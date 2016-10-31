@@ -18,6 +18,17 @@
 		</div>
 		</form>
 		<form method="post" action="/_session/api">
+		<input type="hidden" name="method" value="getSessionHits">
+		<div class="apiMethod">
+			<span class="h3 apiMethodTitle">getSessionHits</span>
+			<div class="apiMethodParameter">
+				<span class="apiMethodLabel">code</span>
+				<input class="apiMethodValue" type="text" name="code"/>
+			</div>
+			<div class="methodFooter"><input type="submit" name="btn_submit" value="Submit" class="apiMethodSubmit"/></div>
+		</div>
+		</form>
+		<form method="post" action="/_session/api">
 		<input type="hidden" name="method" value="addSession">
 		<div class="apiMethod">
 			<span class="apiMethodTitle">addSession</span>

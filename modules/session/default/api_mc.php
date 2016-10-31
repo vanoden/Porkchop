@@ -33,6 +33,33 @@
 	}
 
 	###################################################
+	### Get session info by session code			###
+	###################################################
+	function getSession() {
+		$session = new Session();
+		$session->get($_REQUEST['code']);
+		$response->success = 1;
+		$response->session = $session;
+        api_log($response);
+        header('Content-Type: application/xml');
+        print XMLout($response);
+	}
+
+	###################################################
+	### Get session info by session code			###
+	###################################################
+	function getSessionHits() {
+		$session = new Session();
+		$session->get($_REQUEST['code']);
+		$hits = $session->hits();
+		$response->success = 1;
+		$response->hit = $hits;
+        api_log($response);
+        header('Content-Type: application/xml');
+        print XMLout($response);
+	}
+
+	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
 	function error($message)

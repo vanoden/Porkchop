@@ -93,4 +93,7 @@
 			exit;
 		}
 	}
+	else {
+		app_log("No authentication information sent",'debug',__FILE__,__LINE__);
+	}
 ?>

@@ -490,6 +490,20 @@
 
 			return $this->details($id);
 		}
+		function hits($id = 0) {
+			if ($id < 1) $id = $this->id;
+			$hitlist = new SessionHitList();
+			$hits = $hitlist->find(
+				array(
+					"session_id" => $id
+				)
+			);
+			if ($hitlist->error) {
+				$this->error = $hitlist->error;
+				return null;
+			}
+			return $hits;
+		}
 		function hit() {
 			$_hit = new SessionHit();
 			$hit = $_hit->add(
@@ -550,12 +564,21 @@
 	class SessionHit {
 		public $error;
 		public $id;
+		public $hit_date;
+		public $remote_ip;
+		public $secure;
+		public $script;
+		public $query_string;
 		
-		function __construct() {
+		function __construct($id = 0) {
 			$this->error = '';
 			$schema = new SessionSchema();
 			if ($schema->error) {
 				$this->error = "Failed to initialize schema: ".$schema->error;
+			}
+
+			if ($id > 0) {
+				$this->details($id);
 			}
 		}
 		function add($parameters = array()) {
@@ -625,11 +648,16 @@
 		}
 		function details($id) {
 			$get_object_query = "
-				SELECT	*
-				FROM	session_hits
-				WHERE	id = ?
+				SELECT	h.id,
+						h.hit_date,
+						h.remote_ip,
+						h.secure,
+						h.script,
+						h.query_string
+				FROM	session_hits h
+				WHERE	h.id = ?
 			";
-			
+
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
 				array($id)
@@ -639,7 +667,51 @@
 				$this->error = "SQL Error in SessionHit::details: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			return $rs->FetchNextObject(false);
+			$object = $rs->FetchNextObject(false);
+
+			$this->id = $object->id;
+			$this->hit_date = $object->hit_date;
+			$this->remote_ip = $object->remote_ip;
+			$this->secure = $object->secure;
+			$this->script = $object->script;
+			$this->query_string = $object->query_string;
+
+			return $object;
+			
+		}
+	}
+
+	class SessionHitList {
+		public $errno;
+		public $error;
+
+		function find($parameters = array()) {
+			$find_objects_query .= "
+				SELECT	id
+				FROM	session_hits
+				WHERE	id = id
+			";
+
+			if ($parameters['session_id'])
+				$find_objects_query .= "
+					AND	session_id = ".$GLOBALS['_database']->qstr($parameters['session_id'],get_magic_quotes_gpc);
+			$find_objects_query .= "
+				ORDER BY id desc
+			";
+			if (preg_match('/^\d+$/',$parameters['_limit']))
+				$find_objects_query .= "
+					limit ".$parameters['_limit'];
+			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			if (! $rs) {
+				$this->error = "SQL Error in SessionHitList::find: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			$hits = array();
+			while (list($id) = $rs->FetchRow()) {
+				$hit = new SessionHit($id);
+				array_push($hits,$hit);
+			}
+			return $hits;
 		}
 	}
 
