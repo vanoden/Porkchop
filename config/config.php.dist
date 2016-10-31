@@ -7,18 +7,70 @@
 	define ( 'MODULES', BASE.'/'.ENV.'/modules' );
 	define ( 'THIRD_PARTY', BASE.'/third_party' );
 	define ( 'RESOURCES', BASE.'/resources' );
+	define ( 'API_LOG', '' );
+	define ( 'APPLICATION_LOG', '' );
+	define ( 'APPLICATION_LOG_LEVEL', 'debug' );
 
-	# Mail Server
-	$_config->smtp_server = 'mail.rootseven.com';
-
-	# Cache Mechanism (memcache or xcache)
-	$_config->cache_mechanism   = "xcache";
+	# Initialize config object
+	$_config = new stdClass();
 
 	# Database
-	$_config->database->driver              = 'mysqli';
-	$_config->database->schema              = 'porkchop';
-	$_config->database->master->hostname    = '127.0.0.1';
-	$_config->database->master->username    = 'porkchop';
-	$_config->database->master->password    = 'password';
-	$_config->database->master->port		= '3306';
+	$_config->database = (object) array(
+		'driver'	= 'mysqli',
+		'schema'	= 'porkchop',
+		'master'	= (object) array(
+			'hostname'	= '127.0.0.1',
+			'username'	= 'porkchop',
+			'password'	= 'password',
+			'port'		= 3306
+		)
+	);
+	
+	# Cache Mechanism (memcache or xcache)
+	$_config->cache = (object) array(
+		'mechanism'	= "file",
+		'path'		= "/tmp/porkchop/cache"
+	);
+
+	# Session Info
+	$_config->session = (object) array(
+		'cookie' 	= 'session_code',
+		'domain'	= 'YOURDOMAIN',
+		'expires'	= 36000
+	);
+
+	# Mail Server (SMTP)
+	$_config->email = (object) array(
+		'provider' = "pear",
+		'hostname' = "smtp.gmail.com",
+		'username' = "noreply@YOURDOMAIN",
+		'password' = "outgoing?",
+		'port' 		= 465,
+		'secure' 	= "ssl"
+	);
+
+	# ElasticSearch
+	$_config->elasticsearch = (object) array(
+		'hosts' = array('localhost:9200')
+	);
+
+	# reCAPTCHA
+	$_config->captcha = (object) array(
+		"public_key"    => 'xxxxxxxxxxxxxxxxxxx',
+		"private_key"   => 'yyyyyyyyyyyyyy',
+	);
+
+	# Registration Module
+	$_config->register = (object) array(
+		'minimum_password_strength'	= 8,
+		'auth_target'	= '/_register/welcome'
+	);
+
+	# Confirmation Email Info
+	$_config->register->confirmation = (object) array(
+		"from"                  => 'no-reply@YOURDOMAIN',
+		"subject"               => "Welcome to Our Web Site",
+		"header"                => "Thank you for registering with Us.",
+		"footer"                => "Thank you",
+	);
 ?>
