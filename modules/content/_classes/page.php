@@ -1,6 +1,5 @@
 <?php
-    class Page
-    {
+    class Page {
         public $module;
         public $view;
 		public $index;
@@ -9,20 +8,18 @@
         public $ssl_required;
         public $error;
 		public $uri;
+		public $title;
 
-        public function __construct ($params = array())
-        {
+        public function __construct ($params = array()) {
 			# Initialize Schema
 			$init = new PageInit();
-			if (isset($init->error))
-			{
+			if (isset($init->error)) {
 				$this->error = "Error initializing Page schema: ".$init->error;
 				return null;
 			}
 		}
 
-		public function get($module = '',$view = '',$index = '')
-		{
+		public function get($module = '',$view = '',$index = '') {
 			if (! $module) $module = $this->module;
 			if (! $view) $view = $this->view;
 			if (! $index) $index = $this->index;
@@ -59,8 +56,7 @@
 			return $this->details($id);
 		}
 
-		public function add($module,$view,$index)
-		{
+		public function add($module,$view,$index) {
 			$add_object_query = "
 				INSERT
 				INTO	page_pages
@@ -82,11 +78,9 @@
 			$this->details($id);
 		}
 
-		public function details($id)
-		{
+		public function details($id) {
             # Make Sure Authentication Requirements are Met
-            if (($this->auth_required) and (! $GLOBALS["_SESSION_"]->customer->id))
-            {
+            if (($this->auth_required) and (! $GLOBALS["_SESSION_"]->customer->id)) {
 				if (($this->module != "register")
 					or	(! in_array($this->view,array('login','forgot_password','register','email_verify','resend_verify','invoice_login','thank_you')))
 				)
@@ -96,8 +90,7 @@
 
 					if ($this->module == 'content' && $this->view == 'index' && ! $auth_query_vars)
 						$auth_target = '';
-					else
-					{
+					else {
 						$auth_target = ":_".$this->module.":".$this->view;
 						if ($auth_query_vars) $auth_target .= ":".$auth_query_vars;
 						$auth_target = urlencode($auth_target);
@@ -116,25 +109,20 @@
 			$this->metadata = $_metadata->all($id);
     	}
 
-		public function load_template()
-		{
-			if (isset($this->metadata->template))
-			{
+		public function load_template() {
+			if (isset($this->metadata->template)) {
 				app_log("Loading template '".$this->metadata->template."' from page metadata",'debug',__FILE__,__LINE__);
 				$html = file_get_contents(HTML."/".$this->metadata->template);
 			}
-			elseif (file_exists(HTML."/".$this->module.".".$this->view.".html"))
-			{
+			elseif (file_exists(HTML."/".$this->module.".".$this->view.".html")) {
 				app_log("Loading template '"."/".$this->module.".".$this->view.".html'",'debug',__FILE__,__LINE__);
 				$html = file_get_contents(HTML."/".$this->module.".".$this->view.".html");
 			}
-			elseif (file_exists(HTML."/".$this->module.".html"))
-			{
+			elseif (file_exists(HTML."/".$this->module.".html")) {
 				app_log("Loading template '"."/".$this->module.".html'",'debug',__FILE__,__LINE__);
 				$html = file_get_contents(HTML."/".$this->module.".html");
 			}
-			elseif (file_exists(HTML."/index.html"))
-			{
+			elseif (file_exists(HTML."/index.html")) {
 				app_log("Loading template '/index.html'",'debug',__FILE__,__LINE__);
 				$html = file_get_contents(HTML."/index.html");
 			}
@@ -144,8 +132,7 @@
 			return $this->parse($html);
 		}
 
-		public function parse($message)
-		{
+		public function parse($message) {
 			$module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
 			while (preg_match($module_pattern,$message,$matched))
 			{
@@ -161,8 +148,7 @@
 			return $message;
 		}
 
-		private function parse_element($string)
-		{
+		private function parse_element($string) {
 			# Initialize Array to hold Parameters
 			$parameters = array();
 
@@ -171,8 +157,7 @@
 			$string = $matches[1];
 
 			# Tokenize Parameters
-			while(strlen($string) > 0)
-			{
+			while(strlen($string) > 0) {
 				# Trim Leading Space
 				$string = ltrim($string);
 
@@ -192,8 +177,7 @@
 			return $parameters;
 		}
 
-		public function replace($string)
-		{
+		public function replace($string) {
 			# Initialize Replacement Buffer
 			$buffer = '';
 
@@ -204,45 +188,38 @@
 			if (array_key_exists('object',$parameter)) $object = $parameter['object'];
 			if (array_key_exists('property',$parameter)) $property = $parameter['property'];
 
-			if ($object == "constant")
-			{
-				if ($property == "path")
-				{
+			if ($object == "constant") {
+				if ($property == "path") {
 					$buffer .= PATH;
 				}
-				elseif ($property == "date")
-				{
+				elseif ($property == "date") {
 					$buffer .= date('m/d/Y h:i:s');
 				}
-				elseif ($property == "host")
-				{
+				elseif ($property == "host") {
 					$buffer .= $_SERVER['HTTP_HOST'];
 				}
 			}
-			elseif ($object == "page")
-			{
-				if ($property == "view")
-				{
+			elseif ($object == "page") {
+				if ($property == "view") {
 					$buffer = "<r7 object=\"".$this->module."\" property=\"".$this->view."\"/>";
 				}
-				elseif ($property == "metadata")
-				{
+				elseif ($property == "title") {
+					if (isset($this->metadata->title)) $buffer = $this->metadata->title;
+				}
+				elseif ($property == "metadata") {
 					if (isset($this->metadata->$parameter["field"])) $buffer = $this->metadata->$parameter["field"];
 				}
-				elseif ($property == "navigation")
-				{
+				elseif ($property == "navigation") {
 					require_once( MODULES.'/content/_classes/navigation.php');
 
 					$_navigation = new Menu();
-					if ($_navigation->error)
-					{
+					if ($_navigation->error) {
 						$this->error = "Error initializing navigation module: ".$_navigation->error;
 						return '';
 					}
 
 					$menus = $_navigation->find(array("name" => $parameter["name"]));
-					if ($_navigation->error)
-					{
+					if ($_navigation->error) {
 						app_log("Error displaying menus: ".$_navigation->error,'error',__FILE__,__LINE__);
 						$this->error = $_navigation->error;
 						return '';
@@ -250,14 +227,11 @@
 
 					$menu = $menus[0];
 
-					if (count($menu->item))
-					{
-						foreach($menu->item as $item)
-						{
+					if (count($menu->item)) {
+						foreach($menu->item as $item) {
 							$button_class	= "button_".preg_replace("/\W/","_",$menu->name);
 							$button_id		= "button[".$item->id."]";
-							if (count($item->children))
-							{
+							if (count($item->children)) {
 								$child_container_class	= "child_container_".preg_replace("/\W/","_",$menu->name);
 								$child_container_id		= "child_container[".$item->id."]";
 								$child_button_class		= "child_button_".preg_replace("/\W/","_",$menu->name);
@@ -274,8 +248,7 @@
 								;
 
 								$buffer .= "\t<div class=\"$child_container_class\" id=\"$child_container_id\">\n";
-								foreach($item->children as $child)
-								{
+								foreach($item->children as $child) {
 									$buffer .= "\t\t"
 									."<a"
 									." onMouseOver=\"expandMenu('$child_container_id')\""
@@ -285,8 +258,7 @@
 								}
 								$buffer .= "\t</div>";
 							}
-							else
-							{
+							else {
 								$buffer .=
 								    "<a"
 									." href=\"".$item->target."\""
@@ -299,12 +271,10 @@
 						}
 					}
 				}
-				elseif ($property == "message")
-				{
+				elseif ($property == "message") {
 					$buffer .= "<div class=\"page_message\">".$GLOBALS['page_message']."</div>";
 				}
-				elseif ($property == "error")
-				{
+				elseif ($property == "error") {
 					$buffer .= "<div class=\"page_error\">".$GLOBALS['page_error']."</div>";
 				}
 			}
@@ -606,13 +576,11 @@
 		}
 	}
 	
-	class PageMetadata
-	{
+	class PageMetadata {
 		###################################################
 		### Get Page Metadata							###
 		###################################################
-		public function all($page_id)
-		{
+		public function all($page_id) {
 			$get_object_query = "
 				SELECT	`key`,value
 				FROM	page_metadata
@@ -636,8 +604,7 @@
 			$metadata = (object) $metadata;
 			return $metadata;
 		}
-		public function get($page_id,$key)
-		{
+		public function get($page_id,$key) {
 			$get_object_query = "
 				SELECT	value
 				FROM	page_metadata
@@ -649,23 +616,19 @@
 				$get_object_query,
 				array($id,$key)
 			);
-			if (! $rs)
-			{
+			if (! $rs) {
 				$this->error = "SQL Error getting view metadata in PageMetadata::get: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			list($value) = $rs->FetchRow();
 			return $value;
 		}
-		public function set($page_id,$key,$value)
-		{
-			if (! preg_match('/^\d+$/',$page_id))
-			{
+		public function set($page_id,$key,$value) {
+			if (! preg_match('/^\d+$/',$page_id)) {
 				$this->error = "Invalid page id in PageMetadata::set";
 				return null;
 			}
-			if (! isset($key))
-			{
+			if (! isset($key)) {
 				$this->error = "Invalid key name in PageMetadata::set";
 				return null;
 			}
@@ -681,8 +644,7 @@
 				$set_data_query,
 				array($page_id,$key,$value)
 			);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error setting metadata in PageMetadata::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
@@ -691,8 +653,7 @@
 		###################################################
 		### Find Page Metadata							###
 		###################################################
-		public function find($parameters)
-		{
+		public function find($parameters) {
 			$find_data_query = "
 				SELECT	id
 				FROM	page_metadata
@@ -726,8 +687,7 @@
 		###################################################
 		### Get Details for Metadata					###
 		###################################################
-		public function details($id = 0)
-		{
+		public function details($id = 0) {
 			$get_object_query = "
 				SELECT	`key`,
 						value
@@ -752,18 +712,15 @@
 			return $object;
 		}
 	}
-	class PageInit
-	{
+	class PageInit {
 		###################################################
 		### Database Schema Setup						###
 		###################################################
-		public function __construct()
-		{
+		public function __construct() {
 			# See if Schema is Available
 			$schema_list = $GLOBALS['_database']->MetaTables();
 
-			if (! in_array("page__info",$schema_list))
-			{
+			if (! in_array("page__info",$schema_list)) {
 				# Create company__info table
 				$create_table_query = "
 					CREATE TABLE page__info (
@@ -787,16 +744,14 @@
 			";
 
 			$rs = $GLOBALS['_database']->Execute($get_version_query);
-			if (! $rs)
-			{
+			if (! $rs) {
 				$this->error = "SQL Error in Page::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 
 			list($current_schema_version) = $rs->FetchRow();
 
-			if ($current_schema_version < 1)
-			{
+			if ($current_schema_version < 1) {
 				$update_schema_query = "
 					INSERT
 					INTO	page__info
@@ -805,8 +760,7 @@
 							value = 1
 				";
 				$GLOBALS['_database']->Execute($update_schema_query);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
+				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating _info table in Page::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
 					return 0;
 				}
@@ -817,14 +771,12 @@
 					WHERE	label = 'schema_version'
 				";
 				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
+				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error in register::Person::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
 					return 0;
 				}
 			}
-			if ($current_schema_version < 2)
-			{
+			if ($current_schema_version < 2) {
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `page_metadata` (
 					  `id`		int(5) NOT NULL AUTO_INCREMENT,
@@ -838,8 +790,7 @@
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
+				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating page views table in Page::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
 					return 0;
 				}
@@ -852,8 +803,7 @@
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
+				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating page widgets table in Page::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
 					return 0;
 				}
@@ -868,8 +818,7 @@
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
+				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating page widgets table in Page::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
 					return 0;
 				}
@@ -880,8 +829,35 @@
 					WHERE	label = 'schema_version'
 				";
 				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Page::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
+					return 0;
+				}
+			}
+			if ($current_schema_version < 3) {
+				$create_table_query = "
+					CREATE TABLE `page_pages` (
+					  `id` int(5) NOT NULL AUTO_INCREMENT,
+					  `module` varchar(100) NOT NULL,
+					  `view` varchar(100) NOT NULL,
+					  `index` varchar(100) NOT NULL DEFAULT '',
+					  PRIMARY KEY (`id`),
+					  UNIQUE KEY `uk_page_views` (`module`,`view`,`index`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating page pages table in Page::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
+					return 0;
+				}
+				$current_schema_version = 3;
+				$update_schema_version = "
+					UPDATE	page__info
+					SET		value = $current_schema_version
+					WHERE	label = 'schema_version'
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error in Page::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
 					return 0;
 				}
