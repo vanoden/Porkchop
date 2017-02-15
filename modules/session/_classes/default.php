@@ -320,10 +320,12 @@
 			return $objects;
 		}
 
-		function details($id) {
+		function details($id = 0) {
+			if (! $id) return new stdClass();
+
 			# Name For Xcache Variable
 			$cache_key = "session[".$id."]";
-			cache_unset($cacke_key);
+			cache_unset($cache_key);
 
 			# Cached Customer Object, Yay!	
 			if (($id) and ($session = cache_get($cache_key))) {

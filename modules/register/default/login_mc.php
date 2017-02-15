@@ -19,26 +19,22 @@
 	if (! preg_match('/^\//',$target))
 		$target = '/'.$target;
 
-	if (($GLOBALS['_SESSION_']->customer->id) and ($target != '/'))
-	{
+	if (($GLOBALS['_SESSION_']->customer->id) and ($target != '/'))	{
 		app_log("Redirecting to ".PATH.$target,'notice',__FILE__,__LINE__);
 		header("location: ".PATH.$target);
 		exit;
 	}
 
 	# Handle Input
-	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token'])))
-	{
+	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
 		# Consume Token
 		$_token = new RegisterPasswordToken();
 		$new_id = $_token->consume($_REQUEST['token']);
-		if ($_token->error)
-		{
+		if ($_token->error) {
 			app_log("Error in password recovery: ".$_recovery->error,'error',__FILE__,__LINE__);
 			$GLOBALS['_page']->error = "Error in password recovery.  Admins have been notified.  Please try again later.";
 		}
-		elseif ($new_id > 0)
-		{
+		elseif ($new_id > 0) {
 			$_customer = new RegisterCustomer();
 			$customer = $_customer->details($new_id);
 			$GLOBALS['_SESSION_']->customer = $customer;
@@ -57,14 +53,12 @@
 			header("location: ".PATH.$target);
 			exit;
 		}
-		else
-		{
+		else {
 			$GLOBALS['_page']->error = "Sorry, your recovery token was not recognized or has expired";
 		}
 	}
-	elseif ($_REQUEST['login'])
-	{
-		$customer = new Customer;
+	elseif ($_REQUEST['login']) {
+		$customer = new \Register\Customer();
 		if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'],$GLOBALS['_session']->company)) {
 			$GLOBALS['_page']->error = "Authentication failed";
 		}

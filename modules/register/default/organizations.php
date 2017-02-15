@@ -1,8 +1,7 @@
-<?  if (! role('register reporter'))
-    {
-        print "<span class=\"form_error\">You are not authorized for this view!</span>";
-        return;
-    }
+<?  if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
+		print "<span class=\"form_error\">You are not authorized for this view!</span>";
+		return;
+	}
 ?>
 <script type="text/javascript">
 	function submitForm()
@@ -69,15 +68,15 @@
 	<a href="javascript:void(0)" class="pager pagerPrevious" onclick="submitSearch(<?=$prev_offset?>)"><</a>
 	&nbsp;<?=$_REQUEST['start']+1?> - <?=$next_offset?> of <?=$total_organizations?>&nbsp;
 	<a href="javascript:void(0)" class="pager pagerNext" onclick="submitSearch(<?=$next_offset?>)">></a>
-	<a href="javascript:void(0)" class="pager pagerLast" onclick="submitSearch(<?=$last_offser?>)">>></a>
+	<a href="javascript:void(0)" class="pager pagerLast" onclick="submitSearch(<?=$last_offset?>)">>></a>
 	</td>
 </tr>
 </table>
 </form>
 <?
-	if (role('register manager'))
-	{
+	if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 ?>
 <form action="<?=PATH?>/_register/organization" method="get">
 <span style="text-align: center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span>
 <?	} ?>
+</form>

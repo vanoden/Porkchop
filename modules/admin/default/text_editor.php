@@ -1,12 +1,16 @@
 <html>
 <head>
 	<title>Text Editor</title>
-	<script type="text/javascript" src="/content.api.js"></script>
+	<script type="text/javascript" src="/js/content.api.js"></script>
 	<script type="text/javascript" src="/ckeditor/ckeditor.js"></script>
-	<script type="text/javascript" src="/textEditor.js"></script>
+	<script type="text/javascript" src="/js/textEditor.js"></script>
 	<script type="text/javascript">
+		var messageID = <?=$_REQUEST["id"]?>;
 		function saveContent()
 		{
+			var content = CKEDITOR.instances.contentEditTextArea.getData();
+			updateMessageContent(messageID,content);
+			window.close();
 		}
 		function previewContent()
 		{

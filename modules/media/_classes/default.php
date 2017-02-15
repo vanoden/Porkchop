@@ -1,8 +1,6 @@
 <?
-	class MediaFile
-	{
-		public function find($parameters = array())
-		{
+	class MediaFile {
+		public function find($parameters = array()) {
 			# Get Code From Table
 			$get_code_query = "
 				SELECT	id

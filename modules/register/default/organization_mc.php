@@ -1,123 +1,109 @@
 <?PHP
 	###################################################
-	### register_mc.php								###
-	### This program collects registration info		###
+	### organization_mc.php							###
+	### This program collects organization info		###
 	### for the user.								###
 	### A. Caravello 11/12/2002						###
 	###################################################
-
-	$_organization = new RegisterOrganization();
-	$organization_id = 0;
-
-	# Initialize Organization Object
-	$_organization = new RegisterOrganization();
-
-	# Security - Only Register Module Operators or Managers can see other customers
-	if (role('register manager'))
-	{
-		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) $organization_id = $_REQUEST['organization_id'];
-		elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0]))
-		{
-			$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
-			$organization = $_organization->get($code);
-			if ($organization->id)
-				$organization_id = $organization->id;
-			else
-				$GLOBALS['_page']->error = "Customer not found";
-		}
+	if (! $GLOBALS['_SESSION_']->authenticated()) {
+		header("location: /_register/login?target=_register:organization");
+		exit;
 	}
-	else $organization_id = $GLOBALS['_SESSION_']->customer->organization->id;
+	# Security - Only Register Module Operators or Managers can see other customers
+	if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
+			$organization = new \Register\Organization($_REQUEST['organization_id']);
+			if ($organization->error) {
+				$GLOBALS['_page']->error = "Unable to load organization: ".$organization->error;
+			}
+		}
+		elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
+			$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
+			$organization = new \Register\Organization();
+			$organization->get($code);
+			if (! $organization->id) $GLOBALS['_page']->error = "Customer not found";
+		}
+		else $organization = new \Register\Organization();
+	}
+	else $organization = $GLOBALS['_SESSION_']->customer->organization;
 
-	if ($_REQUEST['method'])
-	{
-		if (! $_REQUEST['name'])
-		{
+	if ($_REQUEST['method']) {
+		$GLOBALS['_page']->success = $_REQUEST['method'];
+		if (! $_REQUEST['name']) {
 			$GLOBALS['_page']->error = "Name required";
 		}
-		else
-		{
+		else {
 			$parameters = array(
 				"name"	=> $_REQUEST['name'],
 				"code"	=> $_REQUEST['code'],
 				"status"	=> $_REQUEST['status']
 			);
-			if ($organization_id)
-			{
+			if (is_object($organization)) {
 				# Update Existing Organization
-				$organization = $_organization->update($organization_id,$parameters);
-				
-				if ($_organization->error)
-				{
+				$organization->update($parameters);
+
+				if ($organization->error) {
 					$GLOBALS['_page']->error = "Error updating organization";
 				}
-				else
-				{
+				else {
 					$GLOBALS['_page']->success = "Organization Updated Successfully";
 				}
-				if ($_REQUEST['new_login'])
-				{
-					$_customer = new RegisterCustomer();
-					
+				if ($_REQUEST['new_login']) {
+					$present_customer = new \Register\Customer();
+
 					# Make Sure Login is unique
-					$present_customer = $_customer->get($_REQUEST['new_login']);
-					if ($present_customer->id)
-					{
+					$present_customer->get($_REQUEST['new_login']);
+					if ($present_customer->id) {
 						$GLOBALS['_page']->error = "Login already exists";
 					}
-					else
-					{
-						$customer = $_customer->add(
+					else {
+						$customer = new \Register\Customer();
+						$customer->add(
 							array(
 								"login"			=> $_REQUEST['new_login'],
 								"first_name"	=> $_REQUEST['new_first_name'],
 								"last_name"		=> $_REQUEST['new_last_name'],
-								"organization_id"	=> $organization_id,
+								"organization_id"	=> $organization->id,
 								"password"			=> uniqid()
 							)
 						);
-						if ($_customer->error)
-						{
-							$GLOBALS['_page']->error = "Error adding customer to organization: ".$_customer->error;
+						if ($customer->error) {
+							$GLOBALS['_page']->error = "Error adding customer to organization: ".$customer->error;
+						}
+						else {
+							$GLOBALS['_page']->success = "Customer added to organization";
 						}
 					}
 				}
 			}
-			else
-			{
+			else {
 				if (! $parameters['code']) $parameters['code'] = uniqid();
-	
+
 				# See if code used
-				$present_org = $_organization->get($parameters['code']);
-				if ($present_org->id)
-				{
+				$present_org = new \Register\Organization();
+				$present_org->get($parameters['code']);
+				if ($present_org->id) {
 					$GLOBALS['_page']->error = "Organization code already used";
 				}
-				else
-				{
+				else {
 					# Add Existing Organization
-					$organization = $_organization->add($parameters);
+					$organization = new \Register\Organization();
+					$organization->add($parameters);
+					if ($organization->error) {
+						$GLOBALS['_page']->error = "Error updating organization";
+					}
+					else {
+						$GLOBALS['_page']->success = "Organization ".$organization->id." Created Successfully";
+					}
 				}
-				if ($_organization->error)
-				{
-					$GLOBALS['_page']->error = "Error updating organization";
-				}
-				else
-				{
-					$GLOBALS['_page']->success = "Organization Updated Successfully";
-				}
-				$organization_id = $organization->id;
 			}
-
 		}
 	}
-	if ($organization_id)
-	{
-		$organization = $_organization->details($organization_id);
-		$members = $_organization->members($organization_id);
-		if ($_organization->error)
-		{
-			$GLOBALS['_page']->error = "Error finding members";
-			app_log("Error finding members: ".$_organization->error,'error',__FILE__,__LINE__);
+	if ($organization->id) {
+		$members = $organization->members();
+		if ($organization->error) {
+			$GLOBALS['_page']->error = "Error finding members: ".$organization->error;
+			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 	}
 ?>

@@ -3,7 +3,21 @@
 	### Make Sure MySQL Date is Valid               ###
 	###################################################
 	function require_module($module,$view='default') {
-		require_once(MODULES."/".$module."/_classes/$view.php");
+			error_log(print_r(debug_backtrace(),true));
+		if (! require_once(MODULES."/".$module."/_classes/$view.php")) {
+		}
+	}
+	function load_class($identifier) {
+		$path = CLASS_PATH."/".preg_replace('/\\\\/','/',$identifier).".php";
+		//app_log("Autoloading '$identifier' from '$path'",'debug',__FILE__,__LINE__);
+		if (file_exists($path)) {
+			require_once($path);
+			return 1;
+		}
+		else {
+			app_log("Class file not found at '$path'",'error',__FILE__,__LINE__);
+		}
+		return 0;
 	}
 	function get_mysql_date($date,$range=0) {
 		# Handle Some Keywords
@@ -45,7 +59,7 @@
 			# Unix Timestamp
 			return date('Y-m-d H:i:s',$date);
 		}
-		elseif ($debug) {
+		elseif (isset($debug) && $debug) {
 			error_log("Parsing regular date format $date");
 		}
 
@@ -107,87 +121,16 @@
     }
 	
 	function cache_set($key,$value,$expires=0) {
-		if (! isset($GLOBALS['_config']->cache_mechanism)) return null;
-		if ($GLOBALS['_config']->cache_mechanism == 'xcache') {
-			$value = serialize($value);
-			return xcache_set($key,$value);
-		}
-		elseif ($GLOBALS['_config']->cache_mechanism == 'memcache') {
-			$result = $GLOBALS['_memcache']->set($key,$value,0,$expires);
-			if (! $result) {
-				app_log("Error setting cache: ".$GLOBALS['_config']->getResultCode(),'error',__FILE__,__LINE__);
-			}
-			return $result;
-		}
-		elseif ($GLOBALS['_config']->cache_mechanism == 'file') {
-			if (is_dir($GLOBALS['_config']->cache_path) || mkdir($GLOBALS['_config']->cache_path,0700,true)) {
-				if ($fh = fopen($GLOBALS['_config']->cache_path."/".$key,'w')) {
-					$value = serialize($value);
-					fwrite($fh,$value);
-					fclose($fh);
-				}
-				else {
-					app_log("Cannot create cache file",'error',__FILE__,__LINE__);
-				}
-			}
-			else {
-				app_log("Cannot create cache path",'error',__FILE__,__LINE__);
-			}
-		}
-		else {
-			app_log("No cache mechanism available");
-		}
-		return null;
+		$cache = new Cache($key);
+		return $cache->set($value);
 	}
 	function cache_unset($key) {
-		if (! isset($GLOBALS['_config']->cache_mechanism)) return null;
-		
-		if ($GLOBALS['_config']->cache_mechanism == 'xcache') {
-			return xcache_unset($key);
-		}
-		elseif ($GLOBALS['_config']->cache_mechanism == 'memcache') {
-			return $GLOBALS['_memcache']->delete($key);
-		}
-		elseif ($GLOBALS['_config']->cache_mechanism == 'file') {
-			if (is_dir($GLOBALS['_config']->cache_path)) {
-				$filename = $GLOBALS['_config']->cache_path."/".$key;
-				unlink($filename);
-			}
-		}
-		return null;
+		$cache = new Cache($key);
+		return $cache->delete();
 	}
 	function cache_get($key) {
-		if (! isset($GLOBALS['_config']->cache_mechanism)) return null;
-		if ($GLOBALS['_config']->cache_mechanism == 'xcache') {
-			if (xcache_isset($key)) {
-				return unserialize(xcache_get($key));
-			}
-		}
-		elseif ($GLOBALS['_config']->cache_mechanism == 'memcache') {
-			return $GLOBALS['_memcache']->get($key);
-		}
-		elseif ($GLOBALS['_config']->cache_mechanism == 'file') {
-			if (is_dir($GLOBALS['_config']->cache_path)) {
-				$filename = $GLOBALS['_config']->cache_path."/".$key;
-				if (! file_exists($filename)) {
-					app_log("No cache available",'debug',__FILE__,__LINE__);
-					return null;
-				}
-				if ($fh = fopen($filename,'r')) {
-					$content = fread($fh,filesize($filename));
-					$value = unserialize($content);
-					fclose($fh);
-					return $value;
-				}
-				else {
-					app_log("Cannot open cache file '$filename'",'error',__FILE__,__LINE__);
-				}
-			}
-			else {
-				app_log("Cannot access cache path",'error',__FILE__,__LINE__);
-			}
-		}
-		return null;
+		$cache = new Cache($key);
+		return $cache->get();
 	}
 
 	# API Logging (With actual parameters)
@@ -198,7 +141,7 @@
 		$method = $_REQUEST['method'];
 		$host = $GLOBALS['_REQUEST_']->client_ip;
 
-		if ($response->success) $status = "SUCCESS";
+		if (is_object($response) && $response->success) $status = "SUCCESS";
 		else $status = "FAILED";
 		$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
 
@@ -341,7 +284,7 @@
 	### Check Permissions							###
 	###################################################
 	function role($role) {
-		if (isset($GLOBALS['_SESSION_']->customer) and (is_array($GLOBALS['_SESSION_']->customer->roles)) and (in_array($role,$GLOBALS['_SESSION_']->customer->roles)))
+		if (isset($GLOBALS['_SESSION_']->customer) and $GLOBALS['_SESSION_']->customer->has_role($role))
 			return 1;
 		else
 			return 0;
@@ -351,5 +294,61 @@
 	###################################################
 	function format_query($string) {
 		return preg_replace('/(\r\n)/','',preg_replace('/\t/',' ',$string));
+	}
+
+	function prettyPrint( $json ) {
+		$result = '';
+		$level = 0;
+		$in_quotes = false;
+		$in_escape = false;
+		$ends_line_level = NULL;
+		$json_length = strlen( $json );
+	
+		for( $i = 0; $i < $json_length; $i++ ) {
+			$char = $json[$i];
+			$new_line_level = NULL;
+			$post = "";
+			if( $ends_line_level !== NULL ) {
+				$new_line_level = $ends_line_level;
+				$ends_line_level = NULL;
+			}
+			if ( $in_escape ) {
+				$in_escape = false;
+			} else if( $char === '"' ) {
+				$in_quotes = !$in_quotes;
+			} else if( ! $in_quotes ) {
+				switch( $char ) {
+					case '}': case ']':
+						$level--;
+						$ends_line_level = NULL;
+						$new_line_level = $level;
+						break;
+	
+					case '{': case '[':
+						$level++;
+					case ',':
+						$ends_line_level = $level;
+						break;
+	
+					case ':':
+						$post = " ";
+						break;
+	
+					case " ": case "\t": case "\n": case "\r":
+						$char = "";
+						$ends_line_level = $new_line_level;
+						$new_line_level = NULL;
+						break;
+				}
+			} else if ( $char === '\\' ) {
+				$in_escape = true;
+			}
+			if( $new_line_level !== NULL ) {
+				$result .= '\n'.str_repeat( '    ', $new_line_level );
+			}
+			$result .= $char.$post;
+		}
+	
+		return $result;
 	}
 ?>

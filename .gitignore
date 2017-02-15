@@ -1,2 +1,4 @@
-config/config.php
-third_party/
+classes/Spectros
+classes/Monitor
+classes/Action
+html

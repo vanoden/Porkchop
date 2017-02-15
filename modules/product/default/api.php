@@ -2,7 +2,7 @@
 		<div class="apiMethod">Request</div>
 		<pre id="requestContent" style="text-align: left; width: 550px; height: 100px; overflow: auto; font-size: 11px; border: 1px dashed blue;"><?=print_r($_REQUEST)?></pre>
 		<form method="post" action="<?=PATH?>/_product/api" name="ping">
-		<input type="hidden" name="apiMethod" value="ping">
+		<input type="hidden" name="method" value="ping">
 		<div class="apiMethod">
 			<div class="h3 apiMethodTitle">ping</div>
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>

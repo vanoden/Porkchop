@@ -11,23 +11,16 @@
 	###########################
 	### Handle Actions		###
 	###########################
-	if ($_REQUEST['method'] == "Apply")
-	{
+	if ($_REQUEST['method'] == "Apply") {
 		# Initialize Admin Object
-		$_customer = new Admin();
-		if ($_customer->password_strength($_REQUEST['password']) < $_GLOBALS['_config']->register->minimum_password_strength)
-		{
+		$_customer = new \Register\Admin();
+		if ($_customer->password_strength($_REQUEST['password']) < $_GLOBALS['_config']->register->minimum_password_strength) {
 			$GLOBALS["_page"]->error = "Password not strong enough";
 		}
-		elseif ($_REQUEST["password"] != $_REQUEST["password_2"])
-		{
+		elseif ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 			$GLOBALS['_page']->error .= "Passwords do not match";
 		}
-		else
-		{
-			# Load Email Module
-			require_once(MODULES.'/email/_classes/default.php');
-
+		else {
 			# Default Login to Email Address
 			if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['email_address'];
 
@@ -36,13 +29,11 @@
 
 			# Make Sure Login is unique
 			$already_exists = $_customer->get($_REQUEST['login']);
-			if ($already_exists->id)
-			{
+			if ($already_exists->id) {
 				$GLOBALS['_page']->error = "Sorry, login already taken";
 				$_REQUEST['login'] = '';
 			}
-			else
-			{
+			else {
 				###########################################
 				### Add User To Database				###
 				###########################################
@@ -56,23 +47,19 @@
 						"validation_key"	=> $validation_key,
 					)
 				);
-				if ($_customer->error)
-				{
+				if ($_customer->error) {
 					app_log("Error adding customer: ".$_customer->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_page']->error .= "Sorry, there was an error adding your account.  Our admins have been notified.  Please try again later";
 				}
-				else
-				{
+				else {
 					# Login New User by updating session
 					$GLOBALS['_SESSION_']->update(array("user_id" => $customer->{id}));
-					if ($GLOBALS['_SESSION_']->error)
-					{
+					if ($GLOBALS['_SESSION_']->error) {
 						$GLOBALS['_page']->error .= "Error updating session: ".$GLOBALS['_SESSION_']->error;
 					}
 
 					# Create Contact Record
-					if ($_REQUEST['work_email'])
-					{
+					if ($_REQUEST['work_email']) {
 						$_customer->addContact(
 							array(
 								"person_id"		=> $customer_id,
@@ -84,8 +71,7 @@
 						if ($_customer->error)
 							app_log("Error adding Work Email '".$_REQUEST['work_email']."': ".$_customer->error,'error',__FILE__,__LINE__);
 					}
-					if ($_REQUEST['home_email'])
-					{
+					if ($_REQUEST['home_email']) {
 						# Create Contact Record
 						$_customer->addContact(
 							array(
@@ -117,7 +103,7 @@
 					$parameters['body'] = $message;
 					$parameters['subject'] = $GLOBALS['_config']->register->confirmation->subject;
 		
-					$_email = new EmailMessage();
+					$_email = new \Email\Message();
 					$_email->send($parameters);
 					if ($_email->error) app_log($_email->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_page']->error = "Failed to send confirmation email";

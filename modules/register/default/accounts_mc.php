@@ -16,9 +16,9 @@
 	if (role('register reporter') or role('register manager'))
 	{
 		if (! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
-		$_customer = new RegisterCustomer();
-		$customers = $_customer->find(array("_limit" => $customers_per_page, "_offset" => $_REQUEST['start']));
-		$total_customers = $_customer->count();
+		$customer_list = new \Register\CustomerList();
+		$customers = $customer_list->find(array("_limit" => $customers_per_page, "_offset" => $_REQUEST['start']));
+		$total_customers = $customer_list->count;
 		if ($_customer->error) $GLOBALS['_page']->error = "Error finding customers: ".$_customer->error;
 		
 		if ($_REQUEST['start'] < $customers_per_page)

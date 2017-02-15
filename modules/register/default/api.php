@@ -292,6 +292,13 @@
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
 			</form>
+			<form method="post" action="<?=PATH?>/_register/api" name="expireInactiveOrganizations">
+			<input type="hidden" name="method" value="expireInactiveOrganizations">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">expireInactiveOrganizations</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
 		</div>
 	</div>
 </div>

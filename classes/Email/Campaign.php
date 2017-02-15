@@ -1,0 +1,7 @@
+<?
+	namespace Email;
+
+	class Campaign {
+		
+	}
+?>

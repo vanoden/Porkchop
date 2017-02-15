@@ -4,7 +4,7 @@
     ### and Management							###
     ### A. Caravello 5/7/2009               	###
     ###############################################
-	$schema = new RegisterSchema();
+	$schema = new \Register\Schema();
 
 	$_package = array(
 		"name"		=> "register",
@@ -15,7 +15,7 @@
 
 	# Call Requested Event
 	//error_log($_REQUEST['action']." Request received from ".$_REQUEST['hub_code']);
-	if ($_REQUEST["method"]) {
+	if (isset($_REQUEST["method"])) {
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
 		$function_name($_package);
@@ -64,7 +64,7 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
 		# Initiate Product Object
-		$_customer = new RegisterCustomer();
+		$_customer = new \Register\Customer();
 
 		$result = $_customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
 
@@ -94,7 +94,7 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
 		# Initiate Product Object
-		$_customer = new RegisterCustomer();
+		$_customer = new \Register\Customer();
 		
 		if ($_REQUEST["login"] and (! $_REQUEST{"code"})) $_REQUEST['code'] = $_REQUEST['login'];
 		$customer = $_customer->get($_REQUEST["code"]);
@@ -119,7 +119,7 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
 		# Initiate Product Object
-		$_customer = new RegisterCustomer();
+		$_customer = new \Register\Customer();
 
 		# Find Customer
 		$customer = $_customer->get($_REQUEST['code']);
@@ -128,7 +128,7 @@
 
 		if ($_REQUEST['organization'])
 		{
-			$_organization = new RegisterOrganization();
+			$_organization = new \Register\Organization();
 			$organization = $_organization->get($_REQUEST['organization']);
 			if ($_organization->error) app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
@@ -161,10 +161,10 @@
 	###################################################
 	function findCustomers() {
 		# Default StyleSheet
-		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customers.xsl';
+		if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customers.xsl';
 
 		# Initiate Image Object
-		$_customer = new RegisterCustomer();
+		$customer = new \Register\Customer();
 
 		# Build Query Parameters
 		$parameters = array();
@@ -173,20 +173,20 @@
 		if ($_REQUEST["first_name"]) $parameters["first_name"] = $_REQUEST["first_name"];
 		if ($_REQUEST["last_name"]) $parameters["last_name"] = $_REQUEST["last_name"];
 		
-		if ($_REQUEST["organization"])
-		{
-			$_organization = new RegisterOrganization();
-			$organization = $_organization->get($_REQUEST["organization"]);
-			if ($_organization->error) app_error("Error finding organization: ".$_organization->error,'error',__FILE__,__LINE__);
+		if ($_REQUEST["organization"]) {
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST["organization"]);
+			if ($organization->error) app_error("Error finding organization: ".$organization->error,'error',__FILE__,__LINE__);
 			if (! $organization->id) error("Could not find organization");
 			$parameters['organization_id'] = $organization->id;
 		}
 
 		# Get List of Matching Customers
-		$customers = $_customer->find($parameters);
+		$customerlist = new \Register\CustomerList();
+		$customers = $customerlist->find($parameters);
 
 		# Error Handling
-		if ($_customer->error) error($_customer->error);
+		if ($customerlist->error) error($customerlist->error);
 
 		$response = new stdClass();
 		$response->success = 1;
@@ -297,7 +297,7 @@
 		$organization_id = 0;
 		if ($_REQUEST['organization'])
 		{
-			$_organization = new RegisterOrganization();
+			$_organization = new \Register\Organization();
 			$organization = $_organization->get($_REQUEST['organization']);
 			if ($_organization->error) app_error("Error finding organization: ",'error',__FILE__,__LINE__);
 			if (! $organization->id) error("Could not find organization");
@@ -330,11 +330,11 @@
 		print XMLout($response,array("stylesheet" => $_REQUEST["stylesheet"]));
 	}
 	function findContacts() {
-		$_contact = new RegisterContact();
+		$_contact = new \Register\Contact();
 
 		if (isset($_REQUEST['person']))
 		{
-			$_customer = new RegisterCustomer();
+			$_customer = new \Register\Customer();
 			$customer = $_customer->get($_REQUEST['person']);
 			if ($_customer->error) error($_customer->error);
 			$customer_id = $customer->id;
@@ -398,7 +398,7 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.contact.xsl';
 
 		# Initiate Customer Object
-		$_user = new RegisterCustomer();
+		$_user = new \Register\Customer();
 
 		# Add Event
 		$_user->notifyContact(
@@ -435,7 +435,7 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
 		# Initiate Object
-		$_organization = new RegisterOrganization();
+		$_organization = new \Register\Organization();
 
 		# Add Object
 		$organization = $_organization->add(
@@ -463,7 +463,7 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organization.xsl';
 
 		# Initiate Organization Object
-		$_organization = new RegisterOrganization();
+		$_organization = new \Register\Organization();
 
 		# Get Matching Organization
 		$organization = $_organization->get($_REQUEST['code']);
@@ -488,7 +488,7 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
 		# Initiate Organization Object
-		$_organization = new RegisterOrganization();
+		$_organization = new \Register\Organization();
 
 		# Build Query Parameters
 		$parameters = array();
@@ -523,7 +523,7 @@
 		if ($_REQUEST['organization'])
 		{
 			# Initiate Organization Object
-			$_organization = new RegisterOrganization();
+			$_organization = new \Register\Organization();
 			$organization = $_organization->get($_REQUEST['organization']);
 			if ($_organization->error) app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
@@ -564,7 +564,7 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
 		# Initiate Organization Object
-		$_organization = new RegisterOrganization();
+		$_organization = new \Register\Organization();
 		$organization = $_organization->get($_REQUEST['organization']);
 		if ($_organization->error) app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
 		if (! $organization->id) error("Organization not found");
@@ -602,7 +602,7 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
 		# Initiate Organization Object
-		$_organization = new RegisterOrganization();
+		$_organization = new \Register\Organization();
 		$organization = $_organization->get($_REQUEST['organization']);
 		if ($_organization->error) app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
 		if (! $organization->id) error("Organization not found");
@@ -634,34 +634,63 @@
 		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 	function expireAgingCustomers() {
-		$_customeroo = new RegisterCustomer();
-		$customers = $_customeroo->find();
-		$counter = array("total" => "0", "expired" => "0");
-		foreach ($customers as $customer)
-		{
-			$counter['total'] ++;
-			if (in_array($customer->status,array('ACTIVE','EXPIRED','DELETED'))) continue;
-			$_cust_session = new Session();
-			$sessions = $_cust_session->find(array("user_id" => $customer->id));
-			if (count($sessions) > 0) {
-				app_log($customer->login." OK",'debug',__FILE__,__LINE__);
+		if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			$expires = strtotime("-12 month", time());
+			$date = date('m/d/Y',$expires);
+	
+			# Initialize Customers
+			$customerlist = new \Register\CustomerList();
+	
+			# Expire Aged Customers
+			$count = $customerslist->expire($date);
+			if ($customerlist->error) {
+				$response->success = 0;
+				$response->error = "Error expiring customers: ".$customerlist->error;
 			}
 			else {
-				$counter['expired'] ++;
-				app_log($customer->login." Deactivated",'notice',__FILE__,__LINE__);
-				$_deleteCust = new RegisterCustomer($customer->id);
-				$_deleteCust->expire();
+				$response->success = 1;
+				$response->message = "$count Customers Expired";
 			}
 		}
-		$response->success = 1;
-		$response->results = $counter;
+		else {
+			$response->success = 0;
+			$response->error = "Requires 'register manager' role";
+		}
+
+		# Send Response
+		header('Content-Type: application/xml');
+		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+	}
+	function expireInactiveOrganizations () {
+		if (role('register manager')) {
+			$expires = strtotime("-12 month", time());
+			$date = date('m/d/Y',$expires);
+
+			# Initialize Organizations
+			$organizationlist = new \Register\OrganizationList();
+			
+			# Expire Organizations w/o Active Users
+			$count = $organizationlist->expire($date);
+			if ($organizationlist->error) {
+				$response->success = 0;
+				$response->error = "Error expiring organizations: ".$organizationlist->error;
+			}
+			else {
+				$response->success = 1;
+				$response->message = "$count Organizations Expired";
+			}
+		}
+		else {
+			$response->success = 0;
+			$response->error = "Requires 'register manager' role";
+		}
 
 		# Send Response
 		header('Content-Type: application/xml');
 		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 	function schemaVersion() {
-		$schema = new RegisterSchema();
+		$schema = new \Register\Schema();
 		if ($schema->error) {
 			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		}
@@ -707,11 +736,8 @@
     	    XML_SERIALIZER_OPTION_INDENT        => '    ',
     	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
 			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
+			'rootName'							=> 'opt',
     	);
-		if (array_key_exists("rootname",$user_options))
-		{
-			$options["rootName"] = $user_options["rootname"];
-		}
     	$xml = &new XML_Serializer($options);
 	   	if ($xml->serialize($object))
 		{
@@ -719,7 +745,7 @@
 			$output = $xml->getSerializedData();
 			if (array_key_exists("stylesheet",$user_options))
 			{
-				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
+				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>\n".$output;
 			}
 			return $output;
 		}

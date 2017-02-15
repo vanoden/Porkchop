@@ -47,7 +47,7 @@
 <?  if ($GLOBALS['_page']->error) { ?>
 <div><?=$GLOBALS['_page']->error?></div>
 <?  }
-	elseif ($_REQUEST['method']) {
+	elseif (isset($_REQUEST['method'])) {
 ?>
 <div class="form_success">Your changes have been saved</div>
 <?  } ?>
@@ -73,7 +73,7 @@
 <?	if (role("register manager")) { ?>
 	<select class="value input registerValue" name="organization_id">
 		<option value="">Select</option>
-	<?	foreach ($organizations as $organization) { ?>
+	<?	foreach ($organizations as $organization) {	?>
 		<option value="<?=$organization->id?>"<? if ($organization->id == $customer->organization->id) print " selected"; ?>><?=$organization->name?></option>
 	<?	} ?>
 	</select>
@@ -83,12 +83,16 @@
 </div>
 <div id="accountTimeZoneQuestion" class="registerQuestion">
 	<span class="label registerLabel registerTimeZoneLabel">*Time Zone:</span>
-	<select id="timezone" name="timezone" class="value input collectionField" style="display:block; float: left">
-<?	foreach (timezone_identifiers_list() as $timezone) { ?>
-		<option value="<?=$timezone?>"<? if ($timezone == $customer->timezone) print " selected"; ?>><?=$timezone?></option>
+	<select id="timezone" name="timezone" class="value input collectionField">
+<?	foreach (timezone_identifiers_list() as $timezone) {
+		if (isset($customer->timezone)) $selected_timezone = $customer->timezone;
+		else $selected_timezone = 'UTC';
+?>
+		<option value="<?=$timezone?>"<? if ($timezone == $selected_timezone) print " selected"; ?>><?=$timezone?></option>
 <?	} ?>
 	</select>
 </div>
+<hr style="width: 100%; color: white; clear: both: height: 0px;"/>
 <!-- Contact Options -->
 <div class="form_instruction">Add methods of contact.</div>
 <table cellpadding="0" cellspacing="0" class="body" style="width:800px">
@@ -141,8 +145,10 @@
 <span class="title" style="margin-top: 12px; display: block;">Assigned Roles</span>
 <table cellpadding="0" cellspacing="0" class="body" style="width: 800px">
 <tr><td class="label" style="width: 40px">&nbsp;</td><td class="label" style="width: 200px;">Name</td><td class="label" style="width: 520px;">Description</td></tr>
-<?	foreach($all_roles as $role) { ?>
-<tr><td class="value<?=$greenbar?>"><input type="checkbox" name="role[<?=$role->id?>]"<? if (in_array($role->name,$customer->roles)) print " CHECKED";?>/></td><td class="value<?=$greenbar?>"><?=$role->name?></td><td class="value<?=$greenbar?>"><?=$role->description?></td></tr>
+<?	$greenbar = '';
+	foreach($all_roles as $role) {
+?>
+<tr><td class="value<?=$greenbar?>"><input type="checkbox" name="role[<?=$role->id?>]"<? if ($customer->has_role($role->name)) print " CHECKED";?>/></td><td class="value<?=$greenbar?>"><?=$role->name?></td><td class="value<?=$greenbar?>"><?=$role->description?></td></tr>
 <?		if ($greenbar) $greenbar = '';
 		else $greenbar = ' greenbar';
 	}

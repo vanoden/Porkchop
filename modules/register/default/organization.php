@@ -13,14 +13,14 @@
 	}
 </style>
 <form name="orgDetails" method="POST">
-<input type="hidden" name="organization_id" value="<?=$organization_id?>"/>
+<input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
 <span class="title">Organization Details</span>
 <?  if ($GLOBALS['_page']->error) { ?>
 <div class="form_error"><?=$GLOBALS['_page']->error?></div>
 <?  }
-	elseif ($_REQUEST['method']) {
+	elseif ($GLOBALS['_page']->success) {
 ?>
-<div class="form_success">Your changes have been saved</div>
+<div class="form_success"><?=$GLOBALS['_page']->success?></div>
 <?  } ?>
 <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
 
@@ -40,13 +40,13 @@
 <?		} ?>
 	</select>
 </div>
-<?	if ($organization_id) { ?>
+<?	if ($organization->id) { ?>
 <table class="body" style="margin-top: 10px">
 <tr><td class="label organizationMemberLoginHeader">Login</td>
 	<td class="label organizationMemberFirstNameHeader">First Name</td>
 	<td class="label organizationMemberLastNameHeader">Last Name</td>
 </tr>
-<?	foreach ($members as $member) { ?>
+<?	foreach ($members as $member) { ;?>
 <tr><td class="value organizationMemberLogin"><a href="/_register/account?customer_id=<?=$member->id?>"><?=$member->login?></a></td>
 	<td class="value organizationMemberFirstName"><?=$member->first_name?></td>
 	<td class="value organizationMemberLastName"><?=$member->last_name?></td>
@@ -59,5 +59,6 @@
 </table>
 <?	} ?>
 <div id="accountFormSubmit">
-	<input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton" onclick="return submitForm();" />
+	<input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton"/>
 </div>
+</form>

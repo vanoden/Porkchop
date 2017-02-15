@@ -5,26 +5,19 @@
     ### A. Caravello 5/7/2009               	###
     ###############################################
 
-    # Initiate Response
-	# We'll be returning an XML formatted Message
-    $response->message = "Message Received";
-	$response->success = 1;
-    $response->header->session = $_SESSION_->code;
-	$response->header->method = $_REQUEST["method"];
-
 	# Call Requested Event
 	#error_log($_REQUEST['method']." Request received");
 	#error_log(print_r($_REQUEST,true));
 	if ($_REQUEST["method"])
 	{
+		app_log("Method ".$_REQUEST["method"]." called with ".$GLOBALS['_REQUEST_']->query_vars);
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
 		$function_name();
 		exit;
 	}
 	# Only Developers Can See The API
-	elseif (! in_array('content operator',$GLOBALS['_SESSION_']->customer->roles))
-	{
+	elseif (! in_array('content operator',$GLOBALS['_SESSION_']->customer->roles)) {
 		header("location: /_content/home");
 		exit;
 	}
@@ -32,8 +25,8 @@
 	###################################################
 	### Just See if Server Is Communicating			###
 	###################################################
-	function ping()
-	{
+	function ping() {
+		$response = new \HTTP\Response();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
 		$response->header->method = $_REQUEST["method"];
 		$response->message = "PING RESPONSE";
@@ -45,31 +38,28 @@
 	###################################################
 	### Echo some specified value					###
 	###################################################
-	function parse()
-	{
+	function parse() {
 		print $GLOBALS['_page']->parse($_REQUEST['string']);
 	}
 	###################################################
 	### Get Details regarding Specified Product		###
 	###################################################
-	function findMessages()
-	{
+	function findMessages() {
 		# Default StyleSheet
-		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
+		if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'content.message.xsl';
+		$response = new \HTTP\Response();
 
 		# Initiate Product Object
-		$_content = new Content();
+		$message_list = new \Content\MessageList();
 
 		# Find Matching Threads
-		$messages = $_content->find(
-			array (
-				'name'			=> $_REQUEST['name'],
-				'options'		=> $_REQUEST['options'],
-			)
-		);
+		$parameters = array();
+		if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+		if (isset($_REQUEST['options'])) $parameters['options'] = $_REQUEST['options'];
+		$messages = $message_list->find($parameters);
 
 		# Error Handling
-		if ($_content->error) error($_content->error);
+		if ($message_list->error) error($message_list->error);
 		else{
 			$response->message = $messages;
 			$response->success = 1;
@@ -84,20 +74,22 @@
 	###################################################
 	### Get Details regarding Specified Message		###
 	###################################################
-	function getMessage()
-	{
+	function getMessage() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
+		$response = new \HTTP\Response();
 
 		# Initiate Product Object
-		$_content = new Content();
+		$message = new \Content\Message($_REQUEST['id']);
+		if (! isset($_REQUEST['id'])) {
+			if (! $_REQUEST['target']) $_REQUEST['target'] = '';
 
-		if (! $_REQUEST['target']) $_REQUEST['target'] = '';
-		# Find Matching Threads
-		$message = $_content->get($_REQUEST['target']);
+			# Find Matching Threads
+			$message->get($_REQUEST['target']);
+		}
 
 		# Error Handling
-		if ($_content->error) error($_content->error);
+		if ($message->error) error($message->error);
 		else{
 			$response->request = $_REQUEST;
 			$response->message = $message;
@@ -113,10 +105,10 @@
 	###################################################
 	### Get Details regarding Specified Product		###
 	###################################################
-	function addMessage()
-	{
+	function addMessage() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
+		$response = new \HTTP\Response();
 
 		# Initiate Product Object
 		$_content = new Content();
@@ -147,29 +139,25 @@
 	###################################################
 	### Update Specified Message					###
 	###################################################
-	function updateMessage()
-	{
+	function updateMessage() {
 		# Default StyleSheet
-		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
+		if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'content.message.xsl';
+		$response = new \HTTP\Response();
 
 		# Initiate Product Object
-		$_content = new Content();
+		$message = new \Content\Message($_REQUEST['id']);
+		if (! $message->id) error("Message '".$_REQUEST['id']."' not found");
 
-		$current_object = $_content->get($_REQUEST['target']);
-		if (! $current_object->id) error("Message '".$_REQUEST['target']."' not found");
+		$parameters = array();
+		if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+		if (isset($_REQUEST['title'])) $parameters['title'] = $_REQUEST['title'];
+		if (isset($_REQUEST['content'])) $parameters['content'] = $_REQUEST['content'];
 
 		# Find Matching Threads
-		$message = $_content->update(
-			$current_object->id,
-			array (
-				'name'			=> $_REQUEST['name'],
-				'title'			=> $_REQUEST['title'],
-				'content'		=> $_REQUEST['content']
-			)
-		);
+		$message->update($parameters);
 
 		# Error Handling
-		if ($_content->error) error($_content->error);
+		if ($message->error) error($message->error);
 		else{
 			$response->message = $message;
 			$response->success = 1;
@@ -183,10 +171,10 @@
 	###################################################
 	### Purge Cache of Specified Message			###
 	###################################################
-	function purgeMessage()
-	{
+	function purgeMessage() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
+		$response = new \HTTP\Response();
 
 		# Initiate Product Object
 		$_content = new Content();
@@ -220,10 +208,10 @@
 	###################################################
 	### Get Metadata for current view				###
 	###################################################
-	function getMetadata()
-	{
+	function getMetadata() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
+		$response = new \HTTP\Response();
 
 		# Initiate Metadata Object
 		$_metadata = new PageMetadata();
@@ -250,10 +238,10 @@
 	###################################################
 	### Get Metadata for current view				###
 	###################################################
-	function findMetadata()
-	{
+	function findMetadata() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
+		$response = new \HTTP\Response();
 
 		# Initiate Metadata Object
 		$_metadata = new PageMetadata();
@@ -283,10 +271,10 @@
 	###################################################
 	### Add Page Metadata							###
 	###################################################
-	function addMetadata()
-	{
+	function addMetadata() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
+		$response = new \HTTP\Response();
 
 		# Initiate Metadata Object
 		$_metadata = new PageMetadata();
@@ -317,10 +305,10 @@
 	###################################################
 	### Update Page Metadata						###
 	###################################################
-	function updateMetadata()
-	{
+	function updateMetadata() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
+		$response = new \HTTP\Response();
 
 		# Initiate Metadata Object
 		$_metadata = new PageMetadata();
@@ -333,8 +321,7 @@
 				'index'			=> $_REQUEST['index'],
 			)
 		);
-		if ($current->id)
-		{
+		if ($current->id) {
 			$response->message = "Updating id ".$current->id;
 			# Find Matching Threads
 			$metadata = $_metadata->update(
@@ -370,6 +357,7 @@
 	{
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
+		$response = new \HTTP\Response();
 
 		# Initiate Product Object
 		$_menu = new Menu();
@@ -403,6 +391,7 @@
 	{
 		$_REQUEST["stylesheet"] = '';
 		error_log($message);
+		$response = new \HTTP\Response();
 		$response->message = $message;
 		$response->success = 0;
 		api_log('content',$_REQUEST,$response);
@@ -413,36 +402,28 @@
 	###################################################
 	### Convert Object to XML						###
 	###################################################
-	function XMLout($object,$user_options = '')
-	{
+	function XMLout($object,$user_options = array()) {
 		require 'XML/Unserializer.php';
     	require 'XML/Serializer.php';
     	$options = array(
     	    XML_SERIALIZER_OPTION_INDENT        => '    ',
     	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
 			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
+			'rootName'							=> 'opt',
     	);
-		if ($user_options["rootname"])
-		{
-			$options["rootName"] = $user_options["rootname"];
-		}
     	$xml = &new XML_Serializer($options);
-	   	if ($xml->serialize($object))
-		{
+	   	if ($xml->serialize($object)) {
 			//error_log("Returning ".$xml->getSerializedData());
 			$output = $xml->getSerializedData();
-			if ($user_options["stylesheet"])
-			{
+			if (isset($user_options["stylesheet"])) {
 				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
 			}
 			return $output;
 		}
 	}
 	
-	function confirm_customer()
-	{
-		if (! in_array('content reporter',$GLOBALS['_SESSION_']->customer->roles))
-		{
+	function confirm_customer() {
+		if (! in_array('content reporter',$GLOBALS['_SESSION_']->customer->roles)) {
 			$this->error = "You do not have permissions for this task.";
 			return 0;
 		}
