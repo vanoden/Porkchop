@@ -1,4 +1,4 @@
-<?PHP	
+<?	
 	###################################################
 	### install.php									###
 	### This module is a content management and 	###
@@ -13,12 +13,12 @@
 	###		Added this header for tracking			###
 	###################################################
 
-	#error_log("###### Page: ".$_SERVER["REQUEST_URI"]."######");
-	#error_log("\$_REQUEST: ".print_r($_REQUEST,true));
+	error_log("Starting install script");
+	error_log("\$_REQUEST: ".print_r($_REQUEST,true));
 	$errorstr = '';
 
 	# Load Config
-	require '../config/config.php';
+	require BASE.'/config/config.php';
 
 	# We'll handle errors ourselves, thank you very much
 	error_reporting(0);
@@ -29,14 +29,8 @@
 	# General Utilities
 	require INCLUDES.'/functions.php';
 
-	# Company Class
-	require MODULES.'/company/_classes/default.php';
-
-	# Register Class - Customers, Admins and Authentication
-	require MODULES.'/register/_classes/default.php';
-
-	# Session Classes
-	require MODULES.'/session/_classes/default.php';
+	# Autoload Classes
+	spl_autoload_register('load_class');
 
 	# Database Abstraction
 	require THIRD_PARTY.'/adodb/adodb-exceptions.inc.php';
@@ -49,8 +43,7 @@
 	###################################################
 	### Check Input									###
 	###################################################
-	if ($_REQUEST['submit'])
-	{
+	if ($_REQUEST['submit']) {
 		if ($_REQUEST['password_1'] != $_REQUEST['password_2'])
 			$errorstr .= "Passwords Don't Match!<br>";
 		if (! $_REQUEST['company_name'])
@@ -89,7 +82,7 @@
 <body>
 <form method="post" action="install.php">
 <table>
-<tr><th colspan="2">Porchop Web Installer V0.9</th></tr>
+<tr><th colspan="2">Porchop Web Installer V2.0</th></tr>
 </table>
 <? if ($errorstr) print "<table><tr><td colspan=\"2\" class=\"error\">There are errors in your submittal:<br>$errorstr</td></tr></table>";?>
 <table>
@@ -129,19 +122,19 @@
 		$GLOBALS['_config']->database->master->username,
 		$GLOBALS['_config']->database->master->password
 	);
-	if (! $connect_success)
+	if (! $connect_success) {
 		install_log("Connection failed",'error');
+		exit;
+	}
 	install_log("Connection successful");
 
 	# Check For Existing Database
 	install_log("Checking for existing schema");
 	$_database->Execute("use ".$GLOBALS['_config']->database->schema);
-	if ($_database->ErrorMsg())
-	{
+	if ($_database->ErrorMsg()) {
 		install_log("Schema ".$GLOBALS['_config']->database->schema." not found. Creating");
 		$_database->Execute("CREATE DATABASE ".$GLOBALS['_config']->database->schema.";");
-		if ($_database->ErrorMsg())
-		{
+		if ($_database->ErrorMsg()) {
 			install_log("Error creating database: ".$_database->ErrorMsg(),'error');
 			exit;
 		}
@@ -163,47 +156,39 @@
 		)
 	";
 	$_database->Execute($create_table_query);
-	if ($_database->ErrorMsg())
-	{
+	if ($_database->ErrorMsg()) {
 		install_log("SQL Error creating states metadata: ".$GLOBALS['_database']->ErrorMsg(),'error');
 		exit;
 	}
 
 	# See if Company Exists
 	install_log("Setting up company");
-	$_company = new Company();
-	if ($_company->error)
-	{
-		install_log("Error loading company module: ".$_company->error,'error');
+	$company = new \Site\Company();
+	if ($company->error) {
+		install_log("Error loading company module: ".$company->error,'error');
 		exit;
 	}
-	list($company) = $_company->find(
-		array(
-			"name" => $_REQUEST['company_name'],
-		)
-	);
+	$company->get($_REQUEST['company_name']);
 
-	if (! $company->id)
-	{
-		$company = $_company->add(
+	if (! $company->id) {
+		$company->add(
 			array(
 				"name" => $_REQUEST['company_name'],
 			)
 		);
+		if ($company->error) {
+			install_log("Cannot add company: ".$company->error);
+			exit;
+		}
 	}
 	$GLOBALS['_session']->company = $company->id;
 
 	install_log("Setting up domain");
-	$_domain = new CompanyDomain();
-	list($domain) = $_domain->find(
-		array(
-			"name" => $domain_name,
-		)
-	);
+	$domain = new \Site\Domain();
+	$domain->get($domain_name);
 
-	if (! $domain->id)
-	{
-		$domain = $_domain->add(
+	if (! $domain->id) {
+		$domain->add(
 			array(
 				"active"		=> 1,
 				"status"		=> $_REQUEST["status"],
@@ -211,31 +196,27 @@
 				"company_id"	=> $company->id,
 			)
 		);
-		if ($_domain->error)
-		{
-			print "Cannot add domain: ".$_domain->error;
+		if ($domain->error) {
+			install_log("Cannot add domain: ".$domain->error);
 			exit;
 		}
 	}
 
 	install_log("Creating admin account");
-	$_admin = new RegisterAdmin();
-	if ($_admin->error)
-	{
+	$admin = new \Register\Customer();
+	if ($admin->error) {
 		install_log("Error initializing Admin object: ".$_admin->error,'error');
 		exit;
 	}
-	list($superuser) = $_admin->find();
-	if ($_admin->error)
-	{
+	$admin->get($_REQUEST['admin_login']);
+	if ($admin->error) {
 		install_log("Error identifying superuser: ".$_admin->error,'error');
 		exit;
 	}
 
-	if (! $superuser->id)
-	{
+	if (! $admin->id) {
 		install_log("Setting as super user");
-		$superuser = $_admin->add(
+		$admin->add(
 			array(
 				"login"			=> $_REQUEST['admin_login'],
 				"password"		=> $_REQUEST['password_1'],
@@ -243,9 +224,8 @@
 				"status"		=> 'active',
 			)
 		);
-		if ($_admin->error)
-		{
-			install_log("Cannot add admin user: ".$_admin->error,'error');
+		if ($admin->error) {
+			install_log("Cannot add admin user: ".$admin->error,'error');
 			exit;
 		}
 		
@@ -255,22 +235,19 @@
 
 		# Get Existing Roles
 		install_log("Getting available roles");
-		$_role = new RegisterRole();
-		$roles = $_role->find();
-		if ($_admin->error)
-		{
-			install_log("Error getting roles: ".$_admin->error,'error');
+		$rolelist = new \Register\RoleList();
+		$roles = $rolelist->find();
+		if ($rolelist->error) {
+			install_log("Error getting roles: ".$rolelist->error,'error');
 			exit;
 		}
 
 		install_log("Granting roles");
-		foreach ($roles as $role)
-		{		
-			install_log("Granting ".$role['name']."[".$role['id']."]");
-			$_admin->add_role($_admin->id,$role['id']);
-			if ($_admin->error)
-			{
-				install_log("Error: ".$_admin->error,'error');
+		foreach ($roles as $role) {		
+			install_log("Granting ".$role->name."[".$role->id."]");
+			$admin->add_role($role['id']);
+			if ($admin->error) {
+				install_log("Error: ".$admin->error,'error');
 				exit;
 			}
 		}
@@ -278,8 +255,7 @@
 
 	install_log("Installation completed successfully");
 
-	function install_log($message = '',$level = 'info')
-	{
+	function install_log($message = '',$level = 'info') {
 		print date('Y/m/d H:i:s');
 		print " [$level]";
 		print ": $message<br>\n";
