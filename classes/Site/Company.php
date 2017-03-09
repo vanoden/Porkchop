@@ -5,10 +5,33 @@
 		private $schema_version = 1;
 		public	$error;
 		public	$id;
+		public $login;
+		public $primary_domain;
+		public $status;
+		public $deleted;
 
 		public function __construct() {
 			# Check Schema
 			$this->schema_manager();		
+		}
+
+		public function get($name) {
+			$get_object_query = "
+				SELECT	id
+				FROM	company_companies
+				WHERE	name = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($name)
+			);
+			if (! $rs) {
+				$this->error = "SQL Error in Site::Company::get(): ".$GLOBALS['_database']->ErrorMsg();
+				return undef;
+			}
+			list($id) = $rs->FetchRow();
+			$this->id = $id;
+			return $this->details();
 		}
 
 		public function find($parameters = array()) {
@@ -18,49 +41,43 @@
 				WHERE	id = id";
 			
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
-			if (! $rs)
-			{
-				$this->error = "SQL Error in company::Company::find: ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+			if (! $rs) {
+				$this->error = "SQL Error in Site::Company::find(): ".$GLOBALS['_database']->ErrorMsg();
+				return undef;
 			}
 			
 			$objects = array();
-			while (list($id) = $rs->FetchRow())
-			{
+			while (list($id) = $rs->FetchRow()) {
 				array_push($objects,$this->details($id));
 			}
 			return $objects;
 		}
 
-		public function details($id=0)
-		{
-			if (! preg_match('/^\d+$/',$id))
-			{
-				$this->error = "Valid id required for details in company::Company::details";
-				return 0;
-			}
-
+		public function details() {
 			$get_details_query = "
 				SELECT	*
 				FROM	company_companies
-				WHERE	id = $id
+				WHERE	id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_details_query);
-			if (! $rs)
-			{
-				$this->error = "SQL Error in company::Company::details: ".$GLOBALS['_database']->ErrorMsg();
+			$rs = $GLOBALS['_database']->Execute(
+				$get_details_query,
+				array($this->id)
+			);
+			if (! $rs) {
+				$this->error = "SQL Error in Site::Company::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
-			$array = $rs->FetchRow();
-			$object = (object) $array;
-			$this->id = $id;
+			$object = $rs->FetchNextObject(false);
+			$this->name = $object->name;
+			$this->login = $object->login;
+			$this->primary_domain = $object->primary_domain;
+			$this->status = $object->status;
+			$this->deleted = $object->deleted;
 			return $object;
 		}
 
-		public function add($parameters = array())
-		{
-			if (! preg_match('/\w/',$parameters['name']))
-			{
+		public function add($parameters = array()) {
+			if (! preg_match('/\w/',$parameters['name'])) {
 				$this->error = "name parameter required in company::Company::add";
 				return 0;
 			}
@@ -72,8 +89,7 @@
 				VALUES
 				(".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc()).")";
 			$GLOBALS['_database']->Execute($add_object_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in company::Company::add: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
@@ -82,18 +98,15 @@
 			return $this->update($this->id,$parameters);
 		}
 
-		public function update($id = 0, $parameters = array())
-		{
-
-			if (! preg_match('/^\d+$/',$id))
-			{
+		public function update($parameters = array()){
+			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error = "Valid id required for details in company::Company::update";
-				return 0;
+				return undef;
 			}
 
 			if ($parameters['name'])
 				$update_object_query .= ",
-						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
+					name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
 
 			# Update Object
 			$update_object_query = "
@@ -101,21 +114,22 @@
 				SET		id = id";
 			
 			$update_object_query .= "
-				WHERE	id = $id
+				WHERE	id = ?
 			";
 
-			$GLOBALS['_database']->Execute($update_object_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
-				$this->error = "SQL Error in company::Company::update: ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+			$GLOBALS['_database']->Execute(
+				$update_object_query,
+				array($this->id)
+			);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Site::Company::update(): ".$GLOBALS['_database']->ErrorMsg();
+				return undef;
 			}
 			
 			return $this->details($id);
 		}
 
-		private function schema_manager()
-		{
+		private function schema_manager() {
 			# See if Schema is Available
 			$schema_list = $GLOBALS['_database']->MetaTables();
 
@@ -129,8 +143,7 @@
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
+				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating info table in company::Company::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
 					return 0;
 				}
@@ -144,16 +157,14 @@
 			";
 
 			$rs = $GLOBALS['_database']->Execute($get_version_query);
-			if (! $rs)
-			{
+			if (! $rs) {
 				$this->error = "SQL Error in company::Company::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 
 			list($current_schema_version) = $rs->FetchRow();
 
-			if ($current_schema_version < 1)
-			{
+			if ($current_schema_version < 1) {
 				$update_schema_query = "
 					INSERT
 					INTO	company__info
@@ -162,15 +173,13 @@
 							value = 1
 				";
 				$GLOBALS['_database']->Execute($update_schema_query);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
-					$this->error = "SQL Error in company::Company::schema: ".$GLOBALS['_database']->ErrorMsg();
-					return 0;
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Site::Company::schema(): ".$GLOBALS['_database']->ErrorMsg();
+					return undef;
 				}
 				$current_schema_version = 1;
 			}
-			if ($current_schema_version < 2)
-			{
+			if ($current_schema_version < 2) {
 				$create_companies_query = "
 					CREATE TABLE IF NOT EXISTS `company_companies` (
 						`id` int(5) NOT NULL auto_increment,
@@ -184,10 +193,9 @@
 					)
 				";
 				$GLOBALS['_database']->Execute($create_companies_query);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
-					$this->error = "SQL Error in company::Companies::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-					return 0;
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Site::Companies::schema_manager(): ".$GLOBALS['_database']->ErrorMsg();
+					return undef;
 				}
 				$create_locations_query = "
 					CREATE TABLE IF NOT EXISTS `company_locations` (
@@ -221,10 +229,9 @@
 					)
 				";
 				$GLOBALS['_database']->Execute($create_locations_query);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
+				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error in company::Companies::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-					return 0;
+					return undef;
 				}
 				$create_domains_query = "
 					CREATE TABLE IF NOT EXISTS `company_domains` (
@@ -245,10 +252,9 @@
 					)
 				";
 				$GLOBALS['_database']->Execute($create_domains_query);
-				if ($GLOBALS['_database']->ErrorMsg())
-				{
-					$this->error = "SQL Error in company::Companies::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-					return 0;
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Site::Companies::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
+					return undef;
 				}
 				$current_schema_version = 2;
 			}
@@ -259,10 +265,9 @@
 				WHERE	label = 'schema_version'
 			";
 			$GLOBALS['_database']->Execute($update_schema_version);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
-				$this->error = "SQL Error in company::Company::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Site::Company::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
+				return undef;
 			}
 		}
 	}

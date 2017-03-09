@@ -3,6 +3,7 @@
 
     class Customer extends Person {
 		public $auth_method;
+		public $elevated = 0;
 
 		public function __construct($person_id = 0) {
 		    if ($person_id) {
@@ -36,22 +37,22 @@
 			$this->organization = new \Register\Organization($this->organization_id);
 		}
 
-		public function update($id,$parameters = array()) {
-			parent::update($id,$parameters);
+		public function update($parameters = array()) {
+			parent::update($parameters);
 
 			# Roles
-			$_role = new Role();
 			if (in_array('register manager',$GLOBALS['_SESSION_']->customer->roles)) {
-				$all_roles = $_role->find();
-				foreach ($all_roles as $role) {
+				$rolelist = new RoleList();
+				$roles = $rolelist->find();
+				foreach ($roles as $role) {
 					if (array_key_exists('roles',$parameters) and is_array($parameters['roles'])) {
 						if (array_key_exists($role['id'],$parameters['roles'])) {
 							# Add Role
-							$this->add_role($id,$role['id']);
+							$this->add_role($role['id']);
 						}
 						else {
 							# Drop Role
-							$this->drop_role($id,$role['id']);
+							$this->drop_role($role['id']);
 						}
 					}
 				}
@@ -59,8 +60,14 @@
 			return $this->details($id);
 		}
 
+		function elevate () {
+			$this->elevated = 1;
+		}
 		function add_role ($role_id) {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			if ($this->elevated) {
+				# go ahead
+			}
+			elseif (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 				app_log("Non admin failed to update roles",'notice',__FILE__,__LINE__);
 				$this->error = "Only Register Managers can update roles.";
 				return 0;
@@ -360,8 +367,7 @@
 		# Notify Members in a Role
 		public function notify_role_members($role_id,$message) {
 			$members = $this->have_role($role_id);
-			foreach ($members as $member)
-			{
+			foreach ($members as $member) {
 				$this->notify($member->id,$message);
 			}
 		}

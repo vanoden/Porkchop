@@ -1,4 +1,4 @@
-<?	
+<?
 	###################################################
 	### install.php									###
 	### This module is a content management and 	###
@@ -18,7 +18,7 @@
 	$errorstr = '';
 
 	# Load Config
-	require BASE.'/config/config.php';
+	require '../config/config.php';
 
 	# We'll handle errors ourselves, thank you very much
 	error_reporting(0);
@@ -58,8 +58,7 @@
 	###################################################
 	### Ask a few questions							###
 	###################################################
-	if ((! $_REQUEST['submit']) or ($errorstr))
-	{
+	if ((! $_REQUEST['submit']) or ($errorstr))	{
 ?>
 <html>
 <head>
@@ -171,6 +170,7 @@
 	$company->get($_REQUEST['company_name']);
 
 	if (! $company->id) {
+		install_log("Adding company");
 		$company->add(
 			array(
 				"name" => $_REQUEST['company_name'],
@@ -181,6 +181,9 @@
 			exit;
 		}
 	}
+	else {
+		install_log("Company already present");
+	}
 	$GLOBALS['_session']->company = $company->id;
 
 	install_log("Setting up domain");
@@ -188,6 +191,7 @@
 	$domain->get($domain_name);
 
 	if (! $domain->id) {
+		install_log("Adding domain");
 		$domain->add(
 			array(
 				"active"		=> 1,
@@ -201,8 +205,11 @@
 			exit;
 		}
 	}
+	else {
+		install_log("Domain already present");
+	}
 
-	install_log("Creating admin account");
+	install_log("Setting up admin account");
 	$admin = new \Register\Customer();
 	if ($admin->error) {
 		install_log("Error initializing Admin object: ".$_admin->error,'error');
@@ -215,7 +222,7 @@
 	}
 
 	if (! $admin->id) {
-		install_log("Setting as super user");
+		install_log("Adding admin account");
 		$admin->add(
 			array(
 				"login"			=> $_REQUEST['admin_login'],
@@ -228,10 +235,10 @@
 			install_log("Cannot add admin user: ".$admin->error,'error');
 			exit;
 		}
-		
-		install_log("Added");
+
 		# Must Grant Privileges to set up roles
-		$_SESSION_->customer->roles = array('register manager');
+		install_log("Elevating privileges for install");
+		$_SESSION_->customer->elevate();
 
 		# Get Existing Roles
 		install_log("Getting available roles");
@@ -251,6 +258,9 @@
 				exit;
 			}
 		}
+	}
+	else {
+		install_log("Admin already exists");
 	}
 
 	install_log("Installation completed successfully");
