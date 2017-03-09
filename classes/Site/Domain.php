@@ -19,6 +19,24 @@
 		public function __construct() {
 		}
 
+		public function get($name) {
+			$get_object_query = "
+				SELECT	id
+				FROM	company_domains
+				WHERE	domain_name = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($name)
+			);
+			if (! $rs) {
+				$this->error = "SQL Error in Site::Domain::get(): ".$GLOBALS['_database']->ErrorMsg();
+				return undef;
+			}
+			list($id) = $rs->FetchRow();
+			$this->id = $id;
+			return $this->details();
+		}
 		public function find($parameters = array()) {
 			$find_objects_query = "
 				SELECT	id
