@@ -9,9 +9,9 @@
 	### A. Caravello 8/25/2002								###
 	###########################################################
 
-	if ($_POST['login_target'])
+	if (isset($_POST['login_target']))
 		$target = $_POST['login_target'];
-	elseif($_GET['target'])
+	elseif(isset($_GET['target']))
 		# Translate target
 		$target = preg_replace('/\:/','/',urldecode($_GET["target"]));
 	elseif($GLOBALS['_config']->register->auth_target)
@@ -35,8 +35,7 @@
 			$GLOBALS['_page']->error = "Error in password recovery.  Admins have been notified.  Please try again later.";
 		}
 		elseif ($new_id > 0) {
-			$_customer = new RegisterCustomer();
-			$customer = $_customer->details($new_id);
+			$customer = new RegisterCustomer($new_id);
 			$GLOBALS['_SESSION_']->customer = $customer;
 
 			$GLOBALS['_SESSION_']->update(
@@ -57,9 +56,9 @@
 			$GLOBALS['_page']->error = "Sorry, your recovery token was not recognized or has expired";
 		}
 	}
-	elseif ($_REQUEST['login']) {
+	elseif (isset($_REQUEST['login'])) {
 		$customer = new \Register\Customer();
-		if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'],$GLOBALS['_session']->company)) {
+		if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
 			$GLOBALS['_page']->error = "Authentication failed";
 		}
 		elseif ($customer->error) {
@@ -69,16 +68,10 @@
 		elseif ($customer->message) {
 			$GLOBALS['_page']->error .= $customer->message;
 		}
-		elseif ($customer->id) {
-			$GLOBALS['_SESSION_']->customer = $customer;
-
-			$GLOBALS['_SESSION_']->update(
-				$GLOBALS['_SESSION_']->id,
-				array(
-					"user_id" => $customer->id,
-					"timezone"	=> $customer->timezone
-				)
-			);
+		else {
+			$customer->get($_REQUEST['login']);
+			$GLOBALS['_SESSION_']->assign($customer->id);
+			$GLOBALS['_SESSION_']->touch();
 
 			app_log("Customer ".$customer->id." logged in",'notice',__FILE__,__LINE__);
 			app_log("login_target = $target",'notice',__FILE__,__LINE__);

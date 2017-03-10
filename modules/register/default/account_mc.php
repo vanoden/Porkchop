@@ -7,7 +7,7 @@
 	###################################################
 
 	# Security - Only Register Module Operators or Managers can see other customers
-	if (role('register manager')) {
+	if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 		if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/',$_REQUEST['customer_id'])) $customer_id = $_REQUEST['customer_id'];
 		elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
 			$code = $GLOBALS['_REQUEST_']->query_vars_array[0];

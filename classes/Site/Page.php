@@ -232,7 +232,6 @@
 				# Store Parameter in Array
 				$parameters[$name] = $value;
 			}
-			#app_log(print_r($parameters,true),'debug',__FILE__,__LINE__);
 			return $parameters;
 		}
 
@@ -346,6 +345,7 @@
 			}
 			elseif ($object == "content") {
 				if ($property == "index") {
+					app_log("content::index");
 					if (isset($parameters['id']) && preg_match("/^\d+$/",$parameter["id"])) $target = $parameter["id"];
 					else $target = $GLOBALS['_REQUEST_']->query_vars_array[0];
 
@@ -368,7 +368,7 @@
 					}
 					if ($message->id) {
 						# Make Sure User Has Privileges
-						if (role('content operator')) {
+						if (is_object($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->id && $GLOBALS['_SESSION_']->customer->has_role('content operator')) {
 							$origin_id = uniqid();
 							$buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(contentElem).style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(contentElem).style.border = \'0px\'; } </script>';
 							$buffer .= "<div>";
@@ -524,7 +524,7 @@
 					}
 				}
 				else {
-					#error_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
+					app_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
 					ob_start();
 					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
 					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
@@ -532,12 +532,11 @@
 				}
 			}
 			elseif ($object == "company") {
-				$company = new \Site\Company();
-				list($_company) = $company->find();
+				$companies = new \Site\CompanyList();
+				list($company) = $companies->find();
 
-				if ($property == "name")
-				{
-					$buffer .= $_company->name;
+				if ($property == "name") {
+					$buffer .= $company->name;
 				}
 			}
 			elseif ($object == "news") {

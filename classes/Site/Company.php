@@ -10,9 +10,14 @@
 		public $status;
 		public $deleted;
 
-		public function __construct() {
+		public function __construct($id = 0) {
 			# Check Schema
-			$this->schema_manager();		
+			$this->schema_manager();
+
+			if ($id > 0) {
+				$this->id = $id;
+				$this->details();
+			}
 		}
 
 		public function get($name) {
@@ -34,25 +39,6 @@
 			return $this->details();
 		}
 
-		public function find($parameters = array()) {
-			$find_objects_query = "
-				SELECT	id
-				FROM	company_companies
-				WHERE	id = id";
-			
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
-			if (! $rs) {
-				$this->error = "SQL Error in Site::Company::find(): ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
-			}
-			
-			$objects = array();
-			while (list($id) = $rs->FetchRow()) {
-				array_push($objects,$this->details($id));
-			}
-			return $objects;
-		}
-
 		public function details() {
 			$get_details_query = "
 				SELECT	*
@@ -65,15 +51,21 @@
 			);
 			if (! $rs) {
 				$this->error = "SQL Error in Site::Company::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				return null;
 			}
 			$object = $rs->FetchNextObject(false);
-			$this->name = $object->name;
-			$this->login = $object->login;
-			$this->primary_domain = $object->primary_domain;
-			$this->status = $object->status;
-			$this->deleted = $object->deleted;
-			return $object;
+			if (is_object($object)) {
+				$this->name = $object->name;
+				$this->login = $object->login;
+				$this->primary_domain = $object->primary_domain;
+				$this->status = $object->status;
+				$this->deleted = $object->deleted;
+				return $object;
+			}
+			else {
+				app_log("No company found for id '".$this->id."'",'error');
+				return new stdClass();
+			}
 		}
 
 		public function add($parameters = array()) {

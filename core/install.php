@@ -13,6 +13,9 @@
 	###		Added this header for tracking			###
 	###################################################
 
+	# Our Global Variables
+	$_SESSION_ = new stdClass();
+
 	error_log("Starting install script");
 	error_log("\$_REQUEST: ".print_r($_REQUEST,true));
 	$errorstr = '';
@@ -184,7 +187,7 @@
 	else {
 		install_log("Company already present");
 	}
-	$GLOBALS['_session']->company = $company->id;
+	$GLOBALS['_SESSION_']->company = $company->id;
 
 	install_log("Setting up domain");
 	$domain = new \Site\Domain();
@@ -212,12 +215,12 @@
 	install_log("Setting up admin account");
 	$admin = new \Register\Customer();
 	if ($admin->error) {
-		install_log("Error initializing Admin object: ".$_admin->error,'error');
+		install_log("Error initializing Admin object: ".$admin->error,'error');
 		exit;
 	}
 	$admin->get($_REQUEST['admin_login']);
 	if ($admin->error) {
-		install_log("Error identifying superuser: ".$_admin->error,'error');
+		install_log("Error identifying superuser: ".$admin->error,'error');
 		exit;
 	}
 
@@ -238,7 +241,7 @@
 
 		# Must Grant Privileges to set up roles
 		install_log("Elevating privileges for install");
-		$_SESSION_->customer->elevate();
+		$_SESSION_->elevate();
 
 		# Get Existing Roles
 		install_log("Getting available roles");

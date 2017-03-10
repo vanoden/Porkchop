@@ -53,7 +53,7 @@
 			app_log("get_mysql_date returns $date",'debug',__FILE__,__LINE__);
 			return $date;
 		}
-		
+
 		# Unix Timestamp
 		if (preg_match('/^\d{10}$/',$date)) {
 			# Unix Timestamp
@@ -119,7 +119,7 @@
         app_log("get_mysql_date returning $date",'debug');
         return $date;
     }
-	
+
 	function cache_set($key,$value,$expires=0) {
 		$cache = new Cache($key);
 		return $cache->set($value);
@@ -196,7 +196,7 @@
 		if (array_key_exists('_SESSION_',$GLOBALS)) {
 			if (property_exists($GLOBALS['_SESSION_'],'id')) $session_id = $GLOBALS['_SESSION_']->id;
 			else $session_id = '-';
-			if (property_exists($GLOBALS['_SESSION_'],'customer')) $customer_id = $GLOBALS['_SESSION_']->customer->id;
+			if (isset($GLOBALS['_SESSION_']->customer)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
 			else $customer_id = '-';
 		}
 		else {

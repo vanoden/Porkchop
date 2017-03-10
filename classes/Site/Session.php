@@ -5,13 +5,13 @@
 		public $code = '';
 		public $id = 0;
 		public $order = 0;
-		public $customer_id = 0;
-		public $company = 0;
+		public $customer;
+		public $company;
 		public $domain = '';
 		public $refer_url = '';
 		public $refer_domain = '';
 		public $browser = '';
-		public $prev_session;
+		public $prev_session = 0;
 		public $email_id = 0;
 		public $admin = 0;
 		public $error = '';
@@ -22,31 +22,47 @@
 		private $cookie_expires;
 		private $cookie_path;
 		private $_cached = 0;
+		private $elevated = 0;
 
 		public function __construct($id = 0) {
 			$schema = new Schema();
 			if ($schema->error) {
 				$this->error = "Failed to initialize schema: ".$schema->error;
 			}
-
-			# Fetch Company Information
-			$this->company();
-
-			# See if we're in site-down
-			if (! $this->company) app_log("Company not found!",'error',__FILE__,__LINE__);
-
-			if ($this->error || ! $this->status) {
-				if ($this->error) app_log("Error initializing session: ".$this->error,'error',__FILE__,__LINE__);
-				else app_log("Site status is '".$this->status."'",'notice',__FILE__,__LINE__);
-				header("location: /site-down.html");
-				exit;
-			}
-
-			if ($id) {
-				$this->details($id);
-			}
 		}
-		public function load() {
+
+		public function start() {
+			# Fetch Company Information
+			$this->location = new \Site\Location();
+			$this->location->getByHost($_SERVER['SERVER_NAME']);
+			if (! $this->location->id) {
+				$this->error = "Location not configured";
+				return null;
+			}
+			if (! $this->location->domain->id) {
+				$this->error = "No domain assigned to location '".$this->location->id."'";
+				return null;
+			}
+
+			$this->domain = new \Site\Domain($this->location->domain->id);
+			if ($this->domain->error) {
+				$this->error = "Error finding domain: ".$this->domain->error;
+				return null;
+			}
+			if (! $this->domain->id) {
+				$this->error = "Domain '".$this->domain->id."' not found for location ".$this->location->id;
+				return null;
+			}
+			$this->company = new \Site\Company($this->domain->company->id);
+			if ($this->company->error) {
+				$this->error = "Error finding company: ".$this->company->error;
+				return null;
+			}
+			if (! $this->company->id) {
+				$this->error = "Company '".$this->domain->company->id."' not found";
+				return null;
+			}
+
 			# Cookie Parameters
 			if (isset($GLOBALS['_config']->session->domain)) $this->cookie_domain = $GLOBALS['_config']->session->domain;
 			else $this->cookie_domain = $this->domain;
@@ -64,7 +80,7 @@
 				# Get Existing Session Information
 				$this->get($request_code);
 				if ($this->id) {
-					app_log("Loaded session ".$this->id.", customer ".$this->customer_id,'debug',__FILE__,__LINE__);
+					app_log("Loaded session ".$this->id.", customer ".$this->customer->id,'debug',__FILE__,__LINE__);
 					$this->timestamp($this->id);
 				}
 				else {
@@ -81,14 +97,11 @@
 
 			if (! $this->id) {
 				# Create New Session
-				$this->create();
+				$this->add();
 			}
 
-			# Create Hit Record
-			$this->hit();
-
 			# Authentication
-			if (($_SERVER['REQUEST_URI'] != '/_register/') and (! $this->customer_id)) {
+			if (($_SERVER['REQUEST_URI'] != '/_register/') and (! $this->customer->id)) {
 				# Initialize Vars
 				$login = '';
 				$password = '';
@@ -112,7 +125,7 @@
 						$this->customer_id = $customer->id;
 					}
 				}
-				if ($this->customer_id) {
+				if ($this->customer->id) {
 					app_log("Customer $login [".$this->customer_id."] logged in");
 					$this->update($this->id,array("user_id" => $this->customer_id,"timezone" => $customer->timezone));
 
@@ -140,7 +153,8 @@
 		}
 
 		# Get Company Information Based on Request Domain
-		function company () {
+		# Remove this function after testing
+		function companyremoveme() {
 			# Get Domain Name
 			preg_match("/(\w+\.\w+)\$/",$_SERVER["HTTP_HOST"],$matches);
 			$domain_name = $matches[1];
@@ -148,8 +162,7 @@
 			$cache_key = "domain[".$domain_name."]";
 
 			# Cached Customer Object, Yay!
-			if ($domain = cache_get($cache_key))
-			{
+			if ($domain = cache_get($cache_key)) {
 				$this->company = $domain->company_id;
 				$this->location = $domain->location_id;
 				$this->domain = $domain->domain_name;
@@ -169,15 +182,12 @@
 			";
 
 			$rs = $GLOBALS['_database']->Execute($get_company_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "Error getting domain information: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			else
-			{
-				if ($rs->RecordCount() > 0)
-				{
+			else {
+				if ($rs->RecordCount() > 0) {
 					$domain = $rs->FetchRow();
 					$domain = (object) $domain;
 
@@ -189,12 +199,20 @@
 					cache_set($cache_key,$domain);
 					return $domain;
 				}
-				else
-				{
+				else {
 					$this->error = "Company not configured for $domain_name";
 					return null;
 				}
 			}
+		}
+
+		# Override Roles
+		function elevate() {
+			$this->elevated = 1;
+		}
+
+		function elevated() {
+			return $this->elevated();
 		}
 
 		# See if a Given Session code looks valid
@@ -206,7 +224,7 @@
 		}
 
 		# Create a New Session Record and return Cookie
-		function create() {
+		function add() {
 			$new_code = '';
 			while (! $new_code) {
 				# Get Large Random value
@@ -234,20 +252,29 @@
 						e_id
 				)
 				VALUES
-				(		'$new_code',
+				(		?,
 						sysdate(),
 						sysdate(),
-						'$this->customer_id',
-						'$this->company',
-						'$this->refer_url',
-						".$GLOBALS['_database']->qstr($_SERVER['HTTP_USER_AGENT'],get_magic_quotes_gpc()).",
-						'$this->prev_session',
-						'$this->email_id'
+						?,
+						?,
+						?,
+						?,
+						?,
+						?
 				)
-				";
-			$rs = $GLOBALS['_database']->Execute($query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$query,
+				array($new_code,
+					  $this->customer_id,
+					  $this->company->id,
+					  $this->refer_url,
+					  $_SERVER['HTTP_USER_AGENT'],
+					  $this->prev_session,
+					  $this->email_id
+				)
+			);
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "Error creating session: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
@@ -256,7 +283,7 @@
 			# Set Session Cookie
 			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$this->cookie_domain))
 			{
-				app_log("New Session ".$this->id." created for ".$this->domain." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
+				app_log("New Session ".$this->id." created for ".$this->domain->id." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
 				app_log("Session Code ".$new_code,'debug',__FILE__,__LINE__);
 			}
 			else{
@@ -275,9 +302,8 @@
 				$get_object_query,
 				array($code)
 			);
-			if (! $rs)
-			{
-				app_log("Error loading session: ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
+			if (! $rs) {
+				app_log("SQL Error in Site::Session::get(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
 				return null;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -324,16 +350,15 @@
 		}
 
 		function details() {
-			$id = $this->id;
 			# Name For Xcache Variable
-			$cache_key = "session[".$id."]";
+			$cache_key = "session[".$this->id."]";
 
 			# Cached Customer Object, Yay!	
-			if (($id) and ($session = cache_get($cache_key))) {
+			if (($this->id) and ($session = cache_get($cache_key))) {
 				if ($session->code) {
 					$this->code = $session->code;
-					$this->company = $session->company;
-					$this->customer_id = $session->customer_id;
+					$this->company = new \Site\Company($session->company_id);
+					$this->customer = new \Register\Customer($session->customer_id);
 					$this->timezone = $session->timezone;
 					$this->browser = $session->browser;
 					$this->first_hit_date = $session->first_hit_date;
@@ -345,33 +370,37 @@
 			}
 
 			$get_session_query = "
-				SELECT	code,
-						company_id company,
+				SELECT	id,
+						code,
+						company_id,
 						user_id customer_id,
 						timezone,
 						browser,
 						first_hit_date,
 						last_hit_date
 				FROM	session_sessions
-				WHERE	id = '$id'
+				WHERE	id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_session_query);
+			$rs = $GLOBALS['_database']->Execute(
+				$get_session_query,
+				array($this->id)
+			);
 			if (! $rs) {
-				$this->error = "Error getting session details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return;
 			}
 			if ($rs->RecordCount()) {
 				$session = $rs->FetchNextObject(false);
 
 				$this->code = $session->code;
-				$this->company = $session->company;
-				$this->customer_id = $session->customer_id;
+				$this->company = new \Site\Company($session->company_id);
+				$this->customer = new \Register\Customer($session->customer_id);
 				$this->timezone = $session->timezone;
 				$this->browser = $session->browser;
 				$this->first_hit_date = $session->first_hit_date;
 				$this->last_hit_date = $session->last_hit_date;
 
-				if ($id) cache_set($cache_key,$session,600);
+				if ($session->id) cache_set($cache_key,$session,600);
 				return $session;
 			}
 		}
@@ -426,7 +455,10 @@
 			#if ($parameters["user_id"]) $this->customer = $parameters["user_id"];
 			return $this->details($this->id);
 		}
-		function timestamp($id) {
+		function touch() {
+			$this->timestamp();
+		}
+		function timestamp() {
 			$update_session_query = "
 				UPDATE	session_sessions
 				SET		last_hit_date = sysdate()
@@ -435,26 +467,25 @@
 
 			$rs = $GLOBALS['_database']->Execute(
 				$update_session_query,
-				array($id)
+				array($this->id)
 			);
-			if (! $rs)
-			{
+			if (! $rs) {
 				$this->error = "SQL Error in Session::timestamp: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			#if ($parameters["user_id"]) $this->customer = $parameters["user_id"];
 			return 1;
 		}
-		function update ($id,$parameters) {
+		function update ($parameters) {
 			# Name For Xcache Variable
-			$cache_key = "session[".$id."]";
+			$cache_key = "session[".$this->id."]";
 			cache_unset($cache_key);
 			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
 
 			# Make Sure User Has Privileges to view other sessions
-			$_customer = new \Register\Customer();
-			if (! role('session manager')) {
-				$id = $this->id;
+			if (! $GLOBALS['_SESSION_']->customer->has_role('session manager')) {
+				$this->error = "No privileges to change session";
+				return null;
 			}
 			$cache_key = "session[".$this->id."]";
 			cache_unset($cache_key);
@@ -487,11 +518,11 @@
 				array($id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Session::update: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
-			return $this->details($id);
+			return $this->details();
 		}
 		function hits($id = 0) {
 			if ($id < 1) $id = $this->id;
@@ -508,15 +539,14 @@
 			return $hits;
 		}
 		function hit() {
-			$_hit = new Hit();
-			$hit = $_hit->add(
+			$hit = new Hit();
+			$hit->add(
 				array(
 					"session_id" => $this->id
 				)
 			);
-			if ($_hit->error)
-			{
-				$this->error = $_hit->error;
+			if ($hit->error) {
+				$this->error = $hit->error;
 				return null;
 			}
 			return 1;

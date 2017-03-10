@@ -6,10 +6,10 @@
 		public $elevated = 0;
 
 		public function __construct($person_id = 0) {
-		    if ($person_id) {
-				$this->id = $person_id;
-				$this->details();
-		    }
+			parent::__construct($person_id);
+			if ($this->id) {
+				$this->roles();
+			}
 		}
 		public function get($code = '') {
 			$this->error = null;
@@ -60,14 +60,8 @@
 			return $this->details($id);
 		}
 
-		function elevate () {
-			$this->elevated = 1;
-		}
 		function add_role ($role_id) {
-			if ($this->elevated) {
-				# go ahead
-			}
-			elseif (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 				app_log("Non admin failed to update roles",'notice',__FILE__,__LINE__);
 				$this->error = "Only Register Managers can update roles.";
 				return 0;
@@ -306,6 +300,11 @@
 
 		# See If a User has been granted a Role
 		public function has_role($role_name) {
+			# Elevation for Initial Installation - Breaks stuff when enabled, not sure why!
+			#if ($GLOBALS['_SESSION_']->elevated() && $GLOBALS['_SESSION_']->customer->id == $this->id) {
+			#	return 1;
+			#}
+
 			# Check Role Query
 			$check_role_query = "
 				SELECT	r.id
@@ -384,7 +383,10 @@
 			";
 
 			#error_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$get_roles_query)));
-			$rs = $GLOBALS['_database']->Execute($get_roles_query,array($this->id));
+			$rs = $GLOBALS['_database']->Execute(
+				$get_roles_query,
+				array($this->id)
+			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				error_log($this->error);
@@ -396,7 +398,6 @@
 				$role = new Role($id);
 				array_push($roles,$role);
 			}
-
 			return $roles;
 		}
 		public function role_id($name) {

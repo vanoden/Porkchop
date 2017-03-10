@@ -43,11 +43,6 @@
 		}
 	
 		public function details() {
-			if (! $this->id) {
-				$this->error = "ID Required for Person::details()";
-				return null;
-			}
-
 			$cache_key = "customer[".$this->id."]";
 
 			# Cached Customer Object, Yay!

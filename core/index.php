@@ -24,27 +24,25 @@
 	### <http://www.gnu.org/licenses/>.								###
 	###################################################################
 
-	# Our Global Variables
-	$_SESSION_ = new stdClass();
-	#$_page = new stdClass();
 
+	###################################################
+	### Load Dependencies							###
+	###################################################
 	# Load Config
 	require '../config/config.php';
+
+	# General Utilities
+	require INCLUDES.'/functions.php';
+	spl_autoload_register('load_class');
+
+	# Database Abstraction
+	require THIRD_PARTY.'/adodb/adodb.inc.php';
 
 	# Config Defaults
 	if (! $_config->session->cookie) $_config->session->cookie = "session_code";
 
 	# Debug Variables
 	$_debug_queries = array();
-	###################################################
-	### Load API Objects							###
-	###################################################
-	# General Utilities
-	require INCLUDES.'/functions.php';
-	spl_autoload_register('load_class');
-	
-	# Database Abstraction
-	require THIRD_PARTY.'/adodb/adodb.inc.php';
 
 	###################################################
 	### Connect to Database							###
@@ -64,6 +62,12 @@
 		error_log("Error connecting to database: ".$_database->ErrorMsg());
 		exit;
 	}
+
+	###################################################
+	### Initialize Session							###
+	###################################################
+	$_SESSION_ = new \Site\Session();
+	$_SESSION_->start();
 
 	###################################################
 	### Connect to Memcache if so configured		###
@@ -114,16 +118,17 @@
 	header("Cache-Control: no-cache, must-revalidate");
 
 	# Create Session
-	$_SESSION_ = new \Site\Session();
-	$_SESSION_->load();
+	$_SESSION_->start();
 	if ($_SESSION_->error) {
 		error_log($_SESSION_->error);
-		die("Session Error: ".$_SESSION_->error);
+		exit;
 	}
+
+	# Create Hit Record
+	$_SESSION_->hit();
 	if ($_SESSION_->message) {
 	    $page_message = $_SESSION_->message;
 	}
-	$_SESSION_->customer = new \Register\Customer($_SESSION_->customer_id);
 
 	# Load Page Information
 	$_page = new \Site\Page();

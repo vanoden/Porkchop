@@ -7,16 +7,20 @@
 		public $id;
 		public $status;
 		public $comments;
-		public $location_id;
+		public $location;
 		public $name;
 		public $date_registered;
 		public $date_created;
 		public $date_expires;
 		public $registration_period;
 		public $register;
-		public $company_id;
+		public $company;
 
-		public function __construct() {
+		public function __construct($id = 0) {
+			if ($id > 0) {
+				$this->id = $id;
+				$this->details();
+			}
 		}
 
 		public function get($name) {
@@ -79,19 +83,18 @@
 			$object = $rs->FetchNextObject(false);
 			$this->status = $object->status;
 			$this->comments = $object->comments;
-			$this->location_id = $object->location_id;
 			$this->name = $object->domain_name;
 			$this->date_registered = $object->date_registered;
 			$this->date_created = $object->date_created;
 			$this->date_expires = $object->date_expires;
 			$this->registration_period = $object->registration_period;
 			$this->register = $object->register;
-			$this->company_id = $object->company_id;
+			$this->company = new \Site\Company($object->company_id);
 			return $object;
 		}
 
 		public function add($parameters = array()) {
-			if (! preg_match('/^\d+$/',$GLOBALS['_company']->id)) {
+			if (! preg_match('/^\d+$/',$GLOBALS['_session']->company->id)) {
 				$this->error = "company must be set for Site::Domain::add";
 				return undef;
 			}
@@ -119,7 +122,7 @@
 
 			$GLOBALS['_database']->Execute($add_object_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in company::CompanyDomain::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Domain::add: ".$GLOBALS['_database']->ErrorMsg();
 				return undef;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();

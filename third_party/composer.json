@@ -1,7 +1,5 @@
 {
 	"require": {
-		"elasticsearch/elasticsearch": "~2.0@beta",
-		"adodb/adodb-php": "5.20.9",
-		"setasign/fpdf": "1.8.1"
+		"elasticsearch/elasticsearch": "~2.0@beta"
 	}
 }

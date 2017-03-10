@@ -76,7 +76,7 @@
                         p.title,
                         p.content
                 FROM    content_messages p
-                WHERE   p.company_id = '".$GLOBALS['_SESSION_']->company."'
+                WHERE   p.company_id = '".$GLOBALS['_SESSION_']->company->id."'
                 AND     p.id = ?
             ";
 			//error_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$get_content_query)));
