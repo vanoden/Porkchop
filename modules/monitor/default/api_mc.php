@@ -1243,10 +1243,7 @@
 		$version = $schema->version();
 		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->monitor->version = $version;
-		$sschema = new \Spectros\Schema();
-		$sversion = $sschema->version();
-		$response->spectros->version = $sversion;
+		$response->version = $version;
 		header('Content-Type: application/xml');
 		print XMLout($response);
 	}
@@ -1258,10 +1255,7 @@
 		$version = $schema->upgrade();
 		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->monitor->version = $version;
-		$sschema = new \Spectros\Schema();
-		$sversion = $sschema->upgrade();
-		$response->spectros->version = $sversion;
+		$response->version = $version;
 		header('Content-Type: application/xml');
 		print XMLout($response);
 	}
