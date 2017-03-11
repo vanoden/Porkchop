@@ -4,12 +4,9 @@
     ### Management								###
     ### A. Caravello 10/4/2014					###
     ###############################################
-	# Load Module Classes
-	require_once(MODULES."/media/_classes/default.php");
 
 	# Call Requested Event
-	if ($_REQUEST["method"])
-	{
+	if ($_REQUEST["method"]) {
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
 		$function_name();
@@ -19,10 +16,11 @@
 	###################################################
 	### Just See if Server Is Communicating			###
 	###################################################
-	function ping()
-	{
+	function ping() {
+		$response = new \HTTP\Response();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
 		$response->header->method = $_REQUEST["method"];
+		$response->header->date = system_time();
 		$response->message = "PING RESPONSE";
 		$response->success = 1;
 		header('Content-Type: application/xml');
@@ -32,8 +30,7 @@
 	###################################################
 	### Add Media Item								###
 	###################################################
-	function addMediaItem()
-	{
+	function addMediaItem() {
 		# Make Sure Upload was Successful
 		check_upload($_FILES['file']);
 
@@ -41,28 +38,32 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'media.item.xsl';
 		
 		# Initiate Media Item Object
-		$_item = new MediaItem();
-		if ($_item->error) error($_item->error);
+		$item = new \Media\Item();
+		if ($item->error) error($item->error);
 
 		# Add Document to Database
-		$item = $_item->add(
+		$item->add(
 			array (
 				'name'	=> $_REQUEST['name'],
 				'type'	=> $_REQUEST['type'],
 				'code'	=> $_REQUEST['code']
 			)
 		);
-		if ($_item->error) error($_item->error);
-		$_file = new MediaFile();
-		$_file->save(
-			$item->id,
-			$_REQUEST['index'],
-			$_FILES['file']['tmp_name'],
-			$_FILES['file']['name'],
-			$_FILES['file']['type'],
-			$_FILES['file']['size']
-		);
-		if ($_file->error) error($_file->error);
+		if ($item->error) error($item->error);
+		$file = new \Media\File();
+		$file->item_id = $item->id;
+		$file->index = $_REQUEST['index'];
+		$file->original_file = $_FILES['file']['name'];
+		$file->mime_type = $_FILES['file']['type'];
+		$file->size = $_FILES['file']['size'];
+	
+		$file->save($_FILES['file']['tmp_name']);
+		if ($file->error) error($file->error);
+
+		$response = new \HTTP\Response();
+		$response->header->session = $GLOBALS['_SESSION_']->code;
+		$response->header->method = $_REQUEST["method"];
+		$response->header->date = system_time();
 		$response->item = $item;
 		$response->success = 1;
 
@@ -74,27 +75,29 @@
 	###################################################
 	### Find Media Items							###
 	###################################################
-	function findMediaItems()
-	{
+	function findMediaItems() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'media.items.xsl';
 
 		# Initiate Media Item Object
-		$_item = new MediaItem();
-		if ($_item->error) error($_item->error);
+		$itemlist = new \Media\ItemList();
+		if ($itemlist->error) error($itemlist->error);
 
 		# Get Items from Database
 		$parameters = array();
 		if ($_REQUEST['type']) $parameters['type'] = $_REQUEST['type'];
-		foreach ($_REQUEST['key'] as $key)
-		{
+		foreach ($_REQUEST['key'] as $key) {
 			$parameters[$key] = $_REQUEST['value'][$key];
 		}
-		$items = $_item->find($parameters);
+		$items = $itemlist->find($parameters);
 
 		# Error Handling
-		if ($_item->error) error($_item->error);
+		if ($itemlist->error) error($itemlist->error);
 		else{
+			$response = new \HTTP\Response();
+			$response->header->session = $GLOBALS['_SESSION_']->code;
+			$response->header->method = $_REQUEST["method"];
+			$response->header->date = system_time();
 			$response->items = $items;
 			$response->success = 1;
 		}
@@ -107,21 +110,24 @@
 	###################################################
 	### Get Media Item								###
 	###################################################
-	function getMediaItem()
-	{
+	function getMediaItem() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'media.item.xsl';
 
 		# Initiate Media Item Object
-		$_item = new MediaItem();
-		if ($_item->error) error($_item->error);
+		$_item = new \Media\Item();
+		if ($item->error) error($item->error);
 
 		# Get Item from Database
-		$item = $_item->get($_REQUEST['code']);
+		$item->get($_REQUEST['code']);
 
 		# Error Handling
-		if ($_item->error) error($_item->error);
+		if ($item->error) error($item->error);
 		else{
+			$response = new \HTTP\Response();
+			$response->header->session = $GLOBALS['_SESSION_']->code;
+			$response->header->method = $_REQUEST["method"];
+			$response->header->date = system_time();
 			$response->item = $item;
 			$response->success = 1;
 		}
@@ -134,17 +140,16 @@
 	###################################################
 	### Download File								###
 	###################################################
-	function downloadMediaFile()
-	{
+	function downloadMediaFile() {
 		# Initiate Media File Object
-		$_file = new MediaFile();
-		if ($_file->error) error($_file->error);
+		$file = new \Media\File();
+		if ($file->error) error($file->error);
 
 		# Get File from Repository
-		$file = $_file->load($_REQUEST['code']);
+		$file->load($_REQUEST['code']);
 
 		# Error Handling
-		if ($_file->error) error($_file->error);
+		if ($file->error) error($file->error);
 		else{
 			app_log("Downloading ".$file->code.", type ".$file->mime_type.", ".$file->size." bytes.",'debug',__FILE__,__LINE__);
 			if ($file->size != strlen($file->content)) app_log("Size doesn't match: ".$file->size." != ".strlen($file->content),'notice',__FILE__,__LINE__);
@@ -158,24 +163,23 @@
 	###################################################
 	### downloadMediaImage							###
 	###################################################
-	function downloadMediaImage()
-	{
+	function downloadMediaImage() {
 		# Initiate Media Image Object
-		$_image = new MediaImage();
-		$image = $_image->get($_REQUEST['code']);
-		if ($_image->error) app_error("Error getting MediaImage: ".$_image->error,'error',__FILE__,__LINE__);
+		$image = new \Media\Image();
+		$image->get($_REQUEST['code']);
+		if ($image->error) app_error("Error getting MediaImage: ".$image->error,'error',__FILE__,__LINE__);
 		if (! $image->id) error("Image not found");
 	
 		# Get Associated File
-		$_file = new MediaFile();
-		list($file) = $_file->find(array("item_id",$image->id));
-		if ($_file->error) error($_file->error);
+		$filelist = new \Media\FileList();
+		list($file) = $filelist->find(array("item_id",$image->id));
+		if ($file->error) error($file->error);
 
 		# Get File from Repository
-		$file = $_file->load($_REQUEST['code']);
+		$file->load($_REQUEST['code']);
 
 		# Error Handling
-		if ($_file->error) error($_file->error);
+		if ($file->error) error($file->error);
 
 		app_log("Generating thumbnail for image '".$file->code."', type ".$file->mime_type,'debug',__FILE__,__LINE__);
 		if ($file->size != strlen($file->content)) error("Size doesn't match: ".$file->size." != ".strlen($file->content));
@@ -192,8 +196,7 @@
 	###################################################
 	### Add Media Metadata							###
 	###################################################
-	function setMediaMetadata()
-	{
+	function setMediaMetadata() {
 		# Make Sure Upload was Successful
 		check_upload($_FILES['file']);
 
@@ -201,19 +204,24 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'media.item.xsl';
 		
 		# Initiate Media Item Object
-		$_item = new MediaItem();
-		if ($_item->error) error($_item->error);
+		$item = new \Media\Item();
+		if ($item->error) error($item->error);
 
 		# Find Item
-		$item = $_item->get($_REQUEST['code']);
+		$$item->get($_REQUEST['code']);
 		if ($_item->error) error("Error finding item: ".$_item->error);
 		if (! $item->id) error("Item not found");
 
 		# Add Meta Tag
-		$_item->setMeta(
+		$item->setMeta(
 			$item->id,$_REQUEST['label'],$_REQUEST['value']
 		);
-		if ($_item->error) error($_item->error);
+		if ($item->error) error($item->error);
+
+		$response = new \HTTP\Response();
+		$response->header->session = $GLOBALS['_SESSION_']->code;
+		$response->header->method = $_REQUEST["method"];
+		$response->header->date = system_time();
 		$response->success = 1;
 
 		# Send Response
@@ -221,8 +229,7 @@
 		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 
-	function check_upload($request)
-	{
+	function check_upload($request) {
 		try {
 			// Undefined | Multiple Files | $_FILES Corruption Attack
 			// If this request falls under any of them, treat it invalid.
@@ -256,19 +263,41 @@
 		}
 		return 1;
 	}
+	function schemaVersion() {
+		$schema = new \Media\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+		}
+		$version = $schema->version();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->version = $version;
+		header('Content-Type: application/xml');
+		print XMLout($response);
+	}
+	function schemaUpgrade() {
+		$schema = new \Media\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+		}
+		$version = $schema->upgrade();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->version = $version;
+		header('Content-Type: application/xml');
+		print XMLout($response);
+	}
 	###################################################
 	### Application Error							###
 	###################################################
-	function app_error($message,$file = __FILE__,$line = __LINE__)
-	{
+	function app_error($message,$file = __FILE__,$line = __LINE__) {
 		app_log($message,'error',$file,$line);
 		error('Application Error');
 	}
 	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
-	function error($message)
-	{
+	function error($message) {
 		$_REQUEST["stylesheet"] = '';
 		error_log($message);
 		$response->message = $message;
@@ -281,26 +310,20 @@
 	###################################################
 	### Convert Object to XML						###
 	###################################################
-	function XMLout($object,$user_options = '')
-	{
+	function XMLout($object,$user_options = '') {
 		require 'XML/Unserializer.php';
     	require 'XML/Serializer.php';
     	$options = array(
     	    XML_SERIALIZER_OPTION_INDENT        => '    ',
     	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
 			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
+			'rootName'							=> 'opt'
     	);
-		if ($user_options["rootname"])
-		{
-			$options["rootName"] = $user_options["rootname"];
-		}
     	$xml = &new XML_Serializer($options);
-	   	if ($xml->serialize($object))
-		{
+	   	if ($xml->serialize($object)) {
 			//error_log("Returning ".$xml->getSerializedData());
 			$output = $xml->getSerializedData();
-			if ($user_options["stylesheet"])
-			{
+			if ($user_options["stylesheet"]) {
 				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
 			}
 			return $output;
