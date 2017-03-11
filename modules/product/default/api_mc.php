@@ -389,7 +389,30 @@
 		header('Content-Type: application/xml');
 		print XMLout($response);
 	}
-
+    function schemaVersion() {
+        $schema = new \Product\Schema();
+        if ($schema->error) {
+            app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+        }
+        $version = $schema->version();
+        $response = new \HTTP\Response();
+        $response->success = 1;
+        $response->version = $version;
+        header('Content-Type: application/xml');
+        print XMLout($response);
+    }
+    function schemaUpgrade() {
+        $schema = new \Product\Schema();
+        if ($schema->error) {
+            app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+        }
+        $version = $schema->upgrade();
+        $response = new \HTTP\Response();
+        $response->success = 1;
+        $response->version = $version;
+        header('Content-Type: application/xml');
+        print XMLout($response);
+	}
 	###################################################
 	### System Time									###
 	###################################################

@@ -6,42 +6,49 @@
 		public $errno;
 
 		public function __construct() {
+			$this->upgrade();
+		}
+
+		public function version() {
 			# See if Schema is Available
 			$schema_list = $GLOBALS['_database']->MetaTables();
+			$info_table = "product__info";
 
-			# Must Initialize Media Module first
-			require_once(MODULES."/media/_classes/default.php");
-			$mediaschema = new \MediaInit();
-
-			if (! in_array("product__info",$schema_list)) {
+			if (! in_array($info_table,$schema_list)) {
 				# Create __info table
 				$create_table_query = "
-					CREATE TABLE product__info (
+					CREATE TABLE `$info_table` (
 						label	varchar(100) not null primary key,
 						value	varchar(255)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating info table in ProductInit::__construct: ".$GLOBALS['_database']->ErrorMsg();
-					return 0;
+					$this->error = "SQL Error creating info table in Product::Schema::version(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
 				}
 			}
 
 			# Check Current Schema Version
 			$get_version_query = "
 				SELECT	value
-				FROM	product__info
+				FROM	`$info_table`
 				WHERE	label = 'schema_version'
 			";
 
 			$rs = $GLOBALS['_database']->Execute($get_version_query);
 			if (! $rs) {
-				$this->error = "SQL Error in ProductInit::__construct: ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				$this->error = "SQL Error in Product::Schema::version(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
 			}
 
-			list($current_schema_version) = $rs->FetchRow();
+			list($version) = $rs->FetchRow();
+			if (! $version) $version = 0;
+			return $version;
+		}
+	
+		public function upgrade() {
+			$current_schema_version = $this->version();
 
 			if ($current_schema_version < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
