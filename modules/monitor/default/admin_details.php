@@ -107,9 +107,9 @@
 					<div class="tableCell" colspan="2">Organization</div>
 				</div>
             	<div class="tableRow">
-					<div class="tableCell"><input type="text" name="asset_code" class="value input <?=$disabled_new?>" value="<?=$asset_code?>" /></div>
+					<div class="tableCell"><input type="text" name="asset_code" class="value input" value="<?=$asset_code?>" /></div>
 					<div class="tableCell">
-						<select name="product_id" class="value input <?=$disabled?>">
+						<select name="product_id" class="value input">
 							<option value="">Select</option>
 <?	foreach ($products as $product) { ?>
 							<option value="<?=$product->id?>"<? if ($product_id == $product->id) print " selected";?>><?=$product->code?></option>
@@ -117,7 +117,7 @@
 						</select>
 					</div>
 					<div class="tableCell">
-						<select name="organization_id" class="value input <?=$disabled?>">
+						<select name="organization_id" class="value input">
 							<option value="">Select</option>
 <?	foreach ($organizations as $organization) { ?>
 							<option value="<?=$organization->id?>"<? if ($asset->organization->id == $organization->id) print " selected";?>><?=$organization->name?></option>
@@ -144,21 +144,34 @@
 				<div class="tableColumn"></div>
 				<div class="tableRowHeader">
 					<div class="tableCell">Code</div>
-					<div class="tableCell">Units</div>
+					<div class="tableCell">Model</div>
 					<div class="tableCell">Last Value</div>
 					<div class="tableCell">Last Read</div>
 				</div>
 <?		foreach ($sensors as $sensor) { ?>
 				<div class="tableRow">
-					<div class="tableCell"><input type="text" name="sensor_code[<?=$sensor->id?>]" class="value input" value="<?=$sensor->code?>" <?=$disabled?> /></div>
-					<div class="tableCell"><input type="text" name="units[<?=$sensor->id?>]" class="value input" value="<?=$sensor->units?>" <?=$disabled?> /></div>
+					<div class="tableCell"><input type="text" name="sensor_code[<?=$sensor->id?>]" class="value input" value="<?=$sensor->code?>" /></div>
+					<div class="tableCell"><select name="model_id[<?=$sensor->id?>]" class="value input">
+		<?	foreach ($models as $model) { ?>
+						<option value="<?=$model->id?>"<? if ($model->id == $sensor->model->id) print " selected"; ?>><?=$model->code?></option>
+		<?	} ?>
+						</select>
+					</div>
 					<div class="tableCell"><?=$sensor->value?></div>
 					<div class="tableCell"><? if (isset($sensor->timestamp)) print date('m/d/Y H:i:s',$sensor->timestamp);?></div>
 				</div>
 <?		} ?>
-				<div class="tableCell"><input type="text" name="sensor_code[0]" class="value input" value="" <?=$disabled?> /></div>
-				<div class="tableCell"><input type="text" name="units[0]" class="value input" value="" <?=$disabled?> /></div>
+				<div class="tableRow">
+					<div class="tableCell"><input type="text" name="sensor_code[0]" class="value input" value="" /></div>
+					<div class="tableCell"><select name="model_id[0]" class="value input">
+		<?	foreach ($models as $model) { ?>
+						<option value="<?=$model->id?>"><?=$model->code?></option>
+		<?	} ?>
+						</select>
+					</div>
+				</div>
 			</div>
+<?		if (isset($GLOBALS['_config']->action)) { ?>
 			<div class="tableTitle">
 				<div class="tableCell">
 					<div class="title tableTitleLeft">Action Tasks</div>
@@ -221,6 +234,8 @@
 				</div>
 <?	} ?>
 			</div>
+<?	} ?>
+<?	if (isset($GLOBALS['_config']->spectros)) { ?>
 			<div class="tableTitle">
 				<div class="tableCell">
 					<div class="title tableTitleLeft">Calibration History</div>
@@ -238,6 +253,7 @@
 					<div class="tableCell">By</div>
 				</div>
 			</div>
+<?	} ?>
 			<div class="tableBodyWrapper">
 				<div class="tableBodyScrolled">
 <?		foreach ($verifications as $verification) {
