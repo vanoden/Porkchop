@@ -34,7 +34,7 @@
 		public function details() {
 		    parent::details();
 			$this->roles();
-			$this->organization = new \Register\Organization($this->organization_id);
+			$this->organization = new \Register\Organization($this->organization->id);
 		}
 
 		public function update($parameters = array()) {

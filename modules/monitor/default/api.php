@@ -33,10 +33,6 @@
 				<span class="label apiLabel">name</span>
 				<input type="text" name="name" class="value input apiInput"/>
 			</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">organization_id</span>
-				<input type="text" name="organization_id" class="value input apiInput"/>
-			</div>
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
@@ -56,10 +52,6 @@
 				<span class="label apiLabel">name</span>
 				<input type="text" name="name" class="value input apiInput"/>
 			</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">organization_id</span>
-				<input type="text" name="organization_id" class="value input apiInput"/>
-			</div>
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
@@ -74,10 +66,6 @@
 			<div class="apiParameter">
 				<span class="label apiLabel">product_code</span>
 				<input type="text" name="product_code" class="value input apiInput"/>
-			</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">organization_code</span>
-				<input type="text" name="organization_code" class="value input apiInput"/>
 			</div>
 			<div class="apiParameter">
 				<span class="label apiLabel">name</span>
@@ -173,10 +161,10 @@
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
 		</div>
 		</form>
-		<form method="post" action="/_monitor/api" name="findReading">
-		<input type="hidden" name="method" value="findReading">
+		<form method="post" action="/_monitor/api" name="findReadings">
+		<input type="hidden" name="method" value="findReadings">
 		<div class="method">
-			<div class="h3 apiMethodTitle">findReading</div>
+			<div class="h3 apiMethodTitle">findReadings</div>
 			<div class="apiParameter">
 				<span class="label apiLabel">sensor_code</span>
 				<input type="text" name="sensor_code" class="value input apiInput"/>
@@ -203,10 +191,6 @@
 			<div class="apiParameter">
 				<span class="label apiLabel">code</span>
 				<input type="text" name="code" class="value input apiInput"/>
-			</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">organization_id</span>
-				<input type="text" name="organization_id" class="value input apiInput"/>
 			</div>
 			<div class="apiParameter">
 				<span class="label apiLabel">date_start</span>
@@ -238,6 +222,21 @@
 			<div class="apiParameter">
 				<span class="label apiLabel">value</span>
 				<input type="text" name="value" class="value input apiInput"/>
+			</div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+		</div>
+		</form>
+		<form method="post" action="/_monitor/api" name="getCollectionMetadata">
+		<input type="hidden" name="method" value="getCollectionMetadata">
+		<div class="apiMethod">
+			<div class="h3 apiMethodTitle">getCollectionMetadata</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">code</span>
+				<input type="text" name="code" class="value input apiInput"/>
+			</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">label</span>
+				<input type="text" name="label" class="value input apiInput"/>
 			</div>
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
 		</div>

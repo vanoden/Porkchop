@@ -84,7 +84,7 @@
 					$this->timestamp($this->id);
 				}
 				else {
-					app_log("Session $request_code not available or expired, deleting cookie for ".$this->domain,'notice',__FILE__,__LINE__);
+					app_log("Session $request_code not available or expired, deleting cookie for ".$this->domain->name,'notice',__FILE__,__LINE__);
 					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $this->cookie_domain);
 				}
 			}

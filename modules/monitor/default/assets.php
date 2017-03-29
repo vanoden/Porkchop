@@ -23,12 +23,17 @@
 	foreach ($assets as $asset) {
 ?>
 <tr><td class="value <?=$greenbar?>"><a href="/_monitor/asset/<?=$asset->id?>"><?=$asset->code?></a></td>
+<?	app_log("Counting sensors",'debug',__FILE__,__LINE__); ?>
 	<td class="value <?=$greenbar?>"><?=count($asset->sensors())?></td>
+<?	app_log("Showing product code",'debug',__FILE__,__LINE__); ?>
 	<td class="value <?=$greenbar?>"><?=$asset->product->code?></td>
+<?	app_log("Showing asset name",'debug',__FILE__,__LINE__); ?>
 	<td class="value <?=$greenbar?>"><?=$asset->name?></td>
+<?	app_log("Finished line",'debug',__FILE__,__LINE__); ?>
 </tr>
 <?
 		if ($greenbar) $greenbar = '';
 		else $greenbar = "greenbar";
 	} ?>
 </table>
+<? app_log("template completed"); ?>

@@ -68,11 +68,13 @@
 	<td class="label zoneLabel" style="width: 120px;">Units</td>
 </tr>
 <?	$greenbar = '';
-	foreach ($sensors as $sensor) { ?>
+	foreach ($sensors as $sensor) {
+		$reading = $sensor->lastReading();
+?>
 <tr><td class="value zoneValue <?=$greenbar?>" style="text-align: right"><?=$sensor->code?>&nbsp;&nbsp;&nbsp;&nbsp;</td>
 	<td class="value zoneValue <?=$greenbar?>"><?=$sensor->name?></td>
-	<td class="value zoneValue <?=$greenbar?>"><? if ($sensor->timestamp) { print date('m/d/Y h:i:s',$sensor->timestamp); } ?></td>
-	<td class="value zoneValue <?=$greenbar?>" style="text-align: right"><?=$sensor->value?>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td class="value zoneValue <?=$greenbar?>"><? if ($reading->timestamp) { print date('m/d/Y h:i:s',$reading->timestamp); } ?></td>
+	<td class="value zoneValue <?=$greenbar?>" style="text-align: right"><?=$reading->value?>&nbsp;&nbsp;&nbsp;&nbsp;</td>
 	<td class="value zoneValue <?=$greenbar?>"><?=$sensor->units?></td>
 </tr>
 <?		if ($greenbar) $greenbar = '';

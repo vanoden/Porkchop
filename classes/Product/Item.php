@@ -300,10 +300,8 @@
 			}
 
 			# Load MediaItem Class
-			include_once( MODULES."/media/_classes/default.php");
 			$images = array();
-			while (list($image_id) = $rs->FetchRow())
-			{
+			while (list($image_id) = $rs->FetchRow()) {
 				$_image = new \MediaItem();
 				if ($_image->error) {
 					$this->error = "Could not load MediaItem class: ".$_image->error;

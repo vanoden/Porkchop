@@ -1,16 +1,16 @@
 <style>
 	.collectionNameColumn {
-		width: 330px;
+		width: 300px;
 		overflow: hidden;
 	}
 	.collectionCustomerColumn {
-		width: 250px;
+		width: 240px;
 	}
 	.collectionStartedColumn {
-		width: 115px;
+		width: 130px;
 	}
 	.collectionFinishedColumn {
-		width: 115px;
+		width: 130px;
 	}
 	.collectionDeleteColumn {
 		width: 35px;
@@ -61,13 +61,14 @@
 	<td class="label columnLabel collectionDeleteColumn">Delete</td>
 </tr>
 <?	foreach ($collections as $collection) {
-		if (! $collection->name) $collection->name = "[none]";
+		$name = $collection->metadata('name');
+		if (! $name) $name = "[none]";
 		
 ?>
-<tr><td class="value columnValue collectionNameColumn<?=$greenbar?>"><a href="/_monitor/dashboard/<?=$collection->code?>" id="Collection[<?=$collection->id?>]"><?=$collection->name?></a></td>
+<tr><td class="value columnValue collectionNameColumn<?=$greenbar?>"><a href="/_monitor/dashboard/<?=$collection->code?>" id="Collection[<?=$collection->id?>]"><?=$name?></a></td>
 	<td class="value columnValue collectionCustomerColumn<?=$greenbar?>"><?=$collection->metadata('customer')?></td>
-	<td class="value columnValue collectionStartedColumn<?=$greenbar?>"><?=date("Y-m-d H:m",$collection->timestamp_start)?></td>
-	<td class="value columnValue collectionFinishedColumn<?=$greenbar?>"><?=date("Y-m-d H:m",$collection->timestamp_end)?></td>
+	<td class="value columnValue collectionStartedColumn<?=$greenbar?>"><?=date("m/d/y H:m",$collection->timestamp_start)?></td>
+	<td class="value columnValue collectionFinishedColumn<?=$greenbar?>"><?=date("m/d/y H:m",$collection->timestamp_end)?></td>
 	<td class="value columnValue collectionDeleteColumn<?=$greenbar?>" style="text-align: center"><input type="button" style="padding-left: 2px; padding-right: 2px; padding-top: 0px; height: 18px; font-weight: bold" name="delete_collection" value="x" onclick="deleteCollection(<?=$collection->id?>)" /></td>
 </tr>
 <?

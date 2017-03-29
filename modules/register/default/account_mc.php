@@ -48,7 +48,7 @@
 		if ($customer_id) {
 			$customer = new \Register\Customer($customer_id);
 
-			$customer->update($customer_id,$parameters);
+			$customer->update($parameters);
 			if ($customer->error)
 			{
 				app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
@@ -148,8 +148,8 @@
 		# Loop through all roles and apply
 		# changes if necessary
 		foreach ($available_roles as $role) {
-			app_log("Checking role ".$role->id,'debug');
-			if ($_REQUEST['role'][$role->id]) {
+			//app_log("Checking role ".$role->id,'debug');
+			if (isset($_REQUEST['role'][$role->id]) && $_REQUEST['role'][$role->id]) {
 				if (! in_array($role->id,$current_roles)) {
 					app_log("Adding role ".$role->id,'debug',__FILE__,__LINE__);
 					$customer->add_role($role->id);

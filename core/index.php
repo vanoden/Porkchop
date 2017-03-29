@@ -36,7 +36,7 @@
 	spl_autoload_register('load_class');
 
 	# Database Abstraction
-	require THIRD_PARTY.'/adodb/adodb.inc.php';
+	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
 
 	# Config Defaults
 	if (! $_config->session->cookie) $_config->session->cookie = "session_code";

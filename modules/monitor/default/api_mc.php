@@ -157,15 +157,33 @@
 	### Add a Collection							###
 	###################################################
 	function addCollection() {
+		if ($GLOBALS['_SESSION_']->customer->has_role('monitor manager') && $GLOBALS['_SESSION_']->customer->has_role('register reporter') && isset($_REQUEST['organization_id'])) {
+			$organization = new \Register\Organization($_REQUEST['organization_id']);
+			if (! $organization->id) error('Organization not found');
+		}
+		elseif ($_REQUEST['organization_id']) {
+			error('Permission Denied');
+		}
+		else {
+			$organization = $GLOBALS['_SESSION_']->customer->organization;
+		}
+
 		$timezone = new DateTimeZone($GLOBALS['_SESSION_']->timezone);
-		if (get_mysql_date($_REQUEST['date_start'])) {
+		if (isset($_REQUEST['date_start']) && get_mysql_date($_REQUEST['date_start'])) {
 			$time = new DateTime(get_mysql_date($_REQUEST['date_start']),$timezone);
 			$_REQUEST['timestamp_start'] = $time->getTimeStamp();
 		}
+		elseif (isset($_REQUEST['timestamp_start'])) {
+			# All set
+		}
 		else $_REQUEST['timestamp_start'] = time();
-		if (get_mysql_date($_REQUEST['date_end'])) {
+
+		if (isset($_REQUEST['date_end']) && get_mysql_date($_REQUEST['date_end'])) {
 			$time = new DateTime(get_mysql_date($_REQUEST['date_end']),$timezone);
 			$_REQUEST['timestamp_end'] = $time->getTimeStamp();
+		}
+		elseif ($_REQUEST['timestamp_end']) {
+			# All set
 		}
 		else $_REQUEST['timestamp_end'] = time() + 86400;
 
@@ -175,12 +193,12 @@
 			array(
 				'code'				=> $_REQUEST['code'],
 				'organization_id'	=> $_REQUEST['organization_id'],
-				'name'				=> $_REQUEST['name'],
 				'timestamp_start'	=> $_REQUEST['timestamp_start'],
 				'timestamp_end'		=> $_REQUEST['timestamp_end']
 			)
 		);
 		if ($collection->error) app_error("Error adding collection: ".$collection->error,__FILE__,__LINE__);
+		else app_log("Collection '".$collection->code."' created",'debug',__FILE__,__LINE__);
 
 		# Timezone
 		$timezone = new DateTimeZone($GLOBALS['_SESSION_']->timezone);
@@ -212,29 +230,49 @@
 		if ($collection->error) app_error("Error finding collection: ".$collection->error,__FILE__,__LINE__);
 		if (! $collection->id) error("Collection '".$_REQUEST['code']."' not found");
 
+		$parameters = array();
+
 		# Find Requested Organization
 		if ($_REQUEST['organization_code']) {
-			$organization = new \Register\Organization();
-			$organization->get($_REQUEST['organization_code']);
-			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
-			if (! $organization->id) error("Organization not found");
-			$_REQUEST['organization_id'] = $organization->id;
+			if ($GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
+				$organization = new \Register\Organization();
+				$organization->get($_REQUEST['organization_code']);
+				if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
+				if (! $organization->id) error("Organization not found");
+				$parameters['organization_id'] = $organization_id;
+			}
+			else {
+				app_error("Permission denied");
+			}
 		}
+		else {
+			$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+		}
+
 
 		$timezone = new DateTimeZone($GLOBALS['_SESSION_']->timezone);
 		if (get_mysql_date($_REQUEST['date_start'])) {
 			$time = new DateTime(get_mysql_date($_REQUEST['date_start']),$timezone);
-			$_REQUEST['timestamp_start'] = $time->getTimeStamp();
+			$parameters['timestamp_start'] = $time->getTimeStamp();
 		}
+		elseif ($_REQUEST['timestamp_start']) {
+			$parameters['timestamp_start'] = $_REQUEST['timestamp_start'];
+		}
+
 		if (get_mysql_date($_REQUEST['date_end'])) {
 			$time = new DateTime(get_mysql_date($_REQUEST['date_end']),$timezone);
-			$_REQUEST['timestamp_end'] = $time->getTimeStamp();
+			$parameters['timestamp_end'] = $time->getTimeStamp();
+		}
+		elseif ($_REQUEST['timestamp_end']) {
+			$parameters['timestamp_end'] = $_REQUEST['timestamp_end'];
+		}
+
+		if (isset($_REQUEST['status']) && strlen($_REQUEST['status'])) {
+			$parameters['status'] = $_REQUEST['status'];
 		}
 
 		# Update Collection
-		$collection->update(
-			$_REQUEST
-		);
+		$collection->update($parameters);
 		if ($collection->error) app_error("Error adding collection: ".$collection->error,__FILE__,__LINE__);
 
 		# Timezone
@@ -281,6 +319,30 @@
 		print XMLout($response);
 	}
 	###################################################
+	### Get Collection Metadata						###
+	###################################################
+	function getCollectionMetadata() {
+		$collection = new \Monitor\Collection();
+		if ($collection->error) app_error("Error initializing collection: ".$collection->error,__FILE__,__LINE__);
+
+		$collection->get($_REQUEST['code']);
+		if ($collection->error) app_error("Error finding collection: ".$collection->error,__FILE__,__LINE__);
+		if (! $collection->id) error("Collection '".$_REQUEST['code']."' not found");
+
+		$metadata = new \Monitor\Collection\Metadata($collection->id,$_REQUEST['key']);
+		if ($metadata->error) app_error("Error getting metadata: ".$metadata->error,__FILE__,__LINE__);
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->metadata = $metadata;
+
+		$_comm = new \Monitor\Communication();
+		$_comm->update(json_encode($response));
+		api_log($response);
+		header('Content-Type: application/xml');
+		print XMLout($response);
+	}
+	###################################################
 	### Find matching Collections					###
 	###################################################
 	function findCollections() {
@@ -298,7 +360,7 @@
 		$_comm->update(json_encode($response));
 		api_log($response);
 		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => "monitor.collections.xsl"));
+		print XMLout($response);
 	}
 	###################################################
 	### Find matching Collection					###
@@ -338,7 +400,7 @@
 		$_comm->update(json_encode($response));
 		api_log($response);
 		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => "monitor.collections.xsl"));
+		print XMLout($response);
 	}
 
 	###################################################
@@ -355,11 +417,11 @@
 		if ($collection->error) error("Error finding collection: ".$collection->error);
 		if (! $collection->id) error("Collection not found");
 
-		$_asset = new \Monitor\Asset();
-		if ($_asset->error) error("Error finding asset: ".$_asset->error);
-		$asset = $_asset->get($_REQUEST['asset_code']);
-		if ($_asset->error) error("Error finding asset: ".$_asset->error);
-		if (! $asset->id) error("Asset '".$_REQUEST['asset_code']."' not found");
+		$assetlist = new \Monitor\AssetList();
+		if ($assetlist->error) error("Error finding asset: ".$assetlist->error);
+		list($asset) = $assetlist->find(array('code' => $_REQUEST['asset_code']));
+		if ($assetlist->error) error("Error finding asset: ".$assetlist->error);
+		if (! $asset->id) error("Asset '".$REQUEST['asset_code']."' not found");
 
 		$sensor = new \Monitor\Sensor();
 		if ($sensor->error) error("Error finding sensor: ".$sensor->error);
@@ -645,7 +707,6 @@
 		header('Content-Type: application/xml');
 		print XMLout($response);
 	}
-
 	###################################################
 	### Get Specified Asset							###
 	###################################################
@@ -665,7 +726,6 @@
 		header('Content-Type: application/xml');
 		print XMLout($response); #,array("stylesheet" => "monitor.assets.xsl"));
 	}
-
 	###################################################
 	### Update an Asset								###
 	###################################################
@@ -704,7 +764,6 @@
 		header('Content-Type: application/xml');
 		print XMLout($response);
 	}
-
 	###################################################
 	### Find matching Assets						###
 	###################################################
@@ -719,27 +778,34 @@
 		if (isset($_REQUEST['name']))
 			$parameters['name'] = $_REQUEST['name'];
 
-		if (isset($_REQUEST['product_code'])) {
+		if (isset($_REQUEST['product_code']) && strlen($_REQUEST['product_code'])) {
 			$product = new \Product\Item();
 			$product->get($_REQUEST['product_code']);
 			if ($product->error) app_error("Error finding product: ".$product->error,__FILE__,__LINE__);
 			if (! $product->id) error("Product not found");
 			$parameters['product_id'] = $product->id;
 		}
-		if (isset($_REQUEST['organization_code'])) {
-			if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+		if (isset($_REQUEST['organization_code']) && strlen($_REQUEST['organization_code'])) {
+			if ($GLOBALS['_SESSION_']->customer->has_role('monitor manager') && $GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
 				$organization = new \Register\Organization();
 				$organization->get($_REQUEST['organization_code']);
 				if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
-				$parameters['organization_id'] = $organization->id();
+				$parameters['organization_id'] = $organization->id;
 			}
 			else {
-				error("No permissions to specify another organization");
+				app_log("Unauthorized attempt to access assets from another organization",'notice',__FILE__,__LINE__);
+				error("Permission Denied");
 			}
 		}
+		elseif(! $GLOBALS['_SESSION_']->customer->has_role('monitor manager')) {
+			$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+		}
+		else {
+			# Privileges support access
+		}
 
-		$assets = $_asset->find($parameters);
-		if ($_asset->error) app_error("Error initializing asset(s): ".$_asset->error,__FILE__,__LINE__);
+		$assets = $assetlist->find($parameters);
+		if ($asset->error) app_error("Error initializing asset(s): ".$asset->error,__FILE__,__LINE__);
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->asset = $assets;
@@ -750,7 +816,6 @@
 		header('Content-Type: application/xml');
 		print XMLout($response); #,array("stylesheet" => "monitor.assets.xsl"));
 	}
-
 	###################################################
 	### Add a Sensor								###
 	###################################################
@@ -785,7 +850,6 @@
 		header('Content-Type: application/xml');
 		print XMLout($response);
 	}
-
 	###################################################
 	### Get a Sensor								###
 	###################################################
@@ -816,7 +880,6 @@
 		header('Content-Type: application/xml');
 		print XMLout($response);
 	}
-
 	###################################################
 	### Update a Sensor								###
 	###################################################
@@ -852,23 +915,31 @@
 		header('Content-Type: application/xml');
 		print XMLout($response);
 	}
-
 	###################################################
 	### Find matching Sensors						###
 	###################################################
 	function findSensors() {
 		$parameters = array();
 
+		if (isset($_REQUEST['organization_id']) && $_REQUEST['organization_id'] > 0) {
+			if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin') || ! $GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
+				error("Permission denied");
+			}
+			$parameters['organization_id'] = $_REQUEST['organization_id'];
+		}
+		else {
+			$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+		}
+
 		if (isset($_REQUEST['asset_code']) && strlen($_REQUEST['asset_code'])) {
-			$asset = new \Monitor\Asset();
-			$asset->get($_REQUEST["asset_code"]);
-			if ($asset->error) error ("Error finding asset: ".$asset->error);
+			$assetlist = new \Monitor\AssetList();
+			list($asset) = $assetlist->find(array('code' => $_REQUEST["asset_code"]));
+			if ($assetlist->error) error ("Error finding asset: ".$assetlist->error);
 			if (! $asset->id) error ("Asset not found");
 			$parameters['asset_id'] = $asset->id;
 		}
-		if (isset($_REQUEST['organization_id']) && $_REQUEST['organization_id'] > 0) $parameters['organization_id'] = $_REQUEST['organization_id'];
 		if (isset($_REQUEST['code']) && strlen($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
-		
+
 		$sensorlist = new \Monitor\SensorList();
 		if ($sensorlist->error) error("Error finding sensor: ".$sensorlist->error);
 		$sensors = $sensorlist->find($parameters);
@@ -892,7 +963,7 @@
 			error("Authentication Required");
 		if ((! $GLOBALS['_SESSION_']->customer->organization->id) and (! in_array('monitor admin',$GLOBALS['_SESSION_']->customer->roles)))
 			error("Must belong to an organization");
-		if ($_REQUEST['organization']) {
+		if (isset($_REQUEST['organization'])) {
 			if (! in_array('monitor admin',$GLOBALS['_SESSION_']->customer->roles)) error("No permission for adding to other organizations");
 			$organization = new \Register\Organization();
 			$organization->get($_REQUEST['organization']);
@@ -904,18 +975,18 @@
 
 		# Get Asset (Monitor) by code
 		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['asset_code'])) error("Valid asset_code required");
-		$asset = new \Monitor\Asset();
-		if ($asset->error) app_error("Error initializing Asset: ".$asset->error,__FILE__,__LINE__);
-		$asset->get($_REQUEST['asset_code']);
-		if ($asset->error) app_error("Error finding Asset: ".$asset->error,__FILE__,__LINE__);
+		$assetlist = new \Monitor\AssetList();
+		if ($assetlist->error) app_error("Error initializing Asset: ".$assetlist->error,__FILE__,__LINE__);
+		list($asset) = $assetlist->find(array('code' => $_REQUEST['asset_code']));
+		if ($assetlist->error) app_error("Error finding Asset: ".$assetlist->error,__FILE__,__LINE__);
 		if (! $asset->id) error("Could not find Asset '".$_REQUEST['asset_code']."' for organization '".$organization->id."'");
 
 		# Get Sensor by asset id/code
 		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['sensor_code'])) error("Valid sensor_code required");
 		$sensor = new \Monitor\Sensor();
 		if ($sensor->error) app_error("Error initializing sensor: ".$sensor->error,__FILE__,__LINE__);
-		$sensor = $sensor->get($_REQUEST['sensor_code'],$asset->id);
-		if ($_sensor->error) app_error("Error finding sensor: ".$_sensor->error,__FILE__,__LINE__);
+		$sensor->get($_REQUEST['sensor_code'],$asset->id);
+		if ($sensor->error) app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
 		if (! $sensor->id) error("Sensor ".$_REQUEST['sensor_code']." not found for asset ".$_REQUEST['asset_code']);
 
 		# Add Reading
@@ -974,9 +1045,9 @@
 			if ($_sensor->error) error("Error finding sensor: ".$_sensor->error);
 			if (! $sensor->id) error("Sensor not found");
 		}
-		$_reading = new \Monitor\Reading();
-		if ($_reading->error) error("Error finding reading: ".$_reading->error);
-		$readings = $_reading->find(
+		$readinglist = new \Monitor\ReadingList();
+		if ($readinglist->error) error("Error finding reading: ".$readinglist->error);
+		$readings = $readinglist->find(
 			array(
 				'code' 				=> $_REQUEST['code'],
 				'organization_id'	=> $_REQUEST['organization_id'],
@@ -986,7 +1057,7 @@
 				'_lastN'			=> 1
 			)
 		);
-		if ($_reading->error) error("Error finding reading: ".$_reading->error);
+		if ($readinglist->error) error("Error finding reading: ".$readinglist->error);
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->reading = $readings;
@@ -1000,35 +1071,38 @@
 	###################################################
 	### Find matching Sensors						###
 	###################################################
+	function findReadings() {
+		return findReading();
+	}
 	function findReading() {
-		if ($_REQUEST['collection_code']) {
+		if (isset($_REQUEST['collection_code'])) {
 			$_collection = new \Monitor\Collection();
 			if ($_collection->error) app_error("Error initializing collection: ".$_collection->error,__FILE__,__LINE__);
 			$collection = $_collection->get($_REQUEST['collection_code']);
 			if ($_collection->error) app_error("Error finding collection: ".$_collection->error,__FILE__,__LINE__);
 			if (! $collection->id) error("Collection not found");
 		}
-		if ($_REQUEST['asset_code']) {
-			$_asset = new \Monitor\Asset();
-			if ($_asset->error) error("Error finding asset: ".$_asset->error);
-			list($asset) = $_asset->find(
+		if (isset($_REQUEST['asset_code'])) {
+			$assetlist = new \Monitor\AssetList();
+			if ($assetlist->error) error("Error finding asset: ".$assetlist->error);
+			list($asset) = $assetlist->find(
 				array (
 					'code'	=> $_REQUEST['asset_code']
 				)
 			);
-			if ($_asset->error) error("Error finding asset: ".$_asset->error);
+			if ($assetlist->error) error("Error finding asset: ".$assetlist->error);
 			if (! $asset->id) error("Asset not found");
 		}
 		if ($_REQUEST['sensor_code']) {
-			$_sensor = new \Monitor\Sensor();
-			if ($_sensor->error) error("Error finding sensor: ".$_sensor->error);
-			list($sensor) = $_sensor->find(
+			$sensorlist = new \Monitor\SensorList();
+			if ($sensorlist->error) error("Error finding sensor: ".$sensorlist->error);
+			list($sensor) = $sensorlist->find(
 				array (
 					'code'		=> $_REQUEST['sensor_code'],
-					'asset_id'	=> $_asset->id,
+					'asset_id'	=> $asset->id,
 				)
 			);
-			if ($_sensor->error) error("Error finding sensor: ".$_sensor->error);
+			if ($sensor->error) error("Error finding sensor: ".$sensor->error);
 			if (! $sensor->id) error("Sensor not found");
 		}
 		$_reading = new \Monitor\Reading();
@@ -1057,60 +1131,47 @@
 	### Find Readings for a Collection/Sensor		###
 	###################################################
 	function collectionReadings() {
-		$_collection = new \Monitor\Collection();
-		if ($_collection->error) app_error("Error finding collection: ".$_collection->error,__FILE__,__LINE__);
 		if ($_REQUEST['collection_id']) {
-			list($collection) = $_collection->find(
-				array(
-					'id'	=> $_REQUEST['collection_id']
-				)
-			);
-			if ($_collection->error) app_error("Error finding collection: ".$_collection->error,__FILE__,__LINE__);
+			$collection = new \Monitor\Collection($_REQUEST['collection_id']);
+			if ($collection->error) app_error("Error finding collection: ".$collection->error,__FILE__,__LINE__);
 			if (! $collection->id) error("Collection not found for id ".$_REQUEST['collection_id']);
 		}
 		elseif ($_REQUEST['collection_code']) {
-			list($collection) = $_collection->find(
-				array (
-					'code'	=> $_REQUEST['collection_code']
-				)
-			);
-			if ($_collection->error) app_error("Error finding collection: ".$_collection->error,__FILE__,__LINE__);
+			$collection = new \Monitor\Collection();
+			if ($collection->error) app_error("Error initializing collection: ".$collection->error,__FILE__,__LINE__);
+			$collection->get($_REQUEST['collection_code']);
+			if ($collection->error) app_error("Error finding collection: ".$collection->error,__FILE__,__LINE__);
 			if (! $collection->id) error("Collection not found");
 		}
 		else {
 			error("collection_code required");
 		}
 		if ($_REQUEST['asset_code']) {
-			$_asset = new \Monitor\Asset();
-			if ($_asset->error) app_error("Error finding asset: ".$_asset->error,__FILE__,__LINE__);
-			list($asset) = $_asset->find(
+			$assetlist = new \Monitor\AssetList();
+			if ($assetlist->error) app_error("Error finding asset: ".$assetlist->error,__FILE__,__LINE__);
+			list($asset) = $assetlist->find(
 				array (
 					'code'	=> $_REQUEST['asset_code']
 				)
 			);
-			if ($_asset->error) app_error("Error finding asset: ".$_asset->error,__FILE__,__LINE__);
+			if ($assetlist->error) app_error("Error finding asset: ".$assetlist->error,__FILE__,__LINE__);
 			if (! $asset->id) error("Asset not found");
 		}
 		else {
 			error("asset_code required");
 		}
 		if ($_REQUEST['sensor_code']) {
-			$_sensor = new \Monitor\Sensor();
-			if ($_sensor->error) app_error("Error finding sensor: ".$_sensor->error,__FILE__,__LINE__);
-			list($sensor) = $_sensor->find(
-				array (
-					'code'		=> $_REQUEST['sensor_code'],
-					'asset_id'	=> $asset->id,
-				)
-			);
-			if ($_sensor->error)app_error("Error finding sensor: ".$_sensor->error,__FILE__,__LINE__);
+			$sensor = new \Monitor\Sensor();
+			if ($sensor->error) app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
+			$sensor->get($_REQUEST['sensor_code'],$asset->id);
+			if ($sensor->error)app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
 			if (! $sensor->id) error("Sensor not found");
 		}
 		else {
 			error("sensor_code required");
 		}
-		$readings = $_collection->readings($collection->id,$sensor->id);
-		if ($_reading->error) app_error("Error finding reading: ".$_reading->error,__FILE__,__LINE__);
+		$readings = $collection->readings($collection->id,$sensor->id);
+		if ($collection->error) app_error("Error finding reading: ".$collection->error,__FILE__,__LINE__);
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->reading = $readings;
@@ -1131,10 +1192,10 @@
 			
 		# Get Asset (Monitor) by code
 		if (preg_match('/^[\w\-\.\_]+$/',$_REQUEST['asset_code'])) {
-			$asset = new \Monitor\Asset();
-			if ($asset->error) app_error("Error initializing Asset: ".$asset->error,__FILE__,__LINE__);
-			$asset->get($_REQUEST['asset_code']);
-			if ($asset->error) app_error("Error finding Asset: ".$asset->error,__FILE__,__LINE__);
+			$assetlist = new \Monitor\AssetList();
+			if ($assetlist->error) app_error("Error initializing AssetList: ".$assetlist->error,__FILE__,__LINE__);
+			list($asset) = $assetlist->find(array('code' => $_REQUEST['asset_code']));
+			if ($assetlist->error) app_error("Error finding Asset: ".$assetlist->error,__FILE__,__LINE__);
 			if (! $asset->id) error("Could not find Asset '".$_REQUEST['asset_code']."' for organization ");
 		}
 		else {
@@ -1278,7 +1339,7 @@
 	function error($message) {
 		$_REQUEST["stylesheet"] = '';
 		$response = new \HTTP\Response();
-		$response->message = $message;
+		$response->error = $message;
 		$response->success = 0;
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
@@ -1308,11 +1369,7 @@
     	);
     	$xml = new XML_Serializer($options);
 	   	if ($xml->serialize($object)) {
-			//error_log("Returning ".$xml->getSerializedData());
 			$output = $xml->getSerializedData();
-			if (array_key_exists('stylesheet',$user_options)) {
-				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
-			}
 			return $output;
 		}
 	}

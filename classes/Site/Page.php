@@ -136,6 +136,7 @@
 				$this->error = "Page not found";
 				return null;
 			}
+
             # Make Sure Authentication Requirements are Met
             if (($this->auth_required) and (! $GLOBALS["_SESSION_"]->customer->id)) {
 				if (($this->module != "register")
@@ -483,6 +484,19 @@
 							$buffer .= "</div>\n";
 						}
 					}
+				}
+				else {
+					app_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view,'debug',__FILE__,__LINE__);
+					ob_start();
+					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
+					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
+					$buffer .= ob_get_clean();
+				}
+			}
+			elseif ($object == "monitor") {
+				# Load Product Class if Not Already Loaded
+				if ($property == "dashboard") {
+					$buffer .= "default";
 				}
 				else {
 					app_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view,'debug',__FILE__,__LINE__);
