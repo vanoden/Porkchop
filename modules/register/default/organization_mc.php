@@ -38,7 +38,8 @@
 				"code"	=> $_REQUEST['code'],
 				"status"	=> $_REQUEST['status']
 			);
-			if (is_object($organization)) {
+			if ($organization->id) {
+				app_log("Updating '".$organization->name."'");
 				# Update Existing Organization
 				$organization->update($parameters);
 
@@ -78,7 +79,7 @@
 			}
 			else {
 				if (! $parameters['code']) $parameters['code'] = uniqid();
-
+				app_log("Adding organization '".$parameters['name']."'");
 				# See if code used
 				$present_org = new \Register\Organization();
 				$present_org->get($parameters['code']);
