@@ -4,7 +4,7 @@
 		<div class="productParentContent">
 			<div class="label productParentLabel"><?=$parent->name?></div>
 			<div class="value parentDescription"><?=$parent->description?></div>
-<?		if (in_array('product manager',$GLOBALS['_SESSION_']->customer->roles)) { ?>
+<?		if ($GLOBALS['_SESSION_']->customer->has_role('product manager')) { ?>
 			<div class="productEdit"><a href="/_product/edit/<?=$parent->code?>">Edit</a></div>
 <?		} ?>
 		</div>
@@ -15,11 +15,9 @@
 		</div>
 	</div>
 <?	} ?>
-<?	foreach ($products as $product)
-	{
+<?	foreach ($products as $product) {
 		if (! $product->name) $product->name = 'Unknown';
-		if ($product->type == "group")
-		{
+		if ($product->type == "group") {
 ?>
 	<div class="product">
 		<div class="productThumbnail"><a href="<?=PATH?>/_product/browse/<?=$product->code?>"><img class="productThumbnail" src="/_media/api?method=downloadMediaFile&code=<?=$product->image[0]->files[0]->code ?>" /></a></div>
@@ -27,8 +25,7 @@
 		<div class="value productDescription"><?=$product->short_description?></div>
 	</div>
 <?		}
-		else
-		{
+		else {
 ?>
 	<div class="product">
 		<div class="productThumbnail"><a href="<?=PATH?>/_product/show/<?=$product->code?>"><img class="productThumbnail" src="/_media/api?method=downloadMediaFile&code=<?=$product->image[0]->files[0]->code ?>" /></a></div>
@@ -37,7 +34,7 @@
 	</div>
 <?		}
 	}
-	if (in_array('product manager',$GLOBALS['_SESSION_']->customer->roles)) { ?>
+	if ($GLOBALS['_SESSION_']->customer->has_role('product manager')) { ?>
 	<div class="product">
 		<form method="post" action="/_product/add">
 		<input type="hidden" name="parent_code" value="<?=$parent->code?>"

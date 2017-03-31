@@ -6,15 +6,14 @@
 		public function __construct()
 		{
 			# Database Initialization
-			$init = new ProductInit();
-			if ($init->error)
-			{
-				$this->error = $init->error;
-				return 0;
+			$schema = new \Product\Schema();
+
+			if ($schema->error) {
+				$this->error = $schema->error;
+				return null;
 			}
 		}
-		public function add($parameters = array())
-		{
+		public function add($parameters = array()) {
 			$add_object_query = "
 				INSERT
 				INTO	product_relations
@@ -29,15 +28,13 @@
 					$parameters['child_id']
 				)
 			);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in ProductRelationship::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return $this->get($parameters['parent_id'],$parameters['child_id']);
 		}
-		public function get($parent_id,$child_id)
-		{
+		public function get($parent_id,$child_id) {
 			$get_object_query = "
 				SELECT	parent_id,
 						product_id child_id
@@ -52,16 +49,14 @@
 					$child_id
 				)
 			);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in ProductRelationship::get: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$array = $rs->FetchRow();
 			return (object) $array;
 		}
-		public function find($parameters)
-		{
+		public function find($parameters) {
 			$find_objects_query = "
 				SELECT	parent_id,
 						product_id child_id

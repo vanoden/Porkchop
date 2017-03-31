@@ -1,7 +1,7 @@
 <?
 	namespace Media;
 
-	class Document extends Item {
+	class Document extends \Media\File {
 		public function add($parameters = array()) {
 			$document = parent::add(array("type" => 'document'));
 			parent::setMeta($document->id,"name",$parameters['name']);

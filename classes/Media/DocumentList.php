@@ -7,7 +7,8 @@
 
 		public function find($parameters = array()) {
 			$parameters['type'] = 'document';
-			return parent::find($parameters);
+			$itemlist = new ItemList();
+			return itemlist::find($parameters);
 		}
 	}
 ?>

@@ -52,6 +52,10 @@
 				<input type="text" name="code" class="value input apiInput"/>
 			</div>
 			<div class="apiParameter">
+				<span class="label apiLabel">type</span>
+				<input type="text" name="type" class="value input apiInput"/>
+			</div>
+			<div class="apiParameter">
 				<span class="label apiLabel">name</span>
 				<input type="text" name="name" class="value input apiInput"/>
 			</div>

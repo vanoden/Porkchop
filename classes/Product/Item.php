@@ -78,8 +78,10 @@
 			}
 
 			$ok_params = array(
-				"status"		=> "/.+/",
+				"status"		=> '/^\w+$/',
 				"type"			=> "/.+/",
+				"name"			=> '/^[\w\-\.\_\s]+$/',
+				"description"	=> "/.+/",
 			);
 
 			# Prepare Query to Update Product
@@ -170,7 +172,7 @@
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
 			app_log("Created Product ".$this->id,'notice',__FILE__,__LINE__);
-			return $this->details();
+			return $this->update($parameters);
 		}
 
 		public function details() {
