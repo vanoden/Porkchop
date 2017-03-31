@@ -179,6 +179,10 @@
 				app_log("Loading template '"."/".$this->module.".".$this->view.".html'",'debug',__FILE__,__LINE__);
 				$html = file_get_contents(HTML."/".$this->module.".".$this->view.".html");
 			}
+			elseif ($this->view == 'api' && file_exists(HTML."/_api.html")) {
+				app_log("Loading template '_api.html'",'debug',__FILE__,__LINE__);
+				$html = file_get_contents(HTML."/_api.html");
+			}
 			elseif (file_exists(HTML."/".$this->module.".html")) {
 				app_log("Loading template '"."/".$this->module.".html'",'debug',__FILE__,__LINE__);
 				$html = file_get_contents(HTML."/".$this->module.".html");

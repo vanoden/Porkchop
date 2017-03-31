@@ -33,8 +33,8 @@
 		$response->header->date = system_time();
 		$response->message = "PING RESPONSE";
 		$response->success = 1;
-		header('Content-Type: application/xml');
-		print XMLout($response);
+
+		print formatOutput($response);
 	}
 	###################################################
 	### Add a Product								###
@@ -56,8 +56,7 @@
 		$response->success = 1;
 		$response->product = $product;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -82,8 +81,7 @@
 		$response->success = 1;
 		$response->product = $product;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -98,8 +96,7 @@
 		$response->success = 1;
 		$response->product = $product;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -117,8 +114,7 @@
 		$response->success = 1;
 		$response->product = $products;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -153,8 +149,7 @@
 		$response->success = 1;
 		$response->relationship = $relationship;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -181,8 +176,7 @@
 		$response->success = 1;
 		$response->relationship = $relationship;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -211,8 +205,7 @@
 		$response->success = 1;
 		$response->relationship = $relationships;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -231,8 +224,7 @@
 		$response->success = 1;
 		$response->group = $group;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -259,8 +251,7 @@
 		$response->success = 1;
 		$response->group = $group;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -279,8 +270,7 @@
 		$response->success = 1;
 		$response->group = $groups;
 
-		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => "monitor.collections.xsl"));
+		print formatOutput($response,array("stylesheet" => "monitor.collections.xsl"));
 	}
 
 	###################################################
@@ -319,8 +309,7 @@
 		$response->success = 1;
 		$response->product = $product;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find Products in Group						###
@@ -342,8 +331,7 @@
 		$response->success = 1;
 		$response->product = $products;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -369,8 +357,7 @@
 		$response = new \HTTP\Response();
 		$response->success = 1;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Add Metadata to Product						###
@@ -386,8 +373,7 @@
 		$response = new \HTTP\Response();
 		$response->success = 1;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
     function schemaVersion() {
         $schema = new \Product\Schema();
@@ -398,8 +384,7 @@
         $response = new \HTTP\Response();
         $response->success = 1;
         $response->version = $version;
-        header('Content-Type: application/xml');
-        print XMLout($response);
+        print formatOutput($response);
     }
     function schemaUpgrade() {
         $schema = new \Product\Schema();
@@ -410,8 +395,7 @@
         $response = new \HTTP\Response();
         $response->success = 1;
         $response->version = $version;
-        header('Content-Type: application/xml');
-        print XMLout($response);
+        print formatOutput($response);
 	}
 	###################################################
 	### System Time									###
@@ -435,36 +419,21 @@
 		$response->message = $message;
 		$response->success = 0;
 		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response,array("stylesheet" => $_REQUEST["stylesheet"]));
 		exit;
 	}
-	###################################################
-	### Convert Object to XML						###
-	###################################################
-	function XMLout($object,$user_options='') {
-		if (0) {
-			$fp = fopen('/var/log/api/monitor.log', 'a');
-			fwrite($fp,"#### RESPONSE ####\n");
-			fwrite($fp, print_r($object,true));
-			fclose($fp);
-		}
 
-		require 'XML/Unserializer.php';
-    	require 'XML/Serializer.php';
-    	$options = array(
-    	    XML_SERIALIZER_OPTION_INDENT        => '    ',
-    	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
-			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
-			'rootName'							=> 'opt'
-    	);
-    	$xml = &new XML_Serializer($options);
-	   	if ($xml->serialize($object)) {
-			//error_log("Returning ".$xml->getSerializedData());
-			$output = $xml->getSerializedData();
-			if ($user_options["stylesheet"]) {
-				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
-			}
-			return $output;
+	function formatOutput($object) {
+		if ($_REQUEST['_format'] == 'json') {
+			$format = 'json';
+			header('Content-Type: application/json');
 		}
+		else {
+			$format = 'xml';
+			header('Content-Type: application/xml');
+		}
+		$document = new \Document($format);
+		$document->prepare($object);
+		return $document->content();
 	}
 ?>

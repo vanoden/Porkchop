@@ -1,4 +1,5 @@
 		<span class="title">Porkchop Session API Version <?=$_package["version"]?></span>
+		<div id="apiScroller">
 		<form method="post" action="/_session/api" name="ping">
 		<input type="hidden" name="method" value="ping">
 		<div class="apiMethod">
@@ -6,15 +7,22 @@
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
+			<form method="post" action="<?=PATH?>/_session/api" name="schemaVersion">
+			<input type="hidden" name="method" value="schemaVersion">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">schemaVersion</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
 		<form method="post" action="/_session/api">
 		<input type="hidden" name="method" value="getSession">
 		<div class="apiMethod">
 			<span class="h3 apiMethodTitle">getSession</span>
 			<div class="apiMethodParameter">
-				<span class="apiMethodLabel">code</span>
-				<input class="apiMethodValue" type="text" name="code"/>
+				<span class="label apiLabel">code</span>
+				<input class="value input apiInput" type="text" name="code"/>
 			</div>
-			<div class="methodFooter"><input type="submit" name="btn_submit" value="Submit" class="apiMethodSubmit"/></div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
 		<form method="post" action="/_session/api">
@@ -22,10 +30,10 @@
 		<div class="apiMethod">
 			<span class="h3 apiMethodTitle">getSessionHits</span>
 			<div class="apiMethodParameter">
-				<span class="apiMethodLabel">code</span>
-				<input class="apiMethodValue" type="text" name="code"/>
+				<span class="label apiLabel">code</span>
+				<input class="value input apiInput" type="text" name="code"/>
 			</div>
-			<div class="methodFooter"><input type="submit" name="btn_submit" value="Submit" class="apiMethodSubmit"/></div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
 		<form method="post" action="/_session/api">
@@ -33,13 +41,14 @@
 		<div class="apiMethod">
 			<span class="apiMethodTitle">addSession</span>
 			<div class="apiMethodParameter">
-				<span class="apiMethodLabel">login</span>
-				<input type="text" name="code" class="apiMethodInput"/></div>
+				<span class="label apiLabel">login</span>
+				<input type="text" name="code" class="value input apiInput"/>
 			</div>
 			<div class="apiMethodParameter">
-				<span class="apiMethodLabel">password</span>
-				<input type="password" name="password" class="apiMethodInput"/></div>
+				<span class="label apiLabel">password</span>
+				<input type="password" name="password" class="value input apiInput"/>
 			</div>
-			<div class="methodFooter"><input type="submit" name="btn_submit" value="Submit" class="apiMethodSubmit"/></div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
+		</div>

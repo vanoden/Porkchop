@@ -1,4 +1,5 @@
-	<div id="scroller" style="width: 600px; height: 500px; overflow: auto;">
+	<span class="title">Porkchop Content API Version <?=$_package["version"]?></span>	
+	<div id="apiScroller">
 		<div class="apiMethod">Request</div>
 		<pre id="requestContent" style="text-align: left; width: 550px; height: 100px; overflow: auto; font-size: 11px; border: 1px dashed blue;"><?=print_r($_REQUEST)?></pre>
 		<form method="post" action="<?=PATH?>/_content/api" id="ping">
@@ -8,6 +9,13 @@
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
+			<form method="post" action="<?=PATH?>/_content/api" name="schemaVersion">
+			<input type="hidden" name="method" value="schemaVersion">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">schemaVersion</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
 		<form method="post" action="<?=PATH?>/_content/api" id="parse">
 		<input type="hidden" name="method" value="parse">
 		<div class="apiMethod">

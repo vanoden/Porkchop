@@ -62,8 +62,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -92,8 +91,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -125,8 +123,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -149,8 +146,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -215,8 +211,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -290,8 +285,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Set Collection Metadata						###
@@ -315,8 +309,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Get Collection Metadata						###
@@ -339,8 +332,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find matching Collections					###
@@ -359,8 +351,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find matching Collection					###
@@ -399,8 +390,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -443,8 +433,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Drop Sensor from Collection					###
@@ -483,8 +472,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find Sensors in Collection					###
@@ -509,8 +497,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	function dygraphData() {
 		$collection = new \Monitor\Collection();
@@ -704,8 +691,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Get Specified Asset							###
@@ -723,8 +709,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => "monitor.assets.xsl"));
+		print formatOutput($response);
 	}
 	###################################################
 	### Update an Asset								###
@@ -761,8 +746,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find matching Assets						###
@@ -813,8 +797,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => "monitor.assets.xsl"));
+		print formatOutput($response);
 	}
 	###################################################
 	### Add a Sensor								###
@@ -847,8 +830,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Get a Sensor								###
@@ -877,8 +859,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Update a Sensor								###
@@ -912,8 +893,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find matching Sensors						###
@@ -951,8 +931,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -1008,8 +987,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	###	Get Last Reading							###
@@ -1065,8 +1043,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find matching Sensors						###
@@ -1124,8 +1101,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find Readings for a Collection/Sensor		###
@@ -1179,8 +1155,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -1247,8 +1222,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find matching Sensors						###
@@ -1293,8 +1267,7 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	function schemaVersion() {
 		$schema = new \Monitor\Schema();
@@ -1305,8 +1278,7 @@
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->version = $version;
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	function schemaUpgrade() {
 		$schema = new \Monitor\Schema();
@@ -1317,8 +1289,7 @@
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->version = $version;
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### System Time									###
@@ -1344,33 +1315,21 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
-		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response);
 		exit;
 	}
-	###################################################
-	### Convert Object to XML						###
-	###################################################
-	function XMLout($object,$user_options=array()) {
-		if (0) {
-			$fp = fopen('/var/log/api/monitor.log', 'a');
-			fwrite($fp,"#### RESPONSE ####\n");
-			fwrite($fp, print_r($object,true));
-			fclose($fp);
-		}
 
-		require 'XML/Unserializer.php';
-    	require 'XML/Serializer.php';
-    	$options = array(
-    	    XML_SERIALIZER_OPTION_INDENT        => '    ',
-    	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
-			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
-			'rootName'							=> 'opt'
-    	);
-    	$xml = new XML_Serializer($options);
-	   	if ($xml->serialize($object)) {
-			$output = $xml->getSerializedData();
-			return $output;
+	function formatOutput($object) {
+		if ($_REQUEST['_format'] == 'json') {
+			$format = 'json';
+			header('Content-Type: application/json');
 		}
+		else {
+			$format = 'xml';
+			header('Content-Type: application/xml');
+		}
+		$document = new \Document($format);
+		$document->prepare($object);
+		return $document->content();
 	}
 ?>

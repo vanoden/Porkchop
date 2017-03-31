@@ -1,5 +1,5 @@
-<?	if (! role('monitor admin'))
-	{
+<?
+	if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')){
 		print "<span class=\"form_error\">You are not authorized for this view!</span>";
 		return;
 	}

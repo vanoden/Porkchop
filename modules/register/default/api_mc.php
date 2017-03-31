@@ -22,7 +22,7 @@
 		exit;
 	}
     # Only Developers Can See The API
-	elseif (! in_array('register manager',$GLOBALS['_SESSION_']->customer->roles)) {
+	elseif (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
         header("location: /_register/login");
         exit;
     }
@@ -37,8 +37,7 @@
 		$response->package_version = $_package["version"];
 		$response->release_date = $_package["release"];
 		$response->success = 1;
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -53,8 +52,7 @@
 		$response->success = 1;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Authenticate Session						###
@@ -83,8 +81,7 @@
 		}
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Get Details regarding Specified Customer	###
@@ -108,8 +105,7 @@
 		}
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Update Specified Customer					###
@@ -152,8 +148,7 @@
 		$response->success = 1;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -193,8 +188,7 @@
 		$response->customer = $customers;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Find Role Members							###
@@ -219,8 +213,7 @@
 		$response->admin = $admins;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Add a User Role								###
@@ -238,8 +231,7 @@
 		$response->success = 1;
 		$response->role = $result;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Create Customer Image						###
@@ -277,8 +269,7 @@
 		}
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response);
 	}
 	###################################################
 	### Add a New Customer via Registration			###
@@ -326,8 +317,7 @@
 		$response->success = 1;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response);
 	}
 	function findContacts() {
 		$_contact = new \Register\Contact();
@@ -354,8 +344,7 @@
 		
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response,array());
+		print formatOutput($response,array());
 	}
 	###################################################
 	### Verify Users Email Address					###
@@ -382,8 +371,7 @@
 		$response->success = 1;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -418,8 +406,7 @@
 		$response->success = 1;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -452,8 +439,7 @@
 		$response->organization = $organization;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response);
 	}
 	###################################################
 	### Get Organization							###
@@ -476,8 +462,7 @@
 		$response->organization = $organization;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -508,8 +493,7 @@
 		$response->organization = $organizations;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Find Organization Owned Products			###
@@ -552,8 +536,7 @@
 		$response->product = $products;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -591,8 +574,7 @@
 		$response->product = $product;
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Add Organization Owned Product				###
@@ -631,7 +613,7 @@
 
 		# Send Response
 		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	function expireAgingCustomers() {
 		if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
@@ -658,8 +640,7 @@
 		}
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	function expireInactiveOrganizations () {
 		if (role('register manager')) {
@@ -687,7 +668,7 @@
 
 		# Send Response
 		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	function schemaVersion() {
 		$schema = new \Register\Schema();
@@ -698,8 +679,7 @@
 		$response = new stdClass();
 		$response->success = 1;
 		$response->version = $version;
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### System Time									###
@@ -723,31 +703,20 @@
 		$response->message = $message;
 		$response->success = 0;
 		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response,array("stylesheet" => $_REQUEST["stylesheet"]));
 		exit;
 	}
-	###################################################
-	### Convert Object to XML						###
-	###################################################
-	function XMLout($object,$user_options = array()) {
-		require 'XML/Unserializer.php';
-    	require 'XML/Serializer.php';
-    	$options = array(
-    	    XML_SERIALIZER_OPTION_INDENT        => '    ',
-    	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
-			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
-			'rootName'							=> 'opt',
-    	);
-    	$xml = &new XML_Serializer($options);
-	   	if ($xml->serialize($object))
-		{
-			//error_log("Returning ".$xml->getSerializedData());
-			$output = $xml->getSerializedData();
-			if (array_key_exists("stylesheet",$user_options))
-			{
-				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>\n".$output;
-			}
-			return $output;
+	function formatOutput($object) {
+		if ($_REQUEST['_format'] == 'json') {
+			$format = 'json';
+			header('Content-Type: application/json');
 		}
+		else {
+			$format = 'xml';
+			header('Content-Type: application/xml');
+		}
+		$document = new \Document($format);
+		$document->prepare($object);
+		return $document->content();
 	}
 ?>

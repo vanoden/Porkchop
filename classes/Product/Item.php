@@ -6,6 +6,7 @@
 		public $code;
 		public $name;
 		public $description;
+		public $type;
 
 		public function __construct($id = 0) {
 			# Clear Error Info
@@ -40,6 +41,7 @@
 		}
 
 		public function get($code = '') {
+			app_log("Product::Item::get()",'trace',__FILE__,__LINE__);
 			# Prepare Query to Get Product
 			$get_object_query = "
 				SELECT	id
@@ -67,6 +69,7 @@
 		}
 
 		public function update($parameters) {
+			app_log("Product::Item::update()",'trace',__FILE__,__LINE__);
 			if (! $GLOBALS['_SESSION_']->customer->has_role('product manager')) {
 				$this->error = "You do not have permissions for this task.";
 				app_log($GLOBALS['_SESSION_']->customer->login." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
@@ -111,27 +114,32 @@
 		}
 
 		public function add($parameters) {
+			app_log("Product::Item::add()",'trace',__FILE__,__LINE__);
 			if (! $GLOBALS['_SESSION_']->customer->has_role('product manager')) {
 				$this->error = "You do not have permissions for this task.";
 				app_log($GLOBALS['_SESSION_']->customer->login." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
 				app_log(print_r($GLOBALS['_SESSION_'],true),'debug',__FILE__,__LINE__);
-				return 0;
+				return null;
 			}
 			$this->error = '';
 
 			# Make Sure Minimum Parameters Sent
 			if (! $parameters['code']) {
 				$this->error = "Code required to add product";
-				return 0;
+				return null;
 			}
 			if ($this->get($parameters['code'])) {
 				$this->error = "Code '".$parameters['code']."' is not unique";
-				return 0;
+				return null;
+			}
+			else {
+				# Hide error because no match found above
+				$this->error = null;
 			}
 
 			if (! $parameters['type']) {
 				$this->error = "Valid product type required";
-				return 0;
+				return null;
 			}
 
 			# Prepare Query to Create Product
@@ -157,7 +165,7 @@
 			);
             if (! $rs) {
                 $this->error = "SQL Error: ".$GLOBALS['_database']->ErrorMsg();
-                return 0;
+                return null;
             }
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
@@ -166,6 +174,7 @@
 		}
 
 		public function details() {
+			app_log("Product::Item::details()",'trace',__FILE__,__LINE__);
 			# Prepare Query to Get Product Details
 			$get_details_query = "
 				SELECT	id,
@@ -192,6 +201,7 @@
 			$this->code = $object->code;
 			$this->name = $object->name;
 			$this->description = $object->description;
+			$this->type = $object->type;
 			$this->metadata = $this->getMeta();
 			$this->images = $this->images();
 
@@ -199,8 +209,8 @@
 		}
 
 		public function inCategory($category,$product = '') {
-			if ($product)
-			{
+			app_log("Product::Item::inCategory()",'trace',__FILE__,__LINE__);
+			if ($product) {
 				$_product = new Product($product);
 				$product_id = $_product->{id};
 			}

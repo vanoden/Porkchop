@@ -1,9 +1,16 @@
 		<span class="title">Porkchop Spectros API Version <?=$_package["version"]?></span>
-		<div id="scroller" style="width: 600px; height: 500px; overflow: auto; margin-left: 50px;">
+		<div id="apiScroller">
 			<form method="post" action="/_email/api" name="ping">
 			<input type="hidden" name="method" value="ping">
 			<div class="apiMethod">
 				<div class="h3 apiMethodTitle">ping</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
+			<form method="post" action="<?=PATH?>/_email/api" name="schemaVersion">
+			<input type="hidden" name="method" value="schemaVersion">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">schemaVersion</div>
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
 			</form>

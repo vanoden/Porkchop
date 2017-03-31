@@ -17,7 +17,7 @@
 		exit;
 	}
 	# Only Developers Can See The API
-	elseif (! in_array('content operator',$GLOBALS['_SESSION_']->customer->roles)) {
+	elseif (! $GLOBALS['_SESSION_']->customer->has_role('content operator')) {
 		header("location: /_content/home");
 		exit;
 	}

@@ -15,15 +15,10 @@
 	###############################################
 	### Load API Objects						###
     ###############################################
-	# Product Module Classes
-	require_once(MODULES.'/email/_classes/default.php');
-
 	# Default Response Values
 	$response->success = 0;
 	$response->method = $_REQUEST["method"];
 
-	$_init = new EmailInit();
-	
 	# Call Requested Event
 	if ($_REQUEST["method"])
 	{
@@ -34,17 +29,16 @@
 		exit;
 	}
 	# Only Developers Can See The API
-	elseif (! in_array('email manager',$GLOBALS['_SESSION_']->customer->roles))
-	{
-		#header("location: /_email/home");
-		#exit;
+	elseif (! $GLOBALS['_SESSION_']->customer->has_role('email manager')) {
+		header("location: /_email/home");
+		exit;
 	}
 
 	###################################################
 	### Just See if Server Is Communicating			###
 	###################################################
-	function ping()
-	{
+	function ping() {
+		$response = new \HTTP\Response();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
 		$response->header->method = $_REQUEST["method"];
 		$response->header->date = system_time();
@@ -57,17 +51,18 @@
 	###################################################
 	### Send Email									###
 	###################################################
-	function sendEmail()
-	{
+	function sendEmail() {
 		$parameters = array();
 		if ($_REQUEST['to']) $parameters['to'] = $_REQUEST['to'];
 		if ($_REQUEST['from']) $parameters['from'] = $_REQUEST['from'];
 		if ($_REQUEST['body']) $parameters['body'] = $_REQUEST['body'];
 		if ($_REQUEST['subject']) $parameters['subject'] = $_REQUEST['subject'];
 
-		$_email = new EmailMessage();
-		$_email->send($parameters);
-		if ($_email->error) app_error($_email->error,__FILE__,__LINE__);
+		$email = new \Email\Message();
+		$email->send($parameters);
+		if ($email->error) app_error($email->error,__FILE__,__LINE__);
+		
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->result = 'Sent';
 
@@ -78,15 +73,13 @@
 	###################################################
 	### System Time									###
 	###################################################
-	function system_time()
-	{
+	function system_time() {
 		return date("Y-m-d H:i:s");
 	}
 	###################################################
 	### Application Error							###
 	###################################################
-	function app_error($message,$file = __FILE__,$line = __LINE__)
-	{
+	function app_error($message,$file = __FILE__,$line = __LINE__) {
 		app_log($message,'error',$file,$line);
 		error('Application Error');
 	}
@@ -96,6 +89,7 @@
 	function error($message)
 	{
 		$_REQUEST["stylesheet"] = '';
+		$response = new \HTTP\Response();
 		$response->message = $message;
 		$response->success = 0;
 		header('Content-Type: application/xml');
@@ -105,10 +99,8 @@
 	###################################################
 	### Convert Object to XML						###
 	###################################################
-	function XMLout($object,$user_options='')
-	{
-		if (0)
-		{
+	function XMLout($object,$user_options='') {
+		if (0) {
 			$fp = fopen('/var/log/api/monitor.log', 'a');
 			fwrite($fp,"#### RESPONSE ####\n");
 			fwrite($fp, print_r($object,true));
@@ -121,28 +113,18 @@
     	    XML_SERIALIZER_OPTION_INDENT        => '    ',
     	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
 			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
+			'rootName'							=> 'opt'
     	);
-		if ($user_options["rootname"])
-		{
-			$options["rootName"] = $user_options["rootname"];
-		}
-    	$xml = &new XML_Serializer($options);
-	   	if ($xml->serialize($object))
-		{
-			//error_log("Returning ".$xml->getSerializedData());
+    	$xml = new XML_Serializer($options);
+	   	if ($xml->serialize($object)) {
 			$output = $xml->getSerializedData();
-			if ($user_options["stylesheet"])
-			{
-				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
-			}
 			return $output;
 		}
 	}
 	###################################################
 	### Convert XML to Object						###
 	###################################################
-	function XMLin($string,$user_options = array())
-	{
+	function XMLin($string,$user_options = array()) {
 		require 'XML/Unserializer.php';
     	require 'XML/Serializer.php';
     	$options = array(
@@ -150,14 +132,12 @@
 			XML_UNSERIALIZER_OPTION_COMPLEXTYPE => 'object'
     	);
     	$_xml = &new XML_Unserializer($options);
-	   	if ($_xml->unserialize($string))
-		{
+	   	if ($_xml->unserialize($string)) {
 			//error_log("Returning ".$xml->getSerializedData());
 			$object = $xml->getUnserializedData();
 			return $object;
 		}
-		else
-		{
+		else {
 			error("Invalid xml in request");
 		}
 	}
