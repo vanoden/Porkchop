@@ -11,8 +11,16 @@ For example:
 
 would load the 'account' view of the 'register' module populated with account information for the user 'bobdole'.
 
-*Installation
+## Installation
 
 Clone the repository into a folder of your choice.  Configure your web server to use the 'html' subfolder as it's document root.
 
 You will need to configure the server to rewrite urls beginning with '/_' to load '/core/index.php'.  Look in /misc for a sample Apache configuration.
+
+## Configuration
+
+Copy the file '/config/config.php.dist' to '/config/config.php'.  Edit the file with your database connection information and other things specific to your site.
+
+## Use
+
+This package was developed by Anthony Caravello.  It is released under the MIT license.  See LICENSE.txt for more information.
