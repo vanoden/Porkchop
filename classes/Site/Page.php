@@ -193,7 +193,7 @@
 			}
 			elseif (file_exists(HTML."/install.html"))
 				$html = file_get_contents(HTML."/install.html");
-			else $html = '';
+			else $html = '<r7 object="page" property="view"/>';
 			return $this->parse($html);
 		}
 
