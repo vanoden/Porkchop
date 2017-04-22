@@ -5,8 +5,9 @@
 	define ( 'HTML', BASE.'/html' );
 	define ( 'INCLUDES', BASE.'/'.ENV.'/includes' );
 	define ( 'MODULES', BASE.'/'.ENV.'/modules' );
-	define ( 'THIRD_PARTY', BASE.'/third_party' );
+	define ( 'THIRD_PARTY', BASE.'/third_party/vendor' );
 	define ( 'RESOURCES', BASE.'/resources' );
+	define ( 'CLASS_PATH', BASE.'/classes' );
 
 	# Mail Server
 	$_config->smtp_server = 'mail.rootseven.com';
