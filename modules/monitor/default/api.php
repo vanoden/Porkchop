@@ -146,6 +146,29 @@
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
 			</form>
+			<form method="post" action="<?=PATH?>/_monitor/api" name="setSensorStatus">
+			<input type="hidden" name="method" value="setSensorStatus">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">setSensorStatus</div>
+				<div class="apiParameter">
+					<span class="label apiLabel">sensor_code</span>
+					<input type="text" name="sensor_code" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
+					<span class="label apiLabel">asset_code</span>
+					<input type="text" name="asset_code" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
+					<span class="label apiLabel">key</span>
+					<input type="text" name="key" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
+					<span class="label apiLabel">value</span>
+					<input type="text" name="value" class="value input apiInput"/>
+				</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
 			<form method="post" action="<?=PATH?>/_monitor/api" name="addReading">
 			<input type="hidden" name="method" value="addReading">
 			<div class="apiMethod">

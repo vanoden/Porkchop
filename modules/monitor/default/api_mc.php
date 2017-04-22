@@ -933,7 +933,54 @@
 		api_log($response);
 		print formatOutput($response);
 	}
+	###################################################
+	### Set Sensor Status							###
+	###################################################
+	function setSensorStatus() {
+		if (! $GLOBALS['_SESSION_']->customer->id)
+			error("Authentication Required");
+		if ((! $GLOBALS['_SESSION_']->customer->organization->id) and (! in_array('monitor admin',$GLOBALS['_SESSION_']->customer->roles)))
+			error("Must belong to an organization");
+		if (isset($_REQUEST['organization'])) {
+			if (! in_array('monitor admin',$GLOBALS['_SESSION_']->customer->roles)) error("No permission for adding to other organizations");
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization']);
+			if ($organization->error) app_error("Error initializing organization: ".$organization->error,__FILE__,__LINE__);
+			if (! $organization->id) error("Organization not found");
+		}
+		else
+			$organization = $GLOBALS['_SESSION_']->customer->organization;
 
+		# Get Asset (Monitor) by code
+		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['asset_code'])) error("Valid asset_code required");
+		$assetlist = new \Monitor\AssetList();
+		if ($assetlist->error) app_error("Error initializing Asset: ".$assetlist->error,__FILE__,__LINE__);
+		list($asset) = $assetlist->find(array('code' => $_REQUEST['asset_code']));
+		if ($assetlist->error) app_error("Error finding Asset: ".$assetlist->error,__FILE__,__LINE__);
+		if (! $asset->id) error("Could not find Asset '".$_REQUEST['asset_code']."' for organization '".$organization->id."'");
+
+		# Get Sensor by asset id/code
+		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['sensor_code'])) error("Valid sensor_code required");
+		$sensor = new \Monitor\Sensor();
+		if ($sensor->error) app_error("Error initializing sensor: ".$sensor->error,__FILE__,__LINE__);
+		$sensor->get($_REQUEST['sensor_code'],$asset->id);
+		if ($sensor->error) app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
+		if (! $sensor->id) error("Sensor ".$_REQUEST['sensor_code']." not found for asset ".$_REQUEST['asset_code']);
+
+		# Set Status
+		$status = new \Monitor\Sensor\Status($sensor->id,$_REQUEST['key']);
+		if ($status->error) app_error("Error initializing status: ".$status->error);
+		$status->set($_REQUEST['value']);
+		if ($status->error) app_error("Error adding status: ".$status->error);
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->status = $status;
+
+		$_comm = new \Monitor\Communication();
+		$_comm->update(json_encode($response));
+		api_log($response);
+		print formatOutput($response);
+	}
 	###################################################
 	### Add a Reading								###
 	###################################################

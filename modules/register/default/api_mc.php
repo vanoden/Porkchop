@@ -16,6 +16,7 @@
 	# Call Requested Event
 	//error_log($_REQUEST['action']." Request received from ".$_REQUEST['hub_code']);
 	if (isset($_REQUEST["method"])) {
+		header('Access-Control-Allow-Origin: *');  
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
 		$function_name($_package);
