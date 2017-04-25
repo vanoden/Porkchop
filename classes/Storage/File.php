@@ -9,6 +9,9 @@
 		public $uri;
 		public $read_protect;
 		public $write_protect;
+		public $mime_type;
+		public $size;
+		private $_name;
 
 		public function __construct($id = 0) {
 			if ($id > 0) {
@@ -90,7 +93,7 @@
 			}
 			$object = $rs->FetchNextObject(false);
 			$this->code = $object->code;
-			$this->name = $object->name;
+			$this->name = $this->_name = $object->name;
 			$this->mime_type = $object->mime_type;
 			$this->size = $object->size;
 			$this->user = new \Register\Customer($object->user_id);
@@ -99,7 +102,6 @@
 			if ($this->repository->endpoint) $this->uri = $this->repository->endpoint."/".$this->name;
 			$this->read_protect = $object->read_protect;
 			$this->write_protect = $object->write_protect;
-
 			return true;
 		}
 
@@ -153,7 +155,7 @@
 		}
 
 		private function _valid_type($name) {
-			if (preg_match('/^(image|application|text)\/(png|jpg|tif|plain|html|csv|cs|js|xml|json)$/',$name)) {
+			if (preg_match('/^(image|application|text)\/(png|jpg|tif|plain|html|csv|cs|js|xml|json|gzip)$/',$name)) {
 				return true;
 			}
 			return false;
@@ -331,6 +333,10 @@
 				if ($ok > 0) return true;
 			}
 			return false;
+		}
+
+		public function download() {
+			return $this->repository->retrieveFile($this);
 		}
 	}
 ?>

@@ -65,7 +65,7 @@
 
 		public function addFile($file,$path) {
 			# Write contents to filesystem
-			return move_uploaded_file($path,$this->_path()."/".$file->name);
+			return move_uploaded_file($path,$this->_path()."/".$file->name());
 		}
 
 		public function retrieveFile($file) {
@@ -82,10 +82,9 @@
 			}
 
 			header("Content-Type: ".$file->mime_type);
+			header('Content-Disposition: filename="'.$file->name().'"');
 			while (!feof($fh)) {
 				$buffer = fread($fh,8192);
-				#$stream_meta_data = stream_get_meta_data($fh);
-				#if($stream_meta_data['unread_bytes'] <= 0) break;
 				print $buffer;
 				flush();
 				ob_flush();

@@ -17,9 +17,7 @@
 			}
 		}
 		public function load($id) {
-			app_log("Searching for repo ".$id);
 			$repository = new Repository($id);
-			app_log("Found repo ".$repository->id);
 			if (! $repository->id) {
 				$this->error = "Repository not found";
 				return false;

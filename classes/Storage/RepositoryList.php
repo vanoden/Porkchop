@@ -29,7 +29,6 @@
 			while(list($id,$type) = $rs->FetchRow()) {
 				$factory = new RepositoryFactory();
 				$repository = $factory->create($type,$id);
-				app_log("Returning repository $id: ".print_r($repository,true),'debug',__FILE__,__LINE__);
 				array_push($repositories,$repository);
 				$this->count ++;
 			}

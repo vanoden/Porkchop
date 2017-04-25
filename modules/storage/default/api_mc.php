@@ -425,29 +425,4 @@
 		$document->prepare($object);
 		return $document->content();
 	}
-
-	function guess_mime_type($string) {
-		if (preg_match('/\.(\w+)$/',$string,$matches)) {
-			$extension = $matches[1];
-			switch($extension) {
-				case "png":
-					return "image/png";
-					break;
-				case "jpg":
-					return "image/jpeg";
-					break;
-				case "tif":
-					return "image/tiff";
-					break;
-				case "txt":
-					return "text/plain";
-					break;
-				case "html":
-					return "text/html";
-					break;
-				default:
-					return null;
-			}
-		}
-	}
 ?>
