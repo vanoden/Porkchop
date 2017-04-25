@@ -351,4 +351,41 @@
 	
 		return $result;
 	}
+
+	function guess_mime_type($string) {
+		if (preg_match('/\.(\w+)$/',$string,$matches)) {
+			$extension = $matches[1];
+			switch($extension) {
+				case "csv":
+					return "text/csv";
+					break;
+				case "gpg":
+					return "application/pgp-encrypted";
+					break;
+				case "gz":
+					return "application/gzip";
+					break;
+				case "html":
+					return "text/html";
+					break;
+				case "jpg":
+					return "image/jpeg";
+					break;
+				case "png":
+					return "image/png";
+					break;
+				case "tif":
+					return "image/tiff";
+					break;
+				case "tgz":
+					return "application/tar+gzip";
+					break;
+				case "txt":
+					return "text/plain";
+					break;
+				default:
+					return null;
+			}
+		}
+	}
 ?>
