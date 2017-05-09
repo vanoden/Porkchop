@@ -24,7 +24,7 @@
 		}
 
 		# Get Count before Pagination
-		$organizationlist->find($find_parameters);
+		$organizationlist->find($find_parameters,false);
 		$total_organizations = $organizationlist->count;
 
 		# Add Pagination to Query

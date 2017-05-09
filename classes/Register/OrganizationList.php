@@ -3,7 +3,8 @@
 
 	class OrganizationList {
 		public $count = 0;
-		public function find($parameters = array()) {
+		public function find($parameters = array(),$recursive = true) {
+			app_log("Register::OrganizationList::find()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$get_organizations_query = "
 				SELECT	id
@@ -50,14 +51,21 @@
 			}
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
-				$organization = new Organization($id);
-				$organization->details();
-				$this->count ++;
-				array_push($organizations,$organization);
+				if ($recursive) {
+					$organization = new Organization($id);
+					$organization->details();
+					$this->count ++;
+					array_push($organizations,$organization);
+				}
+				else {
+					array_push($organizations,$id);
+					$this->count ++;
+				}
 			}
 			return $organizations;
 		}
 		public function findArray($parameters = array()) {
+			app_log("Register::OrganizationList::findArray()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$objects = $this->find($parameters);
 

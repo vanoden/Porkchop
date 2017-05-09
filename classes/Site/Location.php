@@ -111,7 +111,7 @@
 				$this->error = "code parameter required in Site::Domain::add";
 				return undef;
 			}
-			
+	
 			$add_object_query = "
 				INSERT
 				INTO	company_locations
@@ -132,8 +132,8 @@
 				return undef;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
-			
-			return $this->update($this->id,$parameters);
+
+			return $this->update($parameters);
 		}
 
 		public function update($parameters = array()) {
@@ -151,6 +151,15 @@
 				UPDATE	company_locations
 				SET		id = id";
 			
+			if (preg_match('/^[\w\-\.]+$/',$parameters['host']))
+				$update_object_query .= ",
+					host = ".$GLOBALS['_database']->qstr($parameters['host'],get_magic_quotes_gpc());
+			
+			if (preg_match('/^\d+$/',$parameters['domain_id']))
+				$update_object_query .= ",
+					domain_id = ".$GLOBALS['_database']->qstr($parameters['domain_id'],get_magic_quotes_gpc());
+
+
 			$update_object_query .= "
 				WHERE	id = ?
 			";

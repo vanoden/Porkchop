@@ -24,6 +24,7 @@
 		}
 
 		public function add($parameters) {
+			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$add_object_query = "
 				INSERT
@@ -48,6 +49,7 @@
 		}
 
 		public function update($parameters = array()) {
+			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			
 			# Bust Cache
@@ -82,6 +84,7 @@
 			return $this->details();
 		}
 		public function get($code = '') {
+			app_log("Register::Organization::get()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$get_object_query .= "
 				SELECT	id
@@ -101,6 +104,7 @@
 			return $this->details();
 		}
 		public function details() {
+			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
 			$this->error = null;
 
 			$cache_key = "organization[".$this->id."]";
@@ -159,6 +163,7 @@
 			return $object;
 		}
 		public function members() {
+			app_log("Register::Organization::members()",'trace',__FILE__,__LINE__);
 			$customerlist = new CustomerList();
 			#print "Finding members of org $id<br>\n";
 			return $customerlist->find(array('organization_id' => $this->id));

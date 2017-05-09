@@ -169,7 +169,8 @@
 			"warning"	=> LOG_WARNING,
 			"notice"	=> LOG_NOTICE,
 			"info"		=> LOG_INFO,
-			"debug"		=> LOG_DEBUG
+			"debug"		=> LOG_DEBUG,
+			"trace"		=> LOG_DEBUG
 		);
 
 		# Make Sure Severity Level is Valid
@@ -177,7 +178,8 @@
 		if (! array_key_exists($level,$syslog_xref)) $level = "info";
 
 		# Filter on log level
-		if (APPLICATION_LOG_LEVEL == "error" && in_array($level,array('debug','info','notice','warning'))) return null;
+		if (APPLICATION_LOG_LEVEL == "trace" && in_array($level,array('trace','debug','info','notice','warning'))) return null;
+		elseif (APPLICATION_LOG_LEVEL == "error" && in_array($level,array('debug','info','notice','warning'))) return null;
 		elseif (APPLICATION_LOG_LEVEL == "warning" && in_array($level,array('debug','info','notice'))) return null;
 		elseif (APPLICATION_LOG_LEVEL == "notice" && in_array($level,array('debug','info'))) return null;
 		elseif (APPLICATION_LOG_LEVEL == "info" && $level == "debug") return null;

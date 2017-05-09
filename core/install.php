@@ -36,8 +36,8 @@
 	spl_autoload_register('load_class');
 
 	# Database Abstraction
-	require THIRD_PARTY.'/adodb/adodb-exceptions.inc.php';
-	require THIRD_PARTY.'/adodb/adodb.inc.php';
+	require THIRD_PARTY.'/adodb/adodb-php/adodb-exceptions.inc.php';
+	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
 
 	# Don't Cache this Page
 	header("Expires: 0");

@@ -314,14 +314,9 @@
 			# Load MediaItem Class
 			$images = array();
 			while (list($image_id) = $rs->FetchRow()) {
-				$_image = new \MediaItem();
-				if ($_image->error) {
-					$this->error = "Could not load MediaItem class: ".$_image->error;
-					return null;
-				}
-				$image = $_image->details($image_id);
-				if ($_image->error) {
-					$this->error = "Error loading image: ".$_image->error;
+				$image = new \Media\Item($image_id);
+				if ($image->error) {
+					$this->error = "Could not load Media Item class: ".$_image->error;
 					return null;
 				}
 				array_push($images,$image);

@@ -41,30 +41,6 @@
 			$this->id = $id;
 			return $this->details();
 		}
-		public function find($parameters = array()) {
-			$find_objects_query = "
-				SELECT	id
-				FROM	company_domains
-				WHERE	id = id";
-
-			if ($parameters['name']) {
-				$find_objects_query .= "
-				AND		domain_name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
-			}
-
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
-			if (! $rs) {
-				$this->error = "SQL Error in Site::Domain::find: ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
-			}
-			
-			$objects = array();
-			while (list($id) = $rs->FetchRow())
-			{
-				array_push($objects,$this->details($id));
-			}
-			return $objects;
-		}
 
 		public function details() {
 			$get_details_query = "
@@ -94,9 +70,14 @@
 		}
 
 		public function add($parameters = array()) {
-			if (! preg_match('/^\d+$/',$GLOBALS['_session']->company->id)) {
-				$this->error = "company must be set for Site::Domain::add";
-				return undef;
+			if (! isset($parameters['company_id'])) {
+				if (preg_match('/^\d+$/',$GLOBALS['_SESSION_']->company->id)) {
+					$parameters['company_id'] = $GLOBALS['_SESSION_']->company->id;
+				}
+				else {
+					$this->error = "company must be set for Site::Domain::add";
+					return undef;
+				}
 			}
 			if (! preg_match('/\w/',$parameters['name'])) {
 				$this->error = "name parameter required in Site::Domain::add";
@@ -136,6 +117,11 @@
 				return undef;
 			}
 
+			# Update Object
+			$update_object_query = "
+				UPDATE	company_domains
+				SET		id = id";
+
 			if ($parameters['name'])
 				$update_object_query .= ",
 						domain_name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
@@ -148,11 +134,16 @@
 				$update_object_query .= ",
 						status = ".$parameters['status'];
 
-			# Update Object
-			$update_object_query = "
-				UPDATE	company_domains
-				SET		id = id";
-			
+			if (isset($parameters['location_id']) && strlen($parameters['location_id'])) {
+				$location = new \Site\Location($parameters['location_id']);
+				if (! $location->id) {
+					$this->error = "Location ID not found";
+					return false;
+				}
+				$update_object_query .= ",
+					location_id = ".$location->id;
+			}
+
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -163,7 +154,7 @@
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Site::Domain::update: ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				return false;
 			}
 			
 			return $this->details($id);
