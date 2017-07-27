@@ -806,10 +806,10 @@
 		if (! $_REQUEST['code']) error("Code required for addSensor");
 		if (! $_REQUEST['asset_code']) error("Asset required for addSensor");
 
-		$asset = new \Monitor\Asset();
-		if ($asset->error) app_error("Error adding asset: ".$asset->error,__FILE__,__LINE__);
-		$asset->get($_REQUEST['asset_code']);
-		if ($asset->error) app_error("Error finding asset: ".$asset->error,__FILE__,__LINE__);
+		$assetlist = new \Monitor\AssetList();
+		if ($assetlist->error) app_error("Error adding asset: ".$assetlist->error,__FILE__,__LINE__);
+		list($asset) = $assetlist->find(array("code" => $_REQUEST['asset_code']));
+		if ($assetlist->error) app_error("Error finding asset: ".$assetlist->error,__FILE__,__LINE__);
 		if (! $asset->id) error("Asset ".$_REQUEST['asset_code']." not found");
 		if ($asset->organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 			error("No permissions to edit this asset");
@@ -1048,26 +1048,26 @@
 			if (! $collection->id) error("Collection not found");
 		}
 		if ($_REQUEST['asset_code']) {
-			$_asset = new \Monitor\Asset();
-			if ($_asset->error) error("Error finding asset: ".$_asset->error);
-			list($asset) = $_asset->find(
+			$assetlist = new \Monitor\AssetList();
+			if ($assetlist->error) error("Error finding asset: ".$assetlist->error);
+			list($asset) = $assetlist->find(
 				array (
 					'code'	=> $_REQUEST['asset_code']
 				)
 			);
-			if ($_asset->error) error("Error finding asset: ".$_asset->error);
+			if ($assetlist->error) error("Error finding asset: ".$assetlist->error);
 			if (! $asset->id) error("Asset not found");
 		}
 		if ($_REQUEST['sensor_code']) {
-			$_sensor = new \Monitor\Sensor();
-			if ($_sensor->error) error("Error finding sensor: ".$_sensor->error);
-			list($sensor) = $_sensor->find(
+			$sensorlist = new \Monitor\SensorList();
+			if ($sensorlist->error) error("Error finding sensor: ".$sensorlist->error);
+			list($sensor) = $sensorlist->find(
 				array (
 					'code'		=> $_REQUEST['sensor_code'],
-					'asset_id'	=> $_asset->id,
+					'asset_id'	=> $asset->id,
 				)
 			);
-			if ($_sensor->error) error("Error finding sensor: ".$_sensor->error);
+			if ($sensorlist->error) error("Error finding sensor: ".$sensorlist->error);
 			if (! $sensor->id) error("Sensor not found");
 		}
 		$readinglist = new \Monitor\ReadingList();

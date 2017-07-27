@@ -284,14 +284,23 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
 		# Initiate Image Object
-		$_user = new Customer();
+		$user = new \Register\Customer();
+		$user->get($_REQUEST['login']);
+		if ($user->id) {
+			error("Duplicate Login");
+		}
 
 		$organization_id = 0;
-		if ($_REQUEST['organization'])
-		{
-			$_organization = new \Register\Organization();
-			$organization = $_organization->get($_REQUEST['organization']);
-			if ($_organization->error) app_error("Error finding organization: ",'error',__FILE__,__LINE__);
+		if ($_REQUEST['organization_id']) {
+			$organization = new \Register\Organization($_REQUEST['organization_id']);
+            if ($organization->error) app_error("Error finding organization: ",'error',__FILE__,__LINE__);
+            if (! $organization->id) error("Could not find organization by id");
+            $organization_id = $organization->id;
+		}
+		elseif ($_REQUEST['organization']) {
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization']);
+			if ($organization->error) app_error("Error finding organization: ",'error',__FILE__,__LINE__);
 			if (! $organization->id) error("Could not find organization");
 			$organization_id = $organization->id;
 		}
@@ -299,7 +308,7 @@
 		if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['code'];
 
 		# Add Event
-		$_user->add(
+		$user->add(
 			array(
 				first_name		=> $_REQUEST['first_name'],
 				last_name		=> $_REQUEST['last_name'],
@@ -312,9 +321,9 @@
 		);
 
 		# Error Handling
-		if ($_user->error) error($_user->error);
+		if ($user->error) error($user->error);
 		$response = new stdClass();
-		$response->customer = $_user->details();
+		$response->customer = $user;
 		$response->success = 1;
 
 		# Send Response

@@ -41,6 +41,10 @@
 					<span class="label apiLabel">name</span>
 					<input type="text" name="name" class="value input apiInput"/>
 				</div>
+				<div class="apiParameter">
+					<span class="label apiLabel">organization_id</span>
+					<input type="text" name="organization_id" class="value input apiInput"/>
+				</div>
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
 			</form>
