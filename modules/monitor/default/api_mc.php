@@ -806,10 +806,10 @@
 		if (! $_REQUEST['code']) error("Code required for addSensor");
 		if (! $_REQUEST['asset_code']) error("Asset required for addSensor");
 
-		$asset = new \Monitor\Asset();
-		if ($asset->error) app_error("Error adding asset: ".$asset->error,__FILE__,__LINE__);
-		$asset->get($_REQUEST['asset_code']);
-		if ($asset->error) app_error("Error finding asset: ".$asset->error,__FILE__,__LINE__);
+		$assetList = new \Monitor\AssetList();
+		if ($assetList->error) app_error("Error finding asset: ".$assetList->error,__FILE__,__LINE__);
+		list($asset) = $assetList->find(array("code" => $_REQUEST['asset_code']));
+		if ($assetList->error) app_error("Error finding asset: ".$assetList->error,__FILE__,__LINE__);
 		if (! $asset->id) error("Asset ".$_REQUEST['asset_code']." not found");
 		if ($asset->organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 			error("No permissions to edit this asset");
