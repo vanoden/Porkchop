@@ -1,5 +1,5 @@
 <?php
-	namespace Site;
+	namespace Session;
 
 	class Schema {
 		public $errno;

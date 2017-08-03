@@ -19,6 +19,9 @@
 		}
 		return 0;
 	}
+	function _debug_print($message) {
+		error_log("DEBUG: ".$message);
+	}
 	function get_mysql_date($date,$range=0) {
 		# Handle Some Keywords
 		if (preg_match("/today/i",$date)) return date("Y-m-d");

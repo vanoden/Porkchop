@@ -1,5 +1,5 @@
 <?
-	namespace Site;
+	namespace Company;
 
 	class Location {
 		private $schema_version = 1;
@@ -40,7 +40,7 @@
 				array($name)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Location::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Company::Location::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return undef;
 			}
 			list($id) = $rs->FetchRow();
@@ -59,7 +59,7 @@
 				array($hostname)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Location::getByHost(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Company::Location::getByHost(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -78,12 +78,12 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Domain::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Company::Domain::details: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
 			$object = $rs->FetchNextObject(false);
-			$this->company = new \Site\Company($object->company_id);
+			$this->company = new \Company\Company($object->company_id);
 			$this->code = $object->code;
 			$this->address_1 = $object->address_1;
 			$this->address_2 = $object->address_2;
@@ -97,18 +97,18 @@
 			$this->name = $object->name;
 			$this->service_contact = $object->service_contact;
 			$this->sales_contact = $object->sales_contact;
-			$this->domain = new \Site\Domain($object->domain_id);
+			$this->domain = new \Company\Domain($object->domain_id);
 			$this->host = $object->host;
 			return $object;
 		}
 
 		public function add($parameters = array()) {
 			if (! preg_match('/^\d+$/',$parameters['company_id'])) {
-				$this->error = "company_id parameter required for Site::Domain::add";
+				$this->error = "company_id parameter required for Company::Domain::add";
 				return undef;
 			}
 			if (! preg_match('/\w/',$parameters['code'])) {
-				$this->error = "code parameter required in Site::Domain::add";
+				$this->error = "code parameter required in Company::Domain::add";
 				return undef;
 			}
 	
@@ -128,7 +128,7 @@
 				array($parameters["company_id"],$parameters["code"])
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Domain::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Company::Domain::add: ".$GLOBALS['_database']->ErrorMsg();
 				return undef;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -138,7 +138,7 @@
 
 		public function update($parameters = array()) {
 			if (! preg_match('/^\d+$/',$this->id)) {
-				$this->error = "Valid id required for details in Site::Domain::update";
+				$this->error = "Valid id required for details in Company::Domain::update";
 				return undef;
 			}
 
@@ -169,7 +169,7 @@
 				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Location::update: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Company::Location::update: ".$GLOBALS['_database']->ErrorMsg();
 				return undef;
 			}
 			return $this->details($id);

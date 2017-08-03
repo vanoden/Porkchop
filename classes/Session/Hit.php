@@ -1,5 +1,5 @@
 <?php
-	namespace Site;
+	namespace Session;
 
 	class Hit {
 		public $error;

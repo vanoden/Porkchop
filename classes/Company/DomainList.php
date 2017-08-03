@@ -1,5 +1,5 @@
 <?
-	namespace Site;
+	namespace Company;
 
 	class DomainList {
 		public $error;

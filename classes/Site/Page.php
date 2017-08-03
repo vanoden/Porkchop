@@ -251,6 +251,7 @@
 			if (array_key_exists('object',$parameter)) $object = $parameter['object'];
 			if (array_key_exists('property',$parameter)) $property = $parameter['property'];
 
+			_debug_print("Object: $object Property: $property");
 			if ($object == "constant") {
 				if ($property == "path") {
 					$buffer .= PATH;
@@ -378,7 +379,7 @@
 							$buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(contentElem).style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(contentElem).style.border = \'0px\'; } </script>';
 							$buffer .= "<div>";
 							$buffer .= '<div id="r7_widget['.$origin_id.']">'.$message->content.'</div>';
-							$buffer .= '<a style="border: 1px solid black" href="javascript:void(0)" onclick="editContent(\'content\',\''.$origin_id.'\',\''.$message->id.'\')" onmouseover="highlightContent(\'content\');" onmouseout="blurContent(\'content\');">Edit</a>';
+							$buffer .= '<a class="porkchop_edit_button" href="javascript:void(0)" onclick="editContent(\'content\',\''.$origin_id.'\',\''.$message->id.'\')" onmouseover="highlightContent(\'content\');" onmouseout="blurContent(\'content\');">Edit</a>';
 							$buffer .= "</div>";
 						}
 						else {
@@ -550,7 +551,7 @@
 				}
 			}
 			elseif ($object == "company") {
-				$companies = new \Site\CompanyList();
+				$companies = new \Company\CompanyList();
 				list($company) = $companies->find();
 
 				if ($property == "name") {

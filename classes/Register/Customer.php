@@ -41,7 +41,7 @@
 			parent::update($parameters);
 
 			# Roles
-			if (in_array('register manager',$GLOBALS['_SESSION_']->customer->roles)) {
+			if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 				$rolelist = new RoleList();
 				$roles = $rolelist->find();
 				foreach ($roles as $role) {
