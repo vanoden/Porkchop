@@ -262,6 +262,7 @@
 			install_log("Granting ".$role->name."[".$role->id."]");
 			$admin->add_role($role->id);
 			if ($admin->error) {
+				error_log("Error: ".$admin->error);
 				install_log("Error: ".$admin->error,'error');
 				exit;
 			}

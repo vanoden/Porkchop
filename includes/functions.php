@@ -223,8 +223,13 @@
 		}
 		elseif(APPLICATION_LOG) {
 			$log = fopen(APPLICATION_LOG,'a');
-			fwrite($log,$string);
-			fclose($log);
+			if (! $log) {
+				error_log("Cannot access application log: ".E_WARNING);
+			}
+			else {
+				fwrite($log,$string);
+				fclose($log);
+			}
 		}
 		else {
 			error_log($message);
