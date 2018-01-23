@@ -478,6 +478,8 @@
 	### Find Sensors in Collection					###
 	###################################################
 	function findCollectionSensors() {
+		$start_time = microtime(true);
+		app_log("findCollectionSensors(): called");
 		if (! array_key_exists('collection_code',$_REQUEST)) error('collection_code required');
 		if (! array_key_exists('organization_id',$_REQUEST)) $_REQUEST['organization_id'] = '';
 
@@ -497,6 +499,8 @@
 		$_comm = new \Monitor\Communication();
 		$_comm->update(json_encode($response));
 		api_log($response);
+		$elapsed_time = microtime(true) - $start_time;
+		app_log("findCollectionSensors(): $elapsed_time elapsed");
 		print formatOutput($response);
 	}
 	function dygraphData() {

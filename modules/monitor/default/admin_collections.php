@@ -98,7 +98,7 @@
 		if (! $collection_name) $collection_name = "[none]";
 		
 ?>
-<tr><td class="value columnValue collectionNameColumn<?=$greenbar?>"><a href="javascript:void(0)" onclick="loadCollection(<?=$collection->id?>)" id="Collection[<?=$collection->id?>]"><?=$collection_name?></a></td>
+<tr><td class="value columnValue collectionNameColumn<?=$greenbar?>"><a href="/_monitor/dashboard/<?=$collection->code?>" id="Collection[<?=$collection->id?>]"><?=$collection_name?></a></td>
 	<td class="value columnValue collectionCustomerColumn<?=$greenbar?>"><?=$collection->organization->name?></td>
 	<td class="value columnValue collectionCustomerColumn<?=$greenbar?>"><?=$collection->customer?></td>
 	<td class="value columnValue collectionStartedColumn<?=$greenbar?>"><?=date("Y-m-d H:m",$collection->timestamp_start)?></td>
