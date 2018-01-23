@@ -72,6 +72,10 @@
 				$this->id = $id;
 				$this->details();
 			}
+
+			if (isset($GLOBALS['_config']->style[$this->module])) {
+				$this->style = $GLOBALS['_config']->style[$this->module];
+			}
 			return 1;
 		}
 
