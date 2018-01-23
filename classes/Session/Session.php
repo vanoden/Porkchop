@@ -1,5 +1,5 @@
 <?php
-	namespace Site;
+	namespace Session;
 
 	class Session {
 		public $code = '';
@@ -25,15 +25,15 @@
 		private $elevated = 0;
 
 		public function __construct($id = 0) {
-			$schema = new Schema();
-			if ($schema->error) {
-				$this->error = "Failed to initialize schema: ".$schema->error;
+			if ($id > 0) {
+				$this->id = $id;
+				$this->details();
 			}
 		}
 
 		public function start() {
 			# Fetch Company Information
-			$this->location = new \Site\Location();
+			$this->location = new \Company\Location();
 			$this->location->getByHost($_SERVER['SERVER_NAME']);
 			if (! $this->location->id) {
 				$this->error = "Location not configured";
@@ -44,7 +44,7 @@
 				return null;
 			}
 
-			$this->domain = new \Site\Domain($this->location->domain->id);
+			$this->domain = new \Company\Domain($this->location->domain->id);
 			if ($this->domain->error) {
 				$this->error = "Error finding domain: ".$this->domain->error;
 				return null;
@@ -53,7 +53,7 @@
 				$this->error = "Domain '".$this->domain->id."' not found for location ".$this->location->id;
 				return null;
 			}
-			$this->company = new \Site\Company($this->domain->company->id);
+			$this->company = new \Company\Company($this->domain->company->id);
 			if ($this->company->error) {
 				$this->error = "Error finding company: ".$this->company->error;
 				return null;
@@ -66,7 +66,7 @@
 			# Cookie Parameters
 			if (isset($GLOBALS['_config']->session->domain)) $this->cookie_domain = $GLOBALS['_config']->session->domain;
 			else $this->cookie_domain = $this->domain;
-			if (isset($GLOBALS['_config']->session->cookie)) $this->cookie_name = $GLOBALS['_config']->session->cookie;
+			if (isset($GLOBALS['_config']->session->cookie) && is_string($GLOBALS['_config']->session->cookie)) $this->cookie_name = $GLOBALS['_config']->session->cookie;
 			else $this->cookie_name = "session_code";
 			if (isset($GLOBALS['_config']->session->expires)) $this->cookie_expires = time() + $GLOBALS['_config']->session->expires;
 			else $this->cookie_expires = time() + 36000;
@@ -85,7 +85,7 @@
 				}
 				else {
 					app_log("Session $request_code not available or expired, deleting cookie for ".$this->domain->name,'notice',__FILE__,__LINE__);
-					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $this->cookie_domain);
+					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $this->cookie_domain->name);
 				}
 			}
 			elseif ($request_code) {
@@ -237,6 +237,10 @@
 				if ($this->code_in_use($new_code)) $new_code = "";
 			}
 
+			if (! is_object($this->customer)) {
+				$this->customer = new \Register\Customer();
+			}
+
 			# Create The New Session
 			$query = "
 				INSERT
@@ -266,7 +270,7 @@
 			$rs = $GLOBALS['_database']->Execute(
 				$query,
 				array($new_code,
-					  $this->customer_id,
+					  $this->customer->id,
 					  $this->company->id,
 					  $this->refer_url,
 					  $_SERVER['HTTP_USER_AGENT'],
@@ -281,8 +285,7 @@
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
 			# Set Session Cookie
-			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$this->cookie_domain))
-			{
+			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$this->cookie_domain->name)) {
 				app_log("New Session ".$this->id." created for ".$this->domain->id." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
 				app_log("Session Code ".$new_code,'debug',__FILE__,__LINE__);
 			}
@@ -303,7 +306,7 @@
 				array($code)
 			);
 			if (! $rs) {
-				app_log("SQL Error in Site::Session::get(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
+				app_log("SQL Error in Session::Session::get(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
 				return null;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -357,7 +360,7 @@
 			if (($this->id) and ($session = cache_get($cache_key))) {
 				if ($session->code) {
 					$this->code = $session->code;
-					$this->company = new \Site\Company($session->company_id);
+					$this->company = new \Company\Company($session->company_id);
 					$this->customer = new \Register\Customer($session->customer_id);
 					$this->timezone = $session->timezone;
 					$this->browser = $session->browser;
@@ -386,14 +389,14 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Session::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Session::Session::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return;
 			}
 			if ($rs->RecordCount()) {
 				$session = $rs->FetchNextObject(false);
 
 				$this->code = $session->code;
-				$this->company = new \Site\Company($session->company_id);
+				$this->company = new \Company\Company($session->company_id);
 				$this->customer = new \Register\Customer($session->customer_id);
 				$this->timezone = $session->timezone;
 				$this->browser = $session->browser;
@@ -406,7 +409,8 @@
 		}
 
 		function code_in_use ($request_code) {
-			$session = $this->get($request_code);
+			$session = new \Session\Session();
+			$session->get($request_code);
 			if ($session->code) return 1;
 			return 0;
 		}
@@ -518,7 +522,7 @@
 				array($id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Session::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Session::Session::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 

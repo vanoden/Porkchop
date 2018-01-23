@@ -2,7 +2,8 @@
 	class Cache {
 		public $mechanism;
 		public function __construct($key) {
-			$mechanism = $GLOBALS['_config']->cache->mechanism;
+			$mechanism = "";
+			if (isset($GLOBALS['_config']->cache) && isset($GLOBALS['_config']->cache->mechanism)) $mechanism = $GLOBALS['_config']->cache->mechanism;
 			$this->key = $key;
 			if ($mechanism == 'memcache') {
 				$this->mechanism = new \Cache\MemCache($key);

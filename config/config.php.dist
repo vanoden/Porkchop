@@ -8,18 +8,30 @@
 	define ( 'THIRD_PARTY', BASE.'/third_party/vendor' );
 	define ( 'RESOURCES', BASE.'/resources' );
 	define ( 'CLASS_PATH', BASE.'/classes' );
+	define ( 'API_LOG', '/var/log/apache2');
+	define ( 'APPLICATION_LOG', '/var/log/apache2/application.log');
+	define ( 'APPLICATION_LOG_LEVEL', 'debug');
+
+	# Initialize config
+	$_config = new stdClass();
 
 	# Mail Server
-	$_config->smtp_server = 'mail.rootseven.com';
+	$_config->smtp_server = 'smtp.domainname.com';
 
 	# Cache Mechanism (memcache or xcache)
 	$_config->cache_mechanism   = "xcache";
 
 	# Database
+	$_config->database = new stdClass();
 	$_config->database->driver              = 'mysqli';
 	$_config->database->schema              = 'porkchop';
 	$_config->database->master->hostname    = '127.0.0.1';
 	$_config->database->master->username    = 'porkchop';
 	$_config->database->master->password    = 'password';
 	$_config->database->master->port		= '3306';
+
+
+	# Session
+	$_config->session = new stdClass();
+	$_config->session->cookie = new stdClass();
 ?>

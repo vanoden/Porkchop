@@ -2,8 +2,9 @@
 	class Document {
 		public $error;
 		public $type;
-		public $content;
 		public $stylesheet;
+		private $_content;
+		private $_data;
 
 		public function __construct($type = 'xml') {
 			$this->type = $type;
@@ -11,11 +12,11 @@
 
 		public function prepare($object) {
 			if ($this->type == 'xml') {
-				$this->content = $this->_xmlout($object);
+				$this->_content = $this->_xmlout($object);
 				return;
 			}
 			elseif ($this->type == 'json') {
-				$this->content = $this->_jsonout($object);
+				$this->_content = $this->_jsonout($object);
 				return;
 			}
 			else {
@@ -24,9 +25,23 @@
 			}
 		}
 
+		public function parse($string) {
+			if ($this->type == 'xml') {
+				$this->_xmlin($string);
+			}
+			return true;
+		}
+		
+		private function _xmlin($string) {
+			require_once 'XML/Unserializer.php';
+			$unserializer = &new XML_Unserializer();
+			$unserializer->unserialize($string);
+			$this->_data = $unserializer->getUnserializedData();
+		}
+
 		private function _xmlout($object) {
-			require 'XML/Unserializer.php';
-			require 'XML/Serializer.php';
+			require_once 'XML/Unserializer.php';
+			require_once 'XML/Serializer.php';
 			$options = array(
 				XML_SERIALIZER_OPTION_INDENT        => '    ',
 				XML_SERIALIZER_OPTION_RETURN_RESULT => true,
@@ -49,7 +64,11 @@
 		}
 
 		public function content() {
-			return $this->content;
+			return $this->_content;
+		}
+		
+		public function data() {
+			return $this->_data;
 		}
 	}
 ?>

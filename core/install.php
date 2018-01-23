@@ -13,9 +13,6 @@
 	###		Added this header for tracking			###
 	###################################################
 
-	# Our Global Variables
-	$_SESSION_ = new stdClass();
-
 	error_log("Starting install script");
 	error_log("\$_REQUEST: ".print_r($_REQUEST,true));
 	$errorstr = '';
@@ -24,7 +21,7 @@
 	require '../config/config.php';
 
 	# We'll handle errors ourselves, thank you very much
-	error_reporting(0);
+	#error_reporting(0);
 
 	###################################################
 	### Load API Objects							###
@@ -34,7 +31,6 @@
 
 	# Autoload Classes
 	spl_autoload_register('load_class');
-
 	# Database Abstraction
 	require THIRD_PARTY.'/adodb/adodb-php/adodb-exceptions.inc.php';
 	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
@@ -82,7 +78,7 @@
 	</style>
 </head>
 <body>
-<form method="post" action="install.php">
+<form method="post" action="install">
 <table>
 <tr><th colspan="2">Porchop Web Installer V2.0</th></tr>
 </table>
@@ -143,33 +139,21 @@
 		$_database->Execute("use ".$GLOBALS['_config']->database->schema);
 	}
 
-	install_log("Building tables");
-	# Metadata Tables
-	$create_table_query = "
-		CREATE TABLE IF NOT EXISTS `metadata_states` (
-			`id` int(3) NOT NULL AUTO_INCREMENT,
-			`abbrev` char(20) NOT NULL DEFAULT '',
-			`name` char(50) NOT NULL DEFAULT '',
-			`tax_rate` decimal(5,3) NOT NULL DEFAULT '0.000',
-			`country_id` int(5) NOT NULL DEFAULT '1',
-			PRIMARY KEY (`id`),
-			KEY `by_abbrev` (`abbrev`),
-			KEY `country_abbrev` (`country_id`,`abbrev`)
-		)
-	";
-	$_database->Execute($create_table_query);
-	if ($_database->ErrorMsg()) {
-		install_log("SQL Error creating states metadata: ".$GLOBALS['_database']->ErrorMsg(),'error');
-		exit;
-	}
+	install_log("Creating Schema");
+	$company_schema = new \Company\Schema();
+	$session_schema = new \Session\Schema();
+
+	install_log("Starting session");
+	$_SESSION_ = new \Session\Session();
 
 	# See if Company Exists
 	install_log("Setting up company");
-	$company = new \Site\Company();
+	$company = new \Company\Company();
 	if ($company->error) {
 		install_log("Error loading company module: ".$company->error,'error');
 		exit;
 	}
+	install_log("Checking for existing company");
 	$company->get($_REQUEST['company_name']);
 
 	if (! $company->id) {
@@ -190,7 +174,7 @@
 	$GLOBALS['_SESSION_']->company = $company->id;
 
 	install_log("Setting up domain");
-	$domain = new \Site\Domain();
+	$domain = new \Company\Domain();
 	$domain->get($domain_name);
 
 	if (! $domain->id) {
@@ -210,6 +194,27 @@
 	}
 	else {
 		install_log("Domain already present");
+	}
+
+	install_log("Setting up Location");
+	$location = new \Company\Location();
+	$location->getByHost($_SERVER['SERVER_NAME']);
+	if ($location->id) {
+		install_log("Location Located");
+	}
+	else {
+		$location->add(array(
+				name	=> $_SERVER['SERVER_NAME'],
+				host	=> $_SERVER['SERVER_NAME'],
+				domain_id => $domain->id,
+				company_id => $company->id,
+				code	=> uniqid()
+			)
+		);
+		if ($location->error) {
+			install_log("Failed to add location: ".$location->error,'error');
+			exit;
+		}
 	}
 
 	install_log("Setting up admin account");
@@ -255,8 +260,9 @@
 		install_log("Granting roles");
 		foreach ($roles as $role) {		
 			install_log("Granting ".$role->name."[".$role->id."]");
-			$admin->add_role($role['id']);
+			$admin->add_role($role->id);
 			if ($admin->error) {
+				error_log("Error: ".$admin->error);
 				install_log("Error: ".$admin->error,'error');
 				exit;
 			}

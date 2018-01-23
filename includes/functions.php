@@ -19,6 +19,9 @@
 		}
 		return 0;
 	}
+	function _debug_print($message) {
+		error_log("DEBUG: ".$message);
+	}
 	function get_mysql_date($date,$range=0) {
 		# Handle Some Keywords
 		if (preg_match("/today/i",$date)) return date("Y-m-d");
@@ -220,8 +223,13 @@
 		}
 		elseif(APPLICATION_LOG) {
 			$log = fopen(APPLICATION_LOG,'a');
-			fwrite($log,$string);
-			fclose($log);
+			if (! $log) {
+				error_log("Cannot access application log: ".E_WARNING);
+			}
+			else {
+				fwrite($log,$string);
+				fclose($log);
+			}
 		}
 		else {
 			error_log($message);

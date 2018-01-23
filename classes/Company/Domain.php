@@ -1,5 +1,5 @@
 <?
-	namespace Site;
+	namespace Company;
 
 	class Domain {
 		private $schema_version = 1;
@@ -65,7 +65,7 @@
 			$this->date_expires = $object->date_expires;
 			$this->registration_period = $object->registration_period;
 			$this->register = $object->register;
-			$this->company = new \Site\Company($object->company_id);
+			$this->company = new Company($object->company_id);
 			return $object;
 		}
 

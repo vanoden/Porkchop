@@ -32,8 +32,7 @@
 		$response->message = "PING RESPONSE";
 		$response->success = 1;
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Echo some specified value					###
@@ -68,8 +67,7 @@
 		api_log('content',$_REQUEST,$response);
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 	###################################################
 	### Get Details regarding Specified Message		###
@@ -99,8 +97,7 @@
 		api_log('content',$_REQUEST,$response);
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 	###################################################
 	### Get Details regarding Specified Product		###
@@ -133,8 +130,7 @@
 		api_log('content',$_REQUEST,$response);
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 	###################################################
 	### Update Specified Message					###
@@ -165,8 +161,7 @@
 
 		api_log('content',$_REQUEST,$response);
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 	###################################################
 	### Purge Cache of Specified Message			###
@@ -201,8 +196,7 @@
 
 		api_log('content',$_REQUEST,$response);
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 
 	###################################################
@@ -232,8 +226,7 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 	###################################################
 	### Get Metadata for current view				###
@@ -265,8 +258,7 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 	###################################################
 	### Add Page Metadata							###
@@ -299,8 +291,7 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 	###################################################
 	### Update Page Metadata						###
@@ -347,8 +338,7 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
 	###################################################
 	### Get Details regarding Specified Product		###
@@ -379,10 +369,8 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 	}
-
 
 	###################################################
 	### Return Properly Formatted Error Message		###
@@ -395,8 +383,7 @@
 		$response->message = $message;
 		$response->success = 0;
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"]));
 		exit;
 	}
 	###################################################
@@ -428,5 +415,19 @@
 			return 0;
 		}
 	}
+
+    function formatOutput($object) {
+        if ($_REQUEST['_format'] == 'json') {
+            $format = 'json';
+            header('Content-Type: application/json');
+        }
+        else {
+            $format = 'xml';
+            header('Content-Type: application/xml');
+        }
+        $document = new \Document($format);
+        $document->prepare($object);
+        return $document->content();
+    }
 
 ?>

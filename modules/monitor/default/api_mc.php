@@ -1372,7 +1372,7 @@
 	}
 
 	function formatOutput($object) {
-		if ($_REQUEST['_format'] == 'json') {
+		if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
 			$format = 'json';
 			header('Content-Type: application/json');
 		}
