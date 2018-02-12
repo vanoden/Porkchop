@@ -46,7 +46,7 @@
 		$GLOBALS['_page']->error = 'Error loading comm records';
 	}
 
-	$session = new \Site\Session($communication->session_id);
+	$session = new \Session\Session($communication->session_id);
 	$request = $communication->request;
 	$response = $communication->response;
 	unset($response->header->session);

@@ -28,6 +28,9 @@
 			if (isset($parameters['index']))
 				$get_object_query .= "
 					AND		`index` = ".$GLOBALS['_database']->qstr($parameters['index'],get_magic_quotes_gpc());
+			$get_object_query .= "
+					ORDER BY module,view
+			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query);
 			if (! $rs) {
 				$this->error = "SQL Error in PageList::find: ".$GLOBALS['_database']->ErrorMsg();

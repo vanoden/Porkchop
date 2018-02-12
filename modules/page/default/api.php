@@ -1,14 +1,14 @@
 	<div id="scroller" style="width: 600px; height: 500px; overflow: auto;">
 		<div class="apiMethod">Request</div>
 		<pre id="requestContent" style="text-align: left; width: 550px; height: 100px; overflow: auto; font-size: 11px; border: 1px dashed blue;"><?=print_r($_REQUEST)?></pre>
-		<form method="post" action="<?=PATH?>/_content/api" id="ping">
+		<form method="post" action="<?=PATH?>/_page/api" id="ping">
 		<input type="hidden" name="method" value="ping">
 		<div class="apiMethod">
 			<div class="h3 apiMethodTitle">ping</div>
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
-		<form method="post" action="<?=PATH?>/_content/api" id="parse">
+		<form method="post" action="<?=PATH?>/_page/api" id="parse">
 		<input type="hidden" name="method" value="parse">
 		<div class="apiMethod">
 			<div class="h3 apiMethodTitle">parse</div>
@@ -165,7 +165,7 @@
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
-		<form method="post" action="<?=PATH?>/_content/api" id="findMetadata">
+		<form method="post" action="<?=PATH?>/_page/api" id="findMetadata">
 		<input type="hidden" name="method" value="findMetadata">
 		<div class="apiMethod">
 			<div class="h3 apiMethodTitle">findMetadata</div>

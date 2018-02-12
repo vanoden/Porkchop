@@ -21,13 +21,16 @@
 <?	} else if ($GLOBALS['_page']->success) { ?>
 <div class="form_success"><?=$GLOBALS['_page']->success?></div>
 <?	} ?>
-<table class="body" cellpadding="0" cellspacing="0">
-<tr><td colspan="4" class="title">Asset</td></tr>
-<tr><td class="label" style="width: 150px;">Serial Number</td>
-	<td class="value" style="width: 190px;"><?=$asset->code?></td>
-	<td class="label" style="width: 150px;">Name</td>
-	<td class="value" style="width: 240px;"><input type="text" name="name" class="value input" style="width: 250px" value="<?=$asset->name?>" /></td>
-</tr>
+<div id="asset_details" class="container">
+<span class="title">Asset</span>
+<div class="container detail">
+	<span class="label">Serial Number</span>
+	<span class="value"><?=$asset->code?></span>
+</div>
+<div class="container detail">
+	<span class="label">Name</span>
+	<input type="text" name="name" class="value input" style="width: 250px" value="<?=$asset->name?>" />
+</div>
 <tr><td class="label">Model</td>
 	<td class="value"><?=$asset->product->name?></td>
 	<td class="label">Calibrated</td>
@@ -61,11 +64,11 @@
 <br/>
 <div class="title">Zones</div>
 <table class="body" cellpadding="0" cellspacing="0">
-<tr><td class="label zoneLabel" style="width: 50px;">ID</td>
-	<td class="label zoneLabel" style="width: 220px;">Name</td>
-	<td class="label zoneLabel" style="width: 180px;">Last Reading (EST)</td>
-	<td class="label zoneLabel" style="width: 100px;">Last Value</td>
-	<td class="label zoneLabel" style="width: 120px;">Units</td>
+<tr><th class="label zoneLabel" style="width: 50px;">ID</th>
+	<th class="label zoneLabel" style="width: 220px;">Name</th>
+	<th class="label zoneLabel" style="width: 180px;">Last Reading (EST)</th>
+	<th class="label zoneLabel" style="width: 100px;">Last Value</th>
+	<th class="label zoneLabel" style="width: 120px;">Units</th>
 </tr>
 <?	$greenbar = '';
 	foreach ($sensors as $sensor) {
