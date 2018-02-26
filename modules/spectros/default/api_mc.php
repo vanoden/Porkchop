@@ -16,15 +16,6 @@
 	###############################################
 	### Load API Objects						###
     ###############################################
-	# Product Module Classes
-	require_once(MODULES.'/product/_classes/default.php');
-
-	# Spectros Classes
-	require_once(MODULES.'/spectros/_classes/default.php');
-
-	# Monitor Module Classes
-	require_once(MODULES.'/monitor/_classes/default.php');
-
 	# Call Requested Event
 	if ($_REQUEST["method"]) {
 		$message = "Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code;
@@ -61,24 +52,22 @@
 	###################################################
 	function addCalibrationVerificationCredits() {
 		# Find Requested Organization
-		if ($_REQUEST['organization'])
-		{
-			$_organization = new RegisterOrganization();
-			$organization = $_organization->get($_REQUEST['organization']);
-			if ($_organization->error) app_error("Error finding organization: ".$_organization->error,__FILE__,__LINE__);
+		if ($_REQUEST['organization']) {
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization']);
+			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
 			$organization_id = $organization->id;
 		}
-		else
-		{
+		else {
 			$organization_id = $GLOBALS['_SESSION_']->customer->organization->id;
 		}
-		$_credit = new CalibrationVerificationCredit();
-		if ($_credit->error) app_error("Error adding calibration verification credits: ".$_credit->error,__FILE__,__LINE__);
-		$result = $_credit->add($organization_id,$_REQUEST['quantity']);
-		if ($_credit->error) app_error("Error adding credits: ".$_credit->error,__FILE__,__LINE__);
+		$credit = new \Spectros\CalibrationVerificationCredit();
+		if ($credit->error) app_error("Error adding calibration verification credits: ".$_credit->error,__FILE__,__LINE__);
+		$result = $credit->add($organization_id,$_REQUEST['quantity']);
+		if ($credit->error) app_error("Error adding credits: ".$_credit->error,__FILE__,__LINE__);
 		$response->success = 1;
-		$response->credit = $_credit;
+		$response->credit = $credit;
 
 		header('Content-Type: application/xml');
 		print XMLout($response);
