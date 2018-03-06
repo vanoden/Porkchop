@@ -208,7 +208,7 @@
 		$response = new \HTTP\Response();
 
 		# Initiate Metadata Object
-		$_metadata = new PageMetadata();
+		$_metadata = new \Site\Page\Metadata();
 
 		# Find Matching Views
 		$metadata = $_metadata->get(
@@ -237,7 +237,7 @@
 		$response = new \HTTP\Response();
 
 		# Initiate Metadata Object
-		$_metadata = new PageMetadata();
+		$_metadata = new \Site\Page\Metadata();
 
 		# Find Matching Views
 		$metadata = $_metadata->find(
@@ -269,7 +269,7 @@
 		$response = new \HTTP\Response();
 
 		# Initiate Metadata Object
-		$_metadata = new PageMetadata();
+		$_metadata = new \Site\Page\Metadata();
 
 		# Find Matching Threads
 		$metadata = $_metadata->add(
@@ -302,7 +302,7 @@
 		$response = new \HTTP\Response();
 
 		# Initiate Metadata Object
-		$_metadata = new PageMetadata();
+		$_metadata = new \Site\Page\Metadata();
 
 		# Find Metadata On Key
 		$current = $_metadata->get(

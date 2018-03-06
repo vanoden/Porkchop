@@ -19,7 +19,7 @@
 				array($page_id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error getting view metadata in PageMetadata::get: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error getting view metadata in Site::Page::Metadata::get: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$metadata = array();
@@ -43,7 +43,7 @@
 				array($id,$key)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error getting view metadata in PageMetadata::get: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error getting view metadata in Site::Page::Metadata::get: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			list($value) = $rs->FetchRow();
@@ -51,11 +51,11 @@
 		}
 		public function set($page_id,$key,$value) {
 			if (! preg_match('/^\d+$/',$page_id)) {
-				$this->error = "Invalid page id in PageMetadata::set";
+				$this->error = "Invalid page id in Site::Page::Metadata::set";
 				return null;
 			}
 			if (! isset($key)) {
-				$this->error = "Invalid key name in PageMetadata::set";
+				$this->error = "Invalid key name in Site::Page::Metadata::set";
 				return null;
 			}
 
@@ -71,7 +71,7 @@
 				array($page_id,$key,$value)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error setting metadata in PageMetadata::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error setting metadata in Site::Page::Metadata::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return $this->update($GLOBALS['_database']->Insert_ID(),$parameters);
@@ -99,7 +99,7 @@
 			$rs = $GLOBALS['_database']->Execute($find_data_query);
 			if (! $rs)
 			{
-				$this->error = "SQL Error getting page metadata in PageMetadata::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error getting page metadata in Site::Page::Metadata::find: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			$object_array = array();
@@ -126,7 +126,7 @@
 			);
 			if (! $rs)
 			{
-				$this->error = "SQL Error getting view metadata in PageMetadata::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error getting view metadata in Site::Page::Metadata::details: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			$object_array = array();
