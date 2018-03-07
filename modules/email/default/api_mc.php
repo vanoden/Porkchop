@@ -45,7 +45,7 @@
 		$response->message = "PING RESPONSE";
 		$response->success = 1;
 		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -67,7 +67,18 @@
 		$response->result = 'Sent';
 
 		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Schema Info					###
+	###################################################
+	function schemaVersion() {
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->version = 0;
+		header('Content-Type: application/xml');
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -93,7 +104,7 @@
 		$response->message = $message;
 		$response->success = 0;
 		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response,array("stylesheet" => $_REQUEST["stylesheet"]));
 		exit;
 	}
 	###################################################
@@ -141,4 +152,18 @@
 			error("Invalid xml in request");
 		}
 	}
+
+	function formatOutput($object,$options = '') {
+        	if ($_REQUEST['_format'] == 'json') {
+                        $format = 'json';
+                        header('Content-Type: application/json');
+                }
+                else {
+                        $format = 'xml';
+                        header('Content-Type: application/xml');
+                }
+                $document = new \Document($format);
+                $document->prepare($object);
+                return $document->content();
+        }
 ?>

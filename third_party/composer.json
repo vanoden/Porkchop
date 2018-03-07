@@ -4,6 +4,7 @@
 		"setasign/fpdf": "~1.8.1",
 		"adodb/adodb-php": "~5.20.9",
 		"elasticsearch/elasticsearch": "~2.0@beta",
-		"aws/aws-sdk-php": "2.*"
+		"aws/aws-sdk-php": "2.*",
+		"phpmailer/phpmailer": "~5.2"
 	}
 }
