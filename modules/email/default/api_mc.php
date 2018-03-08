@@ -59,12 +59,22 @@
 		if ($_REQUEST['subject']) $parameters['subject'] = $_REQUEST['subject'];
 
 		$email = new \Email\Message();
-		$email->send($parameters);
-		if ($email->error) app_error($email->error,__FILE__,__LINE__);
+		$email->to($_REQUEST['to']);
+		$email->from($_REQUEST['from']);
+		$email->subject($_REQUEST['subject']);
+		$email->body($_REQUEST['body']);
 		
+		$transport = \Email\Transport::Create(array("provider" => $GLOBALS['_config']->email->provider));
+		if (isset($GLOBALS['_config']->email->hostname)) $transport->hostname($GLOBALS['_config']->email->hostname);
+		if (isset($GLOBALS['_config']->email->username)) $transport->username($GLOBALS['_config']->email->username);
+		if (isset($GLOBALS['_config']->email->password)) $transport->password($GLOBALS['_config']->email->password);
+		if (isset($GLOBALS['_config']->email->token)) $transport->token($GLOBALS['_config']->email->token);
+		$transport->deliver($email);
+		if ($transport->error()) app_error($transport->error(),__FILE__,__LINE__);
+
 		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->result = 'Sent';
+		$response->result = $transport->result;
 
 		header('Content-Type: application/xml');
 		print formatOutput($response);
@@ -97,8 +107,7 @@
 	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
-	function error($message)
-	{
+	function error($message) {
 		$_REQUEST["stylesheet"] = '';
 		$response = new \HTTP\Response();
 		$response->message = $message;
