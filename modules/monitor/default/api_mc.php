@@ -1018,7 +1018,14 @@
 		if ($sensor->error) app_error("Error initializing sensor: ".$sensor->error,__FILE__,__LINE__);
 		$sensor->get($_REQUEST['sensor_code'],$asset->id);
 		if ($sensor->error) app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
-		if (! $sensor->id) error("Sensor ".$_REQUEST['sensor_code']." not found for asset ".$_REQUEST['asset_code']);
+		if (! $sensor->id) {
+			$sensor->add(array(
+					"asset_id"	=> $asset->id,
+					"code"		=> $_REQUEST['sensor_code']
+				)
+			);
+			if ($sensor->error) app_error("Error adding sensor: ".$sensor->error,__FILE__,__LINE__);
+		}
 
 		# Add Reading
 		$reading = new \Monitor\Reading();
