@@ -15,8 +15,7 @@
 	require_once(MODULES.'/contact/_classes/default.php');
 
 	# Call Requested Event
-	if ($_REQUEST["method"])
-	{
+	if ($_REQUEST["method"]) {
 		error_log("Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code." for asset ".$_REQUEST['asset_code']);
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
@@ -33,8 +32,7 @@
 	###################################################
 	### Just See if Server Is Communicating			###
 	###################################################
-	function ping()
-	{
+	function ping() {
 		$response->header->session = $GLOBALS['_SESSION_']->code;
 		$response->header->method = $_REQUEST["method"];
 		$response->header->date = system_time();
@@ -47,8 +45,7 @@
 	###################################################
 	### Add an Event								###
 	###################################################
-	function addEvent()
-	{
+	function addEvent() {
 		$_event = new ContactEvent();
 		if ($_event->error) app_error("Error initializing ContactEvent: ".$_event->error);
 		
@@ -69,8 +66,7 @@
 	###################################################
 	### Find matching Events						###
 	###################################################
-	function findEvents()
-	{
+	function findEvents() {
 		$_event = new ContactEvent();
 		if ($_event->error) app_error("Error adding event: ".$_event->error,__FILE__,__LINE__);
 		
@@ -89,23 +85,20 @@
 	###################################################
 	### System Time									###
 	###################################################
-	function system_time()
-	{
+	function system_time() {
 		return date("Y-m-d H:i:s");
 	}
 	###################################################
 	### Application Error							###
 	###################################################
-	function app_error($message,$file = __FILE__,$line = __LINE__)
-	{
+	function app_error($message,$file = __FILE__,$line = __LINE__) {
 		app_log($message,'error',$file,$line);
 		error('Application Error');
 	}
 	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
-	function error($message)
-	{
+	function error($message) {
 		$_REQUEST["stylesheet"] = '';
 		$response->message = $message;
 		$response->success = 0;
@@ -116,10 +109,8 @@
 	###################################################
 	### Convert Object to XML						###
 	###################################################
-	function XMLout($object,$user_options='')
-	{
-		if (0)
-		{
+	function XMLout($object,$user_options='') {
+		if (0) {
 			$fp = fopen('/var/log/api/monitor.log', 'a');
 			fwrite($fp,"#### RESPONSE ####\n");
 			fwrite($fp, print_r($object,true));
@@ -133,17 +124,14 @@
     	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
 			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
     	);
-		if ($user_options["rootname"])
-		{
+		if ($user_options["rootname"]) {
 			$options["rootName"] = $user_options["rootname"];
 		}
     	$xml = &new XML_Serializer($options);
-	   	if ($xml->serialize($object))
-		{
+	   	if ($xml->serialize($object)) {
 			//error_log("Returning ".$xml->getSerializedData());
 			$output = $xml->getSerializedData();
-			if ($user_options["stylesheet"])
-			{
+			if ($user_options["stylesheet"]) {
 				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
 			}
 			return $output;

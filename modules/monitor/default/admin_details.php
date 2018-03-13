@@ -148,7 +148,9 @@
 					<div class="tableCell">Last Value</div>
 					<div class="tableCell">Last Read</div>
 				</div>
-<?		foreach ($sensors as $sensor) { ?>
+<?		foreach ($sensors as $sensor) { 
+				$reading = $sensor->lastReading();
+?>
 				<div class="tableRow">
 					<div class="tableCell"><input type="text" name="sensor_code[<?=$sensor->id?>]" class="value input" value="<?=$sensor->code?>" /></div>
 					<div class="tableCell"><select name="model_id[<?=$sensor->id?>]" class="value input">
@@ -157,8 +159,8 @@
 		<?	} ?>
 						</select>
 					</div>
-					<div class="tableCell"><?=$sensor->value?></div>
-					<div class="tableCell"><? if (isset($sensor->timestamp)) print date('m/d/Y H:i:s',$sensor->timestamp);?></div>
+					<div class="value tableCell"><?=$reading->value?></div>
+					<div class="value tableCell"><? if (isset($reading->timestamp)) print date('m/d/Y H:i:s',$reading->timestamp);?></div>
 				</div>
 <?		} ?>
 				<div class="tableRow">

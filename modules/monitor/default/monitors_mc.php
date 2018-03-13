@@ -1,5 +1,4 @@
 <?PHP
-	require_once MODULES."/monitor/_classes/default.php";
 	require 'XML/Unserializer.php';
     require 'XML/Serializer.php';
     $options = array(
@@ -12,9 +11,10 @@
 	$monitor = new \Monitor\Asset();
 	
 	# Get Monitors for Organization
-	$monitors = $_monitor->catalog();
-	if ($_monitor->error) {
-		print $_monitor->error;
+	$monitorList = new \Monitor\AssetList();
+	$monitors = $monitorList->find();
+	if ($monitorList->error) {
+		print $monitorList->error;
 		exit;
 	}
 
