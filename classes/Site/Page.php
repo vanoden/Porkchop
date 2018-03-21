@@ -352,6 +352,9 @@
 				elseif ($property == "error") {
 					$buffer .= "<div class=\"page_error\">".$GLOBALS['page_error']."</div>";
 				}
+				elseif ($property == "not_authorized") {
+					$buffer .= "<div class=\"page_error\">Sorry, you are not authorized to see this view</div>";
+				}
 				else {
 					app_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view,'debug',__FILE__,__LINE__);
 					ob_start();
@@ -568,6 +571,14 @@
 				if ($property == "name") {
 					$buffer .= $company->name;
 				}
+				else
+				{
+					#error_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
+					ob_start();
+					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
+					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
+					$buffer .= ob_get_clean();
+				}
 			}
 			elseif ($object == "news") {
 				require_once(MODULES.'/news/_classes/news.php');
@@ -623,6 +634,26 @@
 				$buffer .= ob_get_clean();
 			}
 			return $buffer;
+		}
+		public function requires($role = '_customer') {
+			if ($role == '_customer') {
+				if ($GLOBALS['_SESSION_']->customer->id) {
+					return true;
+				}
+				else {
+					header("location: /_register/login?target=_".$this->module.":".$this->view);
+					ob_flush();
+					exit;
+				}
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->has_role($role)) {
+				return true;
+			}
+			else {
+				header("location: /_register/not_authorized");
+				ob_flush();
+				exit;
+			}
 		}
 	}
 ?>

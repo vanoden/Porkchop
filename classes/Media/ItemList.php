@@ -35,8 +35,8 @@
 			}
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				$object = $this->details($id);
-				$privileges = $this->privileges($id);
+				$object = new \Media\Item($id);
+				$privileges = $object->privileges($id);
 				if ($privileges['read']) {
 					app_log("Adding ".$object->id." to array",'debug',__FILE__,__LINE__);
 					array_push($objects,$object);

@@ -1,37 +1,30 @@
 <?php
     ###############################################
-    ### Handle API Request for product			###
+    ### Handle API Request for support			###
     ### communications							###
     ### A. Caravello 8/12/2013               	###
     ###############################################
 
-	app_log('Request: '.print_r($_REQUEST,true),'debug');
-
 	###############################################
 	### Load API Objects						###
     ###############################################
-	# Support Module
-	require_once(MODULES.'/support/_classes/default.php');
-	$_init = new SupportInit();
-	if ($_init->error)
-		app_error("Error initializing Support Module: ".$_init->error,'error',__FILE__,__LINE__);
+	$_package = array(
+		"name"		=> "support",
+		"version"	=> "0.1.0",
+		"release"	=> "2016-12-05",
+	);
 
-	# Default Response Values
-	$response->success = 0;
-	$response->method = $_REQUEST["method"];
+	app_log("Request: ".print_r($_REQUEST,true),'debug',__FILE__,__LINE__);
 
 	# Call Requested Event
-	if ($_REQUEST["method"])
-	{
-		error_log("Method ".$_REQUEST['method']." called by ".$_customer->code);
+	if ($_REQUEST["method"]) {
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
 		$function_name();
 		exit;
 	}
 	# Only Developers Can See The API
-	elseif (role('support manager'))
-	{
+	elseif (! $GLOBALS['_SESSION_']->customer->has_role('support manager')) {
 		header("location: /_support/home");
 		exit;
 	}
@@ -39,68 +32,66 @@
 	###################################################
 	### Just See if Server Is Communicating			###
 	###################################################
-	function ping()
-	{
+	function ping() {
+		$response = new \HTTP\Response();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
 		$response->header->method = $_REQUEST["method"];
 		$response->header->date = system_time();
 		$response->message = "PING RESPONSE";
 		$response->success = 1;
-		header('Content-Type: application/xml');
-		print XMLout($response);
+
+		$_comm = new \Monitor\Communication();
+		$_comm->update(json_encode($response));
+		api_log($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Add a Request								###
 	###################################################
-	function addRequest()
-	{
-		$_request = new SupportRequest();
+	function addRequest() {
+		$request = new \Support\Request();
 
 		$parameters = array();
-		if (permitted('support manager'))
-		{
-			if ($_REQUEST['customer'])
-			{
-				$_customer = new RegisterCustomer();
-				$customer = $_customer->get($_REQUEST['customer']);
-				if ($_customer->error) app_error("Error getting customer: ".$_customer->error,'error',__FILE__,__LINE__);
+		if (permitted('support manager')) {
+			if ($_REQUEST['customer']) {
+				$customer = new \Register\Customer();
+				$customer->get($_REQUEST['customer']);
+				if ($customer->error) app_error("Error getting customer: ".$customer->error,'error',__FILE__,__LINE__);
 				if (! $customer->id) error("Customer not found");
 				$parameters['customer_id'] = $customer->id;
 			}
-			if ($_REQUEST['tech'])
-			{
-				$_admin = new RegisterAdmin();
-				$admin = $_admin->get($_REQUEST['admin']);
-				if ($_admin->error) app_error("Error getting admin: ".$_admin->error,'error',__FILE__,__LINE__);
+			if ($_REQUEST['tech']) {
+				$admin = new RegisterAdmin();
+				$admin->get($_REQUEST['admin']);
+				if ($admin->error) app_error("Error getting admin: ".$admin->error,'error',__FILE__,__LINE__);
 				if (! $admin->id) error("Tech not found");
 				$parameters['tech_id'] = $admin->id;
 			}
-			if ($_REQUEST['status'])
-			{
+			if ($_REQUEST['status']) {
 				$parameters['status'] = $_REQUEST['status'];
 			}
 		}
 		
-		$request = $_request->add($parameters);
+		$request->add($parameters);
 		if ($_request->error) app_error("Error adding request: ".$_request->error);
+
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->request = $request;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
 	### Update a Request							###
 	###################################################
-	function updateRequest()
-	{
-		$_request = new SupportRequest();
-		$request = $_request->get($_REQUEST['code']);
-		if ($_request->error) app_error("Error finding request: ".$_request->error,'error',__FILE__,__LINE__);
+	function updateRequest() {
+		$request = new SupportRequest();
+		$request->get($_REQUEST['code']);
+		if ($request->error) app_error("Error finding request: ".$request->error,'error',__FILE__,__LINE__);
 		if (! $request->id) error("Request not found");
 
-		$request = $_request->update(
+		$request->update(
 			$request->id,
 			array(
 				'name'			=> $_REQUEST['name'],
@@ -109,112 +100,112 @@
 				'description'	=> $_REQUEST['description'],
 			)
 		);
-		if ($_request->error) app_error("Error adding product: ".$_request->error,'error',__FILE__,__LINE__);
+		if ($request->error) app_error("Error adding product: ".$request->error,'error',__FILE__,__LINE__);
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->request = $request;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
 	### Get Specified Request						###
 	###################################################
-	function getRequest()
-	{
-		$_request = new SupportRequest();
-		$request = $_request->get($_REQUEST['code']);
+	function getRequest() {
+		$request = new SupportRequest();
+		$request->get($_REQUEST['code']);
 
-		if ($_request->error) error("Error getting request: ".$_request->error);
+		if ($request->error) error("Error getting request: ".$request->error);
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->request = $request;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
 	### Find matching Requests						###
 	###################################################
-	function findRequests()
-	{
-		$_request = new SupportRequest();
+	function findRequests() {
+		$requestlist = new \Support\RequestList();
 		
 		$parameters = array();
 		if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 		
-		$requests = $_request->find($parameters);
-		if ($_request->error) app_error("Error finding requests: ".$_request->error);
+		$requests = $requestlist->find($parameters);
+		if ($requestlist->error) app_error("Error finding requests: ".$requestlist->error);
 
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->request = $requests;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
+	}
+	###################################################
+	### Manage Support Schema						###
+	###################################################
+	function schemaVersion() {
+		$schema = new \Support\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+		}
+		$version = $schema->version();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->version = $version;
+		print formatOutput($response);
+	}
+	function schemaUpgrade() {
+		$schema = new \Support\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+		}
+		$version = $schema->upgrade();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->version = $version;
+		print formatOutput($response);
 	}
 
 	###################################################
 	### System Time									###
 	###################################################
-	function system_time()
-	{
+	function system_time() {
 		return date("Y-m-d H:i:s");
-	}
-	###################################################
-	### Application Error							###
-	###################################################
-	function app_error($message,$file = __FILE__,$line = __LINE__)
-	{
-		app_log($message,'error',$file,$line);
-		error('Application Error');
 	}
 	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
-	function error($message)
-	{
+	function error($message) {
 		$_REQUEST["stylesheet"] = '';
 		error_log($message);
+		$response = new \HTTP\Response();
 		$response->message = $message;
 		$response->success = 0;
-		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response);
 		exit;
+	}
+	###################################################
+	### Application Error							###
+	###################################################
+	function app_error($message,$file = __FILE__,$line = __LINE__) {
+		app_log($message,'error',$file,$line);
+		error('Application Error');
 	}
 	###################################################
 	### Convert Object to XML						###
 	###################################################
-	function XMLout($object,$user_options='')
-	{
-		if (0)
-		{
-			$fp = fopen('/var/log/api/monitor.log', 'a');
-			fwrite($fp,"#### RESPONSE ####\n");
-			fwrite($fp, print_r($object,true));
-			fclose($fp);
+	function formatOutput($object) {
+		if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
+			$format = 'json';
+			header('Content-Type: application/json');
 		}
-
-		require 'XML/Unserializer.php';
-    	require 'XML/Serializer.php';
-    	$options = array(
-    	    XML_SERIALIZER_OPTION_INDENT        => '    ',
-    	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
-			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
-    	);
-		if ($user_options["rootname"])
-		{
-			$options["rootName"] = $user_options["rootname"];
+		else {
+			$format = 'xml';
+			header('Content-Type: application/xml');
 		}
-    	$xml = &new XML_Serializer($options);
-	   	if ($xml->serialize($object))
-		{
-			//error_log("Returning ".$xml->getSerializedData());
-			$output = $xml->getSerializedData();
-			if ($user_options["stylesheet"])
-			{
-				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
-			}
-			return $output;
-		}
+		$document = new \Document($format);
+		$document->prepare($object);
+		return $document->content();
 	}
 ?>

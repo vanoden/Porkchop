@@ -81,13 +81,28 @@
 	}
 
 	###################################################
-	### Schema Info					###
+	### Manage Email Schema						###
 	###################################################
 	function schemaVersion() {
+		$schema = new \Email\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+		}
+		$version = $schema->version();
 		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->version = 0;
-		header('Content-Type: application/xml');
+		$response->version = $version;
+		print formatOutput($response);
+	}
+	function schemaUpgrade() {
+		$schema = new \Email\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+		}
+		$version = $schema->upgrade();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->version = $version;
 		print formatOutput($response);
 	}
 

@@ -1,3 +1,6 @@
+<? if ($GLOBALS['_page']->error) { ?>
+<div class="form_error"><?=$GLOBALS['_page']->error?></div>
+<?	} ?>
 <table class="body" style="width: 800px">
 <tr><td class="title" colspan="5">Calibrations for <?=$asset->code?></td></tr>
 <tr><td class="label">Date</td>
@@ -9,11 +12,11 @@
 </tr>
 <?	foreach ($verifications as $verification) { ?>
 <tr><td class="value"><?=$verification->date_request?></td>
-	<td class="value"><?=$verification->standard_manufacturer?></td>
-	<td class="value"><?=$verification->cylinder_number?></td>
-	<td class="value"><?=$verification->standard_concentration?></td>
-	<td class="value"><?=$verification->monitor_reading?></td>
-	<td class="value"><?=$verification->detector_voltage?></td>
+	<td class="value"><?=$verification->getMetadata("standard_manufacturer")?></td>
+	<td class="value"><?=$verification->getMetadata("cylinder_number")?></td>
+	<td class="value"><?=$verification->getMetadata("standard_concentration")?></td>
+	<td class="value"><?=$verification->getMetadata("monitor_reading")?></td>
+	<td class="value"><?=$verification->getMetadata("detector_voltage")?></td>
 </tr>
 <?	} ?>
 </table>

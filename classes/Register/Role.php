@@ -130,19 +130,16 @@
 			}
 		}
 
-		public function notify($code,$message) {
-			require_once(MODULES."/email/_classes/default.php");
-			$role = $this->get($code);
-			if (! $role->id)
-			{
+		public function notify($message) {
+			if (! $this->id) {
 				$this->error = "Role not found";
 				return null;
 			}
 			$members = $this->members($role->id);
 			foreach ($members as $member)
 			{
-				$_member = new RegisterPerson();
-				$_member->notify($member->id,$message);
+				$member = new \Register\Person();
+				$member->notify($member->id,$message);
 			}
 		}
 	}

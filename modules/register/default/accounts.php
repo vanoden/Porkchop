@@ -1,21 +1,21 @@
 <script type="text/javascript">
-	function submitForm()
-	{
-		if (document.register.password.value.length > 0 || document.register.password_2.value.length > 0)
-		{
-			if (document.register.password.value.length < 6)
-			{
+	function submitForm() {
+		if (document.register.password.value.length > 0 || document.register.password_2.value.length > 0) {
+			if (document.register.password.value.length < 6) {
 				alert("Your password is too short.");
 				return false;
 			}
 			
-			if (document.register.password.value != document.register.password_2.value)
-			{
+			if (document.register.password.value != document.register.password_2.value) {
 				alert("Your passwords don't match.");
 				return false;
 			}
 		}
-		
+		return true;
+	}
+	function submitSearch(start) {
+		document.getElementById('start').value=start;
+		document.getElementById('custSearch').submit();
 		return true;
 	}
 </script>
@@ -43,11 +43,21 @@
 	}
 </style>
 </script>
-	<table cellpadding="0" cellspacing="0" class="body">
-<?	if ($GLOBALS['_page']->error) { ?>
-	<tr><td colspan="4" class="form_error"><?=$GLOBALS['_page']->error?></td></tr>
+	<div class="title">Accounts</div>
+<?	if ($page->error) { ?>
+	<div class="form_error"><?=$page->error?></div>
 <?	} ?>
-	<tr><th colspan="4" class="title">Accounts</th></tr>
+<?	if ($page->success) { ?>
+	<div class="form_success"><?=$page->success?></div>
+<?	} ?>
+	<div id="search_container">
+		<form id="custSearch" method="get" class="float: left">
+		<input type="text" id="searchAccountInput" name="search" value="<?=$_REQUEST['search']?>" class="value input searchInput"/>
+		<input type="hidden" id="start" name="start" value="0">
+		<img id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>
+		</form>
+	</div>
+	<table cellpadding="0" cellspacing="0" class="body">
 	<tr><th class="label accountsLoginLabel">Login</th>
 		<th class="label accountsFirstLabel">First Name</th>
 		<th class="label accountsLastLabel">Last Name</th>

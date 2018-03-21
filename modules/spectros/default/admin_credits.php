@@ -1,4 +1,4 @@
-<?  if (! role('monitor admin'))
+<?  if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin'))
     {
         print "<span class=\"form_error\">You are not authorized for this view!</span>";
         return;
@@ -11,21 +11,21 @@
 		return false;
 	}
 </script>
+<div class="title">Calibration Credits</div>
+<?	if ($page->error) { ?>
+<div class="form_error" colspan="2"><?=$page->error?></div>
+<?	} ?>
+<?	if ($page->success) { ?>
+<div class="form_success" colspan="2"><?=$page->success?></div>
+<?	} ?>
 <table class="body" style="width: 600px;">
 <form method="post" name="calibrationForm" action="/_spectros/admin_credits">
-<tr><td class="title" colspan="2">Calibration Credits</td></tr>
-<?	if ($GLOBALS['_page']->error) { ?>
-<tr><td class="form_error" colspan="2"><?=$GLOBALS['_page']->error?></td></tr>
-<?	} ?>
-<?	if ($GLOBALS['_page']->success) { ?>
-<tr><td class="form_success" colspan="2"><?=$GLOBALS['_page']->success?></td></tr>
-<?	} ?>
 <tr><td class="label" colspan="2">Organization</td></tr>
 <tr><td class="value" colspan="2">
 		<select name="organization_id" class="value input" onchange="selectOrganization(this);">
 			<option value="">Select</option>
 <?	foreach ($organizations as $organization) { ?>
-			<option value="<?=$organization->id?>"<? if ($organization->id == $_REQUEST['organization_id']) print " selected";?>><?=$organization->name?></option>
+			<option value="<?=$organization->id?>"<? if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected";?>><?=$organization->name?></option>
 <?	} ?>
 		</select>
 	</td>

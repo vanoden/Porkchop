@@ -1,99 +1,124 @@
 <?php
-	require_once(MODULES."/monitor/_classes/default.php");
-	require_once(MODULES."/spectros/_classes/default.php");
-	
-	if (! $_REQUEST['code'])
-	{
+	$page = new \Site\Page(array("module" => "spectros","view" => "calibrate"));
+
+	# Check Configuration
+	if (! isset($GLOBALS['_config']->spectros->calibration_product)) $GLOBALS['_page']->error = "Calibration Product not configured";
+	$cal_product = new \Product\Item();
+	$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
+	if (! $cal_product->id) {
+		$page->error = "Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found";
+		return;
+	}
+
+	if (! $_REQUEST['code']) {
 		$_REQUEST['code'] = $GLOBALS['_REQUEST_']->query_vars_array[0];
+		$_REQUEST['product'] = $GLOBALS['_REQUEST_']->query_vars_array[1];
 	}
-	if (! $_REQUEST['code'])
-	{
-		$GLOBALS['_page']->error = "Asset code required";
+	if (! $_REQUEST['code']) {
+		$page->error = "Asset code required";
 		return;
 	}
-	$_asset = new MonitorAsset();
-	$asset = $_asset->get($_REQUEST['code']);
-	if (! $asset->id)
-	{
-		$GLOBALS['_page']->error = "Asset not found";
+
+	$asset_product = new \Product\Item();
+	$asset_product->get($_REQUEST['product']);
+	if (! $asset_product->id) {
+		$page->error = "Product not found";
 		return;
 	}
-	
+	$asset = new \Monitor\Asset();
+	$asset->get($_REQUEST['code'],$asset_product->id);
+	if (! $asset->id) {
+		$page->error = "Asset '".$_REQUEST['code']."' not found";
+		return;
+	}
+
 	# Show available credits
-	$_credit = new CalibrationVerificationCredit();
-	if ($_credit->error) app_error("Error initializing calibration verification credits: ".$_credit->error,__FILE__,__LINE__);
+	$product = $GLOBALS['_SESSION_']->customer->organization->product($cal_product->id);
+	if ($product->error) app_error("Error initializing calibration verification credits: ".$product->error,__FILE__,__LINE__);
 
 	# See if Credits available
-	$result = $_credit->get($GLOBALS['_SESSION_']->customer->organization->id);
-	if ($_credit->error)
-	{
-		app_log("Error getting credits: ".$_credit->error,'error',__FILE__,__LINE__);
-		$GLOBALS['_page']->error = "Error getting calibration credits";
+	$credits = $product->count();
+	if ($product->error) {
+		app_log("Error getting credits: ".$product->error,'error',__FILE__,__LINE__);
+		$page->error = "Error getting calibration credits";
 		return;
 	}
 
-	if ($result->quantity > 0) $available_credits = $result->quantity;
+	if ($credits > 0) $available_credits = $credits;
 	else $available_credits = 0;
 
-	if ($_REQUEST['btn_submit'])
-	{
-		$parameters = array();
-
-		$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
-		$parameters['asset_id'] = $asset->id;
-		$parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->id;
-		$parameters['date_calibration'] = get_mysql_date($_REQUEST['date_calibration']);
-
-		$_credit = new CalibrationVerificationCredit();
-		if ($_credit->error) app_error("Error initializing calibration verification credits: ".$_credit->error,__FILE__,__LINE__);
+	if ($_REQUEST['btn_submit']) {
+		$date_calibration = get_mysql_date($_REQUEST['date_calibration']);
 
 		# See if Credits available
-		$result = $_credit->get($parameters['organization_id']);
-		if ($_credit->error)
-		{
-			app_log("Error getting credits: ".$_credit->error,'error',__FILE__,__LINE__);
-			$GLOBALS['_page']->error = "Error getting calibration credits";
-			return;
-		}
-		if ($result->quantity < 1)
-		{
+		if ($credits < 1) {
 			app_log("Not enough credits for organization '".$parameters['organization_id']."' [".print_r($result,true)."]",'notice',__FILE__,__LINE__);
-			$GLOBALS['_page']->error = "Not enough calibration credits";
+			$page->error = "Not enough calibration credits";
 			return;
 		}
-		# Consume 1 credit
-		$result = $_credit->consume($parameters['organization_id'],1);
-		if ($_credit->error) app_error("Error finding credits: ".$_credit->error,__FILE__,__LINE__);
-
 		# Create Verification Record
-		$_verification = new CalibrationVerification();
-		if ($_verification->error) app_error("Error adding calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$verification = $_verification->add($parameters);
-		if ($_verification->error) app_error("Error adding collection: ".$_verification->error,__FILE__,__LINE__);
+		$verification = new \Spectros\CalibrationVerification();
+		if ($verification->error) {
+			app_error("Error initializing calibration verification: ".$verification->error,__FILE__,__LINE__);
+			$page->error = "Error recording calibration verification";
+			return;
+		}
+		$verification->add(
+			$asset->id,
+			array("date_request" => $date_calibration)
+		);
+		if ($verification->error) {
+			app_error("Error adding calibration verification: ".$verification->error,__FILE__,__LINE__);
+			$page->error = "Error recording calibration verification";
+			return;
+		}
 
 		# Add Metadata to Verification Record
-		$_verification->setMetadata($verification->id,"standard_manufacturer",$_REQUEST['standard_manufacturer']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$_verification->setMetadata($verification->id,"standard_concentration",$_REQUEST['standard_concentration']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$_verification->setMetadata($verification->id,"standard_expires",$_REQUEST['standard_expires']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$_verification->setMetadata($verification->id,"monitor_reading",$_REQUEST['monitor_reading']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$_verification->setMetadata($verification->id,"cylinder_number",$_REQUEST['cylinder_number']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$_verification->setMetadata($verification->id,"detector_voltage",$_REQUEST['detector_voltage']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
+		$verification->setMetadata("standard_manufacturer",$_REQUEST['standard_manufacturer']);
+		if ($verification->error) {
+			$page->error = "Error setting metadata for calibration verification: ".$verification->error;
+			return;
+		}
+		$verification->setMetadata("standard_concentration",$_REQUEST['standard_concentration']);
+		if ($verification->error) {
+			$page->error = "Error setting metadata for calibration verification: ".$verification->error;
+			return;
+		}
+		$verification->setMetadata("standard_expires",$_REQUEST['standard_expires']);
+		if ($verification->error) {
+			$page->error = "Error setting metadata for calibration verification: ".$verification->error;
+			return;
+		}
+		$verification->setMetadata("monitor_reading",$_REQUEST['monitor_reading']);
+		if ($verification->error) {
+			$page->error = "Error setting metadata for calibration verification: ".$verification->error;
+			return;
+		}
+		$verification->setMetadata("cylinder_number",$_REQUEST['cylinder_number']);
+		if ($verification->error) {
+			$page->error = "Error setting metadata for calibration verification: ".$verification->error;
+			return;
+		}
+		$verification->setMetadata("detector_voltage",$_REQUEST['detector_voltage']);
+		if ($verification->error) {
+			$page->error = "Error setting metadata for calibration verification: ".$verification->error;
+			return;
+		}
 
-		header("location: /_spectros/calibrations/".$_REQUEST['code']);
+		$verification->ready();
+
+		# Consume 1 credit
+		$product->consume(1);
+		if ($product->error) app_error("Error consuming credit: ".$product->error,__FILE__,__LINE__);
+
+		header("location: /_spectros/calibrations/".$_REQUEST['code']."/".$_REQUEST['product']);
 		exit;
 	}
 
 	$date_calibration = date('m/d/Y H:i:s');
 	
-	function app_error($string,$file,$line)
-	{
-		$GLOBALS['_page']->error = $string;
+	function app_error($string,$file,$line) {
+		$page->error = $string;
 		app_log($string,'error',__FILE__,__LINE__);
 		return;
 	}

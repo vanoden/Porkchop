@@ -92,7 +92,7 @@
 <?	} ?>
 	</select>
 </div>
-<hr style="width: 100%; color: white; clear: both: height: 0px;"/>
+<hr style="width: 100%; color: white; clear: both; height: 0px;"/>
 <!-- Contact Options -->
 <div class="form_instruction">Add methods of contact.</div>
 <table cellpadding="0" cellspacing="0" class="body" style="width:800px">

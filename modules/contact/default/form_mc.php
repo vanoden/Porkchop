@@ -1,10 +1,6 @@
 <?
-	require_module("contact");
-	require_module("email");
-
 	# Handle Submit
-	if ($_REQUEST['btn_submit'])
-	{
+	if ($_REQUEST['btn_submit']) {
 		app_log('Contact form submitted by '.$_REQUEST['first_name'].' '.$_REQUEST['last_name'].' <'.$_REQUEST['email_address'].'>','notice',__FILE__,__LINE__);
 
 		# Check reCAPTCHA
@@ -37,29 +33,24 @@
 			unset($_REQUEST['btn_submit']);
 
 			# Store Data
-			$_event = new ContactEvent();
-			if ($_event->error)
-			{
-				app_log("Error initializing ContactEvent: ".$_event->error,'error',__FILE__,__LINE__);
+			$event = new \Contact\Event();
+			if ($event->error) {
+				app_log("Error initializing ContactEvent: ".$event->error,'error',__FILE__,__LINE__);
 				$GLOBALS['_page']->error = "Sorry, there was an error submitting the contact form.  Please call.";
 			}
-			else
-			{
-				$_event->add($_REQUEST);
-				if ($_event->error)
-				{
-					app_log("Error submitting ContactEvent: ".$_event->error,'error',__FILE__,__LINE__);
+			else {
+				$event->add($_REQUEST);
+				if ($event->error) {
+					app_log("Error submitting ContactEvent: ".$event->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_page']->error = "Sorry, there was an error submitting the contact form.  Please call.";
 				}
-				else
-				{
+				else {
 					app_log("Contact Form Submitted: ".print_r($form_data,true),'notice',__FILE__,__LINE__);
 
 					# Notify Admins
 					$message_body  = "Contact Form Submitted on ".date('m/d/Y H:i')."<br>\r\n";
 					$message_body .= "<table>\r\n";
-					foreach(array_keys($_REQUEST) as $field)
-					{
+					foreach(array_keys($_REQUEST) as $field) {
 						$message_body .= "<tr><th>$field</th><td>".$_REQUEST[$field]."</td></tr>";
 					}
 					$message_body .= "</table>";
@@ -68,15 +59,13 @@
 						"subject" 	=> "Contact Form Submitted",
 						"body" 		=> $message_body
 					);
-					$_role = new RegisterRole();
-					$_role->notify("contact admin",$message);
-					if ($_role->error)
-					{
+					$role = new \Register\Role();
+					$role->notify("contact admin",$message);
+					if ($role->error) {
 						$GLOBALS['_page']->error = "Sorry, I was unable to contact representatives.  Please call.";
-						app_log("Error notifying role members: ".$_role->error,'error',__FILE__,__LINE__);
+						app_log("Error notifying role members: ".$role->error,'error',__FILE__,__LINE__);
 					}
-					else
-					{
+					else {
 						# Display Confirmation Page
 						header("location: /_contact/thankyou");
 						exit;

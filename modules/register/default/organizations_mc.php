@@ -5,15 +5,17 @@
 	### for the user.								###
 	### A. Caravello 11/12/2002						###
 	###################################################
+	$page = new \Site\Page();
+
 	# Customers to display at a time
 	if (preg_match('/^\d+$/',$_REQUEST['page_size']))
 		$organizations_per_page = $_REQUEST['page_size'];
 	else
 		$organizations_per_page = 18;
+	if (! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
 
 	# Security - Only Register Module Operators or Managers can see other customers
 	if ($GLOBALS['_SESSION_']->customer->has_role('register reporter') || $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
-		if (! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
 		$organizationlist = new \Register\OrganizationList();
 
 		# Initialize Parameter Array
@@ -45,7 +47,7 @@
 		if ($next_offset > count($organizations)) $next_offset = $_REQUEST['start'] + count($organizations);
 	}
 	else {
-		$GLOBALS['_page']->error = "No permissions to use this tool";
+		$page->error = "You are not permitted to see this view";
 		$organizations = array();
 	}
 ?>
