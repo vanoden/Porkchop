@@ -44,6 +44,7 @@
 	header("Expires: 0");
 	header("Cache-Control: no-cache, must-revalidate");
 
+	install_log("Upgrading site to 201803261806");
 	###################################################
 	### Connect to Database							###
 	###################################################
@@ -207,12 +208,14 @@
 	if (! $product->id) {
 		install_fail("No Calibration Verification Credit product found, code '".$GLOBALS['_config']->spectros->calibration_product."' must exist.");
 	}
+	install_log("Product '".$GLOBALS['_config']->spectros->calibration_product."' found.");
 
 	$product = new \Product\Item();
 	$product->get($GLOBALS['_config']->monitor->default_sensor_product);
 	if (! $product->id) {
 		install_fail("No Generic Sensor product found, code '".$GLOBALS['_config']->monitor->default_sensor_product."' must exist.");
 	}
+	install_log("Product '".$GLOBALS['_config']->monitor->default_sensor_product."' found.");
 
 	install_log("Upgrade completed successfully");
 
