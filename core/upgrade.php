@@ -197,9 +197,27 @@
 		array("monitor","comm_dashboard"),
 	);
 
-	foreach ($set_template_array as $module => $view) {
+	foreach ($set_template_array as $array) {
+		$module = $array[0];
+		$view = $array[1];
 		$page = new \Site\Page($module,$view);
+		if ($page->error) {
+			install_fail("Error loading view '$view' for module '$module': ".$page->error);
+		}
+		if (! $page->id) {
+			try {
+				$page->add($module,$view,null);
+			} catch (Exception $e) {
+				install_fail("Cannot add view: ".$e->getMessage());
+			}
+			if (! $page->id) {
+				install_fail("Cannot find view '$view' for module '$module': ".$page->error);
+			};
+		}
 		$page->setMetadata("template","admin.html");
+		if ($page->error) {
+			install_fail("Could not add metadata to page: ".$page->error);
+		}
 	}
 
 	# Check for Calibration Credit Product

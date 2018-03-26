@@ -130,17 +130,12 @@
 	    $page_message = $_SESSION_->message;
 	}
 
-	# Load Page Information
-	$_page = new \Site\Page();
-	$_page->module	= $_REQUEST_->module;
-	$_page->view	= $_REQUEST_->view;
-	$_page->index	= $_REQUEST_->index;
-
 	# Access Logging in Application Log
 	app_log("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."'",'info',__FILE__,__LINE__);
 
-	# Load The Page
-	$_page->get();
+	# Load Page Information
+	$_page = new \Site\Page();
+	$_page->get($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
 	if ($_page->error) {
 		print "Error: ".$_page->error;
 		app_log("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);

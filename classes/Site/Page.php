@@ -39,8 +39,7 @@
 			}
 		}
 
-		public function get() {
-			if (! isset($this->index)) $this->index = '';
+		public function get($module,$view,$index = '') {
 
 			# Prepare Query
 			$get_object_query = "
@@ -53,9 +52,9 @@
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
 				array(
-					  $this->module,
-					  $this->view,
-					  $this->index
+					  $module,
+					  $view,
+					  $index
 				)
 			);
 			if (! $rs) {
