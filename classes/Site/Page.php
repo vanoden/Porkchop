@@ -3,13 +3,13 @@
 
     class Page {
 		public $id;
-        public $module = 'content';
-        public $view = 'index';
+		public $module = 'content';
+		public $view = 'index';
 		public $index = '';
-        public $style = 'default';
-        public $auth_required = 0;
-        public $ssl_required;
-        public $error;
+		public $style = 'default';
+		public $auth_required = 0;
+		public $ssl_required;
+		public $error;
 		public $uri;
 		public $title;
 		public $metadata;
@@ -22,7 +22,7 @@
 				$this->error = "Error initializing Page schema: ".$schema->error;
 				return null;
 			}
-			
+
 			$args = func_get_args();
 			if (func_num_args() == 1 && gettype($args[0]) == "string") {
 				$this->id = $args[0];
@@ -62,20 +62,9 @@
 				return null;
 			}
 			list($id) = $rs->FetchRow();
-			if (! $id) {
-				$page = $this->add();
-				if ($this->error) return null;
-				$this->id = $page->id;
-			}
-			else {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->id = $id;
 
-			if (isset($GLOBALS['_config']->style[$this->module])) {
-				$this->style = $GLOBALS['_config']->style[$this->module];
-			}
-			return 1;
+			return $this->details();
 		}
 
 		public function add($module = '',$view = '',$index = '') {
@@ -134,6 +123,9 @@
 				$this->module = $object->module;
 				$this->view = $object->view;
 				$this->index = $object->index;
+				if (isset($GLOBALS['_config']->style[$this->module])) {
+					$this->style = $GLOBALS['_config']->style[$this->module];
+				}
 			}
 			else {
 				$this->error = "Page not found";
