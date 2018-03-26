@@ -215,7 +215,7 @@
 		install_fail("_config->spectros->calibration_product not defined!");
 	}
 
-	if (isset($GLOBALS['_config']->spectros->default_sensor_product) and strlen($GLOBALS['_config']->spectros->default_sensor_product)) {
+	if (isset($GLOBALS['_config']->monitor->default_sensor_product) and strlen($GLOBALS['_config']->monitor->default_sensor_product)) {
 		$product = new \Product\Item();
 		$product->get($GLOBALS['_config']->monitor->default_sensor_product);
 		if (! $product->id) {
