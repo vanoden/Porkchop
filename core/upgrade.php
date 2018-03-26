@@ -174,9 +174,9 @@
 	}
 
 	# Unset Templates
-	$pagelist = \Site\PageList->new();
+	$pagelist = new \Site\PageList();
 	$pages = $pagelist->find();
-	foreach my ($pages as $page) {
+	foreach ($pages as $page) {
 		$page->unsetMetadata("template");
 	}
 
@@ -196,11 +196,23 @@
 		array("monitor","comm_dashboard"),
 	);
 
-	foreach my ($set_template_array as $module => $view) {
+	foreach ($set_template_array as $module => $view) {
 		$page = new \Site\Page($module,$view);
 		$page->setMetadata("template","admin.html");
 	}
-	
+
+	# Check for Calibration Credit Product
+	$product = new \Product\Item();
+	$product->get($GLOBALS['_config']->spectros->calibration_product);
+	if (! $product->id) {
+		install_fail("No Calibration Verification Credit product found, code '".$GLOBALS['_config']->spectros->calibration_product."' must exist.");
+	}
+
+	$product = new \Product\Item();
+	$product->get($GLOBALS['_config']->monitor->default_sensor_product);
+	if (! $product->id) {
+		install_fail("No Generic Sensor product found, code '".$GLOBALS['_config']->monitor->default_sensor_product."' must exist.");
+	}
 
 	install_log("Upgrade completed successfully");
 
