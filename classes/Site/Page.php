@@ -655,5 +655,60 @@
 				exit;
 			}
 		}
+
+		public function setMetadata($key,$value) {
+            if (! preg_match('/^\d+$/',$this->id)) {
+                $this->error = "Invalid page id in Site::Page::setMetadata(): ";
+                return null;
+            }
+            if (! isset($key)) {
+                $this->error = "Invalid key name in Site::Page::setMetadata(): ";
+                return null;
+            }
+
+            $set_data_query = "
+                REPLACE
+                INTO    page_metadata
+                (       page_id,`key`,value)
+                VALUES
+                (       ?,?,?)
+            ";
+            $GLOBALS['_database']->Execute(
+                $set_data_query,
+                array($this->id,$key,$value)
+            );
+            if ($GLOBALS['_database']->ErrorMsg()) {
+                $this->error = "SQL Error setting metadata in Site::Page::setMetadata(): ".$GLOBALS['_database']->ErrorMsg();
+                return null;
+            }
+            return $value;
+		}
+
+		public function unsetMetadata($key) {
+            if (! preg_match('/^\d+$/',$this->id)) {
+                $this->error = "Invalid page id in Site::Page::unsetMetadata(): ";
+                return null;
+            }
+            if (! isset($key)) {
+                $this->error = "Invalid key name in Site::Page::unsetMetadata(): ";
+                return null;
+            }
+
+            $set_data_query = "
+                DELETE
+                FROM    page_metadata
+				WHERE	page_id = ?
+				AND		`key` = ?
+            ";
+            $GLOBALS['_database']->Execute(
+                $set_data_query,
+                array($this->id,$key)
+            );
+            if ($GLOBALS['_database']->ErrorMsg()) {
+                $this->error = "SQL Error setting metadata in Site::Page::unsetMetadata(): ".$GLOBALS['_database']->ErrorMsg();
+                return null;
+            }
+            return $value;
+		}
 	}
 ?>

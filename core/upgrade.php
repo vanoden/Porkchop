@@ -90,6 +90,9 @@
 	$class = new \Register\Schema();
 	install_log("Register::Schema: version ".$class->version());
 	if ($class->version() != 10) install_fail("Version 1 Required");
+	$class = new \Storage\Schema();
+	install_log("Storage::Schema: version ".$class->version());
+	if ($class->version() != 1) install_fail("Version 1 Required");
 	$class = new \Package\Schema();
 	install_log("Package::Schema: version ".$class->version());
 	if ($class->version() != 1) install_fail("Version 1 Required");
@@ -101,24 +104,21 @@
 	if ($class->version() != 3) install_fail("Version 1 Required");
 	$class = new \Contact\Schema();
 	install_log("Contact::Schema: version ".$class->version());
-	if ($class->version() != 1) install_fail("Version 1 Required");
+	if ($class->version() != 2) install_fail("Version 1 Required");
 	$class = new \Event\Schema();
 	install_log("Event::Schema: version ".$class->version());
-	if ($class->version() != 1) install_fail("Version 1 Required");
-	$class = new \Storage\Schema();
-	install_log("Storage::Schema: version ".$class->version());
-	if ($class->version() != 1) install_fail("Version 1 Required");
+	if ($class->version() != 0) install_fail("Version 1 Required");
 
 	###################################################
 	### Initialize Session							###
 	###################################################
 	install_log('Initializing Session');
-	$_SESSION_ = new \Site\Session();
+	$_SESSION_ = new \Session\Session();
 
 	###################################################
 	### Get Company Information						###
 	###################################################
-	$companylist = new \Site\CompanyList();
+	$companylist = new \Company\CompanyList();
 	list($company) = $companylist->find();
 	if (! $company->id) {
 		install_fail("No company found.  You must run installer");
@@ -129,7 +129,7 @@
 	### See if Location Present						###
 	###################################################
 	install_log("Finding location by hostname");
-	$location = new \Site\Location();
+	$location = new \Company\Location();
 	$location->getByHost($_SERVER['SERVER_NAME']);
 	if (! $location->id) {
 		###################################################
@@ -139,7 +139,7 @@
 		$domain_name = $matches[1];
 
 		install_log("Checking for domain '$domain_name'");
-		$domain = new \Site\Domain();
+		$domain = new \Company\Domain();
 		$domain->get($domain_name);
 		if (! $domain->id) {
 			install_log("Creating domain");
@@ -172,6 +172,35 @@
 			install_fail("Error adding location: ".$location->error);
 		}
 	}
+
+	# Unset Templates
+	$pagelist = \Site\PageList->new();
+	$pages = $pagelist->find();
+	foreach my ($pages as $page) {
+		$page->unsetMetadata("template");
+	}
+
+	# Set Templates As Necessary
+	$set_template_array = array(
+		array("spectros","admin_home"),
+		array("product","report"),
+		array("product","edit"),
+		array("register","organizations"),
+		array("register","organization"),
+		array("register","accounts"),
+		array("monitor","admin_assets"),
+		array("monitor","admin_details"),
+		array("monitor","admin_collections"),
+		array("spectros","admin_credits"),
+		array("spectros","cal_report"),
+		array("monitor","comm_dashboard"),
+	);
+
+	foreach my ($set_template_array as $module => $view) {
+		$page = new \Site\Page($module,$view);
+		$page->setMetadata("template","admin.html");
+	}
+	
 
 	install_log("Upgrade completed successfully");
 
