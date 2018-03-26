@@ -203,19 +203,29 @@
 	}
 
 	# Check for Calibration Credit Product
-	$product = new \Product\Item();
-	$product->get($GLOBALS['_config']->spectros->calibration_product);
-	if (! $product->id) {
-		install_fail("No Calibration Verification Credit product found, code '".$GLOBALS['_config']->spectros->calibration_product."' must exist.");
+	if (isset($GLOBALS['_config']->spectros->calibration_product) and strlen($GLOBALS['_config']->spectros->calibration_product)) {
+		$product = new \Product\Item();
+		$product->get($GLOBALS['_config']->spectros->calibration_product);
+		if (! $product->id) {
+			install_fail("No Calibration Verification Credit product found, code '".$GLOBALS['_config']->spectros->calibration_product."' must exist.");
+		}
+		install_log("Product '".$GLOBALS['_config']->spectros->calibration_product."' found.");
 	}
-	install_log("Product '".$GLOBALS['_config']->spectros->calibration_product."' found.");
+	else {
+		install_fail("_config->spectros->calibration_product not defined!");
+	}
 
-	$product = new \Product\Item();
-	$product->get($GLOBALS['_config']->monitor->default_sensor_product);
-	if (! $product->id) {
-		install_fail("No Generic Sensor product found, code '".$GLOBALS['_config']->monitor->default_sensor_product."' must exist.");
+	if (isset($GLOBALS['_config']->spectros->default_sensor_product) and strlen($GLOBALS['_config']->spectros->default_sensor_product)) {
+		$product = new \Product\Item();
+		$product->get($GLOBALS['_config']->monitor->default_sensor_product);
+		if (! $product->id) {
+			install_fail("No Generic Sensor product found, code '".$GLOBALS['_config']->monitor->default_sensor_product."' must exist.");
+		}
+		install_log("Product '".$GLOBALS['_config']->monitor->default_sensor_product."' found.");
 	}
-	install_log("Product '".$GLOBALS['_config']->monitor->default_sensor_product."' found.");
+	else {
+		install_fail("_config->monitor->default_sensor_product not defined!");
+	}
 
 	install_log("Upgrade completed successfully");
 
