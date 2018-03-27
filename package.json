@@ -1,0 +1,27 @@
+{
+  "name": "SpectrosWWW",
+  "version": "2.0.0",
+  "description": "Spectros Instruments Web Portal",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://vanoden@github.com/vanoden/Porkchop"
+  },
+  "author": "Anthony Caravello",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/vanoden/Porkchop/issues"
+  },
+  "devDependencies": {
+    "gulp": "~3.9.1",
+    "gulp-debug": "~3.2.0",
+    "gulp-data": "~1.3.1",
+    "gulp-template": "~5.0.0"
+  },
+  "dependencies": {
+    "gulp": "~3.9.1"
+  }
+}
