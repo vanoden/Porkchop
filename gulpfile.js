@@ -16,6 +16,7 @@ gulp.task('process', ['js','css','jpegs','pngs','svg'], () =>
 			}
 		)))
 		.pipe(template())
+		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );
 
@@ -25,6 +26,7 @@ gulp.task('js', () =>
 			{ "field": "content" }
 		)))
 		.pipe(template())
+		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );
 
@@ -34,16 +36,19 @@ gulp.task('css', () =>
 			{ "field": "content" }
 		)))
 		.pipe(template())
+		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );
 
 gulp.task('pngs', () =>
 	gulp.src('html.src/**/*.png')
+		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );
 
 gulp.task('svg', () =>
 	gulp.src('html.src/**/*.svg')
+		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );
 
