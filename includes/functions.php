@@ -181,11 +181,11 @@
 		if (! array_key_exists($level,$syslog_xref)) $level = "info";
 
 		# Filter on log level
-		if (APPLICATION_LOG_LEVEL == "trace" && in_array($level,array('trace','debug','info','notice','warning'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "error" && in_array($level,array('debug','info','notice','warning'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "warning" && in_array($level,array('debug','info','notice'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "notice" && in_array($level,array('debug','info'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "info" && $level == "debug") return null;
+		if     (APPLICATION_LOG_LEVEL == "error"   && in_array($level,array('trace','debug','info','notice','warning'))) return null;
+		elseif (APPLICATION_LOG_LEVEL == "warning" && in_array($level,array('trace','debug','info','notice'))) return null;
+		elseif (APPLICATION_LOG_LEVEL == "notice"  && in_array($level,array('trace','debug','info'))) return null;
+		elseif (APPLICATION_LOG_LEVEL == "info"    && in_array($level,array('trace','debug'))) return null;
+		elseif (APPLICATION_LOG_LEVEL == "debug"   && in_array($level,array('trace'))) return null;
 
 		# Replace Carriage Returns
 		$message = preg_replace('/\r*\n/',"\n",$message);
