@@ -128,8 +128,7 @@
 				}
 			}
 			else {
-				$this->error = "Page not found";
-				return null;
+				# Just Let The Defaults Go
 			}
 
             # Make Sure Authentication Requirements are Met
