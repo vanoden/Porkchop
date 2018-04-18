@@ -53,7 +53,6 @@
 			while (list($id) = $rs->FetchRow()) {
 				if ($recursive) {
 					$organization = new Organization($id);
-					$organization->details();
 					$this->count ++;
 					array_push($organizations,$organization);
 				}

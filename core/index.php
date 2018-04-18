@@ -34,6 +34,7 @@
 	# General Utilities
 	require INCLUDES.'/functions.php';
 	spl_autoload_register('load_class');
+	#require THIRD_PARTY.'/autoload.php';
 
 	# Database Abstraction
 	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
@@ -59,7 +60,7 @@
 	if ($_database->ErrorMsg()) {
 		print "Error connecting to database:<br>\n";
 		print $_database->ErrorMsg();
-		error_log("Error connecting to database: ".$_database->ErrorMsg());
+		app_log("Error connecting to database: ".$_database->ErrorMsg(),'error',__FILE__,__LINE__);
 		exit;
 	}
 
@@ -85,14 +86,14 @@
 		$memcache_stats = @$_memcache->getExtendedStats();
 		$memcache_available = (bool) $memcache_stats[$GLOBALS['_config']->memcache->host.":".$GLOBALS['_config']->memcache->port];
 		if (! $memcache_available) {
-			error_log("Memcached not reachable at ".$GLOBALS['_config']->memcache->host.":".$GLOBALS['_config']->memcache->port);
+			app_log("Memcached not reachable at ".$GLOBALS['_config']->memcache->host.":".$GLOBALS['_config']->memcache->port,'error',__FILE__,__LINE__);
 			$GLOBALS['_config']->cache_mechanism = '';
 		}
 		elseif (@$_memcache->connect($GLOBALS['_config']->memcache->host,$GLOBALS['_config']->memcache->port)) {
 			// Memcache Connected
 		}
 		else {
-			error_log("Cannot connect to memcached");
+			app_log("Cannot connect to memcached",'error',__FILE__,__LINE__);
 			$GLOBALS['_config']->cache_mechanism = '';
 		}
 	}
@@ -120,7 +121,7 @@
 	# Create Session
 	$_SESSION_->start();
 	if ($_SESSION_->error) {
-		error_log($_SESSION_->error);
+		app_log($_SESSION_->error,'error',__FILE__,__LINE__);
 		exit;
 	}
 
@@ -141,6 +142,5 @@
 		app_log("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
 		exit;
 	}
-	app_log("Loading template ".$_page->template." for page ".$_page->module."::".$_page->view."::".$_page->index);
 	print $_page->load_template();
 ?>

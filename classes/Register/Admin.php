@@ -9,17 +9,20 @@
 				$this->error = "Failed to initialize schema: ".$schema->error;
 			}
 			elseif ($id) {
-				$this->id = 0;
+				$this->id = $id;
 				$this->details();
 			}
 		}
 	
 		public function details() {
 		    $details = parent::details();
-		    $details->roles = $this->roles();
-			$_department = new Department();
-			$details->department = $_department->details($details->department_id);
-		    return $details;
+			return;
+			#if (! isset($this->id)) {
+			#	return;
+			#}
+			#$details->roles = $this->roles();
+			#$department = new Department($details->department_id);
+		    #return $details;
 		}
 		public function update($id,$parameters=array()) {
 			parent::update($id,$parameters);

@@ -37,10 +37,12 @@
 					}
 				}
 			}
+			elseif (func_num_args() == 2 && gettype($args[0]) == "string" && gettype($args[1]) == "string") {
+				$this->get($args[0],$args[1]);
+			}
 		}
 
 		public function get($module,$view,$index = '') {
-
 			# Prepare Query
 			$get_object_query = "
 				SELECT	id
@@ -62,9 +64,16 @@
 				return null;
 			}
 			list($id) = $rs->FetchRow();
-			$this->id = $id;
-
-			return $this->details();
+			if (is_numeric($id)) {
+				$this->id = $id;
+				return $this->details();
+			}
+			else {
+				$this->module = $module;
+				$this->view = $view;
+				$this->index = $index;
+			}
+			return;
 		}
 
 		public function add($module = '',$view = '',$index = '') {
@@ -182,7 +191,7 @@
 				$html = file_get_contents(HTML."/".$this->module.".html");
 			}
 			elseif (isset($GLOBALS['_config']->default_template)) {
-				app_log("Loading template '".$GLOBALS['_config']->default_template,'debug',__FILE__,__LINE__);
+				app_log("Loading template '".$GLOBALS['_config']->default_template."'",'debug',__FILE__,__LINE__);
 				if (! file_exists(HTML."/".$GLOBALS['_config']->default_template)) {
 					app_log("Default template file not found!",'error',__FILE__,__LINE__);
 				}
@@ -252,7 +261,7 @@
 			if (array_key_exists('object',$parameter)) $object = $parameter['object'];
 			if (array_key_exists('property',$parameter)) $property = $parameter['property'];
 
-			_debug_print("Object: $object Property: $property");
+			app_log("Object: $object Property: $property",'debug',__FILE__,__LINE__);
 			if ($object == "constant") {
 				if ($property == "path") {
 					$buffer .= PATH;
@@ -275,18 +284,16 @@
 					if (isset($this->metadata->$parameter["field"])) $buffer = $this->metadata->$parameter["field"];
 				}
 				elseif ($property == "navigation") {
-					require_once( MODULES.'/content/_classes/navigation.php');
-
-					$_navigation = new Menu();
-					if ($_navigation->error) {
-						$this->error = "Error initializing navigation module: ".$_navigation->error;
+					$menuList = new \Site\MenuList();
+					if ($menuList->error) {
+						$this->error = "Error initializing navigation module: ".$menuList->error;
 						return '';
 					}
 
-					$menus = $_navigation->find(array("name" => $parameter["name"]));
-					if ($_navigation->error) {
-						app_log("Error displaying menus: ".$_navigation->error,'error',__FILE__,__LINE__);
-						$this->error = $_navigation->error;
+					$menus = $menuList->find(array("name" => $parameter["name"]));
+					if ($menuList->error) {
+						app_log("Error displaying menus: ".$menuList->error,'error',__FILE__,__LINE__);
+						$this->error = $menuList->error;
 						return '';
 					}
 
@@ -348,14 +355,16 @@
 				else {
 					app_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view,'debug',__FILE__,__LINE__);
 					ob_start();
-					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
-					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
+					$be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
+					$fe_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php';
+					if (file_exists($be_file)) include($be_file);
+					if (file_exists($fe_file)) include($fe_file);
 					$buffer .= ob_get_clean();
 				}
 			}
 			elseif ($object == "content") {
 				if ($property == "index") {
-					app_log("content::index");
+					app_log("content::index",'trace',__FILE__,__LINE__);
 					if (isset($parameters['id']) && preg_match("/^\d+$/",$parameter["id"])) $target = $parameter["id"];
 					else $target = $GLOBALS['_REQUEST_']->query_vars_array[0];
 
@@ -420,7 +429,6 @@
 					foreach ($products as $product_id) {
 						#$product = $_product->details($product_id);
 						$buffer .= "<r7_product.detail format=thumbnail id=$product_id>";
-						#error_log("Buffer: $buffer");
 					}
 				}
 				elseif ($property == "detail") {
@@ -571,26 +579,18 @@
 				}
 			}
 			elseif ($object == "news") {
-				require_once(MODULES.'/news/_classes/news.php');
-
-				if ($property == "events")
-				{
-					$_event = new NewsEvent();
-					if ($_event->error)
-					{
-						$GLOBALS['_page']->error = "Error fetching events: ".$_event->error;
+				if ($property == "events") {
+					$eventlist = new \News\EventList();
+					if ($eventlist->error) {
+						$this->error = "Error fetching events: ".$eventlist->error;
 					}
-					else
-					{
-						$events = $_event->find(array('feed_id' => $parameter['id']));
-						if ($_event->error)
-						{
-							$GLOBALS['_page']->error = "Error fetching events: ".$_event->error;
+					else {
+						$events = $eventlist->find(array('feed_id' => $parameter['id']));
+						if ($eventlist->error) {
+							$this->error = "Error fetching events: ".$eventlist->error;
 						}
-						else if (count($events))
-						{
-							foreach ($events as $event)
-							{
+						else if (count($events)) {
+							foreach ($events as $event) {
 								$buffer .= "<a class=\"value ".$greenbar."newsWidgetEventValue\" href=\"".PATH."/_news/event/".$event->id."\">".$event->name."</a>";
 								if ($greenbar)
 									$greenbar = '';
@@ -601,8 +601,7 @@
 						}
 					}
 				}
-				else
-				{
+				else {
 					#error_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
 					ob_start();
 					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
@@ -610,17 +609,17 @@
 					$buffer .= ob_get_clean();
 				}
 			}
-			elseif ($object == "adminbar")
-			{
+			elseif ($object == "adminbar") {
 				if (role('administrator'))
 				$buffer = "<div class=\"adminbar\" id=\"adminbar\" style=\"height:20px; width: 100%; position: absolute; top: 0px; left: 0px;\">Admin stuff goes here</div>\n";
 			}
-			else
-			{
+			else {
 				ob_start();
 				app_log("Loading view ".$this->view." of module ".$this->module,'debug',__FILE__,__LINE__);
-				include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
-				include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
+				$be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
+				$fe_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php';
+				if (file_exists($be_file)) include($be_file);
+				if (file_exists($fe_file)) include($fe_file);
 				$buffer .= ob_get_clean();
 			}
 			return $buffer;

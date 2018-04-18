@@ -52,6 +52,8 @@
 	### Send Email									###
 	###################################################
 	function sendEmail() {
+		$response = new \HTTP\Response();
+
 		$parameters = array();
 		if ($_REQUEST['to']) $parameters['to'] = $_REQUEST['to'];
 		if ($_REQUEST['from']) $parameters['from'] = $_REQUEST['from'];
@@ -69,12 +71,15 @@
 		if (isset($GLOBALS['_config']->email->username)) $transport->username($GLOBALS['_config']->email->username);
 		if (isset($GLOBALS['_config']->email->password)) $transport->password($GLOBALS['_config']->email->password);
 		if (isset($GLOBALS['_config']->email->token)) $transport->token($GLOBALS['_config']->email->token);
-		$transport->deliver($email);
-		if ($transport->error()) app_error($transport->error(),__FILE__,__LINE__);
-
-		$response = new \HTTP\Response();
-		$response->success = 1;
-		$response->result = $transport->result;
+		if (! $transport->deliver($email)) {
+			app_error($transport->error(),__FILE__,__LINE__);
+			$response->success = 0;
+			$response->error = $transport->error();
+		}
+		else {
+			$response->success = 1;
+			$response->result = $transport->result;
+		}
 
 		header('Content-Type: application/xml');
 		print formatOutput($response);

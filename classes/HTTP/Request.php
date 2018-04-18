@@ -8,16 +8,23 @@
 		public $query_vars_array = array();
 		public $client_ip;
 		public $user_agent;
-		private $_method;
+		private $_protocol;
+		private $_method = 'GET';
 		private $_host;
+		private $_port = 80;
 		private $_body;
-		private $_uri;
+		private $_uri = '/';
+		private $_query_string = '';
 		private $_content_type;
 		private $_error;
 		private $_parameters = array();
 		private $_headers = array();
 
-		public function __construct() {
+		public function __construct($parameters = array()) {
+			if (isset($parameters['host'])) $this->host($parameters['host']);
+			if (isset($parameters['method'])) $this->method($parameters['method']);
+			if (isset($parameters['body'])) $this->body($parameters['body']);
+			if (isset($parameters['uri'])) $this->uri($parameters['uri']);
 		}
 
 		public function addParam($key,$value) {
@@ -37,6 +44,48 @@
 			}
 			return $this->_uri;
 		}
+		public function url($url = null) {
+			if (isset($url)) {
+				if (preg_match('/^(https?)\:\/\/([\w\.\-]+)\:(\d+)(\/[^\?]*)\?(.*)$/',$url,$matches)) {
+					$this->_protocol = $matches[1];
+					$this->_host = $matches[2];
+					$this->_port = $matches[3];
+					$this->_uri = $matches[4];
+					$this->_query_string = $matches[5];
+				}
+				elseif (preg_match('/^(https?)\:\/\/([\w\.\-]+)\:(\d+)(\/[^\?]*)$/',$url,$matches)) {
+					$this->_protocol = $matches[1];
+					$this->_host = $matches[2];
+					$this->_port = $matches[3];
+					$this->_uri = $matches[4];
+					$this->_query_string = null;
+				}
+				elseif (preg_match('/^(https?)\:\/\/([\w\.\-]+)(\/[^\?]*)\?(.*)$/',$url,$matches)) {
+					$this->_protocol = $matches[1];
+					$this->_host = $matches[2];
+					$this->_port = 80;
+					if ($this->_protocol == 'https') $this->_port = "443";
+					$this->_uri = $matches[3];
+					$this->_query_string = $matches[4];
+				}
+				elseif (preg_match('/^(https?)\:\/\/([\w\.\-]+)(\/[^\?]*)$/',$url,$matches)) {
+					$this->_protocol = $matches[1];
+					$this->_host = $matches[2];
+					$this->_port = 80;
+					if ($this->_protocol == 'https') $this->_port = "443";
+					$this->_uri = $matches[3];
+					$this->_query_string = null;
+				}
+				else {
+					$this->_error = "Invalid url '".$url."'";
+				}
+			}
+			$url = $this->_protocol."://".$this->_host;
+			if ($this->_port != 80) $url.":".$this->_port.$this->url;
+			$url .= $this->_uri;
+			if ($this->_query_string) $url .= "?".$this->_query_string;
+			return $url;
+		}
 		public function serialize($parameters = array()) {
 			$this->_error = null;
 
@@ -44,6 +93,7 @@
 			if (isset($parameters['method'])) $this->_method = $parameters['method'];
 			if (isset($parameters['body'])) $this->_body = $parameters['body'];
 			if (isset($parameters['uri'])) $this->_uri = $parameters['uri'];
+			
 			if (count($this->_parameters)) {
 				$paramArray = array();
 				foreach($this->_parameters as $key => $value) {
@@ -62,11 +112,11 @@
 			}
 
 			$this->_method = strtoupper($this->_method);
-			if (in_array($this->_method,array('GET','POST','OPTIONS','HEAD'))) {
+			if (preg_match('/^(GET|PUT|POST|OPTIONS|HEAD)$/',$this->_method)) {
 				# We're All Good
 			}
-			else if(isset($this->_method)) {
-				$this->_error = "Invalid HTTP method";
+			elseif(isset($this->_method)) {
+				$this->_error = "Invalid HTTP method '".$this->_method."'";
 				return null;
 			}
 			else if (strlen($this->_body)) {

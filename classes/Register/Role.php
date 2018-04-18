@@ -83,22 +83,20 @@
 			list($this->id) = $rs->FetchRow();
 			return $this->details($this->id);
 		}
-		public function members($id) {
+		public function members() {
 			$get_members_query = "
 				SELECT	user_id
 				FROM	register_users_roles
-				WHERE	role_id = ".$GLOBALS['_database']->qstr($id,get_magic_quotes_gpc());
-			$rs = $GLOBALS['_database']->Execute($get_members_query);
-			if (! $rs)
-			{
+				WHERE	role_id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_members_query,array($this->id));
+			if (! $rs) {
 				$this->error = "SQL Error in register::role::members: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			$admins = array();
-			while (list($admin_id) = $rs->FetchRow())
-			{
-				$_admin = new Admin();
-				$admin = $_admin->details($admin_id);
+			while (list($admin_id) = $rs->FetchRow()) {
+				$admin = new \Register\Admin($admin_id);
 				array_push($admins,$admin);
 			}
 			return $admins;
@@ -135,11 +133,16 @@
 				$this->error = "Role not found";
 				return null;
 			}
-			$members = $this->members($role->id);
-			foreach ($members as $member)
-			{
-				$member = new \Register\Person();
-				$member->notify($member->id,$message);
+			$members = $this->members();
+			foreach ($members as $member) {
+				$member = new \Register\Person($member->id);
+				app_log("Sending notification to '".$member->code."' about contact form",'debug',__FILE__,__LINE__);
+				$member->notify($message);
+				if ($member->error) {
+					app_log("Error sending notification: ".$member->error,'error',__FILE__,__LINE__);
+					$this->error = "Failed to send notification: ".$member->error;
+					return false;
+				}
 			}
 		}
 	}

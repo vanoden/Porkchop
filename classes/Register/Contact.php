@@ -3,6 +3,7 @@
 
 	class Contact {
 		public $error;
+		public $id;
 		public $types = array(
 			'phone'		=> "Phone Number",
 			'email'		=> "Email Address",
@@ -12,6 +13,12 @@
 			'aim'		=> "AOL Instant Messenger"
 		);
 
+		public function __construct($id = 0) {
+			if (is_numeric($id)) {
+				$this->id = $id;
+				$this->details();
+			}
+		}
 		public function add($parameters = array()) {
 			if (! preg_match('/^\d+$/',$parameters['person_id'])) {
 				$this->error = "Valid person_id required for addContact method";
@@ -47,8 +54,8 @@
 			}
 			return $this->update($GLOBALS['_database']->Insert_ID(),$parameters);
 		}
-		public function update($id,$parameters = array()) {
-			if (! preg_match('/^\d+$/',$id)) {
+		public function update($parameters = array()) {
+			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error = "ID Required for update method.";
 				return 0;
 			}
@@ -81,15 +88,15 @@
 				WHERE	id = ?";
 			$GLOBALS['_database']->Execute(
 				$update_contact_query,
-				array($id)
+				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in RegisterContact::update: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			return $this->details($id);
+			return $this->details();
 		}
-		public function delete($id) {
+		public function delete() {
 			$delete_contact_query = "
 				DELETE
 				FROM	register_contacts
@@ -97,7 +104,7 @@
 
 			$GLOBALS['_database']->Execute(
 				$delete_contact_query,
-				array($id)
+				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in RegisterContact::update: ".$GLOBALS['_database']->ErrorMsg();
@@ -105,43 +112,7 @@
 			}
 			return 1;
 		}
-		public function find($parameters = array()) {
-			$find_objects_query = "
-				SELECT	id
-				FROM	register_contacts
-				WHERE	id = id";
-			if (isset($parameters['person_id']))
-				$find_objects_query .= "
-				AND		person_id = ".$GLOBALS['_database']->qstr($parameters['person_id'],get_magic_quotes_gpc());
-			if (isset($parameters['value']))
-				$find_objects_query .= "
-				AND		value = ".$GLOBALS['_database']->qstr($parameters['value'],get_magic_quotes_gpc());
-			if (isset($parameters['type'])) {
-				if (! array_key_exists($parameters['type'],$this->types)) {
-					$this->error = "Invalid contact type";
-					return null;
-				}
-				$find_objects_query .= "
-				AND		type = ".$GLOBALS['_database']->qstr($parameters['type'],get_magic_quotes_gpc());
-			}
-			if (isset($parameters['notify']) and preg_match('/^(0|1)$/',$parameters['notify'])) {
-				$find_objects_query .= "
-				AND		 notify = ".$parameters['notify'];
-			}
-
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
-			if (! $rs) {
-				$this->error = "SQL Error in RegisterContact::find: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			$objects = array();
-			while (list($id) = $rs->FetchRow()) {
-				$object = $this->details($id);
-				array_push($objects,$object);
-			}
-			return $objects;
-		}
-		public function details($id) {
+		public function details() {
 			$get_object_query = "
 				SELECT	id,
 						type,
@@ -155,13 +126,25 @@
 			";
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
-				array($id)
+				array($this->id)
 			);
 			if (! $rs) {
 				$this->error = "SQL Error in regiser::person::contactDetails: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$contact = $rs->FetchNextObject(false);
+			if (isset($contact->id)) {
+				$this->id = $contact->id;
+				$this->type = $contact->type;
+				$this->value = $contact->value;
+				$this->notes = $contact->notes;
+				$this->description = $contact->description;
+				$this->notify = $contact->notify;
+				$this->person = new \Register\Person($contact->person_id);
+			}
+			else {
+				$this->id = null;
+			}
 			return $contact;
 		}
 	}

@@ -12,12 +12,10 @@
 		//app_log("Autoloading '$identifier' from '$path'",'debug',__FILE__,__LINE__);
 		if (file_exists($path)) {
 			require_once($path);
-			return 1;
 		}
 		else {
-			app_log("Class file not found at '$path'",'error',__FILE__,__LINE__);
+			app_log("Porkchop autoloader found no class at '$path'",'error',__FILE__,__LINE__);
 		}
-		return 0;
 	}
 	function _debug_print($message) {
 		error_log("DEBUG: ".$message);

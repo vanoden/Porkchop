@@ -5,14 +5,11 @@
         public $id;
 		public $first_name;
 		public $last_name;
-		public $address;
-		public $email_address;
-		public $phone_number;
+		public $location;
 		public $organization;
 		public $error;
 		public $code;
 		public $message;
-		public $department_id;
 		public $department;
 
 		public function __construct($id = 0) {
@@ -52,7 +49,7 @@
 				$this->last_name = $customer->last_name;
 				$this->code = $customer->code;
 				$this->login = $customer->code;
-				$this->organization_id = $customer->organization_id;
+				$this->organization = $customer->organization_id;
 				$this->department_id = $customer->department_id;
 				if (isset($customer->department)) $this->department = $customer->department;
 				$this->organization = new Organization($customer->organization_id);
@@ -99,49 +96,16 @@
 			$customer = $rs->FetchNextObject(false);
 			if (! isset($customer->id)) {
 				app_log("No customer found for ".$this->id);
+				return $this;
 			}
 
-			# Fetch Organization Info
-			#app_log("Getting organization for person '$id'",'debug',__FILE__,__LINE__);
-			$customer->organization = new Organization($customer->organization_id);
-			if ($customer->organization->error) {
-				$this->error = "Error initializing organization: ".$customer->organization->error;
-				return null;
-			}
-
-			# Fetch Contact Info
-			#app_log("Getting contact details for person '$person_id'",'debug',__FILE__,__LINE__);
-			$_contact = new Contact();
-			if ($_contact->error) {
-				$this->error = "Error initializing contact: ".$_contact->error;
-				return null;
-			}
-			$contact_list = $_contact->find(array("person_id" => $customer->id));
-			if ($_contact->error) {
-				$this->error = "Error finding contacts: ".$_contact->error;
-				return null;
-			}
-			foreach ($contact_list as $contact) {
-				if ($contact->type == 'home phone')
-					$customer->phone_number->home = $contact->value;
-				elseif ($contact->type == 'work phone')
-					$customer->phone_number->work = $contact->value;
-				elseif ($contact->type == 'home email')
-					$customer->email_address->home = $contact->value;
-				elseif ($contact->type == 'work_email')
-					$customer->email_address->work = $contact->value;
-				elseif ($contact->type == 'home mobile')
-					$customer->mobile_number->home = $contact->value;
-				elseif ($contact->type == 'work_mobile')
-					$customer->mobile_number->work = $contact->value;
-			}
-			
+			# Some Old Data Cleanup
 			if (preg_match('/^[\dabcdef]{32}$/',$customer->code))
 				$customer->status = 'HIDDEN';
 			elseif (preg_match('/^auto_\d{11,13}$/',$customer->code))
 				$customer->status = 'HIDDEN';
 
-			#app_log("Caching details for person '$id'",'debug',__FILE__,__LINE__);
+			app_log("Caching details for person '".$this->id."'",'trace',__FILE__,__LINE__);
 			# Store Some Object Vars
 			$this->id = $customer->id;
 			$this->first_name = $customer->first_name;
@@ -149,7 +113,7 @@
 			$this->code = $customer->code;
 			$this->login = $customer->code;
 			$customer->login = $customer->code;
-			$this->organization = $customer->organization;
+			$this->organization = new Organization($customer->organization_id);
 			$this->department_id = $customer->department_id;
 			if (isset($customer->department)) $this->department = $customer->department;
 			$this->status = $customer->status;
@@ -282,9 +246,14 @@
 							`password` = password(".$GLOBALS['_database']->qstr($parameters[$param],get_magic_quotes_gpc()).")";
 					}
 					else {
-						app_log("Updating $param to ".$parameters[$param],'notice',__FILE__,__LINE__);
-						$update_customer_query .= ",
-							".$valid_params[$param]." = ".$GLOBALS['_database']->qstr($parameters[$param],get_magic_quotes_gpc());
+						if (isset($parameters[$param]) && $this->$param != $parameters[$param]) {
+							app_log("Updating $param to ".$parameters[$param],'notice',__FILE__,__LINE__);
+							$update_customer_query .= ",
+								".$valid_params[$param]." = ".$GLOBALS['_database']->qstr($parameters[$param],get_magic_quotes_gpc());
+						}
+						else {
+							app_log("$param unchanged",'trace',__FILE__,__LINE__);
+						}
 					}
 				}
 				else {
@@ -404,109 +373,114 @@
 			$check_key_query = "
 				SELECT	id,validation_key
 				FROM	register_users
-				WHERE	login = ".$GLOBALS['_database']->qstr($login,get_magic_quotes_gpc())."
-				AND		company_id = '".$GLOBALS['_SESSION_']->company."'
+				WHERE	login = ?
+				AND		company_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($check_key_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			$rs = $GLOBALS['_database']->Execute(
+				$check_key_query,
+				array($login,$GLOBALS['_SESSION_']->company)
+			);
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			list($id,$unverified_key) = $rs->fields;
-			if (! $id)
-			{
+			if (! $id) {
 				$this->error = "Invalid Login or Validation Key";
-				return 0;
+				return false;
 			}
-			if (! $unverified_key)
-			{
+			if (! $unverified_key) {
 				$this->error = "Email Address already verified for this account";
-				return 0;
+				return false;
 			}
-			if ($unverified_key != $validation_key)
-			{
+			if ($unverified_key != $validation_key) {
 				$this->error = "Invalid Login or Validation Key";
-				return 0;
+				return false;
 			}
 			$validate_email_query = "
 				UPDATE	register_users
 				SET		validation_key = null
-				WHERE	login = ".$GLOBALS['_database']->qstr($login,get_magic_quotes_gpc())."
-				AND		company_id = '".$GLOBALS['_SESSION_']->company."'
+				WHERE	login = ?
+				AND		company_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($validate_email_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			$rs = $GLOBALS['_database']->Execute(
+				$validate_email_query,
+				array(
+					$login,
+					$GLOBALS['_SESSION_']->company
+				)
+			);
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
-				return 0;
+				return false;
 			}
 			$this->id = $id;
-			return 1;
+			$this->details();
+			return true;
 		}
 		public function addContact($parameters = array()) {
-			$_contact = new Contact();
-			$contact = $_contact->add($parameters);
-			if ($_contact->error)
-			{
-				$this->error = "Error adding contact: ".$_contact->error;
+			$contact = new Contact();
+			$contact->add($parameters);
+			if ($contact->error) {
+				$this->error = "Error adding contact: ".$contact->error;
 				return null;
 			}
 			return $contact;
 		}
 		public function updateContact($id,$parameters = array()) {
-			$contact = new Contact();
-			return $contact->update($id,$parameters);
+			$contact = new Contact($id);
+			return $contact->update($parameters);
 		}
 		public function deleteContact($id) {
-			$contact = new Contact();
-			return $contact->delete($id);
+			$contact = new Contact($id);
+			return $contact->delete();
 		}
-		public function findContacts($parameters = array()) {
-			$contact = new Contact();
-			return $contact->find($parameters);
-		}
-		public function contactDetails($id) {
-			$contact = new Contact();
-			return $contact->details($id);
+		public function contacts($parameters = array()) {
+			$contactlist = new ContactList();
+			$parameters['person_id'] = $this->id;
+			return $contactlist->find($parameters);
 		}
 		public function notifyContact($parameters = array()) {
 			$contact = new Contact();
 			return $contact->notify($parameters);
 		}
-		public function notify($id,$message) {
-			require_module('email');
-
+		public function notify($message) {
 			# Get Contact Info
-			$_contact = new Contact();
-			$contacts = $_contact->find(array("person_id" => $id,"type" => "email","notify" => 1));
-			foreach ($contacts as $contact)
-			{
-				app_log("Sending notification to ".$contact->value,'notice',__FILE__,__LINE__);
-				$_email = new EmailMessage();
-				$message['to'] = $contact->value;
-				$_email->send($message);
-				if ($_email->error)
-				{
-					$this->error = "Error sending notification: ".$_email->error;
+			$contactList = new \Register\ContactList();
+			$contacts = $contactList->find(array("user_id" => $this->id,"type" => "email","notify" => true));
+			if ($contactList->error) {
+				app_log("Error loading contacts: ".$contactList->error,'error',__FILE__,__LINE__);
+				$this->error = "Error loading contacts";
+				return null;
+			}
+			foreach ($contacts as $contact) {
+				app_log("Sending notifications to ".$contact->value,'notice',__FILE__,__LINE__);
+				$message->to($contact->value);
+				$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
+				if (\Email\Transport::error()) {
+					$this->error = "Error initializing email transport: ".\Email\Transport::error();
+					return null;
+				}
+				$transport->hostname($GLOBALS['_config']->email->hostname);
+				$transport->token($GLOBALS['_config']->email->token);
+				$transport->deliver($message);
+				if ($transport->error) {
+					$this->error = "Error sending notification: ".$transport->error;
 					return null;
 				}
 			}
 		}
-		public function delete($id = 0) {
-			if (! $id) $id = $this->id;
-			app_log("Changing person $id to status DELETED",'debug',__FILE__,__LINE__);
-			$this->update($id,array('status' => "DELETED"));
+		public function delete() {
+			app_log("Changing person ".$this->id." to status DELETED",'debug',__FILE__,__LINE__);
+			$this->update($this->id,array('status' => "DELETED"));
 		}
-		public function parents($id = 0) {
-			if (! $id) $id = $this->id;
-			$_relationship = new RegisterRelationship();
-			return $_relationship->parents($id);
+		public function parents() {
+			$relationship = new \Register\Relationship();
+			return $relationship->parents($this->id);
 		}
-		public function children($id = 0) {
-			if (! $id) $id = $this->id;
-			$_relationship = new RegisterRelationship();
-			return $_relationship->children($id);
+		public function children() {
+			$relationship = new \Register\Relationship();
+			return $relationship->children($this->id);
 		}
     }
 ?>

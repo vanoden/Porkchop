@@ -39,7 +39,7 @@
 			$update_object_query = "
 				UPDATE	contact_events
 				SET		id = id";
-			if (in_array($parameters["status"],array("NEW","OPEN","CLOSED"))) {
+			if (isset($parameters["status"]) && in_array($parameters["status"],array("NEW","OPEN","CLOSED"))) {
 				$update_object_query .= ",
 						status = '".$parameters["status"]."'";
 			}

@@ -46,7 +46,7 @@
 	###################################################
 	function me() {
 		# Default StyleSheet
-		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
+		if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
 		$response = new stdClass();
 		$response->customer = $GLOBALS['_SESSION_']->customer;
@@ -717,7 +717,7 @@
 		exit;
 	}
 	function formatOutput($object) {
-		if ($_REQUEST['_format'] == 'json') {
+		if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
 			$format = 'json';
 			header('Content-Type: application/json');
 		}
