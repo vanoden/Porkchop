@@ -123,8 +123,7 @@
 		if ($_customer->error) app_error("Error getting customer: ".$_customer->error,__FILE__,__LINE__);
 		if (! $customer->id) error("Customer not found");
 
-		if ($_REQUEST['organization'])
-		{
+		if ($_REQUEST['organization']) {
 			$_organization = new \Register\Organization();
 			$organization = $_organization->get($_REQUEST['organization']);
 			if ($_organization->error) app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
@@ -199,15 +198,16 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.rolemembers.xsl';
 
 		# Initiate Role Object
-		$_role = new Role();
+		$role = new \Register\Role();
+		$role->get($_REQUEST['code']);
 
 		$response->request->parameter = $parameters;
 
 		# Get List of Matching Admins
-		$admins = $_role->members($_REQUEST['id']);
+		$admins = $role->members();
 
 		# Error Handling
-		if ($_role->error) error($_role->error);
+		if ($role->error) error($role->error);
 
 		$response = new stdClass();
 		$response->success = 1;
@@ -220,7 +220,7 @@
 	### Add a User Role								###
 	###################################################
 	function addRole() {
-		$role = new Role();
+		$role = new \Register\Role();
 		$result = $role->add(
 			array(
 				'name'	=> $_REQUEST['name']
