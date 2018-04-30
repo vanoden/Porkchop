@@ -473,18 +473,20 @@
 		# Get Monitor
 		$monitor = new \Spectros\Monitor();
 		if ($monitor->error) app_error("Error finding monitor: ".$monitor->error,__FILE__,__LINE__);
-		$monitor->get($_REQUEST['monitor_code']);
+		$monitor->getSimple($_REQUEST['monitor_code']);
+		app_log("Getting CT for Asset '".print_r($_REQUEST['monitor_code'],true)."'",'debug',__FILE__,__LINE__);
 		if ($monitor->error) error("Error finding monitor: ".$monitor->error);
+		app_log("Asset Code: ".$monitor->code,'debug',__FILE__,__LINE__);
 		if (! isset($monitor->id)) error("Monitor not found");
 		
 		# Get Sensor
-		$sensor = new \Spectros\Sensor();
+		$sensor = new \Monitor\Sensor();
 		if ($sensor->error) app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
 		$sensor->get($_REQUEST['sensor_code'],$monitor->id);
 		if ($sensor->error) error("Error finding sensor: ".$sensor->error);
 		if (! isset($sensor->id)) error("Sensor not found");
 		
-		$ct = $collection->getCTValue($collection->id,$sensor->id);
+		$ct = $collection->getCTValue($sensor->id);
 
 		$response = new \HTTP\Response();
 		$response->success = 1;
