@@ -120,10 +120,11 @@
 
 				# In Case Cache Corrupted
 				if ($organization->id) {
+					app_log("Organization '".$this->name."' [".$this->id."] found in cache",'debug',__FILE__,__LINE__);
 					return $organization;
 				}
 				else {
-					$this->error = "Organization $id returned unpopulated cache";
+					$this->error = "Organization ".$this->id." returned unpopulated cache";
 				}
 			}
 
