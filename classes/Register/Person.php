@@ -49,7 +49,6 @@
 				$this->last_name = $customer->last_name;
 				$this->code = $customer->code;
 				$this->login = $customer->code;
-				$this->organization = $customer->organization_id;
 				$this->department_id = $customer->department_id;
 				if (isset($customer->department)) $this->department = $customer->department;
 				$this->organization = new Organization($customer->organization_id);
