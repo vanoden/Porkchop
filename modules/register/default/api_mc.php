@@ -79,6 +79,7 @@
 		else{
 			$response = new stdClass();
 			$response->success = $result;
+			if (! $result) $response->message = "Invalid login password combination";
 		}
 
 		# Send Response

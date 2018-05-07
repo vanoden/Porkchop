@@ -6,8 +6,8 @@
     ###############################################
 	$_package = array(
 		"name"		=> "session",
-		"version"	=> "0.1.0",
-		"release"	=> "2015-03-24"
+		"version"	=> "0.2.0",
+		"release"	=> "2018-05-02"
 	);
 
 	app_log($_REQUEST['action']." request:".print_r($_REQUEST,true),'debug',__FILE__,__LINE__);
@@ -61,6 +61,20 @@
 		$response->success = 1;
 		$response->hit = $hits;
         api_log($response);
+		print formatOutput($response);
+	}
+
+	function timelocal() {
+		if (isset($_REQUEST['code'])) {
+			$session = new Session();
+			$session->get($_REQUEST['code']);
+		}
+		else {
+			$session = $GLOBALS['_SESSION_'];
+		}
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->datetime = $session->localtime();
 		print formatOutput($response);
 	}
 

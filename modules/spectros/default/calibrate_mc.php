@@ -63,10 +63,7 @@
 			$page->error = "Error recording calibration verification";
 			return;
 		}
-		$verification->add(
-			$asset->id,
-			array("date_request" => $date_calibration)
-		);
+		$verification->add(array("asset_id" => $asset->id,"date_request" => $date_calibration));
 		if ($verification->error) {
 			app_error("Error adding calibration verification: ".$verification->error,__FILE__,__LINE__);
 			$page->error = "Error recording calibration verification";

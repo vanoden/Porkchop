@@ -20,7 +20,7 @@
 		$target = '/'.$target;
 
 	if (($GLOBALS['_SESSION_']->customer->id) and ($target != '/'))	{
-		app_log("Redirecting to ".PATH.$target,'notice',__FILE__,__LINE__);
+		app_log("Redirecting ".$GLOBALS['_SESSION_']->customer->code." to ".PATH.$target,'notice',__FILE__,__LINE__);
 		header("location: ".PATH.$target);
 		exit;
 	}
