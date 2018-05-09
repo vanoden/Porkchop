@@ -2,4 +2,9 @@ classes/Spectros
 classes/Monitor
 classes/Action
 html
+html.src
 third_party
+modules/monitor/spectros
+modules/contact/spectros
+modules/action/spectros
+templates

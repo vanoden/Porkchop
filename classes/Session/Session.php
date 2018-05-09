@@ -85,7 +85,7 @@
 				}
 				else {
 					app_log("Session $request_code not available or expired, deleting cookie for ".$this->domain->name,'notice',__FILE__,__LINE__);
-					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $this->cookie_domain->name);
+					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST']);
 				}
 			}
 			elseif ($request_code) {
@@ -126,7 +126,8 @@
 					}
 				}
 				if ($this->customer->id) {
-					app_log("Customer $login [".$this->customer_id."] logged in");
+					app_log("Customer $login [".$this->customer_id."] logged in",'info',__FILE__,__LINE__);
+					app_log("TimeZone set to '".$customer->timezone."'",'debug',__FILE__,__LINE__);
 					$this->update($this->id,array("user_id" => $this->customer_id,"timezone" => $customer->timezone));
 
 					if ($_REQUEST['login_target']) {
@@ -285,7 +286,7 @@
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
 			# Set Session Cookie
-			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$this->cookie_domain->name)) {
+			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['HTTP_HOST'])) {
 				app_log("New Session ".$this->id." created for ".$this->domain->id." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
 				app_log("Session Code ".$new_code,'debug',__FILE__,__LINE__);
 			}
@@ -418,6 +419,11 @@
 		function assign ($customer_id) {
 			app_log("Assigning session ".$this->id." to customer ".$customer_id,'debug',__FILE__,__LINE__);
 
+			$customer = new \Register\Customer($customer_id);
+			if (! $customer->id) {
+				$this->error = "Customer not found";
+			}
+
 			$cache_key = "session[".$this->id."]";
 			cache_unset($cache_key);
 
@@ -441,18 +447,19 @@
 			}
 			$update_session_query = "
 				UPDATE  session_sessions
-				SET     user_id = ?
+				SET     user_id = ?,
+						timezone = ?
 				WHERE   id = ?
 			";
 			$GLOBALS['_database']->Execute(
 				$update_session_query,
 				array(
-					  $customer_id,
+					  $customer->id,
+					  $customer->timezone,
 					  $this->id
 				)
 			);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error updating session: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
@@ -598,6 +605,22 @@
 		public function authenticated() {
 			if (isset($this->customer->id) && $this->customer->id > 0) return 1;
 			else return 0;
+		}
+
+		public function localtime($timestamp = 0) {
+			if ($timestamp == 0) $timestamp = time();
+			$datetime = new \DateTime('@'.$timestamp);
+			$datetime->setTimezone(new \DateTimeZone($this->timezone));
+			return array(
+				'timestamp'		=> $timestamp,
+				'year'			=> $datetime->format('Y'),
+				'month'			=> $datetime->format('m'),
+				'day'			=> $datetime->format('d'),
+				'hour'			=> $datetime->format('H'),
+				'minute'		=> $datetime->format('i'),
+				'second'		=> $datetime->format('s'),
+				'timezone'		=> $this->timezone
+			);
 		}
 	}
 ?>

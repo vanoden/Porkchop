@@ -3,13 +3,13 @@
 
     class Page {
 		public $id;
-        public $module = 'content';
-        public $view = 'index';
+		public $module = 'content';
+		public $view = 'index';
 		public $index = '';
-        public $style = 'default';
-        public $auth_required = 0;
-        public $ssl_required;
-        public $error;
+		public $style = 'default';
+		public $auth_required = 0;
+		public $ssl_required;
+		public $error;
 		public $uri;
 		public $title;
 		public $metadata;
@@ -22,7 +22,7 @@
 				$this->error = "Error initializing Page schema: ".$schema->error;
 				return null;
 			}
-			
+
 			$args = func_get_args();
 			if (func_num_args() == 1 && gettype($args[0]) == "string") {
 				$this->id = $args[0];
@@ -37,11 +37,12 @@
 					}
 				}
 			}
+			elseif (func_num_args() == 2 && gettype($args[0]) == "string" && gettype($args[1]) == "string") {
+				$this->get($args[0],$args[1]);
+			}
 		}
 
-		public function get() {
-			if (! isset($this->index)) $this->index = '';
-
+		public function get($module,$view,$index = '') {
 			# Prepare Query
 			$get_object_query = "
 				SELECT	id
@@ -53,9 +54,9 @@
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
 				array(
-					  $this->module,
-					  $this->view,
-					  $this->index
+					  $module,
+					  $view,
+					  $index
 				)
 			);
 			if (! $rs) {
@@ -63,20 +64,16 @@
 				return null;
 			}
 			list($id) = $rs->FetchRow();
-			if (! $id) {
-				$page = $this->add();
-				if ($this->error) return null;
-				$this->id = $page->id;
+			if (is_numeric($id)) {
+				$this->id = $id;
+				return $this->details();
 			}
 			else {
-				$this->id = $id;
-				$this->details();
+				$this->module = $module;
+				$this->view = $view;
+				$this->index = $index;
 			}
-
-			if (isset($GLOBALS['_config']->style[$this->module])) {
-				$this->style = $GLOBALS['_config']->style[$this->module];
-			}
-			return 1;
+			return;
 		}
 
 		public function add($module = '',$view = '',$index = '') {
@@ -135,10 +132,12 @@
 				$this->module = $object->module;
 				$this->view = $object->view;
 				$this->index = $object->index;
+				if (isset($GLOBALS['_config']->style[$this->module])) {
+					$this->style = $GLOBALS['_config']->style[$this->module];
+				}
 			}
 			else {
-				$this->error = "Page not found";
-				return null;
+				# Just Let The Defaults Go
 			}
 
             # Make Sure Authentication Requirements are Met
@@ -192,7 +191,7 @@
 				$html = file_get_contents(HTML."/".$this->module.".html");
 			}
 			elseif (isset($GLOBALS['_config']->default_template)) {
-				app_log("Loading template '".$GLOBALS['_config']->default_template,'debug',__FILE__,__LINE__);
+				app_log("Loading template '".$GLOBALS['_config']->default_template."'",'debug',__FILE__,__LINE__);
 				if (! file_exists(HTML."/".$GLOBALS['_config']->default_template)) {
 					app_log("Default template file not found!",'error',__FILE__,__LINE__);
 				}
@@ -262,7 +261,7 @@
 			if (array_key_exists('object',$parameter)) $object = $parameter['object'];
 			if (array_key_exists('property',$parameter)) $property = $parameter['property'];
 
-			_debug_print("Object: $object Property: $property");
+			app_log("Object: $object Property: $property",'debug',__FILE__,__LINE__);
 			if ($object == "constant") {
 				if ($property == "path") {
 					$buffer .= PATH;
@@ -285,18 +284,16 @@
 					if (isset($this->metadata->$parameter["field"])) $buffer = $this->metadata->$parameter["field"];
 				}
 				elseif ($property == "navigation") {
-					require_once( MODULES.'/content/_classes/navigation.php');
-
-					$_navigation = new Menu();
-					if ($_navigation->error) {
-						$this->error = "Error initializing navigation module: ".$_navigation->error;
+					$menuList = new \Site\MenuList();
+					if ($menuList->error) {
+						$this->error = "Error initializing navigation module: ".$menuList->error;
 						return '';
 					}
 
-					$menus = $_navigation->find(array("name" => $parameter["name"]));
-					if ($_navigation->error) {
-						app_log("Error displaying menus: ".$_navigation->error,'error',__FILE__,__LINE__);
-						$this->error = $_navigation->error;
+					$menus = $menuList->find(array("name" => $parameter["name"]));
+					if ($menuList->error) {
+						app_log("Error displaying menus: ".$menuList->error,'error',__FILE__,__LINE__);
+						$this->error = $menuList->error;
 						return '';
 					}
 
@@ -352,17 +349,22 @@
 				elseif ($property == "error") {
 					$buffer .= "<div class=\"page_error\">".$GLOBALS['page_error']."</div>";
 				}
+				elseif ($property == "not_authorized") {
+					$buffer .= "<div class=\"page_error\">Sorry, you are not authorized to see this view</div>";
+				}
 				else {
 					app_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view,'debug',__FILE__,__LINE__);
 					ob_start();
-					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
-					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
+					$be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
+					$fe_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php';
+					if (file_exists($be_file)) include($be_file);
+					if (file_exists($fe_file)) include($fe_file);
 					$buffer .= ob_get_clean();
 				}
 			}
 			elseif ($object == "content") {
 				if ($property == "index") {
-					app_log("content::index");
+					app_log("content::index",'trace',__FILE__,__LINE__);
 					if (isset($parameters['id']) && preg_match("/^\d+$/",$parameter["id"])) $target = $parameter["id"];
 					else $target = $GLOBALS['_REQUEST_']->query_vars_array[0];
 
@@ -427,7 +429,6 @@
 					foreach ($products as $product_id) {
 						#$product = $_product->details($product_id);
 						$buffer .= "<r7_product.detail format=thumbnail id=$product_id>";
-						#error_log("Buffer: $buffer");
 					}
 				}
 				elseif ($property == "detail") {
@@ -568,28 +569,28 @@
 				if ($property == "name") {
 					$buffer .= $company->name;
 				}
+				else
+				{
+					#error_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
+					ob_start();
+					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
+					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
+					$buffer .= ob_get_clean();
+				}
 			}
 			elseif ($object == "news") {
-				require_once(MODULES.'/news/_classes/news.php');
-
-				if ($property == "events")
-				{
-					$_event = new NewsEvent();
-					if ($_event->error)
-					{
-						$GLOBALS['_page']->error = "Error fetching events: ".$_event->error;
+				if ($property == "events") {
+					$eventlist = new \News\EventList();
+					if ($eventlist->error) {
+						$this->error = "Error fetching events: ".$eventlist->error;
 					}
-					else
-					{
-						$events = $_event->find(array('feed_id' => $parameter['id']));
-						if ($_event->error)
-						{
-							$GLOBALS['_page']->error = "Error fetching events: ".$_event->error;
+					else {
+						$events = $eventlist->find(array('feed_id' => $parameter['id']));
+						if ($eventlist->error) {
+							$this->error = "Error fetching events: ".$eventlist->error;
 						}
-						else if (count($events))
-						{
-							foreach ($events as $event)
-							{
+						else if (count($events)) {
+							foreach ($events as $event) {
 								$buffer .= "<a class=\"value ".$greenbar."newsWidgetEventValue\" href=\"".PATH."/_news/event/".$event->id."\">".$event->name."</a>";
 								if ($greenbar)
 									$greenbar = '';
@@ -600,8 +601,7 @@
 						}
 					}
 				}
-				else
-				{
+				else {
 					#error_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
 					ob_start();
 					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
@@ -609,20 +609,95 @@
 					$buffer .= ob_get_clean();
 				}
 			}
-			elseif ($object == "adminbar")
-			{
+			elseif ($object == "adminbar") {
 				if (role('administrator'))
 				$buffer = "<div class=\"adminbar\" id=\"adminbar\" style=\"height:20px; width: 100%; position: absolute; top: 0px; left: 0px;\">Admin stuff goes here</div>\n";
 			}
-			else
-			{
+			else {
 				ob_start();
 				app_log("Loading view ".$this->view." of module ".$this->module,'debug',__FILE__,__LINE__);
-				include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
-				include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
+				$be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
+				$fe_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php';
+				if (file_exists($be_file)) include($be_file);
+				if (file_exists($fe_file)) include($fe_file);
 				$buffer .= ob_get_clean();
 			}
 			return $buffer;
+		}
+		public function requires($role = '_customer') {
+			if ($role == '_customer') {
+				if ($GLOBALS['_SESSION_']->customer->id) {
+					return true;
+				}
+				else {
+					header("location: /_register/login?target=_".$this->module.":".$this->view);
+					ob_flush();
+					exit;
+				}
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->has_role($role)) {
+				return true;
+			}
+			else {
+				header("location: /_register/not_authorized");
+				ob_flush();
+				exit;
+			}
+		}
+
+		public function setMetadata($key,$value) {
+            if (! preg_match('/^\d+$/',$this->id)) {
+                $this->error = "Invalid page id in Site::Page::setMetadata(): ";
+                return null;
+            }
+            if (! isset($key)) {
+                $this->error = "Invalid key name in Site::Page::setMetadata(): ";
+                return null;
+            }
+
+            $set_data_query = "
+                REPLACE
+                INTO    page_metadata
+                (       page_id,`key`,value)
+                VALUES
+                (       ?,?,?)
+            ";
+            $GLOBALS['_database']->Execute(
+                $set_data_query,
+                array($this->id,$key,$value)
+            );
+            if ($GLOBALS['_database']->ErrorMsg()) {
+                $this->error = "SQL Error setting metadata in Site::Page::setMetadata(): ".$GLOBALS['_database']->ErrorMsg();
+                return null;
+            }
+            return $value;
+		}
+
+		public function unsetMetadata($key) {
+            if (! preg_match('/^\d+$/',$this->id)) {
+                $this->error = "Invalid page id in Site::Page::unsetMetadata(): ";
+                return null;
+            }
+            if (! isset($key)) {
+                $this->error = "Invalid key name in Site::Page::unsetMetadata(): ";
+                return null;
+            }
+
+            $set_data_query = "
+                DELETE
+                FROM    page_metadata
+				WHERE	page_id = ?
+				AND		`key` = ?
+            ";
+            $GLOBALS['_database']->Execute(
+                $set_data_query,
+                array($this->id,$key)
+            );
+            if ($GLOBALS['_database']->ErrorMsg()) {
+                $this->error = "SQL Error setting metadata in Site::Page::unsetMetadata(): ".$GLOBALS['_database']->ErrorMsg();
+                return null;
+            }
+            return $value;
 		}
 	}
 ?>

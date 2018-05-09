@@ -44,12 +44,12 @@
 <input type="hidden" name="target" value="<?=$target?>"/>
 <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
 <span class="title">Account Settings</span>
-<?  if ($GLOBALS['_page']->error) { ?>
-<div><?=$GLOBALS['_page']->error?></div>
+<?  if ($page->error) { ?>
+<div><?=$page->error?></div>
 <?  }
-	elseif (isset($_REQUEST['method'])) {
+	if ($page->success) {
 ?>
-<div class="form_success">Your changes have been saved</div>
+<div class="form_success"><?=$page->success?></div>
 <?  } ?>
 <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
 
@@ -92,7 +92,7 @@
 <?	} ?>
 	</select>
 </div>
-<hr style="width: 100%; color: white; clear: both: height: 0px;"/>
+<hr style="width: 100%; color: white; clear: both; height: 0px;"/>
 <!-- Contact Options -->
 <div class="form_instruction">Add methods of contact.</div>
 <table cellpadding="0" cellspacing="0" class="body" style="width:800px">
@@ -112,6 +112,7 @@
 	<td><input type="text" name="description[<?=$contact->id?>]" class="value input contactDescriptionColumn" value="<?=$contact->description?>" /></td>
 	<td><input type="text" name="value[<?=$contact->id?>]" class="value input contactValueColumn" value="<?=$contact->value?>" /></td>
 	<td><input type="text" name="notes[<?=$contact->id?>]" class="value input contactNotesColumn" value="<?=$contact->notes?>" /></td>
+	<td><input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X" /></td>
 </tr>
 <?	} ?>
 <tr><td><select class="value input" name="type[0]">
@@ -148,7 +149,7 @@
 <?	$greenbar = '';
 	foreach($all_roles as $role) {
 ?>
-<tr><td class="value<?=$greenbar?>"><input type="checkbox" name="role[<?=$role->id?>]"<? if ($customer->has_role($role->name)) print " CHECKED";?>/></td><td class="value<?=$greenbar?>"><?=$role->name?></td><td class="value<?=$greenbar?>"><?=$role->description?></td></tr>
+<tr><td class="value<?=$greenbar?>"><input type="checkbox" name="role[<?=$role->id?>]" value="1" <? if ($customer->has_role($role->name)) print " CHECKED";?>/></td><td class="value<?=$greenbar?>"><?=$role->name?></td><td class="value<?=$greenbar?>"><?=$role->description?></td></tr>
 <?		if ($greenbar) $greenbar = '';
 		else $greenbar = ' greenbar';
 	}

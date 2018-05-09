@@ -41,7 +41,7 @@
 				)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in RegisterOrganization::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in \Register\Organization::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -78,7 +78,7 @@
 			);
 			if (! $rs)
 			{
-				$this->error = "SQL Error in RegisterOrganization::update: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in \Register\Organization::update: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return $this->details();
@@ -86,7 +86,7 @@
 		public function get($code = '') {
 			app_log("Register::Organization::get()",'trace',__FILE__,__LINE__);
 			$this->error = null;
-			$get_object_query .= "
+			$get_object_query = "
 				SELECT	id
 				FROM	register_organizations
 				WHERE	code = ?
@@ -120,10 +120,11 @@
 
 				# In Case Cache Corrupted
 				if ($organization->id) {
+					app_log("Organization '".$this->name."' [".$this->id."] found in cache",'debug',__FILE__,__LINE__);
 					return $organization;
 				}
 				else {
-					$this->error = "Organization $id returned unpopulated cache";
+					$this->error = "Organization ".$this->id." returned unpopulated cache";
 				}
 			}
 
@@ -167,6 +168,18 @@
 			$customerlist = new CustomerList();
 			#print "Finding members of org $id<br>\n";
 			return $customerlist->find(array('organization_id' => $this->id));
+		}
+		public function product($product_id) {
+			$product = new \Product\Item($product_id);
+			if ($product->error) {
+				$this->error = $product->error;
+				return null;
+			}
+			if (! $product->id) {
+				$this->error = "Product not found";
+				return null;
+			}
+			return new \Register\Organization\OwnedProduct($this->id,$product->id);
 		}
     }
 

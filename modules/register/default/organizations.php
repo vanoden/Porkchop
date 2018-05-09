@@ -1,15 +1,8 @@
-<?  if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
-		print "<span class=\"form_error\">You are not authorized for this view!</span>";
-		return;
-	}
-?>
 <script type="text/javascript">
-	function submitForm()
-	{
+	function submitForm() {
 		return true;
 	}
-	function submitSearch(start)
-	{
+	function submitSearch(start) {
 		document.getElementById('start').value=start;
 		document.getElementById('orgSearch').submit();
 		return true;
@@ -31,26 +24,18 @@
 	.greenbar {
 		background-color: #bbbbbb;
 	}
-	#searchOrganizationInput {
-		margin-left: 100px;
-	}
-	.search_button {
-		width: 30px;
-		height: 30px;
-		background-image: url(/images/magnify_glass.png);
-		margin-top: 8px;
-		padding: 0px;
-	}
 	a.pager {
 		margin: 5px;
 	}
 </style>
 </script>
 <form id="orgSearch" method="get" class="float: left">
-<span class="title">Organizations</span>
-<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input"/>
-<input type="hidden" id="start" name="start" value="0">
-<img id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>
+<div class="title">Organizations</div>
+<div id="search_container">
+	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput"/>
+	<input type="hidden" id="start" name="start" value="0">
+	<img id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>
+</div>
 <table cellpadding="0" cellspacing="0" class="body">
 <tr><th class="label organizationsCodeLabel">ID</th>
 	<th class="label organizationsNameLabel">Name</th>

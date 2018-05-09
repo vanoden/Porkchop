@@ -8,6 +8,7 @@
 		private $_subject;
 		private $_body;
 		private $_attachments = array();
+		private $_html = false;
 
 		public function __construct($parameters = array()) {
 			$schema = new Schema();
@@ -15,11 +16,16 @@
 				$this->_error = $schema->error;
 				return null;
 			}
-			
+
 			if (isset($parameters['to'])) $this->add_recipients($parameters['recipients']);
 			if (isset($parameters['from'])) $this->from($parameters['from']);
 			if (isset($parameters['subject'])) $this->subject($parameters['subject']);
 			if (isset($parameters['body'])) $this->body($parameters['body']);
+		}
+
+		public function html($state = null) {
+			if (isset($state)) $this->_html = $state;
+			return $this->_html;
 		}
 
 		public function to($to = null) {

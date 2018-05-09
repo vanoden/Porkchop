@@ -3,9 +3,32 @@
 
 	class OwnedProduct {
         public $error;
+		private $organization;
+		private $product;
+		private $quantity;
 
-        public function add($organization_id,$product_id,$quantity,$parameters=array())
-        {
+		public function __construct($org_id,$product_id) {
+			$this->organization = new \Register\Organization($org_id);
+			if ($this->organization->error) {
+				$this->error = "Error loading organization: ".$this->organization->error;
+				return null;
+			}
+			if (! $this->organization->id) {
+				$this->error = "Organization not found";
+				return null;
+			}
+			$this->product = new \Product\Item($product_id);
+			if ($this->product->error) {
+				$this->error = "Error loading product: ".$this->product->error;
+				return null;
+			}
+			if (! $this->product->id) {
+				$this->error = "Product not found";
+				return null;
+			}
+		}
+	
+        public function add($quantity,$parameters=array()) {
             $add_product_query = "
                 INSERT
                 INTO    register_organization_products
@@ -22,24 +45,28 @@
                 UPDATE
                         quantity = quantity + ?
             ";
+			app_log("Adding $quantity of product ".$this->product->id." for organization ".$this->organization->id,'notice',__FILE__,__LINE__);
             $GLOBALS['_database']->Execute(
 				$add_product_query,
-				array($organization_id,
-					  $product_id,
+				array($this->organization->id,
+					  $this->product->id,
 					  $quantity,
 					  $quantity
 				)
 			);
-            if ($GLOBALS['_database']->ErrorMsg())
-            {
-                $this->error = "SQL Error in OrganizationProducts::add:".$GLOBALS['_database']->ErrorMsg();
-                return 0;
+            if ($GLOBALS['_database']->ErrorMsg()) {
+                $this->error = "SQL Error in Register::Organization::Products::::add:".$GLOBALS['_database']->ErrorMsg();
+                return null;
             }
-            return 1;
-        }
+            return $this->details();
+		}
 
-        public function consume($organization_id,$product_id,$quantity = 1)
-        {
+        public function consume($quantity = 1) {
+			$on_hand = $this->count();
+			if ($quantity > $on_hand) {
+				$this->error = "Less than $quantity available";
+				return null;
+			}
             $use_product_query = "
                 UPDATE  register_organization_products
                 SET     quantity = quantity - ?
@@ -51,104 +78,25 @@
 				$use_product_query,
 				array(
 					$quantity,
-					$organization_id,
-					$product_id
+					$this->organization->id,
+					$this->product->id
 				)
 			);
-            if ($GLOBALS['_database']->ErrorMsg())
-            {
-                $this->error = "SQL Error in OrganizationProducts::use:".$GLOBALS['_database']->ErrorMsg();
-                return 0;
-            }
-            return $this->details($organization_id,$product_id);
-        }
-
-        public function get($organization_id,$product_id)
-        {
-            $get_object_query = "
-                SELECT  organization_id,product_id
-                FROM    register_organization_products
-                WHERE   organization_id = ?
-				AND		product_id = ?
-            ";
-            if (! role('register manager'))
-            {
-                $organization_id = $GLOBALS['_SESSION_']->customer->organization->id;
-			}
-            $rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array(
-					$organization_id,
-					$product_id
-				)
-			);
-            if (! $rs)
-            {
-                $this->error = "SQL Error in OrganizationOwnedProduct::get: ".$GLOBALS['_database']->ErrorMsg();
+            if ($GLOBALS['_database']->ErrorMsg()) {
+                $this->error = "SQL Error in Register::Organization::Products::consume():".$GLOBALS['_database']->ErrorMsg();
                 return null;
             }
-
-            $objects = array();
-
-            list($organization_id,$product_id) = $rs->FetchRow();
-
-            $object = $this->details($organization_id,$product_id);
-            if ($this->error)
-            {
-                $this->error = "Error getting details for OrganizationOwnedProduct: ".$this->error;
-                return null;
-			}
-            return $object;
+            return $this->details();
         }
-        public function find($parameters = array())
-        {
-            $get_objects_query = "
-                SELECT  organization_id,product_id
-                FROM    register_organization_products
-                WHERE   product_id = product_id
-            ";
-            if (preg_match('/^\d+$/',$parameters['product_id']))
-                $get_objects_query .= "
-                AND     product_id = ".$parameters['product_id'];
-
-            if (! role('register manager'))
-            {
-                if (preg_match('/^\d+/',$GLOBALS['_customer']->organization->id))
-                    $parameters['organization_id'] = $GLOBALS['_customer']->organization->id;
-                else
-                    $parameters['organization_id'] = 0;
-            }
-            if (preg_match('/^\d+$/',$parameters['organization_id']))
-                $get_objects_query .= "
-                AND     organization_id = ".$parameters['organization_id'];
-
-            $rs = $GLOBALS['_database']->Execute($get_objects_query);
-            if (! $rs)
-            {
-                $this->error = "SQL Error in OrganizationOwnedProduct::find: ".$GLOBALS['_database']->ErrorMsg();
-                return null;
-            }
-
-            $objects = array();
-
-            while (list($organization_id,$product_id) = $rs->FetchRow())
-            {
-                $object = $this->details($organization_id,$product_id);
-                if ($this->error)
-                {
-                    $this->error = "Error getting details for OrganizationOwnedProduct: ".$this->error;
-                    return null;
-                }
-                array_push($objects,$object);
-            }
-
-            return $objects;
-        }
-
-        private function details($organization_id,$product_id)
-        {
+		public function count() {
+			$this->details();
+			return $this->quantity;
+		}
+        private function details() {
             $get_details_query = "
-                SELECT  organization_id,product_id,quantity
+                SELECT  organization_id,
+						product_id,
+						quantity
                 FROM    register_organization_products
                 WHERE   organization_id = ?
 				AND		product_id = ?
@@ -156,14 +104,19 @@
 
             $rs = $GLOBALS['_database']->Execute(
 				$get_details_query,
-				array($organization_id,$product_id)
+				array($this->organization->id,$this->product->id)
 			);
-            if (! $rs)
-            {
-                $this->error = "SQL Error in OrganizationOwnedProducts::details: ".$GLOBALS['_database']->ErrorMsg();
+            if (! $rs) {
+                $this->error = "SQL Error in Register::Organization::Products::::details(): ".$GLOBALS['_database']->ErrorMsg();
                 return null;
             }
-            return $rs->FetchNextObject(false);
+			$object = $rs->FetchNextObject(false);
+			$this->organization = new \Register\Organization($object->organization_id);
+			$this->product = new \Product\Item($object->product_id);
+			$this->quantity = $object->quantity;
+
+			app_log("Organization ".$this->organization->name." has ".$this->quantity." of ".$this->product->code,'trace');
+			return 1;
         }
     }
 ?>

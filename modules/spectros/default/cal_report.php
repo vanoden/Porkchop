@@ -1,4 +1,4 @@
-<?  if (! role('monitor admin'))
+<?  if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin'))
     {
         print "<span class=\"form_error\">You are not authorized for this view!</span>";
         return;
@@ -17,8 +17,8 @@
 		width: 1200px;
 	}
 </style>
-<?	if ($GLOBALS['_page']->error) { ?>
-<div class="form_error"><?=$GLOBALS['_page']->error?></div>
+<?	if ($page->error) { ?>
+<div class="form_error"><?=$page->error?></div>
 <?	} ?>
 <table class="body">
 <form name="eventFilter" method="get" action="/_spectros/cal_report">
@@ -34,7 +34,7 @@
 	<td class="value"><select name="organization_id" class="value input">
 			<option value="">All</option>
 <?	foreach ($organizations as $organization) { ?>
-			<option value="<?=$organization->id?>"<? if ($organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
+			<option value="<?=$organization->id?>"<? if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
 <?	} ?>
 		</select>
 	</td>
@@ -63,25 +63,19 @@
 	<td class="label">Reading</td>
 	<td class="label">Voltage</td>
 </tr>
-<?	foreach ($verifications as $verification) { 
-		$asset = new MonitorAsset();
-		$product = new Product();
-		$customer = new RegisterCustomer();
-
-		$asset->details($verification->asset_id);
-		$product->details($asset->product_id);
-		$customer->details($verification->customer_id);
+<?	foreach ($verifications as $verification) {
+    $greenbar = '';
 ?>
 <tr><td class="value dateValue<?=$greenbar?>"><?=$verification->date_request?></td>
 	<td class="value dateValue<?=$greenbar?>"><?=$verification->date_confirm?></td>
-	<td class="value dateValue<?=$greenbar?>"><?=$customer->organization->name?></td>
-	<td class="value<?=$greenbar?>"><?=$asset->code?></td>
-	<td class="value<?=$greenbar?>"><?=$product->code?></td>
-	<td class="value<?=$greenbar?>"><?=$verification->standard_manufacturer?></td>
-	<td class="value<?=$greenbar?>"><?=$verification->cylinder_number?></td>
-	<td class="value<?=$greenbar?>"><?=$verification->standard_concentration?></td>
-	<td class="value<?=$greenbar?>"><?=$verification->monitor_reading?></td>
-	<td class="value<?=$greenbar?>"><?=$verification->detector_voltage?></td>
+	<td class="value dateValue<?=$greenbar?>"><?=$verification->customer->organization->name?></td>
+	<td class="value<?=$greenbar?>"><?=$verification->asset->code?></td>
+	<td class="value<?=$greenbar?>"><?=$verification->asset->product->code?></td>
+	<td class="value<?=$greenbar?>"><?=$verification->getMetadata('standard_manufacturer')?></td>
+	<td class="value<?=$greenbar?>"><?=$verification->getMetadata('cylinder_number')?></td>
+	<td class="value<?=$greenbar?>"><?=$verification->getMetadata('standard_concentration')?></td>
+	<td class="value<?=$greenbar?>"><?=$verification->getMetadata('monitor_reading')?></td>
+	<td class="value<?=$greenbar?>"><?=$verification->getMetadata('detector_voltage')?></td>
 </tr>
 <?		if (isset($greenbar) && $greenbar)
 			$greenbar = '';

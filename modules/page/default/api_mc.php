@@ -32,8 +32,7 @@
 		$response->message = "PING RESPONSE";
 		$response->success = 1;
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Query Page List								###
@@ -62,8 +61,7 @@
 		api_log('content',$_REQUEST,$response);
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Get Details regarding Specified Page		###
@@ -98,8 +96,7 @@
 		api_log('content',$_REQUEST,$response);
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Get Details regarding Specified Product		###
@@ -132,8 +129,7 @@
 		api_log('content',$_REQUEST,$response);
 
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Update Specified Message					###
@@ -165,8 +161,7 @@
 
 		api_log('content',$_REQUEST,$response);
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Purge Cache of Specified Message			###
@@ -201,8 +196,7 @@
 
 		api_log('content',$_REQUEST,$response);
 		# Send Response
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -232,8 +226,7 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Get Metadata for current view				###
@@ -265,8 +258,7 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Add Page Metadata							###
@@ -299,8 +291,7 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Update Page Metadata						###
@@ -347,14 +338,12 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Get Details regarding Specified Product		###
 	###################################################
-	function findNavigationItems()
-	{
+	function findNavigationItems() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
 		$response = new \HTTP\Response();
@@ -379,47 +368,70 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 
+	###################################################
+	### Manage Page Schema							###
+	###################################################
+	function schemaVersion() {
+		$schema = new \Page\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+		}
+		$version = $schema->version();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->version = $version;
+		print formatOutput($response);
+	}
+	function schemaUpgrade() {
+		$schema = new \Page\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+		}
+		$version = $schema->upgrade();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->version = $version;
+		print formatOutput($response);
+	}
 
 	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
-	function error($message)
-	{
+	function error($message) {
 		$_REQUEST["stylesheet"] = '';
 		error_log($message);
 		$response = new \HTTP\Response();
 		$response->message = $message;
 		$response->success = 0;
 		api_log('content',$_REQUEST,$response);
-		header('Content-Type: application/xml');
-		print XMLout($response); #,array("stylesheet" => $_REQUEST["stylesheet"]));
+		print formatOutput($response);
 		exit;
+	}
+	###################################################
+	### Application Error							###
+	###################################################
+	function app_error($message,$file = __FILE__,$line = __LINE__) {
+		app_log($message,'error',$file,$line);
+		error('Application Error');
 	}
 	###################################################
 	### Convert Object to XML						###
 	###################################################
-	function XMLout($object,$user_options = array()) {
-		require 'XML/Unserializer.php';
-    	require 'XML/Serializer.php';
-    	$options = array(
-    	    XML_SERIALIZER_OPTION_INDENT        => '    ',
-    	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
-			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
-			'rootName'							=> 'opt',
-    	);
-    	$xml = &new XML_Serializer($options);
-	   	if ($xml->serialize($object)) {
-			//error_log("Returning ".$xml->getSerializedData());
-			$output = $xml->getSerializedData();
-			if (isset($user_options["stylesheet"])) {
-				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
-			}
-			return $output;
+	function formatOutput($object) {
+		if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
+			$format = 'json';
+			header('Content-Type: application/json');
 		}
+		else {
+			$format = 'xml';
+			header('Content-Type: application/xml');
+		}
+		$document = new \Document($format);
+		$document->prepare($object);
+		return $document->content();
 	}
 	
 	function confirm_customer() {

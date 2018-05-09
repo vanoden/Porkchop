@@ -343,8 +343,7 @@
 	###################################################
 	### Get Details regarding Specified Product		###
 	###################################################
-	function findNavigationItems()
-	{
+	function findNavigationItems() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
 		$response = new \HTTP\Response();
@@ -375,8 +374,7 @@
 	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
-	function error($message)
-	{
+	function error($message) {
 		$_REQUEST["stylesheet"] = '';
 		error_log($message);
 		$response = new \HTTP\Response();
@@ -386,27 +384,31 @@
 		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"]));
 		exit;
 	}
+
 	###################################################
-	### Convert Object to XML						###
+	### Manage Content Schema						###
 	###################################################
-	function XMLout($object,$user_options = array()) {
-		require 'XML/Unserializer.php';
-    	require 'XML/Serializer.php';
-    	$options = array(
-    	    XML_SERIALIZER_OPTION_INDENT        => '    ',
-    	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
-			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
-			'rootName'							=> 'opt',
-    	);
-    	$xml = &new XML_Serializer($options);
-	   	if ($xml->serialize($object)) {
-			//error_log("Returning ".$xml->getSerializedData());
-			$output = $xml->getSerializedData();
-			if (isset($user_options["stylesheet"])) {
-				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
-			}
-			return $output;
+	function schemaVersion() {
+		$schema = new \Content\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		}
+		$version = $schema->version();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->version = $version;
+		print formatOutput($response);
+	}
+	function schemaUpgrade() {
+		$schema = new \Content\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+		}
+		$version = $schema->upgrade();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->version = $version;
+		print formatOutput($response);
 	}
 	
 	function confirm_customer() {

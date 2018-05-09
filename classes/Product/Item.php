@@ -7,8 +7,10 @@
 		public $name;
 		public $description;
 		public $type;
+		private $_flat = false;
 
-		public function __construct($id = 0) {
+		public function __construct($id = 0,$flat = false) {
+			if ($flat) $this->_flat = true;
 			# Clear Error Info
 			$this->error = '';
 
@@ -76,6 +78,10 @@
 				app_log(print_r($GLOBALS['_SESSION_']->customer,true),'debug',__FILE__,__LINE__);
 				return null;
 			}
+
+			# Bust Cache
+			$cache_key = "product[".$this->id."]";
+			cache_unset($cache_key);
 
 			$ok_params = array(
 				"status"		=> '/^\w+$/',
@@ -177,6 +183,34 @@
 
 		public function details() {
 			app_log("Product::Item::details()",'trace',__FILE__,__LINE__);
+
+			$cache_key = "product[".$this->id."]";
+
+			# Cached Organization Object, Yay!
+			if (($this->id) and ($product = cache_get($cache_key))) {
+				$product->_cached = 1;
+				$this->id = $product->id;
+				$this->name = $product->name;
+				$this->code = $product->code;
+				$this->status = $product->status;
+				$this->type = $product->type;
+				$this->description = $product->description;
+				$this->_cached = $product->_cached;
+				if (! $this->_flat) {
+					$this->metadata = $this->getMeta();
+					$this->images = $this->images();
+				}
+
+				# In Case Cache Corrupted
+				if ($product->id) {
+					app_log("Product '".$this->name."' [".$this->id."] found in cache",'debug',__FILE__,__LINE__);
+					return $product;
+				}
+				else {
+					$this->error = "Product ".$this->id." returned unpopulated cache";
+				}
+			}
+
 			# Prepare Query to Get Product Details
 			$get_details_query = "
 				SELECT	id,
@@ -204,6 +238,12 @@
 			$this->name = $object->name;
 			$this->description = $object->description;
 			$this->type = $object->type;
+
+			# Cache Product Object
+			app_log("Setting cache key ".$cache_key);
+			if ($object->id) $result = cache_set($cache_key,$object);
+			app_log("Cache result: ".$result);
+
 			$this->metadata = $this->getMeta();
 			$this->images = $this->images();
 

@@ -2,6 +2,7 @@
 	namespace Register;
 
 	class CustomerList {
+		public $error;
 		public $count = 0;
 
 		public function expire($date_threshold) {
@@ -42,7 +43,9 @@
 			}
 			return $count;
 		}
-		public function find($parameters = array()) {
+		public function find($parameters = array(),$count = false) {
+			if ($count == true) $ADODB_COUNTRECS = true;
+			
 			$find_person_query = "
 				SELECT	id
 				FROM	register_users
@@ -129,10 +132,70 @@
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
-				$customer = new Customer($id);
+				if ($count == false) {
+					$customer = new Customer($id);
+					array_push($people,$customer);
+				}
 				$this->count ++;
-				array_push($people,$customer);
 			}
+			if ($count == true) return $this->count;
+			return $people;
+		}
+		public function search($search_string,$limit = 0,$offset = 0) {
+			if (is_bool($limit) && $limit == true) $count = true;
+			else $count == false;
+
+			app_log("Customer Search Requested",'debug',__FILE__,__LINE__);
+			$this->count = 0;
+			if (isset($search_string)) {
+				if (preg_match('/^[\w\-\.\_]+$/',$search_string)) {
+					# Great!
+				}
+				else {
+					app_log("Invalid Search String: '$search_string'",'warning',__FILE__,__LINE__);
+					$self->error = "Invalid Search String";
+					return null;
+				}
+			}
+			else {
+				$self->error = "Search string required";
+				return null;
+			}
+			$find_person_query = "
+				SELECT	id
+				FROM	register_users
+				WHERE	id = id
+				AND		(	login like '%$search_string%'
+					OR		first_name like '%$search_string%'
+					OR		last_name like '%$search_string%'
+				)
+			";
+
+			if ($count == false && $limit > 0 && preg_match('/^\d+$/',$limit)) {
+				if (preg_match('/^\d+$/',$offset))
+					$find_person_query .= "
+					LIMIT	$offset,$limit";
+				else
+					$find_person_query .= "
+					LIMIT	$limit";
+			}
+			app_log("Search query: ".$find_person_query,'trace',__FILE__,__LINE__);
+			$rs = $GLOBALS['_database']->Execute($find_person_query);
+			if (! $rs) {
+				$this->error = "SQL Error in \Register\Customer::search(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+
+			$people = array();
+			while (list($id) = $rs->FetchRow()) {
+				if ($count == false) {
+					$customer = new Customer($id);
+					array_push($people,$customer);
+				}
+				$this->count ++;
+			}
+			app_log($this->count." records found",'debug',__FILE__,__LINE__);
+			if ($count == true) return $this->count;
 			return $people;
 		}
 	}

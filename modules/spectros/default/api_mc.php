@@ -16,15 +16,6 @@
 	###############################################
 	### Load API Objects						###
     ###############################################
-	# Product Module Classes
-	require_once(MODULES.'/product/_classes/default.php');
-
-	# Spectros Classes
-	require_once(MODULES.'/spectros/_classes/default.php');
-
-	# Monitor Module Classes
-	require_once(MODULES.'/monitor/_classes/default.php');
-
 	# Call Requested Event
 	if ($_REQUEST["method"]) {
 		$message = "Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code;
@@ -46,42 +37,54 @@
 	### Just See if Server Is Communicating			###
 	###################################################
 	function ping() {
-		$response = new stdClass();
+		$response = new \HTTP\Response();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
 		$response->header->method = $_REQUEST["method"];
 		$response->header->date = system_time();
 		$response->message = "PING RESPONSE";
 		$response->success = 1;
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
 	### Add Calibration Verification Credits		###
 	###################################################
 	function addCalibrationVerificationCredits() {
-		# Find Requested Organization
-		if ($_REQUEST['organization'])
-		{
-			$_organization = new RegisterOrganization();
-			$organization = $_organization->get($_REQUEST['organization']);
-			if ($_organization->error) app_error("Error finding organization: ".$_organization->error,__FILE__,__LINE__);
-			if (! $organization->id) error("Organization not found");
-			$organization_id = $organization->id;
-		}
-		else
-		{
-			$organization_id = $GLOBALS['_SESSION_']->customer->organization->id;
-		}
-		$_credit = new CalibrationVerificationCredit();
-		if ($_credit->error) app_error("Error adding calibration verification credits: ".$_credit->error,__FILE__,__LINE__);
-		$result = $_credit->add($organization_id,$_REQUEST['quantity']);
-		if ($_credit->error) app_error("Error adding credits: ".$_credit->error,__FILE__,__LINE__);
-		$response->success = 1;
-		$response->credit = $_credit;
+		if (! isset($GLOBALS['_config']->spectros->calibration_product)) error("Calibration Product not configured");
+		$cal_product = new \Product\Item();
+		$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
+		if (! $cal_product->id) error("Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found");
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		# Find Requested Organization
+		if ($_REQUEST['organization']) {
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization']);
+			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
+			if (! $organization->id) error("Organization not found");
+		}
+		elseif ($_REQUEST['organization_id']) {
+			$organization = new \Register\Organization($_REQUEST['oranization_id']);
+		}
+		else {
+			$organization = new \Register\Organization($GLOBALS['_SESSION_']->customer->organization->id);
+		}
+
+		if ($organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('spectros admin')) {
+			error("You do not have privileges");
+		}
+
+		$product = $organization->product($cal_product->id);
+		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
+		$product->add($_REQUEST['quantity']);
+		if ($product->error) app_error("Error adding calibration verification credits: ".$product->error,__FILE__,__LINE__);
+
+		app_log($_REQUEST['quantity']." Credits added for organization ".$organization_id);
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->credits = $product->count();
+
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -91,178 +94,210 @@
 		$parameters = array();
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
-			$_organization = new RegisterOrganization();
-			$organization = $_organization->get($_REQUEST['organization']);
-			if ($_organization->error) app_error("Error finding organization: ".$_organization->error,__FILE__,__LINE__);
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization']);
+			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
 			$parameters['organization_id'] = $organization->id;
 		}
 
-		$_credit = new CalibrationVerificationCredit();
-		if ($_credit->error) app_error("Error finding calibration verification credits: ".$_credit->error,__FILE__,__LINE__);
-		$result = $_credit->find($parameters);
-		if ($_credit->error) app_error("Error finding credits: ".$_credit->error,__FILE__,__LINE__);
-		$response->success = 1;
-		$response->credit = $result;
+		$creditlist = new \Spectros\Calibration\Verification\CreditList();
+		if ($creditlist->error) app_error("Error finding calibration verification credits: ".$creditlist->error,__FILE__,__LINE__);
+		$credits = $creditlist->find($parameters);
+		if ($creditlist->error) app_error("Error finding credits: ".$creditlist->error,__FILE__,__LINE__);
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->credit = $credits;
+
+		print formatOutput($response);
 	}
 
 	###################################################
 	### Get Calibration Verification Credits		###
 	###################################################
 	function getCalibrationVerificationCredits() {
+		if (! isset($GLOBALS['_config']->spectros->calibration_product)) error("Calibration Product not configured");
+		$cal_product = new \Product\Item();
+		$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
+		if (! $cal_product->id) error("Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found");
+
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
-			$_organization = new RegisterOrganization();
-			$organization = $_organization->get($_REQUEST['organization']);
-			if ($_organization->error) app_error("Error finding organization: ".$_organization->error,__FILE__,__LINE__);
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization']);
+			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
-			$organization_id = $organization->id;
 		}
 		elseif ($_REQUEST['organization_id']) {
-			$organization_id = $_REQUEST['organization_id'];
+			$organization = new \Register\Organization($_REQUEST['oranization_id']);
+		}
+		else {
+			$organization = new \Register\Organization($GLOBALS['_SESSION_']->customer->organization->id);
 		}
 
-		if ((! role('spectros admin')) and (! $organization_id)) {
-			$organization_id = $GLOBALS['_SESSION_']->customer->organization->id;
+		if ($organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('spectros admin')) {
+			error("You do not have privileges");
 		}
-		$_credit = new CalibrationVerificationCredit();
-		if ($_credit->error) app_error("Error getting calibration verification credits: ".$_credit->error,__FILE__,__LINE__);
-		$result = $_credit->get($organization_id);
-		if ($_credit->error) app_error("Error finding credits: ".$_credit->error,__FILE__,__LINE__);
+		$product = $organization->product($cal_product->id);
+		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
+
+		app_log($product->count()." Credits available for organization ".$organization->id);
+
+		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->credit = $result;
+		$response->credits = $product->count();
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
 	### Use Calibration Verification Credit			###
 	###################################################
 	function consumeCalibrationVerificationCredit() {
+		if (! isset($GLOBALS['_config']->spectros->calibration_product)) error("Calibration Product not configured");
+		$cal_product = new \Product\Item();
+		$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
+		if (! $cal_product->id) error("Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found");
+
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
-			$_organization = new RegisterOrganization();
-			$organization = $_organization->get($_REQUEST['organization']);
-			if ($_organization->error) app_error("Error finding organization: ".$_organization->error,__FILE__,__LINE__);
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization']);
+			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
-			$organization_id = $organization->id;
+		}
+		elseif ($_REQUEST['organization_id']) {
+			$organization = new \Register\Organization($_REQUEST['oranization_id']);
 		}
 		else {
-			$organization_id = $GLOBALS['_SESSION_']->customer->organization->id;
+			$organization = new \Register\Organization($GLOBALS['_SESSION_']->customer->organization->id);
 		}
 
-		$_credit = new CalibrationVerificationCredit();
-		if ($_credit->error) app_error("Error getting calibration verification credits: ".$_credit->error,__FILE__,__LINE__);
-		$result = $_credit->consume($organization_id);
-		if ($_credit->error) app_error("Error finding credits: ".$_credit->error,__FILE__,__LINE__);
-		$response->success = 1;
-		$response->credits = $result;
+		if ($organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('spectros admin')) {
+			error("You do not have privileges");
+		}
+		$product = $organization->product($cal_product->id);
+		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
+		$product->consume();
+		if ($product->error) app_error("Error consuming credits: ".$credit->error,__FILE__,__LINE__);
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->credits = $product->count();
+
+		print formatOutput($response);
 	}
 
 	###################################################
 	### Return Validation Code to iMonitor			###
 	###################################################
 	function getVerificationCode() {
-		$parsed_request = XMLout($_REQUEST['parameter']);
-		$response->success = 1;
-		$response->request = $parsed_request;
-		
 		# Authenticate Request
-		$_register = new RegisterCustomer();
-		if (! $_register->authenticate($request->header->login,$request->header->password)) error("Authentication Failed");
+		$customer = new \Register\Customer();
+		if (! $customer->authenticate($request->header->login,$request->header->password)) error("Authentication Failed");
 
 		# Fetch Asset
-		$_asset = new MonitorAsset();
-		$asset = $_asset->get($request->serial);
-		if ($_asset->error) app_error("Unable to initialize MonitorAsset class: ".$_asset->error,__FILE__,__LINE__);
+		$asset = new \Monitor\Asset();
+		$asset->get($request->serial);
+		if ($asset->error) app_error("Unable to initialize MonitorAsset class: ".$asset->error,__FILE__,__LINE__);
 		if (! $asset->id) error("Asset '".$request->serial."' not found",__FILE__,__LINE__);
 
 		# Find Verification Record
-		$_verification = new CalibrationVerification();
-		$verification = $_verification->find();
+		$verificationlist = new \Spectros\Calibration\VerificationList();
+		list($verification) = $verificationlist->find(array("asset_code" => $request->serial));
 
-		if ($_verification->error) app_error("Unable to find calibration verification: ".$_verification->error);
+		if ($verificationlist->error) app_error("Unable to find calibration verification: ".$verificationlist->error);
 		if (! $verification->id) error("Unable to find calibration verification for asset.");
 
-		print XMLout($request);
+		$response = new \HTTP\Response();
+		$response->success = 1;
+
+		print formatOutput($response);
 	}
 
 	###################################################
 	### Add a Calibration Verification				###
 	###################################################
 	function addCalibrationVerification() {
-		$parameters = array();
+		if (! isset($GLOBALS['_config']->spectros->calibration_product)) error("Calibration Product not configured");
+		$cal_product = new \Product\Item();
+		$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
+		if (! $cal_product->id) error("Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found");
+
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
-			$_organization = new RegisterOrganization();
-			$organization = $_organization->get($_REQUEST['organization']);
-			if ($_organization->error) app_error("Error finding organization: ".$_organization->error,__FILE__,__LINE__);
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization']);
+			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
-			$parameters['organization_id'] = $organization->id;
+		}
+		elseif ($_REQUEST['organization_id']) {
+			$organization = new \Register\Organization($_REQUEST['oranization_id']);
 		}
 		else {
-			$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+			$organization = new \Register\Organization($GLOBALS['_SESSION_']->customer->organization->id);
 		}
 
+		if ($organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('spectros admin')) {
+			error("You do not have privileges");
+		}
 		if ($_REQUEST['asset']) {
-			$_asset = new MonitorAsset();
-			$asset = $_asset->get($_REQUEST['asset']);
-			if ($_asset->error) app_error("Error finding asset: ".$_asset->error,'error',__FILE__,__LINE__);
+			$assetlist = new \Monitor\AssetList();
+			list($asset) = $assetlist->find(array("code" => $_REQUEST['asset']));
+			if ($assetlist->error) app_error("Error finding asset: ".$assetlist->error,'error',__FILE__,__LINE__);
 			if (! $asset->id) error("Asset not found");
-			$parameters['asset_id'] = $asset->id;
 		}
 		else error("Asset code required");
 
+		# Check Verification Code
 		if (preg_match('/^[\w\-\_\.\s]+$/',$_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
-		$parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
-		$parameters['date_calibration'] = get_mysql_date($_REQUEST['date_calibration']);
-
-		$_credit = new CalibrationVerificationCredit();
-		if ($_credit->error) app_error("Error initializing calibration verification credits: ".$_credit->error,__FILE__,__LINE__);
+		$date_calibration = get_mysql_date($_REQUEST['date_calibration']);
 
 		# See if Credits available
-		$result = $_credit->get($parameters['organization_id']);
-		if ($result->quantity < 1)
-		{
-			app_log("Calibration credits for '".$parameters['organization_id']."' = ".$result->quantity,'info',__FILE__,__LINE__);
+		$product = $organization->product($cal_product->id);
+		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
+		if ($product->count() < 1) {
+			app_log("Calibration credits for '".$organization->name."' = ".$product->count(),'info',__FILE__,__LINE__);
 			error("Not enough calibration credits");
 		}
-		# Consume 1 credit
-		$result = $_credit->consume($parameters['organization_id'],1);
-		if ($_credit->error) app_error("Error finding credits: ".$_credit->error,__FILE__,__LINE__);
-
 		# Create Verification Record
-		$_verification = new CalibrationVerification();
-		if ($_verification->error) app_error("Error adding calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$verification = $_verification->add($parameters);
-		if ($_verification->error) app_error("Error adding collection: ".$_verification->error,__FILE__,__LINE__);
+		$verification = new \Spectros\CalibrationVerification();
+		if ($verification->error) app_error("Error adding calibration verification: ".$verification->error,__FILE__,__LINE__);
+		$verification->add(
+			array(
+				"asset_id"	=> $asset->id,
+				"date_request"	=> date('Y-m-d H:i:s')
+			)
+		);
+		if ($verification->error) app_error("Error adding collection: ".$verification->error,__FILE__,__LINE__);
 
 		# Add Metadata to Verification Record
-		$_verification->setMetadata($verification->id,"standard_manufacturer",$_REQUEST['standard_manufacturer']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$_verification->setMetadata($verification->id,"standard_concentration",$_REQUEST['standard_concentration']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$_verification->setMetadata($verification->id,"standard_expires",$_REQUEST['standard_expires']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$_verification->setMetadata($verification->id,"monitor_reading",$_REQUEST['monitor_reading']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$_verification->setMetadata($verification->id,"cylinder_number",$_REQUEST['cylinder_number']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$_verification->setMetadata($verification->id,"detector_voltage",$_REQUEST['detector_voltage']);
-		if ($_verification->error) app_error("Error setting metadata for calibration verification: ".$_verification->error,__FILE__,__LINE__);
+		$verification->setMetadata($verification->id,"standard_manufacturer",$_REQUEST['standard_manufacturer']);
+		if ($verification->error) app_error("Error setting metadata for calibration verification: ".$verification->error,__FILE__,__LINE__);
+		$verification->setMetadata($verification->id,"standard_concentration",$_REQUEST['standard_concentration']);
+		if ($verification->error) app_error("Error setting metadata for calibration verification: ".$verification->error,__FILE__,__LINE__);
+		$verification->setMetadata($verification->id,"standard_expires",$_REQUEST['standard_expires']);
+		if ($verification->error) app_error("Error setting metadata for calibration verification: ".$verification->error,__FILE__,__LINE__);
+		$verification->setMetadata($verification->id,"monitor_reading",$_REQUEST['monitor_reading']);
+		if ($verification->error) app_error("Error setting metadata for calibration verification: ".$verification->error,__FILE__,__LINE__);
+		$verification->setMetadata($verification->id,"cylinder_number",$_REQUEST['cylinder_number']);
+		if ($verification->error) app_error("Error setting metadata for calibration verification: ".$verification->error,__FILE__,__LINE__);
+		$verification->setMetadata($verification->id,"detector_voltage",$_REQUEST['detector_voltage']);
+		if ($verification->error) app_error("Error setting metadata for calibration verification: ".$verification->error,__FILE__,__LINE__);
 
+		# Verification Edits Complete
+		$verification->ready();
+
+		# Consume 1 credit
+		$product->consume(1);
+		if ($product->error) app_error("Error finding credits: ".$product->error,__FILE__,__LINE__);
+
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->calibration_verification = $verification;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 
 	###################################################
@@ -270,53 +305,54 @@
 	###################################################
 	function updateCalibrationVerification() {
 		# Find Requested Calibration Verification
-		$_verification = new CalibrationVerification();
-		if ($_verification->error) app_error("Error initializing verification: ".$_verification->error,__FILE__,__LINE__);
-		$verification = $_verification->get($_REQUEST['code']);
-		if ($_verification->error) app_error("Error finding verification: ".$_verification->error,__FILE__,__LINE__);
+		$verification = new \Spectros\CalibrationVerification();
+		if ($verification->error) app_error("Error initializing verification: ".$verification->error,__FILE__,__LINE__);
+		$verification->get($_REQUEST['code']);
+		if ($verification->error) app_error("Error finding verification: ".$verification->error,__FILE__,__LINE__);
 		if (! $verification->id) error("Calibration verification '".$_REQUEST['code']."' not found");
 
 		# Find Requested Organization
 		if ($_REQUEST['organization_code']) {
-			$_organization = new RegisterOrganization();
-			$organization = $_organization->get($_REQUEST['organization_code']);
-			if ($_organization->error) app_error("Error finding organization: ".$_organization->error,__FILE__,__LINE__);
+			$organization = new RegisterOrganization();
+			$organization->get($_REQUEST['organization_code']);
+			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
 			$_REQUEST['organization_id'] = $organization->id;
 		}
 
 		# Update Calibration Verification
-		$verification = $_verification->update(
+		$verification->update(
 			$verification->id,
 			$_REQUEST
 		);
-		if ($_verification->error) app_error("Error adding calibration verification: ".$_verification->error,__FILE__,__LINE__);
+		if ($verification->error) app_error("Error adding calibration verification: ".$verification->error,__FILE__,__LINE__);
+
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->calibration_verification = $verification;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Set Calibration Metadata					###
 	###################################################
 	function setCalibrationMetadata() {
-		$_collection = new MonitorCollection();
-		if ($_collection->error) app_error("Error initializing collection: ".$_collection->error,__FILE__,__LINE__);
+		# Find Requested Calibration Verification
+		$verification = new \Spectros\CalibrationVerification();
+		if ($verification->error) app_error("Error initializing verification: ".$verification->error,__FILE__,__LINE__);
 
-		$collection = $_collection->get($_REQUEST['code']);
-		if ($_collection->error) app_error("Error finding collection: ".$_collection->error,__FILE__,__LINE__);
-		if (! $collection->id) error("Collection '".$_REQUEST['code']."' not found");
+		$verification->get($_REQUEST['code']);
+		if ($verification->error) app_error("Error finding Verification: ".$verification->error,__FILE__,__LINE__);
+		if (! $verification->id) error("Verification '".$_REQUEST['code']."' not found");
 
-		$_collection->setMetadata($collection->id,$_REQUEST['key'],$_REQUEST['value']);
-		if ($_collection->error) app_error("Error setting metadata: ".$_collection->error,__FILE__,__LINE__);
+		$verification->setMetadata($_REQUEST['key'],$_REQUEST['value']);
+		if ($verification->error) app_error("Error setting metadata: ".$verification->error,__FILE__,__LINE__);
 
-		$collection = $_collection->get($_REQUEST['code']);
+		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->collection = $collection;
+		$response->value = $verification->getMetadata($_REQUEST['key']);
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find matching Calibrations					###
@@ -325,9 +361,9 @@
 		$parameters = array();
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
-			$_organization = new RegisterOrganization();
-			$organization = $_organization->get($_REQUEST['organization']);
-			if ($_organization->error) app_error("Error finding organization: ".$_organization->error,__FILE__,__LINE__);
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['organization']);
+			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
 			$parameters['organization_id'] = $organization->id;
 		}
@@ -335,53 +371,54 @@
 			$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
 		}
 		if ($_REQUEST['asset']) {
-			$_asset = new MonitorAsset();
-			$asset = $_asset->get($_REQUEST['asset']);
-			if ($_asset->error) app_error("Error finding asset: ".$_asset->error,'error',__FILE__,__LINE__);
+			$asset = new \Monitor\Asset();
+			$asset->get($_REQUEST['asset']);
+			if ($asset->error) app_error("Error finding asset: ".$asset->error,'error',__FILE__,__LINE__);
 			$parameters['asset_id'] = $asset->id;
 		}
 
-		$_verification = new CalibrationVerification();
-		if ($_verification->error) app_error("Error initializing verification: ".$_verification->error,__FILE__,__LINE__);
-		$verifications = $_verification->find($parameters);
-		if ($_verification->error) app_error("Error finding verifications: ".$_verification->error,__FILE__,__LINE__);
+		$verificationlist = new \Spectros\Calibration\VerificationList();
+		if ($verificationlist->error) app_error("Error initializing verification: ".$verificationlist->error,__FILE__,__LINE__);
+		$verifications = $verificationlist->find($parameters);
+		if ($verificationlist->error) app_error("Error finding verifications: ".$verificationlist->error,__FILE__,__LINE__);
+
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->verification = $verifications;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Find matching Calibration					###
 	###################################################
 	function getCalibrationVerification() {
-		$_verification = new CalibrationVerification();
-		if ($_verification->error) app_error("Error finding calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$verification = $_verification->get($_REQUEST['code']);
-		if ($_verification->error) error("Error finding verification: ".$_verification->error);
+		$verification = new \Spectros\CalibrationVerification();
+		if ($verification->error) app_error("Error finding calibration verification: ".$verification->error,__FILE__,__LINE__);
+		$verification->get($_REQUEST['code']);
+		if ($verification->error) error("Error finding verification: ".$verification->error);
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->calibration_verification = $verification;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Unconfirmed Calibration						###
 	###################################################
 	function nextCalibrationVerification() {
-		$_asset = new MonitorAsset();
-		$asset = $_asset->get($_REQUEST['asset']);
-		if ($_asset->error) app_error("Error finding asset: ".$_asset->error,'error',__FILE__,__LINE__);
+		$assetlist = new \Monitor\AssetList();
+		list($asset) = $assetlist->find(array("code" => $_REQUEST['asset']));
+		if ($assetlist->error) app_error("Error finding asset: ".$assetlist->error,'error',__FILE__,__LINE__);
 		if (! $asset->id) error("Asset not found");
-		$asset_id = $asset->id;
 
-		$_verification = new CalibrationVerification();
-		if ($_verification->error) app_error("Error finding calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$verification = $_verification->next($asset_id);
-		if ($_verification->error) error("Error finding verification: ".$_verification->error);
+		$verificationlist = new \Spectros\CalibrationVerificationList();
+		if ($verificationlist->error) app_error("Error finding calibration verification: ".$verificationlist->error,__FILE__,__LINE__);
+		$verification = $verificationlist->next($asset->id);
+		if ($verification->error) error("Error finding verification: ".$verification->error);
+		if (! $verification->id) error("No Available Calibration Verification records");
 
 		# Generate Confirmation Code
-		list($tsec,$tmin,$thour,$tmday,$tmon,$tyear,$twday,$tyday,$tisdst) = localtime(time);
+		list($tsec,$tmin,$thour,$tmday,$tmon,$tyear,$twday,$tyday,$tisdst) = localtime(time());
 		$cyear	= chr($tyear - 40);
 		$cmon	= chr($tmon + 65);
 		$crem	= substr(sprintf("%04d",$verification->id),-4,4);
@@ -399,80 +436,89 @@
 		$verification->response = $result;
 
 		# Return Response
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->calibration_verification = $verification;
-			
-		header('Content-Type: application/xml');
-		print XMLout($response);
+
+		print formatOutput($response);
 	}
 	###################################################
 	### Confirm Calibration							###
 	###################################################
 	function confirmCalibrationVerification() {
-		$_verification = new CalibrationVerification();
-		if ($_verification->error) app_error("Error finding calibration verification: ".$_verification->error,__FILE__,__LINE__);
-		$verification = $_verification->get($_REQUEST['code']);
-		if ($_verification->error) error("Error finding verification: ".$_verification->error);
+		$verification = new \Spectros\CalibrationVerification();
+		if ($verification->error) app_error("Error finding calibration verification: ".$verification->error,__FILE__,__LINE__);
+		$verification->get($_REQUEST['code']);
+		if ($verification->error) error("Error finding verification: ".$verification->error);
 		if (! $verification->id) error("Calibration Verification not found");
-		$verification = $_verification->confirm($verification->id);
-		if ($_verification->error) error("Error confirming verification: ".$_verification->error);
+		$verification->confirm();
+		if ($verification->error) error("Error confirming verification: ".$verification->error);
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->calibration_verification = $verification;
 
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### Get CT for Collection Sensor				###
 	###################################################
 	function getCollectionCT() {
 		# Get Collection
-		$_collection = new SpectrosCollection();
-		if ($_collection->error) app_error("Error finding collection: ".$_collection->error,__FILE__,__LINE__);
-		$collection = $_collection->get($_REQUEST['collection_code']);
-		if ($_collection->error) error("Error finding collection: ".$_collection->error);
+		$collection = new \Spectros\Collection();
+		if ($collection->error) app_error("Error finding collection: ".$collection->error,__FILE__,__LINE__);
+		$collection->get($_REQUEST['collection_code']);
+		if ($collection->error) error("Error finding collection: ".$collection->error);
 		if (! isset($collection->id)) error("Collection not found");
 		
 		# Get Monitor
-		$_monitor = new SpectrosMonitor();
-		if ($_monitor->error) app_error("Error finding monitor: ".$_monitor->error,__FILE__,__LINE__);
-		$monitor = $_monitor->get($_REQUEST['monitor_code']);
-		if ($_monitor->error) error("Error finding monitor: ".$_monitor->error);
+		$monitor = new \Spectros\Monitor();
+		if ($monitor->error) app_error("Error finding monitor: ".$monitor->error,__FILE__,__LINE__);
+		$monitor->getSimple($_REQUEST['monitor_code']);
+		app_log("Getting CT for Asset '".print_r($_REQUEST['monitor_code'],true)."'",'debug',__FILE__,__LINE__);
+		if ($monitor->error) error("Error finding monitor: ".$monitor->error);
+		app_log("Asset Code: ".$monitor->code,'debug',__FILE__,__LINE__);
 		if (! isset($monitor->id)) error("Monitor not found");
 		
 		# Get Sensor
-		$_sensor = new SpectrosSensor();
-		if ($_sensor->error) app_error("Error finding sensor: ".$_sensor->error,__FILE__,__LINE__);
-		$sensor = $_sensor->get($_REQUEST['sensor_code'],$monitor->id);
-		if ($_sensor->error) error("Error finding sensor: ".$_sensor->error);
+		$sensor = new \Monitor\Sensor();
+		if ($sensor->error) app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
+		$sensor->get($_REQUEST['sensor_code'],$monitor->id);
+		if ($sensor->error) error("Error finding sensor: ".$sensor->error);
 		if (! isset($sensor->id)) error("Sensor not found");
 		
-		$ct = $_collection->getCTValue($collection->id,$sensor->id);
+		$ct = $collection->getCTValue($sensor->id);
 
-		$response = new stdClass();
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->ct = $ct;
-
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	function schemaVersion() {
-		$schema = new SpectrosSchema();
+		$schema = new \Spectros\Schema();
 		if ($schema->error) {
 			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		}
 		$version = $schema->version();
-		$response = new stdClass();
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->version = $version;
-		header('Content-Type: application/xml');
-		print XMLout($response);
+		print formatOutput($response);
 	}
 	###################################################
 	### System Time									###
 	###################################################
 	function system_time() {
 		return date("Y-m-d H:i:s");
+	}
+	###################################################
+	### Return Properly Formatted Error Message		###
+	###################################################
+	function error($message) {
+		$_REQUEST["stylesheet"] = '';
+		$response->message = $message;
+		$response->success = 0;
+		print formatOutput($response);
+		exit;
 	}
 	###################################################
 	### Application Error							###
@@ -482,46 +528,20 @@
 		error('Application Error');
 	}
 	###################################################
-	### Return Properly Formatted Error Message		###
-	###################################################
-	function error($message) {
-		$_REQUEST["stylesheet"] = '';
-		$response->message = $message;
-		$response->success = 0;
-		header('Content-Type: application/xml');
-		print XMLout($response,array("stylesheet" => $_REQUEST["stylesheet"]));
-		exit;
-	}
-	###################################################
 	### Convert Object to XML						###
 	###################################################
-	function XMLout($object,$user_options='') {
-		if (0) {
-			$fp = fopen('/var/log/api/monitor.log', 'a');
-			fwrite($fp,"#### RESPONSE ####\n");
-			fwrite($fp, print_r($object,true));
-			fclose($fp);
+	function formatOutput($object) {
+		if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
+			$format = 'json';
+			header('Content-Type: application/json');
 		}
-
-		require 'XML/Unserializer.php';
-    	require 'XML/Serializer.php';
-    	$options = array(
-    	    XML_SERIALIZER_OPTION_INDENT        => '    ',
-    	    XML_SERIALIZER_OPTION_RETURN_RESULT => true,
-			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
-    	);
-		if (isset($user_options["rootname"])) {
-			$options["rootName"] = $user_options["rootname"];
+		else {
+			$format = 'xml';
+			header('Content-Type: application/xml');
 		}
-    	$xml = &new XML_Serializer($options);
-	   	if ($xml->serialize($object)) {
-			//error_log("Returning ".$xml->getSerializedData());
-			$output = $xml->getSerializedData();
-			if (isset($user_options["stylesheet"])) {
-				$output = "<?xml-stylesheet type=\"text/xsl\" href=\"/".$user_options["stylesheet"]."\"?>".$output;
-			}
-			return $output;
-		}
+		$document = new \Document($format);
+		$document->prepare($object);
+		return $document->content();
 	}
 	###################################################
 	### Convert XML to Object						###

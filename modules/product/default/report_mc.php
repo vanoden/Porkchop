@@ -1,7 +1,5 @@
 <?
-	require_once(MODULES."/product/_classes/default.php");
-	
-	$_product = new Product();
+	$productlist = new \Product\ItemList();
 
-	$products = $_product->find();
+	$products = $productlist->find();
 ?>

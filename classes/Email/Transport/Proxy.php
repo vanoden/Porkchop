@@ -1,6 +1,5 @@
 <?
 	namespace Email\Transport;
-	require THIRD_PARTY.'/autoload.php';
 
 	class Proxy {
 		private $_error;
@@ -25,29 +24,44 @@
 		}
 
 		public function deliver($email) {
-			$client = new \GuzzleHttp\Client();
-			$response = $client->request('POST','http://'.$this->hostname().'/send.php', [
-				'form_params' => [
-					'token'		=> $this->token(),
-					'to'		=> $email->to(),
-					'from'		=> $email->from(),
-					'subject'	=> $email->subject(),
-					'body'		=> $email->body()
-				]
-			]);
-			if ($response->getStatusCode() == 200) {
-				$content = $response->getBody();
+			$request = new \HTTP\Request();
+			$request->url('http://'.$this->hostname().'/send.php');
+			if ($request->error()) {
+				$this->_error = $request->error();
+				return false;
+			}
+			$request->addParam('token',$this->token());
+			$request->addParam('to',$email->to());
+			$request->addParam('from',$email->from());
+			$request->addParam('subject',$email->subject());
+			$request->addParam('body',urlencode($email->body()));
+			if ($email->html()) $request->addParam('html','true');
+			app_log("Email request: '".$request->serialize()."'",'trace',__FILE__,__LINE__);
+			$client = new \HTTP\Client();
+			$client->connect($this->hostname());
+			if ($client->error()) {
+				$this->_error = "Cannot connect to host: ".$client->error();
+				return false;
+			}
+			$response = $client->post($request);
+			if ($client->error()) {
+				$this->_error = "Cannot send request: ".$client->error();
+				return false;
+			}
+			app_log("Email response: ".print_r($response,true),'trace',__FILE__,__LINE__);
+			if ($response->code() == 200) {
+				$content = $response->content();
 				if (preg_match('/^ERROR\:\s(.*)$/',$content,$matches)) {
 					$this->_error = $matches[1];
 					return 0;
 				}
 				$this->_result = "Sent";
-				return 1;
+				return true;
 			}
 			else {
 				$this->_result = "Failed";
-				$this->_error = $response->getStatusCode().": ".$response->getReasonPhrase();
-				return 0;
+				$this->_error = $response->code().": ".$response->status();
+				return false;
 			}
 		}
 

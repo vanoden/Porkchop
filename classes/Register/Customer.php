@@ -57,7 +57,7 @@
 					}
 				}
 			}
-			return $this->details($id);
+			return $this->details();
 		}
 
 		function add_role ($role_id) {
@@ -89,39 +89,31 @@
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			
-			# Bust Cache
-			cache_unset("customer[".$this->id."]");
-
 			return 1;
 		}
 
-		function drop_role($customer_id,$role_id = 0) {
+		function drop_role($role_id) {
 			# Our own polymorphism
-			if (! $role_id) {
-				$role_id = $customer_id;
-				$customer_id = $this->id;
-			}
-			if (! in_array("register manager",$GLOBALS['_SESSION_']->customer->roles)) {
+			if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 				$this->error = "Only Register Managers can update roles.";
-				return 0;
+				return false;
 			}
 			$drop_role_query = "
 				DELETE
 				FROM	register_users_roles
-				WHERE	user_id = ".$GLOBALS['_database']->qstr($customer_id,get_magic_quotes_gpc())."
-				AND		role_id = ".$GLOBALS['_database']->qstr($role_id,get_magic_quotes_gpc());
+				WHERE	user_id = ?
+				AND		role_id = ?
+			";
 			//error_log("Update Customer: $drop_role_query");
-			$GLOBALS['_database']->Execute($drop_role_query);
+			$GLOBALS['_database']->Execute(
+				$drop_role_query,
+				array($this->id,$role_id)
+			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
-				return 0;
+				return false;
 			}
-			
-			# Bust Cache
-			cache_unset("customer[".$customer_id."]");
-
-			return 1;
+			return true;
 		}
 
 		// Check login and password against configured authentication mechanism
