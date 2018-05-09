@@ -192,6 +192,19 @@
 		print formatOutput($response);
 	}
 	###################################################
+	### Find Roles									###
+	###################################################
+	function findRoles() {
+		$roleList = new \Register\RoleList();
+		$roles = $roleList->find();
+		
+		$response = new stdClass();
+		$response->success = 1;
+		$response->role = $roles;
+		
+		print formatOutput($response);
+	}
+	###################################################
 	### Find Role Members							###
 	###################################################
 	function findRoleMembers() {
@@ -220,7 +233,7 @@
 	### Add a User Role								###
 	###################################################
 	function addRole() {
-		$role = new Role();
+		$role = new \Register\Role();
 		$result = $role->add(
 			array(
 				'name'	=> $_REQUEST['name']
@@ -231,6 +244,30 @@
 		$response = new stdClass();
 		$response->success = 1;
 		$response->role = $result;
+
+		print formatOutput($response);
+	}
+	###################################################
+	### Add a User to a Role						###
+	###################################################
+	function addRoleMember() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) error("Permission denied");
+
+		$role = new Role();
+		$role->get($_REQUEST['name']);
+		if ($role->error) app_error("Error getting role: ".$role->error,'error',__FILE__,__LINE__);
+		if (! $role->id) error("Role not found");
+		
+		$person = new \Register\Person();
+		$person->get($_REQUEST['login']);
+		if ($person->error) app_error("Error getting person: ".$person->error,'error',__FILE__,__LINE__);
+		if (! $person->id) error("Person not found");
+
+		$result = $role->addMember($person->id);
+		if ($role->error) error($role->error);
+
+		$response = new stdClass();
+		$response->success = 1;
 
 		print formatOutput($response);
 	}
@@ -710,7 +747,7 @@
 	function error($message) {
 		$_REQUEST["stylesheet"] = '';
 		error_log($message);
-		$response->message = $message;
+		$response->error = $message;
 		$response->success = 0;
 		header('Content-Type: application/xml');
 		print formatOutput($response,array("stylesheet" => $_REQUEST["stylesheet"]));

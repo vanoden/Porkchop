@@ -18,6 +18,12 @@
                 $this->error = "Failed to add role, invalid name";
                 return null;
             }
+			$current_role = new Role();
+			$current_role->get($parameters['name']);
+			if ($current_role->id) {
+				$this->error = "Role already exists";
+				return false;
+			}
 
             $add_object_query = "
                 INSERT
@@ -103,7 +109,54 @@
 			}
 			return $admins;
 		}
+		public function hasMember($person_id) {
+			$get_member_query = "
+				SELECT	1
+				FROM	register_users_roles
+				WHERE	role_id = ?
+				AND		user_id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_member_query,
+				array(
+					$this->id,
+					$person_id
+				)
+			);
+			if (! $GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Register::Role::hasMember(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			list($found) = $rs->FetchRow();
+			if ($found == 1) return true;
+			else return false;
+		}
+		public function addMember($person_id) {
+			if ($this->hasMember($person_id)) {
+				$this->error = "Person already has role";
+				return true;
+			}
 
+			$add_member_query = "
+				INSERT
+				INTO	register_users_roles
+				(		role_id,user_id)
+				VALUES
+				(		?,?)
+			";
+			$GLOBALS['_database']->Execute(
+				$add_member_query,
+				array(
+					$this->id,
+					$person_id
+				)
+			);
+			if (! $GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Register::Role::addMember(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			return true;
+		}
 		public function details() {
 			$get_object_query = "
 				SELECT	id,
