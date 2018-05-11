@@ -2,7 +2,7 @@
 <div class="form_error"><?=$GLOBALS['_page']->error?></div>
 <?	} ?>
 <table class="body" style="width: 800px">
-<tr><td class="title" colspan="5">Calibrations for <?=$asset->code?></td></tr>
+<tr><td class="title" colspan="6">Calibrations for <?=$asset->code?></td></tr>
 <tr><td class="label">Date</td>
 	<td class="label">Manufacturer</td>
 	<td class="label">Cylinder</td>
