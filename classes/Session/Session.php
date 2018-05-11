@@ -603,13 +603,13 @@
 			}
 		}
 		public function authenticated() {
-			if (isset($this->customer->id) && $this->customer->id > 0) return 1;
-			else return 0;
+			if (isset($this->customer->id) && $this->customer->id > 0) return true;
+			else return false;
 		}
 
 		public function localtime($timestamp = 0) {
 			if ($timestamp == 0) $timestamp = time();
-			$datetime = new \DateTime('@'.$timestamp);
+			$datetime = new \DateTime('@'.$timestamp,new \DateTimeZone('UTC'));
 			$datetime->setTimezone(new \DateTimeZone($this->timezone));
 			return array(
 				'timestamp'		=> $timestamp,
