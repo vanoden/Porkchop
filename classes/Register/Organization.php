@@ -84,7 +84,7 @@
 			return $this->details();
 		}
 		public function get($code = '') {
-			app_log("Register::Organization::get()",'trace',__FILE__,__LINE__);
+			app_log("Register::Organization::get($code)",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$get_object_query = "
 				SELECT	id
@@ -153,13 +153,14 @@
 				$this->status = $object->status;
 			}
 			else {
+				$this->id = null;
 				return new \stdClass();
 			}
 
 			# Cache Customer Object
-			app_log("Setting cache key ".$cache_key);
+			app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
 			if ($object->id) $result = cache_set($cache_key,$object);
-			app_log("Cache result: ".$result);
+			app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);
 
 			return $object;
 		}
