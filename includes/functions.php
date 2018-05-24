@@ -234,6 +234,10 @@
 		}
 	}
 
+	function query_log($query,$path = 'unknown',$line = 'unknown') {
+		app_log($query,'trace',$path,$line);
+	}
+
 	###############################################
 	### Return Appropriate Error Message for	###
 	### JSON parsing							###
