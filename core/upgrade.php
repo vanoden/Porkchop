@@ -44,7 +44,7 @@
 	header("Expires: 0");
 	header("Cache-Control: no-cache, must-revalidate");
 
-	install_log("Upgrading site to 201803261806");
+	install_log("Upgrading site to 201808050715");
 	###################################################
 	### Connect to Database							###
 	###################################################
@@ -72,25 +72,25 @@
 	if ($class->version() != 1) install_fail("Version 1 Required");
 	$class = new \Content\Schema();
 	install_log("Content::Schema: version ".$class->version());
-	if ($class->version() != 3) install_fail("Version 1 Required");
+	if ($class->version() != 3) install_fail("Version 3 Required");
 	$class = new \Company\Schema();
 	install_log("Company::Schema: version ".$class->version());
-	if ($class->version() != 2) install_fail("Version 1 Required");
+	if ($class->version() != 3) install_fail("Version 3 Required");
 	$class = new \Session\Schema();
-	install_log("SEssion::Schema: version ".$class->version());
-	if ($class->version() != 4) install_fail("Version 1 Required");
+	install_log("Session::Schema: version ".$class->version());
+	if ($class->version() != 4) install_fail("Version 4 Required");
 	$class = new \Email\Schema();
 	install_log("Email::Schema: version ".$class->version());
 	if ($class->version() != 1) install_fail("Version 1 Required");
 	$class = new \Spectros\Schema();
 	install_log("Spectros::Schema: version ".$class->version());
-	if ($class->version() != 5) install_fail("Version 1 Required");
+	if ($class->version() != 5) install_fail("Version 5 Required");
 	$class = new \Action\Schema();
 	install_log("Action::Schema: version ".$class->version());
 	if ($class->version() != 1) install_fail("Version 1 Required");
 	$class = new \Register\Schema();
 	install_log("Register::Schema: version ".$class->version());
-	if ($class->version() != 10) install_fail("Version 1 Required");
+	if ($class->version() != 10) install_fail("Version 10 Required");
 	$class = new \Storage\Schema();
 	install_log("Storage::Schema: version ".$class->version());
 	if ($class->version() != 1) install_fail("Version 1 Required");
@@ -99,13 +99,13 @@
 	if ($class->version() != 1) install_fail("Version 1 Required");
 	$class = new \Monitor\Schema();
 	install_log("Monitor::Schema: version ".$class->version());
-	if ($class->version() != 14) install_fail("Version 1 Required");
+	if ($class->version() != 18) install_fail("Version 18 Required");
 	$class = new \Media\Schema();
 	install_log("Media::Schema: version ".$class->version());
-	if ($class->version() != 3) install_fail("Version 1 Required");
+	if ($class->version() != 3) install_fail("Version 3 Required");
 	$class = new \Contact\Schema();
 	install_log("Contact::Schema: version ".$class->version());
-	if ($class->version() != 2) install_fail("Version 1 Required");
+	if ($class->version() != 2) install_fail("Version 2 Required");
 	$class = new \Event\Schema();
 	install_log("Event::Schema: version ".$class->version());
 	if ($class->version() != 0) install_fail("Version 1 Required");
@@ -243,6 +243,22 @@
 	}
 	else {
 		install_fail("_config->monitor->default_sensor_product not defined!");
+	}
+
+	# Check for Dashboards
+	$dashboard = new \Monitor\Dashboard();
+	$dashboard->get('default');
+	if (! $dashboard->id) {
+		install_log("Adding default dashboard");
+		$dashboard->add(array("name" => 'default','template' => '/dashboards/default.html'));
+		if ($dashboard->error) install_fail("Cannot find or add default dashboard: ".$dashboard->error);
+	}
+	$dashboard = new \Monitor\Dashboard();
+	$dashboard->get('concept');
+	if (! $dashboard->id) {
+		install_log("Adding concept dashboard");
+		$dashboard->add(array("name" => 'concept','template' => '/dashboards/concept/concept.html'));
+		if ($dashboard->error) install_fail("Cannot find or add default dashboard: ".$dashboard->error);
 	}
 
 	install_log("Upgrade completed successfully");
