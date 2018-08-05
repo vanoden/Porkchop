@@ -7,8 +7,7 @@
 		public $expiration;
 		public $code;
 		
-		public function add($person_id)
-		{
+		public function add($person_id) {
 			# Get Large Random value
 			$randval = mt_rand();		
 
@@ -37,8 +36,7 @@
 			return $code;
 		}
 		
-		public function consume($code)
-		{
+		public function consume($code) {
 			# Get Code from Database
 			$get_record_query = "
 				SELECT	person_id
@@ -52,14 +50,12 @@
 				array($code)
 			);
 
-			if (! $rs)
-			{
+			if (! $rs) {
 				$this->error = "SQL Error in RegisterRecovery::consume: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
-			if ($rs->RecordCount())
-			{
+			if ($rs->RecordCount()) {
 				list($person_id) = $rs->FetchRow();
 				
 				$delete_record_query = "

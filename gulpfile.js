@@ -2,6 +2,7 @@ const gulp = require('gulp');
 const template = require('gulp-template');
 const data = require('gulp-data');
 const debug = require('gulp-debug');
+const fs = require('fs');
 
 gulp.task('hello', function() {
 	console.log('Hello, Tony');
@@ -12,7 +13,9 @@ gulp.task('process', ['js','css','jpegs','pngs','svg'], () =>
 		.pipe(data(() => (
 			{
 				"video_path": 'http://assets.spectrosinstruments.com/video',
-				"docs_path": 'http://assets.spectrosinstruments.com/docs'
+				"docs_path": 'http://assets.spectrosinstruments.com/docs',
+				"header": fs.readFileSync('html.src/header.html', 'utf8'),
+				"footer": fs.readFileSync('html.src/footer.html', 'utf8')
 			}
 		)))
 		.pipe(template())

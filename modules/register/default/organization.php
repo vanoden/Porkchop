@@ -40,6 +40,25 @@
 <?		} ?>
 	</select>
 </div>
+<div id="organizationResellerBool" class="registerQuestion">
+	<span id="organizationIsResellerLabel" class="label registerLabel">Can Resell?</span>
+	<input name="is_reseller" type="checkbox" class="value input registerInput" value="1" <? if($organization->is_reseller) print " checked";?> />;
+</div>
+<div id="organizationResellerId" class="registerQuestion">
+	<span id="organizationResellerLabel" class="label registerLabel">Reseller:</span>
+	<select name="assigned_reseller_id" class="value input registerInput">
+		<option value="">Select</option>
+<?	foreach ($resellers as $reseller) {
+	if ($organization->id == $reseller->id) continue;
+?>
+		<option value="<?=$reseller->id?>"<? if($organization->reseller->id == $reseller->id) print " selected";?>><?=$reseller->name?></option>
+<?	} ?>
+	</select>
+</div>
+<div id="organizationNotesQuestion" class="registerQuestion">
+	<span id="organizationNotesLabel" class="label registerLabel">Notes</span>
+	<textarea name="notes" class="value input registerInput"><?=$organization->notes?></textarea>;
+</div>
 <?	if ($organization->id) { ?>
 <table class="body" style="margin-top: 10px">
 <tr><td class="label organizationMemberLoginHeader">Login</td>

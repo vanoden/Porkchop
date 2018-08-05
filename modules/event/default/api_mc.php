@@ -4,7 +4,7 @@
     ### and Management							###
     ### A. Caravello 5/7/2009               	###
     ###############################################
-	$_package = array(
+	$api = array(
 		"name"		=> "event",
 		"version"	=> "0.1.1",
 		"release"	=> "2016-12-05",
@@ -16,19 +16,20 @@
 	if ($_REQUEST["method"]) {
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
-		$function_name($_package);
+		$function_name($api);
 		exit;
 	}
 
 	###################################################
 	### Just See if Server Is Communicating			###
 	###################################################
-	function ping() {
+	function ping($api) {
 		$response = new \HTTP\Response();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
 		$response->header->method = $_REQUEST["method"];
 		$response->header->date = system_time();
 		$response->message = "PING RESPONSE";
+		$response->api = $api;
 		$response->success = 1;
 
 		$_comm = new \Monitor\Communication();

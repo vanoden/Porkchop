@@ -11,9 +11,6 @@
 	###############################################
 	### Load API Objects						###
     ###############################################
-	# Contact Module Classes
-	require_once(MODULES.'/contact/_classes/default.php');
-
 	# Call Requested Event
 	if ($_REQUEST["method"]) {
 		error_log("Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code." for asset ".$_REQUEST['asset_code']);
@@ -46,16 +43,16 @@
 	### Add an Event								###
 	###################################################
 	function addEvent() {
-		$_event = new ContactEvent();
-		if ($_event->error) app_error("Error initializing ContactEvent: ".$_event->error);
+		$event = new \Contact\Event();
+		if ($event->error) app_error("Error initializing ContactEvent: ".$_event->error);
 		
 		$parameters = array();
 		if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 		else $_REQUEST['status'] = 'NEW';
 		$_REQUEST['content'] = $_REQUEST['content'];
 
-		$event = $_event->add($parameters);
-		if ($_event->error) error("Error adding event: ".$_event->error);
+		$event->add($parameters);
+		if ($event->error) error("Error adding event: ".$event->error);
 		$response->success = 1;
 		$response->event = $event;
 
@@ -67,21 +64,31 @@
 	### Find matching Events						###
 	###################################################
 	function findEvents() {
-		$_event = new ContactEvent();
-		if ($_event->error) app_error("Error adding event: ".$_event->error,__FILE__,__LINE__);
+		$eventlist = new \Contact\EventList();
+		if ($eventlist->error) app_error("Error finding events: ".$eventlist->error,__FILE__,__LINE__);
 		
-		if (in_array($_REQUEST['status'],array('NEW','OPEN','CLOSED'))) $paramters['status'] = $_REQUEST['status'];
+		if (in_array($_REQUEST['status'],array('NEW','OPEN','CLOSED'))) $parameters['status'] = $_REQUEST['status'];
 		elseif($_REQUEST['status']) error("Invalid status for events");
 		
-		$events = $_event->find($parameters);
-		if ($_event->error) app_error("Error finding events: ".$_event->error,__FILE__,__LINE__);
+		$events = $eventlist->find($parameters);
+		if ($eventlist->error) app_error("Error finding events: ".$eventlist->error,__FILE__,__LINE__);
 		$response->success = 1;
 		$response->event = $events;
 
 		header('Content-Type: application/xml');
 		print XMLout($response);
 	}
-
+	function schemaVersion() {
+		$schema = new \Contact\Schema();
+		if ($schema->error) {
+			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
+		}
+		$version = $schema->version();
+		$response = new stdClass();
+		$response->success = 1;
+		$response->version = $version;
+		print formatOutput($response);
+    }
 	###################################################
 	### System Time									###
 	###################################################
@@ -136,5 +143,18 @@
 			}
 			return $output;
 		}
+	}
+	function formatOutput($object) {
+		if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
+			$format = 'json';
+			header('Content-Type: application/json');
+		}
+		else {
+			$format = 'xml';
+			header('Content-Type: application/xml');
+		}
+		$document = new \Document($format);
+		$document->prepare($object);
+		return $document->content();
 	}
 ?>

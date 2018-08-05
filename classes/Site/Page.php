@@ -512,16 +512,16 @@
 			}
 			elseif ($object == "monitor") {
 				# Load Product Class if Not Already Loaded
-				if ($property == "dashboard") {
-					$buffer .= "default";
-				}
-				else {
+			#	if ($property == "dashboard") {
+			#		$buffer .= $GLOBALS['_config']->monitor->default_dashboard;
+			#	}
+			#	else {
 					app_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view,'debug',__FILE__,__LINE__);
 					ob_start();
 					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
 					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
 					$buffer .= ob_get_clean();
-				}
+			#	}
 			}
 			elseif ($object == "session") {
 				if ($property == "customer_id") $buffer = $GLOBALS['_SESSION_']->customer->id;

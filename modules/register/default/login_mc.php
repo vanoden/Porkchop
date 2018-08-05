@@ -27,15 +27,16 @@
 
 	# Handle Input
 	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
+		app_log('Auth By Token','debug',__FILE__,__LINE__);
 		# Consume Token
-		$_token = new RegisterPasswordToken();
+		$_token = new \Register\PasswordToken();
 		$new_id = $_token->consume($_REQUEST['token']);
 		if ($_token->error) {
 			app_log("Error in password recovery: ".$_recovery->error,'error',__FILE__,__LINE__);
 			$GLOBALS['_page']->error = "Error in password recovery.  Admins have been notified.  Please try again later.";
 		}
 		elseif ($new_id > 0) {
-			$customer = new RegisterCustomer($new_id);
+			$customer = new \Register\Customer($new_id);
 			$GLOBALS['_SESSION_']->customer = $customer;
 
 			$GLOBALS['_SESSION_']->update(
@@ -57,6 +58,7 @@
 		}
 	}
 	elseif (isset($_REQUEST['login'])) {
+		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
 		$customer = new \Register\Customer();
 		if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
 			$GLOBALS['_page']->error = "Authentication failed";

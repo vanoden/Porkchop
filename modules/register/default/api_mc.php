@@ -8,8 +8,8 @@
 
 	$_package = array(
 		"name"		=> "register",
-		"version"	=> "0.1.9",
-		"release"	=> "2015-04-19",
+		"version"	=> "0.2.0",
+		"release"	=> "2018-05-09",
 		"schema"	=> $schema->version(),
 	);
 
@@ -63,24 +63,22 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
 		# Initiate Product Object
-		$_customer = new \Register\Customer();
+		$customer = new \Register\Customer();
 
-		$result = $_customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
+		$result = $customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
+		if ($customer->error) error($customer->error);
 
 		if ($result > 0) {
 			app_log("Assigning session ".$GLOBALS['_SESSION']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
-			$GLOBALS['_SESSION_']->assign($_customer->id);
+			$GLOBALS['_SESSION_']->assign($customer->id);
 		}
 		else {
 			app_log("Authentication failed",'notice',__FILE__,__LINE__);
 		}
-		# Error Handling
-		if ($_customer->error) error($_customer->error);
-		else{
-			$response = new stdClass();
-			$response->success = $result;
-			if (! $result) $response->message = "Invalid login password combination";
-		}
+		
+		$response = new stdClass();
+		$response->success = $result;
+		if (! $result) $response->message = "Invalid login password combination";
 
 		# Send Response
 		print formatOutput($response);
@@ -93,13 +91,23 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
 		# Initiate Product Object
-		$_customer = new \Register\Customer();
-		
+		$customer = new \Register\Customer();
+
+		if ($GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
+			# Can Get Anyone
+		}
+		elseif ($GLOBALS['_SESSION_']->customer->id = $customer->id) {
+			# Can Get Yourself
+		}
+		else {
+			error('Permission denied');
+		}
+
 		if ($_REQUEST["login"] and (! $_REQUEST{"code"})) $_REQUEST['code'] = $_REQUEST['login'];
-		$customer = $_customer->get($_REQUEST["code"]);
+		$customer->get($_REQUEST["code"]);
 
 		# Error Handling
-		if ($_customer->error) error($_customer->error);
+		if ($customer->error) error($customer->error);
 		else{
 			$response = new stdClass();
 			$response->customer = $customer;
@@ -117,12 +125,22 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
 		# Initiate Product Object
-		$_customer = new \Register\Customer();
+		$customer = new \Register\Customer();
 
 		# Find Customer
-		$customer = $_customer->get($_REQUEST['code']);
-		if ($_customer->error) app_error("Error getting customer: ".$_customer->error,__FILE__,__LINE__);
+		$customer->get($_REQUEST['code']);
+		if ($customer->error) app_error("Error getting customer: ".$customer->error,__FILE__,__LINE__);
 		if (! $customer->id) error("Customer not found");
+
+		if ($GLOBALS['_SESSION_']->customer->has_role('register admin')) {
+			# Can Update Anyone
+		}
+		elseif ($GLOBALS['_SESSION_']->customer->id = $customer->id) {
+			# Can Update Yourself
+		}
+		else {
+			error('Permission denied');
+		}
 
 		if ($_REQUEST['organization']) {
 			$_organization = new \Register\Organization();
@@ -159,23 +177,28 @@
 		# Default StyleSheet
 		if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customers.xsl';
 
-		# Initiate Image Object
-		$customer = new \Register\Customer();
-
 		# Build Query Parameters
 		$parameters = array();
+		if ($GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
+			if ($_REQUEST["organization_code"]) {
+				app_log("Getting organization '".$_REQUEST['organization_code']."'",'debug',__FILE__,__LINE__);
+				$organization = new \Register\Organization();
+				$organization->get($_REQUEST["organization_code"]);
+				if ($organization->error) app_error("Error finding organization: ".$organization->error,'error',__FILE__,__LINE__);
+				if (! $organization->id) error("Could not find organization '".$_REQUEST["organization_code"]."'");
+				$parameters['organization_id'] = $organization->id;
+			}
+		}
+		elseif (isset($GLOBALS['_SESSION_']->customer->organization->id)) {
+			$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+		}
+		else {
+			error('Permission denied');
+		}
 		if ($_REQUEST["code"]) $parameters["code"] = $_REQUEST["code"];
 		elseif ($_REQUEST["login"]) $parameters["code"] = $_REQUEST["login"];
 		if ($_REQUEST["first_name"]) $parameters["first_name"] = $_REQUEST["first_name"];
 		if ($_REQUEST["last_name"]) $parameters["last_name"] = $_REQUEST["last_name"];
-		
-		if ($_REQUEST["organization"]) {
-			$organization = new \Register\Organization();
-			$organization->get($_REQUEST["organization"]);
-			if ($organization->error) app_error("Error finding organization: ".$organization->error,'error',__FILE__,__LINE__);
-			if (! $organization->id) error("Could not find organization");
-			$parameters['organization_id'] = $organization->id;
-		}
 
 		# Get List of Matching Customers
 		$customerlist = new \Register\CustomerList();
@@ -195,6 +218,8 @@
 	### Find Roles									###
 	###################################################
 	function findRoles() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error('Permission denied');
+
 		$roleList = new \Register\RoleList();
 		$roles = $roleList->find();
 		
@@ -210,6 +235,8 @@
 	function findRoleMembers() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.rolemembers.xsl';
+
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error('Permission denied');
 
 		# Initiate Role Object
 		$role = new \Register\Role();
@@ -234,6 +261,8 @@
 	### Add a User Role								###
 	###################################################
 	function addRole() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) error("Permission denied");
+
 		$role = new \Register\Role();
 		$result = $role->add(
 			array(
@@ -520,8 +549,10 @@
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error('Permission denied');
+
 		# Initiate Organization Object
-		$_organization = new \Register\Organization();
+		$organizationList = new \Register\OrganizationList();
 
 		# Build Query Parameters
 		$parameters = array();
@@ -532,10 +563,10 @@
 		$response->request->parameter = $parameters;
 
 		# Get List of Matching Organizations
-		$organizations = $_organization->find($parameters);
+		$organizations = $organizationList->find($parameters);
 
 		# Error Handling
-		if ($_organization->error) error($_organization->error);
+		if ($organizationList->error) error($organizationList->error);
 
 		$response->success = 1;
 		$response->organization = $organizations;

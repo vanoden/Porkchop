@@ -8,6 +8,8 @@
 
 	#error_log(print_r($_REQUEST,true));
 
+	$page = new \Site\Page();
+
 	###########################
 	### Handle Actions		###
 	###########################
@@ -15,10 +17,10 @@
 		# Initialize Admin Object
 		$_customer = new \Register\Admin();
 		if ($_customer->password_strength($_REQUEST['password']) < $_GLOBALS['_config']->register->minimum_password_strength) {
-			$GLOBALS["_page"]->error = "Password not strong enough";
+			$page->error = "Password not strong enough";
 		}
 		elseif ($_REQUEST["password"] != $_REQUEST["password_2"]) {
-			$GLOBALS['_page']->error .= "Passwords do not match";
+			$page->error .= "Passwords do not match";
 		}
 		else {
 			# Default Login to Email Address
@@ -30,7 +32,7 @@
 			# Make Sure Login is unique
 			$already_exists = $_customer->get($_REQUEST['login']);
 			if ($already_exists->id) {
-				$GLOBALS['_page']->error = "Sorry, login already taken";
+				$page->error = "Sorry, login already taken";
 				$_REQUEST['login'] = '';
 			}
 			else {
@@ -49,13 +51,13 @@
 				);
 				if ($_customer->error) {
 					app_log("Error adding customer: ".$_customer->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_page']->error .= "Sorry, there was an error adding your account.  Our admins have been notified.  Please try again later";
+					$page->error .= "Sorry, there was an error adding your account.  Our admins have been notified.  Please try again later";
 				}
 				else {
 					# Login New User by updating session
 					$GLOBALS['_SESSION_']->update(array("user_id" => $customer->{id}));
 					if ($GLOBALS['_SESSION_']->error) {
-						$GLOBALS['_page']->error .= "Error updating session: ".$GLOBALS['_SESSION_']->error;
+						$page->error .= "Error updating session: ".$GLOBALS['_SESSION_']->error;
 					}
 
 					# Create Contact Record
@@ -96,18 +98,29 @@
 					###################################################
 					### Send Confirmation Email						###
 					###################################################
-					$parameters = array();
-					if ($_REQUEST['work_email']) $parameters['to'] = $_REQUEST['work_email'];
-					else $parameters['to'] = $_REQUEST['home_email'];
-					$parameters['from'] = $GLOBALS['_config']->register->confirmation->from;
-					$parameters['body'] = $message;
-					$parameters['subject'] = $GLOBALS['_config']->register->confirmation->subject;
-		
-					$_email = new \Email\Message();
-					$_email->send($parameters);
-					if ($_email->error) app_log($_email->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_page']->error = "Failed to send confirmation email";
-		
+					# Build Message For Delivery
+					$emessage = new \Email\Message();
+					$emessage->html(true);
+					$emessage->from($GLOBALS['_config']->register->confirmation->from);
+					$emessage->subject($GLOBALS['_config']->register->confirmation->subject);
+					$emessage->body($message);
+					if ($_REQUEST['work_email']) $emessage->to($_REQUEST['work_email']);
+					else $emessage->to($_REQUEST['home_email']);
+
+					$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
+					if (\Email\Transport::error()) {
+						$page->error = "Error initializing email transport: ".\Email\Transport::error();
+						return;
+					}
+
+					$transport->hostname($GLOBALS['_config']->email->hostname);
+					$transport->token($GLOBALS['_config']->email->token);
+					$transport->deliver($emessage);
+					if ($transport->error) {
+						$page->error = "Error sending notification: ".$transport->error;
+						return;
+					}
+
 					# Redirect to Address Page If Order Started
 					if ($target) $next_page = $target;
 					elseif ($order_id) $next_page = "/_cart/address";

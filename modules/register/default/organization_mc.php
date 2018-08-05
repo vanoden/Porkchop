@@ -34,12 +34,17 @@
 		}
 		else {
 			$parameters = array(
-				"name"	=> $_REQUEST['name'],
-				"code"	=> $_REQUEST['code'],
-				"status"	=> $_REQUEST['status']
+				"name"					=> $_REQUEST['name'],
+				"code"					=> $_REQUEST['code'],
+				"status"				=> $_REQUEST['status'],
+				'is_reseller'			=> $_REQUEST['is_reseller'],
+				"assigned_reseller_id"	=> $_REQUEST['assigned_reseller_id'],
+				"notes"					=> $_REQUEST['notes']
 			);
+			if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
 			if ($organization->id) {
-				app_log("Updating '".$organization->name."'");
+				app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
+				app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
 				# Update Existing Organization
 				$organization->update($parameters);
 
@@ -107,4 +112,7 @@
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 	}
+	
+	$resellerList = new \Register\OrganizationList();
+	$resellers = $resellerList->find(array("is_reseller" => true));
 ?>

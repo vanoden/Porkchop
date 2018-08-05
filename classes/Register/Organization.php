@@ -7,7 +7,10 @@
 		public $code;
 		public $status;
 		public $id;
-		
+		public $is_reseller;
+		public $reseller;
+		public $notes;
+
 		public function __construct($id = 0) {
 			# Clear Error Info
 			$this->error = '';
@@ -69,9 +72,23 @@
 				$update_object_query .= ",
 						status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
 
+			if (isset($parameters['is_reseller']) && is_numeric($parameters['is_reseller']))
+				$update_object_query .= ",
+						is_reseller = ".$GLOBALS['_database']->qstr($parameters['is_reseller'],get_magic_quotes_gpc());
+
+			if (isset($parameters['assigned_reseller_id']) && is_numeric($parameters['assigned_reseller_id']))
+				$update_object_query .= ",
+						assigned_reseller_id = ".$GLOBALS['_database']->qstr($parameters['assigned_reseller_id'],get_magic_quotes_gpc());
+
+			if (isset($parameters['notes']))
+				$update_object_query .= ",
+						notes = ".$GLOBALS['_database']->qstr($parameters['notes'],get_magic_quotes_gpc());
+
+
 			$update_object_query .= "
 				WHERE	id = ?
 			";
+			query_log($update_object_query);
 			$rs = $GLOBALS['_database']->Execute(
 				$update_object_query,
 				array($this->id)
@@ -116,11 +133,14 @@
 				$this->name = $organization->name;
 				$this->code = $organization->code;
 				$this->status = $organization->status;
+				if ($organization->is_reseller) $this->is_reseller = true;
+				if (isset($this->assigned_reseller_id)) $this->reseller = new Organization($this->assigned_reseller_id);
+				$this->notes = $organization->notes;
 				$this->_cached = $organization->_cached;
 
 				# In Case Cache Corrupted
 				if ($organization->id) {
-					app_log("Organization '".$this->name."' [".$this->id."] found in cache",'debug',__FILE__,__LINE__);
+					app_log("Organization '".$this->name."' [".$this->id."] found in cache",'trace',__FILE__,__LINE__);
 					return $organization;
 				}
 				else {
@@ -133,7 +153,10 @@
 				SELECT	id,
 						code,
 						name,
-						status
+						status,
+						is_reseller,
+						assigned_reseller_id,
+						notes
 				FROM	register_organizations
 				WHERE	id = ?
 			";
@@ -151,6 +174,9 @@
 				$this->name = $object->name;
 				$this->code = $object->code;
 				$this->status = $object->status;
+				if ($object->is_reseller) $this->is_reseller = true;
+				if ($object->assigned_reseller_id) $this->reseller = new Organization($object->assigned_reseller_id);
+				$this->notes = $object->notes;
 			}
 			else {
 				$this->id = null;

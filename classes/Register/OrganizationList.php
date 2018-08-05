@@ -32,6 +32,19 @@
 			else
 				$get_organizations_query .= "
 				AND		status IN ('NEW','ACTIVE')";
+			if (isset($parameters['is_reseller'])) {
+				if ($parameters['is_reseller'])
+					$get_organizations_query .= "
+					AND		is_reseller = 1";
+				else
+					$get_organizations_query .= "
+					AND		is_reseller = 0";
+			}
+			if (isset($parameters['reseller_id'])) {
+				$get_organizations_query .= "
+				AND		reseller_id = ".$GLOBALS['_database']->qstr($parameters['reseller_id'],get_magic_quotes_gpc);
+			}
+
 			$get_organizations_query .= "
 				ORDER BY name
 			";

@@ -93,10 +93,21 @@
 				";
 				$GLOBALS['_database']->Execute($update_schema_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Site::Company::schema(): ".$GLOBALS['_database']->ErrorMsg();
-					return undef;
+					$this->error = "SQL Error in Company::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
 				}
 				$current_schema_version = 1;
+
+				$update_schema_version = "
+					UPDATE	company__info
+					SET		value = $current_schema_version
+					WHERE	label = 'schema_version'
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Company::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
+				}
 			}
 			if ($current_schema_version < 2) {
 				$create_companies_query = "
@@ -149,8 +160,8 @@
 				";
 				$GLOBALS['_database']->Execute($create_locations_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in company::Companies::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-					return undef;
+					$this->error = "SQL Error in Company::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
 				}
 				$create_domains_query = "
 					CREATE TABLE IF NOT EXISTS `company_domains` (
@@ -172,21 +183,68 @@
 				";
 				$GLOBALS['_database']->Execute($create_domains_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Site::Companies::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-					return undef;
+					$this->error = "SQL Error in Company::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
 				}
 				$current_schema_version = 2;
-			}
 
-			$update_schema_version = "
-				UPDATE	company__info
-				SET		value = $current_schema_version
-				WHERE	label = 'schema_version'
-			";
-			$GLOBALS['_database']->Execute($update_schema_version);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Company::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				$update_schema_version = "
+					UPDATE	company__info
+					SET		value = $current_schema_version
+					WHERE	label = 'schema_version'
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Company::Schema::update(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
+				}
+			}
+			
+			if ($current_schema_version < 3) {
+				$create_companies_query = "
+					CREATE TABLE IF NOT EXISTS `company_departments` (
+						`id` int(5) NOT NULL auto_increment,
+						`code` varchar(32) NOT NULL default '',
+						`name` varchar(255) NOT NULL default '',
+						`description` text,
+						`manager_id` int(1) NOT NULL default '0',
+						`status` enum('ACTIVE','DELETED') NOT NULL default 'ACTIVE',
+						PRIMARY KEY  (`id`),
+						UNIQUE KEY `uk_code` (`code`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_companies_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Company::Schema::update(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
+				}
+				$create_locations_query = "
+					CREATE TABLE IF NOT EXISTS `company_department_users` (
+						`department_id` int(5) NOT NULL auto_increment,
+						`user_id` int(11) NOT NULL,
+						PRIMARY KEY  `pk_department_user` (`department_id`,`user_id`),
+						FOREIGN KEY `fk_department_id` (`department_id`) REFERENCES company_departments (`id`),
+						FOREIGN KEY `fk_user_id` (`user_id`) REFERENCES register_users (`id`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_locations_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Company::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
+				}
+
+				$current_schema_version = 3;
+
+				$update_schema_version = "
+					UPDATE	company__info
+					SET		value = $current_schema_version
+					WHERE	label = 'schema_version'
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Company::Schema::update(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
+				}
 			}
 		}
 	}
