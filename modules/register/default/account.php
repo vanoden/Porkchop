@@ -142,7 +142,14 @@
 	<input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton" onclick="return submitForm();" />
 </div>
 
-<?	if (role("register manager")) { ?>
+<?	if ($GLOBALS['_SESSION_']->customer->has_role("register manager")) { ?>
+<div class="title" style="margin-top: 12px; display: block;">Status</div>
+<select class="input" name="status">
+<?	foreach(array('NEW','ACTIVE','EXPIRED','DELETED') as $status) {?>
+<!-- <?=$status?> vs <?=$customer->status?> -->
+	<option value="<?=$status?>"<? if ($status == $customer->status) print " selected"; ?>><?=$status?></option>
+<?	}	?>
+</select>
 <span class="title" style="margin-top: 12px; display: block;">Assigned Roles</span>
 <table cellpadding="0" cellspacing="0" class="body" style="width: 800px">
 <tr><td class="label" style="width: 40px">&nbsp;</td><td class="label" style="width: 200px;">Name</td><td class="label" style="width: 520px;">Description</td></tr>

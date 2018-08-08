@@ -414,5 +414,15 @@
 			$this->update($this->id,array("status" => 'EXPIRED'));
 			return true;
 		}
+		public function last_active() {
+			$sessionList = new \Site\SessionList();
+			list($session) = $sessionList->find(array("user_id" => $this->id,"_limit" => 1,"_sort" => 'last_hit_date',"_desc" => true));
+			if ($sessionList->error) {
+				$this->error = "Error getting session: ".$sessionList->error;
+				return null;
+			}
+			if (! $session) return null;
+			return $session->last_hit_date;
+		}
     }
 ?>

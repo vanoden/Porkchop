@@ -33,7 +33,14 @@
 		width: 140px;
 	}
 	th.accountsOrgLabel {
-		width: 300px;
+		width: 200px;
+		overflow-x: hidden;
+	}
+	th.accountsStatus {
+		width: 100px;
+	}
+	th.accountsLastActive {
+		width: 150px;
 	}
 	td.value {
 		overflow: hidden;
@@ -62,12 +69,16 @@
 		<th class="label accountsFirstLabel">First Name</th>
 		<th class="label accountsLastLabel">Last Name</th>
 		<th class="label accountsOrgLabel">Organization</th>
+		<th class="label accountsStatus">Status</th>
+		<th class="label accountsLastActive">Last Active</th>
 	</tr>
 	<?	foreach ($customers as $customer) { ?>
 	<tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/account?customer_id=".$customer->id?>"><?=$customer->login?></a></td>
 		<td class="value<?=$greenbar?>"><?=$customer->first_name?></td>
 		<td class="value<?=$greenbar?>"><?=$customer->last_name?></td>
-		<td class="value<?=$greenbar?>"><?=$customer->organization->name?></td>
+		<td class="value<?=$greenbar?>"><a href="/_register/organization?organization_id=<?=$customer->organization->id?>"><?=$customer->organization->name?></a></td>
+		<td class="value<?=$greenbar?>"><?=$customer->status?></td>
+		<td class="value<?=$greenbar?>"><?=$customer->last_active()?></td>
 	</tr>
 <?		if ($greenbar) $greenbar = '';
 		else $greenbar = " greenbar";

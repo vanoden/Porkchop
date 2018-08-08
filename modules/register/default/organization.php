@@ -5,8 +5,14 @@
 	.organizationMemberFirstNameHeader {
 		width: 150px;
 	}
-	.organizationMemberLastNameHeader{
+	.organizationMemberLastNameHeader {
 		width: 150px;
+	}
+	.organizationMemberStatusHeader {
+		width: 150px;
+	}
+	.organizationMemberLastActiveHeader {
+		width: 250px;
 	}
 	input.registerInput {
 		width: 350px;
@@ -64,16 +70,20 @@
 <tr><td class="label organizationMemberLoginHeader">Login</td>
 	<td class="label organizationMemberFirstNameHeader">First Name</td>
 	<td class="label organizationMemberLastNameHeader">Last Name</td>
+	<td class="label organizationMemberStatusHeader">Status</td>
+	<td class="label organizationMemberLastActiveHeader">Last Active</td>
 </tr>
 <?	foreach ($members as $member) { ;?>
 <tr><td class="value organizationMemberLogin"><a href="/_register/account?customer_id=<?=$member->id?>"><?=$member->login?></a></td>
 	<td class="value organizationMemberFirstName"><?=$member->first_name?></td>
 	<td class="value organizationMemberLastName"><?=$member->last_name?></td>
+	<td class="value organizationMemberStatus"><?=$member->status?></td>
+	<td class="value organizationMemberLastActive" nowrap><?=$member->last_active()?></td>
 </tr>
 <?	} ?>
 <tr><td class="value organizationMemberLogin"><input type="text" name="new_login" class="value input" /></td>
 	<td class="value organizationMemberFirstName"><input type="text" name="new_first_name" class="value input" /></td>
-	<td class="value organizationMemberLastName"><input type="text" name="new_last_name" class="value input" /></td>
+	<td class="value organizationMemberLastName" colspan="3"><input type="text" name="new_last_name" class="value input" /></td>
 </tr>
 </table>
 <?	} ?>

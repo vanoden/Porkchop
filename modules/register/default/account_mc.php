@@ -35,10 +35,11 @@
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 		app_log("Account form submitted",'debug',__FILE__,__LINE__);
 		$parameters = array();
-		if (isset($_REQUEST["first_name"])) 	$parameters['first_name']	 = $_REQUEST["first_name"];
-		if (isset($_REQUEST["last_name"]))		$parameters['last_name']	 = $_REQUEST["last_name"];
-		if (isset($_REQUEST["timezone"]))		$parameters['timezone']		 = $_REQUEST["timezone"];
-		if (isset($_REQUEST["roles"]))			$parameters['roles']		 = $_REQUEST["role"];
+		if (isset($_REQUEST["first_name"])) 	$parameters['first_name']	= $_REQUEST["first_name"];
+		if (isset($_REQUEST["last_name"]))		$parameters['last_name']	= $_REQUEST["last_name"];
+		if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
+		if (isset($_REQUEST["roles"]))			$parameters['roles']		= $_REQUEST["role"];
+		if (isset($_REQUEST["status"]))			$parameters['status']		= $_REQUEST["status"];
 
 		if (isset($_REQUEST['organization_id'])) {
 			if ($GLOBALS['_SESSION_']->customer->has_role("register manager")) $parameters["organization_id"] = $_REQUEST["organization_id"];
