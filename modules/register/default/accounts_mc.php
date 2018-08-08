@@ -56,7 +56,7 @@
 		$last_offset = $total_customers - $customers_per_page;
 	}
 	else {
-		$page->error("You are not authorized to see this view");
+		$page->error = "You are not authorized to see this view";
 		$customers = array();
 	}
 ?>
