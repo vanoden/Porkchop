@@ -19,10 +19,10 @@
 	<!-- Main Body -->
 	<FORM ACTION="forgot_password" METHOD="POST">
 	<INPUT TYPE="HIDDEN" NAME="action" VALUE="submit">
-	<div class="heading_2 registerHeading">Please enter your email address in the field below.</div>
-	<div class="heading_2 registerCopy">We will send you an email with your login and a new password.</div>
+	<h1 class="registerHeading">Enter the email associated with your account</h1>
+	<p class="form_instruction">You will receive and email with a link to reset your password.</p>
 	<div class="copy_2"><INPUT id="autofocus" TYPE="TEXT" NAME="email_address" SIZE="50" class="input"></div>
-	<div><INPUT TYPE="SUBMIT" NAME="btn_submit" VALUE="Get Password"></div>
+	<div><INPUT TYPE="SUBMIT" NAME="btn_submit" VALUE="Get Password" class="button"></div>
 	</FORM>
 	<?	} ?>
 </div>
