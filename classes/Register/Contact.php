@@ -4,6 +4,7 @@
 	class Contact {
 		public $error;
 		public $id;
+		public $person;
 		public $types = array(
 			'phone'		=> "Phone Number",
 			'email'		=> "Email Address",
@@ -18,6 +19,28 @@
 				$this->id = $id;
 				$this->details();
 			}
+		}
+		public function get($type,$value) {
+			$get_object_query = "
+				SELECT	id
+				FROM	register_contacts
+				WHERE	type = ?
+				AND		value = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array(
+					$type,
+					$value
+				)
+			);
+			if (! $rs) {
+				$this->error = "SQL Error in Register::Contact::get: ".$GLOBALS['_database_']->ErrorMsg();
+				return null;
+			}
+			list($id) = $rs->FetchRow();
+			$this->id = $id;
+			return $this->details();
 		}
 		public function add($parameters = array()) {
 			if (! preg_match('/^\d+$/',$parameters['person_id'])) {

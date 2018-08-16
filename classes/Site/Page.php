@@ -190,12 +190,12 @@
 				app_log("Loading template '"."/".$this->module.".html'",'debug',__FILE__,__LINE__);
 				$html = file_get_contents(HTML."/".$this->module.".html");
 			}
-			elseif (isset($GLOBALS['_config']->default_template)) {
-				app_log("Loading template '".$GLOBALS['_config']->default_template."'",'debug',__FILE__,__LINE__);
-				if (! file_exists(HTML."/".$GLOBALS['_config']->default_template)) {
+			elseif (isset($GLOBALS['_config']->site->default_template)) {
+				app_log("Loading template '".$GLOBALS['_config']->site->default_template."'",'debug',__FILE__,__LINE__);
+				if (! file_exists(HTML."/".$GLOBALS['_config']->site->default_template)) {
 					app_log("Default template file not found!",'error',__FILE__,__LINE__);
 				}
-				$html = file_get_contents(HTML."/".$GLOBALS['_config']->default_template);
+				$html = file_get_contents(HTML."/".$GLOBALS['_config']->site->default_template);
 			}
 			elseif (file_exists(HTML."/index.html")) {
 				app_log("Loading template '/index.html'",'debug',__FILE__,__LINE__);

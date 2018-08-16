@@ -28,11 +28,11 @@
 					$GLOBALS['_REQUEST_']->client_ip
 				)
 			);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in RegisterPasswordToken::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+			$this->code = $code;
 			return $code;
 		}
 		
@@ -69,7 +69,7 @@
 				);
 				return $person_id;
 			}
-			else return 0;
+			else return null;
 		}
 	}
 ?>

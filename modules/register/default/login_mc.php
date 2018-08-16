@@ -8,6 +8,7 @@
 	### the customer id if login successful.				###
 	### A. Caravello 8/25/2002								###
 	###########################################################
+	$page = new \Site\Page();
 
 	if (isset($_POST['login_target']))
 		$target = $_POST['login_target'];
@@ -29,32 +30,33 @@
 	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
 		app_log('Auth By Token','debug',__FILE__,__LINE__);
 		# Consume Token
-		$_token = new \Register\PasswordToken();
-		$new_id = $_token->consume($_REQUEST['token']);
-		if ($_token->error) {
-			app_log("Error in password recovery: ".$_recovery->error,'error',__FILE__,__LINE__);
-			$GLOBALS['_page']->error = "Error in password recovery.  Admins have been notified.  Please try again later.";
+		$token = new \Register\PasswordToken();
+		$customer_id = $token->consume($_REQUEST['token']);
+		if ($token->error) {
+			app_log("Error in password recovery: ".$token->error,'error',__FILE__,__LINE__);
+			$page->error = "Error in password recovery.  Admins have been notified.  Please try again later.";
 		}
-		elseif ($new_id > 0) {
-			$customer = new \Register\Customer($new_id);
-			$GLOBALS['_SESSION_']->customer = $customer;
+		elseif ($customer_id > 0) {
+			$customer = new \Register\Customer($customer_id);
+			if ($customer->error) {
+				app_log("Error getting customer: ".$customer->error,'error',__FILE__,__LINE__);
+				$page->error = "Token error";
+			}
+			elseif(! $customer->id) {
+				app_log("Customer not found!",'notice',__FILE__,__LINE__);
+				$page->error = "Token error";
+			}
+			else {
+				$GLOBALS['_SESSION_']->assign($customer->id);
 
-			$GLOBALS['_SESSION_']->update(
-				$GLOBALS['_SESSION_']->id,
-				array(
-					"user_id" => $customer->id,
-					"timezone"	=> $customer->timezone
-				)
-			);
-
-			app_log("Customer ".$customer->id." logged in by token",'notice',__FILE__,__LINE__);
-			app_log("login_target = $target",'notice',__FILE__,__LINE__);
-			app_log("Redirecting to ".PATH.$target,'notice',__FILE__,__LINE__);
-			header("location: ".PATH.$target);
-			exit;
+				app_log("Customer ".$customer->id." logged in by token",'notice',__FILE__,__LINE__);
+				app_log("Redirecting to '/_register/account'",'notice',__FILE__,__LINE__);
+				header("location: /_register/account");
+				exit;
+			}
 		}
 		else {
-			$GLOBALS['_page']->error = "Sorry, your recovery token was not recognized or has expired";
+			$page->error = "Sorry, your recovery token was not recognized or has expired";
 		}
 	}
 	elseif (isset($_REQUEST['login'])) {
