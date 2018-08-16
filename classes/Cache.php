@@ -1,6 +1,7 @@
 <?
 	class Cache {
 		public $mechanism;
+		public $error;
 		public function __construct($key) {
 			$mechanism = "";
 			if (isset($GLOBALS['_config']->cache) && isset($GLOBALS['_config']->cache->mechanism)) $mechanism = $GLOBALS['_config']->cache->mechanism;
@@ -19,13 +20,34 @@
 			}
 		}
 		public function set($value) {
-			return $this->mechanism->set($value);
+			$this->mechanism->set($value);
+			if ($this->mechanism->error) {
+				$this->error = $this->mechanism->error;
+				return false;
+			}
+			else {
+				return true;
+			}
 		}
 		public function get() {
-			return $this->mechanism->get();
+			$value = $this->mechanism->get();
+			if ($this->mechanism->error) {
+				$this->error = $this->mechanism->error;
+				return null;
+			}
+			else {
+				return value;
+			}
 		}
 		public function delete() {
-			return $this->mechanism->delete();
+			$this->mechanism->delete();
+			if ($this->mechanism->error) {
+				$this->error = $this->mechanism->error;
+				return false;
+			}
+			else {
+				return true;
+			}
 		}
 	}
 ?>

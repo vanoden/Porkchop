@@ -34,13 +34,9 @@
 	# General Utilities
 	require INCLUDES.'/functions.php';
 	spl_autoload_register('load_class');
-	#require THIRD_PARTY.'/autoload.php';
 
 	# Database Abstraction
 	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
-
-	# Config Defaults
-	if (! $_config->session->cookie) $_config->session->cookie = "session_code";
 
 	# Debug Variables
 	$_debug_queries = array();
@@ -63,12 +59,7 @@
 		app_log("Error connecting to database: ".$_database->ErrorMsg(),'error',__FILE__,__LINE__);
 		exit;
 	}
-
-	###################################################
-	### Initialize Session							###
-	###################################################
-	$_SESSION_ = new \Site\Session();
-	$_SESSION_->start();
+	app_log("Database Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
 	### Connect to Memcache if so configured		###
@@ -81,7 +72,7 @@
 		if (! property_exists($GLOBALS['_config']->memcache,'port'))
 			$GLOBALS['_config']->memcache->port = 11211;
 
-		$_memcache = new Memcache;
+		$_memcache = new \Cache\Memcache;
 		$_memcache->addServer($GLOBALS['_config']->memcache->host,$GLOBALS['_config']->memcache->port);
 		$memcache_stats = @$_memcache->getExtendedStats();
 		$memcache_available = (bool) $memcache_stats[$GLOBALS['_config']->memcache->host.":".$GLOBALS['_config']->memcache->port];
@@ -97,6 +88,14 @@
 			$GLOBALS['_config']->cache_mechanism = '';
 		}
 	}
+	app_log("Cache Initiated",'trace',__FILE__,__LINE__);
+
+	###################################################
+	### Initialize Session							###
+	###################################################
+	$_SESSION_ = new \Site\Session();
+	$_SESSION_->start();
+	app_log("Session initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
 	### Parse Request								###

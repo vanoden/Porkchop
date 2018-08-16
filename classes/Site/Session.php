@@ -75,10 +75,10 @@
 			$this->cookie_path = "/";
 
 			# Store Code from Cookie
-			$request_code = $_COOKIE[$this->cookie_name];
+			if (isset($_COOKIE[$this->cookie_name])) $request_code = $_COOKIE[$this->cookie_name];
 
 			# Was a 'Valid looking' Session Given
-			if ($this->valid_code($request_code)) {
+			if (isset($request_code) && $this->valid_code($request_code)) {
 				# Get Existing Session Information
 				$this->get($request_code);
 				if ($this->id) {
@@ -90,7 +90,7 @@
 					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST']);
 				}
 			}
-			elseif ($request_code) {
+			elseif (isset($request_code)) {
 				app_log("Invalid session code '$request_code' sent from client",'notice',__FILE__,__LINE__);
 			}
 			else {
@@ -164,8 +164,13 @@
 
 			$cache_key = "domain[".$domain_name."]";
 
+			$cache = new \Cache($cache_key);
+			if ($cache->error) {
+				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
+			}
+
 			# Cached Customer Object, Yay!
-			if ($domain = cache_get($cache_key)) {
+			if ($domain = $cache->get()) {
 				$this->company = $domain->company_id;
 				$this->location = $domain->location_id;
 				$this->domain = $domain->domain_name;
@@ -199,7 +204,7 @@
 					$this->domain = $domain->domain_name;
 					$this->status = $domain->status;
 
-					cache_set($cache_key,$domain);
+					$cache->set($domain);
 					return $domain;
 				}
 				else {
@@ -320,7 +325,11 @@
 			$cache_key = "session[".$this->id."]";
 
 			# Cached Customer Object, Yay!	
-			if (($this->id) and ($session = cache_get($cache_key))) {
+			$cache = new \Cache($cache_key);
+			if ($cache->error) {
+				app_log("Cache error in Site::Session::get(): ".$cache->error,'error',__FILE__,__LINE__);
+			}
+			elseif (($this->id) and ($session = $cache->get())) {
 				if ($session->code) {
 					$this->code = $session->code;
 					$this->company = new \Company\Company($session->company_id);
@@ -365,7 +374,7 @@
 				$this->first_hit_date = $session->first_hit_date;
 				$this->last_hit_date = $session->last_hit_date;
 
-				if ($session->id) cache_set($cache_key,$session,600);
+				if ($session->id) $cache->set($session,600);
 				return $session;
 			}
 		}
@@ -386,7 +395,8 @@
 			}
 
 			$cache_key = "session[".$this->id."]";
-			cache_unset($cache_key);
+			$cache = new \Cache($cache_key);
+			$cache->unset();
 
 			$check_session_query = "
 				SELECT  user_id
@@ -451,7 +461,7 @@
 		function update ($parameters) {
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
-			cache_unset($cache_key);
+			$cache->unset();
 			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
 
 			# Make Sure User Has Privileges to view other sessions
@@ -459,8 +469,6 @@
 				$this->error = "No privileges to change session";
 				return null;
 			}
-			$cache_key = "session[".$this->id."]";
-			cache_unset($cache_key);
 
 			$ok_params = array(
 				"user_id"	=> "user_id",

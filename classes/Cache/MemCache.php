@@ -3,24 +3,41 @@
 	
 	class MemCache {
 		public $key;
+		private $service;
+		public $error;
 		public function __construct($key) {
+			if (! isset($GLOBALS['_memcache'])) {
+				$this->error = "Memcache not initiated";
+				return null;
+			};
+			$this->service = $GLOBALS['_memcache'];
 			$this->key = $key;
 		}
 
 		public function set($value,$expires=0) {
-			$result = $GLOBALS['_memcache']->set($key,$value,0,$expires);
+			$result = $this->service->set($key,$value,0,$expires);
 			if (! $result) {
-				app_log("Error setting cache: ".$GLOBALS['_config']->getResultCode(),'error',__FILE__,__LINE__);
+				app_log("Error setting cache: ".$this->service->getResultCode(),'error',__FILE__,__LINE__);
+				$this->error = "Errot setting cache";
+				return null;
 			}
 			return $result;
 		}
 
 		public function delete() {
-			return $GLOBALS['_memcache']->delete($this->key);
+			return $this->service->delete($this->key);
 		}
 
 		public function get() {
-			return $GLOBALS['_memcache']->get($this->key);
+			try {
+				$value = $this->service->get($this->key);
+			}
+			catch (Exception $e) {
+				app_log(print_r(debug_backtrace(),true),'trace',__FILE__,__LINE__);
+				$this->error = "Error getting cache: $e->getMessage()";
+				return null;
+			}
+			return $value;
 		}
 	}
 ?>
