@@ -499,7 +499,7 @@
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$alter_table_query = "
-					ALTER TABLE `register_organizations` ADD COLUMN `notes` text'
+					ALTER TABLE `register_organizations` ADD COLUMN `notes` text
 				";
 				$GLOBALS['_database']->Execute($alter_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
