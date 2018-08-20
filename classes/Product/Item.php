@@ -8,6 +8,7 @@
 		public $description;
 		public $type;
 		private $_flat = false;
+		public $_cached = 0;
 
 		public function __construct($id = 0,$flat = false) {
 			if ($flat) $this->_flat = true;
@@ -58,7 +59,7 @@
 			);
             if (! $rs) {
                 $this->error = $GLOBALS['_database']->ErrorMsg();
-                return 0;
+                return null;
             }
 			else {
 				list($this->id) = $rs->FetchRow();
@@ -81,7 +82,8 @@
 
 			# Bust Cache
 			$cache_key = "product[".$this->id."]";
-			cache_unset($cache_key);
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cacke_key);
+			$cache_item->delete();
 
 			$ok_params = array(
 				"status"		=> '/^\w+$/',
@@ -185,9 +187,10 @@
 			app_log("Product::Item::details()",'trace',__FILE__,__LINE__);
 
 			$cache_key = "product[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 
 			# Cached Organization Object, Yay!
-			if (($this->id) and ($product = cache_get($cache_key))) {
+			if (($this->id) and ($product = $cache_item->get())) {
 				$product->_cached = 1;
 				$this->id = $product->id;
 				$this->name = $product->name;
@@ -209,6 +212,9 @@
 				else {
 					$this->error = "Product ".$this->id." returned unpopulated cache";
 				}
+			}
+			else {
+				$this->_cached = 0;
 			}
 
 			# Prepare Query to Get Product Details
@@ -241,8 +247,11 @@
 
 			# Cache Product Object
 			app_log("Setting cache key ".$cache_key);
-			if ($object->id) $result = cache_set($cache_key,$object);
-			app_log("Cache result: ".$result);
+			if ($object->id)
+				if ($cache_item->set($object))
+					app_log("Cache result: success");
+				else
+					app_log("Cache result: failed: ".$cache_item->error);
 
 			$this->metadata = $this->getMeta();
 			$this->images = $this->images();

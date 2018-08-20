@@ -40,7 +40,7 @@
 		public function set($key,$value,$expires=0) {
 			if ($this->_connected) {
 				if ($this->_service->set($key,$value,$expires)) return true;
-				else $this->error = "Error storing cache value";
+				else $this->error = "Error storing cache value for '$key': ".$this->_service->getResultCode();
 			}
 			else {
 				$this->error = "Cache client not connected";

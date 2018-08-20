@@ -175,6 +175,7 @@
 	}
 
 	# Unset Templates
+	install_log("Clear old template settings");
 	$pagelist = new \Site\PageList();
 	$pages = $pagelist->find();
 	foreach ($pages as $page) {
@@ -197,7 +198,9 @@
 		array("monitor","comm_dashboard"),
 	);
 
+	install_log("Add new template settings");
 	foreach ($set_template_array as $array) {
+		install_log("Add template 'admin.html' to $module::$view");
 		$module = $array[0];
 		$view = $array[1];
 		$page = new \Site\Page($module,$view);
@@ -221,6 +224,7 @@
 	}
 
 	# Check for Calibration Credit Product
+	install_log("Check Calibration Verification Product");
 	if (isset($GLOBALS['_config']->spectros->calibration_product) and strlen($GLOBALS['_config']->spectros->calibration_product)) {
 		$product = new \Product\Item();
 		$product->get($GLOBALS['_config']->spectros->calibration_product);
@@ -246,6 +250,7 @@
 	}
 
 	# Check for Dashboards
+	install_log("Check default dashboard");
 	$dashboard = new \Monitor\Dashboard();
 	$dashboard->get('default');
 	if (! $dashboard->id) {
@@ -253,6 +258,7 @@
 		$dashboard->add(array("name" => 'default','template' => '/dashboards/default.html'));
 		if ($dashboard->error) install_fail("Cannot find or add default dashboard: ".$dashboard->error);
 	}
+	install_log("Check concept dashboard");
 	$dashboard = new \Monitor\Dashboard();
 	$dashboard->get('concept');
 	if (! $dashboard->id) {

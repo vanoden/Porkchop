@@ -141,7 +141,13 @@
 
 	if ($_REQUEST['login'] && $_REQUEST['password']) {
 		$customer = new \Register\Customer();
-		if ($customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
+		if ($_SESSION_->customer->id) {
+			$customer = new \Register\Customer($_SESSION_->customer->id);
+			test_log("Customer already signed in");
+			if ($customer->_cached) test_log("Customer already cached");
+			if ($customer->organization->_cached) test_log("Organization already cached");
+		}
+		elseif ($customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
 			test_log("Customer ".$customer->code." authenticated");
 			$_SESSION_->assign($customer->id);
 			if ($_SESSION_->error) {
@@ -150,6 +156,8 @@
 			else {
 				test_log("Session assigned to customer");
 			}
+			if ($customer->_cached) test_log("Customer already cached");
+			if ($customer->organization->_cached) test_log("Organization already cached");
 		}
 		else {
 			test_fail("Customer authentication failed");
@@ -162,7 +170,24 @@
 		test_fail("Error initializing page: ".$page->error,'error');
 	}
 	test_log("Page loaded successfully");
-	
+
+	$product = new \Product\Item();
+	$product->get($GLOBALS['_config']->spectros->calibration_product);
+	if ($product->error) {
+		test_fail("Error getting product: ".$product->error);
+	}
+	if (! $product->id) {
+		test_fail("Calibration product not found");
+	}
+
+	test_log("Calibration product found");
+	if ($product->_cached) {
+		test_log("Product found in cache");
+	}
+	else test_log("Product not in cache");
+
+	test_log("Test completed");
+
 	function test_log($message = '',$level = 'info') {
 		print date('Y/m/d H:i:s');
 		print " [$level]";

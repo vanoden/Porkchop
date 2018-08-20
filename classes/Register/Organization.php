@@ -10,6 +10,7 @@
 		public $is_reseller;
 		public $reseller;
 		public $notes;
+		public $_cached;
 
 		public function __construct($id = 0) {
 			# Clear Error Info
@@ -57,7 +58,8 @@
 			
 			# Bust Cache
 			$cache_key = "organization[".$this->id."]";
-			cache_unset($cache_key);
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
 
 			$update_object_query = "
 				UPDATE	register_organizations
@@ -125,9 +127,9 @@
 			$this->error = null;
 
 			$cache_key = "organization[".$this->id."]";
-
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			# Cached Organization Object, Yay!
-			if (($this->id) and ($organization = cache_get($cache_key))) {
+			if (($this->id) and ($organization = $cache_item->get())) {
 				$organization->_cached = 1;
 				$this->id = $organization->id;
 				$this->name = $organization->name;
@@ -185,7 +187,7 @@
 
 			# Cache Customer Object
 			app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
-			if ($object->id) $result = cache_set($cache_key,$object);
+			if ($object->id) $result = $cache_item->set($object);
 			app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);
 
 			return $object;
