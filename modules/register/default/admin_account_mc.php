@@ -8,14 +8,23 @@
 
 	$page = new \Site\Page(array("module" => 'register',"view" => 'account'));
 
-	if (isset($GLOBALS['_SESSION_']->customer->id)) {
-		$customer_id = $GLOBALS['_SESSION_']->customer->id;
-		$customer = new \Register\Customer($customer_id);
+	# Security - Only Register Module Operators or Managers can see other customers
+	if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+		$page->error("Permission Denied");
+		return;
 	}
-	else {
-		header("location: /_register/login?target=_register/account");
-		exit;
+	if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/',$_REQUEST['customer_id'])) $customer_id = $_REQUEST['customer_id'];
+	elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
+		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
+		$customer = new \Register\Customer();
+		$customer->get($code);
+		if ($customer->id)
+			$customer_id = $customer->id;
+		else
+			$page->error = "Customer not found";
 	}
+	else $customer_id = $GLOBALS['_SESSION_']->customer->id;
+
 	app_log($GLOBALS['_SESSION_']->customer->login." accessing account of customer ".$customer_id,'notice',__FILE__,__LINE__);
 
 	#######################################
@@ -27,6 +36,12 @@
 		if (isset($_REQUEST["first_name"])) 	$parameters['first_name']	= $_REQUEST["first_name"];
 		if (isset($_REQUEST["last_name"]))		$parameters['last_name']	= $_REQUEST["last_name"];
 		if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
+		if (isset($_REQUEST["roles"]))			$parameters['roles']		= $_REQUEST["role"];
+		if (isset($_REQUEST["status"]))			$parameters['status']		= $_REQUEST["status"];
+
+		if (isset($_REQUEST['organization_id'])) {
+			$parameters["organization_id"] = $_REQUEST["organization_id"];
+		}
 		if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
 			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 				$page->error .= "Passwords do not match";
@@ -36,8 +51,9 @@
 				$parameters["password"] = $_REQUEST["password"];
 		}
 
-		if ($customer->id) {
+		if ($customer_id) {
 			app_log("Updating customer ".$customer_id,'debug',__FILE__,__LINE__);
+			$customer = new \Register\Customer($customer_id);
 
 			$customer->update($parameters);
 			if ($customer->error) {
@@ -47,7 +63,6 @@
 			}
 		}
 		else {
-			### THIS NEVER HAPPENS ###
 			app_log("New customer registration",'debug',__FILE__,__LINE__);
 			# Default Login to Email Address
 			if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['email_address'];

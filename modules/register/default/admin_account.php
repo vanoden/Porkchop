@@ -40,7 +40,7 @@
 		float: left;
 	}
 </style>
-<form name="register" action="<?=PATH?>/_register/account" method="POST">
+<form name="register" action="<?=PATH?>/_register/admin_account" method="POST">
 <input type="hidden" name="target" value="<?=$target?>"/>
 <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
 <span class="title">Account Settings</span>
@@ -56,6 +56,7 @@
 <div id="accountLoginQuestion" class="registerQuestion">
 	<span class="label registerLabel registerLoginLabel">Login:</span>
 	<span class="value"><?=$customer->login?></span>
+	<span class="value">[<?=$customer->auth_method?>]</span>
 </div>
 <div id="accountFirstNameQuestion" class="registerQuestion">
 	<span class="label registerLabel registerFirstNameLabel">*First Name:</span>
@@ -67,7 +68,12 @@
 </div>
 <div id="accountOrganizationQuestion" class="registerQuestion">
 	<span class="label registerLabel registerCustom1Label">*Organization:</span>
-	<span class="value registerValue"><?=$customer->organization->name?></span>
+	<select class="value input registerValue" name="organization_id">
+		<option value="">Select</option>
+	<?	foreach ($organizations as $organization) {	?>
+		<option value="<?=$organization->id?>"<? if ($organization->id == $customer->organization->id) print " selected"; ?>><?=$organization->name?></option>
+	<?	} ?>
+	</select>
 </div>
 <div id="accountTimeZoneQuestion" class="registerQuestion">
 	<span class="label registerLabel registerTimeZoneLabel">*Time Zone:</span>
@@ -129,4 +135,24 @@
 <div id="accountFormSubmit">
 	<input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton" onclick="return submitForm();" />
 </div>
+
+<div class="title" style="margin-top: 12px; display: block;">Status</div>
+<select class="input" name="status">
+<?	foreach(array('NEW','ACTIVE','EXPIRED','DELETED') as $status) {?>
+<!-- <?=$status?> vs <?=$customer->status?> -->
+	<option value="<?=$status?>"<? if ($status == $customer->status) print " selected"; ?>><?=$status?></option>
+<?	}	?>
+</select>
+<span class="title" style="margin-top: 12px; display: block;">Assigned Roles</span>
+<table cellpadding="0" cellspacing="0" class="body" style="width: 800px">
+<tr><td class="label" style="width: 40px">&nbsp;</td><td class="label" style="width: 200px;">Name</td><td class="label" style="width: 520px;">Description</td></tr>
+<?	$greenbar = '';
+	foreach($all_roles as $role) {
+?>
+<tr><td class="value<?=$greenbar?>"><input type="checkbox" name="role[<?=$role->id?>]" value="1" <? if ($customer->has_role($role->name)) print " CHECKED";?>/></td><td class="value<?=$greenbar?>"><?=$role->name?></td><td class="value<?=$greenbar?>"><?=$role->description?></td></tr>
+<?		if ($greenbar) $greenbar = '';
+		else $greenbar = ' greenbar';
+	}
+?>
+</table>
 </form>

@@ -11,6 +11,7 @@
 		public $code;
 		public $message;
 		public $department;
+		public $_cached = 0;
 
 		public function __construct($id = 0) {
 			# Clear Error Info
@@ -43,7 +44,7 @@
 			$cache_key = "customer[".$this->id."]";
 
 			# Cached Customer Object, Yay!
-			$cache = new \Cache($cache_key);
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			if (($this->id) and ($customer = $cache->get())) {
 				$this->first_name = $customer->first_name;
 				$this->last_name = $customer->last_name;
@@ -118,6 +119,7 @@
 			$this->status = $customer->status;
 			$this->timezone = $customer->timezone;
 			$this->auth_method = $customer->auth_method;
+			$this->_cached = 0;
 
 			# Cache Customer Object
 			if ($customer->id) cache_set($cache_key,$customer);
@@ -275,7 +277,8 @@
 
 			# Bust Cache
 			$cache_key = "customer[".$this->id."]";
-			cache_unset($cache_key);
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache->delete();
 
 			# Get Updated Information
 			return $this->details();

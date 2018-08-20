@@ -74,7 +74,7 @@
 	<td class="label organizationMemberLastActiveHeader">Last Active</td>
 </tr>
 <?	foreach ($members as $member) { ;?>
-<tr><td class="value organizationMemberLogin"><a href="/_register/account?customer_id=<?=$member->id?>"><?=$member->login?></a></td>
+<tr><td class="value organizationMemberLogin"><a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->login?></a></td>
 	<td class="value organizationMemberFirstName"><?=$member->first_name?></td>
 	<td class="value organizationMemberLastName"><?=$member->last_name?></td>
 	<td class="value organizationMemberStatus"><?=$member->status?></td>

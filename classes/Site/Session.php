@@ -33,6 +33,10 @@
 			}
 		}
 
+		public function cached() {
+			return $this->_cached;
+		}
+
 		public function start() {
 			# Fetch Company Information
 			$this->location = new \Company\Location();
@@ -164,7 +168,7 @@
 
 			$cache_key = "domain[".$domain_name."]";
 
-			$cache = new \Cache($cache_key);
+			$cache = new \Cache\Item($_CACHE_,$cache_key);
 			if ($cache->error) {
 				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
 			}
@@ -324,8 +328,8 @@
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
 
-			# Cached Customer Object, Yay!	
-			$cache = new \Cache($cache_key);
+			# Cached Customer Object, Yay!
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			if ($cache->error) {
 				app_log("Cache error in Site::Session::get(): ".$cache->error,'error',__FILE__,__LINE__);
 			}
@@ -395,8 +399,8 @@
 			}
 
 			$cache_key = "session[".$this->id."]";
-			$cache = new \Cache($cache_key);
-			$cache->unset();
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache->delete();
 
 			$check_session_query = "
 				SELECT  user_id

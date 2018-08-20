@@ -122,15 +122,15 @@
     }
 
 	function cache_set($key,$value,$expires=0) {
-		$cache = new Cache($key);
+		$cache = new \Cache\Item($GLOBALS['_CACHE_'],$key);
 		return $cache->set($value);
 	}
 	function cache_unset($key) {
-		$cache = new Cache($key);
+		$cache = new \Cache\Item($GLOBALS['_CACHE_'],$key);
 		return $cache->delete();
 	}
 	function cache_get($key) {
-		$cache = new Cache($key);
+		$cache = new \Cache\Item($GLOBALS['_CACHE_'],$key);
 		return $cache->get();
 	}
 

@@ -1,12 +1,10 @@
 <?PHP	
 	###################################################################
-	### html/index.php												###
+	### core/test.php												###
 	###																###
-	### This is the bootstrap for the porkchop CMS. Your webserver 	###
-	### should rewrite all requests whose URI starts with /_ here	###
-	### as these are designated module views.						###
+	### This is a unit test for the porkchop CMS.					###
 	###																###
-	### Copyright (C) 2014 Anthony Caravello						###
+	### Copyright (C) 2018 A. Caravello, RootSeven Technologies		###
 	###																###
     ### This program is free software: you can redistribute it and/	###
 	### or modify it under the terms of the GNU General Public		###
@@ -24,7 +22,6 @@
 	### <http://www.gnu.org/licenses/>.								###
 	###################################################################
 
-
 	###################################################
 	### Load Dependencies							###
 	###################################################
@@ -41,6 +38,9 @@
 	# Debug Variables
 	$_debug_queries = array();
 
+	test_log("Site: ".$GLOBALS['_config']->site->name);
+	test_log("Hostname: ".$GLOBALS['_config']->site->hostname);
+
 	###################################################
 	### Connect to Database							###
 	###################################################
@@ -56,10 +56,12 @@
 	if ($_database->ErrorMsg()) {
 		print "Error connecting to database:<br>\n";
 		print $_database->ErrorMsg();
-		app_log("Error connecting to database: ".$_database->ErrorMsg(),'error',__FILE__,__LINE__);
+		test_fail("Error connecting to database: ".$_database->ErrorMsg());
 		exit;
 	}
-	app_log("Database Initiated",'trace',__FILE__,__LINE__);
+	test_log("Database Initiated",'trace');
+	$db_info = $_database->serverInfo();
+	test_log("DB Version ".$db_info['description']);
 
 	###################################################
 	### Connect to Memcache if so configured		###
@@ -68,14 +70,40 @@
 	if ($_CACHE_->error) {
 		test_fail('Unable to initiate Cache client: '.$_CACHE_->error);
 	}
-	app_log("Cache Initiated",'trace',__FILE__,__LINE__);
+
+	test_log("'".$_CACHE_->mechanism()."' Cache Initiated",'trace');
+
+	$cache_item = new \Cache\Item($_CACHE_,'_test_key');
+	if ($cache_item->error) test_fail('Cache key creation failed: '.$cache_item->error);
+
+	if ($_CACHE_->mechanism() == 'Memcache') {
+		list($cache_service,$cache_stats) = each($_CACHE_->stats());
+		test_log("Memcached host ".$cache_service." has ".$cache_stats['curr_items']." items");
+	}
+
+	$test_value = microtime();
+	$cache_item->set($test_value);
+	if ($cache_item->error) test_fail('Cache set failed: '.$cache_item->error);
+	else {
+		$cache_result = $cache_item->get();
+		if ($cache_item->error) test_fail('Cache get failed: '.$cache_item->error);
+		elseif ($cache_result == $test_value) test_log("Cached and recovered value '$cache_result' successfully");
+		else (test_fail("Cache test failed: returned value '$cache_result' doesn't match"));
+	}
 
 	###################################################
 	### Initialize Session							###
 	###################################################
 	$_SESSION_ = new \Site\Session();
 	$_SESSION_->start();
-	app_log("Session initiated",'trace',__FILE__,__LINE__);
+	if ($_SESSION_->error) test_fail('Error starting session: '.$_SESSION_->error);
+	else test_log("Session '".$_SESSION_->code."' initiated",'trace');
+	if ($_SESSION_->cached()) test_log("Session already cached");
+
+	$_SESSION_->details();
+	if ($_SESSION_->cached()) test_log("Session stored in cache");
+	else test_fail("Session not cached");
+	test_log("<a href=\"/_admin/memcached_item?key=session[".$_SESSION_->id."]\">".$_SESSION_->code."</a>");
 
 	###################################################
 	### Parse Request								###
@@ -90,36 +118,60 @@
 	$_REQUEST_->user_agent = $_SERVER['HTTP_USER_AGENT'];
 	$_REQUEST_->timer = microtime();
 
+	# Access Logging in Application Log
+	test_log("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."'",'info');
+
 	###################################################
 	### Build Dynamic Page							###
 	###################################################
-	# Don't Cache this Page
-	header("Expires: 0");
-	header("Cache-Control: no-cache, must-revalidate");
-
 	# Create Session
 	$_SESSION_->start();
 	if ($_SESSION_->error) {
 		app_log($_SESSION_->error,'error',__FILE__,__LINE__);
 		exit;
 	}
+	test_log('Company: '.$_SESSION_->company->name,'info');
+	test_log('Domain '.$_SESSION_->domain->name,'info');
 
 	# Create Hit Record
 	$_SESSION_->hit();
 	if ($_SESSION_->message) {
-	    $page_message = $_SESSION_->message;
+	    test_log("Session message: ".$_SESSION_->message);
 	}
 
-	# Access Logging in Application Log
-	app_log("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."'",'info',__FILE__,__LINE__);
-
+	if ($_REQUEST['login'] && $_REQUEST['password']) {
+		$customer = new \Register\Customer();
+		if ($customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
+			test_log("Customer ".$customer->code." authenticated");
+			$_SESSION_->assign($customer->id);
+			if ($_SESSION_->error) {
+				test_fail("Unable to assign session to customer: ".$_SESSION_->error);
+			}
+			else {
+				test_log("Session assigned to customer");
+			}
+		}
+		else {
+			test_fail("Customer authentication failed");
+		}
+	}
 	# Load Page Information
-	$_page = new \Site\Page();
-	$_page->get($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
-	if ($_page->error) {
-		print "Error: ".$_page->error;
-		app_log("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
+	$page = new \Site\Page();
+	$page->get('register','api');
+	if ($page->error) {
+		test_fail("Error initializing page: ".$page->error,'error');
+	}
+	test_log("Page loaded successfully");
+	
+	function test_log($message = '',$level = 'info') {
+		print date('Y/m/d H:i:s');
+		print " [$level]";
+		print ": $message<br>\n";
+		flush();
+	}
+
+	function test_fail($message) {
+		test_log("Upgrade failed: $message",'error');
 		exit;
 	}
-	print $_page->load_template();
 ?>
