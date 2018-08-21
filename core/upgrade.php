@@ -63,6 +63,18 @@
 		install_fail("Error connecting to database: ".$_database->ErrorMsg());
 	}
 
+	###################################################
+	### Connect to Memcache if so configured		###
+	###################################################
+	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
+	if ($_CACHE_->error) {
+		install_fail('Unable to initiate Cache client: '.$_CACHE_->error);
+	}
+	if ($_CACHE_->mechanism() == 'Memcache') {
+		list($cache_service,$cache_stats) = each($_CACHE_->stats());
+		install_log("Memcached host ".$cache_service." has ".$cache_stats['curr_items']." items");
+	}
+
 	# Upgrade Database
 	$class = new \Product\Schema();
 	install_log("Product::Schema: version ".$class->version());
