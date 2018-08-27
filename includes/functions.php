@@ -83,6 +83,15 @@
 			$minute = 0;
 			$second = 0;
 		}
+		elseif (preg_match('/^(\d+)\/(\d+)$/',$date,$matches)) {
+			# mm/dd/yyyy
+			$year = date('Y');
+			$month = $matches[1];
+			$day = $matches[2];
+			$hour = 0;
+			$minute = 0;
+			$second = 0;
+		}
 		elseif (preg_match('/^(\d+)\/(\d+)\s(\d+)\:(\d+)\:?(\d+)*/',$date,$matches)) {
 			# mm/dd hh:mm:ss
 			$year = date('Y');
