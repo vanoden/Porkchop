@@ -10,7 +10,7 @@
 
 	# Security - Only Register Module Operators or Managers can see other customers
 	if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
-		$page->error("Permission Denied");
+		$page->error = "Permission Denied";
 		return;
 	}
 	if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/',$_REQUEST['customer_id'])) $customer_id = $_REQUEST['customer_id'];
