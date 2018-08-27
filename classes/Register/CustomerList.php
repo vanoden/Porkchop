@@ -5,6 +5,61 @@
 		public $error;
 		public $count = 0;
 
+		public function flagActive() {
+			$find_session_query = "
+				SELECT 	MAX(user_id)
+				FROM	session_sessions
+				WHERE	user_id > 0
+				GROUP BY user_id
+			";
+			$rs = $GLOBALS['_database']->Execute($find_session_query);
+			if (! $rs) {
+				$this->error = "SQL Error in Register::CustomerList::activate(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			$counter = 0;
+			while (list($id) = $rs->FetchRow()) {
+				$counter ++;
+				$update_customer_query = "
+					UPDATE	register_users
+					SET		status = 'ACTIVE'
+					WHERE	id = ?
+				";
+				$GLOBALS['_database']->Execute(
+					$update_customer_query,
+					array($id)
+				);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Register::CustomerList::activate(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
+				}
+			}
+			app_log("Activated ".$counter." customers",'info',__FILE__,__LINE__);
+			return $counter;
+		}
+		public function expireInactive($age = 14) {
+			if (! is_numeric($age)) {
+				$this->error = "Age must be a number";
+				return null;
+			}
+
+			$update_people_query = "
+				UPDATE	register_users
+				SET		status = 'EXPIRED'
+				WHERE	status = 'NEW'
+				AND		date_created < date_sub(sysdate(),INTERVAL ? day)
+			";
+
+			$GLOBALS['_database']->Execute(
+				$update_people_query,
+				array($age)
+			);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Register::CustomerList::expireInactive(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			return true;
+		}
 		public function expire($date_threshold) {
 			if (get_mysql_date($date_threshold))
 				$date = get_mysql_date($date_threshold);
@@ -65,15 +120,16 @@
 			}
 			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
-					$count = 0;
+					$icount = 0;
 					$find_person_query .= "
 					AND	status IN (";
 					foreach ($parameters['status'] as $status) {
-						if ($count > 0) $find_person_query .= ","; 
-						$count ++;
+						if ($icount > 0) $find_person_query .= ","; 
+						$icount ++;
 						if (preg_match('/^[\w\-\_\.]+$/',$status))
-						$find_person_query .= $status;
+						$find_person_query .= "'".$status."'";
 					}
+					$find_person_query .= ")";
 				}
 				else {
 					$find_person_query .= "
@@ -123,7 +179,7 @@
 					$find_person_query .= "
 					LIMIT	".$parameters['_limit'];
 			}
-
+			query_log($find_person_query);
 			$rs = $GLOBALS['_database']->Execute($find_person_query);
 			if (! $rs) {
 				$this->error = "SQL Error in RegisterPerson::find: ".$GLOBALS['_database']->ErrorMsg();
@@ -132,13 +188,13 @@
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
-				if ($count == false) {
+				if (! $count) {
 					$customer = new Customer($id);
 					array_push($people,$customer);
 				}
 				$this->count ++;
 			}
-			if ($count == true) return $this->count;
+			if ($count) return $this->count;
 			return $people;
 		}
 		public function search($search_string,$limit = 0,$offset = 0) {
