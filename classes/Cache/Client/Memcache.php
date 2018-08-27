@@ -24,6 +24,9 @@
 			}
 		}
 
+		public function flush() {
+			return $this->_service->flush();
+		}
 		public function stats() {
 			return $this->_service->getStats();
 		}

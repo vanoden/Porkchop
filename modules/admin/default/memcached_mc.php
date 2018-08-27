@@ -1,3 +1,13 @@
+<?php
+	if ($_REQUEST['flush']) {
+		if ($GLOBALS['_CACHE_']->flush()) {
+			print "Cache flushed";
+		}
+		else {
+			print "Flush failed: ".$GLOBALS['_CACHE_']->error();
+		}
+	}
+?>
 <table>
 <?php
 	$keys = $GLOBALS['_CACHE_']->keys();
