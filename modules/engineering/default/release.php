@@ -1,0 +1,42 @@
+<div style="width: 756px;">
+<form name="release_form" action="/_engineering/release" method="post">
+<input type="hidden" name="release_id" value="<?=$release->id?>" />
+<div class="title">Engineering Release</div>
+<?	if ($page->error) { ?>
+<div class="form_error"><?=$page->error?></div>
+<?	}
+	if ($page->success) { ?>
+<div class="form_success"><?=$page->success?></div>
+<?	} ?>
+<div class="container_narrow">
+	<div class="label">Code</div>
+	<input type="text" name="code" class="value input" value="<?=$form['code']?>" />
+</div>
+<div class="container_narrow">
+	<div class="label">Title</div>
+	<input type="text" name="title" class="value input" style="width: 240px" value="<?=$form['title']?>" />
+</div>
+<div class="container_narrow">
+	<div class="label">Status</div>
+	<select name="status" class="value input">
+		<option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
+		<option value="released"<? if ($form['status'] == "RELEASED") print " selected"; ?>>Released</option>
+	</select>
+</div>
+<div class="container_narrow">
+	<div class="label">Date Scheduled</div>
+	<input type="text" name="date_scheduled" class="value input" value="<?=$form['date_scheduled']?>" />
+</div>
+<div class="container_narrow">
+	<div class="label">Date Released</div>
+	<input type="text" name="date_released" class="value input" value="<?=$form['date_released']?>" />
+</div>
+<div class="container">
+	<div class="label">Description</div>
+	<textarea name="description" style="width: 700px; height: 300px;"><?=$form['description']?></textarea>
+</div>
+<div class="container">
+	<input type="submit" name="btn_submit" class="button" value="Submit">
+</div>
+</form>
+</div>
