@@ -1,4 +1,4 @@
-<?PHP
+ <?PHP
 	###################################################
 	### accounts_mc.php								###
 	### This program collects registration info		###
@@ -21,30 +21,20 @@
 		# Initialize Parameter Array
 		$find_parameters = array();
 		
-		# Get Count before Pagination
-		if (isset($_REQUEST['search']) && strlen($_REQUEST['search'])) {
-			$total_customers = $customer_list->search($_REQUEST['search'],true);
-			if ($customer_list->error) {
-				$page->error = "Search error: ".$customer_list->error;
-				return;
-			}
-			else {
-				$page->success = "Search returned $total_customers records";
-			}
-		}
-		else {
-			$customer_list->find($find_parameters,true);
-			$total_customers = $customer_list->count;
-		}
+		$find_parameters['status'] = array('NEW','ACTIVE');
+		if ($_REQUEST['deleted']) array_push($find_parameters['status'],'DELETED');
+		if ($_REQUEST['expired']) array_push($find_parameters['status'],'EXPIRED');
+		if ($_REQUEST['hidden']) array_push($find_parameters['status'],'HIDDEN');
+		if (isset($_REQUEST['search']) && strlen($_REQUEST['search'])) $find_parameters['_search'] = $_REQUEST['search'];
 
-		if ($_REQUEST['search']) {
-			$customers = $customer_list->search($_REQUEST['search'],$customers_per_page,$_REQUEST['start']);
-		}
-		else {
-			$find_parameters["_limit"] = $customers_per_page;
-			$find_parameters["_offset"] = $_REQUEST['start'];
-			$customers = $customer_list->find($find_parameters);
-		}
+		# Get Count before Pagination
+		$customer_list->find($find_parameters,true);
+		$total_customers = $customer_list->count;
+
+		# Apply Pagination and Get Records
+		$find_parameters["_limit"] = $customers_per_page;
+		$find_parameters["_offset"] = $_REQUEST['start'];
+		$customers = $customer_list->find($find_parameters);
 		if ($customer_list->error) $page->error = "Error finding customers: ".$customer_list->error;
 		
 		if ($_REQUEST['start'] < $customers_per_page)
