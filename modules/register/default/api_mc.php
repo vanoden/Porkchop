@@ -463,12 +463,11 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.contact.xsl';
 
 		# Initiate Customer Object
-		$_user = new \Register\Customer();
+		$user = new \Register\Customer($_REQUEST['id']);
 
 		# Add Event
-		$_user->notifyContact(
+		$user->notifyContact(
 			array (
-				"id"			=> $_REQUEST['id'],
 				"subject"		=> $_REQUEST['subject'],
 				"body"			=> $_REQUEST['body'],
 				"from_address"	=> $_REQUEST['from_address'],
@@ -477,7 +476,7 @@
 		);
 
 		# Error Handling
-		if ($_user->error) error($_user->error);
+		if ($user->error) error($user->error);
 		
 		$response = new stdClass();
 		$response->success = 1;
@@ -498,11 +497,13 @@
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error("Permission Denied");
+
 		# Initiate Object
-		$_organization = new \Register\Organization();
+		$organization = new \Register\Organization();
 
 		# Add Object
-		$organization = $_organization->add(
+		$organization->add(
 			array(
 				"name"		=> $_REQUEST['name'],
 				"code"		=> $_REQUEST['code'],
@@ -510,7 +511,7 @@
 		);
 
 		# Error Handling
-		if ($_organization->error) error($_organization->error);
+		if ($organization->error) error($organization->error);
 		
 		$response->success = 1;
 		$response->organization = $organization;
@@ -525,14 +526,21 @@
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organization.xsl';
 
+		if (isset($_REQUEST['code']))
+			if ($GLOBALS['_SESSION_']->customer->has_role('register reporter') || $GLOBALS['_SESSION_']->customer->has_role('register admin') || $GLOBALS['_SESSION_']->organization->code == $_REQUEST['code'])
+				$org_code = $_REQUEST['code'];
+			else
+				error("Permission denied");
+		else $org_code = $GLOBALS['_SESSION_']->customer->organization->code;
+
 		# Initiate Organization Object
-		$_organization = new \Register\Organization();
+		$organization = new \Register\Organization();
 
 		# Get Matching Organization
-		$organization = $_organization->get($_REQUEST['code']);
+		$organization->get($_REQUEST['code']);
 
 		# Error Handling
-		if ($_organization->error) error($_organization->error);
+		if ($organization->error) error($organization->error);
 
 		$response = new stdClass();
 		$response->success = 1;
@@ -583,8 +591,7 @@
 
 		# Build Query Parameters
 		$parameters = array();
-		if ($_REQUEST['organization'])
-		{
+		if ($_REQUEST['organization']) {
 			# Initiate Organization Object
 			$_organization = new \Register\Organization();
 			$organization = $_organization->get($_REQUEST['organization']);
@@ -592,8 +599,7 @@
 			if (! $organization->id) error("Organization not found");
 			$parameters['organization_id'] = $organization->id;
 		}
-		if ($_REQUEST['product'])
-		{
+		if ($_REQUEST['product']) {
 			$_product = new Product();
 			$product = $_product->get($_REQUEST['product']);
 			if ($_product->error) app_error("Error getting product: ".$_product->error,__FILE__,__LINE__);
@@ -703,7 +709,7 @@
 			$customerlist = new \Register\CustomerList();
 	
 			# Expire Aged Customers
-			$count = $customerslist->expire($date);
+			$count = $customerlist->expire($date);
 			if ($customerlist->error) {
 				$response->success = 0;
 				$response->error = "Error expiring customers: ".$customerlist->error;
@@ -721,16 +727,16 @@
 		# Send Response
 		print formatOutput($response);
 	}
-	function expireInactiveOrganizations () {
+	function expireInactiveOrganizations() {
 		if (role('register manager')) {
 			$expires = strtotime("-12 month", time());
 			$date = date('m/d/Y',$expires);
 
 			# Initialize Organizations
 			$organizationlist = new \Register\OrganizationList();
-			
+
 			# Expire Organizations w/o Active Users
-			$count = $organizationlist->expire($date);
+			$count = $organizationlist->expire();
 			if ($organizationlist->error) {
 				$response->success = 0;
 				$response->error = "Error expiring organizations: ".$organizationlist->error;
@@ -747,6 +753,15 @@
 
 		# Send Response
 		header('Content-Type: application/xml');
+		print formatOutput($response);
+	}
+	function flagActiveCustomers() {
+		$list = new \Register\CustomerList();
+		$counter = $list->activate();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->activated = $counter;
+
 		print formatOutput($response);
 	}
 	function schemaVersion() {
