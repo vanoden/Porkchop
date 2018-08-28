@@ -10,6 +10,7 @@
 				SELECT 	MAX(user_id)
 				FROM	session_sessions
 				WHERE	user_id > 0
+				AND		session.last_hit > date_sub(sysdate(),interval 3 month)
 				GROUP BY user_id
 			";
 			$rs = $GLOBALS['_database']->Execute($find_session_query);
@@ -76,7 +77,7 @@
 				FROM	register_users u
 				LEFT OUTER JOIN session_sessions s
 				ON		s.user_id = u.id
-				AND		s.company_id = ".$GLOBALS['_SESSION_']->company."
+				AND		s.company_id = ".$GLOBALS['_SESSION_']->company->id."
 				WHERE	u.status in ('ACTIVE','NEW')
 				GROUP BY u.id
 				HAVING	last_login < '$date'
@@ -92,8 +93,8 @@
 			$count = 0;
 			while($record = $people->FetchNextObject(false)) {
 				app_log("Expiring ".$record->login."' [".$record->id."]",'notice');
-				$customer = new RegisterCustomer($record->id);
-				$customer->update($record->id,array("status" => "EXPIRED"));
+				$customer = new Customer($record->id);
+				$customer->update(array("status" => "EXPIRED"));
 				$count ++;
 			}
 			return $count;
@@ -106,6 +107,18 @@
 				FROM	register_users
 				WHERE	id = id";
 	
+			if (isset($parameters['_search'])) {
+				if (! preg_match('/^[\w\-\.\_\s\*]+$/',$parameters['_search'])) {
+					$this->error = "Invalid search string";
+					return null;
+				}
+				$find_person_query .= "
+				AND		(	login like '%".$parameters['_search']."%'
+					OR		first_name like '%".$parameters['_search']."%'
+					OR		last_name like '%".$parameters['_search']."%'
+				)
+				";
+			}
 			if (isset($parameters['id']) && preg_match('/^\d+$/',$parameters['id'])) {
 				$find_person_query .= "
 				AND		id = ".$parameters['id'];
@@ -226,6 +239,28 @@
 					OR		last_name like '%$search_string%'
 				)
 			";
+			if (isset($parameters['status'])) {
+				if (is_array($parameters['status'])) {
+					$icount = 0;
+					$find_person_query .= "
+					AND	status IN (";
+					foreach ($parameters['status'] as $status) {
+						if ($icount > 0) $find_person_query .= ","; 
+						$icount ++;
+						if (preg_match('/^[\w\-\_\.]+$/',$status))
+						$find_person_query .= "'".$status."'";
+					}
+					$find_person_query .= ")";
+				}
+				else {
+					$find_person_query .= "
+						AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+				}
+			}
+			else {
+				$find_person_query .= "
+				AND		status not in ('EXPIRED','HIDDEN','DELETED')";
+			}
 
 			if ($count == false && $limit > 0 && preg_match('/^\d+$/',$limit)) {
 				if (preg_match('/^\d+$/',$offset))
