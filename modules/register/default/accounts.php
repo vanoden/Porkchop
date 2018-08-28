@@ -60,8 +60,11 @@
 	<div id="search_container">
 		<form id="custSearch" method="get" class="float: left">
 		<input type="text" id="searchAccountInput" name="search" value="<?=$_REQUEST['search']?>" class="value input searchInput"/>
+		<input type="checkbox" name="hidden" value="1"<? if ($_REQUEST['hidden']) print " checked"; ?> /><span>Hidden</span>
+		<input type="checkbox" name="expired" value="1"<? if ($_REQUEST['expired']) print " checked"; ?> /><span>Expired</span>
+		<input type="checkbox" name="deleted" value="1"<? if ($_REQUEST['deleted']) print " checked"; ?> /><span>Deleted</span>
 		<input type="hidden" id="start" name="start" value="0">
-		<img id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>
+		<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
 		</form>
 	</div>
 	<table cellpadding="0" cellspacing="0" class="body">
@@ -85,11 +88,11 @@
 	}
 ?>
 	<tr><td colspan="6" style="text-align: center">
-		<a href="/_register/accounts?start=0" style="margin: 5px"><<</a>
-		<a href="/_register/accounts?start=<?=$prev_offset?>" style="margin: 5px"><</a>
+		<a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><<</a>
+		<a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><</a>
 		&nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$customers_per_page+1?> of <?=$total_customers?>&nbsp;
-		<a href="/_register/accounts?start=<?=$next_offset?>" style="margin: 5px">></a>
-		<a href="/_register/accounts?start=<?=$last_offset?>" style="margin: 5px">>></a>
+		<a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">></a>
+		<a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">>></a>
 		</td>
 	</tr>
 <?
