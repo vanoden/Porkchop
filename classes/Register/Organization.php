@@ -33,9 +33,9 @@
 			$add_object_query = "
 				INSERT
 				INTO	register_organizations
-				(		id,code)
+				(		id,code,date_created)
 				VALUES
-				(		null,?)
+				(		null,?,sysdate())
 			";
 
 			$rs = $GLOBALS['_database']->Execute(
@@ -209,6 +209,34 @@
 				return null;
 			}
 			return new \Register\Organization\OwnedProduct($this->id,$product->id);
+		}
+
+		public function activeCount() {
+			$customerlist = new CustomerList();
+			$customers = $customerlist->find(array("organization_id" => $this->id,"status" => array('NEW','ACTIVE')));
+			return count($customers);
+		}
+		public function expire() {
+			$update_org_query = "
+				UPDATE	register_organizations
+				SET		status = 'EXPIRED'
+				WHERE	id = ?
+			";
+			$GLOBALS['_database']->Execute(
+				$update_org_query,
+				$this->id
+			);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Register::Organization::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			
+			# Bust Cache
+			$cache_key = "organization[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
+
+			return true;
 		}
     }
 
