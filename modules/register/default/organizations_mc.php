@@ -24,6 +24,11 @@
 			$find_parameters['name'] = $_REQUEST['name'];
 			$find_parameters['_like'] = array('name');
 		}
+		
+		$find_parameters['status'] = array('NEW','ACTIVE');
+		if ($_REQUEST['deleted']) array_push($find_parameters['status'],'DELETED');
+		if ($_REQUEST['expired']) array_push($find_parameters['status'],'EXPIRED');
+		if ($_REQUEST['hidden']) array_push($find_parameters['status'],'HIDDEN');
 
 		# Get Count before Pagination
 		$organizationlist->find($find_parameters,false);

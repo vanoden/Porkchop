@@ -27,22 +27,37 @@
 	a.pager {
 		margin: 5px;
 	}
+	input.checkbox {
+		height: 22px;
+		width: 22px;
+	}
+	span.status {
+		font-size: 20px;
+	}
 </style>
 </script>
 <form id="orgSearch" method="get" class="float: left">
 <div class="title">Organizations</div>
 <div id="search_container">
 	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput"/>
+	<input type="checkbox" name="hidden" class="checkbox" value="1"<? if ($_REQUEST['hidden']) print " checked"; ?> /><span class="status">Hidden</span>
+	<input type="checkbox" name="expired" class="checkbox" value="1"<? if ($_REQUEST['expired']) print " checked"; ?> /><span class="status">Expired</span>
+	<input type="checkbox" name="deleted" class="checkbox" value="1"<? if ($_REQUEST['deleted']) print " checked"; ?> /><span class="status">Deleted</span>
+	<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
 	<input type="hidden" id="start" name="start" value="0">
-	<img id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>
 </div>
+<hr style="visibility: hidden">
 <table cellpadding="0" cellspacing="0" class="body">
 <tr><th class="label organizationsCodeLabel">ID</th>
 	<th class="label organizationsNameLabel">Name</th>
+	<th class="label organizationsCodeLabel">Status</th>
+	<th class="label organizationsCodeLabel">Members</th>
 </tr>
 <?	foreach ($organizations as $organization) { ?>
 <tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/organization?organization_id=".$organization->id?>"><?=$organization->code?></a></td>
 	<td class="value<?=$greenbar?>"><?=$organization->name?></td>
+	<td class="value<?=$greenbar?>"><?=$organization->status?></td>
+	<td class="value<?=$greenbar?>"><?=$organization->activeCount()?></td>
 </tr>
 <?		if ($greenbar) $greenbar = '';
 		else $greenbar = " greenbar";
