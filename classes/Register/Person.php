@@ -12,6 +12,7 @@
 		public $message;
 		public $department;
 		public $_cached = 0;
+		public $status;
 
 		public function __construct($id = 0) {
 			# Clear Error Info
@@ -90,7 +91,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in RegisterPerson::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Person::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$customer = $rs->FetchNextObject(false);
@@ -98,12 +99,6 @@
 				app_log("No customer found for ".$this->id);
 				return $this;
 			}
-
-			# Some Old Data Cleanup
-			if (preg_match('/^[\dabcdef]{32}$/',$customer->code))
-				$customer->status = 'HIDDEN';
-			elseif (preg_match('/^auto_\d{11,13}$/',$customer->code))
-				$customer->status = 'HIDDEN';
 
 			app_log("Caching details for person '".$this->id."'",'trace',__FILE__,__LINE__);
 			# Store Some Object Vars
@@ -240,7 +235,7 @@
 			";
 
 			foreach (array_keys($valid_params) as $param) {
-				if (array_key_exists($param,$parameters)) {
+				if (isset($parameters[$param])) {
 					if ($param == "password") {
 						app_log("Changing password",'notice',__FILE__,__LINE__);
 						$update_customer_query .= ",
@@ -474,6 +469,12 @@
 		}
 		public function delete() {
 			app_log("Changing person ".$this->id." to status DELETED",'debug',__FILE__,__LINE__);
+
+			# Bust Cache
+			$cache_key = "customer[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
+
 			$this->update($this->id,array('status' => "DELETED"));
 		}
 		public function parents() {
