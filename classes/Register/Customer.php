@@ -45,7 +45,7 @@
 				$rolelist = new RoleList();
 				$roles = $rolelist->find();
 				foreach ($roles as $role) {
-					if (array_key_exists('roles',$parameters) and is_array($parameters['roles'])) {
+					if (isset($parameters['roles']) && is_array($parameters['roles'])) {
 						if (array_key_exists($role['id'],$parameters['roles'])) {
 							# Add Role
 							$this->add_role($role['id']);
@@ -122,7 +122,7 @@
 
 			# Get Authentication Method
 			$get_user_query = "
-				SELECT	id,auth_method
+				SELECT	id,auth_method,status
 				FROM	register_users
 				WHERE	login = ?
 			";
@@ -135,9 +135,13 @@
 				return null;
 			}
 
-			list($id,$this->auth_method) = $rs->fields;
+			list($id,$this->auth_method,$status) = $rs->fields;
 			if (! $id) {
-				app_log("No account for '$login'",'notice',__FILE__,__LINE__);
+				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
+				return 0;
+			}
+			if (! in_array($status,array('NEW','ACTIVE'))) {
+				app_log("Auth denied because account '$login' is '$status'",'notice',__FILE__,__LINE__);
 				return 0;
 			}
 
@@ -147,7 +151,13 @@
 				$result = $this->LOCALauthenticate($login,$password);
 
 			// Logging
-			if ($result) app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
+			if ($result) {
+				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
+				if ($status == 'NEW') {
+					$this->update(array("status" => 'ACTIVE'));
+					app_log("'$login' flagged as 'ACTIVE'",'info',__FILE__,__NEW__);
+				}
+			}
 			else app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
 
 			return $result;
