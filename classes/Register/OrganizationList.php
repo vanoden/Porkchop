@@ -3,6 +3,7 @@
 
 	class OrganizationList {
 		public $count = 0;
+		public $error;
 		public function find($parameters = array(),$recursive = true) {
 			app_log("Register::OrganizationList::find()",'trace',__FILE__,__LINE__);
 			$this->error = null;
@@ -26,12 +27,26 @@
 				$get_organizations_query .= "
 				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc);
 			}
-			if (isset($parameters['status']))
+			if (isset($parameters['status']) && is_array($parameters['status'])) {
+				$icount = 0;
+				$get_organizations_query .= "
+				AND	status IN (";
+				foreach ($parameters['status'] as $status) {
+					if ($icount > 0) $get_organizations_query .= ","; 
+					$icount ++;
+					if (preg_match('/^[\w\-\_\.]+$/',$status))
+					$get_organizations_query .= "'".$status."'";
+				}
+				$get_organizations_query .= ")";
+			}
+			elseif (isset($parameters['status'])) {
 				$get_organizations_query .= "
 				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
+			}
 			else
 				$get_organizations_query .= "
 				AND		status IN ('NEW','ACTIVE')";
+
 			if (isset($parameters['is_reseller'])) {
 				if ($parameters['is_reseller'])
 					$get_organizations_query .= "
@@ -57,6 +72,7 @@
 					$get_organizations_query .= "
 					LIMIT	".$parameters['_limit'];
 			}
+			query_log($get_organizations_query);
 			$rs = $GLOBALS['_database']->Execute($get_organizations_query);
 			if (! $rs) {
 				$this->error = "SQL Error in register::organization::find: ".$GLOBALS['_database']->ErrorMsg();
@@ -89,6 +105,37 @@
 				array_push($organizations,$organization);
 			}
 			return $organizations;
+		}
+		public function expire($threshold = 365) {
+			if (! is_numeric($threshold)) {
+				$this->error = "threshold must be numeric";
+				return null;
+			}
+
+			# Find Existing Active Organizations
+			$find_organizations_query = "
+				SELECT	id
+				FROM	register_organizations
+				WHERE	status in ('NEW','ACTIVE')
+				AND		date_created < date_sub(sysdate(),interval 3 month)
+			";
+			$rs = $GLOBALS['_database']->Execute($find_organizations_query);
+			if (! $rs) {
+				$this->error = "SQL Error in Register::OrganizationList::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			$counter = 0;
+			while (list($id) = $rs->FetchRow()) {
+				# Get Active Accounts
+				$organization = new Organization($id);
+				$active = $organization->activeCount();
+				app_log("Organization ".$organization->name." has $active members",'debug',__FILE__,__LINE__);
+				if ($active < 1) {
+					$organization->expire();
+					$counter ++;
+				}
+			}
+			return $counter;
 		}
 	}
 ?>
