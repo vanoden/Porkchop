@@ -7,4 +7,5 @@ third_party
 modules/monitor/spectros
 modules/contact/spectros
 modules/action/spectros
+modules/event/spectros
 templates
