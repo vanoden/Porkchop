@@ -7,6 +7,6 @@
 		"aws/aws-sdk-php": "2.*",
 		"phpmailer/phpmailer": "~5.2",
 		"guzzlehttp/guzzle": "^6.3",
-		"clickalicious/memcached.php": "~0.1"
+		"paragonie/random_compat": "<9.99"
 	}
 }
