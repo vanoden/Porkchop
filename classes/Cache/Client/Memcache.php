@@ -10,8 +10,8 @@
 
 		public function __construct($properties = null) {
 			if (is_object($properties)) {
-				if (preg_match('/^\w[\w\.\-]+$/',$properties->host)) $this->_host = $properties->host;
-				if (is_numeric($properties->port)) $this->_port = $properties->port;
+				if (isset($properties->host) && preg_match('/^\w[\w\.\-]+$/',$properties->host)) $this->_host = $properties->host;
+				if (isset($properties->port) && is_numeric($properties->port)) $this->_port = $properties->port;
 			}
 
 			$this->_service = new \Memcached();
