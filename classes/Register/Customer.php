@@ -153,10 +153,6 @@
 			// Logging
 			if ($result) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
-				if ($status == 'NEW') {
-					$this->update(array("status" => 'ACTIVE'));
-					app_log("'$login' flagged as 'ACTIVE'",'info',__FILE__,__NEW__);
-				}
 			}
 			else app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
 
