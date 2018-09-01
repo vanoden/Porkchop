@@ -93,7 +93,7 @@
 </tr>
 <?	$session_id = 0;
 	foreach($communications as $communication) {
-		$session = new Session($communication->session_id);
+		$session = new \Site\Session($communication->session->id);
 		$customer = new RegisterCustomer($session->customer_id);
 		$request = $communication->request;
 		$response = $communication->response;
