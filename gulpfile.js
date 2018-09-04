@@ -15,15 +15,15 @@ gulp.task('hello', function() {
 	console.log('Hello, Tony');
 });
 
-gulp.task('process', ['tmp','js','css','jpegs','pngs','svg'], () =>
+gulp.task('process', ['pre','js','css','jpegs','pngs','svg'], () =>
 	gulp.src('html.src/**/*.html')
 		.pipe(data(() => (
 			{
 				"static_version": staticVersion,
 				"video_path": videoPath,
 				"docs_path": docsPath,
-				"header": fs.readFileSync('html.src/tmp/header.html', 'utf8'),
-				"footer": fs.readFileSync('html.src/tmp/footer.html', 'utf8')
+				"header": fs.readFileSync('tmp/header.html', 'utf8'),
+				"footer": fs.readFileSync('tmp/footer.html', 'utf8')
 			}
 		)))
 		.pipe(template())
@@ -31,22 +31,21 @@ gulp.task('process', ['tmp','js','css','jpegs','pngs','svg'], () =>
 		.pipe(gulp.dest('html'))
 );
 
-gulp.task('tmp', () =>
-    gulp.src('html.src/*.html')
+gulp.task('pre', () =>
+    gulp.src('html.src/pre/*.html')
         .pipe(data(() => (
             {
                 "static_version": staticVersion,
 				"video_path": videoPath,
 				"docs_path": docsPath,
-                "header": fs.readFileSync('html.src/header.html', 'utf8'),
-                "footer": fs.readFileSync('html.src/footer.html', 'utf8')
+                "header": fs.readFileSync('html.src/pre/header.html', 'utf8'),
+                "footer": fs.readFileSync('html.src/pre/footer.html', 'utf8')
             }
         )))
         .pipe(template())
         .pipe(debug())
-		.pipe(gulp.dest('html.src/tmp'))
+		.pipe(gulp.dest('tmp'))
 );
-    
 
 gulp.task('js', () =>
 	gulp.src('html.src/**/*.js')
