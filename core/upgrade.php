@@ -119,8 +119,11 @@
 	install_log("Contact::Schema: version ".$class->version());
 	if ($class->version() != 2) install_fail("Version 2 Required");
 	$class = new \Event\Schema();
-	install_log("Event::Schema: version ".$class->version());
-	if ($class->version() != 0) install_fail("Version 1 Required");
+#	install_log("Event::Schema: version ".$class->version());
+#	if ($class->version() != 0) install_fail("Version 1 Required");
+	$class = new \Engineering\Schema();
+	install_log("Engineering::Schema: version ".$class->version());
+	if ($class->version() != 1) install_fail("Version 1 Required");
 
 	###################################################
 	### Initialize Session							###
@@ -208,6 +211,14 @@
 		array("spectros","admin_credits"),
 		array("spectros","cal_report"),
 		array("monitor","comm_dashboard"),
+		array("register","admin_account"),
+		array("engineering","home"),
+		array("engineering","tasks"),
+		array("engineering","task"),
+		array("engineering","releases"),
+		array("engineering","release"),
+		array("engineering","products"),
+		array("engineering","product"),
 	);
 
 	install_log("Add new template settings");
