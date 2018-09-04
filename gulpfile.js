@@ -4,6 +4,11 @@ const data = require('gulp-data');
 const debug = require('gulp-debug');
 const fs = require('fs');
 
+var today = new Date();
+var month = today.getMonth() + 1;
+
+const staticVersion = today.getFullYear()+"."+month+"."+today.getDate()+"."+today.getHours()+"."+today.getMinutes();
+
 gulp.task('hello', function() {
 	console.log('Hello, Tony');
 });
@@ -15,7 +20,8 @@ gulp.task('process', ['js','css','jpegs','pngs','svg'], () =>
 				"video_path": 'http://assets.spectrosinstruments.com/video',
 				"docs_path": 'http://assets.spectrosinstruments.com/docs',
 				"header": fs.readFileSync('html.src/header.html', 'utf8'),
-				"footer": fs.readFileSync('html.src/footer.html', 'utf8')
+				"footer": fs.readFileSync('html.src/footer.html', 'utf8'),
+				"static_version": staticVersion
 			}
 		)))
 		.pipe(template())
@@ -26,7 +32,10 @@ gulp.task('process', ['js','css','jpegs','pngs','svg'], () =>
 gulp.task('js', () =>
 	gulp.src('html.src/**/*.js')
 		.pipe(data(() => (
-			{ "field": "content" }
+			{
+				"field": "content",
+				"static_version": staticVersion
+			}
 		)))
 		.pipe(template())
 		.pipe(debug())
