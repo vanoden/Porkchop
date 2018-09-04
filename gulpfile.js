@@ -8,26 +8,45 @@ var today = new Date();
 var month = today.getMonth() + 1;
 
 const staticVersion = today.getFullYear()+"."+month+"."+today.getDate()+"."+today.getHours()+"."+today.getMinutes();
+const videoPath = 'http://assets.spectrosinstruments.com/video';
+const docsPath = 'http://assets.spectrosinstruments.com/docs';
 
 gulp.task('hello', function() {
 	console.log('Hello, Tony');
 });
 
-gulp.task('process', ['js','css','jpegs','pngs','svg'], () =>
+gulp.task('process', ['tmp','js','css','jpegs','pngs','svg'], () =>
 	gulp.src('html.src/**/*.html')
 		.pipe(data(() => (
 			{
-				"video_path": 'http://assets.spectrosinstruments.com/video',
-				"docs_path": 'http://assets.spectrosinstruments.com/docs',
-				"header": fs.readFileSync('html.src/header.html', 'utf8'),
-				"footer": fs.readFileSync('html.src/footer.html', 'utf8'),
-				"static_version": staticVersion
+				"static_version": staticVersion,
+				"video_path": videoPath,
+				"docs_path": docsPath,
+				"header": fs.readFileSync('html.src/tmp/header.html', 'utf8'),
+				"footer": fs.readFileSync('html.src/tmp/footer.html', 'utf8')
 			}
 		)))
 		.pipe(template())
 		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );
+
+gulp.task('tmp', () =>
+    gulp.src('html.src/*.html')
+        .pipe(data(() => (
+            {
+                "static_version": staticVersion,
+				"video_path": videoPath,
+				"docs_path": docsPath,
+                "header": fs.readFileSync('html.src/header.html', 'utf8'),
+                "footer": fs.readFileSync('html.src/footer.html', 'utf8')
+            }
+        )))
+        .pipe(template())
+        .pipe(debug())
+		.pipe(gulp.dest('html.src/tmp'))
+);
+    
 
 gulp.task('js', () =>
 	gulp.src('html.src/**/*.js')
