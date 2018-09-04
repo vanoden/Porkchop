@@ -251,6 +251,7 @@
 			}
 			if (! $page->id) {
 				install_log("Cannot find view '$view' for module '$module': ".$page->error,"warn");
+				continue;
 			};
 		}
 		$page->setMetadata("template","admin.html");
