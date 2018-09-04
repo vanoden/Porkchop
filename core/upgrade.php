@@ -88,7 +88,7 @@
 	$class = new \Company\Schema();
 	install_log("Company::Schema: version ".$class->version());
 	if ($class->version() != 3) install_fail("Version 3 Required");
-	$class = new \Session\Schema();
+	$class = new \Site\Schema();
 	install_log("Session::Schema: version ".$class->version());
 	if ($class->version() != 4) install_fail("Version 4 Required");
 	$class = new \Email\Schema();
@@ -129,7 +129,7 @@
 	### Initialize Session							###
 	###################################################
 	install_log('Initializing Session');
-	$_SESSION_ = new \Session\Session();
+	$_SESSION_ = new \Site\Session();
 
 	###################################################
 	### Get Company Information						###
