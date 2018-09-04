@@ -45,6 +45,19 @@
 	header("Cache-Control: no-cache, must-revalidate");
 
 	install_log("Upgrading site to 201808050715");
+
+	# Get version.txt
+	if (file_exists(HTML."/version.txt")) {
+		$ver_contents = file_get_contents(HTML."/version.txt");
+		if (preg_match('/BUILD_ID\:\s(\d+)/',$ver_contents,$matches)) {
+			install_log("Build: ".$matches[1],'notice');
+		}
+		if (preg_match('/BUILD_DATE\:\s([\w\-\:\s]+)/',$ver_contents,$matches)) {
+			install_log("Date: ".$matches[1],'notice');
+		}
+	}
+	else install_log("version.txt not found",'warn');
+
 	###################################################
 	### Connect to Database							###
 	###################################################
@@ -237,7 +250,7 @@
 				install_fail("Cannot add view: ".$e->getMessage());
 			}
 			if (! $page->id) {
-				install_fail("Cannot find view '$view' for module '$module': ".$page->error);
+				install_log("Cannot find view '$view' for module '$module': ".$page->error,"warn");
 			};
 		}
 		$page->setMetadata("template","admin.html");
@@ -303,4 +316,5 @@
 		install_log("Upgrade failed: $message",'error');
 		exit;
 	}
+
 ?>
