@@ -110,7 +110,7 @@
 						`requested_id` int(11) NOT NULL,
 						`assigned_id` int(11) NOT NULL DEFAULT 0,
 						`date_due` datetime,
-						`priority` enum('NORMAL','IMPORTANT','URGENT','CRITICAL') NOT NULL DEFAULT 'NORMAL'
+						`priority` enum('NORMAL','IMPORTANT','URGENT','CRITICAL') NOT NULL DEFAULT 'NORMAL',
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `UK_CODE` (`code`),
 						FOREIGN KEY `fk_product_id` (`product_id`) REFERENCES `engineering_products` (`id`),
