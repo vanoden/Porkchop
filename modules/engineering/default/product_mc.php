@@ -9,12 +9,9 @@
 	if ($_REQUEST['product_id']) {
 		$product = new \Engineering\Release($_REQUEST['product_id']);
 	}
-	elseif ($_REQUEST['code']) {
+	elseif (isset($_REQUEST['code'])) {
 		$product->get($_REQUEST['code']);
 		if ($product->error) $page->error = $product->error;
-		elseif(! $product->id) {
-			$page->error = "Release not found";
-		}
 	}
 	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];

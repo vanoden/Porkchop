@@ -1,6 +1,10 @@
 <div style="width: 756px;">
 <form name="task_form" action="/_engineering/task" method="post">
 <input type="hidden" name="task_id" value="<?=$task->id?>" />
+<div class="breadcrumbs">
+<a class="breadcrumb" href="/_engineering/home">Engineering</a>
+<a class="breadcrumb" href="/_engineering/tasks">Tasks</a>
+</div>
 <div class="title">Engineering Task</div>
 <?	if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>
@@ -93,10 +97,22 @@
 </div>
 <div class="container">
 	<div class="label">Description</div>
-	<textarea name="description" style="width: 700px; height: 300px;"><?=$form['description']?></textarea>
+	<textarea name="description" style="width: 700px; height: 200px;"><?=$form['description']?></textarea>
+</div>
+<?	if ($task->id) { ?>
+<div class="container">
+	<div class="label">Event</div>
+	<textarea name="notes" style="width: 700px; height: 150px;"></textarea>
 </div>
 <div class="container">
 	<input type="submit" name="btn_submit" class="button" value="Submit">
 </div>
 </form>
+<?	foreach ($events as $event) {
+	$person = $event->person();
+?>
+<label class="task_event_date"><?=$event->date_event?></label>
+<label class="task_event_user"><?=$person->login?></label>
+<label class="task_event_description"><?=$event->description?></label>
+<?	} ?>
 </div>

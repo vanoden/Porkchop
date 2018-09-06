@@ -9,12 +9,9 @@
 	if ($_REQUEST['task_id']) {
 		$task = new \Engineering\Task($_REQUEST['task_id']);
 	}
-	elseif ($_REQUEST['code']) {
+	elseif (isset($_REQUEST['code'])) {
 		$task->get($_REQUEST['code']);
 		if ($task->error) $page->error = $task->error;
-		elseif(! $task->id) {
-			$page->error = "Task not found";
-		}
 	}
 	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];

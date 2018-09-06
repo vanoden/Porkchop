@@ -8,6 +8,9 @@
 <?	if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>
 <?	} ?>
+<div class="breadcrumbs">
+<a class="breadcrumb" href="/_engineering/home">Engineering</a>
+</div>
 <div class="title">Engineering Tasks [<?=count($tasks)?>]</div>
 <form>
 <input type="button" name="btn_new_task" value="Add Task" class="button" onclick="newTask();" />

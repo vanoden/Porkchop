@@ -1,6 +1,10 @@
 <div style="width: 756px;">
 <form name="release_form" action="/_engineering/release" method="post">
 <input type="hidden" name="release_id" value="<?=$release->id?>" />
+<div class="breadcrumbs">
+<a class="breadcrumb" href="/_engineering/home">Engineering</a>
+<a class="breadcrumb" href="/_engineering/releases">Releases</a>
+</div>
 <div class="title">Engineering Release</div>
 <?	if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>

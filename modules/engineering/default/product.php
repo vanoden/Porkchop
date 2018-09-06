@@ -1,7 +1,11 @@
 <div style="width: 756px;">
 <form name="product_form" action="/_engineering/product" method="post">
 <input type="hidden" name="product_id" value="<?=$product->id?>" />
-<div class="title">Engineering Release</div>
+<div class="breadcrumbs">
+<a class="breadcrumb" href="/_engineering/home">Engineering</a>
+<a class="breadcrumb" href="/_engineering/products">Products</a>
+</div>
+<div class="title">Engineering Product</div>
 <?	if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>
 <?	}

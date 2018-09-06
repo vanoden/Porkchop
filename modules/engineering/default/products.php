@@ -30,6 +30,9 @@
 		clear: both;
 	}
 </style>
+<div class="breadcrumbs">
+<a class="breadcrumb" href="/_engineering/home">Engineering</a>
+</div>
 <div class="title">Products</div>
 <a class="more" href="/_engineering/product">New Product</a>
 <table class="body">
