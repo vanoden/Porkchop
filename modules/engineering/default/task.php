@@ -99,13 +99,13 @@
 	<div class="label">Description</div>
 	<textarea name="description" style="width: 700px; height: 200px;"><?=$form['description']?></textarea>
 </div>
+<div class="container">
+	<input type="submit" name="btn_submit" class="button" value="Submit">
+</div>
 <?	if ($task->id) { ?>
 <div class="container">
 	<div class="label">Event</div>
 	<textarea name="notes" style="width: 700px; height: 150px;"></textarea>
-</div>
-<div class="container">
-	<input type="submit" name="btn_submit" class="button" value="Submit">
 </div>
 </form>
 <?	foreach ($events as $event) {
@@ -116,3 +116,4 @@
 <label class="task_event_description"><?=$event->description?></label>
 <?	} ?>
 </div>
+<?	}	?>
