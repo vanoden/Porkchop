@@ -4,7 +4,13 @@
 		return;
 	}
 	$tasklist = new \Engineering\TaskList();
-	$tasks = $tasklist->find();
+	$parameters = array();
+	$parameters['status'] = array("NEW","ACTIVE");
+	if ($_REQUEST["complete"]) array_push($parameters['status'],'COMPLETE');
+	if ($_REQUEST["cancelled"]) array_push($parameters['status'],'CANCELLED');
+	if ($_REQUEST["hold"]) array_push($parameters['status'],'HOLD');
+
+	$tasks = $tasklist->find($parameters);
 	if ($tasklist->error()) {
 		$page->error = $tasklist->error();
 		return;

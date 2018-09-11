@@ -11,6 +11,7 @@
 		public $type;
 		public $estimate;
 		public $date_added;
+		public $priority;
 		private $release_id;
 		private $product_id;
 		private $requested_id;
@@ -273,7 +274,8 @@
 		}
 		public function details() {
 			$get_object_query = "
-				SELECT	*
+				SELECT	*,
+						unix_timestamp(date_added) timestamp_added
 				FROM	engineering_tasks
 				WHERE	id = ?
 			";
@@ -302,6 +304,8 @@
 			$this->product_id = $object->product_id;
 			$this->requested_id = $object->requested_id;
 			$this->assigned_id = $object->assigned_id;
+			$this->priority = $object->priority;
+			$this->timestamp_added = $object->timestamp_added;
 
 			return true;
 		}
