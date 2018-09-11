@@ -35,14 +35,14 @@
 			$add_object_query = "
 				INSERT
 				INTO	engineering_events
-				(		task_id,date_event,description)
+				(		task_id,person_id,date_event,description)
 				VALUES
-				(		?,sysdate(),?)
+				(		?,?,sysdate(),?)
 			";
 
 			$GLOBALS['_database']->Execute(
 				$add_object_query,
-				array($task->id,$parameters['description'])
+				array($task->id,$parameters['person_id'],$parameters['description'])
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
@@ -61,7 +61,17 @@
 
 			if (isset($parameters['description']))
 				$update_object_query .= ",
-						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_match_quotes_gpc());
+						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
+
+			if (isset($parameters['person_id']) && is_numeric($parameters['person_id'])) {
+				$update_object_query .= ",
+						person_id = ".$parameters['person_id'];
+			}
+
+			if (isset($parameters['date_event']) && get_mysql_date($parameters['date_event'])) {
+				$update_object_query .= ",
+						date_event = ".$GLOBALS['_database']->qstr($parameters['date_event'],get_magic_quotes_gpc());
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?
@@ -107,7 +117,7 @@
 		}
 
 		public function person() {
-			return new \Register\Person($this->person_id;
+			return new \Register\Person($this->person_id);
 		}
 
 		public function error() {

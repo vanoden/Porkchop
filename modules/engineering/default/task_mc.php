@@ -18,7 +18,7 @@
 		$task->get($code);
 	}
 
-	if (isset($_REQUEST['btn_submit'])) {
+	if (isset($_REQUEST['btn_submit']) || isset($_REQUEST['btn_add_event'])) {
 		$parameters = array();
 		if (isset($_REQUEST['title'])) $parameters['title'] = $_REQUEST['title'];
 		else {
@@ -56,6 +56,33 @@
 				$page->error = "Error creating task: ".$task->error();
 			}
 		}
+
+		if (isset($_REQUEST['notes']) && strlen($_REQUEST['notes'])) {
+			$event = new \Engineering\Event();
+			$event->add(array(
+				'task_id'		=> $task->id,
+				'person_id'		=> $_REQUEST['event_person_id'],
+				'date_added'	=> $_REQUEST['date_event'],
+				'description'	=> $_REQUEST['notes']
+			));
+			if ($event->error()) {
+				$page->error = $event->error();
+			}
+			else {
+				if ($_REQUEST['new_status'] != $task->status) {
+					$task->update(array('status'=>$_REQUEST['new_status']));
+					if ($task->error) {
+						$page->error = $task->error;
+					}
+					else {
+						$page->success = "Updated applied successfully";
+					}
+				}
+				else {
+					$page->success = "Updated applied successfully";
+				}
+			}
+		}
 	}
 
 	$peopleList = new \Register\CustomerList();
@@ -89,6 +116,10 @@
 		$form['description'] = $task->description;
 		$release = $task->release();
 		$form['release_id'] = $release->id;
+
+		$eventlist = new \Engineering\EventList();
+		$events = $eventlist->find(array('task_id'=> $task_id));
+		if ($eventlist->error()) $page->error = $eventlist->error();
 	}
 	elseif ($page->error) {
 		$form['code'] = $_REQUEST['code'];

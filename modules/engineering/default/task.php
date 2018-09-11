@@ -97,23 +97,53 @@
 </div>
 <div class="container">
 	<div class="label">Description</div>
-	<textarea name="description" style="width: 700px; height: 200px;"><?=$form['description']?></textarea>
+	<textarea name="description" style="width: 720px; height: 80px;"><?=$form['description']?></textarea>
 </div>
 <div class="container">
 	<input type="submit" name="btn_submit" class="button" value="Submit">
 </div>
 <?	if ($task->id) { ?>
+<div class="container_narrow">
+	<div class="label">Event Date</div>
+	<input type="text" name="date_event" class="value input" value="<?=date('m/d/Y H:i:s')?>" />
+</div>
+<div class="container_narrow">
+	<div class="label">Person</div>
+	<select name="event_person_id" class="value input">
+<?	foreach ($people as $person) { ?>
+		<option value="<?=$person->id?>"<? if ($person->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$person->code?></option>
+<?	} ?>
+	</select>
+</div>
+<div class="container_narrow">
+	<div class="label">New Status</div>
+	<select name="new_status" class="value input">
+		<option value="new"<? if ($task->status == 'NEW') print ' selected'; ?>>New</option>
+		<option value="hold"<? if ($task->status == 'HOLD') print ' selected'; ?>>Hold</option>
+		<option value="active"<? if ($task->status == 'ACTIVE') print ' selected'; ?>>Active</option>
+		<option value="cancelled"<? if ($task->status == 'CANCELLED') print ' selected'; ?>>Cancelled</option>
+		<option value="complete"<? if ($task->status == 'COMPLETE') print ' selected'; ?>>Complete</option>
+	</select>
+</div>
 <div class="container">
-	<div class="label">Event</div>
-	<textarea name="notes" style="width: 700px; height: 150px;"></textarea>
+	<div class="label">Event Description</div>
+	<textarea name="notes" style="width: 720px; height: 60px;"></textarea>
+</div>
+<div class="form_footer">
+	<input type="submit" name="btn_add_event" class="button" value="Add Event" />
 </div>
 </form>
+<table class="body" style="width: 760px;">
+<tr><td class="label">Date</td>
+	<td class="label">Person</td>
+</tr>
 <?	foreach ($events as $event) {
 	$person = $event->person();
 ?>
-<label class="task_event_date"><?=$event->date_event?></label>
-<label class="task_event_user"><?=$person->login?></label>
-<label class="task_event_description"><?=$event->description?></label>
+<tr><td class="value"><?=$event->date_event?></td>
+	<td class="value"><?=$person->login?></td>
+</tr>
+<tr><td colspan="2" class="value" style="border-bottom: 1px solid gray"><?=$event->description?></td></tr>
 <?	} ?>
-</div>
+</table>
 <?	}	?>
