@@ -18,8 +18,9 @@
 		return;
 	}
 
-	$assigner_list = new \Register\CustomerList();
-	$assigners = $assigner_list->find();
+	$role = new \Register\Role();
+	$role->get("engineering user");
+	$assigners = $role->members();
 
 	$projectlist = new \Engineering\ProjectList();
 	$projects = $projectlist->find();
