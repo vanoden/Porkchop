@@ -42,7 +42,7 @@
 	### Get session info by session code			###
 	###################################################
 	function getSession() {
-		$session = new \Session\Session();
+		$session = new \Site\Session();
 		$session->get($_REQUEST['code']);
 		$response = new \HTTP\Response();
 		$response->success = 1;
@@ -55,7 +55,7 @@
 	### Get session info by session code			###
 	###################################################
 	function getSessionHits() {
-		$session = new Session();
+		$session = new \Site\Session();
 		$session->get($_REQUEST['code']);
 		$hits = $session->hits();
 		$response->success = 1;
@@ -66,7 +66,7 @@
 
 	function timelocal() {
 		if (isset($_REQUEST['code'])) {
-			$session = new Session();
+			$session = new \Site\Session();
 			$session->get($_REQUEST['code']);
 		}
 		else {
@@ -82,7 +82,7 @@
 	### Manage Session Schema						###
 	###################################################
 	function schemaVersion() {
-		$schema = new \Session\Schema();
+		$schema = new \Site\Schema();
 		if ($schema->error) {
 			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		}
@@ -93,7 +93,7 @@
 		print formatOutput($response);
 	}
 	function schemaUpgrade() {
-		$schema = new \Session\Schema();
+		$schema = new \Site\Schema();
 		if ($schema->error) {
 			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		}
