@@ -95,7 +95,7 @@
 </table>
 <br>
 <div class="title">Projects</div>
-<a class="more" href="/_engineering/projecst">Manage Projects</a>
+<a class="more" href="/_engineering/projects">Manage Projects</a>
 <table class="body">
 <tr><td class="label column_title">Title</td>
 	<td class="label column_title">Manager</td>

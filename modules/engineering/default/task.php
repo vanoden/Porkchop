@@ -81,7 +81,7 @@
 	<div class="label">Assigned To</div>
 	<select name="assigned_id" class="value input" style="width: 240px">
 		<option value="">Unassigned</option>
-<?	foreach($people as $person) { ?>
+<?	foreach($techs as $person) { ?>
 		<option value="<?=$person->id?>"<? if ($person->id == $form['assigned_id']) print " selected"; ?>><?=$person->login?></option>
 <?	} ?>
 	</select>

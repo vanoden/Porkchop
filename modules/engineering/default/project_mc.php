@@ -69,6 +69,7 @@
 	else {
 	}
 
-	$managerList = new \Register\CustomerList();
-	$managers = $managerList->find();
+	$role = new \Register\Role();
+	$role->get("engineering user");
+	$managers = $role->members();
 ?>

@@ -90,6 +90,10 @@
 	$people = $peopleList->find(array("status" => array('NEW','ACTIVE')));
 	if ($peoplelist->error) $page->error = $peoplelist->error;
 
+	$role = new \Register\Role();
+	$role->get("engineering user");
+	$techs = $role->members();
+
 	$productlist = new \Engineering\ProductList();
 	$products = $productlist->find();
 	if ($productlist->error()) $page->error = $productlist->error();
