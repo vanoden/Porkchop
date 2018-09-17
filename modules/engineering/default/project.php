@@ -27,6 +27,7 @@
 <?	foreach ($managers as $manager) { ?>
 		<option value="<?=$manager->id?>"<? if ($manager->id == $project->manager->id) print " selected"; ?>><?=$manager->code?></option>
 <?	} ?>
+	</select>
 </div>
 <div class="container">
 	<div class="label">Description</div>
