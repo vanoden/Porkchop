@@ -36,6 +36,7 @@
 		if (isset($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
 		if (isset($_REQUEST['date_added'])) $parameters['date_added'] = $_REQUEST['date_added'];
 		if (isset($_REQUEST['date_due'])) $parameters['date_due'] = $_REQUEST['date_due'];
+		if (isset($_REQUEST['project_id'])) $parameters['project_id'] = $_REQUEST['project_id'];
 
 		app_log("Submitted task form",'debug',__FILE__,__LINE__);
 		if ($task->id) {
@@ -96,6 +97,10 @@
 	$releaselist = new \Engineering\ReleaseList();
 	$releases = $releaselist->find();
 	if ($releaselist->error()) $page->error = $releaselist->error();
+
+	$projectlist = new \Engineering\ProjectList();
+	$projects = $projectlist->find();
+	if ($projectlist->error()) $page->error = $projectlist->error();
 	
 	if ($task->id) {
 		$task->details();
@@ -116,9 +121,11 @@
 		$form['description'] = $task->description;
 		$release = $task->release();
 		$form['release_id'] = $release->id;
+		$project = $task->project();
+		$form['project_id'] = $project->id;
 
 		$eventlist = new \Engineering\EventList();
-		$events = $eventlist->find(array('task_id'=> $task_id));
+		$events = $eventlist->find(array('task_id'=> $task->id));
 		if ($eventlist->error()) $page->error = $eventlist->error();
 	}
 	elseif ($page->error) {

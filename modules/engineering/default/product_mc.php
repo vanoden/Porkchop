@@ -7,7 +7,7 @@
 	$product = new \Engineering\Product();
 	
 	if ($_REQUEST['product_id']) {
-		$product = new \Engineering\Release($_REQUEST['product_id']);
+		$product = new \Engineering\Product($_REQUEST['product_id']);
 	}
 	elseif (isset($_REQUEST['code'])) {
 		$product->get($_REQUEST['code']);

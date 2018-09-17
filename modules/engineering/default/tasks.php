@@ -15,6 +15,20 @@
 <form>
 <input type="button" name="btn_new_task" value="Add Task" class="button" onclick="newTask();" />
 <div class="filter_container">
+	<span>Assigned To</span>
+	<select name="assigned_id" class="value input" onchange="document.forms[0].submit();">
+		<option value="">Any</option>
+<?	foreach ($assigners as $assigner) { ?>
+		<option value="<?=$assigner->id?>"<? if ($assigner->id == $_REQUEST['assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
+<?	} ?>
+	</select>
+	<span>Project</span>
+	<select name="project_id" class="value input" onchange="document.forms[0].submit();">
+		<option value="">Any</option>
+<?	foreach ($projects as $project) { ?>
+		<option value="project_id"<? if ($project->id = $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
+<?	} ?>
+	</select>
 	<input type="checkbox" name="complete" value="1"<? if ($_REQUEST['complete']) print " checked"; ?> onchange="document.forms[0].submit(); " />Completed
 	<input type="checkbox" name="cancelled" value="1"<? if ($_REQUEST['cancelled']) print " checked"; ?> onchange="document.forms[0].submit(); " />Cancelled
 	<input type="checkbox" name="hold" value="1"<? if ($_REQUEST['hold']) print " checked"; ?> onchange="document.forms[0].submit(); " />Hold

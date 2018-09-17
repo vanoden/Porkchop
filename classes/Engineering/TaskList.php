@@ -11,6 +11,11 @@
 				WHERE	id = id
 			";
 
+			if (isset($parameters['project_id']) && is_numeric($parameters['project_id'])) {
+				$find_objects_query .= "
+				AND		project_id = ".$parameters['project_id'];
+			}
+
 			if (isset($parameters['assigned_id']) && is_numeric($parameters['assigned_id'])) {
 				$find_objects_query .= "
 				AND		assigned_id = ".$parameters['assigned_id'];

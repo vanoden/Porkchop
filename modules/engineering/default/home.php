@@ -36,8 +36,7 @@
 <div class="title">Unassigned Tasks</div>
 <a class="more" href="/_engineering/tasks">Manage Tasks</a>
 <table class="body">
-<tr><td class="label column_code">Code</td>
-	<td class="label column_title">Title</td>
+<tr><td class="label column_title">Title</td>
 	<td class="label column_date">Added</td>
 	<td class="label column_person">Requested By</td>
 	<td class="label column_person">Assigned To</td>
@@ -48,8 +47,7 @@
 		$requestor = $task->requestedBy();
 		$worker = $task->assignedTo();
 ?>
-<tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->code?></a></td>
-	<td class="value"><?=$task->title?></td>
+<tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
 	<td class="value"><?=$task->date_added?></td>
 	<td class="value"><?=$requestor->login?></td>
 	<td class="value"><?=$worker->login?></td>
@@ -59,8 +57,7 @@
 <br>
 <div class="title">Your Tasks</div>
 <table class="body">
-<tr><td class="label column_code">Code</td>
-	<td class="label column_title">Title</td>
+<tr><td class="label column_title">Title</td>
 	<td class="label column_date">Added</td>
 	<td class="label column_person">Requested By</td>
 	<td class="label column_person">Assigned To</td>
@@ -71,8 +68,7 @@
 		$requestor = $task->requestedBy();
 		$worker = $task->assignedTo();
 ?>
-<tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->code?></a></td>
-	<td class="value"><?=$task->title?></td>
+<tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
 	<td class="value"><?=$task->date_added?></td>
 	<td class="value"><?=$requestor->login?></td>
 	<td class="value"><?=$worker->login?></td>
@@ -83,8 +79,7 @@
 <div class="title">Releases</div>
 <a class="more" href="/_engineering/releases">Manage Releases</a>
 <table class="body">
-<tr><td class="label column_code">Code</td>
-	<td class="label column_title">Title</td>
+<tr><td class="label column_title">Title</td>
 	<td class="label column_status">Status</td>
 	<td class="label column_date">Scheduled For</td>
 	<td class="label column_date">Released On</td>
@@ -92,11 +87,26 @@
 <?php
 	foreach ($releases as $release) {
 ?>
-<tr><td class="value"><a href="/_engineering/release/<?=$release->code?>"><?=$release->code?></a></td>
-	<td class="value"><?=$release->title?></td>
+<tr><td class="value"><a href="/_engineering/release/<?=$release->code?>"><?=$release->title?></a></td>
 	<td class="value"><?=$release->status?></td>
 	<td class="value"><?=$release->date_scheduled?></td>
 	<td class="value"><?=$release->date_released?></td>
+<?php	} ?>
+</table>
+<br>
+<div class="title">Projects</div>
+<a class="more" href="/_engineering/projecst">Manage Projects</a>
+<table class="body">
+<tr><td class="label column_title">Title</td>
+	<td class="label column_title">Manager</td>
+	<td class="label" style="width: 600px">Description</td>
+</tr>
+<?php
+	foreach ($projects as $project) {
+?>
+<tr><td class="value"><a href="/_engineering/project/<?=$project->code?>"><?=$project->title?></a></td>
+	<td class="value"><?=$project->manager->code?></td>
+	<td class="value"><?=$project->description?></td>
 <?php	} ?>
 </table>
 <br>
@@ -110,8 +120,7 @@
 <?php
 	foreach ($products as $product) {
 ?>
-<tr><td class="value"><a href="/_engineering/product/<?=$product->code?>"><?=$product->code?></a></td>
-	<td class="value"><?=$product->title?></td>
+<tr><td class="value"><a href="/_engineering/product/<?=$product->code?>"><?=$product->title?></a></td>
 	<td class="value"><?=$product->description?></td>
 <?php	} ?>
 </table>

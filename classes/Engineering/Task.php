@@ -231,6 +231,18 @@
 					return false;
 				}
 			}
+			
+			if (isset($parameters['project_id'])) {
+				$project = new \Engineering\Project($parameters['project_id']);
+				if ($project->id) {
+					$update_object_query .= ",
+						project_id = ".$project->id;
+				}
+				else {
+					$this->_error = "Project not found";
+					return false;
+				}
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?
@@ -306,6 +318,7 @@
 			$this->assigned_id = $object->assigned_id;
 			$this->priority = $object->priority;
 			$this->timestamp_added = $object->timestamp_added;
+			$this->project_id = $object->project_id;
 
 			return true;
 		}
@@ -324,6 +337,10 @@
 
 		public function assignedTo() {
 			return new \Register\Customer($this->assigned_id);
+		}
+
+		public function project() {
+			return new \Engineering\Project($this->project_id);
 		}
 
 		public function assignTo($person_id) {

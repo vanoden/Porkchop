@@ -67,7 +67,7 @@
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating assets table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error creating products table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_database']->RollbackTrans();
 					return 0;
@@ -88,7 +88,7 @@
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating sensors table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error creating releases table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_database']->RollbackTrans();
 					return 0;
@@ -119,7 +119,7 @@
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating collections table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error creating tasks table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_database']->RollbackTrans();
 					return 0;
@@ -139,7 +139,7 @@
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating collections table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error creating events table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_database']->RollbackTrans();
 					return 0;
@@ -169,7 +169,60 @@
 				";
 				$GLOBALS['_database']->Execute($update_schema_version);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in MonitorSchema::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($current_schema_version < 2) {
+				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `engineering_projects` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`code` varchar(45) NOT NULL,
+						`title` varchar(255) NOT NULL,
+						`description` text,
+						`manager_id` int(11),
+						PRIMARY KEY (`id`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating engineering_projects table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$alter_table_query = "
+					ALTER TABLE `engineering_tasks` ADD COLUMN `project_id` int(11) 
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering engineering_tasks table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$current_schema_version = 2;
+				$update_schema_version = "
+					INSERT
+					INTO	engineering__info
+					VALUES	('schema_version',$current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_database']->RollbackTrans();
 					return 0;

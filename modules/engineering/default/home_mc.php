@@ -13,4 +13,7 @@
 
 	$productlist = new \Engineering\ProductList();
 	$products = $productlist->find(array("_limit" => 4));
+
+	$projectlist = new \Engineering\ProjectList();
+	$projects = $projectlist->find(array("_limit" => 4));
 ?>
