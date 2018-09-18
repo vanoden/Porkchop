@@ -11,6 +11,7 @@
 		public $type;
 		public $estimate;
 		public $date_added;
+		public $date_due;
 		public $priority;
 		private $release_id;
 		private $product_id;
@@ -207,6 +208,16 @@
 					return false;
 				}
 			}
+
+			if (isset($parameters['product_id'])) {
+				if (is_numeric($parameters['product_id']))
+					$update_object_query .= ",
+						product_id = ".$parameters['product_id'];
+				else {
+					$this->_error = "Invalid product_id";
+					return false;
+				}
+			}
 			
 			if (isset($parameters['assigned_id'])) {
 				$tech = new \Register\Customer($parameters['assigned_id']);
@@ -237,6 +248,11 @@
 				if ($project->id) {
 					$update_object_query .= ",
 						project_id = ".$project->id;
+				}
+				elseif ($parameters['project_id'] == '-') {
+					$update_object_query .= ",
+						project_id = NULL
+					";
 				}
 				else {
 					$this->_error = "Project not found";
@@ -308,6 +324,7 @@
 			$this->title = $object->title;
 			$this->description = $object->description;
 			$this->date_added = $object->date_added;
+			$this->date_due = $object->date_due;
 			$this->status = $object->status;
 			$this->type = $object->type;
 			$this->estimate = $object->estimate;

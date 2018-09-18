@@ -5,7 +5,7 @@
 	}
 	$page = new \Site\Page();
 	$task = new \Engineering\Task();
-	
+
 	if ($_REQUEST['task_id']) {
 		$task = new \Engineering\Task($_REQUEST['task_id']);
 	}
@@ -19,24 +19,78 @@
 	}
 
 	if (isset($_REQUEST['btn_submit']) || isset($_REQUEST['btn_add_event'])) {
+		$msgs = array();
 		$parameters = array();
-		if (isset($_REQUEST['title'])) $parameters['title'] = $_REQUEST['title'];
+		if (isset($_REQUEST['title'])) {
+			if ($task->title != $_REQUEST['title']) {
+				if ($task->title) array_push($msgs,"Title changed to ".$_REQUEST['title']);
+				$parameters['title'] = $_REQUEST['title'];
+			}
+		}
 		else {
 			$page->error = "Title required";
 		}
-		if (isset($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
-		if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
-		if (isset($_REQUEST['estimate'])) $parameters['estimate'] = $_REQUEST['estimate'];
-		if (isset($_REQUEST['priority'])) $parameters['priority'] = $_REQUEST['priority'];
-		if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
-		if (isset($_REQUEST['requested_id'])) $parameters['requested_id'] = $_REQUEST['requested_id'];
-		if (isset($_REQUEST['release_id']) && $_REQUEST['release_id'] > 0) $parameters['release_id'] = $_REQUEST['release_id'];
-		if (isset($_REQUEST['assigned_id']) && $_REQUEST['assigned_id']) $parameters['assigned_id'] = $_REQUEST['assigned_id'];
-		if (isset($_REQUEST['product_id'])) $parameters['product_id'] = $_REQUEST['product_id'];
-		if (isset($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
-		if (isset($_REQUEST['date_added'])) $parameters['date_added'] = $_REQUEST['date_added'];
-		if (isset($_REQUEST['date_due'])) $parameters['date_due'] = $_REQUEST['date_due'];
-		if (isset($_REQUEST['project_id'])) $parameters['project_id'] = $_REQUEST['project_id'];
+
+		if (! $task->id) {
+			$parameters['code'] = $_REQUEST['code'];
+			$parameters['status'] = $_REQUEST['status'];
+			$parameters['date_added'] = $_REQUEST['date_added'];
+			$parameters['requested_id'] = $_REQUEST['requested_id'];
+		}
+
+		if (isset($_REQUEST['type']) && $task->type != strtoupper($_REQUEST['type'])) {
+			array_push($msgs,"Type changed from ".$task->type." to ".$_REQUEST['type']);
+			$parameters['type'] = $_REQUEST['type'];
+		}
+		if (isset($_REQUEST['estimate']) && $task->estimate != $_REQUEST['estimate']) {
+			array_push($msgs,"Estimage changed from ".$task->estimate." to ".$_REQUEST['estimate']);
+			$parameters['estimate'] = $_REQUEST['estimate'];
+		}
+		if (isset($_REQUEST['priority']) && $task->priority != strtoupper($_REQUEST['priority'])) {
+			array_push($msgs,"Priority changed from ".$task->priority." to ".$_REQUEST['priority']);
+			$parameters['priority'] = $_REQUEST['priority'];
+		}
+		if (isset($_REQUEST['description']) && $task->description != $_REQUEST['description']) {
+			array_push($msgs,"Description updated");
+			$parameters['description'] = $_REQUEST['description'];
+		}
+
+		$old_release = $task->release();
+		if (isset($_REQUEST['release_id']) && $_REQUEST['release_id'] > 0 && $old_release->id != $_REQUEST['release_id']) {
+			$new_release = new \Engineering\Release($_REQUEST['release_id']);
+			array_push($msgs,"Release changed from ".$old_release->title." to ".$new_release->title);
+			$parameters['release_id'] = $_REQUEST['release_id'];
+		}
+
+		$old_tech = $task->assignedTo();
+		if (isset($_REQUEST['assigned_id']) && $old_tech->id != $_REQUEST['assigned_id']) {
+			$new_tech = new \Register\Admin($_REQUEST['assigned_id']);
+			if (isset($old_tech->id) && $old_tech->id != $new_tech->id) {
+				array_push($msgs,"Task re-assigned to ".$new_tech->first_name." ".$new_tech->last_name);
+				$parameters['assigned_id'] = $_REQUEST['assigned_id'];
+			}
+			else {
+				array_push($msgs,"Task assigned to ".$new_tech->first_name." ".$new_tech->last_name);
+				$parameters['assigned_id'] = $_REQUEST['assigned_id'];
+			}
+		}
+
+		$old_product = $task->product();
+		if (isset($_REQUEST['product_id']) && $old_product->id != $_REQUEST['product_id']) {
+			$new_product = new \Engineering\Product($_REQUEST['product_id']);
+			array_push($msgs,"Product changed from ".$old_product->title." to ".$new_product->title);
+			$parameters['product_id'] = $_REQUEST['product_id'];
+		}
+		if (isset($_REQUEST['date_due']) && $task->date_due != get_mysql_date($_REQUEST['date_due'])) {
+			array_push($msgs,"Due Date changed from ".$task->date_due." to ".$_REQUEST['date_due']);
+			$parameters['date_due'] = $_REQUEST['date_due'];
+		}
+		$old_project = $task->project();
+		if (isset($_REQUEST['project_id']) && $old_project->id != $_REQUEST['project_id']) {
+			$new_project = new \Engineering\Project($_REQUEST['project_id']);
+			array_push($msgs,"Project changed from '".$old_project->title."' to '".$new_project->title."'");
+			$parameters['project_id'] = $_REQUEST['project_id'];
+		}
 
 		app_log("Submitted task form",'debug',__FILE__,__LINE__);
 		if ($task->id) {
@@ -46,6 +100,18 @@
 			}
 			else {
 				$page->error = "Error saving updates: ".$task->error();
+			}
+			if (count($msgs) > 0) {
+				$event = new \Engineering\Event();
+				$event->add(array(
+					'task_id'	=> $task->id,
+					'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
+					'date_added'	=> date('Y-m-d H:i:s'),
+					'description'	=> join('<br>',$msgs)
+				));
+				if ($event->error()) {
+					$page->addError("Error creating event: ".$event->error());
+				}
 			}
 		}
 		else {
@@ -59,6 +125,20 @@
 		}
 
 		if (isset($_REQUEST['notes']) && strlen($_REQUEST['notes'])) {
+			if (strtoupper($_REQUEST['new_status']) != $task->status) {
+				$old_status = $task->status;
+				$task->update(array('status'=>$_REQUEST['new_status']));
+				if ($task->error) {
+					$page->addError($task->error);
+				}
+				else {
+					$_REQUEST['notes'] = "Status changed from $old_status to ".strtoupper($_REQUEST['new_status'])."<br>\n".$_REQUEST['notes'];
+					$page->success = "Updated applied successfully";
+				}
+			}
+			else {
+				$page->success = "Updated applied successfully";
+			}
 			$event = new \Engineering\Event();
 			$event->add(array(
 				'task_id'		=> $task->id,
@@ -67,21 +147,7 @@
 				'description'	=> $_REQUEST['notes']
 			));
 			if ($event->error()) {
-				$page->error = $event->error();
-			}
-			else {
-				if ($_REQUEST['new_status'] != $task->status) {
-					$task->update(array('status'=>$_REQUEST['new_status']));
-					if ($task->error) {
-						$page->error = $task->error;
-					}
-					else {
-						$page->success = "Updated applied successfully";
-					}
-				}
-				else {
-					$page->success = "Updated applied successfully";
-				}
+				$page->addError($event->error());
 			}
 		}
 	}

@@ -6,15 +6,19 @@
 <a class="breadcrumb" href="/_engineering/tasks">Tasks</a>
 </div>
 <div class="title">Engineering Task</div>
-<?	if ($page->error) { ?>
-<div class="form_error"><?=$page->error?></div>
+<?	if ($page->errorCount()) { ?>
+<div class="form_error"><?=$page->errorString()?></div>
 <?	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
 <?	} ?>
 <div class="container_narrow">
 	<div class="label">Code</div>
+	<?	if (isset($task->id)) { ?>
+	<span class="value"><?=$form['code']?></span>
+	<?	} else { ?>
 	<input type="text" name="code" class="value input" value="<?=$form['code']?>" />
+	<?	} ?>
 </div>
 <div class="container_narrow">
 	<div class="label">Title</div>
@@ -31,7 +35,11 @@
 </div>
 <div class="container_narrow">
 	<div class="label">Date Requested</div>
+	<?	if (isset($task->id)) { ?>
+	<span class="value"><?=$form['date_added']?></span>
+	<?	} else { ?>
 	<input type="text" name="date_added" class="value input" value="<?=$form['date_added']?>" />
+	<?	} ?>
 </div>
 <div class="container_narrow">
 	<div class="label">Date Due</div>
@@ -51,6 +59,9 @@
 </div>
 <div class="container_narrow">
 	<div class="label">Status</div>
+	<?	if (isset($task->id)) { ?>
+	<span class="value"><?=$task->status?></span>
+	<?	} else { ?>
 	<select name="status" class="value input">
 		<option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
 		<option value="hold"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
@@ -58,24 +69,30 @@
 		<option value="cancelled"<? if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
 		<option value="complete"<? if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
 	</select>
+	<?	}	?>
 </div>
 <div class="container_narrow">
 	<div class="label">Priority</div>
 	<select name="priority" class="value input">
-		<option value="normal"<? if ($form['type'] == "NORMAL") print " selected"; ?>>Normal</option>
-		<option value="important"<? if ($form['type'] == "IMPORTANT") print " selected"; ?>>Important</option>
-		<option value="urgent"<? if ($form['type'] == "URGENT") print " selected"; ?>>Urgent</option>
-		<option value="critical"<? if ($form['type'] == "CRITICAL") print " selected"; ?>>Critical</option>
+		<option value="normal"<? if ($form['priority'] == "NORMAL") print " selected"; ?>>Normal</option>
+		<option value="important"<? if ($form['priority'] == "IMPORTANT") print " selected"; ?>>Important</option>
+		<option value="urgent"<? if ($form['priority'] == "URGENT") print " selected"; ?>>Urgent</option>
+		<option value="critical"<? if ($form['priority'] == "CRITICAL") print " selected"; ?>>Critical</option>
 	</select>
 </div>
 <div class="container_narrow">
 	<div class="label">Requested By</div>
+	<?	if (isset($task->id)) {
+		$requestor = $task->requestedBy(); ?>
+	<span class="value"><?=$requestor->first_name?> <?=$requestor->last_name?></span>
+	<?	} else { ?>
 	<select name="requested_id" class="value input" style="width: 240px">
 		<option value="">Select</option>
 <?	foreach($people as $person) { ?>
 		<option value="<?=$person->id?>"<? if ($person->id == $form['requested_id']) print " selected"; ?>><?=$person->login?></option>
 <?	} ?>
 	</select>
+	<?	}	?>
 </div>
 <div class="container_narrow">
 	<div class="label">Assigned To</div>
@@ -98,7 +115,7 @@
 <div class="container_narrow">
 	<div class="label">Project</div>
 	<select name="project_id" class="value input" style="width: 240px">
-		<option value="">No Project</option>
+		<option value="-">No Project</option>
 <?	foreach($projects as $project) { ?>
 		<option value="<?=$project->id?>"<? if ($project->id == $form['project_id']) print " selected"; ?>><?=$project->title?></option>
 <?	} ?>
@@ -108,9 +125,10 @@
 	<div class="label">Description</div>
 	<textarea name="description" style="width: 720px; height: 80px;"><?=$form['description']?></textarea>
 </div>
-<div class="container">
+<div class="container" class="form_footer">
 	<input type="submit" name="btn_submit" class="button" value="Submit">
 </div>
+<br>
 <?	if ($task->id) { ?>
 <div class="container_narrow">
 	<div class="label">Event Date</div>

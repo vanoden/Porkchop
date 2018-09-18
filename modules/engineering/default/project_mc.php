@@ -72,4 +72,10 @@
 	$role = new \Register\Role();
 	$role->get("engineering user");
 	$managers = $role->members();
+
+	$tasklist = new \Engineering\TaskList();
+	$tasks = $tasklist->find(array('project_id' => $project->id));
+	if ($tasklist->error()) {
+		$page->error = $tasklist->error();
+	}
 ?>

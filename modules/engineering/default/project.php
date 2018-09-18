@@ -37,4 +37,19 @@
 	<input type="submit" name="btn_submit" class="button" value="Submit">
 </div>
 </form>
+<table class="body" style="width: 756px">
+<tr><td class="label">Title</td>
+	<td class="label">Added</td>
+	<td class="label">Tech</td>
+	<td class="label">Status</td>
+</tr>
+<?	foreach ($tasks as $task) {
+		$worker = $task->assignedTo(); ?>
+<tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
+	<td class="value"><?=$task->date_added?></td>
+	<td class="value"><?=$worker->login?></td>
+	<td class="value"><?=$task->status?></td>
+</tr>
+<?	} ?>
+</table>
 </div>
