@@ -5,21 +5,19 @@
 <a class="breadcrumb" href="/_engineering/home">Engineering</a>
 <a class="breadcrumb" href="/_engineering/tasks">Tasks</a>
 </div>
-<div class="title">Engineering Task</div>
+<div class="title">Engineering Task<? if ($form['code']) print " ".$form['code']; ?></div>
 <?	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
 <?	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
 <?	} ?>
+<?	if (! isset($task->id)) { ?>
 <div class="container_narrow">
 	<div class="label">Code</div>
-	<?	if (isset($task->id)) { ?>
-	<span class="value"><?=$form['code']?></span>
-	<?	} else { ?>
 	<input type="text" name="code" class="value input" value="<?=$form['code']?>" />
-	<?	} ?>
 </div>
+<?	} ?>
 <div class="container_narrow">
 	<div class="label">Title</div>
 	<input type="text" name="title" class="value input" style="width: 240px" value="<?=$form['title']?>" />
