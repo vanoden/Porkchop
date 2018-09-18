@@ -119,6 +119,10 @@
 		}
 
 		public function update($parameters = array()) {
+			if (! is_numeric($this->id)) {
+				$this->_error = "No tasks identified to update";
+				return false;
+			}
 			$update_object_query = "
 				UPDATE	engineering_tasks
 				SET		id = id
@@ -261,12 +265,10 @@
 			}
 
 			$update_object_query .= "
-				WHERE	id = ?
-			";
+				WHERE	id = ".$this->id;
 
 			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
+				$update_object_query
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
