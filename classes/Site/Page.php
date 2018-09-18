@@ -14,6 +14,7 @@
 		public $title;
 		public $metadata;
 		public $template;
+		private $_errors = array();
 
         public function __construct () {
 			# Initialize Schema
@@ -698,6 +699,23 @@
                 return null;
             }
             return $value;
+		}
+
+		public function addError($error) {
+			array_push($this->_errors,$error);		
+		}
+
+		public function errorString($delimiter = "<br>\n") {
+			if (count($this->_errors)) return join($delimiter,$this->_errors);
+			return $this->error;
+		}
+
+		public function errors() {
+			return $this->_errors;
+		}
+
+		public function errorCount() {
+			return count($this->_errors);
 		}
 	}
 ?>
