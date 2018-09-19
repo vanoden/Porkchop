@@ -76,7 +76,7 @@
 		}
 
 		$old_product = $task->product();
-		if (isset($_REQUEST['product_id']) && $old_product->id != $_REQUEST['product_id']) {
+		if ($old_product->id != $_REQUEST['product_id']) {
 			$new_product = new \Engineering\Product($_REQUEST['product_id']);
 			array_push($msgs,"Product changed from ".$old_product->title." to ".$new_product->title);
 			$parameters['product_id'] = $_REQUEST['product_id'];
@@ -86,7 +86,7 @@
 			$parameters['date_due'] = $_REQUEST['date_due'];
 		}
 		$old_project = $task->project();
-		if (isset($_REQUEST['project_id']) && $old_project->id != $_REQUEST['project_id']) {
+		if ($old_project->id != $_REQUEST['project_id']) {
 			$new_project = new \Engineering\Project($_REQUEST['project_id']);
 			array_push($msgs,"Project changed from '".$old_project->title."' to '".$new_project->title."'");
 			$parameters['project_id'] = $_REQUEST['project_id'];

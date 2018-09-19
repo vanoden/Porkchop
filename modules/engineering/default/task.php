@@ -113,7 +113,7 @@
 <div class="container_narrow">
 	<div class="label">Project</div>
 	<select name="project_id" class="value input" style="width: 240px">
-		<option value="-">No Project</option>
+		<option value="">No Project</option>
 <?	foreach($projects as $project) { ?>
 		<option value="<?=$project->id?>"<? if ($project->id == $form['project_id']) print " selected"; ?>><?=$project->title?></option>
 <?	} ?>

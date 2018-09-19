@@ -253,7 +253,7 @@
 					$update_object_query .= ",
 						project_id = ".$project->id;
 				}
-				elseif ($parameters['project_id'] == '-') {
+				elseif ($parameters['project_id'] == '') {
 					$update_object_query .= ",
 						project_id = NULL
 					";
