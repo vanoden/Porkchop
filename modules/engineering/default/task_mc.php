@@ -117,6 +117,13 @@
 		else {
 			if ($task->add($parameters)) {
 				$page->success = "Task Created";
+				$event = new \Engineering\Event();
+				$event->add(array(
+					'task_id'	=> $task->id,
+					'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
+					'date_added'	=> date('Y-m-d H:i:s'),
+					'description'	=> 'Task created'
+				));
 				app_log("Task created",'debug',__FILE__,__LINE__);
 			}
 			else {
