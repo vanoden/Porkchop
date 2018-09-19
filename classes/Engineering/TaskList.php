@@ -21,6 +21,11 @@
 				AND		assigned_id = ".$parameters['assigned_id'];
 			}
 
+			if (isset($parameters['release_id']) && is_numeric($parameters['release_id'])) {
+				$find_objects_query .= "
+				AND		release_id = ".$parameters['release_id'];
+			}
+
 			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					$icount = 0;

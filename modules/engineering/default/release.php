@@ -44,3 +44,17 @@
 </div>
 </form>
 </div>
+<?	if ($release->id) { ?>
+<table style="width: 756px;">
+<tr><td class="label">Title</td>
+	<td class="label">Project</td>
+	<td class="label">Status</td>
+</tr>
+<?	foreach ($tasks as $task) { ?>
+<tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
+	<td class="value"><?=$task->project->title?></td>
+	<td class="value"><?=$task->status?></td>
+</tr>
+<?	} ?>
+</table>
+<?	} ?>

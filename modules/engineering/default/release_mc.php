@@ -59,6 +59,8 @@
 		$form['date_scheduled'] = $release->date_scheduled;
 		$form['status'] = $release->status;
 		$form['description'] = $release->description;
+		$tasklist = new \Engineering\TaskList();
+		$tasks = $tasklist->find(array('release_id' => $release->id));
 	}
 	elseif ($page->error) {
 		$form['code'] = $_REQUEST['code'];
