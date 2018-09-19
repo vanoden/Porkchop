@@ -201,7 +201,7 @@
 			return $this->_error;
 		}
 		private function _valid_status($string) {
-			if (preg_match('/^(new|released)$/i',$string)) return true;
+			if (preg_match('/^(new|testing|released)$/i',$string)) return true;
 			else return false;
 		}
 	}

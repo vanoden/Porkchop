@@ -24,6 +24,7 @@
 	<div class="label">Status</div>
 	<select name="status" class="value input">
 		<option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
+		<option value="testing"<? if ($form['status'] == "TESTING") print " selected"; ?>>Testing</option>
 		<option value="released"<? if ($form['status'] == "RELEASED") print " selected"; ?>>Released</option>
 	</select>
 </div>
