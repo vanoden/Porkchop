@@ -32,17 +32,29 @@
 				return false;
 			}
 
+			if (get_mysql_date($parameters['date_added'])) {
+				$date_added = get_mysql_date($parameters['date_added']);
+			}
+			else {
+				$date_added = date('Y-m-d H:i:s');
+			}
+
 			$add_object_query = "
 				INSERT
 				INTO	engineering_events
 				(		task_id,person_id,date_event,description)
 				VALUES
-				(		?,?,sysdate(),?)
+				(		?,?,?,?)
 			";
 
 			$GLOBALS['_database']->Execute(
 				$add_object_query,
-				array($task->id,$parameters['person_id'],$parameters['description'])
+				array(
+					$task->id,
+					$parameters['person_id'],
+					$date_added,
+					$parameters['description']
+				)
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {

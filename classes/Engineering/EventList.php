@@ -16,6 +16,10 @@
 				AND		task_id = ".$parameters['task_id'];
 			}
 
+			$find_objects_query .= "
+				ORDER BY date_event
+			";
+
 			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
 				$find_objects_query .= "
 				LIMIT ".$parameters['_limit'];

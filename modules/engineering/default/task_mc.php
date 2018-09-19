@@ -1,9 +1,9 @@
 <?php
+	$page = new \Site\Page();
 	if (! $GLOBALS['_SESSION_']->customer->has_role('engineering user')) {
-		$page->error = "Permission Denied";
+		$page->addError("Permission Denied");
 		return;
 	}
-	$page = new \Site\Page();
 	$task = new \Engineering\Task();
 
 	if ($_REQUEST['task_id']) {
@@ -11,7 +11,7 @@
 	}
 	elseif (isset($_REQUEST['code'])) {
 		$task->get($_REQUEST['code']);
-		if ($task->error) $page->error = $task->error;
+		if ($task->error) $page->addError($task->error);
 	}
 	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
@@ -28,7 +28,7 @@
 			}
 		}
 		else {
-			$page->error = "Title required";
+			$page->addError("Title required");
 		}
 
 		if (! $task->id) {
@@ -99,7 +99,7 @@
 				app_log("Task updated",'debug',__FILE__,__LINE__);
 			}
 			else {
-				$page->error = "Error saving updates: ".$task->error();
+				$page->addError("Error saving updates: ".$task->error());
 			}
 			if (count($msgs) > 0) {
 				$event = new \Engineering\Event();
@@ -120,7 +120,7 @@
 				app_log("Task created",'debug',__FILE__,__LINE__);
 			}
 			else {
-				$page->error = "Error creating task: ".$task->error();
+				$page->addError("Error creating task: ".$task->error());
 			}
 		}
 
@@ -154,7 +154,7 @@
 
 	$peopleList = new \Register\CustomerList();
 	$people = $peopleList->find(array("status" => array('NEW','ACTIVE')));
-	if ($peoplelist->error) $page->error = $peoplelist->error;
+	if ($peoplelist->error) $page->addError($peoplelist->error);
 
 	$role = new \Register\Role();
 	$role->get("engineering user");
@@ -162,15 +162,15 @@
 
 	$productlist = new \Engineering\ProductList();
 	$products = $productlist->find();
-	if ($productlist->error()) $page->error = $productlist->error();
+	if ($productlist->error()) $page->addError($productlist->error());
 
 	$releaselist = new \Engineering\ReleaseList();
 	$releases = $releaselist->find();
-	if ($releaselist->error()) $page->error = $releaselist->error();
+	if ($releaselist->error()) $page->addError($releaselist->error());
 
 	$projectlist = new \Engineering\ProjectList();
 	$projects = $projectlist->find();
-	if ($projectlist->error()) $page->error = $projectlist->error();
+	if ($projectlist->error()) $page->addError($projectlist->error());
 	
 	if ($task->id) {
 		$task->details();
@@ -196,9 +196,9 @@
 
 		$eventlist = new \Engineering\EventList();
 		$events = $eventlist->find(array('task_id'=> $task->id));
-		if ($eventlist->error()) $page->error = $eventlist->error();
+		if ($eventlist->error()) $page->addError($eventlist->error());
 	}
-	elseif ($page->error) {
+	elseif ($page->errorCount()) {
 		$form['code'] = $_REQUEST['code'];
 		$form['title'] = $_REQUEST['title'];
 		$form['estimate'] = $_REQUEST['estimate'];
@@ -214,6 +214,6 @@
 		$form['release_id'] = $_REQUEST['release_id'];
 	}
 	else {
-		$task->date_added = date('m/d/Y');
+		$task->date_added = 'now';
 	}
 ?>
