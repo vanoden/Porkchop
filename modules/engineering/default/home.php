@@ -113,8 +113,7 @@
 <div class="title">Products</div>
 <a class="more" href="/_engineering/products">Manage Products</a>
 <table class="body">
-<tr><td class="label column_code">Code</td>
-	<td class="label column_title">Title</td>
+<tr><td class="label column_title">Title</td>
 	<td class="label" style="width: 600px">Description</td>
 </tr>
 <?php
