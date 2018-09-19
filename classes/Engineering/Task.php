@@ -89,8 +89,9 @@
 				return false;
 			}
 
-			if (get_mysql_date($parameters['date_added']))
+			if (get_mysql_date($parameters['date_added'])) {
 				$date_added = get_mysql_date($parameters['date_added']);
+			}
 			else {
 				$date_added = date('Y-m-d H:i:s');
 			}
