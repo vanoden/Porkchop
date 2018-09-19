@@ -44,8 +44,6 @@
 	header("Expires: 0");
 	header("Cache-Control: no-cache, must-revalidate");
 
-	install_log("Upgrading site to 201809171222");
-
 	# Get version.txt
 	if (file_exists(HTML."/version.txt")) {
 		$ver_contents = file_get_contents(HTML."/version.txt");
@@ -136,7 +134,7 @@
 #	if ($class->version() != 0) install_fail("Version 1 Required");
 	$class = new \Engineering\Schema();
 	install_log("Engineering::Schema: version ".$class->version());
-	if ($class->version() != 2) install_fail("Version 1 Required");
+	if ($class->version() != 3) install_fail("Version 3 Required");
 
 	###################################################
 	### Initialize Session							###
