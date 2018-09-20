@@ -37,6 +37,8 @@
 	<input type="submit" name="btn_submit" class="button" value="Submit">
 </div>
 </form>
+<?	if ($project->id) { ?>
+<div class="title">Tasks</div>
 <table class="body" style="width: 756px">
 <tr><td class="label">Title</td>
 	<td class="label">Added</td>
@@ -52,4 +54,5 @@
 </tr>
 <?	} ?>
 </table>
+<?	} ?>
 </div>
