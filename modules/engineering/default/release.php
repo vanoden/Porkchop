@@ -51,11 +51,16 @@
 	<td class="label">Project</td>
 	<td class="label">Status</td>
 </tr>
-<?	foreach ($tasks as $task) { ?>
-<tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
-	<td class="value"><?=$task->project->title?></td>
-	<td class="value"><?=$task->status?></td>
+<?	foreach ($tasks as $task) { 
+		$project = $task->project();
+?>
+<tr><td class="value <?=$greenbar?>"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
+	<td class="value <?=$greenbar?>"><?=$project->title?></td>
+	<td class="value <?=$greenbar?>"><?=$task->status?></td>
 </tr>
-<?	} ?>
+<?		if (! $greenbar) $greenbar = 'greenbar';
+		else $greenbar = '';
+	}
+?>
 </table>
 <?	} ?>
