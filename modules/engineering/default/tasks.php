@@ -26,7 +26,7 @@
 	<select name="project_id" class="value input" onchange="document.forms[0].submit();">
 		<option value="">Any</option>
 <?	foreach ($projects as $project) { ?>
-		<option value="<?=$project->id?>"<? if ($project->id = $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
+		<option value="<?=$project->id?>"<? if ($project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
 <?	} ?>
 	</select>
 	<input type="checkbox" name="complete" value="1"<? if ($_REQUEST['complete']) print " checked"; ?> onchange="document.forms[0].submit(); " />Completed
