@@ -165,10 +165,13 @@
 <?	foreach ($events as $event) {
 	$person = $event->person();
 ?>
-<tr><td class="value"><?=$event->date_event?></td>
-	<td class="value"><?=$person->login?></td>
+<tr><td class="value <?=$greenbar?>"><?=$event->date_event?></td>
+	<td class="value <?=$greenbar?>"><?=$person->login?></td>
 </tr>
-<tr><td colspan="2" class="value" style="border-bottom: 1px solid gray"><?=$event->description?></td></tr>
-<?	} ?>
+<tr><td colspan="2" class="value <?=$greenbar?>" style="border-bottom: 1px solid gray"><?=$event->description?></td></tr>
+<?		if ($greenbar) $greenbar = '';
+		else $greenbar = 'greenbar';
+	}
+?>
 </table>
 <?	}	?>
