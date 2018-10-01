@@ -73,6 +73,8 @@
 				$this->module = $module;
 				$this->view = $view;
 				$this->index = $index;
+				if ($GLOBALS['_config']->style[$this->module]) $this->style = $GLOBALS['_config']->style[$this->module];
+				app_log("Style: ".$this->style);
 			}
 			return;
 		}
