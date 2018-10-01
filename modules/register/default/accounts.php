@@ -45,9 +45,6 @@
 	td.value {
 		overflow: hidden;
 	}
-	.greenbar {
-		background-color: #bbbbbb;
-	}
 </style>
 </script>
 	<div class="title">Accounts</div>
@@ -87,20 +84,22 @@
 		else $greenbar = " greenbar";
 	}
 ?>
-	<tr><td colspan="6" style="text-align: center">
-		<a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><<</a>
-		<a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><</a>
-		&nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$customers_per_page+1?> of <?=$total_customers?>&nbsp;
-		<a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">></a>
-		<a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">>></a>
-		</td>
-	</tr>
 <?
 	if (role('register manager'))
 	{
 ?>
 	<form action="<?=PATH?>/_register/register" method="get">
-	<tr><td colspan="4" style="text-align: center"><input type="submit" name="button_submit" value="Add Account" class="input button"/>
+	<tr><td colspan="6" style="text-align: center"><input type="submit" name="button_submit" value="Add Account" class="input button"/></td></tr>
 	</form>
 <?	} ?>
 	</table>
+		
+	<section>
+		<article class="segment pager_bar">
+		<a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><<</a>
+		<a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><</a>
+		&nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$customers_per_page+1?> of <?=$total_customers?>&nbsp;
+		<a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">></a>
+		<a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">>></a>
+			</article>
+	</section>

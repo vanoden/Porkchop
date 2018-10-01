@@ -58,14 +58,6 @@
 	<span class="value"><?=$customer->login?></span>
 	<span class="value">[<?=$customer->auth_method?>]</span>
 </div>
-<div id="accountFirstNameQuestion" class="registerQuestion">
-	<span class="label registerLabel registerFirstNameLabel">*First Name:</span>
-	<input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?=$customer->first_name?>" />
-</div>
-<div id="accountLastNameQuestion" class="registerQuestion">
-	<span class="label registerLabel registerLastNameLabel">*Last Name:</span>
-	<input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" />
-</div>
 <div id="accountOrganizationQuestion" class="registerQuestion">
 	<span class="label registerLabel registerCustom1Label">*Organization:</span>
 	<select class="value input registerValue" name="organization_id">
@@ -74,6 +66,14 @@
 		<option value="<?=$organization->id?>"<? if ($organization->id == $customer->organization->id) print " selected"; ?>><?=$organization->name?></option>
 	<?	} ?>
 	</select>
+</div>
+<div id="accountFirstNameQuestion" class="registerQuestion">
+	<span class="label registerLabel registerFirstNameLabel">*First Name:</span>
+	<input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?=$customer->first_name?>" />
+</div>
+<div id="accountLastNameQuestion" class="registerQuestion">
+	<span class="label registerLabel registerLastNameLabel">*Last Name:</span>
+	<input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" />
 </div>
 <div id="accountTimeZoneQuestion" class="registerQuestion">
 	<span class="label registerLabel registerTimeZoneLabel">*Time Zone:</span>

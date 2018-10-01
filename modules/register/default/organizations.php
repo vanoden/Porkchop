@@ -21,18 +21,9 @@
 	td.value {
 		overflow: hidden;
 	}
-	.greenbar {
-		background-color: #bbbbbb;
-	}
 	a.pager {
 		margin: 5px;
 	}
-	input.checkbox {
-		height: 22px;
-		width: 22px;
-	}
-	span.status {
-		font-size: 20px;
 	}
 </style>
 </script>
@@ -40,10 +31,11 @@
 <div class="title">Organizations</div>
 <div id="search_container">
 	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput"/>
+	<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
 	<input type="checkbox" name="hidden" class="checkbox" value="1"<? if ($_REQUEST['hidden']) print " checked"; ?> /><span class="status">Hidden</span>
 	<input type="checkbox" name="expired" class="checkbox" value="1"<? if ($_REQUEST['expired']) print " checked"; ?> /><span class="status">Expired</span>
 	<input type="checkbox" name="deleted" class="checkbox" value="1"<? if ($_REQUEST['deleted']) print " checked"; ?> /><span class="status">Deleted</span>
-	<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
+	
 	<input type="hidden" id="start" name="start" value="0">
 </div>
 <hr style="visibility: hidden">
@@ -63,20 +55,21 @@
 		else $greenbar = " greenbar";
 	}
 ?>
-<tr><td colspan="6" style="text-align: center">
-	<a href="javascript:void(0)" class="pager pagerFirst" onclick="submitSearch(0)"><<</a>
-	<a href="javascript:void(0)" class="pager pagerPrevious" onclick="submitSearch(<?=$prev_offset?>)"><</a>
-	&nbsp;<?=$_REQUEST['start']+1?> - <?=$next_offset?> of <?=$total_organizations?>&nbsp;
-	<a href="javascript:void(0)" class="pager pagerNext" onclick="submitSearch(<?=$next_offset?>)">></a>
-	<a href="javascript:void(0)" class="pager pagerLast" onclick="submitSearch(<?=$last_offset?>)">>></a>
-	</td>
-</tr>
 </table>
+<section>
+		<article class="segment pager_bar">
+		<a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><<</a>
+		<a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><</a>
+		&nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$customers_per_page+1?> of <?=$total_customers?>&nbsp;
+		<a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">></a>
+		<a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">>></a>
+			</article>
+	</section>
 </form>
 <?
 	if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 ?>
 <form action="<?=PATH?>/_register/organization" method="get">
-<span style="text-align: center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span>
+<div class="button-bar"><span style="text-align: center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span></div>
 <?	} ?>
 </form>

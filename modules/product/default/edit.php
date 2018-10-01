@@ -1,3 +1,4 @@
+<!--
 <style>
 	span.label {
 		float: left;
@@ -39,6 +40,7 @@
 		padding: 0px;
 	}
 </style>
+-->
 <script language="Javascript">
 	function initImageSelectWizard()
 	{
@@ -64,19 +66,19 @@
 <input type="hidden" name="code" id="code" value="<?=$item->code?>" />
 <input type="hidden" name="deleteImage" id="deleteImage" value="" />
 <div class="body">
-	<div class="editItem" id="itemCode">
+	<div class="input-horiz" id="itemCode">
 		<span class="label">Code</span>
 		<span class="value"><?=$item->code?></span>
 	</div>
-	<div class="editItem" id="itemType">
+	<div class="input-horiz" id="itemType">
 		<span class="label">Type</span>
 		<span class="value"><?=$item->type?></span>
 	</div>
-	<div class="editItem" id="itemName">
+	<div class="input-horiz" id="itemName">
 		<span class="label">Name</span>
 		<input type="text" class="value input" name="name" id="name" value="<?=$item->name?>" />
 	</div>
-	<div class="editItem" id="itemStatus">
+	<div class="input-horiz" id="itemStatus">
 		<span class="label">Status</span>
 		<select name="status" class="value input">
 			<option value="">Select</option>
@@ -85,35 +87,35 @@
 			<option value="DELETED"<? if ($item->status == 'DELETED') print " selected"; ?>>DELETED</option>
 		</select>
 	</div>
-	<div class="editItem" id="itemShortDescription">
+	<div class="input-horiz" id="itemShortDescription">
 		<span class="label">Short Description</span>
 		<textarea class="value input" name="short_description" id="short_description"><?=$item->short_description?></textarea>
 	</div>
-	<div class="editItem" id="itemDescription">
+	<div class="input-horiz" id="itemDescription">
 		<span class="label">Description</span>
 		<textarea class="value input" name="description" id="description"><?=$item->description?></textarea>
 	</div>
-	<div class="editItem">
+	<div class="input-horiz">
 		<span class="label">Model</span>
 		<input type="text" class="value input" name="model" id="model" value="<?=$item->model?>" />
 	</div>
-	<div class="editItem">
+	<div class="input-horiz">
 		<span class="label">Empirical Formula</span>
 		<input type="text" class="value input" name="empirical_formula" id="empirical_formula" value="<?=$item->empirical_formula?>" />
 	</div>
-	<div class="editItem">
+	<div class="input-horiz">
 		<span class="label">Sensitivity</span>
 		<input type="text" class="value input" name="sensitivity" id="sensitivity" value="<?=$item->sensitivity?>" />
 	</div>
-	<div class="editItem">
+	<div class="input-horiz">
 		<span class="label">Measure Range</span>
 		<input type="text" class="value input" name="measure_range" id="measure_range" value="<?=$item->measure_range?>" />
 	</div>
-	<div class="editItem">
+	<div class="input-horiz">
 		<span class="label">Accuracy</span>
 		<input type="text" class="value input" name="accuracy" id="accuracy" value="<?=$item->accuracy?>" />
 	</div>
-	<div class="editItem">
+	<div class="input-horiz">
 		<span class="label">Manual</span>
 		<select class="value input" name="manual_id" id="manual_id">
 			<option value="">Select</option>
@@ -122,7 +124,7 @@
 <?	} ?>
 		</select>
 	</div>
-	<div class="editItem">
+	<div class="input-horiz">
 		<span class="label">Spec Table</span>
 		<select class="value input" name="spec_table_image" id="spec_table_image">
 			<option value="">Select</option>
@@ -131,7 +133,7 @@
 <?	} ?>
 		</select>
 	</div>
-	<div class="editImages" id="itemImages">
+	<div class="input-horiz" id="itemImages">
 		<span class="label">Images</span>
 <?	foreach($item->image as $image) { ?>
 		<div class="editItemImage" id="ItemImageDiv_<?=$image->code?>">
@@ -139,10 +141,12 @@
 			<img class="editItemThumbnail" src="/_media/api?method=downloadMediaFile&code=<?=$image->files[0]->code?>">
 		</div>
 <?	} ?>
-		<div class="editItemImage" id="newImageBox"><input type="button" name="addImageButton" value="Add Image" onclick="initImageSelectWizard()" /><input type="hidden" name="new_image_code" id="new_image_code" /></div>
+		<div class="editItemImage" id="newImageBox">
+            <input type="button" name="addImageButton" value="" class="add-image" onclick="initImageSelectWizard()" />
+            <input type="hidden" name="new_image_code" id="new_image_code" />
+        </div>
 	</div>
-	<hr style="width: 900px; clear: both; visibility: hidden;" />
-	<div class="editSubmit">
+	<div class="editSubmit button-bar">
 		<input type="submit" class="button" value="Update" name="submit" id="submit"/>
 	</div>
 </div>

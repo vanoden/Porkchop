@@ -23,19 +23,16 @@
 	.descValue {
 		width: 700px;
 	}
-	table.body {
-		border: 1px solid #333333;
-	}
 </style>
 <div class="body">
-	<span class="title">Products</span>
+	<div class="title">Products</div>
 	<table class="body">
-	<tr><td class="label codeValue">Code</td>
-		<td class="label smallValue">Type</td>
-		<td class="label smallValue">Status</td>
-		<td class="label nameValue">Name</td>
-		<td class="label descValue">Description</td>
-		<td class="label smallValue">Object</td>
+	<tr><th class="label codeValue">Code</th>
+		<th class="label smallValue">Type</th>
+		<th class="label smallValue">Status</th>
+		<th class="label nameValue">Name</th>
+		<th class="label descValue">Description</th>
+		<th class="label smallValue">Object</th>
 	</tr>
 <?	foreach ($products as $product) { ?>
 	<tr><td class="value codeValue<?=$greenbar?>"><a href="/_product/edit/<?=$product->code?>"><?=$product->code?></a></td>
