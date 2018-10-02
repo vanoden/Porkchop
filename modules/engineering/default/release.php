@@ -49,13 +49,16 @@
 <table style="width: 756px;">
 <tr><td class="label">Title</td>
 	<td class="label">Project</td>
+	<td class="label">Product</td>
 	<td class="label">Status</td>
 </tr>
 <?	foreach ($tasks as $task) { 
 		$project = $task->project();
+		$product = $task->product();
 ?>
 <tr><td class="value <?=$greenbar?>"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
 	<td class="value <?=$greenbar?>"><?=$project->title?></td>
+	<td class="value <?=$greenbar?>"><?=$product->title?></td>
 	<td class="value <?=$greenbar?>"><?=$task->status?></td>
 </tr>
 <?		if (! $greenbar) $greenbar = 'greenbar';
