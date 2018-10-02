@@ -1,4 +1,5 @@
 <style>
+/*
 	.collectionNameColumn {
 		width: 330px;
 		overflow: hidden;
@@ -18,6 +19,7 @@
 	.value {
 		font-size: 12px;
 	}
+*/
 </style>
 <script language="Javascript">
 	function newCollection()
@@ -84,13 +86,13 @@
 </table>
 <br>
 <div class="title">Jobs [<?=$total_collections?>]</div>
-<table class="body monitorCollectionsBody" cellpadding="0" cellspacing="0" style="width: 1000px">
-<tr><td class="label columnLabel collectionNameColumn">Name</td>
-	<td class="label columnLabel collectionCustomerColumn">Organization</td>
-	<td class="label columnLabel collectionCustomerColumn">Customer</td>
-	<td class="label columnLabel collectionStartedColumn">Started</td>
-	<td class="label columnLabel collectionFinishedColumn">Finished</td>
-	<td class="label columnLabel collectionDeleteColumn">Delete</td>
+<table class="body monitorCollectionsBody" cellpadding="0" cellspacing="0">
+<tr><td class="label columnLabel collectionNameColumn">Name</th>
+	<th class="label columnLabel collectionCustomerColumn">Organization</th>
+	<th class="label columnLabel collectionCustomerColumn">Customer</th>
+	<th class="label columnLabel collectionStartedColumn">Started</th>
+	<th class="label columnLabel collectionFinishedColumn">Finished</th>
+	<th class="label columnLabel collectionDeleteColumn">Delete</th>
 </tr>
 <?	foreach ($collections as $collection)
 	{

@@ -27,6 +27,9 @@
 	}
 </style>
 </script>
+
+<section>
+	<article class="segment">
 <form id="orgSearch" method="get" class="float: left">
 <div class="title">Organizations</div>
 <div id="search_container">
@@ -56,7 +59,7 @@
 	}
 ?>
 </table>
-<section>
+</article>
 		<article class="segment pager_bar">
 		<a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><<</a>
 		<a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><</a>
@@ -64,8 +67,9 @@
 		<a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">></a>
 		<a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">>></a>
 			</article>
-	</section>
 </form>
+	
+</section>
 <?
 	if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 ?>

@@ -20,6 +20,7 @@
 	}
 </script>
 <style type="text/css">
+/*
 	.accountInfo {
 		border-top: 1px solid gray;
 	}
@@ -38,6 +39,7 @@
 	}
 	div.registerQuestion {
 		float: left;
+*/
 	}
 </style>
 <form name="register" action="<?=PATH?>/_register/account" method="POST">
@@ -65,6 +67,7 @@
 	<span class="label registerLabel registerLastNameLabel">*Last Name:</span>
 	<input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" />
 </div>
+	<br>
 <div id="accountOrganizationQuestion" class="registerQuestion">
 	<span class="label registerLabel registerCustom1Label">*Organization:</span>
 	<span class="value registerValue"><?=$customer->organization->name?></span>
@@ -83,7 +86,7 @@
 <hr style="width: 100%; color: white; clear: both; height: 0px;"/>
 <!-- Contact Options -->
 <div class="form_instruction">Add methods of contact.</div>
-<table cellpadding="0" cellspacing="0" class="body" style="width:800px">
+<table cellpadding="0" cellspacing="0" class="body contactMethods">
 <tr><td class="label">Type</td>
 	<td class="label contactDescriptionColumn">Description</td>
 	<td class="label contactValueColumn">Address/Number</td>
