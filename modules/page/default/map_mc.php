@@ -1,3 +1,0 @@
-<?
-	$pageList = new \Site\PageList();
-?>
