@@ -648,6 +648,30 @@
 			}
 		}
 
+		public function metadata() {
+			$get_data_query = "
+				SELECT	`key`,
+						`value`
+				FROM	page_metadata
+				WHERE	page_id = ?
+			";
+
+			$rs = $GLOBALS['_database']->Execute(
+				$get_data_query,
+				array($this->id)
+			);
+
+			if (! $rs) {
+				$this->error = "SQL Error in Site::Page::metadata(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			$metadata = array();
+			while(list($key,$value) = $rs->FetchRow()) {
+				array_push($metadata,array($key,$value));
+			}
+			return $metadata;
+		}
+
 		public function setMetadata($key,$value) {
             if (! preg_match('/^\d+$/',$this->id)) {
                 $this->error = "Invalid page id in Site::Page::setMetadata(): ";
