@@ -48,6 +48,7 @@
 		# Find Matching Threads
 		$parameters = array();
 		if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+		if (isset($_REQUEST['module'])) $parameters['module'] = $_REQUEST['module'];
 		if (isset($_REQUEST['options'])) $parameters['options'] = $_REQUEST['options'];
 		$pages = $page_list->find($parameters);
 
@@ -73,24 +74,19 @@
 
 		# Initiate Page Object
 		$page = new \Site\Page();
-		if (isset($_REQUEST['module'])) $page->module = $_REQUEST['module'];
-		elseif (isset($_REQUEST['target'])) {
-			$page->module = 'content';
-			$page->view = 'index';
-			$page->index = $_REQUEST['target'];
-		}
-		if (isset($_REQUEST['view'])) $page->view = $_REQUEST['view'];
-		if (isset($_REQUEST['index'])) $page->index = $_REQUEST['index'];
-
-		# Find Matching Page
-		$page->get();
+		if (isset($_REQUEST['module'])) $page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index']);
+		elseif (isset($_REQUEST['target'])) $page->get('content','index',$_REQUEST['target']);
 
 		# Error Handling
 		if ($page->error) error($page->error);
-		else{
+		elseif ($page->id) {
 			$response->request = $_REQUEST;
 			$response->page = $page;
 			$response->success = 1;
+		}
+		else {
+			$response->success = 0;
+			$response->error = "Page not found";
 		}
 
 		api_log('content',$_REQUEST,$response);
@@ -355,6 +351,30 @@
 
 		# Send Response
 		api_log('content',$_REQUEST,$response);
+		print formatOutput($response);
+	}
+	function setPageMetadata() {
+		$response = new \HTTP\Response();
+
+		$page = new \Site\Page();
+		if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+			if ($page->setMetadata($_REQUEST['key'],$_REQUEST['value'])) {
+				$response->success = 1;
+				$response->metadata = array('key' => $_REQUEST['key'],'value' => $_REQUEST['value']);
+			}
+			else {
+				$response->success = 0;
+				$response->error = "Error setting metadata: ".$page->errorString();
+			}
+		}
+		elseif ($page->errorCount()) {
+			$response->success = 0;
+			$response->error = "Error finding page '".$_REQUEST['module'].":".$_REQUEST['view']."': ".$page->errorString();
+		}
+		else {
+			$response->success = 0;
+			$response->error = "Page '".$_REQUEST['module'].":".$_REQUEST['view']."' Not Found";
+		}
 		print formatOutput($response);
 	}
 	###################################################

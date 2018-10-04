@@ -43,40 +43,45 @@
 			}
 		}
 
-		public function get($module,$view,$index = '') {
+		public function get($module,$view,$index = null) {
+			$parameters = array($module,$view);
+
 			# Prepare Query
 			$get_object_query = "
 				SELECT	id
 				FROM	page_pages
 				WHERE	module = ?
 				AND		view = ?
-				AND		`index` = ?
 			";
+			if (isset($index)) {
+				$get_object_query .= "
+				AND		`index` = ?
+				";
+				array_push($parameters,$index);
+			}
+			else {
+				$get_object_query .= "
+				AND		`index` is null
+				";
+			}
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
-				array(
-					  $module,
-					  $view,
-					  $index
-				)
+				$parameters
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Page::get: ".$GLOBALS['_database']->ErrorMsg();
+				$this->addError("SQL Error in Page::get: ".$GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
+
 			if (is_numeric($id)) {
 				$this->id = $id;
 				return $this->details();
 			}
 			else {
-				$this->module = $module;
-				$this->view = $view;
-				$this->index = $index;
-				if ($GLOBALS['_config']->style[$this->module]) $this->style = $GLOBALS['_config']->style[$this->module];
-				app_log("Style: ".$this->style);
+				return false;
 			}
-			return;
+			return true;
 		}
 
 		public function add($module = '',$view = '',$index = '') {
@@ -174,6 +179,8 @@
 
 			# Pull Key Metadata
 			$this->template = $_metadata->get('template');
+			
+			return true;
     	}
 
 		public function load_template() {
@@ -673,13 +680,17 @@
 		}
 
 		public function setMetadata($key,$value) {
+			if (! isset($this->id)) {
+				$this->addError("No page id");
+				return false;
+			}
             if (! preg_match('/^\d+$/',$this->id)) {
-                $this->error = "Invalid page id in Site::Page::setMetadata(): ";
-                return null;
+                $this->addError("Invalid page id in Site::Page::setMetadata()");
+                return false;
             }
             if (! isset($key)) {
-                $this->error = "Invalid key name in Site::Page::setMetadata(): ";
-                return null;
+                $this->addError("Invalid key name in Site::Page::setMetadata()");
+                return false;
             }
 
             $set_data_query = "
@@ -694,10 +705,10 @@
                 array($this->id,$key,$value)
             );
             if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->error = "SQL Error setting metadata in Site::Page::setMetadata(): ".$GLOBALS['_database']->ErrorMsg();
-                return null;
+                $this->addError("SQL Error setting metadata in Site::Page::setMetadata(): ".$GLOBALS['_database']->ErrorMsg());
+                return false;
             }
-            return $value;
+            return true;
 		}
 
 		public function unsetMetadata($key) {
@@ -741,6 +752,7 @@
 		}
 
 		public function errorCount() {
+			if ($this->error) array_push($this->error);
 			return count($this->_errors);
 		}
 	}
