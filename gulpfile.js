@@ -15,7 +15,7 @@ gulp.task('hello', function() {
 	console.log('Hello, Tony');
 });
 
-gulp.task('process', ['pre','js','css','jpegs','pngs','svg'], () =>
+gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif'], () =>
 	gulp.src('html.src/**/*.html')
 		.pipe(data(() => (
 			{
@@ -84,6 +84,12 @@ gulp.task('svg', () =>
 
 gulp.task('jpegs', () =>
 	gulp.src('html.src/**/*.jpg')
+		.pipe(debug())
+		.pipe(gulp.dest('html'))
+);
+
+gulp.task('gif', () =>
+	gulp.src('html.src/**/*.gif')
 		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );
