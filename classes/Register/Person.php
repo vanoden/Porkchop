@@ -123,6 +123,16 @@
 			return $this;
 		}
 
+		public function full_name() {
+			$full_name = '';
+			if (strlen($this->first_name)) $full_name .= $this->first_name;
+			if (strlen($this->last_name)) {
+				if (strlen($full_name)) $full_name .= " ";
+				$full_name .= $this->last_name;
+			}
+			if (! strlen($full_name)) $full_name = $this->code;
+			return $full_name;
+		}
 		public function password_strength($string) {
 			$password_strength = strlen($string);
 			if (preg_match('/[A-Z]/',$string)) $password_strength += 1;
