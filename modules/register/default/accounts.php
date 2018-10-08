@@ -20,34 +20,18 @@
 	}
 </script>
 <style>
-	.label {
-		text-align: left;
-	}
-	th.accountsLoginLabel {
-		width: 150px;
-	}
-	th.accountsFirstLabel {
-		width: 140px;
-	}
-	th.accountsLastLabel {
-		width: 140px;
-	}
-	th.accountsOrgLabel {
-		width: 200px;
-		overflow-x: hidden;
-	}
-	th.accountsStatus {
-		width: 100px;
-	}
-	th.accountsLastActive {
-		width: 150px;
-	}
-	td.value {
-		overflow: hidden;
-	}
+	.label { text-align: left; }
+	th.accountsLoginLabel { width: 18%; }
+	th.accountsFirstLabel { width: 15%; }
+	th.accountsLastLabel { width: 15%; }
+	th.accountsOrgLabel { width: 24%; overflow-x: hidden; }
+	th.accountsStatus {	width: 10%;	}
+	th.accountsLastActive {	width: 18%; }
+	td.value { overflow: hidden; }
 </style>
+
 </script>
-	<div class="title">Accounts</div>
+	<h2>Accounts</h2>
 <?	if ($page->error) { ?>
 	<div class="form_error"><?=$page->error?></div>
 <?	} ?>
@@ -57,11 +41,11 @@
 	<div id="search_container">
 		<form id="custSearch" method="get" class="float: left">
 		<input type="text" id="searchAccountInput" name="search" value="<?=$_REQUEST['search']?>" class="value input searchInput"/>
+		<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
 		<input type="checkbox" name="hidden" value="1"<? if ($_REQUEST['hidden']) print " checked"; ?> /><span>Hidden</span>
 		<input type="checkbox" name="expired" value="1"<? if ($_REQUEST['expired']) print " checked"; ?> /><span>Expired</span>
 		<input type="checkbox" name="deleted" value="1"<? if ($_REQUEST['deleted']) print " checked"; ?> /><span>Deleted</span>
 		<input type="hidden" id="start" name="start" value="0">
-		<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
 		</form>
 	</div>
 	<table cellpadding="0" cellspacing="0" class="body">
@@ -94,12 +78,14 @@
 <?	} ?>
 	</table>
 		
-	<section>
-		<article class="segment pager_bar">
-		<a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><<</a>
-		<a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><</a>
+<!--    Standard Page Navigation Bar ADMIN ONLY -->
+<div class="pager_bar">
+	<div class="pager_controls">
+		<a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerFirst"><< First </a>
+		<a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerPrevious"><</a>
 		&nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$customers_per_page+1?> of <?=$total_customers?>&nbsp;
-		<a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">></a>
-		<a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">>></a>
-			</article>
-	</section>
+		<a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerNext">></a>
+		<a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerLast"> Last >></a>
+	</div>
+</div>
+<!--    [end] Standard Page Navigation Bar ADMIN ONLY-->

@@ -20,30 +20,18 @@
 	}
 </script>
 <style type="text/css">
-	.accountInfo {
-		border-top: 1px solid gray;
-	}
-	.accountRoles {
-		position: relative;
-		top: 10px;
-		display: block;
-		clear: both;
-		border-top: 1px solid gray;
-	}
-	.contactValueColumn {
-		width: 200px;
-	}
-	.contactNotesColumn {
-		width: 300px;
-	}
-	div.registerQuestion {
-		float: left;
-	}
+	.accountInfo { border-top: 1px solid gray; }
+	.accountRoles { position: relative;	top: 10px; display: block; clear: both; border-top: 1px solid gray;	}
+	.accountLoginQuestion { width: 100%; }
+	.contactValueColumn {	width: 200px; }
+	.contactNotesColumn {	width: 300px;	}
+	div.registerQuestion { 	}
 </style>
+
+<h2>Account Settings</h2>
 <form name="register" action="<?=PATH?>/_register/admin_account" method="POST">
 <input type="hidden" name="target" value="<?=$target?>"/>
 <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
-<span class="title">Account Settings</span>
 <?  if ($page->error) { ?>
 <div><?=$page->error?></div>
 <?  }
@@ -54,7 +42,7 @@
 <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
 
 <div id="accountLoginQuestion" class="registerQuestion">
-	<span class="label registerLabel registerLoginLabel">Login:</span>
+	<span class="label" style="display: inline;">Login:</span>
 	<span class="value"><?=$customer->login?></span>
 	<span class="value">[<?=$customer->auth_method?>]</span>
 </div>
@@ -90,11 +78,12 @@
 <!-- Contact Options -->
 <div class="form_instruction">Add methods of contact.</div>
 <table cellpadding="0" cellspacing="0" class="body" style="width:800px">
-<tr><td class="label">Type</td>
-	<td class="label contactDescriptionColumn">Description</td>
-	<td class="label contactValueColumn">Address/Number</td>
-	<td class="label contactNotesColumn">Notes</td>
-	<td class="label">Drop</td>
+<tr>
+	<th class="label">Type</th>
+	<th class="label contactDescriptionColumn">Description</th>
+	<th class="label contactValueColumn">Address/Number</th>
+	<th class="label contactNotesColumn">Notes</th>
+	<th class="label">Drop</th>
 </tr>
 <?	foreach ($contacts as $contact) { ?>
 <tr><td><select class="value input" name="type[<?=$contact->id?>]">
@@ -136,16 +125,20 @@
 	<input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton" onclick="return submitForm();" />
 </div>
 
-<div class="title" style="margin-top: 12px; display: block;">Status</div>
+<h2>Status</h2>
 <select class="input" name="status">
 <?	foreach(array('NEW','ACTIVE','EXPIRED','DELETED') as $status) {?>
 <!-- <?=$status?> vs <?=$customer->status?> -->
 	<option value="<?=$status?>"<? if ($status == $customer->status) print " selected"; ?>><?=$status?></option>
 <?	}	?>
 </select>
-<span class="title" style="margin-top: 12px; display: block;">Assigned Roles</span>
-<table cellpadding="0" cellspacing="0" class="body" style="width: 800px">
-<tr><td class="label" style="width: 40px">&nbsp;</td><td class="label" style="width: 200px;">Name</td><td class="label" style="width: 520px;">Description</td></tr>
+<h2>Assigned Roles</h2>
+<table cellpadding="0" cellspacing="0" class="body">
+<tr>
+	<td class="label" style="width: 10%; ">&nbsp;</td>
+	<td class="label" style="width: 25%;">Name</td>
+	<td class="label" style="width: 65%;">Description</td>
+</tr>
 <?	$greenbar = '';
 	foreach($all_roles as $role) {
 ?>

@@ -1,25 +1,6 @@
-<style type="text/css">
-/*
-	.organizationMemberLoginHeader {
-		width: 150px;
-	}
-	.organizationMemberFirstNameHeader {
-		width: 150px;
-	}
-	.organizationMemberLastNameHeader {
-		width: 150px;
-	}
-	.organizationMemberStatusHeader {
-		width: 150px;
-	}
-	.organizationMemberLastActiveHeader {
-		width: 250px;
-	}
-*/
-</style>
+<h2>Organization Details</h2>
 <form name="orgDetails" method="POST">
 <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
-<div class="title">Organization Details</div>
 <?  if ($GLOBALS['_page']->error) { ?>
 <div class="form_error"><?=$GLOBALS['_page']->error?></div>
 <?  }
@@ -84,9 +65,10 @@
     <th colspan="5">Add New User</th>
 </tr>
 <tr class="non-table">
-    <td class="value organizationMemberLogin" value="New Username"><input type="text" name="new_login" class="value input" /></td>
-	<td class="value organizationMemberFirstName" value="First Name"><input type="text" name="new_first_name" class="value input" /></td>
-	<td class="value organizationMemberLastName" value="Last Name"><input type="text" name="new_last_name" class="value input" /></td>
+<!--    Comment on 10/4-->
+    <td><input type="text" name="new_login" value="Enter Username" onfocus="this.value=''" /></td>
+	<td><input type="text" name="new_first_name" value="Enter First Name" onfocus="this.value=''" /></td>
+	<td><input type="text" name="new_last_name" value="Enter Last Name" onfocus="this.value=''" /></td>
     <td colspan="2">&nbsp;</td>
 </tr>
 </table>

@@ -30,8 +30,8 @@
 
 <section>
 	<article class="segment">
+		<h2>Organizations</h2>
 <form id="orgSearch" method="get" class="float: left">
-<div class="title">Organizations</div>
 <div id="search_container">
 	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput"/>
 	<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
@@ -59,17 +59,18 @@
 	}
 ?>
 </table>
-</article>
-		<article class="segment pager_bar">
-		<a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><<</a>
-		<a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px"><</a>
+<!--    Standard Page Navigation Bar ADMIN ONLY -->
+<div class="pager_bar">
+	<div class="pager_controls">
+		<a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerFirst"><< First </a>
+		<a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerPrevious"><</a>
 		&nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$customers_per_page+1?> of <?=$total_customers?>&nbsp;
-		<a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">></a>
-		<a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" style="margin: 5px">>></a>
-			</article>
+		<a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerNext">></a>
+		<a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerLast"> Last >></a>
+    </div>
+</div>
 </form>
-	
-</section>
+
 <?
 	if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 ?>
