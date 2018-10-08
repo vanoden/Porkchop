@@ -45,6 +45,7 @@
 
 		public function get($module,$view,$index = null) {
 			$parameters = array($module,$view);
+			if (strlen($index) < 1) $index = null;
 
 			# Prepare Query
 			$get_object_query = "
@@ -61,9 +62,11 @@
 			}
 			else {
 				$get_object_query .= "
-				AND		`index` is null
+				AND		(`index` is null or `index` = '')
 				";
 			}
+			query_log($get_object_query);
+			app_log(print_r($parameters,true));
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
 				$parameters
