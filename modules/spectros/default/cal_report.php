@@ -5,29 +5,22 @@
     }
 ?>
 <style>
-	.dateValue {
-		width: 150px;
-		padding-left: 3px;
-		margin-left: 1px;
-	}
-	.orgValue {
-		width: 250px;
-	}
-	table.body {
-		width: 1200px;
-	}
+	.dateValue { width: 150px; padding-left: 3px; margin-left: 1px;	}
+	.orgValue { width: 250px; }
+	table.body { width: 1200px;	}
 </style>
 <?	if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>
 <?	} ?>
+<h2>Event Filter</h2>
 <table class="body">
 <form name="eventFilter" method="get" action="/_spectros/cal_report">
-<tr><td class="title" colspan="5">Event Filter</td></tr>
-<tr><td class="label">Start Date</td>
-	<td class="label">End Date</td>
-	<td class="label">Organization</td>
-	<td class="label">Asset</td>
-	<td class="label">Product</td>
+<tr>
+	<th class="label">Start Date</th>
+	<th class="label">End Date</th>
+	<th class="label">Organization</th>
+	<th class="label">Asset</th>
+	<th class="label">Product</th>
 </tr>
 <tr><td class="value"><input type="text" name="date_start" class="value input" value="<?=$date_start?>" /></td>
 	<td class="value"><input type="text" name="date_end" class="value input" value="<?=$date_end?>" /></td>
@@ -50,18 +43,19 @@
 <tr><td class="form_footer" colspan="5" style="text-align: center"><input type="submit" name="btn_submit" class="button" value="Search" /></td></tr>
 </form>
 </table>
+<h2>Calibration Events [<?=count($verifications)?>]</h2>
 <table class="body">
-<tr><td class="title" colspan="5">Calibration Events [<?=count($verifications)?>]</td></tr>
-<tr><td class="label dateValue">Date Submitted</td>
-	<td class="label dateValue">Date Written</td>
-	<td class="label orgValue">Organization</td>
-	<td class="label">Asset</td>
-	<td class="label">Product</td>
-	<td class="label">Manufacturer</td>
-	<td class="label">Cylinder</td>
-	<td class="label">Concent.</td>
-	<td class="label">Reading</td>
-	<td class="label">Voltage</td>
+<tr>
+	<th class="label dateValue">Date Submitted</th>
+	<th class="label dateValue">Date Written</th>
+	<th class="label orgValue">Organization</th>
+	<th class="label">Asset</th>
+	<th class="label">Product</th>
+	<th class="label">Manufacturer</th>
+	<th class="label">Cylinder</th>
+	<th class="label">Concent.</th>
+	<th class="label">Reading</th>
+	<th class="label">Voltage</th>
 </tr>
 <?	foreach ($verifications as $verification) {
     $greenbar = '';
