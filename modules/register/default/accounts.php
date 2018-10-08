@@ -40,7 +40,7 @@
 <?	} ?>
 	<div id="search_container">
 		<form id="custSearch" method="get" class="float: left">
-		<input type="text" id="searchAccountInput" name="search" value="<?=$_REQUEST['search']?>" class="value input searchInput"/>
+		<input type="text" id="searchAccountInput" name="search" value="<?=$_REQUEST['search']?>" class="value input searchInput wide_md"/>
 		<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
 		<input type="checkbox" name="hidden" value="1"<? if ($_REQUEST['hidden']) print " checked"; ?> /><span>Hidden</span>
 		<input type="checkbox" name="expired" value="1"<? if ($_REQUEST['expired']) print " checked"; ?> /><span>Expired</span>
@@ -72,12 +72,11 @@
 	if (role('register manager'))
 	{
 ?>
+	</table>
 	<form action="<?=PATH?>/_register/register" method="get">
-	<tr><td colspan="6" style="text-align: center"><input type="submit" name="button_submit" value="Add Account" class="input button"/></td></tr>
+	<div class="button-bar"><input type="submit" name="button_submit" value="Add Account" class="input button"/></div>
 	</form>
 <?	} ?>
-	</table>
-		
 <!--    Standard Page Navigation Bar ADMIN ONLY -->
 <div class="pager_bar">
 	<div class="pager_controls">

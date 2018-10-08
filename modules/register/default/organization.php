@@ -12,15 +12,15 @@
 
 <div id="organizationCodeQuestion" class="input-vert">
 	<span id="organizationCodeLabel" class="label">Code:</span>
-	<input name="code" type="text" id="organizationCodeValue" value="<?=$organization->code?>" />
+	<input name="code" type="text" class="wide_sm" id="organizationCodeValue" value="<?=$organization->code?>" />
 </div>
 <div id="organizationNameQuestion" class="input-vert">
 	<span id="organizationNameLabel" class="label">Name:</span>
-	<input name="name" type="text" id="organizationNameValue" value="<?=$organization->name?>" />
+	<input name="name" type="text" class="wide_sm" id="organizationNameValue" value="<?=$organization->name?>" />
 </div>
 <div id="organizationStatusQuestion" class="input-vert">
 	<span id="organizationStatusLabel" class="label">Status:</span>
-	<select name="status" id="organizationStatusValue">
+	<select name="status" class="wide_sm" id="organizationStatusValue">
 <?		foreach (array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED") as $status) { ?>
 		<option value="<?=$status?>"<? if ($status == $organization->status) print " selected"; ?>><?=$status?></option>
 <?		} ?>
@@ -31,7 +31,7 @@
 	<input name="is_reseller" type="checkbox" value="1" <? if($organization->is_reseller) print " checked"?> />
 </div>
 <div id="organizationResellerId" class="input-vert">
-	<span id="organizationResellerLabel" class="label">Reseller:</span>
+	<span id="organizationResellerLabel" class="label wide_sm">Reseller:</span>
 	<select name="assigned_reseller_id">
 		<option value="">Select</option>
 <?	foreach ($resellers as $reseller) {
@@ -43,7 +43,7 @@
 </div>
 <div id="organizationNotesQuestion" class="input-vert">
 	<span id="organizationNotesLabel" class="label">Notes</span>
-	<textarea name="notes"><?=$organization->notes?></textarea>
+	<textarea name="notes" class="wide_md"><?=$organization->notes?></textarea>
 </div>
 <?	if ($organization->id) { ?>
 <table class="body" style="margin-top: 10px">
