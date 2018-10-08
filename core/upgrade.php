@@ -236,9 +236,9 @@
 
 	install_log("Add new template settings");
 	foreach ($set_template_array as $array) {
-		install_log("Add template 'admin.html' to $module::$view");
 		$module = $array[0];
 		$view = $array[1];
+		install_log("Add template 'admin.html' to $module::$view");
 		$page = new \Site\Page($module,$view);
 		if ($page->error) {
 			install_fail("Error loading view '$view' for module '$module': ".$page->error);
@@ -262,8 +262,11 @@
 
 	# Add administrator role
 	$role = new \Register\Role();
-	$role->add(array('name' => 'administrator','description' => "Access to admin tools"));
-	if ($role->error) install_fail("Error adding role: ".$role->error);
+	if (! $role->get('administrator')) {
+		install_log("Adding 'administrator' role");
+		$role->add(array('name' => 'administrator','description' => "Access to admin tools"));
+		if ($role->error) install_fail("Error adding role: ".$role->error);
+	}
 
 	# Check for Calibration Credit Product
 	install_log("Check Calibration Verification Product");
