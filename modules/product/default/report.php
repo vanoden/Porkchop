@@ -11,21 +11,13 @@
 	}
 </script>
 <style>
-	.smallValue{
-		width: 100px;
-	}
-	.codeValue {
-		width: 200px;
-	}
-	.nameValue {
-		width: 300px;
-	}
-	.descValue {
-		width: 700px;
-	}
+	.smallValue{ width: 8%; }
+	.codeValue { width: 15%; }
+	.nameValue { width: 24%; }
+	.descValue { width: 53%; }
 </style>
 <div class="body">
-	<div class="title">Products</div>
+	<h2>Products</h2>
 	<table class="body">
 	<tr><th class="label codeValue">Code</th>
 		<th class="label smallValue">Type</th>

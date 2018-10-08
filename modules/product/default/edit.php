@@ -1,46 +1,3 @@
-<!--
-<style>
-	span.label {
-		float: left;
-		display: block;
-		width: 160px;
-		clear: left;
-	}
-	textarea.input {
-		height: 75px;
-		width: 300px;
-	}
-	div.editImages {
-		clear: both;
-	}
-	input.input {
-		width: 300px;
-	}
-	div.editItemImage {
-		position: relative;
-		float: left;
-		width: 126px;
-		height: 126px;
-		border: 1px solid gray;
-		overflow: hidden;
-	}
-	input.editItemThumbnail {
-		position: absolute;
-		top: 0px;
-		left: 0px;
-		width: 10px;
-		height: 10px;
-		z-index: 99;
-	}
-	img.editItemThumbnail {
-		position: absolute;
-		top: 3px;
-		left: 3px;
-		width: 120px;
-		padding: 0px;
-	}
-</style>
--->
 <script language="Javascript">
 	function initImageSelectWizard()
 	{
@@ -58,7 +15,7 @@
 		document.getElementById('ItemImageDiv_'+code).style.display = "none";
 	}
 </script>
-<div class="title">Edit Product</div>
+<h2>Edit Product</h2>
 <?	if ($GLOBALS['_page']->error) { ?>
 <div class="form_error"><?=$GLOBALS['_page']->error?></div>
 <?	} ?>
@@ -76,11 +33,11 @@
 	</div>
 	<div class="input-horiz" id="itemName">
 		<span class="label">Name</span>
-		<input type="text" class="value input" name="name" id="name" value="<?=$item->name?>" />
+		<input type="text" class="value input wide_md" name="name" id="name" value="<?=$item->name?>" />
 	</div>
 	<div class="input-horiz" id="itemStatus">
 		<span class="label">Status</span>
-		<select name="status" class="value input">
+		<select name="status" class="value input wide_sm">
 			<option value="">Select</option>
 			<option value="ACTIVE"<? if ($item->status == 'ACTIVE') print " selected"; ?>>ACTIVE</option>
 			<option value="HIDDEN"<? if ($item->status == 'HIDDEN') print " selected"; ?>>HIDDEN</option>
@@ -89,36 +46,35 @@
 	</div>
 	<div class="input-horiz" id="itemShortDescription">
 		<span class="label">Short Description</span>
-		<textarea class="value input" name="short_description" id="short_description"><?=$item->short_description?></textarea>
+		<textarea class="value input wide_md" name="short_description" id="short_description"><?=$item->short_description?></textarea>
 	</div>
 	<div class="input-horiz" id="itemDescription">
 		<span class="label">Description</span>
-		<textarea class="value input" name="description" id="description"><?=$item->description?></textarea>
+		<textarea class="value input wide_md" name="description" id="description"><?=$item->description?></textarea>
 	</div>
 	<div class="input-horiz">
 		<span class="label">Model</span>
-		<input type="text" class="value input" name="model" id="model" value="<?=$item->model?>" />
+		<input type="text" class="value input wide_sm" name="model" id="model" value="<?=$item->model?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Empirical Formula</span>
-		<input type="text" class="value input" name="empirical_formula" id="empirical_formula" value="<?=$item->empirical_formula?>" />
+		<input type="text" class="value input wide_sm" name="empirical_formula" id="empirical_formula" value="<?=$item->empirical_formula?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Sensitivity</span>
-		<input type="text" class="value input" name="sensitivity" id="sensitivity" value="<?=$item->sensitivity?>" />
+		<input type="text" class="value input wide_sm" name="sensitivity" id="sensitivity" value="<?=$item->sensitivity?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Measure Range</span>
-		<input type="text" class="value input" name="measure_range" id="measure_range" value="<?=$item->measure_range?>" />
+		<input type="text" class="value input wide_sm" name="measure_range" id="measure_range" value="<?=$item->measure_range?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Accuracy</span>
-		<input type="text" class="value input" name="accuracy" id="accuracy" value="<?=$item->accuracy?>" />
+		<input type="text" class="value input wide_sm" name="accuracy" id="accuracy" value="<?=$item->accuracy?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Manual</span>
-		<select class="value input" name="manual_id" id="manual_id">
-			<option value="">Select</option>
+		<select class="value input wide_sm" name="manual_id" id="manual_id">
 <?	foreach($manuals as $manual) { ?>
 			<option value="<?=$manual->id?>"<? if ($item->manual_id == $manual->id) { print " selected"; } ?>><?=$manual->name?></option>
 <?	} ?>
@@ -126,8 +82,8 @@
 	</div>
 	<div class="input-horiz">
 		<span class="label">Spec Table</span>
-		<select class="value input" name="spec_table_image" id="spec_table_image">
-			<option value="">Select</option>
+		<select class="value input wide_sm" name="spec_table_image" id="spec_table_image">
+			<option value="Select"></option>
 <?	foreach($tables as $table) { ?>
 			<option value="<?=$table->id?>"<? if ($item->spec_table_image == $table->id) { print " selected"; } ?>><?=$table->name?></option>
 <?	} ?>
