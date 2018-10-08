@@ -269,7 +269,8 @@
 		$role = new \Register\Role();
 		$result = $role->add(
 			array(
-				'name'	=> $_REQUEST['name']
+				'name'	=> $_REQUEST['name'],
+				'description'	=> $_REQUEST['description']
 			)
 		);
 		if ($role->error) error($role->error);
