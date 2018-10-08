@@ -260,6 +260,11 @@
 		}
 	}
 
+	# Add administrator role
+	$role = new \Register\Role();
+	$role->add(array('name' => 'administrator','description' => "Access to admin tools"));
+	if ($role->error) install_fail("Error adding role: ".$role->error);
+
 	# Check for Calibration Credit Product
 	install_log("Check Calibration Verification Product");
 	if (isset($GLOBALS['_config']->spectros->calibration_product) and strlen($GLOBALS['_config']->spectros->calibration_product)) {
