@@ -69,7 +69,7 @@
 	<td class="value columnValue collectionCustomerColumn<?=$greenbar?>"><?=$collection->metadata('customer')?></td>
 	<td class="value columnValue collectionStartedColumn<?=$greenbar?>"><?=date("m/d/y H:m",$collection->timestamp_start)?></td>
 	<td class="value columnValue collectionFinishedColumn<?=$greenbar?>"><?=date("m/d/y H:m",$collection->timestamp_end)?></td>
-	<td class="value columnValue columnValueRight collectionDeleteColumn<?=$greenbar?>"><input type="button" name="delete_collection" value="x" onclick="deleteCollection(<?=$collection->id?>)" /></td>
+	<td class="value columnValue columnValueRight collectionDeleteColumn<?=$greenbar?>"><input type="image" src="/img/_global/icon_trashcan.svg" name="delete_collection" onclick="deleteCollection(<?=$collection->id?>)" /></td>
 </tr>
 <?
 		if ($greenbar) $greenbar = "";
