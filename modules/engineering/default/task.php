@@ -1,4 +1,4 @@
-<div style="width: 756px;">
+<div>
 <form name="task_form" action="/_engineering/task" method="post">
 <input type="hidden" name="task_id" value="<?=$task->id?>" />
 <div class="breadcrumbs">
@@ -18,12 +18,15 @@
 	<input type="text" name="code" class="value input" value="<?=$form['code']?>" />
 </div>
 <?	} ?>
+	
+<!--	Start First Row-->
+<div class="row">
 <div class="container_narrow">
 	<div class="label">Title</div>
-	<input type="text" name="title" class="value input" style="width: 240px" value="<?=$form['title']?>" />
+	<input type="text" name="title" class="value input wide_md" value="<?=$form['title']?>" />
 </div>
 <div class="container_narrow">
-	<div class="label">Product</div>
+	<div class="label wide_sm">Product</div>
 	<select name="product_id" class="value input">
 		<option value="">Select</option>
 <?	foreach ($products as $product) { ?>
@@ -43,13 +46,18 @@
 	<div class="label">Date Due</div>
 	<input type="text" name="date_due" class="value input" value="<?=$form['date_due']?>" />
 </div>
+</div>
+<!--End first row-->
+	
+<!--	Start Second Row-->
+<div class="row">
 <div class="container_narrow">
 	<div class="label">Time Estimate (hrs)</div>
-	<input type="text" name="estimate" class="value input" value="<?=$form['estimate']?>" />
+	<input type="text" name="estimate" class="value input wide_xs" value="<?=$form['estimate']?>" />
 </div>
 <div class="container_narrow">
 	<div class="label">Type</div>
-	<select name="type" class="value input">
+	<select name="type" class="value input wide_xs">
 		<option value="bug"<? if ($form['type'] == "BUG") print " selected"; ?>>Bug</option>
 		<option value="feature"<? if ($form['type'] == "FEATURE") print " selected"; ?>>Feature</option>
 		<option value="test"<? if ($form['type'] == "TEST") print " selected"; ?>>Test</option>
@@ -71,13 +79,17 @@
 </div>
 <div class="container_narrow">
 	<div class="label">Priority</div>
-	<select name="priority" class="value input">
+	<select name="priority" class="value input wide_xs">
 		<option value="normal"<? if ($form['priority'] == "NORMAL") print " selected"; ?>>Normal</option>
 		<option value="important"<? if ($form['priority'] == "IMPORTANT") print " selected"; ?>>Important</option>
 		<option value="urgent"<? if ($form['priority'] == "URGENT") print " selected"; ?>>Urgent</option>
 		<option value="critical"<? if ($form['priority'] == "CRITICAL") print " selected"; ?>>Critical</option>
 	</select>
 </div>
+<!--End second row-->
+	
+<!--	Start Third Row-->	
+<div class="row">
 <div class="container_narrow">
 	<div class="label">Requested By</div>
 	<?	if (isset($task->id)) {
@@ -94,7 +106,7 @@
 </div>
 <div class="container_narrow">
 	<div class="label">Assigned To</div>
-	<select name="assigned_id" class="value input" style="width: 240px">
+	<select name="assigned_id" class="value input wide_sm">
 		<option value="">Unassigned</option>
 <?	foreach($techs as $person) { ?>
 		<option value="<?=$person->id?>"<? if ($person->id == $form['assigned_id']) print " selected"; ?>><?=$person->login?></option>
@@ -103,7 +115,7 @@
 </div>
 <div class="container_narrow">
 	<div class="label">Release</div>
-	<select name="release_id" class="value input" style="width: 240px">
+	<select name="release_id" class="value input wide_md">
 		<option value="">Not Scheduled</option>
 <?	foreach($releases as $release) { ?>
 		<option value="<?=$release->id?>"<? if ($release->id == $form['release_id']) print " selected"; ?>><?=$release->title?></option>
@@ -112,13 +124,16 @@
 </div>
 <div class="container_narrow">
 	<div class="label">Project</div>
-	<select name="project_id" class="value input" style="width: 240px">
+	<select name="project_id" class="value input wide_md">
 		<option value="">No Project</option>
 <?	foreach($projects as $project) { ?>
 		<option value="<?=$project->id?>"<? if ($project->id == $form['project_id']) print " selected"; ?>><?=$project->title?></option>
 <?	} ?>
 	</select>
 </div>
+</div>	
+<!--End third row-->
+	
 <div class="container">
 	<div class="label">Description</div>
 	<textarea name="description" style="width: 720px; height: 80px;"><?=$form['description']?></textarea>
@@ -134,7 +149,7 @@
 </div>
 <div class="container_narrow">
 	<div class="label">Person</div>
-	<select name="event_person_id" class="value input">
+	<select name="event_person_id" class="value input wide_xs">
 <?	foreach ($people as $person) { ?>
 		<option value="<?=$person->id?>"<? if ($person->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$person->code?></option>
 <?	} ?>
@@ -142,7 +157,7 @@
 </div>
 <div class="container_narrow">
 	<div class="label">New Status</div>
-	<select name="new_status" class="value input">
+	<select name="new_status" class="value input wide_xs">
 		<option value="new"<? if ($task->status == 'NEW') print ' selected'; ?>>New</option>
 		<option value="hold"<? if ($task->status == 'HOLD') print ' selected'; ?>>Hold</option>
 		<option value="active"<? if ($task->status == 'ACTIVE') print ' selected'; ?>>Active</option>
