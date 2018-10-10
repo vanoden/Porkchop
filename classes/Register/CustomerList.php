@@ -181,6 +181,9 @@
 			if (preg_match('/^(login|first_name|last_name|organization_id)$/',$parameters['_sort'])) {
 				$find_person_query .= " ORDER BY ".$parameters['_sort'];
 			}
+			elseif ($parameters['_sort'] == 'full_name') {
+				$find_person_query .= " ORDER BY first_name,last_name";
+			}
 			else
 				$find_person_query .= " ORDER BY login";
 
@@ -201,10 +204,9 @@
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
-				if (! $count) {
-					$customer = new Customer($id);
-					array_push($people,$customer);
-				}
+				$customer = new Customer($id);
+				if (isset($parameters['role']) && ! $customer->has_role($parameters['role'])) continue;
+				if (! $count) array_push($people,$customer);
 				$this->count ++;
 			}
 			if ($count) return $this->count;
