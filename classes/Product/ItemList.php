@@ -17,9 +17,23 @@
 				WHERE	p.status != 'DELETED'";
 
 			# Filter on Given Parameters
-			if (isset($parameters['type']))
-				$find_product_query .= "
-				AND		p.type = ".$GLOBALS['_database']->qstr($parameters["type"],get_magic_quotes_gpc());
+			if (isset($parameters['type'])) {
+				if (is_array($parameters['type'])) {
+					$find_product_query .= "
+					AND		p.type in (";
+					$count = 0;
+					foreach ($parameters['type'] as $type) {
+						if ($count) $find_product_query .= ",";
+						$count ++;
+						$find_product_query .= $GLOBALS['_database']->qstr($type,get_magic_quotes_gpc());
+					}
+					$find_product_query .= ")";
+				}
+				else {
+					$find_product_query .= "
+					AND		p.type = ".$GLOBALS['_database']->qstr($parameters["type"],get_magic_quotes_gpc());
+				}
+			}
 			if (isset($parameters['status']))
 				$find_product_query .= "
 				AND		p.status = ".$GLOBALS['_database']->qstr($parameters["type"],get_magic_quotes_gpc());
