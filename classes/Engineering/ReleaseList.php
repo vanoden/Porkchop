@@ -5,22 +5,28 @@
 		private $_error;
 
 		public function find($parameters = array()) {
+			$bind_params = array();
 			$find_objects_query = "
 				SELECT	id
 				FROM	engineering_releases
 				WHERE	id = id
 			";
 
+			if (isset($parameters['!status'])) {
+				$find_objects_query .= "
+				AND		status != ?";
+				array_push($bind_params,$parameters['!status']);
+			}
 			$find_objects_query .= "
-				ORDER BY status,date_scheduled desc";
+				ORDER BY FIELD(status,'NEW','TESTING','RELEASED'),date_released,date_scheduled desc";
 			
 			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
 				$find_objects_query .= "
 				LIMIT ".$parameters['_limit'];
 			}
-
+			query_log($find_objects_query);
 			$rs = $GLOBALS['_database']->Execute(
-				$find_objects_query
+				$find_objects_query,$bind_params
 			);
 
 			if (! $rs) {
