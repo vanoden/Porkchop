@@ -77,7 +77,7 @@
 </script>
 <div class="breadcrumbs">
 	<a href="/_support/requests">Support</a>
-	<a href="/_support/requests">Requests</a>
+	<a href="/_support/requests">Requests</a> > New Request
 </div>
 
 <!-- Error Messaging -->
@@ -137,7 +137,7 @@
 
 		
 <!--	START First Table -->
-	<div class="tableBody half min-tablet marginTop_20">
+<div id="generic_form" class="tableBody half min-tablet marginTop_20" style="display:none;">
 	<div class="tableRowHeader">
 		<div class="tableCell" style="width: 100%;">Describe Problem</div>
 	</div>
@@ -150,9 +150,9 @@
 <!--	END First Table -->
 		
 		
-	<div class="container" id="equipment_form">
+<div class="device_table" id="device_table" style="display:none;">
 <!--	START First Table -->
-	<div -d="device_table" class="tableBody min-tablet marginTop_20">
+	<div class="tableBody min-tablet marginTop_20">
 	<div class="tableRowHeader">
 		<div class="tableCell" style="width: 20%;">Product</div>
 		<div class="tableCell" style="width: 20%;">Serial Number</div>
