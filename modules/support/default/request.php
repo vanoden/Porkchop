@@ -11,7 +11,7 @@
 	}
 	div.table_cell {
 		display: table-cell;
-		border-bottom: 1px solid blue;
+		border-bottom: 1px solid #dedede;
 	}
 </style>
 <script language= "Javascript">
@@ -123,7 +123,7 @@
 	</div>
 	<div class="table_row">
 		<div class="table_cell" style="width: 100px;">
-			<select name="product_id[0]" class="value input">
+			<select name="product_id[0]" class="value input" style="width: 150px; margin-right: 25px;">
 				<option value="">None</option>
 <?	foreach ($products as $product) { ?>
 				<option value="<?=$product->id?>"><?=$product->code?></option>
@@ -131,10 +131,10 @@
 			</select>
 		</div>
 		<div class="table_cell" style="width: 100px;">
-			<input type="text" name="serial_number[0]" class="value input" style="width: 50px;" />
+			<input type="text" name="serial_number[0]" class="value input" style="width: 150px; margin-right: 25px;" />
 		</div>
 		<div class="table_cell" style="width: 500px;">
-			<input type="text" name="line_description[0]" class="value input" style="width:500px" />
+			<input type="text" name="line_description[0]" class="value input" style="width:400px; margin-right: 25px;" />
 		</div>
 		<div class="table_cell" style="width: 50px;">
 			<input type="button" name="additem[0]" class="value input" style="width:50px" value="+" onclick="addRow();" />

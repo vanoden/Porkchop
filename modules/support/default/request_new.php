@@ -1,19 +1,3 @@
-<style>
-	div.table {
-		display: table;
-	}
-	div.table_header {
-		display: table-row;
-		font-weight: bold;
-	}
-	div.table_row {
-		display: table-row;
-	}
-	div.table_cell {
-		display: table-cell;
-		border-bottom: 1px solid blue;
-	}
-</style>
 <script language="Javascript">
 	function goForm(selectedForm) {
 		document.requestForm.action = '/_support/request_'+selectedForm;
@@ -89,91 +73,114 @@
 		productCell4.appendChild(addBtn);
 	}
 </script>
+
 </script>
-<div class="breadcrumbs"><a href="/_support/requests">Support</a><a href="/_support/requests">Requests</a></div>
+<div class="breadcrumbs">
+	<a href="/_support/requests">Support</a>
+	<a href="/_support/requests">Requests</a>
+</div>
+
+<!-- Error Messaging -->
 <?	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
 <?	} ?>
-<div style="width: 756px;">
+
+<div>
 	<form name="requestForm" method="post">
 	<input type="hidden" name="request_id" value="<?=$request->id?>" />
 	<h2>Request <?=$request->code?></h2>
-	<div class="container_narrow">
-		<span class="label">Organization</span>
-		<select name="organization_id" class="value input" onchange="populateCustomers();">
-			<option value="">Select</option>
-	<?	foreach ($organizations as $organization) { ?>
-			<option value="<?=$organization->id?>"<? if ($organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
-	<?	} ?>
-		</select>
+		
+		
+<!--	START First Table -->
+	<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 36%;">Organization</div>
+		<div class="tableCell" style="width: 30%;">Requested By</div>
+		<div class="tableCell" style="width: 24%;">Type</div>
+		<div class="tableCell" style="width: 10%;">Status</div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Requested By</span>
-		<select class="value" name="requestor_id">
-			<option value="">Select</option>
-	<?	foreach ($customers as $customer) { ?>
-			<option value="<?=$customer->id?>"<? if ($customer->id == $_REQUEST['customer_id']) print " selected"; ?>><?=$customer->full_name()?></option>
-	<?	} ?>
-		</select>
+	<div class="tableRow">
+		<div class="tableCell">
+			<select name="organization_id" class="value wide_100per" onchange="populateCustomers();">
+				<option value="">Select</option>
+				<?	foreach ($organizations as $organization) { ?>
+				<option value="<?=$organization->id?>"<? if ($organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
+				<?	} ?>
+			</select>
+		</div>
+		<div class="tableCell">
+			<select class="value wide_100per" name="requestor_id">
+				<option value="">Select</option>
+				<?	foreach ($customers as $customer) { ?>
+				<option value="<?=$customer->id?>"<? if ($customer->id == $_REQUEST['customer_id']) print " selected"; ?>><?=$customer->full_name()?></option>
+				<?	} ?>
+			</select>
+		</div>
+		<div class="tableCell">
+			<select name="type" id="problem_type" class="value wide_100per" onchange="selectedType(this);">
+				<option value="">Select</option>
+				<option value="gas monitor">Gas Monitor</option>
+				<option value="billing">Billing and Account</option>
+				<option value="web portal">Web Portal</option>
+			</select>
+		</div>
+		<div class="tableCell">
+			<select class="value wide_100per" name="status">
+				<option value="NEW"<? if ($_REQUEST['status'] == 'NEW') print " selected"; ?>>New</option>
+				<option value="OPEN"<? if ($_REQUEST['status'] == 'OPEN') print " selected"; ?>>Open</option>
+				<option value="CLOSED"<? if ($_REQUEST['status'] == 'CLOSED') print " selected"; ?>>Closed</option>
+			</select>
+		</div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Type</span>
-		<select name="type" id="problem_type" class="value input" onchange="selectedType(this);">
-			<option value="">Select</option>
-			<option value="gas monitor">Gas Monitor</option>
-			<option value="billing">Billing and Account</option>
-			<option value="web portal">Web Portal</option>
-		</select>
+</div>
+<!--	END First Table -->		
+
+		
+<!--	START First Table -->
+	<div class="tableBody half min-tablet marginTop_20">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 100%;">Describe Problem</div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Status</span>
-		<select class="value input" name="status">
-			<option value="NEW"<? if ($_REQUEST['status'] == 'NEW') print " selected"; ?>>New</option>
-			<option value="OPEN"<? if ($_REQUEST['status'] == 'OPEN') print " selected"; ?>>Open</option>
-			<option value="CLOSED"<? if ($_REQUEST['status'] == 'CLOSED') print " selected"; ?>>Closed</option>
-		</select>
+	<div class="tableRow">
+		<div class="tableCell">
+			<textarea name="description" class="value input" style="width: 100%"></textarea>
+		</div>
 	</div>
-	<div class="container" id="generic_form">
-		<div class="label">Describe Problem</div>
-		<textarea name="description" class="value input" style="width: 100%"></textarea>
-	</div>
+</div>
+<!--	END First Table -->
+		
+		
 	<div class="container" id="equipment_form">
-	<div class="table" id="device_table">
-		<div class="table_header">
-			<div class="table_cell">
-				Product
-			</div>
-			<div class="table_cell">
-				Serial Number
-			</div>
-			<div class="table_cell">
-				Problem
-			</div>
-			<div class="table_cell">
-				&nbsp;
-			</div>
+<!--	START First Table -->
+	<div -d="device_table" class="tableBody min-tablet marginTop_20">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 20%;">Product</div>
+		<div class="tableCell" style="width: 20%;">Serial Number</div>
+		<div class="tableCell" style="width: 50%;">Problem</div>
+		<div class="tableCell" style="width: 10%;"></div>
+	</div>
+	<div class="tableRow">
+		<div class="tableCell">
+			<select name="product_id[0]" class="value wide_100per">
+				<option value="">None</option>
+				<?	foreach ($products as $product) { ?>
+				<option value="<?=$product->id?>"><?=$product->code?></option>
+				<?	} ?>
+			</select>
 		</div>
-		<div class="table_row">
-			<div class="table_cell" style="width: 100px;">
-				<select name="product_id[0]" class="value input">
-					<option value="">None</option>
-	<?	foreach ($products as $product) { ?>
-					<option value="<?=$product->id?>"><?=$product->code?></option>
-	<?	} ?>
-				</select>
-			</div>
-			<div class="table_cell" style="width: 100px;">
-				<input type="text" name="serial_number[0]" class="value input" style="width: 50px;" />
-			</div>
-			<div class="table_cell" style="width: 500px;">
-				<input type="text" name="line_description[0]" class="value input" style="width:500px" />
-			</div>
-			<div class="table_cell" style="width: 50px;">
-				<input type="button" name="additem[0]" class="value input" style="width:50px" value="+" onclick="addRow();" />
-			</div>
+		<div class="tableCell">
+			<input type="text" name="serial_number[0]" class="value wide_100per" />
+		</div>
+		<div class="tableCell">
+			<input type="text" name="line_description[0]" class="value wide_100per" />
+		</div>
+		<div class="tableCell">
+			<input type="button" name="additem[0]" class="value" value="+" onclick="addRow();" />
 		</div>
 	</div>
-	<div class="form_footer">
+</div>
+<!--	END First Table -->	
+	<div class="button-bar min-tablet marginTop_20">
 		<input type="submit" class="button" name="btn_submit" value="Add Request" />
 	</div>
 	</form>
