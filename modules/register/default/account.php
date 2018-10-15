@@ -40,7 +40,6 @@
 	div.registerQuestion {
 		float: left;
 */
-	}
 </style>
 <form name="register" action="<?=PATH?>/_register/account" method="POST">
 <input type="hidden" name="target" value="<?=$target?>"/>
@@ -91,6 +90,7 @@
 	<td class="label contactDescriptionColumn">Description</td>
 	<td class="label contactValueColumn">Address/Number</td>
 	<td class="label contactNotesColumn">Notes</td>
+	<td class="label">Notify</td>
 	<td class="label">Drop</td>
 </tr>
 <?	foreach ($contacts as $contact) { ?>
@@ -103,6 +103,7 @@
 	<td><input type="text" name="description[<?=$contact->id?>]" class="value input contactDescriptionColumn" value="<?=$contact->description?>" /></td>
 	<td><input type="text" name="value[<?=$contact->id?>]" class="value input contactValueColumn" value="<?=$contact->value?>" /></td>
 	<td><input type="text" name="notes[<?=$contact->id?>]" class="value input contactNotesColumn" value="<?=$contact->notes?>" /></td>
+	<td><input type="checkbox" name="notify[<?=$contact->id?>]" value="1"<? if ($contact->notify == true) print " checked"; ?>></td>
 	<td><input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X" /></td>
 </tr>
 <?	} ?>
@@ -116,6 +117,7 @@
 	<td><input type="text" name="description[0]" class="value input contactDescriptionColumn" /></td>
 	<td><input type="text" name="value[0]" class="value input contactValueColumn" /></td>
 	<td><input type="text" name="notes[0]" class="value input contactNotesColumn" /></td>
+	<td><input type="checkbox" name="notify[0]" value="1"></td>
 </tr>
 </table>
 <?  if ($customer->auth_method == 'local') { ?>

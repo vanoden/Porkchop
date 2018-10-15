@@ -31,7 +31,7 @@
 </style>
 
 </script>
-	<h2>Accounts</h2>
+	<h2>Customers</h2>
 <?	if ($page->error) { ?>
 	<div class="form_error"><?=$page->error?></div>
 <?	} ?>

@@ -10,7 +10,11 @@
 	###########################################################
 	$page = new \Site\Page();
 
-	if (isset($_POST['login_target']))
+	if (isset($_REQUEST['return']) && $_REQUEST['return'] == 'true') {
+		$target = $GLOBALS['_REQUEST_']->refererURI();
+		app_log("Return to ".$GLOBALS['_REQUEST_']->refererURI()." after login");
+	}
+	elseif (isset($_POST['login_target']))
 		$target = $_POST['login_target'];
 	elseif(isset($_GET['target']))
 		# Translate target

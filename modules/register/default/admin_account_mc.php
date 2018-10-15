@@ -122,13 +122,16 @@
 				app_log("Updating contact record",'debug',__FILE__,__LINE__);
 				$contact = new \Register\Contact($contact_id);
 
+				if ($_REQUEST['notify'][$contact_id]) $notify = true;
+				else $notify = false;
 				# Update Existing Contact Record
 				$contact->update(
 					array(
 						"type"			=> $_REQUEST['type'][$contact_id],
 						"description"	=> $_REQUEST['description'][$contact_id],
 						"value"			=> $_REQUEST['value'][$contact_id],
-						"notes"			=> $_REQUEST['notes'][$contact_id]
+						"notes"			=> $_REQUEST['notes'][$contact_id],
+						"notify"		=> $notify
 					)
 				);
 				if ($contact->error) {
@@ -138,6 +141,9 @@
 			}
 			else {
 				app_log("Adding contact record",'debug',__FILE__,__LINE__);
+
+				if ($_REQUEST['notify'][0]) $notify = true;
+				else $notify = false;
 				# Create Contact Record
 				$customer->addContact(
 					array(
@@ -145,7 +151,8 @@
 						"type"			=> $_REQUEST['type'][0],
 						"description"	=> $_REQUEST['description'][0],
 						"value"			=> $_REQUEST['value'][0],
-						"notes"			=> $_REQUEST['notes'][0]
+						"notes"			=> $_REQUEST['notes'][0],
+						"notify"		=> $notify
 					)
 				);
 				if ($customer->error) {

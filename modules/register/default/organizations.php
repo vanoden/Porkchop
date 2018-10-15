@@ -9,22 +9,11 @@
 	}
 </script>
 <style>
-	.label {
-		text-align: left;
-	}
-	th.organizationsCodeLabel {
-		width: 150px;
-	}
-	th.organizationsNameLabel {
-		width: 540px;
-	}
-	td.value {
-		overflow: hidden;
-	}
-	a.pager {
-		margin: 5px;
-	}
-	}
+	.label { text-align: left; }
+	th.organizationsCodeLabel { width: 150px; }
+	th.organizationsNameLabel { width: 540px; }
+	td.value { overflow: hidden; }
+	a.pager {	margin: 5px; }
 </style>
 </script>
 
@@ -33,7 +22,7 @@
 		<h2>Organizations</h2>
 <form id="orgSearch" method="get" class="float: left">
 <div id="search_container">
-	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput"/>
+	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput wide_md"/>
 	<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
 	<input type="checkbox" name="hidden" class="checkbox" value="1"<? if ($_REQUEST['hidden']) print " checked"; ?> /><span class="status">Hidden</span>
 	<input type="checkbox" name="expired" class="checkbox" value="1"<? if ($_REQUEST['expired']) print " checked"; ?> /><span class="status">Expired</span>
