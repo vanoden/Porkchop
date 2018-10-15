@@ -33,61 +33,6 @@
 			return true;
 		}
     </script>
-	<style>
-		.tableCell {
-			display: table-cell;
-			text-align: left;
-			vertical-align: middle;
-		}
-		.tableTitle {
-			display: table;
-			width: 800px;
-			margin-top: 20px;
-		}
-		.tableTitleLeft {
-			float: left;
-			font-size: 22px;
-		}
-		.tableTitleRight {
-			float: right;
-		}
-		.tableRowHeader {
-			display: table-row;
-			width: 800px;
-			background-color: #999999;
-			font-size: 16px;
-			font-weight: bold;
-			color: white;
-		}
-		.tableRowFooter {
-			display: table-row;
-			width: 800px;
-			background-color: #999999;
-			font-size: 16px;
-			font-weight: bold;
-			text-align: center;
-		}
-		.tableBody {
-			display: table;
-			width: 800px;
-		}
-		.tableBodyWrapper {
-			width: 800px;
-			height: 150px;
-			overflow-y: auto;
-		}
-		.tableBodyScrolled {
-			display: table;
-			width: 782px;
-		}
-		.tableRow {
-			display: table-row;
-		}
-		.tableCell {
-			display: table-cell;
-			padding-left: 7px;
-		}
-	</style>
 			<form name="mainform" method="post">
 			<input type="hidden" name="method" value="submit" />
 			<div class="title" >Asset Details</div>
@@ -97,16 +42,13 @@
 <?	if ($GLOBALS['_page']->success) { ?>
 			<div class="form_success" style="width: 700px;"><?=$GLOBALS['_page']->success?></div>
 <?	} ?>
-            <div class="tableBody">
-				<div class="tableColumn"></div>
-				<div class="tableColumn"></div>
-				<div class="tableColumn"></div>
-            	<div class="tableRowHeader">
-					<div class="tableCell">Serial Number</div>
-					<div class="tableCell" style="width: 120px;">Model</div>
-					<div class="tableCell" colspan="2">Organization</div>
-				</div>
-            	<div class="tableRow">
+        <div class="tableBody">
+					<div class="tableRowHeader">
+						<div class="tableCell" style="width: 35%;">Serial Number</div>
+						<div class="tableCell" style="width: 30%;">Model</div>
+						<div class="tableCell" style="width: 35%;">Organization</div>
+					</div>
+					<div class="tableRow">
 					<div class="tableCell"><input type="text" name="asset_code" class="value input" value="<?=$asset_code?>" /></div>
 					<div class="tableCell">
 						<select name="product_id" class="value input">
@@ -138,10 +80,6 @@
 				</div>
 			</div>
 			<div class="tableBody">
-				<div class="tableColumn"></div>
-				<div class="tableColumn"></div>
-				<div class="tableColumn"></div>
-				<div class="tableColumn"></div>
 				<div class="tableRowHeader">
 					<div class="tableCell">Code</div>
 					<div class="tableCell">Model</div>
@@ -186,10 +124,6 @@
 				</div>
 			</div>
 			<div class="tableBody">
-				<div class="tableColumn"></div>
-				<div class="tableColumn"></div>
-				<div class="tableColumn"></div>
-				<div class="tableColumn"></div>
 				<div class="tableRowHeader">
 					<div class="tableCell">Date Requested</div>
 					<div class="tableCell">By</div>
@@ -218,9 +152,6 @@
 				</div>
 			</div>
 			<div class="tableBody">
-				<div class="tableColumn"></div>
-				<div class="tableColumn"></div>
-				<div class="tableColumn"></div>
 				<div class="tableRowHeader">
 					<div class="tableCell">Date Event</div>
 					<div class="tableCell">Person</div>

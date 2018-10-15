@@ -44,9 +44,8 @@
 			</tr>
 			</form>
 			</table>
-			<br/>
-			<table class="body" style="width: 700px">
-			<tr><td class="title" colspan="3">Monitors [<?=count($assets)?>]</td></tr>
+			<h2>Monitors [<?=count($assets)?>]</h2>
+			<table class="body">
 			<tr><td class="label">Serial</td>
 				<td class="label">Model</td>
 				<td class="label">Organization</td>
