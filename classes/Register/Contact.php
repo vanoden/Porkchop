@@ -72,7 +72,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in RegisterContact::add: ".$GLOBALS['_database']->ErrorMSg();
+				$this->error = "SQL Error in Register::Contact::add(): ".$GLOBALS['_database']->ErrorMSg();
 				return null;
 			}
 			return $this->update($GLOBALS['_database']->Insert_ID(),$parameters);
@@ -82,6 +82,7 @@
 				$this->error = "ID Required for update method.";
 				return 0;
 			}
+			$bind_params = array();
 			$update_contact_query = "
 				UPDATE	register_contacts
 				SET		id = id";
@@ -92,27 +93,36 @@
 					return null;
 				}
 				$update_contact_query .= ",
-						type = ".$GLOBALS['_database']->qstr($parameters['type'],get_magic_quotes_gpc());
+						type = ?";
+				array_push($bind_params,$parameters['type']);
 			}
-			if ($parameters['description'])
+			if ($parameters['description']) {
 				$update_contact_query .= ",
-						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
-			if (array_key_exists('notify',$parameters) and preg_match('/^(0|1)$/',$parameters['notify']))
+						description = ?";
+				array_push($bind_params,$parameters['description']);
+			if (isset($parameters['notify'])){
 				$update_contact_query .= ",
-						notify = ".$parameters['notify'];
-			if (isset($parameters['value']))
+						notify = ?";
+				if ($parameters['notify']) array_push($bind_params,1);
+				else array_push($bind_params,0);
+			}
+			if (isset($parameters['value'])) {
 				$update_contact_query .= ",
-						value = ".$GLOBALS['_database']->qstr($parameters['value'],get_magic_quotes_gpc());
+						value = ?";
+				array_push($bind_params,$parameters['value']);
+			}
 			if (isset($parameters['notes']))
 				$update_contact_query .= ",
-						notes = ".$GLOBALS['_database']->qstr($parameters['notes'],get_magic_quotes_gpc());
+						notes = ?";
+				array_push($bind_params,$parameters['notes']);
+			}
 
 			$update_contact_query .= "
 				WHERE	id = ?";
-			$GLOBALS['_database']->Execute(
-				$update_contact_query,
-				array($this->id)
-			);
+			array_push($bind_params,$this->id);
+
+			query_log($update_contact_query);
+			$GLOBALS['_database']->Execute($update_contact_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in RegisterContact::update: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -162,7 +172,8 @@
 				$this->value = $contact->value;
 				$this->notes = $contact->notes;
 				$this->description = $contact->description;
-				$this->notify = $contact->notify;
+				if ($contact->notify == 1) $this->notify = true;
+				else $this->notify = false;
 				$this->person = new \Register\Person($contact->person_id);
 			}
 			else {
