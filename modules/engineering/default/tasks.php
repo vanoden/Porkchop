@@ -11,9 +11,10 @@
 <div class="breadcrumbs">
 <a class="breadcrumb" href="/_engineering/home">Engineering</a> > Tasks
 </div>
-<h2>Engineering Tasks [<?=count($tasks)?>]</h2>
+
 <form>
-	
+<h2 style="display: inline-block;">Engineering Tasks [<?=count($tasks)?>]</h2>
+<input type="button" name="btn_new_task" value="Add Task" class="button more" onclick="newTask();" />	
 
 <!--	START First Table -->
 	<div class="tableBody min-tablet">
@@ -87,8 +88,4 @@
 <?php	} ?>
 </div>
 <!--	END First Table -->			
-	
-<div class="button-bar">
-	<input type="button" name="btn_new_task" value="Add Task" class="button" onclick="newTask();" />
-</div>
 </form>
