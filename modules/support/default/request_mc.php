@@ -29,10 +29,23 @@
 			$page->addError("Error submitting request: ".$request->error());
 		}
 		else {
+			$body = "The following support request was submitted:
+	Request: ".$request->code."<br>
+	Type: ".$request->type."<br>
+	URL: http://".$GLOBALS['_config']->site->hostname."/_support/request/".$request->code;
+			$message = new \Email\Message(
+				array(
+					'from'	=> 'service@spectrosinstruments.com',
+					'subject'	=> "[SUPPORT] New Request #".$request->code." from ".$request->customer->full_name(),
+					'body'		=> $body
+				)
+			);
+			$message->html(true);
+			$role = new \Register\Role('support user');
+			$role->notify($message);
 			$page->success = 'Support request submitted.  A representative will contact you shortly';
 		}
 		foreach ($_REQUEST['product_id'] as $line => $pid) {
-			print "<br>Line $line, Product ".$_REQUEST['product_id'][$line].", Serial ".$_REQUEST['serial_number'][$line];
 			$item = array(
 				'line'			=> $line,
 				'product_id'	=> $_REQUEST['product_id'][$line],

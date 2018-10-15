@@ -80,14 +80,12 @@
 		productCell4.appendChild(addBtn);
 	}
 </script>
-<a href="/_support/requests" class="breadcrumbs">< Requests</a>
 <h2>Request Support</h2>
 <?	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
 <?	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<a href="/_support/requests">See Requests</a>
 <?	}
 	else { ?>
 <form name="supportRequest" method="post" action="/_support/request">

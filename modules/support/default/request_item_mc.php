@@ -74,6 +74,7 @@ Serial: ".$action->item->serial_number."<br>
 Description: ".$action->description
 				)
 			);
+			$message->html(true);
 			$assigned_to->notify($message);
 		}
 	}
