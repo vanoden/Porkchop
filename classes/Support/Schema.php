@@ -217,27 +217,6 @@
 					return false;
 				}
 
-				$create_table_query = "
-					CREATE TABLE IF NOT EXISTS `support_item_comments` (
-						id INT(11) NOT NULL AUTO_INCREMENT,
-						item_id INT(11) NOT NULL,
-						author_id INT(11) NOT NULL,
-						date_note datetime,
-						description TEXT,
-						PRIMARY KEY `pk_id` (`id`),
-						FOREIGN KEY `fk_item` (`item_id`) REFERENCES `support_request_items` (`id`),
-						FOREIGN KEY `fk_author` (`author_id`) REFERENCES `register_users` (`id`),
-						INDEX `idx_date` (`date_note`)
-					)
-				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support_item_comments table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return false;
-				}
-
                 $current_schema_version = 1;
                 $update_schema_version = "
                     INSERT
