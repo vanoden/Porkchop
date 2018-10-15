@@ -13,6 +13,7 @@
 		public $department;
 		public $_cached = 0;
 		public $status;
+		public $notify = false;
 
 		public function __construct($id = 0) {
 			# Clear Error Info
@@ -178,7 +179,8 @@
 					first_name,
 					last_name,
 					organization_id,
-					timezone
+					timezone,
+					notify
 				)
 				VALUES
 				(
@@ -191,7 +193,8 @@
 					?,
 					?,
 					?,
-					?
+					?,
+					0
 				)
 			";
 
@@ -235,7 +238,8 @@
 				"password"      	=> 'password',
 				"organization_id"	=> 'organization_id',
 				"status"			=> 'status',
-				"timezone"			=> 'timezone'
+				"timezone"			=> 'timezone',
+				"notify"			=> 'notify'
 			);
 
 			# Loop through and apply changes
