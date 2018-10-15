@@ -129,22 +129,33 @@
 				SET		id = id
 			";
 
-			if (isset($parameters['title']))
-				$update_object_query .= ",
-						title = ".$GLOBALS['_database']->qstr($parameters['title'],get_magic_quotes_gpc());
+			$bind_params = array();
 
-			if (isset($parameters['estimate']))
+			if (isset($parameters['title'])) {
 				$update_object_query .= ",
-						estimate = ".$GLOBALS['_database']->qstr($parameters['estimate'],get_magic_quotes_gpc());
+						title = ?";
+				array_push($bind_params,$parameters['title']);
+			}
 
-			if (isset($parameters['description']))
+			if (isset($parameters['estimate'])) {
 				$update_object_query .= ",
-						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
+						estimate = ?";
+				array_push($bind_params,$parameters['estimate']);
+			}
+
+			if (isset($parameters['description'])) {
+				$update_object_query .= ",
+						description = ?";
+				array_push($bind_params,$parameters['description']);
+			}
 
 			if (isset($parameters['status'])) {
-				if ($this->_valid_status($parameters['status']))
+				if ($this->_valid_status($parameters['status'])) {
 					$update_object_query .= ",
-						status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+						status = ?";
+					array_push($bind_params,$parameters['status']);
+				}
+				
 				else {
 					$this->_error = "Invalid status";
 					return false;
@@ -152,9 +163,11 @@
 			}
 
 			if (isset($parameters['priority'])) {
-				if ($this->_valid_priority($parameters['priority']))
+				if ($this->_valid_priority($parameters['priority'])) {
 					$update_object_query .= ",
-						priority = ".$GLOBALS['_database']->qstr($parameters['priority'],get_magic_quotes_gpc());
+						priority = ?";
+					array_push($bind_params,$parameters['priority']);
+				}
 				else {
 					$this->_error = "Invalid priority";
 					return false;
@@ -162,9 +175,11 @@
 			}
 
 			if (isset($parameters['type'])) {
-				if ($this->_valid_type($parameters['type']))
+				if ($this->_valid_type($parameters['type'])) {
 					$update_object_query .= ",
-						type = ".$GLOBALS['_database']->qstr($parameters['type'],get_magic_quotes_gpc());
+						type = ?";
+					array_push($bind_params,$parameters['type']);
+				}
 				else {
 					$this->_error = "Invalid type '".$parameters['type']."'";
 					return false;
@@ -172,9 +187,11 @@
 			}
 
 			if (isset($parameters['date_added'])) {
-				if (get_mysql_date($parameters['date_added']))
+				if (get_mysql_date($parameters['date_added'])) {
 					$update_object_query .= ",
-						date_added = '".get_mysql_date($parameters['date_added'])."'";
+						date_added = ?";
+					array_push($bind_params,get_mysql_date($parameters['date_added']));
+				}
 				elseif (strlen($parameters['date_added'])) {
 					$this->_error = "Invalid date";
 					return false;
@@ -182,18 +199,22 @@
 			}
 
 			if (isset($parameters['date_due'])) {
-				if (get_mysql_date($parameters['date_due']))
+				if (get_mysql_date($parameters['date_due'])) {
 					$update_object_query .= ",
-						date_due = '".get_mysql_date($parameters['date_due'])."'";
+						date_due = ?";
+					array_push($bind_params,get_mysql_date($parameters['date_due']));
+				}
 				elseif (strlen($parameters['date_due'])) {
 					$this->_error = "Invalid due date";
 					return false;
 				}
 			}
 
-			if (isset($parameters['location']))
+			if (isset($parameters['location'])) {
 				$update_object_query .= "
-						location = ".$GLOBALS['_database']->qstr($parameters['location'],get_magic_quotes_gpc());
+						location = ?";
+				array_push($bind_params,$parameters['location']);
+			}
 
 			if (isset($parameters['estimate']))
 				if (is_numeric($parameters['estimate']))
@@ -266,11 +287,10 @@
 			}
 
 			$update_object_query .= "
-				WHERE	id = ".$this->id;
+				WHERE	id = ?";
+			array_push($bind_params,$this->id);
 
-			$GLOBALS['_database']->Execute(
-				$update_object_query
-			);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Task::update(): ".$GLOBALS['_database']->ErrorMsg();

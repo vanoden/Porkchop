@@ -71,28 +71,32 @@
 				SET		id = id
 			";
 
-			if (isset($parameters['description']))
+			$bind_params = array();
+
+			if (isset($parameters['description'])) {
 				$update_object_query .= ",
-						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
+						description = ?";
+				array_push($bind_params,$parameters['description']);
+			}
 
 			if (isset($parameters['person_id']) && is_numeric($parameters['person_id'])) {
 				$update_object_query .= ",
-						person_id = ".$parameters['person_id'];
+						person_id = ?";
+				array_push($bind_params,$parameters['person_id']);
 			}
 
 			if (isset($parameters['date_event']) && get_mysql_date($parameters['date_event'])) {
 				$update_object_query .= ",
-						date_event = ".$GLOBALS['_database']->qstr($parameters['date_event'],get_magic_quotes_gpc());
+						date_event = ?";
+				array_push($bind_params,$parameters['date_event']);
 			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
+			array_push($bind_params,$this->id);
 
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Events::update(): ".$GLOBALS['_database']->ErrorMsg();
