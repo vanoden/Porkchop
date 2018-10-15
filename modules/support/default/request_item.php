@@ -145,16 +145,16 @@
 				</div>
 				<div class="tableCell">
 					<select name="action_type" class="value input">
-						<option value="Remote Evaluation">Contact Customer</option>
+						<option value="Contact Customer">Contact Customer</option>
 						<option value="Remote Evaluation">Remote Evaluation</option>
-						<option value="Remote Evaluation">Authorize Return</option>
-						<option value="Remote Evaluation">Local Diagnosis</option>
-						<option value="Remote Evaluation">Order Parts</option>
-						<option value="Remote Evaluation">Repair Unit</option>
-						<option value="Remote Evaluation">Build New Unit</option>
-						<option value="Remote Evaluation">Configure Unit</option>
-						<option value="Remote Evaluation">Test Unit</option>
-						<option value="Remote Evaluation">Ship Unit</option>
+						<option value="Authorize Return">Authorize Return</option>
+						<option value="Local Diagnosis">Local Diagnosis</option>
+						<option value="Order Parts">Order Parts</option>
+						<option value="Repair Unit">Repair Unit</option>
+						<option value="Build New Unit">Build New Unit</option>
+						<option value="Configure Unit">Configure Unit</option>
+						<option value="Test Unit">Test Unit</option>
+						<option value="Ship Unit">Ship Unit</option>
 					</select>
 				</div>
 				<div class="tableCell">
