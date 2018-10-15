@@ -22,11 +22,11 @@
 	function addRow() {
 		line ++;
 		var row = document.createElement('div');
-		row.classList.add('table_row');
+		row.classList.add('tableRow');
 		document.getElementById('device_table').appendChild(row);
 
 		var productCell1 = document.createElement('div');
-		productCell1.classList.add('table_cell');
+		productCell1.classList.add('tableCell');
 		row.appendChild(productCell1);
 		var productSelect = document.createElement('select');
 		productSelect.name = 'product_id['+line+']';
@@ -47,7 +47,7 @@
 
 
 		var productCell2 = document.createElement('div');
-		productCell2.classList.add('table_cell');
+		productCell2.classList.add('tableCell');
 		row.appendChild(productCell2);
 		var serialNumber = document.createElement('input');
 		serialNumber.name = "serial_number["+line+"]";
@@ -56,7 +56,7 @@
 		productCell2.appendChild(serialNumber);
 
 		var productCell3 = document.createElement('div');
-		productCell3.classList.add('table_cell');
+		productCell3.classList.add('tableCell');
 		row.appendChild(productCell3);
 		var problem = document.createElement('input');
 		problem.name = "line_description["+line+"]";
@@ -65,7 +65,7 @@
 		productCell3.appendChild(problem);
 
 		var productCell4 = document.createElement('div');
-		productCell4.classList.add('table_cell');
+		productCell4.classList.add('tableCell');
 		row.appendChild(productCell4);
 		var addBtn = document.createElement('input');
 		addBtn.type = 'button';
@@ -150,36 +150,37 @@
 <!--	END First Table -->
 		
 		
+<!--	START Last Table -->
 <div class="device_table" id="device_table" style="display:none;">
-<!--	START First Table -->
 	<div class="tableBody min-tablet marginTop_20">
-	<div class="tableRowHeader">
-		<div class="tableCell" style="width: 20%;">Product</div>
-		<div class="tableCell" style="width: 20%;">Serial Number</div>
-		<div class="tableCell" style="width: 50%;">Problem</div>
-		<div class="tableCell" style="width: 10%;"></div>
-	</div>
-	<div class="tableRow">
-		<div class="tableCell">
-			<select name="product_id[0]" class="value wide_100per">
-				<option value="">None</option>
-				<?	foreach ($products as $product) { ?>
-				<option value="<?=$product->id?>"><?=$product->code?></option>
-				<?	} ?>
-			</select>
+		<div class="tableRowHeader">
+			<div class="tableCell" style="width: 20%;">Product</div>
+			<div class="tableCell" style="width: 20%;">Serial Number</div>
+			<div class="tableCell" style="width: 50%;">Problem</div>
+			<div class="tableCell" style="width: 10%;"></div>
 		</div>
-		<div class="tableCell">
-			<input type="text" name="serial_number[0]" class="value wide_100per" />
-		</div>
-		<div class="tableCell">
-			<input type="text" name="line_description[0]" class="value wide_100per" />
-		</div>
-		<div class="tableCell">
-			<input type="button" name="additem[0]" class="value" value="+" onclick="addRow();" />
+		<div class="tableRow">
+			<div class="tableCell">
+				<select name="product_id[0]" class="value wide_100per">
+					<option value="">None</option>
+					<?	foreach ($products as $product) { ?>
+					<option value="<?=$product->id?>"><?=$product->code?></option>
+					<?	} ?>
+				</select>
+			</div>
+			<div class="tableCell">
+				<input type="text" name="serial_number[0]" class="value wide_100per" />
+			</div>
+			<div class="tableCell">
+				<input type="text" name="line_description[0]" class="value wide_100per" />
+			</div>
+			<div class="tableCell">
+				<input type="button" name="additem[0]" class="value" value="+" onclick="addRow();" />
+			</div>
 		</div>
 	</div>
 </div>
-<!--	END First Table -->	
+<!--	END Last Table -->	
 	<div class="button-bar min-tablet marginTop_20">
 		<input type="submit" class="button" name="btn_submit" value="Add Request" />
 	</div>
