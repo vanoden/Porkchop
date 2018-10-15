@@ -26,6 +26,38 @@
 	# We'll handle errors ourselves, thank you very much
 	#error_reporting(0);
 
+	
+	# Set Templates As Necessary
+	$admin_templates = array(
+		array("spectros","admin_home"),
+		array("product","report"),
+		array("product","edit"),
+		array("register","organizations"),
+		array("register","organization"),
+		array("register","accounts"),
+		array("monitor","admin_assets"),
+		array("monitor","admin_details"),
+		array("monitor","admin_collections"),
+		array("spectros","admin_credits"),
+		array("spectros","cal_report"),
+		array("monitor","comm_dashboard"),
+		array("register","admin_account"),
+		array("engineering","home"),
+		array("engineering","tasks"),
+		array("engineering","task"),
+		array("engineering","releases"),
+		array("engineering","release"),
+		array("engineering","products"),
+		array("engineering","product"),
+		array("engineering","projects"),
+		array("engineering","project"),
+		array("support","request_new"),
+		array("support","requests"),
+		array("support","request_detail"),
+		array("support","request_item"),
+		array("support","action")
+	);
+
 	###################################################
 	### Load API Objects							###
 	###################################################
@@ -92,7 +124,7 @@
 	if ($class->version() != 1) install_fail("Version 1 Required");
 	$class = new \Support\Schema();
 	install_log("Support::Schema: version ".$class->version());
-	if ($class->version() != 1) install_fail("Version 1 Required");
+	if ($class->version() != 2) install_fail("Version 2 Required");
 	$class = new \Content\Schema();
 	install_log("Content::Schema: version ".$class->version());
 	if ($class->version() != 3) install_fail("Version 3 Required");
@@ -208,34 +240,9 @@
 		$page->unsetMetadata("template");
 	}
 
-	# Set Templates As Necessary
-	$set_template_array = array(
-		array("spectros","admin_home"),
-		array("product","report"),
-		array("product","edit"),
-		array("register","organizations"),
-		array("register","organization"),
-		array("register","accounts"),
-		array("monitor","admin_assets"),
-		array("monitor","admin_details"),
-		array("monitor","admin_collections"),
-		array("spectros","admin_credits"),
-		array("spectros","cal_report"),
-		array("monitor","comm_dashboard"),
-		array("register","admin_account"),
-		array("engineering","home"),
-		array("engineering","tasks"),
-		array("engineering","task"),
-		array("engineering","releases"),
-		array("engineering","release"),
-		array("engineering","products"),
-		array("engineering","product"),
-		array("engineering","projects"),
-		array("engineering","project"),
-	);
 
 	install_log("Add new template settings");
-	foreach ($set_template_array as $array) {
+	foreach ($admin_templates as $array) {
 		$module = $array[0];
 		$view = $array[1];
 		install_log("Add template 'admin.html' to $module::$view");

@@ -5,7 +5,11 @@
 		public $errno;
 		public $error;
 		public $module = "support";
-		
+		private $roles = array(
+			'support manager'	=> 'Full control over requests, actions, etc',
+			'support user'		=> 'Can work with support requests'
+		);
+
 		public function __construct() {
 			$this->upgrade();
 		}
@@ -234,20 +238,6 @@
 					return false;
 				}
 
-				$add_roles_query = "
-					INSERT
-					INTO	register_roles
-					VALUES	(null,'support manager','Full control over requests, actions, etc'),
-							(null,'support user','Can work with support requests')
-				";
-				$GLOBALS['_database']->Execute($add_roles_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error adding monitor roles in Engineering::Schema::upgrade: ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
-				}
-
                 $current_schema_version = 1;
                 $update_schema_version = "
                     INSERT
@@ -258,7 +248,7 @@
                 ";
                 $GLOBALS['_database']->Execute($update_schema_version);
                 if ($GLOBALS['_database']->ErrorMsg()) {
-                    $this->error = "SQL Error in Monitor::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+                    $this->error = "SQL Error in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
                     app_log($this->error,'error',__FILE__,__LINE__);
                     $GLOBALS['_database']->RollbackTrans();
                     return undef;
@@ -291,7 +281,7 @@
                 ";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support_requests table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error creating support_rmas table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_database']->RollbackTrans();
 					return false;
@@ -313,7 +303,7 @@
                 ";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support_requests table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error creating support_item_comments table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_database']->RollbackTrans();
 					return false;
@@ -329,13 +319,26 @@
                 ";
                 $GLOBALS['_database']->Execute($update_schema_version);
                 if ($GLOBALS['_database']->ErrorMsg()) {
-                    $this->error = "SQL Error in Monitor::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+                    $this->error = "SQL Error in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
                     app_log($this->error,'error',__FILE__,__LINE__);
                     $GLOBALS['_database']->RollbackTrans();
                     return undef;
                 }
                 $GLOBALS['_database']->CommitTrans();
             }
+
+			# Add Roles
+			foreach ($this->roles as $name => $description) {
+				$role = new \Register\Role();
+				if (! $role->get($name)) {
+					$role->add(array('name' => $name,'description' => $description));
+				}
+				if ($role->error) {
+					$this->_error = "Error adding role '$name': ".$role->error;
+					return false;
+				}
+				return true;
+			}
 		}
 	}
 ?>
