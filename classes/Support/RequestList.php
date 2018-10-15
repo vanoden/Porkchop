@@ -2,7 +2,7 @@
 	namespace Support;
 
 	class RequestList {
-		public $error;
+		private $_error;
 		public $count;
 	
 		public function find($parameters = array()) {
@@ -25,7 +25,7 @@
 				$find_requests_query .= "
 				AND		sr.customer_id = ".$GLOBALS['_SESSION_']->customer->id;
 			else {
-				$this->error = "Authentication required";
+				$this->_error = "Authentication required";
 				return null;
 			}
 			
@@ -33,9 +33,12 @@
 				$find_requests_query .= "\tAND	status = ".$parameters['status']."\n";
 			}
 
+			$find_requests_query .= "
+				ORDER BY date_request DESC";
+
 			$rs = $GLOBALS['_database']->Execute($find_requests_query);
 			if (! $rs) {
-				$this->error = "SQL Error in SupportRequest::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in SupportRequest::find: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$requests = array();
@@ -45,5 +48,9 @@
 			}
 			return $requests;
 		}
+		public function error() {
+			return $this->_error;
+		}
 	}
+
 ?>
