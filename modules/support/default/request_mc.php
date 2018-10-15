@@ -43,7 +43,10 @@
 			$message->html(true);
 			$role = new \Register\Role('support user');
 			$role->notify($message);
-			$page->success = 'Support request submitted.  A representative will contact you shortly';
+			if ($role->error) {
+				app_log("Error sending request notification: ".$role->error);
+			}
+			$page->success = 'Support request '.$request->code.' submitted.  A representative will follow up shortly';
 		}
 		foreach ($_REQUEST['product_id'] as $line => $pid) {
 			$item = array(
