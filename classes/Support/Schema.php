@@ -331,6 +331,7 @@
 			foreach ($this->roles as $name => $description) {
 				$role = new \Register\Role();
 				if (! $role->get($name)) {
+					app_log("Adding role '$name'");
 					$role->add(array('name' => $name,'description' => $description));
 				}
 				if ($role->error) {

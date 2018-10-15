@@ -18,7 +18,7 @@
 				array_push($bind_params,$parameters['!status']);
 			}
 			$find_objects_query .= "
-				ORDER BY FIELD(status,'NEW','TESTING','RELEASED'),date_released,date_scheduled desc";
+				ORDER BY FIELD(status,'NEW','TESTING','RELEASED'),date_released desc,date_scheduled desc";
 			
 			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
 				$find_objects_query .= "
