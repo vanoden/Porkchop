@@ -12,7 +12,7 @@
 	function selectedType(elem) {
 		if (document.getElementById('problem_type').value == "gas monitor") {
 			document.getElementById('generic_form').style.display = 'none';
-			document.getElementById('device_table').style.display = 'block';
+			document.getElementById('device_table').style.display = 'inline-table';
 		}
 		else {
 			document.getElementById('device_table').style.display = 'none';
@@ -31,7 +31,7 @@
 		var productSelect = document.createElement('select');
 		productSelect.name = 'product_id['+line+']';
 		productSelect.classList.add('value');
-		productSelect.classList.add('input');
+		productSelect.classList.add('wide_100per');
 		productCell1.appendChild(productSelect);
 		var productOpt0 = document.createElement('option');
 		productOpt0.value = '';
@@ -52,7 +52,7 @@
 		var serialNumber = document.createElement('input');
 		serialNumber.name = "serial_number["+line+"]";
 		serialNumber.classList.add('value');
-		serialNumber.classList.add('input');
+		serialNumber.classList.add('wide_100per');
 		productCell2.appendChild(serialNumber);
 
 		var productCell3 = document.createElement('div');
@@ -61,7 +61,7 @@
 		var problem = document.createElement('input');
 		problem.name = "line_description["+line+"]";
 		problem.classList.add('value');
-		problem.classList.add('input');
+		problem.classList.add('wide_100per');
 		productCell3.appendChild(problem);
 
 		var productCell4 = document.createElement('div');
@@ -151,32 +151,30 @@
 		
 		
 <!--	START Last Table -->
-<div class="device_table" id="device_table" style="display:none;">
-	<div class="tableBody min-tablet marginTop_20">
-		<div class="tableRowHeader">
-			<div class="tableCell" style="width: 20%;">Product</div>
-			<div class="tableCell" style="width: 20%;">Serial Number</div>
-			<div class="tableCell" style="width: 50%;">Problem</div>
-			<div class="tableCell" style="width: 10%;"></div>
+<div id="device_table" class="tableBody min-tablet marginTop_20" style="display:none;">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 20%;">Product</div>
+		<div class="tableCell" style="width: 20%;">Serial Number</div>
+		<div class="tableCell" style="width: 50%;">Problem</div>
+		<div class="tableCell" style="width: 10%;"></div>
+	</div>
+	<div class="tableRow">
+		<div class="tableCell">
+			<select name="product_id[0]" class="value wide_100per">
+				<option value="">None</option>
+				<?	foreach ($products as $product) { ?>
+				<option value="<?=$product->id?>"><?=$product->code?></option>
+				<?	} ?>
+			</select>
 		</div>
-		<div class="tableRow">
-			<div class="tableCell">
-				<select name="product_id[0]" class="value wide_100per">
-					<option value="">None</option>
-					<?	foreach ($products as $product) { ?>
-					<option value="<?=$product->id?>"><?=$product->code?></option>
-					<?	} ?>
-				</select>
-			</div>
-			<div class="tableCell">
-				<input type="text" name="serial_number[0]" class="value wide_100per" />
-			</div>
-			<div class="tableCell">
-				<input type="text" name="line_description[0]" class="value wide_100per" />
-			</div>
-			<div class="tableCell">
-				<input type="button" name="additem[0]" class="value" value="+" onclick="addRow();" />
-			</div>
+		<div class="tableCell">
+			<input type="text" name="serial_number[0]" class="value wide_100per" />
+		</div>
+		<div class="tableCell">
+			<input type="text" name="line_description[0]" class="value wide_100per" />
+		</div>
+		<div class="tableCell">
+			<input type="button" name="additem[0]" class="value" value="+" onclick="addRow();" />
 		</div>
 	</div>
 </div>
