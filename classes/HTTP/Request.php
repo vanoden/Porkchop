@@ -27,6 +27,13 @@
 			if (isset($parameters['uri'])) $this->uri($parameters['uri']);
 		}
 
+		public function refererURI() {
+			app_log("Referer: ".$_SERVER['HTTP_REFERER']);
+			if (preg_match('/^https?\:\/\/[\w\-\.]+(\/.*)/',$_SERVER['HTTP_REFERER'],$matches)) {
+				return $matches[1];
+			}
+			return null;
+		}
 		public function addParam($key,$value) {
 			$this->_parameters[$key] = $value;
 		}
