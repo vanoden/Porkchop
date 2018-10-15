@@ -11,16 +11,16 @@
 		return false;
 	}
 </script>
-<div class="title">Calibration Credits</div>
+<h2>Calibration Credits</h2>
 <?	if ($page->error) { ?>
 <div class="form_error" colspan="2"><?=$page->error?></div>
 <?	} ?>
 <?	if ($page->success) { ?>
 <div class="form_success" colspan="2"><?=$page->success?></div>
 <?	} ?>
-<table class="body" style="width: 600px;">
+<table class="body">
 <form method="post" name="calibrationForm" action="/_spectros/admin_credits">
-<tr><td class="label" colspan="2">Organization</td></tr>
+<tr><th class="label" colspan="2">Organization</th></tr>
 <tr><td class="value" colspan="2">
 		<select name="organization_id" class="value input" onchange="selectOrganization(this);">
 			<option value="">Select</option>
