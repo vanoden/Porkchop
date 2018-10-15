@@ -11,10 +11,10 @@
 	}
 </script>
 <style>
-	.smallValue{ width: 8%; }
-	.codeValue { width: 15%; }
-	.nameValue { width: 24%; }
-	.descValue { width: 53%; }
+	.codeValue { width: 21%; }
+	.smallValue{ width: 7%; } /* for Type and Status */
+	.nameValue { width: 35%; }
+	.descValue { width: 30%; }
 </style>
 <div class="body">
 	<h2>Products</h2>

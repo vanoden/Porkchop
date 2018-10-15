@@ -33,7 +33,7 @@
 	</div>
 	<div class="input-horiz" id="itemName">
 		<span class="label">Name</span>
-		<input type="text" class="value input wide_md" name="name" id="name" value="<?=$item->name?>" />
+		<input type="text" class="value input wide_lg" name="name" id="name" value="<?=$item->name?>" />
 	</div>
 	<div class="input-horiz" id="itemStatus">
 		<span class="label">Status</span>
@@ -45,36 +45,36 @@
 		</select>
 	</div>
 	<div class="input-horiz" id="itemShortDescription">
-		<span class="label">Short Description</span>
-		<textarea class="value input wide_md" name="short_description" id="short_description"><?=$item->short_description?></textarea>
+		<span class="label align-top">Short Description</span>
+		<textarea class="value input wide_lg" name="short_description" id="short_description"><?=$item->short_description?></textarea>
 	</div>
 	<div class="input-horiz" id="itemDescription">
-		<span class="label">Description</span>
-		<textarea class="value input wide_md" name="description" id="description"><?=$item->description?></textarea>
+		<span class="label align-top">Description</span>
+		<textarea class="value input wide_lg" name="description" id="description"><?=$item->description?></textarea>
 	</div>
 	<div class="input-horiz">
 		<span class="label">Model</span>
-		<input type="text" class="value input wide_sm" name="model" id="model" value="<?=$item->model?>" />
+		<input type="text" class="value input wide_md" name="model" id="model" value="<?=$item->model?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Empirical Formula</span>
-		<input type="text" class="value input wide_sm" name="empirical_formula" id="empirical_formula" value="<?=$item->empirical_formula?>" />
+		<input type="text" class="value input wide_md" name="empirical_formula" id="empirical_formula" value="<?=$item->empirical_formula?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Sensitivity</span>
-		<input type="text" class="value input wide_sm" name="sensitivity" id="sensitivity" value="<?=$item->sensitivity?>" />
+		<input type="text" class="value input wide_md" name="sensitivity" id="sensitivity" value="<?=$item->sensitivity?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Measure Range</span>
-		<input type="text" class="value input wide_sm" name="measure_range" id="measure_range" value="<?=$item->measure_range?>" />
+		<input type="text" class="value input wide_md" name="measure_range" id="measure_range" value="<?=$item->measure_range?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Accuracy</span>
-		<input type="text" class="value input wide_sm" name="accuracy" id="accuracy" value="<?=$item->accuracy?>" />
+		<input type="text" class="value input wide_md" name="accuracy" id="accuracy" value="<?=$item->accuracy?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Manual</span>
-		<select class="value input wide_sm" name="manual_id" id="manual_id">
+		<select class="value input wide_md" name="manual_id" id="manual_id">
 <?	foreach($manuals as $manual) { ?>
 			<option value="<?=$manual->id?>"<? if ($item->manual_id == $manual->id) { print " selected"; } ?>><?=$manual->name?></option>
 <?	} ?>
@@ -82,7 +82,7 @@
 	</div>
 	<div class="input-horiz">
 		<span class="label">Spec Table</span>
-		<select class="value input wide_sm" name="spec_table_image" id="spec_table_image">
+		<select class="value input wide_md" name="spec_table_image" id="spec_table_image">
 			<option value="Select"></option>
 <?	foreach($tables as $table) { ?>
 			<option value="<?=$table->id?>"<? if ($item->spec_table_image == $table->id) { print " selected"; } ?>><?=$table->name?></option>
@@ -90,7 +90,7 @@
 		</select>
 	</div>
 	<div class="input-horiz" id="itemImages">
-		<span class="label">Images</span>
+		<span class="label align-top">Images</span>
 <?	foreach($item->image as $image) { ?>
 		<div class="editItemImage" id="ItemImageDiv_<?=$image->code?>">
 			<input type="button" name="btn_drop" class="editItemThumbnail" onclick="dropImage('<?=$image->code?>')" value="X" />
@@ -102,7 +102,7 @@
             <input type="hidden" name="new_image_code" id="new_image_code" />
         </div>
 	</div>
-	<div class="editSubmit button-bar">
+	<div class="editSubmit button-bar floating">
 		<input type="submit" class="button" value="Update" name="submit" id="submit"/>
 	</div>
 </div>
