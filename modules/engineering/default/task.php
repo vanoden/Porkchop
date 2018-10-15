@@ -3,7 +3,7 @@
 <input type="hidden" name="task_id" value="<?=$task->id?>" />
 <div class="breadcrumbs">
 <a class="breadcrumb" href="/_engineering/home">Engineering</a>
-<a class="breadcrumb" href="/_engineering/tasks">Tasks</a>
+<a class="breadcrumb" href="/_engineering/tasks">Tasks</a> > Task Detail
 </div>
 <h2>Engineering Task: <span><? if ($form['code']) print " ".$form['code']; ?></span></h2>
 <?	if ($page->errorCount()) { ?>

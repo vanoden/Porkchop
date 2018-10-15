@@ -5,7 +5,7 @@
 <a class="breadcrumb" href="/_engineering/home">Engineering</a>
 <a class="breadcrumb" href="/_engineering/releases">Releases</a>
 </div>
-<div class="title">Engineering Release</div>
+<h2>Engineering Release</h2>
 	
 <!--	Error Checking -->
 <?	if ($page->error) { ?>
@@ -18,7 +18,7 @@
 	
 	
 <!--	START First Table -->
-	<div class="tableBody min-tablet marginTop_20">
+	<div class="tableBody min-tablet">
 	<div class="tableRowHeader">
 		<div class="tableCell" style="width: 20%;">Code</div>
 		<div class="tableCell" style="width: 40%;">Title</div>
@@ -61,7 +61,7 @@
 		</div>
 		</div>
 </div>
-<div class="tableBody clean min-tablet marginTop_20">
+<div class="tableBody clean min-tablet">
 	<div class="tableRowHeader">
 		<div class="tableCell" style="width: 100%;">Description</div>
 	</div> <!-- end row header -->

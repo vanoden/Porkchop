@@ -3,7 +3,7 @@
 <input type="hidden" name="product_id" value="<?=$product->id?>" />
 <div class="breadcrumbs">
 	<a href="/_engineering/home">Engineering</a>
-	<a href="/_engineering/products">Products</a>
+	<a href="/_engineering/products">Products</a> > Product Details
 </div>
 	
 <h2>Engineering Product</h2>

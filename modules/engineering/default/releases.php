@@ -1,58 +1,42 @@
-<style>
-	td.column_code {
-		width: 140px;
-	}
-	td.column_title {
-		width: 220px;
-	}
-	td.column_date {
-		width: 160px;
-	}
-	td.column_person {
-		width: 160px;
-	}
-	td.column_status {
-		width: 120px;
-	}
-	a.more {
-		position: relative;
-		display: block;
-		font-weight: bold;
-		padding-left: 15px;
-		margin-top: 4px;
-		font-size: 20px;
-	}
-	div.title {
-		float: left;
-		margin-right: 10px;
-	}
-	table.body {
-		clear: both;
-	}
-</style>
 <div class="breadcrumbs">
-<a class="breadcrumb" href="/_engineering/home">Engineering</a>
+<a href="/_engineering/home">Engineering</a> > Releases
 </div>
-<div class="title">Releases</div>
-<a class="more" href="/_engineering/release">New Release</a>
+<h2 style="display: inline-block;">Releases</h2>
+<a class="button more" href="/_engineering/release">New Release</a>
 <?	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorCount()?></div>
 <?	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
 <?	} ?>
-<table class="body">
-<tr><td class="label column_code">Code</td>
-	<td class="label column_title">Title</td>
-	<td class="label column_status">Status</td>
-	<td class="label column_date">Released On</td>
-</tr>
+
+
+<!--	START First Table -->
+	<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 20%;">Code</div>
+		<div class="tableCell" style="width: 40%;">Title</div>
+		<div class="tableCell" style="width: 15%;">Status</div>
+		<div class="tableCell" style="width: 25%;">Released On</div>
+	</div>
 <?php
 	foreach ($releases as $release) {
 ?>
-<tr><td class="value"><a href="/_engineering/release/<?=$release->code?>"><?=$release->code?></a></td>
-	<td class="value"><?=$release->title?></td>
-	<td class="value"><?=$release->status?></td>
-	<td class="value"><?=$release->date_released?></td>
+	<div class="tableRow">
+		<div class="tableCell">
+			<a href="/_engineering/release/<?=$release->code?>"><?=$release->code?></a>
+		</div>
+		<div class="tableCell">
+			<?=$release->title?>
+		</div>
+		<div class="tableCell">
+			<?=$release->status?>
+		</div>
+		<div class="tableCell">
+			<?=$release->date_released?>
+		</div>
+	</div>
 <?php	} ?>
-</table>
+</div>
+<!--	END First Table -->
+

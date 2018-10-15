@@ -3,7 +3,7 @@
 <input type="hidden" name="project_id" value="<?=$project->id?>" />
 <div class="breadcrumbs">
 	<a href="/_engineering/home">Engineering</a>
-	<a href="/_engineering/projects">Projects</a>
+	<a href="/_engineering/projects">Projects</a> > Project Details
 </div>
 	
 <h2>Engineering Project</h2>
