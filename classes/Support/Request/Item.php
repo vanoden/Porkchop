@@ -147,7 +147,7 @@
 			$parameters['item_id'] = $this->id;
 			$action = new \Support\Request\Item\Action();
 			if ($action->add($parameters)) {
-				return true;
+				return $action;
 			}
 			else {
 				$this->_error = $action->error();
@@ -158,7 +158,7 @@
 			$parameters['item_id'] = $this->id;
 			$rma = new \Support\Request\Item\RMA();
 			if ($rma->add($parameters)) {
-				return true;
+				return $rma;
 			}
 			else {
 				$this->_error = $rma->error();
@@ -169,7 +169,7 @@
 			$parameters['item_id'] = $this->id;
 			$comment = new \Support\Request\Item\Comment();
 			if ($comment->add($parameters)) {
-				return true;
+				return $comment;
 			}
 			else {
 				$this->_error = $comment->error();

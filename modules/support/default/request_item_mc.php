@@ -51,11 +51,12 @@
 			'description'		=> $_REQUEST['action_description']
 		);
 
-		if (! $item->addAction($parameters)) {
+		$action = $item->addAction($parameters);
+		if ($item->error()) {
 			$page->addError($item->error());
 		}
 		else {
-			$page->success = "Action added";
+			$page->success = "Action #".$action->id." added";
 		}
 		if ($item->status == "NEW") $item->update(array('status' => 'ACTIVE'));
 		$assigned_to = new \Register\Customer($_REQUEST['action_assigned_to']);
@@ -63,7 +64,7 @@
 			$message = new \Email\Message(
 				array(
 					'from'	=> 'service@spectrosinstruments.com',
-					'subject'	=> "[SUPPORT] Action ".$action->id." assigned to you",
+					'subject'	=> "[SUPPORT] Action #".$action->id." assigned to you",
 					'body'		=> "The following action was assigned to you:
 Request: ".$action->item->request->code."<br>
 Item: ".$action->item->line."<br>
