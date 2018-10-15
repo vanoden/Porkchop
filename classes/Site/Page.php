@@ -14,6 +14,7 @@
 		public $title;
 		public $metadata;
 		public $template;
+		public $success;
 		private $_errors = array();
 
         public function __construct () {
@@ -40,6 +41,25 @@
 			}
 			elseif (func_num_args() == 2 && gettype($args[0]) == "string" && gettype($args[1]) == "string") {
 				$this->get($args[0],$args[1]);
+			}
+		}
+
+		public function fromRequest() {
+			return $this->get(
+				$GLOBALS['_REQUEST_']->module,
+				$GLOBALS['_REQUEST_']->view,
+				$GLOBALS['_REQUEST_']->index
+			);
+		}
+
+		public function requireRole($role) {
+			if (! $GLOBALS['_SESSION_']->customer->id) {
+				header('location: /_register/login?return=true');
+				exit;
+			}
+			if (! $GLOBALS['_SESSION_']->customer->has_role($role)) {
+				header('location: /_register/permission_denied');
+				exit;
 			}
 		}
 
