@@ -16,7 +16,7 @@
 		}
 		else {
 			document.getElementById('device_table').style.display = 'none';
-			document.getElementById('generic_form').style.display = "block";
+			document.getElementById('generic_form').style.display = "inline-table";
 		}
 	}
 	function addRow() {
@@ -143,7 +143,7 @@
 	</div>
 	<div class="tableRow">
 		<div class="tableCell">
-			<textarea name="description" class="value input" style="width: 100%"></textarea>
+			<textarea name="description" class="value wide_100per"></textarea>
 		</div>
 	</div>
 </div>
