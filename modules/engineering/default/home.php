@@ -4,7 +4,6 @@
 	td.column_date { width: 160px; }
 	td.column_person { width: 160px; }
 	td.column_status { width: 120px; }
-	a.more { position: relative; display: inline-block; font-weight: bold; padding-left: 15px; margin-top: 4px; font-size: 20px;	}
 	div.title { float: left; margin-right: 10px; }
 	table.body { clear: both; }
 </style>
@@ -12,7 +11,7 @@
 <div class="form_error"><?=$page->error?></div>
 <?	} ?>
 <h2 style="display: inline-block;">Unassigned Tasks</h2>
-<a class="more" href="/_engineering/tasks">Manage Tasks</a>
+<a class="button more" href="/_engineering/tasks">Manage Tasks</a>
 <table class="body">
 <tr>
 	<th class="label column_title">Title</th>
@@ -57,7 +56,7 @@
 </table>
 <br>
 <h2 style="display: inline-block;">Releases</h2>
-<a class="more" href="/_engineering/releases">Manage Releases</a>
+<a class="button more" href="/_engineering/releases">Manage Releases</a>
 <table class="body">
 <tr>
 	<th class="label column_title">Title</th>
@@ -76,7 +75,7 @@
 </table>
 <br>
 <h2 style="display: inline-block;">Projects</h2>
-<a class="more" href="/_engineering/projects">Manage Projects</a>
+<a class="button more" href="/_engineering/projects">Manage Projects</a>
 <table class="body">
 <tr>
 	<th class="label column_title">Title</th>
@@ -94,7 +93,7 @@
 </table>
 <br>
 <h2 style="display: inline-block;">Products</h2>
-<a class="more" href="/_engineering/products">Manage Products</a>
+<a class="button more" href="/_engineering/products">Manage Products</a>
 <table class="body">
 <tr>
 	<th class="label column_title">Title</th>

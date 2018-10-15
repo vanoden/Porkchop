@@ -1,31 +1,54 @@
-<div style="width: 756px;">
+<div>
 <form name="product_form" action="/_engineering/product" method="post">
 <input type="hidden" name="product_id" value="<?=$product->id?>" />
 <div class="breadcrumbs">
-<a class="breadcrumb" href="/_engineering/home">Engineering</a>
-<a class="breadcrumb" href="/_engineering/products">Products</a>
+	<a href="/_engineering/home">Engineering</a>
+	<a href="/_engineering/products">Products</a>
 </div>
-<div class="title">Engineering Product</div>
+	
+<h2>Engineering Product</h2>
 <?	if ($page->error) { ?>
-<div class="form_error"><?=$page->error?></div>
+	<div class="form_error"><?=$page->error?></div>
 <?	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
 <?	} ?>
-<div class="container_narrow">
-	<div class="label">Code</div>
-	<input type="text" name="code" class="value input" value="<?=$form['code']?>" />
+	
+	
+<!--	START First Table -->
+	<div class="tableBody half min-tablet marginTop_20">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 50%;">Code</div>
+		<div class="tableCell" style="width: 50%;">Title</div>
+	</div>
+	<div class="tableRow">
+		<div class="tableCell">
+			<input type="text" name="code" class="value wide_100per" value="<?=$form['code']?>" />
+		</div>
+		<div class="tableCell">
+			<input type="text" name="title" class="value wide_100per" value="<?=$form['title']?>" />
+		</div>
+	</div>
 </div>
-<div class="container_narrow">
-	<div class="label">Title</div>
-	<input type="text" name="title" class="value input" style="width: 240px" value="<?=$form['title']?>" />
+<!--	END First Table -->
+	
+<!--	START First Table -->
+	<div class="tableBody half min-tablet marginTop_20">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 100%;">Description</div>
+	</div>
+	<div class="tableRow">
+		<div class="tableCell">
+			<textarea name="description" style="width: 700px; height: 300px;"><?=$form['description']?></textarea>
+		</div>
+	</div>
 </div>
-<div class="container">
-	<div class="label">Description</div>
-	<textarea name="description" style="width: 700px; height: 300px;"><?=$form['description']?></textarea>
-</div>
-<div class="container">
+<!--	END First Table -->
+	
+<div class="button-bar">
 	<input type="submit" name="btn_submit" class="button" value="Submit">
 </div>
-</form>
+	
+	
+</form>	
 </div>

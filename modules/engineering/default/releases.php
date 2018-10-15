@@ -35,6 +35,12 @@
 </div>
 <div class="title">Releases</div>
 <a class="more" href="/_engineering/release">New Release</a>
+<?	if ($page->errorCount()) { ?>
+<div class="form_error"><?=$page->errorCount()?></div>
+<?	}
+	if ($page->success) { ?>
+<div class="form_success"><?=$page->success?></div>
+<?	} ?>
 <table class="body">
 <tr><td class="label column_code">Code</td>
 	<td class="label column_title">Title</td>

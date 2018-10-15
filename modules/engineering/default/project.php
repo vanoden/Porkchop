@@ -2,57 +2,104 @@
 <form name="project_form" action="/_engineering/project" method="post">
 <input type="hidden" name="project_id" value="<?=$project->id?>" />
 <div class="breadcrumbs">
-<a class="breadcrumb" href="/_engineering/home">Engineering</a>
-<a class="breadcrumb" href="/_engineering/projects">Projects</a>
+	<a href="/_engineering/home">Engineering</a>
+	<a href="/_engineering/projects">Projects</a>
 </div>
-<div class="title">Engineering Project</div>
+	
+<h2>Engineering Project</h2>
 <?	if ($page->error) { ?>
-<div class="form_error"><?=$page->error?></div>
+	<div class="form_error"><?=$page->error?></div>
 <?	}
 	if ($page->success) { ?>
-<div class="form_success"><?=$page->success?></div>
+	<div class="form_success"><?=$page->success?></div>
 <?	} ?>
-<div class="container_narrow">
-	<div class="label">Code</div>
-	<input type="text" name="code" class="value input" value="<?=$form['code']?>" />
-</div>
-<div class="container_narrow">
-	<div class="label">Title</div>
-	<input type="text" name="title" class="value input" style="width: 240px" value="<?=$form['title']?>" />
-</div>
-<div class="container_narrow">
-	<div class="label">Manager</div>
-	<select name="manager_id" class="value input" style="width: 240px">
-		<option value="">Unassigned</option>
-<?	foreach ($managers as $manager) { ?>
-		<option value="<?=$manager->id?>"<? if ($manager->id == $project->manager->id) print " selected"; ?>><?=$manager->code?></option>
-<?	} ?>
+	
+	
+	
+<!--	START First Table -->
+	<div class="tableBody min-tablet marginTop_20">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 25%;">Code</div>
+		<div class="tableCell" style="width: 30%;">Title</div>
+		<div class="tableCell" style="width: 25%;">Manager</div>
+		<div class="tableCell" style="width: 20%;"></div>
+	</div>
+	<div class="tableRow">
+		<div class="tableCell">
+			<input type="text" name="code" class="value input" value="<?=$form['code']?>" />
+		</div>
+		<div class="tableCell">
+			<input type="text" name="title" class="value input" style="width: 240px" value="<?=$form['title']?>" />
+		</div>
+		<div class="tableCell">
+			<select name="manager_id" class="value input" style="width: 240px">
+				<option value="">Unassigned</option>
+				<?	foreach ($managers as $manager) { ?>
+				<option value="<?=$manager->id?>"<? if ($manager->id == $project->manager->id) print " selected"; ?>><?=$manager->code?></option>
+				<?	} ?>
 	</select>
+		</div>
+		<div class="tableCell">
+<!--			empty cell -->
+		</div>
+	</div>
 </div>
-<div class="container">
-	<div class="label">Description</div>
-	<textarea name="description" style="width: 700px; height: 300px;"><?=$form['description']?></textarea>
+<!--	END First Table -->
+	
+	
+<!--	START First Table -->
+	<div class="tableBody half clean min-tablet marginTop_20">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 25%;">Description</div>
+	</div>
+	<div class="tableRow">
+		<div class="tableCell">
+			<textarea name="description"><?=$form['description']?></textarea>
+		</div>
+	</div>
 </div>
-<div class="container">
+<!--	END First Table -->
+	
+
+	
+<div class="button-bar">
 	<input type="submit" name="btn_submit" class="button" value="Submit">
 </div>
 </form>
-<?	if ($project->id) { ?>
-<div class="title">Tasks</div>
-<table class="body" style="width: 756px">
-<tr><td class="label">Title</td>
-	<td class="label">Added</td>
-	<td class="label">Tech</td>
-	<td class="label">Status</td>
-</tr>
-<?	foreach ($tasks as $task) {
+	
+	
+
+	
+	
+<!--	START First Table -->
+	<?	if ($project->id) { ?>
+<h3>Tasks</h3>
+	<div class="tableBody min-tablet marginTop_20">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 25%;">Title</div>
+		<div class="tableCell" style="width: 25%;">Added</div>
+		<div class="tableCell" style="width: 25%;">Tech</div>
+		<div class="tableCell" style="width: 25%;">Status</div>
+	</div>
+		<?	foreach ($tasks as $task) {
 		$worker = $task->assignedTo(); ?>
-<tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
-	<td class="value"><?=$task->date_added?></td>
-	<td class="value"><?=$worker->login?></td>
-	<td class="value"><?=$task->status?></td>
-</tr>
+	<div class="tableRow">
+		<div class="tableCell">
+			<a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a>
+		</div>
+		<div class="tableCell">
+			<?=$task->date_added?>
+		</div>
+		<div class="tableCell">
+			<?=$worker->login?>
+		</div>
+		<div class="tableCell">
+			<?=$task->status?>
+		</div>
+	</div>
 <?	} ?>
-</table>
+</div>
 <?	} ?>
+<!--	END First Table -->	
+	
 </div>

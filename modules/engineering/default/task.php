@@ -5,7 +5,7 @@
 <a class="breadcrumb" href="/_engineering/home">Engineering</a>
 <a class="breadcrumb" href="/_engineering/tasks">Tasks</a>
 </div>
-<div class="title">Engineering Task<? if ($form['code']) print " ".$form['code']; ?></div>
+<h2>Engineering Task: <span><? if ($form['code']) print " ".$form['code']; ?></span></h2>
 <?	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
 <?	}
@@ -20,173 +20,223 @@
 <?	} ?>
 	
 <!--	Start First Row-->
-<div class="row">
-<div class="container_narrow">
-	<div class="label">Title</div>
-	<input type="text" name="title" class="value input wide_md" value="<?=$form['title']?>" />
-</div>
-<div class="container_narrow">
-	<div class="label wide_sm">Product</div>
-	<select name="product_id" class="value input">
-		<option value="">Select</option>
-<?	foreach ($products as $product) { ?>
-		<option value="<?=$product->id?>"<? if ($product->id == $form['product_id']) print " selected"; ?>><?=$product->title?></option>
-<?	} ?>
-	</select>
-</div>
-<div class="container_narrow">
-	<div class="label">Date Requested</div>
-	<?	if (isset($task->id)) { ?>
-	<span class="value"><?=$form['date_added']?></span>
-	<?	} else { ?>
-	<input type="text" name="date_added" class="value input" value="<?=$form['date_added']?>" />
-	<?	} ?>
-</div>
-<div class="container_narrow">
-	<div class="label">Date Due</div>
-	<input type="text" name="date_due" class="value input" value="<?=$form['date_due']?>" />
-</div>
-</div>
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 25%;">Title</div>
+		<div class="tableCell" style="width: 25%;">Product</div>
+		<div class="tableCell" style="width: 25%;">Date Requested</div>
+		<div class="tableCell" style="width: 25%;">Date Due</div>
+	</div> <!-- end row header -->
+	<div class="tableRow">
+		<div class="tableCell"><input type="text" name="title" class="value input wide_100per" value="<?=$form['title']?>" /></div>
+		<div class="tableCell">
+			<select name="product_id" class="value input wide_100per">
+				<option value="">Select</option>
+				<?	foreach ($products as $product) { ?>
+				<option value="<?=$product->id?>"<? if ($product->id == $form['product_id']) print " selected"; ?>><?=$product->title?></option>
+				<?	} ?>
+			</select>
+		</div>
+		<div class="tableCell">
+			<?	if (isset($task->id)) { ?>
+			<span class="value"><?=$form['date_added']?></span>
+			<?	} else { ?>
+			<input type="text" name="date_added" class="value input wide_100per" value="<?=$form['date_added']?>" />
+			<?	} ?>
+		</div>
+		<div class="tableCell">
+			<input type="text" name="date_due" class="value input wide_100per" value="<?=$form['date_due']?>" />
+		</div>
+	</div>
+</div>	
 <!--End first row-->
 	
+	
 <!--	Start Second Row-->
-<div class="row">
-<div class="container_narrow">
-	<div class="label">Time Estimate (hrs)</div>
-	<input type="text" name="estimate" class="value input wide_xs" value="<?=$form['estimate']?>" />
-</div>
-<div class="container_narrow">
-	<div class="label">Type</div>
-	<select name="type" class="value input wide_xs">
-		<option value="bug"<? if ($form['type'] == "BUG") print " selected"; ?>>Bug</option>
-		<option value="feature"<? if ($form['type'] == "FEATURE") print " selected"; ?>>Feature</option>
-		<option value="test"<? if ($form['type'] == "TEST") print " selected"; ?>>Test</option>
-	</select>
-</div>
-<div class="container_narrow">
-	<div class="label">Status</div>
-	<?	if (isset($task->id)) { ?>
-	<span class="value"><?=$task->status?></span>
-	<?	} else { ?>
-	<select name="status" class="value input">
-		<option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
-		<option value="hold"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
-		<option value="active"<? if ($form['status'] == "ACTIVE") print " selected"; ?>>Active</option>
-		<option value="cancelled"<? if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
-		<option value="complete"<? if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
-	</select>
-	<?	}	?>
-</div>
-<div class="container_narrow">
-	<div class="label">Priority</div>
-	<select name="priority" class="value input wide_xs">
-		<option value="normal"<? if ($form['priority'] == "NORMAL") print " selected"; ?>>Normal</option>
-		<option value="important"<? if ($form['priority'] == "IMPORTANT") print " selected"; ?>>Important</option>
-		<option value="urgent"<? if ($form['priority'] == "URGENT") print " selected"; ?>>Urgent</option>
-		<option value="critical"<? if ($form['priority'] == "CRITICAL") print " selected"; ?>>Critical</option>
-	</select>
-</div>
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 25%;">Time Estimate (hrs)</div>
+		<div class="tableCell" style="width: 25%;">Type</div>
+		<div class="tableCell" style="width: 25%;">Status</div>
+		<div class="tableCell" style="width: 25%;">Priority</div>
+	</div>
+	<div class="tableRow">
+		<div class="tableCell"><input type="text" name="estimate" class="value input wide_100per" value="<?=$form['estimate']?>" /></div>
+		<div class="tableCell">
+			<select name="type" class="value input wide_100per">
+				<option value="bug"<? if ($form['type'] == "BUG") print " selected"; ?>>Bug</option>
+				<option value="feature"<? if ($form['type'] == "FEATURE") print " selected"; ?>>Feature</option>
+				<option value="test"<? if ($form['type'] == "TEST") print " selected"; ?>>Test</option>
+			</select>
+		</div>
+		<div class="tableCell">
+			<?	if (isset($task->id)) { ?>
+			<span class="value"><?=$task->status?></span>
+			<?	} else { ?>
+			<select name="status" class="value input wide_100per">
+				<option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
+				<option value="hold"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
+				<option value="active"<? if ($form['status'] == "ACTIVE") print " selected"; ?>>Active</option>
+				<option value="cancelled"<? if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
+				<option value="complete"<? if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
+			</select>
+			<?	}	?>
+		</div>
+		<div class="tableCell">
+			<select name="priority" class="value input wide_100per">
+				<option value="normal"<? if ($form['priority'] == "NORMAL") print " selected"; ?>>Normal</option>
+				<option value="important"<? if ($form['priority'] == "IMPORTANT") print " selected"; ?>>Important</option>
+				<option value="urgent"<? if ($form['priority'] == "URGENT") print " selected"; ?>>Urgent</option>
+				<option value="critical"<? if ($form['priority'] == "CRITICAL") print " selected"; ?>>Critical</option>
+			</select>
+		</div>
+	</div>
+</div>	
 <!--End second row-->
 	
-<!--	Start Third Row-->	
-<div class="row">
-<div class="container_narrow">
-	<div class="label">Requested By</div>
-	<?	if (isset($task->id)) {
-		$requestor = $task->requestedBy(); ?>
-	<span class="value"><?=$requestor->first_name?> <?=$requestor->last_name?></span>
-	<?	} else { ?>
-	<select name="requested_id" class="value input" style="width: 240px">
-		<option value="">Select</option>
-<?	foreach($people as $person) { ?>
-		<option value="<?=$person->id?>"<? if ($person->id == $form['requested_id']) print " selected"; ?>><?=$person->login?></option>
-<?	} ?>
-	</select>
-	<?	}	?>
-</div>
-<div class="container_narrow">
-	<div class="label">Assigned To</div>
-	<select name="assigned_id" class="value input wide_sm">
-		<option value="">Unassigned</option>
-<?	foreach($techs as $person) { ?>
-		<option value="<?=$person->id?>"<? if ($person->id == $form['assigned_id']) print " selected"; ?>><?=$person->login?></option>
-<?	} ?>
-	</select>
-</div>
-<div class="container_narrow">
-	<div class="label">Release</div>
-	<select name="release_id" class="value input wide_md">
-		<option value="">Not Scheduled</option>
-<?	foreach($releases as $release) { ?>
-		<option value="<?=$release->id?>"<? if ($release->id == $form['release_id']) print " selected"; ?>><?=$release->title?></option>
-<?	} ?>
-	</select>
-</div>
-<div class="container_narrow">
-	<div class="label">Project</div>
-	<select name="project_id" class="value input wide_md">
-		<option value="">No Project</option>
-<?	foreach($projects as $project) { ?>
-		<option value="<?=$project->id?>"<? if ($project->id == $form['project_id']) print " selected"; ?>><?=$project->title?></option>
-<?	} ?>
-	</select>
-</div>
-</div>	
-<!--End third row-->
 	
-<div class="container">
-	<div class="label">Description</div>
-	<textarea name="description" style="width: 720px; height: 80px;"><?=$form['description']?></textarea>
-</div>
-<div class="container" class="form_footer">
-	<input type="submit" name="btn_submit" class="button" value="Submit">
-</div>
-<br>
+<!--	Start Third Row-->
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 25%;">Request By</div>
+		<div class="tableCell" style="width: 25%;">Assigned To</div>
+		<div class="tableCell" style="width: 25%;">Release</div>
+		<div class="tableCell" style="width: 25%;">Project</div>
+	</div>
+	<div class="tableRow">
+		<div class="tableCell">
+			<?	if (isset($task->id)) {
+			$requestor = $task->requestedBy(); ?>
+			<span class="value"><?=$requestor->first_name?> <?=$requestor->last_name?></span>
+			<?	} else { ?>
+			<select name="requested_id" class="value input wide_100per">
+				<option value="">Select</option>
+			<?	foreach($people as $person) { ?>
+				<option value="<?=$person->id?>"<? if ($person->id == $form['requested_id']) print " selected"; ?>><?=$person->login?></option>
+			<?	} ?>
+			</select>
+			<?	}	?>
+		</div>
+		<div class="tableCell">
+			<select name="assigned_id" class="value input wide_100per">
+				<option value="">Unassigned</option>
+				<?	foreach($techs as $person) { ?>
+				<option value="<?=$person->id?>"<? if ($person->id == $form['assigned_id']) print " selected"; ?>><?=$person->login?></option>
+				<?	} ?>
+			</select>
+		</div>
+		<div class="tableCell">
+			<select name="release_id" class="value input wide_100per">
+				<option value="">Not Scheduled</option>
+				<?	foreach($releases as $release) { ?>
+				<option value="<?=$release->id?>"<? if ($release->id == $form['release_id']) print " selected"; ?>><?=$release->title?></option>
+				<?	} ?>
+			</select>
+		</div>
+		<div class="tableCell">
+			<select name="project_id" class="value input wide_100per">
+				<option value="">No Project</option>
+				<?	foreach($projects as $project) { ?>
+				<option value="<?=$project->id?>"<? if ($project->id == $form['project_id']) print " selected"; ?>><?=$project->title?></option>
+				<?	} ?>
+			</select>
+		</div>
+	</div>
+</div>	
+<!--End Third row-->	
+
+<!-- Start Fourth Row -->
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell">Description</div>
+	</div>  
+	<div class="tableRow">
+		<div class="tableCell">
+			<textarea name="description" class="wide_100per"><?=$form['description']?></textarea>
+		</div>
+	</div>
+	<div class="tableRow button-bar">
+			<input type="submit" name="btn_submit" class="button" value="Submit">
+	</div>
+</div>		
+<!-- End Fourth Row -->
+
+	
+<!-- Start Fifth Row -->
 <?	if ($task->id) { ?>
-<div class="container_narrow">
-	<div class="label">Event Date</div>
-	<input type="text" name="date_event" class="value input" value="<?=date('m/d/Y H:i:s')?>" />
-</div>
-<div class="container_narrow">
-	<div class="label">Person</div>
-	<select name="event_person_id" class="value input wide_xs">
-<?	foreach ($people as $person) { ?>
-		<option value="<?=$person->id?>"<? if ($person->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$person->code?></option>
-<?	} ?>
-	</select>
-</div>
-<div class="container_narrow">
-	<div class="label">New Status</div>
-	<select name="new_status" class="value input wide_xs">
+<h3>Event Update</h3>
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell">Event Date</div>
+		<div class="tableCell">Person</div>
+		<div class="tableCell">New Status</div>
+	</div>  
+	<div class="tableRow">
+		<div class="tableCell">
+			<input type="text" name="date_event" class="value input wide_100per" value="<?=date('m/d/Y H:i:s')?>" />
+		</div>
+		<div class="tableCell">
+			<select name="event_person_id" class="value input wide_100per">
+				<?	foreach ($people as $person) { ?>
+				<option value="<?=$person->id?>"<? if ($person->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$person->code?></option>
+				<?	} ?>
+			</select>
+		</div>
+		<div class="tableCell">
+			<select name="new_status" class="value input wide_100per">
 		<option value="new"<? if ($task->status == 'NEW') print ' selected'; ?>>New</option>
 		<option value="hold"<? if ($task->status == 'HOLD') print ' selected'; ?>>Hold</option>
 		<option value="active"<? if ($task->status == 'ACTIVE') print ' selected'; ?>>Active</option>
 		<option value="cancelled"<? if ($task->status == 'CANCELLED') print ' selected'; ?>>Cancelled</option>
 		<option value="complete"<? if ($task->status == 'COMPLETE') print ' selected'; ?>>Complete</option>
 	</select>
-</div>
-<div class="container">
-	<div class="label">Event Description</div>
-	<textarea name="notes" style="width: 720px; height: 60px;"></textarea>
-</div>
-<div class="form_footer">
-	<input type="submit" name="btn_add_event" class="button" value="Add Event" />
-</div>
+		</div>
+	</div>
+</div>		
+<!-- End Fifth Row -->	
+
+<!-- Start Sixth Row -->
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell">Event Description</div>
+	</div>  
+	<div class="tableRow">
+		<div class="tableCell">
+			<textarea name="notes" class="wide_100per"></textarea>
+		</div>
+	</div>
+	<div class="tableRow button-bar">
+			<input type="submit" name="btn_add_event" class="button" value="Add Event" />
+	</div>
+</div>		
+<!-- End Sixth Row -->
 </form>
-<table class="body" style="width: 760px;">
-<tr><td class="label">Date</td>
-	<td class="label">Person</td>
-</tr>
+	
+	
+<!--	Start First Row-->
+<h3>Event Log</h3>
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 20%;">Date</div>
+		<div class="tableCell" style="width: 15%;">Person</div>
+		<div class="tableCell" style="width: 65%;">Description</div>
+	</div>
 <?	foreach ($events as $event) {
 	$person = $event->person();
 ?>
-<tr><td class="value <?=$greenbar?>"><?=$event->date_event?></td>
-	<td class="value <?=$greenbar?>"><?=$person->login?></td>
-</tr>
-<tr><td colspan="2" class="value <?=$greenbar?>" style="border-bottom: 1px solid gray"><?=$event->description?></td></tr>
-<?		if ($greenbar) $greenbar = '';
-		else $greenbar = 'greenbar';
-	}
-?>
-</table>
+	<div class="tableRow">
+		<div class="tableCell">
+			<?=$event->date_event?>
+		</div>
+		<div class="tableCell">
+			<?=$person->login?>
+		</div>
+		<div class="tableCell">
+			<?=$event->description?>
+		</div>
+	</div>
+	<?	} ?>
+</div>
+	
+	
 <?	}	?>
