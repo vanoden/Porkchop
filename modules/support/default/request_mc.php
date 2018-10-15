@@ -6,47 +6,47 @@
 	### A. Caravello 10/26/2014							###
 	#######################################################
 
-	require_once(MODULES."/support/_classes/default.php");
+	$page = new \Site\Page();
 
 	# Make sure customer is signed in
-	if (! $GLOBALS['_SESSION_']->customer->id)
-	{
+	if (! $GLOBALS['_SESSION_']->customer->id) {
 		# Send to login page
 		header("location: /_register/login?target=_support:request");
 		exit;
 	}
 
-	if ($_REQUEST['btn_submit'])
-	{
+	if ($_REQUEST['btn_submit']) {
 		# Enter Support Request
-		$_request = new SupportRequest();
-		$request = $_request->add();
-		if ($_request->error)
-		{
-			app_log("Error adding support request: ".$_request->error,'error',__FILE__,__LINE__);
-			$GLOBALS['_page']->error = "Error submitting request";
+		$parameters = array(
+			"customer_id"	=> $GLOBALS['_SESSION_']->customer->id,
+			"type" 			=> $_REQUEST['type'],
+			"description"	=> $_REQUEST['description']
+		);
+		$request = new \Support\Request();
+		$request->add($parameters);
+		if ($request->error()) {
+			app_log("Error adding support request: ".$request->error(),'error',__FILE__,__LINE__);
+			$page->addError("Error submitting request: ".$request->error());
 		}
-		else
-		{
-			$_event = new SupportEvent();
-			$event = $_event->add(
-				array(
-					"request"	=> $request->code,
-					"comment"	=> $_REQUEST['description']
-				)
+		else {
+			$page->success = 'Support request submitted.  A representative will contact you shortly';
+		}
+		foreach ($_REQUEST['product_id'] as $line => $pid) {
+			print "<br>Line $line, Product ".$_REQUEST['product_id'][$line].", Serial ".$_REQUEST['serial_number'][$line];
+			$item = array(
+				'line'			=> $line,
+				'product_id'	=> $_REQUEST['product_id'][$line],
+				'serial_number'	=> $_REQUEST['serial_number'][$line],
+				'description'	=> $_REQUEST['line_description'][$line],
+				'quantity'		=> 1
 			);
-			if ($_event->error)
-			{
-				app_log("Error adding support event: ".$_event->error,'error',__FILE__,__LINE__);
-				$GLOBALS['_page']->error = "Error submitting request";
+			$request->addItem($item);
+			if ($request->error()) {
+				$page->addError("Error adding item to request: ".$request->error());
 			}
-			print "Request added<br>";
-			print_r($request);
-			print_r($event);
-			exit;
 		}
 	}
-	else
-	{
-	}
+
+	$productlist = new \Product\ItemList(array('type'=>'inventory'));
+	$products = $productlist->find();
 ?>
