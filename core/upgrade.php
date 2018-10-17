@@ -56,7 +56,8 @@
 		array("support","requests"),
 		array("support","request_detail"),
 		array("support","request_item"),
-		array("support","action")
+		array("support","action"),
+		array("support","admin_actions")
 	);
 
 	###################################################
