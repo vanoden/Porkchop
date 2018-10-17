@@ -127,6 +127,7 @@
 
 			$this->date_event = $object->date_event;
 			$this->person_id = $object->person_id;
+			$this->task_id = $object->task_id;
 			$this->description = $object->description;
 
 			return true;
@@ -134,6 +135,10 @@
 
 		public function person() {
 			return new \Register\Person($this->person_id);
+		}
+
+		public function task() {
+			return new \Engineering\Task($this->task_id);
 		}
 
 		public function error() {
