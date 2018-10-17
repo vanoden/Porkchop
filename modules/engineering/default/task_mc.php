@@ -43,7 +43,7 @@
 			$parameters['type'] = $_REQUEST['type'];
 		}
 		if (isset($_REQUEST['estimate']) && $task->estimate != $_REQUEST['estimate']) {
-			array_push($msgs,"Estimage changed from ".$task->estimate." to ".$_REQUEST['estimate']);
+			array_push($msgs,"Estimate changed from ".$task->estimate." to ".$_REQUEST['estimate']);
 			$parameters['estimate'] = $_REQUEST['estimate'];
 		}
 		if (isset($_REQUEST['priority']) && $task->priority != strtoupper($_REQUEST['priority'])) {
@@ -68,11 +68,13 @@
 			if (isset($old_tech->id) && $old_tech->id != $new_tech->id) {
 				array_push($msgs,"Task re-assigned to ".$new_tech->first_name." ".$new_tech->last_name);
 				$parameters['assigned_id'] = $_REQUEST['assigned_id'];
+				$tech_status = "Re-Assigned";
 			}
 			else {
 				array_push($msgs,"Task assigned to ".$new_tech->first_name." ".$new_tech->last_name);
 				$parameters['assigned_id'] = $_REQUEST['assigned_id'];
-			}
+				$tech_status = "Assigned";
+			};
 		}
 
 		$old_product = $task->product();
@@ -129,6 +131,32 @@
 			else {
 				$page->addError("Error creating task: ".$task->error());
 			}
+		}
+		
+		# Email if Assignment changed
+		if ($tech_status) {
+			$tech = $task->assignedTo();
+			$product = $task->product();
+			$project = $task->project();
+			$requestedBy = $task->requestedBy();
+			$message = new \Email\Message(
+				array(
+					'from'	=> 'service@spectrosinstruments.com',
+					'subject'	=> "[ENGINEERING] Task #".$task->id." assigned to you",
+					'body'		=> "The following task was $tech_status to you:
+Task Title: ".$task->title."<br>
+Product: ".$product->title."<br>
+Project: ".$project->title."<br>
+Priority: ".$task->priority."<br>
+Type: ".$task->type."<br>
+Due: ".$task->date_due."<br>
+Requested By: ".$requestedBy->full_name()."<br>
+Link: http://".$GLOBALS['_config']->site->hostname."/_engineering/task/".$task->code."<br>
+Description: ".$task->description
+				)
+			);
+			$message->html(true);
+			$tech->notify($message);
 		}
 
 		if (isset($_REQUEST['notes']) && strlen($_REQUEST['notes'])) {
