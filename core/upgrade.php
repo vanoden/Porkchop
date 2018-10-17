@@ -51,6 +51,7 @@
 		array("engineering","product"),
 		array("engineering","projects"),
 		array("engineering","project"),
+		array("engineering","event_report"),
 		array("support","request_new"),
 		array("support","requests"),
 		array("support","request_detail"),

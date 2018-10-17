@@ -12,6 +12,7 @@
 <?	} ?>
 <h2 style="display: inline-block;">Unassigned Tasks</h2>
 <a class="button more" href="/_engineering/tasks">Manage Tasks</a>
+<a class="button more" href="/_engineering/event_report">Event Report</a>
 <table class="body">
 <tr>
 	<th class="label column_title">Title</th>
