@@ -3,9 +3,16 @@
 		$page->error = "Permission Denied";
 		return;
 	}
+	if (! $_REQUEST['btn_submit']) {
+		$_REQUEST['new'] = 1;
+		$_REQUEST['active'] = 1;
+	}
+
 	$tasklist = new \Engineering\TaskList();
 	$parameters = array();
-	$parameters['status'] = array("NEW","ACTIVE");
+	$parameters['status'] = array();
+	if ($_REQUEST["new"]) array_push($parameters['status'],'NEW');
+	if ($_REQUEST["active"]) array_push($parameters['status'],'ACTIVE');
 	if ($_REQUEST["complete"]) array_push($parameters['status'],'COMPLETE');
 	if ($_REQUEST["cancelled"]) array_push($parameters['status'],'CANCELLED');
 	if ($_REQUEST["hold"]) array_push($parameters['status'],'HOLD');

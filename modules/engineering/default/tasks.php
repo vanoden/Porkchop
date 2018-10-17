@@ -21,7 +21,7 @@
 	<div class="tableRowHeader">
 		<div class="tableCell" style="width: 25%;">Assigned To</div>
 		<div class="tableCell" style="width: 25%;">Project</div>
-		<div class="tableCell" style="width: 50%;"></div>
+		<div class="tableCell" style="width: 50%;">Status</div>
 	</div>
 	<div class="tableRow">
 		<div class="tableCell">
@@ -41,10 +41,15 @@
 			</select>
 		</div>
 		<div class="tableCell">
-			<input type="checkbox" name="complete" value="1"<? if ($_REQUEST['complete']) print " checked"; ?> onchange="document.forms[0].submit(); " />Completed
-			<input type="checkbox" name="cancelled" value="1"<? if ($_REQUEST['cancelled']) print " checked"; ?> onchange="document.forms[0].submit(); " />Cancelled
-			<input type="checkbox" name="hold" value="1"<? if ($_REQUEST['hold']) print " checked"; ?> onchange="document.forms[0].submit(); " />Hold
+			<input type="checkbox" name="new" value="1"<? if ($_REQUEST['new']) print " checked"; ?> />New
+			<input type="checkbox" name="active" value="1"<? if ($_REQUEST['active']) print " checked"; ?> />Active
+			<input type="checkbox" name="complete" value="1"<? if ($_REQUEST['complete']) print " checked"; ?>/>Completed
+			<input type="checkbox" name="cancelled" value="1"<? if ($_REQUEST['cancelled']) print " checked"; ?> />Cancelled
+			<input type="checkbox" name="hold" value="1"<? if ($_REQUEST['hold']) print " checked"; ?> />Hold
 		</div>
+	</div>
+	<div class="form_footer" style="text-align: center; width: 100%">
+		<input type="submit" name="btn_submit" class="button" value="Apply Filter" />
 	</div>
 </div>
 <!--	END First Table -->		
@@ -58,11 +63,13 @@
 		<div class="tableCell" style="width: 15%;">Assigned To</div>
 		<div class="tableCell" style="width: 10%;">Status</div>
 		<div class="tableCell" style="width: 15%;">Product</div>
+		<div class="tableCell" style="width: 15%;">Project</div>
 		<div class="tableCell" style="width: 10%;">Priority</div>
 	</div>
 <?php
 	foreach ($tasks as $task) {
 		$product = $task->product();
+		$project = $task->project();
 		$worker = $task->assignedTo();
 ?>
 	<div class="tableRow">
@@ -73,13 +80,16 @@
 			<?=date('m/d/Y',$task->timestamp_added)?>
 		</div>
 		<div class="tableCell">
-			<?=$worker->login?>
+			<?=$worker->full_name()?>
 		</div>
 		<div class="tableCell">
 			<?=$task->status?>
 		</div>
 		<div class="tableCell">
 			<?=$product->title?>
+		</div>
+		<div class="tableCell">
+			<?=$project->title?>
 		</div>
 		<div class="tableCell">
 			<?=$task->priority?>
