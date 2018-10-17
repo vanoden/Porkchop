@@ -58,12 +58,12 @@
 <!--	START First Table -->
 	<div class="tableBody min-tablet">
 	<div class="tableRowHeader">
-		<div class="tableCell" style="width: 35%;">Title</div>
-		<div class="tableCell" style="width: 15%;">Added</div>
+		<div class="tableCell" style="width: 23%;">Title</div>
+		<div class="tableCell" style="width: 10%;">Added</div>
 		<div class="tableCell" style="width: 15%;">Assigned To</div>
-		<div class="tableCell" style="width: 10%;">Status</div>
+		<div class="tableCell" style="width: 7%;">Status</div>
 		<div class="tableCell" style="width: 15%;">Product</div>
-		<div class="tableCell" style="width: 15%;">Project</div>
+		<div class="tableCell" style="width: 20%;">Project</div>
 		<div class="tableCell" style="width: 10%;">Priority</div>
 	</div>
 <?php
