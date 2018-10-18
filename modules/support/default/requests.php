@@ -1,4 +1,9 @@
 <h2 style="display: inline-block; ">Requests</h2>
+<?	if ($_REQUEST['btn_all']) { ?>
+<a class="button more" href="/_support/requests">Open Requests</a>
+<?	} else { ?>
+<a class="button more" href="/_support/requests?btn_all=true">All Requests</a>
+<?	} ?>
 <a class="button more" href="/_support/request_new">New Request</a>
 <a class="button more" href="/_support/admin_actions">Action Report</a>
 <table>

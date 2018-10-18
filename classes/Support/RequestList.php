@@ -29,8 +29,25 @@
 				return null;
 			}
 			
-			if (preg_match('/^[\w\s]+$/',$parameters['status'])) {
-				$find_requests_query .= "\tAND	status = ".$parameters['status']."\n";
+			if (isset($parameters['status'])) {
+				if (is_array($parameters['status'])) {
+					$find_requests_query .= "
+					AND	status IN (";
+					$started = 0;
+					foreach ($parameters['status'] as $status) {
+						if (! in_array($status,array('NEW','OPEN','CANCELLED','CLOSED'))) {
+							$this->_error = "Invalid status '$status'";
+							return false;
+						}
+						if ($started) $find_requests_query .= ",";
+						$find_requests_query .= "'$status'";
+						$started = 1;
+					}
+					$find_requests_query .= ")";
+				}
+				if (preg_match('/^[\w\s]+$/',$parameters['status'])) {
+					$find_requests_query .= "\tAND	status = ".$parameters['status']."\n";
+				}
 			}
 
 			$find_requests_query .= "
