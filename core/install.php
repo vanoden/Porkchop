@@ -78,7 +78,7 @@
 	</style>
 </head>
 <body>
-<form method="post" action="install">
+<form method="post" action="_install">
 <table>
 <tr><th colspan="2">Porchop Web Installer V2.0</th></tr>
 </table>
@@ -141,7 +141,7 @@
 
 	install_log("Creating Schema");
 	$company_schema = new \Company\Schema();
-	$session_schema = new \Session\Schema();
+	$session_schema = new \Site\Schema();
 
 	install_log("Starting session");
 	$_SESSION_ = new \Session\Session();
