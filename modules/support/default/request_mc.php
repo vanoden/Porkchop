@@ -64,5 +64,5 @@
 	}
 
 	$productlist = new \Product\ItemList(array('type'=>'inventory'));
-	$products = $productlist->find();
+	$products = $productlist->find(array('type' => 'unique'));
 ?>
