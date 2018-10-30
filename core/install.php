@@ -126,6 +126,15 @@
 	}
 	install_log("Connection successful");
 
+	###################################################
+	### Connect to Memcache if so configured                ###
+	###################################################
+	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
+	if ($_CACHE_->error) {
+		install_log('Unable to initiate Cache client: '.$_CACHE_->error,'error');
+	}
+	install_log("Cache Initiated");
+
 	# Check For Existing Database
 	install_log("Checking for existing schema");
 	$_database->Execute("use ".$GLOBALS['_config']->database->schema);
@@ -144,7 +153,7 @@
 	$session_schema = new \Site\Schema();
 
 	install_log("Starting session");
-	$_SESSION_ = new \Session\Session();
+	$_SESSION_ = new \Site\Session();
 
 	# See if Company Exists
 	install_log("Setting up company");
