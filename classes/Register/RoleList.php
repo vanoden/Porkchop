@@ -3,6 +3,7 @@
 
 	class RoleList {
 		public $count;
+		public $_error;
 
 		public function find($parameters = array()) {
 			$get_objects_query = "
@@ -12,7 +13,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_objects_query);
 			if (! $rs) {
-				$this->error = "SQL Error in RegisterRole::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in RegisterRole::find: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$roles = array();
@@ -22,6 +23,9 @@
 				array_push($roles,$role);
 			}
 			return $roles;
+		}
+		public function error() {
+			return $this->_error;
 		}
 	}
 ?>
