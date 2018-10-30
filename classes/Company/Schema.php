@@ -201,6 +201,13 @@
 			}
 			
 			if ($current_schema_version < 3) {
+				# Make Sure Register Users is present
+				$user_schema = new \Register\Schema();
+				$user_schema->upgrade();
+				if ($user_schema->version() < 1) {
+					$this->error = "Cannot continue, Register Schema ver < 1";
+					return false;
+				}
 				$create_companies_query = "
 					CREATE TABLE IF NOT EXISTS `company_departments` (
 						`id` int(5) NOT NULL auto_increment,

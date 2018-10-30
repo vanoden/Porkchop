@@ -42,7 +42,9 @@ gulp.task('pre', () =>
                 "footer": fs.readFileSync('html.src/pre/footer.html', 'utf8')
             }
         )))
-        .pipe(template())
+        .pipe(template().on('error',function(e){
+		console.log(e);
+	}))
         .pipe(debug())
 		.pipe(gulp.dest('tmp'))
 );
