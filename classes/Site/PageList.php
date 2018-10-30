@@ -4,14 +4,6 @@
 	class PageList {
 		public $error;
 
-        public function __construct () {
-			# Initialize Schema
-			$schema = new \Site\Page\Schema();
-			if (isset($schema->error)) {
-				$schema->error = "Error initializing Page schema: ".$init->error;
-				return null;
-			}
-		}
 		public function find($parameters = array()) {
 			# Prepare Query
 			$get_object_query = "

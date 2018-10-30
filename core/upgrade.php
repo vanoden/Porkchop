@@ -93,6 +93,7 @@
 	###################################################
 	### Connect to Database							###
 	###################################################
+	install_log("Connecting to database ".$GLOBALS['_config']->database->master->hostname.":".$GLOBALS['_config']->database->master->port);
 	# Connect to Database
 	$_database = NewADOConnection('mysqli');
 	if ($GLOBALS['_config']->database->master->port) $_database->port = $GLOBALS['_config']->database->master->port;
@@ -111,6 +112,7 @@
 	###################################################
 	### Connect to Memcache if so configured		###
 	###################################################
+	install_log("Connecting to ".$GLOBALS['_config']->Cache->mechanism." cache");
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
 	if ($_CACHE_->error) {
 		install_fail('Unable to initiate Cache client: '.$_CACHE_->error);
@@ -121,6 +123,10 @@
 	}
 
 	# Upgrade Database
+	install_log("Upgrading Schema");
+	$class = new \Media\Schema();
+	install_log("Media::Schema: version".$class->version());
+	if ($class->version() != 3) install_fail("Version 3 Required");
 	$class = new \Product\Schema();
 	install_log("Product::Schema: version ".$class->version());
 	if ($class->version() != 1) install_fail("Version 1 Required");
@@ -135,10 +141,13 @@
 	if ($class->version() != 3) install_fail("Version 3 Required");
 	$class = new \Site\Schema();
 	install_log("Session::Schema: version ".$class->version());
-	if ($class->version() != 4) install_fail("Version 4 Required");
+	if ($class->version() != 5) install_fail("Version 5 Required");
 	$class = new \Email\Schema();
 	install_log("Email::Schema: version ".$class->version());
 	if ($class->version() != 1) install_fail("Version 1 Required");
+	$class = new \Monitor\Schema();
+	install_log("Monitor::Schema: version ".$class->version());
+	if ($class->version() != 18) install_fail("Version 18 Required");
 	$class = new \Spectros\Schema();
 	install_log("Spectros::Schema: version ".$class->version());
 	if ($class->version() != 5) install_fail("Version 5 Required");
@@ -154,12 +163,6 @@
 	$class = new \Package\Schema();
 	install_log("Package::Schema: version ".$class->version());
 	if ($class->version() != 1) install_fail("Version 1 Required");
-	$class = new \Monitor\Schema();
-	install_log("Monitor::Schema: version ".$class->version());
-	if ($class->version() != 18) install_fail("Version 18 Required");
-	$class = new \Media\Schema();
-	install_log("Media::Schema: version ".$class->version());
-	if ($class->version() != 3) install_fail("Version 3 Required");
 	$class = new \Contact\Schema();
 	install_log("Contact::Schema: version ".$class->version());
 	if ($class->version() != 2) install_fail("Version 2 Required");

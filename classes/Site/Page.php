@@ -18,13 +18,6 @@
 		private $_errors = array();
 
         public function __construct () {
-			# Initialize Schema
-			$schema = new \Site\Page\Schema();
-			if (isset($schema->error)) {
-				$this->error = "Error initializing Page schema: ".$schema->error;
-				return null;
-			}
-
 			$args = func_get_args();
 			if (func_num_args() == 1 && gettype($args[0]) == "string") {
 				$this->id = $args[0];
