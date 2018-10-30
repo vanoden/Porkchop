@@ -55,6 +55,7 @@
 				VALUES
 				(		?,?,?,?,?,?)
 			";
+			query_log($add_item_query);
 			$GLOBALS['_database']->Execute(
 				$add_item_query,
 				array(
@@ -70,8 +71,8 @@
 				$this->_error = "SQL Error in Support::Request::Item::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			list($id) = $GLOBALS['_database']->Insert_ID();
-			$this->id = $id;
+			$this->id = $GLOBALS['_database']->Insert_ID();
+			app_log("Added support item $id");
 			return $this->update($parameters);
 		}
 		public function update($parameters) {
@@ -108,7 +109,7 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-			
+			query_log($update_object_query);	
 			$GLOBALS['_database']->Execute(
 				$update_object_query,$bind_params
 			);
