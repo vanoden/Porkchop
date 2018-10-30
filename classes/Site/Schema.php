@@ -215,6 +215,80 @@
 					return null;
 				}
 			}
+			if ($current_schema_version < 5) {
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `page_pages` (
+					  `id` int(5) NOT NULL AUTO_INCREMENT,
+					  `module` varchar(100) NOT NULL,
+					  `view` varchar(100) NOT NULL,
+					  `index` varchar(100) NOT NULL DEFAULT '',
+					  PRIMARY KEY (`id`),
+					  UNIQUE KEY `uk_page_views` (`module`,`view`,`index`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating page pages table in Site::Page::Schema::_construct: ".$GLOBALS['_database']->ErrorMsg();
+					return 0;
+				}
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `page_metadata` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`page_id` int(11) NOT NULL,
+						`key` varchar(32) NOT NULL,
+						`value` text,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `UK_PAGE_METADATA_PAGE_KEY` (`page_id`,`key`),
+						CONSTRAINT `FK_PAGE_METADATA_PAGE_ID` FOREIGN KEY (`page_id`) REFERENCES `page_pages` (`id`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating page views table in Site::Page::Schema::_construct: ".$GLOBALS['_database']->ErrorMsg();
+					return 0;
+				}
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `page_widget_types` (
+					  `id` int(5) NOT NULL AUTO_INCREMENT,
+					  `name` varchar(100) NOT NULL,
+					  PRIMARY KEY `pk_widget_type` (`id`),
+					  UNIQUE KEY `uk_name` (`name`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating page widgets table in Site::Page::Schema::_construct: ".$GLOBALS['_database']->ErrorMsg();
+					return 0;
+				}
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `page_widgets` (
+					  `id` int(10) NOT NULL AUTO_INCREMENT,
+					  `page_view_id` int(5) NOT NULL,
+					  `type_id` int(10) NOT NULL DEFAULT '0',
+					  PRIMARY KEY (`id`),
+					  FOREIGN KEY `fk_page_view` (`page_view_id`) REFERENCES `page_metadata` (`id`),
+					  FOREIGN KEY `fk_widget_type` (`type_id`) REFERENCES `page_widget_types` (`id`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating page widgets table in Site::Page::Schema::_construct: ".$GLOBALS['_database']->ErrorMsg();
+					return 0;
+				}
+
+				$current_schema_version = 5;
+				$update_schema_version = "
+					UPDATE	page__info
+					SET		value = $current_schema_version
+					WHERE	label = 'schema_version'
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Site::Page::Schema::_construct: ".$GLOBALS['_database']->ErrorMsg();
+					return 0;
+				}
+			}
 		}
 	}
 ?>
