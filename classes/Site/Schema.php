@@ -279,7 +279,7 @@
 
 				$current_schema_version = 5;
 				$update_schema_version = "
-					UPDATE	page__info
+					UPDATE	`$info_table`
 					SET		value = $current_schema_version
 					WHERE	label = 'schema_version'
 				";
