@@ -20,16 +20,23 @@
 		if (document.getElementById('problem_type').value == "gas monitor") {
 			document.getElementById('generic_form').style.display = 'none';
 			document.getElementById('device_table').style.display = 'block';
+			document.getElementById('btn_additem').style.display = 'inline';
 		}
 		else {
 			document.getElementById('device_table').style.display = 'none';
 			document.getElementById('generic_form').style.display = "block";
+			document.getElementById('btn_additem').style.display = 'none';
 		}
+	}
+	function dropRow(line) {
+		row = document.getElementById('row'+line);
+		row.parentNode.removeChild(row);
 	}
 	function addRow() {
 		line ++;
 		var row = document.createElement('div');
 		row.classList.add('table_row');
+		row.id = 'row'+line;
 		document.getElementById('device_table').appendChild(row);
 
 		var productCell1 = document.createElement('div');
@@ -76,8 +83,12 @@
 		row.appendChild(productCell4);
 		var addBtn = document.createElement('input');
 		addBtn.type = 'button';
-		addBtn.value = '+';
+		addBtn.value = '-';
 		productCell4.appendChild(addBtn);
+		var lineID = line;
+		addBtn.addEventListener("click", function(){
+			dropRow(lineID);
+		});
 	}
 </script>
 <h2>Request Support</h2>
@@ -121,7 +132,7 @@
 			&nbsp;
 		</div>
 	</div>
-	<div class="table_row">
+	<div class="table_row" id="row0">
 		<div class="table_cell" style="width: 100px;">
 			<select name="product_id[0]" class="value input" style="width: 150px; margin-right: 25px;">
 				<option value="">None</option>
@@ -137,11 +148,12 @@
 			<input type="text" name="line_description[0]" class="value input" style="width:400px; margin-right: 25px;" />
 		</div>
 		<div class="table_cell" style="width: 50px;">
-			<input type="button" name="additem[0]" class="value input" style="width:50px" value="+" onclick="addRow();" />
+			<input type="button" name="btn_drop" class="value input" style="width:50px" value="-" onclick="dropRow(0);" />
 		</div>
 	</div>
 </div>
 <div class="form_footer" colspan="2" style="text-align: center">
+	<input id="btn_additem" type="button" name="additem" class="button" value="Another Product" style="display: none" onclick="addRow();" />
 	<input type="submit" name="btn_submit" class="button" value="Submit" />
 </div>
 </form>
