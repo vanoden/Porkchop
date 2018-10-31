@@ -34,62 +34,65 @@
 	<div class="form_success"><?=$page->success?></div>
 	<?	} ?>
 	<h2>Request <?=$request->code?></h2>
-	<div class="container_narrow">
-		<span class="label">Request Code</span>
-		<span class="value"><?=$request->code?></span>
+</div>
+<div class="tableBody min-tablet marginTop_20">
+	<div class="tableRowHeader">
+		<div class="tableCell">Request Code</div>
+		<div class="tableCell">Request Date</div>
+		<div class="tableCell">Organization</div>
+		<div class="tableCell">Submitted By</div>
+		<div class="tableCell">Request Status</div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Request Date</span>
-		<span class="value"><?=$request->date_request?></span>
+	<div class="tableRow">
+		<div class="tableCell"><a href="/_support/request_detail/<?=$request->code?>"><?=$request->code?></a></div>
+		<div class="tableCell"><?=$request->date_request?></div>
+		<div class="tableCell"><?=$request->customer->organization->name?></div>
+		<div class="tableCell"><?=$request->customer->full_name()?></div>
+		<div class="tableCell"><?=$request->status?></div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Request Organization</span>
-		<span class="value"><?=$request->customer->organization->name?></span>
+	<div class="tableRowHeader">
+		<div class="tableCell">Ticket #</div>
+		<div class="tableCell">Entered By</div>
+		<div class="tableCell">Action Type</div>
+		<div class="tableCell">Assigned To</div>
+		<div class="tableCell">Ticked Status</div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Request Submitted By</span>
-		<span class="value"><?=$request->customer->full_name()?></span>
+	<div class="tableRow">
+		<div class="tableCell"><a href="/_support/request_item/<?=$item->id?>"><?=$item->ticketNumber()?></a></div>
+		<div class="tableCell"><?=$action->requestedBy->full_name()?></div>
+		<div class="tableCell"><?=$action->type?></div>
+		<div class="tableCell"><?=$assignedTo?></div>
+		<div class="tableCell"><?=$action->status?></div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Request Status</span>
-		<span class="value"><?=$request->status?></span>
+	<div class="tableRowHeader">
+		<div class="tableCell">Product</div>
+		<div class="tableCell">Name</div>
+		<div class="tableCell">Serial Number</div>
+		<div class="tableCell"></div>
+		<div class="tableCell"></div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Item Line</span>
-		<span class="value"><?=$item->line?></span>
+	<div class="tableRow">
+		<div class="tableCell"><?=$item->product->code?></div>
+		<div class="tableCell"><?=$item->product->description?></div>
+		<div class="tableCell"><a href="/_monitor/admin_details/<?=$item->serial_number?>/<?=$item->product->code?>"><?=$item->serial_number?></a></div>
+		<div class="tableCell"></div>
+		<div class="tableCell"></div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Item Requested By</span>
-		<span class="value"><?=$action->requestedBy->full_name()?></span>
+</div>
+<div class="tableBody min-tablet marginTop_20">
+	<div class="tableRowHeader">
+		<div class="tableCell">Description</div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Item Action Type</span>
-		<span class="value"><?=$action->type?></span>
+	<div class="tableRow">
+		<div class="tableCell"><?=$action->description?></div>
 	</div>
-	<div class="container_narrow">
-		<span class="label">Assigned To</span>
-		<span class="value"><?=$assignedTo?></span>
-	</div>
-	<div class="container_narrow">
-		<span class="label">Status</span>
-		<span class="value"><?=$action->status?></span>
-	</div>
-	<div class="container_narrow">
-		<span class="label">Product</span>
-		<span class="value"><?=$item->product->code?></span>
-	</div>
-	<div class="container_narrow">
-		<span class="label">Serial Number</span>
-		<span class="value"><?=$item->serial_number?></span>
-	</div>
-	<div class="container">
-		<span class="label">Description</span>
-		<span class="value"><?=$action->description?></span>
-	</div>
+</div>
+<div class="tableBody min-tablet marginTop_20">
 	<div class="form_footer">
 		<input type="button" name="btn_show" class="button" value="Add Event" onclick="showForm('event');" />
 		<input type="button" name="btn_show" class="button" value="Assign Action" onclick="showForm('assign');" />
 	</div>
+</div>
 	<div class="toggleContainer" id="eventFormDiv">
 		<form name="eventForm" method="post" action="/_support/action">
 		<input type="hidden" name="action_id" value="<?=$action->id?>" />
