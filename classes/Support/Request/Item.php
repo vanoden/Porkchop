@@ -168,6 +168,9 @@
 		}
 		public function addComment($parameters) {
 			$parameters['item_id'] = $this->id;
+			if ($parameters['status'] != $this->status) {
+				$this->update(array('status' => $parameters['status']));
+			}
 			$comment = new \Support\Request\Item\Comment();
 			if ($comment->add($parameters)) {
 				return $comment;
@@ -200,6 +203,9 @@
 				if (! in_array($action->status,array('COMPLETE','CLOSED','CANCELLED'))) $count ++;
 			}
 			return $count;
+		}
+		public function ticketNumber() {
+			return sprintf("%06d",$this->id);
 		}
 	}
 ?>

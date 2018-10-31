@@ -24,16 +24,15 @@
 <input type="hidden" name="request_id" value="<?=$request->id?>" />
 <div><!-- START Main Div -->
 	<div class="breadcrumbs">
-		<a href="/_support/requests">Support Requests</a>
-		<a href="/_support/request_detail/<?=$request->code?>"><?=$request->code?></a>
-		> <?=$request->code?><?=$request->code?>-<?=$item->line?>
+		<a href="/_support/request_items">Support Tickets</a>
+		> Ticket #<?=$item->ticketNumber()?>
 	</div>
 	
 <!--	 ==================================== -->
 	<!-- START Request Form -->
 	<form name="requestForm" method="post">
 	<input type="hidden" name="item_id" value="<?=$item->id?>" />
-	<h2>Request Item: <span><?=$request->code?>-<?=$item->line?></span></h2>
+	<h2>Ticket: <span><?=$item->ticketNumber()?></span></h2>
 	<?	if ($page->errorCount()) { ?>
 	<div class="form_error"><?=$page->errorString()?></div>
 	<? } ?>
@@ -153,8 +152,10 @@
 						<option value="Repair Unit">Repair Unit</option>
 						<option value="Build New Unit">Build New Unit</option>
 						<option value="Configure Unit">Configure Unit</option>
+						<option value="Calibrate Unit">Calibrate Unit</option>
 						<option value="Test Unit">Test Unit</option>
 						<option value="Ship Unit">Ship Unit</option>
+						<option value="Transfer Ownership">Transfer Ownership</option>
 					</select>
 				</div>
 				<div class="tableCell">
@@ -231,8 +232,23 @@
 		<form name="commentForm" method="post" action="/_support/request_item">
 		<input type="hidden" name="item_id" value="<?=$item->id?>" />
 		<h2>Add Comment</h2>
-			
 		<div class="tableBody min-tablet">
+			<div class="tableRowHeader">
+				<span class="label">New Status</span>
+			</div>
+			<div class="tableRow">
+				<div class="tableCell">
+					<select name="action_status" class="value input">
+						<option value="NEW">New</option>
+						<option value="ASSIGNED">Assigned</option>
+						<option value="ACTIVE">Active</option>
+						<option value="PENDING CUSTOMER">Pending Customer</option>
+						<option value="PENDING VENDOR">Pending Vendor</option>
+						<option value="CANCELLED">Cancelled</option>
+						<option value="COMPLETE">Complete</option>
+					</select>
+				</div>
+			</div>
 			<div class="tableRowHeader">
 				<span class="label">Comment</span>
 			</div>
@@ -326,7 +342,7 @@
 <!--	Start Request Item-->
 <h3>Comments</h3>
 <?		foreach ($comments as $comment) { ?>
-<div class="tableBody min-tablet marginBottom_20">
+<div class="tableBody min-tablet">
 	<div class="tableRowHeader">
 		<div class="tableCell" style="width: 60%;">Date Entered</div>
 		<div class="tableCell" style="width: 40%;">Author</div>
@@ -340,7 +356,7 @@
 		</div>
 	</div>
 </div>
-<div class="tableBody min-tablet">
+<div class="tableBody min-tablet marginBottom_20">
 	<div class="tableRowHeader">
 		<div class="tableCell" style="width: 100%;">Comment</div>
 	</div> <!-- end row header -->

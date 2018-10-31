@@ -27,9 +27,43 @@
 				AND		request_id = ?";
 				array_push($bind_params,$request->id);
 			}
+			if (isset($parameters['product_id'])) {
+				$find_objects_query .= "
+					AND	product_id = ?";
+				array_push($bind_params,$parameters['product_id']);
+			}
+			if (isset($parameters['serial_number'])) {
+				$find_objects_query .= "
+					AND	serial_number = ?";
+				array_push($bind_params,$parameters['serial_number']);
+			}
+
+			if (isset($parameters['status'])) {
+				if (is_array($parameters['status'])) {
+
+					$find_objects_query .= "
+					AND	status IN (";
+					$started = 0;
+					foreach ($parameters['status'] as $status) {
+						if (! in_array($status,array('NEW','ACTIVE','PENDING_VENDOR','PENDING_CUSTOMER','COMPLETE','CLOSED'))) {
+							$this->_error = "Invalid status '$status'";
+							return false;
+						}
+						if ($started) $find_objects_query .= ",";
+						$find_objects_query .= "'$status'";
+						$started = 1;
+					}
+					$find_objects_query .= ")";
+				}
+
+				if (preg_match('/^[\w\s]+$/',$parameters['status'])) {
+					$find_objects_query .= "\tAND	status = ?";
+					array_push($bind_params,$parameters['status']);
+				}
+			}
 
 			$find_objects_query .= "
-				ORDER BY line
+				ORDER BY id DESC
 			";
 			query_log($find_objects_query);
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
@@ -48,6 +82,10 @@
 
 		public function count() {
 			return $this->_count;
+		}
+
+		public function error() {
+			return $this->_error;
 		}
 	}
 ?>

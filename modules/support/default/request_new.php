@@ -77,7 +77,7 @@
 </script>
 <div class="breadcrumbs">
 	<a href="/_support/requests">Support</a>
-	<a href="/_support/requests">Requests</a> > New Request
+	<a href="/_support/request_items">Tickets</a> > New Request
 </div>
 
 <!-- Error Messaging -->
