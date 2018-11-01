@@ -59,19 +59,19 @@
 </div>
 <!--End first row-->		
 
-<h3>Request Items</h3>
+<h3>Request Tickets</h3>
 <!--	Start Request Item-->
 <?	foreach ($items as $item) { ?>
 <div class="tableBody min-tablet">
 	<div class="tableRowHeader">
-		<div class="tableCell" style="width: 10%;">Line</div>
+		<div class="tableCell" style="width: 10%;">Ticket</div>
 		<div class="tableCell" style="width: 25%;">Product</div>
 		<div class="tableCell" style="width: 25%;">Serial</div>
 		<div class="tableCell" style="width: 20%;">Status</div>
 	</div> <!-- end row header -->
 	<div class="tableRow">
 		<div class="tableCell">
-			<a href="/_support/request_item/<?=$item->id?>"><?=$item->line?></a>
+			<a href="/_support/request_item/<?=$item->id?>"><?=$item->ticketNumber()?></a>
 		</div>
 		<div class="tableCell">
 			<?=$item->product->code?>
@@ -98,7 +98,7 @@
 <?	} ?>	
 <!--End Request Item -->	
 		
-<h3>Add Item</h3>
+<h3>Add Ticket</h3>
 		
 <!--	Start Request Item-->
 <div class="tableBody min-tablet">
