@@ -9,6 +9,7 @@
 				SELECT	id
 				FROM	engineering_products
 				WHERE	id = id
+				ORDER BY title ASC
 			";
 
 			$rs = $GLOBALS['_database']->Execute(

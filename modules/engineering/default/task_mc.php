@@ -4,8 +4,13 @@
 		$page->addError("Permission Denied");
 		return;
 	}
-	$task = new \Engineering\Task();
 
+        // get new and active tasks for the 'prerequisite' field
+	$tasklist = new \Engineering\TaskList();
+	$tasklist = $tasklist->find(array('status'=>array('NEW', 'ACTIVE')));
+
+        // create new task or get existing if the "code" is passed
+	$task = new \Engineering\Task();
 	if ($_REQUEST['task_id']) {
 		$task = new \Engineering\Task($_REQUEST['task_id']);
 	}
@@ -54,7 +59,11 @@
 			array_push($msgs,"Description updated");
 			$parameters['description'] = $_REQUEST['description'];
 		}
-
+		if (isset($_REQUEST['prerequisite_id']) && $task->prerequisite_id != $_REQUEST['prerequisite_id']) {
+			array_push($msgs,"Prerequisite updated");
+			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_id'];
+		}
+		
 		$old_release = $task->release();
 		if (isset($_REQUEST['release_id']) && $_REQUEST['release_id'] > 0 && $old_release->id != $_REQUEST['release_id']) {
 			$new_release = new \Engineering\Release($_REQUEST['release_id']);
@@ -133,7 +142,7 @@
 			}
 		}
 		
-		# Email if Assignment changed
+		// Email if Assignment changed
 		if ($tech_status) {
 			$tech = $task->assignedTo();
 			$product = $task->product();
@@ -228,7 +237,7 @@ Description: ".$task->description
 		$form['release_id'] = $release->id;
 		$project = $task->project();
 		$form['project_id'] = $project->id;
-
+                $form['prerequisite_id'] = $task->prerequisite_id;
 		$eventlist = new \Engineering\EventList();
 		$events = $eventlist->find(array('task_id'=> $task->id));
 		if ($eventlist->error()) $page->addError($eventlist->error());
@@ -247,6 +256,7 @@ Description: ".$task->description
 		$form['status'] = $_REQUEST['status'];
 		$form['description'] = $_REQUEST['description'];
 		$form['release_id'] = $_REQUEST['release_id'];
+		$form['prerequisite_id'] = $_REQUEST['prerequisite_id'];
 	}
 	else {
 		$task->date_added = 'now';

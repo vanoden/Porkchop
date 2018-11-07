@@ -130,6 +130,7 @@
 				$get_user_query,
 				array($login)
 			);
+
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL error in register::customer::authenticate: ".$GLOBALS['_database']->ErrorMsg();
 				return null;

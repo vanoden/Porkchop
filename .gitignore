@@ -10,3 +10,5 @@ modules/action/spectros
 modules/event/spectros
 templates
 tmp
+node_modules/
+package-lock.json

@@ -1,9 +1,17 @@
 <?php
 	namespace Engineering;
 
+	/**
+	 * list of engineering tasks 
+	 */
 	class TaskList {
 		private $_error;
 
+		/**
+		 * get current tasks based on params criteria array
+		 * 
+		 * @param array $parameters
+		 */
 		public function find($parameters = array()) {
 			$find_objects_query = "
 				SELECT	id

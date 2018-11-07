@@ -54,7 +54,6 @@
 </div>
 <!--	END First Table -->		
 
-	
 <!--	START First Table -->
 	<div class="tableBody min-tablet">
 	<div class="tableRowHeader">
@@ -65,12 +64,15 @@
 		<div class="tableCell" style="width: 15%;">Product</div>
 		<div class="tableCell" style="width: 20%;">Project</div>
 		<div class="tableCell" style="width: 10%;">Priority</div>
+		<div class="tableCell" style="width: 10%;">PreRequisite</div>
 	</div>
 <?php
 	foreach ($tasks as $task) {
 		$product = $task->product();
 		$project = $task->project();
 		$worker = $task->assignedTo();
+		$prerequisiteTask = null;
+		if (!empty($task->prerequisite_id)) $prerequisiteTask = new \Engineering\Task($task->prerequisite_id);
 ?>
 	<div class="tableRow">
 		<div class="tableCell">
@@ -93,6 +95,15 @@
 		</div>
 		<div class="tableCell">
 			<?=$task->priority?>
+		</div>
+		<div class="tableCell">
+	       <?php
+	       if (isset($prerequisiteTask->title)) {
+               ?>
+                   <a href="/_engineering/task/<?=$prerequisiteTask->code?>"><?=$prerequisiteTask->title?></a>
+                <?php
+                }
+                ?>
 		</div>
 	</div>
 <?php	} ?>

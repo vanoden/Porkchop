@@ -13,10 +13,11 @@
 		public $date_added;
 		public $date_due;
 		public $priority;
+		public $prerequisite_id;
 		private $release_id;
 		private $product_id;
 		private $requested_id;
-		private $assigned_id;
+                private $assigned_id;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -43,6 +44,17 @@
 			if ($check_dups->get($code)) {
 				$this->_error = "Duplicate code '$code'";
 				return false;
+			}
+
+			// process any prerequisite task that may have been passed
+			$prerequisite_id = NULL;
+			if (!empty($parameters['prerequisite_id'])) {
+				$prerequisiteTask = new Task($parameters['prerequisite_id']);
+				if (! $prerequisiteTask->id) {
+					$this->_error = "Prerequisite task not found";
+					return false;
+				}
+				$prerequisite_id = $parameters['prerequisite_id'];
 			}
 
 			if (isset($parameters['type'])) {
@@ -77,6 +89,12 @@
 				return false;
 			}
 
+			// check if title set, required in database
+			if (empty($parameters['title'])) {
+				$this->_error = "Please enter a title";
+				return false;
+			}
+
 			if (isset($parameters['requested_id']) && is_numeric($parameters['requested_id'])) {
 				$requestor = new \Register\Customer($parameters['requested_id']);
 				if (! $requestor->id) {
@@ -99,14 +117,14 @@
 			$add_object_query = "
 				INSERT
 				INTO	engineering_tasks
-				(		code,title,type,status,date_added,requested_id,product_id)
+				(		code,title,type,status,date_added,requested_id,product_id,prerequisite_id)
 				VALUES
-				(		?,?,?,?,?,?,?)
+				(		?,?,?,?,?,?,?,?)
 			";
 
 			$GLOBALS['_database']->Execute(
 				$add_object_query,
-				array($code,$parameters['title'],$type,$status,$date_added,$parameters['requested_id'],$product->id)
+				array($code,$parameters['title'],$type,$status,$date_added,$parameters['requested_id'],$product->id,$prerequisite_id)
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
@@ -269,6 +287,19 @@
 				}
 			}
 			
+                        // allow for prerequisite to be passed or else set to NULL if none passed
+			if (isset($parameters['prerequisite_id'])) {
+				$task = new Task($parameters['prerequisite_id']);
+				if ($task->id) {
+					$update_object_query .= ",
+						prerequisite_id = ".$task->id;
+				}
+				else {
+                                        $update_object_query .= ",
+						prerequisite_id = NULL";
+				}
+			}
+			
 			if (isset($parameters['project_id'])) {
 				$project = new \Engineering\Project($parameters['project_id']);
 				if ($project->id) {
@@ -301,6 +332,7 @@
 		}
 
 		public function get($code) {
+
 			$get_object_query = "
 				SELECT	id
 				FROM	engineering_tasks
@@ -324,6 +356,7 @@
 			}
 		}
 		public function details() {
+
 			$get_object_query = "
 				SELECT	*,
 						unix_timestamp(date_added) timestamp_added
@@ -342,7 +375,6 @@
 			};
 
 			$object = $rs->FetchNextObject(false);
-
 			$this->code = $object->code;
 			$this->title = $object->title;
 			$this->description = $object->description;
@@ -358,8 +390,8 @@
 			$this->assigned_id = $object->assigned_id;
 			$this->priority = $object->priority;
 			$this->timestamp_added = $object->timestamp_added;
-			$this->project_id = $object->project_id;
-
+                        $this->project_id = $object->project_id;
+                        $this->prerequisite_id = $object->prerequisite_id;
 			return true;
 		}
 
@@ -450,5 +482,4 @@
 			else return false;
 		}
 	}
-
 ?>
