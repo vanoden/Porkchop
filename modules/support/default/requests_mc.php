@@ -1,5 +1,7 @@
 <?
 	$page = new \Site\Page();
+	$page->fromRequest();
+	$page->requireRole('support user');
 
 	$parameters = array('status' => array('NEW','OPEN'));
 	if ($_REQUEST['btn_all']) $parameters = array();

@@ -1,6 +1,7 @@
 <?
 	$page = new \Site\Page();
 	$page->fromRequest();
+	$page->requireRole('support user');
 
 	$adminlist = new \Register\CustomerList();
 	$admins = $adminlist->find(array('role' => 'support user'));

@@ -116,7 +116,8 @@ Description: ".$action->description
 	if ($_REQUEST['btn_add_comment']) {
 		$parameters = array(
 			'author_id'	=> $GLOBALS['_SESSION_']->customer->id,
-			'content'	=> $_REQUEST['content']
+			'content'	=> $_REQUEST['content'],
+			'status'	=> $_REQUEST['action_status']
 		);
 		$item->addComment($parameters);
 		if ($item->error()) {

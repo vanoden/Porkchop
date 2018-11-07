@@ -19,7 +19,7 @@
 		# Enter Support Request
 		$parameters = array(
 			"customer_id"	=> $GLOBALS['_SESSION_']->customer->id,
-			"type" 			=> $_REQUEST['type'],
+			"type" 			=> 'service',
 			"description"	=> $_REQUEST['description']
 		);
 		$request = new \Support\Request();
@@ -29,10 +29,29 @@
 			$page->addError("Error submitting request: ".$request->error());
 		}
 		else {
-			$body = "The following support request was submitted:
+			$body = "The following service request was submitted:
 	Request: ".$request->code."<br>
-	Type: ".$request->type."<br>
-	URL: http://".$GLOBALS['_config']->site->hostname."/_support/request/".$request->code;
+	Type: ".$_REQUEST['type']."<br>
+	URL: http://".$GLOBALS['_config']->site->hostname."/_support/request_detail/".$request->code;
+
+			foreach ($_REQUEST['product_id'] as $line => $pid) {
+				$parameters = array(
+					'line'			=> $line,
+					'product_id'	=> $_REQUEST['product_id'][$line],
+					'serial_number'	=> $_REQUEST['serial_number'][$line],
+					'description'	=> $_REQUEST['line_description'][$line],
+					'quantity'		=> 1
+				);
+				$item = $request->addItem($parameters);
+				if ($request->error()) {
+					$page->addError("Error adding item to request: ".$request->error());
+				}
+
+				$body .= "<br>
+	Ticket: ".$item->id."<br>
+	&nbsp;&nbsp;".$item->product->code." ".$item->serial_number.": ".$item->description;
+			}
+
 			$message = new \Email\Message(
 				array(
 					'from'	=> 'service@spectrosinstruments.com',
@@ -41,28 +60,21 @@
 				)
 			);
 			$message->html(true);
-			$role = new \Register\Role('support user');
-			$role->notify($message);
-			if ($role->error) {
-				app_log("Error sending request notification: ".$role->error);
+			if (0) {
+				$GLOBALS['_SESSION_']->customer->notify($message);
+			}
+			else {
+				$role = new \Register\Role();
+				$role->get('support user');
+				$role->notify($message);
+				if ($role->error) {
+					app_log("Error sending request notification: ".$role->error);
+				}
 			}
 			$page->success = 'Support request '.$request->code.' submitted.  A representative will follow up shortly';
 		}
-		foreach ($_REQUEST['product_id'] as $line => $pid) {
-			$item = array(
-				'line'			=> $line,
-				'product_id'	=> $_REQUEST['product_id'][$line],
-				'serial_number'	=> $_REQUEST['serial_number'][$line],
-				'description'	=> $_REQUEST['line_description'][$line],
-				'quantity'		=> 1
-			);
-			$request->addItem($item);
-			if ($request->error()) {
-				$page->addError("Error adding item to request: ".$request->error());
-			}
-		}
 	}
 
-	$productlist = new \Product\ItemList(array('type'=>'inventory'));
-	$products = $productlist->find();
+	$productlist = new \Product\ItemList();
+	$products = $productlist->find(array('type' => array('inventory','unique','kit')));
 ?>

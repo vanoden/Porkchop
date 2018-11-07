@@ -95,4 +95,5 @@ Description: ".$action->description
 	
 	if ($action->assignedTo->id) $assignedTo = $action->assignedTo->full_name();
 	else $assignedTo = "Unassigned";
+	if (! $action->description) $action->description = 'None provided';
 ?>

@@ -62,6 +62,7 @@
 						`id`			int(11) NOT NULL AUTO_INCREMENT,
 						`name`			varchar(255) NOT NULL,
 						`code`			varchar(100) NOT NULL,
+						`date_created`	date,
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `UK_CODE` (`code`)
 					)

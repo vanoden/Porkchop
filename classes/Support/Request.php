@@ -182,7 +182,7 @@
 				$this->_error = "Error adding item: ".$item->error();
 				return false;
 			}
-			return true;
+			return $item;
 		}
 
 		public function openItems() {

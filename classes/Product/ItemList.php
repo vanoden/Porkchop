@@ -95,7 +95,7 @@
 				$find_product_query .= "
 				ORDER BY r.view_order,p.name";
 
-			#app_log("Find Products Query: ".preg_replace("/(\n|\r)/","",$find_product_query),'debug',__FILE__,__LINE__);
+			query_log($find_product_query);
 			$rs = $GLOBALS['_database']->Execute($find_product_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();

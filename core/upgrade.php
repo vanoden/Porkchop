@@ -26,7 +26,25 @@
 	# We'll handle errors ourselves, thank you very much
 	#error_reporting(0);
 
-	
+	# Base Classes
+	$base_classes = array(
+		"Media"		=> 3,
+		"Product"	=> 1,
+		"Site"		=> 5,
+		"Content"	=> 3,
+		"Register"	=> 10,
+		"Company"	=> 3,
+		"Storage"	=> 1,
+		"Email"		=> 1,
+		"Package"	=> 1,
+		"Contact"	=> 2,
+		"Support"	=> 2,
+		"Engineering"	=> 3,
+		"Monitor"	=> 18,
+		"Spectros"	=> 5,
+		"Action"	=> 1
+	);
+
 	# Set Templates As Necessary
 	$admin_templates = array(
 		array("spectros","admin_home"),
@@ -124,54 +142,19 @@
 
 	# Upgrade Database
 	install_log("Upgrading Schema");
-	$class = new \Media\Schema();
-	install_log("Media::Schema: version".$class->version());
-	if ($class->version() != 3) install_fail("Version 3 Required");
-	$class = new \Product\Schema();
-	install_log("Product::Schema: version ".$class->version());
-	if ($class->version() != 1) install_fail("Version 1 Required");
-	$class = new \Support\Schema();
-	install_log("Support::Schema: version ".$class->version());
-	if ($class->version() != 2) install_fail("Version 2 Required");
-	$class = new \Content\Schema();
-	install_log("Content::Schema: version ".$class->version());
-	if ($class->version() != 3) install_fail("Version 3 Required");
-	$class = new \Company\Schema();
-	install_log("Company::Schema: version ".$class->version());
-	if ($class->version() != 3) install_fail("Version 3 Required");
-	$class = new \Site\Schema();
-	install_log("Session::Schema: version ".$class->version());
-	if ($class->version() != 5) install_fail("Version 5 Required");
-	$class = new \Email\Schema();
-	install_log("Email::Schema: version ".$class->version());
-	if ($class->version() != 1) install_fail("Version 1 Required");
-	$class = new \Monitor\Schema();
-	install_log("Monitor::Schema: version ".$class->version());
-	if ($class->version() != 18) install_fail("Version 18 Required");
-	$class = new \Spectros\Schema();
-	install_log("Spectros::Schema: version ".$class->version());
-	if ($class->version() != 5) install_fail("Version 5 Required");
-	$class = new \Action\Schema();
-	install_log("Action::Schema: version ".$class->version());
-	if ($class->version() != 1) install_fail("Version 1 Required");
-	$class = new \Register\Schema();
-	install_log("Register::Schema: version ".$class->version());
-	if ($class->version() != 10) install_fail("Version 10 Required");
-	$class = new \Storage\Schema();
-	install_log("Storage::Schema: version ".$class->version());
-	if ($class->version() != 1) install_fail("Version 1 Required");
-	$class = new \Package\Schema();
-	install_log("Package::Schema: version ".$class->version());
-	if ($class->version() != 1) install_fail("Version 1 Required");
-	$class = new \Contact\Schema();
-	install_log("Contact::Schema: version ".$class->version());
-	if ($class->version() != 2) install_fail("Version 2 Required");
-	$class = new \Event\Schema();
-#	install_log("Event::Schema: version ".$class->version());
-#	if ($class->version() != 0) install_fail("Version 1 Required");
-	$class = new \Engineering\Schema();
-	install_log("Engineering::Schema: version ".$class->version());
-	if ($class->version() != 3) install_fail("Version 3 Required");
+	foreach ($base_classes as $base_class => $version) {
+		$class_name = "\\$base_class\\Schema";
+		try {
+			$class = new $class_name();
+			$class_version = $class->version();
+		} catch (Exception $e) {
+			install_fail("Cannot upgrade schema: ".$e->getMessage());
+		}
+		install_log("$base_class::Schema: version ".$class_version);
+		if ($class_version != $version) {
+			install_fail("Version $version Required");
+		}
+	}
 
 	###################################################
 	### Initialize Session							###

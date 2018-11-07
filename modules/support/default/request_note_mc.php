@@ -1,5 +1,8 @@
 <?
 	$page = new \Site\Page();
+	$page->fromRequest();
+	$page->requireRole('support user');
+
 	$request = new \Support\Request($_REQUEST['request_id']);
 
 	if ($_REQUEST['btn_submit']) {
