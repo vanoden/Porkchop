@@ -111,6 +111,7 @@
 						`assigned_id` int(11) NOT NULL DEFAULT 0,
 						`date_due` datetime,
 						`priority` enum('NORMAL','IMPORTANT','URGENT','CRITICAL') NOT NULL DEFAULT 'NORMAL',
+                                                `prerequisite_id` varchar(11) DEFAULT NULL,
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `UK_CODE` (`code`),
 						FOREIGN KEY `fk_product_id` (`product_id`) REFERENCES `engineering_products` (`id`),
