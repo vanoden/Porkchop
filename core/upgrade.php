@@ -45,18 +45,11 @@
 
 	# Set Templates As Necessary
 	$admin_templates = array(
-		array("spectros","admin_home"),
 		array("product","report"),
 		array("product","edit"),
 		array("register","organizations"),
 		array("register","organization"),
 		array("register","accounts"),
-		array("monitor","admin_assets"),
-		array("monitor","admin_details"),
-		array("monitor","admin_collections"),
-		array("spectros","admin_credits"),
-		array("spectros","cal_report"),
-		array("monitor","comm_dashboard"),
 		array("register","admin_account"),
 		array("engineering","home"),
 		array("engineering","tasks"),
@@ -259,50 +252,6 @@
 		install_log("Adding 'administrator' role");
 		$role->add(array('name' => 'administrator','description' => "Access to admin tools"));
 		if ($role->error) install_fail("Error adding role: ".$role->error);
-	}
-
-	# Check for Calibration Credit Product
-	install_log("Check Calibration Verification Product");
-	if (isset($GLOBALS['_config']->spectros->calibration_product) and strlen($GLOBALS['_config']->spectros->calibration_product)) {
-		$product = new \Product\Item();
-		$product->get($GLOBALS['_config']->spectros->calibration_product);
-		if (! $product->id) {
-			install_fail("No Calibration Verification Credit product found, code '".$GLOBALS['_config']->spectros->calibration_product."' must exist.");
-		}
-		install_log("Product '".$GLOBALS['_config']->spectros->calibration_product."' found.");
-	}
-	else {
-		install_fail("_config->spectros->calibration_product not defined!");
-	}
-
-	if (isset($GLOBALS['_config']->monitor->default_sensor_product) and strlen($GLOBALS['_config']->monitor->default_sensor_product)) {
-		$product = new \Product\Item();
-		$product->get($GLOBALS['_config']->monitor->default_sensor_product);
-		if (! $product->id) {
-			install_fail("No Generic Sensor product found, code '".$GLOBALS['_config']->monitor->default_sensor_product."' must exist.");
-		}
-		install_log("Product '".$GLOBALS['_config']->monitor->default_sensor_product."' found.");
-	}
-	else {
-		install_fail("_config->monitor->default_sensor_product not defined!");
-	}
-
-	# Check for Dashboards
-	install_log("Check default dashboard");
-	$dashboard = new \Monitor\Dashboard();
-	$dashboard->get('default');
-	if (! $dashboard->id) {
-		install_log("Adding default dashboard");
-		$dashboard->add(array("name" => 'default','template' => '/dashboards/default.html'));
-		if ($dashboard->error) install_fail("Cannot find or add default dashboard: ".$dashboard->error);
-	}
-	install_log("Check concept dashboard");
-	$dashboard = new \Monitor\Dashboard();
-	$dashboard->get('concept');
-	if (! $dashboard->id) {
-		install_log("Adding concept dashboard");
-		$dashboard->add(array("name" => 'concept','template' => '/dashboards/concept/concept.html'));
-		if ($dashboard->error) install_fail("Cannot find or add default dashboard: ".$dashboard->error);
 	}
 
 	install_log("Upgrade completed successfully");
