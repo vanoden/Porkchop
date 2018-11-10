@@ -27,23 +27,21 @@
 	#error_reporting(0);
 
 	# Base Classes
-	$base_classes = array(
-		"Media"		=> 3,
-		"Product"	=> 1,
-		"Site"		=> 5,
-		"Content"	=> 3,
-		"Register"	=> 10,
-		"Company"	=> 3,
-		"Storage"	=> 1,
-		"Email"		=> 1,
-		"Package"	=> 1,
-		"Contact"	=> 2,
-		"Support"	=> 2,
-		"Engineering"	=> 3,
-		"Monitor"	=> 18,
-		"Spectros"	=> 5,
-		"Action"	=> 1
-	);
+	if (isset($_config->schema)) $base_classes = $_config->schema;
+	else $base_classes = array(
+        "Media"     => 3,
+        "Product"   => 1,
+        "Site"      => 5,
+        "Content"   => 3,
+        "Register"  => 10,
+        "Company"   => 3,
+        "Storage"   => 1,
+        "Email"     => 1,
+        "Package"   => 1,
+        "Contact"   => 2,
+        "Support"   => 2,
+        "Engineering"   => 3,
+    );
 
 	# Set Templates As Necessary
 	$admin_templates = array(
