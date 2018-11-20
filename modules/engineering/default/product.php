@@ -1,11 +1,11 @@
 <div>
+  <div class="breadcrumbs">
+     <a href="/_engineering/home">Engineering</a>
+     <a href="/_engineering/products">Products</a> > Product Details
+  </div>
+  <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
    <form name="product_form" action="/_engineering/product" method="post">
       <input type="hidden" name="product_id" value="<?=$product->id?>" />
-      <div class="breadcrumbs">
-         <a href="/_engineering/home">Engineering</a>
-         <a href="/_engineering/products">Products</a> > Product Details
-      </div>
-      <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
       <h2>Engineering Product</h2>
       <?	if ($page->error) { ?>
       <div class="form_error"><?=$page->error?></div>

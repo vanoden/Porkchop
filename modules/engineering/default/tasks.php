@@ -6,7 +6,7 @@
 	}
 </script>
 <?	if ($page->error) { ?>
-<div class="form_error"><?=$page->error?></div>
+    <div class="form_error"><?=$page->error?></div>
 <?	} ?>
 <div class="breadcrumbs">
     <a class="breadcrumb" href="/_engineering/home">Engineering</a> > Tasks

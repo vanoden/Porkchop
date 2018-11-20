@@ -78,7 +78,7 @@
 <div class="topnav">
   <a class="active" href="/_engineering/home"><i class="fa fa-cogs"></i> Home</a>
   <div class="search-container">
-    <form action="/_engineering/search">
+    <form action="/_engineering/search" method="get">
       <input type="text" value="<?=preg_replace("/[^A-Za-z0-9 ]/", '', $_REQUEST['search'])?>" placeholder="Search.." name="search" style="background-color:white;"/>
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>

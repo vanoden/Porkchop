@@ -1,11 +1,11 @@
+<div class="breadcrumbs">
+ <a href="/_engineering/home">Engineering</a>
+ <a href="/_engineering/projects">Projects</a> > Project Details
+</div>
+<?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
 <div style="width: 756px;">
    <form name="project_form" action="/_engineering/project" method="post">
       <input type="hidden" name="project_id" value="<?=$project->id?>" />
-      <div class="breadcrumbs">
-         <a href="/_engineering/home">Engineering</a>
-         <a href="/_engineering/projects">Projects</a> > Project Details
-      </div>
-      <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
       <h2>Engineering Project</h2>
       <?	if ($page->error) { ?>
       	<div class="form_error"><?=$page->error?></div>

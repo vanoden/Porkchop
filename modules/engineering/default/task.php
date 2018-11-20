@@ -1,11 +1,11 @@
 <div>
+  <div class="breadcrumbs">
+     <a class="breadcrumb" href="/_engineering/home">Engineering</a>
+     <a class="breadcrumb" href="/_engineering/tasks">Tasks</a> > Task Detail
+  </div>
+   <?php include(MODULES.'/engineering/partials/search_bar.php'); ?> 
    <form name="task_form" action="/_engineering/task" method="post">
       <input type="hidden" name="task_id" value="<?=$task->id?>" />
-      <div class="breadcrumbs">
-         <a class="breadcrumb" href="/_engineering/home">Engineering</a>
-         <a class="breadcrumb" href="/_engineering/tasks">Tasks</a> > Task Detail
-      </div>
-      <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
       <h2>Engineering Task: 
 	  	<? if ($form['code']) { ?>
 	  		<span><?php print " ".$form['code'];?></span>
