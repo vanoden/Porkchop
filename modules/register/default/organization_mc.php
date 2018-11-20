@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	###################################################
 	### organization_mc.php							###
 	### This program collects organization info		###
@@ -43,8 +43,10 @@
 			);
 			if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
 			if ($organization->id) {
+			
 				app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
 				app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
+				
 				# Update Existing Organization
 				$organization->update($parameters);
 
@@ -115,4 +117,3 @@
 	
 	$resellerList = new \Register\OrganizationList();
 	$resellers = $resellerList->find(array("is_reseller" => true));
-?>

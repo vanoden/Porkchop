@@ -1,3 +1,4 @@
+<?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
 <div style="width: 756px;">
 	<h1>Event Report</h1>
 	<?	if ($page->errorCount()) { ?>

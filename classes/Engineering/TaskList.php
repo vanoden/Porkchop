@@ -13,11 +13,23 @@
 		 * @param array $parameters
 		 */
 		public function find($parameters = array()) {
+		
 			$find_objects_query = "
 				SELECT	id
 				FROM	engineering_tasks
 				WHERE	id = id
 			";
+
+                        // if search term, then constrain by that
+                        if ($parameters['searchTerm']) {            
+			    $find_objects_query = "
+		            SELECT	`id`
+		            FROM	`engineering_tasks`
+                            WHERE `code` LIKE '%".$parameters['searchTerm']."%' 
+                            OR `title` LIKE '%".$parameters['searchTerm']."%' 
+                            OR `description` LIKE '%".$parameters['searchTerm']."%'
+                            OR `location` LIKE '%".$parameters['searchTerm']."%' ";
+                        }
 
 			if (isset($parameters['project_id']) && is_numeric($parameters['project_id'])) {
 				$find_objects_query .= "
@@ -34,7 +46,7 @@
 				AND		release_id = ".$parameters['release_id'];
 			}
 
-			if (isset($parameters['status'])) {
+			if (isset($parameters['status']) && !empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					$icount = 0;
 					$find_objects_query .= "

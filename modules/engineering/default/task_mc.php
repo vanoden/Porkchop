@@ -5,11 +5,11 @@
 		return;
 	}
 
-        // get new and active tasks for the 'prerequisite' field
+    // get new and active tasks for the 'prerequisite' field
 	$tasklist = new \Engineering\TaskList();
 	$tasklist = $tasklist->find(array('status'=>array('NEW', 'ACTIVE')));
 
-        // create new task or get existing if the "code" is passed
+    // create new task or get existing if the "code" is passed
 	$task = new \Engineering\Task();
 	if ($_REQUEST['task_id']) {
 		$task = new \Engineering\Task($_REQUEST['task_id']);
@@ -261,4 +261,3 @@ Description: ".$task->description
 	else {
 		$task->date_added = 'now';
 	}
-?>

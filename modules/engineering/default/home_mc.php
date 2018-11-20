@@ -16,4 +16,3 @@
 
 	$projectlist = new \Engineering\ProjectList();
 	$projects = $projectlist->find(array("_limit" => 4));
-?>

@@ -70,6 +70,3 @@
 		$form['status'] = $_REQUEST['status'];
 		$form['description'] = $_REQUEST['description'];
 	}
-	else {
-	}
-?>

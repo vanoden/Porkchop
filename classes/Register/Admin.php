@@ -2,7 +2,9 @@
 	namespace Register;
 
     class Admin extends Customer {
+
 		public function __construct($id = 0) {
+
 			# Database Initialization
 			$schema = new Schema();
 			if ($schema->error) {
@@ -17,15 +19,10 @@
 		public function details() {
 		    $details = parent::details();
 			return;
-			#if (! isset($this->id)) {
-			#	return;
-			#}
-			#$details->roles = $this->roles();
-			#$department = new Department($details->department_id);
-		    #return $details;
 		}
-		public function update($id,$parameters=array()) {
-			parent::update($id,$parameters);
+		
+		public function adminUpdate($id,$parameters=array()) {
+			parent::update($parameters);
 			
 			if (isset($parameters['department_id'])) {
 				$update_admin_query = "
@@ -41,4 +38,3 @@
 			return $this->details($id);
 		}
     }
-?>

@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	###########################################################
 	### login_mc.php										###
 	### This program is the main content file for			###

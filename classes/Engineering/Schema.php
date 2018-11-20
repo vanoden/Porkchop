@@ -203,7 +203,8 @@
 				}
 
 				$alter_table_query = "
-					ALTER TABLE `engineering_tasks` ADD COLUMN `project_id` int(11) 
+					ALTER TABLE `engineering_tasks` ADD COLUMN `project_id` int(11);
+					ALTER TABLE `engineering_tasks` ADD COLUMN `prerequisite_id` VARCHAR(11);
 				";
 				$GLOBALS['_database']->Execute($alter_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {

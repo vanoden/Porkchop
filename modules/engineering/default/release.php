@@ -5,6 +5,7 @@
          <a class="breadcrumb" href="/_engineering/home">Engineering</a>
          <a class="breadcrumb" href="/_engineering/releases">Releases</a>
       </div>
+      <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
       <h2>Engineering Release</h2>
       <!--	Error Checking -->
       <?	if ($page->error) { ?>

@@ -19,15 +19,18 @@
 			if (isset($parameters['code']) && strlen($parameters['code'])) {
 				if (preg_match('/^[\w\-\.\_\s]+$/',$parameters['code'])) {
 					$code = $parameters['code'];
-				}
-				else {
+				} else {
 					$this->_error = "Invalid code";
 					return null;
 				}
-			}
-			else {
+			} else {
 				$code = uniqid();
 			}
+		
+                        if (empty($parameters['manager_id'])) {
+		            $this->_error = "Manager field is required";
+		            return null;
+                        }  
 
 			$check_dups = new Project();
 			if ($check_dups->get($code)) {
@@ -62,6 +65,11 @@
 				UPDATE	engineering_projects
 				SET		id = id
 			";
+
+                        if (empty($parameters['manager_id'])) {
+			    $this->_error = "Manager field is required";
+			    return null;
+                        }
 
 			if (isset($parameters['title']))
 				$update_object_query .= ",
@@ -111,7 +119,7 @@
 
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
-app_log("Found project $id");
+            app_log("Found project $id");
 			return $this->details();
 		}
 
@@ -121,7 +129,7 @@ app_log("Found project $id");
 				FROM	engineering_projects
 				WHERE	id = ?
 			";
-app_log("Getting details for project ".$this->id);
+            app_log("Getting details for project ".$this->id);
 
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,

@@ -7,6 +7,11 @@
 	div.title { float: left; margin-right: 10px; }
 	table.body { clear: both; }
 </style>
+<div class="breadcrumbs">
+   <a href="/_engineering/home">Engineering</a>
+</div>
+<?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
+
 <? if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>
 <?	} ?>

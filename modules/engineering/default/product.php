@@ -5,6 +5,7 @@
          <a href="/_engineering/home">Engineering</a>
          <a href="/_engineering/products">Products</a> > Product Details
       </div>
+      <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
       <h2>Engineering Product</h2>
       <?	if ($page->error) { ?>
       <div class="form_error"><?=$page->error?></div>

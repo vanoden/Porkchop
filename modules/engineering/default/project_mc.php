@@ -78,4 +78,3 @@
 	if ($tasklist->error()) {
 		$page->error = $tasklist->error();
 	}
-?>

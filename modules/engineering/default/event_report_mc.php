@@ -2,7 +2,6 @@
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
-
 	if (! $_REQUEST['btn_submit']) {
 		$_REQUEST['date_start'] = date('m/d/Y',time() - 604800);
 	}
@@ -29,4 +28,3 @@
 	$userlist = new \Register\CustomerList();
 	$users = $userlist->find(array('role' => 'support user'));
 	if ($userlist->error) $page->addError($userlist->error);
-?>
