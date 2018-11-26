@@ -280,8 +280,6 @@
 
 				$alter_table_query = "
 					ALTER TABLE `engineering_tasks` ADD COLUMN `prerequisite_id` VARCHAR(11);
-					INSERT INTO page_pages (`module`, `view`) VALUES ('engineering', 'search');
-					INSERT INTO page_metadata (`page_id`, `key`, `value`) VALUES ('30','template','admin.html');
 				";
 				$GLOBALS['_database']->Execute($alter_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {

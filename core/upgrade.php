@@ -61,6 +61,7 @@
 		array("engineering","projects"),
 		array("engineering","project"),
 		array("engineering","event_report"),
+		array("engineering","search"),
 		array("support","request_new"),
 		array("support","requests"),
 		array("support","request_detail"),
@@ -219,7 +220,6 @@
 		$page->unsetMetadata("template");
 	}
 
-
 	install_log("Add new template settings");
 	foreach ($admin_templates as $array) {
 		$module = $array[0];
@@ -267,5 +267,4 @@
 		install_log("Upgrade failed: $message",'error');
 		exit;
 	}
-
 ?>
