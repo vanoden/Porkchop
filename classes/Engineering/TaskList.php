@@ -18,7 +18,6 @@
 				SELECT	id
 				FROM	engineering_tasks
 				WHERE	id = id
-				ORDER BY title ASC
 			";
 
             // if search term, then constrain by that

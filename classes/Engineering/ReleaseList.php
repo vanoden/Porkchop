@@ -10,7 +10,6 @@
 				SELECT	id
 				FROM	engineering_releases
 				WHERE	id = id
-				ORDER BY title ASC
 			";
 
 			if (isset($parameters['!status'])) {
