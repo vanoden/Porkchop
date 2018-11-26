@@ -18,18 +18,19 @@
 				SELECT	id
 				FROM	engineering_tasks
 				WHERE	id = id
+				ORDER BY title ASC
 			";
 
-                        // if search term, then constrain by that
-                        if ($parameters['searchTerm']) {            
-			    $find_objects_query = "
-		            SELECT	`id`
-		            FROM	`engineering_tasks`
-                            WHERE `code` LIKE '%".$parameters['searchTerm']."%' 
-                            OR `title` LIKE '%".$parameters['searchTerm']."%' 
-                            OR `description` LIKE '%".$parameters['searchTerm']."%'
-                            OR `location` LIKE '%".$parameters['searchTerm']."%' ";
-                        }
+            // if search term, then constrain by that
+            if ($parameters['searchTerm']) {            
+                $find_objects_query = "
+                SELECT	`id`
+                FROM	`engineering_tasks`
+                    WHERE `code` LIKE '%".$parameters['searchTerm']."%' 
+                    OR `title` LIKE '%".$parameters['searchTerm']."%' 
+                    OR `description` LIKE '%".$parameters['searchTerm']."%'
+                    OR `location` LIKE '%".$parameters['searchTerm']."%' ";
+            }
 
 			if (isset($parameters['project_id']) && is_numeric($parameters['project_id'])) {
 				$find_objects_query .= "

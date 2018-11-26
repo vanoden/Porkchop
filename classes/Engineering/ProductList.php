@@ -14,16 +14,16 @@
 				ORDER BY title ASC
 			";
 
-                       // if search term, then constrain by that
-                      if ($parameters['searchTerm']) {            
-	                  $find_objects_query = "
-	                    SELECT	`id`
-	                    FROM	`engineering_products`
-	                    WHERE	`code` LIKE '%".$parameters['searchTerm']."%' 
-	                            OR `title` LIKE '%".$parameters['searchTerm']."%' 
-	                            OR `description` LIKE '%".$parameters['searchTerm']."%'
-	                    ORDER BY title ASC";
-                       }
+            // if search term, then constrain by that
+            if ($parameters['searchTerm']) {            
+                $find_objects_query = "
+                SELECT	`id`
+                FROM	`engineering_products`
+                WHERE	`code` LIKE '%".$parameters['searchTerm']."%' 
+                        OR `title` LIKE '%".$parameters['searchTerm']."%' 
+                        OR `description` LIKE '%".$parameters['searchTerm']."%'
+                ORDER BY title ASC";
+            }
 
 			$rs = $GLOBALS['_database']->Execute(
 				$find_objects_query
