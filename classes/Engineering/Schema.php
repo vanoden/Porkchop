@@ -111,7 +111,7 @@
 						`assigned_id` int(11) NOT NULL DEFAULT 0,
 						`date_due` datetime,
 						`priority` enum('NORMAL','IMPORTANT','URGENT','CRITICAL') NOT NULL DEFAULT 'NORMAL',
-                                                `prerequisite_id` varchar(11) DEFAULT NULL,
+                        `prerequisite_id` varchar(11) DEFAULT NULL,
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `UK_CODE` (`code`),
 						FOREIGN KEY `fk_product_id` (`product_id`) REFERENCES `engineering_products` (`id`),
@@ -205,6 +205,8 @@
 				$alter_table_query = "
 					ALTER TABLE `engineering_tasks` ADD COLUMN `project_id` int(11);
 					ALTER TABLE `engineering_tasks` ADD COLUMN `prerequisite_id` VARCHAR(11);
+					INSERT INTO page_pages (`module`, `view`) VALUES ('engineering', 'search');
+					INSERT INTO page_metadata (`page_id`, `key`, `value`) VALUES ('30','template','admin.html');
 				";
 				$GLOBALS['_database']->Execute($alter_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
