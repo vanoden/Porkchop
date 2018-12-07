@@ -134,7 +134,7 @@
 		if ($user_options["rootname"]) {
 			$options["rootName"] = $user_options["rootname"];
 		}
-    	$xml = &new XML_Serializer($options);
+    	$xml = new XML_Serializer($options);
 	   	if ($xml->serialize($object)) {
 			//error_log("Returning ".$xml->getSerializedData());
 			$output = $xml->getSerializedData();

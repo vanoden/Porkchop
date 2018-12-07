@@ -17,8 +17,6 @@
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$project->get($code);
 	}
-	else {
-	}
 
 	if (isset($_REQUEST['btn_submit'])) {
 		$parameters = array();
@@ -27,6 +25,7 @@
 			if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
 			if (isset($_REQUEST['manager_id'])) $parameters['manager_id'] = $_REQUEST['manager_id'];
 			if (isset($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
+			if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 
 			app_log("Submitted project form",'debug',__FILE__,__LINE__);
 			if ($project->id) {
@@ -58,15 +57,15 @@
 		$form['code'] = $project->code;
 		$form['title'] = $project->title;
 		$form['description'] = $project->description;
+		$form['status'] = $project->status;
 		$form['manager_id'] = $project->manager->id;
 	}
 	elseif ($page->error) {
 		$form['code'] = $_REQUEST['code'];
 		$form['title'] = $_REQUEST['title'];
+		$form['status'] = $_REQUEST['status'];
 		$form['description'] = $_REQUEST['description'];
 		$form['manager_id'] = $_REQUEST['manager_id'];
-	}
-	else {
 	}
 
 	$role = new \Register\Role();
@@ -75,6 +74,4 @@
 
 	$tasklist = new \Engineering\TaskList();
 	$tasks = $tasklist->find(array('project_id' => $project->id));
-	if ($tasklist->error()) {
-		$page->error = $tasklist->error();
-	}
+	if ($tasklist->error()) $page->error = $tasklist->error();

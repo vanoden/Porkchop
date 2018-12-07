@@ -110,7 +110,7 @@
 					XML_SERIALIZER_OPTION_RETURN_RESULT => true,
 					XML_SERIALIZER_OPTION_MODE          => 'simplexml',
 				);
-				$xml = &new XML_Unserializer($options);
+				$xml = new XML_Unserializer($options);
 				if ($xml->unserialize($path,true,$options))
         		{
 					$metadata = (object) $xml->getUnserializedData();

@@ -319,7 +319,7 @@
 			XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
 			'rootName'							=> 'opt'
     	);
-    	$xml = &new XML_Serializer($options);
+    	$xml = new XML_Serializer($options);
 	   	if ($xml->serialize($object)) {
 			//error_log("Returning ".$xml->getSerializedData());
 			$output = $xml->getSerializedData();

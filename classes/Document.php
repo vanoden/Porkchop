@@ -1,4 +1,4 @@
-<?
+<?php
 	class Document {
 		public $error;
 		public $type;
@@ -34,7 +34,7 @@
 		
 		private function _xmlin($string) {
 			require_once 'XML/Unserializer.php';
-			$unserializer = &new XML_Unserializer();
+			$unserializer = new XML_Unserializer();
 			$unserializer->unserialize($string);
 			$this->_data = $unserializer->getUnserializedData();
 		}
@@ -48,7 +48,7 @@
 				XML_SERIALIZER_OPTION_MODE			=> 'simplexml',
 				'rootName'							=> 'opt',
 			);
-			$xml = &new XML_Serializer($options);
+			$xml = new XML_Serializer($options);
 			if ($xml->serialize($object)) {
 				//error_log("Returning ".$xml->getSerializedData());
 				$output = $xml->getSerializedData();
@@ -71,4 +71,3 @@
 			return $this->_data;
 		}
 	}
-?>

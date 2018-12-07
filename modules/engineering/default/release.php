@@ -84,38 +84,51 @@
    </form>
 </div>
 <!--	START First Table -->
-<?	if ($release->id) { ?>
-<div class="tableBody min-tablet marginTop_20">
-   <div class="tableRowHeader">
-      <div class="tableCell" style="width: 30%;">Title</div>
-      <div class="tableCell" style="width: 30%;">Project</div>
-      <div class="tableCell" style="width: 20%;">Product</div>
-      <div class="tableCell" style="width: 20%;">Status</div>
-   </div>
-   <!-- end row header -->
-   <?	foreach ($tasks as $task) { 
-      $project = $task->project();
-      $product = $task->product();
-      ?>
-   <div class="tableRow">
-      <div class="tableCell">
-         <a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a>
-      </div>
-      <div class="tableCell">
-         <?=$project->title?>
-      </div>
-      <div class="tableCell">
-         <?=$product->title?>
-      </div>
-      <div class="tableCell">
-         <?=$task->status?>
-      </div>
-   </div>
-   <?		if (! $greenbar) $greenbar = 'greenbar';
-      else $greenbar = '';
-      }
-      ?>
-</div>
-<!--	END First Table -->
-</div>
+<?php	if ($release->id) { ?>
+    <div class="tableBody min-tablet marginTop_20">
+        <form name="release_form" action="/_engineering/release" method="post">
+           <div class="tableRowHeader">
+              <div class="tableCell" style="width: 30%;">Title</div>
+              <div class="tableCell" style="width: 30%;">Project</div>
+              <div class="tableCell" style="width: 20%;">Product</div>
+              <div class="tableCell" style="width: 20%;">Status</div>
+              <div class="tableCell" style="width: 20%;">&nbsp;</div>
+           </div>
+           <!-- end row header -->
+           <?	foreach ($tasks as $task) { 
+              $project = $task->project();
+              $product = $task->product();
+              ?>
+           <div class="tableRow">
+              <div class="tableCell">
+                 <a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a>
+              </div>
+              <div class="tableCell">
+                 <?=$project->title?>
+              </div>
+              <div class="tableCell">
+                 <?=$product->title?>
+              </div>
+              <div class="tableCell">
+                 <?=$task->status?>
+              </div>
+              <div class="tableCell">
+                <?php
+                 // can't postpone a complete tasks pre requirements
+                 if ($task->status !== 'COMPLETE') {
+                ?>
+                    <input type="button" name="btn_postpone" onclick="location.replace('/_engineering/release/?code=<?=$form['code']?>&postpone=<?=$task->code?>')" class="button" value="Postpone"/>
+                <?php
+                 }
+                ?>
+              </div>
+           </div>
+           <?		
+              if (! $greenbar) $greenbar = 'greenbar'; else $greenbar = '';
+            }
+           ?>
+        </form>
+    </div>
+    <!--	END First Table -->
+    </div>
 <?	} ?>
