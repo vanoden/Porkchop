@@ -13,7 +13,8 @@
 	<div class="tableRowHeader">
 		<div class="tableCell" style="width: 20%;">Code</div>
 		<div class="tableCell" style="width: 25%;">Title</div>
-		<div class="tableCell" style="width: 55%;">Description</div>
+		<div class="tableCell" style="width: 25%;">Description</div>
+		<div class="tableCell" style="width: 30%;">Status</div>
 	</div>
 <?php
 	foreach ($projects as $project) {
@@ -27,6 +28,9 @@
 		</div>
 		<div class="tableCell">
 			<?=$project->description?>
+		</div>
+		<div class="tableCell">
+			<?=$project->status?>
 		</div>
 	</div>
 <?php	} ?>
