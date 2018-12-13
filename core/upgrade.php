@@ -66,8 +66,10 @@
 		array("support","requests"),
 		array("support","request_detail"),
 		array("support","request_item"),
+		array("support","request_items"),
 		array("support","action"),
-		array("support","admin_actions")
+		array("support","admin_actions"),
+		array("spectros","admin_home")
 	);
 
 	###################################################
