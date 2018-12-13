@@ -19,7 +19,7 @@
             <div class="tableCell" style="width: 25%;">Code</div>
             <div class="tableCell" style="width: 30%;">Title</div>
             <div class="tableCell" style="width: 25%;">Manager</div>
-            <div class="tableCell" style="width: 20%;"></div>
+            <div class="tableCell" style="width: 20%;">Status</div>
          </div>
          <div class="tableRow">
             <div class="tableCell">
@@ -36,8 +36,14 @@
                   <?	} ?>
                </select>
             </div>
-            <div class="tableCell">
-               <!--			empty cell -->
+            <div class="tableCell" style="min-width: 100px;">
+               <select name="status" class="value input wide_100per">
+                  <option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
+                  <option value="hold"<? if ($form['status'] == "OPEN") print " selected"; ?>>Open</option>
+                  <option value="active"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
+                  <option value="cancelled"<? if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
+                  <option value="complete"<? if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
+               </select>
             </div>	  
          </div>
       </div>

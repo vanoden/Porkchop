@@ -572,7 +572,7 @@
     	    XML_UNSERIALIZER_OPTION_RETURN_RESULT => false,
 			XML_UNSERIALIZER_OPTION_COMPLEXTYPE => 'object'
     	);
-    	$_xml = &new XML_Unserializer($options);
+    	$_xml = new XML_Unserializer($options);
 	   	if ($_xml->unserialize($string)) {
 			//error_log("Returning ".$xml->getSerializedData());
 			$object = $xml->getUnserializedData();

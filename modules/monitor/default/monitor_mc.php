@@ -8,7 +8,7 @@
         XML_SERIALIZER_OPTION_RETURN_RESULT => true,
 		XML_SERIALIZER_OPTION_MODE			=> 'simplexml'
     );
-    $xml = &new XML_Serializer($options);
+    $xml = new XML_Serializer($options);
 
 	$xml->serialize($monitor);
 	header('Content-Type: application/xml');

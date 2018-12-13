@@ -234,7 +234,7 @@
 				array_push($bind_params,$parameters['location']);
 			}
 
-			if (isset($parameters['estimate']))
+			if (isset($parameters['estimate'])) {
 				if (is_numeric($parameters['estimate']))
 					$update_object_query .= ",
 						estimate = ".$parameters['estimate'];
@@ -242,12 +242,15 @@
 					$this->_error = "Estimate must be numeric";
 					return false;
 				}
-
+            }
 			if (isset($parameters['release_id'])) {
-				if (is_numeric($parameters['release_id']))
-					$update_object_query .= ",
-						release_id = ".$parameters['release_id'];
-				else {
+				if (is_numeric($parameters['release_id'])) {
+                    if ($parameters['release_id'] > 0) {
+                        $update_object_query .= ", release_id = ".$parameters['release_id'];
+                    } else {
+                        $update_object_query .= ", release_id = NULL";
+                    }
+				} else {
 					$this->_error = "Invalid release_id";
 					return false;
 				}
@@ -287,7 +290,7 @@
 				}
 			}
 			
-                        // allow for prerequisite to be passed or else set to NULL if none passed
+            // allow for prerequisite to be passed or else set to NULL if none passed
 			if (isset($parameters['prerequisite_id'])) {
 				$task = new Task($parameters['prerequisite_id']);
 				if ($task->id) {
@@ -295,7 +298,7 @@
 						prerequisite_id = ".$task->id;
 				}
 				else {
-                                        $update_object_query .= ",
+                    $update_object_query .= ",
 						prerequisite_id = NULL";
 				}
 			}
@@ -390,8 +393,8 @@
 			$this->assigned_id = $object->assigned_id;
 			$this->priority = $object->priority;
 			$this->timestamp_added = $object->timestamp_added;
-                        $this->project_id = $object->project_id;
-                        $this->prerequisite_id = $object->prerequisite_id;
+            $this->project_id = $object->project_id;
+            $this->prerequisite_id = $object->prerequisite_id;
 			return true;
 		}
 

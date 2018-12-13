@@ -61,15 +61,16 @@
 		}
 
 		public function update($parameters = array()) {
+		    
 			$update_object_query = "
 				UPDATE	engineering_projects
 				SET		id = id
 			";
 
-                        if (empty($parameters['manager_id'])) {
+            if (empty($parameters['manager_id'])) {
 			    $this->_error = "Manager field is required";
 			    return null;
-                        }
+            }
 
 			if (isset($parameters['title']))
 				$update_object_query .= ",
@@ -79,6 +80,10 @@
 				$update_object_query .= ",
 						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
 
+			if (isset($parameters['status']))
+				$update_object_query .= ",
+						status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+						
 			if (isset($parameters['manager_id']))
 				$update_object_query .= ",
 						manager_id = ".$GLOBALS['_database']->qstr($parameters['manager_id'],get_magic_quotes_gpc());
@@ -143,11 +148,11 @@
 
 			if ($rs->RecordCount()) {
 				$object = $rs->FetchNextObject(false);
-
 				$this->title = $object->title;
 				$this->code = $object->code;
 				$this->description = $object->description;
 				$this->manager = new \Register\Customer($object->manager_id);
+				$this->status = $object->status;
 
 				return $object;
 			}

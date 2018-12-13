@@ -13,12 +13,10 @@
 	$task = new \Engineering\Task();
 	if ($_REQUEST['task_id']) {
 		$task = new \Engineering\Task($_REQUEST['task_id']);
-	}
-	elseif (isset($_REQUEST['code'])) {
+	} elseif (isset($_REQUEST['code'])) {
 		$task->get($_REQUEST['code']);
 		if ($task->error) $page->addError($task->error);
-	}
-	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+	} elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$task->get($code);
 	}
@@ -31,18 +29,15 @@
 				if ($task->title) array_push($msgs,"Title changed to ".$_REQUEST['title']);
 				$parameters['title'] = $_REQUEST['title'];
 			}
-		}
-		else {
+		} else {
 			$page->addError("Title required");
 		}
-
 		if (! $task->id) {
 			$parameters['code'] = $_REQUEST['code'];
 			$parameters['status'] = $_REQUEST['status'];
 			$parameters['date_added'] = $_REQUEST['date_added'];
 			$parameters['requested_id'] = $_REQUEST['requested_id'];
 		}
-
 		if (isset($_REQUEST['type']) && $task->type != strtoupper($_REQUEST['type'])) {
 			array_push($msgs,"Type changed from ".$task->type." to ".$_REQUEST['type']);
 			$parameters['type'] = $_REQUEST['type'];
@@ -63,14 +58,12 @@
 			array_push($msgs,"Prerequisite updated");
 			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_id'];
 		}
-		
 		$old_release = $task->release();
 		if (isset($_REQUEST['release_id']) && $_REQUEST['release_id'] > 0 && $old_release->id != $_REQUEST['release_id']) {
 			$new_release = new \Engineering\Release($_REQUEST['release_id']);
 			array_push($msgs,"Release changed from ".$old_release->title." to ".$new_release->title);
 			$parameters['release_id'] = $_REQUEST['release_id'];
 		}
-
 		$old_tech = $task->assignedTo();
 		if (isset($_REQUEST['assigned_id']) && $old_tech->id != $_REQUEST['assigned_id']) {
 			$new_tech = new \Register\Admin($_REQUEST['assigned_id']);
@@ -78,14 +71,12 @@
 				array_push($msgs,"Task re-assigned to ".$new_tech->first_name." ".$new_tech->last_name);
 				$parameters['assigned_id'] = $_REQUEST['assigned_id'];
 				$tech_status = "Re-Assigned";
-			}
-			else {
+			} else {
 				array_push($msgs,"Task assigned to ".$new_tech->first_name." ".$new_tech->last_name);
 				$parameters['assigned_id'] = $_REQUEST['assigned_id'];
 				$tech_status = "Assigned";
 			};
 		}
-
 		$old_product = $task->product();
 		if ($old_product->id != $_REQUEST['product_id']) {
 			$new_product = new \Engineering\Product($_REQUEST['product_id']);
@@ -102,14 +93,12 @@
 			array_push($msgs,"Project changed from '".$old_project->title."' to '".$new_project->title."'");
 			$parameters['project_id'] = $_REQUEST['project_id'];
 		}
-
 		app_log("Submitted task form",'debug',__FILE__,__LINE__);
 		if ($task->id) {
 			if ($task->update($parameters)) {
 				$page->success = "Updates applied";
 				app_log("Task updated",'debug',__FILE__,__LINE__);
-			}
-			else {
+			} else {
 				$page->addError("Error saving updates: ".$task->error());
 			}
 			if (count($msgs) > 0) {
@@ -120,9 +109,7 @@
 					'date_added'	=> date('Y-m-d H:i:s'),
 					'description'	=> join('<br>',$msgs)
 				));
-				if ($event->error()) {
-					$page->addError("Error creating event: ".$event->error());
-				}
+				if ($event->error()) $page->addError("Error creating event: ".$event->error());
 			}
 		}
 		else {
@@ -136,8 +123,7 @@
 					'description'	=> 'Task created'
 				));
 				app_log("Task created",'debug',__FILE__,__LINE__);
-			}
-			else {
+			} else {
 				$page->addError("Error creating task: ".$task->error());
 			}
 		}
@@ -174,13 +160,11 @@ Description: ".$task->description
 				$task->update(array('status'=>$_REQUEST['new_status']));
 				if ($task->error) {
 					$page->addError($task->error);
-				}
-				else {
+				} else {
 					$_REQUEST['notes'] = "Status changed from $old_status to ".strtoupper($_REQUEST['new_status'])."<br>\n".$_REQUEST['notes'];
 					$page->success = "Updated applied successfully";
 				}
-			}
-			else {
+			} else {
 				$page->success = "Updated applied successfully";
 			}
 			$event = new \Engineering\Event();
@@ -190,9 +174,10 @@ Description: ".$task->description
 				'date_added'	=> $_REQUEST['date_event'],
 				'description'	=> $_REQUEST['notes']
 			));
-			if ($event->error()) {
-				$page->addError($event->error());
-			}
+			if ($event->error()) $page->addError($event->error());
+		} else {
+		    // if they tried to do an event update without description, then show error
+		    if (isset($_REQUEST['btn_add_event'])) $page->addError("'Event Update' could not be added, 'Event Description' is required.");
 		}
 	}
 
@@ -237,12 +222,11 @@ Description: ".$task->description
 		$form['release_id'] = $release->id;
 		$project = $task->project();
 		$form['project_id'] = $project->id;
-                $form['prerequisite_id'] = $task->prerequisite_id;
+        $form['prerequisite_id'] = $task->prerequisite_id;
 		$eventlist = new \Engineering\EventList();
 		$events = $eventlist->find(array('task_id'=> $task->id));
 		if ($eventlist->error()) $page->addError($eventlist->error());
-	}
-	elseif ($page->errorCount()) {
+	} elseif ($page->errorCount()) {
 		$form['code'] = $_REQUEST['code'];
 		$form['title'] = $_REQUEST['title'];
 		$form['estimate'] = $_REQUEST['estimate'];
@@ -257,7 +241,6 @@ Description: ".$task->description
 		$form['description'] = $_REQUEST['description'];
 		$form['release_id'] = $_REQUEST['release_id'];
 		$form['prerequisite_id'] = $_REQUEST['prerequisite_id'];
-	}
-	else {
+	} else {
 		$task->date_added = 'now';
 	}

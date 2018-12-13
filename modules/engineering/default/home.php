@@ -86,6 +86,7 @@
 	<th class="label column_title">Title</th>
 	<th class="label column_title">Manager</th>
 	<th class="label" style="width: 600px">Description</th>
+	<th class="label column_title">Status</th>
 </tr>
 <?php
 	foreach ($projects as $project) {
@@ -94,6 +95,7 @@
 	<td class="value"><a href="/_engineering/project/<?=$project->code?>"><?=$project->title?></a></td>
 	<td class="value"><?=$project->manager->code?></td>
 	<td class="value"><?=$project->description?></td>
+	<td class="value"><?=$project->status?></td>
 <?php	} ?>
 </table>
 <br>

@@ -8,16 +8,14 @@
 	
 	if ($_REQUEST['release_id']) {
 		$release = new \Engineering\Release($_REQUEST['release_id']);
-	}
-	elseif (isset($_REQUEST['code'])) {
+	} elseif (isset($_REQUEST['code'])) {
 		$release->get($_REQUEST['code']);
 		if ($release->error) $page->error = $release->error;
-	}
-	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+	} elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$release->get($code);
 	}
-
+	
 	if (isset($_REQUEST['btn_submit'])) {
 		$parameters = array();
 		if (isset($_REQUEST['title'])) $parameters['title'] = $_REQUEST['title'];
@@ -35,8 +33,7 @@
 			if ($release->update($parameters)) {
 				$page->success = "Updates applied";
 				app_log("Release updated",'debug',__FILE__,__LINE__);
-			}
-			else {
+			} else {
 				$page->error = "Error saving updates: ".$release->error();
 			}
 		}
@@ -44,11 +41,21 @@
 			if ($release->add($parameters)) {
 				$page->success = "Release Created";
 				app_log("Release created",'debug',__FILE__,__LINE__);
-			}
-			else {
+			} else {
 				$page->error = "Error creating task: ".$release->error();
 			}
 		}
+	}
+
+	// if a request to postpone a task from the release, then process
+	if (isset($_REQUEST['postpone'])) {
+	
+	    // get task in question to postpone from release, 0 means remove/set null
+		$task = new \Engineering\Task();
+		$task->get($_REQUEST['postpone']);
+		$task->update(array('release_id'=> 0));
+		$page->success = "Task " . $_REQUEST['postpone'] . " has been postponed from this release.";
+		app_log("Task Postponed",'debug',__FILE__,__LINE__);
 	}
 
 	if ($release->id) {
