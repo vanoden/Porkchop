@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item;
 	
 	class ActionList {
@@ -7,12 +7,21 @@
 		
 		public function find($parameters = array()) {
 			$get_list_query = "
-				SELECT	id
-				FROM	support_item_actions
-				WHERE	id = id
+				SELECT	`id`
+				FROM	`support_item_actions`
+				WHERE	`id` = `id`
 			";
-			$bind_parameters = array();
 			
+            // if search term, then constrain by that
+            if ($parameters['searchTerm']) {
+                $get_list_query = "
+				    SELECT	`id`
+				    FROM	`support_item_actions`
+				    WHERE `description` LIKE '%".$parameters['searchTerm']."%' 
+			    ";
+            }
+
+			$bind_parameters = array();
 			if (isset($parameters['item_id']) && $parameters['item_id'] > 0) {
 				$item = new \Support\Request\Item($parameters['item_id']);
 				if ($item->error()) {
@@ -78,4 +87,3 @@
 			return $this->_error;
 		}
 	}
-?>

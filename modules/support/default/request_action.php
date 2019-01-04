@@ -8,8 +8,8 @@
 	}
 </style>
 <div style="width: 756px;">
-	<a href="/_support/requests" class="breadcrumbs">< Requests</a>
-	<a href="/_support/request/<?=$request->code?>" class="breadcrumbs">< <?=$request->code?></a>
+	<a href="/_support/requests" class="breadcrumbs">&gt; Requests</a>
+	<a href="/_support/request/<?=$request->code?>" class="breadcrumbs">&gt; <?=$request->code?></a>
 	<?	if ($page->errorCount()) { ?>
 	<div class="form_error"><?=$page->errorString()?></div>
 	<?	} ?>

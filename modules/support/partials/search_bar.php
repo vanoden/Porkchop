@@ -6,6 +6,39 @@
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
     }
+    
+    a.button.blue-background {
+        background-color:blue;
+    }
+    
+    a.button.blue-background:hover {
+        background-color:#0085ad;
+    }
+    
+    a.button.red-background {
+        background-color:red;
+    }
+    
+    a.button.red-background:hover {
+        background-color:red;
+    }
+    
+    a.button.green-background {
+        background-color:green;
+    }
+    
+    a.button.green-background:hover {
+        background-color:#22b95e;
+    }
+    
+    a.black {
+        color: black;
+        text-decoration: none;
+    }
+    
+    a.black:hover {
+        color: black;
+    }
 
     .topnav {
       overflow: hidden;
@@ -75,10 +108,20 @@
       }
     }
 </style>
+<?	if ($_REQUEST['btn_all']) { ?>
+<a class="button more" href="/_support/requests">Open Requests</a>
+<?	} else { ?>
+<a class="button more" href="/_support/requests?btn_all=true">All Requests</a>
+<?	} ?>
+&nbsp;| 
+<a class="button more green-background" href="/_support/request_items">Requests &gt; Tickets</a>
+&nbsp;| 
+<a class="button more blue-background" href="/_support/admin_actions">Tickets &gt; Actions</a>
+<a class="button more red-background" style="float: right; margin-top: 12px; font-size: 16px;" href="/_support/request_new">New Request</a>  
 <div class="topnav">
-  <a class="active" href="/_engineering/home"><i class="fa fa-cogs"></i> Engineering</a>
+  <a class="active" href="/_support/requests"><i class="fa fa-phone" aria-hidden="true"></i> Support</a>
   <div class="search-container">
-    <form action="/_engineering/search" method="get">
+    <form action="/_support/search" method="get">
       <input type="text" value="<?=preg_replace("/[^A-Za-z0-9 ]/", '', $_REQUEST['search'])?>" placeholder="Search.." name="search" style="background-color:white;"/>
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
