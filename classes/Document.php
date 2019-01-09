@@ -34,7 +34,7 @@
 		
 		private function _xmlin($string) {
 			require_once 'XML/Unserializer.php';
-			$unserializer = new XML_Unserializer();
+			$unserializer = &new XML_Unserializer();
 			$unserializer->unserialize($string);
 			$this->_data = $unserializer->getUnserializedData();
 		}
