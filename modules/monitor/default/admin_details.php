@@ -1,5 +1,4 @@
-<?	if (! role('monitor admin'))
-	{
+<?	if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) {
 		print "<span class=\"form_error\">You are not authorized for this view!</span>";
 		return;
 	}
@@ -17,7 +16,11 @@
         }
 		function goAddTask()
 		{
-			window.open("/_action/new_task?asset_code=<?=$asset->code?>","newTask","status=0,toolbar=0,menubar=0,resizable=0,scrollbars=0,width=610px,height=270px,top=150,left=150");
+			location.href = '/_support/request_new_monitor?type=monitor&product_id=<?=$asset->product->id?>&code=<?=$asset->code?>';
+		}
+		function goAllTasks()
+		{
+			location.href = '/_support/request_items?product_id=<?=$asset->product->id?>&serial_number=<?=$asset->code?>';
 		}
 		function goCalibrationVerification()
 		{
@@ -33,25 +36,28 @@
 			return true;
 		}
     </script>
+			<h2>Monitor Details</h2>
 			<form name="mainform" method="post">
 			<input type="hidden" name="method" value="submit" />
-			<div class="title" >Asset Details</div>
-<?	if ($GLOBALS['_page']->error) { ?>
-			<div class="form_error" style="width: 700px;"><?=$GLOBALS['_page']->error?></div>
+<?	if ($page->error) { ?>
+			<div class="form_error" style="width: 700px;"><?=$page->error?></div>
 <?	} ?>
-<?	if ($GLOBALS['_page']->success) { ?>
-			<div class="form_success" style="width: 700px;"><?=$GLOBALS['_page']->success?></div>
+<?	if ($page->success) { ?>
+			<div class="form_success" style="width: 700px;"><?=$page->success?></div>
 <?	} ?>
-        <div class="tableBody">
-					<div class="tableRowHeader">
-						<div class="tableCell" style="width: 35%;">Serial Number</div>
-						<div class="tableCell" style="width: 30%;">Model</div>
-						<div class="tableCell" style="width: 35%;">Organization</div>
-					</div>
-					<div class="tableRow">
-					<div class="tableCell"><input type="text" name="asset_code" class="value input" value="<?=$asset_code?>" /></div>
+      <div class="tableBody">
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+        <div class="tableRowHeader">
+					<div class="tableCell">Serial Number</div>
+					<div class="tableCell">Model</div>
+					<div class="tableCell">Organization</div>
+				</div>
+            	<div class="tableRow">
+					<div class="tableCell"><input type="text" name="asset_code" class="value input <?=$disabled_new?>" value="<?=$asset_code?>" /></div>
 					<div class="tableCell">
-						<select name="product_id" class="value input">
+						<select name="product_id" class="value input <?=$disabled?>">
 							<option value="">Select</option>
 <?	foreach ($products as $product) { ?>
 							<option value="<?=$product->id?>"<? if ($product_id == $product->id) print " selected";?>><?=$product->code?></option>
@@ -59,7 +65,7 @@
 						</select>
 					</div>
 					<div class="tableCell">
-						<select name="organization_id" class="value input">
+						<select name="organization_id" class="value input <?=$disabled?>">
 							<option value="">Select</option>
 <?	foreach ($organizations as $organization) { ?>
 							<option value="<?=$organization->id?>"<? if ($asset->organization->id == $organization->id) print " selected";?>><?=$organization->name?></option>
@@ -67,116 +73,154 @@
 						</select>
 					</div>
 				</div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+            	<div class="tableRowHeader">
+					<div class="tableCell">Software Version</div>
+					<div class="tableCell">Display</div>
+					<div class="tableCell">Date Shipped</div>
+				</div>
+            	<div class="tableRow">
+					<div class="tableCell"><input type="text" name="software_version" class="value input" value="<?=$asset->metadata('software_version')?>" /></div>
+					<div class="tableCell"><input type="text" name="display_type" class="value input" value="<?=$asset->metadata('display_type')?>" /></div>
+					<div class="tableCell"><input type="text" name="date_shipped" class="value input" value="<?=$asset->metadata('date_shipped')?>" /></div>
+				</div>
 			</div>
 <?	if ($asset->id) { ?>
+			<div class="tableTitle">
+				<div class="tableCell">
+					<div class="title tableTitleLeft">Last Communication</div>
+				</div>
+				<div class="tableCell">
+					<div class="tableTitleRight">
+						<input type="submit" name="btn_update" class="button" value="Apply" />
+					</div>
+				</div>
+			</div>
+			<div class="tableBody">
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableRowHeader">
+					<div class="tableCell">Date Hit</div>
+					<div class="tableCell">IP Address</div>
+					<div class="tableCell">URI</div>
+					<div class="tableCell">Method</div>
+					<div class="tableCell">Agent</div>
+					<div class="tableCell">Status</div>
+				</div>
+<?  if ($communication->timestamp > 0) {
+        $timearray = $GLOBALS['_SESSION_']->localtime($communication->timestamp);
+        $request_time = sprintf("%d/%d/%04d %02d:%02d:%02d",$timearray['month'],$timearray['day'],$timearray['year'],$timearray['hour'],$timearray['minute'],$timearray['second']); ?>
+				<div class="tableRow">
+					<div class="tableCell" nowrap><?=$request_time?></div>
+					<div class="tableCell"><?=$request->client_ip?></div>
+					<div class="tableCell"><?=$request->uri?></div>
+					<div class="tableCell"><?=$request->post->method?></div>
+					<div class="tableCell"><?=$request->user_agent?></div>
+					<div class="tableCell"><?=$communication->result?></div>
+				</div>
+<?  } else { ?>
+				<div class="tablerow">
+					<div class="tableCell" style="width: 100%">None recorded</div>
+				</div>
+<?  } ?>
+			</div>
 			<div class="tableTitle">
 				<div class="tableCell">
 					<div class="title tableTitleLeft">Asset Sensors</div>
 				</div>
 				<div class="tableCell">
 					<div class="tableTitleRight">
-						<input type="submit" name="btn_update" value="Apply" />
+						<input type="submit" name="btn_update" class="button" value="Apply" />
 					</div>
 				</div>
 			</div>
 			<div class="tableBody">
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
 				<div class="tableRowHeader">
 					<div class="tableCell">Code</div>
 					<div class="tableCell">Model</div>
+					<div class="tableCell">Units</div>
 					<div class="tableCell">Last Value</div>
 					<div class="tableCell">Last Read</div>
 				</div>
-<?		foreach ($sensors as $sensor) { 
+<?		foreach ($sensors as $sensor) {
 				$reading = $sensor->lastReading();
 ?>
 				<div class="tableRow">
-					<div class="tableCell"><input type="text" name="sensor_code[<?=$sensor->id?>]" class="value input" value="<?=$sensor->code?>" /></div>
-					<div class="tableCell"><select name="model_id[<?=$sensor->id?>]" class="value input">
-		<?	foreach ($models as $model) { ?>
-						<option value="<?=$model->id?>"<? if ($model->id == $sensor->model->id) print " selected"; ?>><?=$model->code?></option>
-		<?	} ?>
+					<div class="tableCell"><input type="text" name="sensor_code[<?=$sensor->id?>]" class="value input" value="<?=$sensor->code?>" <?=$disabled?> /></div>
+					<div class="tableCell"><select name="model_id[<?=$sensor->id?>]" class="value input" />
+						<option value="">Select</option>
+<?		foreach ($models as $model) { ?>
+						<option value="<?=$model->id?>"<? if ($model->id == $sensor->model_id) print " selected"; ?>><?=$model->code?></option>
+<?		} ?>
 						</select>
 					</div>
-					<div class="value tableCell"><?=$reading->value?></div>
-					<div class="value tableCell"><? if (isset($reading->timestamp)) print date('m/d/Y H:i:s',$reading->timestamp);?></div>
+					<div class="tableCell"><?=$sensor->model->units?></div>
+					<div class="tableCell"><?=$reading->value?></div>
+					<div class="tableCell"><? if (isset($reading->timestamp)) print date('m/d/Y H:i:s',$reading->timestamp);?></div>
 				</div>
 <?		} ?>
-				<div class="tableRow">
-					<div class="tableCell"><input type="text" name="sensor_code[0]" class="value input" value="" /></div>
-					<div class="tableCell"><select name="model_id[0]" class="value input">
-		<?	foreach ($models as $model) { ?>
+				<div class="tableCell"><input type="text" name="sensor_code[0]" class="value input" value="" <?=$disabled?> /></div>
+				<div class="tableCell"><select name="model_id[0]" class="value input" />
+						<option value="">Select</option>
+<?		foreach ($models as $model) { ?>
 						<option value="<?=$model->id?>"><?=$model->code?></option>
-		<?	} ?>
+<?		} ?>
 						</select>
 					</div>
-				</div>
+				<div class="tableCell">&nbsp;</div>
 			</div>
-<?		if (isset($GLOBALS['_config']->action)) { ?>
 			<div class="tableTitle">
 				<div class="tableCell">
-					<div class="title tableTitleLeft">Action Tasks</div>
+					<div class="title tableTitleLeft">Asset Tickets</div>
 				</div>
 				<div class="tableCell">
 					<div class="tableTitleRight">
-						<input type="button" name="btn_add_task" value="Add Task" onclick="goAddTask()" />
-						<input type="submit" name="btn_update" value="Apply" />
+						<input type="button" name="btn_add_task" class="button secondary" value="Add Ticket" onclick="goAddTask()" />
+						<input type="button" name="btn_all_tasks" class="button secondary" value="All Tickets" onclick="goAllTasks()" />
 					</div>
 				</div>
 			</div>
 			<div class="tableBody">
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
+				<div class="tableColumn"></div>
 				<div class="tableRowHeader">
+					<div class="tableCell">#</div>
 					<div class="tableCell">Date Requested</div>
 					<div class="tableCell">By</div>
 					<div class="tableCell">Status</div>
-					<div class="tableCell">Type</div>
 					<div class="tableCell">Assignee</div>
 				</div>
-<?	foreach ($tasks as $task) { ?>
+<?	foreach ($tickets as $ticket) { ?>
 				<div class="tableRow">
-					<div class="tableCell"><a href="/_spectros/admin_task/<?=$task->id?>"><?=$task->date_request?></a></div>
-					<div class="tableCell"><?=$task->user_requested_name()?></div>
-					<div class="tableCell"><?=$task->status?></div>
-					<div class="tableCell"><?=$task->type()?></div>
-					<div class="tableCell"><?=$task->user_assigned_name()?></div>
+					<div class="tableCell"><a href="/_support/request_item/<?=$ticket->id?>"><?=$ticket->ticketNumber()?></a></div>
+					<div class="tableCell"><?=$ticket->request->date_request?></div>
+					<div class="tableCell"><?=$ticket->request->customer->full_name()?></div>
+					<div class="tableCell"><?=$ticket->status?></div>
+					<div class="tableCell"><?=$ticket->assigned->full_name()?></div>
 				</div>
 <?	} ?>
 			</div>
-			<div class="tableTitle">
-				<div class="tableCell">
-					<div class="title tableTitleLeft">Asset History</div>
-				</div>
-				<div class="tableCell">
-					<div class="tableTitleRight">
-						<input type="submit" name="btn_update" value="Apply" />
-					</div>
-				</div>
-			</div>
-			<div class="tableBody">
-				<div class="tableRowHeader">
-					<div class="tableCell">Date Event</div>
-					<div class="tableCell">Person</div>
-					<div class="tableCell">Description</div>
-				</div>
-<?	foreach ($events["hits"]["hits"] as $hit) { 
-                $event = $hit["_source"];
-?>
-				<div class="tableRow">
-					<div class="tableCell"><?=$event["timestamp"]?></div>
-					<div class="tableCell"><?=$event["user"]?></div>
-					<div class="tableCell"><?=$event["description"]?></div>
-				</div>
-<?	} ?>
-			</div>
-<?	} ?>
-<?	if (isset($GLOBALS['_config']->spectros)) { ?>
 			<div class="tableTitle">
 				<div class="tableCell">
 					<div class="title tableTitleLeft">Calibration History</div>
 				</div>
 				<div class="tableCell">
 					<div class="tableTitleRight">
-						<input type="button" name="btn_add_task" value="Record Calibration" onclick="goCalibrationVerification()" />
-						<input type="submit" name="btn_update" value="Apply" />
+						<input type="button" name="btn_add_task" class="button secondary" value="Record Calibration" onclick="goCalibrationVerification()" />
+						<input type="submit" name="btn_update" class="button" value="Apply" />
 					</div>
 				</div>
 			</div>
@@ -186,14 +230,13 @@
 					<div class="tableCell">By</div>
 				</div>
 			</div>
-<?	} ?>
 			<div class="tableBodyWrapper">
 				<div class="tableBodyScrolled">
-<?		foreach ($verifications as $verification) {
-			$calibrator = new \Register\Customer($verification->customer_id);
+<?		foreach ($calibrations as $calibration) {
+			$calibrator = new \Register\Customer($calibration->customer->id);
 ?>
 					<div class="tableRow">
-						<div class="tableCell"><?=$verification->date_request?></div>
+						<div class="tableCell"><?=$calibration->date_request?></div>
 						<div class="tableCell"><?=$calibrator->first_name." ".$calibrator->last_name." of ".$calibrator->organization->name?></div>
 					</div>
 <?		} ?>
@@ -201,7 +244,7 @@
 			</div>
 			<div class="tableBody">
 				<div class="tableRowFooter">
-					<div class="tableCell"><input type="submit" name="btn_submit" class="button" value="Update Asset"/></div>
+					<div class="tableCell button-bar"><input type="submit" name="btn_submit" class="button" value="Update Asset"/></div>
 <?	}
 	else
 	{
@@ -211,5 +254,29 @@
 					<div class="tableCell"><input type="submit" name="btn_submit" class="button" value="Add Asset"/></div>
 <?	} ?>
 				</div>
+			</div>
+			<div class="tableTitle">
+				<div class="tableCell">
+					<div class="title tableTitleLeft">Messages</div>
+				</div>
+				<div class="tableCell">
+					<div class="tableTitleRight">
+						<input type="submit" name="btn_update" class="button" value="Apply" />
+					</div>
+				</div>
+			</div>
+			<div class="tableBody">
+				<div class="tableRowHeader">
+					<div class="tableCell">Date</div>
+					<div class="tableCell">Level</div>
+					<div class="tableCell">Message</div>
+				</div>
+<?		foreach ($messages as $message) { ?>
+				<div class="tableRow">
+					<div class="tableCell"><?=$message->date_recorded?></div>
+					<div class="tableCell"><?=$message->level?></div>
+					<div class="tableCell"><?=$message->message?></div>
+				</div>
+<?		} ?>
 			</div>
 			</form>

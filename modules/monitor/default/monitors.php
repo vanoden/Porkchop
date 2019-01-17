@@ -4,5 +4,4 @@
 	print "<monitor>\n";
 	print $xml->getSerializedData();
 	print "</monitor>";
-	
 ?>

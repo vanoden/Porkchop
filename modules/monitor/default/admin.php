@@ -6,7 +6,7 @@
 	else
 	{
 ?>
-<tr><td class="value"><a href="/_monitor/admin_assets">Manage Assets</td></tr>
+<tr><td class="value"><a href="/_monitor/admin_assets">Manage Monitors</td></tr>
 <tr><td class="value"><a href="/_monitor/admin_credits">Manage Credits</td></tr>
 <?	} ?>
 </table>

@@ -252,33 +252,37 @@
 			install_log("Cannot add admin user: ".$admin->error,'error');
 			exit;
 		}
-
-		# Must Grant Privileges to set up roles
-		install_log("Elevating privileges for install");
-		$_SESSION_->elevate();
-
-		# Get Existing Roles
-		install_log("Getting available roles");
-		$rolelist = new \Register\RoleList();
-		$roles = $rolelist->find();
-		if ($rolelist->error) {
-			install_log("Error getting roles: ".$rolelist->error,'error');
-			exit;
-		}
-
-		install_log("Granting roles");
-		foreach ($roles as $role) {		
-			install_log("Granting ".$role->name."[".$role->id."]");
-			$admin->add_role($role->id);
-			if ($admin->error) {
-				error_log("Error: ".$admin->error);
-				install_log("Error: ".$admin->error,'error');
-				exit;
-			}
-		}
 	}
 	else {
 		install_log("Admin already exists");
+	}
+
+	# Must Grant Privileges to set up roles
+	install_log("Elevating privileges for install");
+	$_SESSION_->elevate();
+
+	# Get Existing Roles
+	install_log("Getting available roles");
+	$rolelist = new \Register\RoleList();
+	$roles = $rolelist->find();
+	if ($rolelist->error) {
+		install_log("Error getting roles: ".$rolelist->error,'error');
+		exit;
+	}
+
+	install_log("Granting roles");
+	foreach ($roles as $role) {		
+		if ($admin->has_role($role->code)) {
+			install_log("Already has role ".$role->code);
+			continue;
+		}
+		install_log("Granting ".$role->name."[".$role->id."]");
+		$admin->add_role($role->id);
+		if ($admin->error) {
+			error_log("Error: ".$admin->error);
+			install_log("Error: ".$admin->error,'error');
+			exit;
+		}
 	}
 
 	install_log("Installation completed successfully");

@@ -35,6 +35,7 @@
 			elseif (func_num_args() == 2 && gettype($args[0]) == "string" && gettype($args[1]) == "string") {
 				$this->get($args[0],$args[1]);
 			}
+
 		}
 
 		public function fromRequest() {
@@ -43,6 +44,11 @@
 				$GLOBALS['_REQUEST_']->view,
 				$GLOBALS['_REQUEST_']->index
 			);
+		}
+
+		public function applyStyle() {
+			if (isset($GLOBALS['_config']->style[$this->module]))
+				$this->style = $GLOBALS['_config']->style[$this->module];
 		}
 
 		public function requireRole($role) {
@@ -156,12 +162,12 @@
 				$this->module = $object->module;
 				$this->view = $object->view;
 				$this->index = $object->index;
-				if (isset($GLOBALS['_config']->style[$this->module])) {
-					$this->style = $GLOBALS['_config']->style[$this->module];
-				}
 			}
 			else {
 				# Just Let The Defaults Go
+			}
+			if (isset($GLOBALS['_config']->style[$this->module])) {
+				$this->style = $GLOBALS['_config']->style[$this->module];
 			}
 
             # Make Sure Authentication Requirements are Met

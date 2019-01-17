@@ -1,17 +1,29 @@
 <?
+	$page = new \Site\Page('spectros','admin_details');
+
 	if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) return;
 
-	if (isset($_REQUEST['id']) && preg_match('/^\d+$/',$_REQUEST['id'])) {
+	if (preg_match('/^\d+$/',$_REQUEST['id'])) {
 		# Get Asset
 		$asset = new \Monitor\Asset($_REQUEST['id']);
 		if ($asset->error) {
-			$GLOBALS['_page']->error = "Error loading asset: ".$asset->error;
+			$page->error = "Error loading asset: ".$asset->error;
 		}
 	}
-	if (! isset($asset) || ! $asset->id) {
+	else {
+		$asset = new \Monitor\Asset();
+		if ($asset->error) {
+			$page->error = "Error initializing asset: ".$asset->error;
+		}
+	}
+
+	if (! $asset->id) {
+		$product = '';
 		if (! isset($_REQUEST['asset_code'])) {
-			if (isset($_REQUEST['asset_code'])) $_REQUEST['asset_code'] = $_REQUEST['code'];
-			else $_REQUEST['asset_code'] = $GLOBALS['_REQUEST_']->query_vars_array[0];
+			$_REQUEST['asset_code'] = $_REQUEST['code'];
+		}
+		if (! isset($_REQUEST['asset_code'])) {
+			$_REQUEST['asset_code'] = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		}
 		if (! isset($_REQUEST['product_code'])) {
 			$_REQUEST['product_code'] = $GLOBALS['_REQUEST_']->query_vars_array[1];
@@ -20,22 +32,31 @@
 			$product = new \Product\Item();
 			$product->get($_REQUEST['product_code']);
 			if ($product->error) {
-				$this->error = "Error finding product: ".$product->error;
+				$page->error = "Error finding product: ".$product->error;
 				return;
 			}
 		}
-		elseif (isset($_REQUEST['product_id'])) {
+		elseif ($_REQUEST['product_id']) {
 			$product = new \Product\Item($_REQUEST['product_id']);
 		}
+
 		if ($_REQUEST['asset_code'] && isset($product->id)) {
-			$asset = new \Monitor\Asset();
-			$asset->get($_REQUEST['asset_code'],$product->id);
-			if ($asset->error) $GLOBALS['_page']->error = "Error loading asset: ".$_asset->error;
+			$assetlist = new \Monitor\AssetList();
+			list($asset_found) = $assetlist->find(
+				array(
+					"code"			=> $_REQUEST['asset_code'],
+					"product_id"	=> $product->id
+				)
+			);
+			if ($assetlist->error) $page->error = "Error loading asset: ".$assetlist->error;
+			if (isset($asset_found->id)) {
+				$asset = $asset_found;
+			}
 		}
 	}
 
 	# Handle Updates
-	if (isset($_REQUEST['method'])) {
+	if ($_REQUEST['method']) {
 		if ($asset->id) {
 			# Update Existing Asset
 			$asset->update(
@@ -44,76 +65,84 @@
 					"organization_id"	=> $_REQUEST['organization_id'],
 				)
 			);
-			$GLOBALS['_page']->success = "Asset ".$asset->code." updated";
+			$page->success = "Asset ".$asset->code." updated";
 		}
 		else {
 			# Add New Asset
-			$asset = new \Monitor\Asset();
 			$asset->add(
 				array(
 					"product_id"		=> $_REQUEST['product_id'],
 					"code"				=> $_REQUEST['asset_code'],
-					"organization_id"	=> $_REQUEST['organization_id']
+					"organization_id"	=> $_REQUEST['organization_id'],
 				)
 			);
-			if ($asset->error) $GLOBALS['_page']->error = "Error adding asset: ".$asset->error;
+			if ($asset->error) $page->error = "Error adding asset: ".$asset->error;
 		}
 
 		if ($asset->id) {
+			$asset->setMetadata('software_version',$_REQUEST['software_version']);
+			$asset->setMetadata('display_type',$_REQUEST['display_type']);
+			$asset->setMetadata('date_shipped',get_mysql_date($_REQUEST['date_shipped']));
+
 			while (list($id) = each($_REQUEST['sensor_code'])) {
 				if (! $_REQUEST['sensor_code'][$id]) continue;
-				if ($id) {
-					$sensor = new \Monitor\Sensor($id);
+				$sensor = new \Monitor\Sensor($id);
+				if ($sensor->id) {
 					# Update Sensor
 					$sensor->update(
 						array(
 							"code"		=> $_REQUEST['sensor_code'][$id],
+							"units"		=> $_REQUEST['units'][$id],
 							"model_id"	=> $_REQUEST['model_id'][$id]
 						)
 					);
 					if ($sensor->error)
-						$GLOBALS['_page']->error .= "<br>Error updating sensor ".$_REQUEST['sensor_code'][$id].": ".$sensor->error;
+						$page->error .= "<br>Error updating sensor ".$_REQUEST['sensor_code'].": ".$sensor->error;
 				}
 				else {
-					$sensor = new \Monitor\Sensor();
 					$sensor->add(
 						array(
 							"asset_id"	=> $asset->id,
 							"code"		=> $_REQUEST['sensor_code'][$id],
+							"units"		=> $_REQUEST['units'][$id],
 							"model_id"	=> $_REQUEST['model_id'][$id]
 						)
 					);
 					if ($sensor->error)
-						$GLOBALS['_page']->error .= "<br>Error adding sensor ".$_REQUEST['sensor_code'][$id].": ".$sensor->error;
+						$page->error .= "<br>Error adding sensor ".$_REQUEST['sensor_code'].": ".$sensor->error;
 					else
-						$GLOBALS['_page']->success .= "<br>Added sensor ".$_REQUEST['sensor_code'][$id];
+						$page->success .= "<br>Added sensor ".$_REQUEST['sensor_code'][$id];
 				}
 			}
 		}
 	}
-
+	
 	if (isset($asset->id)) {
 		# Get Sensors
-		$sensors = $asset->sensors($asset->id);
+		$sensors = $asset->sensors();
 		if ($asset->error) {
-			$GLOBALS['_page']->error = "Error getting sensors for asset: ".$asset->error;
-		}
-
-		if (isset($GLOBALS['_config']->spectros)) {
-			# Get Calibration History
-			$verificationlist = new \Spectros\CalibrationVerificationList();
-			$verifications = $verificationlist->find(array("asset_id" => $asset->id));
-			if ($verificationlist->error) {
-				$GLOBALS['_page']->error = "Error getting calibration history: ".$verificationlist->error;
-				return null;
-			}
-		}
-		else {
-			$verifications = array();
+			$page->error = "Error getting sensors for asset: ".$asset->error;
 		}
 
 		$asset_code = $asset->code;
-		$product_id = $asset->product_id;
+		$product_id = $asset->product->id;
+
+		# Get Last Communication
+		$parameters['account'] = $asset->code;
+		$parameters['_limit'] = 1;
+		$comm_list = new \Monitor\CommunicationList();
+		app_log("Getting Communications",'trace',__FILE__,__LINE__);
+		list($communication) = $comm_list->find($parameters);
+		if ($comm_list->error) {
+			app_log("Error querying for communications: ".$comm_list->error,'error',__FILE__,__LINE__);
+			$page->error = 'Error loading comm records';
+		}
+
+        $session = new \Site\Session($communication->session->id);
+        $request = $communication->request;
+        $response = $communication->response;
+        unset($response->header->session);
+        unset($request->post->password);
 	}
 	else {
 		$asset_code = $_REQUEST['asset_code'];
@@ -128,19 +157,20 @@
 		)
 	);
 	if ($productlist->error) {
-		$GLOBALS['_page']->error = "Error getting products for selection: ".$productlist->error;
+		$page->error = "Error getting products for selection: ".$productlist->error;
 	}
 	$organizationlist = new \Register\OrganizationList();
 	$organizations = $organizationlist->find();
 
-	$modellist = new \Monitor\ModelList();
+	# Get Associated Tickets
+	$ticketlist = new \Support\Request\ItemList();
+	$tickets = $ticketlist->find(array('product_id' => $asset->product->id,'serial_number' => $asset->code,'_limit' => 1));
+
+	# Get Sensor Models
+	$modellist = new \Monitor\Sensor\ModelList();
 	$models = $modellist->find();
 
-	# Get Associated Tasks
-	if ($asset->id && isset($GLOBALS['_config']->spectros)) {
-		$catalog = new \Action\TaskList();
-		$tasks = $catalog->find(array("asset_id" => $asset->id));
-		$catalog = new \Action\Event();
-		$events = $catalog->search("ActionTask",array("asset_code" => $asset->code));
-	}
+	# Get Messages for Device
+	$messageList = new \Monitor\MessageList();
+	$messages = $messageList->find(array('asset_id' => $asset->id,'_limit' => 5));
 ?>
