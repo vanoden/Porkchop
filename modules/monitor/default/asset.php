@@ -45,7 +45,7 @@
 	<td class="value responseValue"><?=$communication->result?></td>
 </tr>
 <?	} else { ?>
-<tr><td class="value" colspan="4">None recorded</td></tr>
+<tr><td class="value" colspan="6">None recorded</td></tr>
 <?	} ?>
 </table>
 <div class="title">Zones</div>
