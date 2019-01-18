@@ -4,9 +4,9 @@
 		exit;
 	}
 
-
+	$dashboard_name = $GLOBALS['_config']->monitor->default_dashboard;
 	$dashboard = new \Monitor\Dashboard();
-	$dashboard->get($GLOBALS['_config']->monitor->default_dashboard);
+	$dashboard->get($dashboard_name);
 	if ($dashboard->exists()) {
 		if (isset($dashboard->template)) {
 			app_log("Loading dashboard '".$GLOBALS['_config']->monitor->default_dashboard);
@@ -22,7 +22,7 @@
 		}
 	}
 	else {
-		print "Dashboard '".$dashboard->name."' Not Found";
+		print "Dashboard '".$dashboard_name."' Not Found";
 	}
 	exit;
 ?>
