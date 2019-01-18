@@ -44,7 +44,8 @@
     );
 
 	# Set Templates As Necessary
-	$admin_templates = array(
+	if (isset($_config->templates)) $admin_templates = $_config->templates;
+	else $admin_templates = array(
 		array("product","report"),
 		array("product","edit"),
 		array("register","organizations"),
