@@ -39,12 +39,13 @@
         "Email"     => 1,
         "Package"   => 1,
         "Contact"   => 2,
-        "Support"   => 2,
+        "Support"   => 3,
         "Engineering"   => 5,
     );
 
 	# Set Templates As Necessary
-	$admin_templates = array(
+	if (isset($_config->templates)) $admin_templates = $_config->templates;
+	else $admin_templates = array(
 		array("product","report"),
 		array("product","edit"),
 		array("register","organizations"),
@@ -134,6 +135,14 @@
 		install_log("Memcached host ".$cache_service." has ".$cache_stats['curr_items']." items");
 	}
 
+	# Unset Templates
+	install_log("Clear old template settings");
+	$pagelist = new \Site\PageList();
+	$pages = $pagelist->find();
+	foreach ($pages as $page) {
+		$page->unsetMetadata("template");
+	}
+
 	# Upgrade Database
 	install_log("Upgrading Schema");
 	foreach ($base_classes as $base_class => $version) {
@@ -142,7 +151,7 @@
 			$class = new $class_name();
 			$class_version = $class->version();
 		} catch (Exception $e) {
-			install_fail("Cannot upgrade schema: ".$e->getMessage());
+			install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
 		}
 		install_log("$base_class::Schema: version ".$class_version);
 		if ($class_version != $version) {
@@ -212,14 +221,6 @@
 		if ($location->error) {
 			install_fail("Error adding location: ".$location->error);
 		}
-	}
-
-	# Unset Templates
-	install_log("Clear old template settings");
-	$pagelist = new \Site\PageList();
-	$pages = $pagelist->find();
-	foreach ($pages as $page) {
-		$page->unsetMetadata("template");
 	}
 
 	install_log("Add new template settings");

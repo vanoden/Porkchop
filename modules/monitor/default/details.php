@@ -27,7 +27,7 @@
 <input type="hidden" name="code"/>
 <input type="hidden" name="method"/>
             <table>
-			<tr><td class="title" colspan="3">Asset Details</td></tr>
+			<tr><td class="title" colspan="3">Monitor Details</td></tr>
             <tr><td class="label" style="float: left; width: 70px;">Code</td>
 				<td class="label" style="float: left; width: 190px;">Name</td>
 				<td class="label" style="float: left; width: 100px;">Model</td>
@@ -42,7 +42,7 @@
 			</tr>
 			</table>
 			<table>
-			<tr><td class="title" colspan="4">Asset Sensors</td></tr>
+			<tr><td class="title" colspan="4">Monitor Sensors</td></tr>
 			<tr><td class="label">Code</td>
 				<td class="label">Name</td>
 				<td class="label">Units</td>

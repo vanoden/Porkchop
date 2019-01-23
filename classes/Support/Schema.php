@@ -314,30 +314,7 @@
                 if (! $GLOBALS['_database']->BeginTrans())
                     app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-				// new support search page
-                $create_table_query = "
-                    INSERT INTO page_pages (`module`, `view`) VALUES ('support', 'search');
-                ";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support search page in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return false;
-				}
-
-				// new support search page
-                $create_table_query = "
-                    INSERT INTO page_metadata (`page_id`, `key`, `value`) VALUES ('222','template','admin.html');
-                ";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support search page in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return false;
-				}
-
+				# There was an errant entry here, but we can't downgrade versions, so this empty version stays
                 $current_schema_version = 3;
                 $update_schema_version = "
                     INSERT
