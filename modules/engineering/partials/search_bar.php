@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <style>
     * {box-sizing: border-box;}
 
@@ -74,7 +75,42 @@
         border: 1px solid #ccc;  
       }
     }
+    
+    .menu-sub-nav {
+        padding-left: 35px;
+    }
+    
+    nav ul li a.sub-current {
+        background: rgba(33, 255, 142, 0.25);
+    }
+    
+    #menu > li:nth-child(12):hover {
+        background: rgba(255,255,255,0);
+    }
+    
+    nav ul li a.menu-sub-nav:hover {
+        background: rgba(255,255,255,0.25);
+    }
+    
+    #menu a[href="/_engineering/home"]:hover {
+        background: rgba(255,255,255,0.25);
+    }    
 </style>
+<script>
+    // TODO let's consolidate all this together, this is a local hack for the requirment now
+    $(document).ready(function (){
+
+        // add current class to the engineering section and add the sub-menu and add the "cog" icon
+        var sideNav = $('#menu a[href="/_engineering/home"]');
+        sideNav.html('<i class="fa fa-cogs"></i> Engineering');
+        sideNav.addClass('current');
+        sideNav.after( "<div id='_engineering-sub-nav-container'><li><a id='engineering-sub-nav-tasks' class='menu-sub-nav' href='/_engineering/tasks'><i class='fa fa-tasks' aria-hidden='true'></i> Tasks</a></li><li><a id='engineering-sub-nav-reports' class='menu-sub-nav' href='/_engineering/event_report'><i class='fa fa-line-chart' aria-hidden='true'></i> Reports</a></li><li><a id='engineering-sub-nav-releases' class='menu-sub-nav' href='/_engineering/releases'><i class='fa fa-upload' aria-hidden='true'></i> Releases</a></li><li><a id='engineering-sub-nav-projects' class='menu-sub-nav' href='/_engineering/projects'><i class='fa fa-pie-chart' aria-hidden='true'></i> Projects</a></li><li><a id='engineering-sub-nav-products' class='menu-sub-nav' href='/_engineering/products'><i class='fa fa-truck' aria-hidden='true'></i> Products</a></li></div>" );
+
+        // add sub-current class to current sub menu page selected
+        var sideNavSubMenu = $('#menu a[href="/_engineering/' + window.location.href.split('/').pop() + '"]');
+        sideNavSubMenu.addClass('sub-current'); 
+    });
+</script>
 <div class="topnav">
   <a class="active" href="/_engineering/home"><i class="fa fa-cogs"></i> Engineering</a>
   <div class="search-container">

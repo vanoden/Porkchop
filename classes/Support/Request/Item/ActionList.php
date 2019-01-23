@@ -6,6 +6,7 @@
 		public $count = 0;
 		
 		public function find($parameters = array()) {
+		
 			$get_list_query = "
 				SELECT	`id`
 				FROM	`support_item_actions`
@@ -20,7 +21,17 @@
 				    WHERE `description` LIKE '%".$parameters['searchTerm']."%' 
 			    ";
             }
-
+            
+            // if request detail page allow for querying multiple actions here
+            if (!empty($parameters['searchAllItems']) && !empty($parameters['itemIds'])) {
+                $commaList = implode(', ', $parameters['itemIds']);                
+                $get_list_query = "
+				    SELECT	`id`
+				    FROM	`support_item_actions`
+				    WHERE `item_id` IN (". $commaList.")
+			    ";
+            }
+            
 			$bind_parameters = array();
 			if (isset($parameters['item_id']) && $parameters['item_id'] > 0) {
 				$item = new \Support\Request\Item($parameters['item_id']);

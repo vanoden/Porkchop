@@ -1,7 +1,8 @@
 <script>
 	function updateReport() {
-		document.forms[0].filtered.value = 1;
-		document.forms[0].submit();
+    	var reportForm = document.getElementById('reportForm');
+		reportForm.filtered.value = 1;
+		reportForm.submit();
 		return true;
 	}
 </script>
@@ -19,7 +20,7 @@
     	<div class="form_error"><?=$page->errorString()?></div>
 	<?	} ?>
 	
-	<form name="reportForm" method="get" action="/_support/admin_actions">
+	<form name="reportForm" id="reportForm" method="get" action="/_support/admin_actions">
 	    <h3><u>Report Filters</u></h3><br/>
 	    <input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />
 	    <span class="label">Status</span>

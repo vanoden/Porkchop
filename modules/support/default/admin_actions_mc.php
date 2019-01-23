@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
@@ -32,4 +32,3 @@
 	}
 	$actions = $actionlist->find($parameters);
 	if ($actionlist->error()) $page->addError($actionlist->error());
-?>

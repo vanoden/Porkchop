@@ -61,7 +61,7 @@
 				array_push($bind_params,$parameters['serial_number']);
 			}
 
-			if (isset($parameters['status'])) {
+			if (isset($parameters['status']) && !empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 
 					$find_objects_query .= "

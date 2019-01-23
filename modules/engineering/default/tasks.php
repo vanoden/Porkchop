@@ -1,7 +1,8 @@
 <script language="Javascript">
 	function newTask() {
-		document.forms[0].action = "/_engineering/task";
-		document.forms[0].submit();
+	    var tasksListForm = document.getElementById('tasksListForm');
+		tasksListForm.action = "/_engineering/task";
+		tasksListForm.submit();
 		return true;
 	}
 </script>

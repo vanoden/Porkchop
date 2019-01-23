@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item;
 
 	class Action {
@@ -75,10 +75,11 @@
 						type,
 						status,
 						description,
-						assigned_id
+						assigned_id,
+						entered_id
 				)
 				VALUES
-				(		?,sysdate(),?,?,?,?,?,?)
+				(		?,sysdate(),?,?,?,?,?,?,?)
 			";
 			$GLOBALS['_database']->Execute(
 				$add_object_query,
@@ -89,7 +90,8 @@
 					$parameters['type'],
 					$status,
 					$parameters['description'],
-					$assignedTo->id
+					$assignedTo->id,
+					0
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
@@ -204,4 +206,3 @@
 			return false;
 		}
 	}
-?>

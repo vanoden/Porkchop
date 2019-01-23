@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <style>
     * {box-sizing: border-box;}
 
@@ -107,7 +108,43 @@
         border: 1px solid #ccc;  
       }
     }
+    
+    .menu-sub-nav {
+        padding-left: 35px;
+    }
+    
+    nav ul li a.sub-current {
+        background: rgba(33, 255, 142, 0.25);
+    }
+    
+    #menu > li:nth-child(13):hover {
+        background: rgba(255,255,255,0);
+    }
+    
+    nav ul li a.menu-sub-nav:hover {
+        background: rgba(255,255,255,0.25);
+    }
+    
+    #menu a[href="/_engineering/home"]:hover {
+        background: rgba(255,255,255,0.25);
+    }
+    
 </style>
+<script>
+    // TODO let's consolidate all this together, this is a local hack for the requirment now
+    $(document).ready(function (){
+
+        // add current class to the engineering section and add the sub-menu and add the "cog" icon
+        var sideNav = $('#menu a[href="/_support/requests"]');
+        sideNav.html('<i class="fa fa-phone"></i> Support');
+        sideNav.addClass('current');
+        sideNav.after( "<div id='_engineering-sub-nav-container'><li><a id='engineering-sub-nav-tasks' class='menu-sub-nav' href='/_support/request_new'><i class='fa fa-plus' aria-hidden='true'></i> New Request</a></li><li><a id='engineering-sub-nav-reports' class='menu-sub-nav' href='/_support/requests?btn_all=true'><i class='fa fa-list-ol' aria-hidden='true'></i> All Requests</a></li><li><a id='engineering-sub-nav-releases' class='menu-sub-nav' href='/_support/request_items'><i class='fa fa-check-square' aria-hidden='true'></i> Tickets</a></li><li><a id='engineering-sub-nav-projects' class='menu-sub-nav' href='/_support/admin_actions'><i class='fa fa-check-square-o' aria-hidden='true'></i> Actions</a></li><li></div>" );
+
+        // add sub-current class to current sub menu page selected
+        var sideNavSubMenu = $('#menu a[href="/_support/' + window.location.href.split('/').pop() + '"]');
+        sideNavSubMenu.addClass('sub-current'); 
+    });
+</script>
 <?	if ($_REQUEST['btn_all']) { ?>
 <a class="button more" href="/_support/requests">Open Requests</a>
 <?	} else { ?>

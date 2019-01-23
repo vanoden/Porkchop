@@ -141,6 +141,60 @@
 		        <input type="submit" name="btn_add_item" class="button" value="Add Item" />
 	        </div>
         </div>		
-        <!--End Request Item -->		
+        <!--End Request Item -->
+        <?	if (count($actions) > 0) { ?>
+        <div style="width: 756px;">
+        <h2>Actions</h2>
+        <?	foreach ($actions as $action) {
+		        if (isset($action->requestedBy)) {
+			        $requested_by = $action->requestedBy->full_name();
+		        }
+		        else {
+			        $requested_by = "Unknown";
+		        }
+		        if (isset($action->assignedTo) && isset($action->assignedTo->id)) {
+			        $assigned_to = $action->assignedTo->full_name();
+		        }
+		        else {
+			        $assigned_to = "Unassigned";
+		        }
+		        if ($action->type == "Note") {
+        ?>
+        <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
+            <tr>
+                <th>Posted On</th>
+	            <th>Posted By</th>
+            </tr>
+            <tr>
+                <td><?=$action->date_requested?></td>
+	            <td><?=$requested_by?></td>
+            </tr>
+            <tr><th colspan="2">Note</th></tr>
+            <tr><td colspan="2"><?=$action->description?></td></tr>
+        </table>
+        <? } else { ?>
+        <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
+            <tr>
+                <th>Date Requested</th>
+	            <th>Requested By</th>
+	            <th>Assigned To</th>
+	            <th>Type</th>
+	            <th>Status</th>
+            </tr>
+            <tr>
+                <td><a href="/_support/action/<?=$action->id?>"><?=$action->date_requested?></a></td>
+	            <td><?=$requested_by?></td>
+	            <td><?=$assigned_to?></td>
+	            <td><?=$action->type?></td>
+	            <td><?=$action->status?></td>
+            </tr>
+            <tr><th colspan="5">Description</th></tr>
+            <tr><td colspan="5"><?=$action->description?></td></tr>
+        </table>
+        <?	} 
+        } 
+        ?>
+        </div>
+        <?	} ?>
 	</form>
 </div>
