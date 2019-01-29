@@ -24,6 +24,12 @@
 		}
 
 		public function add($parameters) {
+		
+			if ( empty($parameters['product_id'])) {
+				$this->_error = "product ID is required";
+				return false;
+			}
+
 			if (! isset($parameters['line'])) {
 				$this->_error = "line number required";
 				return false;

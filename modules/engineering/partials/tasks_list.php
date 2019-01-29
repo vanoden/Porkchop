@@ -1,7 +1,7 @@
 <form id="tasksListForm">
     <h2 style="display: inline-block;">Engineering Tasks [
         <?=($page->isSearchResults)? "Matched Tasks: " : "";?>
-        <?=count($tasks)?>
+        <?=isset($tasks) ? count($tasks) : "0"?>
     ]</h2>
     <?php
      if (!$page->isSearchResults) {
@@ -65,6 +65,7 @@
 		    <div class="tableCell" style="width: 10%;">PreRequisite</div>
 	    </div>
     <?php
+        if (!isset($tasks)) $tasks = array();
 	    foreach ($tasks as $task) {
 		    $product = $task->product();
 		    $project = $task->project();
