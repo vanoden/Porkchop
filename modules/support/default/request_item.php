@@ -25,7 +25,7 @@
 		<a href="/_support/request_items">Tickets</a> &gt; Ticket #<?=$item->ticketNumber()?>
 	</div>
 </div>
-<h2 style="display: inline-block;">Ticket: <span><?=$item->ticketNumber()?></span></h2>
+<h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i> Ticket: <span><?=$item->ticketNumber()?></span></h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 
 <form name="request_form" method="post" action="/_support/request_item">

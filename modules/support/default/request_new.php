@@ -75,7 +75,7 @@
 	<a href="/_support/requests">Support Home</a> &gt; New Request
 </div>
 
-<h2 style="display: inline-block;">Request [Tickets]</h2>
+<h2 style="display: inline-block;"><i class='fa fa-plus' aria-hidden='true'></i> Request [Tickets]</h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 
 <!-- Error Messaging -->

@@ -88,6 +88,7 @@
 			$find_objects_query .= "
 				ORDER BY s.id DESC
 			";
+			
 			query_log($find_objects_query);
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {

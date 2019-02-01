@@ -13,7 +13,7 @@
 		<a href="/_support/request_items">Tickets</a> &gt; Actions
 	</div>
 </div>
-<h2 style="display: inline-block;">Action Report</h2>
+<h2 style="display: inline-block;"><i class='fa fa-check-square-o' aria-hidden='true'></i> Action Report</h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 <div>
 	<?	if ($page->errorCount()) { ?>

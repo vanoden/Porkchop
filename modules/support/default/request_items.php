@@ -35,7 +35,7 @@
 	    <div class="form_success"><?=$page->success?></div>
 	<?	} ?>
 </div>
-<h2 style="display: inline-block;">Request [Tickets]</h2>
+<h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i> Request [Tickets]</h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 
 <div style="width: 756px;">

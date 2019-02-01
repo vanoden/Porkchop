@@ -35,7 +35,7 @@
 	    <?	} ?>
 	</div>
 </div>
-<h2 style="display: inline-block;">Request Action <?=$request->code?>-<?=$item->line?>-<?=$action->id?></h2>
+<h2 style="display: inline-block;"><i class='fa fa-check-square-o' aria-hidden='true'></i> Request Action <?=$request->code?>-<?=$item->line?>-<?=$action->id?></h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 <div class="tableBody min-tablet marginTop_20">
 	<div class="tableRowHeader">

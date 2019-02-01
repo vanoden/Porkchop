@@ -3,7 +3,7 @@
 		Support Home
 	</div>
 </div>
-<h2 style="display: inline-block;">Support Requests <?=!empty($_REQUEST['btn_all']) ? '[ALL]' : '[Open]';?></h2>
+<h2 style="display: inline-block;"><i class='fa fa-list-ol' aria-hidden='true'></i> Support Requests <?=!empty($_REQUEST['btn_all']) ? '[ALL]' : '[Open]';?></h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 
 <table>
