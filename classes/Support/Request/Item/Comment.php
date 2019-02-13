@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item;
 
 	class Comment {
@@ -15,6 +15,7 @@
 		}
 
 		public function add($parameters) {
+		
 			if (isset($parameters['item_id'])) {
 				$item = new \Support\Request\Item($parameters['item_id']);
 				if ($item->error()) {
@@ -100,4 +101,3 @@
 			return $this->_error;
 		}
 	}
-?>

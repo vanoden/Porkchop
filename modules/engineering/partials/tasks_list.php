@@ -21,7 +21,7 @@
 	    </div>
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <select name="assigned_id" class="value input" onchange="document.getElementById('tasksListForm').submit();">
+			    <select name="assigned_id" class="value input">
 				    <option value="">Any</option>
 				    <?	foreach ($assigners as $assigner) { ?>
 				    <option value="<?=$assigner->id?>"<? if ($assigner->id == $_REQUEST['assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
@@ -29,7 +29,7 @@
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <select name="project_id" class="value input" onchange="document.getElementById('tasksListForm').submit();">
+			    <select name="project_id" class="value input">
 				    <option value="">Any</option>
 				    <?	foreach ($projects as $project) { ?>
 				    <option value="<?=$project->id?>"<? if ($project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>

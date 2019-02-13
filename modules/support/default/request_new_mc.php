@@ -47,7 +47,7 @@
 						if ($request->error()) $page->addError("Error adding item to request: ".$request->error());
 					}
 					if (! $page->errorCount()) {
-						header('location: /_support/requests');
+						header('location: /_support/request_items');
 						exit;
 					}
 				}

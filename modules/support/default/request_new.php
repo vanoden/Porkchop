@@ -82,9 +82,8 @@
 <?	if ($page->errorCount()) { ?>
     <div class="form_error"><?=$page->errorString()?></div>
 <?	} ?>
-
-<div>
-	<form name="requestForm" method="post">
+    <div>
+	    <form name="requestForm" method="post">
 	        <input type="hidden" name="request_id" value="<?=$request->id?>" />
 	        <h2>Create New Request <?=$request->code?></h2>
 

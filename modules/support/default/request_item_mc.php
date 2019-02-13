@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
@@ -151,4 +151,3 @@ Description: ".$action->description
 	$commentlist = new \Support\Request\Item\CommentList();
 	$comments = $commentlist->find(array('item_id' => $item->id));
 	if ($commentlist->error()) $page->addError($commentlist->error());
-?>
