@@ -39,6 +39,24 @@
 				$date_added = date('Y-m-d H:i:s');
 			}
 
+			if (isset($parameters['person_id'])) {
+				$person = new \Register\Person($parameters['person_id']);
+				if (! $person->id) {
+					$this->_error = "Person not found";
+					return false;
+				}
+			}
+			elseif (isset($parameters['person_code'])) {
+				$person = new \Register\Person();
+				$person->get($parameters['person_code']);
+				if (! $person->id) {
+					$this->_error = "Person not found";
+					return false;
+			}
+			else {
+				$person = new \Register\Person($GLOBALS['_SESSION_']->customer->id);
+			}
+
 			$add_object_query = "
 				INSERT
 				INTO	engineering_events
@@ -51,7 +69,7 @@
 				$add_object_query,
 				array(
 					$task->id,
-					$parameters['person_id'],
+					$person_id,
 					$date_added,
 					$parameters['description']
 				)
