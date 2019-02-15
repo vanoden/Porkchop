@@ -125,6 +125,7 @@
 		$_page->module = $_REQUEST_->module;
 		$_page->view = $_REQUEST_->view;
 		$_page->index = $_REQUEST_->index;
+		$_page->applyStyle();
 	}
 	print $_page->load_template();
 ?>

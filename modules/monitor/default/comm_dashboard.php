@@ -1,36 +1,5 @@
 <style>
-	.body {
-		width: 1000px;
-		margin-bottom: 5px;
-		border: 1px solid #222222;
-	}
-	td.label {
-		width: 200px;
-	}
-	.resultlabel {
-		vertical-align: top;
-		width: 100px;
-	}
-	.labelLastHit {
-		width: 180px;
-	}
-	.labelRequest,
-	.labelResponse {
-		width: 100px;
-	}
-	.form_instruction,
-	.form_error {
-		width: 300px;
-	}
-	pre {
-		line-height: 14px;
-	}
-	td {
-		background-color: white;
-	}
-	.responseValue {
-		border-bottom: 1px solid gray;
-	}
+/*	h2 {border-bottom: 3px solid rgba(0,42,58,0.4);}*/
 </style>
 <script language="Javascript">
 	var Requests = new Array();
@@ -43,58 +12,63 @@
 		alert(Responses[id]);
 	}
 </script>
-<form action="comm_dashboard" method="POST">
-<table class="body">
-<tr><td class="title" colspan="4">Filter</td></tr>
+<h2>Monitor API Sessions</h2>
 <?	if ($GLOBALS['_page']->error) { ?>
-<tr><td class="form_error" colspan="4"><?=$GLOBALS['_page']->error?></td></tr>
+<div class="form_error" colspan="4"><?=$GLOBALS['_page']->error?></div>
 <?	} ?>
-<tr><td class="form_instruction" colspan="4"><?=$GLOBALS['_page']->instruction?></td></tr>
-<tr><td class="label">Account</td>
-	<td class="value">
-		<select name="account_code" class="value input">
-			<option value="">All</option>
-<?	foreach ($accounts as $account) {
-		if (in_array($account->status,array('HIDDEN','DELETED'))) continue;
-?>
-			<option value="<?=$account->code?>"<? if (isset($parameters['account']) && $account->code == $parameters['account']) print " selected"; ?>><?=$account->code?></option>
-<?	} ?>
-		</select>
-	</td>
-	<td class="label">Status</td>
-	<td class="value">
-		<select name="_active" class="value input">
-			<option value="1"<? if ($parameters['_active']) print " selected"; ?>>Active</option>
-			<option value="0"<? if (! $parameters['_active']) print " selected"; ?>>All</option>
-		</select>
-	</td>
-</tr>
-<tr><td class="label">Start Date</td>
-	<td class="value">
-		<input type="text" name="date_start" class="value input" value="<?=$parameters['date_start']?>" />
-	</td>
-	<td class="label">Max Results</td>
-	<td class="value">
-		<input type="text" name="max_records" class="value input" value="<?=$parameters['_limit']?>" />
-	</td>
-</tr>
-<tr><td class="table_footer" align="center" colspan="4"><input type="submit" name="btn_submit" class="button" value="Search"/></td></tr>
-</table>
+<div class="form_instruction" colspan="4"><?=$GLOBALS['_page']->instruction?></div>
+
+<form action="comm_dashboard" method="POST">
+<h3>Filter</h3>
+	
+	
+
+	
+<!--	START First Table -->
+	<div class="tableBody min-tablet marginTop_20">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 25%;">Account</div>
+		<div class="tableCell" style="width: 25%;">Status</div>
+		<div class="tableCell" style="width: 25%;">Start Date</div>
+		<div class="tableCell" style="width: 25%;">Max Results</div>
+	</div>	<div class="tableRow">
+		<div class="tableCell">
+			<input type="text" name="account_code" class="value input wide_md" value="<?=$parameters["account"]?>" />
+		</div>
+		<div class="tableCell">
+			<select name="_active" class="value input wide_xs">
+				<option value="1"<? if ($parameters['_active']) print " selected"; ?>>Active</option>
+				<option value="0"<? if (! $parameters['_active']) print " selected"; ?>>All</option>
+			</select>
+		</div>
+		<div class="tableCell">
+			<input type="text" name="date_start" class="value input" value="<?=$parameters['date_start']?>" />
+		</div>
+		<div class="tableCell">
+			<input type="text" name="max_records" class="value input wide_xs" value="<?=$parameters['_limit']?>" />
+		</div>
+	</div>
+</div>
+<!--	END First Table -->	
+	
+<div class="button-bar min-tablet"><input type="submit" name="btn_submit" class="button" value="Search"/></div>
 </form>
-<table class="body">
-<tr><td class="title" colspan="7">Sessions</td></tr>
-<tr><td class="label resultlabel labelLastHit">Last Hit</td>
-	<td class="label resultlabel labelAccount">Account</td>
-	<td class="label resultlabel labelIPAddress">IP Address</td>
-	<td class="label resultlabel labelPath">Path</td>
-	<td class="label resultlabel labelResult">Result</td>
-	<td class="label resultlabel labelRequest">Request</td>
-	<td class="label resultlabel labelResponse">Response</td>
+
+<h3>Sessions</h3>
+<table class="max_1000">
+<tr>
+	<th class="label resultlabel labelLastHit">Last Hit</th>
+	<th class="label resultlabel labelAccount">Account</th>
+	<th class="label resultlabel labelIPAddress">IP Address</th>
+	<th class="label resultlabel labelPath">Method</th>
+	<th class="label resultlabel labelResult">Result</th>
+	<th class="label resultlabel labelRequest">Request</th>
+	<th class="label resultlabel labelResponse">Response</th>
 </tr>
 <?	$session_id = 0;
 	foreach($communications as $communication) {
-		$session = new \Site\Session($communication->session->id);
-		$customer = new RegisterCustomer($session->customer_id);
+		$session = $communication->session;
+		$customer = $session->customer;
 		$request = $communication->request;
 		$response = $communication->response;
 		$session_id ++;
@@ -107,9 +81,9 @@
 		Responses[<?=$session_id?>] = '<?=$response_string?>';
 	</script>
 	<td class="value responseValue" nowrap><?=date('n/j/Y H:i:s',$communication->timestamp)?></td>
-	<td class="value responseValue"><?=$customer->login?></td>
+	<td class="value responseValue"><?=$customer->code?></td>
 	<td class="value responseValue"><?=$request->client_ip?></td>
-	<td class="value responseValue"><?=$request->uri?></td>
+	<td class="value responseValue"><?=$request->method?></td>
 	<td class="value responseValue"><?=$communication->result?></td>
 	<td class="value responseValue"><input type="button" name="btnRequest[<?=$session_id?>]" value="Show" class="button" onClick="showRequest(<?=$session_id?>)" /></td>
 	<td class="value responseValue"><input type="button" name="btnResponse[<?=$session_id?>]" value="Show" class="button" onClick="showResponse(<?=$session_id?>)" /></td>

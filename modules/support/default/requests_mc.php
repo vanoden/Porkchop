@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
@@ -8,7 +8,4 @@
 
 	$requestList = new \Support\RequestList();
 	$requests = $requestList->find($parameters);
-	if ($requestList->error()) {
-		$page->addError($requestList->error());
-	}
-?>
+	if ($requestList->error()) $page->addError($requestList->error());

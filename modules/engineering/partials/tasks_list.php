@@ -1,7 +1,7 @@
-<form>
+<form id="tasksListForm">
     <h2 style="display: inline-block;">Engineering Tasks [
         <?=($page->isSearchResults)? "Matched Tasks: " : "";?>
-        <?=count($tasks)?>
+        <?=isset($tasks) ? count($tasks) : "0"?>
     ]</h2>
     <?php
      if (!$page->isSearchResults) {
@@ -21,7 +21,7 @@
 	    </div>
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <select name="assigned_id" class="value input" onchange="document.forms[0].submit();">
+			    <select name="assigned_id" class="value input">
 				    <option value="">Any</option>
 				    <?	foreach ($assigners as $assigner) { ?>
 				    <option value="<?=$assigner->id?>"<? if ($assigner->id == $_REQUEST['assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
@@ -29,7 +29,7 @@
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <select name="project_id" class="value input" onchange="document.forms[0].submit();">
+			    <select name="project_id" class="value input">
 				    <option value="">Any</option>
 				    <?	foreach ($projects as $project) { ?>
 				    <option value="<?=$project->id?>"<? if ($project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
@@ -52,7 +52,6 @@
     <?php  
     }
     ?>
-
     <!--	START First Table -->
 	    <div class="tableBody min-tablet">
 	    <div class="tableRowHeader">
@@ -66,6 +65,7 @@
 		    <div class="tableCell" style="width: 10%;">PreRequisite</div>
 	    </div>
     <?php
+        if (!isset($tasks)) $tasks = array();
 	    foreach ($tasks as $task) {
 		    $product = $task->product();
 		    $project = $task->project();
@@ -98,11 +98,11 @@
 		    <div class="tableCell">
 	           <?php
 	           if (isset($prerequisiteTask->title)) {
-                   ?>
-                       <a href="/_engineering/task/<?=$prerequisiteTask->code?>"><?=$prerequisiteTask->title?></a>
-                    <?php
-                    }
-                    ?>
+               ?>
+                    <a href="/_engineering/task/<?=$prerequisiteTask->code?>"><?=$prerequisiteTask->title?></a>
+               <?php
+               }
+               ?>
 		    </div>
 	    </div>
     <?php	} ?>

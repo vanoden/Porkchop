@@ -61,12 +61,17 @@
 		}
 
 		function add_role ($role_id) {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			if ($GLOBALS['_SESSION_']->elevated()) {
+				app_log("Elevated Session adding role");
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+				app_log("Granting role '$role_id' to customer '".$this->id."'",'info',__FILE__,__LINE__);
+			}
+			else {
 				app_log("Non admin failed to update roles",'notice',__FILE__,__LINE__);
 				$this->error = "Only Register Managers can update roles.";
 				return 0;
 			}
-			app_log("Granting role '$role_id' to customer '".$this->id."'",'info',__FILE__,__LINE__);
 			$add_role_query = "
 				INSERT
 				INTO	register_users_roles

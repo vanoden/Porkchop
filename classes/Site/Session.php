@@ -224,7 +224,7 @@
 		}
 
 		function elevated() {
-			return $this->elevated();
+			return $this->elevated;
 		}
 
 		# See if a Given Session code looks valid

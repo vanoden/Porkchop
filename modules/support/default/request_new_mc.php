@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
@@ -44,12 +44,10 @@
 							'quantity'		=> 1
 						);
 						$request->addItem($item);
-						if ($request->error()) {
-							$page->addError("Error adding item to request: ".$request->error());
-						}
+						if ($request->error()) $page->addError("Error adding item to request: ".$request->error());
 					}
 					if (! $page->errorCount()) {
-						header('location: /_support/requests');
+						header('location: /_support/request_items');
 						exit;
 					}
 				}
@@ -68,4 +66,3 @@
 
 	$productlist = new \Product\ItemList();
 	$products = $productlist->find(array('type'=> array('inventory','unique','kit')));
-?>

@@ -1,4 +1,5 @@
 <?php
+	$page = new \Site\Page();
 	if (! $GLOBALS['_SESSION_']->customer->has_role('engineering user')) {
 		$page->error = "Permission Denied";
 		return;

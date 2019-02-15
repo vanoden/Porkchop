@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support;
 
 	class Request {
@@ -225,4 +225,3 @@
 			}
 		}
 	}
-?>

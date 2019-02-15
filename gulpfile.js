@@ -15,7 +15,7 @@ gulp.task('hello', function() {
 	console.log('Hello, Tony');
 });
 
-gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif'], () =>
+gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico'], () =>
 	gulp.src('html.src/**/*.html')
 		.pipe(data(() => (
 			{
@@ -39,7 +39,8 @@ gulp.task('pre', () =>
 				"video_path": videoPath,
 				"docs_path": docsPath,
                 "header": fs.readFileSync('html.src/pre/header.html', 'utf8'),
-                "footer": fs.readFileSync('html.src/pre/footer.html', 'utf8')
+                "footer": fs.readFileSync('html.src/pre/footer.html', 'utf8'),
+				"title": 'Interscan Corporation'
             }
         )))
         .pipe(template().on('error',function(e){
@@ -92,6 +93,12 @@ gulp.task('jpegs', () =>
 
 gulp.task('gif', () =>
 	gulp.src('html.src/**/*.gif')
+		.pipe(debug())
+		.pipe(gulp.dest('html'))
+);
+
+gulp.task('ico', () =>
+	gulp.src('html.src/**/*.ico')
 		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );

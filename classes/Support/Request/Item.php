@@ -24,6 +24,12 @@
 		}
 
 		public function add($parameters) {
+		
+			if ( empty($parameters['product_id'])) {
+				$this->_error = "product ID is required";
+				return false;
+			}
+
 			if (! isset($parameters['line'])) {
 				$this->_error = "line number required";
 				return false;
@@ -50,10 +56,10 @@
 
 			$add_item_query = "
 				INSERT
-				INTO	support_request_items
-				(		request_id,line,product_id,serial_number,quantity,description)
+				INTO support_request_items
+				    (request_id,line,product_id,serial_number,quantity,description)
 				VALUES
-				(		?,?,?,?,?,?)
+				    (?,?,?,?,?,?)
 			";
 			query_log($add_item_query);
 			$GLOBALS['_database']->Execute(
@@ -149,8 +155,7 @@
 			$action = new \Support\Request\Item\Action();
 			if ($action->add($parameters)) {
 				return $action;
-			}
-			else {
+			} else {
 				$this->_error = $action->error();
 				return false;
 			}
@@ -160,8 +165,7 @@
 			$rma = new \Support\Request\Item\RMA();
 			if ($rma->add($parameters)) {
 				return $rma;
-			}
-			else {
+			} else {
 				$this->_error = $rma->error();
 				return false;
 			}
@@ -185,14 +189,14 @@
 		}
 		public function statuses() {
 			return array(
-					"NEW",
-					"CANCELLED",
-					"ASSIGNED",
-					"OPEN",
-					"PENDING CUSTOMER",
-					"PENDING VENDOR",
-					"COMPLETE",
-					"CLOSED"
+				"NEW",
+				"CANCELLED",
+				"ASSIGNED",
+				"OPEN",
+				"PENDING CUSTOMER",
+				"PENDING VENDOR",
+				"COMPLETE",
+				"CLOSED"
 			);
 		}
 		public function openActions() {
@@ -208,4 +212,3 @@
 			return sprintf("%06d",$this->id);
 		}
 	}
-?>
