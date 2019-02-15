@@ -69,7 +69,14 @@
 		array("support","request_items"),
 		array("support","action"),
 		array("support","admin_actions"),
-		array("spectros","admin_home")
+		array("spectros","admin_home"),
+		array("spectros","admin_credits"),
+		array("spectros","cal_report"),
+		array("spectros","transfer_ownership"),
+		array("spectros","admin_collections"),
+		array("monitor","admin_assets"),
+		array("monitor","admin_details"),
+		array("monitor","comm_dashboard"),
 	);
 
 	###################################################
