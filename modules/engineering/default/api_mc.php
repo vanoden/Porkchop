@@ -157,7 +157,7 @@
 				$reporter = new \Register\Customer();
 				$reporter->get($_REQUEST['user_code']);
 				if ($reporter->error) error("Error finding reporter: ".$reporter->error);
-				if (! $reporter->id) error("No user found matching '".$_REQUEST['reporter_login']."'");
+				if (! $reporter->id) error("No user found matching '".$_REQUEST['user_code']."'");
 			}
 			else {
 				error("Permission denied");
@@ -175,7 +175,7 @@
 		}
 		$task = new \Engineering\Task();
 		if ($task->error()) error("Error adding task: ".$task->error());
-		$issue->add(
+		$task->add(
 			array(
 				'title'				=> $_REQUEST['title'],
 				'status'			=> $_REQUEST['status'],
@@ -194,7 +194,6 @@
 		print formatOutput($response);
 	}
 
-
 	###################################################
 	### Find Tasks									###
 	###################################################
@@ -211,6 +210,51 @@
 		api_log($response);
 		print formatOutput($response);
 	}
+
+	###################################################
+	### Add an Event								###
+	###################################################
+	function addEvent() {
+		$task = new \Engineering\Task();
+		$task->get($_REQUEST['task_code']);
+		if ($task->error()) error("Error finding task: ".$task->error());
+		if (! $task->id) error("No task found matching '".$_REQUEST['task_code']."'");
+
+		if (isset($_REQUEST['person_code']) && $_REQUEST['person_code'] && $_REQUEST['person_code'] != $GLOBALS['_SESSION_']->customer->code) {
+			if ($GLOBALS['_SESSION_']->customer->has_role('engineering admin')) {
+				$reporter = new \Register\Customer();
+				$reporter->get($_REQUEST['person_code']);
+				if ($reporter->error) error("Error finding reporter: ".$reporter->error);
+				if (! $reporter->id) error("No user found matching '".$_REQUEST['person_code']."'");
+			}
+			else {
+				error("Permission denied");
+			}
+		}
+		else {
+			$reporter = new \Register\Customer($GLOBALS['_SESSION_']->customer->id);
+		}
+
+		$event = new \Engineering\Event();
+		if ($event->error()) error("Error adding event: ".$event->error());
+		$event->add(
+			array(
+				'task_id'			=> $task->id,
+				'person_id'			=> $reporter->id,
+				'date_event'		=> get_mysql_date($_REQUEST['date_event']),
+				'description'		=> $_REQUEST['description']
+			)
+		);
+		if ($event->error()) error("Error adding event: ".$event->error());
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->event = $event;
+
+		api_log($response);
+		print formatOutput($response);
+	}
+
+
 	###################################################
 	### Run Upgrades and Return DB Schema Version	###
 	###################################################
