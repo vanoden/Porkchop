@@ -123,6 +123,6 @@
 	<td class="label">User</td>
 	<td class="value"><?=$event["user"]?></td>
 </tr>
-<tr><td class="value" colspan="4"><?=$event["description"]?></td></tr>
+<tr><td class="value" colspan="4"><pre><?=$event["description"]?></pre></td></tr>
 <?	} ?>
 </table>

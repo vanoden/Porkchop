@@ -22,9 +22,7 @@
 		}
 		else {
 			$item->update(array('status' => 'COMPLETE'));
-			if ($item->error()) {
-				$page->addError($item->error());
-			}
+			if ($item->error()) $page->addError($item->error());
 		}
 	}
 	if ($_REQUEST['btn_close_item']) {
@@ -33,14 +31,10 @@
 		}
 		else {
 			$item->update(array('status' => 'CLOSED'));
-			if ($item->error()) {
-				$page->addError($item->error());
-			}
+			if ($item->error()) $page->addError($item->error());
 		}
 	}
-	if ($_REQUEST['btn_reopen_item']) {
-		$item->update(array('status' => 'ACTIVE'));
-	}
+	if ($_REQUEST['btn_reopen_item']) $item->update(array('status' => 'ACTIVE'));
 	if ($_REQUEST['btn_add_action']) {
 		$parameters = array(
 			'type'				=> $_REQUEST['action_type'],
@@ -54,8 +48,7 @@
 		$action = $item->addAction($parameters);
 		if ($item->error()) {
 			$page->addError($item->error());
-		}
-		else {
+		} else {
 			$page->success = "Action #".$action->id." added";
 		}
 		if ($item->status == "NEW") $item->update(array('status' => 'ACTIVE'));
@@ -95,11 +88,9 @@ Description: ".$action->description
 		$shipment = new \Shipping\Shipment($_REQUEST['shipment_id']);
 		if ($shipment->error()) {
 			$page->addError($shipment->error());
-		}
-		elseif (! $shipment->id) {
+		} elseif (! $shipment->id) {
 			$page->addError("Shipment not found");
-		}
-		else {
+		} else {
 			$parameters = array(
 				'user_id'		=> $GLOBALS['_SESSION_']->customer->id,
 				'shipment_id'	=> $shipment->id,
@@ -107,8 +98,7 @@ Description: ".$action->description
 			$item->addToShipment($parameters);
 			if ($item->error()) {
 				$page->addError("Unable to associate shipment: ".$item->error());
-			}
-			else {
+			} else {
 				$page->success = "Item ready for pickup";
 			}
 		}
@@ -120,9 +110,7 @@ Description: ".$action->description
 			'status'	=> $_REQUEST['action_status']
 		);
 		$item->addComment($parameters);
-		if ($item->error()) {
-			$page->addError("Unable to add comment: ".$item->error());
-		}
+		if ($item->error()) $page->addError("Unable to add comment: ".$item->error());
 	}
 	if ($_REQUEST['btn_submit']) {
 		$item->update(
@@ -131,9 +119,7 @@ Description: ".$action->description
 				'product_id'		=> $_REQUEST['product_id']
 			)
 		);
-		if ($item->error()) {
-			$page->addError($item->error());
-		}
+		if ($item->error()) $page->addError($item->error());
 	}
 	$adminlist = new \Register\CustomerList();
 	$admins = $adminlist->find(array('role' => 'support user'));

@@ -244,7 +244,9 @@
             <?=$person->login?>
          </div>
          <div class="tableCell">
-            <?=$event->description?>
+             <pre>
+                <?=$event->description?>
+             </pre>
          </div>
       </div>
       <?	} ?>

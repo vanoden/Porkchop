@@ -163,7 +163,7 @@
 		    <td><?=$event->user->full_name()?></td>
 	    </tr>
 	    <tr><th colspan="2">Description</th>
-	    <tr><td colspan="2"><?=$event->description?></td></tr>
+	    <tr><td colspan="2"><pre><?=$event->description?></pre></td></tr>
 	    </tr>
 	    </table>
     <?	} ?>

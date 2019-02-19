@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item;
 	
 	class CommentList {
@@ -52,4 +52,3 @@
 			return $this->_error;
 		}
 	}
-?>

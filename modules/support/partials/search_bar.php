@@ -8,6 +8,10 @@
       font-family: Arial, Helvetica, sans-serif;
     }
     
+    pre {
+        font-size: 10px;
+    }
+    
     a.button.blue-background {
         background-color:blue;
     }

@@ -7,6 +7,10 @@
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
     }
+    
+    pre {
+        font-size: 10px;
+    }
 
     .topnav {
       overflow: hidden;

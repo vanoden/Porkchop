@@ -61,5 +61,9 @@
     foreach ($items as $itemRequest) $itemRequestActionIds[] = $itemRequest->id;
     $actions = $actionlist->find(array('searchAllItems'=> true, 'itemIds' => $itemRequestActionIds ));
 
-    // get the comments next?!	
-    	
+    // get the comments 
+    $supportItemComments = array();
+    foreach ($itemRequestActionIds as $itemRequestID) {
+	    $commentlist = new \Support\Request\Item\CommentList();
+	    $supportItemComments[] = $commentlist->find(array('item_id' => $itemRequestID));
+    }

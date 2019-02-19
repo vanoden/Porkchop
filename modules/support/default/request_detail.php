@@ -35,7 +35,7 @@
 			        <span class="value"><?=$request->date_request?></span>
 		        </div>
 		        <div class="tableCell">
-			        <span class="value"><?=$request->customer->full_name()?></span>
+			        <span class="value"><?=isset($request->customer) ? $request->customer->full_name() : ""?></span>
 		        </div>
 		        <div class="tableCell">
 			        <span class="value"><?=$request->customer->organization->name?></span>
@@ -195,6 +195,41 @@
         } 
         ?>
         </div>
+        <?	} ?>
+        <?	if (isset($supportItemComments) && count($supportItemComments) > 0) { ?>
+            <!--	Start Request Item-->
+            <h3>Comments</h3>
+            <?php	
+                foreach ($supportItemComments as $comment) { 
+                $comment = array_pop($comment);
+                if ($comment->date_comment) {
+            ?>
+            <div class="tableBody min-tablet">
+	            <div class="tableRowHeader">
+		            <div class="tableCell" style="width: 60%;">Date Entered</div>
+		            <div class="tableCell" style="width: 40%;">Author</div>
+	            </div> <!-- end row header -->
+	            <div class="tableRow">
+		            <div class="tableCell">
+			            <?=$comment->date_comment?>
+		            </div>
+		            <div class="tableCell">
+			            <?=isset($comment->author) ? $comment->author->full_name() : ""?>
+		            </div>
+	            </div>
+            </div>
+            <div class="tableBody min-tablet marginBottom_20">
+	            <div class="tableRowHeader">
+		            <div class="tableCell" style="width: 100%;">Comment</div>
+	            </div> <!-- end row header -->
+	            <div class="tableRow">
+		            <div class="tableCell">
+			            <?=$comment->content?>
+		            </div>
+	            </div>
+            </div>
+            <?	}	
+             } ?>
         <?	} ?>
 	</form>
 </div>
