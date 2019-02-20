@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Product;
 
 	class ItemList {
@@ -92,8 +92,7 @@
 				$find_product_query .= "
 				ORDER BY p.".$parameters['_sort'];
 			else	
-				$find_product_query .= "
-				ORDER BY r.view_order,p.name";
+			    $find_product_query .= "ORDER BY p.id";
 
 			query_log($find_product_query);
 			$rs = $GLOBALS['_database']->Execute($find_product_query);
