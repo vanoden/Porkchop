@@ -52,6 +52,7 @@
 				if (! $person->id) {
 					$this->_error = "Person not found";
 					return false;
+				}
 			}
 			else {
 				$person = new \Register\Person($GLOBALS['_SESSION_']->customer->id);
