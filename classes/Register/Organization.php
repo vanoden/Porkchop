@@ -13,21 +13,22 @@
 		public $_cached;
 
 		public function __construct($id = 0) {
-			# Clear Error Info
+		
+			// Clear Error Info
 			$this->error = '';
 
-			# Database Initialization
+			// Database Initialization
 			$schema = new Schema();
 			if ($schema->error) {
 				$this->error = "Failed to initialize schema: ".$schema->error;
-			}
-			elseif ($id) {
+			} elseif ($id) {
 				$this->id = $id;
 				$this->details();
 			}
 		}
 
 		public function add($parameters) {
+		
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$add_object_query = "
@@ -53,10 +54,11 @@
 		}
 
 		public function update($parameters = array()) {
+		
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			
-			# Bust Cache
+			// Bust Cache
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			$cache_item->delete();
@@ -86,7 +88,6 @@
 				$update_object_query .= ",
 						notes = ".$GLOBALS['_database']->qstr($parameters['notes'],get_magic_quotes_gpc());
 
-
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -95,8 +96,7 @@
 				$update_object_query,
 				array($this->id)
 			);
-			if (! $rs)
-			{
+			if (! $rs) {
 				$this->error = "SQL Error in \Register\Organization::update: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
@@ -128,7 +128,8 @@
 
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
-			# Cached Organization Object, Yay!
+			
+			// Cached Organization Object, Yay!
 			if (($this->id) and ($organization = $cache_item->get())) {
 				$organization->_cached = 1;
 				$this->id = $organization->id;
@@ -140,7 +141,7 @@
 				$this->notes = $organization->notes;
 				$this->_cached = $organization->_cached;
 
-				# In Case Cache Corrupted
+				// In Case Cache Corrupted
 				if ($organization->id) {
 					app_log("Organization '".$this->name."' [".$this->id."] found in cache",'trace',__FILE__,__LINE__);
 					return $organization;
@@ -150,7 +151,7 @@
 				}
 			}
 
-			# Get Details for Organization
+			// Get Details for Organization
 			$get_details_query = "
 				SELECT	id,
 						code,
@@ -185,7 +186,7 @@
 				return new \stdClass();
 			}
 
-			# Cache Customer Object
+			// Cache Customer Object
 			app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
 			if ($object->id) $result = $cache_item->set($object);
 			app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);
@@ -195,7 +196,6 @@
 		public function members() {
 			app_log("Register::Organization::members()",'trace',__FILE__,__LINE__);
 			$customerlist = new CustomerList();
-			#print "Finding members of org $id<br>\n";
 			return $customerlist->find(array('organization_id' => $this->id));
 		}
 		public function product($product_id) {
@@ -231,7 +231,7 @@
 				return false;
 			}
 			
-			# Bust Cache
+			// Bust Cache
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			$cache_item->delete();
@@ -239,5 +239,3 @@
 			return true;
 		}
     }
-
-?>

@@ -126,7 +126,7 @@
 		 */
 		public function getProductsAvailable() {
 		
-			$find_objects_query .= "SELECT id, code FROM product_products GROUP BY code ORDER BY code ASC";
+			$find_objects_query .= "SELECT id, code, name, description FROM product_products GROUP BY code ORDER BY code ASC";
 			query_log($find_objects_query);
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {
@@ -134,7 +134,7 @@
 				return false;
 			}
 			$objects = array();
-			while($row = $rs->FetchRow()) if (!empty($row['code'])) $objects[] = array($row['id'], $row['code']);
+			while($row = $rs->FetchRow()) if (!empty($row['code'])) $objects[] = array($row['id'], $row['code'], $row['name'], $row['description']);
 			return $objects;
 		}		
 

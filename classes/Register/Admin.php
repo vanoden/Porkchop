@@ -5,12 +5,11 @@
 
 		public function __construct($id = 0) {
 
-			# Database Initialization
+			// Database Initialization
 			$schema = new Schema();
 			if ($schema->error) {
 				$this->error = "Failed to initialize schema: ".$schema->error;
-			}
-			elseif ($id) {
+			} elseif ($id) {
 				$this->id = $id;
 				$this->details();
 			}
@@ -22,8 +21,8 @@
 		}
 		
 		public function adminUpdate($id,$parameters=array()) {
+		
 			parent::update($parameters);
-			
 			if (isset($parameters['department_id'])) {
 				$update_admin_query = "
 					UPDATE	register_users

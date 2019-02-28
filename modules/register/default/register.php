@@ -1,18 +1,13 @@
 <script type="text/javascript">
-	function submitForm()
-	{
-		if (document.register.password.value.length < 6)
-		{
+	function submitForm() {
+		if (document.register.password.value.length < 6) {
 			alert("Your password is too short.");
 			return false;
 		}
-
-		if (document.register.password.value != document.register.password_2.value)
-		{
+		if (document.register.password.value != document.register.password_2.value) {
 			alert("Your passwords don't match.");
 			return false;
 		}
-
 		return true;
 	}
 </script>
@@ -22,7 +17,7 @@
 	<input type="hidden" name="target" value="<?=$target?>">
 	<div class="instruction"><r7_page.message id=100></div>
 	<?	if ($page->error) { ?>
-	<div class="form_error"><?=$page->error?></div>
+	    <div class="form_error"><?=$page->error?></div>
 	<?	} ?>
 	<div id="registerFormSubmit">
 		<div class="form-group">

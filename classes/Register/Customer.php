@@ -2,15 +2,15 @@
 	namespace Register;
 
     class Customer extends Person {
+    
 		public $auth_method;
 		public $elevated = 0;
 
 		public function __construct($person_id = 0) {
 			parent::__construct($person_id);
-			if ($this->id) {
-				$this->roles();
-			}
+			if ($this->id) $this->roles();
 		}
+		
 		public function get($code = '') {
 			$this->error = null;
 			$get_object_query = "
@@ -31,6 +31,7 @@
 			$object = $this->details();
 			return $object;
 		}
+		
 		public function details() {
 		    parent::details();
 			$this->roles();
@@ -38,20 +39,20 @@
 		}
 
 		public function update($parameters = array()) {
+		
 			parent::update($parameters);
 
-			# Roles
+			// Roles
 			if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 				$rolelist = new RoleList();
 				$roles = $rolelist->find();
 				foreach ($roles as $role) {
 					if (isset($parameters['roles']) && is_array($parameters['roles'])) {
 						if (array_key_exists($role['id'],$parameters['roles'])) {
-							# Add Role
+							// Add Role
 							$this->add_role($role['id']);
-						}
-						else {
-							# Drop Role
+						} else {
+							// Drop Role
 							$this->drop_role($role['id']);
 						}
 					}
@@ -61,17 +62,17 @@
 		}
 
 		function add_role ($role_id) {
+		
 			if ($GLOBALS['_SESSION_']->elevated()) {
 				app_log("Elevated Session adding role");
-			}
-			elseif ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			} elseif ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 				app_log("Granting role '$role_id' to customer '".$this->id."'",'info',__FILE__,__LINE__);
-			}
-			else {
+			} else {
 				app_log("Non admin failed to update roles",'notice',__FILE__,__LINE__);
 				$this->error = "Only Register Managers can update roles.";
 				return 0;
 			}
+			
 			$add_role_query = "
 				INSERT
 				INTO	register_users_roles
@@ -90,34 +91,41 @@
 					$role_id
 				)
 			);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+			
 			return 1;
 		}
 
 		function drop_role($role_id) {
-			# Our own polymorphism
+		
+			// Our own polymorphism
 			if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 				$this->error = "Only Register Managers can update roles.";
 				return false;
 			}
+			
 			$drop_role_query = "
 				DELETE
 				FROM	register_users_roles
 				WHERE	user_id = ?
 				AND		role_id = ?
 			";
+			
 			//error_log("Update Customer: $drop_role_query");
 			$GLOBALS['_database']->Execute(
 				$drop_role_query,
 				array($this->id,$role_id)
 			);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
 			return true;
 		}
 
@@ -125,12 +133,13 @@
 		function authenticate ($login,$password) {
 			if (! $login) return 0;
 
-			# Get Authentication Method
+			// Get Authentication Method
 			$get_user_query = "
 				SELECT	id,auth_method,status
 				FROM	register_users
 				WHERE	login = ?
 			";
+			
 			$rs = $GLOBALS['_database']->Execute(
 				$get_user_query,
 				array($login)
@@ -146,6 +155,7 @@
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
 				return 0;
 			}
+			
 			if (! in_array($status,array('NEW','ACTIVE'))) {
 				app_log("Auth denied because account '$login' is '$status'",'notice',__FILE__,__LINE__);
 				return 0;
@@ -165,14 +175,15 @@
 			return $result;
 		}
 
-		# Authenticate using database for credentials
+		// Authenticate using database for credentials
 		function LOCALauthenticate ($login,$password) {
+		
 			if (! $login) {
 				app_log("No 'login' for authentication");
 				return 0;
 			}
 
-			# Check User Query
+			// Check User Query
 			$get_user_query = "
 				SELECT	id
 				FROM	register_users
@@ -194,8 +205,9 @@
 
 			list($id) = $rs->FetchRow();
 
+            // Login Failed
 			if (! $id) {
-				# Login Failed
+				
 				return 0;
 			}
 			$this->id = $id;
@@ -203,9 +215,10 @@
 			return 1;
 		}
 
-		# Authenticate using external LDAP service
+		// Authenticate using external LDAP service
 		public function LDAPauthenticate($domain,$login,$password) {
-			# Check User Query
+		
+			// Check User Query
 			$get_user_query = "
 				SELECT	id
 				FROM	register_users
@@ -232,7 +245,7 @@
 			$BIND_username		= strtoupper($domain)."\\$login";
 			$BIND_password		= $password;
 
-			if(($ds=ldap_connect($LDAPServerAddress1)) || ($ds=ldap_connect($LDAPServerAddress2))) {
+			if (($ds=ldap_connect($LDAPServerAddress1)) || ($ds=ldap_connect($LDAPServerAddress2))) {
 				ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);
 				ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);
 
@@ -240,14 +253,12 @@
 					error_log("LDAP Authentication for $login successful");
 					$this->details($id);
 					return 1;
-				}
-				else {
+				} else {
 					$this->message = "Auth Failed: ".ldap_error($ds);
 					$GLOBALS['_page']->error = "Auth Failed: ".ldap_error($ds);
 					if (ldap_get_option($ds, LDAP_OPT_DIAGNOSTIC_MESSAGE, $extended_error)) {
 						error_log("Error Binding to LDAP: $extended_error");
-					}
-					else {
+					} else {
 						error_log("LDAP Authentication for $login failed");
 					}
 					return 0;
@@ -255,12 +266,14 @@
 			}
 		}
 
-		# Personal Inventory (Online Products)
+		// Personal Inventory (Online Products)
 		public function products($product='') {
+		
 			###############################################
-			### Get List of Purchased Products			###
+			## Get List of Purchased Products			###
 			###############################################
-			# Prepare Query
+			
+			// Prepare Query
 			$get_products_query = "
 				SELECT	p.name,
 						p.description,
@@ -285,10 +298,10 @@
 				AND		cp.void_flag = 0
 			";
 	
-			# Conditional
+			// Conditional
 			if ($product) $get_products_query .= "AND p.sku = '".mysql_escape_string($product)."'\n";
 	
-			# Execute Query
+			// Execute Query
 			$rs = $GLOBALS['_database']->Execute($get_products_query);
 			if ($rs->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
@@ -302,14 +315,10 @@
 			return $hubs;
 		}
 
-		# See If a User has been granted a Role
+		// See If a User has been granted a Role
 		public function has_role($role_name) {
-			# Elevation for Initial Installation - Breaks stuff when enabled, not sure why!
-			#if ($GLOBALS['_SESSION_']->elevated() && $GLOBALS['_SESSION_']->customer->id == $this->id) {
-			#	return 1;
-			#}
-
-			# Check Role Query
+		
+			// Check Role Query
 			$check_role_query = "
 				SELECT	r.id
 				FROM	register_roles r
@@ -340,9 +349,11 @@
 				return false;
 			}
 		}
-		# Get all users that have been granted a Role
+		
+		// Get all users that have been granted a Role
 		public function have_role($id) {
-			# Check Role Query
+		
+			// Check Role Query
 			$check_role_query = "
 				SELECT	user_id
 				FROM	register_roles
@@ -367,7 +378,8 @@
 			}
 			return $customers;
 		}
-		# Notify Members in a Role
+		
+		// Notify Members in a Role
 		public function notify_role_members($role_id,$message) {
 			$members = $this->have_role($role_id);
 			foreach ($members as $member) {
@@ -375,9 +387,9 @@
 			}
 		}
 
-		# Get List of User Roles
+		// Get List of User Roles
 		public function roles() {
-			# Get Roles Query
+			// Get Roles Query
 			$get_roles_query = "
 				SELECT	r.id
 				FROM	register_roles r
@@ -386,11 +398,11 @@
 				WHERE	rur.user_id = ?
 			";
 
-			#error_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$get_roles_query)));
 			$rs = $GLOBALS['_database']->Execute(
 				$get_roles_query,
 				array($this->id)
 			);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				error_log($this->error);
@@ -402,10 +414,12 @@
 				$role = new Role($id);
 				array_push($roles,$role);
 			}
+			
 			return $roles;
 		}
 		public function role_id($name) {
-			# Get Role Query
+		
+			// Get Role Query
 			$get_role_query = "
 				SELECT	id
 				FROM	register_roles
@@ -418,8 +432,7 @@
 				return 0;
 			}
 
-			list($id) = $rs->FetchRow();
-			
+			list($id) = $rs->FetchRow();			
 			return $id;
 		}
 		public function expire() {
@@ -437,4 +450,3 @@
 			return $session->last_hit_date;
 		}
     }
-?>
