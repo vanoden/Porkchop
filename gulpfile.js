@@ -7,9 +7,12 @@ const fs = require('fs');
 var today = new Date();
 var month = today.getMonth() + 1;
 
+const configJSON = fs.readFileSync('html.src/gulp_config.json');
+const configDict = JSON.parse(configJSON);
+
+const videoPath = configDict.videoPath;
+const docsPath = configDict.docsPath;
 const staticVersion = today.getFullYear()+"."+month+"."+today.getDate()+"."+today.getHours()+"."+today.getMinutes();
-const videoPath = 'http://assets.spectrosinstruments.com/video';
-const docsPath = 'http://assets.spectrosinstruments.com/docs';
 
 gulp.task('hello', function() {
 	console.log('Hello, Tony');
@@ -22,6 +25,8 @@ gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico'], () =>
 				"static_version": staticVersion,
 				"video_path": videoPath,
 				"docs_path": docsPath,
+				"company_name": configDict.companyName,
+				"company": configDict.companyCode,
 				"header": fs.readFileSync('tmp/header.html', 'utf8'),
 				"footer": fs.readFileSync('tmp/footer.html', 'utf8')
 			}
