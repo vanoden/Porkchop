@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Email;
 
 	class Transport {
@@ -10,14 +10,13 @@
 			else $parameters['provider'] = 'SMTP';
 			if ($parameters['provider'] == 'Proxy') {
 				return new \Email\Transport\Proxy($parameters);
-			}
-			else {
+			} else {
 				$this->_error = "Invalid Transport";
 				return null;
 			}
 		}
+
 		public function error() {
 			return $this->_error;
 		}
 	}
-?>

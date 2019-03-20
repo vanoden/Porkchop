@@ -16,6 +16,7 @@
 		}
 
 		public function add($parameters = array()) {
+		
 			if (isset($parameters['task_id'])) {
 				$task = new Task($parameters['task_id']);
 				if ($task->error()) {
@@ -57,7 +58,7 @@
 			else {
 				$person = new \Register\Person($GLOBALS['_SESSION_']->customer->id);
 			}
-
+			
 			$add_object_query = "
 				INSERT
 				INTO	engineering_events
@@ -70,7 +71,7 @@
 				$add_object_query,
 				array(
 					$task->id,
-					$person_id,
+					$person->id,
 					$date_added,
 					$parameters['description']
 				)

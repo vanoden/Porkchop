@@ -425,7 +425,7 @@
 			$this->details();
 			return true;
 		}
-		public function addContact($parameters = array()) {
+		public function addContact($parameters = array()) {		
 			$contact = new Contact();
 			$contact->add($parameters);
 			if ($contact->error) {
