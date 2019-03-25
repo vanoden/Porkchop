@@ -47,7 +47,7 @@
 				
 				if ($_customer->error) {
 					app_log("Error adding customer: ".$_customer->error,'error',__FILE__,__LINE__);
-					$page->error .= "Sorry, there was an error adding your account.  Our admins have been notified.  Please try again later";
+					$page->error .= "Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher questions.";
 				} else {
 
 					// Login New User by updating session
@@ -105,7 +105,7 @@
                     
                     if ($queuedCustomer->error) {
                         app_log("Error adding queued organization: ".$queuedCustomer->error,'error',__FILE__,__LINE__);
-                        $page->error .= "Sorry, there was an error adding your account.  Our admins have been notified.  Please try again later";
+                        $page->error .= "Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher questions.";
                     }
 					
 					// Generate Email Confirmation

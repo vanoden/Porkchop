@@ -40,8 +40,8 @@
        document.getElementById('new-notes').style.display = "none";
        document.getElementById('new-notify').style.display = "none";    
        var newContactSelect = document.getElementById("new-contact-select");        
-       newContactSelect.options[6] = new Option('Select', 0);
-       newContactSelect.options[6].selected = 'selected';
+       newContactSelect.options[4] = new Option('Select', 0);
+       newContactSelect.options[4].selected = 'selected';
    
    }
    
@@ -52,7 +52,7 @@
        document.getElementById('new-notes').style.display = "block";
        document.getElementById('new-notify').style.display = "block";    
        var newContactSelect = document.getElementById("new-contact-select");
-       newContactSelect.remove(6);
+       newContactSelect.remove(4);
    }
 </script>
 <h2>Customer Account Settings</h2>

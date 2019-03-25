@@ -9,11 +9,9 @@
 			'phone'		=> "Phone Number",
 			'email'		=> "Email Address",
 			'sms'		=> "SMS-Text",
-			'facebook'	=> "FaceBook Account",
-			'twitter'	=> "Twitter Account",
-			'aim'		=> "AOL Instant Messenger"
+			'facebook'	=> "FaceBook Account"
 		);
-
+		
 		public function __construct($id = 0) {
 			if (is_numeric($id)) {
 				$this->id = $id;

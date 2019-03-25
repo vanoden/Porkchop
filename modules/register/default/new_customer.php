@@ -46,7 +46,7 @@
       <div class="form-group">
          <div id="registerCompanyName">
             <span class="label registerLabel long-field"><strong>*Company/Organization Name:</strong></span>
-            <input type="text" class="value registerValue long-field" name="organization_name" value="<?=!empty($_REQUEST['first_name']) ? $_REQUEST['first_name'] : "" ?>" placeholder="Company LLC"/>
+            <input type="text" class="value registerValue long-field" name="organization_name" value="<?=!empty($_REQUEST['organization_name']) ? $_REQUEST['organization_name'] : "" ?>" placeholder="Company LLC"/>
             <div class="small-text">
                <input id="is_reseller_checkbox" type="checkbox" name="reseller" value="yes"> Are you a reseller? (wish sell our products and services)<br/>
             </div>
@@ -75,19 +75,21 @@
             </select>
          </div>
          <br/>
+         
          <h3>Business Address</h3>
          <label for="address"><i class="fa fa-address-card-o"></i> Address</label>
-         <input type="text" id="address" class="long-field" name="address" placeholder="542 W. 15th Street">
+         <input type="text" id="address" class="long-field" name="address" placeholder="542 W. 15th Street" value="<?=!empty($_REQUEST['address']) ? $_REQUEST['address'] : "" ?>">
          <label for="city"><i class="fa fa-institution"></i> City</label>
-         <input type="text" id="city" name="city" placeholder="New York">
-         <label for="state">State</label>
-         <input type="text" id="state" name="state" placeholder="NY">
-         <label for="zip">Zip</label>
-         <input type="text" id="zip" name="zip" placeholder="10001">
+         <input type="text" id="city" name="city" placeholder="New York" value="<?=!empty($_REQUEST['city']) ? $_REQUEST['city'] : "" ?>">
+         <label for="state">State/Region</label>
+         <input type="text" id="state" name="state" placeholder="NY" value="<?=!empty($_REQUEST['state']) ? $_REQUEST['state'] : "" ?>">
+         <label for="zip">Zip/Postal Code</label>
+         <input type="text" id="zip" name="zip" placeholder="10001" value="<?=!empty($_REQUEST['zip']) ? $_REQUEST['zip'] : "" ?>">
          <label for="state">Buisness Phone</label>
-         <input type="text" id="phone" name="phone" placeholder="555-555-5555">
+         <input type="text" id="phone" name="phone" placeholder="555-555-5555" value="<?=!empty($_REQUEST['phone']) ? $_REQUEST['phone'] : "" ?>">
          <label for="state">Cell</label>
-         <input type="text" id="cell" name="cell" placeholder="555-555-5555"><br/>
+         <input type="text" id="cell" name="cell" placeholder="555-555-5555" value="<?=!empty($_REQUEST['cell']) ? $_REQUEST['cell'] : "" ?>"><br/>
+         
          <h3>Contact Info</h3>
          <span class="label registerLabel registerFirstNameLabel">*First Name:</span>
          <input type="text" class="value registerValue registerFirstNameValue long-field" name="first_name" value="<?=!empty($_REQUEST['first_name']) ? $_REQUEST['first_name'] : "" ?>" placeholder="John">
@@ -103,6 +105,7 @@
          <input type="text" class="value registerValue registerLoginValue" name="work_email" value="<?=!empty($_REQUEST['work_email']) ? $_REQUEST['work_email'] : "" ?>" placeholder="me@business.com">
          <span class="label registerLabel registerLoginLabel">*Home Email:</span>
          <input type="text" class="value registerValue registerLoginValue" name="home_email" value="<?=!empty($_REQUEST['home_email']) ? $_REQUEST['home_email'] : "" ?>" placeholder="me@email.com">
+         
       </div>
       <div id="registerSubmit" class="registerQuestion">
          <div class="g-recaptcha" data-sitekey="6LfrepcUAAAAACr1RpIeYIUasYuF0vC13wkDQgrN"></div>
