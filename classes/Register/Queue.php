@@ -29,10 +29,30 @@
 			$schema = new Schema();
 			if ($schema->error) {
 				$this->error = "Failed to initialize schema: ".$schema->error;
-			} elseif ($id) {
+			} elseif (!empty($id)) {
 				$this->id = $id;
 				$this->details();
 			}
+		}
+		
+		// hydrate known details about this queue object from known id if set
+		public function details() {
+		    if (!empty($this->id)) {
+                $get_queued_contacts_query = "
+	                SELECT	*
+	                FROM	register_queue
+	                WHERE	id = " . $this->id;
+                $rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
+                if (! $rs) {
+	                $this->error = "SQL Error in Register::ContactList::find(): ".$GLOBALS['_database']->ErrorMsg();
+	                return null;
+                }
+                while ($row = $rs->FetchRow()) {
+                    foreach ($row as $rowValueKey => $rowValue){
+                        if (!is_numeric($rowValueKey)) $this->$rowValueKey = $rowValue;
+                    }
+                }
+		    }
 		}
 
 		public function add($parameters) {

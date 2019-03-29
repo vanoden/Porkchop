@@ -69,7 +69,6 @@
 				}
 			}
 
-			#app_log("Querying details for person '$id'",'debug',__FILE__,__LINE__);
 			# Get Persons Info From Database
 			$get_person_query = "
 				SELECT	id,
