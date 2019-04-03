@@ -91,8 +91,7 @@
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
-				$person = new Person();
-				$person->details($id);
+				$person = new Person($id);
 				$this->count ++;
 				array_push($people,$person);
 			}
