@@ -93,13 +93,14 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-
+			query_log($update_object_query);
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Storage::Repository::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			if (isset($parameters['path'])) $this->_setMetadata('path',$parameters['path']);
 			app_log("Repo ".$this->id." updated, getting details");
 			return $this->details();
 		}
@@ -145,7 +146,7 @@
 			$this->type = $object->type;
 			$this->endpoint = $object->endpoint;
 			$this->code = $object->code;
-			app_log("Repo id is code ".$this->code);
+			$this->status = $object->status;
 			return true;
 		}
 		public function _setMetadata($key,$value) {
@@ -198,7 +199,7 @@
 			return false;
 		}
 		private function _valid_status($string) {
-			if (preg_match('/^(NEW|ACTIVE|HIDDEN)$/i',$string)) {
+			if (preg_match('/^(NEW|ACTIVE|DISABLED)$/i',$string)) {
 				return true;
 			}
 			return false;

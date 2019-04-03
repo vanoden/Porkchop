@@ -18,6 +18,9 @@
 				$get_objects_query .= "
 				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc());
 			}
+			$get_objects_query .= "
+				AND		status != 'DISABLED'";
+
 			$rs = $GLOBALS['_database']->Execute(
 				$get_objects_query
 			);

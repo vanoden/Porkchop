@@ -41,5 +41,23 @@
 				return false;
 			}
 		}
+		public function get($code) {
+			$repository = new Repository();
+			$repository->get($code);
+			if (! $repository->id) {
+				$this->error = "Repository not found";
+				return false;
+			}
+			if ($repository->type == "Local") {
+				return new Repository\Local($repository->id);
+			}
+			else if ($repository->type == "S3") {
+				return new Repository\S3($repository->id);
+			}
+			else {
+				$this->error = "Unsupported Repository Type";
+				return false;
+			}
+		}
 	}
 ?>
