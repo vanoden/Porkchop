@@ -315,6 +315,25 @@
 			return $hubs;
 		}
 
+		public function can($privilege_name) {
+			$check_privs_query = "
+				SELECT	1
+				FROM	register_users_roles rur,
+						register_role_privileges rrp
+				WHERE	rur.user_id = ?
+				AND		rur.role_id = rrp.role_id
+				AND		rrp.privilege = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($check_privs_query,array($this->id,$privilege_name));
+			if (! $rs) {
+				$this->error = "SQL Error in Register::Customer::can(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			list($can) = $rs->FetchRow();
+			if ($can) return true;
+			return false;
+		}
+
 		// See If a User has been granted a Role
 		public function has_role($role_name) {
 		

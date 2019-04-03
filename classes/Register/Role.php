@@ -198,5 +198,18 @@
 				}
 			}
 		}
+		public function addPrivilege($new_privilege) {
+			$privilege = new \Register\Privilege();
+			$privilege->add(array('role_id' => $this->id,'privilege' => $new_privilege));
+			if ($privilege->error()) {
+				$this->error = $privilege->error();
+				return false;
+			}
+			return true;
+		}
+		public function privileges() {
+			$privilegeList = new PrivilegeList();
+			return $privilegeList->find(array('role_id' => $this->id));
+		}
 	}
 ?>
