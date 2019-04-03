@@ -45,7 +45,7 @@
 				$parameters['code'] = uniqid();
 			}
 
-			if (! preg_match('/^\w+$/',$parameters['code'])) {
+			if (! preg_match('/^[\w\-\_\.]+$/',$parameters['code'])) {
 				$this->error = "Invalid code";
 				return false;
 			}
@@ -83,39 +83,55 @@
 				return null;
 			}
 
+			$bind_params = array();
 			$update_object_query = "
 				UPDATE	package_packages
 				SET		id = id
 			";
 
 			if (isset($parameters['status']) && strlen($parameters['status'])) {
-				if (preg_match('/^(NEW|ACTIVE|HIDDEN)$/',$parameters['status']))
+				$parameters['status'] = strtoupper($parameters['status']);
+				if (preg_match('/^(NEW|ACTIVE|HIDDEN)$/',$parameters['status'])) {
 					$update_object_query .= ",
-						status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+						status = ?";
+					array_push($bind_params,$parameters['status']);
+				}
 				else {
 					$this->error = "Invalid package status '".$parameters['status']."'";
 					return null;
 				}
 			}
-			if (isset($parameters['license']) && strlen($parameters['license']))
+			if (isset($parameters['name']) && strlen($parameters['name'])) {
 				$update_object_query .= ",
-						license = ".$GLOBALS['_database']->qstr($parameters['license'],get_magic_quotes_gpc());
-			if (isset($parameters['platform']) && strlen($parameters['platform']))
+						name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
+			if (isset($parameters['license']) && strlen($parameters['license'])) {
 				$update_object_query .= ",
-						platform = ".$GLOBALS['_database']->qstr($parameters['platform'],get_magic_quotes_gpc());
-
+						license = ?";
+				array_push($bind_params,$parameters['license']);
+			}
+			if (isset($parameters['platform']) && strlen($parameters['platform'])) {
+				$update_object_query .= ",
+						platform = ?";
+				array_push($bind_params,$parameters['platform']);
+			}
 
 			if (isset($parameters['description']) && strlen($parameters['description']))
 				$update_object_query .= ",
-						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
+						description = ?";
+				array_push($bind_params,$parameters['description']);
 
+			if (isset($parameters['owner_id']) && is_numeric($parameters['owner_id'])) {
+				$update_object_query .= ",
+						owner_id = ?";
+				array_push($bind_params,$parameters['owner_id']);
+			}
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
+			array_push($bind_params,$this->id);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Package::Package::update(): ".$GLOBALS['_database']->ErrorMsg()."=>$update_object_query";
 				return false;
@@ -135,6 +151,10 @@
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
+			if (! $this->id) {
+				$this->error = "Package not found";
+				return false;
+			}
 			return $this->details();
 		}
 
@@ -151,7 +171,7 @@
 			);
 			if (! $rs) {
 				$this->error = "SQL Error in Package::Package::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				return false;
 			}
 			$object = $rs->FetchNextObject(false);
 			$this->code = $object->code;
@@ -167,6 +187,26 @@
 			$this->repository = $factory->load($object->repository_id);
 
 			return true;
+		}
+
+		public function latestVersion() {
+			$get_object_query = "
+				SELECT  id
+				FROM    package_versions
+				WHERE   package_id = ?
+				AND     status = 'PUBLISHED'
+				ORDER BY major DESC, minor DESC, build DESC
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($this->id)
+			);
+			if (! $rs) {
+				$this->error = "SQL Error in Package::Version::latest(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			list($this->id) = $rs->FetchRow();
+			return new Version($this->id);
 		}
 
 		public function addVersion($parameters = array()) {

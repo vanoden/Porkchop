@@ -90,10 +90,10 @@
 			$insert_object_query = "
 				INSERT
 				INTO	package_versions
-				(		id,package_id,major,minor,build,status
+				(		id,package_id,major,minor,build,status,user_id,date_created
 				)
 				VALUES
-				(		?,?,?,?,?,'NEW')
+				(		?,?,?,?,?,'NEW',?,sysdate())
 			";
 			$GLOBALS['_database']->Execute(
 				$insert_object_query,
@@ -102,7 +102,8 @@
 					$parameters['package_id'],
 					$parameters['major'],
 					$parameters['minor'],
-					$parameters['build']
+					$parameters['build'],
+					$GLOBALS['_SESSION_']->customer->id
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
@@ -170,6 +171,7 @@
 				SET		package_id = package_id
 			";
 			if (isset($parameters['status']) && strlen($parameters['status'])) {
+				$parameters['status'] = strtoupper($parameters['status']);
 				if (preg_match('/^(NEW|PUBLISHED|HIDDEN)$/',$parameters['status'])) {
 					$update_object_query .= ",
 					status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
@@ -225,10 +227,16 @@
 			$this->minor = $object->minor;
 			$this->build = $object->build;
 			$this->status = $object->status;
+			$this->owner = new \Register\Person($object->user_id);
+			$this->date_created = $object->date_created;
 			$factory = new \Storage\RepositoryFactory();
 			$this->repository = $factory->load($this->repository->id);
 
 			return true;
+		}
+
+		public function version() {
+			return sprintf("%0d.%0d.%0d",$this->major,$this->minor,$this->build);
 		}
 	}
 ?>

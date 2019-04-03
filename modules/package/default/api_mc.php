@@ -53,13 +53,13 @@
 	### Add a Package								###
 	###################################################
 	function addPackage() {
+		$response = new \HTTP\Response();
+		if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) error("Permission Denied");
+
 		# Identify Repository
-		$repositorylist = new \Storage\RepositoryList();
-		list($repository) = $repositorylist->find(array('code' => $_REQUEST['repository_code']));
-		if (! $repository->id) {
-			$this->error = "Repository not found";
-			return false;
-		}
+		$repository = new \Storage\Repository();
+		if (! $repository->get($_REQUEST['repository_code'])) error("Repository ".$_REQUEST['repository_code']." not found");
+		app_log("Repository ".$repository->id);
 
 		$package = new \Package\Package();
 		if ($package->error) error("Error adding package: ".$package->error);
@@ -87,6 +87,8 @@
 	### Update a Package							###
 	###################################################
 	function updatePackage() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) error("Permission Denied");
+
 		$package = new \Package\Package();
 		if ($package->error) error("Error adding package: ".$package->error);
 		$package->get($_REQUEST['code']);
@@ -125,6 +127,8 @@
 	###################################################
 	function findPackages() {
 		$packagelist = new \Package\PackageList();
+		if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) error("Permission Denied");
+
 		if ($packagelist->error) app_error("Error initializing packages: ".$packagelist->error,__FILE__,__LINE__);
 
 		$parameters = array();
@@ -159,6 +163,8 @@
 	### Add a Version								###
 	###################################################
 	function addVersion() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) error("Permission Denied");
+
 		$package = new \Package\Package();
 		$package->get($_REQUEST['package_code']);
 		if ($package->error) error("Error finding package: ".$package->error);
@@ -190,6 +196,8 @@
 	### Update a Version							###
 	###################################################
 	function updateVersion() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) error("Permission Denied");
+
 		$package = new \Package\Package();
 		$package->get($_REQUEST['package_code']);
 		if ($package->error) api_error("Error getting package: ".$package->error,'error',__FILE__,__LINE__);
@@ -242,6 +250,8 @@
 	### Download Version							###
 	###################################################
 	function downloadVersion() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('package manager') && ! $GLOBALS['_SESSION_']->customer->has_role('monitor asset')) error("Permission Denied");
+
 		$package = new \Package\Package();
 		$package->get($_REQUEST['package_code']);
 		if ($package->error) app_error("Error finding package: ".$package->error,__FILE__,__LINE__);
@@ -264,9 +274,8 @@
 		if ($package->error) app_error("Error finding package: ".$package->error,__FILE__,__LINE__);
 		if (! $package->id) error("Package not found");
 
-		$version = new \Package\Version();
-		$version->latest($package->id);
-		if ($version->error) app_error("Error finding version: ".$version->error,__FILE__,__LINE__);
+		$version = $package->latestVersion();
+		if ($package->error) app_error("Error finding version: ".$package->error,__FILE__,__LINE__);
 		if (! $version->id) error("Version not found");
 
 		$response = new \HTTP\Response();
@@ -281,6 +290,8 @@
 	### Download Version							###
 	###################################################
 	function downloadLatestVersion() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('package manager') && ! $GLOBALS['_SESSION_']->customer->has_role('monitor asset')) error("Permission Denied");
+
 		$package = new \Package\Package();
 		$package->get($_REQUEST['package_code']);
 		if ($package->error) app_error("Error finding package: ".$package->error,__FILE__,__LINE__);
