@@ -69,7 +69,6 @@
 				}
 			}
 
-			#app_log("Querying details for person '$id'",'debug',__FILE__,__LINE__);
 			# Get Persons Info From Database
 			$get_person_query = "
 				SELECT	id,
@@ -425,7 +424,7 @@
 			$this->details();
 			return true;
 		}
-		public function addContact($parameters = array()) {
+		public function addContact($parameters = array()) {		
 			$contact = new Contact();
 			$contact->add($parameters);
 			if ($contact->error) {

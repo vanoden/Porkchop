@@ -465,7 +465,7 @@
 		function update ($parameters) {
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
-			$cache->unset();
+			if ($cache) $cache->unset();
 			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
 
 			# Make Sure User Has Privileges to view other sessions

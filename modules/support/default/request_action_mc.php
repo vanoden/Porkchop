@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
@@ -37,4 +37,3 @@
 	}
 	$userlist = new \Register\CustomerList();
 	$users = $userlist->find();
-?>

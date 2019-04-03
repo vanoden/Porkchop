@@ -4,18 +4,15 @@
       *
       * @copyright Spectros Instruments
       * @author khinds
-      */
+      */      
     $page = new \Site\Page();
 	$resellerList = new \Register\OrganizationList();
 	$itemlist = new \Support\Request\ItemList();
-	
 	$productsAvailable = $itemlist->getProductsAvailable();
-	
-	
 	$resellers = $resellerList->find(array("is_reseller" => true));
 
     // handle form submit	
-	if ($_REQUEST['method'] == "Apply") {
+	if ($_REQUEST['method'] == "register") {
 	
 		// Initialize Customer Object
 		$_customer = new \Register\Customer();
@@ -24,7 +21,7 @@
 		} elseif ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 			$page->error .= "Passwords do not match";
 		} else {
-		
+
 			// Default Login to Email Address
 			if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['email_address'];
 
@@ -37,8 +34,7 @@
 				$page->error = "Sorry, login already taken";
 				$_REQUEST['login'] = '';
 			} else {
-			
-				// Add Customer Record to Database
+                // Add Customer Record to Database
 				$customer = $_customer->add(
 					array(
 						"login"				=> $_REQUEST['login'],
@@ -51,14 +47,12 @@
 				
 				if ($_customer->error) {
 					app_log("Error adding customer: ".$_customer->error,'error',__FILE__,__LINE__);
-					$page->error .= "Sorry, there was an error adding your account.  Our admins have been notified.  Please try again later";
+					$page->error .= "Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher questions.";
 				} else {
 
 					// Login New User by updating session
-					$GLOBALS['_SESSION_']->update(array("user_id" => $customer->{id}));
-					if ($GLOBALS['_SESSION_']->error) {
-						$page->error .= "Error updating session: ".$GLOBALS['_SESSION_']->error;
-					}
+					$GLOBALS['_SESSION_']->update(array("user_id" => $customer->id));
+					if ($GLOBALS['_SESSION_']->error) $page->error .= "Error updating session: ".$GLOBALS['_SESSION_']->error;
 
 					// Create Contact Record
 					if ($_REQUEST['work_email']) {
@@ -99,19 +93,25 @@
 	                    $queuedCustomerData['is_reseller'] = 1;
 	                    $queuedCustomerData['assigned_reseller_id'] = $_REQUEST['assigned_reseller_id'];
                     }
-                    
+                    $queuedCustomerData['address'] = $_REQUEST['address'];
+                    $queuedCustomerData['city'] = $_REQUEST['city'];
+                    $queuedCustomerData['state'] = $_REQUEST['state'];
+                    $queuedCustomerData['zip'] = $_REQUEST['zip'];
+                    $queuedCustomerData['phone'] = $_REQUEST['phone'];
+                    $queuedCustomerData['cell'] = $_REQUEST['cell'];                    
+                    $queuedCustomerData['product_id'] = $_REQUEST['product_id'];
+                    $queuedCustomerData['serial_number'] = $_REQUEST['serial_number'];               
                     $queuedCustomer->add($queuedCustomerData);
                     
                     if ($queuedCustomer->error) {
                         app_log("Error adding queued organization: ".$queuedCustomer->error,'error',__FILE__,__LINE__);
-                        $page->error .= "Sorry, there was an error adding your account.  Our admins have been notified.  Please try again later";
+                        $page->error .= "Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher questions.";
                     }
 					
 					// Generate Email Confirmation
 					$message = "<html>\n";
 					$message .= "<span class=\"email_header\">".$GLOBALS['_config']->register->confirmation->header."</span><br><br>\n";
 					$message .= "<span class=\"email_label\">Your login is: </span><span class=\"email_value\">".$_REQUEST['login']."</span><br>\n";
-		
 					$message .= "<span class=\"email_body\">".$GLOBALS['_config']->register->confirmation->footer."</span><br>\n";
 					$message .= "</html>\n";
 					
@@ -137,12 +137,7 @@
 						$page->error = "Error sending notification: ".$transport->error;
 						return;
 					}
-
-					// Redirect to Address Page If Order Started
-					if ($target) $next_page = $target;
-					elseif ($order_id) $next_page = "/_cart/address";
-					else $next_page = "/_register/thank_you";
-					header("Location: $next_page");
+					header("Location: /_register/thank_you");
 				}
 			}
 		}

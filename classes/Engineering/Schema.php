@@ -341,6 +341,43 @@
 				}
 				$GLOBALS['_database']->CommitTrans();
 			}		
+			
+            // VERSION 6
+			if ($current_schema_version < 6) {
+				app_log("Upgrading schema to version 6",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+                // add new pending_customers page HERE @TODO
+                
+                // page_pages
+                // 222	support	search
+                
+                // page_metadata
+                // 126	222	template	admin.html
+
+                // INSERT INTO `page_pages` (module, view) VALUES ("support", "pending_customers")
+
+                // INSERT INTO `page_metadata` (`page_id`, `key`, `value`) VALUES ('224', 'template', 'admin.html');
+
+
+				$current_schema_version = 6;
+				$update_schema_version = "
+					INSERT
+					INTO	engineering__info
+					VALUES	('schema_version', $current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}
 		}
 	}
-?>
