@@ -306,6 +306,79 @@
 		print formatOutput($response);
 	}
 	###################################################
+	### Assign Privilege to Role					###
+	###################################################
+	function addRolePrivilege() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) error('Permission Denied');
+
+		if ($_REQUEST['role']) {
+			$role = new \Register\Role();
+			$role->get($_REQUEST['role']);
+			if ($role->error) error ($role->error);
+			if (! $role->id) error ("Role not found");
+		}
+		else {
+			error('role required');
+		}
+
+
+		$response = new \HTTP\Response();
+		if ($role->addPrivilege($_REQUEST['privilege'])) {
+			$response->success = 1;
+		}
+		else {
+			error($role->error);
+		}
+
+		# Send Response
+		print formatOutput($response);
+	}
+	###################################################
+	### Assign Privilege to Role					###
+	###################################################
+	function getRolePrivileges() {
+		if ($_REQUEST['role']) {
+			$role = new \Register\Role();
+			$role->get($_REQUEST['role']);
+			if ($role->error) error ($role->error);
+			if (! $role->id) error ("Role not found");
+		}
+		else {
+			error('role required');
+		}
+
+		$privileges = $role->privileges();
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->privilege = $privileges;
+
+		# Send Response
+		print formatOutput($response);
+	}
+	###################################################
+	### Does Customer Have Privilege				###
+	###################################################
+	function customerHasPrivilege() {
+		if ($_REQUEST['login']) {
+			$customer = new \Register\Customer();
+			$customer->get($_REQUEST['login']);
+			if ($customer->error) error ($customer->error);
+			if (! $customer->id) error ("Customer not found");
+		}
+		else {
+			error('login required');
+		}
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		if ($customer->can($_REQUEST['privilege'])) $response->can = 'yes';
+		else $response->can = 'no';
+
+		# Send Response
+		print formatOutput($response);
+	}
+	###################################################
 	### Create Customer Image						###
 	###################################################
 	function addImage() {
