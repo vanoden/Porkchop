@@ -34,6 +34,10 @@
 					<span class="label apiLabel">status</span>
 					<input type="text" name="status" class="value input apiInput"/>
 				</div>
+				<div class="apiParameter">
+					<span class="label apiLabel">path</span>
+					<input type="text" name="path" class="value input apiInput"/>
+				</div>
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
 			</form>

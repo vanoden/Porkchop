@@ -7,6 +7,43 @@
 				$this->id = $id;
 				$this->details();
 			}
+			$this->type = 'Local';
+		}
+
+		public function add($parameters) {
+			app_log("Creating local repository ".$parameters['name'],'notice');
+			if (! isset($parameters['path'])) {
+				$this->error = "Path required";
+				return false;
+			}
+			elseif (! is_dir($parameters['path'])) {
+				$this->error = "Path doesn't exist";
+				return false;
+			}
+			elseif (! is_writable($parameters['path'])) {
+				$this->error = "Path not writable";
+				return false;
+			}
+
+			app_log("Path is ".$parameters['path'],'notice');
+			parent::add($parameters);
+			if ($this->id) {
+				app_log("Storage repository created, adding path",'notice');
+				if ($this->_setMetadata('path',$parameters['path'])) {
+					app_log("Path set to ".$parameters['path'],'notice');
+					$this->path = $this->_path();
+					return true;
+				}
+				else {
+					app_log("Failed to set path: ".$this->error,'error');
+					$this->error = "Failed to add path to metadata: ".parent::error;
+					return false;
+				}
+			}
+			else {
+				app_log("Parent add returned false: ".$this->error,'error');
+				return false;
+			}
 		}
 
 		private function _path($path = null) {

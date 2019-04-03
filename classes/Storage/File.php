@@ -155,7 +155,7 @@
 		}
 
 		private function _valid_type($name) {
-			if (preg_match('/^(image|application|text)\/(png|jpg|tif|plain|html|csv|cs|js|xml|json|gzip)$/',$name)) {
+			if (preg_match('/^(image|application|text)\/(png|jpg|jpeg|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip)$/',$name)) {
 				return true;
 			}
 			return false;

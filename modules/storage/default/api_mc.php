@@ -62,8 +62,8 @@
 			array(
 				'code'				=> $_REQUEST['code'],
 				'name'				=> $_REQUEST['name'],
-				'type'				=> $_REQUEST['type'],
-				'status'			=> $_REQUEST['status']
+				'status'			=> $_REQUEST['status'],
+				'path'				=> $_REQUEST['path']
 			)
 		);
 		if ($repository->error) error("Error adding repository: ".$repository->error);
@@ -201,7 +201,7 @@
 
 		# Add File to Library
 		$file = new \Storage\File();
-		if ($file->error) error("Error adding file: ".$file->error);
+		if ($file->error) error("Error initializing file: ".$file->error);
 		$file->add(
 			array(
 				'repository_id'		=> $repository->id,
