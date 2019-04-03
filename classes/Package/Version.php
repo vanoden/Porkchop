@@ -165,6 +165,36 @@
 			return sprintf("%s-%d.%d.%d.%s",$this->package->code,$this->major,$this->minor,$this->build,$this->extension);
 		}
 
+		public function publish() {
+			$publish_object_query = "
+				UPDATE	package_versions
+				SET		status = 'PUBLISHED',
+						date_published = sysdate()
+				WHERE	id = ?
+			";
+
+			$GLOBALS['_database']->Execute($publish_object_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Package::Version::publish(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			return $this->details();
+		}
+
+		public function hide() {
+			$hide_object_query = "
+				UPDATE	package_versions
+				SET		status = 'HIDDEN'
+				WHERE	id = ?
+			";
+
+			$GLOBALS['_database']->Execute($hide_object_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Package::Version::hide(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			return $this->details();
+		}
 		public function update($parameters) {
 			$update_object_query = "
 				UPDATE	package_versions

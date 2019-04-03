@@ -117,11 +117,11 @@
 				array_push($bind_params,$parameters['platform']);
 			}
 
-			if (isset($parameters['description']) && strlen($parameters['description']))
+			if (isset($parameters['description']) && strlen($parameters['description'])) {
 				$update_object_query .= ",
 						description = ?";
 				array_push($bind_params,$parameters['description']);
-
+			}
 			if (isset($parameters['owner_id']) && is_numeric($parameters['owner_id'])) {
 				$update_object_query .= ",
 						owner_id = ?";

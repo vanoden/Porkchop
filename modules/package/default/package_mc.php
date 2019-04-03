@@ -31,6 +31,7 @@
         $parameters['name'] = $_REQUEST['name'];
         $parameters['description'] = $_REQUEST['description'];
         $parameters['license'] = $_REQUEST['license'];
+        $parameters['platform'] = $_REQUEST['platform'];
         $parameters['owner_id'] = $_REQUEST['owner_id'];
         $parameters['status'] = $_REQUEST['status'];
         if (! $package->id) {
