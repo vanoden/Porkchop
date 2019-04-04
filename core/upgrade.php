@@ -33,14 +33,14 @@
         "Product"   => 1,
         "Site"      => 5,
         "Content"   => 3,
-        "Register"  => 10,
+        "Register"  => 12,
         "Company"   => 3,
         "Storage"   => 1,
         "Email"     => 1,
         "Package"   => 1,
         "Contact"   => 2,
         "Support"   => 3,
-        "Engineering"   => 5,
+        "Engineering"   => 6,
     );
 
 	# Set Templates As Necessary
