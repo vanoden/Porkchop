@@ -149,6 +149,10 @@
 			$this->status = $object->status;
 			return true;
 		}
+		public function files() {
+			$filelist = new FileList();
+			return $filelist->find(array('repository_id' => $this->id));
+		}
 		public function _setMetadata($key,$value) {
 			$set_object_query = "
 				INSERT
