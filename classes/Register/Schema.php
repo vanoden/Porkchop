@@ -625,6 +625,69 @@
 				}
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($current_schema_version < 12) {
+				app_log("Upgrading schema to version 12",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE `register_queue` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`name` varchar(255) NOT NULL,
+						`address` varchar(200) NOT NULL DEFAULT '',
+						`city` varchar(200) NOT NULL DEFAULT '',
+						`state` varchar(200) NOT NULL DEFAULT '',
+						`zip` varchar(200) NOT NULL DEFAULT '',
+						`phone` varchar(200) NOT NULL DEFAULT '',
+						`cell` varchar(200) NOT NULL DEFAULT '',
+						`code` varchar(100) NOT NULL,
+						`status` enum('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED') NOT NULL DEFAULT 'NEW',
+						`date_created` datetime NULL,
+						`is_reseller` int(1) DEFAULT '0',
+						`assigned_reseller_id` int(11) DEFAULT '0',
+						`notes` text,
+						`product_id` int(11) DEFAULT NULL,
+						`serial_number` varchar(255) DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `UK_CODE` (`code`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating register queue table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$alter_table_query = "
+					ALTER TABLE `register_contacts` MODIFY `description` varchar(100) DEFAULT NULL
+				";
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_contacts table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$current_schema_version = 12;
+				$update_schema_version = "
+					INSERT
+					INTO	register__info
+					VALUES	('schema_version',$current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					app_log("SQL Error in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
+					$this->error = "Error adding roles to database";
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}
 		}
 	}
 ?>
