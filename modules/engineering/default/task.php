@@ -81,6 +81,7 @@
                   <option value="hold"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
                   <option value="active"<? if ($form['status'] == "ACTIVE") print " selected"; ?>>Active</option>
                   <option value="cancelled"<? if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
+                  <option value="testing"<? if ($form['status'] == "TESTING") print " selected"; ?>>Testing</option>
                   <option value="complete"<? if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
                </select>
                <?	}	?>
@@ -203,6 +204,7 @@
                   <option value="hold"<? if ($task->status == 'HOLD') print ' selected'; ?>>Hold</option>
                   <option value="active"<? if ($task->status == 'ACTIVE') print ' selected'; ?>>Active</option>
                   <option value="cancelled"<? if ($task->status == 'CANCELLED') print ' selected'; ?>>Cancelled</option>
+                  <option value="testing"<? if ($task->status == 'TESTING') print ' selected'; ?>>Testing</option>
                   <option value="complete"<? if ($task->status == 'COMPLETE') print ' selected'; ?>>Complete</option>
                </select>
             </div>
