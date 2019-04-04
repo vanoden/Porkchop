@@ -78,6 +78,13 @@
 		array("monitor","admin_assets"),
 		array("monitor","admin_details"),
 		array("monitor","comm_dashboard"),
+		array("storage","repositories"),
+		array("storage","repository"),
+		array("storage","files"),
+		array("package","packages"),
+		array("package","package"),
+		array("package","versions"),
+		array("register","pending_customers")
 	);
 
 	###################################################
