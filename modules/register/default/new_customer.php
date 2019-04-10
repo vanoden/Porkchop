@@ -16,9 +16,6 @@
    
    // check reseller toggle
    $(document).ready(function() {
-       $("#is_reseller_checkbox").change(function() {
-      	    $("#assigned_reseller_id").toggle();
-       });
        $("#has_item_checkbox").change(function() {
       	    $("#product_details").toggle();
        });
@@ -45,20 +42,12 @@
    <div id="registerFormSubmit">
       <div class="form-group">
          <div id="registerCompanyName">
-            <span class="label registerLabel long-field"><strong>*Company/Organization Name:</strong></span>
+            <h3>*Company/Organization Name:</h3>
             <input type="text" class="value registerValue long-field" name="organization_name" value="<?=!empty($_REQUEST['organization_name']) ? $_REQUEST['organization_name'] : "" ?>" placeholder="Company LLC"/>
             <div class="small-text">
                <input id="is_reseller_checkbox" type="checkbox" name="reseller" value="yes"> Are you a reseller? (wish sell our products and services)<br/>
             </div>
-            <select id="assigned_reseller_id" name="assigned_reseller_id" class="wide_100per" style="display:none;">
-               <?php	foreach ($resellers as $reseller) {
-                  if ($organization->id == $reseller->id) continue;
-                  ?>
-               <option value="<?=$reseller->id?>"<?php if($organization->reseller->id == $reseller->id) print " selected";?>><?=$reseller->name?></option>
-               <?php	} ?>
-            </select>
-         </div>
-         <br/>
+         </div><br/>
          <h3>Register your Product</h3>
          <div class="small-text">
             <input id="has_item_checkbox" type="checkbox" name="reseller" value="yes"> Already have a device you would like to register?<br/>
@@ -70,7 +59,7 @@
             <select id="product_id" name="product_id" class="value input collectionField">
                <option value=""<? if ($product == $selectedProduct) print " selected"; ?>>---</option>
                <?php	foreach ($productsAvailable as $product) { ?>
-                <option value="<?=$product[0]?>"<? if ($product[0] == $selectedProduct) print " selected"; ?>><?=$product[2]?> [Item: <?=$product[1]?>]</option>
+                    <option value="<?=$product[0]?>"<? if ($product[0] == $selectedProduct) print " selected"; ?>><?=$product[2]?> [Item: <?=$product[1]?>]</option>
                <?php	} ?>
             </select>
          </div>

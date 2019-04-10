@@ -19,6 +19,7 @@
 		public $zip;
 		public $phone;
 		public $cell;
+		public $possibleStatus = array('NEW', 'ACTIVE', 'EXPIRED', 'HIDDEN', 'DELETED');
 
 		public function __construct($id = 0) {
 		
@@ -33,6 +34,49 @@
 				$this->id = $id;
 				$this->details();
 			}
+		}
+		
+        /**
+         * update potential customer
+         * @param array $parameters
+         */
+		public function update ($parameters) {
+		
+			if (! preg_match('/^[0-9]+$/',$this->id)) {
+				$this->error = "ID Required for update method.";
+				return 0;
+			}
+
+			$bind_params = array();
+			$update_contact_query = " UPDATE register_queue SET id = id";
+
+			if (isset($parameters['notes'])) {
+				$update_contact_query .= ",
+						notes = ?";
+				array_push($bind_params,$parameters['notes']);
+			}
+
+			if (isset($parameters['status'])) {
+                if (!in_array($parameters['status'], $this->possibleStatus)) {
+				    $this->error = "Invalid Status for RegisterQueue entry";
+				    return 0;
+                }
+				$update_contact_query .= ",
+						status = ?";
+				array_push($bind_params,$parameters['status']);
+			}
+
+			$update_contact_query .= "
+				WHERE	id = ?";
+			array_push($bind_params,$this->id);
+
+			query_log($update_contact_query);
+			$GLOBALS['_database']->Execute($update_contact_query,$bind_params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in RegisterQueue::update: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			return $this->details();
 		}
 		
 		// hydrate known details about this queue object from known id if set
@@ -55,6 +99,10 @@
 		    }
 		}
 
+        /**
+         * add new potential customer
+         * @param array $parameters
+         */
 		public function add($parameters) {
 			app_log("Register::Queue::add()",'trace',__FILE__,__LINE__);
 			$this->error = null;
@@ -65,6 +113,11 @@
 				VALUES
 	    			(?, ?, sysdate(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
 	    			";
+
+            // zero out empty values for int DB fields
+            if (empty($parameters['is_reseller'])) $parameters['is_reseller'] = 0;
+            if (empty($parameters['assigned_reseller_id'])) $parameters['assigned_reseller_id'] = 0;
+            if (empty($parameters['product_id'])) $parameters['product_id'] = 0;
 
 			$rs = $GLOBALS['_database']->Execute(
 				$add_object_query,

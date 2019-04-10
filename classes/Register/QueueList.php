@@ -5,6 +5,7 @@
 	
 		public $error;
 		public $count;
+		public $possibleStatus = array('NEW', 'ACTIVE', 'EXPIRED', 'HIDDEN', 'DELETED');
 		
 		public function find($parameters = array()) {
 		
@@ -13,6 +14,9 @@
 				FROM	register_queue
 				WHERE	id = id
 			";
+			
+            if (!empty($parameters['searchAll']))
+	            $get_queued_contacts_query .= " AND	" . $this->columnSearch($parameters['searchAll'], array('name', 'address', 'city', 'state', 'zip', 'phone', 'cell', 'code', 'notes', 'product_id', 'serial_number'));			
 			
 	        if (!empty($parameters['name']))
 	            $get_queued_contacts_query .= " AND	" . $this->columnSearch($parameters['name'], array('name'));
@@ -41,9 +45,6 @@
             if (!empty($parameters['serial_number']))
                 $get_queued_contacts_query .= " AND	" . $this->columnExact($parameters['serial_number'], array('serial_number'));
 
-            // @TODO date_created
-	        // print $get_queued_contacts_query;
-	        
 			$rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
 			if (! $rs) {
 				$this->error = "SQL Error in Register::ContactList::find(): ".$GLOBALS['_database']->ErrorMsg();

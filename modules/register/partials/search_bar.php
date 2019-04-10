@@ -142,29 +142,16 @@
 
         // add current class to the engineering section and add the sub-menu and add the "cog" icon
         var sideNav = $('#support-admin-menu');
-        sideNav.html('<i class="fa fa-phone"></i> Support');
-        sideNav.addClass('current');
-        sideNav.after( "<div id='_engineering-sub-nav-container'>   <li><a id='engineering-sub-nav-tasks' class='menu-sub-nav' href='/_support/request_new'><i class='fa fa-plus' aria-hidden='true'></i> New Request</a></li>   <li><a id='engineering-sub-nav-reports' class='menu-sub-nav' href='/_support/requests?btn_all=true'><i class='fa fa-list-ol' aria-hidden='true'></i> All Requests</a></li>   <li><a id='engineering-sub-nav-releases' class='menu-sub-nav' href='/_support/request_items'><i class='fa fa-check-square' aria-hidden='true'></i> Tickets</a></li>   <li><a id='engineering-sub-nav-projects' class='menu-sub-nav' href='/_support/admin_actions'><i class='fa fa-check-square-o' aria-hidden='true'></i> Actions</a></li></div>" );
 
         // add sub-current class to current sub menu page selected
-        var sideNavSubMenu = $('#menu a[href="/_support/' + window.location.href.split('/').pop() + '"]');
+        var sideNavSubMenu = $('#menu a[href="/_register/' + window.location.href.split('/').pop() + '"]');
         sideNavSubMenu.addClass('sub-current'); 
     });
 </script>
-<?	if ($_REQUEST['btn_all']) { ?>
-    <a class="button more" href="/_support/requests">Open Requests</a>
-<?	} else { ?>
-    <a class="button more" href="/_support/requests?btn_all=true">All Requests</a>
-<?	} ?>
-&nbsp;| 
-    <a class="button more green-background" href="/_support/request_items">Requests &gt; Tickets</a>
-&nbsp;| 
-<a class="button more blue-background" href="/_support/admin_actions">Tickets &gt; Actions</a>
-<a class="button more red-background" style="float: right; margin-top: 12px; font-size: 16px;" href="/_support/request_new">New Request</a>  
 <div class="topnav">
-  <a class="active" href="/_support/requests"><i class="fa fa-phone" aria-hidden="true"></i> Support</a>
+  <a class="active" href="/_register/pending_customers"><i class="fa fa-user" aria-hidden="true"></i> Regististrations</a>
   <div class="search-container">
-    <form action="/_support/search" method="get">
+    <form action="/_register/pending_customers" method="get">
       <input type="text" value="<?=preg_replace("/[^A-Za-z0-9 ]/", '', $_REQUEST['search'])?>" placeholder="Search.." name="search" style="background-color:white;"/>
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
