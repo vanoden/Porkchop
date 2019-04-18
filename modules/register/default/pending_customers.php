@@ -25,6 +25,12 @@
         border-radius: 5px;
         color: white;
     }
+    td, tr, th {
+        border:0;
+    }
+    table {
+        border-bottom: 1px solid #000;
+    }
 </style>
 <script>
     // reset the page forms to only allow the one in question
@@ -62,6 +68,26 @@
         $("#customer_notes_form_" + queueId).hide();
         $("#customer_notes_edit_links_" + queueId).show();       
     }
+    
+	// date picker with max date being current day
+    window.onload = function() {
+       $("#dateStart").datepicker({
+            onSelect: function(dateText, inst) {
+                var minDate = document.getElementById('min_date');
+                minDate.value = dateText;
+                updateReport();
+            }, 
+            maxDate: '0'
+        });
+       $("#dateEnd").datepicker({
+            onSelect: function(dateText, inst) {
+                var minDate = document.getElementById('min_date');
+                minDate.value = dateText;
+                updateReport();
+            }, 
+            maxDate: '0'
+        });
+    }
 </script>
 <div class="breadcrumbs">
 	<a href="/_support/requests">Support Home</a> &gt; Customer Requests
@@ -69,6 +95,34 @@
 
 <h2 style="display: inline-block;"><i class='fa fa-users' aria-hidden='true'></i> Customer Registrations </h2>
 <?php include(MODULES.'/register/partials/search_bar.php'); ?>
+
+<div style="width: 100%;">
+   <?	if ($page->errorCount()) { ?>
+       <div class="form_error"><?=$page->errorString()?></div>
+   <?	} ?>
+   <form action="/_register/pending_customers" method="post">
+      <table>
+         <tr>
+            <th><span class="label"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> Start Date</th>
+            <th><span class="label"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> End Date</th>
+            <th><span class="label"><i class="fa fa-filter" aria-hidden="true"></i> Status</span></th>
+         </tr>
+         <tr>
+            <td><input type="text" id="dateStart" name="dateStart" class="value input" value="<?=$_REQUEST['dateStart']?>" /></td>
+            <td><input type="text" id="dateEnd" name="dateEnd" class="value input" value="<?=$_REQUEST['dateEnd']?>" /></td>
+            <td style="width: 50%;">
+              <?php foreach ($queuedCustomers->possibleStatus as $possibleStatus) { ?>
+                  <input type="checkbox" name="<?=$possibleStatus?>" value="<?=$possibleStatus?>"
+                  <?php
+                  if ($_REQUEST[$possibleStatus] == $possibleStatus) print " checked"; 
+                  ?> /><?=$possibleStatus?>
+              <?php } ?>
+            </td>
+         </tr>
+      </table>
+      <input type="submit" name="btn_submit" class="button" value="Filter Results" style="float:right;" /><br/><br/>
+   </form>
+</div>
 
 <?php
 if ($page->success) {

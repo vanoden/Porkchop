@@ -49,9 +49,26 @@
     // get queued customers based on search
     $queuedCustomers = new Register\QueueList();
     $searchTerm = '';
+    $dateStart = '';
+    $dateEnd = '';
+    $statusFiltered = array();
+    
+    // process form posted filters for results
+    if ($_REQUEST['NEW']) $statusFiltered[] = $_REQUEST['NEW'];
+    if ($_REQUEST['ACTIVE']) $statusFiltered[] = $_REQUEST['ACTIVE'];
+    if ($_REQUEST['EXPIRED']) $statusFiltered[] = $_REQUEST['EXPIRED'];
+    if ($_REQUEST['HIDDEN']) $statusFiltered[] = $_REQUEST['HIDDEN'];
+    if ($_REQUEST['DELETED']) $statusFiltered[] = $_REQUEST['DELETED'];
     if ($_REQUEST['search']) $searchTerm = $_REQUEST['search'];
+    if ($_REQUEST['dateStart']) $dateStart = $_REQUEST['dateStart'];
+    if ($_REQUEST['dateEnd']) $dateEnd = $_REQUEST['dateEnd'];
+    
+    // get results
     $queuedCustomersList = $queuedCustomers->find(
         array(
-            'searchAll'=> $searchTerm, 
+            'searchAll'=> $searchTerm,
+            'status' => $statusFiltered, 
+            'dateStart'=> $dateStart,
+            'dateEnd'=> $dateEnd
         )
     );
