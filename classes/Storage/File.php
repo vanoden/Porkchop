@@ -21,6 +21,7 @@
 		}
 
 		public function add($parameters) {
+            app_log('Storage::File::add(): '.print_r($parameters,true));
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) {
 				$parameters['code'] = uniqid();
 			}
@@ -344,5 +345,11 @@
 		public function download() {
 			return $this->repository->retrieveFile($this);
 		}
+        public function code() {
+            return $this->code;
+        }
+        public function error() {
+            return $this->error;
+        }
 	}
 ?>

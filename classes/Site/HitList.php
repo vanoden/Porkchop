@@ -28,7 +28,7 @@
 			}
 			$hits = array();
 			while (list($id) = $rs->FetchRow()) {
-				$hit = new SessionHit($id);
+				$hit = new Hit($id);
 				array_push($hits,$hit);
 			}
 			return $hits;

@@ -1,9 +1,7 @@
 <?php
-	if (! $GLOBALS['_SESSION_']->customer->has_role('engineering user')) {
-		$page->error = "Permission Denied";
-		return;
-	}
 	$page = new \Site\Page();
+	$page->requireRole('engineering user');
+
 	$project = new \Engineering\Project();
 	
 	if ($_REQUEST['project_id']) {

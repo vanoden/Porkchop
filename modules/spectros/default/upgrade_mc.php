@@ -47,7 +47,7 @@
 			"templates"		=> array(
 				"repositories"		=> "admin.html",
 				"repository"		=> "admin.html",
-				"files"				=> "admin.html",
+				"browse"			=> "admin.html",
 			),
 		),
 		"Media"			=> array(

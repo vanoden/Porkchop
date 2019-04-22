@@ -42,6 +42,7 @@
 </div>
 <div class="form_footer">
     <input type="submit" name="btn_submit" class="button" value="Update" />
+    <input type="button" name="btn_files" class="button" value="Files" onclick="window.location.href='/_storage/browse?code=<?=$repository->code?>';" />
     <input type="button" name="btn_back" class="button" value="Back" onclick="window.location.href='/_storage/repositories';" />
 </div>
 </form>

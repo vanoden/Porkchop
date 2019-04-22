@@ -1,9 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	if (! $GLOBALS['_SESSION_']->customer->has_role('engineering user')) {
-		$page->addError("Permission Denied");
-		return;
-	}
+	$page->requireRole('engineering user');
 
     // get new and active tasks for the 'prerequisite' field
 	$tasklist = new \Engineering\TaskList();

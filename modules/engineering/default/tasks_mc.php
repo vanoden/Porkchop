@@ -1,9 +1,7 @@
 <?php
 	$page = new \Site\Page();
-	if (! $GLOBALS['_SESSION_']->customer->has_role('engineering user')) {
-		$page->error = "Permission Denied";
-		return;
-	}
+	$page->requireRole('engineering user');
+
 	if (! $_REQUEST['btn_submit']) {
 		$_REQUEST['new'] = 1;
 		$_REQUEST['active'] = 1;
