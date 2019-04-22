@@ -5,6 +5,7 @@
 	
 		public $error;
 		public $count;
+		public $possibleStatus = array('NEW', 'ACTIVE', 'EXPIRED', 'HIDDEN', 'DELETED');
 		
 		public function find($parameters = array()) {
 		
@@ -13,6 +14,9 @@
 				FROM	register_queue
 				WHERE	id = id
 			";
+			
+            if (!empty($parameters['searchAll']))
+	            $get_queued_contacts_query .= " AND	" . $this->columnSearch($parameters['searchAll'], array('name', 'address', 'city', 'state', 'zip', 'phone', 'cell', 'code', 'notes', 'product_id', 'serial_number'));			
 			
 	        if (!empty($parameters['name']))
 	            $get_queued_contacts_query .= " AND	" . $this->columnSearch($parameters['name'], array('name'));
@@ -25,9 +29,6 @@
 	                
 	        if (!empty($parameters['code']))
 	            $get_queued_contacts_query .= " AND	" . $this->columnExact($parameters['code'], array('code'));
-	            
-            if (!empty($parameters['status']))
-                $get_queued_contacts_query .= " AND	" . $this->columnExact($parameters['status'], array('status'));
                 
             if (!empty($parameters['is_reseller']))
                 $get_queued_contacts_query .= " AND	" . $this->columnExact($parameters['is_reseller'], array('is_reseller'));
@@ -41,15 +42,25 @@
             if (!empty($parameters['serial_number']))
                 $get_queued_contacts_query .= " AND	" . $this->columnExact($parameters['serial_number'], array('serial_number'));
 
-            // @TODO date_created
-	        // print $get_queued_contacts_query;
-	        
+            if (!empty($parameters['status'])) {
+                $get_queued_contacts_query .= "AND (";
+                foreach ($parameters['status'] as $status) $get_queued_contacts_query .= " OR " . $this->columnExact($status, array('status'));         
+                $get_queued_contacts_query .= ")";
+                $get_queued_contacts_query  = str_replace ( "( OR (" , "((" , $get_queued_contacts_query); // @TODO, this isn't the best really to produce the OR statements
+            }
+
+            if (!empty($parameters['dateStart'])) 
+                $get_queued_contacts_query .= " AND	`date_created` > '" . date("Y-m-d H:i:s", strtotime($parameters['dateStart'])) . "'";
+
+            if (!empty($parameters['dateEnd'])) 
+                $get_queued_contacts_query .= " AND	`date_created` < '" . date("Y-m-d H:i:s", strtotime($parameters['dateEnd'])) . "'";
+
 			$rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
 			if (! $rs) {
 				$this->error = "SQL Error in Register::ContactList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			
+
 			// get list of contacts for UI
 			$queuedContacts = array();
 			while (list($id) = $rs->FetchRow()) {
