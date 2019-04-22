@@ -44,10 +44,14 @@
 						"validation_key"	=> $validation_key,
 					)
 				);
-				
+				$page->loginTaken = false;
 				if ($_customer->error) {
 					app_log("Error adding customer: ".$_customer->error,'error',__FILE__,__LINE__);
-					$page->error .= "Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher questions.";
+					$page->error .= "Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher issues.";
+					if (strpos($_customer->error, 'Duplicate entry') !== false) {
+					    $page->error = "Error: <strong>" . $_REQUEST['login'] . "</strong> has already been taken for a user name";
+					    $page->loginTaken = true;
+					}
 				} else {
 
 					// Login New User by updating session
@@ -100,12 +104,13 @@
                     $queuedCustomerData['phone'] = $_REQUEST['phone'];
                     $queuedCustomerData['cell'] = $_REQUEST['cell'];                    
                     $queuedCustomerData['product_id'] = $_REQUEST['product_id'];
+                    if (empty($queuedCustomerData['product_id'])) $queuedCustomerData['product_id'] = 0;
                     $queuedCustomerData['serial_number'] = $_REQUEST['serial_number'];               
                     $queuedCustomer->add($queuedCustomerData);
                     
                     if ($queuedCustomer->error) {
                         app_log("Error adding queued organization: ".$queuedCustomer->error,'error',__FILE__,__LINE__);
-                        $page->error .= "Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher questions.";
+                        $page->error .= "Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher issues.";
                     }
 					
 					// Generate Email Confirmation

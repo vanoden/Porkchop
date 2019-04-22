@@ -35,7 +35,7 @@
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 
 <div style="width: 756px;">
-	<form id="pageForm" name="filterForm" method="get" action="/_support/request_items">
+	<form id="pageForm" name="filterForm" method="get" action="/_support/request_items"  autocomplete="off">
 	    <input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />
 	    <input id="min_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['min_date']?>" />
 	    <div style="width: 100%; border: solid 1px #888a85; padding: 10px; margin: 10px; margin-left: 0px;">

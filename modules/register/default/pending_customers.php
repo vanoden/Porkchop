@@ -100,7 +100,7 @@
    <?	if ($page->errorCount()) { ?>
        <div class="form_error"><?=$page->errorString()?></div>
    <?	} ?>
-   <form action="/_register/pending_customers" method="post">
+   <form action="/_register/pending_customers" method="post" autocomplete="off">
       <table>
          <tr>
             <th><span class="label"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> Start Date</th>
@@ -139,6 +139,7 @@ if ($page->error) {
 <h2 style="display: inline-block;">Pending Customers
     <?=($page->isSearchResults)? "[Found Customers: ". count($queuedCustomersList)."]" : "";?>
 </h2>
+<h4 style="margin:0;padding: 0px 0px 8px 8px;">set to <span style="color:brown;">active</span> to add them as a new customer</h4>
 <!--	START First Table -->
 	<div class="tableBody" style="min-width: 100%;">
 	<div class="tableRowHeader">
