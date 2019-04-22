@@ -207,6 +207,7 @@
 		# Prepare Values for String
 		$date = date('Y/m/d H:i:s');
 		$path = preg_replace('#^'.BASE.'/#','',$path);
+		$pid = getMyPid();
 
 		if ((array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'module'))) $module = $GLOBALS['_page']->module;
 		else $module = '-';
@@ -224,7 +225,7 @@
 		}
 
 		# Build String
-		$string = "$date [$level] $module::$view $path:$line $session_id $customer_id $message\n";
+		$string = "$date [$pid] [$level] $module::$view $path:$line $session_id $customer_id $message\n";
 
 		# Send to appropriate log
 		if (preg_match('/^syslog$/i',APPLICATION_LOG)) {
@@ -411,6 +412,9 @@
 				case "txt":
 					return "text/plain";
 					break;
+                case "md5":
+                    return "text/plain";
+                    break;
 				default:
 					return null;
 			}
