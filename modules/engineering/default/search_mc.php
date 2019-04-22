@@ -1,10 +1,7 @@
 <?php
     $page = new \Site\Page();
+	$page->requireRole('engineering user');
     $page->isSearchResults = true;
-    if (! $GLOBALS['_SESSION_']->customer->has_role('engineering user')) {
-	    $page->addError("Permission Denied");
-	    return;
-    }
 
     // clean user input and search away
     $searchTerm = preg_replace("/[^A-Za-z0-9 ]/", '', $_REQUEST['search']);
