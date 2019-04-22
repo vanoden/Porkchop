@@ -72,7 +72,6 @@
 						`status`		enum('TEST','ACTIVE','HIDDEN') NOT NULL DEFAULT 'TEST',
 						`repository_id`	int(11) NOT NULL,
 						`date_created`	datetime,
-						`date_published` datetime,
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `uk_package_code` (`code`),
 						FOREIGN KEY `fk_owner_id` (`owner_id`) REFERENCES `register_users` (`id`),
@@ -89,15 +88,15 @@
 
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `package_versions` (
-						`id`			int(11) NOT NULL,
+						`id`			int(11) NOT NULL PRIMARY KEY,
 						`package_id`	int(11) NOT NULL,
 						`major`			int(3) NOT NULL,
 						`minor`			int(3) NOT NULL,
 						`build`			varchar(10) NOT NULL,
 						`status`		enum('NEW','PUBLISHED','HIDDEN'),
 						`date_created`	datetime,
+						`date_published` datetime,
 						`user_id`		int(11) NOT NULL,
-						PRIMARY KEY `PK_VERSION_ID` (`id`),
 						FOREIGN KEY `FK_PACKAGE_ID` (`package_id`) REFERENCES `package_packages` (`id`),
 						FOREIGN KEY `FK_FILE_ID` (`id`) REFERENCES `storage_files` (`id`),
 						FOREIGN KEY `FK_USER_ID` (`user_id`) REFERENCES `register_users` (`id`)

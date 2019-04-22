@@ -102,17 +102,17 @@
 
 		public function addFile($file,$path) {
 			# Write contents to filesystem
-			return move_uploaded_file($path,$this->_path()."/".$file->name());
+			return move_uploaded_file($path,$this->_path()."/".$file->code());
 		}
 
 		public function retrieveFile($file) {
-			if (! file_exists($this->_path()."/".$file->name)) {
+			if (! file_exists($this->_path()."/".$file->code)) {
 				$this->error = "File not found";
 				return false;
 			}
 
 			# Load contents from filesystem
-			$fh = fopen($this->_path()."/".$file->name,'rb');
+			$fh = fopen($this->_path()."/".$file->code,'rb');
 			if (FALSE === $fh) {
 				$this->error = "Failed to open file";
 				return false;
@@ -131,7 +131,14 @@
 		}
 
 		public function eraseFile($file) {
-			if (! file_exists($this->_path()."/".$file->name))
+			if (! file_exists($this->_path()."/".$file->code)) {
+                $this->error = "File not found";
+                return false;
+            }
+            if (! unlink($this->_path()."/".$file->code)) {
+                $this->error = "Failed to delete file";
+                return false;
+            }
 			return true;
 		}
 	}

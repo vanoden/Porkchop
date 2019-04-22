@@ -17,6 +17,7 @@
 		}
 
 		public function add($parameters) {
+            
 			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) {
 				$this->error = "package manager role required";
 				return false;
@@ -30,6 +31,10 @@
 				$this->error = "Package not found";
 				return false;
 			}
+            if (! $package->repository->id) {
+                $this->error = "No repository assigned to package";
+                return false;
+            }
 			$this->package = $package;
 			if (! preg_match('/^\d+$/',$parameters['major'])) {
 				$this->error = "major sequence required";
@@ -67,23 +72,31 @@
 			# Set name based on package and version
 			$this->name($this->formatted_name());
 
+			$parameters['repository_id'] = $package->repository->id;
+			$parameters['name'] = $this->formatted_name();
+			if (! isset($parameters['mime_type'])) $parameters['mime_type'] = guess_mime_type($parameters['filename']);
+			if (! isset($parameters['size'])) $parameters['size'] = filesize($parameters['path']);
+
+            # Open Repository for File Storage
 			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->load($package->repository->id);
 			if ($factory->error) {
 				$this->error = "Error finding repository: ".$factory->error;
 				return false;
 			}
-			if (! $repository->addFile($this,$parameters['path'])) {
-				$this->error = "Error adding file to repository: ".$repository->error;
+
+            # Add File to Repository
+            parent::add(array(
+                'repository_id' => $parameters['repository_id'],
+                'name'          => $parameters['name'],
+                'size'          => $parameters['size'],
+                'mime_type'     => $parameters['mime_type'],
+            ));
+			if (parent::error()) {
 				return false;
 			}
-
-			$parameters['name'] = $this->formatted_name();
-			$parameters['mime_type'] = guess_mime_type($parameters['filename']);
-			$parameters['repository_id'] = $repository->id;
-			$parameters['size'] = filesize($parameters['path']);
-			parent::add($parameters);
-			if ($this->error) {
+			if (! $repository->addFile($this,$parameters['path'])) {
+				$this->error = "Error adding file to repository: ".$repository->error;
 				return false;
 			}
 
@@ -259,12 +272,12 @@
 			$this->status = $object->status;
 			$this->owner = new \Register\Person($object->user_id);
 			$this->date_created = $object->date_created;
+			$this->date_published = $object->date_published;
 			$factory = new \Storage\RepositoryFactory();
 			$this->repository = $factory->load($this->repository->id);
 
 			return true;
 		}
-
 		public function version() {
 			return sprintf("%0d.%0d.%0d",$this->major,$this->minor,$this->build);
 		}

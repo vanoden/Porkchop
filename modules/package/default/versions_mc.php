@@ -14,13 +14,27 @@
 
     if ($_REQUEST['dothis'] == 'publish') {
         $version = new \Package\Version($_REQUEST['version_id']);
-        app_log("Publishing version ".$version->version()." of ".$version->package->name,'notice');
+        app_log($GLOBALS['_SESSION_']->customer->login." publishing version ".$version->version()." of ".$version->package->name,'notice');
         $version->publish();
+        if ($version->error) {
+            $page->addError($version->error);
+        }
     }
 
     if ($_REQUEST['dothis'] == 'hide') {
         $version = new \Package\Version($_REQUEST['version_id']);
         app_log("Hiding version ".$version->version()." of ".$version->package->name,'notice');
         $version->hide();
+    }
+
+    if ($_REQUEST['dothis'] == 'download') {
+        $version = new \Package\Version($_REQUEST['version_id']);
+        $version->download();
+        if ($version->error()) {
+            $page->addError($version->error());
+        }
+        else {
+            exit;
+        }
     }
 ?>

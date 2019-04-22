@@ -163,7 +163,10 @@
 	### Add a Version								###
 	###################################################
 	function addVersion() {
+		app_log("addVersion called");
 		if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) error("Permission Denied");
+
+        if ($_FILES['file']['error']) error("File upload failed: ".$_FILES['file']['error']);
 
 		$package = new \Package\Package();
 		$package->get($_REQUEST['package_code']);
@@ -172,6 +175,15 @@
 
 		$version = new \Package\Version();
 		if ($version->error) error("Error adding version: ".$version->error);
+		app_log(print_r($_FILES,true));
+        if ($_FILES['file']['type']) {
+            $mime_type = $_FILES['file']['type'];
+        }
+        elseif(guess_mime_type($_FILES['file']['name'])) {
+            $mime_type = guess_mime_type($_FILES['file']['name']);
+        }
+        else error("Can't guess mime-type for ".$_FILES['file']['name']);
+
 		$version->add(
 			array(
 				'package_id'	=> $package->id,
@@ -181,6 +193,8 @@
 				'status'		=> $_REQUEST['status'],
 				'filename'		=> $_FILES['file']['name'],
 				'path'			=> $_FILES['file']['tmp_name'],
+                'size'          => $_FILES['file']['size'],
+                'mime_type'     => $mime_type
 			)
 		);
 		if ($version->error) error("Error adding version: ".$version->error);
