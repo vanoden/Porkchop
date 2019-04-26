@@ -119,6 +119,7 @@
 			}
 
 			header("Content-Type: ".$file->mime_type);
+			header("Content-Length: ".filesize($this->_path()."/".$file->code));
 			header('Content-Disposition: filename="'.$file->name().'"');
 			while (!feof($fh)) {
 				$buffer = fread($fh,8192);
