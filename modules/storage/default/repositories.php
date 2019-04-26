@@ -1,4 +1,5 @@
 <div class="title">Repositories</div>
+<a class="button" href="/_storage/repository">New Repository</a>
 <table class="body">
 <tr><th>Code</th>
 	<th>Name</th>
