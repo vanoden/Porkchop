@@ -64,7 +64,7 @@
             </select>
          </div>
          <br/>
-         
+
          <h3>Business Address</h3>
          <label for="address"><i class="fa fa-address-card-o"></i> Address</label>
          <input type="text" id="address" class="long-field" name="address" placeholder="542 W. 15th Street" value="<?=!empty($_REQUEST['address']) ? $_REQUEST['address'] : "" ?>">
@@ -85,7 +85,14 @@
          <span class="label registerLabel registerLastNameLabel">*Last Name:</span>
          <input type="text" class="value registerValue registerLastNameValue long-field" name="last_name" value="<?=!empty($_REQUEST['last_name']) ? $_REQUEST['last_name'] : "" ?>" placeholder="Doe">
          <span class="label registerLabel registerLoginLabel">*Login:</span>
-         <input type="text" class="value registerValue registerLoginValue" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" />
+         <input type="text" class="value registerValue registerLoginValue" style="<?=($page->loginTaken) ? 'border:solid red 2px;' : ''?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" />
+         <?php
+            if ($page->loginTaken) {
+         ?>
+         <div style="color:red; font-size: 12px;"><?=$page->error;?></div><br/>
+         <?php    
+             }
+         ?>
          <span class="label registerLabel registerPasswordLabel">*Password:</span>
          <input type="password" class="value registerValue registerPasswordValue" name="password" /><br/>
          <span class="label registerLabel registerPasswordLabel">*Confirm Password:</span>
@@ -94,7 +101,6 @@
          <input type="text" class="value registerValue registerLoginValue" name="work_email" value="<?=!empty($_REQUEST['work_email']) ? $_REQUEST['work_email'] : "" ?>" placeholder="me@business.com">
          <span class="label registerLabel registerLoginLabel">*Home Email:</span>
          <input type="text" class="value registerValue registerLoginValue" name="home_email" value="<?=!empty($_REQUEST['home_email']) ? $_REQUEST['home_email'] : "" ?>" placeholder="me@email.com">
-         
       </div>
       <div id="registerSubmit" class="registerQuestion">
          <div class="g-recaptcha" data-sitekey="6LfrepcUAAAAACr1RpIeYIUasYuF0vC13wkDQgrN"></div>

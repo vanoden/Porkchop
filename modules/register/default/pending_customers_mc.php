@@ -63,6 +63,12 @@
     if ($_REQUEST['dateStart']) $dateStart = $_REQUEST['dateStart'];
     if ($_REQUEST['dateEnd']) $dateEnd = $_REQUEST['dateEnd'];
     
+    // set to default of no options selected
+    if (empty($statusFiltered)) {
+        $_REQUEST['NEW'] = $statusFiltered[] = 'NEW';
+        $_REQUEST['ACTIVE'] = $statusFiltered[] = 'ACTIVE';
+    }
+    
     // get results
     $queuedCustomersList = $queuedCustomers->find(
         array(

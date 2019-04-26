@@ -78,11 +78,6 @@
 					}
 					$find_objects_query .= ")";
 				}
-				
-			    if (preg_match('/^[\w\s]+$/',$parameters['status'])) {
-				    $find_objects_query .= "\tAND s.status = ?";
-				    array_push($bind_params,$parameters['status']);
-			    }
 			}
 			
 			$find_objects_query .= "
