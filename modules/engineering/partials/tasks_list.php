@@ -15,9 +15,10 @@
         <!--	START First Table -->
 	    <div class="tableBody min-tablet">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 25%;">Assigned To</div>
-		    <div class="tableCell" style="width: 25%;">Project</div>
-		    <div class="tableCell" style="width: 50%;">Status</div>
+		    <div class="tableCell" style="width: 14%;">Assigned To</div>
+		    <div class="tableCell" style="width: 18%;">Product</div>
+		    <div class="tableCell" style="width: 16%;">Project</div>
+		    <div class="tableCell" style="width: 52%;">Status</div>
 	    </div>
 	    <div class="tableRow">
 		    <div class="tableCell">
@@ -25,6 +26,14 @@
 				    <option value="">Any</option>
 				    <?	foreach ($assigners as $assigner) { ?>
 				    <option value="<?=$assigner->id?>"<? if ($assigner->id == $_REQUEST['assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
+				    <?	} ?>
+			    </select>
+		    </div>
+		    <div class="tableCell">
+			    <select name="product_id" class="value input">
+				    <option value="">Any</option>
+				    <?	foreach ($products as $product) { ?>
+				    <option value="<?=$product->id?>"<? if ($product->id == $_REQUEST['product_id']) print " selected"; ?>><?=$product->title?></option>
 				    <?	} ?>
 			    </select>
 		    </div>
@@ -39,6 +48,8 @@
 		    <div class="tableCell">
 			    <input type="checkbox" name="new" value="1"<? if ($_REQUEST['new']) print " checked"; ?> />New
 			    <input type="checkbox" name="active" value="1"<? if ($_REQUEST['active']) print " checked"; ?> />Active
+			    <input type="checkbox" name="broken" value="1"<? if ($_REQUEST['broken']) print " checked"; ?> />Broken
+			    <input type="checkbox" name="testing" value="1"<? if ($_REQUEST['testing']) print " checked"; ?> />Testing
 			    <input type="checkbox" name="complete" value="1"<? if ($_REQUEST['complete']) print " checked"; ?>/>Completed
 			    <input type="checkbox" name="cancelled" value="1"<? if ($_REQUEST['cancelled']) print " checked"; ?> />Cancelled
 			    <input type="checkbox" name="hold" value="1"<? if ($_REQUEST['hold']) print " checked"; ?> />Hold

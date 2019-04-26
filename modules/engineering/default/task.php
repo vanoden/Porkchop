@@ -203,8 +203,9 @@
                   <option value="new"<? if ($task->status == 'NEW') print ' selected'; ?>>New</option>
                   <option value="hold"<? if ($task->status == 'HOLD') print ' selected'; ?>>Hold</option>
                   <option value="active"<? if ($task->status == 'ACTIVE') print ' selected'; ?>>Active</option>
-                  <option value="cancelled"<? if ($task->status == 'CANCELLED') print ' selected'; ?>>Cancelled</option>
+                  <option value="broken"<? if ($task->status == 'BROKEN') print ' selected'; ?>>Broken</option>
                   <option value="testing"<? if ($task->status == 'TESTING') print ' selected'; ?>>Testing</option>
+                  <option value="cancelled"<? if ($task->status == 'CANCELLED') print ' selected'; ?>>Cancelled</option>
                   <option value="complete"<? if ($task->status == 'COMPLETE') print ' selected'; ?>>Complete</option>
                </select>
             </div>
