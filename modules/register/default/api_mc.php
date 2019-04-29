@@ -282,6 +282,29 @@
 		print formatOutput($response);
 	}
 	###################################################
+	### Update an Existing Role						###
+	###################################################
+	function updateRole() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) error("Permission denied");
+
+		$response = new stdClass();
+
+		$role = new \Register\Role();
+		$role->get($_REQUEST['name']);
+		if ($role->error) error($role->error);
+		if (! $role->id) error("Role not found");
+		$parameters = array();
+		if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
+		if ($role->update($parameters)) {
+			$response->success = 1;
+		}
+		else {
+			$response->success = 0;
+			$response->error = $role->error;
+		}
+		print formatOutput($response);
+	}
+	###################################################
 	### Add a User to a Role						###
 	###################################################
 	function addRoleMember() {

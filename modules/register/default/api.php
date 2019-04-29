@@ -157,6 +157,25 @@
 					<span class="label apiLabel">name</span>
 					<input type="text" name="name" class="input value methodInput"/>
 				</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">description</span>
+					<input type="text" name="description" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
+			<form method="post" action="<?=PATH?>/_register/api" name="updateRole">
+			<input type="hidden" name="method" value="updateRole">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">updateRole</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">name</span>
+					<input type="text" name="name" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">description</span>
+					<input type="text" name="description" class="input value methodInput"/>
+				</div>
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
 			</form>
