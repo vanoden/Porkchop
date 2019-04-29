@@ -45,27 +45,26 @@
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
-			return $this->update($this->id,$parameters);
+			return $this->update($parameters);
         }
 
-		public function update($id,$parameters = array()) {
-			if (! preg_match('/^\d+$/',$id)) {
-				if ($this->id) $id = $this->id;
-				else {
-					$this->error = "Valid id required in Role::add";
-					return null;
-				}
-			}
-
+		public function update($parameters = array()) {
 			$update_object_query = "
 				UPDATE	register_roles
 				SET		id = id";
 
-			if ($parameters['description'])
+			$bind_params = array();
+			if (isset($parameters['description']))
 				$update_object_query .= ",
-						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
+						description = ?";
+			array_push($bind_params,$parameters['description']);
 
-			$GLOBALS['_database']->Execute($update_object_query);
+			$update_object_query .= "
+				WHERE	id = ?";
+			array_push($bind_params,$this->id);
+
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Role::update: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
