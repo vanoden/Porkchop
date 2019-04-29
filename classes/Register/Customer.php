@@ -460,7 +460,7 @@
 		}
 		public function last_active() {
 			$sessionList = new \Site\SessionList();
-			list($session) = $sessionList->find(array("user_id" => $this->id,"_limit" => 1,"_sort" => 'last_hit_date',"_desc" => true));
+			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true));
 			if ($sessionList->error) {
 				$this->error = "Error getting session: ".$sessionList->error;
 				return null;
