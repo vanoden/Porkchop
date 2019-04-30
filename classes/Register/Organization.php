@@ -26,6 +26,39 @@
 				$this->details();
 			}
 		}
+		
+		public function addQueued($parameters) {
+		
+			app_log("Register::Organization::addQueued()",'trace',__FILE__,__LINE__);
+			
+			$this->error = null;
+			$add_object_query = "
+				INSERT
+				INTO	register_organizations
+				(		name,code,status,date_created,is_reseller,assigned_reseller_id,notes)
+				VALUES
+				(		
+				    ?,?,?,sysdate(),?,?,?
+				)
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$add_object_query,
+				array(
+					$parameters['name'],
+					$parameters['code'],
+					$parameters['status'],
+					$parameters['is_reseller'],
+					$parameters['assigned_reseller_id'],
+					$parameters['notes']				
+				)
+			);
+			if (! $rs) {			
+				$this->error = "SQL Error in \Register\Organization::addQueued: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			$this->id = $GLOBALS['_database']->Insert_ID();
+			return $this->update($parameters);	
+		}
 
 		public function add($parameters) {
 		
@@ -38,14 +71,13 @@
 				VALUES
 				(		null,?,sysdate())
 			";
-
 			$rs = $GLOBALS['_database']->Execute(
 				$add_object_query,
 				array(
 					$parameters['code']
 				)
 			);
-			if (! $rs) {
+			if (! $rs) {			
 				$this->error = "SQL Error in \Register\Organization::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
@@ -102,6 +134,7 @@
 			}
 			return $this->details();
 		}
+		
 		public function get($code = '') {
 			app_log("Register::Organization::get($code)",'trace',__FILE__,__LINE__);
 			$this->error = null;
@@ -122,6 +155,7 @@
 			$this->id = $id;
 			return $this->details();
 		}
+		
 		public function details() {
 			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
 			$this->error = null;

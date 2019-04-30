@@ -1,11 +1,15 @@
-<?
+<?php
 	namespace Register;
 
 	class OrganizationList {
+	
 		public $count = 0;
 		public $error;
+		
 		public function find($parameters = array(),$recursive = true) {
+		
 			app_log("Register::OrganizationList::find()",'trace',__FILE__,__LINE__);
+			
 			$this->error = null;
 			$get_organizations_query = "
 				SELECT	id
@@ -92,7 +96,9 @@
 			}
 			return $organizations;
 		}
+		
 		public function findArray($parameters = array()) {
+		
 			app_log("Register::OrganizationList::findArray()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$objects = $this->find($parameters);
@@ -106,7 +112,9 @@
 			}
 			return $organizations;
 		}
+		
 		public function expire($threshold = 365) {
+		
 			if (! is_numeric($threshold)) {
 				$this->error = "threshold must be numeric";
 				return null;
@@ -138,4 +146,3 @@
 			return $counter;
 		}
 	}
-?>

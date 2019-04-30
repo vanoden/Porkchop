@@ -43,30 +43,40 @@
 
     // edit status for pending customer
     function editStatus(queueId) {
-        resetPage()
+        resetPage();
         $("#customer_status_form_" + queueId).show();
         $("#customer_status_form_links_" + queueId).hide();       
     }
     
     // cancel edit status for pending customer
     function cancelEditStatus(queueId) {
-        resetPage()
+        resetPage();
         $("#customer_status_form_" + queueId).hide();
         $("#customer_status_form_links_" + queueId).show();       
     }
     
     // edit notes for pending customer
     function editNote(queueId) {
-        resetPage()
+        resetPage();
         $("#customer_notes_form_" + queueId).show();
         $("#customer_notes_edit_links_" + queueId).hide();       
     }
 
     // cancel edit notes for pending customer
     function cancelEditNote(queueId) {
-        resetPage()
+        resetPage();
         $("#customer_notes_form_" + queueId).hide();
         $("#customer_notes_edit_links_" + queueId).show();       
+    }
+    
+    function assignCustomer(queueId) {
+        $("#customer_assign_" + queueId).val('assignCustomer');
+        $("#customer_assign_form_" + queueId).submit();
+    }
+    
+    function denyCustomer(queueId) {
+        $("#customer_assign_" + queueId).val('denyCustomer');
+        $("#customer_assign_form_" + queueId).submit();
     }
     
 	// date picker with max date being current day
@@ -75,15 +85,13 @@
             onSelect: function(dateText, inst) {
                 var minDate = document.getElementById('min_date');
                 minDate.value = dateText;
-                updateReport();
             }, 
             maxDate: '0'
         });
        $("#dateEnd").datepicker({
             onSelect: function(dateText, inst) {
-                var minDate = document.getElementById('min_date');
-                minDate.value = dateText;
-                updateReport();
+                var maxDate = document.getElementById('max_date');
+                maxDate.value = dateText;
             }, 
             maxDate: '0'
         });
@@ -101,6 +109,8 @@
        <div class="form_error"><?=$page->errorString()?></div>
    <?	} ?>
    <form action="/_register/pending_customers" method="post" autocomplete="off">
+      <input id="min_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['min_date']?>" />
+      <input id="max_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['max_date']?>" />
       <table>
          <tr>
             <th><span class="label"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> Start Date</th>
@@ -127,7 +137,7 @@
 <?php
 if ($page->success) {
 ?>
-    <h4 class="success-message"><i class="fa fa-check-square-o" aria-hidden="true"></i> Customer Updated</h4>
+    <h3 class="success-message"><i class="fa fa-check-square-o" aria-hidden="true"></i> Customer Updated</h3>
 <?php
 }
 if ($page->error) {
@@ -139,10 +149,10 @@ if ($page->error) {
 <h2 style="display: inline-block;">Pending Customers
     <?=($page->isSearchResults)? "[Found Customers: ". count($queuedCustomersList)."]" : "";?>
 </h2>
-<h4 style="margin:0;padding: 0px 0px 8px 8px;">set to <span style="color:brown;">active</span> to add them as a new customer</h4>
 <!--	START First Table -->
 	<div class="tableBody" style="min-width: 100%;">
 	<div class="tableRowHeader">
+	    <div class="tableCell">Action</div>
     	<div class="tableCell">Status</div>
     	<div class="tableCell">Date</div>	
 		<div class="tableCell">Name</div>
@@ -155,6 +165,44 @@ if ($page->error) {
 	foreach ($queuedCustomersList as $queuedCustomer) {
 ?>
 	<div class="tableRow">
+    	<div class="tableCell" style="font-size: 10px; max-width: 100px;">
+			<form method="POST" id="customer_assign_form_<?=$queuedCustomer->id?>" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+		    	<?php
+		    	switch ($queuedCustomer->status) {
+		    	    case 'PENDING':
+		    	        ?>
+		            	    <button type="button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-check-circle" aria-hidden="true"></i> Assign</button>
+		            	    <button type="button" onclick="denyCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-ban" aria-hidden="true"></i> Deny</button>    	    
+		    	        <?php
+		    	        break;
+		    	
+		    	    case 'VERIFYING':
+		    	        ?>
+		        	        <span style="color: <?=colorCodeStatus("VERIFYING")?>">
+		                	    <i class="fa fa-clock-o" aria-hidden="true"></i> email validating
+		                	</span>
+		    	        <?php
+		    	        break;
+		    	    case 'APPROVED':
+		                ?>
+		        	        <span style="color: <?=colorCodeStatus("APPROVED")?>">
+		                	    <i class="fa fa-check-circle" aria-hidden="true"></i> approved
+		                	</span>
+		    	        <?php
+		    	        break;
+		    	    default:
+		    	        ?>
+		        	        <span style="color: <?=colorCodeStatus("DENIED")?>">
+		                	    <i class="fa fa-times" aria-hidden="true"></i> denied
+		                	</span>
+		    	        <?php
+		    	        break;
+		    	}
+		    	?>
+		        <input id="customer_assign_<?=$queuedCustomer->id?>" type="hidden" name="action" value="assignCustomer"/>
+		        <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>
+			</form>
+    	</div>
 		<div class="tableCell">
 		    <div id="customer_status_form_<?=$queuedCustomer->id?>" class="hidden customer_status_form">
 		        <form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
@@ -165,7 +213,6 @@ if ($page->error) {
                         <?php } ?>
                     </select>
                     <br/>
-		            <input type="hidden" name="queueId" value="<?=$queuedCustomer->notes?>"/>
 		            <input type="hidden" name="action" value="updateStatus"/>
 		            <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>
 		            <button type="submit">Save</button>

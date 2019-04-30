@@ -10,6 +10,7 @@
 		public $is_reseller;
 		public $assigned_reseller_id;
 		public $notes;
+		public $register_user_id;
 		
 		// business contact fields
 		public $name;		
@@ -19,10 +20,10 @@
 		public $zip;
 		public $phone;
 		public $cell;
-		public $possibleStatus = array('NEW', 'ACTIVE', 'EXPIRED', 'HIDDEN', 'DELETED');
+		public $possibleStatus = array('VERIFYING','PENDING','APPROVED','DENIED');
 
 		public function __construct($id = 0) {
-		
+
 			// Clear Error Info
 			$this->error = '';
 
@@ -34,6 +35,28 @@
 				$this->id = $id;
 				$this->details();
 			}
+		}
+		
+		public function getByQueuedLogin($queuedUserId = 0) {
+		
+		    if (!empty($queuedUserId)) {
+
+                $get_queued_contacts_query = "
+	                SELECT	*
+	                FROM	register_queue
+	                WHERE	register_user_id = " . $queuedUserId;
+	                
+                $rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
+                if (! $rs) {
+	                $this->error = "SQL Error in Register::Queue::getByQueuedLogin(): ".$GLOBALS['_database']->ErrorMsg();
+	                return null;
+                }
+                while ($row = $rs->FetchRow()) {
+                    foreach ($row as $rowValueKey => $rowValue){
+                        if (!is_numeric($rowValueKey)) $this->$rowValueKey = $rowValue;
+                    }
+                }
+		    }
 		}
 		
         /**
@@ -69,14 +92,49 @@
 			$update_contact_query .= "
 				WHERE	id = ?";
 			array_push($bind_params,$this->id);
-
 			query_log($update_contact_query);
 			$GLOBALS['_database']->Execute($update_contact_query,$bind_params);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in RegisterQueue::update: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+						
+			// return basic queue entry details
 			return $this->details();
+		}
+		
+        /**
+         * sync the live account that may or may not be associated with the queued account being edited
+         */
+		public function syncLiveAccount () {
+
+            $registerContactList = new \Register\ContactList();
+            $registerContact = new \Register\Contact();
+            $registerCustomerList = new \Register\CustomerList();
+            $registerCustomer = new \Register\Customer();
+            $registerDept = new \Register\Department();
+            $registerOrganizationComment = new \Register\Organization\Comment();
+            $registerOrganizationList = new \Register\OrganizationList();
+            
+            $registerPrivilegeList = new \Register\PrivilegeList();
+            $registerPrivilege = new \Register\Privilege();
+            $registerRelationship = new \Register\Relationship();
+            $registerRoleList = new \Register\RoleList();
+            $registerRole = new \Register\Role();
+            
+            // process the new or existing queued customer to the chosen status
+            $organizationExists = !empty($registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleStatus)));
+            $registerOrganization = new \Register\Organization();   
+            
+            // set to active - doesn't exist yet - create the organization
+            if (!$organizationExists) {
+                $registerOrganization->addQueued(array('name' => $this->name, 'code' => $this->code, 'status' => 'ACTIVE', 'is_reseller' => $this->is_reseller, 'assigned_reseller_id' => $this->reseller, 'notes' => $this->notes));
+            } else {
+                // set to active - already exists - update the organization
+                $registerOrganization->get($this->code);
+                $registerOrganization->update(array('status' => 'ACTIVE', 'notes' => $this->notes));
+            }
 		}
 		
 		// hydrate known details about this queue object from known id if set
@@ -88,7 +146,7 @@
 	                WHERE	id = " . $this->id;
                 $rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
                 if (! $rs) {
-	                $this->error = "SQL Error in Register::ContactList::find(): ".$GLOBALS['_database']->ErrorMsg();
+	                $this->error = "SQL Error in Register::Queue::details(): ".$GLOBALS['_database']->ErrorMsg();
 	                return null;
                 }
                 while ($row = $rs->FetchRow()) {
@@ -103,21 +161,22 @@
          * add new potential customer
          * @param array $parameters
          */
-		public function add($parameters) {
+		public function add($parameters) {		
 			app_log("Register::Queue::add()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$add_object_query = "
 				INSERT
 				INTO	register_queue
-    				(name, code, date_created, is_reseller, assigned_reseller_id, address, city, state, zip, phone, cell, product_id, serial_number)
+    				(name, code, date_created, is_reseller, assigned_reseller_id, address, city, state, zip, phone, cell, product_id, serial_number, register_user_id)
 				VALUES
-	    			(?, ?, sysdate(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
+	    			(?, ?, sysdate(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	    			";
 
             // zero out empty values for int DB fields
             if (empty($parameters['is_reseller'])) $parameters['is_reseller'] = 0;
             if (empty($parameters['assigned_reseller_id'])) $parameters['assigned_reseller_id'] = 0;
             if (empty($parameters['product_id'])) $parameters['product_id'] = 0;
+            if (empty($parameters['register_user_id'])) $parameters['register_user_id'] = NULL;
 
 			$rs = $GLOBALS['_database']->Execute(
 				$add_object_query,
@@ -133,11 +192,12 @@
 					$parameters['phone'],
 					$parameters['cell'],
                     $parameters['product_id'],
-                    $parameters['serial_number']
+                    $parameters['serial_number'],
+                    $parameters['register_user_id']
 				)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in \Register\Organization::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in \Register\Queue::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();

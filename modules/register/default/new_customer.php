@@ -29,6 +29,22 @@
     font-size: 12px;
    }
 </style>
+<?php
+    if (isset($page->isVerifedAccount)) {
+        if ($page->isVerifedAccount) {
+?>
+    <h3>Your account has been verified, thank you!</h3>
+    <h5>Please <a href="/_register/login">login</a> to your account.</h5><br/>
+    <h6><strong>Please Note:</strong> Final approval registering your company with us is pending by our adminstrator.</h6>
+<?php        
+        } else {
+?>
+    <h3>Account could not be verified</h3>
+    <h5>Please check your spam / other mail folders in case you still need to find the correct verification link.</h5>
+<?php
+        }
+    } else {
+?>
 <h1><i class="fa fa-users" aria-hidden="true"></i> NEW Customer Registration</h1>
 <span class="form_instruction">Fill out all required information to apply. You will receive and email once your account has been created, thank you!</span><br/><br/>
 <form name="register" action="/_register/new_customer" method="POST">
@@ -37,7 +53,7 @@
       <r7_page.message id=100>
    </div>
    <?php	if ($page->error) { ?>
-    <div class="form_error"><?=$page->error?></div>
+      <div class="form_error"><?=$page->error?></div>
    <?php	} ?>
    <div id="registerFormSubmit">
       <div class="form-group">
@@ -89,7 +105,7 @@
          <?php
             if ($page->loginTaken) {
          ?>
-         <div style="color:red; font-size: 12px;"><?=$page->error;?></div><br/>
+             <div style="color:red; font-size: 12px;"><?=$page->error;?></div><br/>
          <?php    
              }
          ?>
@@ -111,3 +127,6 @@
    <!-- end registerFormSubmit -->
    </div>
 </form>
+<?php
+    }
+?>
