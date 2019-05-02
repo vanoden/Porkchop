@@ -383,9 +383,9 @@
                 $detect = new \Mobile_Detect;
 
                 if ($detect->isMobile())
-                    $this->mobile = true;
+                    $this->isMobile = true;
                 else
-                    $this->mobile = false;
+                    $this->isMobile = false;
 
 				if ($session->id) $cache->set($session,600);
 				return $session;
