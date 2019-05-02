@@ -26,11 +26,31 @@
 				$this->error = "SQL Error in RegisterPerson::get: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+			
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
 			$object = $this->details();
 			return $object;
 		}
+		
+		public function getAllDetails($code = '') {
+			$this->error = null;
+			$get_object_query = "
+				SELECT	*
+				FROM	register_users
+				WHERE	login = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($code)
+			);
+			if (! $rs) {
+				$this->error = "SQL Error in \Register\Customer::getAllDetails: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			return $rs->FetchRow();
+		}
+		
 		
 		public function details() {
 		    parent::details();
@@ -49,10 +69,8 @@
 				foreach ($roles as $role) {
 					if (isset($parameters['roles']) && is_array($parameters['roles'])) {
 						if (array_key_exists($role['id'],$parameters['roles'])) {
-							// Add Role
 							$this->add_role($role['id']);
 						} else {
-							// Drop Role
 							$this->drop_role($role['id']);
 						}
 					}

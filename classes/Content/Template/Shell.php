@@ -6,14 +6,10 @@
 		private $_content;
 		private $_params = array();
 		
-		public function __construct($path = null) {
-			
-		}
+		public function __construct($path = null) {}
 
 		public function content($content = null) {
-			if (isset($content)) {
-				$this->_content = $content;
-			}
+			if (isset($content)) $this->_content = $content;
 			return $this->_content;
 		}
 
@@ -48,4 +44,3 @@
 			return $this->_error;
 		}
 	}
-?>

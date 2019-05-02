@@ -10,19 +10,16 @@
 	function colorCodeStatus($status) {
 	    $color =  "#28a745";
 	    switch ($status) {
-	        case 'NEW':
-	            $color =  "#28a745";
-	            break;
-	        case 'ACTIVE':
+	        case 'VERIFYING':
 	            $color =  "#007bff";
 	            break;
-	        case 'EXPIRED':
+	        case 'PENDING':
+	            $color =  "#28a745";
+	            break;
+	        case 'APPROVED':
 	            $color =  "#333333";
 	            break;
-	        case 'HIDDEN':
-	            $color =  "#999999";
-	            break;
-	        case 'DELETED':
+	        case 'DENIED':
 	            $color =  "#dc3545";
 	            break;
 	        default:
@@ -46,6 +43,21 @@
         $page->success = true;
 	}
 	
+    // assign customer and/or generate new organization if needed
+	if ($_REQUEST['action'] == 'denyCustomer') {
+	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
+	    $queuedCustomer->update(array('status' => 'DELETED'));
+        $page->success = true;
+	}
+	
+    // assign customer and/or generate new organization if needed
+	if ($_REQUEST['action'] == 'assignCustomer') {
+	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
+	    $queuedCustomer->update(array('status' => 'ACTIVE'));
+	    $queuedCustomer->syncLiveAccount();
+        $page->success = true;
+	}
+	
     // get queued customers based on search
     $queuedCustomers = new Register\QueueList();
     $searchTerm = '';
@@ -54,19 +66,18 @@
     $statusFiltered = array();
     
     // process form posted filters for results
-    if ($_REQUEST['NEW']) $statusFiltered[] = $_REQUEST['NEW'];
-    if ($_REQUEST['ACTIVE']) $statusFiltered[] = $_REQUEST['ACTIVE'];
-    if ($_REQUEST['EXPIRED']) $statusFiltered[] = $_REQUEST['EXPIRED'];
-    if ($_REQUEST['HIDDEN']) $statusFiltered[] = $_REQUEST['HIDDEN'];
-    if ($_REQUEST['DELETED']) $statusFiltered[] = $_REQUEST['DELETED'];
+    if ($_REQUEST['VERIFYING']) $statusFiltered[] = $_REQUEST['VERIFYING'];
+    if ($_REQUEST['PENDING']) $statusFiltered[] = $_REQUEST['PENDING'];
+    if ($_REQUEST['APPROVED']) $statusFiltered[] = $_REQUEST['APPROVED'];
+    if ($_REQUEST['DENIED']) $statusFiltered[] = $_REQUEST['DENIED'];
     if ($_REQUEST['search']) $searchTerm = $_REQUEST['search'];
     if ($_REQUEST['dateStart']) $dateStart = $_REQUEST['dateStart'];
     if ($_REQUEST['dateEnd']) $dateEnd = $_REQUEST['dateEnd'];
     
     // set to default of no options selected
     if (empty($statusFiltered)) {
-        $_REQUEST['NEW'] = $statusFiltered[] = 'NEW';
-        $_REQUEST['ACTIVE'] = $statusFiltered[] = 'ACTIVE';
+        $_REQUEST['VERIFYING'] = $statusFiltered[] = 'VERIFYING';
+        $_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
     }
     
     // get results

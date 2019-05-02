@@ -5,7 +5,7 @@
 	
 		public $error;
 		public $count;
-		public $possibleStatus = array('NEW', 'ACTIVE', 'EXPIRED', 'HIDDEN', 'DELETED');
+		public $possibleStatus = array('VERIFYING','PENDING','APPROVED','DENIED');
 		
 		public function find($parameters = array()) {
 		

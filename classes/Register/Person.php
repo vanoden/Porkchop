@@ -162,7 +162,8 @@
 			if (! isset($parameters['timezone'])) $parameters['timezone'] = 'America/New_York';
 			if (! isset($parameters['status'])) $parameters['status'] = 'NEW';
 			if (! isset($parameters['date_expires'])) $parameters['date_expires'] = '2038-01-01 00:00:00';
-
+			if (! isset($parameters['validation_key'])) $parameters['validation_key'] = NULL;
+			
 			# Add to Database
 			$add_user_query = "
 				INSERT
@@ -177,7 +178,8 @@
 					first_name,
 					last_name,
 					organization_id,
-					timezone
+					timezone,
+					validation_key
 				)
 				VALUES
 				(
@@ -187,6 +189,7 @@
 					?,
 					?,
 					password(?),
+					?,
 					?,
 					?,
 					?,
@@ -204,7 +207,8 @@
 					$parameters['first_name'],
 					$parameters['last_name'],
 					$parameters['organization_id'],
-					$parameters['timezone']
+					$parameters['timezone'],
+					$parameters['validation_key']
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
