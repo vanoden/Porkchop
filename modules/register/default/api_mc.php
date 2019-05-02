@@ -158,10 +158,7 @@
 		if ($_REQUEST['password']) $parameters['password'] = $_REQUEST['password'];
 
 		# Update Customer
-		$customer = $_customer->update(
-			$customer->id,
-			$parameters
-		);
+		$customer->update($parameters);
 
 		# Error Handling
 		if ($_customer->error) app_error("Error updating customer: ".$_customer->error,__FILE__,__LINE__);
@@ -672,6 +669,37 @@
 
 		# Get List of Matching Organizations
 		$organizations = $organizationList->find($parameters);
+
+		# Error Handling
+		if ($organizationList->error) error($organizationList->error);
+
+		$response->success = 1;
+		$response->organization = $organizations;
+
+		# Send Response
+		print formatOutput($response);
+	}
+	###################################################
+	### Search Organizations						###
+	###################################################
+	function searchOrganizations() {
+		# Default StyleSheet
+		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error('Permission denied');
+
+		# Initiate Organization Object
+		$organizationList = new \Register\OrganizationList();
+
+		# Build Query Parameters
+		$parameters = array();
+		$parameters["string"] = $_REQUEST["string"];
+
+		$response = new stdClass();
+		$response->request->parameter = $parameters;
+
+		# Get List of Matching Organizations
+		$organizations = $organizationList->search($parameters);
 
 		# Error Handling
 		if ($organizationList->error) error($organizationList->error);

@@ -228,6 +228,17 @@
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
 			</form>
+			<form method="post" action="<?=PATH?>/_register/api" name="searchOrganizations">
+			<input type="hidden" name="method" value="searchOrganizations">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">searchOrganizations</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">string</span>
+					<input type="text" name="string" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
 			<form method="post" action="<?=PATH?>/_register/api" name="addOrganization">
 			<input type="hidden" name="method" value="addOrganization">
 			<div class="apiMethod">

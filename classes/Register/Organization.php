@@ -11,11 +11,15 @@
 		public $reseller;
 		public $notes;
 		public $_cached;
-
-		public function __construct($id = 0) {
+		private $_nocache = false;
+		public function __construct($id = 0,$options = array()) {
 		
 			// Clear Error Info
 			$this->error = '';
+
+			if ($options['nocache']) {
+				$this->_nocache = true;
+			}
 
 			// Database Initialization
 			$schema = new Schema();
@@ -123,14 +127,14 @@
 			return $this->details();
 		}
 		public function details() {
-			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
+			app_log("Register::Organization::details()[".$this->id."]",'notice',__FILE__,__LINE__);
 			$this->error = null;
 
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			
 			// Cached Organization Object, Yay!
-			if (($this->id) and ($organization = $cache_item->get())) {
+			if ((! $this->_nocache) and ($this->id) and ($organization = $cache_item->get())) {
 				$organization->_cached = 1;
 				$this->id = $organization->id;
 				$this->name = $organization->name;
@@ -163,6 +167,7 @@
 				FROM	register_organizations
 				WHERE	id = ?
 			";
+			query_log($get_details_query);
 			$rs = $GLOBALS['_database']->Execute(
 				$get_details_query,
 				array($this->id)
