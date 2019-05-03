@@ -53,7 +53,7 @@
     // assign customer and/or generate new organization if needed
 	if ($_REQUEST['action'] == 'assignCustomer') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
-	    $queuedCustomer->update(array('status' => 'ACTIVE'));
+	    $queuedCustomer->update(array('status' => 'APPROVED'));
 	    $queuedCustomer->syncLiveAccount();
         $page->success = true;
 	}
@@ -75,10 +75,7 @@
     if ($_REQUEST['dateEnd']) $dateEnd = $_REQUEST['dateEnd'];
     
     // set to default of no options selected
-    if (empty($statusFiltered)) {
-        $_REQUEST['VERIFYING'] = $statusFiltered[] = 'VERIFYING';
-        $_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
-    }
+    if (empty($statusFiltered)) $_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
     
     // get results
     $queuedCustomersList = $queuedCustomers->find(

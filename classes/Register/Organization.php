@@ -50,7 +50,7 @@
 				array(
 					$parameters['name'],
 					$parameters['code'],
-					$parameters['status'],
+					'NEW',
 					$parameters['is_reseller'],
 					$parameters['assigned_reseller_id'],
 					$parameters['notes']				
@@ -60,6 +60,7 @@
 				$this->error = "SQL Error in \Register\Organization::addQueued: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+			
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);	
 		}

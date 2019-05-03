@@ -109,32 +109,25 @@
          */
 		public function syncLiveAccount () {
 
-            $registerContactList = new \Register\ContactList();
-            $registerContact = new \Register\Contact();
-            $registerCustomerList = new \Register\CustomerList();
-            $registerCustomer = new \Register\Customer();
-            $registerDept = new \Register\Department();
-            $registerOrganizationComment = new \Register\Organization\Comment();
-            $registerOrganizationList = new \Register\OrganizationList();
-            
-            $registerPrivilegeList = new \Register\PrivilegeList();
-            $registerPrivilege = new \Register\Privilege();
-            $registerRelationship = new \Register\Relationship();
-            $registerRoleList = new \Register\RoleList();
-            $registerRole = new \Register\Role();
-            
-            // process the new or existing queued customer to the chosen status
-            $organizationExists = !empty($registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleStatus)));
-            $registerOrganization = new \Register\Organization();   
+            // process the new or existing queued customer to the chosen status  
+            $registerOrganizationList = new \Register\OrganizationList();          
+            $existingOrganization = $registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleStatus));
+            $organizationExists = !empty($existingOrganization);
+            $registerOrganization = new \Register\Organization();
             
             // set to active - doesn't exist yet - create the organization
             if (!$organizationExists) {
-                $registerOrganization->addQueued(array('name' => $this->name, 'code' => $this->code, 'status' => 'ACTIVE', 'is_reseller' => $this->is_reseller, 'assigned_reseller_id' => $this->reseller, 'notes' => $this->notes));
+                $newOrganizationDetails = $registerOrganization->addQueued(array('name' => $this->name, 'code' => $this->code, 'status' => 'APPROVED', 'is_reseller' => $this->is_reseller, 'assigned_reseller_id' => $this->reseller, 'notes' => $this->notes));
             } else {
                 // set to active - already exists - update the organization
                 $registerOrganization->get($this->code);
-                $registerOrganization->update(array('status' => 'ACTIVE', 'notes' => $this->notes));
+                $registerOrganization->update(array('status' => 'APPROVED', 'notes' => $this->notes));
             }
+            $existingOrganization = $registerOrganizationList->find(array('name' => $this->name));
+            
+            // update to have the queued login match the 'approved' organization
+            $registerCustomer = new \Register\Customer($this->register_user_id);
+            $registerCustomer->update(array('organization_id' => $existingOrganization[0]->id));
 		}
 		
 		// hydrate known details about this queue object from known id if set
