@@ -103,11 +103,10 @@
 			";
 
 			if (isset($parameters['name'])) {
-				if (in_array("name",$parameters['_like'])) {
+				if (isset($parameters['_like']) && in_array("name",$parameters['_like'])) {
 					$get_organizations_query .= "
 					AND		name like '%".preg_replace('/[^\w\-\.\_\s]/','',$parameters['name'])."%'";
-				}
-				else {
+				} else {
 					$get_organizations_query .= "
 					AND		name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc);
 				}
