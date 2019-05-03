@@ -38,5 +38,5 @@
 	if ($itemlist->error()) $page->addError($itemlist->error());
 
     // get current serial numbers and products available
-	$serialNumbers = $itemlist->getSerialNumbersAvailable();
-    $productsAvailable = $itemlist->getProductsAvailable();
+	$productList = new \Product\ItemList();
+	$products = $productList->find(array('type' => 'unique','status' => 'ACTIVE'));

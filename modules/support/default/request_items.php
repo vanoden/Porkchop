@@ -42,19 +42,14 @@
 	    <h3 style="padding: 0px; margin: 0px;">Filter Results</h3><br/>
         <div style="width: 25%; float:left;">
 	        <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
-	        <select id="serial_number" name="serial_number" class="value input collectionField" onchange="updateReport()">
-    	        <option value="ALL"<? if ($serialNumber == $selectedSerialNumber) print " selected"; ?>>ALL</option>
-                <?	foreach ($serialNumbers as $serialNumber) { ?>
-		            <option value="<?=$serialNumber?>"<? if ($serialNumber == $selectedSerialNumber) print " selected"; ?>><?=$serialNumber?></option>
-                <?	} ?>
-	        </select>
+	        <input type="text" id="serial_number" name="serial_number" class="value input collectionField" value="<?=$selectedSerialNumber?>" onchange="updateReport()" />
         </div>
         <div style="width: 42%; float:left;">
 	        <span class="label"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
 	        <select id="product_id" name="product_id" class="value input collectionField" onchange="updateReport()">
     	         <option value="ALL"<? if ($product == $selectedProduct) print " selected"; ?>>ALL</option>
-                <?	foreach ($productsAvailable as $product) { ?>
-		            <option value="<?=$product[0]?>"<? if ($product[0] == $selectedProduct) print " selected"; ?>><?=$product[1]?></option>
+                <?	foreach ($products as $product) { ?>
+		            <option value="<?=$product->id?>"<? if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?></option>
                 <?	} ?>
 	        </select>
 	    </div>
