@@ -119,7 +119,14 @@
          <input type="text" class="value registerValue registerLoginValue" name="home_email" value="<?=!empty($_REQUEST['home_email']) ? $_REQUEST['home_email'] : "" ?>" placeholder="me@email.com">
       </div>
       <div id="registerSubmit" class="registerQuestion">
-         <div class="g-recaptcha" data-sitekey="6LfrepcUAAAAACr1RpIeYIUasYuF0vC13wkDQgrN"></div>
+         <?php
+            if (!$page->captchaPassed) {
+         ?>
+             <div style="color:red; font-size: 12px; padding-top:15px;"><?=$page->error;?></div><br/>
+         <?php    
+             }
+         ?>
+         <div class="g-recaptcha" data-sitekey="<?=$GLOBALS['_config']->captchaNew->public_key?>"></div>
          <br/><input type="submit" class="button" onclick="return submitForm();" value="Apply" style="height: 35px; width: 90px;"><br/><br/>
          <a class="button secondary" href="/_register/login">Cancel</a>
       </div>
