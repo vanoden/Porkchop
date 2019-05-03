@@ -7,8 +7,8 @@
       */      
     $page = new \Site\Page();
 	$resellerList = new \Register\OrganizationList();
-	$itemlist = new \Support\Request\ItemList();
-	$productsAvailable = $itemlist->getProductsAvailable();
+	$productList = new \Product\ItemList();
+	$productsAvailable = $productList->find(array('type' => 'unique','status' => 'active'));
 	$resellers = $resellerList->find(array("is_reseller" => true));
     global $_config;
     

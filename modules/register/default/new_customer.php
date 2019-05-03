@@ -75,7 +75,7 @@
             <select id="product_id" name="product_id" class="value input collectionField">
                <option value=""<? if ($product == $selectedProduct) print " selected"; ?>>---</option>
                <?php	foreach ($productsAvailable as $product) { ?>
-                    <option value="<?=$product[0]?>"<? if ($product[0] == $selectedProduct) print " selected"; ?>><?=$product[2]?> [Item: <?=$product[1]?>]</option>
+                    <option value="<?=$product->id?>"<? if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=$product->description?></option>
                <?php	} ?>
             </select>
          </div>
