@@ -33,6 +33,7 @@
         "Product"   => 1,
         "Site"      => 5,
         "Content"   => 3,
+		"Navigation"	=> 2,
         "Register"  => 10,
         "Company"   => 3,
         "Storage"   => 1,
