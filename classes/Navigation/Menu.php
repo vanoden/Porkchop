@@ -15,6 +15,57 @@
 			}
         }
 
+		public function get($name) {
+			$get_object_query = "
+				SELECT	id
+				FROM	navigation_menus
+				WHERE	name = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($name)
+			);
+			if (! $rs) {
+				$this->_error = "SQL Error in Navigation::Menu::get(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			list($id) = $rs->FetchRow();
+			if (isset($id) {
+				$this->id = $id;
+				return $this->details();
+			}
+			else {
+				$this->_error = "Menu not found";
+				return false;
+			}
+		}
+
+		public function add($parameters = array()) {
+			if (! isset($parameters['name'])) {
+				$this->_error = "Name required";
+				return false;
+			}
+			$add_object_query = "
+				INSERT
+				INTO	navigation_menus
+				(name)
+				VALUES
+				(?)
+			";
+			$GLOBALS['_database']->Execute(
+				$add_object_query,
+				array($parameters['name'])
+			);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->_error = $GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			$this->id = $GLOBALS['_database']->Insert_ID();
+			return $this->update($parameters);
+		}
+		public function update($parameters = array()) {
+			return $this->details();
+		}
         public function details() {
             $get_default_query = "
                 SELECT  id,name

@@ -11,11 +11,15 @@
 		public $reseller;
 		public $notes;
 		public $_cached;
-
-		public function __construct($id = 0) {
+		private $_nocache = false;
+		public function __construct($id = 0,$options = array()) {
 		
 			// Clear Error Info
 			$this->error = '';
+
+			if ($options['nocache']) {
+				$this->_nocache = true;
+			}
 
 			// Database Initialization
 			$schema = new Schema();
@@ -25,6 +29,40 @@
 				$this->id = $id;
 				$this->details();
 			}
+		}
+		
+		public function addQueued($parameters) {
+		
+			app_log("Register::Organization::addQueued()",'trace',__FILE__,__LINE__);
+			
+			$this->error = null;
+			$add_object_query = "
+				INSERT
+				INTO	register_organizations
+				(		name,code,status,date_created,is_reseller,assigned_reseller_id,notes)
+				VALUES
+				(		
+				    ?,?,?,sysdate(),?,?,?
+				)
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$add_object_query,
+				array(
+					$parameters['name'],
+					$parameters['code'],
+					'NEW',
+					$parameters['is_reseller'],
+					$parameters['assigned_reseller_id'],
+					$parameters['notes']				
+				)
+			);
+			if (! $rs) {			
+				$this->error = "SQL Error in \Register\Organization::addQueued: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			
+			$this->id = $GLOBALS['_database']->Insert_ID();
+			return $this->update($parameters);	
 		}
 
 		public function add($parameters) {
@@ -38,14 +76,13 @@
 				VALUES
 				(		null,?,sysdate())
 			";
-
 			$rs = $GLOBALS['_database']->Execute(
 				$add_object_query,
 				array(
 					$parameters['code']
 				)
 			);
-			if (! $rs) {
+			if (! $rs) {			
 				$this->error = "SQL Error in \Register\Organization::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
@@ -102,6 +139,7 @@
 			}
 			return $this->details();
 		}
+		
 		public function get($code = '') {
 			app_log("Register::Organization::get($code)",'trace',__FILE__,__LINE__);
 			$this->error = null;
@@ -122,15 +160,16 @@
 			$this->id = $id;
 			return $this->details();
 		}
+		
 		public function details() {
-			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
+			app_log("Register::Organization::details()[".$this->id."]",'notice',__FILE__,__LINE__);
 			$this->error = null;
 
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			
 			// Cached Organization Object, Yay!
-			if (($this->id) and ($organization = $cache_item->get())) {
+			if ((! $this->_nocache) and ($this->id) and ($organization = $cache_item->get())) {
 				$organization->_cached = 1;
 				$this->id = $organization->id;
 				$this->name = $organization->name;
@@ -163,6 +202,7 @@
 				FROM	register_organizations
 				WHERE	id = ?
 			";
+			query_log($get_details_query);
 			$rs = $GLOBALS['_database']->Execute(
 				$get_details_query,
 				array($this->id)

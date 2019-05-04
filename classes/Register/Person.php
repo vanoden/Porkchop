@@ -69,7 +69,6 @@
 				}
 			}
 
-			#app_log("Querying details for person '$id'",'debug',__FILE__,__LINE__);
 			# Get Persons Info From Database
 			$get_person_query = "
 				SELECT	id,
@@ -163,7 +162,8 @@
 			if (! isset($parameters['timezone'])) $parameters['timezone'] = 'America/New_York';
 			if (! isset($parameters['status'])) $parameters['status'] = 'NEW';
 			if (! isset($parameters['date_expires'])) $parameters['date_expires'] = '2038-01-01 00:00:00';
-
+			if (! isset($parameters['validation_key'])) $parameters['validation_key'] = NULL;
+			
 			# Add to Database
 			$add_user_query = "
 				INSERT
@@ -178,7 +178,8 @@
 					first_name,
 					last_name,
 					organization_id,
-					timezone
+					timezone,
+					validation_key
 				)
 				VALUES
 				(
@@ -188,6 +189,7 @@
 					?,
 					?,
 					password(?),
+					?,
 					?,
 					?,
 					?,
@@ -205,7 +207,8 @@
 					$parameters['first_name'],
 					$parameters['last_name'],
 					$parameters['organization_id'],
-					$parameters['timezone']
+					$parameters['timezone'],
+					$parameters['validation_key']
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
@@ -425,7 +428,7 @@
 			$this->details();
 			return true;
 		}
-		public function addContact($parameters = array()) {
+		public function addContact($parameters = array()) {		
 			$contact = new Contact();
 			$contact->add($parameters);
 			if ($contact->error) {

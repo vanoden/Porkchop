@@ -158,10 +158,7 @@
 		if ($_REQUEST['password']) $parameters['password'] = $_REQUEST['password'];
 
 		# Update Customer
-		$customer = $_customer->update(
-			$customer->id,
-			$parameters
-		);
+		$customer->update($parameters);
 
 		# Error Handling
 		if ($_customer->error) app_error("Error updating customer: ".$_customer->error,__FILE__,__LINE__);
@@ -282,6 +279,29 @@
 		print formatOutput($response);
 	}
 	###################################################
+	### Update an Existing Role						###
+	###################################################
+	function updateRole() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) error("Permission denied");
+
+		$response = new stdClass();
+
+		$role = new \Register\Role();
+		$role->get($_REQUEST['name']);
+		if ($role->error) error($role->error);
+		if (! $role->id) error("Role not found");
+		$parameters = array();
+		if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
+		if ($role->update($parameters)) {
+			$response->success = 1;
+		}
+		else {
+			$response->success = 0;
+			$response->error = $role->error;
+		}
+		print formatOutput($response);
+	}
+	###################################################
 	### Add a User to a Role						###
 	###################################################
 	function addRoleMember() {
@@ -303,6 +323,79 @@
 		$response = new stdClass();
 		$response->success = 1;
 
+		print formatOutput($response);
+	}
+	###################################################
+	### Assign Privilege to Role					###
+	###################################################
+	function addRolePrivilege() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) error('Permission Denied');
+
+		if ($_REQUEST['role']) {
+			$role = new \Register\Role();
+			$role->get($_REQUEST['role']);
+			if ($role->error) error ($role->error);
+			if (! $role->id) error ("Role not found");
+		}
+		else {
+			error('role required');
+		}
+
+
+		$response = new \HTTP\Response();
+		if ($role->addPrivilege($_REQUEST['privilege'])) {
+			$response->success = 1;
+		}
+		else {
+			error($role->error);
+		}
+
+		# Send Response
+		print formatOutput($response);
+	}
+	###################################################
+	### Assign Privilege to Role					###
+	###################################################
+	function getRolePrivileges() {
+		if ($_REQUEST['role']) {
+			$role = new \Register\Role();
+			$role->get($_REQUEST['role']);
+			if ($role->error) error ($role->error);
+			if (! $role->id) error ("Role not found");
+		}
+		else {
+			error('role required');
+		}
+
+		$privileges = $role->privileges();
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->privilege = $privileges;
+
+		# Send Response
+		print formatOutput($response);
+	}
+	###################################################
+	### Does Customer Have Privilege				###
+	###################################################
+	function customerHasPrivilege() {
+		if ($_REQUEST['login']) {
+			$customer = new \Register\Customer();
+			$customer->get($_REQUEST['login']);
+			if ($customer->error) error ($customer->error);
+			if (! $customer->id) error ("Customer not found");
+		}
+		else {
+			error('login required');
+		}
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		if ($customer->can($_REQUEST['privilege'])) $response->can = 'yes';
+		else $response->can = 'no';
+
+		# Send Response
 		print formatOutput($response);
 	}
 	###################################################
@@ -576,6 +669,37 @@
 
 		# Get List of Matching Organizations
 		$organizations = $organizationList->find($parameters);
+
+		# Error Handling
+		if ($organizationList->error) error($organizationList->error);
+
+		$response->success = 1;
+		$response->organization = $organizations;
+
+		# Send Response
+		print formatOutput($response);
+	}
+	###################################################
+	### Search Organizations						###
+	###################################################
+	function searchOrganizations() {
+		# Default StyleSheet
+		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+
+		if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error('Permission denied');
+
+		# Initiate Organization Object
+		$organizationList = new \Register\OrganizationList();
+
+		# Build Query Parameters
+		$parameters = array();
+		$parameters["string"] = $_REQUEST["string"];
+
+		$response = new stdClass();
+		$response->request->parameter = $parameters;
+
+		# Get List of Matching Organizations
+		$organizations = $organizationList->search($parameters);
 
 		# Error Handling
 		if ($organizationList->error) error($organizationList->error);

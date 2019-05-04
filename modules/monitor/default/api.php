@@ -530,6 +530,43 @@
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
 		</div>
 		</form>
+		<form method="post" action="/_monitor/api" name="findDashboards">
+		<input type="hidden" name="method" value="findDashboards">
+		<div class="apiMethod">
+			<div class="h3 apiMethodTitle">findDashboards</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">code</span>
+				<input type="text" name="code" class="value input apiInput"/>
+			</div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+		</div>
+		</form>
+		<form method="post" action="/_monitor/api" name="getDashboard">
+		<input type="hidden" name="method" value="getDashboard">
+		<div class="apiMethod">
+			<div class="h3 apiMethodTitle">getDashboard</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">name</span>
+				<input type="text" name="name" class="value input apiInput"/>
+			</div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+		</div>
+		</form>
+		<form method="post" action="/_monitor/api" name="addDashboard">
+		<input type="hidden" name="method" value="addDashboard">
+		<div class="apiMethod">
+			<div class="h3 apiMethodTitle">addDashboard</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">name</span>
+				<input type="text" name="name" class="value input apiInput"/>
+			</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">template</span>
+				<input type="text" name="template" class="value input apiInput"/>
+			</div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+		</div>
+		</form>
 		<form method="post" action="/_monitor/api" name="dygraphData">
 		<input type="hidden" name="method" value="dygraphData">
 		<div class="apiMethod">

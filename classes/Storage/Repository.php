@@ -23,7 +23,7 @@
 				$this->error = "Invalid code";
 				return false;
 			}
-			if (! isset($paramters['status']) || ! strlen($parameters['status'])) {
+			if (! isset($parameters['status']) || ! strlen($parameters['status'])) {
 				$parameters['status'] = 'NEW';
 			}
 			else if (! $this->_valid_status($parameters['status'])) {
@@ -47,7 +47,7 @@
 				array(
 					$parameters['code'],
 					$parameters['name'],
-					$parameters['type'],
+					$this->type,
 					$parameters['status']
 				)
 			);
@@ -55,8 +55,8 @@
 				$this->error = "SQL Error in Storage::Repository::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			list($this->id) = $GLOBALS['_database']->Insert_ID();
-
+			$this->id = $GLOBALS['_database']->Insert_ID();
+			app_log("Repo ".$this->id." created, updating");
 			return $this->update($parameters);
 		}
 
@@ -65,30 +65,24 @@
 				UPDATE	storage_repositories
 				SET		id = id
 			";
+			$bind_params = array();
+
 			if (isset($parameters['name'])) {
 				if ($this->_valid_name($parameters['name'])) {
 					$update_object_query .= ",
-					name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
+					name = ?";
+					array_push($bind_params,$parameters['name']);
 				}
 				else {
 					$this->error = "Invalid name '".$parameters['name']."'";
 					return false;
 				}
 			}
-			if (isset($parameters['type'])) {
-				if ($this->_valid_type($parameters['type'])) {
-					$update_object_query .= ",
-					type = ".$GLOBALS['_database']->qstr($parameters['type'],get_magic_quotes_gpc());
-				}
-				else {
-					$this->error = "Invalid type";
-					return false;
-				}
-			}
 			if (isset($parameters['status'])) {
 				if ($this->_valid_status($parameters['status'])) {
 					$update_object_query .= ",
-					status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+					status = ?";
+					array_push($bind_params,$parameters['status']);
 				}
 				else {
 					$this->error = "Invalid status";
@@ -98,17 +92,16 @@
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
+			array_push($bind_params,$this->id);
+			query_log($update_object_query);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Storage::Repository::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-
+			if (isset($parameters['path'])) $this->_setMetadata('path',$parameters['path']);
+			app_log("Repo ".$this->id." updated, getting details");
 			return $this->details();
 		}
 	
@@ -127,6 +120,10 @@
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
+			if (! $this->id) {
+				$this->error = "Repository not found";
+				return false;
+			}
 			return $this->details();
 		}
 
@@ -149,6 +146,12 @@
 			$this->type = $object->type;
 			$this->endpoint = $object->endpoint;
 			$this->code = $object->code;
+			$this->status = $object->status;
+			return true;
+		}
+		public function files() {
+			$filelist = new FileList();
+			return $filelist->find(array('repository_id' => $this->id));
 		}
 		public function _setMetadata($key,$value) {
 			$set_object_query = "
@@ -165,9 +168,9 @@
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Storage::Repository::setMetadata: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				return false;
 			}
-			return 1;
+			return true;
 		}
 		public function _metadata($key) {
 			$get_value_query = "
@@ -200,7 +203,7 @@
 			return false;
 		}
 		private function _valid_status($string) {
-			if (preg_match('/^(NEW|ACTIVE|HIDDEN)$/',$string)) {
+			if (preg_match('/^(NEW|ACTIVE|DISABLED)$/i',$string)) {
 				return true;
 			}
 			return false;

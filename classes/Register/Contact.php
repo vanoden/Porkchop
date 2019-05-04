@@ -9,11 +9,9 @@
 			'phone'		=> "Phone Number",
 			'email'		=> "Email Address",
 			'sms'		=> "SMS-Text",
-			'facebook'	=> "FaceBook Account",
-			'twitter'	=> "Twitter Account",
-			'aim'		=> "AOL Instant Messenger"
+			'facebook'	=> "FaceBook Account"
 		);
-
+		
 		public function __construct($id = 0) {
 			if (is_numeric($id)) {
 				$this->id = $id;
@@ -43,6 +41,7 @@
 			return $this->details();
 		}
 		public function add($parameters = array()) {
+		
 			if (! preg_match('/^\d+$/',$parameters['person_id'])) {
 				$this->error = "Valid person_id required for addContact method";
 				return null;
@@ -54,38 +53,50 @@
 
 			$add_contact_query = "
 				INSERT
-				INTO	register_contacts
-				(		person_id,
+				INTO	
+				    register_contacts
+				(		
+				        person_id,
+				        description,
 						type,
-						value
+						value,
+						notify,
+						notes
 				)
 				VALUES
-				(		?,?,?
+				(		
+				    ?,?,?,?,?,?
 				)
 			";
+			
 			$GLOBALS['_database']->Execute(
 				$add_contact_query,
 				array(
 					$parameters['person_id'],
+					$parameters['description'],
 					$parameters['type'],
-					$parameters['value']
+					$parameters['value'],
+					$parameters['notify'],
+					$parameters['notes']
 				)
 			);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Register::Contact::add(): ".$GLOBALS['_database']->ErrorMSg();
 				return null;
 			}
-			return $this->update($GLOBALS['_database']->Insert_ID(),$parameters);
+					
+			return $GLOBALS['_database']->Insert_ID();
 		}
-		public function update($parameters = array()) {
-			if (! preg_match('/^\d+$/',$this->id)) {
+		public function update($parameters = array(), $id = null) {
+		
+			if (! preg_match('/^[0-9]+$/',$this->id)) {
 				$this->error = "ID Required for update method.";
 				return 0;
 			}
+			
 			$bind_params = array();
-			$update_contact_query = "
-				UPDATE	register_contacts
-				SET		id = id";
+			$update_contact_query = " UPDATE register_contacts SET id = id";
 				
 			if ($parameters['type']) {
 				if (! array_key_exists($parameters['type'],$this->types)) {

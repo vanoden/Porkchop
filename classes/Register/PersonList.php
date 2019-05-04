@@ -1,15 +1,16 @@
-<?
+<?php
 	namespace Register;
-	
 	class PersonList {
+
 		public $count = 0;
 
 		public function find($parameters = array()) {
+
 			$find_person_query = "
 				SELECT	id
 				FROM	register_users
 				WHERE	id = id";
-	
+
 			if (isset($parameters['id']) && preg_match('/^\d+$/',$parameters['id'])) {
 				$find_person_query .= "
 				AND		id = ".$parameters['id'];
@@ -91,12 +92,10 @@
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
-				$person = new Person();
-				$person->details($id);
+				$person = new Person($id);
 				$this->count ++;
 				array_push($people,$person);
 			}
 			return $people;
 		}
 	}
-?>

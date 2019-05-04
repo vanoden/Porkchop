@@ -35,26 +35,21 @@
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 
 <div style="width: 756px;">
-	<form id="pageForm" name="filterForm" method="get" action="/_support/request_items">
+	<form id="pageForm" name="filterForm" method="get" action="/_support/request_items"  autocomplete="off">
 	    <input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />
 	    <input id="min_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['min_date']?>" />
 	    <div style="width: 100%; border: solid 1px #888a85; padding: 10px; margin: 10px; margin-left: 0px;">
 	    <h3 style="padding: 0px; margin: 0px;">Filter Results</h3><br/>
         <div style="width: 25%; float:left;">
 	        <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
-	        <select id="serial_number" name="serial_number" class="value input collectionField" onchange="updateReport()">
-    	        <option value="ALL"<? if ($serialNumber == $selectedSerialNumber) print " selected"; ?>>ALL</option>
-                <?	foreach ($serialNumbers as $serialNumber) { ?>
-		            <option value="<?=$serialNumber?>"<? if ($serialNumber == $selectedSerialNumber) print " selected"; ?>><?=$serialNumber?></option>
-                <?	} ?>
-	        </select>
+	        <input type="text" id="serial_number" name="serial_number" class="value input collectionField" value="<?=$selectedSerialNumber?>" onchange="updateReport()" />
         </div>
         <div style="width: 42%; float:left;">
 	        <span class="label"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
 	        <select id="product_id" name="product_id" class="value input collectionField" onchange="updateReport()">
     	         <option value="ALL"<? if ($product == $selectedProduct) print " selected"; ?>>ALL</option>
-                <?	foreach ($productsAvailable as $product) { ?>
-		            <option value="<?=$product[0]?>"<? if ($product[0] == $selectedProduct) print " selected"; ?>><?=$product[1]?></option>
+                <?	foreach ($products as $product) { ?>
+		            <option value="<?=$product->id?>"<? if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?></option>
                 <?	} ?>
 	        </select>
 	    </div>

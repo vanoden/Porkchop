@@ -21,6 +21,7 @@
 		}
 
 		public function add($parameters) {
+            app_log('Storage::File::add(): '.print_r($parameters,true));
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) {
 				$parameters['code'] = uniqid();
 			}
@@ -92,16 +93,22 @@
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
-			$this->code = $object->code;
-			$this->name = $this->_name = $object->name;
-			$this->mime_type = $object->mime_type;
-			$this->size = $object->size;
-			$this->user = new \Register\Customer($object->user_id);
-			$factory = new RepositoryFactory();
-			$this->repository = $factory->load($object->repository_id);
-			if ($this->repository->endpoint) $this->uri = $this->repository->endpoint."/".$this->name;
-			$this->read_protect = $object->read_protect;
-			$this->write_protect = $object->write_protect;
+			if ($object->id) {
+				$this->code = $object->code;
+				$this->name = $this->_name = $object->name;
+				$this->mime_type = $object->mime_type;
+				$this->size = $object->size;
+				$this->user = new \Register\Customer($object->user_id);
+				$factory = new RepositoryFactory();
+				$this->repository = $factory->load($object->repository_id);
+				if ($this->repository->endpoint) $this->uri = $this->repository->endpoint."/".$this->name;
+				$this->read_protect = $object->read_protect;
+				$this->write_protect = $object->write_protect;
+			}
+			else {
+				$this->id = null;
+				$this->code = null;
+			}
 			return true;
 		}
 
@@ -155,7 +162,7 @@
 		}
 
 		private function _valid_type($name) {
-			if (preg_match('/^(image|application|text)\/(png|jpg|tif|plain|html|csv|cs|js|xml|json|gzip)$/',$name)) {
+			if (preg_match('/^(image|application|text)\/(png|jpg|jpeg|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip)$/',$name)) {
 				return true;
 			}
 			return false;
@@ -338,5 +345,11 @@
 		public function download() {
 			return $this->repository->retrieveFile($this);
 		}
+        public function code() {
+            return $this->code;
+        }
+        public function error() {
+            return $this->error;
+        }
 	}
 ?>

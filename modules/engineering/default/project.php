@@ -42,6 +42,7 @@
                   <option value="hold"<? if ($form['status'] == "OPEN") print " selected"; ?>>Open</option>
                   <option value="active"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
                   <option value="cancelled"<? if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
+                  <option value="testing"<? if ($form['status'] == "TESTING") print " selected"; ?>>Testing</option>
                   <option value="complete"<? if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
                </select>
             </div>	  

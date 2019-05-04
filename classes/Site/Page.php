@@ -2,6 +2,7 @@
 	namespace Site;
 
     class Page {
+    
 		public $id;
 		public $module = 'content';
 		public $view = 'index';
@@ -52,11 +53,14 @@
 		}
 
 		public function requireRole($role) {
-			if (! $GLOBALS['_SESSION_']->customer->id) {
-				header('location: /_register/login?return=true');
+			if ($this->module == 'register' && $this->view == 'login') {
+				# Do Nothing, Where Here
+			}
+			elseif (! $GLOBALS['_SESSION_']->customer->id) {
+				header('location: /_register/login?return=true&module='.$this->module.'&view='.$this->view);
 				exit;
 			}
-			if (! $GLOBALS['_SESSION_']->customer->has_role($role)) {
+			elseif (! $GLOBALS['_SESSION_']->customer->has_role($role)) {
 				header('location: /_register/permission_denied');
 				exit;
 			}

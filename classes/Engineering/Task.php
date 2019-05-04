@@ -471,7 +471,7 @@
 			return $this->_error;
 		}
 		private function _valid_status($string) {
-			if (preg_match('/^(new|hold|active|cancelled|complete)$/i',$string)) return true;
+			if (preg_match('/^(new|hold|active|cancelled|testing|broken|complete)$/i',$string)) return true;
 			else return false;
 		}
 

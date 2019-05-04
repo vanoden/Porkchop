@@ -1,9 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	if (! $GLOBALS['_SESSION_']->customer->has_role('engineering user')) {
-		$page->addError("Permission Denied");
-		return;
-	}
+	$page->requireRole('engineering user');
 
     // get new and active tasks for the 'prerequisite' field
 	$tasklist = new \Engineering\TaskList();
@@ -97,7 +94,7 @@
 		if ($task->id) {
 			if ($task->update($parameters)) {
 				$page->success = "Updates applied";
-				app_log("Task updated",'debug',__FILE__,__LINE__);
+				app_log("Task updated, status now ".$parameters['status'],'debug',__FILE__,__LINE__);
 			} else {
 				$page->addError("Error saving updates: ".$task->error());
 			}

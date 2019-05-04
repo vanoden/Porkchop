@@ -157,6 +157,25 @@
 					<span class="label apiLabel">name</span>
 					<input type="text" name="name" class="input value methodInput"/>
 				</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">description</span>
+					<input type="text" name="description" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
+			<form method="post" action="<?=PATH?>/_register/api" name="updateRole">
+			<input type="hidden" name="method" value="updateRole">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">updateRole</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">name</span>
+					<input type="text" name="name" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">description</span>
+					<input type="text" name="description" class="input value methodInput"/>
+				</div>
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
 			</form>
@@ -205,6 +224,17 @@
 				<div class="apiMethodParameter">
 					<span class="label apiLabel">code</span>
 					<input type="text" name="code" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
+			<form method="post" action="<?=PATH?>/_register/api" name="searchOrganizations">
+			<input type="hidden" name="method" value="searchOrganizations">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">searchOrganizations</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">string</span>
+					<input type="text" name="string" class="input value methodInput"/>
 				</div>
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
@@ -306,8 +336,45 @@
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
 			</form>
+			<form method="post" action="<?=PATH?>/_register/api" name="addRolePrivilege">
+			<input type="hidden" name="method" value="addRolePrivilege">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">addRolePrivilege</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">role</span>
+					<input type="text" name="role" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">privilege</span>
+					<input type="text" name="privilege" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
+			<form method="post" action="<?=PATH?>/_register/api" name="getRolePrivileges">
+			<input type="hidden" name="method" value="getRolePrivileges">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">getRolePrivileges</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">role</span>
+					<input type="text" name="role" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
+			<form method="post" action="<?=PATH?>/_register/api" name="customerHasPrivilege">
+			<input type="hidden" name="method" value="customerHasPrivilege">
+			<div class="apiMethod">
+				<div class="h3 apiMethodTitle">customerHasPrivilege</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">login</span>
+					<input type="text" name="login" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodParameter">
+					<span class="label apiLabel">privilege</span>
+					<input type="text" name="privilege" class="input value methodInput"/>
+				</div>
+				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+			</div>
+			</form>
 		</div>
-	</div>
-</div>
-</body>
-</html>

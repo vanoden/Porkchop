@@ -72,9 +72,9 @@
 				<h2>Monitors [<?=$total_assets?>]</h2>
 			<table class="body">
 			<tr>
-				<th class="label"><a href="javascript:void(0)" class="label" onclick="sort('serial');">Serial</a></th>
-				<th class="label"><a href="javascript:void(0)" class="label" onclick="sort('product');">Model</a></th>
-				<th class="label"><a href="javascript:void(0)" class="label" onclick="sort('organization');">Organization</a></th>
+				<th class="label"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('serial');">Serial</a></th>
+				<th class="label"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('product');">Model</a></th>
+				<th class="label"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('organization');">Organization</a></th>
 				<th class="label">Last Comm</th>
 				<th class="label">Result</th>
 			</tr>

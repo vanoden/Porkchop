@@ -1,12 +1,11 @@
 <?php
 	$page = new \Site\Page();
-	if (! $GLOBALS['_SESSION_']->customer->has_role('engineering user')) {
-		$page->error = "Permission Denied";
-		return;
-	}
+	$page->requireRole('engineering user');
+
 	if (! $_REQUEST['btn_submit']) {
 		$_REQUEST['new'] = 1;
 		$_REQUEST['active'] = 1;
+		$_REQUEST['broken'] = 1;
 	}
 
 	$tasklist = new \Engineering\TaskList();
@@ -16,6 +15,8 @@
 	if ($_REQUEST["active"]) array_push($parameters['status'],'ACTIVE');
 	if ($_REQUEST["complete"]) array_push($parameters['status'],'COMPLETE');
 	if ($_REQUEST["cancelled"]) array_push($parameters['status'],'CANCELLED');
+	if ($_REQUEST["broken"]) array_push($parameters['status'],'BROKEN');
+	if ($_REQUEST["testing"]) array_push($parameters['status'],'TESTING');
 	if ($_REQUEST["hold"]) array_push($parameters['status'],'HOLD');
 	if ($_REQUEST["project_id"]) $parameters['project_id'] = $_REQUEST['project_id'];
 	if ($_REQUEST["assigned_id"]) $parameters['assigned_id'] = $_REQUEST['assigned_id'];
@@ -32,3 +33,6 @@
 
 	$projectlist = new \Engineering\ProjectList();
 	$projects = $projectlist->find();
+
+	$productlist = new \Engineering\ProductList();
+	$products = $productlist->find();

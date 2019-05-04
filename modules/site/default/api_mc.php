@@ -95,6 +95,8 @@
 		print formatOutput($response);
 	}
 	function addPage() {
+		if (! $GLOBALS['_SESSION_']->customer->can('change content pages')) error("Permission Denied");
+
 		if (! $_REQUEST['module']) error("Module required");
 		if (! $_REQUEST['view']) error("View required");
 		if (! $_REQUEST['index']) $_REQUEST['index'] = '';
@@ -115,6 +117,8 @@
 	### Get Details regarding Specified Product		###
 	###################################################
 	function addMessage() {
+		if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
 		$response = new \HTTP\Response();
@@ -148,6 +152,8 @@
 	### Update Specified Message					###
 	###################################################
 	function updateMessage() {
+		if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
 		$response = new \HTTP\Response();
@@ -180,6 +186,8 @@
 	### Purge Cache of Specified Message			###
 	###################################################
 	function purgeMessage() {
+		if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
 		$response = new \HTTP\Response();
@@ -277,6 +285,8 @@
 	### Add Page Metadata							###
 	###################################################
 	function addMetadata() {
+		if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
+
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
 		$response = new \HTTP\Response();
@@ -310,6 +320,8 @@
 	### Update Page Metadata						###
 	###################################################
 	function updateMetadata() {
+		if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
+
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
 		$response = new \HTTP\Response();
@@ -354,6 +366,8 @@
 		print formatOutput($response);
 	}
 	function setPageMetadata() {
+		if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
+
 		$response = new \HTTP\Response();
 
 		$page = new \Site\Page();
@@ -470,7 +484,7 @@
 		$document->prepare($object);
 		return $document->content();
 	}
-	
+
 	function confirm_customer() {
 		if (! in_array('content reporter',$GLOBALS['_SESSION_']->customer->roles)) {
 			$this->error = "You do not have permissions for this task.";

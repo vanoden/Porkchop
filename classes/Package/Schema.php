@@ -4,6 +4,9 @@
 	class Schema {
 		public $error;
 		public $errno;
+		private $roles = array(
+			'package manager'   => 'Full control over packages and versions'
+		);
 
 		public function __construct() {
 			$this->upgrade();
@@ -66,7 +69,7 @@
 						`license`		text,
 						`platform`		varchar(255),
 						`owner_id`		int(11) NOT NULL,
-						`status`		enum('NEW','ACTIVE','HIDDEN') NOT NULL DEFAULT 'NEW',
+						`status`		enum('TEST','ACTIVE','HIDDEN') NOT NULL DEFAULT 'TEST',
 						`repository_id`	int(11) NOT NULL,
 						`date_created`	datetime,
 						PRIMARY KEY (`id`),
@@ -85,32 +88,23 @@
 
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `package_versions` (
-						`id`			int(11) NOT NULL,
+						`id`			int(11) NOT NULL PRIMARY KEY,
 						`package_id`	int(11) NOT NULL,
 						`major`			int(3) NOT NULL,
 						`minor`			int(3) NOT NULL,
 						`build`			varchar(10) NOT NULL,
 						`status`		enum('NEW','PUBLISHED','HIDDEN'),
-						PRIMARY KEY `PK_VERSION_ID` (`id`),
+						`date_created`	datetime,
+						`date_published` datetime,
+						`user_id`		int(11) NOT NULL,
 						FOREIGN KEY `FK_PACKAGE_ID` (`package_id`) REFERENCES `package_packages` (`id`),
-						FOREIGN KEY `FK_FILE_ID` (`id`) REFERENCES `storage_files` (`id`)
+						FOREIGN KEY `FK_FILE_ID` (`id`) REFERENCES `storage_files` (`id`),
+						FOREIGN KEY `FK_USER_ID` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating product_images table in ProductInit::__construct: ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
-				}
-				$add_roles_query = "
-					INSERT
-					INTO	register_roles
-					VALUES	(null,'package manager','Can view/edit packages')
-				";
-				$GLOBALS['_database']->Execute($add_roles_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error adding product roles in ProductInit::__construct: ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_database']->RollbackTrans();
 					return 0;
@@ -132,6 +126,20 @@
 					return 0;
 				}
 				$GLOBALS['_database']->CommitTrans();
+			}
+			
+			# Add Roles
+			foreach ($this->roles as $name => $description) {
+				$role = new \Register\Role();
+				if (! $role->get($name)) {
+					app_log("Adding role '$name'");
+					$role->add(array('name' => $name,'description' => $description));
+				}
+				if ($role->error) {
+					$this->_error = "Error adding role '$name': ".$role->error;
+					return false;
+				}
+				return true;
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 classes/Spectros
 classes/Monitor
 classes/Action
+classes/Media
 html
 html.src
 third_party

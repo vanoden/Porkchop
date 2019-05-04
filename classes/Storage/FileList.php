@@ -14,11 +14,12 @@
 				FROM	storage_files
 				WHERE	id = id
 			";
-
+			$bind_params = array();
 			if (isset($parameters['name']) && strlen($parameters['name'])) {
 				if (preg_match('/^[\w\-\_.\s]+$/',$parameters['name'])) {
 					$get_objects_query .= "
-						AND		name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
+						AND		name = ?";
+					array_push($bind_params,$parameters['name']);
 				}
 				else {
 					$this->error = "Invalid name";
@@ -29,17 +30,16 @@
 			if (isset($parameters['repository_id'])) {
 				if (preg_match('/^\d+$/',$parameters['repository_id'])) {
 					$get_objects_query .= "
-						AND		repository_id = ".$parameters['repository_id'];
+						AND		repository_id = ?";
+					array_push($bind_params,$parameters['repository_id']);
 				}
 				else {
 					$this->error = "Invalid repository id";
 					return false;
 				}
 			}
-
-			$rs = $GLOBALS['_database']->Execute(
-				$get_objects_query
-			);
+			query_log($get_objects_query);
+			$rs = $GLOBALS['_database']->Execute($get_objects_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Storage::FileList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

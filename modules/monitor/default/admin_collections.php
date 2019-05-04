@@ -87,11 +87,11 @@
 <h3>Jobs [<?=count($collections)?>]</h3>
 <table class="body monitorCollectionsBody" cellpadding="0" cellspacing="0">
 <tr>
-	<th class="label columnLabel collectionNameColumn"><a href="javascript:void(0)" class="label" onclick="sort('name');">Name</a></th>
-	<th class="label columnLabel collectionCustomerColumn"><a href="javascript:void(0)" class="label" onclick="sort('organization');">Organization</a></th>
-	<th class="label columnLabel collectionStatusColumn"><a href="javascript:void(0)" class="label" onclick="sort('status');">Status</a></th>
-	<th class="label columnLabel collectionStartedColumn"><a href="javascript:void(0)" class="label" onclick="sort('date_start');">Started</a></th>
-	<th class="label columnLabel collectionFinishedColumn"><a href="javascript:void(0)" class="label" onclick="sort('date_end');">Finished</a></th>
+	<th class="label columnLabel collectionNameColumn"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('name');">Name</a></th>
+	<th class="label columnLabel collectionCustomerColumn"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('organization');">Organization</a></th>
+	<th class="label columnLabel collectionStatusColumn"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('status');">Status</a></th>
+	<th class="label columnLabel collectionStartedColumn"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('date_start');">Started</a></th>
+	<th class="label columnLabel collectionFinishedColumn"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('date_end');">Finished</a></th>
 	<th class="label columnLabel collectionDeleteColumn">Delete</td>
 </tr>
 <?	foreach ($collections as $collection)

@@ -26,11 +26,31 @@
 				$this->error = "SQL Error in RegisterPerson::get: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+			
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
 			$object = $this->details();
 			return $object;
 		}
+		
+		public function getAllDetails($code = '') {
+			$this->error = null;
+			$get_object_query = "
+				SELECT	*
+				FROM	register_users
+				WHERE	login = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($code)
+			);
+			if (! $rs) {
+				$this->error = "SQL Error in \Register\Customer::getAllDetails: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			return $rs->FetchRow();
+		}
+		
 		
 		public function details() {
 		    parent::details();
@@ -49,10 +69,8 @@
 				foreach ($roles as $role) {
 					if (isset($parameters['roles']) && is_array($parameters['roles'])) {
 						if (array_key_exists($role['id'],$parameters['roles'])) {
-							// Add Role
 							$this->add_role($role['id']);
 						} else {
-							// Drop Role
 							$this->drop_role($role['id']);
 						}
 					}
@@ -315,6 +333,25 @@
 			return $hubs;
 		}
 
+		public function can($privilege_name) {
+			$check_privs_query = "
+				SELECT	1
+				FROM	register_users_roles rur,
+						register_role_privileges rrp
+				WHERE	rur.user_id = ?
+				AND		rur.role_id = rrp.role_id
+				AND		rrp.privilege = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($check_privs_query,array($this->id,$privilege_name));
+			if (! $rs) {
+				$this->error = "SQL Error in Register::Customer::can(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			list($can) = $rs->FetchRow();
+			if ($can) return true;
+			return false;
+		}
+
 		// See If a User has been granted a Role
 		public function has_role($role_name) {
 		
@@ -441,7 +478,7 @@
 		}
 		public function last_active() {
 			$sessionList = new \Site\SessionList();
-			list($session) = $sessionList->find(array("user_id" => $this->id,"_limit" => 1,"_sort" => 'last_hit_date',"_desc" => true));
+			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true));
 			if ($sessionList->error) {
 				$this->error = "Error getting session: ".$sessionList->error;
 				return null;

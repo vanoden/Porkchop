@@ -34,14 +34,14 @@
         "Site"      => 5,
         "Content"   => 3,
 		"Navigation"	=> 2,
-        "Register"  => 10,
+        "Register"  => 12,
         "Company"   => 3,
         "Storage"   => 1,
         "Email"     => 1,
         "Package"   => 1,
         "Contact"   => 2,
         "Support"   => 3,
-        "Engineering"   => 5,
+        "Engineering"   => 6,
     );
 
 	# Set Templates As Necessary
@@ -79,6 +79,13 @@
 		array("monitor","admin_assets"),
 		array("monitor","admin_details"),
 		array("monitor","comm_dashboard"),
+		array("storage","repositories"),
+		array("storage","repository"),
+		array("storage","files"),
+		array("package","packages"),
+		array("package","package"),
+		array("package","versions"),
+		array("register","pending_customers")
 	);
 
 	###################################################

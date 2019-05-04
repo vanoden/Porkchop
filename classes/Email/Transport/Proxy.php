@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Email\Transport;
 
 	class Proxy {
@@ -73,4 +73,3 @@
 			return $this->_error;
 		}
 	}
-?>
