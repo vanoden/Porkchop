@@ -337,7 +337,11 @@
 
 					if (count($menu->item)) {
 						foreach($menu->item as $item) {
-							$button_class	= "button_".preg_replace("/\W/","_",$menu->name);
+							if (isset($parameter['class']))
+								$button_class = $parameters['class'];
+							else {
+								$button_class	= "button_".preg_replace("/\W/","_",$menu->name);
+							}
 							$button_id		= "button[".$item->id."]";
 							if (count($item->children)) {
 								$child_container_class	= "child_container_".preg_replace("/\W/","_",$menu->name);
