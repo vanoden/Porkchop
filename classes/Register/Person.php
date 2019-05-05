@@ -498,5 +498,8 @@
 			$relationship = new \Register\Relationship();
 			return $relationship->children($this->id);
 		}
+		public function error() {
+			return $this->error;
+		}
     }
 ?>
