@@ -58,10 +58,10 @@
 		<th>User</th>
 	</tr>
 	<tr><td><?=$event->date_event?></td>
-		<td><?=$project->title?></td>
-		<td><?=$product->title?></td>
-		<td><?=$task->title?></td>
-		<td><?=$person->full_name()?></td>
+		<td><a href="/_engineering/project/<?=$project->code?>"><?=$project->title?></a></td>
+		<td><a href="/_engineering/product/<?=$product->code?>"><?=$product->title?></a></td>
+		<td><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
+		<td><a href="/_register/account/<?=$person->code?>"><?=$person->full_name()?></a></td>
 	</tr>
 	<tr><th colspan="5">Description</th></tr>
 	<tr><td colspan="5"><?=$event->description?></td></tr>

@@ -39,10 +39,9 @@
             <div class="tableCell" style="min-width: 100px;">
                <select name="status" class="value input wide_100per">
                   <option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
-                  <option value="hold"<? if ($form['status'] == "OPEN") print " selected"; ?>>Open</option>
-                  <option value="active"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
+                  <option value="open"<? if ($form['status'] == "OPEN") print " selected"; ?>>Open</option>
+                  <option value="hold"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
                   <option value="cancelled"<? if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
-                  <option value="testing"<? if ($form['status'] == "TESTING") print " selected"; ?>>Testing</option>
                   <option value="complete"<? if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
                </select>
             </div>	  
@@ -61,15 +60,9 @@
          </div>
       </div>
       <!--	END First Table -->
-	  <?php
-		if (!$page->success) {
-		?>
-			<div class="button-bar">
-				<input type="submit" name="btn_submit" class="button" value="Submit">
-			</div>
-		<?php
-		}
-		?>
+	<div class="button-bar">
+		<input type="submit" name="btn_submit" class="button" value="Submit">
+	</div>
    </form>
    <!--	START First Table -->
    <?	if ($project->id) { ?>
