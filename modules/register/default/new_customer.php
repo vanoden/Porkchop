@@ -52,8 +52,8 @@
    <div class="instruction">
       <r7_page.message id=100>
    </div>
-   <?php	if ($page->error) { ?>
-      <div class="form_error"><?=$page->error?></div>
+   <?php	if ($page->errorCount()) { ?>
+      <div class="form_error"><?=$page->errorString()?></div>
    <?php	} ?>
    <div id="registerFormSubmit">
       <div class="form-group">
@@ -70,7 +70,7 @@
          </div>
          <div id="product_details" style="display:none;">
             <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
-            <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="SF8TA1001">
+            <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number">
             <span class="label"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
             <select id="product_id" name="product_id" class="value input collectionField">
                <option value=""<? if ($product == $selectedProduct) print " selected"; ?>>---</option>
@@ -90,11 +90,11 @@
          <input type="text" id="state" name="state" placeholder="NY" value="<?=!empty($_REQUEST['state']) ? $_REQUEST['state'] : "" ?>">
          <label for="zip">Zip/Postal Code</label>
          <input type="text" id="zip" name="zip" placeholder="10001" value="<?=!empty($_REQUEST['zip']) ? $_REQUEST['zip'] : "" ?>">
-         <label for="state">Buisness Phone</label>
+         <label for="state">Business Phone</label>
          <input type="text" id="phone" name="phone" placeholder="555-555-5555" value="<?=!empty($_REQUEST['phone']) ? $_REQUEST['phone'] : "" ?>">
          <label for="state">Cell</label>
          <input type="text" id="cell" name="cell" placeholder="555-555-5555" value="<?=!empty($_REQUEST['cell']) ? $_REQUEST['cell'] : "" ?>"><br/>
-         
+
          <h3>Contact Info</h3>
          <span class="label registerLabel registerFirstNameLabel">*First Name:</span>
          <input type="text" class="value registerValue registerFirstNameValue long-field" name="first_name" value="<?=!empty($_REQUEST['first_name']) ? $_REQUEST['first_name'] : "" ?>" placeholder="John">
@@ -126,7 +126,7 @@
          <?php    
              }
          ?>
-         <div class="g-recaptcha" data-sitekey="<?=$GLOBALS['_config']->captchaNew->public_key?>"></div>
+         <div class="g-recaptcha" data-sitekey="<?=$GLOBALS['_config']->captcha->public_key?>"></div>
          <br/><input type="submit" class="button" onclick="return submitForm();" value="Apply" style="height: 35px; width: 90px;"><br/><br/>
          <a class="button secondary" href="/_register/login">Cancel</a>
       </div>
