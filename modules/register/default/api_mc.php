@@ -522,6 +522,7 @@
 	###################################################
 	function verifyEmail() {
 		# Initiate Response
+		$response = new stdClass();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
 		$response->header->method = $_REQUEST["method"];
 
@@ -529,17 +530,16 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.verify.xsl';
 
 		# Initiate Image Object
-		$_user = new Customer();
+		$user = new Customer();
 
-		# Add Event
-		$_user->verify_email($_REQUEST['login'],$_REQUEST['validation_key']);
-
-		# Error Handling
-		if ($_user->error) error($_user->error);
-		
-		$response = new stdClass();
-		$response->user = $_user->details();
-		$response->success = 1;
+		if ($user->get($_REQUEST['login'])) {
+			if ($user->verify_email($_REQUEST['validation_key'])) {
+				$response->success = 1;
+			}
+			else error("Invalid validation key");
+		}
+		elseif ($user->error) error($user->error);
+		else error("Invalid validation key");
 
 		# Send Response
 		print formatOutput($response);
