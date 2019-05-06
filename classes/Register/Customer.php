@@ -29,8 +29,7 @@
 			
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
-			$object = $this->details();
-			return $object;
+			return $this->details();
 		}
 		
 		public function getAllDetails($code = '') {
@@ -54,8 +53,14 @@
 		
 		public function details() {
 		    parent::details();
-			$this->roles();
-			$this->organization = new \Register\Organization($this->organization->id);
+			if ($this->id) {
+				$this->roles();
+				$this->organization = new \Register\Organization($this->organization->id);
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 
 		public function update($parameters = array()) {
