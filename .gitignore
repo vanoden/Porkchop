@@ -2,6 +2,7 @@ classes/Spectros
 classes/Monitor
 classes/Action
 classes/Media
+classes/Solvay
 html
 html.src
 third_party
@@ -9,6 +10,7 @@ modules/monitor/spectros
 modules/contact/spectros
 modules/action/spectros
 modules/event/spectros
+modules/monitor/solvay
 templates
 tmp
 node_modules/

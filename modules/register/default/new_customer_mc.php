@@ -19,7 +19,7 @@
 	    // Check reCAPTCHA 2.0
 	    $url = "https://www.google.com/recaptcha/api/siteverify";
 	    $data = array(
-		    'secret'	=> $GLOBALS['_config']->captchaNew->private_key,
+		    'secret'	=> $GLOBALS['_config']->captcha->private_key,
 		    'response'	=> $_REQUEST['g-recaptcha-response'],
 		    'remoteip'	=> $_SERVER['REMOTE_ADDR'],
 	    );
@@ -42,11 +42,11 @@
 	    if ($captcha_success->success == true) {
 	    
             // Initialize Customer Object
-	        $_customer = new \Register\Customer();
-	        if ($_customer->password_strength($_REQUEST['password']) < $_GLOBALS['_config']->register->minimum_password_strength) {
-		        $page->error = "Password not strong enough";
+	        $customer = new \Register\Customer();
+	        if ($customer->password_strength($_REQUEST['password']) < $_GLOBALS['_config']->register->minimum_password_strength) {
+		        $page->addError("Password not strong enough");
 	        } elseif ($_REQUEST["password"] != $_REQUEST["password_2"]) {
-		        $page->error .= "Passwords do not match";
+		        $page->addError("Passwords do not match");
 	        } else {
 
 		        // Default Login to Email Address
@@ -56,13 +56,15 @@
 		        $validation_key = md5(microtime());
 
 		        // Make Sure Login is unique
-		        $already_exists = $_customer->get($_REQUEST['login']);
-		        if ($already_exists->id) {
-			        $page->error = "Sorry, login already taken";
+		        if ($customer->get($_REQUEST['login'])) {
+			        $page->addError("Sorry, login already taken");
 			        $_REQUEST['login'] = '';
-		        } else {
+				} elseif ($customer->error) {
+					$page->addError("Error checking login: ".$customer->error);
+				} else {
+			        $page->loginTaken = false;
                     // Add Customer Record to Database
-			        $customer = $_customer->add(
+			        $customer->add(
 				        array(
 					        "login"				=> $_REQUEST['login'],
 					        "password"			=> $_REQUEST['password'],
@@ -71,47 +73,44 @@
 					        "validation_key"	=> $validation_key,
 				        )
 			        );
-			        
-			        $page->loginTaken = false;
-			        if ($_customer->error) {
-				        app_log("Error adding customer: ".$_customer->error,'error',__FILE__,__LINE__);
-				        $page->error .= "Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher issues.";
-				        if (strpos($_customer->error, 'Duplicate entry') !== false) {
-				            $page->error = "Error: <strong>" . $_REQUEST['login'] . "</strong> has already been taken for a user name";
+			        if ($customer->error) {
+				        app_log("Error adding customer: ".$customer->error,'error',__FILE__,__LINE__);
+				        $page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher issues.");
+				        if (strpos($customer->error, 'Duplicate entry') !== false) {
+				            $page->addError("Error: <strong>" . $_REQUEST['login'] . "</strong> has already been taken for a user name");
 				            $page->loginTaken = true;
 				        }
 			        } else {
 
 				        // Login New User by updating session
-				        $GLOBALS['_SESSION_']->update(array("user_id" => $customer->id));
-				        if ($GLOBALS['_SESSION_']->error) $page->error .= "Error updating session: ".$GLOBALS['_SESSION_']->error;
+				        $GLOBALS['_SESSION_']->assign($customer->id);
+				        if ($GLOBALS['_SESSION_']->error) $page->addError("Error updating session: ".$GLOBALS['_SESSION_']->error);
 
 				        // Create Contact Record
 				        if ($_REQUEST['work_email']) {
-					        $_customer->addContact(
+					        $customer->addContact(
 						        array(
-							        "person_id"		=> $_customer->id,
 							        "type"			=> "email",
 							        "description"	=> "Work Email",
 							        "value"			=> $_REQUEST['work_email']
 						        )
 					        );
-					        if ($_customer->error) app_log("Error adding Work Email '".$_REQUEST['work_email']."': ".$_customer->error,'error',__FILE__,__LINE__);
+					        if ($customer->error) app_log("Error adding Work Email '".$_REQUEST['work_email']."': ".$customer->error,'error',__FILE__,__LINE__);
 				        }
 				        
 				        if ($_REQUEST['home_email']) {
 				        
 					        // Create Contact Record
-					        $_customer->addContact(
+					        $customer->addContact(
 						        array(
-							        "person_id"		=> $_customer->id,
+							        "person_id"		=> $customer->id,
 							        "type"			=> "email",
 							        "description"	=> "Home Email",
 							        "value"			=> $_REQUEST['home_email']
 						        )
 					        );
 					        
-					        if ($_customer->error) app_log("Error adding Home Email '".$_REQUEST['home_email']."': ".$_customer->error,'error',__FILE__,__LINE__);
+					        if ($customer->error) app_log("Error adding Home Email '".$_REQUEST['home_email']."': ".$customer->error,'error',__FILE__,__LINE__);
 				        }
 
                         // Initialize Register Queued Object
@@ -134,12 +133,13 @@
                         $queuedCustomerData['product_id'] = $_REQUEST['product_id'];
                         if (empty($queuedCustomerData['product_id'])) $queuedCustomerData['product_id'] = 0;
                         $queuedCustomerData['serial_number'] = $_REQUEST['serial_number'];
-                        $queuedCustomerData['register_user_id'] = $_customer->id;                           
+                        $queuedCustomerData['register_user_id'] = $customer->id;                           
                         $queuedCustomer->add($queuedCustomerData);
                         
                         if ($queuedCustomer->error) {
                             app_log("Error adding queued organization: ".$queuedCustomer->error,'error',__FILE__,__LINE__);
-                            $page->error .= "Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher issues.";
+                            $page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher issues.");
+							return;
                         }
 
                         // create the verify account email
@@ -147,14 +147,14 @@
                         $welcomeEmailTemplate = BASE. '/modules/register/email_templates/verify_email.html';
                     	if (! file_exists($welcomeEmailTemplate)) {
                     		app_log("Template '".$welcomeEmailTemplate."' not found",'error',__FILE__,__LINE__);
-                    		$page->error = "Template '".$welcomeEmailTemplate."' not found";
+                    		$page->addError("Template '".$welcomeEmailTemplate."' not found");
                     		return;
                     	}
                     	try {
                     		$verifyContent = file_get_contents($welcomeEmailTemplate);
                     	} catch (Exception $e) {
                     		app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
-                    		$page->error = "Template load failed.  Try again later";
+                    		$page->addError("Template load failed.  Try again later");
                     		return;
                     	}
                     	$verifyTemplate = new \Content\Template\Shell();
@@ -176,7 +176,7 @@
                     	$transport->token($GLOBALS['_config']->email->token);
                     	$transport->deliver($message);
                     	if ($transport->error) {
-                    		$page->error = "Error sending email, please contact us at service@spectrosinstruments.com";
+                    		$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
                     		app_log("Error sending forgot password link: ".$transport->error,'error',__FILE__,__LINE__);
                     		return;
                     	}
@@ -186,7 +186,7 @@
 	        }
 	    } else {
     	   $page->captchaPassed = false;
-	       $page->error = "Please confirm your humanity, solve captcha below.";
+	       $page->addError("Please confirm your humanity, solve captcha below.");
 	    }
 	}
 
@@ -194,8 +194,8 @@
     
 		// Initialize Customer Object
 		$page->isVerifedAccount = false;
-		$_customer = new \Register\Customer();
-        $customer = $_customer->getAllDetails($_REQUEST['login']);
+		$customer = new \Register\Customer();
+        $customer->getAllDetails($_REQUEST['login']);
         
         if ($customer['validation_key'] == $_REQUEST['access']) {
             
@@ -209,14 +209,14 @@
             $adminReminderTemplate = BASE . '/modules/register/email_templates/admin_notification.html';
         	if (! file_exists($adminReminderTemplate)) {
         		app_log("Template '".$adminReminderTemplate."' not found",'error',__FILE__,__LINE__);
-        		$page->error = "Template '".$adminReminderTemplate."' not found";
+        		$page->addError("Template '".$adminReminderTemplate."' not found");
         		return;
         	}
         	try {
         		$verifyContent = file_get_contents($adminReminderTemplate);
         	} catch (Exception $e) {
         		app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
-        		$page->error = "Template load failed. Try again later";
+        		$page->addError("Template load failed. Try again later");
         		return;
         	}
         	$verifyTemplate = new \Content\Template\Shell();
@@ -240,7 +240,7 @@
         	$transport->token($GLOBALS['_config']->email->token);
         	$transport->deliver($message);
         	if ($transport->error) {
-        		$page->error = "Error sending email, please contact us at service@spectrosinstruments.com";
+        		$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
         		app_log("Error Sending Admin Confirm new customer reminder: ".$transport->error,'error',__FILE__,__LINE__);
         		return;
         	}

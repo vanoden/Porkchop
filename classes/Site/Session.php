@@ -19,6 +19,7 @@
 		public $status = 0;
 		public $first_hit_date;
 		public $last_hit_date;
+		public $isMobile = false;
 		private $cookie_name;
 		private $cookie_domain;
 		private $cookie_expires;
@@ -342,7 +343,7 @@
 					$this->browser = $session->browser;
 					$this->first_hit_date = $session->first_hit_date;
 					$this->last_hit_date = $session->last_hit_date;
-                    $this->isMobile = $session->isMobile;
+                    if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
 					$this->_cached = 1;
 					return $this->code;
 				}

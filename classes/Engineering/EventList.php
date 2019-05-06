@@ -7,14 +7,15 @@
 		public function find($parameters = array()) {
 			$find_objects_query = "
 				SELECT	ee.id
-				FROM	(engineering_events ee,
-						engineering_tasks et,
-						engineering_products ep)
+				FROM	engineering_events ee
+				JOIN	engineering_tasks et
+				ON		ee.task_id = et.id
+				JOIN	engineering_products ep
+				ON		ep.id = et.product_id
 				LEFT OUTER JOIN
 						engineering_projects epr
 				ON		epr.id = et.project_id
-				WHERE	ee.task_id = et.id
-				AND		et.product_id = ep.id
+				WHERE	ee.id = ee.id
 			";
 
 			$bind_params = array();
@@ -44,7 +45,7 @@
 					return null;
 				}
 				$find_objects_query .= "
-				AND		ee.user_id = ?";
+				AND		ee.person_id = ?";
 				array_push($bind_params,$user->id);
 			}
 

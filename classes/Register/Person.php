@@ -428,7 +428,8 @@
 			$this->details();
 			return true;
 		}
-		public function addContact($parameters = array()) {		
+		public function addContact($parameters = array()) {
+			$parameters['person_id'] = $this->id;
 			$contact = new Contact();
 			$contact->add($parameters);
 			if ($contact->error) {
@@ -497,6 +498,9 @@
 		public function children() {
 			$relationship = new \Register\Relationship();
 			return $relationship->children($this->id);
+		}
+		public function error() {
+			return $this->error;
 		}
     }
 ?>
