@@ -51,6 +51,7 @@
 				return null;
 			}
 
+			if (! isset($parameters['notify'])) $parameters['notify'] = 0;
 			$add_contact_query = "
 				INSERT
 				INTO	
