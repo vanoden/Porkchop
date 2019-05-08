@@ -52,6 +52,12 @@
 				$this->style = $GLOBALS['_config']->style[$this->module];
 		}
 
+		public function requireAuth() {
+			if (! $GLOBALS['_SESSION_']->customer->id > 0) {
+				header('location: /_register/login?return=true&module='.$this->module.'&view='.$this->view);
+			}
+		}
+
 		public function requireRole($role) {
 			if ($this->module == 'register' && $this->view == 'login') {
 				# Do Nothing, Where Here
