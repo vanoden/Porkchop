@@ -376,59 +376,57 @@
 			return $objects;
 		}
 		# Process Email Verification Request
-		function verify_email($login,$validation_key) {
-			if (! $login) return 0;
-			if (! $validation_key) return 0;
-	
+		function verify_email($validation_key) {
+			if (! $this->id) return false;
+			if (! $validation_key) return false;
+
 			$check_key_query = "
 				SELECT	id,validation_key
 				FROM	register_users
-				WHERE	login = ?
-				AND		company_id = ?
+				WHERE	id = ?
 			";
 			$rs = $GLOBALS['_database']->Execute(
 				$check_key_query,
-				array($login,$GLOBALS['_SESSION_']->company)
+				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
-				return 0;
+				return false;
 			}
 			list($id,$unverified_key) = $rs->fields;
 			if (! $id) {
+				app_log("Key doesn't match");
 				$this->error = "Invalid Login or Validation Key";
 				return false;
 			}
 			if (! $unverified_key) {
+				app_log("No key in system to match");
 				$this->error = "Email Address already verified for this account";
 				return false;
 			}
 			if ($unverified_key != $validation_key) {
+				app_log($unverified_key . " != ".$validation_key);
 				$this->error = "Invalid Login or Validation Key";
 				return false;
 			}
 			$validate_email_query = "
 				UPDATE	register_users
 				SET		validation_key = null
-				WHERE	login = ?
-				AND		company_id = ?
+				WHERE	id = ?
 			";
 			$rs = $GLOBALS['_database']->Execute(
 				$validate_email_query,
-				array(
-					$login,
-					$GLOBALS['_SESSION_']->company
-				)
+				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			$this->id = $id;
-			$this->details();
-			return true;
+			return $this->details();
 		}
-		public function addContact($parameters = array()) {		
+		public function addContact($parameters = array()) {
+			$parameters['person_id'] = $this->id;
 			$contact = new Contact();
 			$contact->add($parameters);
 			if ($contact->error) {
@@ -497,6 +495,9 @@
 		public function children() {
 			$relationship = new \Register\Relationship();
 			return $relationship->children($this->id);
+		}
+		public function error() {
+			return $this->error;
 		}
     }
 ?>

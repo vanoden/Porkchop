@@ -27,10 +27,10 @@
 				$code = uniqid();
 			}
 		
-                        if (empty($parameters['manager_id'])) {
-		            $this->_error = "Manager field is required";
-		            return null;
-                        }  
+			if (empty($parameters['manager_id'])) {
+				$this->_error = "Manager field is required";
+				return null;
+			}  
 
 			$check_dups = new Project();
 			if ($check_dups->get($code)) {
@@ -72,29 +72,39 @@
 			    return null;
             }
 
-			if (isset($parameters['title']))
+			$bind_params = array();
+			if (isset($parameters['title'])) {
 				$update_object_query .= ",
-						title = ".$GLOBALS['_database']->qstr($parameters['title'],get_magic_quotes_gpc());
+						title = ?";
+				array_push($bind_params,$parameters['title']);
+			}
 
-			if (isset($parameters['description']))
+			if (isset($parameters['description'])) {
 				$update_object_query .= ",
-						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
+						description = ?";
+				array_push($bind_params,$parameters['description']);
+			}
 
-			if (isset($parameters['status']))
+			if (isset($parameters['status'])) {
 				$update_object_query .= ",
-						status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
-						
-			if (isset($parameters['manager_id']))
+						status = ?";
+				array_push($bind_params,$parameters['status']);
+			}
+
+			if (isset($parameters['manager_id'])) {
 				$update_object_query .= ",
-						manager_id = ".$GLOBALS['_database']->qstr($parameters['manager_id'],get_magic_quotes_gpc());
+						manager_id = ?";
+				array_push($bind_params,$parameters['manager_id']);
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
+			array_push($bind_params,$this->id);
 
 			$GLOBALS['_database']->Execute(
 				$update_object_query,
-				array($this->id)
+				$bind_params
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {

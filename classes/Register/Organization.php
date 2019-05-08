@@ -17,7 +17,7 @@
 			// Clear Error Info
 			$this->error = '';
 
-			if ($options['nocache']) {
+			if (isset($options['nocache']) && $option['nocache']) {
 				$this->_nocache = true;
 			}
 

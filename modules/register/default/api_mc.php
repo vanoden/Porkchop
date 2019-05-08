@@ -494,26 +494,23 @@
 		print formatOutput($response);
 	}
 	function findContacts() {
-		$_contact = new \Register\Contact();
-
-		if (isset($_REQUEST['person']))
-		{
-			$_customer = new \Register\Customer();
-			$customer = $_customer->get($_REQUEST['person']);
-			if ($_customer->error) error($_customer->error);
-			$customer_id = $customer->id;
-			if (! $customer_id) app_error("Customer not found");
+		if (isset($_REQUEST['person'])) {
+			$customer = new \Register\Customer();
+			$customer->get($_REQUEST['person']);
+			if ($customer->error) error($customer->error);
+			if (! $customer->id) app_error("Customer not found");
 		}
 
 		$parameters = array();
-		if (isset($customer_id) and $customer_id) $parameters['person_id'] = $customer_id;
+		if (isset($customer->id) and $customer->id) $parameters['person_id'] = $customer->id;
 		if (isset($_REQUEST['type']) and $_REQUEST['type']) $parameters['type'] = $_REQUEST['type'];
 		if (isset($_REQUEST['value']) and $_REQUEST['value']) $parameters['value'] = $_REQUEST['value'];
 		
-		$contact = $_contact->find($parameters);
-		if ($_contact->error) error($_contact->error);
+		$contactList = new \Register\ContactList();
+		$contacts = $contactList->find($parameters);
+		if ($contactList->error) error($contactList->error);
 		$response = new stdClass();
-		$response->contact = $contact;
+		$response->contact = $contacts;
 		$response->success = 1;
 		
 
@@ -525,6 +522,7 @@
 	###################################################
 	function verifyEmail() {
 		# Initiate Response
+		$response = new stdClass();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
 		$response->header->method = $_REQUEST["method"];
 
@@ -532,17 +530,16 @@
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.verify.xsl';
 
 		# Initiate Image Object
-		$_user = new Customer();
+		$user = new Customer();
 
-		# Add Event
-		$_user->verify_email($_REQUEST['login'],$_REQUEST['validation_key']);
-
-		# Error Handling
-		if ($_user->error) error($_user->error);
-		
-		$response = new stdClass();
-		$response->user = $_user->details();
-		$response->success = 1;
+		if ($user->get($_REQUEST['login'])) {
+			if ($user->verify_email($_REQUEST['validation_key'])) {
+				$response->success = 1;
+			}
+			else error("Invalid validation key");
+		}
+		elseif ($user->error) error($user->error);
+		else error("Invalid validation key");
 
 		# Send Response
 		print formatOutput($response);

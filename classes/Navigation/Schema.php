@@ -69,11 +69,10 @@
 				$create_table_query = "
                     CREATE TABLE IF NOT EXISTS `navigation_menus` (
                       `id` int(5) NOT NULL AUTO_INCREMENT,
-                      `company_id` int(5) NOT NULL DEFAULT '0',
-                      `name` varchar(100) NOT NULL DEFAULT '',
+                      `code` varchar(100) NOT NULL,
+                      `title` varchar(100) NOT NULL DEFAULT '',
                       PRIMARY KEY (`id`),
-                      UNIQUE KEY `nav_name` (`company_id`,`name`),
-                      FOREIGN KEY `fk_company_id` (`company_id`) REFERENCES `company_companies` (`id`)
+                      UNIQUE KEY `uk_code` (`code`)
                     )
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
@@ -88,14 +87,11 @@
                       `title` varchar(100) NOT NULL DEFAULT '',
                       `target` varchar(200) NOT NULL DEFAULT '',
                       `view_order` int(3) DEFAULT NULL,
-                      `alt` text,
-                      `privileged` int(1) NOT NULL DEFAULT '0',
+                      `alt` varchar(255),
+					  `description` text,
                       `parent_id` int(5) NOT NULL DEFAULT '0',
                       `external` int(1) NOT NULL DEFAULT '0',
                       `ssl` int(11) NOT NULL DEFAULT '0',
-                      `spacer` int(1) NOT NULL DEFAULT '0',
-                      `cart_link` int(1) NOT NULL DEFAULT '0',
-                      `admin_role_required` int(11) NOT NULL DEFAULT '0',
                       PRIMARY KEY (`id`),
                       KEY `parent_id` (`parent_id`),
                       KEY `view_order` (`view_order`),
