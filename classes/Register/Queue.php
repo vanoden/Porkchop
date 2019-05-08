@@ -21,6 +21,7 @@
 		public $phone;
 		public $cell;
 		public $possibleStatus = array('VERIFYING','PENDING','APPROVED','DENIED');
+		public $possibleOrganizationStatus = array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED');
 
 		public function __construct($id = 0) {
 
@@ -111,23 +112,47 @@
 
             // process the new or existing queued customer to the chosen status  
             $registerOrganizationList = new \Register\OrganizationList();          
-            $existingOrganization = $registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleStatus));
+            $existingOrganization = $registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleOrganizationStatus));
             $organizationExists = !empty($existingOrganization);
             $registerOrganization = new \Register\Organization();
-            
+
             // set to active - doesn't exist yet - create the organization
             if (!$organizationExists) {
-                $newOrganizationDetails = $registerOrganization->addQueued(array('name' => $this->name, 'code' => $this->code, 'status' => 'APPROVED', 'is_reseller' => $this->is_reseller, 'assigned_reseller_id' => $this->reseller, 'notes' => $this->notes));
+                $newOrganizationDetails = $registerOrganization->addQueued(array('name' => $this->name, 'code' => $this->code, 'status' => 'NEW', 'is_reseller' => $this->is_reseller, 'assigned_reseller_id' => $this->reseller, 'notes' => $this->notes));
             } else {
-                // set to active - already exists - update the organization
+                //  already exists - set to approved - update the organization
                 $registerOrganization->get($this->code);
                 $registerOrganization->update(array('status' => 'APPROVED', 'notes' => $this->notes));
             }
-            $existingOrganization = $registerOrganizationList->find(array('name' => $this->name));
+            $existingOrganization = array_pop($registerOrganizationList->find(array('name' => $this->name)));
             
             // update to have the queued login match the 'approved' organization
             $registerCustomer = new \Register\Customer($this->register_user_id);
-            $registerCustomer->update(array('organization_id' => $existingOrganization[0]->id));
+            $registerCustomer->update(array('organization_id' => $existingOrganization->id));
+            
+            // add a support_request record with customer id, date entry and request items for each item entered. 
+            $supportRequest = new \Support\Request();
+			$newSupportRequest = $supportRequest->add(
+				array(
+					"date_request"	    => date("Y-m-d H:i:s"),
+					"customer_id"	    => $this->register_user_id,
+					"organization_id"   => $existingOrganization->id,
+					"type"			    => 'service',
+					"status"		    => "NEW"
+				)
+			);
+	
+	        // add production		
+			if (!empty($this->product_id)) {
+                $item = array(
+                    'line'			=> 1,
+                    'product_id'    => $this->product_id,
+                    'description'	=> "New organization approved with registered device. [" . $existingOrganization->name . "]",
+                    'quantity'		=> 1
+                );
+                if (!empty($this->serial_number)) $item['serial_number'] = $this->serial_number;
+                $supportRequest->addItem($item);
+			}     
 		}
 		
 		// hydrate known details about this queue object from known id if set

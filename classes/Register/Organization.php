@@ -56,6 +56,7 @@
 					$parameters['notes']				
 				)
 			);
+			
 			if (! $rs) {			
 				$this->error = "SQL Error in \Register\Organization::addQueued: ".$GLOBALS['_database']->ErrorMsg();
 				return null;

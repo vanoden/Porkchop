@@ -40,6 +40,7 @@
 	if ($_REQUEST['action'] == 'updateStatus') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
 	    $queuedCustomer->update(array('status' => $_REQUEST['status']));
+	    if ($_REQUEST['status'] == 'APPROVED')$queuedCustomer->syncLiveAccount();
         $page->success = true;
 	}
 	

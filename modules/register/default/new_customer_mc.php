@@ -195,8 +195,8 @@
 		// Initialize Customer Object
 		$page->isVerifedAccount = false;
 		$customer = new \Register\Customer();
-        $customer->getAllDetails($_REQUEST['login']);
-        
+        $customer = $customer->getAllDetails($_REQUEST['login']);
+
         if ($customer['validation_key'] == $_REQUEST['access']) {
             
             // update the queued organization to "PENDING" because the email has been verifed
