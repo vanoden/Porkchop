@@ -191,59 +191,69 @@
 	}
 
     if ($_REQUEST['method'] == "verify") {
-    
+		app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
 		// Initialize Customer Object
 		$page->isVerifedAccount = false;
 		$customer = new \Register\Customer();
-        $customer = $customer->getAllDetails($_REQUEST['login']);
-
-        if ($customer['validation_key'] == $_REQUEST['access']) {
-            
-            // update the queued organization to "PENDING" because the email has been verifed
-            $queuedCustomer = new \Register\Queue(); 
-            $queuedCustomer->getByQueuedLogin($customer['id']);
-            $queuedCustomer->update (array('status'=>'PENDING'));
-            
-            // create the notify support reminder email for the new verified customer
-            // @TODO, let's get a global function going for emailing people by "template files " / "template placeholder values"
-            $adminReminderTemplate = BASE . '/modules/register/email_templates/admin_notification.html';
-        	if (! file_exists($adminReminderTemplate)) {
-        		app_log("Template '".$adminReminderTemplate."' not found",'error',__FILE__,__LINE__);
-        		$page->addError("Template '".$adminReminderTemplate."' not found");
-        		return;
-        	}
-        	try {
-        		$verifyContent = file_get_contents($adminReminderTemplate);
-        	} catch (Exception $e) {
-        		app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
-        		$page->addError("Template load failed. Try again later");
-        		return;
-        	}
-        	$verifyTemplate = new \Content\Template\Shell();
-        	$verifyTemplate->content($verifyContent);
-        	$verifyTemplate->addParam('ADMIN.URL', 'https://'. $_config->site->hostname . '/_register/pending_customers');
-        	$verifyTemplate->addParam('ADMIN.USERDETAILS', $_REQUEST['login']);
-        	
-        	app_log("Message: ".$verifyTemplate->output(),'trace',__FILE__,__LINE__);
-
-        	// Build Message For Delivery
-        	$message = new \Email\Message();
-        	$message->html(true);
-        	$message->to('support@spectrosinstruments.com');
-        	$message->from('no-reply@spectrosinstruments.com');
-        	$message->subject('New verified customer - pending organizational approval');
-        	$message->body($verifyTemplate->output());
-
-        	app_log("Sending Admin Confirm new customer reminder",'debug',__FILE__,__LINE__);
-        	$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
-        	$transport->hostname($GLOBALS['_config']->email->hostname);
-        	$transport->token($GLOBALS['_config']->email->token);
-        	$transport->deliver($message);
-        	if ($transport->error) {
-        		$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
-        		app_log("Error Sending Admin Confirm new customer reminder: ".$transport->error,'error',__FILE__,__LINE__);
-        		return;
-        	}
-            $page->isVerifedAccount = true;
-        }
+        if ($customer->get($_REQUEST['login'])) {
+			app_log("Found customer ".$customer->id);
+			if ($customer->verify_email($_REQUEST['access'])) {
+				// update the queued organization to "PENDING" because the email has been verifed
+				app_log("Validation key confirmed, updating queue record");
+				$queuedCustomer = new \Register\Queue(); 
+				$queuedCustomer->getByQueuedLogin($customer->id);
+				$queuedCustomer->update (array('status'=>'PENDING'));
+				
+				// create the notify support reminder email for the new verified customer
+				// @TODO, let's get a global function going for emailing people by "template files " / "template placeholder values"
+				app_log("Generating notification email");
+				$adminReminderTemplate = BASE . '/modules/register/email_templates/admin_notification.html';
+				if (! file_exists($adminReminderTemplate)) {
+					app_log("Template '".$adminReminderTemplate."' not found",'error',__FILE__,__LINE__);
+					$page->addError("Template '".$adminReminderTemplate."' not found");
+					return;
+				}
+				try {
+					$verifyContent = file_get_contents($adminReminderTemplate);
+				} catch (Exception $e) {
+					app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
+					$page->addError("Template load failed. Try again later");
+					return;
+				}
+				$verifyTemplate = new \Content\Template\Shell();
+				$verifyTemplate->content($verifyContent);
+				$verifyTemplate->addParam('ADMIN.URL', 'https://'. $_config->site->hostname . '/_register/pending_customers');
+				$verifyTemplate->addParam('ADMIN.USERDETAILS', $_REQUEST['login']);
+				
+				app_log("Message: ".$verifyTemplate->output(),'trace',__FILE__,__LINE__);
+	
+				// Build Message For Delivery
+				$message = new \Email\Message();
+				$message->html(true);
+				$message->to('support@spectrosinstruments.com');
+				$message->from('no-reply@spectrosinstruments.com');
+				$message->subject('New verified customer - pending organizational approval');
+				$message->body($verifyTemplate->output());
+	
+				app_log("Sending Admin Confirm new customer reminder",'debug',__FILE__,__LINE__);
+				$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
+				$transport->hostname($GLOBALS['_config']->email->hostname);
+				$transport->token($GLOBALS['_config']->email->token);
+				$transport->deliver($message);
+				if ($transport->error) {
+					$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
+					app_log("Error Sending Admin Confirm new customer reminder: ".$transport->error,'error',__FILE__,__LINE__);
+					return;
+				}
+				$page->isVerifedAccount = true;
+			}
+			else {
+				app_log("Key not matched",'notice');
+				$page->addError("Invalid key");
+			}
+		}
+		else {
+			app_log("Login not matched",'notice');
+			$page->addError("Invalid key");
+		}
     }

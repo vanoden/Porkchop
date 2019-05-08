@@ -28,14 +28,16 @@
 	    }
 	    return $color;
 	}
-	
+
+app_log("updateNotes");
     // update customer notes from UI request
 	if ($_REQUEST['action'] == 'updateNotes') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);
 	    $queuedCustomer->update(array('notes' => $_REQUEST['notes']));
         $page->success = true;
 	}
-	
+
+app_log("updateStatus");
     // update customer status from UI request
 	if ($_REQUEST['action'] == 'updateStatus') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
@@ -43,14 +45,16 @@
 	    if ($_REQUEST['status'] == 'APPROVED')$queuedCustomer->syncLiveAccount();
         $page->success = true;
 	}
-	
+
+app_log("denyCustomer");
     // assign customer and/or generate new organization if needed
 	if ($_REQUEST['action'] == 'denyCustomer') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
 	    $queuedCustomer->update(array('status' => 'DELETED'));
         $page->success = true;
 	}
-	
+
+app_log("assignCustomer");
     // assign customer and/or generate new organization if needed
 	if ($_REQUEST['action'] == 'assignCustomer') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
@@ -58,14 +62,16 @@
 	    $queuedCustomer->syncLiveAccount();
         $page->success = true;
 	}
-	
+
+app_log("QueueList");
     // get queued customers based on search
     $queuedCustomers = new Register\QueueList();
     $searchTerm = '';
     $dateStart = '';
     $dateEnd = '';
     $statusFiltered = array();
-    
+
+app_log("Filters");
     // process form posted filters for results
     if ($_REQUEST['VERIFYING']) $statusFiltered[] = $_REQUEST['VERIFYING'];
     if ($_REQUEST['PENDING']) $statusFiltered[] = $_REQUEST['PENDING'];
@@ -77,7 +83,8 @@
     
     // set to default of no options selected
     if (empty($statusFiltered)) $_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
-    
+
+app_log("Find");
     // get results
     $queuedCustomersList = $queuedCustomers->find(
         array(
