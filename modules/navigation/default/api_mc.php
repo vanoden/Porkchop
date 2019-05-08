@@ -1,15 +1,14 @@
 <?php
     ###############################################
-    ### Handle API Request for Content Info and	###
+    ### Handle API Request for Navigation and	###
     ### Management								###
     ### A. Caravello 5/7/2009               	###
     ###############################################
 
+	$page = new \Site\Page();
+
 	# Call Requested Event
-	#error_log($_REQUEST['method']." Request received");
-	#error_log(print_r($_REQUEST,true));
-	if ($_REQUEST["method"])
-	{
+	if ($_REQUEST["method"]) {
 		app_log("Method ".$_REQUEST["method"]." called with ".$GLOBALS['_REQUEST_']->query_vars);
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
@@ -17,10 +16,7 @@
 		exit;
 	}
 	# Only Developers Can See The API
-	elseif (! $GLOBALS['_SESSION_']->customer->has_role('content operator')) {
-		header("location: /_content/home");
-		exit;
-	}
+	else $page->requireRole('content operator');
 
 	###################################################
 	### Just See if Server Is Communicating			###
@@ -43,16 +39,17 @@
 		$response = new \HTTP\Response();
 
 		# Initiate Page List
-		$page_list = new \Navigation\MenuList();
+		$menu_list = new \Navigation\MenuList();
 
 		# Find Matching Threads
 		$parameters = array();
-		$pages = $menu_list->find($parameters);
+		$menus = $menu_list->find($parameters);
 
 		# Error Handling
 		if ($menu_list->error) error($menu_list->error);
 		else{
 			$response->menu = $menus;
+			$response->count = $menu_list->count();
 			$response->success = 1;
 		}
 
@@ -61,63 +58,176 @@
 		# Send Response
 		print formatOutput($response);
 	}
+
 	###################################################
-	### Get Details regarding Specified Page		###
+	### Get Menu									###
 	###################################################
-	function getMenuButtons() {
+	function getMenu() {
 		# Default StyleSheet
-		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.button.xsl';
+		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.menu.xsl';
 		$response = new \HTTP\Response();
 
-		# Initiate Page Object
-		$menu = new \Navigation\Menu();
-		if (isset($_REQUEST['code'])) $menu->get($_REQUEST['code']);
+		$parameters = array();
 
-		# Error Handling
-		if ($menu->error) error($menu->error);
-		elseif ($menu->id) {
-			$response->request = $_REQUEST;
-			$response->button = $button;
+		if (isset($_REQUEST['code'])) {
+			$menu = new \Navigation\Menu();
+			if ($menu->get($_REQUEST['code'])) {
+				$response->request = $_REQUEST;
+				$response->menu = $menu;
+				$response->success = 1;
+			}
+			elseif ($menu->error()) {
+				error($menu->error());
+			}
+			else {
+				error("Menu not found");
+			}
+		}
+		else error("menu code required");
+
+		api_log('navigation',$_REQUEST,$response);
+
+		# Send Response
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Add Menu									###
+	###################################################
+	function addMenu() {
+		# Default StyleSheet
+		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.menu.xsl';
+		$response = new \HTTP\Response();
+
+		$parameters = array();
+
+		if (! isset($_REQUEST['code'])) error("code required");
+		$parameters['code'] = $_REQUEST['code'];
+		$parameters['title'] = $_REQUEST['title'];
+
+		$menu = new \Navigation\Menu();
+		if ($menu->add($parameters)) {
+			$response->menu = $menu;
 			$response->success = 1;
+		}
+		elseif ($menu->error()) {
+			error($menu->error());
 		}
 		else {
-			$response->success = 0;
-			$response->error = "Page not found";
+			error("Menu not found");
 		}
 
-		api_log('content',$_REQUEST,$response);
+		api_log('navigation',$_REQUEST,$response);
 
 		# Send Response
 		print formatOutput($response);
 	}
+
 	###################################################
-	### Get Details regarding Specified Product		###
+	### Get Menu Items								###
 	###################################################
-	function findNavigationItems() {
+	function findItems() {
 		# Default StyleSheet
-		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
+		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
 		$response = new \HTTP\Response();
 
-		# Initiate Product Object
-		$_menu = new Menu();
+		$parameters = array();
+		$itemlist = new \Navigation\ItemList();
 
-		# Find Matching Threads
-		$items = $_menu->find(
-			array (
-				'id'			=> $_REQUEST['id'],
-				'parent_id'		=> $_REQUEST['parent_id'],
-			)
-		);
+		if (isset($_REQUEST['menu_code'])) {
+			$menu = new \Navigation\Menu();
+			if ($menu->get($_REQUEST['menu_code'])) {
+				$parameters['menu_id'] = $menu->id;
+			}
+			else {
+				error("Menu '".$_REQUEST['menu_code']."' not found");
+			}
+		}
 
-		# Error Handling
-		if ($_menu->error) error($_menu->error);
-		else{
+		$items = $itemlist->find($parameters);
+		if ($itemlist->error()) error($itemlist->error());
+		else {
+			$response->request = $_REQUEST;
 			$response->item = $items;
+			$response->count = $itemlist->count();
 			$response->success = 1;
 		}
 
+		api_log('navigation',$_REQUEST,$response);
+
 		# Send Response
-		api_log('content',$_REQUEST,$response);
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Add Menu Item								###
+	###################################################
+	function addItem() {
+		# Default StyleSheet
+		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
+		$response = new \HTTP\Response();
+
+		$parameters = array();
+
+		if (! isset($_REQUEST['menu_code'])) error("menu_code required");
+		$menu = new \Navigation\Menu();
+		if (! $menu->get($_REQUEST['menu_code'])) error("Menu not found");
+
+		$parameters['menu_id'] = $menu->id;	
+		$parameters['title'] = $_REQUEST['title'];
+		$parameters['target'] = $_REQUEST['target'];
+		$parameters['alt'] = $_REQUEST['alt'];
+		$parameters['description'] = $_REQUEST['description'];
+		$parameters['view_order'] = $_REQUEST['view_order'];
+
+		$item = new \Navigation\Item();
+		if ($item->add($parameters)) {
+			$response->item = $item;
+			$response->success = 1;
+		}
+		elseif ($item->error()) {
+			error($item->error());
+		}
+
+		api_log('navigation',$_REQUEST,$response);
+
+		# Send Response
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Update Menu Item							###
+	###################################################
+	function updateItem() {
+		# Default StyleSheet
+		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
+		$response = new \HTTP\Response();
+
+		$parameters = array();
+
+		if (! isset($_REQUEST['id'])) error("id required");
+		$item = new \Navigation\Item($_REQUEST['id']);
+		if ($item->error) error($item->error);
+		if (! $item->id) error("Item not found");
+
+		$parameters['title'] = $_REQUEST['title'];
+		$parameters['target'] = $_REQUEST['target'];
+		$parameters['alt'] = $_REQUEST['alt'];
+		$parameters['description'] = $_REQUEST['description'];
+		$parameters['view_order'] = $_REQUEST['view_order'];
+
+		if ($item->update($parameters)) {
+			$response->request = $_REQUEST;
+			$response->item = $item;
+			$response->success = 1;
+		}
+		elseif ($item->error()) {
+			error($item->error());
+		}
+
+		api_log('navigation',$_REQUEST,$response);
+
+		# Send Response
 		print formatOutput($response);
 	}
 
