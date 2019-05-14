@@ -110,12 +110,13 @@
          */
 		public function syncLiveAccount () {
 
-            // process the new or existing queued customer to the chosen status  
+            // process the new or existing queued customer to the chosen status
+            global $_config;
             $registerOrganizationList = new \Register\OrganizationList();          
             $existingOrganization = $registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleOrganizationStatus));
             $organizationExists = !empty($existingOrganization);
             $registerOrganization = new \Register\Organization();
-
+            
             // set to active - doesn't exist yet - create the organization
             if (!$organizationExists) {
                 $newOrganizationDetails = $registerOrganization->addQueued(array('name' => $this->name, 'code' => $this->code, 'status' => 'NEW', 'is_reseller' => $this->is_reseller, 'assigned_reseller_id' => $this->reseller, 'notes' => $this->notes));
@@ -144,7 +145,7 @@
 	
 	        // add production		
 			if (!empty($this->product_id)) {
-                $item = array(
+                $item = array (
                     'line'			=> 1,
                     'product_id'    => $this->product_id,
                     'description'	=> "New organization approved with registered device. [" . $existingOrganization->name . "]",
@@ -152,7 +153,30 @@
                 );
                 if (!empty($this->serial_number)) $item['serial_number'] = $this->serial_number;
                 $supportRequest->addItem($item);
-			}     
+			}   
+
+            // get contact work email address
+            $registerContact = new \Register\Contact();
+            $registerContact->detailsByUserByTypeByDesc($registerCustomer->id, 'email');
+            $contactWorkEmail = $registerContact->value;
+
+            // An email notification must be sent to members of the 'support user' role
+            $emailNotification = new \Email\Notification(
+            array('subject' => 'New Customer Approved', 
+                  'template' => BASE. '/modules/register/email_templates/admin_notification_new_customer.html', 
+                  'templateVars' => array('USERDETAILS' => $registerContact->person->first_name . " " . $registerContact->person->last_name . " - " . $registerOrganization->name, 'URL' => 'https://'. $_config->site->hostname . '_support/requests')
+                  )
+            );  
+            $emailNotification->send('khinds10@gmail.com', 'no-reply@spectrosinstruments.com');                    	                       
+
+            // An email confirmation must be sent to the customer
+            $emailNotification = new \Email\Notification(
+            array('subject' => 'Your account has been Approved!', 
+                  'template' => BASE. '/modules/register/email_templates/welcome.html', 
+                  'templateVars' => array('USERDETAILS' => $registerContact->person->first_name . " " . $registerContact->person->last_name, 'URL' => 'https://'. $_config->site->hostname)
+                  )
+            );  
+            $isEmailSent = $emailNotification->send($contactWorkEmail, 'no-reply@spectrosinstruments.com');
 		}
 		
 		// hydrate known details about this queue object from known id if set

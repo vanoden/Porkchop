@@ -12,7 +12,7 @@
 	$resellers = $resellerList->find(array("is_reseller" => true));
 	$page->captchaPassed = true;
     global $_config;
-    
+
     // handle form submit	
 	if ($_REQUEST['method'] == "register") {
 	
@@ -38,6 +38,9 @@
 	    $context = stream_context_create($options);
 	    $result = file_get_contents($url, false, $context);
 	    $captcha_success = json_decode($result);
+	    
+	    // $captcha_success = new stdClass();
+	    // $captcha_success->success = true;
 	    
 	    if ($captcha_success->success == true) {
 	    
@@ -141,45 +144,18 @@
                             $page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher issues.");
 							return;
                         }
-
+                        
                         // create the verify account email
-                        // @TODO, let's get a global function going for emailing people by "template files " / "template placeholder values"
-                        $welcomeEmailTemplate = BASE. '/modules/register/email_templates/verify_email.html';
-                    	if (! file_exists($welcomeEmailTemplate)) {
-                    		app_log("Template '".$welcomeEmailTemplate."' not found",'error',__FILE__,__LINE__);
-                    		$page->addError("Template '".$welcomeEmailTemplate."' not found");
-                    		return;
-                    	}
-                    	try {
-                    		$verifyContent = file_get_contents($welcomeEmailTemplate);
-                    	} catch (Exception $e) {
-                    		app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
-                    		$page->addError("Template load failed.  Try again later");
-                    		return;
-                    	}
-                    	$verifyTemplate = new \Content\Template\Shell();
-                    	$verifyTemplate->content($verifyContent);
-                    	$verifyTemplate->addParam('VERIFYING.URL', 'https://'. $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $_REQUEST['login']);
-                    	app_log("Message: ".$verifyTemplate->output(),'trace',__FILE__,__LINE__);
-
-                    	// Build Message For Delivery
-                    	$message = new \Email\Message();
-                    	$message->html(true);
-                    	$message->to($_REQUEST['work_email']);
-                    	$message->from('no-reply@spectrosinstruments.com');
-                    	$message->subject('Please verify your account');
-                    	$message->body($verifyTemplate->output());
-
-                    	app_log("Sending Verify Email Link",'debug',__FILE__,__LINE__);
-                    	$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
-                    	$transport->hostname($GLOBALS['_config']->email->hostname);
-                    	$transport->token($GLOBALS['_config']->email->token);
-                    	$transport->deliver($message);
-                    	if ($transport->error) {
-                    		$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
-                    		app_log("Error sending forgot password link: ".$transport->error,'error',__FILE__,__LINE__);
-                    		return;
-                    	}
+                        $emailNotification = new \Email\Notification(
+                        array('subject' => 'Please verify your account', 
+                              'template' => BASE. '/modules/register/email_templates/verify_email.html', 
+                              'templateVars' => array('VERIFYING.URL' => 'https://'. $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $_REQUEST['login'])
+                              )
+                        );  
+                        $isEmailSent = $emailNotification->send($_REQUEST['work_email'], 'no-reply@spectrosinstruments.com');                    	
+                    	if (!$isEmailSent) $page->addError("Confirmation email could not be sent, please contact us at support@spectrosinstruments.com to complete your registration, thank you!");
+                    	
+                    	// show thank you page
 				        header("Location: /_register/thank_you");
 			        }
 		        }
@@ -205,46 +181,15 @@
 				$queuedCustomer->update (array('status'=>'PENDING'));
 				
 				// create the notify support reminder email for the new verified customer
-				// @TODO, let's get a global function going for emailing people by "template files " / "template placeholder values"
 				app_log("Generating notification email");
-				$adminReminderTemplate = BASE . '/modules/register/email_templates/admin_notification.html';
-				if (! file_exists($adminReminderTemplate)) {
-					app_log("Template '".$adminReminderTemplate."' not found",'error',__FILE__,__LINE__);
-					$page->addError("Template '".$adminReminderTemplate."' not found");
-					return;
-				}
-				try {
-					$verifyContent = file_get_contents($adminReminderTemplate);
-				} catch (Exception $e) {
-					app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
-					$page->addError("Template load failed. Try again later");
-					return;
-				}
-				$verifyTemplate = new \Content\Template\Shell();
-				$verifyTemplate->content($verifyContent);
-				$verifyTemplate->addParam('ADMIN.URL', 'https://'. $_config->site->hostname . '/_register/pending_customers');
-				$verifyTemplate->addParam('ADMIN.USERDETAILS', $_REQUEST['login']);
-				
-				app_log("Message: ".$verifyTemplate->output(),'trace',__FILE__,__LINE__);
-	
-				// Build Message For Delivery
-				$message = new \Email\Message();
-				$message->html(true);
-				$message->to('support@spectrosinstruments.com');
-				$message->from('no-reply@spectrosinstruments.com');
-				$message->subject('New verified customer - pending organizational approval');
-				$message->body($verifyTemplate->output());
-	
-				app_log("Sending Admin Confirm new customer reminder",'debug',__FILE__,__LINE__);
-				$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
-				$transport->hostname($GLOBALS['_config']->email->hostname);
-				$transport->token($GLOBALS['_config']->email->token);
-				$transport->deliver($message);
-				if ($transport->error) {
-					$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
-					app_log("Error Sending Admin Confirm new customer reminder: ".$transport->error,'error',__FILE__,__LINE__);
-					return;
-				}
+                $emailNotification = new \Email\Notification(
+                array('subject' => 'New verified customer - pending organizational approval', 
+                      'template' => BASE . '/modules/register/email_templates/admin_notification.html', 
+                      'templateVars' => array('ADMIN.URL' => 'https://'. $_config->site->hostname . '/_register/pending_customers', 'ADMIN.USERDETAILS' => $_REQUEST['login'])
+                      )
+                );  
+                app_log("Sending Admin Confirm new customer reminder",'debug',__FILE__,__LINE__);
+                $emailNotification->send('khinds10@gmail.com', 'no-reply@spectrosinstruments.com');
 				$page->isVerifedAccount = true;
 			}
 			else {

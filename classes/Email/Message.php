@@ -52,5 +52,3 @@
 			return $this->_body;
 		}
 	}
-	
-?>
