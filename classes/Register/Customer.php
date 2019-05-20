@@ -39,6 +39,7 @@
 				FROM	register_users
 				WHERE	login = ?
 			";
+			
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
 				array($code)
@@ -49,7 +50,6 @@
 			}
 			return $rs->FetchRow();
 		}
-		
 		
 		public function details() {
 		    parent::details();

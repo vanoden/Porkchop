@@ -18,6 +18,7 @@
 				$this->details();
 			}
 		}
+		
 		public function get($type,$value) {
 			$get_object_query = "
 				SELECT	id
@@ -40,6 +41,7 @@
 			$this->id = $id;
 			return $this->details();
 		}
+		
 		public function add($parameters = array()) {
 		
 			if (! preg_match('/^\d+$/',$parameters['person_id'])) {
@@ -89,6 +91,7 @@
 					
 			return $GLOBALS['_database']->Insert_ID();
 		}
+		
 		public function update($parameters = array(), $id = null) {
 		
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
@@ -141,6 +144,7 @@
 			}
 			return $this->details();
 		}
+		
 		public function delete() {
 			$delete_contact_query = "
 				DELETE
@@ -157,6 +161,46 @@
 			}
 			return 1;
 		}
+		
+		public function detailsByUserByTypeByDesc($person_id, $type='email', $desc='Work Email') {
+            $get_object_query = "
+				SELECT	id,
+						type,
+						value,
+						notes,
+						description,
+						notify,
+						person_id
+				FROM	register_contacts
+				WHERE 	person_id = ?
+				AND		type = ?
+				AND		description = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($person_id, $type, $desc)
+			);
+			if (! $rs) {
+				$this->error = "SQL Error in regiser::person::contactDetails: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			$contact = $rs->FetchNextObject(false);
+			if (isset($contact->id)) {
+				$this->id = $contact->id;
+				$this->type = $contact->type;
+				$this->value = $contact->value;
+				$this->notes = $contact->notes;
+				$this->description = $contact->description;
+				if ($contact->notify == 1) $this->notify = true;
+				else $this->notify = false;
+				$this->person = new \Register\Person($contact->person_id);
+			}
+			else {
+				$this->id = null;
+			}
+			return $contact;
+		}
+		
 		public function details() {
 			$get_object_query = "
 				SELECT	id,
@@ -194,4 +238,3 @@
 			return $contact;
 		}
 	}
-?>
