@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support;
 
 	class Event {
@@ -125,4 +125,3 @@
 			return $rs->FetchObject();
 		}
 	}
-?>

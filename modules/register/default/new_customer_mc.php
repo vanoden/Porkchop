@@ -115,6 +115,36 @@
 					        
 					        if ($customer->error) app_log("Error adding Home Email '".$_REQUEST['home_email']."': ".$customer->error,'error',__FILE__,__LINE__);
 				        }
+				        
+				        if ($_REQUEST['phone']) {
+				        
+					        // Create Contact Record
+					        $customer->addContact(
+						        array(
+							        "person_id"		=> $customer->id,
+							        "type"			=> "phone",
+							        "description"	=> "Business Phone",
+							        "value"			=> $_REQUEST['phone']
+						        )
+					        );
+					        
+					        if ($customer->error) app_log("Error adding Business Phone '".$_REQUEST['phone']."': ".$customer->error,'error',__FILE__,__LINE__);
+				        }
+
+				        if ($_REQUEST['cell']) {
+				        
+					        // Create Contact Record
+					        $customer->addContact(
+						        array(
+							        "person_id"		=> $customer->id,
+							        "type"			=> "phone",
+							        "description"	=> "Cell Phone",
+							        "value"			=> $_REQUEST['cell']
+						        )
+					        );
+					        
+					        if ($customer->error) app_log("Error adding Cell Phone '".$_REQUEST['cell']."': ".$customer->error,'error',__FILE__,__LINE__);
+				        }
 
                         // Initialize Register Queued Object
                         $queuedCustomer = new \Register\Queue();
@@ -148,7 +178,7 @@
                         // create the verify account email
                         $emailNotification = new \Email\Notification(
                         array('subject' => 'Please verify your account', 
-                              'template' => BASE. '/modules/register/email_templates/verify_email.html', 
+                              'template' => BASE . '/modules/register/email_templates/verify_email.html', 
                               'templateVars' => array('VERIFYING.URL' => 'https://'. $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $_REQUEST['login'])
                               )
                         );  
