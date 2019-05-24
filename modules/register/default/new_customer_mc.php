@@ -148,7 +148,7 @@
 
                         // Initialize Register Queued Object
                         $queuedCustomer = new \Register\Queue();
-                        $queuedCustomerData = array();    
+                        $queuedCustomerData = array();
                         $queuedCustomerData['name'] = $_REQUEST['organization_name'];
                         $queuedCustomerData['code'] = time(); // @TODO, not sure about this column
                         $queuedCustomerData['is_reseller'] = 0;
@@ -177,14 +177,14 @@
                         
                         // create the verify account email
                         $emailNotification = new \Email\Notification(
-                        array('subject' => 'Please verify your account', 
-                              'template' => BASE . '/modules/register/email_templates/verify_email.html', 
+                        array('subject' => 'Please verify your account',
+                              'template' => BASE . '/modules/register/email_templates/verify_email.html',
                               'templateVars' => array('VERIFYING.URL' => 'https://'. $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $_REQUEST['login'])
                               )
-                        );  
-                        $isEmailSent = $emailNotification->send($_REQUEST['work_email'], 'no-reply@spectrosinstruments.com');                    	
+                        );
+                        $isEmailSent = $emailNotification->send($_REQUEST['work_email'], 'no-reply@spectrosinstruments.com');
                     	if (!$isEmailSent) $page->addError("Confirmation email could not be sent, please contact us at support@spectrosinstruments.com to complete your registration, thank you!");
-                    	
+
                     	// show thank you page
 				        header("Location: /_register/thank_you");
 			        }
@@ -219,7 +219,7 @@
                       )
                 );  
                 app_log("Sending Admin Confirm new customer reminder",'debug',__FILE__,__LINE__);
-                $emailNotification->send('khinds10@gmail.com', 'no-reply@spectrosinstruments.com');
+                $emailNotification->send('support@spectrosinstruments.com', 'no-reply@spectrosinstruments.com');
 				$page->isVerifedAccount = true;
 			}
 			else {

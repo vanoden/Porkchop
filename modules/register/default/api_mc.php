@@ -962,10 +962,30 @@
 		return $document->content();
 	}
 	
+    /**
+	 * search registered organizations by name
+	 */
+	function searchOrganizationsByName() {
+    	header('Content-Type: application/json');
+    	$organizationList = new \Register\OrganizationList();
+		$search = array();
+		$search['name'] = $_REQUEST['term'];
+		$search['_like'] = array('name');
+    	$organizationsFound = $organizationList->find($search);
+    	
+    	$results = array();
+    	foreach ($organizationsFound as $organization) {
+    	    $newOrganization = new stdClass();
+    	    $newOrganization->id = $organization->id;
+    	    $newOrganization->label = $organization->name;
+    	    $newOrganization->value = $organization->name;
+    	    $results[] = $newOrganization;
+    	}
+		print json_encode($results);
+	}
+
 	/**
 	 * get shipment by serial number
-	 *
-	 * @param string $serialNumber
 	 */
 	function shipmentFindBySerial() {
     	header('Content-Type: application/json');

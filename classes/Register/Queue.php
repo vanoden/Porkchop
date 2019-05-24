@@ -110,13 +110,16 @@
          */
 		public function syncLiveAccount () {
 
+		    // if they've found an existing organization
+		    if($_REQUEST['organization']) $this->name = $_REQUEST['organization'];
+		
             // process the new or existing queued customer to the chosen status
             global $_config;
             $registerOrganizationList = new \Register\OrganizationList();          
             $existingOrganization = $registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleOrganizationStatus));
             $organizationExists = !empty($existingOrganization);
             $registerOrganization = new \Register\Organization();
-            
+                        
             // set to active - doesn't exist yet - create the organization
             if (!$organizationExists) {
                 $newOrganizationDetails = $registerOrganization->addQueued(array('name' => $this->name, 'code' => $this->code, 'status' => 'NEW', 'is_reseller' => $this->is_reseller, 'assigned_reseller_id' => $this->reseller, 'notes' => $this->notes));
@@ -153,7 +156,7 @@
                 );
                 if (!empty($this->serial_number)) $item['serial_number'] = $this->serial_number;
                 $supportRequest->addItem($item);
-			}   
+			}
 
             // get contact work email address
             $registerContact = new \Register\Contact();
@@ -167,7 +170,7 @@
                   'templateVars' => array('USERDETAILS' => $registerContact->person->first_name . " " . $registerContact->person->last_name . " - " . $registerOrganization->name, 'URL' => 'https://'. $_config->site->hostname . '_support/requests')
                   )
             );  
-            $emailNotification->send('khinds10@gmail.com', 'no-reply@spectrosinstruments.com');                    	                       
+            $emailNotification->send('support@spectrosinstruments.com', 'no-reply@spectrosinstruments.com');                    	                       
 
             // An email confirmation must be sent to the customer
             $emailNotification = new \Email\Notification(
@@ -175,7 +178,7 @@
                   'template' => BASE. '/modules/register/email_templates/welcome.html', 
                   'templateVars' => array('USERDETAILS' => $registerContact->person->first_name . " " . $registerContact->person->last_name, 'URL' => 'https://'. $_config->site->hostname)
                   )
-            );  
+            );
             $isEmailSent = $emailNotification->send($contactWorkEmail, 'no-reply@spectrosinstruments.com');
 		}
 		

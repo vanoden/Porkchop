@@ -29,16 +29,16 @@
 	    return $color;
 	}
 
-app_log("updateNotes");
     // update customer notes from UI request
+    app_log("updateNotes");
 	if ($_REQUEST['action'] == 'updateNotes') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);
 	    $queuedCustomer->update(array('notes' => $_REQUEST['notes']));
         $page->success = true;
 	}
 
-app_log("updateStatus");
     // update customer status from UI request
+    app_log("updateStatus");
 	if ($_REQUEST['action'] == 'updateStatus') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
 	    $queuedCustomer->update(array('status' => $_REQUEST['status']));
@@ -46,33 +46,33 @@ app_log("updateStatus");
         $page->success = true;
 	}
 
-app_log("denyCustomer");
     // assign customer and/or generate new organization if needed
+    app_log("denyCustomer");
 	if ($_REQUEST['action'] == 'denyCustomer') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
 	    $queuedCustomer->update(array('status' => 'DELETED'));
         $page->success = true;
 	}
 
-app_log("assignCustomer");
     // assign customer and/or generate new organization if needed
+    app_log("assignCustomer");
 	if ($_REQUEST['action'] == 'assignCustomer') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
 	    $queuedCustomer->update(array('status' => 'APPROVED'));
 	    $queuedCustomer->syncLiveAccount();
         $page->success = true;
-	}
+	}	
 
-app_log("QueueList");
     // get queued customers based on search
+    app_log("QueueList");
     $queuedCustomers = new Register\QueueList();
     $searchTerm = '';
     $dateStart = '';
     $dateEnd = '';
     $statusFiltered = array();
 
-app_log("Filters");
     // process form posted filters for results
+    app_log("Filters");
     if ($_REQUEST['VERIFYING']) $statusFiltered[] = $_REQUEST['VERIFYING'];
     if ($_REQUEST['PENDING']) $statusFiltered[] = $_REQUEST['PENDING'];
     if ($_REQUEST['APPROVED']) $statusFiltered[] = $_REQUEST['APPROVED'];
@@ -84,8 +84,8 @@ app_log("Filters");
     // set to default of no options selected
     if (empty($statusFiltered)) $_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
 
-app_log("Find");
     // get results
+    app_log("Find");
     $queuedCustomersList = $queuedCustomers->find(
         array(
             'searchAll'=> $searchTerm,
