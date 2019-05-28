@@ -163,19 +163,34 @@
             $registerContact->detailsByUserByTypeByDesc($registerCustomer->id, 'email');
             $contactWorkEmail = $registerContact->value;
 
-            // An email notification must be sent to members of the 'support user' role
+            // email notification must be sent to members of the 'support user' role
             $emailNotification = new \Email\Notification(
             array('subject' => 'New Customer Approved', 
-                  'template' => BASE. '/modules/register/email_templates/admin_notification_new_customer.html', 
+                  'template' => TEMPLATES . '/registration/admin_notification_new_customer.html', 
                   'templateVars' => array('USERDETAILS' => $registerContact->person->first_name . " " . $registerContact->person->last_name . " - " . $registerOrganization->name, 'URL' => 'https://'. $_config->site->hostname . '_support/requests')
                   )
             );  
             $emailNotification->send('support@spectrosinstruments.com', 'no-reply@spectrosinstruments.com');                    	                       
 
+            // alert 'support user' users of the new customer
+            $message = new \Email\Message(
+                array(
+                    'from'	=> 'service@spectrosinstruments.com',
+                    'subject'	=> 'New Customer Approved',
+                    'body'		=> $emailNotification->getMessageBody()
+                )
+            );
+            $message->html(true);
+
+            $role = new \Register\Role();
+            $role->get('support user');
+            $role->notify($message);
+            if ($role->error) app_log("Error sending admin new customer reminder: ".$role->error);	
+
             // An email confirmation must be sent to the customer
             $emailNotification = new \Email\Notification(
             array('subject' => 'Your account has been Approved!', 
-                  'template' => BASE. '/modules/register/email_templates/welcome.html', 
+                  'template' => TEMPLATES . '/registration/welcome.html', 
                   'templateVars' => array('USERDETAILS' => $registerContact->person->first_name . " " . $registerContact->person->last_name, 'URL' => 'https://'. $_config->site->hostname)
                   )
             );

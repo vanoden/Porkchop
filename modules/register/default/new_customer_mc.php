@@ -178,7 +178,7 @@
                         // create the verify account email
                         $emailNotification = new \Email\Notification(
                         array('subject' => 'Please verify your account',
-                              'template' => BASE . '/modules/register/email_templates/verify_email.html',
+                              'template' => TEMPLATES . '/registration/verify_email.html',
                               'templateVars' => array('VERIFYING.URL' => 'https://'. $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $_REQUEST['login'])
                               )
                         );
@@ -213,14 +213,30 @@
 				// create the notify support reminder email for the new verified customer
 				app_log("Generating notification email");
                 $emailNotification = new \Email\Notification(
-                array('subject' => 'New verified customer - pending organizational approval', 
-                      'template' => BASE . '/modules/register/email_templates/admin_notification.html', 
+                $notificationSubject = 'New verified customer - pending organizational approval';
+                array('subject' => $notificationSubject,
+                      'template' => TEMPLATES . '/registration/admin_notification.html', 
                       'templateVars' => array('ADMIN.URL' => 'https://'. $_config->site->hostname . '/_register/pending_customers', 'ADMIN.USERDETAILS' => $_REQUEST['login'])
                       )
                 );  
                 app_log("Sending Admin Confirm new customer reminder",'debug',__FILE__,__LINE__);
                 $emailNotification->send('support@spectrosinstruments.com', 'no-reply@spectrosinstruments.com');
-				$page->isVerifedAccount = true;
+				
+                // alert 'register manager' users of the new customer
+                $message = new \Email\Message(
+                    array(
+	                    'from'	=> 'service@spectrosinstruments.com',
+	                    'subject'	=> $notificationSubject,
+	                    'body'		=> $emailNotification->getMessageBody()
+                    )
+                );
+                $message->html(true);
+                $role = new \Register\Role();
+                $role->get('register manager');
+                $role->notify($message);
+                if ($role->error) app_log("Error sending admin confirm new customer reminder: ".$role->error);				
+
+				$page->isVerifedAccount = true;				
 			}
 			else {
 				app_log("Key not matched",'notice');
