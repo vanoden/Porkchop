@@ -212,8 +212,8 @@
 				
 				// create the notify support reminder email for the new verified customer
 				app_log("Generating notification email");
+				$notificationSubject = 'New verified customer - pending organizational approval';
                 $emailNotification = new \Email\Notification(
-                $notificationSubject = 'New verified customer - pending organizational approval';
                 array('subject' => $notificationSubject,
                       'template' => TEMPLATES . '/registration/admin_notification.html', 
                       'templateVars' => array('ADMIN.URL' => 'https://'. $_config->site->hostname . '/_register/pending_customers', 'ADMIN.USERDETAILS' => $_REQUEST['login'])
