@@ -110,13 +110,16 @@
          */
 		public function syncLiveAccount () {
 
+		    // if they've found an existing organization
+		    if($_REQUEST['organization']) $this->name = $_REQUEST['organization'];
+		
             // process the new or existing queued customer to the chosen status
             global $_config;
             $registerOrganizationList = new \Register\OrganizationList();          
             $existingOrganization = $registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleOrganizationStatus));
             $organizationExists = !empty($existingOrganization);
             $registerOrganization = new \Register\Organization();
-            
+                        
             // set to active - doesn't exist yet - create the organization
             if (!$organizationExists) {
                 $newOrganizationDetails = $registerOrganization->addQueued(array('name' => $this->name, 'code' => $this->code, 'status' => 'NEW', 'is_reseller' => $this->is_reseller, 'assigned_reseller_id' => $this->reseller, 'notes' => $this->notes));
@@ -153,29 +156,44 @@
                 );
                 if (!empty($this->serial_number)) $item['serial_number'] = $this->serial_number;
                 $supportRequest->addItem($item);
-			}   
+			}
 
             // get contact work email address
             $registerContact = new \Register\Contact();
             $registerContact->detailsByUserByTypeByDesc($registerCustomer->id, 'email');
             $contactWorkEmail = $registerContact->value;
 
-            // An email notification must be sent to members of the 'support user' role
+            // email notification must be sent to members of the 'support user' role
             $emailNotification = new \Email\Notification(
             array('subject' => 'New Customer Approved', 
-                  'template' => BASE. '/modules/register/email_templates/admin_notification_new_customer.html', 
+                  'template' => TEMPLATES . '/registration/admin_notification_new_customer.html', 
                   'templateVars' => array('USERDETAILS' => $registerContact->person->first_name . " " . $registerContact->person->last_name . " - " . $registerOrganization->name, 'URL' => 'https://'. $_config->site->hostname . '_support/requests')
                   )
             );  
-            $emailNotification->send('khinds10@gmail.com', 'no-reply@spectrosinstruments.com');                    	                       
+            $emailNotification->send('support@spectrosinstruments.com', 'no-reply@spectrosinstruments.com');                    	                       
+
+            // alert 'support user' users of the new customer
+            $message = new \Email\Message(
+                array(
+                    'from'	=> 'service@spectrosinstruments.com',
+                    'subject'	=> 'New Customer Approved',
+                    'body'		=> $emailNotification->getMessageBody()
+                )
+            );
+            $message->html(true);
+
+            $role = new \Register\Role();
+            $role->get('support user');
+            $role->notify($message);
+            if ($role->error) app_log("Error sending admin new customer reminder: ".$role->error);	
 
             // An email confirmation must be sent to the customer
             $emailNotification = new \Email\Notification(
             array('subject' => 'Your account has been Approved!', 
-                  'template' => BASE. '/modules/register/email_templates/welcome.html', 
+                  'template' => TEMPLATES . '/registration/welcome.html', 
                   'templateVars' => array('USERDETAILS' => $registerContact->person->first_name . " " . $registerContact->person->last_name, 'URL' => 'https://'. $_config->site->hostname)
                   )
-            );  
+            );
             $isEmailSent = $emailNotification->send($contactWorkEmail, 'no-reply@spectrosinstruments.com');
 		}
 		

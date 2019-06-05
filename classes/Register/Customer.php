@@ -32,25 +32,6 @@
 			return $this->details();
 		}
 		
-		public function getAllDetails($code = '') {
-			$this->error = null;
-			$get_object_query = "
-				SELECT	*
-				FROM	register_users
-				WHERE	login = ?
-			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			if (! $rs) {
-				$this->error = "SQL Error in \Register\Customer::getAllDetails: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			return $rs->FetchRow();
-		}
-		
 		public function details() {
 		    parent::details();
 			if ($this->id) {

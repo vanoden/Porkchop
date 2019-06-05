@@ -47,10 +47,7 @@
 	function me() {
 		# Default StyleSheet
 		if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
-
-		if ($GLOBALS['_SESSION_']->customer->has_role('administrator')) {
-			$GLOBALS['_SESSION_']->customer->admin = 1;
-		}
+		if ($GLOBALS['_SESSION_']->customer->has_role('administrator')) $GLOBALS['_SESSION_']->customer->admin = 1;
 		$response = new stdClass();
 		$response->customer = $GLOBALS['_SESSION_']->customer;
 		$response->success = 1;
@@ -58,6 +55,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Authenticate Session						###
 	###################################################
@@ -86,6 +84,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Get Details regarding Specified Customer	###
 	###################################################
@@ -120,6 +119,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Update Specified Customer					###
 	###################################################
@@ -214,6 +214,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Find Roles									###
 	###################################################
@@ -229,6 +230,7 @@
 		
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Find Role Members							###
 	###################################################
@@ -257,6 +259,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Add a User Role								###
 	###################################################
@@ -278,6 +281,7 @@
 
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Update an Existing Role						###
 	###################################################
@@ -301,6 +305,7 @@
 		}
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Add a User to a Role						###
 	###################################################
@@ -325,6 +330,7 @@
 
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Assign Privilege to Role					###
 	###################################################
@@ -341,7 +347,6 @@
 			error('role required');
 		}
 
-
 		$response = new \HTTP\Response();
 		if ($role->addPrivilege($_REQUEST['privilege'])) {
 			$response->success = 1;
@@ -353,6 +358,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Assign Privilege to Role					###
 	###################################################
@@ -376,6 +382,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Does Customer Have Privilege				###
 	###################################################
@@ -398,6 +405,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Create Customer Image						###
 	###################################################
@@ -436,6 +444,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Add a New Customer via Registration			###
 	###################################################
@@ -493,6 +502,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	function findContacts() {
 		if (isset($_REQUEST['person'])) {
 			$customer = new \Register\Customer();
@@ -517,6 +527,7 @@
 		# Send Response
 		print formatOutput($response,array());
 	}
+	
 	###################################################
 	### Verify Users Email Address					###
 	###################################################
@@ -613,6 +624,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Get Organization							###
 	###################################################
@@ -676,6 +688,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Search Organizations						###
 	###################################################
@@ -707,6 +720,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Find Organization Owned Products			###
 	###################################################
@@ -786,6 +800,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Add Organization Owned Product				###
 	###################################################
@@ -825,6 +840,7 @@
 		header('Content-Type: application/xml');
 		print formatOutput($response);
 	}
+	
 	function expireAgingCustomers() {
 		if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 			$expires = strtotime("-12 month", time());
@@ -852,6 +868,7 @@
 		# Send Response
 		print formatOutput($response);
 	}
+	
 	function expireInactiveOrganizations() {
 		if (role('register manager')) {
 			$expires = strtotime("-12 month", time());
@@ -880,6 +897,7 @@
 		header('Content-Type: application/xml');
 		print formatOutput($response);
 	}
+	
 	function flagActiveCustomers() {
 		$list = new \Register\CustomerList();
 		$counter = $list->activate();
@@ -889,6 +907,7 @@
 
 		print formatOutput($response);
 	}
+	
 	function schemaVersion() {
 		$schema = new \Register\Schema();
 		if ($schema->error) {
@@ -900,12 +919,14 @@
 		$response->version = $version;
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### System Time									###
 	###################################################
 	function system_time() {
 		return date("Y-m-d H:i:s");
 	}
+	
 	###################################################
 	### Application Error							###
 	###################################################
@@ -913,6 +934,7 @@
 		app_log($message,'error',$file,$line);
 		error('Application Error');
 	}
+	
 	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
@@ -925,6 +947,7 @@
 		print formatOutput($response,array("stylesheet" => $_REQUEST["stylesheet"]));
 		exit;
 	}
+	
 	function formatOutput($object) {
 		if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
 			$format = 'json';
@@ -938,4 +961,35 @@
 		$document->prepare($object);
 		return $document->content();
 	}
-?>
+	
+    /**
+	 * search registered organizations by name
+	 */
+	function searchOrganizationsByName() {
+    	header('Content-Type: application/json');
+    	$organizationList = new \Register\OrganizationList();
+		$search = array();
+		$search['name'] = $_REQUEST['term'];
+		$search['_like'] = array('name');
+    	$organizationsFound = $organizationList->find($search);
+    	
+    	$results = array();
+    	foreach ($organizationsFound as $organization) {
+    	    $newOrganization = new stdClass();
+    	    $newOrganization->id = $organization->id;
+    	    $newOrganization->label = $organization->name;
+    	    $newOrganization->value = $organization->name;
+    	    $results[] = $newOrganization;
+    	}
+		print json_encode($results);
+	}
+
+	/**
+	 * get shipment by serial number
+	 */
+	function shipmentFindBySerial() {
+    	header('Content-Type: application/json');
+	    $supportShipmentItem = new \Support\ShipmentItem();
+        $shipmentDetails = $supportShipmentItem->findBySerial($_REQUEST['serialNumber']);
+		print json_encode($shipmentDetails);
+	}

@@ -1,4 +1,4 @@
-<?
+<?php
 	#######################################################
 	### support::request								###
 	### Form for customers to submit support requests.	###
@@ -43,9 +43,7 @@
 					'quantity'		=> 1
 				);
 				$item = $request->addItem($parameters);
-				if ($request->error()) {
-					$page->addError("Error adding item to request: ".$request->error());
-				}
+				if ($request->error()) $page->addError("Error adding item to request: ".$request->error());
 
 				$body .= "<br>
 	Ticket: ".$item->id."<br>
@@ -67,9 +65,7 @@
 				$role = new \Register\Role();
 				$role->get('support user');
 				$role->notify($message);
-				if ($role->error) {
-					app_log("Error sending request notification: ".$role->error);
-				}
+				if ($role->error) app_log("Error sending request notification: ".$role->error);
 			}
 			$page->success = 'Support request '.$request->code.' submitted.  A representative will follow up shortly';
 		}
@@ -77,4 +73,3 @@
 
 	$productlist = new \Product\ItemList();
 	$products = $productlist->find(array('type' => array('inventory','unique','kit')));
-?>

@@ -30,8 +30,6 @@
 	$_config->database->master->password    = 'password';
 	$_config->database->master->port		= '3306';
 
-
 	# Session
 	$_config->session = new stdClass();
 	$_config->session->cookie = new stdClass();
-?>

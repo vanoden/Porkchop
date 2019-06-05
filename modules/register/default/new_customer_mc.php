@@ -115,10 +115,40 @@
 					        
 					        if ($customer->error) app_log("Error adding Home Email '".$_REQUEST['home_email']."': ".$customer->error,'error',__FILE__,__LINE__);
 				        }
+				        
+				        if ($_REQUEST['phone']) {
+				        
+					        // Create Contact Record
+					        $customer->addContact(
+						        array(
+							        "person_id"		=> $customer->id,
+							        "type"			=> "phone",
+							        "description"	=> "Business Phone",
+							        "value"			=> $_REQUEST['phone']
+						        )
+					        );
+					        
+					        if ($customer->error) app_log("Error adding Business Phone '".$_REQUEST['phone']."': ".$customer->error,'error',__FILE__,__LINE__);
+				        }
+
+				        if ($_REQUEST['cell']) {
+				        
+					        // Create Contact Record
+					        $customer->addContact(
+						        array(
+							        "person_id"		=> $customer->id,
+							        "type"			=> "phone",
+							        "description"	=> "Cell Phone",
+							        "value"			=> $_REQUEST['cell']
+						        )
+					        );
+					        
+					        if ($customer->error) app_log("Error adding Cell Phone '".$_REQUEST['cell']."': ".$customer->error,'error',__FILE__,__LINE__);
+				        }
 
                         // Initialize Register Queued Object
                         $queuedCustomer = new \Register\Queue();
-                        $queuedCustomerData = array();    
+                        $queuedCustomerData = array();
                         $queuedCustomerData['name'] = $_REQUEST['organization_name'];
                         $queuedCustomerData['code'] = time(); // @TODO, not sure about this column
                         $queuedCustomerData['is_reseller'] = 0;
@@ -147,14 +177,14 @@
                         
                         // create the verify account email
                         $emailNotification = new \Email\Notification(
-                        array('subject' => 'Please verify your account', 
-                              'template' => BASE. '/modules/register/email_templates/verify_email.html', 
+                        array('subject' => 'Please verify your account',
+                              'template' => TEMPLATES . '/registration/verify_email.html',
                               'templateVars' => array('VERIFYING.URL' => 'https://'. $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $_REQUEST['login'])
                               )
-                        );  
-                        $isEmailSent = $emailNotification->send($_REQUEST['work_email'], 'no-reply@spectrosinstruments.com');                    	
+                        );
+                        $isEmailSent = $emailNotification->send($_REQUEST['work_email'], 'no-reply@spectrosinstruments.com');
                     	if (!$isEmailSent) $page->addError("Confirmation email could not be sent, please contact us at support@spectrosinstruments.com to complete your registration, thank you!");
-                    	
+
                     	// show thank you page
 				        header("Location: /_register/thank_you");
 			        }
@@ -182,15 +212,31 @@
 				
 				// create the notify support reminder email for the new verified customer
 				app_log("Generating notification email");
+				$notificationSubject = 'New verified customer - pending organizational approval';
                 $emailNotification = new \Email\Notification(
-                array('subject' => 'New verified customer - pending organizational approval', 
-                      'template' => BASE . '/modules/register/email_templates/admin_notification.html', 
+                array('subject' => $notificationSubject,
+                      'template' => TEMPLATES . '/registration/admin_notification.html', 
                       'templateVars' => array('ADMIN.URL' => 'https://'. $_config->site->hostname . '/_register/pending_customers', 'ADMIN.USERDETAILS' => $_REQUEST['login'])
                       )
                 );  
                 app_log("Sending Admin Confirm new customer reminder",'debug',__FILE__,__LINE__);
-                $emailNotification->send('khinds10@gmail.com', 'no-reply@spectrosinstruments.com');
-				$page->isVerifedAccount = true;
+                $emailNotification->send('support@spectrosinstruments.com', 'no-reply@spectrosinstruments.com');
+				
+                // alert 'register manager' users of the new customer
+                $message = new \Email\Message(
+                    array(
+	                    'from'	=> 'service@spectrosinstruments.com',
+	                    'subject'	=> $notificationSubject,
+	                    'body'		=> $emailNotification->getMessageBody()
+                    )
+                );
+                $message->html(true);
+                $role = new \Register\Role();
+                $role->get('register manager');
+                $role->notify($message);
+                if ($role->error) app_log("Error sending admin confirm new customer reminder: ".$role->error);				
+
+				$page->isVerifedAccount = true;				
 			}
 			else {
 				app_log("Key not matched",'notice');

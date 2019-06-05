@@ -6,6 +6,7 @@
 	    public $template;
 	    public $templateVars;
 	    public $errors = array();
+	    public $message;
 	    private $verifyTemplate;
 	    private $transport;
 
@@ -75,6 +76,13 @@
         		return;
         	}
             return true;
+		}
+		
+		/**
+		 * get message body of the notification to be sent
+		 */
+		public function getMessageBody() {
+		    return $this->verifyTemplate->output();
 		}
 		
 		/**

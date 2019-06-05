@@ -20,13 +20,31 @@
       	    $("#product_details").toggle();
        });
    });
+   
+   // make sure the serial number is valid
+   function checkSerial() {
+    var serialInput = $("#serial_number");
+    var serialNumberMessage = $("#serial_number_message");
+    var serialNumberMessageOK = $("#serial_number_message_ok");
+    $.post( "/_register/api", { __format: "json", serialNumber: serialInput.val(), method: 'shipmentFindBySerial' }).done(function( data ) {
+        if (data.ID) {
+            serialInput.attr('style', 'border: solid 2px green;');
+            serialNumberMessage.hide();
+            serialNumberMessageOK.show();
+        } else {
+            serialInput.attr('style', 'border: solid 2px red;');
+            serialNumberMessage.show();
+            serialNumberMessageOK.hide();
+        }
+    });
+   }
 </script>
 <style>
    .long-field {
-    min-width: 350px;
+     min-width: 350px;
    }
    .small-text {
-    font-size: 12px;
+     font-size: 12px;
    }
 </style>
 <?php
@@ -70,7 +88,9 @@
          </div>
          <div id="product_details" style="display:none;">
             <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
-            <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number">
+            <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number" onblur="checkSerial()">
+            <div id="serial_number_message" style="color:red; display:none;">Serial number not found in our system<br/><br/></div>
+            <div id="serial_number_message_ok" style="color:green; display:none;">Serial number has been found, thank you for providing!<br/><br/></div>
             <span class="label"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
             <select id="product_id" name="product_id" class="value input collectionField">
                <option value=""<? if ($product == $selectedProduct) print " selected"; ?>>---</option>
