@@ -68,6 +68,11 @@
 			";
 			$bind_params = array();
 
+			if (isset($parameters['code'])) {
+				$update_object_query .= ",
+						code = ?";
+				array_push($bind_params,$parameters['code']);
+			}
 			if (isset($parameters['title'])) {
 				$update_object_query .= ",
 						title = ?";
@@ -77,7 +82,7 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-
+			query_log($update_object_query);
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
@@ -125,6 +130,10 @@
 				return null;
 			}
 			return $items;
+		}
+
+		public function error() {
+			return $this->_error;
 		}
 	}
 ?>
