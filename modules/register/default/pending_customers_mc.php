@@ -50,7 +50,7 @@
     app_log("denyCustomer");
 	if ($_REQUEST['action'] == 'denyCustomer') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
-	    $queuedCustomer->update(array('status' => 'DELETED'));
+	    $queuedCustomer->update(array('status' => 'DENIED'));
         $page->success = true;
 	}
 

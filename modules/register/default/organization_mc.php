@@ -92,15 +92,13 @@
 				$present_org->get($parameters['code']);
 				if ($present_org->id) {
 					$GLOBALS['_page']->error = "Organization code already used";
-				}
-				else {
+				} else {
 					# Add Existing Organization
 					$organization = new \Register\Organization();
 					$organization->add($parameters);
 					if ($organization->error) {
 						$GLOBALS['_page']->error = "Error updating organization";
-					}
-					else {
+					} else {
 						$GLOBALS['_page']->success = "Organization ".$organization->id." Created Successfully";
 					}
 				}
@@ -114,6 +112,5 @@
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 	}
-	
 	$resellerList = new \Register\OrganizationList();
 	$resellers = $resellerList->find(array("is_reseller" => true));
