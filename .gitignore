@@ -11,6 +11,7 @@ modules/contact/spectros
 modules/action/spectros
 modules/event/spectros
 modules/monitor/solvay
+modules/brand
 templates
 tmp
 node_modules/

@@ -45,6 +45,8 @@
 				<div class="apiParameter">
 					<span class="label apiLabel">code</span>
 					<input type="text" name="code" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">title</span>
 					<input type="text" name="title" class="value input apiInput"/>
 				</div>
@@ -69,14 +71,24 @@
 				<div class="apiParameter">
 					<span class="label apiLabel">menu_code</span>
 					<input type="text" name="menu_code" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">title</span>
 					<input type="text" name="title" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">target</span>
 					<input type="text" name="target" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">alt</span>
 					<input type="text" name="alt" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">description</span>
 					<input type="text" name="description" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">view_order</span>
 					<input type="text" name="view_order" class="value input apiInput"/>
 				</div>
@@ -90,14 +102,24 @@
 				<div class="apiParameter">
 					<span class="label apiLabel">id</span>
 					<input type="text" name="id" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">title</span>
 					<input type="text" name="title" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">target</span>
 					<input type="text" name="target" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">alt</span>
 					<input type="text" name="alt" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">description</span>
 					<input type="text" name="description" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">view_order</span>
 					<input type="text" name="view_order" class="value input apiInput"/>
 				</div>

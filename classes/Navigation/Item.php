@@ -21,6 +21,20 @@
 			}
 		}
 
+		public function delete() {
+			$drop_object_query = "
+				DELETE
+				FROM	navigation_menu_items
+				WHERE	id = ?
+			";
+			$GLOBALS['_database']->Execute($drop_object_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->_error = "SQL Error in Navigation::Item::drop(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			return true;
+		}
+
 		public function add($parameters) {
 			if ($parameters['menu_id']) {
 				$menu = new Menu($parameters['menu_id']);
@@ -46,7 +60,7 @@
 				return false;
 			}
 
-			list($id) = $GLOBALS['_database']->Insert_ID();
+			$id = $GLOBALS['_database']->Insert_ID();
 			$this->id = $id;
 			return $this->update($parameters);
 		}

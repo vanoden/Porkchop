@@ -35,15 +35,26 @@
 
 			exec($this->_binary." ".$file.' 2>&1', $output, $return);
 			if ($return == 0) {
-				if (preg_match('/^([\w\-]+)\:([\w\-]+)/',$output[0],$matches)) {
-					$this->_type = $matches[1];
-					$this->_code = $matches[2];
-					return true;
+				foreach ($output as $record) {
+					if (preg_match('/^([A-Z]{3,4}\-\d+)\:([\w\-]+)/',$record,$matches)) {
+						app_log("Got code: ".$matches[0]);
+						$this->_type = $matches[1];
+						$this->_code = $matches[2];
+						return true;
+					}
+					if (preg_match('/^(I2\/\d)\:([\w\-]+)/',$record,$matches)) {
+						app_log("Got code: ".$matches[0]);
+						$this->_type = $matches[1];
+						$this->_code = $matches[2];
+						return true;
+					}
+					else {
+						app_log("Record $record not parseable");
+					}
 				}
-				else {
-					$this->_error = "Cannot parse positive response: '".$output[0]."'";
-					return false;
-				}
+				$this->_error = "Cannot parse positive response: '".end($output)."'";
+				app_log("Unscannable bar code: ".print_r($output,true),'notice');
+				return false;
 			}
 			else {
 				$this->_error = $output[0];
