@@ -962,6 +962,17 @@
 		return $document->content();
 	}
 	
+	/**
+	 * get last active date for member
+	 */
+	function getMemberLastActive() {
+        $user = new \Register\Customer($_REQUEST['memberId']);
+        $results = new stdClass();
+        $results->memberId = $_REQUEST['memberId'];
+        $results->lastActive = $user->last_active();
+        print json_encode($results);
+	}
+	
     /**
 	 * search registered organizations by name
 	 */

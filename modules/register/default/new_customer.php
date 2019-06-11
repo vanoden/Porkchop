@@ -52,8 +52,8 @@
         if ($page->isVerifedAccount) {
 ?>
     <h3>Your account has been verified, thank you!</h3>
-    <h5>Please <a href="/_register/login">login</a> to your account.</h5><br/>
-    <h6><strong>Please Note:</strong> Final approval registering your company with us is pending by our adminstrator.</h6>
+    <h5>You may login to your account <a href="/_register/login">here</a>.</h5><br/>
+    <h6>Additional steps are still required by our administrators to complete your account registration.</h6>
 <?php        
         } else {
 ?>
@@ -64,7 +64,7 @@
     } else {
 ?>
 <h1><i class="fa fa-users" aria-hidden="true"></i> NEW Customer Registration</h1>
-<span class="form_instruction">Fill out all required information to apply. You will receive and email once your account has been created, thank you!</span><br/><br/>
+<span class="form_instruction">Fill out all required information to apply. You will receive an email once your account has been verified, thank you!</span><br/><br/>
 <form name="register" action="/_register/new_customer" method="POST">
    <input type="hidden" name="method" value="register">
    <div class="instruction">
