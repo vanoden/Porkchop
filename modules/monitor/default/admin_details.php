@@ -1,9 +1,3 @@
-<?php	
-    if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) {
-		print "<span class=\"form_error\">You are not authorized for this view!</span>";
-		return;
-	}
-?>
     <script language="Javascript">
         function goUrl(url) {
             location.href = url;
@@ -34,8 +28,8 @@
 			<h2>Monitor Details</h2>
 			<form name="mainform" method="post">
 			<input type="hidden" name="method" value="submit" />
-<?php	if ($page->error) { ?>
-			<div class="form_error" style="width: 700px;"><?=$page->error?></div>
+<?php	if ($page->errorCount()) { ?>
+			<div class="form_error" style="width: 700px;"><?=$page->errorString?></div>
 <?php	} ?>
 <?php	if ($page->success) { ?>
 			<div class="form_success" style="width: 700px;"><?=$page->success?></div>
@@ -154,9 +148,9 @@
 					<div class="tableCell"><input type="text" name="sensor_code[<?=$sensor->id?>]" class="value input" value="<?=$sensor->code?>" <?=$disabled?> /></div>
 					<div class="tableCell"><select name="model_id[<?=$sensor->id?>]" class="value input" />
 						<option value="">Select</option>
-<?php		foreach ($models as $model) { ?>
+<?php			foreach ($models as $model) { ?>
 						<option value="<?=$model->id?>"<? if ($model->id == $sensor->model_id) print " selected"; ?>><?=$model->code?></option>
-<?		} ?>
+<?				} ?>
 						</select>
 					</div>
 					<div class="tableCell"><?=$sensor->model->units?></div>
@@ -169,11 +163,14 @@
 						<option value="">Select</option>
 <?php		foreach ($models as $model) { ?>
 						<option value="<?=$model->id?>"><?=$model->code?></option>
-<?		} ?>
+<?			} ?>
 						</select>
 					</div>
 				<div class="tableCell">&nbsp;</div>
 			</div>
+<!-- Support Plugin -->
+<?			$module = new \Site\Module();
+			if ($module->get('support')) { ?>
 			<div class="tableTitle">
 				<div class="tableCell">
 					<div class="title tableTitleLeft">Asset Tickets</div>
@@ -198,7 +195,7 @@
 					<div class="tableCell">Status</div>
 					<div class="tableCell">Assignee</div>
 				</div>
-<?php	foreach ($tickets as $ticket) { ?>
+<?php			foreach ($tickets as $ticket) { ?>
 				<div class="tableRow">
 					<div class="tableCell"><a href="/_support/request_item/<?=$ticket->id?>"><?=$ticket->ticketNumber()?></a></div>
 					<div class="tableCell"><?=$ticket->request->date_request?></div>
@@ -206,8 +203,13 @@
 					<div class="tableCell"><?=$ticket->status?></div>
 					<div class="tableCell"><?=$ticket->assigned->full_name()?></div>
 				</div>
-<?php	} ?>
+<?php			} ?>
 			</div>
+<?			} ?>
+<!-- Calibration Plugin -->
+<?		$module = new \Site\Module();
+		if ($module->get('spectros')) {
+?>
 			<div class="tableTitle">
 				<div class="tableCell">
 					<div class="title tableTitleLeft">Calibration History</div>
@@ -237,19 +239,8 @@
 <?php		} ?>
 				</div>
 			</div>
-			<div class="tableBody">
-				<div class="tableRowFooter">
-					<div class="tableCell button-bar"><input type="submit" name="btn_submit" class="button" value="Update Asset"/></div>
-<?php	}
-	else
-	{
-?>
-			<div class="tableBody">
-				<div class="tableRowFooter">
-					<div class="tableCell"><input type="submit" name="btn_submit" class="button" value="Add Asset"/></div>
-<?	} ?>
-				</div>
-			</div>
+<?		} ?>
+<!-- Message -->
 			<div class="tableTitle">
 				<div class="tableCell">
 					<div class="title tableTitleLeft">Messages</div>
@@ -272,6 +263,15 @@
 					<div class="tableCell"><?=$message->level?></div>
 					<div class="tableCell"><?=$message->message?></div>
 				</div>
-<?		} ?>
+<?			} ?>
 			</div>
-			</form>
+<?	}
+	else {
+?>
+			<div class="tableBody">
+				<div class="tableRowFooter">
+					<div class="tableCell"><input type="submit" name="btn_submit" class="button" value="Add Asset"/></div>
+				</div>
+			</div>
+<?	} ?>
+		</form>
