@@ -1,14 +1,18 @@
-<table class="body">
-<tr><td class="title" colspan="2">Modules</td></tr>
-<?	if ($GLOBALS['_page']->error) { ?>
-<tr><td class="error" colspan="2"><?=$GLOBALS['_page']->error?></td></tr>
+<div class="title">Modules</div>
+<?	if ($page->errorCount()) { ?>
+<div class="form_error"><?=$page->errorString()?></div>
 <?	} ?>
-<tr><td class="label">Title</td>
-	<td class="label">Description</td>
-</tr>
+<div class="table">
+	<div class="table_header">
+		<div class="table_cell">Title</div>
+		<div class="table_cell">Description</div>
+	</div>
+	<div class="table_body">
 <?	foreach ($modules as $module) { ?>
-<tr><td class="value"><?=$module->name?></td>
-	<td class="value"><?=$module->description?></td>
-</tr>
+	<div class="table_row">
+		<div class="table_cell"><?=$module->name()?></div>
+		<div class="table_cell"><?=$module->description()?></div>
+	</div>
 <?	} ?>
-</table>
+	</div>
+</div>
