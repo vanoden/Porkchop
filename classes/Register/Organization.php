@@ -163,7 +163,7 @@
 		}
 		
 		public function details() {
-			app_log("Register::Organization::details()[".$this->id."]",'notice',__FILE__,__LINE__);
+			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
 			$this->error = null;
 
 			$cache_key = "organization[".$this->id."]";

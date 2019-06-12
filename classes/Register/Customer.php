@@ -36,7 +36,6 @@
 		    parent::details();
 			if ($this->id) {
 				$this->roles();
-				$this->organization = new \Register\Organization($this->organization->id);
 				return true;
 			}
 			else {
@@ -464,7 +463,7 @@
 		}
 		public function last_active() {
 			$sessionList = new \Site\SessionList();
-			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true));
+			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
 			if ($sessionList->error) {
 				$this->error = "Error getting session: ".$sessionList->error;
 				return null;
