@@ -13,8 +13,7 @@
 	app_log($_REQUEST['method']." request:".print_r($_REQUEST,true),'debug',__FILE__,__LINE__);
 
 	# Call Requested Event
-	if ($_REQUEST["method"])
-	{
+	if ($_REQUEST["method"]) {
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
 		$function_name();
@@ -43,10 +42,10 @@
 	function addActionRequest() {
 		if (! preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['person_code'])) error("person_code required for addActionRequest method");
 
-		$_person = new RegisterCustomer();
-		if ($_person->error) error("Error initializing person: ".$_person->error);
-		$person = $_person->get($_REQUEST['person_code']);
-		if ($_person->error) error("Error finding person: ".$_person->error);
+		$person = new \Register\Customer();
+		if ($person->error) error("Error initializing person: ".$person->error);
+		$person->get($_REQUEST['person_code']);
+		if ($person->error) error("Error finding person: ".$person->error);
 		if (! $person->id) error("Person '".$_REQUEST['person_code']."' not found");
 
 		$request = new \Action\Request();
@@ -68,7 +67,7 @@
 	### Add ActionTaskType Request					###
 	###################################################
 	function addActionTaskType() {
-		$type = new ActionTaskType();
+		$type = new \Action\Task\Type();
 		$type->add(
 			array(
 				'code' => $_REQUEST['code'],
@@ -130,6 +129,7 @@
 		$response->version = $version;
 		print formatOutput($response);
 	}
+
 	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
@@ -137,11 +137,12 @@
 		$_REQUEST["stylesheet"] = '';
 		app_log($message,'error',__FILE__,__LINE__);
 		$response = new \HTTP\Response();
-		$response->message = $message;
+		$response->error = $message;
 		$response->success = 0;
 		print formatOutput($response);
 		exit;
 	}
+
 	###################################################
 	### Application Error							###
 	###################################################
@@ -149,6 +150,7 @@
 		app_log($message,'error',$file,$line);
 		error('Application Error');
 	}
+
 	###################################################
 	### Convert Object to XML						###
 	###################################################
