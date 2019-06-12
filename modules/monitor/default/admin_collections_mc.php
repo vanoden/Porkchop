@@ -1,5 +1,6 @@
 <?
 	$page = new \Site\Page('spectros','admin_collections');
+	$page->requireRole('administrator');
 
 	# Collections to display at a time
 	if (preg_match('/^\d+$/',$_REQUEST['page_size']))

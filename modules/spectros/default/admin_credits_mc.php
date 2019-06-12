@@ -1,5 +1,6 @@
 <?php
 	$page = new \Site\Page('spectros','admin_credits');
+	$page->requireRole('administrator');
 
 	if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) {
 		$GLOBALS['_page']->error = "Must have role 'monitor admin' to access this page";
