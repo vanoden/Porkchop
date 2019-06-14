@@ -11,6 +11,7 @@
 		public $write_protect;
 		public $mime_type;
 		public $size;
+		public $timestamp;
 		private $_name;
 
 		public function __construct($id = 0) {
@@ -99,9 +100,12 @@
 				$this->mime_type = $object->mime_type;
 				$this->size = $object->size;
 				$this->user = new \Register\Customer($object->user_id);
+				$this->date_created = $object->date_created;
+				$this->timestamp = strtotime($this->timestamp);
 				$factory = new RepositoryFactory();
 				$this->repository = $factory->load($object->repository_id);
 				if ($this->repository->endpoint) $this->uri = $this->repository->endpoint."/".$this->name;
+				else $this->endpoint = 'N/A';
 				$this->read_protect = $object->read_protect;
 				$this->write_protect = $object->write_protect;
 			}
@@ -162,7 +166,7 @@
 		}
 
 		private function _valid_type($name) {
-			if (preg_match('/^(image|application|text)\/(png|jpg|jpeg|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip)$/',$name)) {
+			if (preg_match('/^(image|application|text)\/(png|jpg|jpeg|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip|pdf)$/',$name)) {
 				return true;
 			}
 			return false;
