@@ -52,9 +52,6 @@
 		        $page->addError("Passwords do not match");
 	        } else {
 
-		        // Default Login to Email Address
-		        if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['email_address'];
-
 		        // Generate Validation Key
 		        $validation_key = md5(microtime());
 
@@ -78,7 +75,7 @@
 			        );
 			        if ($customer->error) {
 				        app_log("Error adding customer: ".$customer->error,'error',__FILE__,__LINE__);
-				        $page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher issues.");
+				        $page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:".$GLOBALS['_config']->site->support_email."'>".$GLOBALS['_config']->site->support_email."</a> if you have any futher issues.",'error');
 				        if (strpos($customer->error, 'Duplicate entry') !== false) {
 				            $page->addError("Error: <strong>" . $_REQUEST['login'] . "</strong> has already been taken for a user name");
 				            $page->loginTaken = true;
@@ -90,61 +87,35 @@
 				        if ($GLOBALS['_SESSION_']->error) $page->addError("Error updating session: ".$GLOBALS['_SESSION_']->error);
 
 				        // Create Contact Record
-				        if ($_REQUEST['work_email']) {
+				        if ($_REQUEST['email_address']) {
 					        $customer->addContact(
 						        array(
 							        "type"			=> "email",
-							        "description"	=> "Work Email",
-							        "value"			=> $_REQUEST['work_email']
+							        "description"	=> $_REQUEST['email_type'],
+							        "value"			=> $_REQUEST['email_address'],
+									"notify"		=> 1
 						        )
 					        );
-					        if ($customer->error) app_log("Error adding Work Email '".$_REQUEST['work_email']."': ".$customer->error,'error',__FILE__,__LINE__);
+					        if ($customer->error) app_log("Error adding Email Address'".$_REQUEST['email_address']."': ".$customer->error,'error',__FILE__,__LINE__);
+							else app_log("Added address '".$_REQUEST['email_address']."' for customer ".$customer->login,'info');
 				        }
-				        
-				        if ($_REQUEST['home_email']) {
-				        
-					        // Create Contact Record
-					        $customer->addContact(
-						        array(
-							        "person_id"		=> $customer->id,
-							        "type"			=> "email",
-							        "description"	=> "Home Email",
-							        "value"			=> $_REQUEST['home_email']
-						        )
-					        );
-					        
-					        if ($customer->error) app_log("Error adding Home Email '".$_REQUEST['home_email']."': ".$customer->error,'error',__FILE__,__LINE__);
-				        }
-				        
-				        if ($_REQUEST['phone']) {
-				        
-					        // Create Contact Record
-					        $customer->addContact(
-						        array(
-							        "person_id"		=> $customer->id,
-							        "type"			=> "phone",
-							        "description"	=> "Business Phone",
-							        "value"			=> $_REQUEST['phone']
-						        )
-					        );
-					        
-					        if ($customer->error) app_log("Error adding Business Phone '".$_REQUEST['phone']."': ".$customer->error,'error',__FILE__,__LINE__);
-				        }
+						else app_log("No email address provided",'warning');
 
-				        if ($_REQUEST['cell']) {
-				        
+				        if ($_REQUEST['phone_number']) {
+
 					        // Create Contact Record
 					        $customer->addContact(
 						        array(
-							        "person_id"		=> $customer->id,
 							        "type"			=> "phone",
-							        "description"	=> "Cell Phone",
-							        "value"			=> $_REQUEST['cell']
+							        "description"	=> $_REQUEST['phone_type'],
+							        "value"			=> $_REQUEST['phone_number']
 						        )
 					        );
-					        
-					        if ($customer->error) app_log("Error adding Cell Phone '".$_REQUEST['cell']."': ".$customer->error,'error',__FILE__,__LINE__);
+
+					        if ($customer->error) app_log("Error adding Phone Number '".$_REQUEST['phone_number']."': ".$customer->error,'error',__FILE__,__LINE__);
+							else app_log("Added phone '".$_REQUEST['phone_number']."' for customer ".$customer->login,'info');
 				        }
+						else app_log("No phone number provided",'warning');
 
                         // Initialize Register Queued Object
                         $queuedCustomer = new \Register\Queue();
@@ -171,7 +142,7 @@
                         
                         if ($queuedCustomer->error) {
                             app_log("Error adding queued organization: ".$queuedCustomer->error,'error',__FILE__,__LINE__);
-                            $page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher issues.");
+                            $page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:".$GLOBALS['_config']->site->support_email."'>".$GLOBALS['_config']->site->support_email."</a> if you have any futher issues.");
 							return;
                         }
                         
@@ -182,11 +153,15 @@
                               'templateVars' => array('VERIFYING.URL' => 'https://'. $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $_REQUEST['login'])
                               )
                         );
-                        $isEmailSent = $emailNotification->send($_REQUEST['work_email'], 'no-reply@spectrosinstruments.com');
-                    	if (!$isEmailSent) $page->addError("Confirmation email could not be sent, please contact us at support@spectrosinstruments.com to complete your registration, thank you!");
-
-                    	// show thank you page
-				        header("Location: /_register/thank_you");
+						$isEmailSent = $emailNotification->send($_REQUEST['email_address'], $GLOBALS['_config']->site->support_email);
+						if (!$isEmailSent) {
+							$page->addError("Confirmation email could not be sent, please contact us at ".$GLOBALS['_config']->site->support_email." to complete your registration, thank you!");
+							app_log("Error sending confirmation email: ".$emailNotification->error(),'error');
+						}
+						else {
+							// show thank you page
+							header("Location: /_register/thank_you");
+						}
 			        }
 		        }
 	        }
@@ -220,7 +195,7 @@
                       )
                 );  
                 app_log("Sending Admin Confirm new customer reminder",'debug',__FILE__,__LINE__);
-                $emailNotification->send('support@spectrosinstruments.com', 'no-reply@spectrosinstruments.com');
+                $emailNotification->send($GLOBALS['_config']->site->support_email, 'no-reply@spectrosinstruments.com');
 				
                 // alert 'register manager' users of the new customer
                 $message = new \Email\Message(

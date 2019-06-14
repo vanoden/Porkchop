@@ -90,6 +90,21 @@
    .small-text {
      font-size: 12px;
    }
+	div.contactContainer {
+		padding: 1px;
+		margin-left: 0px;
+	}
+	select.contactTypeInput {
+		display: inline;
+	}
+	input#phone,
+	input#email {
+		display: inline;
+	}
+	span.registerPasswordLabel {
+		display: block;
+		clear: both;
+	}
 </style>
 <?php
     if (isset($page->isVerifedAccount)) {
@@ -139,7 +154,7 @@
                <?php	} ?>
             </select>
             <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
-            <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number" onfocus="checkProduct();" onblur="checkSerial()">
+            <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number" onfocus="checkProduct();" onchange="checkSerial()">
             <div id="serial_number_message" style="color:red; display:none;">Serial number not found in our system<br/><br/></div>
             <div id="serial_number_message_ok" style="color:green; display:none;">Serial number has been found, thank you for providing!<br/><br/></div>
          </div>
@@ -154,16 +169,29 @@
          <input type="text" id="state" name="state" placeholder="NY" value="<?=!empty($_REQUEST['state']) ? $_REQUEST['state'] : "" ?>">
          <label for="zip">Zip/Postal Code</label>
          <input type="text" id="zip" name="zip" placeholder="10001" value="<?=!empty($_REQUEST['zip']) ? $_REQUEST['zip'] : "" ?>">
-         <label for="state">Business Phone</label>
-         <input type="text" id="phone" name="phone" placeholder="555-555-5555" value="<?=!empty($_REQUEST['phone']) ? $_REQUEST['phone'] : "" ?>">
-         <label for="state">Cell</label>
-         <input type="text" id="cell" name="cell" placeholder="555-555-5555" value="<?=!empty($_REQUEST['cell']) ? $_REQUEST['cell'] : "" ?>"><br/>
-
+<br>
          <h3>Contact Info</h3>
          <span class="label registerLabel registerFirstNameLabel">*First Name:</span>
          <input type="text" class="value registerValue registerFirstNameValue long-field" name="first_name" value="<?=!empty($_REQUEST['first_name']) ? $_REQUEST['first_name'] : "" ?>" placeholder="John">
          <span class="label registerLabel registerLastNameLabel">*Last Name:</span>
          <input type="text" class="value registerValue registerLastNameValue long-field" name="last_name" value="<?=!empty($_REQUEST['last_name']) ? $_REQUEST['last_name'] : "" ?>" placeholder="Doe">
+         <label for="state" style="clear: both">Phone Number</label>
+		<div class="container contactContainer">
+			<select name="phone_type" class="input contactTypeInput">
+				<option value="Business Phone">Business Phone</option>
+				<option value="Home Phone">Home Phone</option>
+				<option value="Mobile Phone">Mobile Phone</option>
+			</select>
+			<input type="text" id="phone" name="phone_number" placeholder="555-555-5555" value="<?=!empty($_REQUEST['phone_number']) ? $_REQUEST['phone_number'] : "" ?>">
+		</div>
+		<span class="label registerLabel registerLoginLabel">*Email Address:</span>
+		<div class="container contactContainer">
+			<select name="email_type" class="input contactTypeInput">
+				<option value="Work Email">Work Email</option>
+				<option value="Home Email">Home Email</option>
+			</select>
+         <input type="text" id="email" class="value registerValue registerLoginValue" name="email_address" value="<?=!empty($_REQUEST['email_address']) ? $_REQUEST['email_address'] : "" ?>" placeholder="me@business.com">
+		</div>
          <span class="label registerLabel registerLoginLabel">*Login:</span>
          <input type="text" class="value registerValue registerLoginValue" style="<?=($page->loginTaken) ? 'border:solid red 2px;' : ''?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" />
          <?php
@@ -177,10 +205,6 @@
          <input type="password" class="value registerValue registerPasswordValue" name="password" /><br/>
          <span class="label registerLabel registerPasswordLabel">*Confirm Password:</span>
          <input type="password" class="value registerValue registerPasswordValue" name="password_2" /><br/>
-         <span class="label registerLabel registerLoginLabel">*Work Email:</span>
-         <input type="text" class="value registerValue registerLoginValue" name="work_email" value="<?=!empty($_REQUEST['work_email']) ? $_REQUEST['work_email'] : "" ?>" placeholder="me@business.com">
-         <span class="label registerLabel registerLoginLabel">*Home Email:</span>
-         <input type="text" class="value registerValue registerLoginValue" name="home_email" value="<?=!empty($_REQUEST['home_email']) ? $_REQUEST['home_email'] : "" ?>" placeholder="me@email.com">
       </div>
       <div id="registerSubmit" class="registerQuestion">
          <?php

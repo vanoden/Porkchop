@@ -471,4 +471,22 @@
 			if (! $session) return null;
 			return $session->last_hit_date;
 		}
+		public function contacts($params = array()) {
+			$contactList = new \Register\ContactList();
+			$parameters = array(
+				'person_id'	=> $this->id
+			);
+			if (isset($params['type'])) $parameters['type'] = $params['type'];
+			$contacts = $contactList->find($parameters);
+			if ($contactList->error()) {
+				$this->error = $contactList->error();
+				return null;
+			}
+			else {
+				return $contacts;
+			}
+		}
+		public function error() {
+			return $this->error;
+		}
     }
