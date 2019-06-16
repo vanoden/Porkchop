@@ -5,6 +5,10 @@
 		public $error;
 		public $errno;
 		private $info_table = "storage__info";
+		private $roles = array(
+			'storage manager'   => 'Can manage repositories',
+			'storage upload'	=> 'Can upload and manage files'
+		);
 
 		public function __construct() {
 			$this->upgrade();
@@ -158,20 +162,6 @@
 					return null;
 				}
 
-				$add_roles_query = "
-					INSERT
-					INTO	register_roles
-					VALUES	(null,'storage manager','Can manage repositories'),
-							(null,'storage upload','Can upload and manage files')
-				";
-				$GLOBALS['_database']->Execute($add_roles_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error adding storage roles in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
-				}
-
 				$current_schema_version = 1;
 				$update_schema_version = "
 					INSERT
@@ -188,6 +178,57 @@
 					return 0;
 				}
 				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($current_schema_version < 2) {
+				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$update_table_query = "
+					ALTER TABLE storage_files
+					ADD display_name varchar(255),
+					ADD description text
+				";
+				$GLOBALS['_database']->Execute($update_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering file table in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$current_schema_version = 2;
+				$update_schema_version = "
+					INSERT
+					INTO	`".$this->info_table."`
+					VALUES	('schema_version',$current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			# Add Roles
+			foreach ($this->roles as $name => $description) {
+				$role = new \Register\Role();
+				if (! $role->get($name)) {
+					app_log("Adding role '$name'");
+					$role->add(array('name' => $name,'description' => $description));
+				}
+				if ($role->error) {
+					$this->_error = "Error adding role '$name': ".$role->error;
+					return false;
+				}
+				return true;
 			}
 		}
 	}

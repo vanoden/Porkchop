@@ -144,14 +144,18 @@
 			$object = $rs->FetchNextObject(false);
 			$this->name = $object->name;
 			$this->type = $object->type;
-			$this->endpoint = $object->endpoint;
+			if (isset($object->endpoint)) $this->endpoint = $object->endpoint;
 			$this->code = $object->code;
 			$this->status = $object->status;
 			return true;
 		}
-		public function files() {
+		public function files($path = "/") {
 			$filelist = new FileList();
-			return $filelist->find(array('repository_id' => $this->id));
+			return $filelist->find(array('repository_id' => $this->id,'path' => $path));
+		}
+		public function directories($path = "/") {
+			$directorylist = new DirectoryList();
+			return $directorylist->find(array('repository_id' => $this->id,'path' => $path));
 		}
 		public function _setMetadata($key,$value) {
 			$set_object_query = "

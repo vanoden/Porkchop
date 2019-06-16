@@ -42,7 +42,17 @@
 </div>
 <div class="form_footer">
     <input type="submit" name="btn_submit" class="button" value="Update" />
-    <input type="button" name="btn_files" class="button" value="Files" onclick="window.location.href='/_storage/browse?code=<?=$repository->code?>';" />
+    <input type="button" name="btn_files" class="button" value="Browse" onclick="window.location.href='/_storage/browse?code=<?=$repository->code?>';" />
     <input type="button" name="btn_back" class="button" value="Back" onclick="window.location.href='/_storage/repositories';" />
 </div>
 </form>
+<?	if ($repository->id) { ?>
+<form name="repoUpload" action="/_storage/file" method="post" enctype="multipart/form-data">
+<div class="container">
+	<span class="label">Upload File</span>
+	<input type="hidden" name="repository_id" value="<?=$repository->id?>" />
+	<input type="file" name="uploadFile" />
+	<input type="submit" name="btn_submit" class="button" value="Upload" />
+</div>
+</form>
+<?	} ?>

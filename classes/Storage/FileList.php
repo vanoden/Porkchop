@@ -38,7 +38,14 @@
 					return false;
 				}
 			}
-			query_log($get_objects_query);
+
+			if (isset($parameters['path'])) {
+				$get_objects_query .= "
+					AND		path = ?";
+				array_push($bind_params,$parameters['path']);
+			}
+
+			query_log($get_objects_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_objects_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Storage::FileList::find(): ".$GLOBALS['_database']->ErrorMsg();
