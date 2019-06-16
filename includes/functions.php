@@ -251,8 +251,8 @@
 		}
 	}
 
-	function query_log($query,$path = 'unknown',$line = 'unknown') {
-		app_log($query,'trace',$path,$line);
+	function query_log($query,$params = array(),$path = 'unknown',$line = 'unknown') {
+		app_log($query."\n".print_r($params,true),'trace',$path,$line);
 	}
 
 	###############################################
