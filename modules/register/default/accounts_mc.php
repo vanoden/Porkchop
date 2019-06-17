@@ -6,6 +6,7 @@
 	### A. Caravello 11/12/2002						###
 	###################################################
 	$page = new \Site\Page('register','accounts');
+	$page->requireRole('administrator');
 
 	# Customers to display at a time
 	if (isset($_REQUEST['page_size']) && preg_match('/^\d+$/',$_REQUEST['page_size']))

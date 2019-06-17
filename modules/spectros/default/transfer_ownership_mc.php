@@ -1,5 +1,6 @@
 <?php
 	$page = new \Site\Page();
+	$page->requireRole('administrator');
 
 	if (isset($_REQUEST['btn_submit'])) {
 		$asset = new \Monitor\Asset($_REQUEST['asset_id']);

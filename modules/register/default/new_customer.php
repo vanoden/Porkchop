@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script src="/js/monitor.js"></script>
 <script type="text/javascript">
     // validate password and submit if ok to go
     function submitForm() {
@@ -21,23 +22,66 @@
        });
    });
    
-   // make sure the serial number is valid
-   function checkSerial() {
-    var serialInput = $("#serial_number");
-    var serialNumberMessage = $("#serial_number_message");
-    var serialNumberMessageOK = $("#serial_number_message_ok");
-    $.post( "/_register/api", { __format: "json", serialNumber: serialInput.val(), method: 'shipmentFindBySerial' }).done(function( data ) {
-        if (data.ID) {
-            serialInput.attr('style', 'border: solid 2px green;');
-            serialNumberMessage.hide();
-            serialNumberMessageOK.show();
-        } else {
-            serialInput.attr('style', 'border: solid 2px red;');
-            serialNumberMessage.show();
-            serialNumberMessageOK.hide();
-        }
-    });
-   }
+	function checkProduct() {
+		var productElem = document.getElementById('product_id');
+		var serialNumber = document.getElementById('serial_number');
+		var serialMessage = document.getElementById('serial_number_message');
+		serialNumber.focus();
+		serialNumber.style.border = '1px solid gray';
+		if (productElem.selectedIndex > 0) {
+			if (document.getElementById('serial_number').value.length > 0) {
+				serialMessage.display = 'none';
+			}
+			return true;
+		}
+		else {
+			serialMessage.innerHTML = 'Select a product first';
+			serialMessage.style.display = 'block';
+			productElem.focus();
+			return false;
+		}
+	}
+
+	// make sure the serial number is valid
+	function checkSerial() {
+		var productInput = document.getElementById('product_id');
+		checkProduct();
+		var productID = productInput.options[productInput.selectedIndex].value;
+
+		var serialInput = document.getElementById('serial_number');
+		var serialNumberMessage = document.getElementById('serial_number_message');
+		var serialNumberMessageOK = document.getElementById('serial_number_message_ok');
+
+		if (serialInput.value.length < 1) {
+			return true;
+		}
+		var code = serialInput.value;
+		var asset = Object.create(Asset);
+
+		if (asset.get(code)) {
+			if (asset.product.id == productID) {
+				serialInput.style.border = 'solid 2px green';
+				serialNumberMessage.style.display = 'none';
+				serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
+				serialNumberMessageOK.style.display = 'block';
+				return true;
+			}
+			else {
+				serialInput.style.border = 'solid 2px red';
+				serialNumberMessage.innerHTML = 'Product not found with that serial number';
+				serialNumberMessage.style.display = 'block';
+				serialNumberMessageOK.style.display = 'none';
+				return false;
+			}
+		}
+		else {
+			serialInput.style.border = 'solid 2px red';
+			serialNumberMessage.innerHTML = 'Serial number not found in our system';
+			serialNumberMessage.style.display = 'block';
+			serialNumberMessageOK.style.display = 'none';
+			return false;
+		}
+	}
 </script>
 <style>
    .long-field {
@@ -46,6 +90,21 @@
    .small-text {
      font-size: 12px;
    }
+	div.contactContainer {
+		padding: 1px;
+		margin-left: 0px;
+	}
+	select.contactTypeInput {
+		display: inline;
+	}
+	input#phone,
+	input#email {
+		display: inline;
+	}
+	span.registerPasswordLabel {
+		display: block;
+		clear: both;
+	}
 </style>
 <?php
     if (isset($page->isVerifedAccount)) {
@@ -87,17 +146,17 @@
             <input id="has_item_checkbox" type="checkbox" name="reseller" value="yes"> Already have a device you would like to register?<br/>
          </div>
          <div id="product_details" style="display:none;">
-            <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
-            <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number" onblur="checkSerial()">
-            <div id="serial_number_message" style="color:red; display:none;">Serial number not found in our system<br/><br/></div>
-            <div id="serial_number_message_ok" style="color:green; display:none;">Serial number has been found, thank you for providing!<br/><br/></div>
-            <span class="label"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
-            <select id="product_id" name="product_id" class="value input collectionField">
+            <span class="label" style="display: block"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
+            <select id="product_id" name="product_id" class="value input collectionField" style="display: block" onchange="document.getElementById('serial_number_message').style.display = 'none';">
                <option value=""<? if ($product == $selectedProduct) print " selected"; ?>>---</option>
                <?php	foreach ($productsAvailable as $product) { ?>
                     <option value="<?=$product->id?>"<? if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=$product->description?></option>
                <?php	} ?>
             </select>
+            <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
+            <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number" onfocus="checkProduct();" onchange="checkSerial()">
+            <div id="serial_number_message" style="color:red; display:none;">Serial number not found in our system<br/><br/></div>
+            <div id="serial_number_message_ok" style="color:green; display:none;">Serial number has been found, thank you for providing!<br/><br/></div>
          </div>
          <br/>
 
@@ -110,16 +169,29 @@
          <input type="text" id="state" name="state" placeholder="NY" value="<?=!empty($_REQUEST['state']) ? $_REQUEST['state'] : "" ?>">
          <label for="zip">Zip/Postal Code</label>
          <input type="text" id="zip" name="zip" placeholder="10001" value="<?=!empty($_REQUEST['zip']) ? $_REQUEST['zip'] : "" ?>">
-         <label for="state">Business Phone</label>
-         <input type="text" id="phone" name="phone" placeholder="555-555-5555" value="<?=!empty($_REQUEST['phone']) ? $_REQUEST['phone'] : "" ?>">
-         <label for="state">Cell</label>
-         <input type="text" id="cell" name="cell" placeholder="555-555-5555" value="<?=!empty($_REQUEST['cell']) ? $_REQUEST['cell'] : "" ?>"><br/>
-
+<br>
          <h3>Contact Info</h3>
          <span class="label registerLabel registerFirstNameLabel">*First Name:</span>
          <input type="text" class="value registerValue registerFirstNameValue long-field" name="first_name" value="<?=!empty($_REQUEST['first_name']) ? $_REQUEST['first_name'] : "" ?>" placeholder="John">
          <span class="label registerLabel registerLastNameLabel">*Last Name:</span>
          <input type="text" class="value registerValue registerLastNameValue long-field" name="last_name" value="<?=!empty($_REQUEST['last_name']) ? $_REQUEST['last_name'] : "" ?>" placeholder="Doe">
+         <label for="state" style="clear: both">Phone Number</label>
+		<div class="container contactContainer">
+			<select name="phone_type" class="input contactTypeInput">
+				<option value="Business Phone">Business Phone</option>
+				<option value="Home Phone">Home Phone</option>
+				<option value="Mobile Phone">Mobile Phone</option>
+			</select>
+			<input type="text" id="phone" name="phone_number" placeholder="555-555-5555" value="<?=!empty($_REQUEST['phone_number']) ? $_REQUEST['phone_number'] : "" ?>">
+		</div>
+		<span class="label registerLabel registerLoginLabel">*Email Address:</span>
+		<div class="container contactContainer">
+			<select name="email_type" class="input contactTypeInput">
+				<option value="Work Email">Work Email</option>
+				<option value="Home Email">Home Email</option>
+			</select>
+         <input type="text" id="email" class="value registerValue registerLoginValue" name="email_address" value="<?=!empty($_REQUEST['email_address']) ? $_REQUEST['email_address'] : "" ?>" placeholder="me@business.com">
+		</div>
          <span class="label registerLabel registerLoginLabel">*Login:</span>
          <input type="text" class="value registerValue registerLoginValue" style="<?=($page->loginTaken) ? 'border:solid red 2px;' : ''?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" />
          <?php
@@ -133,10 +205,6 @@
          <input type="password" class="value registerValue registerPasswordValue" name="password" /><br/>
          <span class="label registerLabel registerPasswordLabel">*Confirm Password:</span>
          <input type="password" class="value registerValue registerPasswordValue" name="password_2" /><br/>
-         <span class="label registerLabel registerLoginLabel">*Work Email:</span>
-         <input type="text" class="value registerValue registerLoginValue" name="work_email" value="<?=!empty($_REQUEST['work_email']) ? $_REQUEST['work_email'] : "" ?>" placeholder="me@business.com">
-         <span class="label registerLabel registerLoginLabel">*Home Email:</span>
-         <input type="text" class="value registerValue registerLoginValue" name="home_email" value="<?=!empty($_REQUEST['home_email']) ? $_REQUEST['home_email'] : "" ?>" placeholder="me@email.com">
       </div>
       <div id="registerSubmit" class="registerQuestion">
          <?php

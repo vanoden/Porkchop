@@ -11,7 +11,10 @@
 		public $write_protect;
 		public $mime_type;
 		public $size;
-		private $_name;
+		public $timestamp;
+		private $path;
+		private $original_name;
+		private $name;
 
 		public function __construct($id = 0) {
 			if ($id > 0) {
@@ -20,7 +23,7 @@
 			}
 		}
 
-		public function add($parameters) {
+		public function add($parameters = array()) {
             app_log('Storage::File::add(): '.print_r($parameters,true));
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) {
 				$parameters['code'] = uniqid();
@@ -33,6 +36,10 @@
 			if (! $this->_valid_type($parameters['mime_type'])) {
 				$this->error = "Invalid mime_type '".$parameters['mime_type']."'";
 				return false;
+			}
+
+			if (! $parameters['original_name']) {
+				$parameters['original_name'] = $parameters['name'];
 			}
 
 			$add_object_query = "
@@ -58,6 +65,43 @@
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+			return $this->update($parameters);
+		}
+		
+		public function update($parameters = array()) {
+			$update_object_query = "
+				UPDATE	storage_files
+				SET		id = id";
+
+			$bind_params = array();
+
+			if (isset($parameters['display_name'])) {
+				$update_object_query .= ",
+						display_name = ?";
+				array_push($bind_params,$parameters['display_name']);
+			}
+			if (isset($parameters['description'])) {
+				$update_object_query .= ",
+						description = ?";
+				array_push($bind_params,$parameters['description']);
+			}
+			if (isset($parameters['path'])) {
+				$update_object_query .= ",
+						path = ?";
+				array_push($bind_params,$parameters['path']);
+			}
+			query_log($update_object_query);
+			$update_object_query .= "
+				WHERE	id = ?
+			";
+			array_push($bind_params,$this->id);
+
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Storage::File::update(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
 			return $this->details();
 		}
 
@@ -78,6 +122,7 @@
 			list($this->id) = $rs->FetchRow();
 			return $this->details();
 		}
+
 		public function details() {
 			$get_object_query = "
 				SELECT	*
@@ -95,13 +140,19 @@
 			$object = $rs->FetchNextObject(false);
 			if ($object->id) {
 				$this->code = $object->code;
-				$this->name = $this->_name = $object->name;
+				$this->name = $object->name;
+				$this->path = $object->path;
+				$this->display_name = $object->display_name;
+				$this->description = $object->description;
 				$this->mime_type = $object->mime_type;
 				$this->size = $object->size;
 				$this->user = new \Register\Customer($object->user_id);
+				$this->date_created = $object->date_created;
+				$this->timestamp = strtotime($this->timestamp);
 				$factory = new RepositoryFactory();
 				$this->repository = $factory->load($object->repository_id);
 				if ($this->repository->endpoint) $this->uri = $this->repository->endpoint."/".$this->name;
+				else $this->endpoint = 'N/A';
 				$this->read_protect = $object->read_protect;
 				$this->write_protect = $object->write_protect;
 			}
@@ -140,12 +191,14 @@
 					return false;
 				}
 				else {
-					$this->_name = $name;
+					$this->name = $name;
 				}
 			}
-			return $this->_name;
+			return $this->name;
 		}
-
+		public function path() {
+			return $this->path;
+		}
 		public function repository_id($id = 0) {
 			if ($id > 0) {
 				# Get Repository
@@ -162,7 +215,7 @@
 		}
 
 		private function _valid_type($name) {
-			if (preg_match('/^(image|application|text)\/(png|jpg|jpeg|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip)$/',$name)) {
+			if (preg_match('/^(image|application|text)\/(png|jpg|jpeg|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip|pdf|octet\-stream)$/',$name)) {
 				return true;
 			}
 			return false;
@@ -351,5 +404,8 @@
         public function error() {
             return $this->error;
         }
+		public function downloadURI() {
+			return '/_storage/file/'.$this->code.'/download';
+		}
 	}
 ?>

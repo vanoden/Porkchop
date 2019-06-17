@@ -31,7 +31,7 @@
 			<div id="register_submit">
 				<a class="button buttonRegisterLogin" href="#" onclick="document.loginForm.submit();">Sign In</a>
 			    <a class="button secondary" id="recover_password_link" href="/_register/forgot_password">Recover Password</a>
-			    <a class="button secondary" id="registration_link" href="<?=PATH?>/_register/register">Register Now</a>
+			    <a class="button secondary" id="registration_link" href="<?=PATH?>/_register/new_customer">Register Now</a>
 			</div>
 		</div>
 	</form>

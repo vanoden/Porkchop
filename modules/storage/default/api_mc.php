@@ -370,6 +370,31 @@
 		$file->repository->retrieveFile($file);
 		if ($file->error) app_error("Error getting file: ".$file->error,__FILE__,__LINE__);
 	}
+	
+	###################################################
+	### Set Empty Paths to Root						###
+	###################################################
+	function rootPath() {
+		$count = 0;
+		$repoList = new \Storage\RepositoryList();
+		$repos = $repoList->find();
+		foreach ($repos as $repo) {
+			$files = $repo->files();
+			foreach ($files as $file) {
+				if (! preg_match('/^\//',$file->path())) {
+					$file->update(array('path' => '/'.$file->path()));
+					$count ++;
+				}
+			}
+		}
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->count = $count;
+
+		api_log($response);
+		print formatOutput($response);
+	}
+
 	function schemaVersion() {
 		$schema = new \Storage\Schema();
 		if ($schema->error) {

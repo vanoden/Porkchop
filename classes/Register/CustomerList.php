@@ -204,7 +204,9 @@
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
-				$customer = new Customer($id);
+				if (isset($parameters['role']) || ! $count) {
+					$customer = new Customer($id);
+				}
 				if (isset($parameters['role']) && ! $customer->has_role($parameters['role'])) continue;
 				if (! $count) array_push($people,$customer);
 				$this->count ++;

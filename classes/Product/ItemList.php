@@ -113,5 +113,9 @@
 			}
 			return $items;
 		}
+
+		public function error() {
+			return $this->error;
+		}
 	}
 ?>

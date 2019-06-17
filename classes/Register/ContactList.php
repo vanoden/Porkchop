@@ -71,4 +71,7 @@
 			}
 			return $contacts;
 		}
+		public function error() {
+			return $this->error;
+		}
 	}

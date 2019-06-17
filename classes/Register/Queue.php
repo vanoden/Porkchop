@@ -37,13 +37,13 @@
 				$this->details();
 			}
 		}
-		
+
 		public function getByQueuedLogin($queuedUserId = 0) {
 		
 		    if (!empty($queuedUserId)) {
 
                 $get_queued_contacts_query = "
-	                SELECT	*
+	                SELECT	id
 	                FROM	register_queue
 	                WHERE	register_user_id = " . $queuedUserId;
 	                
@@ -52,11 +52,9 @@
 	                $this->error = "SQL Error in Register::Queue::getByQueuedLogin(): ".$GLOBALS['_database']->ErrorMsg();
 	                return null;
                 }
-                while ($row = $rs->FetchRow()) {
-                    foreach ($row as $rowValueKey => $rowValue){
-                        if (!is_numeric($rowValueKey)) $this->$rowValueKey = $rowValue;
-                    }
-                }
+                list($id) = $rs->FetchRow();
+				$this->id = $id;
+				return $this->details();
 		    }
 		}
 		
@@ -214,6 +212,7 @@
                         if (!is_numeric($rowValueKey)) $this->$rowValueKey = $rowValue;
                     }
                 }
+				return true;
 		    }
 		}
 
@@ -227,9 +226,9 @@
 			$add_object_query = "
 				INSERT
 				INTO	register_queue
-    				(name, code, date_created, is_reseller, assigned_reseller_id, address, city, state, zip, phone, cell, product_id, serial_number, register_user_id)
+    				(name, code, date_created, is_reseller, assigned_reseller_id, address, city, state, zip, product_id, serial_number, register_user_id)
 				VALUES
-	    			(?, ?, sysdate(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	    			(?, ?, sysdate(), ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	    			";
 
             // zero out empty values for int DB fields
@@ -249,8 +248,6 @@
 					$parameters['city'],
 					$parameters['state'],
 					$parameters['zip'],
-					$parameters['phone'],
-					$parameters['cell'],
                     $parameters['product_id'],
                     $parameters['serial_number'],
                     $parameters['register_user_id']
@@ -262,5 +259,9 @@
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->id;
+		}
+
+		public function customer() {
+			return new \Register\Customer($this->register_user_id);
 		}
     }

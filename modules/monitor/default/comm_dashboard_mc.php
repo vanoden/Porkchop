@@ -1,6 +1,6 @@
 <?
 	$page = $GLOBALS['_page'];
-	$page->requires();
+	$page->requireRole('administrator');
 	$page->instruction = "Set filters and click 'Submit'";
 
 	if (isset($_REQUEST['btn_submit'])) {
