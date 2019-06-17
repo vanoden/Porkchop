@@ -13,6 +13,7 @@
 		public function __construct() {
 			$this->upgrade();
 		}
+		
 		public function version() {
 			# See if Schema is Available
 			$schema_list = $GLOBALS['_database']->MetaTables();
@@ -50,6 +51,7 @@
             if (! $version) $version = 0;
             return $version;
 		}
+		
 		public function upgrade() {
 			$this->error = '';
 			$info_table = strtolower($this->module)."__info";
@@ -234,6 +236,7 @@
                 }
                 $GLOBALS['_database']->CommitTrans();
             }
+            
 			if ($current_schema_version < 2) {
                 app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
@@ -303,6 +306,7 @@
                     $GLOBALS['_database']->RollbackTrans();
                     return undef;
                 }
+                
                 $GLOBALS['_database']->CommitTrans();
             }
             
@@ -316,6 +320,55 @@
 
 				# There was an errant entry here, but we can't downgrade versions, so this empty version stays
                 $current_schema_version = 3;
+                $update_schema_version = "
+                    INSERT
+                    INTO    support__info
+                    VALUES  ('schema_version',$current_schema_version)
+                    ON DUPLICATE KEY UPDATE
+                        value = $current_schema_version
+                ";
+                $GLOBALS['_database']->Execute($update_schema_version);
+                if ($GLOBALS['_database']->ErrorMsg()) {
+                    $this->error = "SQL Error in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+                    app_log($this->error,'error',__FILE__,__LINE__);
+                    $GLOBALS['_database']->RollbackTrans();
+                    return undef;
+                }
+                $GLOBALS['_database']->CommitTrans();
+            }
+            
+            // update to schema 4 (new product registration -> /_support/register_product)
+            if ($current_schema_version < 4) {
+            
+                app_log("Upgrading schema to version 4",'notice',__FILE__,__LINE__);
+
+                // Start Transaction
+                if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+                
+				// product warranty page table
+                $create_table_query = "	
+                    CREATE TABLE `product_registration_queue` (
+                      `customer_id` int(11) DEFAULT NULL,
+                      `product_id` int(11) NOT NULL,
+                      `serial_number` varchar(255) DEFAULT NULL,
+                      `date_purchased` datetime NOT NULL,
+                      `distributor_id` int(11) NOT NULL DEFAULT '0',
+                      KEY `FK_CUSTOMER_ID` (`customer_id`),
+                      KEY `idx_serial` (`product_id`,`serial_number`),
+                      CONSTRAINT `product_registration_queue_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `product_products` (`id`),
+                      CONSTRAINT `product_registration_queue_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `register_users` (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+                ";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating `product_registration_queue` table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return false;
+				}
+
+				// There was an errant entry here, but we can't downgrade versions, so this empty version stays
+                $current_schema_version = 4;
                 $update_schema_version = "
                     INSERT
                     INTO    support__info
@@ -348,4 +401,3 @@
 			}
 		}
 	}
-?>
