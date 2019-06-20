@@ -29,9 +29,7 @@
 		serialNumber.focus();
 		serialNumber.style.border = '1px solid gray';
 		if (productElem.selectedIndex > 0) {
-			if (document.getElementById('serial_number').value.length > 0) {
-				serialMessage.display = 'none';
-			}
+			if (document.getElementById('serial_number').value.length > 0) serialMessage.display = 'none';
 			return true;
 		}
 		else {
