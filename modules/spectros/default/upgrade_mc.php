@@ -221,4 +221,3 @@
         install_log("Upgrade failed: $message",'error');
         exit;
     }
-?>

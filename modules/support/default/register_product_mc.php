@@ -15,9 +15,18 @@
 
     // if form submit
 	if ($_REQUEST['btnSubmit']) {
-        $productId = $_REQUEST['productId'];
-        $selectedProduct = $_REQUEST['productId'];
-        $purchased = $_REQUEST['purchased'];
-        $distributor = $_REQUEST['distributor'];
-        $serialNumber = $_REQUEST['serialNumber'];
+
+	    $insertParams = array();
+	    $insertParams['product_id']         = $productId    = $_REQUEST['productId'];
+	    $insertParams['date_purchased']     = $purchased    = $_REQUEST['purchased'];
+	    $insertParams['serial_number']      = $serialNumber = $_REQUEST['serialNumber'];
+	    $insertParams['distributor_name']   = $distributor  = $_REQUEST['distributor'];
+	    
+	    // @TODO
+	    $insertParams['customer_id']    = $XXX;
+        $selectedProduct                = $_REQUEST['productId'];
+        
+        // insert the potential registration record
+        $registrationQueue = new \Support\RegistrationQueue();
+        $registrationQueue->add($insertParams);
 	}

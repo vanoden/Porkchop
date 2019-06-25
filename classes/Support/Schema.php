@@ -348,16 +348,18 @@
 				// product warranty page table
                 $create_table_query = "	
                     CREATE TABLE `product_registration_queue` (
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
                       `customer_id` int(11) DEFAULT NULL,
                       `product_id` int(11) NOT NULL,
                       `serial_number` varchar(255) DEFAULT NULL,
                       `date_purchased` datetime NOT NULL,
-                      `distributor_id` int(11) NOT NULL DEFAULT '0',
+                      `distributor_name` varchar(255) DEFAULT NULL,
+                      PRIMARY KEY (`id`),
                       KEY `FK_CUSTOMER_ID` (`customer_id`),
                       KEY `idx_serial` (`product_id`,`serial_number`),
                       CONSTRAINT `product_registration_queue_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `product_products` (`id`),
                       CONSTRAINT `product_registration_queue_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `register_users` (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
                 ";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {

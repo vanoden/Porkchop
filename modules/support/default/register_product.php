@@ -18,9 +18,7 @@
 		if (serialInput.value.length < 1) return true;
 		var code = serialInput.value;
 		var asset = Object.create(Asset);
-	
-	    console.log(code);
-	
+
 		if (asset.get(code)) {
 			if (asset.product.id == productID) {
 				serialInput.style.border = 'solid 2px green';
@@ -55,16 +53,16 @@
 <h1>Warranty Registration</h1>
 <span class="form_instruction">Welcome! Fill out all required information your device to our product warrenty.</span>
 <form name="register" action="/_support/register_product" method="POST" autocomplete="off">
-	<?	if ($page->error) { ?>
+	<?php	if ($page->error) { ?>
 	    <div class="form_error"><?=$page->error?></div>
-	<?	} ?>
+	<?php	} ?>
 	<div id="registerProductSubmit">
         <h3>Select your Product</h3>
          <div id="product_details">
             <span class="label" style="display: block"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
             <select id="productId" name="productId" class="value input collectionField" style="display: block" onchange="document.getElementById('serialNumberMessage').style.display = 'none';">
                <?php	foreach ($productsAvailable as $product) { ?>
-                    <option value="<?=$product->id?>"<? if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=$product->description?></option>
+                    <option value="<?=$product->id?>"<?php if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=$product->description?></option>
                <?php	} ?>
             </select>
             <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
@@ -77,7 +75,7 @@
             <span class="label">Date Purchased</span>
             <input type="text" id="purchased" name="purchased" placeholder="MM/DD/YYYY" value="<?=$purchased?>">
             <i class="fa fa-truck" aria-hidden="true"></i> Distributor
-            <input type="text" id="distributor" name="distributor" placeholder="e.g. spectros or airmet.com" value="<?=$distributor?>">
+            <input type="text" id="distributor" name="distributor" placeholder="e.g. univar / airmet.com" value="<?=$distributor?>">
          </div>
 	    <div style="padding-top: 10px;">
 		    <input type="submit" name="btnSubmit" class="button" value="Submit" style="padding:10px; min-width: 120px;" />
