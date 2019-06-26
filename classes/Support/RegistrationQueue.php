@@ -116,7 +116,8 @@
          * add new potential registration
          * @param array $parameters
          */
-		public function add($parameters) {		
+		public function add($parameters) {
+
 			app_log("RegistrationQueue::add()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 
@@ -138,10 +139,13 @@
 	    			(?, ?, ?, ?, ?)";
 
             // zero out empty values for int DB fields
-            if (empty($parameters['date_purchased'])) $parameters['date_purchased'] = date("Y-m-d H:i:s", time());
+            if (!empty($parameters['date_purchased'])) {
+                $parameters['date_purchased'] = date("Y-m-d H:i:s", strtotime($parameters['date_purchased']));
+            } else {
+                $parameters['date_purchased'] = date("Y-m-d H:i:s", time());
+            }
             if (empty($parameters['distributor_name'])) $parameters['distributor_name'] = NULL;
             if (empty($parameters['serial_number'])) $parameters['serial_number'] = NULL;
-
 			$rs = $GLOBALS['_database']->Execute(
 				$add_object_query,
 				array(

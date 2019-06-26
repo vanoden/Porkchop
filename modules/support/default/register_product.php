@@ -52,6 +52,7 @@
 
 <h1>Warranty Registration</h1>
 <span class="form_instruction">Welcome! Fill out all required information your device to our product warrenty.</span>
+
 <form name="register" action="/_support/register_product" method="POST" autocomplete="off">
 	<?php	if ($page->error) { ?>
 	    <div class="form_error"><?=$page->error?></div>
@@ -78,7 +79,17 @@
             <input type="text" id="distributor" name="distributor" placeholder="e.g. univar / airmet.com" value="<?=$distributor?>">
          </div>
 	    <div style="padding-top: 10px;">
-		    <input type="submit" name="btnSubmit" class="button" value="Submit" style="padding:10px; min-width: 120px;" />
+	        <?php
+    	    if (!$page->success) {
+	        ?>
+    		    <input type="submit" name="btnSubmit" class="button" value="Submit" style="padding:10px; min-width: 120px;" />
+		    <?php
+		    } else {
+		    ?>
+    		    <div class="form_success"><?=$page->success?></div>
+		    <?php
+		    }
+		    ?>
 	    </div>
 	</div>
 </form>
