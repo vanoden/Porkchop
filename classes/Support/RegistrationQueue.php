@@ -40,7 +40,7 @@
 	                SELECT	`id`
 	                FROM	`product_registration_queue`
 	                WHERE	`customer_id` = " . $customerId;
-	                
+
                 $rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
                 if (! $rs) {
 	                $this->error = "SQL Error in RegistrationQueue::getByCustomer(): ".$GLOBALS['_database']->ErrorMsg();
@@ -89,7 +89,7 @@
 			$update_registration_query = "UPDATE product_registration_queue SET id = id";
 
             // push any allowed parameter values on to the update query
-            $updateableParams = array('customer_id','product_id','serial_number','distributor_name');
+            $updateableParams = array('customer_id','product_id','serial_number','distributor_name', 'status', 'notes');            
             foreach ($updateableParams as $keyName) {
                 if (isset($parameters[$keyName])) {
                     $update_registration_query .= ",
@@ -134,9 +134,9 @@
             // build query
 			$add_object_query = "
 				INSERT INTO	`product_registration_queue`
-    				(`customer_id`, `product_id`, `serial_number`, `date_purchased`, `distributor_name`)
+    				(`customer_id`, `product_id`, `serial_number`, `date_created`, `date_purchased`, `distributor_name`)
 				VALUES
-	    			(?, ?, ?, ?, ?)";
+	    			(?, ?, ?, ?, ?, ?)";
 
             // zero out empty values for int DB fields
             if (!empty($parameters['date_purchased'])) {
@@ -144,6 +144,8 @@
             } else {
                 $parameters['date_purchased'] = date("Y-m-d H:i:s", time());
             }
+            $parameters['date_created'] = date("Y-m-d H:i:s", time());
+            
             if (empty($parameters['distributor_name'])) $parameters['distributor_name'] = NULL;
             if (empty($parameters['serial_number'])) $parameters['serial_number'] = NULL;
 			$rs = $GLOBALS['_database']->Execute(
@@ -152,6 +154,7 @@
     				$parameters['customer_id'],
 					$parameters['product_id'],
 					$parameters['serial_number'],
+					$parameters['date_created'],
 					$parameters['date_purchased'],
 					$parameters['distributor_name'],
 				)

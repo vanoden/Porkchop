@@ -86,13 +86,14 @@
 			"roles"			=> array(
 			),
 			"templates"		=> array(
-				"request_new"		=> "admin.html",
-				"requests"			=> "admin.html",
-				"request_detail"	=> "admin.html",
-				"request_items"		=> "admin.html",
-				"request_item"		=> "admin.html",
-				"action"			=> "admin.html",
-				"admin_actions"		=> "admin.html",
+				"request_new"		    => "admin.html",
+				"requests"			    => "admin.html",
+				"request_detail"	    => "admin.html",
+				"request_items"		    => "admin.html",
+				"request_item"		    => "admin.html",
+				"action"			    => "admin.html",
+				"admin_actions"		    => "admin.html",
+				"pending_registrations"	=> "admin.html",
 			),
 		),
         "Engineering"	=> array(

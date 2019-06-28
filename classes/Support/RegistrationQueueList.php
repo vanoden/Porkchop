@@ -5,6 +5,7 @@
 	
 		public $error;
 		public $count;
+        public $possibleStatus = array('PENDING','APPROVED','DENIED');
 
 		public function find($parameters = array()) {
 		
@@ -14,11 +15,16 @@
 				WHERE	id = id
 			";
 
-            if (!empty($parameters['searchAll'])) $get_queued_registration_query .= " AND	" . $this->columnSearch($parameters['searchAll'], array('customer_id', 'product_id', 'serial_number', 'distributor_name'));
-
             if (!empty($parameters['dateStart'])) $get_queued_registration_query .= " AND	`date_purchased` > '" . date("Y-m-d H:i:s", strtotime($parameters['dateStart'])) . "'";
 
             if (!empty($parameters['dateEnd']))  $get_queued_registration_query .= " AND	`date_purchased` < '" . date("Y-m-d H:i:s", strtotime($parameters['dateEnd'])) . "'";
+
+            if (!empty($parameters['status'])) {
+                $get_queued_registration_query .= "AND (";
+                foreach ($parameters['status'] as $status) $get_queued_registration_query .= " OR " . $this->columnExact($status, array('status'));         
+                $get_queued_registration_query .= ")";
+                $get_queued_registration_query  = str_replace ( "( OR (" , "((" , $get_queued_registration_query); // @TODO, this isn't the best really to produce the OR statements
+            }
 
 			$rs = $GLOBALS['_database']->Execute( $get_queued_registration_query );
 			if (! $rs) {
