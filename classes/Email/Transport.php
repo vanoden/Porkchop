@@ -18,11 +18,12 @@
 			if ($parameters['provider'] == 'Proxy') {
 				return new \Email\Transport\Proxy($parameters);
 			} else {
+				$this->_error = "Invalid Email Transport";
 				return null;
 			}
 		}
 
 		public function error() {
-			return "Invalid Email Transport";
+			return $this->_error;
 		}
 	}
