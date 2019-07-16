@@ -25,6 +25,23 @@
                 $get_queued_registration_query .= ")";
                 $get_queued_registration_query  = str_replace ( "( OR (" , "((" , $get_queued_registration_query); // @TODO, this isn't the best really to produce the OR statements
             }
+            
+            // if search term, then constrain by that
+            if ($parameters['searchTerm']) {            
+                $get_queued_registration_query = "
+                SELECT	prq.id
+                FROM	product_registration_queue prq
+                LEFT JOIN register_users ru ON prq.customer_id = ru.id
+                LEFT JOIN register_organizations ro ON ru.organization_id = ro.id
+                    WHERE 
+                    prq.serial_number LIKE '%".$parameters['searchTerm']."%' 
+                    OR ru.first_name LIKE '%".$parameters['searchTerm']."%'
+                    OR ru.last_name LIKE '%".$parameters['searchTerm']."%'
+                    OR ru.login LIKE '%".$parameters['searchTerm']."%'
+                    OR ro.name LIKE '%".$parameters['searchTerm']."%'    
+                    OR prq.distributor_name LIKE '%".$parameters['searchTerm']."%'  
+                    OR prq.notes LIKE '%".$parameters['searchTerm']."%' ";
+            }
 
 			$rs = $GLOBALS['_database']->Execute( $get_queued_registration_query );
 			if (! $rs) {
