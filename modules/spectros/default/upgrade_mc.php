@@ -86,7 +86,8 @@
 			"roles"			=> array(
 			),
 			"templates"		=> array(
-				"request_new"		    => "admin.html",
+				"request_new"			=> "admin.html",
+				"request_new_monitor"   => "admin.html",
 				"requests"			    => "admin.html",
 				"request_detail"	    => "admin.html",
 				"request_items"		    => "admin.html",
