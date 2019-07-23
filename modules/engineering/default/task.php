@@ -1,3 +1,10 @@
+<style>
+    .eventLogEntry {
+        max-width: 200px; 
+        overflow:auto; 
+        padding: 25px;
+    }
+</style>
 <div>
   <div class="breadcrumbs">
      <a class="breadcrumb" href="/_engineering/home">Engineering</a>
@@ -241,15 +248,13 @@
          ?>
       <div class="tableRow">
          <div class="tableCell">
-            <?=$event->date_event?>
+            <i><?=$event->date_event?></i>
          </div>
          <div class="tableCell">
-            <?=$person->login?>
+            <strong><?=$person->login?></strong>
          </div>
-         <div class="tableCell">
-             <pre>
-                <?=$event->description?>
-             </pre>
+         <div class="tableCell eventLogEntry">
+            <?=str_replace(" ","&nbsp;",str_replace("\n","<br/>\n",$event->description)) ;?>
          </div>
       </div>
       <?	} ?>

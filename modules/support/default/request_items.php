@@ -44,7 +44,7 @@
 	        <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
 	        <input type="text" id="serial_number" name="serial_number" class="value input collectionField" value="<?=$selectedSerialNumber?>" onchange="updateReport()" />
         </div>
-        <div style="width: 42%; float:left;">
+        <div style="width: 42%; float:left; padding-left: 10px;">
 	        <span class="label"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
 	        <select id="product_id" name="product_id" class="value input collectionField" onchange="updateReport()">
     	         <option value="ALL"<? if ($product == $selectedProduct) print " selected"; ?>>ALL</option>

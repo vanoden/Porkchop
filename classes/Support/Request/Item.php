@@ -2,6 +2,7 @@
 	namespace Support\Request;
 	
 	class Item {
+	
 		private $_error;
 		public $line;
 		public $request;
@@ -17,15 +18,14 @@
 					$this->id = $id;
 					$this->details();
 				}
-			}
-			else {
+			} else {
 				$this->_error = "Invalid id";
 			}
 		}
 
 		public function add($parameters) {
 		
-			if ( empty($parameters['product_id'])) {
+			if (! isset($parameters['product_id'])) {	
 				$this->_error = "product ID is required";
 				return false;
 			}
