@@ -5,12 +5,20 @@
 	$page->requireRole('support user');
 
     // clean user input and search away
-    $searchTerm = preg_replace("/[^A-Za-z0-9\- ]/", '', $_REQUEST['search']);
-    
+    $searchTerm = preg_replace("/[^A-Za-z0-9\- ]/", '', $_REQUEST['search']);    
+    $searchTermArray = array('searchTerm'=>$searchTerm);
+
     // search service items that match
     $supportRequestList = new \Support\RequestList();
-    $supportRequestList = $supportRequestList->find(array('searchTerm'=>$searchTerm));
+    $supportRequestList = $supportRequestList->find($searchTermArray);
     $supportItemList = new Support\Request\ItemList();
-    $supportItemList = $supportItemList->find(array('searchTerm'=>$searchTerm));   
+    $supportItemList = $supportItemList->find($searchTermArray);   
 	$actionlist = new \Support\Request\Item\ActionList();
-	$actions = $actionlist->find(array('searchTerm'=>$searchTerm));
+	$actions = $actionlist->find($searchTermArray);
+
+	// get current registrations
+	$registrationQueueList = new \Support\RegistrationQueueList();
+
+    // get results
+    app_log("Find Pending Product Registrations");
+    $queuedProductRegistrations = $registrationQueueList->find($searchTermArray);

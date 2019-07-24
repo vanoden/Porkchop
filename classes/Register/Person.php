@@ -500,4 +500,3 @@
 			return $this->error;
 		}
     }
-?>

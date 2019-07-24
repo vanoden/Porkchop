@@ -24,14 +24,14 @@
 				if ($request->id) {
 					if (isset($_REQUEST['description']) && strlen($_REQUEST['description']) > 0) {
 						$parameters = array(
+								'product_id'	=> 0,
 								'line'			=> 0,
 								'description'	=> $_REQUEST['description'],
 								"quantity"		=> 0
 						);
+						
 						$request->addItem($parameters);
-						if ($request->error()) {
-							$page->addError("Error adding message: ".$request->error());
-						}
+						if ($request->error()) $page->addError("Error adding message: ".$request->error());						
 					}
 					foreach ($_REQUEST['product_id'] as $line => $pid) {
 						print "<br>Line $line, Product ".$_REQUEST['product_id'][$line].", Serial ".$_REQUEST['serial_number'][$line];
@@ -50,8 +50,7 @@
 						header('location: /_support/request_items');
 						exit;
 					}
-				}
-				elseif($request->error()) {
+				} elseif($request->error()) {
 					$page->addError($request->error());
 				}
 			}

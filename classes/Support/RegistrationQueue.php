@@ -5,6 +5,7 @@
 	
 	    public $id;
 	    public $customer_id;
+	    public $customer;
 	    public $product_id;
 	    public $serial_number;
 	    public $date_purchased;
@@ -68,7 +69,10 @@
                 }
                 while ($row = $rs->FetchRow()) {
                     foreach ($row as $rowValueKey => $rowValue){
-                        if (!is_numeric($rowValueKey)) $this->$rowValueKey = $rowValue;
+                        if (!is_numeric($rowValueKey)) {
+                            $this->$rowValueKey = $rowValue;
+                            $this->customer = new \Register\Person($this->customer_id);   
+                        }
                     }
                 }
 				return true;

@@ -18,7 +18,7 @@
 </script>
 <style>
    .strong-text {
-	font-weight: bold;
+    font-weight: bold;
    }
    .small-text {
 	font-size: 10px;
@@ -51,6 +51,9 @@
    }
    .vertical-align-top {
 	vertical-align: unset;
+   }
+   .product-info {
+       color: #003308; padding: 10px 0px 10px 0px;
    }
 </style>
 <script>
@@ -100,6 +103,7 @@
 		   }, 
 		   maxDate: '0'
 	   });
+	   
 	  $("#dateEnd").datepicker({
 		   onSelect: function(dateText, inst) {
 			   var maxDate = document.getElementById('max_date');
@@ -181,7 +185,7 @@
 	  </div>
 	  <div class="tableCell">
 	  	 <?php if ($queuedRegistration->product_id) { ?>
-			 <div style="color: #003308; padding: 10px 0px 10px 0px;"><?=$productItem->name?> [<?=$productItem->code?>]</div>
+			 <div class="product-info"><?=$productItem->name?> [<?=$productItem->code?>]</div>
 			 <strong>Serial #:</strong> <?=$queuedRegistration->serial_number?><br/>
 		 <?php } ?>
 		 <br/>

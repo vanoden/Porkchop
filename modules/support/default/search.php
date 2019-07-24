@@ -40,7 +40,7 @@ Searched for: <strong><?=$searchTerm?></strong>
         </div>
     <?php } ?>
 </div>
-<!--End first row-->	Manage
+<!--End first row-->
 
 
 <?php
@@ -154,3 +154,40 @@ if (empty($supportItemList)) {
     ?>
     </div>
 <?php	} ?>
+
+<h3>Pending Product Registrations</h3>
+
+<!--	Start First Row-->
+<div class="tableBody min-tablet">
+    <div class="tableRowHeader">
+        <div class="tableCell" style="width: 15%;">Serial Number</div>
+        <div class="tableCell" style="width: 15%;">Date Added</div>
+        <div class="tableCell" style="width: 15%;">Customer</div>
+        <div class="tableCell" style="width: 15%;">Organization</div>
+        <div class="tableCell" style="width: 15%;">Distributor</div>
+        <div class="tableCell" style="width: 15%;">Status</div>
+    </div> <!-- end row header -->
+    <?php foreach ($queuedProductRegistrations as $request) { ?>
+        <div class="tableRow">
+            <div class="tableCell">
+	            <span class="value"><a href="/_support/pending_registrations"><?=$request->serial_number?></a></span>
+            </div>
+            <div class="tableCell">
+	            <span class="value"><?=date('m/d/Y', strtotime($request->date_created))?></span>
+            </div>
+            <div class="tableCell">
+	            <span class="value"><?=$request->customer->full_name()?></span>
+            </div>
+            <div class="tableCell">
+	            <span class="value"><?=$request->customer->organization->name?></span>
+            </div>
+            <div class="tableCell">
+	            <span class="value"><?=$request->distributor_name?></span>
+            </div>
+            <div class="tableCell">
+	            <span class="value"><?=ucwords(strtolower($request->status))?></span>
+            </div>
+        </div>
+    <?php } ?>
+</div>
+<!--End first row-->
