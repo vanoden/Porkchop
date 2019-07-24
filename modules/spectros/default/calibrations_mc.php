@@ -1,6 +1,6 @@
 <?
 	$page = new \Site\Page();
-	$page->requireRole('administrator');
+	#$page->requireRole('administrator');
 
 	# Get Asset
 	if (! $_REQUEST['code']) {
