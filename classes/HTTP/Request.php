@@ -1,7 +1,8 @@
-<?
+<?php
 	namespace HTTP;
 
 	class Request {
+	
 		public $module;
 		public $view;
 		public $index;
@@ -29,9 +30,7 @@
 
 		public function refererURI() {
 			app_log("Referer: ".$_SERVER['HTTP_REFERER']);
-			if (preg_match('/^https?\:\/\/[\w\-\.]+(\/.*)/',$_SERVER['HTTP_REFERER'],$matches)) {
-				return $matches[1];
-			}
+			if (preg_match('/^https?\:\/\/[\w\-\.]+(\/.*)/',$_SERVER['HTTP_REFERER'],$matches)) return $matches[1];
 			return null;
 		}
 		public function addParam($key,$value) {
@@ -39,16 +38,12 @@
 		}
 		
 		public function host($host = null) {
-			if (isset($host)) {
-				$this->_host = $host;
-			}
+			if (isset($host)) $this->_host = $host;
 			return $this->_host;
 		}
 
 		public function uri($uri = null) {
-			if (isset($uri)) {
-				$this->_uri = $uri;
-			}
+			if (isset($uri)) $this->_uri = $uri;
 			return $this->_uri;
 		}
 		public function url($url = null) {
@@ -103,9 +98,7 @@
 			
 			if (count($this->_parameters)) {
 				$paramArray = array();
-				foreach($this->_parameters as $key => $value) {
-					array_push($paramArray,"$key=$value");
-				}
+				foreach($this->_parameters as $key => $value) array_push($paramArray,"$key=$value");
 				$this->_body = join('&',$paramArray);
 			}
 
@@ -150,6 +143,7 @@
 		}
 
 		public function deconstruct() {
+		
 			# Strip Path from URI
 			$this->uri = preg_replace('@^'.PATH.'@','',$_SERVER['REQUEST_URI']);
 
@@ -192,13 +186,13 @@
 			}
 
 			app_log("Request: ".$this->module."::".$this->view."::".$this->index,'debug',__FILE__,__LINE__);
+			
 			# Parse Remainder of Query String into Array
 			$parsed_vars = preg_split("@/@",$this->query_vars);
 			$qv_counter = 0;
 			foreach ($parsed_vars as $element) {
 				$this->query_vars_array[$qv_counter] = $element;
-				if (preg_match("/=/",$element))
-				{
+				if (preg_match("/=/",$element)) {
 					list($label,$value) = preg_split("/=/",$element);
 					$this->query_vars_array[$label] = $value;
 					$this->parameters[$label] = $value;
@@ -227,14 +221,24 @@
 			return $this->_method;
 		}
 		public function parameters() {
-			foreach ($_POST as $label => $value) {
-				$this->parameters[$label] = $value;
-			}
+			foreach ($_POST as $label => $value) $this->parameters[$label] = $value;
 			return $this->parameters;
 		}
 		
 		public function error() {
 			return $this->_error;
 		}
+		
+		/**
+		 * clean characters to prevent XSS/Injection attacks via user input on the system
+		 * @param $input
+		 */
+		public function cleanCharacters($input) {
+    		$input = str_replace("`","",$input);
+    		$input = str_replace("\"","",$input);
+    		$input = str_replace(";","",$input);
+    		$input = str_replace("/","",$input);
+    		$input = str_replace("\\","",$input);
+    		$input = str_replace("*","",$input);
+		}
 	}
-?>

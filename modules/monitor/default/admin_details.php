@@ -143,6 +143,7 @@
 				</div>
 <?php		foreach ($sensors as $sensor) {
 				$reading = $sensor->lastReading();
+				
 ?>
 				<div class="tableRow">
 					<div class="tableCell"><input type="text" name="sensor_code[<?=$sensor->id?>]" class="value input" value="<?=$sensor->code?>" <?=$disabled?> /></div>
