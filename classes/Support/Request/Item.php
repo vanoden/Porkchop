@@ -24,10 +24,14 @@
 		}
 
 		public function add($parameters) {
-		
+
 			if (! isset($parameters['product_id'])) {	
 				$this->_error = "product ID is required";
 				return false;
+			}
+			
+			if (isset($parameters['product_id']) && empty($parameters['product_id'])) {
+			    $parameters['product_id'] = 0;
 			}
 
 			if (! isset($parameters['line'])) {

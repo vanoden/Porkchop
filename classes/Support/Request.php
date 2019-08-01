@@ -23,15 +23,18 @@
 				WHERE	request_id = ?
 			";
 			$rs = $GLOBALS['_database']->Execute(
-				$get_line_query,array($this->id)
+				$get_line_query, array($this->id)
 			);
+			
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::nextLine(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
 			list($line) = $rs->FetchRow();
 			return $line + 1;
 		}
+		
 		public function get($code) {
 			$get_object_query = "
 				SELECT	id
@@ -42,15 +45,19 @@
 				$get_object_query,
 				array($code)
 			);
+			
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+			
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
 			return $this->details();
 		}
+		
 		public function add($parameters) {
+		
 			if (! $parameters['code']) $parameters['code'] = $this->nextCode();
 
 			$customer = new \Register\Customer($parameters['customer_id']);
@@ -58,8 +65,10 @@
 				$this->_error = "Customer required";
 				return false;
 			}
+			
 			if (! $parameters['status']) $parameters['status'] = 'NEW';
 			$parameters['status'] = strtoupper($parameters['status']);
+			
 			if (! $this->valid_status($parameters['status'])) {
 				$this->_error = "Invalid status";
 				return false;
@@ -78,6 +87,7 @@
 				VALUES
 				(		?,?,?,sysdate(),?,?)
 			";
+
 			$bind_params = array(
 				$parameters['code'],
 				$customer->id,
@@ -85,13 +95,15 @@
 				$parameters['status'],
 				$parameters['type']
 			);
-			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
+
+			$GLOBALS['_database']->Execute($add_object_query,$bind_params);			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::add(): ".$GLOBALS['_database']->ErrorMsg();
 				query_log($add_object_query);
 				app_log(print_r($bind_params,true),'info');
 				return null;
 			}
+
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
 		}
@@ -105,8 +117,7 @@
 				if ($this->valid_status($parameters['status'])) {
 					$update_object_query .= ",
 					status	= ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
-				}
-				else {
+				} else {
 					$this->_error = "Invalid status";
 					return false;
 				}
@@ -118,15 +129,18 @@
 				$update_object_query,
 				array($this->id)
 			);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+			
 			return $this->details($id);
 		}
 
 		private function details() {
-			# Get Request Details
+		
+			// Get Request Details
 			$get_request_query = "
 				SELECT	id,
 						code,
@@ -137,14 +151,17 @@
 				FROM	support_requests
 				WHERE	id = ?
 			";
+			
 			$rs = $GLOBALS['_database']->Execute(
 				$get_request_query,
 				array($this->id)
 			);
+			
 			if (! $rs) {
 				$this->_error = "SQL Error in SupportRequest::details: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+			
 			$record = $rs->FetchNextObject(false);
 			$this->code = $record->code;
 			$this->status = $record->status;
@@ -196,6 +213,7 @@
 			}
 			return $count;
 		}
+		
 		public function items() {
 			$itemlist = new \Support\Request\ItemList();
 			$items = $itemlist->find(array('request_id' => $this->id));

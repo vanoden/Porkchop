@@ -2,36 +2,53 @@
 	div.table {
 		display: none;
 	}
+	
 	div.table_header {
 		display: table-row;
 		font-weight: bold;
 	}
+	
 	div.table_row {
 		display: table-row;
 	}
+	
 	div.table_cell {
 		display: table-cell;
 		border-bottom: 1px solid #dedede;
 	}
 </style>
-<script language= "Javascript">
+<script>
 	var line = 0;
-	function selectedType(elem) {
-		if (document.getElementById('problem_type').value == "gas monitor") {
-			document.getElementById('generic_form').style.display = 'none';
-			document.getElementById('device_table').style.display = 'block';
-			document.getElementById('btn_additem').style.display = 'inline';
-		}
-		else {
-			document.getElementById('device_table').style.display = 'none';
-			document.getElementById('generic_form').style.display = "block";
-			document.getElementById('btn_additem').style.display = 'none';
-		}
+	
+	function setVisibility(elementId, visibility) {
+    	document.getElementById(elementId).style.display = visibility;
 	}
+	
+	function selectedType(elem) {
+	
+		if (document.getElementById('problem_type').value == "gas monitor") {
+    		setVisibility('generic_form', 'none');
+    		setVisibility('device_table', 'block');
+    		setVisibility('form_footer', 'block');
+    		setVisibility('btn_additem', 'inline');
+		} else {
+    		setVisibility('device_table', 'none');
+    		setVisibility('generic_form', 'block');
+    		setVisibility('form_footer', 'block');
+    		setVisibility('btn_additem', 'none');
+		}
+		
+	    if (document.getElementById('problem_type').value == '') {
+            setVisibility('generic_form', 'none');
+            setVisibility('form_footer', 'none');	    
+	    }
+	}
+	
 	function dropRow(line) {
 		row = document.getElementById('row'+line);
 		row.parentNode.removeChild(row);
 	}
+	
 	function addRow() {
 		line ++;
 		var row = document.createElement('div');
@@ -58,7 +75,6 @@
 		productSelect.appendChild(productOpt<?=$product->id?>);
 <?	} ?>
 		productCell1.appendChild(productSelect);
-
 
 		var productCell2 = document.createElement('div');
 		productCell2.classList.add('table_cell');
@@ -97,8 +113,7 @@
 <?	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?	}
-	else { ?>
+<?	} else { ?>
 <form name="supportRequest" method="post" action="/_support/request">
 <div class="form_instruction">
 	Select your problem type from the list.  Then clearly define your problem.  Make sure to list relevant Serial Numbers for any devices referenced.
@@ -152,9 +167,13 @@
 		</div>
 	</div>
 </div>
-<div class="form_footer" colspan="2" style="text-align: center">
+<div id="form_footer" class="form_footer" colspan="2" style="text-align: center">
 	<input id="btn_additem" type="button" name="additem" class="button" value="Another Product" style="display: none" onclick="addRow();" />
 	<input type="submit" name="btn_submit" class="button" value="Submit" />
 </div>
 </form>
-<?	} ?>
+<script>
+    setVisibility('generic_form', 'none');
+    setVisibility('form_footer', 'none');
+</script>
+<? } ?>
