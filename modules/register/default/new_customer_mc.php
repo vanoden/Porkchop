@@ -115,7 +115,7 @@
 						// Initialize Register Queued Object
 						$queuedCustomer = new \Register\Queue();
 						$queuedCustomerData = array();
-						$queuedCustomerData['name'] = $HTTPRequest->cleanCharacters(_REQUEST['organization_name']);
+						$queuedCustomerData['name'] = $HTTPRequest->cleanCharacters($_REQUEST['organization_name']);
 						$queuedCustomerData['code'] = time(); // @TODO, not sure about this column
 						$queuedCustomerData['is_reseller'] = 0;
 						$queuedCustomerData['assigned_reseller_id'] = NULL;
@@ -131,7 +131,7 @@
 						$queuedCustomerData['cell'] = $HTTPRequest->cleanCharacters($_REQUEST['cell']);
 						$queuedCustomerData['product_id'] = $HTTPRequest->cleanCharacters($_REQUEST['product_id']);
 						if (empty($queuedCustomerData['product_id'])) $queuedCustomerData['product_id'] = 0;
-						$queuedCustomerData['serial_number'] = $HTTPRequest->cleanCharacters(_REQUEST['serial_number']);
+						$queuedCustomerData['serial_number'] = $HTTPRequest->cleanCharacters($_REQUEST['serial_number']);
 						$queuedCustomerData['register_user_id'] = $customer->id;                           
 						$queuedCustomer->add($queuedCustomerData);
 						
