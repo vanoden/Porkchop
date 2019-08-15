@@ -2,6 +2,7 @@
 	namespace Support;
 
 	class Request {
+	
 		private $_error;
 		public $id;
 		public $customer;
@@ -192,9 +193,44 @@
 		}
 
 		public function addItem($parameters) {
+
 			$parameters['request_id'] = $this->id;
 			$item = new \Support\Request\Item();
 			$item->add($parameters);
+
+		    // get notification
+    		$parameters = array('type' => 'email', 'notify' => 1,'user_id' => $item->request->customer->id);
+		    $registerContact = new \Register\ContactList();
+		    $registerContactDetails = $registerContact->find($parameters);
+		    if (!empty($registerContactDetails)) {
+    		    foreach ($registerContactDetails as $contactDetail) {
+    		    
+    		        // only send emails to people who didn't create the request itself
+    		        if ($contactDetail->person->id != $GLOBALS['_SESSION_']->customer->id) {
+
+		                // send update to customer that a new ticket has been added for their support request
+		                app_log("Generating update to support request email");
+                        $description = 'Product Serial #' . $item->serial_number . "<br>\n" . 'Request Status: ' . $item->status . "<br>\n<br>\n" . $item->description;
+		                $notificationSubject = 'Updates on your request for support';
+		                $emailNotification = new \Email\Notification(
+		                    array('subject' => $notificationSubject,
+			                      'template' => TEMPLATES . '/support/support_request_update.html', 
+			                      'templateVars' => 
+			                        array(
+                                        'FIRST.NAME' => $contactDetail->person->first_name,
+                                        'LAST.NAME' => $contactDetail->person->last_name,
+                                        'SUPPORT.CODE' => 'Ticket #'. $item->request->code,
+                                        'ACTION' => 'Service Ticket Added',
+                                        'DESCRIPTION' => $description
+			                        )
+			                      )
+		                );
+		                app_log("Sending update to support request email",'debug',__FILE__,__LINE__);
+		                $emailNotification->send($contactDetail->value, 'no-reply@spectrosinstruments.com');
+		            }
+    		    }
+		    }
+
 			if ($item->error()) {
 				$this->_error = "Error adding item: ".$item->error();
 				return false;
