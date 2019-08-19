@@ -121,7 +121,7 @@
 		        <div class="tableCell">
 			        <select name="item_status" class="value input">
 				        <?	foreach ($statuses as $status) { ?>
-				        <option value="<?=$status?>"><?=ucwords(strtolower($status))?></option>
+				        <option value="<?=$status?>"><?=ucwords(str_replace("_"," ", strtolower($status)))?></option>
 				        <?	} ?>
 			        </select>
 		        </div>

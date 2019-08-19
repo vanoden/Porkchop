@@ -28,9 +28,7 @@
 				if ($args[0]['method']) {
 					$this->method = $args[0]['method'];
 					$this->view = $args[0]['view'];
-					if ($args[0]['index']) {
-						$this->index = $args[0]['index'];
-					}
+					if ($args[0]['index']) $this->index = $args[0]['index'];
 				}
 			}
 			elseif (func_num_args() == 2 && gettype($args[0]) == "string" && gettype($args[1]) == "string") {
@@ -60,7 +58,7 @@
 
 		public function requireRole($role) {
 			if ($this->module == 'register' && $this->view == 'login') {
-				# Do Nothing, Where Here
+				# Do Nothing, we're Here
 			}
 			elseif (! $GLOBALS['_SESSION_']->customer->id) {
 				header('location: /_register/login?return=true&module='.$this->module.'&view='.$this->view);
@@ -122,9 +120,7 @@
 				$this->module = $module;
 				if ($view) {
 					$this->view = $view;
-					if ($index) {
-						$this->index = $index;
-					}
+					if ($index) $this->index = $index;
 				}
 			}
 

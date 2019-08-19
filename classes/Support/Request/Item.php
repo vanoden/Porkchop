@@ -182,8 +182,7 @@
 			$comment = new \Support\Request\Item\Comment();
 			if ($comment->add($parameters)) {
 				return $comment;
-			}
-			else {
+			} else {
 				$this->_error = $comment->error();
 				return false;
 			}
@@ -192,16 +191,7 @@
 			return $this->_error;
 		}
 		public function statuses() {
-			return array(
-				"NEW",
-				"CANCELLED",
-				"ASSIGNED",
-				"OPEN",
-				"PENDING CUSTOMER",
-				"PENDING VENDOR",
-				"COMPLETE",
-				"CLOSED"
-			);
+			return array("NEW", "ACTIVE", "PENDING_VENDOR", "PENDING_CUSTOMER", "COMPLETE", "CLOSED");
 		}
 		public function openActions() {
 			$actionlist = new \Support\Request\Item\ActionList();

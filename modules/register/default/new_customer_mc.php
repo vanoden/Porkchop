@@ -74,6 +74,7 @@
 							"validation_key"	=> $validation_key,
 						)
 					);
+					
 					if ($customer->error) {
 						app_log("Error adding customer: ".$customer->error,'error',__FILE__,__LINE__);
 						$page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:".$GLOBALS['_config']->site->support_email."'>".$GLOBALS['_config']->site->support_email."</a> if you have any futher issues.",'error');
@@ -115,7 +116,7 @@
 						// Initialize Register Queued Object
 						$queuedCustomer = new \Register\Queue();
 						$queuedCustomerData = array();
-						$queuedCustomerData['name'] = $HTTPRequest->cleanCharacters(_REQUEST['organization_name']);
+						$queuedCustomerData['name'] = $HTTPRequest->cleanCharacters($_REQUEST['organization_name']);
 						$queuedCustomerData['code'] = time(); // @TODO, not sure about this column
 						$queuedCustomerData['is_reseller'] = 0;
 						$queuedCustomerData['assigned_reseller_id'] = NULL;
@@ -131,7 +132,7 @@
 						$queuedCustomerData['cell'] = $HTTPRequest->cleanCharacters($_REQUEST['cell']);
 						$queuedCustomerData['product_id'] = $HTTPRequest->cleanCharacters($_REQUEST['product_id']);
 						if (empty($queuedCustomerData['product_id'])) $queuedCustomerData['product_id'] = 0;
-						$queuedCustomerData['serial_number'] = $HTTPRequest->cleanCharacters(_REQUEST['serial_number']);
+						$queuedCustomerData['serial_number'] = $HTTPRequest->cleanCharacters($_REQUEST['serial_number']);
 						$queuedCustomerData['register_user_id'] = $customer->id;                           
 						$queuedCustomer->add($queuedCustomerData);
 						
@@ -152,8 +153,7 @@
 						if (!$isEmailSent) {
 							$page->addError("Confirmation email could not be sent, please contact us at ".$GLOBALS['_config']->site->support_email." to complete your registration, thank you!");
 							app_log("Error sending confirmation email: ".$emailNotification->error(),'error');
-						}
-						else {
+						} else {
 							// show thank you page
 							header("Location: /_register/thank_you");
 						}
@@ -168,12 +168,14 @@
 
 	if ($_REQUEST['method'] == "verify") {
 		app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
+		
 		// Initialize Customer Object
 		$page->isVerifedAccount = false;
 		$customer = new \Register\Customer();
 		if ($customer->get($_REQUEST['login'])) {
 			app_log("Found customer ".$customer->id);
 			if ($customer->verify_email($_REQUEST['access'])) {
+			
 				// update the queued organization to "PENDING" because the email has been verifed
 				app_log("Validation key confirmed, updating queue record");
 				$queuedCustomer = new \Register\Queue(); 
@@ -184,10 +186,10 @@
 				app_log("Generating notification email");
 				$notificationSubject = 'New verified customer - pending organizational approval';
 				$emailNotification = new \Email\Notification(
-				array('subject' => $notificationSubject,
-					  'template' => TEMPLATES . '/registration/admin_notification.html', 
-					  'templateVars' => array('ADMIN.URL' => 'https://'. $_config->site->hostname . '/_register/pending_customers', 'ADMIN.USERDETAILS' => $_REQUEST['login'])
-					  )
+				    array('subject' => $notificationSubject,
+					      'template' => TEMPLATES . '/registration/admin_notification.html', 
+					      'templateVars' => array('ADMIN.URL' => 'https://'. $_config->site->hostname . '/_register/pending_customers', 'ADMIN.USERDETAILS' => $_REQUEST['login'])
+					      )
 				);  
 				app_log("Sending Admin Confirm new customer reminder",'debug',__FILE__,__LINE__);
 				$emailNotification->send($GLOBALS['_config']->site->support_email, 'no-reply@spectrosinstruments.com');
@@ -207,8 +209,7 @@
 				if ($role->error) app_log("Error sending admin confirm new customer reminder: ".$role->error);				
 
 				$page->isVerifedAccount = true;				
-			}
-			else {
+			} else {
 				app_log("Key not matched",'notice');
 				$page->addError("Invalid key");
 			}
