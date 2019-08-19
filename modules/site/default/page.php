@@ -3,18 +3,25 @@
 <div class="form_error"><?=$page->errorString()?></div>
 <?	} ?>
 <div class="container_narrow">
-	<span class="label">Module</span><span><?=$page->module?></span>
+	<span class="label">Module</span><span><?=$module?></span>
 </div>
 <div class="container_narrow">
-	<span class="label">View</span><span><?=$page->view?></span>
+	<span class="label">View</span><span><?=$view?></span>
 </div>
 <div class="container_narrow">
-	<span class="label">Index</span><span><?=$page->index?></span>
+	<span class="label">Index</span><span><?=$index?></span>
 </div>
 <div class="subheading">Metadata</div>
-<?	foreach ($metadata as $key=>$value) { ?>
-<div class="container">
-	<span class="label"><?=$key?></span>
-	<input type="text" name="page_<?=$key?>" value="<?=$value?>" />
-</div>
+<div class="table">
+	<div class="tableHead">
+		<div class="tableCell">Key</div>
+		<div class="tableCell">Value</div>
+	</div>
+<?	foreach ($page->metadata as $key=>$value) { ?>
+	<div class="tableRow">
+		<div class="tableCell"><?=$key?></div>
+		<div class="tableCell"><input type="text" name="metadata[<?=$key?>]" value="<?=$value?>" /></div>
+		<div class="tableCell"><input type="button" name="add[<?=$key?>]" value="<?=$value?>" /></div>
+	</div>
 <?	} ?>
+</div>

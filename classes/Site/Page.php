@@ -34,7 +34,7 @@
 				}
 			}
 			elseif (func_num_args() == 2 && gettype($args[0]) == "string" && gettype($args[1]) == "string") {
-				$this->get($args[0],$args[1]);
+				$this->get($args[0],$args[1],$args[2]);
 			}
 
 		}
@@ -155,7 +155,10 @@
 
 		public function details() {
 			$get_details_query = "
-				SELECT	*
+				SELECT	id,
+						module,
+						view,
+						`index` idx
 				FROM	page_pages
 				WHERE	id = ?
 			";
@@ -171,7 +174,7 @@
 			if (gettype($object) == 'object') {
 				$this->module = $object->module;
 				$this->view = $object->view;
-				$this->index = $object->index;
+				$this->index = $object->idx;
 			}
 			else {
 				# Just Let The Defaults Go
