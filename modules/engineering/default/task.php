@@ -146,7 +146,7 @@
                <select name="project_id" class="value input wide_100per">
                   <option value="">No Project</option>
                   <?	foreach($projects as $project) { ?>
-                  <option value="<?=$project->id?>"<? if ($project->id == $form['project_id']) print " selected"; ?>><?=$project->title?></option>
+                  <option value="<?=$project->id?>"<? if ($project->id == $form['project_id'] || $project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
                   <?	} ?>
                </select>
             </div>

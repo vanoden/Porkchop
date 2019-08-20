@@ -59,7 +59,9 @@
     $actionlist = new \Support\Request\Item\ActionList();
     $itemRequestActionIds = array();
     foreach ($items as $itemRequest) $itemRequestActionIds[] = $itemRequest->id;
-    $actions = $actionlist->find(array('searchAllItems'=> true, 'itemIds' => $itemRequestActionIds ));
+    $actions = array();
+    if (!empty($itemRequestActionIds)) $actions = $actionlist->find(array('searchAllItems'=> true, 'itemIds' => $itemRequestActionIds ));
+    
 
     // get the comments 
     $supportItemComments = array();

@@ -63,6 +63,7 @@
 				";
 				array_push($bind_parameters,$admin->id);
 			}
+			
 			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					$get_list_query .= "
@@ -80,12 +81,14 @@
 					$get_list_query .= ")";
 				}
 			}
+			
 			query_log($get_list_query);
 			$rs = $GLOBALS['_database']->Execute($get_list_query,$bind_parameters);
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ActionList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
 				$object = new \Support\Request\Item\Action($id);
@@ -94,6 +97,7 @@
 			}
 			return $objects;
 		}
+		
 		public function error() {
 			return $this->_error;
 		}

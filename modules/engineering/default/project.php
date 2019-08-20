@@ -61,7 +61,7 @@
       </div>
       <!--	END First Table -->
 	<div class="button-bar">
-		<input type="submit" name="btn_submit" class="button" value="Submit">
+		<input type="submit" name="btn_submit" class="button" value="Submit"/>
 	</div>
    </form>
    <!--	START First Table -->
@@ -92,6 +92,8 @@
       </div>
       <?	} ?>
    </div>
+   <br/><br/>
+   <a href="/_engineering/task?project_id=<?=$project->id?>" class="button">Add Task</a>
    <?	} ?>
    <!--	END First Table -->	
 </div>

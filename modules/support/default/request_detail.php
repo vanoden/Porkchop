@@ -145,17 +145,17 @@
         <?	if (count($actions) > 0) { ?>
         <div style="width: 756px;">
         <h2>Actions</h2>
-        <?	foreach ($actions as $action) {
+        <?php
+           if (!empty($actions)) {
+            foreach ($actions as $action) {
 		        if (isset($action->requestedBy)) {
 			        $requested_by = $action->requestedBy->full_name();
-		        }
-		        else {
+		        } else {
 			        $requested_by = "Unknown";
 		        }
 		        if (isset($action->assignedTo) && isset($action->assignedTo->id)) {
 			        $assigned_to = $action->assignedTo->full_name();
-		        }
-		        else {
+		        } else {
 			        $assigned_to = "Unassigned";
 		        }
 		        if ($action->type == "Note") {
@@ -191,8 +191,9 @@
             <tr><th colspan="5">Description</th></tr>
             <tr><td colspan="5"><?=$action->description?></td></tr>
         </table>
-        <?	} 
-        } 
+        <?	    }
+            } 
+        }
         ?>
         </div>
         <?	} ?>

@@ -2,6 +2,7 @@
 	namespace Engineering;
 
 	class Project {
+	
 		private $_error;
 		public $id;
 		public $code;
@@ -16,6 +17,7 @@
 		}
 
 		public function add($parameters = array()) {
+
 			if (isset($parameters['code']) && strlen($parameters['code'])) {
 				if (preg_match('/^[\w\-\.\_\s]+$/',$parameters['code'])) {
 					$code = $parameters['code'];
@@ -116,6 +118,7 @@
 		}
 
 		public function get($code) {
+		
 			$get_object_query = "
 				SELECT	id
 				FROM	engineering_projects
@@ -139,6 +142,7 @@
 		}
 
 		public function details() {
+
 			$get_object_query = "
 				SELECT	*
 				FROM	engineering_projects
@@ -163,10 +167,8 @@
 				$this->description = $object->description;
 				$this->manager = new \Register\Customer($object->manager_id);
 				$this->status = $object->status;
-
 				return $object;
-			}
-			else {
+			} else {
 				return null;
 			}
 		}
@@ -175,4 +177,3 @@
 			return $this->_error;
 		}
 	}
-?>

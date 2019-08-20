@@ -268,18 +268,19 @@
 <div style="width: 756px;">
 <h2>Actions</h2>
 <?	foreach ($actions as $action) {
+
 		if (isset($action->requestedBy)) {
 			$requested_by = $action->requestedBy->full_name();
-		}
-		else {
+		} else {
 			$requested_by = "Unknown";
 		}
+		
 		if (isset($action->assignedTo) && isset($action->assignedTo->id)) {
 			$assigned_to = $action->assignedTo->full_name();
-		}
-		else {
+		} else {
 			$assigned_to = "Unassigned";
 		}
+		
 		if ($action->type == "Note") {
 ?>
 <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">

@@ -4,19 +4,17 @@
 
 	$project = new \Engineering\Project();
 	
-	if ($_REQUEST['project_id']) {
-		$project = new \Engineering\Project($_REQUEST['project_id']);
-	}
+	if ($_REQUEST['project_id']) $project = new \Engineering\Project($_REQUEST['project_id']);
 	elseif (isset($_REQUEST['code'])) {
 		$project->get($_REQUEST['code']);
 		if ($project->error) $page->error = $project->error;
-	}
-	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+	} elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$project->get($code);
 	}
 
 	if (isset($_REQUEST['btn_submit'])) {
+	
 		$parameters = array();
 		if (isset($_REQUEST['title'])) {
 			$parameters['title'] = $_REQUEST['title'];
@@ -30,22 +28,18 @@
 				if ($project->update($parameters)) {
 					$page->success = "Updates applied";
 					app_log("Project updated",'debug',__FILE__,__LINE__);
-				}
-				else {
+				} else {
 					$page->error = "Error saving updates to project ".$project->id.": ".$project->error();
 				}
-			}
-			else {
+			} else {
 				if ($project->add($parameters)) {
 					$page->success = "Project Created";
 					app_log("Project created",'debug',__FILE__,__LINE__);
-				}
-				else {
+				} else {
 					$page->error = "Error creating project: ".$project->error();
 				}
 			}
-		}
-		else {
+		} else {
 			$page->error = "Title required";
 		}
 	}
@@ -57,8 +51,7 @@
 		$form['description'] = $project->description;
 		$form['status'] = $project->status;
 		$form['manager_id'] = $project->manager->id;
-	}
-	elseif ($page->error) {
+	} elseif ($page->error) {
 		$form['code'] = $_REQUEST['code'];
 		$form['title'] = $_REQUEST['title'];
 		$form['status'] = $_REQUEST['status'];
