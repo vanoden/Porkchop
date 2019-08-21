@@ -126,7 +126,7 @@
 		}
 		
 		// Email if Assignment changed
-		if ($tech_status) {
+		if ($task->id && $task->assignedTo() && $tech_status) {
 			$tech = $task->assignedTo();
 			$product = $task->product();
 			$project = $task->project();
