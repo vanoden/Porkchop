@@ -453,6 +453,11 @@
 			return $contact->notify($parameters);
 		}
 		public function notify($message) {
+			# Make Sure We have identifed a person
+			if (! preg_match('/^\d+$/',$this->id)) {
+				$this->error = "Customer not specified";
+				return false;
+			}
 			# Get Contact Info
 			$contactList = new \Register\ContactList();
 			$contacts = $contactList->find(array("user_id" => $this->id,"type" => "email","notify" => true));
@@ -477,6 +482,7 @@
 					return null;
 				}
 			}
+			return true;
 		}
 		public function delete() {
 			app_log("Changing person ".$this->id." to status DELETED",'debug',__FILE__,__LINE__);
