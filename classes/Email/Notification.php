@@ -96,4 +96,8 @@
 		    $this->errors[] = $errorMsg;
 		    app_log($errorMsg, 'error', $fileName, $lineNumber);		    
 		}
+
+		public function error() {
+			return join("<br>",$this->errors);
+		}
 	}
