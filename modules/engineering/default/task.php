@@ -4,7 +4,17 @@
         overflow:auto; 
         padding: 25px;
     }
+    .event-log-description {
+        background-color: white;
+    }
 </style>
+<script>
+    window.onload = function() {
+        $( "textarea:odd" ).css( "background-color", "#eeeff7" );
+        //$( "#date_added" ).datepicker();
+        //$( "#date_due" ).datepicker();
+    };
+</script>
 <div>
   <div class="breadcrumbs">
      <a class="breadcrumb" href="/_engineering/home">Engineering</a>
@@ -51,13 +61,13 @@
             </div>
             <div class="tableCell">
                <?	if (isset($task->id)) { ?>
-               <span class="value"><?=$form['date_added']?></span>
+                <span class="value"><?=$form['date_added']?></span>
                <?	} else { ?>
-               <input type="text" name="date_added" class="value input wide_100per" value="<?=$form['date_added']?>" />
+                <input id="date_added" type="text" name="date_added" class="value input wide_100per" value="<?=$form['date_added']?>" />
                <?	} ?>
             </div>
             <div class="tableCell">
-               <input type="text" name="date_due" class="value input wide_100per" value="<?=$form['date_due']?>" />
+               <input id="date_due" type="text" name="date_due" class="value input wide_100per" value="<?=$form['date_due']?>" />
             </div>
          </div>
       </div>
@@ -254,7 +264,7 @@
             <strong><?=$person->login?></strong>
          </div>
          <div class="tableCell eventLogEntry">
-            <?=str_replace(" ","&nbsp;",str_replace("\n","<br/>\n",$event->description)) ;?>
+         <textarea class="event-log-description" readonly="readonly" style="border: solid 1px #EFEFEF; border-radius: 5px; height: 50px;"><?=str_replace(" ","&nbsp;",str_replace("\n","<br/>\n",$event->description)) ;?></textarea>
          </div>
       </div>
       <?	} ?>

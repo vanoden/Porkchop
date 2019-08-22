@@ -47,12 +47,20 @@
 	// date picker with max date being current day
     window.onload = function() {
        $("#purchased").datepicker({ maxDate: '0' });
+       <?php if($page->serialError) { ?>
+           $("#serialNumber").css('background-color','#FFBCC3');
+       <?php
+       }?>
     }
 </script>
-
 <h1>Warranty Registration</h1>
-<span class="form_instruction">Welcome! Fill out all required information your device to our product warrenty.</span>
-
+<?php
+if (!$page->error) {
+?>
+    <span class="form_instruction">Welcome! Fill out all required information your device to our product warrenty.</span>
+<?php
+}
+?>
 <form name="register" action="/_support/register_product" method="POST" autocomplete="off">
 	<?php	if ($page->error) { ?>
 	    <div class="form_error"><?=$page->error?></div>

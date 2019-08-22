@@ -147,6 +147,7 @@ Link: http://".$GLOBALS['_config']->site->hostname."/_engineering/task/".$task->
 Description: ".$task->description
 				)
 			);
+			
 			$message->html(true);
 			$tech->notify($message);
 		}
