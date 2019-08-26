@@ -392,18 +392,18 @@
 		print formatOutput($response);
 	}
 	###################################################
-	### Get Details regarding Specified Product		###
+	### Get List of Site Navigation Menus			###
 	###################################################
-	function findNavigationItems() {
+	function findNavigationMenus() {
 		# Default StyleSheet
 		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
 		$response = new \HTTP\Response();
 
 		# Initiate Product Object
-		$_menu = new Menu();
+		$menulist = new \Navigation\MenuList();
 
 		# Find Matching Threads
-		$items = $_menu->find(
+		$menus = $menulist->find(
 			array (
 				'id'			=> $_REQUEST['id'],
 				'parent_id'		=> $_REQUEST['parent_id'],
@@ -411,7 +411,33 @@
 		);
 
 		# Error Handling
-		if ($_menu->error) error($_menu->error);
+		if ($menulist->error) error($menulist->error);
+		else{
+			$response->menu = $menus;
+			$response->success = 1;
+		}
+
+		# Send Response
+		api_log('content',$_REQUEST,$response);
+		print formatOutput($response);
+	}
+	###################################################
+	### Get Items from a Site Navigation Menu		###
+	###################################################
+	function findNavigationItems() {
+		# Default StyleSheet
+		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
+		$response = new \HTTP\Response();
+
+		# Get Menu
+		$menu = new \Navigation\Menu();
+		if (! $menu->get($_REQUEST['code'])) error("Menu not found");
+
+		# Find Matching Threads
+		$items = $menu->items();
+
+		# Error Handling
+		if ($menu->error) error($menu->error);
 		else{
 			$response->item = $items;
 			$response->success = 1;
