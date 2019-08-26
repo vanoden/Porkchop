@@ -75,7 +75,7 @@
 				array_push($msgs,"Task re-assigned to ".$new_tech->first_name." ".$new_tech->last_name);
 				$parameters['assigned_id'] = $_REQUEST['assigned_id'];
 				$tech_status = "Re-Assigned";
-			} elseif (isset($old_tech->id)) {
+			} else {
 				array_push($msgs,"Task assigned to ".$new_tech->first_name." ".$new_tech->last_name);
 				$parameters['assigned_id'] = $_REQUEST['assigned_id'];
 				$tech_status = "Assigned";
@@ -137,6 +137,7 @@
 			/************************************/
 			/* Email Internal Notifications		*/
 			/************************************/
+			app_log("Generating email notification from template");
 			// Get Objects
 			$product = $task->product();
 			$project = $task->project();
@@ -144,63 +145,84 @@
 
 			// Get Template File
 			$internal_notification = $GLOBALS['_config']->engineering->internal_notification;
-			if (! file_exists($internal_notification->template)) {
+			if (! isset($GLOBALS['_config']->engineering->internal_notification)) {
+				$page->error = "Notification template not configured";
+				app_log("config->engineering->internal_notification not set!",'error');
+			}
+			elseif (! file_exists($internal_notification->template)) {
 				$page->error = "Support Internal Email Template '".$internal_notification->template."' not found";
-				goto failed;
-			}
-			try {
-				$notice_content = file_get_contents($internal_notification->template);
-			}
-			catch (Exception $e) {
-				app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
-				$page->error = "Template load failed.  Try again later";
-				return;
-			}
-
-			// Create Template
-			$notice_template = new \Content\Template\Shell();
-			$notice_template->content($notice_content);
-			$notice_template->addParam('PRODUCT.TITLE',$product->title);
-			$notice_template->addParam('PROJECT.TITLE',$project->title);
-			$notice_template->addParam('TASK.PRIORITY',$task->priority);
-			$notice_template->addParam('TASK.TYPE',$task->type);
-			$notice_template->addParam('TASK.DATE_DUE',$task->date_due);
-			$notice_template->addParam('TASK.REQUESTED_BY',$requestedBy->full_name());
-			$notice_template->addParam('TASK.INTERNAL_LINK',"http://".$GLOBALS['_config']->site->hostname."/_engineering/task/".$task->code);
-			$notice_template->addParam('TASK.DESCRIPTION',$task->description);
-
-			$message = new \Email\Message();
-			$message->from($internal_notification->from);
-			$message->html(true);
-
-			if (isset($old_id)) {
-				// Existing Task
-				if ($tech_status) {
-					$tech = $task->assignedTo();
-					$notice_template->addParam('MESSAGE',"The following task was $tech_status to you");
-					$message->subject("[ENGINEERING] Task #".$task->id." assigned to you");
-					$tech->notify($message);
-				}
+				app_log("File '".$internal_notification->template."' not found! Set in config->engineering->internal_notification setting",'error');
 			}
 			else {
-				// New Task
-				if (isset($task->assignedTo()) && $task->assignedTo() > 0) {
-					// Assigned
-					$tech = $task->assignedTo();
-					$notice_template->addParam('MESSAGE',"The following new task was assigned to you");
-					$message->subject("[ENGINEERING] Task #".$task->id." assigned to you");
-					$tech->notify($message);
+				try {
+					$notice_content = file_get_contents($internal_notification->template);
+				}
+				catch (Exception $e) {
+					app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
+					$page->error = "Template load failed.  Try again later";
+					return;
+				}
+
+				// Create Template
+				app_log("Populating notification email");
+				if ($GLOBALS['_config']->site->https) $url = "https://".$GLOBALS['_config']->site->hostname."/_engineering/task/".$task->code;
+				else "http://".$GLOBALS['_config']->site->hostname."/_engineering/task/".$task->code;
+				if ($project->id > 0) $project_title = $project->title;
+				else $project_title = "None Selected";
+				if ($product->id > 0) $product_title = $product->title;
+				else $product_title = "None Selected";
+				$notice_template = new \Content\Template\Shell();
+				$notice_template->content($notice_content);
+				$notice_template->addParam('TASK.TITLE',$task->title);
+				$notice_template->addParam('PRODUCT.TITLE',$product_title);
+				$notice_template->addParam('PROJECT.TITLE',$project_title);
+				$notice_template->addParam('TASK.PRIORITY',$task->priority);
+				$notice_template->addParam('TASK.TYPE',$task->type);
+				$notice_template->addParam('TASK.DATE_DUE',$task->date_due);
+				$notice_template->addParam('TASK.REQUESTED_BY',$requestedBy->full_name());
+				$notice_template->addParam('TASK.INTERNAL_LINK',$url);
+				$notice_template->addParam('TASK.DESCRIPTION',$task->description);
+
+				$message = new \Email\Message();
+				$message->from($internal_notification->from);
+				$message->html(true);
+	
+				if (isset($old_id)) {
+					// Existing Task
+					if ($tech_status) {
+						$tech = $task->assignedTo();
+						app_log("Notifying tech ".$tech->login." of updated assignment");
+						$notice_template->addParam('MESSAGE',"The following task was $tech_status to you");
+						$message->subject("[ENGINEERING] Task #".$task->id." assigned to you");
+						$message->body($notice_template->output());
+						$tech->notify($message);
+					}
 				}
 				else {
-					// Not Assigned
-					$role = \Register\Role();
-					if ($role->get('service tech')) {
-						$notice_template->addParam('MESSAGE',"The following new task is not assigned");
+					// New Task
+					$tech = $task->assignedTo();
+					if ($tech->id > 0) {
+						// Assigned
+						app_log("Notifying tech ".$tech->login." of new assignment");
+						$notice_template->addParam('MESSAGE',"The following new task was assigned to you");
 						$message->subject("[ENGINEERING] Task #".$task->id." assigned to you");
-						$role->notify($message);
+						$message->body($notice_template->output());
+						$tech->notify($message);
 					}
 					else {
-						app_log("service tech role doesn't exist so no notifications were sent",'notice');
+						// Not Assigned
+						$role = new \Register\Role();
+						if ($role->get('engineering manager')) {
+							app_log("Notifying ".$role->name." of new, unassigned task");
+							$notice_template->addParam('MESSAGE',"The following new task is not assigned");
+							$message->subject("[ENGINEERING] Task #".$task->id." was created");
+							$message->body($notice_template->output());
+							$role->notify($message);
+						}
+						else {
+							$page->addError("engineering manager role doesn't exist so no notifications were sent");
+							app_log("engineering manager role doesn't exist so no notifications were sent",'notice');
+						}
 					}
 				}
 			}
@@ -253,6 +275,7 @@
 	$projects = $projectlist->find();
 	if ($projectlist->error()) $page->addError($projectlist->error());
 	
+	$form = array();
 	if ($task->id) {
 		$task->details();
 		$form['code'] = $task->code;
@@ -294,5 +317,19 @@
 		$form['release_id'] = $_REQUEST['release_id'];
 		$form['prerequisite_id'] = $_REQUEST['prerequisite_id'];
 	} else {
+		$form[code] = uniqid();
+		$form[product_id] = '';
+		$form[date_added] = 'now';
+		$form[date_due] = '';
+		$form[estimate] = 0;
+		$form[type] = '';
+		$form[status] = '';
+		$form[priority] = '';
+		$form[assigned_id] = '';
+		$form[requested_id] = $GLOBALS['_SESSION_']->customer->id;
+		$form[description] = '';
+		$form[project_id] = '';
+		$form[prerequisite_id] = '';
+		$form[release_id] = '';
 		$task->date_added = 'now';
 	}
