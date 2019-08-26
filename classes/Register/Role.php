@@ -210,5 +210,26 @@
 			$privilegeList = new PrivilegeList();
 			return $privilegeList->find(array('role_id' => $this->id));
 		}
+		public function has_privilege($name) {
+			$get_privilege_query = "
+				SELECT	id
+				FROM	register_role_privileges
+				WHERE	role_id = ?
+				AND		privilege = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_privilege_query,array($this->id,$name));
+
+			if (! $rs) {
+				$this->error = $GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			list($id) = $rs->FetchRow();
+			if ($id > 0) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
 	}
 ?>
