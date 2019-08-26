@@ -61,7 +61,7 @@
 
 				# In Case Cache Corrupted
 				if ($customer->id) {
-					app_log("Customer ".$this->login." [".$this->id."] found in cache",'debug',__FILE__,__LINE__);
+					app_log("Customer ".$this->login." [".$this->id."] found in cache",'trace',__FILE__,__LINE__);
 					return $customer;
 				}
 				else {
