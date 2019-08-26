@@ -371,6 +371,16 @@
 				return false;
 			}
 		}
+
+		public function has_privilege($privilege_name) {
+			$roles = $this->roles();
+			foreach ($roles as $role) {
+				if ($role->has_privilege($privilege_name)) {
+					return true;
+				}
+			}
+			return false;
+		}
 		
 		// Get all users that have been granted a Role
 		public function have_role($id) {
