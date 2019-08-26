@@ -30,8 +30,6 @@
 
 		private function _process($message = null) {
 			$module_pattern = '/\$\{([\w\-\.\_\-]+)\}/is';
-			if (! isset($message) && isset($this->_content))
-				$message = $this->_content;
 			
 			while (preg_match($module_pattern,$message,$matched)) {
 				$search = $matched[0];
