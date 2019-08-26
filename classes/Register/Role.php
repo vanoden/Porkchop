@@ -83,10 +83,14 @@
 			);
 			if (! $rs) {
 				$this->error = "SQL Error in RegisterRole::get: ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				return false;
 			}
 			list($this->id) = $rs->FetchRow();
-			return $this->details($this->id);
+			if ($this->id < 1) {
+				$this->error = "Role not found";
+				return false;
+			}
+			return $this->details();
 		}
 		public function members() {
 			$get_members_query = "
