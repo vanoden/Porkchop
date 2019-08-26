@@ -184,15 +184,9 @@
                </select>
             </div>
          </div>
-	<?php
-	if (!$page->success) {
-	?>
        <div class="tableRow button-bar">
         <input type="submit" name="btn_submit" class="button" value="Submit">
        </div>
-	<?php
-	}
-	?>
       </div>
       <!-- End Fourth Row -->
       <!-- Start Fifth Row -->
