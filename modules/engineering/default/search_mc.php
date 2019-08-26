@@ -13,7 +13,7 @@
 	
     // get any projects matched
     $projectlist = new \Engineering\ProjectList();
-    $projects = $projectlist->find(array('searchTerm'=>$searchTerm));
+    $projects = $projectlist->search(array('searchTerm'=>$searchTerm));
     if ($projectlist->error()) $page->addError($projectlist->error());
 	
     // get any tasks matched
