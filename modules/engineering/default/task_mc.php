@@ -55,26 +55,32 @@
 			array_push($msgs,"Prerequisite updated");
 			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_id'];
 		}
+
+		# Store Old Values to Recognize Change
+		$old_id = $task->id;
 		$old_release = $task->release();
+		$old_tech = $task->assignedTo();
+		$old_product = $task->product();
+		$old_project = $task->project();
+
 		if (isset($_REQUEST['release_id']) && $_REQUEST['release_id'] > 0 && $old_release->id != $_REQUEST['release_id']) {
 			$new_release = new \Engineering\Release($_REQUEST['release_id']);
 			array_push($msgs,"Release changed from ".$old_release->title." to ".$new_release->title);
 			$parameters['release_id'] = $_REQUEST['release_id'];
 		}
-		$old_tech = $task->assignedTo();
+
 		if (isset($_REQUEST['assigned_id']) && $old_tech->id != $_REQUEST['assigned_id']) {
 			$new_tech = new \Register\Admin($_REQUEST['assigned_id']);
 			if (isset($old_tech->id) && $old_tech->id != $new_tech->id) {
 				array_push($msgs,"Task re-assigned to ".$new_tech->first_name." ".$new_tech->last_name);
 				$parameters['assigned_id'] = $_REQUEST['assigned_id'];
 				$tech_status = "Re-Assigned";
-			} else {
+			} elseif (isset($old_tech->id)) {
 				array_push($msgs,"Task assigned to ".$new_tech->first_name." ".$new_tech->last_name);
 				$parameters['assigned_id'] = $_REQUEST['assigned_id'];
 				$tech_status = "Assigned";
 			};
 		}
-		$old_product = $task->product();
 		if ($old_product->id != $_REQUEST['product_id']) {
 			$new_product = new \Engineering\Product($_REQUEST['product_id']);
 			array_push($msgs,"Product changed from ".$old_product->title." to ".$new_product->title);
@@ -84,14 +90,15 @@
 			array_push($msgs,"Due Date changed from ".$task->date_due." to ".$_REQUEST['date_due']);
 			$parameters['date_due'] = $_REQUEST['date_due'];
 		}
-		$old_project = $task->project();
 		if ($old_project->id != $_REQUEST['project_id']) {
 			$new_project = new \Engineering\Project($_REQUEST['project_id']);
 			array_push($msgs,"Project changed from '".$old_project->title."' to '".$new_project->title."'");
 			$parameters['project_id'] = $_REQUEST['project_id'];
 		}
+
 		app_log("Submitted task form",'debug',__FILE__,__LINE__);
 		if ($task->id) {
+			# Task Exists, Update
 			if ($task->update($parameters)) {
 				$page->success = "Updates applied";
 				app_log("Task updated, status now ".$parameters['status'],'debug',__FILE__,__LINE__);
@@ -110,6 +117,7 @@
 			}
 		}
 		else {
+			# Create New Task
 			if ($task->add($parameters)) {
 				$page->success = "Task Created";
 				$event = new \Engineering\Event();
@@ -124,31 +132,78 @@
 				$page->addError("Error creating task: ".$task->error());
 			}
 		}
-		
-		// Email if Assignment changed
-		if ($task->id && $task->assignedTo() && $tech_status) {
-			$tech = $task->assignedTo();
+
+		if (is_numeric($task->id) && $task->id > 0) {
+			/************************************/
+			/* Email Internal Notifications		*/
+			/************************************/
+			// Get Objects
 			$product = $task->product();
 			$project = $task->project();
 			$requestedBy = $task->requestedBy();
-			$message = new \Email\Message(
-				array(
-					'from'	=> 'service@spectrosinstruments.com',
-					'subject'	=> "[ENGINEERING] Task #".$task->id." assigned to you",
-					'body'		=> "The following task was $tech_status to you:
-Task Title: ".$task->title."<br>
-Product: ".$product->title."<br>
-Project: ".$project->title."<br>
-Priority: ".$task->priority."<br>
-Type: ".$task->type."<br>
-Due: ".$task->date_due."<br>
-Requested By: ".$requestedBy->full_name()."<br>
-Link: http://".$GLOBALS['_config']->site->hostname."/_engineering/task/".$task->code."<br>
-Description: ".$task->description
-				)
-			);
+
+			// Get Template File
+			$internal_notification = $GLOBALS['_config']->engineering->internal_notification;
+			if (! file_exists($internal_notification->template)) {
+				$page->error = "Support Internal Email Template '".$internal_notification->template."' not found";
+				goto failed;
+			}
+			try {
+				$notice_content = file_get_contents($internal_notification->template);
+			}
+			catch (Exception $e) {
+				app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
+				$page->error = "Template load failed.  Try again later";
+				return;
+			}
+
+			// Create Template
+			$notice_template = new \Content\Template\Shell();
+			$notice_template->content($notice_content);
+			$notice_template->addParam('PRODUCT.TITLE',$product->title);
+			$notice_template->addParam('PROJECT.TITLE',$project->title);
+			$notice_template->addParam('TASK.PRIORITY',$task->priority);
+			$notice_template->addParam('TASK.TYPE',$task->type);
+			$notice_template->addParam('TASK.DATE_DUE',$task->date_due);
+			$notice_template->addParam('TASK.REQUESTED_BY',$requestedBy->full_name());
+			$notice_template->addParam('TASK.INTERNAL_LINK',"http://".$GLOBALS['_config']->site->hostname."/_engineering/task/".$task->code);
+			$notice_template->addParam('TASK.DESCRIPTION',$task->description);
+
+			$message = new \Email\Message();
+			$message->from($internal_notification->from);
 			$message->html(true);
-			$tech->notify($message);
+
+			if (isset($old_id)) {
+				// Existing Task
+				if ($tech_status) {
+					$tech = $task->assignedTo();
+					$notice_template->addParam('MESSAGE',"The following task was $tech_status to you");
+					$message->subject("[ENGINEERING] Task #".$task->id." assigned to you");
+					$tech->notify($message);
+				}
+			}
+			else {
+				// New Task
+				if (isset($task->assignedTo()) && $task->assignedTo() > 0) {
+					// Assigned
+					$tech = $task->assignedTo();
+					$notice_template->addParam('MESSAGE',"The following new task was assigned to you");
+					$message->subject("[ENGINEERING] Task #".$task->id." assigned to you");
+					$tech->notify($message);
+				}
+				else {
+					// Not Assigned
+					$role = \Register\Role();
+					if ($role->get('service tech')) {
+						$notice_template->addParam('MESSAGE',"The following new task is not assigned");
+						$message->subject("[ENGINEERING] Task #".$task->id." assigned to you");
+						$role->notify($message);
+					}
+					else {
+						app_log("service tech role doesn't exist so no notifications were sent",'notice');
+					}
+				}
+			}
 		}
 
 		if (isset($_REQUEST['notes']) && strlen($_REQUEST['notes'])) {
