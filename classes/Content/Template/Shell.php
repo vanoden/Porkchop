@@ -8,6 +8,17 @@
 		
 		public function __construct($path = null) {}
 
+		public function load($path) {
+			if (file_exists($path)) {
+				if ($this->_content = file_get_contents($path)) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+		}
+
 		public function content($content = null) {
 			if (isset($content)) $this->_content = $content;
 			return $this->_content;
@@ -17,8 +28,11 @@
 			$this->_params[$key] = $value;
 		}
 
-		private function _process($message) {
+		private function _process($message = null) {
 			$module_pattern = '/\$\{([\w\-\.\_\-]+)\}/is';
+			if (! isset($message) && isset($this->_content))
+				$message = $this->_content;
+			
 			while (preg_match($module_pattern,$message,$matched)) {
 				$search = $matched[0];
 				$parse_message = "Replaced $search";
