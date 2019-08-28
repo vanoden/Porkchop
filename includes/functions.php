@@ -177,78 +177,7 @@
 			$line = $caller['line'];
 		}
 
-		# PHP Syslog Levels (also for level validation)
-		$syslog_xref = array(
-			"emergency" => LOG_EMERG,
-			"alert"		=> LOG_ALERT,
-			"critical"	=> LOG_CRIT,
-			"error"		=> LOG_ERR,
-			"warning"	=> LOG_WARNING,
-			"notice"	=> LOG_NOTICE,
-			"info"		=> LOG_INFO,
-			"debug"		=> LOG_DEBUG,
-			"trace"		=> LOG_DEBUG
-		);
-
-		# Make Sure Severity Level is Valid
-		$level = strtolower($level);
-		if (! array_key_exists($level,$syslog_xref)) $level = "info";
-
-		# Filter on log level
-		if     (APPLICATION_LOG_LEVEL == "error"   && in_array($level,array('trace','debug','info','notice','warning'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "warning" && in_array($level,array('trace','debug','info','notice'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "notice"  && in_array($level,array('trace','debug','info'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "info"    && in_array($level,array('trace','debug'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "debug"   && in_array($level,array('trace'))) return null;
-
-		# Replace Carriage Returns
-		$message = preg_replace('/\r*\n/',"\n",$message);
-
-		# Prepare Values for String
-		$date = date('Y/m/d H:i:s');
-		$path = preg_replace('#^'.BASE.'/#','',$path);
-		$pid = getMyPid();
-
-		if ((array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'module'))) $module = $GLOBALS['_page']->module;
-		else $module = '-';
-		if ((array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'view'))) $view = $GLOBALS['_page']->view;
-		else $view = '-';
-		if (array_key_exists('_SESSION_',$GLOBALS)) {
-			if (property_exists($GLOBALS['_SESSION_'],'id')) $session_id = $GLOBALS['_SESSION_']->id;
-			else $session_id = '-';
-			if (isset($GLOBALS['_SESSION_']->customer)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
-			else $customer_id = '-';
-		}
-		else {
-			$session_id = '-';
-			$customer_id = '-';
-		}
-
-		# Build String
-		$string = "$date [$pid] [$level] $module::$view $path:$line $session_id $customer_id $message\n";
-
-		# Send to appropriate log
-		if (preg_match('/^syslog$/i',APPLICATION_LOG)) {
-			syslog($syslog_xref[$level],$string);
-		}
-		elseif (is_dir(APPLICATION_LOG)) {
-			$log = fopen(APPLICATION_LOG."/application_log",'a');
-			fwrite($log,$string);
-			fclose($log);
-		}
-		elseif(APPLICATION_LOG) {
-			$log = fopen(APPLICATION_LOG,'a');
-			if (! $log) {
-				error_log("Cannot access application log: ".E_WARNING);
-			}
-			else {
-				fwrite($log,$string);
-				fclose($log);
-			}
-		}
-		else {
-			error_log($message);
-		}
+		$GLOBALS['logger']->writeln($message,$level,$path,$line);
 	}
 
 	function query_log($query,$params = array(),$path = 'unknown',$line = 'unknown') {

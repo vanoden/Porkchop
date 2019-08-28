@@ -42,6 +42,12 @@
 	$_debug_queries = array();
 
 	###################################################
+	### Connect to Logger							###
+	###################################################
+	$logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG));
+	$logger->connect();
+
+	###################################################
 	### Connect to Database							###
 	###################################################
 	# Connect to Database
@@ -56,10 +62,10 @@
 	if ($_database->ErrorMsg()) {
 		print "Error connecting to database:<br>\n";
 		print $_database->ErrorMsg();
-		app_log("Error connecting to database: ".$_database->ErrorMsg(),'error',__FILE__,__LINE__);
+		$logger->write("Error connecting to database: ".$_database->ErrorMsg(),'error');
 		exit;
 	}
-	app_log("Database Initiated",'trace',__FILE__,__LINE__);
+	$logger->write("Database Initiated",'trace');
 
 	###################################################
 	### Connect to Memcache if so configured		###
@@ -68,14 +74,14 @@
 	if ($_CACHE_->error) {
 		test_fail('Unable to initiate Cache client: '.$_CACHE_->error);
 	}
-	app_log("Cache Initiated",'trace',__FILE__,__LINE__);
+	$logger->write("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
 	### Initialize Session							###
 	###################################################
 	$_SESSION_ = new \Site\Session();
 	$_SESSION_->start();
-	app_log("Session initiated",'trace',__FILE__,__LINE__);
+	$logger->write("Session initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
 	### Parse Request								###
@@ -100,7 +106,7 @@
 	# Create Session
 	$_SESSION_->start();
 	if ($_SESSION_->error) {
-		app_log($_SESSION_->error,'error',__FILE__,__LINE__);
+		$logger->write($_SESSION_->error,'error',__FILE__,__LINE__);
 		exit;
 	}
 
@@ -111,14 +117,14 @@
 	}
 
 	# Access Logging in Application Log
-	app_log("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."'",'info',__FILE__,__LINE__);
+	$logger->write("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."'",'info',__FILE__,__LINE__);
 
 	# Load Page Information
 	$_page = new \Site\Page();
 	$_page->get($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
 	if ($_page->error) {
 		print "Error: ".$_page->error;
-		app_log("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
+		$logger->write("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
 		exit;
 	}
 	if (! $_page->id) {
