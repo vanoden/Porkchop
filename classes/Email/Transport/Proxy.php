@@ -36,7 +36,7 @@
 			$request->addParam('subject',$email->subject());
 			$request->addParam('body',urlencode($email->body()));
 			if ($email->html()) $request->addParam('html','true');
-			app_log("Email request: '".$request->serialize()."'",'trace',__FILE__,__LINE__);
+			app_log("Email request: '".$request->serialize()."'",'trace');
 			$client = new \HTTP\Client();
 			$client->connect($this->hostname());
 			if ($client->error()) {
@@ -48,12 +48,17 @@
 				$this->_error = "Cannot send request: ".$client->error();
 				return false;
 			}
-			app_log("Email response: ".print_r($response,true),'trace',__FILE__,__LINE__);
+			app_log("Email response: ".print_r($response,true),'trace');
 			if ($response->code() == 200) {
 				$content = $response->content();
+				app_log($content);
 				if (preg_match('/^ERROR\:\s(.*)$/',$content,$matches)) {
 					$this->_error = $matches[1];
-					return 0;
+					return false;
+				}
+				elseif (preg_match('/Mailer\sError/',$content)) {
+					$this->_error = $content;
+					return false;
 				}
 				$this->_result = "Sent";
 				return true;

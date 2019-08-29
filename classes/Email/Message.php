@@ -10,17 +10,25 @@
 		private $_attachments = array();
 		private $_html = false;
 
-		public function __construct($parameters = array()) {
+		public function __construct($argument = null) {
 			$schema = new Schema();
 			if ($schema->error) {
 				$this->_error = $schema->error;
 				return null;
 			}
 
-			if (isset($parameters['to'])) $this->add_recipients($parameters['recipients']);
-			if (isset($parameters['from'])) $this->from($parameters['from']);
-			if (isset($parameters['subject'])) $this->subject($parameters['subject']);
-			if (isset($parameters['body'])) $this->body($parameters['body']);
+			if (gettype($argument) == 'array') {
+				if (isset($argument['to'])) $this->add_recipients($argument['recipients']);
+				if (isset($argument['from'])) $this->from($argument['from']);
+				if (isset($argument['subject'])) $this->subject($argument['subject']);
+				if (isset($argument['body'])) $this->body($argument['body']);
+			}
+			elseif (gettype($argument) == 'object') {
+				if (isset($argument->to)) $this->add_recipients($argument->to);
+				if (isset($argument->from)) $this->from($argument->from);
+				if (isset($argument->subject)) $this->subject($argument->subject);
+				if (isset($argument->body)) $this->body($argument->body);
+			}
 		}
 
 		public function html($state = null) {

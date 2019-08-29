@@ -148,7 +148,7 @@
 			if (! $GLOBALS['_config']->no_password) {
 				$password_length = strlen($parameters['password']);
 
-				if ($this->password_strength($parameters['password']) < $_GLOBALS['_config']->register->minimum_password_strength) {
+				if ($this->password_strength($parameters['password']) < $GLOBALS['_config']->register->minimum_password_strength) {
 					$this->error = "Password too weak.";
 					return null;
 				}
@@ -464,22 +464,31 @@
 			if ($contactList->error) {
 				app_log("Error loading contacts: ".$contactList->error,'error',__FILE__,__LINE__);
 				$this->error = "Error loading contacts";
-				return null;
+				return false;
 			}
 			foreach ($contacts as $contact) {
-				app_log("Sending notifications to ".$contact->value,'notice',__FILE__,__LINE__);
+				app_log("Sending notifications to ".$contact->value,'notice');
 				$message->to($contact->value);
 				$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
 				if (\Email\Transport::error()) {
 					$this->error = "Error initializing email transport: ".\Email\Transport::error();
-					return null;
+					app_log("Message to ".$contact->value." failed: ".$this->error,'error');
+					return false;
 				}
 				$transport->hostname($GLOBALS['_config']->email->hostname);
 				$transport->token($GLOBALS['_config']->email->token);
-				$transport->deliver($message);
-				if ($transport->error) {
-					$this->error = "Error sending notification: ".$transport->error;
-					return null;
+				if ($transport->deliver($message)) {
+					app_log("Message to ".$contact->value." successful");
+				}
+				elseif ($transport->error()) {
+					$this->error = "Error sending notification: ".$transport->error();
+					app_log("Message to ".$contact->value." failed: ".$this->error,'error');
+					return false;
+				}
+				else {
+					$this->error = "Unhandled Error sending notification";
+					app_log("Message to ".$contact->value." failed",'error');
+					return false;
 				}
 			}
 			return true;

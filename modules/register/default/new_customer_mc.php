@@ -47,7 +47,7 @@
 		
 			// Initialize Customer Object
 			$customer = new \Register\Customer();
-			if ($customer->password_strength($_REQUEST['password']) < $_GLOBALS['_config']->register->minimum_password_strength) {
+			if ($customer->password_strength($_REQUEST['password']) < $GLOBALS['_config']->register->minimum_password_strength) {
 				$page->addError("Password not strong enough");
 			} elseif ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 				$page->addError("Passwords do not match");
@@ -143,19 +143,31 @@
 						}
 						
 						// create the verify account email
-						$emailNotification = new \Email\Notification(
-						array('subject' => 'Please verify your account',
-							  'template' => TEMPLATES . '/registration/verify_email.html',
-							  'templateVars' => array('VERIFYING.URL' => 'https://'. $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $_REQUEST['login'])
-							  )
+						$verify_url = $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $_REQUEST['login'];
+						if ($_config->site->https) $verify_url = "https://$verify_url";
+						else $verify_url = "http://$verify_url";
+						$template = new \Content\Template\Shell(
+							array(
+								'path'	=> $_config->register->verify_email->template,
+								'parameters'	=> array(
+									'VERIFYING.URL' => $verify_url
+								)
+							)
 						);
-						$isEmailSent = $emailNotification->send($_REQUEST['email_address'], $GLOBALS['_config']->site->support_email);
-						if (!$isEmailSent) {
-							$page->addError("Confirmation email could not be sent, please contact us at ".$GLOBALS['_config']->site->support_email." to complete your registration, thank you!");
-							app_log("Error sending confirmation email: ".$emailNotification->error(),'error');
-						} else {
-							// show thank you page
-							header("Location: /_register/thank_you");
+						if ($template->error()) {
+							$page->addError("Error generating verification email, please contact us at ".$_config->site->support_email." to complete your registration, thank you!");
+						}
+						else {
+							$message = new \Email\Message($_config->register->verify_email);
+							$message->html(true);
+							$message->body($template->output());
+							if (! $customer->notify($message)) {
+								$page->addError("Confirmation email could not be sent, please contact us at ".$_config->site->support_email." to complete your registration, thank you!");
+								app_log("Error sending confirmation email: ".$customer->error(),'error');
+							} else {
+								// show thank you page
+								header("Location: /_register/thank_you");
+							}
 						}
 					}
 				}
@@ -181,28 +193,28 @@
 				$queuedCustomer = new \Register\Queue(); 
 				$queuedCustomer->getByQueuedLogin($customer->id);
 				$queuedCustomer->update (array('status'=>'PENDING'));
-				
+
 				// create the notify support reminder email for the new verified customer
 				app_log("Generating notification email");
-				$notificationSubject = 'New verified customer - pending organizational approval';
-				$emailNotification = new \Email\Notification(
-				    array('subject' => $notificationSubject,
-					      'template' => TEMPLATES . '/registration/admin_notification.html', 
-					      'templateVars' => array('ADMIN.URL' => 'https://'. $_config->site->hostname . '/_register/pending_customers', 'ADMIN.USERDETAILS' => $_REQUEST['login'])
-					      )
-				);  
-				app_log("Sending Admin Confirm new customer reminder",'debug',__FILE__,__LINE__);
-				$emailNotification->send($GLOBALS['_config']->site->support_email, 'no-reply@spectrosinstruments.com');
-				
-				// alert 'register manager' users of the new customer
-				$message = new \Email\Message(
+				$url = $_config->site->hostname . '/_register/pending_customers';
+				if ($_config->site->https) $url = "https://$url";
+				else $url = "http://$url";
+
+				$template = new \Content\Template\Shell(
 					array(
-						'from'	=> 'service@spectrosinstruments.com',
-						'subject'	=> $notificationSubject,
-						'body'		=> $emailNotification->getMessageBody()
+						'path'	=> $_config->registration_notification->template,
+						'parameters'	=> array(
+							'ADMIN.URL' 		=> $url,
+							'ADMIN.USERDETAILS'	=> $_REQUEST['login']
+						)
 					)
 				);
+
+				$message = new \Email\Message($GLOBALS['_config']->register->registration_notification);
 				$message->html(true);
+				$message->body($template->output());
+
+				app_log("Sending Admin Confirm new customer reminder",'debug');
 				$role = new \Register\Role();
 				$role->get('register manager');
 				$role->notify($message);

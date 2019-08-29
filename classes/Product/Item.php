@@ -179,12 +179,12 @@
             }
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
-			app_log("Created Product ".$this->id,'notice',__FILE__,__LINE__);
+			app_log("Created Product ".$this->id,'notice');
 			return $this->update($parameters);
 		}
 
 		public function details() {
-			app_log("Product::Item::details()",'trace',__FILE__,__LINE__);
+			app_log("Product::Item::details()",'trace');
 
 			$cache_key = "product[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -206,7 +206,7 @@
 
 				# In Case Cache Corrupted
 				if ($product->id) {
-					app_log("Product '".$this->name."' [".$this->id."] found in cache",'debug',__FILE__,__LINE__);
+					app_log("Product '".$this->name."' [".$this->id."] found in cache",'trace');
 					return $product;
 				}
 				else {
