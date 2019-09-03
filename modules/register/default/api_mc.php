@@ -670,8 +670,9 @@
 
 		# Build Query Parameters
 		$parameters = array();
-		if ($_REQUEST["code"]) $parameters["code"] = $_REQUEST["code"];
-		if ($_REQUEST["name"]) $parameters["name"] = $_REQUEST["name"];
+		if (!empty($_REQUEST["code"])) $parameters["code"] = $_REQUEST["code"];
+		if (!empty($_REQUEST["name"])) $parameters["name"] = $_REQUEST["name"];
+		if (!empty($_REQUEST["status"])) $parameters["status"] = $_REQUEST["status"];
 
 		$response = new stdClass();
 		$response->request->parameter = $parameters;
@@ -683,6 +684,7 @@
 		if ($organizationList->error) error($organizationList->error);
 
 		$response->success = 1;
+		$response->count = count($organizations);
 		$response->organization = $organizations;
 
 		# Send Response
