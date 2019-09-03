@@ -6,7 +6,6 @@
 		private $_count;
 
 		public function find($parameters = array()) {
-print_r("Parameters: ");
 			$find_objects_query = "
 				SELECT	id
 				FROM	engineering_projects
@@ -14,8 +13,6 @@ print_r("Parameters: ");
 			";
 
 			$bind_params = array();
-
-print_r($parameters);
 
 			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
