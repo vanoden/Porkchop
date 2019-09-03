@@ -776,12 +776,31 @@
 		}
 
 		public function addError($error) {
+            $trace = debug_backtrace();
+            $caller = $trace[0];
+            $file = $caller['file'];
+            $line = $caller['line'];
+			app_log($error,'error',$file,$line);
 			array_push($this->_errors,$error);		
 		}
 
 		public function errorString($delimiter = "<br>\n") {
-			if (count($this->_errors)) return join($delimiter,$this->_errors);
-			return $this->error;
+			if (isset($this->error)) {
+				array_push($this->_errors,$this->error);
+			}
+			$error_string = '';
+			foreach ($this->_errors as $error) {
+				if (strlen($error_string)) {
+					$error_string .= $delimiter;
+				}
+				if (preg_match('/SQL\sError/',$error)) {
+					$error_string .= "Internal site error";
+				}
+				else {
+					$error_string .= $error;
+				}
+			}
+			return $error_string;
 		}
 
 		public function errors() {
