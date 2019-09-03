@@ -29,6 +29,9 @@
 			elseif (strtolower($parameters['type']) == "errorlog") {
 				return new \Site\Logger\Errorlog($parameters);
 			}
+			elseif (strtolower($parameters['type']) == "screen") {
+				return new \Site\Logger\Screen($parameters);
+			}
 			elseif (isset($parameters['path']) && ! empty($parameters['path'])) {
 				return new \Site\Logger\File($parameters);
 			}

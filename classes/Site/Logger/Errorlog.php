@@ -16,7 +16,7 @@
 
 			list($file,$line) = $this->caller($file,$line);
 
-			error_log($this->posix_level($level), $this->formatted($message,$level,$file,$line));
+			error_log($this->formatted($message,$level,$file,$line));
 			return 1;
 		}
 
