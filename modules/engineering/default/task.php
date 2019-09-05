@@ -5,6 +5,9 @@
         padding: 25px;
     }
     .event-log-description {
+        border: solid 1px #EFEFEF; 
+        border-radius: 5px; 
+        height: 50px;
         background-color: white;
     }
 </style>
@@ -258,7 +261,7 @@
             <strong><?=$person->login?></strong>
          </div>
          <div class="tableCell eventLogEntry">
-         <textarea class="event-log-description" readonly="readonly" style="border: solid 1px #EFEFEF; border-radius: 5px; height: 50px;"><?=str_replace(" ","&nbsp;",str_replace("\n","<br/>\n",$event->description)) ;?></textarea>
+         <textarea class="event-log-description" readonly="readonly"><?=str_replace(" ","&nbsp;",str_replace("\n","<br/>\n",$event->description)) ;?></textarea>
          </div>
       </div>
       <?	} ?>

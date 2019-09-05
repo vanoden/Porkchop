@@ -24,13 +24,16 @@
 	### <http://www.gnu.org/licenses/>.								###
 	###################################################################
 
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
 
 	###################################################
 	### Load Dependencies							###
 	###################################################
 	# Load Config
 	require '../config/config.php';
-
+	
 	# General Utilities
 	require INCLUDES.'/functions.php';
 	spl_autoload_register('load_class');
@@ -71,9 +74,7 @@
 	### Connect to Memcache if so configured		###
 	###################################################
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
-	if ($_CACHE_->error) {
-		test_fail('Unable to initiate Cache client: '.$_CACHE_->error);
-	}
+	if ($_CACHE_->error) test_fail('Unable to initiate Cache client: '.$_CACHE_->error);
 	$logger->write("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
@@ -112,9 +113,7 @@
 
 	# Create Hit Record
 	$_SESSION_->hit();
-	if ($_SESSION_->message) {
-	    $page_message = $_SESSION_->message;
-	}
+	if ($_SESSION_->message) $page_message = $_SESSION_->message;
 
 	# Access Logging in Application Log
 	$logger->write("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."'",'info',__FILE__,__LINE__);

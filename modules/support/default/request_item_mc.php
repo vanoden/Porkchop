@@ -1,16 +1,15 @@
 <?php
+    global $_config;
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
-
+	
 	if ($_REQUEST['item_id']) {
 		$item = new \Support\Request\Item($_REQUEST['item_id']);
-	}
-	elseif ($_REQUEST['request_id'] && $_REQUEST['line']) {
+	} elseif ($_REQUEST['request_id'] && $_REQUEST['line']) {
 		$item = new \Support\Request\Item();
 		$item->get($_REQUEST['request_id'],$_REQUEST['line']);
-	}
-	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+	} elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$item = new \Support\Request\Item($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
 
@@ -19,8 +18,7 @@
 	if ($_REQUEST['btn_complete']) {
 		if ($item->openActions() > 0) {
 			$page->addError("Item has open actions!");
-		}
-		else {
+		} else {
 			$item->update(array('status' => 'COMPLETE'));
 			if ($item->error()) $page->addError($item->error());
 		}
@@ -28,8 +26,7 @@
 	if ($_REQUEST['btn_close_item']) {
 		if ($item->openActions() > 0) {
 			$page->addError("Item has open actions!");
-		}
-		else {
+		} else {
 			$item->update(array('status' => 'CLOSED'));
 			if ($item->error()) $page->addError($item->error());
 		}
@@ -59,7 +56,7 @@
 					'from'	=> 'service@spectrosinstruments.com',
 					'subject'	=> "[SUPPORT] Action #".$action->id." assigned to you",
 					'body'		=> "The following action was assigned to you:
-Request: ".$action->item->request->code."<br>
+Request: <a href='https://".$_config->site->hostname."/_support/request_detail/".$action->item->request->code."'>".$action->item->request->code."</a><br>
 Item: ".$action->item->line."<br>
 Type: ".$action->type."<br>
 Product: ".$action->item->product->code."<br>
