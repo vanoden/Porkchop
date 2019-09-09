@@ -24,10 +24,6 @@
 	### <http://www.gnu.org/licenses/>.								###
 	###################################################################
 
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
-
 	###################################################
 	### Load Dependencies							###
 	###################################################
@@ -69,7 +65,7 @@
 		exit;
 	}
 	$logger->write("Database Initiated",'trace');
-
+    
 	###################################################
 	### Connect to Memcache if so configured		###
 	###################################################
@@ -133,4 +129,3 @@
 		$_page->applyStyle();
 	}
 	print $_page->load_template();
-?>

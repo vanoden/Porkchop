@@ -42,6 +42,7 @@
 
 	// make sure the serial number is valid
 	function checkSerial() {
+	
 		var productInput = document.getElementById('product_id');
 		checkProduct();
 		var productID = productInput.options[productInput.selectedIndex].value;
@@ -50,9 +51,7 @@
 		var serialNumberMessage = document.getElementById('serial_number_message');
 		var serialNumberMessageOK = document.getElementById('serial_number_message_ok');
 
-		if (serialInput.value.length < 1) {
-			return true;
-		}
+		if (serialInput.value.length < 1) return true;
 		var code = serialInput.value;
 		var asset = Object.create(Asset);
 
@@ -63,16 +62,14 @@
 				serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
 				serialNumberMessageOK.style.display = 'block';
 				return true;
-			}
-			else {
+			} else {
 				serialInput.style.border = 'solid 2px red';
 				serialNumberMessage.innerHTML = 'Product not found with that serial number';
 				serialNumberMessage.style.display = 'block';
 				serialNumberMessageOK.style.display = 'none';
 				return false;
 			}
-		}
-		else {
+		} else {
 			serialInput.style.border = 'solid 2px red';
 			serialNumberMessage.innerHTML = 'Serial number not found in our system';
 			serialNumberMessage.style.display = 'block';
