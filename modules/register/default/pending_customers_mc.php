@@ -82,7 +82,10 @@
     if ($_REQUEST['dateEnd']) $dateEnd = $_REQUEST['dateEnd'];
     
     // set to default of no options selected
-    if (empty($statusFiltered)) $_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
+    if (empty($statusFiltered)) {
+        $_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
+        $_REQUEST['VERIFYING'] = $statusFiltered[] = 'VERIFYING';
+    }
 
     // get results
     app_log("Find");
