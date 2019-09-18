@@ -434,7 +434,7 @@
 						# Make Sure User Has Privileges
 						if (is_object($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->id && $GLOBALS['_SESSION_']->customer->has_role('content operator')) {
 							$origin_id = uniqid();
-							$buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(contentElem).style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(contentElem).style.border = \'0px\'; } </script>';
+							$buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'0px\'; } </script>';
 							$buffer .= "<div>";
 							$buffer .= '<div id="r7_widget['.$origin_id.']">'.$message->content.'</div>';
 							$buffer .= '<a class="porkchop_edit_button" href="javascript:void(0)" onclick="editContent(\'content\',\''.$origin_id.'\',\''.$message->id.'\')" onmouseover="highlightContent(\'content\');" onmouseout="blurContent(\'content\');">Edit</a>';
