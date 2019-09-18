@@ -200,18 +200,18 @@
 				if ($_config->site->https) $url = "https://$url";
 				else $url = "http://$url";
 
-				$template = new \Content\Template\Shell(
-					array(
-						'path'	=> $_config->registration_notification->template,
-						'parameters'	=> array(
-							'ADMIN.URL' 		=> $url,
-							'ADMIN.USERDETAILS'	=> $_REQUEST['login']
-						)
+				$template = new \Content\Template\Shell($_config->register->registration_notification->template);
+				$template->addParams(array(
+						'ORGANIZATION.NAME'		=> $queuedCustomer->organization,
+						'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
+						'CUSTOMER.LAST_NAME'	=> $customer->last_name,
+						'EMAIL'					=> $queuedCustomer->email_address,
+						'CUSTOMER.LOGIN'		=> $customer->login,
+						'SITE.LINK'				=> 'http://'.$_config->site->hostname.'/_register/pending_customers'
 					)
 				);
 
-				$message = new \Email\Message($GLOBALS['_config']->register->registration_notification);
-				$message->html(true);
+				$message = new \Email\Message($_config->register->registration_notification);
 				$message->body($template->output());
 
 				app_log("Sending Admin Confirm new customer reminder",'debug');

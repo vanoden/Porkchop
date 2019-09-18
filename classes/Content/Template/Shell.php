@@ -21,6 +21,13 @@
 					}
 				}
 			}
+			elseif (gettype($argument) == 'string') {
+				if (file_exists($argument)) {
+					if ($this->load($argument)) {
+						app_log("Loaded template ".$argument['path']);
+					}
+				}
+			}
 		}
 
 		public function load($path) {
