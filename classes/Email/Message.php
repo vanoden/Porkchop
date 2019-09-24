@@ -22,12 +22,14 @@
 				if (isset($argument['from'])) $this->from($argument['from']);
 				if (isset($argument['subject'])) $this->subject($argument['subject']);
 				if (isset($argument['body'])) $this->body($argument['body']);
+				if (isset($argument['html'])) $this->_html = $argument['html'];
 			}
 			elseif (gettype($argument) == 'object') {
 				if (isset($argument->to)) $this->add_recipients($argument->to);
 				if (isset($argument->from)) $this->from($argument->from);
 				if (isset($argument->subject)) $this->subject($argument->subject);
 				if (isset($argument->body)) $this->body($argument->body);
+				if (isset($argument->html)) $this->_html = $argument->html;
 			}
 		}
 

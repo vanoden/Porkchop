@@ -205,4 +205,8 @@
 		public function ticketNumber() {
 			return sprintf("%06d",$this->id);
 		}
+		public function internalLink() {
+			if ($GLOBALS['_config']->site->https) return "https://".$GLOBALS['_config']->site->hostname."/_support/item/".$this->id;
+			return "http://".$GLOBALS['_config']->site->hostname."/_support/item/".$this->id;
+		}
 	}

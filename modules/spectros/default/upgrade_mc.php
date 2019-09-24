@@ -151,6 +151,10 @@
 	);
 	$modules['Monitor']['schema_required'] = 19;
 
+	# Show Errors
+	error_reporting(E_ERROR);
+	ini_set('display_errors',1);
+
 	# Process Modules
 	foreach ($modules as $module_name => $module_data) {
 		# Update Schema
@@ -189,13 +193,13 @@
 	    install_log("Add new template settings");
 	    foreach ($module_data['templates'] as $view => $template) {
 			install_log("Add template '$template' to $module_name::$view");
-	        $page = new \Site\Page($module_name,$view);
+	        $page = new \Site\Page(strtolower($module_name),$view);
 	        if ($page->error) {
 	            install_fail("Error loading view '$view' for module '$module_name': ".$page->error);
 	        }
 	        if (! $page->id) {
 	            try {
-	                $page->add($module_name,$view,null);
+	                $page->add(strtolower($module_name),$view,null);
 	            } catch (Exception $e) {
 	                install_fail("Cannot add view: ".$e->getMessage());
 	            }

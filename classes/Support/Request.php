@@ -140,7 +140,7 @@
 		}
 
 		private function details() {
-		
+
 			// Get Request Details
 			$get_request_query = "
 				SELECT	id,
@@ -152,17 +152,17 @@
 				FROM	support_requests
 				WHERE	id = ?
 			";
-			
+
 			$rs = $GLOBALS['_database']->Execute(
 				$get_request_query,
 				array($this->id)
 			);
-			
+
 			if (! $rs) {
 				$this->_error = "SQL Error in SupportRequest::details: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			
+
 			$record = $rs->FetchNextObject(false);
 			$this->code = $record->code;
 			$this->status = $record->status;
@@ -193,51 +193,27 @@
 		}
 
 		public function addItem($parameters) {
-
+			// Add Ticket (item) To Request
 			$parameters['request_id'] = $this->id;
 			$item = new \Support\Request\Item();
 			$item->add($parameters);
-
-		    // get notification
-    		$parameters = array('type' => 'email', 'notify' => 1,'user_id' => $item->request->customer->id);
-		    $registerContact = new \Register\ContactList();
-		    $registerContactDetails = $registerContact->find($parameters);
-		    if (!empty($registerContactDetails)) {
-    		    foreach ($registerContactDetails as $contactDetail) {
-    		    
-    		        // only send emails to people who didn't create the request itself
-    		        if ($contactDetail->person->id != $GLOBALS['_SESSION_']->customer->id) {
-
-		                // send update to customer that a new ticket has been added for their support request
-		                app_log("Generating update to support request email");
-                        $description = 'Product Serial #' . $item->serial_number . "<br>\n" . 'Request Status: ' . $item->status . "<br>\n<br>\n" . $item->description;
-		                $notificationSubject = 'Updates on your request for support';
-		                $emailNotification = new \Email\Notification(
-		                    array('subject' => $notificationSubject,
-			                      'template' => TEMPLATES . '/support/support_request_update.html', 
-			                      'templateVars' => 
-			                        array(
-                                        'FIRST.NAME' => $contactDetail->person->first_name,
-                                        'LAST.NAME' => $contactDetail->person->last_name,
-                                        'SUPPORT.CODE' => 'Ticket #'. $item->request->code,
-                                        'ACTION' => 'Service Ticket Added',
-                                        'DESCRIPTION' => $description
-			                        )
-			                      )
-		                );
-		                app_log("Sending update to support request email",'debug',__FILE__,__LINE__);
-		                $emailNotification->send($contactDetail->value, 'no-reply@spectrosinstruments.com');
-		            }
-    		    }
-		    }
 
 			if ($item->error()) {
 				$this->_error = "Error adding item: ".$item->error();
 				return false;
 			}
+
 			return $item;
 		}
 
+		public function notifyOwner($message) {
+			if ($this->owner()) {
+				$this->owner()->notify($message);
+			}
+		}
+		public function owner() {
+			return new \Register\Customer($this->customer_id);
+		}
 		public function openItems() {
 			app_log("Counting open items");
 			$itemlist = new \Support\Request\ItemList();

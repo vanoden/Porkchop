@@ -8,7 +8,7 @@
 	###																###
 	### Copyright (C) 2014 Anthony Caravello						###
 	###																###
-    ### This program is free software: you can redistribute it and/	###
+	### This program is free software: you can redistribute it and/	###
 	### or modify it under the terms of the GNU General Public		###
 	### License as published by the Free Software Foundation, 		###
 	### either version 3 of the License, or any later version.		###
@@ -44,7 +44,17 @@
 	### Connect to Logger							###
 	###################################################
 	$logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG));
+	if ($logger->error()) {
+		error_log("Error initializing logger: ".$logger->error());
+		print "Logger error\n";
+		exit;
+	}
 	$logger->connect();
+	if ($logger->error()) {
+		error_log("Error initializing logger: ".$logger->error());
+		print "Logger error\n";
+		exit;
+	}
 
 	###################################################
 	### Connect to Database							###

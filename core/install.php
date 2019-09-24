@@ -35,6 +35,22 @@
 	require THIRD_PARTY.'/adodb/adodb-php/adodb-exceptions.inc.php';
 	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
 
+        ###################################################
+        ### Connect to Logger                                                   ###
+        ###################################################
+        $logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG));
+        if ($logger->error()) {
+                error_log("Error initializing logger: ".$logger->error());
+                print "Logger error\n";
+                exit;
+        }
+        $logger->connect();
+        if ($logger->error()) {
+                error_log("Error initializing logger: ".$logger->error());
+                print "Logger error\n";
+                exit;
+        }
+
 	# Don't Cache this Page
 	header("Expires: 0");
 	header("Cache-Control: no-cache, must-revalidate");

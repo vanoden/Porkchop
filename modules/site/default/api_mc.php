@@ -449,10 +449,10 @@
 	}
 
 	###################################################
-	### Manage Page Schema							###
+	### Manage Site Schema							###
 	###################################################
 	function schemaVersion() {
-		$schema = new \Page\Schema();
+		$schema = new \Site\Schema();
 		if ($schema->error) {
 			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		}
@@ -463,7 +463,7 @@
 		print formatOutput($response);
 	}
 	function schemaUpgrade() {
-		$schema = new \Page\Schema();
+		$schema = new \Site\Schema();
 		if ($schema->error) {
 			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		}

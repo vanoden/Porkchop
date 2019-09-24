@@ -110,14 +110,14 @@
 
 		    // if they've found an existing organization
 		    if($_REQUEST['organization']) $this->name = $_REQUEST['organization'];
-		
+
             // process the new or existing queued customer to the chosen status
             global $_config;
             $registerOrganizationList = new \Register\OrganizationList();          
             $existingOrganization = $registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleOrganizationStatus));
             $organizationExists = !empty($existingOrganization);
             $registerOrganization = new \Register\Organization();
-                        
+
             // set to active - doesn't exist yet - create the organization
             if (!$organizationExists) {
                 $newOrganizationDetails = $registerOrganization->addQueued(array('name' => $this->name, 'code' => $this->code, 'status' => 'NEW', 'is_reseller' => $this->is_reseller, 'assigned_reseller_id' => $this->reseller, 'notes' => $this->notes));
@@ -127,7 +127,7 @@
                 $registerOrganization->update(array('status' => 'APPROVED', 'notes' => $this->notes));
             }
             $existingOrganization = array_pop($registerOrganizationList->find(array('name' => $this->name)));
-            
+
             // update to have the queued login match the 'approved' organization
             $registerCustomer = new \Register\Customer($this->register_user_id);
             $registerCustomer->update(array('organization_id' => $existingOrganization->id));
@@ -149,52 +149,54 @@
                 $item = array (
                     'line'			=> 1,
                     'product_id'    => $this->product_id,
-                    'description'	=> "New organization approved with registered device. [" . $existingOrganization->name . "]",
+                    'description'	=> "Approve registration of new device",
                     'quantity'		=> 1
                 );
                 if (!empty($this->serial_number)) $item['serial_number'] = $this->serial_number;
-                $supportRequest->addItem($item);
+                $ticket = $supportRequest->addItem($item);
+				if ($ticket) {
+					// Add Action to Ticket
+					$action = $ticket->addAction(array(
+						'requested_id'	=> $registerCustomer->id,
+						'status'		=> 'NEW',
+						'type'			=> 'Transfer Ownership',
+						'description'	=> 'Confirm and Transfer ownership to new company'
+						)
+					);
+
+					// Notify Admins of Action
+					$template = new \Content\Template\Shell($GLOBALS['_config']->support->unassigned_action->template);
+					$template->addParams(array(
+						'TICKET.NUMBER'	=> $ticket->ticketNumber(),
+						'TICKET.LINK'	=> $ticket->internalLink(),
+						'ACTION.LINK'	=> $action->internalLink(),
+						'ACTION.TYPE'	=> $action->type,
+						'ACTION.DESCRIPTION'	=> $action->description
+					));
+					$message = new \Email\Message();
+					$message->html(true);
+					$message->from($GLOBALS['_config']->support->unassigned_action->from);
+					$message->subject($GLOBALS['_config']->support->unassigned_action->subject);
+					$role = new \Register\Role();
+					if ($role->get('support user')) {
+						app_log("Notifying Support Team");
+						$role->notify($message);
+					}
+				}
+				else {
+					app_log("Error creating ticket: ".$supportRequest->error(),'error');
+				}
 			}
 
-            // get contact work email address
-            $registerContact = new \Register\Contact();
-            $registerContact->detailsByUserByTypeByDesc($registerCustomer->id, 'email');
-            $contactWorkEmail = $registerContact->value;
-
-            // email notification must be sent to members of the 'support user' role
-            $emailNotification = new \Email\Notification(
-            array('subject' => 'New Customer Approved', 
-                  'template' => TEMPLATES . '/registration/admin_notification_new_customer.html', 
-                  'templateVars' => array('USERDETAILS' => $registerContact->person->first_name . " " . $registerContact->person->last_name . " - " . $registerOrganization->name, 'URL' => 'https://'. $_config->site->hostname . '_support/requests')
-                  )
-            );  
-            $emailNotification->send('support@spectrosinstruments.com', 'no-reply@spectrosinstruments.com');                    	                       
-
-            // alert 'support user' users of the new customer
-            $message = new \Email\Message(
-                array(
-                    'from'	=> 'service@spectrosinstruments.com',
-                    'subject'	=> 'New Customer Approved',
-                    'body'		=> $emailNotification->getMessageBody()
-                )
-            );
-            $message->html(true);
-
-            $role = new \Register\Role();
-            $role->get('support user');
-            $role->notify($message);
-            if ($role->error) app_log("Error sending admin new customer reminder: ".$role->error);	
-
-            // An email confirmation must be sent to the customer
-            $emailNotification = new \Email\Notification(
-            array('subject' => 'Your account has been Approved!', 
-                  'template' => TEMPLATES . '/registration/welcome.html', 
-                  'templateVars' => array('USERDETAILS' => $registerContact->person->first_name . " " . $registerContact->person->last_name, 'URL' => 'https://'. $_config->site->hostname)
-                  )
-            );
-            $isEmailSent = $emailNotification->send($contactWorkEmail, 'no-reply@spectrosinstruments.com');
+			// Notify Customer of Approval
+			$template = new \Content\Template\Shell($GLOBALS['_config']->register->account_activation_notification->template);
+			$message = new \Email\Message();
+			$message->html(true);
+			$message->from($GLOBALS['_config']->register->account_activation_notification->from);
+			$message->subject($GLOBALS['_config']->register->account_activation_notification->subject);
+			$registerCustomer->notify($message);
 		}
-		
+
 		// hydrate known details about this queue object from known id if set
 		public function details() {
 		    if (!empty($this->id)) {
