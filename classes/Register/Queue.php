@@ -132,20 +132,20 @@
             $registerCustomer = new \Register\Customer($this->register_user_id);
             $registerCustomer->update(array('organization_id' => $existingOrganization->id));
             
-            // add a support_request record with customer id, date entry and request items for each item entered. 
-            $supportRequest = new \Support\Request();
-			$newSupportRequest = $supportRequest->add(
-				array(
-					"date_request"	    => date("Y-m-d H:i:s"),
-					"customer_id"	    => $this->register_user_id,
-					"organization_id"   => $existingOrganization->id,
-					"type"			    => 'service',
-					"status"		    => "NEW"
-				)
-			);
-	
-	        // add production		
+	        // they've entered a product, add a support_request record with customer id, date entry and request items for each item entered
 			if (!empty($this->product_id)) {
+
+                $supportRequest = new \Support\Request();
+			    $newSupportRequest = $supportRequest->add(
+				    array(
+					    "date_request"	    => date("Y-m-d H:i:s"),
+					    "customer_id"	    => $this->register_user_id,
+					    "organization_id"   => $existingOrganization->id,
+					    "type"			    => 'service',
+					    "status"		    => "NEW"
+				    )
+			    );
+			    
                 $item = array (
                     'line'			=> 1,
                     'product_id'    => $this->product_id,

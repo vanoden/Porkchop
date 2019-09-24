@@ -28,7 +28,7 @@
       <input type="hidden" name="task_id" value="<?=$task->id?>" />
       <h2>Engineering Task: 
 	  	<? if ($form['code']) { ?>
-	  		<span><?php print " ".$form['code'];?></span>
+	  		<span><a href="/_engineering/task/<?=$form['code'];?>"><?php print " ".$form['code'];?></a></span>
 		<? } ?>
 	  </h2>
       <?	if ($page->errorCount()) { ?>
@@ -193,7 +193,54 @@
       </div>
       <!-- End Fourth Row -->
       <!-- Start Fifth Row -->
-      <?	if ($task->id) { ?>
+      <?	if ($task->id) { ?>      
+      
+      <h3>Comment Update</h3>
+      <!-- Start comment Row -->
+      <div class="tableBody min-tablet">
+         <div class="tableRowHeader">
+            <div class="tableCell">Add Task Comment</div>
+         </div>
+         <div class="tableRow">
+            <div class="tableCell">
+               <textarea name="content" class="wide_100per"></textarea>
+            </div>
+         </div>
+         <div class="tableRow button-bar">
+            <input type="submit" name="btn_add_comment" class="button" value="Add Comment" />
+         </div>
+      </div>
+      <!-- End comment Row -->
+          
+       <!--	Start First Row-->
+       <h3>Comments</h3>
+       <div class="tableBody min-tablet">
+          <div class="tableRowHeader">
+             <div class="tableCell" style="width: 20%;">Date</div>
+             <div class="tableCell" style="width: 15%;">Person</div>
+             <div class="tableCell" style="width: 65%;">Description</div>
+          </div>
+          <?	
+            foreach ($commentsList as $comment) {
+             ?>
+          <div class="tableRow">
+             <div class="tableCell">
+                <i><?=date("M dS Y h:i A", $comment->timestamp_added)?></i>
+             </div>
+             <div class="tableCell">
+                <strong><?=$person->login?></strong>
+             </div>
+             <div class="tableCell eventLogEntry">
+             <textarea class="event-log-description" readonly="readonly">
+             
+                <?=$comment->content?>
+             
+             </textarea>
+             </div>
+          </div>
+          <?	} ?>
+       </div>
+
       <h3>Event Update</h3>
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
@@ -225,8 +272,9 @@
             </div>
          </div>
       </div>
-      <!-- End Fifth Row -->	
-      <!-- Start Sixth Row -->
+      <!-- End Event Update Row -->
+
+      <!-- Start event description Row -->
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
             <div class="tableCell">Event Description</div>
@@ -240,8 +288,9 @@
             <input type="submit" name="btn_add_event" class="button" value="Add Event" />
          </div>
       </div>
-      <!-- End Sixth Row -->
+      <!-- End event description Row -->
    </form>
+   
    <!--	Start First Row-->
    <h3>Event Log</h3>
    <div class="tableBody min-tablet">
@@ -266,5 +315,6 @@
       </div>
       <?	} ?>
    </div>
+   
    <?	}	?>
 </div>

@@ -40,9 +40,6 @@
 		$result = file_get_contents($url, false, $context);
 		$captcha_success = json_decode($result);
 		
-		// $captcha_success = new stdClass();
-		// $captcha_success->success = true;
-		
 		if ($captcha_success->success == true) {
 		
 			// Initialize Customer Object
@@ -64,6 +61,7 @@
 					$page->addError("Error checking login: ".$customer->error);
 				} else {
 					$page->loginTaken = false;
+					
 					// Add Customer Record to Database
 					$customer->add(
 						array(
@@ -83,6 +81,7 @@
 							$page->loginTaken = true;
 						}
 					} else {
+					
 						// Create Contact Record
 						if ($_REQUEST['email_address']) {
 							$customer->addContact(
@@ -99,6 +98,7 @@
 						else app_log("No email address provided",'warning');
 
 						if ($_REQUEST['phone_number']) {
+						
 							// Create Contact Record
 							$customer->addContact(
 								array(
@@ -117,7 +117,7 @@
 						$queuedCustomer = new \Register\Queue();
 						$queuedCustomerData = array();
 						$queuedCustomerData['name'] = $HTTPRequest->cleanCharacters($_REQUEST['organization_name']);
-						$queuedCustomerData['code'] = time(); // @TODO, not sure about this column
+						$queuedCustomerData['code'] = time();
 						$queuedCustomerData['is_reseller'] = 0;
 						$queuedCustomerData['assigned_reseller_id'] = NULL;
 						if (isset($_REQUEST['reseller']) && $_REQUEST['reseller'] == "yes") {

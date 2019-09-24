@@ -10,7 +10,7 @@
 <script>
    $( function() {
 	 $( ".organization" ).autocomplete({
-	   source: "/_register/api?method=searchOrganizationsByName",       
+	   source: "/_register/api?method=searchOrganizationsByName",
 	   minLength: 2,
 	   select: function( event, ui ) {}
 	 });

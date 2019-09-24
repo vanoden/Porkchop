@@ -111,10 +111,12 @@
 					AND		name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc);
 				}
 			}
+			
 			if (isset($parameters['code'])) {
 				$get_organizations_query .= "
 				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc);
 			}
+			
 			if (isset($parameters['status']) && is_array($parameters['status'])) {
 				$icount = 0;
 				$get_organizations_query .= "
@@ -126,12 +128,10 @@
 					$get_organizations_query .= "'".$status."'";
 				}
 				$get_organizations_query .= ")";
-			}
-			elseif (isset($parameters['status'])) {
+			} elseif (isset($parameters['status'])) {
 				$get_organizations_query .= "
 				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
-			}
-			else
+			} else
 				$get_organizations_query .= "
 				AND		status IN ('NEW','ACTIVE')";
 
@@ -160,12 +160,14 @@
 					$get_organizations_query .= "
 					LIMIT	".$parameters['_limit'];
 			}
+			
 			query_log($get_organizations_query);
 			$rs = $GLOBALS['_database']->Execute($get_organizations_query);
 			if (! $rs) {
 				$this->error = "SQL Error in register::organization::find: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+			
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
 				if ($recursive) {
@@ -178,6 +180,7 @@
 					$this->count ++;
 				}
 			}
+			
 			return $organizations;
 		}
 		

@@ -14,7 +14,6 @@
 	);
 
 	# Call Requested Event
-	//error_log($_REQUEST['action']." Request received from ".$_REQUEST['hub_code']);
 	if (isset($_REQUEST["method"])) {
 		header('Access-Control-Allow-Origin: *');  
 		# Call the Specified Method
@@ -213,6 +212,19 @@
 
 		# Send Response
 		print formatOutput($response);
+	}
+	
+	/**
+	 * check if a login exists already for user creating a new account
+	 */
+	function checkLoginNotTaken() {
+    	$customer = new Register\Customer();    	
+    	$customer->get($parameters["code"]);
+        if (!$customer->id) {
+            print true;
+        } else {
+            print false;
+        }	
 	}
 	
 	###################################################

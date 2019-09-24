@@ -2,6 +2,7 @@
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script src="/js/monitor.js"></script>
 <script type="text/javascript">
+
     // validate password and submit if ok to go
     function submitForm() {
         if (document.register.password.value.length < 6) {
@@ -38,6 +39,23 @@
 			productElem.focus();
 			return false;
 		}
+	}
+	
+	// make sure that the user name isn't taken
+	function checkUserName() {
+	    var loginField = $("#login");
+	    var loginMessage = $("#login-message");
+        $.get('/_register/api?method=checkLoginNotTaken&login=' + loginField.val(), function(data, status){
+            if (data == 1) {
+                loginField.css('border', '2px solid green');
+                loginMessage.html('login is available');
+                loginMessage.css('color', 'green');
+            } else {
+                loginField.css('border', '2px solid red');
+                loginMessage.html('login is not available');
+                loginMessage.css('color', 'red');
+            }
+        });
 	}
 
 	// make sure the serial number is valid
@@ -164,7 +182,7 @@
          <input type="text" id="state" name="state" placeholder="NY" value="<?=!empty($_REQUEST['state']) ? $_REQUEST['state'] : "" ?>" maxlength="10"/>
          <label for="zip">Zip/Postal Code</label>
          <input type="text" id="zip" name="zip" placeholder="10001" value="<?=!empty($_REQUEST['zip']) ? $_REQUEST['zip'] : "" ?>" maxlength="20"/>
-<br>
+         <br>
          <h3>Contact Info</h3>
          <span class="label registerLabel registerFirstNameLabel">*First Name:</span>
          <input type="text" class="value registerValue registerFirstNameValue long-field" name="first_name" value="<?=!empty($_REQUEST['first_name']) ? $_REQUEST['first_name'] : "" ?>" placeholder="John" maxlength="50"/>
@@ -188,12 +206,13 @@
          <input type="text" id="email" class="value registerValue registerLoginValue" name="email_address" value="<?=!empty($_REQUEST['email_address']) ? $_REQUEST['email_address'] : "" ?>" placeholder="me@business.com" maxlength="50"/>
 		</div>
          <span class="label registerLabel registerLoginLabel">*Login:</span>
-         <input type="text" class="value registerValue registerLoginValue" style="<?=($page->loginTaken) ? 'border:solid red 2px;' : ''?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" maxlength="50"/>
+         <input type="text" id="login" class="value registerValue registerLoginValue" style="<?=($page->loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onchange="checkUserName()" maxlength="50"/>
+         <div id="login-message" style="display:inline; font-size: 10px;"></div>
          <?php
             if ($page->loginTaken) {
          ?>
              <div style="color:red; font-size: 12px;"><?=$page->error;?></div><br/>
-         <?php    
+         <?php
              }
          ?>
          <span class="label registerLabel registerPasswordLabel">*Password:</span>

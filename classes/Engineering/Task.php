@@ -345,6 +345,7 @@
 				$get_object_query,
 				array($code)
 			);
+
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::Task::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -353,11 +354,11 @@
 			if ($id) {
 				$this->id = $id;
 				return $this->details();
-			}
-			else {
+			} else {
 				return false;
 			}
 		}
+		
 		public function details() {
 
 			$get_object_query = "

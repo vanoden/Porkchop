@@ -57,14 +57,13 @@
 		}
 
 		public function requireRole($role) {
+
 			if ($this->module == 'register' && $this->view == 'login') {
 				# Do Nothing, we're Here
-			}
-			elseif (! $GLOBALS['_SESSION_']->customer->id) {
+			} elseif (! $GLOBALS['_SESSION_']->customer->id) {
 				header('location: /_register/login?return=true&module='.$this->module.'&view='.$this->view);
 				exit;
-			}
-			elseif (! $GLOBALS['_SESSION_']->customer->has_role($role)) {
+			} elseif (! $GLOBALS['_SESSION_']->customer->has_role($role)) {
 				header('location: /_register/permission_denied');
 				exit;
 			}

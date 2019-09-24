@@ -15,6 +15,7 @@
 		public $status;
 
 		public function __construct($id = 0) {
+		
 			# Clear Error Info
 			$this->error = '';
 

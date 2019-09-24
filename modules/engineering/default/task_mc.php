@@ -18,6 +18,28 @@
 		$task->get($code);
 	}
 
+    // add task comment
+    if (isset($_REQUEST['btn_add_comment'])) {
+        $msgs = array();
+		if (isset($_REQUEST['content'])) {
+            $engineeringComment = new \Engineering\Comment();
+            $engineeringComment->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $task->code, 'content' => $_REQUEST['content']));
+            if ($engineeringComment->error()) $page->addError("Error creating comment: ".$engineeringComment->error());
+            array_push($msgs,"Comment added.");
+			$event = new \Engineering\Event();
+			$event->add(array(
+				'task_id'	=> $task->id,
+				'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
+				'date_added'	=> date('Y-m-d H:i:s'),
+				'description'	=> join('<br>',$msgs)
+			));
+			if ($event->error()) $page->addError("Error creating event: ".$event->error());
+		} else {
+			$page->addError("Comment required");
+		}
+    }
+
+    // edit task or add event
 	if (isset($_REQUEST['btn_submit']) || isset($_REQUEST['btn_add_event'])) {
 		$msgs = array();
 		$parameters = array();
@@ -254,7 +276,7 @@
 		    if (isset($_REQUEST['btn_add_event'])) $page->addError("'Event Update' could not be added, 'Event Description' is required.");
 		}
 	}
-
+	
 	$peopleList = new \Register\CustomerList();
 	$people = $peopleList->find(array("status" => array('NEW','ACTIVE')));
 	if ($peoplelist->error) $page->addError($peoplelist->error);
@@ -274,6 +296,10 @@
 	$projectlist = new \Engineering\ProjectList();
 	$projects = $projectlist->find();
 	if ($projectlist->error()) $page->addError($projectlist->error());
+	
+	// get engineering comments 
+    $engineeringComments = new \Engineering\CommentList();
+	$commentsList = $engineeringComments->find(array('code'=>$task->code));
 	
 	$form = array();
 	if ($task->id) {

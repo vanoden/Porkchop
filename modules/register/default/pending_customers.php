@@ -8,13 +8,44 @@
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script>
-   $( function() {
-	 $( ".organization" ).autocomplete({
-	   source: "/_register/api?method=searchOrganizationsByName",       
-	   minLength: 2,
-	   select: function( event, ui ) {}
-	 });
-   } );
+
+    // check if the organization already exists for button states
+    function checkExisting(id, orgName) {
+        $.get("/_register/api?method=searchOrganizationsByName&term=" + orgName, function(data) {
+            console.log(data.length);
+            if (data.length > 0) {
+                document.getElementById(id + "_assign_button").disabled = false;
+                document.getElementById(id + "_new_button").disabled = true;
+            } else {
+                document.getElementById(id + "_assign_button").disabled = true;
+                document.getElementById(id + "_new_button").disabled = false;
+            }
+        });
+    };
+    
+    // page load apply button status, setup up autocomplete
+    $(function() {
+        // autocomplete textbox
+        $(".organization").autocomplete({
+            source: "/_register/api?method=searchOrganizationsByName",
+            minLength: 2,
+            select: function(event, ui) {
+                var id = $(this)[0].id
+                document.getElementById(id + "_assign_button").disabled = false;
+                document.getElementById(id + "_new_button").disabled = true;
+            }
+        });
+
+        // page load confirm if org exists already
+        $(".organization").each(function(index) {
+            checkExisting($(this)[0].id, $(this).val())
+        });
+
+        // if change the field, then keep the button disable sync'd
+        $(".organization").keyup(function() {            
+            checkExisting($(this)[0].id, $(this).val())
+        });
+    });
 </script>
 <style>
    .strong-text {
@@ -197,11 +228,11 @@
 					  ?>
 			<div class="ui-widget">
 				<label for="organization">Match Organization: </label><br/>
-				<input class="organization" id="organization" name="organization" value="<?=$queuedCustomer->name?>">
-				<button type="button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-check-circle" aria-hidden="true"></i> Assign</button>
+				<input class="organization" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?=$queuedCustomer->name?>"/>
+				<button type="button" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-check-circle" aria-hidden="true"></i> Assign</button>
 			</div>
-			<button type="button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-plus" aria-hidden="true"></i> Add as New</button>
-			<button type="button" onclick="denyCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-ban" aria-hidden="true"></i> Deny</button>
+			<button type="button" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-plus" aria-hidden="true"></i> Add as New</button>
+			<button type="button" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-ban" aria-hidden="true"></i> Deny</button>
 		   <?php
 			  break;
 			  case 'VERIFYING':
