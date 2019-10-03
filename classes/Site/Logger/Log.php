@@ -60,5 +60,9 @@
 			elseif ($this->level == "emergency"	&& in_array($level,array('emergency'))) return true;
 			return false;
 		}
+
+		public function error() {
+			return $this->error;
+		}
 	}
 ?>
