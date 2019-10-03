@@ -155,6 +155,7 @@
 							)
 						);
 						if ($template->error()) {
+							app_log($template->error(),'error');
 							$page->addError("Error generating verification email, please contact us at ".$_config->site->support_email." to complete your registration, thank you!");
 						}
 						else {

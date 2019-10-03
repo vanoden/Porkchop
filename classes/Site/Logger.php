@@ -28,4 +28,8 @@
 				return new \Site\Logger\Errorlog($parameters);
 			}
 		}
+
+		public function error() {
+			return $this->error;
+		}
 	}

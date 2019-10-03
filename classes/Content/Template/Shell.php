@@ -17,7 +17,7 @@
 						}
 					}
 					else {
-						$this->_error = "Template file not found";
+						$this->_error = "Template file '".$argument['path']."' not found";
 					}
 				}
 			}

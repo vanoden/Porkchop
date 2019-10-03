@@ -45,9 +45,5 @@
 
 			$this->write($message."\n",$level,$file,$line);
 		}
-
-		public function error() {
-			return $this->error;
-		}
 	}
 ?>
