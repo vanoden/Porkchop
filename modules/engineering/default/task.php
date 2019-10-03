@@ -1,3 +1,5 @@
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+
 <style>
     .eventLogEntry {
         max-width: 200px; 
@@ -12,11 +14,26 @@
     }
 </style>
 <script>
-    window.onload = function() {
+    $(document).ready(function () {
         $( "textarea:odd" ).css( "background-color", "#eeeff7" );
-        //$( "#date_added" ).datepicker();
-        //$( "#date_due" ).datepicker();
-    };
+        
+        // disable buttons to prevent duplicate clicks
+        $( "#btn_submit" ).click(function() {
+            $( "#btn_submit" ).val("please wait...");
+            $( "#task_form" ).submit();
+            $( "#btn_submit" ).click(false);
+        });
+        $( "#btn_add_comment" ).click(function() {
+            $( "#btn_add_comment" ).val("please wait...");
+            $( "#task_form" ).submit();
+            $( "#btn_add_comment" ).click(false);
+        });
+        $( "#btn_add_event" ).click(function() {
+            $( "#btn_add_event" ).val("please wait...");
+            $( "#task_form" ).submit();
+            $( "#btn_add_event" ).click(false);
+        });
+    });
 </script>
 <div>
   <div class="breadcrumbs">
@@ -24,7 +41,7 @@
      <a class="breadcrumb" href="/_engineering/tasks">Tasks</a> > Task Detail
   </div>
    <?php include(MODULES.'/engineering/partials/search_bar.php'); ?> 
-   <form name="task_form" action="/_engineering/task" method="post">
+   <form id="task_form" name="task_form" action="/_engineering/task" method="post">
       <input type="hidden" name="task_id" value="<?=$task->id?>" />
       <h2>Engineering Task: 
 	  	<? if ($form['code']) { ?>
@@ -188,7 +205,7 @@
             </div>
          </div>
        <div class="tableRow button-bar">
-        <input type="submit" name="btn_submit" class="button" value="Submit">
+        <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
        </div>
       </div>
       <!-- End Fourth Row -->
@@ -207,7 +224,7 @@
             </div>
          </div>
          <div class="tableRow button-bar">
-            <input type="submit" name="btn_add_comment" class="button" value="Add Comment" />
+            <input id="btn_add_comment" type="submit" name="btn_add_comment" class="button" value="Add Comment" />
          </div>
       </div>
       <!-- End comment Row -->
@@ -285,7 +302,7 @@
             </div>
          </div>
          <div class="tableRow button-bar">
-            <input type="submit" name="btn_add_event" class="button" value="Add Event" />
+            <input id="btn_add_event" type="submit" name="btn_add_event" class="button" value="Add Event" />
          </div>
       </div>
       <!-- End event description Row -->
