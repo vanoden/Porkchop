@@ -149,7 +149,6 @@
 			"admin_collections"	=> "admin.html",
 		),
 	);
-	$modules['Monitor']['schema_required'] = 19;
 
 	# Show Errors
 	error_reporting(E_ERROR);
