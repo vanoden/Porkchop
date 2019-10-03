@@ -219,12 +219,8 @@
 	 */
 	function checkLoginNotTaken() {
     	$customer = new Register\Customer();    	
-    	$customer->get($parameters["code"]);
-        if (!$customer->id) {
-            print true;
-        } else {
-            print false;
-        }	
+    	if ($customer->get($_REQUEST["login"])) print "0";
+		else print "1";
 	}
 	
 	###################################################
