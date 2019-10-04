@@ -203,33 +203,63 @@
 		}
 		public function addPrivilege($new_privilege) {
 			$privilege = new \Register\Privilege();
-			$privilege->add(array('role_id' => $this->id,'privilege' => $new_privilege));
-			if ($privilege->error()) {
-				$this->error = $privilege->error();
+			if ($privilege->get(array('privilege' => $new_privilege))) {
+				$add_privilege_query = "
+					INSERT	INTO	register_roles_privileges
+					VALUES  (?,?)
+				";
+				$GLOBALS['_database']->Execute($add_privilege_query,array($this->id,$privilege->id));
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Register::Role::addPrivilege(): ".$GLOBALS['_database']->ErrorMsg();
+					return false;
+				}
+			}
+			else {
+				$this->error = "privilege not found";
 				return false;
 			}
 			return true;
 		}
+
 		public function privileges() {
-			$privilegeList = new PrivilegeList();
-			return $privilegeList->find(array('role_id' => $this->id));
+			$get_privileges_query = "
+				SELECT	privilege_id
+				FROM	register_roles_privileges
+				WHERE	role_id = ?
+			";
+			query_log($get_privileges_query,array($this->id));
+			$rs = $GLOBALS['_database']->Execute($get_privileges_query,array($this->id));
+			app_log($rs->recordCount()." rows returned");
+			$privileges = array();
+			while(list($id) = $rs->FetchRow()) {
+				app_log("Getting privilege $id");
+				$privilege = new \Register\Privilege($id);
+				array_push($privileges,$privilege);
+			}
+			return $privileges;
 		}
 		public function has_privilege($name) {
-			$get_privilege_query = "
-				SELECT	id
-				FROM	register_role_privileges
-				WHERE	role_id = ?
-				AND		privilege = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($get_privilege_query,array($this->id,$name));
+			$privilege = new \Register\Privilege();
+			if ($privilege->get($name)) {
+				$get_privilege_query = "
+					SELECT	1
+					FROM	register_roles_privileges
+					WHERE	role_id = ?
+					AND		privilege_id = ?
+				";
+				$rs = $GLOBALS['_database']->Execute($get_privilege_query,array($this->id,$name));
 
-			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			list($id) = $rs->FetchRow();
-			if ($id > 0) {
-				return true;
+				if (! $rs) {
+					$this->error = $GLOBALS['_database']->ErrorMsg();
+					return false;
+				}
+				list($found) = $rs->FetchRow();
+				if ($found == 1) {
+					return true;
+				}
+				else {
+					return false;
+				}
 			}
 			else {
 				return false;

@@ -7,17 +7,13 @@
 
 		public function find($parameters = array()) {
 			$find_objects_query = "
-				SELECT  id
-				FROM    register_role_privileges
-                WHERE   id = id
+				SELECT  rp.id
+				FROM    register_privileges rp
+				WHERE   id = id
 			";
 
             $bind_params = array();
-			if (isset($parameters['role_id'])) {
-                $find_objects_query .= "
-                AND     role_id = ?";
-                array_push($bind_params,$parameters['role_id']);
-			}
+
 			query_log($find_objects_query);
             $rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
             if (! $rs) {

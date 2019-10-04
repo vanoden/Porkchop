@@ -13,29 +13,17 @@
 		}
 
 		public function add($parameters = array()) {
-			if ($parameters['role_id']) {
-				$role = new \Register\Role($parameters['role_id']);
-				if (! $role->id) {
-					$this->_error = "Role not found";
-					return false;
-				}
-			}
-			else {
-				$this->_error = "Role id required";
-				return false;
-			}
-
             $add_object_query = "
                 INSERT
-                INTO    register_role_privileges
-                (       role_id,privilege)
+                INTO    register_privileges
+                (       name)
                 VALUES
-                (       ?,? )
+                (       ? )
             ";
 
             $GLOBALS['_database']->Execute(
                 $add_object_query,
-                array($role->id,$parameters["privilege"])
+                array($parameters["name"])
             );
 
             if ($GLOBALS['_database']->ErrorMsg()) {
@@ -49,14 +37,20 @@
 
         public function update($parameters = array()) {
             $update_object_query = "
-                UPDATE      register_role_privileges
+                UPDATE      register_privileges
                 SET         id = id
             ";
             $bind_params = array();
 
-            if ($parameters['privilege']) {
+            if ($parameters['name']) {
                 $update_object_query .= ",
-                privilege = ?";
+                name = ?";
+                array_push($bind_params,$parameters['name']);
+            }
+
+            if ($parameters['description']) {
+                $update_object_query .= ",
+                description = ?";
                 array_push($bind_params,$parameters['privilege']);
             }
 
@@ -75,10 +69,25 @@
             return $this->details();
         }
 
+		public function get($name) {
+			$get_object_query = "
+				SELECT	id
+				FROM	register_privileges
+				WHERE	name = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($name));
+			if (! $rs) {
+				$this->_error = "SQL Error in Register::Privilege::get(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			list($this->id) = $rs->FetchRow();
+			return $this->details();
+		}
+
         public function details() {
             $get_object_query = "
-                SELECT  role_id,privilege
-                FROM    register_role_privileges
+                SELECT  id,name,description
+                FROM    register_privileges
                 WHERE   id = ?
             ";
 
@@ -88,8 +97,7 @@
                 return false;
             }
 
-            list($this->role_id,$this->privilege) = $rs->FetchRow();
-            $this->role = new \Register\Role($this->role_id);
+            list($this->id,$this->name,$this->description) = $rs->FetchRow();
             return true;
         }
 

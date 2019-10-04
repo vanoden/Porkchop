@@ -14,7 +14,7 @@
 <span class="label">Privileges</span>
 <?php	foreach ($privileges as $privilege) { ?>
 	<div class="rolePrivilegeContainer">
-		<span class="value"><?=$privilege->privilege?></span>
+		<span class="value"><?=$privilege->name?></span>
 	</div>
 <?	} ?>
 </div>

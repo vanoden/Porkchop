@@ -32,6 +32,8 @@
 				"accounts"			=> "admin.html",
 				"admin_account"		=> "admin.html",
 				"pending_customers"	=> "admin.html",
+				"roles"				=> "admin.html",
+				"role"				=> "admin.html"
 			),
 		),
         "Contact"		=> array(
