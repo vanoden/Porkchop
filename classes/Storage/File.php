@@ -407,5 +407,13 @@
 		public function downloadURI() {
 			return '/_storage/file/'.$this->code.'/download';
 		}
+		public function exists() {
+			if ($this->id) {
+				if (file_exists($this->path())) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 ?>
