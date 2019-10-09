@@ -328,7 +328,7 @@
 	        <th>Date Approved</th>
 	        <th>Approved By</th>
         </tr>
-        <tr><td><?=$rma->code?></td>
+        <tr><td><a href="/_support/rma/<?=$rma->code?>"><?=$rma->number()?></a></td>
 	        <td><?=$rma->date_approved?></td>
 	        <td><?=$rma->approvedBy->full_name()?></td>
         </tr>

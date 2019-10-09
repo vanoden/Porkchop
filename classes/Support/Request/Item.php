@@ -11,6 +11,7 @@
 		public $description;
 		public $status;
 		public $assigned;
+		private $request_id;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id)) {
@@ -151,8 +152,12 @@
 			$this->status = $object->status;
 			$this->assigned = new \Register\Customer($object->assigned_id);
 			$this->request = new \Support\Request($object->request_id);
+			$this->request_id = $object->request_id;
 			
 			return true;
+		}
+		public function request() {
+			return new \Support\Request($this->request_id);
 		}
 		public function addAction($parameters) {
 			$parameters['item_id'] = $this->id;

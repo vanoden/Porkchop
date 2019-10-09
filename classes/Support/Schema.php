@@ -391,6 +391,43 @@
                 $GLOBALS['_database']->CommitTrans();
             }
 
+            if ($current_schema_version < 5) {
+                app_log("Upgrading schema to version 5",'notice',__FILE__,__LINE__);
+
+                // Start Transaction
+                if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				// product warranty page table
+                $alter_table_query = "	
+                    ALTER TABLE `support_rmas` add document_id int(11)
+                ";
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error updating support_rmas table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return false;
+				}
+
+				// There was an errant entry here, but we can't downgrade versions, so this empty version stays
+                $current_schema_version = 5;
+                $update_schema_version = "
+                    INSERT
+                    INTO    support__info
+                    VALUES  ('schema_version',$current_schema_version)
+                    ON DUPLICATE KEY UPDATE
+                        value = $current_schema_version
+                ";
+                $GLOBALS['_database']->Execute($update_schema_version);
+                if ($GLOBALS['_database']->ErrorMsg()) {
+                    $this->error = "SQL Error in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+                    app_log($this->error,'error',__FILE__,__LINE__);
+                    $GLOBALS['_database']->RollbackTrans();
+                    return undef;
+                }
+                $GLOBALS['_database']->CommitTrans();
+            }
+
 			# Add Roles
 			foreach ($this->roles as $name => $description) {
 				$role = new \Register\Role();
