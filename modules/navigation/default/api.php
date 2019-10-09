@@ -61,6 +61,10 @@
 					<span class="label apiLabel">menu_code</span>
 					<input type="text" name="menu_code" class="value input apiInput"/>
 				</div>
+				<div class="apiParameter">
+					<span class="label apiLabel">parent_id</span>
+					<input type="text" name="parent_id" class="value input apiInput"/>
+				</div>
 				<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 			</div>
 			</form>

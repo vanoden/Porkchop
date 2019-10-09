@@ -18,11 +18,16 @@
 				AND     menu_id = ?";
 				array_push($bind_params,$parameters["menu_id"]);
 			}
+			if (isset($parameters['parent_id'])) {
+				$get_items_query .= "
+				AND		parent_id = ?";
+				array_push($bind_params,$parameters['parent_id']);
+			}
 
 			$get_items_query .= "
 				ORDER BY view_order,title
 			";
-
+			#query_log($get_items_query);
 			$rs = $GLOBALS['_database']->Execute($get_items_query,$bind_params);
 			if (! $rs) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();

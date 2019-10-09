@@ -138,6 +138,9 @@
 			$menu = new \Navigation\Menu();
 			if ($menu->get($_REQUEST['menu_code'])) {
 				$parameters['menu_id'] = $menu->id;
+				if (isset($_REQUEST['parent_id'])) {
+					$parameters['parent_id'] = $_REQUEST['parent_id'];
+				}
 			}
 			else {
 				error("Menu '".$_REQUEST['menu_code']."' not found");
@@ -228,6 +231,22 @@
 		api_log('navigation',$_REQUEST,$response);
 
 		# Send Response
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Dump Menu Data for Javascript				###
+	###################################################
+	function menuObject() {
+		$response = new \HTTP\Response();
+
+		if (! isset($_REQUEST['code'])) error("menu code required");
+
+		$menu = new \Navigation\Menu();
+		if (! $menu->get($_REQUEST['code'])) error("menu not found");
+
+		$response->item = $menu->cascade();
+		$response->success = 1;
 		print formatOutput($response);
 	}
 

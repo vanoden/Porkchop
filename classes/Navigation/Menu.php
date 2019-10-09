@@ -132,6 +132,16 @@
 			return $items;
 		}
 
+		public function cascade($parent_id = 0) {
+			$response = array();
+			$items = $this->items($parent_id);
+			foreach ($items as $item) {
+				$item->item = $this->cascade($item->id);
+				array_push($response,$item);
+			}
+			return $response;
+		}
+
 		public function error() {
 			return $this->_error;
 		}
