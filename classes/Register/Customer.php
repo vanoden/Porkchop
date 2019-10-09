@@ -319,22 +319,7 @@
 		}
 
 		public function can($privilege_name) {
-			$check_privs_query = "
-				SELECT	1
-				FROM	register_users_roles rur,
-						register_role_privileges rrp
-				WHERE	rur.user_id = ?
-				AND		rur.role_id = rrp.role_id
-				AND		rrp.privilege = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($check_privs_query,array($this->id,$privilege_name));
-			if (! $rs) {
-				$this->error = "SQL Error in Register::Customer::can(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			list($can) = $rs->FetchRow();
-			if ($can) return true;
-			return false;
+			return $this->has_privilege($privilege_name);
 		}
 
 		// See If a User has been granted a Role
@@ -373,13 +358,24 @@
 		}
 
 		public function has_privilege($privilege_name) {
-			$roles = $this->roles();
-			foreach ($roles as $role) {
-				if ($role->has_privilege($privilege_name)) {
-					return true;
-				}
+			$check_privilege_query = "
+				SELECT	1
+				FROM	register_users_roles rur,
+						register_roles_privileges rrp,
+						register_privileges p
+				WHERE	rur.user_id = ?
+				AND		rrp.role_id = rur.role_id
+				AND		p.id = rrp.privilege_id
+				AND		p.name = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($check_privilege_query,array($this->id,$privilege_name));
+			if (! $rs) {
+				$this->error = "SQL Error in Register::Customer::has_privilege(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
 			}
-			return false;
+			list($found) = $rs->FetchRow();
+			if ($found == "1") return true;
+			else return false;
 		}
 		
 		// Get all users that have been granted a Role
