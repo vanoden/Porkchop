@@ -193,7 +193,8 @@
 				app_log("Validation key confirmed, updating queue record");
 				$queuedCustomer = new \Register\Queue(); 
 				$queuedCustomer->getByQueuedLogin($customer->id);
-				$queuedCustomer->update (array('status'=>'PENDING'));
+				
+				if ($queuedCustomer->status == "VERIFYING") $queuedCustomer->update (array('status'=>'PENDING'));
 
 				// create the notify support reminder email for the new verified customer
 				app_log("Generating notification email");

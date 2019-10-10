@@ -24,6 +24,6 @@
 		}
 
 		public function error() {
-			return $this->_error;
+            return 'Email Transport error has occurred';
 		}
 	}
