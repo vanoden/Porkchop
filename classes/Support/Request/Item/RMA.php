@@ -7,6 +7,7 @@
 		public $approvedBy;
 		public $date_approved;
 		public $item;
+		private $item_id;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -131,8 +132,30 @@
 			$this->approvedBy = new \Register\Customer($object->approved_id);
 			$this->status = $object->status;
 			$this->shipment = new \Shipping\Shipment($object->shipment_id);
+			$this->item_id = $object->item_id;
+			$this->document_id = $object->document_id;
 			return true;
 		}
+
+		public function document() {
+			return new \Storage\File($this->document_id);
+		}
+
+		public function item() {
+			return new \Support\Request\Item($this->item_id);
+		}
+		public function number() {
+			return sprintf("RMA%05d",$this->id);
+		}
+		public function events() {
+			return null;
+		}
+
+		public function exists() {
+			if (is_numeric($this->id)) return true;
+			return false;
+		}
+
 		public function error() {
 			return $this->_error;
 		}

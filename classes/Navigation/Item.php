@@ -4,7 +4,7 @@
 	class Item {
 		private $_error;
 		public $id;
-		public $menu;
+		private $menu_id;
 		public $title;
 		public $target;
 		public $view_order;
@@ -149,8 +149,9 @@
 			}
 			$object = $rs->FetchNextObject(false);
 			if ($object->id) {
+				app_log(print_r($object,true));
 				$this->id = $object->id;
-				$this->menu = new Menu($object->menu_id);
+				$this->menu_id= $object->menu_id;
 				$this->title = $object->title;
 				$this->target = $object->target;
 				$this->view_order = $object->view_order;
@@ -175,6 +176,10 @@
 				$this->ssl = null;
 			}
 			return true;
+		}
+
+		public function menu() {
+			return new \Navigation\Menu($this->menu_id);
 		}
 
 		public function error() {
