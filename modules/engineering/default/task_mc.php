@@ -20,6 +20,7 @@
 
     // add task comment
     if (isset($_REQUEST['btn_add_comment'])) {
+    
         $msgs = array();
 		if (isset($_REQUEST['content'])) {
             $engineeringComment = new \Engineering\Comment();

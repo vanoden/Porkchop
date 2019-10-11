@@ -23,14 +23,14 @@
        });
    });
    
-	function checkProduct() {
-		var productElem = document.getElementById('product_id');
-		var serialNumber = document.getElementById('serial_number');
-		var serialMessage = document.getElementById('serial_number_message');
+	function checkProduct(lineNumber) {	
+		var productElem = document.getElementById('product_id'+lineNumber);
+		var serialNumber = document.getElementById('serial_number'+lineNumber);
+		var serialMessage = document.getElementById('serial_number_message'+lineNumber);
 		serialNumber.focus();
 		serialNumber.style.border = '1px solid gray';
 		if (productElem.selectedIndex > 0) {
-			if (document.getElementById('serial_number').value.length > 0) serialMessage.display = 'none';
+			if (document.getElementById('serial_number'+lineNumber).value.length > 0) serialMessage.display = 'none';
 			return true;
 		}
 		else {
@@ -59,15 +59,15 @@
 	}
 
 	// make sure the serial number is valid
-	function checkSerial() {
+	function checkSerial(lineNumber) {
 	
-		var productInput = document.getElementById('product_id');
-		checkProduct();
+		var productInput = document.getElementById('product_id'+lineNumber);
+		checkProduct(lineNumber);
 		var productID = productInput.options[productInput.selectedIndex].value;
 
-		var serialInput = document.getElementById('serial_number');
-		var serialNumberMessage = document.getElementById('serial_number_message');
-		var serialNumberMessageOK = document.getElementById('serial_number_message_ok');
+		var serialInput = document.getElementById('serial_number'+lineNumber);
+		var serialNumberMessage = document.getElementById('serial_number_message'+lineNumber);
+		var serialNumberMessageOK = document.getElementById('serial_number_message_ok'+lineNumber);
 
 		if (serialInput.value.length < 1) return true;
 		var code = serialInput.value;
@@ -114,6 +114,12 @@
 		display: table-cell;
 		border-bottom: 1px solid #dedede;
 	}
+	
+	#page-mgmt input[type="text"] {
+	    min-width: 300px;
+	    margin: 0px 25px 0px 25px;
+	}
+	
 </style>
 <script>
 	var line = 0;
@@ -159,6 +165,7 @@
 		row.appendChild(productCell1);
 		var productSelect = document.createElement('select');
 		productSelect.name = 'product_id['+line+']';
+		productSelect.id = 'product_id'+line;
 		productSelect.classList.add('value');
 		productSelect.classList.add('input');
 		productCell1.appendChild(productSelect);
@@ -179,17 +186,21 @@
 		row.appendChild(productCell2);
 		var serialNumber = document.createElement('input');
 		serialNumber.name = "serial_number["+line+"]";
+		serialNumber.id = 'serial_number'+line;
 		serialNumber.classList.add('value');
 		serialNumber.classList.add('input');
+		serialNumber.setAttribute('style','min-width: 300px; margin: 0px 25px 0px 25px;');
 		productCell2.appendChild(serialNumber);
-
+		
 		var productCell3 = document.createElement('div');
 		productCell3.classList.add('table_cell');
 		row.appendChild(productCell3);
 		var problem = document.createElement('input');
 		problem.name = "line_description["+line+"]";
+		problem.id = 'line_description'+line;
 		problem.classList.add('value');
 		problem.classList.add('input');
+        problem.setAttribute('style','min-width: 300px; margin: 0px 25px 0px 25px;');
 		productCell3.appendChild(problem);
 
 		var productCell4 = document.createElement('div');
@@ -203,6 +214,20 @@
 		addBtn.addEventListener("click", function(){
 			dropRow(lineID);
 		});
+		
+		var serialNumberMessage = document.createElement('div');
+		serialNumberMessage.id = 'serial_number_message'+line;
+		serialNumberMessage.setAttribute('style','color:red; display:none;');
+		productCell2.appendChild(serialNumberMessage);
+		
+		var serialNumberMessageOK = document.createElement('div');
+		serialNumberMessageOK.id = 'serial_number_message_ok'+line;
+		serialNumberMessageOK.setAttribute('style','color:green; display:none;');
+		productCell2.appendChild(serialNumberMessageOK);
+		
+		newSerialNumber = document.getElementById('serial_number'+line);
+		newSerialNumber.addEventListener("change", function() { checkSerial(lineID); }, false);
+		newSerialNumber.addEventListener("focus", function() { checkProduct(lineID); }, false);
 	}
 </script>
 <h2><i class='fa fa-phone' aria-hidden='true'></i> Request Support</h2>
@@ -247,7 +272,7 @@
 	</div>
 	<div class="table_row" id="row0">
 		<div class="table_cell" style="width: 100px;">
-			<select id="product_id" name="product_id[0]" class="value input" style="width: 150px; margin-right: 25px;">
+			<select id="product_id0" name="product_id[0]" class="value input">
 				<option value="">None</option>
 <?	foreach ($products as $product) { ?>
 				<option value="<?=$product->id?>"><?=$product->code?></option>
@@ -255,15 +280,15 @@
 			</select>
 		</div>
 		<div class="table_cell" style="width: 100px;">		
-			<input id="serial_number" type="text" name="serial_number[0]" class="value input" onfocus="checkProduct();" onchange="checkSerial()" maxlength="50" style="width: 150px; margin-right: 25px;" />
-            <div id="serial_number_message" style="color:red; display:none;">Serial number not found in our system</div>
-            <div id="serial_number_message_ok" style="color:green; display:none;">Serial number has been found, thank you for providing!</div>			
+  		  <input id="serial_number0" type="text" name="serial_number[0]" class="value input" onfocus="checkProduct(0);" onchange="checkSerial(0)" maxlength="50"/>
+          <div id="serial_number_message0" style="color:red; display:none;">Serial number not found in our system</div>
+          <div id="serial_number_message_ok0" style="color:green; display:none;">Serial number has been found, thank you for providing!</div>			
 		</div>
 		<div class="table_cell" style="width: 500px;">
-			<input type="text" name="line_description[0]" class="value input" style="width:400px; margin-right: 25px;" />
+			<input type="text" name="line_description[0]" class="value input" />
 		</div>
 		<div class="table_cell" style="width: 50px;">
-			<input type="button" name="btn_drop" class="value input" style="width:50px" value="-" onclick="dropRow(0);" />
+			<input type="button" name="btn_drop" class="value input" value="-" onclick="dropRow(0);" />
 		</div>
 	</div>
 </div>

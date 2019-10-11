@@ -174,4 +174,8 @@
 		public function error() {
 			return $this->_error;
 		}
+		
+		public function person() {
+			return new \Register\Person($this->user_id);
+		}
 	}

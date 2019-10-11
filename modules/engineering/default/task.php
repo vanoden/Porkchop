@@ -239,19 +239,18 @@
           </div>
           <?	
             foreach ($commentsList as $comment) {
+            $person = $comment->person();
              ?>
           <div class="tableRow">
              <div class="tableCell">
                 <i><?=date("M dS Y h:i A", $comment->timestamp_added)?></i>
              </div>
              <div class="tableCell">
-                <strong><?=$person->login?></strong>
+               <strong><?=$person->login?></strong>
              </div>
              <div class="tableCell eventLogEntry">
              <textarea class="event-log-description" readonly="readonly">
-             
                 <?=$comment->content?>
-             
              </textarea>
              </div>
           </div>
@@ -316,7 +315,8 @@
          <div class="tableCell" style="width: 15%;">Person</div>
          <div class="tableCell" style="width: 65%;">Description</div>
       </div>
-      <?	foreach ($events as $event) {
+      <?php	
+        foreach ($events as $event) {
          $person = $event->person();
          ?>
       <div class="tableRow">
