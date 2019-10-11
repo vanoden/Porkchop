@@ -125,8 +125,8 @@
 
 			$itemlist = new \Navigation\ItemList();
 			$items = $itemlist->find(array('menu_id' => $this->id,'parent_id' => $parent_id));
-			if ($itemlist->error) {
-				$this->_error = $itemlist->error;
+			if ($itemlist->error()) {
+				$this->_error = $itemlist->error();
 				return null;
 			}
 			return $items;
@@ -142,6 +142,59 @@
 			return $response;
 		}
 
+		public function asHTML($parameters = array()) {
+			$html = '';
+			if ($parameters['type'] == 'left_nav') {
+				if (!isset($parameters['nav_id'])) $parameters['nav_id'] = 'left_nav';
+				if (!isset($parameters['a_class'])) $parameters['a_class'] = 'left_nav_button';
+				$html .= '<nav id="'.$parameters['nav_id'].'">';
+				$items = $this->cascade();
+				foreach ($items as $item) {
+					$html .= '<a class="'.$parameters['a_class'].'">'.$item->title."</a>";
+				}
+			}
+			else {
+				# Defaults
+				if (!isset($parameters['nav_id'])) $parameters['nav_id'] = 'left_nav';
+				if (!isset($parameters['nav_button_class'])) $parameters['nav_button_class'] = 'left_nav_button';
+				if (!isset($parameters['subnav_button_class'])) $parameters['subnav_button_class'] = 'left_subnav_button';
+
+				# Nav Container
+				$html .= '<nav id="'.$parameters['nav_id'].'">'."\n";
+				$items = $this->cascade();
+				foreach ($items as $item) {
+					if ($item->hasChildren()) $has_children = 1;
+					else $has_children = 0;
+
+					# Parent Nav Button
+					$html .= "\t".'<a id="left_nav['.$item->id.']" class="'.$parameters['nav_button_class'].'"';
+					
+					if ($has_children) {
+						$html .= ' href="javascript:void(0)"';
+						$html .= ' onclick="toggleMenu(this)"';
+					}
+					else {
+						$html .= ' href="'.$item->target.'"';
+					}
+					$html .= '>'.$item->title."</a>\n";
+					if ($has_children) {
+						# Sub Nav Container
+						$html .= '<div id="left_subnav['.$item->id.']" class="left_subnav"';
+						if (isset($_REQUEST['expandNav']) && $_REQUEST['expandNav'] == $item->id) $html .= ' style="display: block"';
+						$html .= '>';
+						foreach ($item->item as $subitem) {
+							# Sub Nav Button
+							$target = $subitem->target;
+							if (preg_match('/\?/',$target)) $target .= "&expandNav=".$item->id;
+							else $target .= "?expandNav=".$item->id;
+							$html .= '<a href="'.$target.'" class="'.$parameters['subnav_button_class'].'">'.$subitem->title.'</a>';
+						}
+						$html .= '</div>';
+					}
+				}
+			}
+			return $html;
+		}
 		public function error() {
 			return $this->_error;
 		}

@@ -406,6 +406,28 @@
 					$buffer .= ob_get_clean();
 				}
 			}
+			elseif ($object == "navigation") {
+				if ($property == "menu") {
+					if ($parameter['code']) {
+						$menu = new \Navigation\Menu();
+						if ($menu->get($parameter['code'])) {
+							$buffer .= $menu->asHTML($parameter);
+						}
+					}
+					else {
+						app_log("navigation menu references without code");
+					}
+				}
+				else {
+					app_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view,'debug',__FILE__,__LINE__);
+					ob_start();
+					$be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
+					$fe_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php';
+					if (file_exists($be_file)) include($be_file);
+					if (file_exists($fe_file)) include($fe_file);
+					$buffer .= ob_get_clean();
+				}
+			}
 			elseif ($object == "content") {
 				if ($property == "index") {
 					app_log("content::index",'trace',__FILE__,__LINE__);

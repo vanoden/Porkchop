@@ -65,14 +65,15 @@
 			return $this->update($parameters);
 		}
 
-		public function get($code) {
+		public function get($menu_id,$code) {
 			$get_object_query = "
 				SELECT	id
 				FROM	navigation_menu_items
-				WHERE	code = ?
+				WHERE	menu_id = ?
+				AND		title = ?
 			";
-
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($code));
+query_log($get_object_query,array($menu_id,$code));
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($menu_id,$code));
 
 			if (! $rs) {
 				$this->_error = "SQL Error in Navigation::Item::get(): ".$GLOBALS['_database']->ErrorMsg();
@@ -84,7 +85,6 @@
 				return $this->details();
 			}
 			else {
-				$this->_error = "Item not found";
 				return false;
 			}
 		}
@@ -136,7 +136,6 @@
 		}
 
 		public function details() {
-			app_log("Get details for menu item ".$this->id,'trace');
 			$get_object_query = "
 				SELECT	*
 				FROM	navigation_menu_items
@@ -149,7 +148,6 @@
 			}
 			$object = $rs->FetchNextObject(false);
 			if ($object->id) {
-				app_log(print_r($object,true));
 				$this->id = $object->id;
 				$this->menu_id= $object->menu_id;
 				$this->title = $object->title;
@@ -182,6 +180,26 @@
 			return new \Navigation\Menu($this->menu_id);
 		}
 
+		public function hasChildren() {
+			$get_children_query = "
+				SELECT	count(*)
+				FROM	navigation_menu_items
+				WHERE	parent_id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_children_query,array($this->id));
+			if (! $rs) {
+				$this->error = "SQL Error in Navigation::Item::hasChildren(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			list($count) = $rs->FetchRow();
+			if ($count > 0) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		
 		public function error() {
 			return $this->_error;
 		}
