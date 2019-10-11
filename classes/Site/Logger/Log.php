@@ -21,7 +21,7 @@
 
 		public function formatted($message,$level = 'debug',$file,$line) {
 			# Replace Carriage Returns
-			$message = preg_replace('/\r*\n/',"\n",$message);
+			$message = preg_replace('/\r*\n$/',"",$message);
 	
 			# Prepare Values for String
 			$date = $this->datetime();
