@@ -259,6 +259,13 @@
 							"view_order"	=> 50,
 							"alt"			=> "Transfer Device",
 							"description"	=> "Device Transfers"
+						),
+						array (
+							"title"	=> "Sensor Models",
+							"target"	=> "/_monitor/sensor_models",
+							"view_order"	=> 90,
+							"alt"			=> "Sensor Model Management",
+							"description"	=> "Sensor Model Management"
 						)
 					)
 				),
