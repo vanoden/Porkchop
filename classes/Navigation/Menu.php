@@ -33,7 +33,6 @@
 				return $this->details();
 			}
 			else {
-				$this->_error = "Menu not found";
 				return false;
 			}
 		}

@@ -41,6 +41,7 @@
 				"contact admin"	=> array(),
 			),
 		),
+		"Navigation"	=> array(),
         "Storage"		=> array(
 			"roles"			=> array(
 				"storage manager"	=> "admin.html",
@@ -510,6 +511,7 @@
 					$subnav_item->update(
 						array(
 							"view_order"	=> $subitem["view_order"],
+							"target"		=> $subitem["target"],
 							"alt"			=> $subitem["alt"],
 							"description"	=> $subitem["description"]
 						)
@@ -521,6 +523,7 @@
 							"menu_id"		=> $nav_menu->id,
 							"parent_id"		=> $nav_item->id,
 							"title"			=> $subitem["title"],
+							"target"		=> $subitem["target"],
 							"view_order"	=> $subitem["view_order"],
 							"alt"			=> $subitem["alt"],
 							"description"	=> $subitem["description"]

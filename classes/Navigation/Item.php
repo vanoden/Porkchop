@@ -105,6 +105,11 @@ query_log($get_object_query,array($menu_id,$code));
 						target = ?";
 				array_push($bind_params,$parameters['target']);
 			}
+			if (isset($parameters['parent_id'])) {
+				$update_object_query .= ",
+					parent_id = ?";
+				array_push($bind_params,$parameters['parent_id']);
+			}
 			if (isset($parameters['alt'])) {
 				$update_object_query .= ",
 						alt = ?";
