@@ -136,6 +136,8 @@
 				"admin_assets"		=> "admin.html",
 				"admin_details"		=> "admin.html",
 				"comm_dashboard"	=> "admin.html",
+				"sensor_models"		=> "admin.html",
+				"sensor_model"		=> "admin.html"
 			),
 		),
 	);
