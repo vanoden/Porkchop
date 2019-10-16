@@ -123,12 +123,9 @@
     if (isset($page->isVerifedAccount)) {
         if ($page->isVerifedAccount) {
 ?>
-    <h3>Your account has been created, thank you!</h3><br>
+    <h3>Your account has been verified, thank you!</h3><br>
     <h5>You may login to your account <a href="/_register/login">here</a>.</h5><br/>
-    <h6>You will <strong>receive an email</strong> soon confirm your email address is valid.</h6>
-    <h6>Please check your <strong>spam / other</strong> mail folder if you have <u>trouble finding it in your inbox</u>.</h6>
-    <br/>
-    <h6><i><strong>Note:</strong> Our account administrators will fully approve your account in the coming days to use our platform.</i></h6>
+    <h6><i><strong>Note:</strong> Our account administrators will soon fully approve your account to use our platform.</i></h6>
 <?php        
         } else {
 ?>

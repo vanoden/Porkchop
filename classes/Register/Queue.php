@@ -192,6 +192,7 @@
 					$message->html(true);
 					$message->from($GLOBALS['_config']->support->unassigned_action->from);
 					$message->subject($GLOBALS['_config']->support->unassigned_action->subject);
+					$message->body($template->content());
 					$role = new \Register\Role();
 					if ($role->get('support user')) {
 						app_log("Notifying Support Team");
@@ -209,7 +210,14 @@
 			$message->html(true);
 			$message->from($GLOBALS['_config']->register->account_activation_notification->from);
 			$message->subject($GLOBALS['_config']->register->account_activation_notification->subject);
-			$customer->notify($message);
+			$message->body($template->content());
+			if ($customer->notify($message)) {
+				app_log("Activation notice sent");
+			}
+			else {
+				app_log("Activation notice failed: ".$customer->error(),'error');
+				$this->error = "Error notifying customer: ".$customer->error();
+			}
 		}
 
 		// hydrate known details about this queue object from known id if set
