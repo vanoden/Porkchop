@@ -31,41 +31,6 @@
 			}
 		}
 		
-		public function addQueued($parameters) {
-		
-			app_log("Register::Organization::addQueued()",'trace',__FILE__,__LINE__);
-			
-			$this->error = null;
-			$add_object_query = "
-				INSERT
-				INTO	register_organizations
-				(		name,code,status,date_created,is_reseller,assigned_reseller_id,notes)
-				VALUES
-				(		
-				    ?,?,?,sysdate(),?,?,?
-				)
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$parameters['name'],
-					$parameters['code'],
-					'NEW',
-					$parameters['is_reseller'],
-					$parameters['assigned_reseller_id'],
-					$parameters['notes']				
-				)
-			);
-			
-			if (! $rs) {			
-				$this->error = "SQL Error in \Register\Organization::addQueued: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			
-			$this->id = $GLOBALS['_database']->Insert_ID();
-			return $this->update($parameters);	
-		}
-
 		public function add($parameters) {
 		
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
@@ -257,6 +222,11 @@
 			$customers = $customerlist->find(array("organization_id" => $this->id,"status" => array('NEW','ACTIVE')));
 			return count($customers);
 		}
+
+		public function exists() {
+			if (isset($this->id) && is_numeric($this->id) && $this->id > 0) return true;
+			return false;
+		}
 		public function expire() {
 			$update_org_query = "
 				UPDATE	register_organizations
@@ -278,5 +248,8 @@
 			$cache_item->delete();
 
 			return true;
+		}
+		public function error() {
+			return $this->error;
 		}
     }

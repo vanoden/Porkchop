@@ -990,9 +990,10 @@
     	header('Content-Type: application/json');
     	$organizationList = new \Register\OrganizationList();
 		$search = array();
-		$search['name'] = $_REQUEST['term'];
+		$search['string'] = $_REQUEST['term'];
 		$search['_like'] = array('name');
-    	$organizationsFound = $organizationList->find($search);
+		$search['status'] = array('NEW','ACTIVE','EXPIRED');
+    	$organizationsFound = $organizationList->search($search);
     	
     	$results = array();
     	foreach ($organizationsFound as $organization) {

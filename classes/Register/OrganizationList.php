@@ -16,12 +16,14 @@
 
 			$string = $parameters['string'];
 
-			if (! preg_match('/^[\w\-\.\_\*]+$/',$string)) {
+			if (! preg_match('/^[\'\w\-\.\_\s\*]+$/',$string)) {
+				app_log("Invalid search string: '$string'",'info');
 				$this->error = "Invalid search string";
 				return undef;
 			}
-
+			$string = str_replace("'","\'",$string);
 			$string = preg_replace('/\*/','%',$string);
+
 			$get_organizations_query .= "
 				WHERE name like '$string'";
 
@@ -39,11 +41,11 @@
 			}
 			elseif (isset($parameters['status'])) {
 				$get_organizations_query .= "
-				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
+				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
 			}
 			else
 				$get_organizations_query .= "
-				AND		status IN ('NEW','ACTIVE')";
+				AND		status IN ('NEW','ACTIVE','EXPIRED')";
 
 			if (isset($parameters['is_reseller'])) {
 				if ($parameters['is_reseller'])
@@ -55,7 +57,7 @@
 			}
 			if (isset($parameters['reseller_id'])) {
 				$get_organizations_query .= "
-				AND		reseller_id = ".$GLOBALS['_database']->qstr($parameters['reseller_id'],get_magic_quotes_gpc);
+				AND		reseller_id = ".$GLOBALS['_database']->qstr($parameters['reseller_id'],get_magic_quotes_gpc());
 			}
 
 			$get_organizations_query .= "
@@ -108,13 +110,13 @@
 					AND		name like '%".preg_replace('/[^\w\-\.\_\s]/','',$parameters['name'])."%'";
 				} else {
 					$get_organizations_query .= "
-					AND		name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc);
+					AND		name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
 				}
 			}
 			
 			if (isset($parameters['code'])) {
 				$get_organizations_query .= "
-				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc);
+				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc());
 			}
 			
 			if (isset($parameters['status']) && is_array($parameters['status'])) {
@@ -130,7 +132,7 @@
 				$get_organizations_query .= ")";
 			} elseif (isset($parameters['status'])) {
 				$get_organizations_query .= "
-				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
+				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
 			} else
 				$get_organizations_query .= "
 				AND		status IN ('NEW','ACTIVE')";
@@ -145,7 +147,7 @@
 			}
 			if (isset($parameters['reseller_id'])) {
 				$get_organizations_query .= "
-				AND		reseller_id = ".$GLOBALS['_database']->qstr($parameters['reseller_id'],get_magic_quotes_gpc);
+				AND		reseller_id = ".$GLOBALS['_database']->qstr($parameters['reseller_id'],get_magic_quotes_gpc());
 			}
 
 			$get_organizations_query .= "

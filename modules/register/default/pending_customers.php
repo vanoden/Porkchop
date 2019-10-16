@@ -219,7 +219,7 @@
 	  ?>
 	<div class="tableRow">
 		<div class="tableCell"><?=$queuedCustomer->name?>
-<?	if ($queuedCustomer->is_reseller) { ?><br>[Reseller]<? } ?>
+<?	if ($queuedCustomer->is_reseller) { ?>&nbsp;[Reseller]<? } ?>
 		<br>
 		<form method="POST" id="customer_add_form_<?=$queuedCustomer->id?>" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
 		<?php
@@ -227,12 +227,12 @@
 				  case 'PENDING':
 					  ?>
 			<div class="ui-widget">
-				<label for="organization">Match Organization: </label><br/>
-				<input class="organization" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?=$queuedCustomer->name?>"/>
-				<button type="button" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-check-circle" aria-hidden="true"></i> Assign</button>
+				<label for="organization">Match Organization: </label>
+				<input class="organization" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?=$queuedCustomer->name?>"/><br>
+				<button type="button" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-check-circle" aria-hidden="true"></i> Assign Existing</button>
+				<button type="button" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-plus" aria-hidden="true"></i> Add as New</button>
+				<button type="button" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-ban" aria-hidden="true"></i> Deny</button>
 			</div>
-			<button type="button" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-plus" aria-hidden="true"></i> Add as New</button>
-			<button type="button" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-ban" aria-hidden="true"></i> Deny</button>
 		   <?php
 			  break;
 			  case 'VERIFYING':

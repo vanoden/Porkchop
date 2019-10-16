@@ -107,44 +107,59 @@
          * sync the live account that may or may not be associated with the queued account being edited
          */
 		public function syncLiveAccount () {
-
 		    // if they've found an existing organization
 		    if($_REQUEST['organization']) $this->name = $_REQUEST['organization'];
 
             // process the new or existing queued customer to the chosen status
             global $_config;
             $registerOrganizationList = new \Register\OrganizationList();          
-            $existingOrganization = $registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleOrganizationStatus));
-            $organizationExists = !empty($existingOrganization);
-            $registerOrganization = new \Register\Organization();
-
-            // set to active - doesn't exist yet - create the organization
-            if (!$organizationExists) {
-                $newOrganizationDetails = $registerOrganization->addQueued(array('name' => $this->name, 'code' => $this->code, 'status' => 'NEW', 'is_reseller' => $this->is_reseller, 'assigned_reseller_id' => $this->reseller, 'notes' => $this->notes));
-            } else {
-                //  already exists - set to approved - update the organization
-                $registerOrganization->get($this->code);
-                $registerOrganization->update(array('status' => 'APPROVED', 'notes' => $this->notes));
+            list($organization) = $registerOrganizationList->find(array('name' => $this->name, 'status' => $this->possibleOrganizationStatus));
+			if (!empty($organization)) {
+				app_log("Organization ".$organization->name." matched");
+                $organization->update(array('status' => 'ACTIVE','notes' => $this->notes));
+			}
+			else {
+				app_log("Creating organization ".$this->name);
+				$organization = new \Register\Organization();
+                $organization->add(
+					array(
+						'name' => $this->name,
+						'code' => $this->code,
+						'status' => 'NEW',
+						'is_reseller' => $this->is_reseller,
+						'assigned_reseller_id' => $this->reseller,
+						'notes' => $this->notes
+					)
+				);
+				if ($organization->error()) {
+					$this->error = "Error adding organization: ".$organization->error();
+					return false;
+				}
             }
-            $existingOrganization = array_pop($registerOrganizationList->find(array('name' => $this->name)));
 
             // update to have the queued login match the 'approved' organization
-            $registerCustomer = new \Register\Customer($this->register_user_id);
-            $registerCustomer->update(array('organization_id' => $existingOrganization->id));
+            $customer = new \Register\Customer($this->register_user_id);
+			app_log("Assigning customer ".$customer->login." to organization ".$organization->name);
+            $customer->update(array('organization_id' => $organization->id));
             
 	        // they've entered a product, add a support_request record with customer id, date entry and request items for each item entered
 			if (!empty($this->product_id)) {
-
+				app_log("Adding transfer of ownership request for ".$this->product_id);
                 $supportRequest = new \Support\Request();
-			    $newSupportRequest = $supportRequest->add(
+			    $supportRequest->add(
 				    array(
 					    "date_request"	    => date("Y-m-d H:i:s"),
 					    "customer_id"	    => $this->register_user_id,
-					    "organization_id"   => $existingOrganization->id,
+					    "organization_id"   => $organization->id,
+
 					    "type"			    => 'service',
 					    "status"		    => "NEW"
 				    )
 			    );
+				if ($supportRequest->error()) {
+					$this->error = "Error adding support request: ".$supportRequest->error();
+					return false;
+				}
 			    
                 $item = array (
                     'line'			=> 1,
@@ -157,7 +172,7 @@
 				if ($ticket) {
 					// Add Action to Ticket
 					$action = $ticket->addAction(array(
-						'requested_id'	=> $registerCustomer->id,
+						'requested_id'	=> $customer->id,
 						'status'		=> 'NEW',
 						'type'			=> 'Transfer Ownership',
 						'description'	=> 'Confirm and Transfer ownership to new company'
@@ -194,7 +209,7 @@
 			$message->html(true);
 			$message->from($GLOBALS['_config']->register->account_activation_notification->from);
 			$message->subject($GLOBALS['_config']->register->account_activation_notification->subject);
-			$registerCustomer->notify($message);
+			$customer->notify($message);
 		}
 
 		// hydrate known details about this queue object from known id if set
