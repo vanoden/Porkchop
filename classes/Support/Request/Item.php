@@ -173,9 +173,11 @@
 			$parameters['item_id'] = $this->id;
 			$rma = new \Support\Request\Item\RMA();
 			if ($rma->add($parameters)) {
+				app_log("Created RMA ".$rma->code);
 				return $rma;
 			} else {
 				$this->_error = $rma->error();
+				app_log("Error creating RMA: ".$rma->error(),'error');
 				return false;
 			}
 		}

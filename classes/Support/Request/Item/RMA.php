@@ -87,7 +87,7 @@
 				$this->_error = "SQL Error in Support::Request::RMA::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			list($this->id) = $GLOBALS['_database']->Insert_ID();
+			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
 		}
 

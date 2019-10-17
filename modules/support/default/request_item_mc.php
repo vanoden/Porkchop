@@ -1,7 +1,6 @@
 <?php
     global $_config;
 	$page = new \Site\Page();
-	$page->fromRequest();
 	$page->requireRole('support user');
 	
 	if ($_REQUEST['item_id']) {
@@ -69,17 +68,59 @@ Description: ".$action->description
 		}
 	}
 	if ($_REQUEST['btn_add_rma']) {
+		// Make Sure Notification Template is available
+		$return_notification = $GLOBALS['_config']->support->return_notification;
+		if (! isset($return_notification) || empty($return_notification)) {
+			$page->addError("Return notification template not configured");
+			app_log("config->support->return_notification not set!",'error');
+			return false;
+		}
+		elseif (! file_exists($return_notification->template)) {
+			$page->addError("Return Notification Email Template '".$return_notification->template."' not found");
+			app_log("File '".$return_notification->template."' not found! Set in config->support->return_notification setting",'error');
+			return false;
+		}
+
 		// We create an RMA record.  Shipment is created by customer when they ship, or admin when received
 		$parameters = array(
 			'approved_id'	=> $GLOBALS['_SESSION_']->customer->id,
 			'date_approved'	=> date('Y-m-d H:i:s'),
 			'item_id'		=> $item->id
 		);
-		$item->addRMA($parameters);
+		$rma = $item->addRMA($parameters);
 		if ($item->error()) {
 			$page->addError("Unable to create RMA: ".$item->error());
+			return false;
 		}
-		$item->update(array('status' => 'PENDING CUSTOMER'));
+		app_log("RMA ".$rma->code." creaed",'info');
+
+		// Create Template
+		app_log("Populating notification email");
+		if ($GLOBALS['_config']->site->https) $url = "https://".$GLOBALS['_config']->site->hostname."/_support/rma_form/".$rma->code;
+		else $url = "http://".$GLOBALS['_config']->site->hostname."/_support/rma_form/".$rma->code;
+
+		$requestedBy = $item->request()->customer;
+		$notice_template = new \Content\Template\Shell();
+		$notice_template->load($return_notification->template);
+		$notice_template->addParam('CUSTOMER.FIRST_NAME',$requestedBy->first_name);
+		$notice_template->addParam('CUSTOMER.LAST_NAME',$requestedBy->last_name);
+		$notice_template->addParam('URL',$url);
+		$notice_template->addParam('PRODUCT.SERIAL_NUMBER',$item->serial_number);
+
+		app_log("Notifying customer of return authorization");
+		$message = new \Email\Message();
+		$message->from($return_notification->from);
+		$message->subject($return_notification->subject);
+		$message->html(true);
+		$message->body($notice_template->output());
+		if ($requestedBy->notify($message)) {
+			$page->success = "Message delivered to ".$requestedBy->login;
+			app_log("Notification email delivered to ".$requestedBy->login);
+		}
+		else {
+			$page->addError("Error delivering notification: ".$requestedBy->error());
+			app_log("Error delivering notification: ".$requestedBy->error());
+		}
 	}
 	if ($_REQUEST['btn_add_shipment']) {
 		$shipment = new \Shipping\Shipment($_REQUEST['shipment_id']);
