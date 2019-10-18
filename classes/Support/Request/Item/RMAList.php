@@ -7,9 +7,12 @@
 
 		public function find($parameters = array()) {
 			$find_objects_query = "
-				SELECT	id
-				FROM	support_rmas
-				WHERE	id = id
+				SELECT	sr.id
+				FROM	support_rmas sr,
+						support_request_items sri,
+						support_requests srs
+				WHERE	sr.item_id = sri.id
+				AND		sri.request_id = srs.id
 			";
 			$bind_params = array();
 			if (isset($parameters['item_id'])) {
@@ -23,10 +26,52 @@
 					return false;
 				}
 				$find_objects_query .= "
-				AND		item_id = ?
+				AND		sri.item_id = ?
 				";
 				array_push($bind_params,$item->id);
 			}
+			if (isset($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
+				$organization = new \Register\Organization($parameters['organization_id']);
+				if (! $organization->exists()) {
+					$this->_error = "Organization not found";
+					return null;
+				}
+				$find_objects_query .= "
+					AND	srs.organization_id = ?";
+				array_push($bind_params,$organization->id);
+			}
+
+			if (isset($parameters['product_id'])) {
+				$product = new \Product\Item($parameters['product_id']);
+				$find_objects_query .= "
+					AND	sri.product_id = ?";
+				array_push($bind_params,$product->id);
+			}
+
+			if (isset($parameters['status'])) {
+				if (is_array($parameters['status'])) {
+				}
+				else {
+					$find_objects_query .= "
+					AND		sr.status = ?
+					";
+					array_push($bind_params,$parameters['status']);
+				}
+			}
+
+			if (isset($parameters['date_start']) && get_mysql_date($parameters['date_start'])) {
+				$find_objects_query .= "
+					AND		date_approved >= ?";
+				array_push($bind_params,get_mysql_date($parameters['date_start']));
+			}
+
+			if (isset($parameters['date_end']) && get_mysql_date($parameters['date_end'])) {
+				$find_objects_query .= "
+					AND		date_approved < ?";
+				array_push($bind_params,get_mysql_date($parameters['date_end']));
+			}
+
+			query_log($find_objects_query,$bind_params);
 			
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			
@@ -41,6 +86,10 @@
 				$this->count ++;
 			}
 			return $objects;
+		}
+
+		public function error() {
+			return $this->_error;
 		}
 	}
 ?>

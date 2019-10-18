@@ -4,8 +4,9 @@
 	class RMA {
 		private $_error;
 		public $code;
-		public $approvedBy;
+		private $approved_id;
 		public $date_approved;
+		public $timestamp_approved;
 		public $item;
 		private $item_id;
 
@@ -114,7 +115,8 @@
 
 		public function details() {
 			$get_object_query = "
-				SELECT	*
+				SELECT	*,
+						unix_timestamp('date_approved') timestamp_approved
 				FROM	support_rmas
 				WHERE	id = ?
 			";
@@ -129,7 +131,8 @@
 			$this->id = $object->id;
 			$this->code = $object->code;
 			$this->date_approved = $object->date_approved;
-			$this->approvedBy = new \Register\Customer($object->approved_id);
+			$this->timestamp_approved = $object->timestamp_approved;
+			$this->approved_id = $object->approved_id;
 			$this->status = $object->status;
 			$this->shipment = new \Shipping\Shipment($object->shipment_id);
 			$this->item_id = $object->item_id;
@@ -137,6 +140,9 @@
 			return true;
 		}
 
+		public function approvedBy() {
+			return new \Register\Customer($this->approved_id);
+		}
 		public function document() {
 			return new \Storage\File($this->document_id);
 		}
@@ -149,6 +155,9 @@
 		}
 		public function events() {
 			return null;
+		}
+		public function localtimeApproved() {
+			return date('m/d/Y H:i:s',$this->timestamp_approved);
 		}
 
 		public function exists() {

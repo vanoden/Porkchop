@@ -32,7 +32,23 @@
 				$this->_error = "Authentication required";
 				return null;
 			}
-			
+
+			// Get Requests for Organization
+			if (isset($parameters['organization_id'])) {
+				$organization = new \Register\Organization($parameters['organization_id']);
+				if (! $organization->exists()) {
+					$this->_error = "Organization not found";
+					return null;
+				}
+				$members = $organization->members();
+				$memberlist = array();
+				foreach ($members as $member) {
+					array_push($memberlist,$member->id);
+				}
+				$find_requests_query .= "
+					AND	customer_id IN (".join(',',$memberlist).")";
+			}
+
 			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					$find_requests_query .= "

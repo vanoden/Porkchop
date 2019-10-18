@@ -79,6 +79,17 @@
 					$find_objects_query .= ")";
 				}
 			}
+
+			if (isset($parameters['organization_id'])) {
+				$requestList = new \Support\RequestList();
+				$requests = $requestList->find(array('organization_id' => $parameters['organization_id']));
+				$requestids = array();
+				foreach ($requests as $request) {
+					array_push($requestids,$request->id);
+				}
+				$find_objects_query .= "
+					AND	s.request_id IN (".join(',',$requestids).")";
+			}
 			
 			$find_objects_query .= "
 				ORDER BY s.id DESC
