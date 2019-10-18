@@ -25,6 +25,7 @@
 		if (preg_match("/today/i",$date)) return date("Y-m-d");
 		if (preg_match("/now/i",$date)) return date("Y-m-d h:i:s");
 		if (preg_match("/tomorrow/i",$date)) return date("Y-m-d",time() + 86400);
+		if (preg_match('/^(19|20|21|22)\d{2}$/',$date)) return $date."-01-01 00:00:00";
 
 		# Handle OffSets
 		if (preg_match('/(\+|\-)\s*(\d+)\s*(hour|day|week)s?/i',$date,$matches)) {
@@ -180,7 +181,13 @@
 		$GLOBALS['logger']->writeln($message,$level,$path,$line);
 	}
 
-	function query_log($query,$params = array(),$path = 'unknown',$line = 'unknown') {
+	function query_log($query,$params = array(),$path = null,$line = null) {
+		if (! isset($path)) {
+			$trace = debug_backtrace();
+			$caller = $trace[0];
+			$path = $caller['file'];
+			$line = $caller['line'];
+		} 
 		app_log($query."\n".print_r($params,true),'trace',$path,$line);
 	}
 
