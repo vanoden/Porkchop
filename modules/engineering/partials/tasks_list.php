@@ -81,8 +81,7 @@
 		    $product = $task->product();
 		    $project = $task->project();
 		    $worker = $task->assignedTo();
-		    $prerequisiteTask = null;
-		    if (!empty($task->prerequisite_id)) $prerequisiteTask = new \Engineering\Task($task->prerequisite_id);
+			$prerequisiteTask = $task->prerequisite();
     ?>
 	    <div class="tableRow">
 		    <div class="tableCell">

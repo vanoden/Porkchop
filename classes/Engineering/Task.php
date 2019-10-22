@@ -396,6 +396,8 @@
 			$this->timestamp_added = $object->timestamp_added;
             $this->project_id = $object->project_id;
             $this->prerequisite_id = $object->prerequisite_id;
+			$prereq = new \Engineering\Task($object->prerequisite_id);
+			if ($prereq->id && $prereq->status != 'COMPLETE') $this->status = 'BLOCKED';
 			return true;
 		}
 		public function prerequisite() {
