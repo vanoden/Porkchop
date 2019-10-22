@@ -43,6 +43,7 @@
 </table>
 <br>
 <h2 style="display: inline-block;">Your Tasks</h2>
+<a class="button more" href="/_engineering/tasks?assigned_id=<?=$GLOBALS['_SESSION_']->customer->id?>">See All</a>
 <table class="body">
 <tr>
 	<th class="label column_title">Title</th>
