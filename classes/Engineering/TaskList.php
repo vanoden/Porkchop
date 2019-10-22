@@ -94,7 +94,11 @@
 
 		public function search($parameters) {
 			$search_term = null;
-			if (preg_match('/^[\w\-\.\_\s\*]+$/')) $search_term = $parameters['searchTerm'];
+			if (preg_match('/^[\w\-\.\_\s\*]+$/',$parameters['searchTerm'])) $search_term = $parameters['searchTerm'];
+			else {
+				$this->_error = "Invalid search term";
+				return null;
+			}
 
 			$find_objects_query = "
 				SELECT	`id`
