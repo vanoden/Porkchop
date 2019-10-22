@@ -181,7 +181,7 @@
 			return $tasks;
 		}
 		public function count() {
-			return $this->_count();
+			return $this->count();
 		}
 		public function error() {
 			return $this->_error;
