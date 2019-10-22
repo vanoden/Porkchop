@@ -398,7 +398,10 @@
             $this->prerequisite_id = $object->prerequisite_id;
 			return true;
 		}
-
+		public function prerequisite() {
+			$task = new \Engineering\Task($this->prerequisite_id);
+			return $task;
+		}
 		public function release() {
 			return new Release($this->release_id);
 		}

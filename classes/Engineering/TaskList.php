@@ -70,6 +70,12 @@
 				AND		status NOT IN ('CANCELLED')";
 			}
 
+			$find_objects_query .= "
+				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
+						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
+						date_added DESC
+			";
+
 			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
 				$find_objects_query .= "
 				LIMIT ".$parameters['_limit'];
@@ -157,6 +163,12 @@
 				$find_objects_query .= "
 				AND		status NOT IN ('CANCELLED')";
 			}
+
+			$find_objects_query .= "
+				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
+						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
+						date_added DESC
+			";
 
 			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
 				$find_objects_query .= "

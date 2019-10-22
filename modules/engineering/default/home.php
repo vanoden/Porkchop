@@ -24,17 +24,21 @@
 	<th class="label column_person">Requested By</th>
 	<th class="label column_person">Assigned To</th>
 	<th class="label column_status">Status</th>
+	<th class="label column_status">Priority</th>
 </tr>
 <?php
 	foreach ($unassigned_tasks as $task) {
 		$requestor = $task->requestedBy();
 		$worker = $task->assignedTo();
+		$prerequisite = $task->prerequisite();
+		if ($prerequisite->id && $prerequisite->status != 'COMPLETE') continue;
 ?>
 <tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
 	<td class="value"><?=$task->date_added?></td>
 	<td class="value"><?=$requestor->login?></td>
 	<td class="value"><?=$worker->login?></td>
 	<td class="value"><?=$task->status?></td>
+	<td class="value"><?=$task->priority.$thing?></td>
 <?php	} ?>
 </table>
 <br>
@@ -46,17 +50,21 @@
 	<th class="label column_person">Requested By</th>
 	<th class="label column_person">Assigned To</th>
 	<th class="label column_status">Status</th>
+	<th class="label column_status">Priority</th>
 </tr>
 <?php
 	foreach ($my_tasks as $task) {
 		$requestor = $task->requestedBy();
 		$worker = $task->assignedTo();
+		$prerequisite = $task->prerequisite();
+		if ($prerequisite->id && $prerequisite->status != 'COMPLETE') continue;
 ?>
 <tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
 	<td class="value"><?=$task->date_added?></td>
 	<td class="value"><?=$requestor->login?></td>
 	<td class="value"><?=$worker->login?></td>
 	<td class="value"><?=$task->status?></td>
+	<td class="value"><?=$task->priority?></td>
 <?php	} ?>
 </table>
 <br>
