@@ -6,6 +6,7 @@
 	 */
 	class TaskList {
 		private $_error;
+		private $count = 0;
 
 		/**
 		 * get current tasks based on params criteria array
@@ -87,6 +88,7 @@
 			while (list($id) = $rs->FetchRow()) {
 				$task = new Task($id);
 				array_push($tasks,$task);
+				$this->count ++;
 			}
 
 			return $tasks;
@@ -173,9 +175,13 @@
 			while (list($id) = $rs->FetchRow()) {
 				$task = new Task($id);
 				array_push($tasks,$task);
+				$this->count ++;
 			}
 
 			return $tasks;
+		}
+		public function count() {
+			return $this->_count();
 		}
 		public function error() {
 			return $this->_error;
