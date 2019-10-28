@@ -740,6 +740,7 @@ class Schema {
 				}
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($current_schema_version < 14) {
 				app_log("Upgrading schema to version 14",'notice',__FILE__,__LINE__);
                 # Start Transaction
@@ -829,5 +830,37 @@ class Schema {
 				}
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+            if ($current_schema_version < 15) {
+				app_log("Upgrading schema to version 15",'notice',__FILE__,__LINE__);
+				
+                // Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+		
+
+				
+				// @TODO tables here
+				
+
+				
+
+				$current_schema_version = 15;
+				$update_schema_version = "
+					INSERT
+					INTO	register__info
+					VALUES	('schema_version',$current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					app_log("SQL Error in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
+					$this->error = "Error adding roles to database";
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}
+			
 		}
 	}

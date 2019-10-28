@@ -2,8 +2,12 @@
 	$page = new \Site\Page();
 	$page->requireRole("support user");
 
-    // @TODO form submitted, handle here
+    // process the form submission for the return request
     if ($_REQUEST['form_submitted'] == 'submit') {
+    
+        // A shipping record is created status NEW.
+
+        // Each item from the form including accessories is added to the shipment as a shipping_item record
     
         // $_REQUEST ->
         //    [shipping_firstname] => Kevin Hinds
@@ -28,6 +32,8 @@
         //    [delivery_instructions] => test
         //    [tracking_numbers] => test
         //    [form_submitted] => submit
+    
+        
         
         print_r($_REQUEST);    
         die();

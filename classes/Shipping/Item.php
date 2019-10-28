@@ -1,19 +1,14 @@
 <?php
 	namespace Shipping;
 	
-	class Shipment {
-	
+	class Item {
 		private $_error;
 		public $id;
-		public $document;
-		public $date_entered;
-		public $date_shipped;
-		public $status;
-		public $send_contact_id;
-		public $send_location_id;
-		public $rec_contact_id;
-		public $rec_location_id;
-		public $vendor;
+		public $package;
+		public $product;
+		public $serial_number;
+		public $condition;
+		public $quantity;
 		
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -38,4 +33,3 @@
 			return $this->_error;
 		}
 	}
-
