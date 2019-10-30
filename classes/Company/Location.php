@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Company;
 
 	class Location {
@@ -175,4 +175,3 @@
 			return $this->details($id);
 		}
 	}
-?>

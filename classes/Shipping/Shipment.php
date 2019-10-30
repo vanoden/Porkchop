@@ -1,12 +1,19 @@
-<?
+<?php
 	namespace Shipping;
 	
 	class Shipment {
+	
 		private $_error;
 		public $id;
-		public $vendor;
+		public $document;
+		public $date_entered;
 		public $date_shipped;
-		public $date_received;
+		public $status;
+		public $send_contact_id;
+		public $send_location_id;
+		public $rec_contact_id;
+		public $rec_location_id;
+		public $vendor;
 		
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -78,4 +85,4 @@
 		public function error() {
 			return $this->_error;
 		}
-?>
+	}
