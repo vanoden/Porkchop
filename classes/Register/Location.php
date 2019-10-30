@@ -6,10 +6,11 @@
 		public $address_1;
 		public $address_2;
 		public $city;
-		public $state;
+		public $region;
+		public $country;
 		public $zip_code;
 		public $name;
-		
+
 		public function __construct($id = null) {
 			if (is_numeric($id) {
 				$this->id = $id;

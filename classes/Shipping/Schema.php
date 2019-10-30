@@ -98,7 +98,7 @@
 						name VARCHAR(255) NOT NULL,
 						account_number VARCHAR(255),
 						PRIMARY KEY `pk_vendor_id` (`id`),
-						UNIQUE KEY `uk_account_number` (`account_number`)
+						UNIQUE KEY `uk_name` (`name`)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
@@ -114,7 +114,7 @@
 					CREATE TABLE IF NOT EXISTS `shipping_shipments` (
 						id INT(11) NOT NULL AUTO_INCREMENT,
 						code varchar(255) NOT NULL,
-						document_id varchar(255) NOT NULL,
+						document_number varchar(255) NOT NULL,
 						date_entered datetime NOT NULL,
 						date_shipped datetime,
 						status enum('NEW','SHIPPED','LOST','RECEIVED','RETURNED') NOT NULL DEFAULT 'NEW',
@@ -125,7 +125,7 @@
 						vendor_id INT(11) NOT NULL,
 						PRIMARY KEY `pk_id` (`id`),
 						UNIQUE KEY `uk_code` (`code`),
-						KEY `idx_document` (`document_id`),
+						KEY `idx_document` (`document_number`),
 						KEY `idx_vendor` (`vendor_id`),
 						FOREIGN KEY `fk_sender` (`send_contact_id`) REFERENCES `register_users` (`id`),
 						FOREIGN KEY `fk_receiver` (`rec_contact_id`) REFERENCES `register_users` (`id`),
@@ -149,8 +149,8 @@
 						id INT(11) NOT NULL AUTO_INCREMENT,
 						shipment_id INT(11) NOT NULL,
 						number INT(11) NOT NULL,
-						tracking_code varchar(255) NOT NULL,
-						status enum('SHIPPED','RECEIVED','RETURNED'),
+						tracking_code varchar(255),
+						status enum('READY','SHIPPED','RECEIVED','RETURNED') NOT NULL DEFAULT 'READY',
 						condition enum('OK','DAMAGED'),
 						height decimal(6,2) NOT NULL DEFAULT 0,
 						width decimal(6,2) NOT NULL DEFAULT 0,
@@ -158,7 +158,7 @@
 						weight decimal(6,2) NOT NULL DEFAULT 0,
 						shipping_cost decimal(6,2 NOT NULL DEFAULT 0,
 						date_received datetime(),
-						user_received int(11),
+						user_received_id int(11),
 						PRIMARY KEY `pk_id` (`id`),
 						UNIQUE KEY `uk_line` (`shipment_id`,`number`),
 						FOREIGN KEY `fk_shipment_id` (`shipment_id`) REFERENCES `shipping_shipments` (`id`),

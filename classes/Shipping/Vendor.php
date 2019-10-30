@@ -1,14 +1,11 @@
-<?php
+<?
 	namespace Shipping;
-	
-	class Item {
+
+	class Vendor {
 		private $_error;
 		public $id;
-		public $package;
-		public $product;
-		public $serial_number;
-		public $condition;
-		public $quantity;
+		public $name;
+		public $account_number;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -18,9 +15,18 @@
 		}
 
 		public function add($parameters = array()) {
+			if (! isset($parameters['name'])) {
+				$this->_error = "Name required";
+				return false;
+			}
 			$bind_params = array();
 			$add_object_query = "
+				INSERT
+				INTO	shipping_vendors
+						(`name`)
+				VALUES	(?)
 			";
+			array_push($bind_params,$parameters['name']);
 
 			$GLOBALS["_database"]->Execute($add_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
@@ -35,7 +41,21 @@
 		public function update($parameters = array()) {
 			$bind_params = array();
 			$update_object_query = "
+				UPDATE	shipping_vendors
+				SET		id = id
 			";
+
+			if (isset($parameters['name'])) {
+				$update_object_query .= ",
+						name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
+
+			if (isset($parameters['account_number'])) {
+				$update_object_query .= ",
+						account_number = ?";
+				array_push($bind_params,$parameters['account_number']);
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?";
@@ -52,6 +72,9 @@
 
 		public function get($code) {
 			$get_object_query = "
+				SELECT	id
+				FROM	shipping_vendors
+				WHERE	`name` = ?
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($code));
 			if (! $rs) {
@@ -59,13 +82,17 @@
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
-			return $this->details();
+			if ($this->id) return $this->details();
+			else {
+				$this->_error = "Vendor not found";
+				return false;
+			}
 		}
 
 		public function details() {
 			$get_object_query = "
 				SELECT	*
-				FROM	<TABLE>
+				FROM	shipping_vendors
 				WHERE	id = ?
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
@@ -81,3 +108,4 @@
 			return $this->_error;
 		}
 	}
+?>

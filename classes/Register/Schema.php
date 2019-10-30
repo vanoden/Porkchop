@@ -836,13 +836,64 @@ class Schema {
 				
                 // Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
-		
 
-				
-				// @TODO tables here
-				
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS register_locations (
+						id INT(11) NOT NULL AUTO_INCREMENT,
+						name varchar(255) NOT NULL,
+						address_1 varchar(255),
+						address_2 varchar(255),
+						city varchar(255) NOT NULL,
+						region_id varchar(255) NOT NULL,
+						country_id INT(4) NOT NULL DEFAULT 1,
+						zip_code INT(10) NOT NULL,
+						notes TEXT(),
+						PRIMARY KEY `pk_id` (`id`),
+						FOREIGN KEY `fk_country_id` (`country_id`) REFERENCES `geography_countries` (`id`),
+						FOREIGN KEY `fk_region_id` (`region_id`) REFERENCES `geography_regions` (`id`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_locations table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
 
-				
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS register_organization_locations (
+						organization_id INT(11) NOT NULL,
+						location_id INT(11) NOT NULL,
+						PRIMARY KEY `pk_org_loc` (`organization_id`,`location_id`),
+						FOREIGN KEY `fk_org_id` (`organization_id`) REFERENCES `register_locations` (`id`),
+						FOREIGN KEY `fk_loc_id` (`location_id`) REFERENCES `register_locations` (`id`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_organization_locations table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS register_user_locations (
+						user_id INT(11) NOT NULL,
+						location_id INT(11) NOT NULL,
+						PRIMARY KEY `pk_user_loc` (`user_id`,`location_id`),
+						FOREIGN KEY `fk_user_id` (`user_id`) REFERENCES `register_users` (`id`),
+						FOREIGN KEY `fk_loc_id` (`location_id`) REFERENCES `register_locations` (`id`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_user_locations table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
 
 				$current_schema_version = 15;
 				$update_schema_version = "
