@@ -91,28 +91,48 @@
 				if (! $GLOBALS['_database']->BeginTrans())
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-				# Collection of Items Requiring Action
+				# Shipping Vendors
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `shipping_vendors` (
+						id INT(11) NOT NULL AUTO_INCREMENT,
+						name VARCHAR(255) NOT NULL,
+						account_number VARCHAR(255),
+						PRIMARY KEY `pk_vendor_id` (`id`),
+						UNIQUE KEY `uk_account_number` (`account_number`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating shipping_vendors table in Shipping::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return false;
+				}
+
+				# Collection of Shipments
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `shipping_shipments` (
 						id INT(11) NOT NULL AUTO_INCREMENT,
+						code varchar(255) NOT NULL,
 						document_id varchar(255) NOT NULL,
-						date_entered datetime,
+						date_entered datetime NOT NULL,
 						date_shipped datetime,
-						status enum('NEW','SHIPPED','LOST','RECEIVED','RETURNED')
+						status enum('NEW','SHIPPED','LOST','RECEIVED','RETURNED') NOT NULL DEFAULT 'NEW',
 						send_contact_id INT(11) NOT NULL,
 						send_location_id INT(11) NOT NULL,
 						rec_contact_id INT(11) NOT NULL,
 						rec_location_id INT(11) NOT NULL,
 						vendor_id INT(11) NOT NULL,
 						PRIMARY KEY `pk_id` (`id`),
+						UNIQUE KEY `uk_code` (`code`),
 						KEY `idx_document` (`document_id`),
+						KEY `idx_vendor` (`vendor_id`),
 						FOREIGN KEY `fk_sender` (`send_contact_id`) REFERENCES `register_users` (`id`),
 						FOREIGN KEY `fk_receiver` (`rec_contact_id`) REFERENCES `register_users` (`id`),
 						FOREIGN KEY `fk_send_from` (`send_location_id`) REFERENCES `register_locations` (`id`),
 						FOREIGN KEY `fk_send_to` (`rec_location_id`) REFERENCES `register_locations` (`id`),
-						FOREIGN KEY `fk_vendor_id` (`vendor_id`) REFERENCES `product_vendors` (`id`),
-						INDEX `idx_date` (`date_request`),
-						INDEX `idx_status` (`status`,`date_request`)
+						INDEX `idx_date` (`date_entered`),
+						INDEX `idx_status` (`status`,`date_entered`)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
