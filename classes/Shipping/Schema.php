@@ -9,7 +9,7 @@
 		public function __construct() {
 			$this->upgrade();
 		}
-		
+	
 		public function version() {
 			# See if Schema is Available
 			$schema_list = $GLOBALS['_database']->MetaTables();
