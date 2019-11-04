@@ -950,7 +950,7 @@
 	###################################################
 	function error($message) {
 		$_REQUEST["stylesheet"] = '';
-		error_log($message);
+		$response = new \HTTP\Response();
 		$response->error = $message;
 		$response->success = 0;
 		header('Content-Type: application/xml');

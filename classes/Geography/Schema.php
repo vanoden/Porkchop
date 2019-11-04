@@ -93,8 +93,8 @@
 
 				# Geography Countries
 				$create_table_query = "
-					CREATE TABLE IF NOT EXISTS `geography_country` (
-						id INT(11) NOT NULL AUTO_INCREMENT,
+					CREATE TABLE IF NOT EXISTS `geography_countries` (
+						id INT(4) NOT NULL AUTO_INCREMENT,
 						name VARCHAR(255) NOT NULL,
 						abbreviation VARCHAR(100),
 						view_order INT(11) NOT NULL DEFAULT 500,
@@ -116,13 +116,13 @@
 					CREATE TABLE IF NOT EXISTS `geography_regions` (
 						id INT(11) NOT NULL AUTO_INCREMENT,
 						code varchar(255) NOT NULL,
-						country_id INT(11) NOT NULL,
+						country_id INT(4) NOT NULL,
 						name varchar(255) NOT NULL,
 						abbreviation varchar(100) NOT NULL,
 						PRIMARY KEY `pk_id` (`id`),
 						UNIQUE KEY `uk_code` (`code`),
 						UNIQUE KEY `uk_name` (`country_id`,`name`),
-						FOREIGN KEY `fk_country` (`country_id`) REFERENCES `geography_country` (`id`)
+						FOREIGN KEY `fk_country` (`country_id`) REFERENCES `geography_countries` (`id`)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
