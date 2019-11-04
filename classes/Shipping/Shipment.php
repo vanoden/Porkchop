@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Shipping;
 	
 	class Shipment {
@@ -189,4 +189,4 @@
 		public function error() {
 			return $this->_error;
 		}
-?>
+	}

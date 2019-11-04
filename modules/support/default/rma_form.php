@@ -376,7 +376,7 @@
    </div>
    <div class="container">
       <span class="label">Approved By</span>
-      <span class="value"><?=$rma->approvedBy->full_name()?></span>
+      <span class="value"><?=isset($rma->approvedBy) ? $rma->approvedBy->full_name() : ''?></span>
    </div>
    <div class="container">
       <span class="label">Date Approved</span>
