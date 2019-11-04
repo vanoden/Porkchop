@@ -19,17 +19,10 @@
 			# Clear Error Info
 			$this->error = '';
 
-			# Database Initialization
-			$schema = new Schema();
-			if ($schema->error) {
-				$this->error = "Failed to initialize schema: ".$schema->error;
-			}
-			else {
-				# Find Person if id given
-				if ($id) {
-					$this->id= $id;
-					$this->details();
-				}
+			# Find Person if id given
+			if (isset($id) && is_numeric($id)) {
+				$this->id= $id;
+				$this->details();
 			}
     	}
 
