@@ -77,14 +77,21 @@
 		public function details() {
 			$getObjectQuery = "SELECT * FROM $this->tableName WHERE	id = ?";
 			$rs = $this->execute($getObjectQuery, array($this->id));
-			return $rs->FetchNextObject(false);
+            $object = $rs->FetchNextObject(false);
+			if (is_numeric($object->id)) {
+    			foreach ($this->fields as $field) $this->$field = $object->$field;
+			}
+
 		}
 
         /**
          * get object by code
+         *
+         * @param string $code
+         * @param string $columnName, which column we search for the code value by
          */
-		public function get($code) {
-			$getObjectQuery = "SELECT id FROM `$this->tableName` WHERE code = ?";
+		public function get($code, $columnName='code') {
+			$getObjectQuery = "SELECT id FROM `$this->tableName` WHERE `$columnName` = ?";
 			$rs = $this->execute($getObjectQuery, array($code));
             if ($rs) {
                 list($id) = $rs->FetchRow();

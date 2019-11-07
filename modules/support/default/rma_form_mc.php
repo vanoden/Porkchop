@@ -69,8 +69,14 @@
             $parameters['vendor_id'] = 0; // @TODO, this is an organization_id??
             $parameters['send_location_id'] = $registerLocation->id;
             $shippingShipment->add($parameters);
-        } else {
-            $parameters['send_location_id'] = $registerLocation->id;
-            $shippingShipment->update($parameters);            
+            
+            //                    shipping_shipments
+            //                        shipping_packages (on shipment_id = shipping_shipments->id)
+            //                            shipping_items (on package_id = shipping_packages->id)
+            
+            
+            
+            
+            
         }
     }
