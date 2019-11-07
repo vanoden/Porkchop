@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item;
 
 	class RMA {
@@ -169,4 +169,3 @@
 			return $this->_error;
 		}
 	}
-?>

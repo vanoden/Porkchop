@@ -111,6 +111,7 @@
 				$this->_error = "SQL Error in Shipping::Vendor::get() ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
 			list($this->id) = $rs->FetchRow();
 			return $this->details();
 		}

@@ -1,56 +1,76 @@
 <?php
 	$page = new \Site\Page();
 	$page->requireRole("support user");
-
-    // process the form submission for the return request
-    if ($_REQUEST['form_submitted'] == 'submit') {
-    
-        // A shipping record is created status NEW.
-
-        // Each item from the form including accessories is added to the shipment as a shipping_item record
-    
-        // $_REQUEST ->
-        //    [shipping_firstname] => Kevin Hinds
-        //    [shipping_address] => test
-        //    [shipping_city] => test
-        //    [shipping_state] => test
-        //    [shipping_zip] => test
-        //    [billing_same_as_shipping] => billing_same_as_shipping
-        //    [billing_firstname] => Kevin Hinds
-        //    [billing_address] => 
-        //    [billing_city] => 
-        //    [billing_state] => 
-        //    [billing_zip] => 
-        //    [power_cord] => power_cord
-        //    [filters] => filters
-        //    [battery] => battery
-        //    [carry_bag] => carry_bag
-        //    [usb_comm_cable] => usb_comm_cable
-        //    [cellular_access_point] => cellular_access_point
-        //    [agree_package_properly] => agree_package_properly
-        //    [agree_payment_received] => agree_payment_received
-        //    [delivery_instructions] => test
-        //    [tracking_numbers] => test
-        //    [form_submitted] => submit
-    
-        
-        
-        print_r($_REQUEST);    
-        die();
-    }
-    
-	if (isset($_REQUEST['id'])) {
+	
+    // get cooresponding RMA from possible input values
+    $rma = new \Support\Request\Item\RMA();
+    $rmaId = (isset($_REQUEST['id'])) ? $_REQUEST['id'] : 0;
+    $rmaCode = (isset($_REQUEST['code'])) ? $_REQUEST['code'] : 0;
+    if (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) $rmaCode = $GLOBALS['_REQUEST_']->query_vars_array[0];
+	if ($rmaId) {
 		$rma = new \Support\Request\Item\RMA($_REQUEST['id']);
-	} elseif (isset($_REQUEST['code'])) {
-		$rma = new \Support\Request\Item\RMA();
+	} elseif ($rmaCode) {
 		$rma->get($_REQUEST['code']);
-	} elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
-		$rma = new \Support\Request\Item\RMA();
-		$rma->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
-
+	
+    // add events to page if they exist
 	if ($rma->exists()) {
 		$events = $rma->events();
 	} else {
 		$events = array();
 	}
+	
+	// get any values for UI, check if they exist
+	$rmaNumber = $rma->number() ? $rma->number() : "";
+	$rmaItemId = $rma->item() ? $rma->item()->id : "";
+	$rmaTicketNumber = $rma->item()->ticketNumber() ? $rma->item()->ticketNumber() : "";
+	$rmaCustomerFullName = $rma->item()->request->customer ? $rma->item()->request->customer->full_name() : "";
+	$rmaCustomerOrganizationName = $rma->item()->request->customer->organization->name ? $rma->item()->request->customer->organization->name : "";
+	$rmaApprovedByName = $rma->approvedBy ? $rma->approvedBy->full_name() : "";
+	$rmaDateApproved = date("m/d/Y", strtotime($rma->date_approved));
+	$rmaStatus = $rma->status;
+	$rmaProductCode = $rma->item()->product ? $rma->item()->product->code : "";
+	$rmaSerialNumber = $rma->item() ? $rma->item()->serial_number : "";
+    
+    // process the form submission for the return request
+    if ($_REQUEST['form_submitted'] == 'submit') {
+    
+        // A shipping record is created status NEW.
+        //  Each item from the form including accessories is added to the shipment as a shipping_item record
+        $shippingShipment = new \Shipping\Shipment();
+        $registerLocation = new \Register\Location();
+        $shippingShipment->get($rmaCode);
+        $parameters = array();
+        $parameters['code'] = $rmaCode;
+        
+        $billingAddressParams = array();
+        $billingAddressParams['address_1'] = $_REQUEST['billing_address'];
+        $billingAddressParams['address_2'] = $_REQUEST['billing_address2'];
+        $billingAddressParams['city'] = $_REQUEST['billing_city'];
+        $billingAddressParams['zip_code'] = $_REQUEST['billing_zip'];
+        
+        $shippingAddressParams = array();
+        $shippingAddressParams['address_1'] = $_REQUEST['shipping_address'];
+        $shippingAddressParams['address_2'] = $_REQUEST['shipping_address2'];
+        $shippingAddressParams['city'] = $_REQUEST['shipping_city'];
+        $shippingAddressParams['zip_code'] = $_REQUEST['shipping_zip'];
+
+        if (!$registerLocation->findExistingByAddress($billingAddressParams)) $registerLocation->add($billingAddressParams);
+        if (!$registerLocation->findExistingByAddress($shippingAddressParams)) $registerLocation->add($shippingAddressParams);
+        
+        // upsert shipment info, use the location recently provided
+        if (!$shippingShipment->id) {
+            $parameters['document_number'] = uniqid();
+            $parameters['date_entered'] = date("Y-m-d H:i:s");
+            $parameters['status'] = 'NEW';
+            $parameters['send_contact_id'] = $rma->item()->request->customer->id;
+            $parameters['rec_contact_id'] = $rma->approvedBy()->id;
+            $parameters['rec_location_id'] = 0; // @TODO, this defaults to a Spectros Inc. default location??
+            $parameters['vendor_id'] = 0; // @TODO, this is an organization_id??
+            $parameters['send_location_id'] = $registerLocation->id;
+            $shippingShipment->add($parameters);
+        } else {
+            $parameters['send_location_id'] = $registerLocation->id;
+            $shippingShipment->update($parameters);            
+        }
+    }

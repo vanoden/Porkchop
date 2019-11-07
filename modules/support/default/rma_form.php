@@ -364,31 +364,31 @@
 <div id="support_rma">
    <div class="container">
       <span class="label">Number</span>
-      <span class="value"><?=$rma->number()?></span>
+      <span class="value"><?=$rmaNumber?></span>
    </div>
    <div class="container">
       <span class="label">Ticket</span>
-      <span class="value"><a href="/_support/request_item/<?=$rma->item()->id?>"><?=$rma->item()->ticketNumber()?></a></span>
+      <span class="value"><a href="/_support/request_item/<?=$rmaItemId?>"><?=$rmaTicketNumber?></a></span>
    </div>
    <div class="container">
       <span class="label">Contact</span>
-      <span class="value"><?=$rma->item()->request->customer->full_name()?> - <?=$rma->item()->request->customer->organization->name?></span>
+      <span class="value"><?=$rmaCustomerFullName?> - <?=$rmaCustomerOrganizationName?></span>
    </div>
    <div class="container">
       <span class="label">Approved By</span>
-      <span class="value"><?=isset($rma->approvedBy) ? $rma->approvedBy->full_name() : ''?></span>
+      <span class="value"><?=$rmaApprovedByName?></span>
    </div>
    <div class="container">
       <span class="label">Date Approved</span>
-      <span class="value"><?=date("m/d/Y", strtotime($rma->date_approved))?></span>
+      <span class="value"><?=$rmaDateApproved?></span>
    </div>
    <div class="container">
       <span class="label">Status</span>
-      <span class="value"><?=$rma->status?></span>
+      <span class="value"><?=$rmaStatus?></span>
    </div>
    <div class="container">
       <span class="label">Product</span>
-      <span class="value"><?=$rma->item()->product->code?> - <?=$rma->item()->serial_number?></span>
+      <span class="value"><?=$rmaProductCode?> - <?=$rmaSerialNumber?></span>
    </div>
    <div class="stepwizard">
       <div class="stepwizard-row">
@@ -414,9 +414,10 @@
                   <div id="shipping_address_form" class="col-50">
                      <a name="shipping"><h2>Return Shipping Address</h2></a>
                      <label for="fname"><i class="fa fa-user"></i> Full Name</label>
-                     <input type="text" id="shipping_firstname" name="shipping_firstname" class="shipping_fields" placeholder="John M. Doe" value="<?=$rma->item()->request->customer->full_name()?>">
+                     <input type="text" id="shipping_firstname" name="shipping_firstname" class="shipping_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>">
                      <label for="adr"><i class="fa fa-address-card-o"></i> Address</label>
                      <input type="text" id="shipping_address" name="shipping_address" class="shipping_fields" placeholder="542 W. 15th Street">
+                     <input type="text" id="shipping_address2" name="shipping_address2" class="shipping_fields" placeholder="Suite 1">
                      <label for="city"><i class="fa fa-institution"></i> City</label>
                      <input type="text" id="shipping_city" name="shipping_city" class="shipping_fields" placeholder="New York">
                      <div class="row">
@@ -438,9 +439,10 @@
                      <input type="checkbox" id="billing_same_as_shipping" name="billing_same_as_shipping" value="billing_same_as_shipping" onclick="toggleBilling()"> Same as Shipping<br/><br/>
                      <div id="billing_address_container" style="display:block;">
                          <label for="fname"><i class="fa fa-user"></i> Full Name</label>
-                         <input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John M. Doe" value="<?=$rma->item()->request->customer->full_name()?>">
+                         <input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>">
                          <label for="adr"><i class="fa fa-address-card-o"></i> Address</label>
                          <input type="text" id="billing_address" name="billing_address" class="billing_fields" placeholder="542 W. 15th Street">
+                         <input type="text" id="billing_address2" name="billing_address2" class="billing_fields" placeholder="Suite 1">
                          <label for="city"><i class="fa fa-institution"></i> City</label>
                          <input type="text" id="billing_city" name="billing_city" class="billing_fields" placeholder="New York">
                          <div class="row">
@@ -506,11 +508,11 @@
             if ($events) {
                 foreach ($events as $event) {
             ?>
-         <div class="tableRow">
-            <div class="tableCell"><?=$event->date?></div>
-            <div class="tableCell"><?=$event->person->full_name()?></div>
-            <div class="tableCell"><?=$event->description?></div>
-         </div>
+             <div class="tableRow">
+                <div class="tableCell"><?=$event->date?></div>
+                <div class="tableCell"><?=$event->person->full_name()?></div>
+                <div class="tableCell"><?=$event->description?></div>
+             </div>
          <?php
                 }
             } ?>
