@@ -169,7 +169,7 @@
 
 			$cache_key = "domain[".$domain_name."]";
 
-			$cache = new \Cache\Item($_CACHE_,$cache_key);
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			if ($cache->error) {
 				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
 			}
