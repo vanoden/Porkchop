@@ -143,7 +143,7 @@
 
 		public function asHTML($parameters = array()) {
 			$html = '';
-			if ($parameters['type'] == 'left_nav') {
+			if (isset($parameters['type']) && $parameters['type'] == 'left_nav') {
 				if (!isset($parameters['nav_id'])) $parameters['nav_id'] = 'left_nav';
 				if (!isset($parameters['a_class'])) $parameters['a_class'] = 'left_nav_button';
 				$html .= '<nav id="'.$parameters['nav_id'].'">';

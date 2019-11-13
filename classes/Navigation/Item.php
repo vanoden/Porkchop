@@ -65,15 +65,23 @@
 			return $this->update($parameters);
 		}
 
-		public function get($menu_id,$code) {
+		public function get($menu_id,$code,$parent = null) {
 			$get_object_query = "
 				SELECT	id
 				FROM	navigation_menu_items
 				WHERE	menu_id = ?
 				AND		title = ?
 			";
-query_log($get_object_query,array($menu_id,$code));
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($menu_id,$code));
+
+			$bind_params = array($menu_id,$code);
+			if (isset($parent) and is_object($parent)) {
+				$get_object_query .= "
+				AND		parent_id = ?";
+				array_push($bind_params,$parent->id);
+			}
+
+query_log($get_object_query,$bind_params);
+			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 
 			if (! $rs) {
 				$this->_error = "SQL Error in Navigation::Item::get(): ".$GLOBALS['_database']->ErrorMsg();
