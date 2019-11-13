@@ -60,7 +60,7 @@
 	###################################################
 	function authenticateSession() {
 		# Default StyleSheet
-		if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
+		if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
 		# Initiate Product Object
 		$customer = new \Register\Customer();
@@ -69,7 +69,7 @@
 		if ($customer->error) error($customer->error);
 
 		if ($result > 0) {
-			app_log("Assigning session ".$GLOBALS['_SESSION']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
+			app_log("Assigning session ".$GLOBALS['_SESSION_']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
 			$GLOBALS['_SESSION_']->assign($customer->id);
 		}
 		else {
