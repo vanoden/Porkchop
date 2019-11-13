@@ -473,8 +473,9 @@
                      Special Delivery Instructions (provide if needed):<br/>
                      <textarea name="delivery_instructions" style="width: 50%; height: 100px;"></textarea><br/>
                      
-                     Tracking Number(s) [optional]:<br/>
-                     <textarea name="tracking_numbers" style="width: 50%; height: 100px;"></textarea><br/><br/>
+                     Tracking Number [optional]:<br/>
+                     <input type="text" id="tracking_number" name="tracking_number" placeholder="1Z9999999999999999"/>                     
+                     <br/><br/>
                      
                      <u>Please Confirm</u><br/>
                      <input id="agree_package_properly" type="checkbox" name="agree_package_properly" value="agree_package_properly"> <span class="confirm_terms" style="color:black;">* Item must be packaged properly and a copy of the RMA included</span><br/>

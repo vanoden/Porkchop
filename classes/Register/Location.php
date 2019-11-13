@@ -21,16 +21,17 @@
          */
         public function findExistingByAddress($parameters = array()) {
             $getObjectQuery = "SELECT id FROM `$this->tableName` WHERE
-                LOWER(address_1) LIKE '%".strtolower($parameters['address_1'])."%'
-                AND LOWER(address_2) LIKE '%".strtolower($parameters['address_2'])."%'
-                AND LOWER(city) LIKE LIKE '%".strtolower($parameters['city'])."%'
-                AND LOWER(zip_code) LIKE LIKE '%".strtolower($parameters['zip_code'])."%'";
+                LOWER(`address_1`) LIKE '%".strtolower($parameters['address_1'])."%'
+                AND LOWER(`address_2`) LIKE '%".strtolower($parameters['address_2'])."%'
+                AND LOWER(`city`) LIKE '%".strtolower($parameters['city'])."%'
+                AND LOWER(`zip_code`) LIKE '%".strtolower($parameters['zip_code'])."%'";   
 			$rs = $this->execute($getObjectQuery, array());
             if ($rs) {
                 list($id) = $rs->FetchRow();
                 if ($id) {
                     $this->id = $id;
-                    return $this->details();
+                    $this->details();
+                    return true;
                 }
             }
             $this->_error = "ERROR: no records found for these values.";

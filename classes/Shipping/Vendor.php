@@ -21,13 +21,5 @@
 			}
 			
 			parent::add($parameters);
-		}
-		
-        /**
-         * get object by code
-         */
-		public function get($code) {
-		    parent::get($code, 'name');
-		}
-        
+		}        
 	}

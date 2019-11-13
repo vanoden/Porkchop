@@ -862,6 +862,21 @@
 					return null;
 				}
 	
+	            // spectros itself needs a register location to default to
+                $add_spectros_address = '
+                    INSERT INTO register_locations
+                        (`id`, `name`, `address_1`, `address_2`, `city`, `region_id`, `country_id`, `zip_code`, `notes`)
+                    VALUES
+                        (1, "Spectros Instruments, Inc", "4 Evergreen Ln", "# 12", "Hopedale", 4075, 217, 01747, `notes`);
+				';
+				$GLOBALS['_database']->Execute($add_spectros_address);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error adding register_locations default spectros address in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+	
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS register_organization_locations (
 						organization_id INT(11) NOT NULL,

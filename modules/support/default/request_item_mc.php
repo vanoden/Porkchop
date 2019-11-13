@@ -171,6 +171,7 @@ Description: ".$action->description
 
 	$rmalist = new \Support\Request\Item\RMAList();
 	$rmas = $rmalist->find(array('item_id' => $item->id));
+	if (!$rmas) $rmas = array();
 
 	$commentlist = new \Support\Request\Item\CommentList();
 	$comments = $commentlist->find(array('item_id' => $item->id));

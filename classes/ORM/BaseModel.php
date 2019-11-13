@@ -67,6 +67,7 @@
 	        $this->addQuery .= '(`'.implode('`,`',$bindFields).'`';
             $this->addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindParams)) ,',') . ")";
             $this->execute($this->addQuery, $bindParams);
+            
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
 		}
