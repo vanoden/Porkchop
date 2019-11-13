@@ -52,8 +52,9 @@
 		$country = new \Geography\Country();
 
 		$parameters = array();
-		$country->add($parameters);
-		if ($_request->error) app_error("Error adding country: ".$_request->error);
+		if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+		if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = $_REQUEST['abbreviation'];
+		if (! $country->add($parameters)) app_error("Error adding country: ".$country->error());
 
 		$response = new \HTTP\Response();
 		$response->success = 1;
@@ -68,14 +69,14 @@
 	function updateCountry() {
 		$country = new \Geography\Country();
 		$country->get($_REQUEST['code']);
-		if ($country->error) app_error("Error finding country: ".$country->error,'error',__FILE__,__LINE__);
+		if ($country->error) app_error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
 		if (! $country->id) error("Request not found");
 
 		$parameters = array();
 		$country->update(
 			$parameters
 		);
-		if ($country->error) app_error("Error updating country: ".$country->error,'error',__FILE__,__LINE__);
+		if ($country->error) app_error("Error updating country: ".$country->error(),'error',__FILE__,__LINE__);
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->country = $country;
@@ -88,9 +89,9 @@
 	###################################################
 	function getCountry() {
 		$country = new \Geography\Country();
-		$country->get($_REQUEST['code']);
+		$country->get($_REQUEST['name']);
+		if ($country->error()) app_error($country->error());
 
-		if ($country->error) error("Error getting country: ".$country->error);
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->country = $country;
@@ -107,15 +108,102 @@
 		$parameters = array();
 		if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 		
-		$countrys = $countryList->find($parameters);
-		if ($countryList->error) app_error("Error finding countrys: ".$countryList->error);
+		$countries = $countryList->find($parameters);
+		if ($countryList->error) app_error("Error finding countries: ".$countryList->error());
 
 		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->country = $countrys;
+		$response->country = $countries;
 
 		print formatOutput($response);
 	}
+	###################################################
+	### Add a Province or State						###
+	###################################################
+	function addProvince() {
+		$country = new \Geography\Country($_REQUEST['country_id']);
+		if (! $country->id) app_error("Country not found");
+
+		$province = new \Geography\Province();
+
+		$parameters = array();
+		if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+		if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = $_REQUEST['abbreviation'];
+		$parameters['country_id'] = $country->id;
+		if (! $province->add($parameters)) app_error("Error adding province: ".$province->error());
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->province = $province;
+
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Update a Province							###
+	###################################################
+	function updateProvince() {
+		$country = new \Geography\Country();
+		$country->get($_REQUEST['code']);
+		if ($country->error) app_error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
+		if (! $country->id) error("Request not found");
+
+		$parameters = array();
+		$country->update(
+			$parameters
+		);
+		if ($country->error) app_error("Error updating country: ".$country->error(),'error',__FILE__,__LINE__);
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->country = $country;
+
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Get Specified Province						###
+	###################################################
+	function getProvince() {
+		$country = new \Geography\Country($_REQUEST['country_id']);
+		if (! $country->id) app_error("Country not found");
+
+		$province = new \Geography\Province();
+		if (! $province->get($country->id,$_REQUEST['name']));
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->province = $province;
+
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Find matching Provinces						###
+	###################################################
+	function findProvinces() {
+		$provinceList = new \Geography\ProvinceList();
+		
+		$parameters = array();
+		if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
+		if ($_REQUEST['country']) {
+			$country = new \Geography\Country();
+			if (! $country->get($_REQUEST['country'])) app_error("Country not found");
+			$parameters['country_id'] = $country->id;
+		}
+		elseif ($_REQUEST['country_id']) {
+			$country = new \Geography\Country($_REQUEST['country_id']);
+			$parameters['country_id'] = $country->id;
+		}
+		
+		$provinces = $provinceList->find($parameters);
+		if ($provinceList->error) app_error("Error finding provinces: ".$provinceList->error());
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->province = $provinces;
+
+		print formatOutput($response);
+	}
+
 	###################################################
 	### Manage Support Schema						###
 	###################################################

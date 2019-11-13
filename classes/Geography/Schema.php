@@ -113,12 +113,14 @@
 
 				# Collection of Geography Regions
 				$create_table_query = "
-					CREATE TABLE IF NOT EXISTS `geography_regions` (
+					CREATE TABLE IF NOT EXISTS `geography_provinces` (
 						id INT(11) NOT NULL AUTO_INCREMENT,
 						code varchar(255) NOT NULL,
 						country_id INT(4) NOT NULL,
 						name varchar(255) NOT NULL,
+						type varchar(100),
 						abbreviation varchar(100) NOT NULL,
+						label	varchar(255),
 						PRIMARY KEY `pk_id` (`id`),
 						UNIQUE KEY `uk_code` (`code`),
 						UNIQUE KEY `uk_name` (`country_id`,`name`),
