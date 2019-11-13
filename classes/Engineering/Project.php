@@ -63,7 +63,11 @@
 		}
 
 		public function update($parameters = array()) {
-		    
+			// Bust Cache
+			$cache_key = "engineering.project[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
+
 			$update_object_query = "
 				UPDATE	engineering_projects
 				SET		id = id
@@ -142,35 +146,52 @@
 		}
 
 		public function details() {
-
-			$get_object_query = "
-				SELECT	*
-				FROM	engineering_projects
-				WHERE	id = ?
-			";
-            app_log("Getting details for project ".$this->id);
-
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-
-			if (! $rs) {
-				$this->_error = "SQL Error in Engineering::Project::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			};
-
-			if ($rs->RecordCount()) {
-				$object = $rs->FetchNextObject(false);
-				$this->title = $object->title;
-				$this->code = $object->code;
-				$this->description = $object->description;
-				$this->manager = new \Register\Customer($object->manager_id);
-				$this->status = $object->status;
-				return $object;
-			} else {
-				return null;
+			$cache_key = "engineering.project[".$this->id."]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			if ($cache->error) {
+				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
 			}
+
+			# Cached Object, Yay!
+			if ($object = $cache->get()) {
+				app_log($cache_key." found in cache",'trace');
+				$this->_cached = true;
+			}
+			else {
+				$get_object_query = "
+					SELECT	*
+					FROM	engineering_projects
+					WHERE	id = ?
+				";
+				app_log("Getting details for project ".$this->id);
+	
+				$rs = $GLOBALS['_database']->Execute(
+					$get_object_query,
+					array($this->id)
+				);
+	
+				if (! $rs) {
+					$this->_error = "SQL Error in Engineering::Project::details(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
+				};
+				$object = $rs->FetchNextObject(false);
+				$this->id = $object->id;
+				$this->_cached = false;
+			}
+
+			$this->title = $object->title;
+			$this->code = $object->code;
+			$this->description = $object->description;
+			$this->manager = new \Register\Customer($object->manager_id);
+			$this->status = $object->status;
+
+			if (! $this->_cached) {
+				// Cache Object
+				app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
+				if ($object->id) $result = $cache->set($object);
+				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);	
+			}
+			return true;
 		}
 
 		public function error() {

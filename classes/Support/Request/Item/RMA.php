@@ -135,10 +135,18 @@
 			$this->timestamp_approved = $object->timestamp_approved;
 			$this->approved_id = $object->approved_id;
 			$this->status = $object->status;
-			$this->shipment = new \Shipping\Shipment($object->shipment_id);
 			$this->item_id = $object->item_id;
-			$this->document_id = $object->document_id;
 			return true;
+		}
+
+		public function shipments() {
+			$shipmentList = new \Shipping\ShipmentList();
+			$shipments = $shipmentList->find(array('document_id' => $this->number()));
+			if ($shipmentList->error()) {
+				$this->_error = $shipmentList->error();
+				return null;
+			}
+			return $shipments;
 		}
 
 		public function approvedBy() {
