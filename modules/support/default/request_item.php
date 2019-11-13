@@ -318,20 +318,22 @@
 ?>
 </div>
 <?	} ?>
-<?	if (count($rmas) > 0) { ?>
+<?	if ($rmalist->count() > 0) { ?>
 <div style="width: 756px;">
 <h2>Authorized Returns</h2>
 <?		foreach ($rmas as $rma) { ?>
-    <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
-        <tr><th>Number</th>
-	        <th>Date Approved</th>
-	        <th>Approved By</th>
-        </tr>
-        <tr><td><a href="/_support/rma/<?=$rma->code?>"><?=$rma->number()?></a></td>
-	        <td><?=$rma->date_approved?></td>
-	        <td><?=$rma->approvedBy->full_name()?></td>
-        </tr>
-    </table>
+	<div class="tableBody min-tablet">
+		<div class="tableRowHeader">
+			<div class="tableCell">Number</div>
+	        <div class="tableCell">Date Approved</div>
+	        <div class="tableCell">Approved By</div>
+        </div>
+        <div class="tableRow">
+			<div class="tableCell"><a href="/_support/rma/<?=$rma->code?>"><?=$rma->number()?></a></div>
+	        <div class="tableCell"><?=$rma->date_approved?></div>
+	        <div class="tableCell"><?=$rma->approvedBy()->full_name()?></div>
+        </div>
+    </div>
 <?		} ?>
 </div>
 <?	} ?>

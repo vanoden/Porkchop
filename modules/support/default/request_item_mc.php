@@ -168,9 +168,11 @@ Description: ".$action->description
 
 	$productlist = new \Product\ItemList();
 	$products = $productlist->find();
+	if ($productlist->error()) $page->addError($productlist->error());
 
 	$rmalist = new \Support\Request\Item\RMAList();
 	$rmas = $rmalist->find(array('item_id' => $item->id));
+	if ($rmalist->error()) $page->addError($rmalist->error());
 
 	$commentlist = new \Support\Request\Item\CommentList();
 	$comments = $commentlist->find(array('item_id' => $item->id));

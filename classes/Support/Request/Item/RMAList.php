@@ -3,7 +3,7 @@
 	
 	class RMAList {
 		private $_error;
-		public $count;
+		private $_count = 0;
 
 		public function find($parameters = array()) {
 			$find_objects_query = "
@@ -26,7 +26,7 @@
 					return false;
 				}
 				$find_objects_query .= "
-				AND		sri.item_id = ?
+				AND		sri.id = ?
 				";
 				array_push($bind_params,$item->id);
 			}
@@ -83,13 +83,17 @@
 			while(list($id) = $rs->FetchRow()) {
 				$object = new \Support\Request\Item\RMA($id);
 				array_push($objects,$object);
-				$this->count ++;
+				$this->_count ++;
 			}
 			return $objects;
 		}
 
 		public function error() {
 			return $this->_error;
+		}
+
+		public function count() {
+			return $this->_count;
 		}
 	}
 ?>
