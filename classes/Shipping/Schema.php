@@ -151,7 +151,7 @@
 						number INT(11) NOT NULL,
 						tracking_code varchar(255),
 						status enum('READY','SHIPPED','RECEIVED','RETURNED') NOT NULL DEFAULT 'READY',
-						condition enum('OK','DAMAGED'),
+						`condition` enum('OK','DAMAGED'),
 						height decimal(6,2) NOT NULL DEFAULT 0,
 						width decimal(6,2) NOT NULL DEFAULT 0,
 						depth decimal(6,2) NOT NULL DEFAULT 0,
@@ -180,7 +180,7 @@
 						package_id INT(11),
 						product_id INT(11) NOT NULL,
 						serial_number VARCHAR(255),
-						condition enum('OK','DAMAGED'),
+						`condition` enum('OK','DAMAGED'),
 						quantity INT(11) NOT NULL,
 						PRIMARY KEY `pk_id` (`id`),
 						FOREIGN KEY `fk_product` (`product_id`) REFERENCES `product_products` (`id`)

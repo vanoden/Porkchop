@@ -1,7 +1,8 @@
-<?
+<?php
 	namespace Support\Request\Item;
 
 	class RMA {
+	
 		private $_error;
 		public $code;
 		private $approved_id;
@@ -169,4 +170,3 @@
 			return $this->_error;
 		}
 	}
-?>
