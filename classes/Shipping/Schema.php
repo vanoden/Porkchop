@@ -123,6 +123,7 @@
 						rec_contact_id INT(11) NOT NULL,
 						rec_location_id INT(11) NOT NULL,
 						vendor_id INT(11) NOT NULL,
+						instructions TEXT,
 						PRIMARY KEY `pk_id` (`id`),
 						UNIQUE KEY `uk_code` (`code`),
 						KEY `idx_document` (`document_number`),
@@ -182,6 +183,7 @@
 						serial_number VARCHAR(255),
 						`condition` enum('OK','DAMAGED'),
 						quantity INT(11) NOT NULL,
+						description TEXT,
 						PRIMARY KEY `pk_id` (`id`),
 						FOREIGN KEY `fk_product` (`product_id`) REFERENCES `product_products` (`id`)
 					)
