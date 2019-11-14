@@ -329,7 +329,7 @@
 	        <div class="tableCell">Approved By</div>
         </div>
         <div class="tableRow">
-			<div class="tableCell"><a href="/_support/rma/<?=$rma->code?>"><?=$rma->number()?></a></div>
+			<div class="tableCell"><a href="/_support/admin_rma/<?=$rma->code?>"><?=$rma->number()?></a></div>
 	        <div class="tableCell"><?=$rma->date_approved?></div>
 	        <div class="tableCell"><?=$rma->approvedBy()->full_name()?></div>
         </div>

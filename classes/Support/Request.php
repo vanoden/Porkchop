@@ -110,6 +110,11 @@
 		}
 
 		public function update($parameters = array()) {
+			// Bust Cache
+			$cache_key = "support.request[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
+
 			$update_object_query = "
 				UPDATE	support_requests
 				SET		id = id";
@@ -140,35 +145,56 @@
 		}
 
 		private function details() {
-
-			// Get Request Details
-			$get_request_query = "
-				SELECT	id,
-						code,
-						status,
-						customer_id,
-						date_request,
-						type
-				FROM	support_requests
-				WHERE	id = ?
-			";
-
-			$rs = $GLOBALS['_database']->Execute(
-				$get_request_query,
-				array($this->id)
-			);
-
-			if (! $rs) {
-				$this->_error = "SQL Error in SupportRequest::details: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+			$cache_key = "support.request[".$this->id."]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			if ($cache->error) {
+				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
 			}
 
-			$record = $rs->FetchNextObject(false);
-			$this->code = $record->code;
-			$this->status = $record->status;
-			$this->customer = new \Register\Customer($record->customer_id);
-			$this->date_request = $record->date_request;
-			$this->type = $record->type;
+			# Cached Object, Yay!
+			if ($object = $cache->get()) {
+				app_log($cache_key." found in cache",'trace');
+				$this->_cached = true;
+			}
+			else {
+				// Get Request Details
+				$get_request_query = "
+					SELECT	id,
+							code,
+							status,
+							customer_id,
+							date_request,
+							type
+					FROM	support_requests
+					WHERE	id = ?
+				";
+	
+				$rs = $GLOBALS['_database']->Execute(
+					$get_request_query,
+					array($this->id)
+				);
+	
+				if (! $rs) {
+					$this->_error = "SQL Error in SupportRequest::details: ".$GLOBALS['_database']->ErrorMsg();
+					return null;
+				}
+	
+				$object = $rs->FetchNextObject(false);
+				$this->id = $object->id;
+				$this->_cache = false;
+			}
+			$this->code = $object->code;
+			$this->status = $object->status;
+			$this->customer = new \Register\Customer($object->customer_id);
+			$this->date_request = $object->date_request;
+			$this->type = $object->type;
+
+			if (! $this->_cached) {
+				// Cache Object
+				app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
+				if ($object->id) $result = $cache->set($object);
+				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);	
+			}
 
 			return true;
 		}

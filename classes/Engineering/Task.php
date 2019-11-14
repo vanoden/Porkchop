@@ -17,7 +17,7 @@
 		private $release_id;
 		private $product_id;
 		private $requested_id;
-                private $assigned_id;
+		private $assigned_id;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -138,6 +138,11 @@
 		}
 
 		public function update($parameters = array()) {
+			// Bust Cache
+			$cache_key = "engineering.task[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
+
 			if (! is_numeric($this->id)) {
 				$this->_error = "No tasks identified to update";
 				return false;
@@ -360,25 +365,39 @@
 		}
 		
 		public function details() {
+			$cache_key = "engineering.task[".$this->id."]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			if ($cache->error) {
+				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
+			}
 
-			$get_object_query = "
-				SELECT	*,
-						unix_timestamp(date_added) timestamp_added
-				FROM	engineering_tasks
-				WHERE	id = ?
-			";
-
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-
-			if (! $rs) {
-				$this->_error = "SQL Error in Engineering::Task::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			};
-
-			$object = $rs->FetchNextObject(false);
+			# Cached Object, Yay!
+			if ($object = $cache->get()) {
+				app_log($cache_key." found in cache",'trace');
+				$this->_cached = true;
+			}
+			else {
+				$get_object_query = "
+					SELECT	*,
+							unix_timestamp(date_added) timestamp_added
+					FROM	engineering_tasks
+					WHERE	id = ?
+				";
+	
+				$rs = $GLOBALS['_database']->Execute(
+					$get_object_query,
+					array($this->id)
+				);
+	
+				if (! $rs) {
+					$this->_error = "SQL Error in Engineering::Task::details(): ".$GLOBALS['_database']->ErrorMsg();
+					return false;
+				};
+	
+				$object = $rs->FetchNextObject(false);
+				$this->id = $object->id;
+				$this->_cached = false;
+			}
 			$this->code = $object->code;
 			$this->title = $object->title;
 			$this->description = $object->description;
@@ -396,6 +415,14 @@
 			$this->timestamp_added = $object->timestamp_added;
             $this->project_id = $object->project_id;
             $this->prerequisite_id = $object->prerequisite_id;
+
+			if (! $this->_cached) {
+				// Cache Object
+				app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
+				if ($object->id) $result = $cache->set($object);
+				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);	
+			}
+
 			$prereq = new \Engineering\Task($object->prerequisite_id);
 			if ($prereq->id && $prereq->status != 'COMPLETE') $this->status = 'BLOCKED';
 			return true;

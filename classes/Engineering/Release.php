@@ -60,6 +60,11 @@
 		}
 
 		public function update($parameters = array()) {
+			// Bust Cache
+			$cache_key = "engineering.release[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
+
 			$update_object_query = "
 				UPDATE	engineering_releases
 				SET		id = id
@@ -132,23 +137,38 @@
 			}
 		}
 		public function details() {
-			$get_object_query = "
-				SELECT	*
-				FROM	engineering_releases
-				WHERE	id = ?
-			";
+			$cache_key = "engineering.release[".$this->id."]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			if ($cache->error) {
+				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
+			}
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-
-			if (! $rs) {
-				$this->_error = "SQL Error in Engineering::Release::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			};
-
-			$object = $rs->FetchNextObject(false);
+			# Cached Object, Yay!
+			if ($object = $cache->get()) {
+				app_log($cache_key." found in cache",'trace');
+				$this->_cached = true;
+			}
+			else {
+				$get_object_query = "
+					SELECT	*
+					FROM	engineering_releases
+					WHERE	id = ?
+				";
+	
+				$rs = $GLOBALS['_database']->Execute(
+					$get_object_query,
+					array($this->id)
+				);
+	
+				if (! $rs) {
+					$this->_error = "SQL Error in Engineering::Release::details(): ".$GLOBALS['_database']->ErrorMsg();
+					return false;
+				};
+	
+				$object = $rs->FetchNextObject(false);
+				$this->id = $object->id;
+				$this->_cached = false;
+			}
 
 			$this->title = $object->title;
 			$this->code = $object->code;
@@ -157,7 +177,14 @@
 			$this->date_released = $object->date_released;
 			$this->date_scheduled = $object->date_scheduled;
 
-			return $object;
+			if (! $this->_cached) {
+				// Cache Object
+				app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
+				if ($object->id) $result = $cache->set($object);
+				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);	
+			}
+
+			return true;
 		}
 
 		public function released() {
