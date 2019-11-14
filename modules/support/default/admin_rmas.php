@@ -64,7 +64,7 @@
 		$customer = $item->request()->customer;
 ?>
 	<div class="tableRow">
-		<div class="tableCell"><a href="/_support/rma/<?=$rma->code?>"><?=$rma->number()?></a></div>
+		<div class="tableCell"><a href="/_support/admin_rma/<?=$rma->code?>"><?=$rma->number()?></a></div>
 		<div class="tableCell"><?=$rma->status?></div>
 		<div class="tableCell"><?=$customer->organization->name?></div>
 		<div class="tableCell"><?=$customer->full_name()?></div>
