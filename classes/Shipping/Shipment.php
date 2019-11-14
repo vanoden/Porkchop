@@ -15,7 +15,7 @@
 		public $rec_location_id;
 		public $vendor_id;
 		public $tableName = 'shipping_shipments';
-        public $fields = array('id','code','document_number','date_entered','date_shipped','status','send_contact_id','send_location_id','rec_contact_id','rec_location_id','vendor_id');
+        public $fields = array('id','code','document_number','date_entered','date_shipped','status','send_contact_id','send_location_id','rec_contact_id','rec_location_id','vendor_id', 'instructions');
         
         /**
          * add by params
@@ -88,6 +88,21 @@
 				return null;
 			}
 		}
+		
+		/**
+		 * for current shipment, get the items included
+		 */
+		public function get_items() {
+			$itemsInShipment = array();
+			if ($this->id) {
+				$items = $this->execute('SELECT * FROM shipping_packages sp INNER JOIN shipping_items si on sp.id = si.package_id  where sp.shipment_id = ?', array($this->id));
+				foreach ($items as $item) $itemsInShipment[] = $item;
+				return $itemsInShipment;
+			} else {
+				$this->_error = "no shipment id was found";
+			}
+		}
+		
 		
 		public function vendor() {
 			return new \Shipping\Vendor($this->vendor_id);

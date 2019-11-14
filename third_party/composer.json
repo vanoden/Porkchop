@@ -8,6 +8,8 @@
 		"phpmailer/phpmailer": "~5.2",
 		"guzzlehttp/guzzle": "^6.3",
 		"paragonie/random_compat": "<9.99",
-		"mobiledetect/mobiledetectlib": "^2.8"
+		"mobiledetect/mobiledetectlib": "^2.8",
+		"tecnickcom/tcpdf": "^6.3",
+		"picqer/php-barcode-generator": "^0.3.0"
 	}
 }
