@@ -87,6 +87,9 @@
 		),
         "Support"		=> array(
 			"roles"			=> array(
+				"support manager"	=> array(),
+				"support reporter"	=> array(),
+				"support user"		=> array(),
 			),
 			"templates"		=> array(
 				"request_new"			=> "admin.html",
@@ -98,6 +101,8 @@
 				"action"			    => "admin.html",
 				"admin_actions"		    => "admin.html",
 				"pending_registrations"	=> "admin.html",
+				"admin_rmas"			=> "admin.html",
+				"admin_rma"				=> "admin.html",
 			),
 		),
         "Engineering"	=> array(
@@ -358,7 +363,7 @@
 						),
 						array (
 							"title"	=> "RMAs",
-							"target"	=> "/_support/rmas",
+							"target"	=> "/_support/admin_rmas",
 							"view_order"	=> 90,
 							"alt"			=> "RMAs",
 							"description"	=> "RMAs"
@@ -495,7 +500,8 @@
 					array(
 						"view_order"	=> $item["view_order"],
 						"alt"			=> $item["alt"],
-						"description"	=> $item["description"]
+						"description"	=> $item["description"],
+						"target"		=> $item["target"],
 					)
 				);
 				install_log("Menu Item ".$item["title"]." updated");
@@ -504,6 +510,7 @@
 					array(
 						"menu_id"		=> $nav_menu->id,
 						"title"			=> $item["title"],
+						"target"		=> $item["target"],
 						"view_order"	=> $item["view_order"],
 						"alt"			=> $item["alt"],
 						"description"	=> $item["description"]
