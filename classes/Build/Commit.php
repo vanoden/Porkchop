@@ -45,6 +45,40 @@
 		}
 
 		public function update($parameters = array()) {
+			$update_object_query = "
+				UPDATE	build_commits
+				SET		id = id";
+
+			$bind_params = array();
+			if ($parameters['author']) {
+				$author = new \Register\Customer();
+				if (! $author->get($parameters['author'])) {
+					$this->_error = "Author not found"
+					return false;
+				}
+				$update_object_query .= ",
+						author_id = ?";
+				array_push($bind_params,$author->id);
+			}
+			elseif($parameters['author_id']) {
+				$author = new \Register\Customer($parameters['author_id']);
+				if (! $author->id) {
+					$this->_error = "Author not found";
+					return false;
+				}
+				$update_object_query .= ",
+						author_id = ?";
+				array_push($bind_params,$author->id);
+			}
+			$update_object_query .= "
+				WHERE	id = ?";
+			array_push($bind_params,$this->id);
+
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->_error = "SQL Error in Build::Commit::update(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
 			return $this->details();
 		}
 
@@ -91,6 +125,7 @@
 				$this->repository_id = $object->repository_id;
 				$this->hash = $object->hash;
 				$this->timestamp = $object->timestamp;
+				$this->author_id = $object->author_id;
 				return true;
 			}
 			else {
