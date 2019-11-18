@@ -135,6 +135,62 @@
 					return false;
 				}
 
+				# Build Repos
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `build_repositories` (
+						`id` int(4) NOT NULL AUTO_INCREMENT,
+						`url` varchar(255) NOT NULL,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `uk_url` (`url`)
+					)
+				";
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating build_repos table in Build::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return false;
+				}
+
+				# Build Commits
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `build_commits` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`repository_id` int(4) NOT NULL,
+						`hash` varchar(255) NOT NULL NULL,
+						`timestamp` datetime DEFAULT NULL,
+						PRIMARY KEY (`id`),
+						FOREIGN KEY `fk_repo` (`repository_id`) REFERENCES `build_repositories` (`id`)
+					)
+				";
+
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating build_commits table in Build::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return false;
+				}
+
+				# Version/Commit Cross Reference
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `build_version_commits` (
+						`version_id`	INT(11) NOT NULL,
+						`commit_id`		INT(11) NOT NULL,
+						PRIMARY KEY `pk_vc` (`version_id`,`commit_id`),
+						FOREIGN KEY `fk_version` (`version_id`) REFERENCES `build_versions` (`id`),
+						FOREIGN KEY `fk_commit` (`commit_id`) REFERENCES `build_commits` (`id`)
+					)
+				";
+
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating build_version_commits table in Build::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return false;
+				}
+
 				$current_schema_version = 1;
 				$update_schema_version = "
 					INSERT
