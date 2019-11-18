@@ -8,108 +8,104 @@
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
-		<form method="post" action="<?=PATH?>/_support/api" name="addRequest">
-		<input type="hidden" name="method" value="addRequest">
+		<form method="post" action="<?=PATH?>/_build/api" name="addProduct">
+		<input type="hidden" name="method" value="addProduct">
 		<div class="apiMethod">
-			<div class="h3 apiMethodTitle">addRequest</div>
+			<div class="h3 apiMethodTitle">addProduct</div>
 			<div class="apiParameter">
-				<span class="label apiLabel">code</span>
-				<input type="text" name="code" class="value input apiInput"/>
+				<span class="label apiLabel">name</span>
+				<input type="text" name="name" class="value input apiInput"/>
 			</div>
 			<div class="apiParameter">
-				<span class="label apiLabel">customer</span>
-				<input type="text" name="customer" class="value input apiInput"/>
+				<span class="label apiLabel">workspace</span>
+				<input type="text" name="workspace" class="value input apiInput"/>
 			</div>
 			<div class="apiParameter">
-				<span class="label apiLabel">organization</span>
-				<input type="text" name="organization" class="value input apiInput"/>
+				<span class="label apiLabel">major_version</span>
+				<input type="text" name="major_version" class="value input apiInput"/>
 			</div>
 			<div class="apiParameter">
-				<span class="label apiLabel">tech</span>
-				<input type="text" name="tech" class="value input apiInput"/>
+				<span class="label apiLabel">minor_version</span>
+				<input type="text" name="minor_version" class="value input apiInput"/>
+			</div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+		</div>
+		</form>
+		<form method="post" action="<?=PATH?>/_build/api" name="updateProduct">
+		<input type="hidden" name="method" value="updateProduct">
+		<div class="apiMethod">
+			<div class="h3 apiMethodTitle">updateProduct</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">workspace</span>
+				<input type="text" name="workspace" class="value input apiInput"/>
+			</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">major_version</span>
+				<input type="text" name="major_version" class="value input apiInput"/>
+			</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">minor_version</span>
+				<input type="text" name="minor_version" class="value input apiInput"/>
+			</div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+		</div>
+		</form>
+		<form method="post" action="<?=PATH?>/_build/api" name="findProducts">
+		<input type="hidden" name="method" value="findProducts">
+		<div class="apiMethod">
+			<div class="h3 apiMethodTitle">findProducts</div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+		</div>
+		</form>
+		<form method="post" action="<?=PATH?>/_build/api" name="getProduct">
+		<input type="hidden" name="method" value="getProduct">
+		<div class="apiMethod">
+			<div class="h3 apiMethodTitle">getProduct</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">name</span>
+				<input type="text" name="name" class="value input apiInput"/>
+			</div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+		</div>
+		</form>
+		<form method="post" action="<?=PATH?>/_build/api" name="addVersion">
+		<input type="hidden" name="method" value="addVersion">
+		<div class="apiMethod">
+			<div class="h3 apiMethodTitle">addVersion</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">product</span>
+				<input type="text" name="product" class="value input apiInput"/>
+			</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">number</span>
+				<input type="text" name="number" class="value input apiInput"/>
 			</div>
 			<div class="apiParameter">
 				<span class="label apiLabel">status</span>
 				<input type="text" name="status" class="value input apiInput"/>
 			</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">tarball</span>
+				<input type="text" name="tarball" class="value input apiInput"/>
+			</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">message</span>
+				<input type="text" name="message" class="value input apiInput"/>
+			</div>
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
-		<form method="post" action="<?=PATH?>/_support/api" name="updateRequest">
-		<input type="hidden" name="method" value="updateRequest">
+		<form method="post" action="<?=PATH?>/_build/api" name="findVersions">
+		<input type="hidden" name="method" value="findVersions">
 		<div class="apiMethod">
-			<div class="h3 apiMethodTitle">updateRequest</div>
+			<div class="h3 apiMethodTitle">findVersions</div>
 			<div class="apiParameter">
-				<span class="label apiLabel">code</span>
-				<input type="text" name="code" class="value input apiInput"/>
+				<span class="label apiLabel">product</span>
+				<input type="text" name="product" class="value input apiInput"/>
 			</div>
 			<div class="apiParameter">
 				<span class="label apiLabel">status</span>
 				<input type="text" name="status" class="value input apiInput"/>
-			</div>
-			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
-		</div>
-		</form>
-		<form method="post" action="<?=PATH?>/_support/api" name="findRequests">
-		<input type="hidden" name="method" value="findRequests">
-		<div class="apiMethod">
-			<div class="h3 apiMethodTitle">findRequests</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">code</span>
-				<input type="text" name="code" class="value input apiInput"/>
-			</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">customer</span>
-				<input type="text" name="customer" class="value input apiInput"/>
-			</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">organization</span>
-				<input type="text" name="organization" class="value input apiInput"/>
-			</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">status</span>
-				<input type="text" name="status" class="value input apiInput"/>
-			</div>
-			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
-		</div>
-		</form>
-		<form method="post" action="<?=PATH?>/_support/api" name="getRequest">
-		<input type="hidden" name="method" value="getRequest">
-		<div class="apiMethod">
-			<div class="h3 apiMethodTitle">getRequest</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">code</span>
-				<input type="text" name="code" class="value input apiInput"/>
-			</div>
-			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
-		</div>
-		</form>
-		<form method="post" action="<?=PATH?>/_support/api" name="addEvent">
-		<input type="hidden" name="method" value="addEvent">
-		<div class="apiMethod">
-			<div class="h3 apiMethodTitle">addEvent</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">request</span>
-				<input type="text" name="request" class="value input apiInput"/>
-			</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">tech</span>
-				<input type="text" name="tech" class="value input apiInput"/>
-			</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">comment</span>
-				<input type="text" name="comment" class="value input apiInput"/>
-			</div>
-			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
-		</div>
-		</form>
-		<form method="post" action="<?=PATH?>/_support/api" name="findEvents">
-		<input type="hidden" name="method" value="findEvents">
-		<div class="apiMethod">
-			<div class="h3 apiMethodTitle">findEvents</div>
-			<div class="apiParameter">
-				<span class="label apiLabel">request</span>
-				<input type="text" name="parent_code" class="value input apiInput"/>
 			</div>
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
