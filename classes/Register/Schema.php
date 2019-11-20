@@ -884,7 +884,7 @@
 						notes TEXT,
 						PRIMARY KEY `pk_id` (`id`),
 						FOREIGN KEY `fk_country_id` (`country_id`) REFERENCES `geography_countries` (`id`),
-						FOREIGN KEY `fk_region_id` (`region_id`) REFERENCES `geography_regions` (`id`)
+						FOREIGN KEY `fk_region_id` (`region_id`) REFERENCES `geography_provinces` (`id`)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
