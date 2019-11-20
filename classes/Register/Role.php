@@ -87,7 +87,6 @@
 			}
 			list($this->id) = $rs->FetchRow();
 			if ($this->id < 1) {
-				$this->error = "Role not found";
 				return false;
 			}
 			return $this->details();

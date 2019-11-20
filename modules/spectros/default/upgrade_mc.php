@@ -9,6 +9,12 @@
 				),
 			),
 		),
+		"Geography"		=> array(
+			"roles"			=> array(
+				"geography manager"	=> array(),
+				"geography user"	=> array(),
+			),
+		),
 		"Content"		=> array(
 			"roles"			=> array(
 				"developer"		=> array(
