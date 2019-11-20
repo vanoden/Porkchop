@@ -1,4 +1,7 @@
 <?php
+	$default_Template = "default.html";
+	$admin_template = "admin.html";
+
 	$modules = array(
 		"Company"		=> array(
 		),
@@ -33,13 +36,13 @@
 				),
 			),
 			"templates"		=> array(
-				"organizations"		=> "admin.html",
-				"organization"		=> "admin.html",
-				"accounts"			=> "admin.html",
-				"admin_account"		=> "admin.html",
-				"pending_customers"	=> "admin.html",
-				"roles"				=> "admin.html",
-				"role"				=> "admin.html"
+				"organizations"		=> $admin_template,
+				"organization"		=> $admin_template,
+				"accounts"			=> $admin_template,
+				"admin_account"		=> $admin_template,
+				"pending_customers"	=> $admin_template,
+				"roles"				=> $admin_template,
+				"role"				=> $admin_template
 			),
 		),
         "Contact"		=> array(
@@ -54,22 +57,22 @@
 				"build user"		=> "Create versions and commits",
 			),
 			"templates"	=> array(
-				"products"			=> "admin.html",
-				"product"			=> "admin.html",
-				"product_new"		=> "admin.html",
-				"versions"			=> "admin.html",
-				"version"			=> "admin.html",
+				"products"			=> $admin_template,
+				"product"			=> $admin_template,
+				"product_new"		=> $admin_template,
+				"versions"			=> $admin_template,
+				"version"			=> $admin_template,
 			),
 		),
         "Storage"		=> array(
 			"roles"			=> array(
-				"storage manager"	=> "admin.html",
-				"storage upload"	=> "admin.html",
+				"storage manager"	=> $admin_template,
+				"storage upload"	=> $admin_template,
 			),
 			"templates"		=> array(
-				"repositories"		=> "admin.html",
-				"repository"		=> "admin.html",
-				"browse"			=> "admin.html",
+				"repositories"		=> $admin_template,
+				"repository"		=> $admin_template,
+				"browse"			=> $admin_template,
 			),
 		),
 		"Media"			=> array(
@@ -85,8 +88,8 @@
 				"product reporter"	=> array(),
 			),
 			"templates"		=> array(
-				"report"			=> "admin.html",
-				"edit"				=> "admin.html",
+				"report"			=> $admin_template,
+				"edit"				=> $admin_template,
 			),
 		),
         "Email"			=> array(
@@ -99,9 +102,9 @@
 				"package manager"	=> array(),
 			),
 			"templates"		=> array(
-				"packages"			=> "admin.html",
-				"package"			=> "admin.html",
-				"versions"			=> "admin.html",
+				"packages"			=> $admin_template,
+				"package"			=> $admin_template,
+				"versions"			=> $admin_template,
 			),
 		),
         "Support"		=> array(
@@ -111,17 +114,17 @@
 				"support user"		=> array(),
 			),
 			"templates"		=> array(
-				"request_new"			=> "admin.html",
-				"request_new_monitor"   => "admin.html",
-				"requests"			    => "admin.html",
-				"request_detail"	    => "admin.html",
-				"request_items"		    => "admin.html",
-				"request_item"		    => "admin.html",
-				"action"			    => "admin.html",
-				"admin_actions"		    => "admin.html",
-				"pending_registrations"	=> "admin.html",
-				"admin_rmas"			=> "admin.html",
-				"admin_rma"				=> "admin.html",
+				"request_new"			=> $admin_template,
+				"request_new_monitor"   => $admin_template,
+				"requests"			    => $admin_template,
+				"request_detail"	    => $admin_template,
+				"request_items"		    => $admin_template,
+				"request_item"		    => $admin_template,
+				"action"			    => $admin_template,
+				"admin_actions"		    => $admin_template,
+				"pending_registrations"	=> $admin_template,
+				"admin_rmas"			=> $admin_template,
+				"admin_rma"				=> $admin_template,
 			),
 		),
         "Engineering"	=> array(
@@ -130,17 +133,17 @@
 				"engineering reporter"	=> array(),
 			),
 			"templates"		=> array(
-				"home"				=> "admin.html",
-				"tasks"				=> "admin.html",
-				"task"				=> "admin.html",
-				"releases"			=> "admin.html",
-				"release"			=> "admin.html",
-				"products"			=> "admin.html",
-				"product"			=> "admin.html",
-				"projects"			=> "admin.html",
-				"project"			=> "admin.html",
-				"event_report"		=> "admin.html",
-				"search"			=> "admin.html",
+				"home"				=> $admin_template,
+				"tasks"				=> $admin_template,
+				"task"				=> $admin_template,
+				"releases"			=> $admin_template,
+				"release"			=> $admin_template,
+				"products"			=> $admin_template,
+				"product"			=> $admin_template,
+				"projects"			=> $admin_template,
+				"project"			=> $admin_template,
+				"event_report"		=> $admin_template,
+				"search"			=> $admin_template,
 			),
 		),
 		"Action"		=> array(
@@ -157,27 +160,27 @@
 				"monitor asset"		=> array(),
 			),
 			"templates"		=> array(
-				"admin_assets"		=> "admin.html",
-				"admin_details"		=> "admin.html",
-				"comm_dashboard"	=> "admin.html",
-				"sensor_models"		=> "admin.html",
-				"sensor_model"		=> "admin.html",
-				"dashboards"		=> "admin.html",
-				"admin_dashboard"	=> "admin.html"
+				"admin_assets"		=> $admin_template,
+				"admin_details"		=> $admin_template,
+				"comm_dashboard"	=> $admin_template,
+				"sensor_models"		=> $admin_template,
+				"sensor_model"		=> $admin_template,
+				"dashboards"		=> $admin_template,
+				"admin_dashboard"	=> $admin_template
 			),
 		),
 	);
 
 	$modules['Spectros'] = array(
 		"roles"			=> array(
-			"credit manager"	=> "admin.html",
+			"credit manager"	=> $admin_template,
 		),
 		"templates"		=> array(
-			"admin_home"		=> "admin.html",
-			"admin_credits"		=> "admin.html",
-			"cal_report"		=> "admin.html",
-			"transfer_ownership"	=> "admin.html",
-			"admin_collections"	=> "admin.html",
+			"admin_home"		=> $admin_template,
+			"admin_credits"		=> $admin_template,
+			"cal_report"		=> $admin_template,
+			"transfer_ownership"	=> $admin_template,
+			"admin_collections"	=> $admin_template,
 		),
 	);
 
@@ -450,6 +453,21 @@
 	error_reporting(E_ERROR);
 	ini_set('display_errors',1);
 
+	if ($_REQUEST['log_level']) $log_level = $_REQUEST['log_level'];
+
+	install_log("Starting site upgrade",'notice');
+	if (file_exists(HTML."/version.txt")) {
+		install_log("Loaded ".HTML."/version.txt",'debug');
+		$version_info = file_get_contents(HTML."/version.txt");
+		if (preg_match('/PRODUCT\:\s(.+)/',$version_info,$matches)) install_log("Product: ".$matches[1],'notice');
+		if (preg_match('/BUILD_ID\:\s(.+)/',$version_info,$matches)) install_log("Build: ".$matches[1]);
+		if (preg_match('/BUILD_DATE\:\s(.+)/',$version_info,$matches)) install_log("Built: ".$matches[1]);
+		if (preg_match('/VERSION\:\s(.+)/',$version_info,$matches)) install_log("Version: ".$matches[1],'notice');
+	}
+	else {
+		install_log("No version.txt found",'warning');
+	}
+
 	# Process Modules
 	foreach ($modules as $module_name => $module_data) {
 		# Update Schema
@@ -483,12 +501,11 @@
 				}
 			}
 			else {
-				install_log("Found role $role_name");
+				install_log("Found role $role_name",'debug');
 			}
 		}
-	    install_log("Add new template settings");
+	    //install_log("Add new template settings");
 	    foreach ($module_data['templates'] as $view => $template) {
-			install_log("Add template '$template' to $module_name::$view");
 	        $page = new \Site\Page(strtolower($module_name),$view);
 	        if ($page->error) {
 	            install_fail("Error loading view '$view' for module '$module_name': ".$page->error);
@@ -504,9 +521,17 @@
 					continue;
 				};
 			}
-			$page->setMetadata("template",$template);
-			if ($page->error) {
-				install_fail("Could not add metadata to page: ".$page->error);
+			//install_log(print_r($page,true));
+			//install_log($page->metadata->template." vs $template");
+			if ($page->metadata->template != $template) {
+				install_log("Add template '$template' to $module_name::$view");
+				$page->setMetadata("template",$template);
+				if ($page->error) {
+					install_fail("Could not add metadata to page: ".$page->error);
+				}
+			}
+			else {
+				install_log("Template already set correctly for $module_name::$view",'trace');
 			}
 		}
 	}
@@ -582,9 +607,11 @@
 			}
 		}
 	}
+	install_log("Upgrade completed successfully",'notice');
 	exit;
 
     function install_log($message = '',$level = 'info') {
+		if (! log_level($level)) return;
         print date('Y/m/d H:i:s');
         print " [$level]";
         print ": $message<br>\n";
@@ -595,3 +622,16 @@
         install_log("Upgrade failed: $message",'error');
         exit;
     }
+
+	function log_level($level = 'info') {
+		if ($_REQUEST['log_level']) $log_level = $_REQUEST['log_level'];
+		else $log_level = 'warning';
+
+		if ($log_level == 'trace') return true;
+		if ($log_level == 'debug' && $level != 'trace') return true;
+		if ($log_level == 'info' && $level != 'trace' && $level != 'debug') return true;
+		if ($log_level == 'warning' && $level != 'trace' && $level != 'debug' && $level != 'info') return true;
+		if ($log_level == 'notice' && $level != 'trace' && $level != 'debug' && $level != 'info' && $level != 'warning') return true;
+		if ($log_level == 'error') return true;
+		return false;
+	}
