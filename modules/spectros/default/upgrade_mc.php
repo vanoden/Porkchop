@@ -42,6 +42,19 @@
 			),
 		),
 		"Navigation"	=> array(),
+		"Build"		=> array(
+			"roles"		=> array(
+				"build manager"		=> "Manage Build Products and Repositories",
+				"build user"		=> "Create versions and commits",
+			),
+			"templates"	=> array(
+				"products"			=> "admin.html",
+				"product"			=> "admin.html",
+				"product_new"		=> "admin.html",
+				"versions"			=> "admin.html",
+				"version"			=> "admin.html",
+			),
+		),
         "Storage"		=> array(
 			"roles"			=> array(
 				"storage manager"	=> "admin.html",
@@ -142,7 +155,9 @@
 				"admin_details"		=> "admin.html",
 				"comm_dashboard"	=> "admin.html",
 				"sensor_models"		=> "admin.html",
-				"sensor_model"		=> "admin.html"
+				"sensor_model"		=> "admin.html",
+				"dashboards"		=> "admin.html",
+				"admin_dashboard"	=> "admin.html"
 			),
 		),
 	);
@@ -273,6 +288,13 @@
 							"view_order"	=> 90,
 							"alt"			=> "Sensor Model Management",
 							"description"	=> "Sensor Model Management"
+						),
+						array (
+							"title"	=> "Dashboards",
+							"target"	=> "/_monitor/dashboards",
+							"view_order"	=> 95,
+							"alt"			=> "Monitor Dashboard Management",
+							"description"	=> "Monitor Dashboard Management"
 						)
 					)
 				),
@@ -429,6 +451,7 @@
 		try {
 			$class = new $class_name();
 			$class_version = $class->version();
+			if ($class->error) install_fail($class->error);
 		} catch (Exception $e) {
 			install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
         }
