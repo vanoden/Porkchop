@@ -837,6 +837,39 @@
 					
 				// Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$drop_table_query = "
+					DROP TABLE IF EXISTS register_organization_locations
+				";
+				$GLOBALS['_database']->Execute($drop_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error dropping register_organization_locations table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$drop_table_query = "
+					DROP TABLE IF EXISTS builtin_locations
+				";
+				$GLOBALS['_database']->Execute($drop_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error dropping builtin_locations table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$drop_table_query = "
+					DROP TABLE IF EXISTS builtin__info
+				";
+				$GLOBALS['_database']->Execute($drop_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error dropping builtin__info table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
 	
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS register_locations (
@@ -857,21 +890,6 @@
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating register_locations table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
-	
-	            // spectros itself needs a register location to default to
-                $add_spectros_address = '
-                    INSERT INTO register_locations
-                        (`id`, `name`, `address_1`, `address_2`, `city`, `region_id`, `country_id`, `zip_code`, `notes`)
-                    VALUES
-                        (1, "Spectros Instruments, Inc", "4 Evergreen Ln", "# 12", "Hopedale", 4075, 217, 01747, `notes`);
-				';
-				$GLOBALS['_database']->Execute($add_spectros_address);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error adding register_locations default spectros address in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
