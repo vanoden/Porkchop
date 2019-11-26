@@ -48,6 +48,18 @@
 		}
 		
         /**
+         * get object in question
+         */
+		public function getByShippingID($id=0) {
+			$getObjectQuery = "SELECT * FROM $this->tableName WHERE	shipment_id = ?";
+			$rs = $this->execute($getObjectQuery, array($id));
+            $object = $rs->FetchNextObject(false);
+			if (is_numeric($object->id)) {
+    			foreach ($this->fields as $field) $this->$field = $object->$field;
+			}
+		}
+		
+        /**
          * update by params
          * 
          * @param array $parameters, name value pairs to update object by

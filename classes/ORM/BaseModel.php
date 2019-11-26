@@ -82,7 +82,6 @@
 			if (is_numeric($object->id)) {
     			foreach ($this->fields as $field) $this->$field = $object->$field;
 			}
-
 		}
 
         /**

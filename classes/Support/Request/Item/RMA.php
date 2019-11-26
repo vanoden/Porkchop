@@ -10,6 +10,7 @@
 		public $timestamp_approved;
 		public $item;
 		private $item_id;
+		public $status;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -92,11 +93,51 @@
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
 		}
-
+		
 		public function update($parameters) {
+			$update_action_query = "
+				UPDATE	`support_rmas`
+				SET		id = id
+			";
+
+            $bind_params = array();
+			if (isset($parameters['status']) && $parameters['status'] != $this->status) {
+				$update_action_query .= ",
+				status = ?";
+				array_push($bind_params,$parameters['status']);
+			}
+
+			if (isset($parameters['approved_id']) && $parameters['approved_id'] > 0) {
+				$admin = new \Register\Customer($parameters['approved_id']);
+				if ($admin->error) {
+					$this->_error = $admin->error;
+					return false;
+				}
+				if (! $admin->id) {
+					$this->_error = "Admin not found";
+					return false;
+				}
+				if ($admin->id != $this->assignedTo->id) {
+					$update_action_query .= ",
+						approved_id = ?,
+						date_approved = sysdate()";
+					array_push($bind_params,$parameters['approved_id']);
+				}
+			}
+
+			$update_action_query .= "
+				WHERE	id = ?
+			";
+			array_push($bind_params,$this->id);
+	
+			$GLOBALS['_database']->Execute($update_action_query,$bind_params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->_error = "SQL Error in Support::Request::Item::RMA::update(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
 			return $this->details();
 		}
-
+		
 		public function get($code) {
 			$get_object_query = "
 				SELECT	*
@@ -135,7 +176,7 @@
 			$this->timestamp_approved = $object->timestamp_approved;
 			$this->approved_id = $object->approved_id;
 			$this->status = $object->status;
-			$this->item_id = $object->item_id;
+			$this->item_id = $object->item_id;			
 			return true;
 		}
 

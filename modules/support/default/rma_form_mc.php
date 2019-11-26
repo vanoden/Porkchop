@@ -140,6 +140,28 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 		if (! empty ( $_REQUEST ['usb_comm_cable'] )) addShippedItem ( $shippingPackage->id, $rmaProductId, $rmaSerialNumber, 'OK', 1, 'USB Cable' );
 		if (! empty ( $_REQUEST ['cellular_access_point'] )) addShippedItem ( $shippingPackage->id, $rmaProductId, $rmaSerialNumber, 'OK', 1, 'Cellular Access Point' );
 	}
+	
+	// RMA status is changed to CUSTOMER_HIP @TODO, why didn't the table have that in the ENUM values?
+	$rma->update(array('status'=>'PRINTED'));
+}
+
+// process the form submission for the adding package and tracking details
+if ($_REQUEST ['form_submitted'] == 'package_details_submitted') {
+
+    $shippingPackage = new \Shipping\Package ();
+    $shippingPackage->getByShippingID($shippingShipment->id);
+	$packageDetails = array ();
+	$packageDetails ['shipment_id'] = $shippingShipment->id;
+	$packageDetails ['tracking_code'] = (isset ( $_REQUEST ['tracking_code'] )) ? $_REQUEST ['tracking_code'] : '';
+	$packageDetails ['height'] = (isset ( $_REQUEST ['height'] )) ? floatval( $_REQUEST ['height'] ) : 0;
+	$packageDetails ['width'] = (isset ( $_REQUEST ['width'] )) ? floatval( $_REQUEST ['width'] ) : 0;
+	$packageDetails ['depth'] = (isset ( $_REQUEST ['depth'] )) ?  floatval( $_REQUEST ['depth'] ) : 0;
+	$packageDetails ['weight'] = (isset ( $_REQUEST ['weight'] )) ? floatval( $_REQUEST ['weight'] ) : 0;		
+	if (!empty($shippingPackage->id)) {
+		$shippingPackage->update ( $packageDetails );
+	} else {
+		$shippingPackage->add ( $packageDetails );
+	}
 }
 
 // set UI to submitted or not
@@ -148,5 +170,6 @@ if ($shippingShipment->id) {
 	$rmaSubmitted = true;
 	$sentFromLocation = $shippingShipment->send_location ();
 	$sentToLocation = $shippingShipment->rec_location ();
+    $shippingPackage = new \Shipping\Package ();
+    $shippingPackage->getByShippingID($shippingShipment->id);
 }
-

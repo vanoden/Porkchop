@@ -53,6 +53,17 @@ input[type=text] {
 	border-radius: 3px;
 }
 
+.small-input {
+    width: 50%;
+}
+
+.enter-shipping-form {
+	margin-left: 100px; 
+	border: dashed 1px #000; 
+	padding: 10px; 
+	max-width: 700px;
+}
+
 label {
 	margin-bottom: 10px;
 	display: block;
@@ -359,148 +370,195 @@ span.price {
     }
 </script>
 <h1>Return Merchandise Authorization</h1>
-<div id="support_rma">
-    <?php
-				if ($rmaSubmitted) {
-					?>
-       <h2 class="green">Your return is processing...</h2>
-	<span class="container" style="float: right;"> <span class="label"><i class="fa fa-exclamation-circle red" aria-hidden="true"></i> Please include the following form with your return: </span> <span class="value">&nbsp;<a href="#"> <i class="fa fa-file"></i> Download
-		</a></span>
-	</span><br /> <br />
-	<div class="container">
-		<span class="label"><i class="fa fa-address-card" aria-hidden="true"></i> Sending From: <br /></span> <span class="value">
-               <?=$sentFromLocation->address_1?> <?=$sentFromLocation->address_2?><br />
-               <?=$sentFromLocation->city?>, <?=$sentFromLocation->zip_code?><br /> <i><?=$sentFromLocation->notes?></i>
-		</span>
-	</div>
-	<div class="container">
-		<span class="label"><i class="fa fa-address-card-o" aria-hidden="true"></i> Shipping To: <br /></span> <span class="value">
+<?php
+if ($rma->id) {
+?>
+    <div id="support_rma">
+        <?php
+	    if ($rmaSubmitted) {
+		    ?>
+           <h2 class="green">Your return is processing...</h2>
+	    <span class="container" style="float: right;"> <span class="label"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> 
+	        Please include the following form with your return: </span> <span class="value">&nbsp;<a href="/_support/rma_pdf/<?=$rmaCode?>" target="_blank"> <i class="fa fa-file"></i> Download </a></span>
+	    </span><br /> <br />
+	    <div class="container">
+		    <span class="label"><i class="fa fa-address-card" aria-hidden="true"></i> Sending From: <br /></span> <span class="value">
+                   <?=$sentFromLocation->address_1?> <?=$sentFromLocation->address_2?><br />
+                   <?=$sentFromLocation->city?>, <?=$sentFromLocation->zip_code?><br /> <i><?=$sentFromLocation->notes?></i>
+		    </span>
+	    </div>
+	    <div class="container">
+		    <span class="label"><i class="fa fa-address-card-o" aria-hidden="true"></i> Shipping To: <br /></span> <span class="value">
                <?=$sentToLocation->address_1?> <?=$sentToLocation->address_2?><br />
                <?=$sentToLocation->city?>, <?=$sentToLocation->zip_code?><br /> <i><?=$sentToLocation->notes?></i>
-		</span>
-	</div>
-	<hr />
-    <?php
-				}
-				?>
-	<div class="container">
-		<span class="label"><i class="fa fa-ticket" aria-hidden="true"></i> Ticket</span> <span class="value"><a href="/_support/request_item/<?=$rmaItemId?>"><?=$rmaTicketNumber?></a> / <?=$rmaNumber?></span>
-	</div>
-	<div class="container">
-		<span class="label"><i class="fa fa-user" aria-hidden="true"></i> Contact</span> <span class="value"><?=$rmaCustomerFullName?> - <?=$rmaCustomerOrganizationName?></span>
-	</div>
-	<div class="container">
-		<span class="label"><i class="fa fa-wrench" aria-hidden="true"></i> Approved By</span> <span class="value"><?=$rmaApprovedByName?> - <?=$rmaDateApproved?> - Status: <?=$rmaStatus?></span>
-	</div>
-	<div class="container">
-		<span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Product</span> <span class="value"><?=$rmaProductCode?> - <?=$rmaSerialNumber?></span>
-	</div>
-    <?php
-				if (! $rmaSubmitted) {
-					?>
-   <div class="stepwizard">
-		<div class="stepwizard-row">
-			<div class="stepwizard-step">
-				<a type="button" href="#shipping" class="btn btn-default btn-circle">1</a>
-				<p>Return Address</p>
-			</div>
-			<div class="stepwizard-step">
-				<a type="button" href="#billing" class="btn btn-primary btn-circle">2</a>
-				<p>Billing Address</p>
-			</div>
-			<div class="stepwizard-step">
-				<a type="button" href="#terms" class="btn btn-default btn-circle">3</a>
-				<p>Terms and Conditions</p>
-			</div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-75">
-			<div class="container">
-				<form method="post" id="submit_rma_form">
-					<div class="row">
-						<div id="shipping_address_form" class="col-50">
-							<a name="shipping"><h2>Return Shipping Address</h2></a> <label for="fname"><i class="fa fa-user"></i> Full Name</label> <input type="text" id="shipping_firstname" name="shipping_firstname" class="shipping_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> <label for="adr"><i class="fa fa-address-card-o"></i> Address</label> <input type="text" id="shipping_address" name="shipping_address" class="shipping_fields" placeholder="542 W. 15th Street"> <input type="text" id="shipping_address2" name="shipping_address2" class="shipping_fields" placeholder="Suite 1"> <label for="city"><i class="fa fa-institution"></i> City</label> <input type="text" id="shipping_city" name="shipping_city" class="shipping_fields" placeholder="New York">
-							<div class="row">
-								<div class="col-50">
-									<label for="state">State</label> <input type="text" id="shipping_state" name="shipping_state" class="shipping_fields" placeholder="NY">
-								</div>
-								<div class="col-50">
-									<label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields" placeholder="10001">
-								</div>
-							</div>
-						</div>
-					</div>
-					<input id="show-billing-button" onclick="showBilling()" type="button" value="Next" class="btn" style="display: block;"><br />
-					<div id="billing_address_form" class="row" style="display: none;">
-						<div class="col-50">
-							<a name="billing"><h2>Billing Address</h2></a> <input type="checkbox" id="billing_same_as_shipping" name="billing_same_as_shipping" value="billing_same_as_shipping" onclick="toggleBilling()"> Same as Shipping<br /> <br />
-							<div id="billing_address_container" style="display: block;">
-								<label for="fname"><i class="fa fa-user"></i> Full Name</label> <input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> <label for="adr"><i class="fa fa-address-card-o"></i> Address</label> <input type="text" id="billing_address" name="billing_address" class="billing_fields" placeholder="542 W. 15th Street"> <input type="text" id="billing_address2" name="billing_address2" class="billing_fields" placeholder="Suite 1"> <label for="city"><i class="fa fa-institution"></i> City</label> <input type="text" id="billing_city" name="billing_city" class="billing_fields" placeholder="New York">
-								<div class="row">
-									<div class="col-50">
-										<label for="state">State</label> <input type="text" id="billing_state" name="billing_state" class="billing_fields" placeholder="NY">
-									</div>
-									<div class="col-50">
-										<label for="zip">Zip</label> <input type="text" id="billing_zip" name="billing_zip" class="billing_fields" placeholder="10001">
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<input id="show-checklist-button" onclick="showTerms()" type="button" value="Next" class="btn" style="display: none;"><br />
-					<div id="checklist_form" class="row" style="display: none;">
-						<div class="col-50">
-							<a name="terms"><h3>
-									<u>Items Checklist</u>
-								</h3></a> * Only the specified item may be returned. Other contents may be discarded<br /> <br /> <input type="checkbox" name="power_cord" value="power_cord"> Power Cord<br /> <input type="checkbox" name="filters" value="filters"> Filters<br /> <input type="checkbox" name="battery" value="battery"> Battery<br /> <input type="checkbox" name="carry_bag" value="carry_bag"> Carry Bag<br /> <input type="checkbox" name="usb_comm_cable" value="usb_comm_cable"> USB Comm Cable<br /> <input type="checkbox" name="cellular_access_point" value="cellular_access_point"> Cellular Access Point (MiFi/JetPack)<br /> <br /> Special Delivery Instructions (provide if needed):<br />
-							<textarea id="delivery_instructions" name="delivery_instructions" style="width: 50%; height: 100px;"></textarea>
-							<br /> Tracking Number [optional]:<br /> <input type="text" id="tracking_number" name="tracking_number" placeholder="1Z9999999999999999" /> <br /> <br /> <u>Please Confirm</u><br /> <input id="agree_package_properly" type="checkbox" name="agree_package_properly" value="agree_package_properly"> <span class="confirm_terms" style="color: black;">* Item must be packaged properly and a copy of the RMA included</span><br /> <input id="agree_payment_received" type="checkbox" name="agree_payment_received" value="agree_payment_received"> <span class="confirm_terms" style="color: black;">* Item will not be returned before payment is received</span><br /> <br />
-							<div id="agree_terms_message" style="display: none; color: red;">
-								<i class="fa fa-check" aria-hidden="true"></i> Please check you've confirmed the items above, thank you!<br /> <br />
-							</div>
-							<div id="shipping_fields_required" style="display: none; color: red;">
-								<i class="fa fa-exclamation-circle" aria-hidden="true"></i> Please finish entering your address for shipping
-							</div>
-							<div id="billing_fields_required" style="display: none; color: red;">
-								<i class="fa fa-exclamation-circle" aria-hidden="true"></i> Please finish entering your address for billing
-							</div>
-							<br> <br />
-						</div>
-					</div>
-					<input type="hidden" name="form_submitted" value="submit" /> <input id="submit-form-button" type="button" value="Submit Return" onclick="submitForm()" class="btn" style="display: none;"><br />
-				</form>
-			</div>
-		</div>
-	</div>
-   <?php
-				}
-				?>
-   <br />
-	<div class="container">
-		<div class="label">
-			<h4>Events</h4>
-		</div>
-		<hr />
-		<div class="table">
-			<div class="tableHeading">
-				<div class="tableCell">Event Date</div>
-				<div class="tableCell">Person</div>
-				<div class="tableCell">Description</div>
-			</div>
-         <?php
-									if ($events) {
-										foreach ( $events as $event ) {
-											?>
-             <div class="tableRow">
-				<div class="tableCell"><?=$event->date?></div>
-				<div class="tableCell"><?=$event->person->full_name()?></div>
-				<div class="tableCell"><?=$event->description?></div>
-			</div>
-         <?php
-										}
-									}
-									?>
-      </div>
-	</div>
-</div>
+		    </span>
+	    </div>
+	    
+	    <? if (!empty($shippingPackage->id)) {?>
+	        <div class="container">
+		        <span class="label"><i class="fa fa-envelope" aria-hidden="true"></i> Current Package Info: <br /></span> 
+		        <span class="value">
+  		          Tracking #: <?=$shippingPackage->tracking_code;?><br/>
+                  Height: <?=$shippingPackage->height;?><br/>
+                  Width: <?=$shippingPackage->width;?><br/>
+                  Depth: <?=$shippingPackage->depth;?><br/>
+                  Weight: <?=$shippingPackage->weight;?><br/>
+		        </span>
+	        </div>	    
+	    <? } ?>
+	    <div class="enter-shipping-form">
+            <u><b><?=empty($shippingPackage->id) ? "Add" : "Update"?> your shipment info:</b></u>
+            <form method="post" id="submit_package_details">
+                <div class="small-input">
+                    <label for="tracking_code">Tracking Number</label> 
+                    <input type="text" id="tracking_code" name="tracking_code" class="tracking_code" placeholder="1Z9999999999999999" value="<?=$shippingPackage->tracking_code;?>">
+                    
+                    <label for="height">Height (in/cm)</label> 
+                    <input type="text" id="height" name="height" class="height" placeholder="10" value="<?=$shippingPackage->height;?>"> 
+                     
+                    <label for="width">Width (in/cm)</label> 
+                    <input type="text" id="width" name="width" class="width" placeholder="5" value="<?=$shippingPackage->width;?>"> 
+                    
+                    <label for="depth">Depth (in/cm)</label> 
+                    <input type="text" id="depth" name="depth" class="depth" placeholder="5" value="<?=$shippingPackage->depth;?>"> 
+                    
+                    <label for="weight">Weight (kg/lb)</label> 
+                    <input type="text" id="weight" name="weight" class="weight" placeholder="1" value="<?=$shippingPackage->weight;?>"> 
+                    
+                    <input type="hidden" name="form_submitted" value="package_details_submitted" />
+                    <input id="add-package-details" type="submit" value="<?=empty($shippingPackage->id) ? "Add" : "Update"?> Package Details" class="btn" style="height: 35px;">
+                </div>
+            </form>
+        </div>
+	    <hr />	    
+        <?php
+	    }
+	    ?>
+	    <div class="container">
+		    <span class="label"><i class="fa fa-ticket" aria-hidden="true"></i> Ticket</span> <span class="value"><a href="/_support/request_item/<?=$rmaItemId?>"><?=$rmaTicketNumber?></a> / <?=$rmaNumber?></span>
+	    </div>
+	    <div class="container">
+		    <span class="label"><i class="fa fa-user" aria-hidden="true"></i> Contact</span> <span class="value"><?=$rmaCustomerFullName?> - <?=$rmaCustomerOrganizationName?></span>
+	    </div>
+	    <div class="container">
+		    <span class="label"><i class="fa fa-wrench" aria-hidden="true"></i> Approved By</span> <span class="value"><?=$rmaApprovedByName?> - <?=$rmaDateApproved?> - Status: <?=$rmaStatus?></span>
+	    </div>
+	    <div class="container">
+		    <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Product</span> <span class="value"><?=$rmaProductCode?> - <?=$rmaSerialNumber?></span>
+	    </div>
+        <?php
+	    if (! $rmaSubmitted) {
+		    ?>
+       <div class="stepwizard">
+		    <div class="stepwizard-row">
+			    <div class="stepwizard-step">
+				    <a type="button" href="#shipping" class="btn btn-default btn-circle">1</a>
+				    <p>Return Address</p>
+			    </div>
+			    <div class="stepwizard-step">
+				    <a type="button" href="#billing" class="btn btn-primary btn-circle">2</a>
+				    <p>Billing Address</p>
+			    </div>
+			    <div class="stepwizard-step">
+				    <a type="button" href="#terms" class="btn btn-default btn-circle">3</a>
+				    <p>Terms and Conditions</p>
+			    </div>
+		    </div>
+	    </div>
+	    <div class="row">
+		    <div class="col-75">
+			    <div class="container">
+				    <form method="post" id="submit_rma_form">
+					    <div class="row">
+						    <div id="shipping_address_form" class="col-50">
+							    <a name="shipping"><h2>Return Shipping Address</h2></a> <label for="fname"><i class="fa fa-user"></i> Full Name</label> <input type="text" id="shipping_firstname" name="shipping_firstname" class="shipping_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> <label for="adr"><i class="fa fa-address-card-o"></i> Address</label> <input type="text" id="shipping_address" name="shipping_address" class="shipping_fields" placeholder="542 W. 15th Street"> <input type="text" id="shipping_address2" name="shipping_address2" class="shipping_fields" placeholder="Suite 1"> <label for="city"><i class="fa fa-institution"></i> City</label> <input type="text" id="shipping_city" name="shipping_city" class="shipping_fields" placeholder="New York">
+							    <div class="row">
+								    <div class="col-50">
+									    <label for="state">State</label> <input type="text" id="shipping_state" name="shipping_state" class="shipping_fields" placeholder="NY">
+								    </div>
+								    <div class="col-50">
+									    <label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields" placeholder="10001">
+								    </div>
+							    </div>
+						    </div>
+					    </div>
+					    <input id="show-billing-button" onclick="showBilling()" type="button" value="Next" class="btn" style="display: block;"><br />
+					    <div id="billing_address_form" class="row" style="display: none;">
+						    <div class="col-50">
+							    <a name="billing"><h2>Billing Address</h2></a> <input type="checkbox" id="billing_same_as_shipping" name="billing_same_as_shipping" value="billing_same_as_shipping" onclick="toggleBilling()"> Same as Shipping<br /> <br />
+							    <div id="billing_address_container" style="display: block;">
+								    <label for="fname"><i class="fa fa-user"></i> Full Name</label> <input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> <label for="adr"><i class="fa fa-address-card-o"></i> Address</label> <input type="text" id="billing_address" name="billing_address" class="billing_fields" placeholder="542 W. 15th Street"> <input type="text" id="billing_address2" name="billing_address2" class="billing_fields" placeholder="Suite 1"> <label for="city"><i class="fa fa-institution"></i> City</label> <input type="text" id="billing_city" name="billing_city" class="billing_fields" placeholder="New York">
+								    <div class="row">
+									    <div class="col-50">
+										    <label for="state">State</label> <input type="text" id="billing_state" name="billing_state" class="billing_fields" placeholder="NY">
+									    </div>
+									    <div class="col-50">
+										    <label for="zip">Zip</label> <input type="text" id="billing_zip" name="billing_zip" class="billing_fields" placeholder="10001">
+									    </div>
+								    </div>
+							    </div>
+						    </div>
+					    </div>
+					    <input id="show-checklist-button" onclick="showTerms()" type="button" value="Next" class="btn" style="display: none;"><br />
+					    <div id="checklist_form" class="row" style="display: none;">
+						    <div class="col-50">
+							    <a name="terms"><h3>
+									    <u>Items Checklist</u>
+								    </h3></a> * Only the specified item may be returned. Other contents may be discarded<br /> <br /> <input type="checkbox" name="power_cord" value="power_cord"> Power Cord<br /> <input type="checkbox" name="filters" value="filters"> Filters<br /> <input type="checkbox" name="battery" value="battery"> Battery<br /> <input type="checkbox" name="carry_bag" value="carry_bag"> Carry Bag<br /> <input type="checkbox" name="usb_comm_cable" value="usb_comm_cable"> USB Comm Cable<br /> <input type="checkbox" name="cellular_access_point" value="cellular_access_point"> Cellular Access Point (MiFi/JetPack)<br /> <br /> Special Delivery Instructions (provide if needed):<br />
+							    <textarea id="delivery_instructions" name="delivery_instructions" style="width: 50%; height: 100px;"></textarea>
+							    <br /> Tracking Number [optional]:<br /> <input type="text" id="tracking_number" name="tracking_number" placeholder="1Z9999999999999999" /> <br /> <br /> <u>Please Confirm</u><br /> <input id="agree_package_properly" type="checkbox" name="agree_package_properly" value="agree_package_properly"> <span class="confirm_terms" style="color: black;">* Item must be packaged properly and a copy of the RMA included</span><br /> <input id="agree_payment_received" type="checkbox" name="agree_payment_received" value="agree_payment_received"> <span class="confirm_terms" style="color: black;">* Item will not be returned before payment is received</span><br /> <br />
+							    <div id="agree_terms_message" style="display: none; color: red;">
+								    <i class="fa fa-check" aria-hidden="true"></i> Please check you've confirmed the items above, thank you!<br /> <br />
+							    </div>
+							    <div id="shipping_fields_required" style="display: none; color: red;">
+								    <i class="fa fa-exclamation-circle" aria-hidden="true"></i> Please finish entering your address for shipping
+							    </div>
+							    <div id="billing_fields_required" style="display: none; color: red;">
+								    <i class="fa fa-exclamation-circle" aria-hidden="true"></i> Please finish entering your address for billing
+							    </div>
+							    <br> <br />
+						    </div>
+					    </div>
+					    <input type="hidden" name="form_submitted" value="submit" /> <input id="submit-form-button" type="button" value="Submit Return" onclick="submitForm()" class="btn" style="display: none;"><br />
+				    </form>
+			    </div>
+		    </div>
+	    </div>
+       <?php
+	    }
+	    ?>
+       <br />
+	    <div class="container">
+		    <div class="label">
+			    <h4>Events</h4>
+		    </div>
+		    <hr />
+		    <div class="table">
+			    <div class="tableHeading">
+				    <div class="tableCell">Event Date</div>
+				    <div class="tableCell">Person</div>
+				    <div class="tableCell">Description</div>
+			    </div>
+             <?php
+		        if ($events) {
+			        foreach ( $events as $event ) {
+				        ?>
+                 <div class="tableRow">
+				    <div class="tableCell"><?=$event->date?></div>
+				    <div class="tableCell"><?=$event->person->full_name()?></div>
+				    <div class="tableCell"><?=$event->description?></div>
+			    </div>
+             <?php
+			        }
+		        }
+		        ?>
+          </div>
+	    </div>
+    </div>
+<?php
+} else {
+?>
+    <h3>RMA not found, please file a <a href="/_support/request">support request</a> with us to continue.</h3>
+<?php
+}
+?>
