@@ -90,24 +90,41 @@
 			$customer = $rs->FetchNextObject(false);
 			if (! isset($customer->id)) {
 				app_log("No customer found for ".$this->id);
+				$this->id = null;
 				return $this;
 			}
 
 			app_log("Caching details for person '".$this->id."'",'trace',__FILE__,__LINE__);
 			# Store Some Object Vars
-			$this->id = $customer->id;
-			$this->first_name = $customer->first_name;
-			$this->last_name = $customer->last_name;
-			$this->code = $customer->code;
-			$this->login = $customer->code;
-			$customer->login = $customer->code;
-			$this->organization = new Organization($customer->organization_id);
-			$this->department_id = $customer->department_id;
-			if (isset($customer->department)) $this->department = $customer->department;
-			$this->status = $customer->status;
-			$this->timezone = $customer->timezone;
-			$this->auth_method = $customer->auth_method;
-			$this->_cached = 0;
+			if ($customer->id && $customer->id > 0) {
+				$this->id = $customer->id;
+				$this->first_name = $customer->first_name;
+				$this->last_name = $customer->last_name;
+				$this->code = $customer->code;
+				$this->login = $customer->code;
+				$customer->login = $customer->code;
+				$this->organization = new Organization($customer->organization_id);
+				$this->department_id = $customer->department_id;
+				if (isset($customer->department)) $this->department = $customer->department;
+				$this->status = $customer->status;
+				$this->timezone = $customer->timezone;
+				$this->auth_method = $customer->auth_method;
+				$this->_cached = 0;
+			}
+			else {
+				$this->id = null;
+				$this->first_name = null;
+				$this->last_name = null;
+				$this->code = null;
+				$this->login = null;
+				$customer->login = null;
+				$this->organization = new Organization();
+				$this->department_id = null;
+				$this->status = null;
+				$this->timezone = null;
+				$this->auth_method = null;
+				$this->_cached = 0;
+			}
 
 			# Cache Customer Object
 			if ($customer->id) cache_set($cache_key,$customer);
