@@ -95,10 +95,12 @@
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `sales_orders` (
 						id INT(4) NOT NULL AUTO_INCREMENT,
+						code VARCHAR(255) NOT NULL,
 						salesperson_id INT(11) NOT NULL,
 						status enum('NEW','QUOTE','CANCELLED','APPROVED','COMPLETE') NOT NULL DEFAULT 'NEW',
 						customer_id INT(11) NOT NULL,
 						PRIMARY KEY `pk_id` (`id`),
+						UNIQUE KEY `uk_code` (`code`),
 						FOREIGN KEY `fk_sp_id` (`salesperson_id`) REFERENCES `register_users` (`id`),
 						FOREIGN KEY `fk_cust_id` (`customer_id`) REFERENCES `register_users` (`id`)
 					)
@@ -116,7 +118,8 @@
 					CREATE TABLE IF NOT EXISTS `sales_order_events` (
 						id INT(11) NOT NULL AUTO_INCREMENT,
 						order_id INT(11) NOT NULL,
-						result_status enum('NEW','QUOTE','CANCELLED','APPROVED','COMPLETE') NOT NULL,
+						type enum('CREATE','UPDATE','CANCEL','APPROVE','COMPLETE') NOT NULL,
+						new_status enum('NEW','QUOTE','CANCELLED','APPROVED','COMPLETE') NOT NULL,
 						user_id INT(11) NOT NULL,
 						PRIMARY KEY `pk_id` (`id`),
 						FOREIGN KEY `fk_order_id` (`order_id`) REFERENCES `sales_orders` (`id`),

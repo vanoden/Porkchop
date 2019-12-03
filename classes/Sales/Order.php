@@ -3,23 +3,41 @@
 
 	class Order extends \ORM\BaseModel {
 		public $id;
-		public $name;
-		public $abbreviation;
+		private $customer_id;
+		private $salesperson_id;
+		public $status;
 
 		public function add($parameters) {
+			$customer = new \Register\User($parameters['customer_id']);
+			if (! $customer->id) {
+				$this->_error = "Customer not found";
+				return false;
+			}
+			$salesperson = new \Register\User($parameters['salesperson_id']);
+			if (! $salesperson->id) {
+				$this->_error = "Salesperson not found";
+				return false;
+			}
+			if ($parameters['status']) $status = $parameters['status'];
+			else $status = 'NEW';
+			if ($parameters['code']) $code = $parameters['code']);
+			else $code = uniqid();
+
 			$add_object_query = "
 				INSERT
 				INTO	sales_orders
-				(		id,customer_id,salesperson_id,status)
+				(		id,code,customer_id,salesperson_id,status)
 				VALUES
-				(		null,?,?,'NEW')
+				(		null,?,?,?,'NEW')
 			";
-			$GLOBALS['_database']->Execute($add_object_query,array($parameters["name"]));
+			$GLOBALS['_database']->Execute($add_object_query,array($code,$customer->id,$salesperson->id,$status));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Sales::Order::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+			$event = new \Sales\Order\Event();
+			$event->add(array('order_id' => $this->id,'new_status' => $status,'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "CREATE"));
 			return $this->update($parameters);
 		}
 
@@ -43,17 +61,18 @@
 				$this->_error = "SQL Error in Sales::Order::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			$event->add(array('order_id' => $this->id,'new_status' => $status,'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "UPDATE"));
 			return $this->details();
 		}
 
-		public function get($name) {
+		public function get($code) {
 			$get_object_query = "
 				SELECT	id
 				FROM	sales_orders
-				WHERE	name = ?
+				WHERE	code = ?
 			";
 
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($name));
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($code));
 			if (! $rs) {
 				$this->_error = "SQL Error in Sales::Order::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -82,13 +101,23 @@
 			if ($this->id) {
 				app_log("Got details for ".$this->id);
 				$this->id = $object->id;
-				$this->name = $object->name;
-				$this->abbreviation = $object->abbreviation;
+				$this->code = $object->code;
+				$this->salesperson_id = $object->salesperson_id;
+				$this->status = $object->status;
+				$this->customer_id = $object->customer_id;
 				return true;
 			}
 			else {
 				return false;
 			}
+		}
+
+		public function salesperson() {
+			return new \Register\User($this->salesperson_id);
+		}
+
+		public function customer() {
+			return new \Register\User($this->customer_id);
 		}
 
 		public function addItem($item) {
