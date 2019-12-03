@@ -25,11 +25,11 @@
 			$add_object_query = "
 				INSERT
 				INTO	build_products
-				(		name,major_version,minor_version)
+				(		name,architecture,major_version,minor_version)
 				VALUES
-				(		?,?,?)
+				(		?,?,?,?)
 			";
-			$GLOBALS['_database']->Execute($add_object_query,array($parameters['name'],$parameters['major_version'],$parameters['minor_version']));
+			$GLOBALS['_database']->Execute($add_object_query,array($parameters['name'],$parameters['architecture'],$parameters['major_version'],$parameters['minor_version']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Build::Product::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -52,6 +52,10 @@
 				$update_object_query .= ", name = ?";
 				array_push($bind_params,$parameters['name']);
 			}
+			if (isset($parameters['architecture'])) {
+				$update_object_query .= ", architecture = ?";
+				array_push($bind_params,$parameters['architecture']);
+			}
 			if (isset($parameters['major_version'])) {
 				$update_object_query .= ", major_version = ?";
 				array_push($bind_params,$parameters['major_version']);
@@ -63,6 +67,10 @@
 			if (isset($parameters['workspace'])) {
 				$update_object_query .= ", workspace = ?";
 				array_push($bind_params,$parameters['workspace']);
+			}
+			if (isset($parameters['description'])) {
+				$update_object_query .= ", description = ?";
+				array_push($bind_params,$parameters['description']);
 			}
 			$update_object_query .= "
 				WHERE	id = ?";
@@ -113,12 +121,31 @@
 				$this->major_version = $object->major_version;
 				$this->minor_version = $object->minor_version;
 				$this->workspace = $object->workspace;
+				$this->architecture = $object->architecture;
+				$this->description = $object->description;
 				return true;
 			}
 			else {
 				$this->id = null;
 				return false;
 			}
+		}
+
+		public function lastVersion() {
+			$get_last_query = "
+				SELECT	id
+				FROM	build_versions
+				WHERE	product_id = ?
+				ORDER BY `timestamp` DESC
+				LIMIT	1
+			";
+			$rs = $GLOBALS['_database']->Execute($get_last_query,array($this->id));
+			if (! $rs) {
+				$this->_error = "SQL Error in Build::Product::lastVersion(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			list($id) = $rs->FetchRow();
+			return new Version($id);
 		}
 
 		public function error() {

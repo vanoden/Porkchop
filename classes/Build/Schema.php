@@ -96,11 +96,13 @@
 					CREATE TABLE IF NOT EXISTS `build_products` (
 						`id` int(4) NOT NULL AUTO_INCREMENT,
 						`name` varchar(100) NOT NULL,
+						`architecture` varchar(255),
+						`description` text,
 						`workspace` varchar(255) NOT NULL,
 						`major_version` int(5) DEFAULT NULL,
 						`minor_version` int(5) DEFAULT NULL,
 						PRIMARY KEY (`id`),
-						UNIQUE KEY `uk_name` (`name`),
+						UNIQUE KEY `uk_name_arch` (`name`,`architecture`),
 						UNIQUE KEY `uk_workspace` (`workspace`)
 					)
 				";
@@ -117,14 +119,18 @@
 					CREATE TABLE IF NOT EXISTS `build_versions` (
 						`id` int(11) NOT NULL AUTO_INCREMENT,
 						`product_id` int(4) NOT NULL,
+						`major_number` int(4) NOT NULL DEFAULT 0,
+						`minor_number` int(4) NOT NULL DEFAULT 0,
 						`number` int(11) DEFAULT NULL,
 						`timestamp` datetime DEFAULT NULL,
 						`status` enum('NEW','FAILED','ACTIVE') NOT NULL DEFAULT 'NEW',
 						`tarball` varchar(255) DEFAULT NULL,
 						`message` text,
+						`user_id` int(11) NOT NULL,
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `uk_number` (`product_id`,`number`),
-						FOREIGN KEY `fk_product` (`product_id`) REFERENCES `build_products` (`id`)
+						FOREIGN KEY `fk_product` (`product_id`) REFERENCES `build_products` (`id`),
+						FOREIGN KEY `fk_user` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);

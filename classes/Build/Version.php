@@ -66,6 +66,18 @@
 				$update_object_query .= ", message = ?";
 				array_push($bind_params,$parameters['message']);
 			}
+			if (isset($parameters['major_number'])) {
+				$update_object_query .= ", major_number = ?";
+				array_push($bind_params,$parameters['major_number']);
+			}
+			if (isset($parameters['minor_number'])) {
+				$update_object_query .= ", minor_number = ?";
+				array_push($bind_params,$parameters['minor_number']);
+			}
+			if (isset($parameters['user_id'])) {
+				$update_object_query .= ", user_id = ?";
+				array_push($bind_params,$parameters['user_id']);
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?";
@@ -120,11 +132,14 @@
 			if ($object->id) {
 				$this->id = $object->id;
 				$this->product_id = $object->product_id;
+				$this->major_number = $object->major_number;
+				$this->minor_number = $object->minor_number;
 				$this->number = $object->number;
 				$this->timestamp = $object->timestamp;
 				$this->status = $object->status;
 				$this->message = $object->message;
 				$this->tarball = $object->tarball;
+				$this->user_id = $object->user_id;
 				return true;
 			}
 			else {

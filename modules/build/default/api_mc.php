@@ -53,6 +53,8 @@
 
 		$parameters = array();
 		if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+		if (isset($_REQUEST['architecture'])) $parameters['architecture'] = $_REQUEST['architecture'];
+		if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
 		if (isset($_REQUEST['workspace'])) $parameters['workspace'] = $_REQUEST['workspace'];
 		if (isset($_REQUEST['major_version'])) $parameters['major_version'] = $_REQUEST['major_version'];
 		if (isset($_REQUEST['minor_version'])) $parameters['minor_version'] = $_REQUEST['minor_version'];
@@ -75,6 +77,9 @@
 		if (! $product->id) error("Request not found");
 
 		$parameters = array();
+		if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+		if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
+		if (isset($_REQUEST['architecture'])) $parameters['architecture'] = $_REQUEST['architecture'];
 		if (isset($_REQUEST['workspace'])) $parameters['workspace'] = $_REQUEST['workspace'];
 		if (isset($_REQUEST['major_version'])) $parameters['major_version'] = $_REQUEST['major_version'];
 		if (isset($_REQUEST['minor_version'])) $parameters['minor_version'] = $_REQUEST['minor_version'];
@@ -136,11 +141,21 @@
 			app_error("product_id or product required");
 		}
 		if (! $product->id) app_error("Product not found");
+		if ($_REQUEST['user_id']) {
+			$user = new \Register\Customer($_REQUEST['user_id']);
+		}
+		elseif ($_REQUEST['user']) {
+			$user = new \Register\Customer();
+			$user->get($_REQUEST['user']);
+		}
+		if (! $user->id) app_error("User not found");
 
 		$version = new \Build\Version();
 
 		$parameters = array();
 		if (isset($_REQUEST['number'])) $parameters['number'] = $_REQUEST['number'];
+		$parameters['major_number'] = $_REQUEST['major_number'];
+		$parameters['minor_number'] = $_REQUEST['minor_number'];
 		if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 		if (isset($_REQUEST['tarball'])) $parameters['tarball'] = $_REQUEST['tarball'];
 		if (isset($_REQUEST['message'])) $parameters['message'] = $_REQUEST['message'];
@@ -211,6 +226,11 @@
 		elseif ($_REQUEST['product_id']) {
 			$product = new \Build\Product($_REQUEST['product_id']);
 			$parameters['product_id'] = $product->id;
+		}
+		if (isset($_REQUEST['user'])) {
+			$user = new \Register\Customer();
+			if (! $user->get($_REQUEST['user'])) app_error("User not found");
+			$parameters['user_id'] = $user->id;
 		}
 		if (isset($_REQUEST['number'])) $parameters['number'] = $_REQUEST['number'];
 		if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
@@ -404,7 +424,7 @@
 		}
 		if (isset($_REQUEST['author'])) {
 			$author = new \Register\Customer();
-			if ($author->get($_REQUEST['author')) $parameters['author_id'] = $author->id;
+			if ($author->get($_REQUEST['author'])) $parameters['author_id'] = $author->id;
 			else app_error("Author not found");
 		}
 		elseif(isset($_REQUEST['author_id'])) {
@@ -416,7 +436,7 @@
 		}
 
 		$parameters = array();
-		if ($repository->id) $paramters['repository_id'] = $repository->id;
+		if ($repository->id) $parameters['repository_id'] = $repository->id;
 		if ($author->id) $parameters['author_id'] = $author->id;
 
 		$commits = $commitList->find($parameters);
