@@ -22,14 +22,19 @@
 			if ($this->connected) return true;
 			try {
 				$this->fh = fopen($this->path,'a');
-				$this->connected = true;
-				return 1;
 			}
 			catch (Exception $e) {
 				$this->connected = false;
 				$this->error = $e->getMessage();
-				return 0;
+				return false;
 			}
+
+			if (!$this->fh) {
+				$this->error = join("\n",error_get_last());
+				return false;
+			}
+			$this->connected = true;
+			return true;
 		}
 
 		public function write($message,$level = 'debug',$file = null,$line = null) {
