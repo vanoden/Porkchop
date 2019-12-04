@@ -1,60 +1,13 @@
 <?php
 	namespace Register;
 	
-	class Schema {
-		public $error;
-		public $errno;
+	class Schema Extends \Database\Schema {
 		public $module = "register";
 		
-		public function __construct()
-		{
-			$this->upgrade();
-		}
-		
-		public function version()
-		{
-			# See if Schema is Available
-			$schema_list = $GLOBALS['_database']->MetaTables();
-			$info_table  = "register__info";
-			
-			if (!in_array($info_table, $schema_list)) {
-				# Create __info table
-				$create_table_query = "
-						CREATE TABLE `$info_table` (
-							label	varchar(100) not null primary key,
-							value	varchar(255)
-						)
-					";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating info table in RegisterSchema::__construct: " . $GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
-			}
-			
-			# Check Current Schema Version
-			$get_version_query = "
-					SELECT	value
-					FROM	`$info_table`
-					WHERE	label = 'schema_version'
-				";
-			
-			$rs = $GLOBALS['_database']->Execute($get_version_query);
-			if (!$rs) {
-				$this->error = "SQL Error in RegisterInit::__construct: " . $GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			
-			list($version) = $rs->FetchRow();
-			if (!$version)
-				$version = 0;
-			return $version;
-		}
-		public function upgrade()
-		{
-			$current_schema_version = $this->version();
-			
-			if ($current_schema_version < 1) {
+		public function upgrade() {
+			$this->error = null;
+
+			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -71,12 +24,10 @@
 							UNIQUE KEY `UK_CODE` (`code`)
 						)
 					";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating organizations table in RegisterInit::__construct: " . $GLOBALS['_database']->ErrorMsg();
-					app_log($this->error, 'error', __FILE__, __LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating organizations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 				
 				$create_table_query = "
@@ -91,12 +42,10 @@
 							INDEX `IDX_PARENT` (`parent_id`)
 						)
 					";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating departments table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
-					app_log($this->error, 'error', __FILE__, __LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating register_departments table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 				
 				$create_table_query = "
@@ -125,12 +74,10 @@
 							KEY `idx_unsubscribe_key` (`unsubscribe_key`)
 						)
 					";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error creating users table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error creating register_users table";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating register_users table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 				
 				$create_table_query = "
@@ -148,12 +95,10 @@
 							CONSTRAINT `register_contact_listing_ibfk_1` FOREIGN KEY (`person_id`) REFERENCES `register_users` (`id`)
 						)
 					";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating register_contacts table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
-					app_log($this->error, 'error', __FILE__, __LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating register_contacts table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 				
 				$create_table_query = "
@@ -165,12 +110,10 @@
 							UNIQUE KEY `uk_name` (`name`)
 						)
 					";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating register_roles table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
-					app_log($this->error, 'error', __FILE__, __LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating register_roles table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 				
 				$create_table_query = "
@@ -182,48 +125,17 @@
 							FOREIGN KEY `register_users_roles_ibfk_2` (`role_id`) REFERENCES `register_roles` (`id`)
 						)
 					";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating register_users_roles table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
-					app_log($this->error, 'error', __FILE__, __LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating register_users_roles table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
-				
-				$add_roles_query = "
-						INSERT
-						INTO	register_roles
-						VALUES	(null,'register manager','Can view/edit customers and organizations'),
-								(null,'register reporter','Can view customers and organizations')
-					";
-				$GLOBALS['_database']->Execute($add_roles_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error adding register roles in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
-					app_log($this->error, 'error', __FILE__, __LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
-				
-				$current_schema_version = 1;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 0) {
+			if ($this->version() < 0) {
 				app_log("Upgrading schema to version 2", 'notice', __FILE__, __LINE__);
-				
+
 				# Start Transaction
 				if (!$GLOBALS['_database']->BeginTrans())
 					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
@@ -239,32 +151,16 @@
 							FOREIGN KEY `fk_product` (`product_id`) REFERENCES `product_products` (`id`)
 						)
 					";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating organizations table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
-					app_log($this->error, 'error', __FILE__, __LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating register_organization_products table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
-				
-				$current_schema_version = 2;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 3) {
+			if ($this->version() < 3) {
 				app_log("Upgrading schema to version 3", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -289,25 +185,11 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-				
-				$current_schema_version = 3;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(3);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 4) {
+			if ($this->version() < 4) {
 				app_log("Upgrading schema to version 4", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -324,25 +206,11 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-				
-				$current_schema_version = 4;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(4);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 5) {
+			if ($this->version() < 5) {
 				app_log("Upgrading schema to version 5", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -365,25 +233,11 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-				
-				$current_schema_version = 5;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in RegisterInit::schema_manager: " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(5);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 6) {
+			if ($this->version() < 6) {
 				app_log("Upgrading schema to version 6", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -407,25 +261,11 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-				
-				$current_schema_version = 6;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(6);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 7) {
+			if ($this->version() < 7) {
 				app_log("Upgrading schema to version 7", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -442,25 +282,11 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-				
-				$current_schema_version = 7;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(7);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 8) {
+			if ($this->version() < 8) {
 				app_log("Upgrading schema to version 8", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -477,25 +303,11 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-				
-				$current_schema_version = 8;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(8);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 9) {
+			if ($this->version() < 9) {
 				app_log("Upgrading schema to version 9", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -524,25 +336,11 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-				
-				$current_schema_version = 9;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(9);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 10) {
+			if ($this->version() < 10) {
 				app_log("Upgrading schema to version 10", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -570,25 +368,11 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-				
-				$current_schema_version = 10;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
-					app_log($this->error, 'error', __FILE__, __LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(10);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 11) {
+			if ($this->version() < 11) {
 				app_log("Upgrading schema to version 11", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -611,25 +395,11 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-				
-				$current_schema_version = 11;
-				$update_schema_version  = "
-						INSERT
-						INTO	register__info
-						VALUES	('schema_version',$current_schema_version)
-						ON DUPLICATE KEY UPDATE
-							value = $current_schema_version
-					";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg(), 'error', __FILE__, __LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(11);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 12) {
+			if ($this->version() < 12) {
 				app_log("Upgrading schema to version 12", 'notice', __FILE__, __LINE__);
 				
 				# Start Transaction
@@ -675,26 +445,11 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-				
-				$current_schema_version = 12;
-				$update_schema_version  = "
-					INSERT
-					INTO	register__info
-					VALUES	('schema_version',$current_schema_version)
-					ON DUPLICATE KEY UPDATE
-						value = $current_schema_version
-				";
-	
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(12);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 13) {
+			if ($this->version() < 13) {
 	
 				app_log("Upgrading schema to version 13",'notice',__FILE__,__LINE__);
 	
@@ -723,26 +478,12 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-			
-				$current_schema_version = 13;
-				$update_schema_version = "
-					INSERT
-					INTO	register__info
-					VALUES	('schema_version',$current_schema_version)
-					ON DUPLICATE KEY UPDATE
-						value = $current_schema_version
-				";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(13);
 				$GLOBALS['_database']->CommitTrans();
 			}
 				
-			if ($current_schema_version < 14) {
+			if ($this->version() < 14) {
 				app_log("Upgrading schema to version 14",'notice',__FILE__,__LINE__);
 				   # Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
@@ -813,26 +554,12 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-			
-				$current_schema_version = 14;
-				$update_schema_version = "
-					INSERT
-					INTO	register__info
-					VALUES	('schema_version',$current_schema_version)
-					ON DUPLICATE KEY UPDATE
-						value = $current_schema_version
-				";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(14);
 				$GLOBALS['_database']->CommitTrans();
 			}
 				
-			if ($current_schema_version < 15) {
+			if ($this->version() < 15) {
 				app_log("Upgrading schema to version 15",'notice',__FILE__,__LINE__);
 					
 				// Start Transaction
@@ -928,23 +655,15 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-	
-				$current_schema_version = 15;
-				$update_schema_version = "
-					INSERT
-					INTO	register__info
-					VALUES	('schema_version',$current_schema_version)
-					ON DUPLICATE KEY UPDATE
-						value = $current_schema_version
-				";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+
+				$this->setVersion(15);
 				$GLOBALS['_database']->CommitTrans();
 			}
+
+			$this->addRoles(array(
+				'register manager'	=> 'Can view/edit customers and organizations',
+				'register reporter'	=> 'Can view customers and organizations'
+			));
+			return true;
 		}
 	}

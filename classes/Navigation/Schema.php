@@ -1,71 +1,19 @@
 <?
 	namespace Navigation;
 
-	class Schema {
-		public $error;
-		public $errno;
-
-		public function __construct() {
-			$this->upgrade();
-		}
-
-		public function version() {
-			# See if Schema is Available
-			$schema_list = $GLOBALS['_database']->MetaTables();
-			$info_table = "navigation__info";
-
-			if (! in_array($info_table,$schema_list)) {
-				# Create __info table
-				$create_table_query = "
-					CREATE TABLE `$info_table` (
-						label	varchar(100) not null primary key,
-						value	varchar(255)
-					)
-				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating info table in MonitorSchema::version: ".$GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
-			}
-
-			# Check Current Schema Version
-			$get_version_query = "
-				SELECT	value
-				FROM	`$info_table`
-				WHERE	label = 'schema_version'
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_version_query);
-			if (! $rs) {
-				$this->error = "SQL Error in Navigation::Schema::version(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-
-			list($version) = $rs->FetchRow();
-			if (! $version) $version = 0;
-			return $version;
-		}
+	class Schema Extends \Database\Schema {
+		public $module = "Navigation";
 
 		public function upgrade() {
-			$current_schema_version = $this->version();
+			$this->error = null;
 
-			if ($current_schema_version < 1) {
-				$update_schema_query = "
-					INSERT
-					INTO	navigation__info
-					VALUES	('schema_version',1)
-					ON DUPLICATE KEY UPDATE
-							value = 1
-				";
-				$GLOBALS['_database']->Execute($update_schema_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating _info table in navigation::Menu::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
-				$current_schema_version = 1;
-			}
-			if ($current_schema_version < 2) {
+			if ($this->version() < 2) {
+				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
 				$create_table_query = "
                     CREATE TABLE IF NOT EXISTS `navigation_menus` (
                       `id` int(5) NOT NULL AUTO_INCREMENT,
@@ -75,11 +23,12 @@
                       UNIQUE KEY `uk_code` (`code`)
                     )
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating navigation menus table in navigation::Menu::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating navigation_menus table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
+
 				$create_table_query = "
                     CREATE TABLE IF NOT EXISTS `navigation_menu_items` (
                       `id` int(8) NOT NULL AUTO_INCREMENT,
@@ -98,24 +47,17 @@
                       FOREIGN KEY `fk_menu_id` (`menu_id`) REFERENCES `navigation_menus` (`id`)
                     )
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating navigation menu items table in navigation::Menu::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating navigation_menu_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
-				$current_schema_version = 2;
+
+				$this->setVersion(1);
+				$GLOBALS['_database']->CommitTrans();
 			}
 
-			$update_schema_version = "
-				UPDATE	navigation__info
-				SET		value = $current_schema_version
-				WHERE	label = 'schema_version'
-			";
-			$GLOBALS['_database']->Execute($update_schema_version);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in navigation::Menu::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
+			return true;
 		}
 	}
 ?>
