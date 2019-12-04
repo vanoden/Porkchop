@@ -59,7 +59,7 @@
 			return $version;
 		}
 
-		private function setVersion($version) {
+		public function setVersion($version) {
 			app_log(__FUNCTION__." Called");
 			$this->current_version = $version;
 			$update_schema_version = "
@@ -78,13 +78,29 @@
 			}
 		}
 
-		private function executeSQL($sql,$parameters = array()) {
+		public function executeSQL($sql,$parameters = array()) {
 			app_log(__FUNCTION__." Called");
 			$GLOBALS['_database']->Execute($sql,$parameters);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				$GLOBALS['_database']->RollbackTrans();
 				return false;
+			}
+			return true;
+		}
+
+		public function addRoles($roles = array()) {
+			# Add Roles
+			foreach ($roles as $name => $description) {
+				$role = new \Register\Role();
+				if (! $role->get($name)) {
+					app_log("Adding role '$name'");
+					$role->add(array('name' => $name,'description' => $description));
+				}
+				if ($role->error) {
+					$this->_error = "Error adding role '$name': ".$role->error;
+					return false;
+				}
 			}
 			return true;
 		}
