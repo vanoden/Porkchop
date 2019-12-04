@@ -69,7 +69,7 @@
 				$this->error = "SQL Error in Role::update: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			return $this->details($id);
+			return $this->details();
 		}
 		public function get($code) {
 			$get_object_query = "
