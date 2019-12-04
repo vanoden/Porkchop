@@ -39,4 +39,4 @@ Copy the file '/config/config.php.dist' to '/config/config.php'.  Edit the file 
 
 ## Use
 
-This package was developed by Anthony Caravello.  It is released under the MIT license.  See LICENSE.txt for more information.
+This package was developed and is maintained by Anthony Caravello with the help of contributors.  It is released under the MIT license.  See LICENSE.txt for more information.
