@@ -76,8 +76,17 @@
 			}
 		}
 
-		public function keys() {
-			return $this->_service->getAllKeys();
+		public function keys($object = null) {
+			$keyArray = array();
+			$keys = $this->_service->getAllKeys();
+			foreach ($keys as $key) {
+				preg_match('/^(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches);
+				if (is_null($object) || $object == $matches[1]) {
+					$key = sprintf("%s[%d]",$matches[1],$matches[2]);
+					array_push($keyArray,$key);
+				}
+			}
+			return $keyArray;
 		}
 	}
 ?>

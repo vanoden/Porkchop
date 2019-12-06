@@ -91,13 +91,16 @@
 			}
 		}
 
-		public function keys() {
+		public function keys($object = null) {
 			$keyArray = array();
 			if ($this->_connected) {
 				$keys = scandir($GLOBALS['_config']->cache->path."/");
 				foreach ($keys as $key) {
-					if (preg_match('/(\w[\w\-\.\_]+\[\d+\])$/',$key,$matches)) {
-						array_push($keyArray,$matches[1]);
+					if (preg_match('/(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) {
+						if (is_null($object) || $object == $matches[1]) {
+							$key = sprintf("%s[%d]",$matches[1],$matches[2]);
+							array_push($keyArray,$key);
+						}
 					}
 				}
 			}
