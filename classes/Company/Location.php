@@ -83,23 +83,29 @@
 			}
 
 			$object = $rs->FetchNextObject(false);
-			$this->company = new \Company\Company($object->company_id);
-			$this->code = $object->code;
-			$this->address_1 = $object->address_1;
-			$this->address_2 = $object->address_2;
-			$this->city = $object->city;
-			$this->state_id = $object->state_id;
-			$this->zip_code = $object->zip_code;
-			$this->zip_ext = $object->zip_ext;
-			$this->content = $object->content;
-			$this->order_number_sequence = $object->order_number_sequence;
-			$this->active = $object->active;
-			$this->name = $object->name;
-			$this->service_contact = $object->service_contact;
-			$this->sales_contact = $object->sales_contact;
-			$this->domain = new \Company\Domain($object->domain_id);
-			$this->host = $object->host;
-			return $object;
+			if ($object) {
+				$this->id = $object->id;
+				$this->company = new \Company\Company($object->company_id);
+				$this->code = $object->code;
+				$this->address_1 = $object->address_1;
+				$this->address_2 = $object->address_2;
+				$this->city = $object->city;
+				$this->state_id = $object->state_id;
+				$this->zip_code = $object->zip_code;
+				$this->zip_ext = $object->zip_ext;
+				$this->content = $object->content;
+				$this->order_number_sequence = $object->order_number_sequence;
+				$this->active = $object->active;
+				$this->name = $object->name;
+				$this->service_contact = $object->service_contact;
+				$this->sales_contact = $object->sales_contact;
+				$this->domain = new \Company\Domain($object->domain_id);
+				$this->host = $object->host;
+				return $object;
+			}
+			else {
+				return new \stdClass();
+			}
 		}
 
 		public function add($parameters = array()) {
