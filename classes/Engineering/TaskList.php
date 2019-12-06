@@ -37,7 +37,7 @@
 
 			if (isset($parameters['release_id']) && is_numeric($parameters['release_id'])) {
 				$find_objects_query .= "
-				AND		release_id = ".$parameters['release_id'];
+				AND		release_id = ?";
 				array_push($bind_params,$parameters['release_id']);
 			}
 
