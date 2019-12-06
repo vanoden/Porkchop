@@ -96,12 +96,12 @@
 			if ($this->_connected) {
 				$keys = scandir($GLOBALS['_config']->cache->path."/");
 				foreach ($keys as $key) {
-					if (preg_match('/^[\w\-\.\_]+\[\d+\]$/')) {
-						array_push($keyArray,$key);
+					if (preg_match('/(\w[\w\-\.\_]+\[\d+\])$/',$key,$matches)) {
+						array_push($keyArray,$matches[1]);
 					}
 				}
 			}
-			return $keyArray();
+			return $keyArray;
 		}
 		public function flush() {
 			if ($this->_connected) {
