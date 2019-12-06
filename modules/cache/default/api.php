@@ -34,4 +34,19 @@
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 		</div>
 		</form>
+		<form method="post" action="<?=PATH?>/_cache/api" name="deleteItem">
+		<input type="hidden" name="method" value="deleteItem">
+		<div class="apiMethod">
+			<div class="h3 apiMethodTitle">deleteItem</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">object</span>
+				<input type="text" name="object" class="value input apiInput"/>
+			</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">id</span>
+				<input type="text" name="id" class="value input apiInput"/>
+			</div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+		</div>
+		</form>
 	</div>

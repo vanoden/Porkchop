@@ -31,6 +31,12 @@
 			return $this->_client->get($this->_key);
 		}
 
+		public function exists() {
+			$object = $this->_client->get($this->_key);
+			if (! empty($object)) return true;
+			else return false;
+		}
+
 		public function key() {
 			return $this->_key;
 		}

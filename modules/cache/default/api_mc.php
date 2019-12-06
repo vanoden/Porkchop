@@ -85,6 +85,30 @@
 	}
 
 	###################################################
+	### Delete Specific Item from Cache				###
+	###################################################
+	function deleteItem() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error('Permission denied');
+		$cache_key = $_REQUEST['object']."[".$_REQUEST['id']."]";
+		$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+		if ($cache->error) {
+			app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
+		}
+
+		$count = 0;
+		if ($cache->exists()) {
+			$cache->delete();
+			$count = 1;
+		}
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->count = $count;
+
+		print formatOutput($response);
+	}
+
+	###################################################
 	### Cache Stats									###
 	###################################################
 	function stats() {
