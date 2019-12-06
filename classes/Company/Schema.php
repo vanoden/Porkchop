@@ -51,7 +51,7 @@
 						`service_contact` int(11) NOT NULL default '0',
 						`sales_contact` int(11) NOT NULL default '0',
 						`domain_id` int(11) unsigned NOT NULL default '0',
-						`host` varchar(45) NOT NULL default '',
+						`host` varchar(100) NOT NULL default '',
 						PRIMARY KEY  (`id`),
 						UNIQUE KEY `location_key` (`company_id`,`code`),
 						FOREIGN KEY `fk_company_id` (`company_id`) REFERENCES company_companies (`id`) 
