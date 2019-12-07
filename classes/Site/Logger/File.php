@@ -16,6 +16,10 @@
 			if (isset($parameters['level'])) {
 				$this->level = $parameters['level'];
 			}
+			if (is_dir($this->path)) {
+				if (! preg_match('/\/$/',$this->path)) $this->path .= "/";
+				$this->path .= "application.log";
+			}
 		}
 
 		public function connect() {
