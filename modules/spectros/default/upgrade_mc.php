@@ -125,6 +125,7 @@
 				"pending_registrations"	=> $admin_template,
 				"admin_rmas"			=> $admin_template,
 				"admin_rma"				=> $admin_template,
+				"summary"   			=> $admin_template,
 			),
 		),
         "Engineering"	=> array(

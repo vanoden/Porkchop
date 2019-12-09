@@ -1,5 +1,4 @@
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-
 <style>
     .eventLogEntry {
         max-width: 200px; 
@@ -190,7 +189,7 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <textarea name="description" class="wide_100per"><?=$form['description']?></textarea>
+               <textarea name="description" class="wide_100per"><?=strip_tags($form['description'])?></textarea>
             </div>
          </div>
          <div class="tableRow">
@@ -250,7 +249,7 @@
              </div>
              <div class="tableCell eventLogEntry">
              <textarea class="event-log-description" readonly="readonly">
-                <?=$comment->content?>
+                <?=strip_tags($comment->content)?>
              </textarea>
              </div>
           </div>
@@ -319,19 +318,18 @@
         foreach ($events as $event) {
          $person = $event->person();
          ?>
-      <div class="tableRow">
-         <div class="tableCell">
-            <i><?=$event->date_event?></i>
-         </div>
-         <div class="tableCell">
-            <strong><?=$person->login?></strong>
-         </div>
-         <div class="tableCell eventLogEntry">
-         <textarea class="event-log-description" readonly="readonly"><?=str_replace(" ","&nbsp;",str_replace("\n","<br/>\n",$event->description)) ;?></textarea>
-         </div>
-      </div>
+          <div class="tableRow">
+             <div class="tableCell">
+                <i><?=$event->date_event?></i>
+             </div>
+             <div class="tableCell">
+                <strong><?=$person->login?></strong>
+             </div>
+             <div class="tableCell eventLogEntry">
+             <textarea class="event-log-description" readonly="readonly"><?=strip_tags($event->description);?></textarea>
+             </div>
+          </div>
       <?	} ?>
    </div>
-   
    <?	}	?>
 </div>

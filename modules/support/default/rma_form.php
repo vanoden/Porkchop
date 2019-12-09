@@ -1,280 +1,280 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
-* {
-	box-sizing: border-box;
-}
+    * {
+	    box-sizing: border-box;
+    }
 
-.row {
-	display: -ms-flexbox;
-	/* IE10 */
-	display: flex;
-	-ms-flex-wrap: wrap;
-	/* IE10 */
-	flex-wrap: wrap;
-	margin: 0 -16px;
-}
+    .row {
+	    display: -ms-flexbox;
+	    /* IE10 */
+	    display: flex;
+	    -ms-flex-wrap: wrap;
+	    /* IE10 */
+	    flex-wrap: wrap;
+	    margin: 0 -16px;
+    }
 
-.col-25 {
-	-ms-flex: 25%;
-	/* IE10 */
-	flex: 25%;
-}
+    .col-25 {
+	    -ms-flex: 25%;
+	    /* IE10 */
+	    flex: 25%;
+    }
 
-.col-50 {
-	-ms-flex: 50%;
-	/* IE10 */
-	flex: 50%;
-}
+    .col-50 {
+	    -ms-flex: 50%;
+	    /* IE10 */
+	    flex: 50%;
+    }
 
-.col-75 {
-	-ms-flex: 75%;
-	/* IE10 */
-	flex: 75%;
-}
+    .col-75 {
+	    -ms-flex: 75%;
+	    /* IE10 */
+	    flex: 75%;
+    }
 
-.col-25, .col-50, .col-75 {
-	padding: 0 16px;
-}
+    .col-25, .col-50, .col-75 {
+	    padding: 0 16px;
+    }
 
-.label {
-	font-weight: bold;
-}
+    .label {
+	    font-weight: bold;
+    }
 
-.container {
-	padding: 5px 20px 15px 20px;
-	border-radius: 3px;
-}
+    .container {
+	    padding: 5px 20px 15px 20px;
+	    border-radius: 3px;
+    }
 
-input[type=text] {
-	width: 100%;
-	margin-bottom: 20px;
-	padding: 12px;
-	border: 1px solid #ccc;
-	border-radius: 3px;
-}
+    input[type=text] {
+	    width: 100%;
+	    margin-bottom: 20px;
+	    padding: 12px;
+	    border: 1px solid #ccc;
+	    border-radius: 3px;
+    }
 
-.small-input {
-    width: 50%;
-}
+    .small-input {
+        width: 50%;
+    }
 
-.enter-shipping-form {
-	margin-left: 100px; 
-	border: dashed 1px #000; 
-	padding: 10px; 
-	max-width: 700px;
-}
+    .enter-shipping-form {
+	    margin-left: 100px; 
+	    border: dashed 1px #000; 
+	    padding: 10px; 
+	    max-width: 700px;
+    }
 
-label {
-	margin-bottom: 10px;
-	display: block;
-}
+    label {
+	    margin-bottom: 10px;
+	    display: block;
+    }
 
-.icon-container {
-	margin-bottom: 20px;
-	padding: 7px 0;
-	font-size: 24px;
-}
+    .icon-container {
+	    margin-bottom: 20px;
+	    padding: 7px 0;
+	    font-size: 24px;
+    }
 
-#submit-form-button {
-	background-color: #4CAF50;
-}
+    #submit-form-button {
+	    background-color: #4CAF50;
+    }
 
-#submit-form-button:hover {
-	background-color: #45a049;
-}
+    #submit-form-button:hover {
+	    background-color: #45a049;
+    }
 
-.btn {
-	background-color: #4CAF50;
-	color: white;
-	padding: 20px;
-	margin: 10px 0;
-	border: none;
-	width: 100%;
-	border-radius: 3px;
-	cursor: pointer;
-	font-size: 17px;
-}
+    .btn {
+	    background-color: #4CAF50;
+	    color: white;
+	    padding: 20px;
+	    margin: 10px 0;
+	    border: none;
+	    width: 100%;
+	    border-radius: 3px;
+	    cursor: pointer;
+	    font-size: 17px;
+    }
 
-.btn:hover {
-	background-color: #45a049;
-}
+    .btn:hover {
+	    background-color: #45a049;
+    }
 
-a {
-	color: #2196F3;
-}
+    a {
+	    color: #2196F3;
+    }
 
-hr {
-	border: 1px solid lightgrey;
-}
+    hr {
+	    border: 1px solid lightgrey;
+    }
 
-span.price {
-	float: right;
-	color: grey;
-}
+    span.price {
+	    float: right;
+	    color: grey;
+    }
 
-@media ( max-width : 800px) {
-	.row {
-		flex-direction: column-reverse;
-	}
-	.col-25 {
-		margin-bottom: 20px;
-	}
-}
+    @media ( max-width : 800px) {
+	    .row {
+		    flex-direction: column-reverse;
+	    }
+	    .col-25 {
+		    margin-bottom: 20px;
+	    }
+    }
 
-.tableBody, .tableTitle {
-	display: table;
-	width: 100%;
-	max-width: 800px;
-	border-color: #dedede;
-	border-style: solid;
-}
+    .tableBody, .tableTitle {
+	    display: table;
+	    width: 100%;
+	    max-width: 800px;
+	    border-color: #dedede;
+	    border-style: solid;
+    }
 
-.tableBody.half, .tableTitle.half {
-	max-width: 400px;
-}
+    .tableBody.half, .tableTitle.half {
+	    max-width: 400px;
+    }
 
-.tableBody {
-	border-width: 1px;
-}
+    .tableBody {
+	    border-width: 1px;
+    }
 
-.tableBody.clean {
-	border: none;
-}
+    .tableBody.clean {
+	    border: none;
+    }
 
-.tableBody.clean>.tableRowHeader {
-	background: none;
-}
+    .tableBody.clean>.tableRowHeader {
+	    background: none;
+    }
 
-.tableTitle {
-	margin-top: 20px;
-	background: #f0f3f5;
-	border-width: 1px 1px 0 1px;
-}
+    .tableTitle {
+	    margin-top: 20px;
+	    background: #f0f3f5;
+	    border-width: 1px 1px 0 1px;
+    }
 
-.tableCell {
-	display: table-cell;
-	text-align: left;
-	vertical-align: middle;
-	padding: 3px 7px 2px;
-}
+    .tableCell {
+	    display: table-cell;
+	    text-align: left;
+	    vertical-align: middle;
+	    padding: 3px 7px 2px;
+    }
 
-.tableTitleLeft {
-	float: left;
-}
+    .tableTitleLeft {
+	    float: left;
+    }
 
-.tableTitleRight {
-	text-align: right;
-}
+    .tableTitleRight {
+	    text-align: right;
+    }
 
-.tableRowHeader {
-	display: table-row;
-}
+    .tableRowHeader {
+	    display: table-row;
+    }
 
-.tableRowFooter {
-	display: table-row;
-	width: 800px;
-	text-align: center;
-}
+    .tableRowFooter {
+	    display: table-row;
+	    width: 800px;
+	    text-align: center;
+    }
 
-.tableBodyWrapper {
-	width: 100%;
-	max-width: 800px;
-	height: 150px;
-	overflow-y: auto;
-}
+    .tableBodyWrapper {
+	    width: 100%;
+	    max-width: 800px;
+	    height: 150px;
+	    overflow-y: auto;
+    }
 
-.tableBodyScrolled {
-	display: table;
-	max-width: 800px;
-}
+    .tableBodyScrolled {
+	    display: table;
+	    max-width: 800px;
+    }
 
-.tableRow {
-	display: table-row;
-}
+    .tableRow {
+	    display: table-row;
+    }
 
-.tableRow:nth-child(odd) {
-	background-color: #eeeff7;
-}
+    .tableRow:nth-child(odd) {
+	    background-color: #eeeff7;
+    }
 
-.min-tablet {
-	min-width: 600px;
-	max-width: 1000px;
-}
+    .min-tablet {
+	    min-width: 600px;
+	    max-width: 1000px;
+    }
 
-.tableCell textarea {
-	width: 100%;
-	padding: 2px 4px;
-}
+    .tableCell textarea {
+	    width: 100%;
+	    padding: 2px 4px;
+    }
 
-.value {
-	color: #6495ed;
-}
+    .value {
+	    color: #6495ed;
+    }
 
-#page-mgmt #submit-form-button, #page-mgmt #show-billing-button,
-	#page-mgmt #show-checklist-button {
-	padding: 10px;
-	max-width: 50%;
-	margin: unset;
-	margin: auto;
-}
+    #page-mgmt #submit-form-button, #page-mgmt #show-billing-button,
+	    #page-mgmt #show-checklist-button {
+	    padding: 10px;
+	    max-width: 50%;
+	    margin: unset;
+	    margin: auto;
+    }
 
-.stepwizard-step p {
-	margin-top: 10px;
-}
+    .stepwizard-step p {
+	    margin-top: 10px;
+    }
 
-.stepwizard-row {
-	display: table-row;
-}
+    .stepwizard-row {
+	    display: table-row;
+    }
 
-.stepwizard {
-	display: table;
-	width: 100%;
-	position: relative;
-}
+    .stepwizard {
+	    display: table;
+	    width: 100%;
+	    position: relative;
+    }
 
-.stepwizard-step button[disabled] {
-	opacity: 0.5 !important;
-	filter: alpha(opacity = 0.5) !important;
-}
+    .stepwizard-step button[disabled] {
+	    opacity: 0.5 !important;
+	    filter: alpha(opacity = 0.5) !important;
+    }
 
-.stepwizard-row:before {
-	top: 14px;
-	bottom: 0;
-	position: absolute;
-	content: " ";
-	width: 100%;
-	height: 1px;
-	background-color: #ccc;
-	z-order: 0;
-}
+    .stepwizard-row:before {
+	    top: 14px;
+	    bottom: 0;
+	    position: absolute;
+	    content: " ";
+	    width: 100%;
+	    height: 1px;
+	    background-color: #ccc;
+	    z-order: 0;
+    }
 
-.stepwizard-step {
-	display: table-cell;
-	text-align: center;
-	position: relative;
-}
+    .stepwizard-step {
+	    display: table-cell;
+	    text-align: center;
+	    position: relative;
+    }
 
-#support_rma .stepwizard-step a {
-	color: white;
-}
+    #support_rma .stepwizard-step a {
+	    color: white;
+    }
 
-.btn-circle {
-	width: 30px;
-	height: 30px;
-	text-align: center;
-	padding: 6px 0;
-	font-size: 12px;
-	line-height: 1.428571429;
-	border-radius: 15px;
-}
+    .btn-circle {
+	    width: 30px;
+	    height: 30px;
+	    text-align: center;
+	    padding: 6px 0;
+	    font-size: 12px;
+	    line-height: 1.428571429;
+	    border-radius: 15px;
+    }
 
-.green {
-	color: green;
-}
+    .green {
+	    color: green;
+    }
 
-.red {
-	color: red;
-}
+    .red {
+	    color: red;
+    }
 </style>
 <script type="text/javascript">
 
@@ -449,22 +449,6 @@ if ($rma->id) {
         <?php
 	    if (! $rmaSubmitted) {
 		    ?>
-       <div class="stepwizard">
-		    <div class="stepwizard-row">
-			    <div class="stepwizard-step">
-				    <a type="button" href="#shipping" class="btn btn-default btn-circle">1</a>
-				    <p>Return Address</p>
-			    </div>
-			    <div class="stepwizard-step">
-				    <a type="button" href="#billing" class="btn btn-primary btn-circle">2</a>
-				    <p>Billing Address</p>
-			    </div>
-			    <div class="stepwizard-step">
-				    <a type="button" href="#terms" class="btn btn-default btn-circle">3</a>
-				    <p>Terms and Conditions</p>
-			    </div>
-		    </div>
-	    </div>
 	    <div class="row">
 		    <div class="col-75">
 			    <div class="container">

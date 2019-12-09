@@ -1,8 +1,7 @@
-<!-- @TODO move this to the main site html.src module -->
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <style>
    .ui-autocomplete-loading {
-	background: white url("https://jqueryui.com/resources/demos/autocomplete/images/ui-anim_basic_16x16.gif") right center no-repeat;
+        background: white url("https://jqueryui.com/resources/demos/autocomplete/images/ui-anim_basic_16x16.gif") right center no-repeat;
    }
 </style>
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
