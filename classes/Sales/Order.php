@@ -80,8 +80,7 @@
 			list($this->id) = $rs->FetchRow();
 			if ($this->id) {
 				return $this->details();
-			}
-			else {
+			} else {
 				return false;
 			}
 		}
@@ -106,8 +105,7 @@
 				$this->status = $object->status;
 				$this->customer_id = $object->customer_id;
 				return true;
-			}
-			else {
+			} else {
 				return false;
 			}
 		}

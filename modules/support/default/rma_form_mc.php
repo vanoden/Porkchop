@@ -25,6 +25,16 @@ function addShippedItem($package_id, $product_id, $serial_number, $condition, $q
 	$shippingItem->add ( $shippedItemDetails );
 }
 
+/**
+ * for country name sorting
+ *
+ * @param string $a
+ * @param string $b
+ */
+function sortNames($a, $b) {
+	return strcmp($a->name, $b->name);
+}
+
 // get cooresponding RMA from possible input values
 $rma = new \Support\Request\Item\RMA ();
 $rmaId = (isset ( $_REQUEST ['id'] )) ? $_REQUEST ['id'] : 0;
@@ -59,6 +69,11 @@ $rmaSerialNumber = $rma->item () ? $rma->item ()->serial_number : "";
 // get the shipment in question if it exists
 $shippingShipment = new \Shipping\Shipment ();
 $shippingShipment->get ( $rmaCode );
+
+// get existing geography for form fields
+$countryList = new \Geography\CountryList ();
+$allCountriesList = $countryList->find();
+usort($allCountriesList, "sortNames");
 
 // process the form submission for the return request
 if ($_REQUEST ['form_submitted'] == 'submit') {

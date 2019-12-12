@@ -218,42 +218,6 @@
 	    margin: auto;
     }
 
-    .stepwizard-step p {
-	    margin-top: 10px;
-    }
-
-    .stepwizard-row {
-	    display: table-row;
-    }
-
-    .stepwizard {
-	    display: table;
-	    width: 100%;
-	    position: relative;
-    }
-
-    .stepwizard-step button[disabled] {
-	    opacity: 0.5 !important;
-	    filter: alpha(opacity = 0.5) !important;
-    }
-
-    .stepwizard-row:before {
-	    top: 14px;
-	    bottom: 0;
-	    position: absolute;
-	    content: " ";
-	    width: 100%;
-	    height: 1px;
-	    background-color: #ccc;
-	    z-order: 0;
-    }
-
-    .stepwizard-step {
-	    display: table-cell;
-	    text-align: center;
-	    position: relative;
-    }
-
     #support_rma .stepwizard-step a {
 	    color: white;
     }
@@ -294,10 +258,10 @@
     
     // toggle same as billing address
     function toggleBilling() {
-        if (document.getElementById('billing_address_container').style.display == "block") {
-            document.getElementById('billing_address_container').style.display = "none";
+        if (document.getElementById('billing_address_container_main_container').style.display == "block") {
+            document.getElementById('billing_address_container_main_container').style.display = "none";
         } else {
-            document.getElementById('billing_address_container').style.display = "block";
+            document.getElementById('billing_address_container_main_container').style.display = "block";
         }
     }
     
@@ -368,6 +332,37 @@
     function updateMessageColors(element, color) {
         element.style.color = color;
     }
+
+	// get the dropdown name of the selected option
+    function getDropdownSelectedText(dropdownId) {
+    	var domNode = document.getElementById(dropdownId);
+    	var value = domNode.selectedIndex;
+    	return domNode.options[value].text;
+    }
+
+	// country has been selected
+    function changeCountry(countryDropdownId, addressContainer, provinceDropdownId, provinceAddressContainer) {
+        var countryDropdown = document.getElementById(countryDropdownId);
+        $('#' + addressContainer).hide();
+        $.get('/_support/api?method=getProvinces&country_id=' + countryDropdown.value, function(data, status){
+			console.log(data);
+			$('#' + provinceAddressContainer).show();
+			data = $.parseJSON(data);
+			$('#' + provinceDropdownId).html('');
+			$('#' + provinceDropdownId).append('<option value="0">-</option>');
+			if (data.length > 0) {
+				for (var i = 0; i <= data.length; i++) $('#' + provinceDropdownId).append('<option value="' + data[i].id + '">' + data[i].name + '</option>');
+			} else {		    	
+				$('#' + provinceDropdownId).append('<option value="0">' + getDropdownSelectedText(countryDropdownId) + '</option>');
+			}
+         });
+    }
+
+	// a province has been selected
+    function changeProvince(addressContainer, shippingStateField) {
+		$('#' + addressContainer).show();
+		$('#' + shippingStateField).val(getDropdownSelectedText('shipping_province'));
+    }
 </script>
 <h1>Return Merchandise Authorization</h1>
 <?php
@@ -394,7 +389,7 @@ if ($rma->id) {
 		    </span>
 	    </div>
 	    
-	    <? if (!empty($shippingPackage->id)) {?>
+	    <? if (!empty($shippingPackage->id)) { ?>
 	        <div class="container">
 		        <span class="label"><i class="fa fa-envelope" aria-hidden="true"></i> Current Package Info: <br /></span> 
 		        <span class="value">
@@ -455,23 +450,71 @@ if ($rma->id) {
 				    <form method="post" id="submit_rma_form">
 					    <div class="row">
 						    <div id="shipping_address_form" class="col-50">
-							    <a name="shipping"><h2>Return Shipping Address</h2></a> <label for="fname"><i class="fa fa-user"></i> Full Name</label> <input type="text" id="shipping_firstname" name="shipping_firstname" class="shipping_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> <label for="adr"><i class="fa fa-address-card-o"></i> Address</label> <input type="text" id="shipping_address" name="shipping_address" class="shipping_fields" placeholder="542 W. 15th Street"> <input type="text" id="shipping_address2" name="shipping_address2" class="shipping_fields" placeholder="Suite 1"> <label for="city"><i class="fa fa-institution"></i> City</label> <input type="text" id="shipping_city" name="shipping_city" class="shipping_fields" placeholder="New York">
-							    <div class="row">
-								    <div class="col-50">
-									    <label for="state">State</label> <input type="text" id="shipping_state" name="shipping_state" class="shipping_fields" placeholder="NY">
-								    </div>
-								    <div class="col-50">
-									    <label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields" placeholder="10001">
-								    </div>
+								<label for="fname"><i class="fa fa-user"></i> Full Name</label> 
+								<input type="text" id="shipping_firstname" name="shipping_firstname" class="shipping_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> 
+								<label for="adr"><i class="fa fa-address-card-o"></i> Address</label> 
+								<input type="text" id="shipping_address" name="shipping_address" class="shipping_fields" placeholder="542 W. 15th Street"> 
+								<input type="text" id="shipping_address2" name="shipping_address2" class="shipping_fields" placeholder="Suite 1">
+								Select your Country:
+							    <select id="shipping_country" name="shipping_country" onchange="changeCountry('shipping_country', 'shipping_address_container', 'shipping_province', 'shipping_province_container')">
+							    	<option value="0">-</option>
+							    	<?php 
+							    	foreach ($allCountriesList as $country) {
+							    	?>
+							    		<option value="<?=$country->id?>"><?=$country->name?></option>
+							    	<?php
+							    	}
+							    	?>
+							    </select>
+							    <div id="shipping_province_container" style="display: none;">
+								    <select id="shipping_province" name="shipping_province" onchange="changeProvince('shipping_address_container', 'shipping_state')">
+								    	<option value="0">-</option>
+								    </select>
 							    </div>
+							    
+								<div id="shipping_address_container" style="display: none;">
+									<label for="city"><i class="fa fa-institution"></i> City</label> 
+									<input type="text" id="shipping_city" name="shipping_city" class="shipping_fields" placeholder="New York">
+								    <div class="row">
+									    <div class="col-50">
+										    <label for="state">State</label> <input type="text" id="shipping_state" name="shipping_state" class="shipping_fields" placeholder="NY">
+									    </div>
+									    <div class="col-50">
+										    <label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields" placeholder="10001">
+									    </div>
+								    </div>
+								</div>
 						    </div>
-					    </div>
+					    </div>					    
 					    <input id="show-billing-button" onclick="showBilling()" type="button" value="Next" class="btn" style="display: block;"><br />
 					    <div id="billing_address_form" class="row" style="display: none;">
 						    <div class="col-50">
 							    <a name="billing"><h2>Billing Address</h2></a> <input type="checkbox" id="billing_same_as_shipping" name="billing_same_as_shipping" value="billing_same_as_shipping" onclick="toggleBilling()"> Same as Shipping<br /> <br />
-							    <div id="billing_address_container" style="display: block;">
-								    <label for="fname"><i class="fa fa-user"></i> Full Name</label> <input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> <label for="adr"><i class="fa fa-address-card-o"></i> Address</label> <input type="text" id="billing_address" name="billing_address" class="billing_fields" placeholder="542 W. 15th Street"> <input type="text" id="billing_address2" name="billing_address2" class="billing_fields" placeholder="Suite 1"> <label for="city"><i class="fa fa-institution"></i> City</label> <input type="text" id="billing_city" name="billing_city" class="billing_fields" placeholder="New York">
+							    <div id="billing_address_container_main_container" style="display: block;">
+									<label for="fname"><i class="fa fa-user"></i> Full Name</label> 
+									<input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> 
+									<label for="adr"><i class="fa fa-address-card-o"></i> Address </label> 
+									<input type="text" id="billing_address" name="billing_address" class="billing_fields" placeholder="542 W. 15th Street"> 
+									<input type="text" id="billing_address2" name="billing_address2" class="billing_fields" placeholder="Suite 1">
+									Select your Country:
+								    <select id="billing_country" name="billing_country" onchange="changeCountry('billing_country', 'billing_address_container', 'billing_province', 'billing_province_container')">
+								    	<option value="0">-</option>
+								    	<?php 
+								    	foreach ($allCountriesList as $country) {
+								    	?>
+								    		<option value="<?=$country->id?>"><?=$country->name?></option>
+								    	<?php
+								    	}
+								    	?>
+								    </select>
+							    <div id="billing_province_container" style="display: none;">
+								    <select id="billing_province" name="billing_province" onchange="changeProvince('billing_address_container', 'billing_state')">
+								    	<option value="0">-</option>
+								    </select>
+							    </div>
+								<div id="billing_address_container" style="display: none;">
+									<label for="city"><i class="fa fa-institution"></i> City</label> 
+									<input type="text" id="billing_city" name="billing_city" class="billing_fields" placeholder="New York">
 								    <div class="row">
 									    <div class="col-50">
 										    <label for="state">State</label> <input type="text" id="billing_state" name="billing_state" class="billing_fields" placeholder="NY">
@@ -480,15 +523,15 @@ if ($rma->id) {
 										    <label for="zip">Zip</label> <input type="text" id="billing_zip" name="billing_zip" class="billing_fields" placeholder="10001">
 									    </div>
 								    </div>
+								 </div>
 							    </div>
 						    </div>
 					    </div>
 					    <input id="show-checklist-button" onclick="showTerms()" type="button" value="Next" class="btn" style="display: none;"><br />
 					    <div id="checklist_form" class="row" style="display: none;">
 						    <div class="col-50">
-							    <a name="terms"><h3>
-									    <u>Items Checklist</u>
-								    </h3></a> * Only the specified item may be returned. Other contents may be discarded<br /> <br /> <input type="checkbox" name="power_cord" value="power_cord"> Power Cord<br /> <input type="checkbox" name="filters" value="filters"> Filters<br /> <input type="checkbox" name="battery" value="battery"> Battery<br /> <input type="checkbox" name="carry_bag" value="carry_bag"> Carry Bag<br /> <input type="checkbox" name="usb_comm_cable" value="usb_comm_cable"> USB Comm Cable<br /> <input type="checkbox" name="cellular_access_point" value="cellular_access_point"> Cellular Access Point (MiFi/JetPack)<br /> <br /> Special Delivery Instructions (provide if needed):<br />
+							    <a name="terms"><h3><u>Items Checklist</u></h3></a> 
+							    * Only the specified item may be returned. Other contents may be discarded<br /> <br /> <input type="checkbox" name="power_cord" value="power_cord"> Power Cord<br /> <input type="checkbox" name="filters" value="filters"> Filters<br /> <input type="checkbox" name="battery" value="battery"> Battery<br /> <input type="checkbox" name="carry_bag" value="carry_bag"> Carry Bag<br /> <input type="checkbox" name="usb_comm_cable" value="usb_comm_cable"> USB Comm Cable<br /> <input type="checkbox" name="cellular_access_point" value="cellular_access_point"> Cellular Access Point (MiFi/JetPack)<br /> <br /> Special Delivery Instructions (provide if needed):<br />
 							    <textarea id="delivery_instructions" name="delivery_instructions" style="width: 50%; height: 100px;"></textarea>
 							    <br /> Tracking Number [optional]:<br /> <input type="text" id="tracking_number" name="tracking_number" placeholder="1Z9999999999999999" /> <br /> <br /> <u>Please Confirm</u><br /> <input id="agree_package_properly" type="checkbox" name="agree_package_properly" value="agree_package_properly"> <span class="confirm_terms" style="color: black;">* Item must be packaged properly and a copy of the RMA included</span><br /> <input id="agree_payment_received" type="checkbox" name="agree_payment_received" value="agree_payment_received"> <span class="confirm_terms" style="color: black;">* Item will not be returned before payment is received</span><br /> <br />
 							    <div id="agree_terms_message" style="display: none; color: red;">

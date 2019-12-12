@@ -2,14 +2,17 @@
 	namespace ORM;
 	
 	class BaseModel {
-	
-	    public $tableName;
-	    public $updateQuery;
-	    public $addQuery;
+
 	    public $fields = array();
-	    public $values = array();
+	    public $values = array();	
+	    protected $tableName;
+	    private $_updateQuery;
+	    private $_addQuery;
 	    private $_error;
 	
+        /**
+         * construct ORM
+         */
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
@@ -24,7 +27,7 @@
          */
         public function update($parameters = array()) {
 
-            $this->updateQuery = "UPDATE `$this->tableName` SET id = id ";
+            $this->_updateQuery = "UPDATE `$this->tableName` SET id = id ";
             $this->values = $parameters;
 		    $bindParams = array();
 		    
@@ -36,13 +39,13 @@
 
 	        foreach ($this->values as $fieldKey => $fieldValue) {
 	            if (in_array($fieldKey, $this->fields)) {
-	               $this->updateQuery .= ", `$fieldKey` = ?";
+	               $this->_updateQuery .= ", `$fieldKey` = ?";
 	               array_push($bindParams, $fieldValue);
 	            }
 	        }
-            $this->updateQuery .= " WHERE	id = ?";
+            $this->_updateQuery .= " WHERE	id = ?";
             array_push($bindParams, $this->id);
-            $this->execute($this->updateQuery, $bindParams);
+            $this->execute($this->_updateQuery, $bindParams);
             
             return $this->details();
 		}
@@ -54,7 +57,7 @@
          */
 		public function add($parameters = array()) {
 		
-    		$this->addQuery = "INSERT INTO `$this->tableName` ";
+    		$this->_addQuery = "INSERT INTO `$this->tableName` ";
 			$bindParams = array();
 			$bindFields = array();		
             $this->values = $parameters;
@@ -64,9 +67,9 @@
     	            array_push($bindParams, $fieldValue);
 	            }
 	        }
-	        $this->addQuery .= '(`'.implode('`,`',$bindFields).'`';
-            $this->addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindParams)) ,',') . ")";
-            $this->execute($this->addQuery, $bindParams);
+	        $this->_addQuery .= '(`'.implode('`,`',$bindFields).'`';
+            $this->_addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindParams)) ,',') . ")";
+            $this->execute($this->_addQuery, $bindParams);
             
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);

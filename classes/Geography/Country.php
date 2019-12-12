@@ -2,16 +2,16 @@
 	namespace Geography;
 
 	class Country extends \ORM\BaseModel {
+	
 		public $id;
 		public $name;
 		public $abbreviation;
 
-		public function add($parameters) {
+		public function add($parameters=array()) {
 			if (! isset($parameters['name'])) {
 				$this->_error = "Country name required";
 				return false;
-			}
-			elseif (! preg_match('/^\w[\w\.\-\_\s\,]*$/',$parameters['name'])) {
+			} elseif (! preg_match('/^\w[\w\.\-\_\s\,]*$/',$parameters['name'])) {
 				$this->_error = "Invalid country name";
 				return false;
 			}
@@ -58,7 +58,7 @@
 			return $this->details();
 		}
 
-		public function get($name) {
+		public function get($name, $columnName = 'code') {
 			$get_object_query = "
 				SELECT	id
 				FROM	geography_countries
@@ -74,8 +74,7 @@
 			if ($this->id) {
 				app_log("Found country ".$this->id);
 				return $this->details();
-			}
-			else {
+			} else {
 				return false;
 			}
 		}
@@ -98,8 +97,7 @@
 				$this->name = $object->name;
 				$this->abbreviation = $object->abbreviation;
 				return true;
-			}
-			else {
+			} else {
 				return false;
 			}
 		}
