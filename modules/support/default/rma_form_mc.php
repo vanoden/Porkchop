@@ -92,10 +92,8 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 	$billingAddressParams ['city'] = $_REQUEST ['billing_city'];
 	$billingAddressParams ['zip_code'] = $_REQUEST ['billing_zip'];
 	$billingAddressParams ['notes'] = "";
-
-	// @TODO defaulting to America/MA for now
-	$billingAddressParams ['region_id'] = 4075;
-	$billingAddressParams ['country_id'] = 217;
+	$billingAddressParams ['region_id'] = $_REQUEST ['billing_province'];
+	$billingAddressParams ['country_id'] = $_REQUEST ['billing_country'];
 
 	$shippingAddressParams = array ();
 	$shippingAddressParams ['name'] = $_REQUEST ['shipping_address'];
@@ -104,10 +102,8 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 	$shippingAddressParams ['city'] = $_REQUEST ['shipping_city'];
 	$shippingAddressParams ['zip_code'] = $_REQUEST ['shipping_zip'];
 	$shippingAddressParams ['notes'] = "";
-
-	// @TODO defaulting to America/NY for now
-	$shippingAddressParams ['region_id'] = 4075;
-	$shippingAddressParams ['country_id'] = 217;
+	$shippingAddressParams ['region_id'] = $_REQUEST ['shipping_province'];
+	$shippingAddressParams ['country_id'] = $_REQUEST ['shipping_country'];
 
 	// add user address(es) if they don't exist yet
 	if (! $registerLocationShipping->findExistingByAddress ( $shippingAddressParams )) $registerLocationShipping->add ( $shippingAddressParams );
@@ -126,12 +122,8 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 		$parameters ['rec_contact_id'] = $rma->approvedBy ()->id;
 		$parameters ['send_location_id'] = $registerLocationShipping->id;
 		$parameters ['instructions'] = (isset ( $_REQUEST ['delivery_instructions'] )) ? $_REQUEST ['delivery_instructions'] : '';
-
-		// @TODO, this is just spectros default location?
-		$parameters ['rec_location_id'] = 1;
-
-		// @TODO, this is an organization_id??
-		$parameters ['vendor_id'] = 0;
+		$parameters ['rec_location_id'] = defined('SPECTROS_LOCATION_ID') ? SPECTROS_LOCATION_ID : 1;
+		$parameters ['vendor_id'] = defined('SPECTROS_VENDOR_ID') ? SPECTROS_VENDOR_ID : 0;
 
 		// add shipment with package and items entries
 		$shippingShipment->add ( $parameters );
