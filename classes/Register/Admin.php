@@ -5,11 +5,7 @@
 
 		public function __construct($id = 0) {
 
-			// Database Initialization
-			$schema = new Schema();
-			if ($schema->error) {
-				$this->error = "Failed to initialize schema: ".$schema->error;
-			} elseif ($id) {
+			if ($id) {
 				$this->id = $id;
 				$this->details();
 			}
