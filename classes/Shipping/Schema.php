@@ -1,7 +1,7 @@
 <?php
 	namespace Shipping;
 
-	class Schema Extends \Database\Schema  {
+	class Schema Extends \Database\BaseSchema  {
 		public $module = "shipping";
 
 		public function upgrade() {
@@ -115,7 +115,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			$this->addRoles(array(
-				'shipping admin'	=> 'Can browse all shipments'
+				'shipping manager'	=> 'Can browse all shipments'
 			));
 			return true;
 		}

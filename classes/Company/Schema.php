@@ -1,7 +1,7 @@
 <?
 	namespace Company;
 
-	class Schema Extends \Database\Schema {
+	class Schema Extends \Database\BaseSchema {
 		public $module = "Company";
 
 		public function upgrade() {

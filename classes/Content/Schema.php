@@ -1,7 +1,7 @@
 <?php
 	namespace Content;
 
-	class Schema Extends \Database\Schema {
+	class Schema Extends \Database\BaseSchema {
 		public $module = "Content";
 
 		public function upgrade() {

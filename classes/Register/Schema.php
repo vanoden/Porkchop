@@ -1,12 +1,12 @@
 <?php
 	namespace Register;
 	
-	class Schema Extends \Database\Schema {
+	class Schema Extends \Database\BaseSchema {
 		public $module = "register";
 		
 		public function upgrade() {
 			$this->error = null;
-
+			
 			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1", 'notice', __FILE__, __LINE__);
 				
@@ -659,10 +659,71 @@
 				$this->setVersion(15);
 				$GLOBALS['_database']->CommitTrans();
 			}
+				
+			if ($this->version() < 16) {
+				app_log("Upgrading schema to version 16",'notice',__FILE__,__LINE__);
+					
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$table = new \Database\Table('register_locations');
+				if (! $table->disable_keys()) {
+					$this->error = $table->error();
+					return false;
+				}
+
+				$constraints = $table->constraints();
+				if ($table->error()) {
+					$this->error = $table->error();
+					app_log($table->error(),'error');
+					return false;
+				}
+				foreach ($constraints as $constraint) {
+					if ($constraint->type == 'FOREIGN KEY') {
+						if (!$constraint->drop()) {
+							$this->error = "Error dropping constraint '".$constraint->name."': ".$constraint->error();
+							return false;
+						}
+					}
+				}
+				//if (! $this->executeSQL("ALTER TABLE register_locations DROP FOREIGN KEY `register_locations_ibfk_1`")) {
+				//	$this->error = "SQL Error dropping fk_region_id key from register_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+				//	app_log($this->error, 'error');
+				//	return false;
+				//}
+				//if (! $this->executeSQL("ALTER TABLE register_locations DROP FOREIGN KEY `register_locations_ibfk_2`, DROP COLUMN `country_id`")) {
+				//	$this->error = "SQL Error dropping fk_country_id key from register_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+				//	app_log($this->error, 'error');
+				//	return false;
+				//}
+				if ($table->has_column('region_id')) {
+					if (! $this->executeSQL("ALTER TABLE register_locations CHANGE COLUMN region_id province_id INT(11) NOT NULL")) {
+						$this->error = "SQL Error altering from register_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+				}
+				if (! $table->has_constraint('fk_province_id')) {
+					if (! $this->executeSQL("ALTER TABLE register_locations ADD FOREIGN KEY `fk_province_id` (`province_id`) REFERENCES `geography_provinces` (`id`)")) {
+						$this->error = "SQL Error adding key to register_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+				}
+				if (! $table->enable_keys()) {
+					$this->error = $table->error();
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(16);
+				$GLOBALS['_database']->CommitTrans();
+			}
 
 			$this->addRoles(array(
 				'register manager'	=> 'Can view/edit customers and organizations',
-				'register reporter'	=> 'Can view customers and organizations'
+				'register reporter'	=> 'Can view customers and organizations',
+				'location manager'	=> 'Can view and manage location entries'
 			));
 			return true;
 		}

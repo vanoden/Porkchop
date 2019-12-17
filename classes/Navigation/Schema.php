@@ -1,7 +1,7 @@
 <?
 	namespace Navigation;
 
-	class Schema Extends \Database\Schema {
+	class Schema Extends \Database\BaseSchema {
 		public $module = "Navigation";
 
 		public function upgrade() {
