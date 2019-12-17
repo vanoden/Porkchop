@@ -1,121 +1,68 @@
 <?
 	namespace Email;
 
-	class Schema {
-		public $errno;
-		public $error;
-		public $module = "email";
+	class Schema Extends \Database\BaseSchema {
+		public $module = "Email";
 		
-		public function __construct() {
-			$this->upgrade();
-		}
-		public function version() {
-			# See if Schema is Available
-			$schema_list = $GLOBALS['_database']->MetaTables();
-			$info_table = strtolower($this->module)."__info";
-
-			if (! in_array($info_table,$schema_list)) {
-                # Create __info table
-                $create_table_query = "
-                    CREATE TABLE `$info_table` (
-                        label   varchar(100) not null primary key,
-                        value   varchar(255)
-                    )
-                ";
-                $GLOBALS['_database']->Execute($create_table_query);
-                if ($GLOBALS['_database']->ErrorMsg()) {
-                    $this->error = "SQL Error creating info table in ".$this->module."Schema::version: ".$GLOBALS['_database']->ErrorMsg();
-                    return null;
-                }
-            }
-
-            # Check Current Schema Version
-            $get_version_query = "
-                SELECT  value
-                FROM    `$info_table`
-                WHERE   label = 'schema_version'
-            ";
-
-            $rs = $GLOBALS['_database']->Execute($get_version_query);
-            if (! $rs) {
-                $this->error = "SQL Error in ".$this->module."::version: ".$GLOBALS['_database']->ErrorMsg();
-                return null;
-            }
-
-            list($version) = $rs->FetchRow();
-            if (! $version) $version = 0;
-            return $version;
-		}
 		public function upgrade() {
-			$this->error = '';
-			$info_table = strtolower($this->module)."__info";
+			$this->error = null;
 
-			# See if Schema is Available
-			$schema_list = $GLOBALS['_database']->MetaTables();
+			if ($this->version() < 2) {
+				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
-			if (! in_array($info_table,$schema_list)) {
-				# Create company__info table
 				$create_table_query = "
-					CREATE TABLE `$info_table` (
-						label	varchar(100) not null primary key,
-						value	varchar(255)
+					CREATE TABLE IF NOT EXISTS email_messages (
+						`id`	int(11) not null AUTO_INCREMENT,
+						`date_created` datetime not null,
+						`date_tried` datetime,
+						`tries` int(2) not null default 0,
+						`status` enum('QUEUED','SENDING','ERROR','CANCELLED','SENT','FAILED') not null default 'QUEUED',
+						`to` varchar(255) not null,
+						`from` varchar(255) not null,
+						`subject` varchar(255) not null,
+						`body` text,
+						`html` int(1) not null default 1,
+						`process_id` int(11) not null default 0,
+						PRIMARY KEY `pk_id` (`id`),
+						INDEX `idx_status` (`status`,`date_created`),
+						INDEX `idx_date` (`date_created`),
+						INDEX `idx_to` (`to`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating info table in ".$this->module."Schema::upgrade: ".$GLOBALS['_database']->ErrorMsg();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating email_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
-			}
 
-			# Check Current Schema Version
-			$get_version_query = "
-				SELECT	value
-				FROM	`$info_table`
-				WHERE	label = 'schema_version'
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_version_query);
-			if (! $rs) {
-				$this->error = "SQL Error in ".$this->module."Schema::upgrade: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-
-			list($current_schema_version) = $rs->FetchRow();
-
-			if ($current_schema_version < 1) {
-				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
-
-				$add_roles_query = "
-					INSERT
-					INTO	register_roles
-					VALUES	(null,'email manager','Can trigger emails via api')
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS email_history (
+						`email_id`	int(11) not null,
+						`date_event` datetime not null,
+						`new_status` enum('QUEUED','SENDING','ERROR','CANCELLED','SENT','FAILED') not null default 'QUEUED',
+						`response_code` int(3),
+						`host` varchar(255),
+						`result` text,
+						INDEX `idx_id` (`email_id`),
+						INDEX `idx_date` (`date_event`),
+						INDEX `idx_host` (`host`),
+						INDEX `idx_code` (`response_code`)
+					)
 				";
-				$GLOBALS['_database']->Execute($add_roles_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error adding monitor roles in EmailInit::__construct: ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating email_history table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
-				$current_schema_version = 1;
-				$update_schema_version = "
-					INSERT
-					INTO	email__info
-					VALUES	('schema_version',$current_schema_version)
-					ON DUPLICATE KEY UPDATE
-						value = $current_schema_version
-				";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in EmailInit::schema_manager: ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
-				}
+				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
 			}
+
+			$this->addRoles(array(
+				'email manager'	=> 'Can trigger emails via api'
+			));
+			return true;
 		}
 	}
 ?>

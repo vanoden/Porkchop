@@ -17,8 +17,12 @@
 			
 			if ($parameters['provider'] == 'Proxy') {
 				return new \Email\Transport\Proxy($parameters);
-			} else {
-				$this->_error = "Invalid Email Transport";
+			}
+			elseif ($parameters['provider'] == 'Queue') {
+				return new \Email\Transport\Queue($parameters);
+			}
+			else {
+				app_log("Invalid Email Transport",'error');
 				return null;
 			}
 		}

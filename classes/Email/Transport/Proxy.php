@@ -1,8 +1,7 @@
 <?php
 	namespace Email\Transport;
 
-	class Proxy {
-		private $_error;
+	class Proxy Extends Base {
 		private $_hostname;
 		private $_username;
 		private $_password;
@@ -68,13 +67,5 @@
 				$this->_error = $response->code().": ".$response->status();
 				return false;
 			}
-		}
-
-		public function result() {
-			return $this->_result;
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}
