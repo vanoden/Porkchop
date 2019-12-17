@@ -585,7 +585,7 @@
 					app_log("Loading ".MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view,'debug',__FILE__,__LINE__);
 					ob_start();
 					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php');
-					include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
+					if (file_exists(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php')) include(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'.php');
 					$buffer .= ob_get_clean();
 			#	}
 			}
