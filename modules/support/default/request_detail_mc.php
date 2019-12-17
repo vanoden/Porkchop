@@ -62,7 +62,6 @@
     $actions = array();
     if (!empty($itemRequestActionIds)) $actions = $actionlist->find(array('searchAllItems'=> true, 'itemIds' => $itemRequestActionIds ));
     
-
     // get the comments 
     $supportItemComments = array();
     foreach ($itemRequestActionIds as $itemRequestID) {

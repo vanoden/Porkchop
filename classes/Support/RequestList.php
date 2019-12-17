@@ -14,9 +14,8 @@
 				WHERE	sr.id = sr.id
 			";
 			
-			if ($GLOBALS['_SESSION_']->customer->has_role("support manager")) {
-				// No Special Limits
-			}
+			// No Special Limits 
+			if ($GLOBALS['_SESSION_']->customer->has_role("support manager")) {}
 			
 			// Get Requests for Organization Member
 			elseif ($GLOBALS['_SESSION_']->customer->organization->id > 0) {
@@ -42,9 +41,7 @@
 				}
 				$members = $organization->members();
 				$memberlist = array();
-				foreach ($members as $member) {
-					array_push($memberlist,$member->id);
-				}
+				foreach ($members as $member) array_push($memberlist,$member->id);
 				$find_requests_query .= "
 					AND	customer_id IN (".join(',',$memberlist).")";
 			}
@@ -65,20 +62,22 @@
 					}
 					$find_requests_query .= ")";
 				}
-				
+								
                 if (!is_array($parameters['status'])) {
 				    if (preg_match('/^[\w\s]+$/', $parameters['status'])) $find_requests_query .= "\tAND	status = ".$parameters['status']."\n";
 				}
 			}
 
+			// handle date search queries
+			if (isset($parameters['min_date']) && isset($parameters['max_date'])) {
+                if (isset($parameters['min_date'])) $find_requests_query .= " AND sr.date_request > '" . $parameters['min_date'] ."'";
+                if (isset($parameters['max_date'])) $find_requests_query .= " AND sr.date_request <= '" . $parameters['max_date'] ."'";
+			}
+			
             // search for requestList looks like only by code would be meaningful
-            if (isset($parameters['searchTerm'])) {
-                $find_requests_query .= "
-				                AND sr.code LIKE '%" . $parameters['searchTerm'] . "%'";
-            }
+            if (isset($parameters['searchTerm'])) $find_requests_query .= " AND sr.code LIKE '%" . $parameters['searchTerm'] . "%'";
 
-			$find_requests_query .= "
-				ORDER BY date_request DESC";
+			$find_requests_query .= " ORDER BY date_request DESC";
 				
 			$rs = $GLOBALS['_database']->Execute($find_requests_query);
 			if (! $rs) {

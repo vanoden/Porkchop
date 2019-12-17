@@ -276,10 +276,10 @@
 				if ($tech->id) {
 					$update_object_query .= ",
 						assigned_id = ".$tech->id;
-				}
-				else {
-					$this->_error = "Tech not found";
-					return false;
+				} else {
+                    // allow for tasks to be assigned to "unassigned"
+                    $update_object_query .= ",
+						assigned_id = 0";
 				}
 			}
 			

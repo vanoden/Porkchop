@@ -9,6 +9,7 @@
 		public $tech_id;
 		public $status;
 		public $date_created;
+		public $validStatus = array('NEW','CANCELLED','OPEN','CLOSED');
 
 		public function __construct($id = 0) {
 			if ($id > 0) {
