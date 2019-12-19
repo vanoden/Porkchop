@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class Schema Extends \Database\Schema {
+	class Schema Extends \Database\BaseSchema {
 		public $module = "Session";
 
 		public function upgrade() {

@@ -1,7 +1,7 @@
 <?
 	namespace Contact;
 
-	class Schema Extends \Database\Schema {
+	class Schema Extends \Database\BaseSchema {
 		public $module = "Contact";
 
 		public function upgrade() {

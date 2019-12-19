@@ -1,7 +1,7 @@
 <?php
 	namespace Geography;
 
-	class Schema Extends \Database\Schema {
+	class Schema Extends \Database\BaseSchema {
 		public $module = "Geography";
 
 		public function upgrade() {
