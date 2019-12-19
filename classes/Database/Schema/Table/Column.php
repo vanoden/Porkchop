@@ -1,5 +1,5 @@
 <?php
-	namespace Database\Table;
+	namespace Database\Schema\Table;
 
 	class Column {
 		private $_error;
