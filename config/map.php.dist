@@ -95,6 +95,8 @@
 				"action"			=> "admin.html",
 				"admin_actions"		=> "admin.html",
 				"summary"			=> "admin.html",
+				"admin_rmas"		=> "admin.html",
+				"admin_rma"			=> "admin.html",
 			),
 		),
         "Engineering"	=> array(

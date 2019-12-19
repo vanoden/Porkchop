@@ -66,6 +66,11 @@ $rmaProductCode = $rma->item ()->product ? $rma->item ()->product->code : "";
 $rmaProductId = $rma->item ()->product->id ? $rma->item ()->product->id : "";
 $rmaSerialNumber = $rma->item () ? $rma->item ()->serial_number : "";
 
+// make sure customer belongs to the RMA, or we're an admin user wishing to view it
+$authorized = true;
+if ( ! $GLOBALS['_SESSION_']->customer->id || ( $rma->item ()->request->customer->id != $GLOBALS['_SESSION_']->customer->id ) ) $authorized = false;
+if ( $GLOBALS['_SESSION_']->customer->has_role('support user') ) $authorized = true;
+
 // get the shipment in question if it exists
 $shippingShipment = new \Shipping\Shipment ();
 $shippingShipment->get ( $rmaCode );
