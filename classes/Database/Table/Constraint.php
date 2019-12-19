@@ -33,6 +33,6 @@
 		}
 
 		public function error() {
-			return $this->_error();
+			return $this->_error;
 		}
 	}
