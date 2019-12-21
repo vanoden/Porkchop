@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->requireRole("support user");
 
@@ -26,4 +26,3 @@
 
 	$productList = new \Product\ItemList();
 	$products = $productList->find();
-?>

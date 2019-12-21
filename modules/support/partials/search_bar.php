@@ -134,7 +134,10 @@
     #menu a[href="/_engineering/home"]:hover {
         background: rgba(255,255,255,0.25);
     }
-    
+    /*** @TODO, this is needed, hack for now, something happened with the CSS for the main menu of the support section */
+    #container > section > article {
+        padding-left: 50px;
+    }
 </style>
 <script>
     // TODO let's consolidate all this together, this is a local hack for the requirment now
@@ -144,7 +147,7 @@
         var sideNav = $('#support-admin-menu');
         sideNav.html('<i class="fa fa-phone"></i> Support');
         sideNav.addClass('current');
-        sideNav.after( "<div id='_engineering-sub-nav-container'>   <li><a id='engineering-sub-nav-tasks' class='menu-sub-nav' href='/_support/request_new'><i class='fa fa-plus' aria-hidden='true'></i> New Request</a></li>   <li><a id='engineering-sub-nav-reports' class='menu-sub-nav' href='/_support/requests?btn_all=true'><i class='fa fa-list-ol' aria-hidden='true'></i> All Requests</a></li>   <li><a id='engineering-sub-nav-releases' class='menu-sub-nav' href='/_support/request_items'><i class='fa fa-check-square' aria-hidden='true'></i> Tickets</a></li>   <li><a id='engineering-sub-nav-projects' class='menu-sub-nav' href='/_support/admin_actions'><i class='fa fa-check-square-o' aria-hidden='true'></i> Actions</a></li><li><a id='engineering-sub-nav-projects' class='menu-sub-nav' href='/_support/pending_registrations'><i class='fa fa-id-badge' aria-hidden='true'></i> Warranty</a></li><li><a id='engineering-sub-nav-projects' class='menu-sub-nav' href='/_support/summary'><i class='fa fa-file-text-o' aria-hidden='true'></i> Summary</a></li></div>" );
+        sideNav.after( "<div id='_engineering-sub-nav-container'><li><a id='engineering-sub-nav-tasks' class='menu-sub-nav' href='/_support/request_new'><i class='fa fa-plus' aria-hidden='true'></i> New Request</a></li>   <li><a id='engineering-sub-nav-reports' class='menu-sub-nav' href='/_support/requests?btn_all=true'><i class='fa fa-list-ol' aria-hidden='true'></i> All Requests</a></li>   <li><a id='engineering-sub-nav-releases' class='menu-sub-nav' href='/_support/request_items'><i class='fa fa-check-square' aria-hidden='true'></i> Tickets</a></li>   <li><a id='engineering-sub-nav-projects' class='menu-sub-nav' href='/_support/admin_actions'><i class='fa fa-check-square-o' aria-hidden='true'></i> Actions</a></li><li><a id='engineering-sub-nav-projects' class='menu-sub-nav' href='/_support/pending_registrations'><i class='fa fa-id-badge' aria-hidden='true'></i> Warranty</a></li><li><a id='engineering-sub-nav-projects' class='menu-sub-nav' href='/_support/summary'><i class='fa fa-file-text-o' aria-hidden='true'></i> Summary</a></li><li><a id='engineering-sub-nav-projects' class='menu-sub-nav' href='/_support/admin_rmas'><i class='fa fa-truck' aria-hidden='true'></i> Returns (RMAs)</a></li></div>" );
 
         // add sub-current class to current sub menu page selected
         var sideNavSubMenu = $('#menu a[href="/_support/' + window.location.href.split('/').pop() + '"]');

@@ -6,29 +6,24 @@
 
     .row {
 	    display: -ms-flexbox;
-	    /* IE10 */
 	    display: flex;
 	    -ms-flex-wrap: wrap;
-	    /* IE10 */
 	    flex-wrap: wrap;
 	    margin: 0 -16px;
     }
 
     .col-25 {
 	    -ms-flex: 25%;
-	    /* IE10 */
 	    flex: 25%;
     }
 
     .col-50 {
 	    -ms-flex: 50%;
-	    /* IE10 */
 	    flex: 50%;
     }
 
     .col-75 {
 	    -ms-flex: 75%;
-	    /* IE10 */
 	    flex: 75%;
     }
 
@@ -366,7 +361,9 @@
 </script>
 <h1>Return Merchandise Authorization</h1>
 <?php
-if ($rma->id) {
+// make sure we're authorized and have a valid RMA present
+if ($authorized) {
+    if ($rma->id) {
 ?>
     <div id="support_rma">
         <?php
@@ -582,10 +579,15 @@ if ($rma->id) {
           </div>
 	    </div>
     </div>
-<?php
+    <?php
+    } else {
+    ?>
+        <h3>RMA not found, please file a <a href="/_support/request">support request</a> with us to continue.</h3>
+    <?php
+    }
 } else {
 ?>
-    <h3>RMA not found, please file a <a href="/_support/request">support request</a> with us to continue.</h3>
+    <h3>Not Authorized to view this RMA, please file a <a href="/_support/request">support request</a> with us to continue.</h3>
 <?php
 }
 ?>

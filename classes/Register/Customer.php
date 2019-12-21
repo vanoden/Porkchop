@@ -37,8 +37,7 @@
 			if ($this->id) {
 				$this->roles();
 				return true;
-			}
-			else {
+			} else {
 				return false;
 			}
 		}
@@ -47,7 +46,7 @@
 		
 			parent::update($parameters);
 
-			// Roles
+			// roles
 			if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 				$rolelist = new RoleList();
 				$roles = $rolelist->find();
@@ -99,13 +98,12 @@
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			
 			return 1;
 		}
 
 		function drop_role($role_id) {
 		
-			// Our own polymorphism
+			// our own polymorphism
 			if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 				$this->error = "Only Register Managers can update roles.";
 				return false;
@@ -342,17 +340,16 @@
 					$role_name
 				)
 			);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in RegisterCustomer::has_role: ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			
 			list($has_it) = $rs->fields;
-			
 			if ($has_it) {
 				return $has_it;
-			}
-			else {
+			} else {
 				return false;
 			}
 		}
@@ -417,6 +414,7 @@
 
 		// Get List of User Roles
 		public function roles() {
+		
 			// Get Roles Query
 			$get_roles_query = "
 				SELECT	r.id
@@ -445,6 +443,7 @@
 			
 			return $roles;
 		}
+		
 		public function role_id($name) {
 		
 			// Get Role Query
@@ -463,10 +462,12 @@
 			list($id) = $rs->FetchRow();			
 			return $id;
 		}
+		
 		public function expire() {
 			$this->update($this->id,array("status" => 'EXPIRED'));
 			return true;
 		}
+		
 		public function last_active() {
 			$sessionList = new \Site\SessionList();
 			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
@@ -477,6 +478,7 @@
 			if (! $session) return null;
 			return $session->last_hit_date;
 		}
+		
 		public function contacts($params = array()) {
 			$contactList = new \Register\ContactList();
 			$parameters = array(
@@ -492,6 +494,7 @@
 				return $contacts;
 			}
 		}
+		
 		public function error() {
 			return $this->error;
 		}

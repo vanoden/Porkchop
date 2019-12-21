@@ -1,5 +1,5 @@
 <?php
-	namespace Database;
+	namespace Database\Schema;
 
 	class Table {
 		private $name;
@@ -69,7 +69,7 @@
 			}
 			$columns = array();
 			while ($object = $rs->FetchNextObject(false)) {
-				$column = new \Database\Table\Column($object->TABLE_NAME);
+				$column = new \Database\Schema\Table\Column($object->TABLE_NAME);
 				$column->schema_name = $object->TABLE_SCHEMA;
 				$column->table_name = $object->TABLE_NAME;
 				$column->name = $object->COLUMN_NAME;
@@ -85,6 +85,7 @@
 				$column->key = $object->COLUMN_KEY;
 				$column->comment = $object->COLUMN_COMMENT;
 				$column->exists = true;
+				array_push($columns,$column);
 			}
 			return $columns;
 		}
@@ -135,7 +136,7 @@
 			app_log("Found ".$rs->recordCount()." constraints");
 			while ($object = $rs->FetchNextObject(false)) {
 				app_log("Found constraint ".$object->CONSTRAINT_NAME);
-				$constraint = new \Database\Table\Constraint();
+				$constraint = new \Database\Schema\Table\Constraint();
 				$constraint->schema = $object->CONSTRAINT_SCHEMA;
 				$constraint->name = $object->CONSTRAINT_NAME;
 				$constraint->table = $object->TABLE_NAME;

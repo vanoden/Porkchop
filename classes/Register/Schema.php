@@ -666,7 +666,7 @@
 				// Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-				$table = new \Database\Table('register_locations');
+				$table = new \Database\Schema\Table('register_locations');
 				if (! $table->disable_keys()) {
 					$this->error = $table->error();
 					return false;
@@ -679,23 +679,14 @@
 					return false;
 				}
 				foreach ($constraints as $constraint) {
-					if ($constraint->type == 'FOREIGN KEY') {
+					if ($constraint->type != 'PRIMARY KEY') {
+						app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table,'notice');
 						if (!$constraint->drop()) {
 							$this->error = "Error dropping constraint '".$constraint->name."': ".$constraint->error();
 							return false;
 						}
 					}
 				}
-				//if (! $this->executeSQL("ALTER TABLE register_locations DROP FOREIGN KEY `register_locations_ibfk_1`")) {
-				//	$this->error = "SQL Error dropping fk_region_id key from register_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
-				//	app_log($this->error, 'error');
-				//	return false;
-				//}
-				//if (! $this->executeSQL("ALTER TABLE register_locations DROP FOREIGN KEY `register_locations_ibfk_2`, DROP COLUMN `country_id`")) {
-				//	$this->error = "SQL Error dropping fk_country_id key from register_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
-				//	app_log($this->error, 'error');
-				//	return false;
-				//}
 				if ($table->has_column('region_id')) {
 					if (! $this->executeSQL("ALTER TABLE register_locations CHANGE COLUMN region_id province_id INT(11) NOT NULL")) {
 						$this->error = "SQL Error altering from register_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;

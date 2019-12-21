@@ -49,11 +49,16 @@
 		<div class="tableCell">Shipped</div>
 		<div class="tableCell">Shipper</div>
 	</div>
-<?	foreach ($shipments as $shipment) { ?>
-	<div class="tableRow">
-		<div class="tableCell"><?=$shipment->status?></div>
-		<div class="tableCell"><?=$shipment->date_shipped?></div>
-		<div class="tableCell"><?=$shipment->vendor?></div>
-	</div>
-<?	} ?>
+<?php
+    if ($shipments) {
+	    foreach ($shipments as $shipment) { ?>
+	    <div class="tableRow">
+		    <div class="tableCell"><?=$shipment->status?></div>
+		    <div class="tableCell"><?=$shipment->date_shipped?></div>
+		    <div class="tableCell"><?=$shipment->vendor?></div>
+	    </div>
+    <?php
+        } 
+    }
+?>
 </div>
