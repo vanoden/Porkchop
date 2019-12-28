@@ -12,6 +12,10 @@
 		$request = new \Support\Request();
 		$request->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
+
+    // flag if we have an actual request or not to show for the UI
+    $hasRequest = true;
+	if (empty($request->id)) $hasRequest = false;
 	
 	if ($_REQUEST['btn_add_item']) {
 		$parameters = array(
@@ -44,27 +48,41 @@
 	}
 
 	if ($_REQUEST['btn_reopen']) $request->update(array('status' => 'OPEN'));
-	$items = $request->items();
 
-	$productlist = new \Product\ItemList();
-	$products = $productlist->find(array('type' => array('inventory','kit','unique')));
+    if ($hasRequest) {
+	    $items = $request->items();
 
-	$item = new \Support\Request\Item();
-	$statuses = $item->statuses();
+	    $productlist = new \Product\ItemList();
+	    $products = $productlist->find(array('type' => array('inventory','kit','unique')));
 
-	$adminlist = new \Register\CustomerList();
-	$admins = $adminlist->find(array('role' => 'support user','_sort' => 'full_name'));
-    
-    // get all the actions related to this request
-    $actionlist = new \Support\Request\Item\ActionList();
-    $itemRequestActionIds = array();
-    foreach ($items as $itemRequest) $itemRequestActionIds[] = $itemRequest->id;
-    $actions = array();
-    if (!empty($itemRequestActionIds)) $actions = $actionlist->find(array('searchAllItems'=> true, 'itemIds' => $itemRequestActionIds ));
-    
-    // get the comments 
-    $supportItemComments = array();
-    foreach ($itemRequestActionIds as $itemRequestID) {
-	    $commentlist = new \Support\Request\Item\CommentList();
-	    $supportItemComments[] = $commentlist->find(array('item_id' => $itemRequestID));
+	    $item = new \Support\Request\Item();
+	    $statuses = $item->statuses();
+
+	    $adminlist = new \Register\CustomerList();
+	    $admins = $adminlist->find(array('role' => 'support user','_sort' => 'full_name'));
+        
+        // get all the actions related to this request
+        $actionlist = new \Support\Request\Item\ActionList();
+        $itemRequestActionIds = array();
+        foreach ($items as $itemRequest) $itemRequestActionIds[] = $itemRequest->id;
+        $actions = array();
+        if (!empty($itemRequestActionIds)) $actions = $actionlist->find(array('searchAllItems'=> true, 'itemIds' => $itemRequestActionIds ));
+        
+        // get the events for an action, to display as an expandable list
+        $events = array();  
+        foreach ($actions as $action) {
+	        $eventlist = new \Support\Request\Item\Action\EventList();
+	        $events[$action->id] = $eventlist->find(array('action_id' => $action->id));
+        }
+
+        // get the comments
+        $supportItemComments = array();
+        foreach ($itemRequestActionIds as $itemRequestID) {
+	        $commentlist = new \Support\Request\Item\CommentList();
+	        $supportItemComments[] = $commentlist->find(array('item_id' => $itemRequestID));
+        }
+    } else {
+        $items = array();
+        $actions = array();
+        $page->addError('Request could not be found');
     }

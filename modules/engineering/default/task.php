@@ -68,8 +68,8 @@
             <div class="tableCell" style="width: 25%;">Date Due</div>
          </div>
          <!-- end row header -->
-         <div class="tableRow">
-            <div class="tableCell"><input type="text" name="title" class="value input wide_100per" value="<?=$form['title']?>" /></div>
+         <div class="tableRow">         
+            <div class="tableCell"><input type="text" name="title" class="value input wide_100per" value="<?=preg_replace("/['|\"]/", "", $form['title']);?>" /></div>
             <div class="tableCell">
                <select name="product_id" class="value input wide_100per">
                   <option value="">Select</option>

@@ -388,6 +388,7 @@
 		}
 		# Process Email Verification Request
 		function verify_email($validation_key) {
+		
 			if (! $this->id) return false;
 			if (! $validation_key) return false;
 

@@ -344,19 +344,19 @@
 		$form['release_id'] = $_REQUEST['release_id'];
 		$form['prerequisite_id'] = $_REQUEST['prerequisite_id'];
 	} else {
-		$form[code] = uniqid();
-		$form[product_id] = '';
-		$form[date_added] = 'now';
-		$form[date_due] = '';
-		$form[estimate] = 0;
-		$form[type] = '';
-		$form[status] = '';
-		$form[priority] = '';
-		$form[assigned_id] = '';
-		$form[requested_id] = $GLOBALS['_SESSION_']->customer->id;
-		$form[description] = '';
-		$form[project_id] = '';
-		$form[prerequisite_id] = '';
-		$form[release_id] = '';
+		$form['code'] = uniqid();
+		$form['product_id'] = '';
+		$form['date_added'] = 'now';
+		$form['date_due'] = '';
+		$form['estimate'] = 0;
+		$form['type'] = '';
+		$form['status'] = '';
+		$form['priority'] = '';
+		$form['assigned_id'] = '';
+		$form['requested_id'] = $GLOBALS['_SESSION_']->customer->id;
+		$form['description'] = '';
+		$form['project_id'] = '';
+		$form['prerequisite_id'] = '';
+		$form['release_id'] = '';
 		$task->date_added = 'now';
 	}

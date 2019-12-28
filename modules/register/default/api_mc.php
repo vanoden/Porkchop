@@ -540,6 +540,7 @@
 	### Verify Users Email Address					###
 	###################################################
 	function verifyEmail() {
+	
 		# Initiate Response
 		$response = new stdClass();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
@@ -554,10 +555,9 @@
 		if ($user->get($_REQUEST['login'])) {
 			if ($user->verify_email($_REQUEST['validation_key'])) {
 				$response->success = 1;
-			}
-			else error("Invalid validation key");
-		}
-		elseif ($user->error) error($user->error);
+			} else error("Invalid validation key");
+		} elseif ($user->error) error($user->error);
+		
 		else error("Invalid validation key");
 
 		# Send Response
