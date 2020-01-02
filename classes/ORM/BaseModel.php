@@ -8,7 +8,7 @@
 	    protected $tableName;
 	    private $_updateQuery;
 	    private $_addQuery;
-	    private $_error;
+	    protected $_error;
 	
         /**
          * construct ORM
@@ -46,6 +46,8 @@
             $this->_updateQuery .= " WHERE	id = ?";
             array_push($bindParams, $this->id);
             $this->execute($this->_updateQuery, $bindParams);
+
+			if ($this->_error) return false;
             
             return $this->details();
 		}
@@ -69,8 +71,11 @@
 	        }
 	        $this->_addQuery .= '(`'.implode('`,`',$bindFields).'`';
             $this->_addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindParams)) ,',') . ")";
+			query_log($this->_addQuery,$bindParams);
             $this->execute($this->_addQuery, $bindParams);
-            
+
+			if ($this->_error) return false;
+
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
 		}
@@ -120,7 +125,7 @@
 		protected function execute($query, $params) {
 			$rs = $GLOBALS["_database"]->Execute($query,$params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = print_r(debug_backtrace(), true) . $GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in ORM::BaseModel::execute(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
             return $rs;
