@@ -74,13 +74,13 @@
 					array(
 						'from'	=> 'service@spectrosinstruments.com',
 						'subject'	=> "Action ".$action->id." assigned to you",
-						'body'		=> "The following action was assigned to you:
-Request: ".$action->item->request->code."<br>
-Item: ".$action->item->line."<br>
-Type: ".$action->type."<br>
-Product: ".$action->item->product->code."<br>
-Serial: ".$action->item->serial_number."<br>
-Description: ".$action->description
+						'body'		=> "The following action was assigned to you:<br/>
+                                        Request: ".$action->item->request->code."<br/>
+                                        Item: ".$action->item->line."<br/>
+                                        Type: ".$action->type."<br/>
+                                        Product: ".$action->item->product->code."<br/>
+                                        Serial: ".$action->item->serial_number."<br/>
+                                        Description: ".$action->description
 					)
 				);
 				$user->notify($message);

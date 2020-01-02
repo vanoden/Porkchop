@@ -1,11 +1,14 @@
 <style>
-    .event-log-description {
+   .event-log-description {
         background-color: white;
         min-width: 75%; 
         overflow:auto; 
         padding: 25px;
         min-height: 100px;
-    }
+        border: solid 1px #EFEFEF; 
+        border-radius: 5px; 
+        height: 50px;
+   }
    div.container {	width: 100%; clear: both;	}
    div.toggleContainer {	width: 100%; clear: both; display: none; }
 </style>
@@ -35,10 +38,10 @@
          <a href="/_support/request_item/<?=$item->id?>" class="breadcrumbs">Line <?=$item->line?></a>
          <input type="hidden" name="action_id" value="<?=$action->id?>" />
          <?	if ($page->errorCount()) { ?>
-         <div class="form_error"><?=$page->errorString()?></div>
+            <div class="form_error"><?=$page->errorString()?></div>
          <? } ?>
          <?	if ($page->success) { ?>
-         <div class="form_success"><?=$page->success?></div>
+            <div class="form_success"><?=$page->success?></div>
          <?	} ?>
       </div>
    </div>
@@ -103,43 +106,43 @@
       </div>
    </div>
    <div class="toggleContainer" id="eventFormDiv">
-<form name="eventForm" method="post" action="/_support/action">
-<input type="hidden" name="action_id" value="<?=$action->id?>" />
-<h2>Add Event</h2>
-<div class="container_narrow">
-<span class="label">Event Date</span>
-<input type="text" name="date_event" class="value input" value="now" />
-</div>
-<div class="container_narrow">
-<span class="label">User</span>
-<select name="user_id" class="value input">
-<option value="">Select</option>
-<?	foreach ($admins as $admin) { ?>
-<option value="<?=$admin->id?>"<? if ($admin->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$admin->full_name()?></option>
-<?	} ?>
-</select>
-</div>
-<div class="container_narrow">
-<span class="label">New Status</span>
-<select name="status" class="value input">
-<option value="ACTIVE">Active</option>
-<option value="PENDING CUSTOMER">Pending Customer</option>
-<option value="PENDING VENDOR">Pending Vendor</option>
-<option value="CANCELLED">Cancelled</option>
-<option value="COMPLETE">Complete</option>
-</select>
-</div>
-<div class="container">
-<span class="label">
-Description
-</span>
-<textarea name="description" class="value input" style="width: 650px"></textarea>
-</div>
-<div class="form_footer">
-<input type="submit" name="btn_add_event" class="button" value="Add Event" />
-<input type="button" name="btn_cancel" value="Cancel" class="button" onclick="hideForm('event');" />
-</div>
-</form>
+    <form name="eventForm" method="post" action="/_support/action">
+       <input type="hidden" name="action_id" value="<?=$action->id?>" />
+       <h2>Add Event</h2>
+       <div class="container_narrow">
+          <span class="label">Event Date</span>
+          <input type="text" name="date_event" class="value input" value="now" />
+       </div>
+       <div class="container_narrow">
+          <span class="label">User</span>
+          <select name="user_id" class="value input">
+             <option value="">Select</option>
+             <?	foreach ($admins as $admin) { ?>
+             <option value="<?=$admin->id?>"<? if ($admin->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$admin->full_name()?></option>
+             <?	} ?>
+          </select>
+       </div>
+       <div class="container_narrow">
+          <span class="label">New Status</span>
+          <select name="status" class="value input">
+             <option value="ACTIVE">Active</option>
+             <option value="PENDING CUSTOMER">Pending Customer</option>
+             <option value="PENDING VENDOR">Pending Vendor</option>
+             <option value="CANCELLED">Cancelled</option>
+             <option value="COMPLETE">Complete</option>
+          </select>
+       </div>
+       <div class="container">
+          <span class="label">
+          Description
+          </span>
+          <textarea name="description" class="value input" style="width: 650px"></textarea>
+       </div>
+       <div class="form_footer">
+          <input type="submit" name="btn_add_event" class="button" value="Add Event" />
+          <input type="button" name="btn_cancel" value="Cancel" class="button" onclick="hideForm('event');" />
+       </div>
+    </form>
 </div>
 <div class="toggleContainer" id="assignFormDiv">
    <form name="assignForm" method="post" action="/_support/action">
@@ -175,7 +178,7 @@ Description
       <th colspan="2">Description</th>
    <tr>
       <td colspan="2">	    
-         <textarea class="event-log-description" readonly="readonly" style="border: solid 1px #EFEFEF; border-radius: 5px; height: 50px;"><?=$event->description?></textarea>
+         <textarea class="event-log-description" readonly="readonly"><?=strip_tags($event->description)?></textarea>
       </td>
    </tr>
    </tr>

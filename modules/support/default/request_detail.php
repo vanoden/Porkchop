@@ -1,8 +1,43 @@
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<style>
+   .ui-autocomplete-loading {
+        background: white url("https://jqueryui.com/resources/demos/autocomplete/images/ui-anim_basic_16x16.gif") right center no-repeat;
+   }
+   .center {
+        text-align:center;
+   }
+   .events-toggle {
+        cursor: pointer;
+   }
+</style>
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<style>
+   .event-log-description {
+        background-color: white;
+        min-width: 75%; 
+        overflow:auto; 
+        padding: 25px;
+        min-height: 100px;
+        border: solid 1px #EFEFEF; 
+        border-radius: 5px; 
+        height: 50px;
+   }
+   div.container {	width: 100%; clear: both;	}
+   div.toggleContainer {	width: 100%; clear: both; display: none; }
+</style>
 <script language="Javascript">
 	function goForm(selectedForm) {
 		document.requestForm.action = '/_support/request_'+selectedForm;
 		document.requestForm.submit();
 	}
+	$(document).ready(function() {
+	    $('.events-toggle').click(function(){            
+            $('.open-action-' + $(this).data("id")).toggle();
+            $('.close-action-' + $(this).data("id")).toggle();
+            $('.events-list-' + $(this).data("id")).toggle();
+	    });
+	});
 </script>
 
 <div class="breadcrumbs">
@@ -65,6 +100,7 @@
 	        <div class="tableRowHeader">
 		        <div class="tableCell" style="width: 10%;">Ticket</div>
 		        <div class="tableCell" style="width: 25%;">Product</div>
+
 		        <div class="tableCell" style="width: 25%;">Serial</div>
 		        <div class="tableCell" style="width: 20%;">Status</div>
 	        </div> <!-- end row header -->
@@ -191,17 +227,54 @@
             <tr><th colspan="5">Description</th></tr>
             <tr><td colspan="5"><?=$action->description?></td></tr>
         </table>
-        <?	    }
-            } 
-        }
+        <?php    
+            }
+            if (count($events[$action->id])) {
         ?>
+            <h4 class="events-toggle" data-id="<?=$action->id?>">Events [<span class="open-action-<?=$action->id?>">+</span><span class="close-action-<?=$action->id?>" style="display:none;">-</span>]</h4>
+        <?php	    
+            }
+        ?>
+            <div class="events-list-<?=$action->id?>" style="display:none;">
+        <?php
+                foreach ($events[$action->id] as $event) {
+                    ?>
+                    <div style="margin-left: 25px; padding: 5px; border: 1px solid #000;">
+                        <table style="width: 100%; padding-bottom: 10px;">
+                           <tr>
+                              <th>Event Date</th>
+                              <th>User</th>
+                           </tr>
+                           <tr>
+                              <td><?=$event->date_event?></td>
+                              <td><?=$event->user->full_name()?></td>
+                           </tr>
+                           <tr>
+                              <th colspan="2">Description</th>
+                           <tr>
+                              <td colspan="2">	    
+                                 <textarea class="event-log-description" readonly="readonly" style="border: solid 1px #EFEFEF; border-radius: 5px; height: 50px;"><?=strip_tags($event->description)?></textarea>
+                              </td>
+                           </tr>
+                           </tr>
+                        </table>
+                    </div>
+                    <?php
+                }
+            ?>
+            </div>
+            <br/><hr/><br/>
+            <?php
+            }
+        }
+        ?><br/>
         </div>
         <?	} ?>
         <?	if (isset($supportItemComments) && count($supportItemComments) > 0) { ?>
             <!--	Start Request Item-->
             <h3>Comments</h3>
             <?php	
-                foreach ($supportItemComments as $comment) { 
+                foreach ($supportItemComments as $comment) {
                 $comment = array_pop($comment);
                 if ($comment->date_comment) {
             ?>
