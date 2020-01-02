@@ -320,7 +320,7 @@
 	###################################################
 	### Add a Commit								###
 	###################################################
-	function addCommmit() {
+	function addCommit() {
 		if (! isset($_REQUEST['hash'])) app_error("hash required");
 
 		if (isset($_REQUEST['repository_id'])) {

@@ -1,7 +1,7 @@
 <?php
 	namespace Build;
 
-	class Commit {
+	class Repository {
 		public $id;
 		private $_error;
 
@@ -20,7 +20,7 @@
 
 			$add_object_query = "
 				INSERT
-				INTO	build_commits
+				INTO	build_repositories
 				(		id,url)
 				VALUES
 				(		null,?)
