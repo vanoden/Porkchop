@@ -182,13 +182,20 @@
 	}
 
 	function query_log($query,$params = array(),$path = null,$line = null) {
+		if (is_bool($path)) {
+			$level = 'debug';
+			$path = null;
+		}
+		else {
+			$level = 'trace';
+		}
 		if (! isset($path)) {
 			$trace = debug_backtrace();
 			$caller = $trace[0];
 			$path = $caller['file'];
 			$line = $caller['line'];
-		} 
-		app_log($query."\n".print_r($params,true),'trace',$path,$line);
+		}
+		app_log($query."\n".print_r($params,true),$level,$path,$line);
 	}
 
 	###############################################
