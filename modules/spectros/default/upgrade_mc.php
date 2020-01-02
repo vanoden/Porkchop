@@ -42,7 +42,8 @@
 				"admin_account"		=> $admin_template,
 				"pending_customers"	=> $admin_template,
 				"roles"				=> $admin_template,
-				"role"				=> $admin_template
+				"role"				=> $admin_template,
+				"admin_location"	=> $admin_template,
 			),
 		),
         "Contact"		=> array(
