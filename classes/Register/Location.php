@@ -12,7 +12,7 @@
 		public $zip_code;
 		public $notes;
 		public $tableName = 'register_locations';
-        public $fields = array('id','name','address_1','address_2','city','region_id','country_id','zip_code', 'notes');
+        public $fields = array('id','name','address_1','address_2','city','province_id','zip_code', 'notes');
 
         /**
          * find existing entry by user provided address info
@@ -37,4 +37,27 @@
             $this->_error = "ERROR: no records found for these values.";
             return false;
         }
+
+		public function associateOrganization($organization_id) {
+			$add_record_query = "
+				INSERT
+				INTO	register_organization_locations
+				(organization_id,location_id)
+				VALUES	(?,?)
+				ON DUPLICATE KEY UPDATE
+				location_id = location_id
+			";
+			$bind_params = array($organization_id,$this->id);
+			query_log($add_record_query,$bind_params,true);
+			$GLOBALS['_database']->Execute($add_record_query,$bind_params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->_error = "SQL Error in Register::Location::associateOrganization(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			return true;
+		}
+
+		public function province() {
+			return new \Geography\Province($this->province_id);
+		}
 	}

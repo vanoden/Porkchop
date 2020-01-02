@@ -917,7 +917,103 @@
 
 		print formatOutput($response);
 	}
-	
+
+	/**
+	 * get last active date for member
+	 */
+	function getMemberLastActive() {
+        $user = new \Register\Customer($_REQUEST['memberId']);
+        $results = new stdClass();
+        $results->memberId = $_REQUEST['memberId'];
+        $results->lastActive = $user->last_active();
+        print json_encode($results);
+	}
+
+    /**
+	 * search registered organizations by name
+	 */
+	function searchOrganizationsByName() {
+    	header('Content-Type: application/json');
+    	$organizationList = new \Register\OrganizationList();
+		$search = array();
+		$search['string'] = $_REQUEST['term'];
+		$search['_like'] = array('name');
+		$search['status'] = array('NEW','ACTIVE','EXPIRED');
+    	$organizationsFound = $organizationList->search($search);
+    	
+    	$results = array();
+    	foreach ($organizationsFound as $organization) {
+    	    $newOrganization = new stdClass();
+    	    $newOrganization->id = $organization->id;
+    	    $newOrganization->label = $organization->name;
+    	    $newOrganization->value = $organization->name;
+    	    $results[] = $newOrganization;
+    	}
+		print json_encode($results);
+	}
+
+	/**
+	 * get shipment by serial number
+	 */
+	function shipmentFindBySerial() {
+    	header('Content-Type: application/json');
+	    $supportShipmentItem = new \Support\ShipmentItem();
+        $shipmentDetails = $supportShipmentItem->findBySerial($_REQUEST['serialNumber']);
+		print json_encode($shipmentDetails);
+	}
+
+	function findLocations() {
+		$response = new \HTTP\Response();
+		$parameters = array();
+		if (isset($_REQUEST['organization']) && $GLOBALS['_SESSION_']->customer->has_role("location manager")) {
+			$organization = new \Register\Organization();
+			if (!$organization->get($_REQUEST['organization'])) error("Organization not found");
+			$_REQUEST['organization_id'] = $organization->id;
+		}
+		elseif (isset($_REQUEST['organization_id']) && $GLOBALS['_SESSION_']->customer->has_role('location manager')) {
+			$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+		}
+		else {
+			$parameters['organization_id'] = $_REQUEST['organization_id'];
+		}
+
+		$locationList = new \Register\LocationList();
+		$locations = $locationList->find($parameters);
+
+		$response->success = 1;
+		$response->location = $locations;
+
+		print formatOutput($response);
+	}
+
+	function addLocation() {
+		$response = new \HTTP\Response();
+		$parameters = array();
+		$parameters->name = $_REQUEST['name'];
+		$parameters->address_1 = $_REQUEST['address_1'];
+		$parameters->address_2 = $_REQUEST['address_2'];
+		$parameters->city = $_REQUEST['city'];
+		$parameters->zip_code = $_REQUEST['zip_code'];
+
+		$province = new \Geography\Province();
+		if (! $province->get($_REQUEST['province'])) error("Province not found");
+		$parameters->province_id = $province->id;
+
+		$location = new \Register\Location();
+		if ($location->add($parameters)) {
+			$response->success = 1;
+			$response->location = $location;
+			print formatOutput($response);
+		}
+		else {
+			error("Cannot add location: ".$location->error());
+		}
+	}
+
+	function getLocation() {
+		
+	}
+
 	function schemaVersion() {
 		$schema = new \Register\Schema();
 		if ($schema->error) {
@@ -972,46 +1068,3 @@
 		return $document->content();
 	}
 	
-	/**
-	 * get last active date for member
-	 */
-	function getMemberLastActive() {
-        $user = new \Register\Customer($_REQUEST['memberId']);
-        $results = new stdClass();
-        $results->memberId = $_REQUEST['memberId'];
-        $results->lastActive = $user->last_active();
-        print json_encode($results);
-	}
-	
-    /**
-	 * search registered organizations by name
-	 */
-	function searchOrganizationsByName() {
-    	header('Content-Type: application/json');
-    	$organizationList = new \Register\OrganizationList();
-		$search = array();
-		$search['string'] = $_REQUEST['term'];
-		$search['_like'] = array('name');
-		$search['status'] = array('NEW','ACTIVE','EXPIRED');
-    	$organizationsFound = $organizationList->search($search);
-    	
-    	$results = array();
-    	foreach ($organizationsFound as $organization) {
-    	    $newOrganization = new stdClass();
-    	    $newOrganization->id = $organization->id;
-    	    $newOrganization->label = $organization->name;
-    	    $newOrganization->value = $organization->name;
-    	    $results[] = $newOrganization;
-    	}
-		print json_encode($results);
-	}
-
-	/**
-	 * get shipment by serial number
-	 */
-	function shipmentFindBySerial() {
-    	header('Content-Type: application/json');
-	    $supportShipmentItem = new \Support\ShipmentItem();
-        $shipmentDetails = $supportShipmentItem->findBySerial($_REQUEST['serialNumber']);
-		print json_encode($shipmentDetails);
-	}

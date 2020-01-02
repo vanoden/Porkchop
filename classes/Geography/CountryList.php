@@ -11,6 +11,9 @@
 				FROM	geography_countries
 			";
 
+			$find_objects_query .= "
+				ORDER BY name";
+
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {
 				$this->_error = "SQL Error in Geography::CountryList::find(): ".$GLOBALS['_database']->ErrorMsg();

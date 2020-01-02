@@ -2,11 +2,12 @@
 	namespace Geography;
 
 	class Admin {
-		private $id;
-		private $error;
+		public $id;
+		public $_error;
 
 		public function __construct($id = null) {
 			if (isset($id) && is_numeric($id)) {
+				app_log("Loading admin $id",'notice');
 				$this->id = $id;
 				$this->details();
 			}
@@ -129,6 +130,10 @@
 				$this->id = null;
 				return false;
 			}
+		}
+
+		public function country() {
+			return new \Geography\Country($this->country_id);
 		}
 
 		public function error() {

@@ -246,6 +246,24 @@
 
 			return true;
 		}
+
+		public function locations() {
+			$get_locations_query = "
+				SELECT	location_id
+				FROM	register_organization_locations
+				WHERE	organization_id = ?";
+			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->id));
+			if (! $rs) {
+				$this->error = "SQL Error in Register::Organization::lcations: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			$locations = array();
+			while (list($id) = $rs->FetchRow()) {
+				$location = new \Register\Location($id);
+				array_push($locations,$location);
+			}
+			return $locations;
+		}
 		public function error() {
 			return $this->error;
 		}

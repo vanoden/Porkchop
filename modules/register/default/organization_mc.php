@@ -5,10 +5,9 @@
 	### for the user.								###
 	### A. Caravello 11/12/2002						###
 	###################################################
-	if (! $GLOBALS['_SESSION_']->authenticated()) {
-		header("location: /_register/login?target=_register:organization");
-		exit;
-	}
+	$page = new \Site\Page();
+	$page->requireAuth();
+
 	# Security - Only Register Module Operators or Managers can see other customers
 	if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
@@ -114,3 +113,8 @@
 	}
 	$resellerList = new \Register\OrganizationList();
 	$resellers = $resellerList->find(array("is_reseller" => true));
+
+	$locations = $organization->locations();
+	if ($organization->error()) {
+		$page->addError($organization->error());
+	}

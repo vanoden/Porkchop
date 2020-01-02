@@ -1,4 +1,11 @@
 <h2>Organization Details</h2>
+<script language="JavaScript">
+	function addLocation() {
+		var organization_id = document.forms[0].organization_id.value;
+		window.location.href = "/_register/admin_location?organization_id="+organization_id;
+		return true;
+	}
+</script>
 <form name="orgDetails" method="POST">
 <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
 <?  if ($GLOBALS['_page']->error) { ?>
@@ -57,7 +64,10 @@
 			<textarea name="notes" class="wide_lg"><?=$organization->notes?></textarea>
 		</div>
 	</div>
-</div>	
+</div>
+<div class="tableFooter min-tablet">
+	<input type="submit" name="method" value="Apply" class="button"/>
+</div>
 <!--End first row-->
 	
 <h3>Current Users</h3>
@@ -113,12 +123,43 @@
 		</div>
 	</div>
 </div>
-<!--End first row-->	
-<?	} ?>
-<div id="accountFormSubmit" class="button-bar marginTop_20">
-	<input type="submit" name="method" value="Apply" class="button"/>
+<div class="tableFooter min-tablet">
+	<input type="submit" name="method" value="Add User" class="button"/>
 </div>
+
+<h3>Locations</h3>
+<!--	Start First Row-->
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell value" style="width: 20%;">Name</div>
+		<div class="tableCell value" style="width: 20%;">Address</div>
+		<div class="tableCell value" style="width: 20%;">City</div>
+		<div class="tableCell value" style="width: 20%;">Province</div>
+		<div class="tableCell value" style="width: 20%;">Region</div>
+	</div>
+<?	foreach ($locations as $location) { ;?>
+	<div class="tableRow">
+		<div class="tableCell">
+			<a href="/_register/admin_location?organization_id=<?=$organization->id?>&id=<?=$location->id?>"><?=$location->name?></a>
+		</div>
+		<div class="tableCell">
+			<?=$location->address_1?>
+		</div>
+		<div class="tableCell">
+			<?=$location->city?>
+		</div>
+		<div class="tableCell">
+			<?=$location->province()->name?>
+		</div>
+		<div class="tableCell">
+			<?=$location->province()->country()->name?>
+		</div>
+	</div>
+<?	} ?>
+</div>
+<div class="tableFooter min-tablet">
+	<input type="button" name="method" value="Add Location" class="button" onclick="addLocation()"/>
+</div>
+<!--End first row-->
+<?	} ?>
 </form>
-
-
-

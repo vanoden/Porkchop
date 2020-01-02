@@ -597,7 +597,7 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-	
+
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS register_locations (
 						id INT(11) NOT NULL AUTO_INCREMENT,
@@ -621,7 +621,7 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return null;
 				}
-	
+
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS register_organization_locations (
 						organization_id INT(11) NOT NULL,
@@ -708,6 +708,77 @@
 				}
 
 				$this->setVersion(16);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			if ($this->version() < 17) {
+	
+				app_log("Upgrading schema to version 17",'notice',__FILE__,__LINE__);
+	
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+			
+				$alter_table_query = "
+					ALTER TABLE register_locations MODIFY COLUMN zip_code varchar(12) NOT NULL
+				";
+	
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_locations table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+						app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(17);
+				$GLOBALS['_database']->CommitTrans();
+			}
+				
+			if ($this->version() < 18) {
+				app_log("Upgrading schema to version 18",'notice',__FILE__,__LINE__);
+					
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$table = new \Database\Schema\Table('register_organization_locations');
+				if (! $table->disable_keys()) {
+					$this->error = $table->error();
+					return false;
+				}
+
+				$constraints = $table->constraints();
+				if ($table->error()) {
+					$this->error = $table->error();
+					app_log($table->error(),'error');
+					return false;
+				}
+				foreach ($constraints as $constraint) {
+					if ($constraint->type == 'FOREIGN KEY') {
+						app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table,'notice');
+						if (!$constraint->drop()) {
+							$this->error = "Error dropping constraint '".$constraint->name."': ".$constraint->error();
+							return false;
+						}
+					}
+				}
+				if (! $this->executeSQL("ALTER TABLE register_organization_locations ADD FOREIGN KEY `register_organization_locations_organization_id` (`organization_id`) REFERENCES `register_organizations` (`id`)")) {
+					$this->error = "SQL Error adding key to register_organization_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+				if (! $this->executeSQL("ALTER TABLE register_organization_locations ADD FOREIGN KEY `register_organization_locations_location_id` (`location_id`) REFERENCES `register_locations` (`id`)")) {
+					$this->error = "SQL Error adding key to register_organization_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				if (! $table->enable_keys()) {
+					$this->error = $table->error();
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(18);
 				$GLOBALS['_database']->CommitTrans();
 			}
 

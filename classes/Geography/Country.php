@@ -92,7 +92,7 @@
 			}
 			$object = $rs->FetchNextObject(false);
 			if ($this->id) {
-				app_log("Got details for ".$this->id);
+				app_log("Got details for ".$this->id,'trace');
 				$this->id = $object->id;
 				$this->name = $object->name;
 				$this->abbreviation = $object->abbreviation;
@@ -100,6 +100,11 @@
 			} else {
 				return false;
 			}
+		}
+
+		public function provinces() {
+			$provinceList = new \Geography\ProvinceList();
+			return $provinceList->find(array('country_id' => $this->id));
 		}
 
 		public function error() {
