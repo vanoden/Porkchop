@@ -20,8 +20,7 @@
 	$response->method = $_REQUEST["method"];
 
 	# Call Requested Event
-	if ($_REQUEST["method"])
-	{
+	if ($_REQUEST["method"]) {
 		error_log("Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code);
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
@@ -109,8 +108,15 @@
 		$queue = new \Email\Queue();
 		$message = $queue->takeNextUnsent();
 		$response->success = 1;
-		if ($message->id) $response->message = $message;
-		
+		if (is_numeric($message->id) && $message->id > 0) {
+			app_log("Returning message ".$message->id,'notice');
+			$response->message = $message;
+		}
+		else {
+			app_log("No message returned",'notice');
+			unset($response->message);
+		}
+
 		print formatOutput($response);
 	}
 
@@ -121,6 +127,7 @@
 		$response = new \HTTP\Response();
 
 		$message = new \Email\Queue\Message($_REQUEST['id']);
+		if (! $message->id) error("Message not found");
 		if ($message->recordEvent(
 			$_REQUEST['status'],
 			$_REQUEST['code'],

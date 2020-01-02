@@ -51,13 +51,19 @@
 				return null;
 			}
 			list($id) = $rs->FetchRow();
-			app_log("Taking message '$id'",'notice');
-			$message = new \Email\Queue\Message($id);
-			if ($message->lockForSend()) {
-				return $message;
+			if ($id > 0) {
+				app_log("Taking message '$id'",'notice');
+				$message = new \Email\Queue\Message($id);
+				if ($message->lockForSend()) {
+					return $message;
+				}
+				else {
+					$this->_error = "Could not lock message for delivery";
+					return null;
+				}
 			}
 			else {
-				$this->_error = "Could not lock message for delivery";
+				app_log("No messages ready");
 				return null;
 			}
 		}
