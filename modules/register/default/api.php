@@ -377,4 +377,26 @@
 		<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
 	</div>
 	</form>
+	<form method="post" action="<?=PATH?>/_register/api" name="findOrganizationLocations">
+	<input type="hidden" name="method" value="findOrganizationLocations">
+	<div class="apiMethod">
+		<div class="h3 apiMethodTitle">findOrganizationLocations</div>
+		<div class="apiMethodParameter">
+			<span class="label apiLabel">code</span>
+			<input type="text" name="code" class="input value methodInput"/>
+		</div>
+		<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+	</div>
+	</form>
+	<form method="post" action="<?=PATH?>/_register/api" name="findCustomerLocations">
+	<input type="hidden" name="method" value="findCustomerLocations">
+	<div class="apiMethod">
+		<div class="h3 apiMethodTitle">findCustomerLocations</div>
+		<div class="apiMethodParameter">
+			<span class="label apiLabel">login</span>
+			<input type="text" name="login" class="input value methodInput"/>
+		</div>
+		<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>
+	</div>
+	</form>
 </div>

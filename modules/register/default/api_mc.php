@@ -850,7 +850,41 @@
 		header('Content-Type: application/xml');
 		print formatOutput($response);
 	}
-	
+	function findOrganizationLocations() {
+		if ($GLOBALS['_SESSION_']->customer->has_role('register manager') && isset($_REQUEST['organization_id'])) {
+			$organization = new \Register\Organization($_REQUEST['organization_id']);
+		}
+		elseif ($GLOBALS['_SESSION_']->customer->has_role('register manager') && isset($_REQUEST['code'])) {
+			$organization = new \Register\Organization();
+			$organization->get($_REQUEST['code']);
+		}
+		else {
+			$organization = $GLOBALS['_SESSION_']->customer->organization;
+		}
+		if (! $organization->id) error ("Organization required");
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->location = $organization->locations();
+
+		print formatOutput($response);
+	}
+	function findCustomerLocations() {
+		if ($GLOBALS['_SESSION_']->customer->has_role('register manager') && isset($_REQUEST['customer_id'])) {
+			$customer = new \Register\Customer($_REQUEST['customer_id']);
+		}
+		elseif ($GLOBALS['_SESSION_']->customer->has_role('register manager') && isset($_REQUEST['login'])) {
+			$customer = new \Register\Customer();
+			$customer->get($_REQUEST['login']);
+		}
+		else {
+			$customer = $GLOBALS['_SESSION_']->customer;
+		}
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->location = $customer->locations();
+
+		print formatOutput($response);
+	}
 	function expireAgingCustomers() {
 		if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 			$expires = strtotime("-12 month", time());
