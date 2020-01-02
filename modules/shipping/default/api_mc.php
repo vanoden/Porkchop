@@ -45,15 +45,115 @@
 		api_log($response);
 		print formatOutput($response);
 	}
+
+	###################################################
+	### Find matching Vendors						###
+	###################################################
+	function findVendors() {
+		$vendorList = new \Shipping\VendorList();
+		
+		$parameters = array();
+		
+		$vendors = $vendorList->find($parameters);
+		if ($vendorList->error) app_error("Error finding vendors: ".$vendorList->error);
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->vendors = $vendors;
+
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Add a Vendor								###
+	###################################################
+	function addVendor() {
+		$vendor = new \Shipping\Vendor();
+
+		$parameters = array();
+		$parameters['name'] = $_REQUEST['name'];
+		$parameters['account_number'] = $_REQUEST['account_number'];
+
+		$vendor->add($parameters);
+		if ($_request->error) app_error("Error adding vendor: ".$_request->error);
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->vendor = $vendor;
+
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Update a Vendor								###
+	###################################################
+	function updateVendor() {
+		$vendor = new \Shipping\Vendor();
+		$vendor->get($_REQUEST['name']);
+		if ($vendor->error) app_error("Error finding vendor: ".$vendor->error,'error',__FILE__,__LINE__);
+		if (! $vendor->id) error("Vendor ".$_REQUEST['name']." not found");
+
+		$parameters = array();
+		$parameters['account_number'] = $_REQUEST['account_number'];
+		$vendor->update($parameters);
+
+		if ($vendor->error) app_error("Error updating vendor: ".$vendor->error,'error',__FILE__,__LINE__);
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->vendor = $vendor;
+
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Get a Specific Vendor						###
+	###################################################
+	function getVendor() {
+		$response = new \HTTP\Response();
+		$vendor = new \Shipping\Vendor();
+		if ($vendor->get($_REQUEST['name'])) {
+			$response->success = 1;
+			$response->vendor = $vendor;
+		}
+		else {
+			error("Error finding vendor: ".$vendor->error(),'error');
+		}
+
+		print formatOutput($response);
+	}
+
 	###################################################
 	### Add a Shipment								###
 	###################################################
 	function addShipment() {
-		$shipment = new \Shipping\Shipment();
-
 		$parameters = array();
+		$send_location = new \Register\Location($_REQUEST['send_location_id']);
+		if ($send_location->id) $parameters['send_location_id'] = $send_location->id;
+		else error("Sending location not found");
+
+		$receive_location = new \Register\Location($_REQUEST['receive_location_id']);
+		if ($receive_location->id) $parameters['receive_location_id'] = $receive_location->id;
+		else error("Receiving location not found");
+
+		$send_customer = new \Register\Customer($_REQUEST['send_customer_id']);
+		if ($send_customer->id) $parameters['send_customer_id'] = $send_customer->id;
+		else error("Sending Customer not found");
+
+		$receive_customer = new \Register\Customer($_REQUEST['receive_customer_id']);
+		if ($receive_customer->id) $parameters['receive_customer_id'] = $_REQUEST['receive_customer_id'];
+		else error("Receiving Customer not found");
+
+		$vendor = new \Shipping\Vendor($_REQUEST['vendor_id']);
+		if ($vendor->id) $parameters['vendor_id'] = $_REQUEST['vendor_id'];
+
+		if (isset($_REQUEST['document_number'])) $parameters['document_number'] = $_REQUEST['document_number'];
+		else error("Document number required");
+
+		if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+
+		$shipment = new \Shipping\Shipment();
 		$shipment->add($parameters);
-		if ($_request->error) app_error("Error adding shipment: ".$_request->error);
+		if ($shipment->error()) error("Error adding shipment: ".$shipment->error());
 
 		$response = new \HTTP\Response();
 		$response->success = 1;

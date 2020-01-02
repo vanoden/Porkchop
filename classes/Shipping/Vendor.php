@@ -20,6 +20,11 @@
 				return false;
 			}
 			
-			parent::add($parameters);
-		}        
+			return parent::add($parameters);
+		}
+
+		public function get($name) {
+			app_log("Getting vendor $name");
+			return parent::get($name,'name');
+		}
 	}

@@ -25,9 +25,12 @@
 		public function add($parameters = array()) {
 			if (! isset($parameters['code'])) $parameters['code'] = uniqid();
 			if (! isset($parameters['status'])) $parameters['status'] = 'NEW';
+			if (! isset($parameters['date_entered'])) $parameters['date_entered'] = date('Y-m-d H:i:s');
 			
-			
-			if (! isset($parameters['send_contact_id'])) {
+			if (isset($parameters['send_customer_id'])) {
+				$parameters['send_contact_id'] = $parameters['send_customer_id'];
+			}
+			else {
 				$this->_error = "Sending contact required";
 				return false;
 			}
@@ -35,12 +38,22 @@
 				$this->_error = "Sending location required";
 				return false;
 			}
-			if (! isset($parameters['rec_contact_id'])) {
+			if (isset($parameters['receive_customer_id'])) {
+				$parameters['rec_contact_id'] = $parameters['receive_customer_id'];
+			}
+			else {
 				$this->_error = "Receiving contact required";
 				return false;
 			}
-			if (! isset($parameters['rec_location_id'])) {
+			if (isset($parameters['receive_location_id'])) {
+				$parameters['rec_location_id'] = $parameters['receive_location_id'];
+			}
+			else {
 				$this->_error = "Receiving location required";
+				return false;
+			}
+			if (! isset($parameters['document_number'])) {
+				$this->_error = "Document number required";
 				return false;
 			}
 			
@@ -56,7 +69,7 @@
 			if (isset($parameters['type']) && isset($parameters['number'])) $parameters['document_number'] = sprintf("%s-%06d",$parameters['type'],$parameters['number']);
             parent::update($parameters);
 		}
-		
+
         /**
          * add package by parameters
          * 
