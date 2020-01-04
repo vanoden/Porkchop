@@ -27,7 +27,7 @@
 				$this->details();
 			}
 		}
-		
+
 		public function add($parameters) {
 		
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
@@ -247,7 +247,7 @@
 			return true;
 		}
 
-		public function locations() {
+		public function locations($parameters = array()) {
 			$get_locations_query = "
 				SELECT	location_id
 				FROM	register_organization_locations
@@ -259,7 +259,7 @@
 			}
 			$locations = array();
 			while (list($id) = $rs->FetchRow()) {
-				$location = new \Register\Location($id);
+				$location = new \Register\Location($id,$parameters);
 				array_push($locations,$location);
 			}
 			return $locations;

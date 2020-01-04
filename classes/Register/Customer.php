@@ -494,7 +494,7 @@
 				return $contacts;
 			}
 		}
-		public function locations() {
+		public function locations($parameters = array()) {
 			$get_locations_query = "
 				SELECT	rol.location_id
 				FROM	register_organization_locations rol
@@ -511,7 +511,7 @@
 			}
 			$locations = array();
 			while (list($id) = $rs->FetchRow()) {
-				$location = new \Register\Location($id);
+				$location = new \Register\Location($id,$parameters);
 				array_push($locations,$location);
 			}
 			return $locations;

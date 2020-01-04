@@ -23,7 +23,7 @@
 
             $objects = array();
             while (list($id) = $rs->FetchRow()) {
-                $object = new \Register\Privilege($id);
+                $object = new \Register\Privilege($id,array('recursive' => $parameters['recursive']));
                 array_push($objects,$object);
                 $this->_count ++;
             }

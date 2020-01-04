@@ -14,6 +14,13 @@
 		public $tableName = 'register_locations';
         public $fields = array('id','name','address_1','address_2','city','province_id','zip_code', 'notes');
 
+		public function __construct($id = 0,$parameters = array()) {
+			parent::__construct($id);
+			if ($parameters['recursive']) {
+				$this->province = new \Geography\Province($this->province_id);
+				$this->country = new \Geography\Country($this->province->country_id);
+			}
+		}
         /**
          * find existing entry by user provided address info
          *
