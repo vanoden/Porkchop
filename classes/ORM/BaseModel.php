@@ -3,7 +3,7 @@
 	
 	class BaseModel {
 
-	    public $fields = array();
+	    protected $fields = array();
 	    public $values = array();	
 	    protected $tableName;
 	    private $_updateQuery;
