@@ -864,7 +864,7 @@
 		if (! $organization->id) error ("Organization required");
 		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->location = $organization->locations();
+		$response->location = $organization->locations(array('recursive' => true));
 
 		print formatOutput($response);
 	}
@@ -881,7 +881,7 @@
 		}
 		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->location = $customer->locations();
+		$response->location = $customer->locations(array('recursive' => true));
 
 		print formatOutput($response);
 	}
@@ -1010,6 +1010,7 @@
 		else {
 			$parameters['organization_id'] = $_REQUEST['organization_id'];
 		}
+		$parameters['recursive'] = true;
 
 		$locationList = new \Register\LocationList();
 		$locations = $locationList->find($parameters);
