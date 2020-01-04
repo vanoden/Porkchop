@@ -88,10 +88,17 @@
 	### Get Specified Country						###
 	###################################################
 	function getCountry() {
-		$country = new \Geography\Country();
-		$country->get($_REQUEST['name']);
-		if ($country->error()) app_error($country->error());
-
+		if (isset($_REQUEST['name'])) {
+			$country = new \Geography\Country();
+			$country->get($_REQUEST['name']);
+			if ($country->error()) app_error($country->error());
+		}
+		elseif(isset($_REQUEST['id'])) {
+			$country = new \Geography\Country($_REQUEST['id']);
+		}
+		else {
+			error("Not enough parameters");
+		}
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->country = $country;
@@ -164,11 +171,21 @@
 	### Get Specified Province						###
 	###################################################
 	function getProvince() {
-		$country = new \Geography\Country($_REQUEST['country_id']);
-		if (! $country->id) app_error("Country not found");
+		if (isset($_REQUEST['country_id'])) {
+			$country = new \Geography\Country($_REQUEST['country_id']);
+			if (! $country->id) error("Country not found");
 
-		$province = new \Geography\Province();
-		if (! $province->get($country->id,$_REQUEST['name']));
+			$province = new \Geography\Province();
+			if (! $province->get($country->id,$_REQUEST['name'])) error("Country not found");
+		}
+		elseif (isset($_REQUEST['id'])) {
+			$province = new \Geography\Province($_REQUEST['id']);
+			if (! $province->id) error("Province not found");
+		}
+		else {
+			error("Not enough parameters");
+		}
+
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->province = $province;
