@@ -42,6 +42,10 @@
 				$parameters['original_name'] = $parameters['name'];
 			}
 
+			if (! $parameters['path']) {
+				$parameters['path'] = '/';
+			}
+
 			$add_object_query = "
 				INSERT
 				INTO	storage_files
