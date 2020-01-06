@@ -283,26 +283,26 @@
         billingFieldsPopulated = true;
         billingFields.forEach(function (element){checkForBillingValues(element)});
 
-        // show shipping fields are required
+        // show shipping fields are required, unless they pick an existing address
         var shippingFieldItems = Array.prototype.slice.call(document.getElementsByClassName("shipping_fields"));
-        if (!shippingFieldsPopulated) {
+        if (shippingFieldsPopulated || $('#shipping_address_picker').val() > 0) {
+            shippingFieldItems.forEach(function (element){updateFieldBackground(element, '#f0f8ff')});
+            document.getElementById("shipping_fields_required").style.display="none";
+        } else {
             shippingFieldItems.forEach(function (element){updateFieldBackground(element, 'rgba(240, 173, 140, 0.60)')});
             document.getElementById("shipping_fields_required").style.display="block";
             return false;
-        } else {
-            shippingFieldItems.forEach(function (element){updateFieldBackground(element, '#f0f8ff')});
-            document.getElementById("shipping_fields_required").style.display="none";
         }
         
         // show billing fields are required, if the they didn't check same as shipping
         var billingFieldItems = Array.prototype.slice.call(document.getElementsByClassName("billing_fields"));
-        if (!billingFieldsPopulated && !document.getElementById("billing_same_as_shipping").checked) {
+        if (billingFieldsPopulated || document.getElementById("billing_same_as_shipping").checked || $('#billing_address_picker').val() > 0) {
+            billingFieldItems.forEach(function (element){updateFieldBackground(element, '#f0f8ff')});
+            document.getElementById("billing_fields_required").style.display="none";
+        } else {
             billingFieldItems.forEach(function (element){updateFieldBackground(element, 'rgba(240, 173, 140, 0.60)')});
             document.getElementById("billing_fields_required").style.display="block";
             return false;
-        } else {
-            billingFieldItems.forEach(function (element){updateFieldBackground(element, '#f0f8ff')});
-            document.getElementById("billing_fields_required").style.display="none";
         }
         
         // confirm terms of RMA are required
@@ -358,6 +358,49 @@
 		$('#' + addressContainer).show();
 		$('#' + shippingStateField).val(getDropdownSelectedText('shipping_province'));
     }
+    
+    function selectShippingAddress() {        
+        if ($('#shipping_address_picker').val() > 0) {
+            $('#add_new_shipping_address').hide();
+            $('#billing_address_form').hide();
+            $('#show-checklist-button').hide();
+            $('#billing_address_form').hide();
+            $('#checklist_form').hide();
+            $('#submit-form-button').hide();
+        } else {   
+            $('#add_new_shipping_address').show();
+        }
+        if ($('#shipping_address_picker').val() == '') {
+            $('#add_new_shipping_address').hide();
+            $('#billing_address_form').hide();
+            $('#show-checklist-button').hide();
+            $('#add_new_billing_address').hide();
+            $('#show-billing-button').hide();
+            $('#checklist_form').hide();
+            $('#submit-form-button').hide();
+        } else {
+            $('#show-billing-button').show();
+        }
+    }
+    
+    function selectBillingAddress() {
+        if ($('#billing_address_picker').val() > 0) {
+            $('#add_new_billing_address').hide();
+            $('#checklist_form').hide();
+            $('#submit-form-button').hide();
+        } else {
+            $('#add_new_billing_address').show();
+        }
+        if ($('#billing_address_picker').val() == '') {
+            $('#show-checklist-button').hide();
+            $('#add_new_billing_address').hide();
+            $('#show-billing-button').hide();
+            $('#checklist_form').hide();
+            $('#submit-form-button').hide();
+        } else {
+            $('#show-checklist-button').show();
+        }
+    }
 </script>
 <h1>Return Merchandise Authorization</h1>
 <?php
@@ -385,7 +428,6 @@ if ($authorized) {
                <?=$sentToLocation->city?>, <?=$sentToLocation->zip_code?><br /> <i><?=$sentToLocation->notes?></i>
 		    </span>
 	    </div>
-	    
 	    <? if (!empty($shippingPackage->id)) { ?>
 	        <div class="container">
 		        <span class="label"><i class="fa fa-envelope" aria-hidden="true"></i> Current Package Info: <br /></span> 
@@ -448,47 +490,73 @@ if ($authorized) {
 					    <div class="row">
 						    <div id="shipping_address_form" class="col-50">
 								<label for="fname"><i class="fa fa-user"></i> Full Name</label> 
-								<input type="text" id="shipping_firstname" name="shipping_firstname" class="shipping_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> 
-								<label for="adr"><i class="fa fa-address-card-o"></i> Address</label> 
-								<input type="text" id="shipping_address" name="shipping_address" class="shipping_fields" placeholder="542 W. 15th Street"> 
-								<input type="text" id="shipping_address2" name="shipping_address2" class="shipping_fields" placeholder="Suite 1">
-								Select your Country:
-							    <select id="shipping_country" name="shipping_country" onchange="changeCountry('shipping_country', 'shipping_address_container', 'shipping_province', 'shipping_province_container')">
-							    	<option value="0">-</option>
-							    	<?php 
-							    	foreach ($allCountriesList as $country) {
-							    	?>
-							    		<option value="<?=$country->id?>"><?=$country->name?></option>
-							    	<?php
-							    	}
-							    	?>
-							    </select>
-							    <div id="shipping_province_container" style="display: none;">
-								    <select id="shipping_province" name="shipping_province" onchange="changeProvince('shipping_address_container', 'shipping_state')">
-								    	<option value="0">-</option>
-								    </select>
-							    </div>
-							    
-								<div id="shipping_address_container" style="display: none;">
-									<label for="city"><i class="fa fa-institution"></i> City</label> 
-									<input type="text" id="shipping_city" name="shipping_city" class="shipping_fields" placeholder="New York">
-								    <div class="row">
-									    <div class="col-50">
-										    <label for="state">State</label> <input type="text" id="shipping_state" name="shipping_state" class="shipping_fields" placeholder="NY">
-									    </div>
-									    <div class="col-50">
-										    <label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields" placeholder="10001">
-									    </div>
+								
+							    Select your Address:
+						        <select id="shipping_address_picker" name="shipping_address_picker" onchange="selectShippingAddress()">
+						        	<option value="">--</option>
+						        	<option value="0">[add new]</option>
+                                    <?php foreach ($customerLocations as $customerLocation) { ?>
+    						        	<option value="<?=$customerLocation->id?>"><?=$customerLocation->name?> <?=$customerLocation->address_1?> <?=$customerLocation->address_2?> <?=$customerLocation->city?> <?=$customerLocation->zip_code?></option>
+						        	<?php } ?>
+						        </select>
+						        
+								<div id="add_new_shipping_address" style="display:none;">
+                                    <br/>
+                                    <input type="radio" name="shipping_address_type" value="business" checked="checked"> Business <input type="radio" name="shipping_address_type" value="personal"> Personal
+								    <input type="text" id="shipping_firstname" name="shipping_firstname" class="shipping_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> 
+								    <label for="adr"><i class="fa fa-address-card-o"></i> Address</label> 
+								    <input type="text" id="shipping_address" name="shipping_address" class="shipping_fields" placeholder="542 W. 15th Street"> 
+								    <input type="text" id="shipping_address2" name="shipping_address2" class="shipping_fields" placeholder="Suite 1">
+								    Select your Country:
+							        <select id="shipping_country" name="shipping_country" onchange="changeCountry('shipping_country', 'shipping_address_container', 'shipping_province', 'shipping_province_container')">
+							        	<option value="0">-</option>
+							        	<?php 
+							        	foreach ($allCountriesList as $country) {
+							        	?>
+							        		<option value="<?=$country->id?>"><?=$country->name?></option>
+							        	<?php
+							        	}
+							        	?>
+							        </select>
+							        <div id="shipping_province_container" style="display: none;">
+								        <select id="shipping_province" name="shipping_province" onchange="changeProvince('shipping_address_container', 'shipping_state')">
+								        	<option value="0">-</option>
+								        </select>
+							        </div>
+								    <div id="shipping_address_container" style="display: none;">
+									    <label for="city"><i class="fa fa-institution"></i> City</label> 
+									    <input type="text" id="shipping_city" name="shipping_city" class="shipping_fields" placeholder="New York">
+								        <div class="row">
+									        <div class="col-50">
+										        <label for="state">State</label> <input type="text" id="shipping_state" name="shipping_state" class="shipping_fields" placeholder="NY">
+									        </div>
+									        <div class="col-50">
+										        <label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields" placeholder="10001">
+									        </div>
+								        </div>
 								    </div>
 								</div>
 						    </div>
 					    </div>					    
-					    <input id="show-billing-button" onclick="showBilling()" type="button" value="Next" class="btn" style="display: block;"><br />
+					    <input id="show-billing-button" onclick="showBilling()" type="button" value="Next" class="btn" style="display: none;"><br />
 					    <div id="billing_address_form" class="row" style="display: none;">
 						    <div class="col-50">
 							    <a name="billing"><h2>Billing Address</h2></a> <input type="checkbox" id="billing_same_as_shipping" name="billing_same_as_shipping" value="billing_same_as_shipping" onclick="toggleBilling()"> Same as Shipping<br /> <br />
 							    <div id="billing_address_container_main_container" style="display: block;">
-									<label for="fname"><i class="fa fa-user"></i> Full Name</label> 
+									<label for="fname"><i class="fa fa-user"></i> Full Name</label>
+									
+							    Select your Billing Address:
+						        <select id="billing_address_picker" name="billing_address_picker" onchange="selectBillingAddress()">
+						        	<option value="">--</option>
+						        	<option value="0">[add new]</option>
+                                    <?php foreach ($customerLocations as $customerLocation) { ?>
+    						        	<option value="<?=$customerLocation->id?>"><?=$customerLocation->name?> <?=$customerLocation->address_1?> <?=$customerLocation->address_2?> <?=$customerLocation->city?> <?=$customerLocation->zip_code?></option>
+						        	<?php } ?>
+						        </select>
+									
+								<div id="add_new_billing_address" style="display:none;">
+                                    <br/>                                    
+                                    <input type="radio" name="billing_address_type" value="business" checked="checked"> Business <input type="radio" name="billing_address_type" value="personal"> Personal
 									<input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> 
 									<label for="adr"><i class="fa fa-address-card-o"></i> Address </label> 
 									<input type="text" id="billing_address" name="billing_address" class="billing_fields" placeholder="542 W. 15th Street"> 
@@ -504,23 +572,24 @@ if ($authorized) {
 								    	}
 								    	?>
 								    </select>
-							    <div id="billing_province_container" style="display: none;">
-								    <select id="billing_province" name="billing_province" onchange="changeProvince('billing_address_container', 'billing_state')">
-								    	<option value="0">-</option>
-								    </select>
-							    </div>
-								<div id="billing_address_container" style="display: none;">
-									<label for="city"><i class="fa fa-institution"></i> City</label> 
-									<input type="text" id="billing_city" name="billing_city" class="billing_fields" placeholder="New York">
-								    <div class="row">
-									    <div class="col-50">
-										    <label for="state">State</label> <input type="text" id="billing_state" name="billing_state" class="billing_fields" placeholder="NY">
-									    </div>
-									    <div class="col-50">
-										    <label for="zip">Zip</label> <input type="text" id="billing_zip" name="billing_zip" class="billing_fields" placeholder="10001">
-									    </div>
-								    </div>
-								 </div>
+							        <div id="billing_province_container" style="display: none;">
+								        <select id="billing_province" name="billing_province" onchange="changeProvince('billing_address_container', 'billing_state')">
+								        	<option value="0">-</option>
+								        </select>
+							        </div>
+								    <div id="billing_address_container" style="display: none;">
+									    <label for="city"><i class="fa fa-institution"></i> City</label> 
+									    <input type="text" id="billing_city" name="billing_city" class="billing_fields" placeholder="New York">
+								        <div class="row">
+									        <div class="col-50">
+										        <label for="state">State</label> <input type="text" id="billing_state" name="billing_state" class="billing_fields" placeholder="NY">
+									        </div>
+									        <div class="col-50">
+										        <label for="zip">Zip</label> <input type="text" id="billing_zip" name="billing_zip" class="billing_fields" placeholder="10001">
+									        </div>
+								        </div>
+								     </div>
+							        </div>
 							    </div>
 						    </div>
 					    </div>

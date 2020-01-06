@@ -71,6 +71,11 @@ $authorized = true;
 if ( ! $GLOBALS['_SESSION_']->customer->id || ( $rma->item ()->request->customer->id != $GLOBALS['_SESSION_']->customer->id ) ) $authorized = false;
 if ( $GLOBALS['_SESSION_']->customer->has_role('support user') ) $authorized = true;
 
+// get the addresses known for given customer and customer organization
+$customerId = $GLOBALS['_SESSION_']->customer->id;
+$organizationId = $rma->item ()->request->customer->organization->id;
+$customerLocations = $GLOBALS['_SESSION_']->customer->locations();
+
 // get the shipment in question if it exists
 $shippingShipment = new \Shipping\Shipment ();
 $shippingShipment->get ( $rmaCode );

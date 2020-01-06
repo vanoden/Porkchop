@@ -494,6 +494,7 @@
 				return $contacts;
 			}
 		}
+		
 		public function locations($parameters = array()) {
 			$get_locations_query = "
 				SELECT	rol.location_id
@@ -505,6 +506,7 @@
 				WHERE	rul.user_id = ?
 			";
 			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->organization->id,$this->id));
+			
 			if (! $rs) {
 				$this->error = "SQL Error in Register::Customer::locations(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -516,6 +518,7 @@
 			}
 			return $locations;
 		}
+				
 		public function error() {
 			return $this->error;
 		}
