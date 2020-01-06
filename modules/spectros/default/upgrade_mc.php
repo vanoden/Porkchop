@@ -11,6 +11,10 @@
 					"description"	=> "Super User"
 				),
 			),
+			"templates"	=> array(
+				"page"	=> $admin_template,
+				"pages"	=> $admin_template,
+			),
 		),
 		"Geography"		=> array(
 			"roles"			=> array(
