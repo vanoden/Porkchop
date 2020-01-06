@@ -732,7 +732,7 @@
 			}
 			$metadata = array();
 			while(list($key,$value) = $rs->FetchRow()) {
-				array_push($metadata,array($key,$value));
+				array_push($metadata,array('key' => $key,'value' => $value));
 			}
 			return $metadata;
 		}
@@ -793,7 +793,7 @@
                 $this->error = "SQL Error setting metadata in Site::Page::unsetMetadata(): ".$GLOBALS['_database']->ErrorMsg();
                 return null;
             }
-            return $value;
+            return true;
 		}
 
 		public function addError($error) {
