@@ -53,7 +53,6 @@
     }
     
     .enter-shipping-form {
-         margin-left: 100px;
          border: dashed 1px #000;
          padding: 10px;
          max-width: 700px;

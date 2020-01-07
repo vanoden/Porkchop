@@ -206,7 +206,7 @@ if ($_REQUEST ['form_submitted'] == 'package_details_submitted') {
 
 // set UI to submitted or not
 $rmaSubmitted = false;
-if ($shippingShipment->id) {
+if (!empty($shippingShipment->id)) {
 	$rmaSubmitted = true;
 	$sentFromLocation = $shippingShipment->send_location ();
 	$sentToLocation = $shippingShipment->rec_location ();
