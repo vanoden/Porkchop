@@ -512,6 +512,16 @@
 		print formatOutput($response);
 	}
 
+	function flagAutomationDevices() {
+		$customerList = new \Spectros\CustomerList();
+		if (!$customerList->flagAutomationAccounts()) error($customerList->error());
+
+		$response = $schema->version();
+		$response->success = 1;
+		$response->updates = $customerList->count();
+		print formatOutput($response);
+	}
+
 	function schemaVersion() {
 		$schema = new \Spectros\Schema();
 		if ($schema->error) {
