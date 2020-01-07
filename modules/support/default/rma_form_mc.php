@@ -91,36 +91,8 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 
 	// A shipping record is created status NEW.
 	// Each item from the form including accessories is added to the shipment as a shipping_item record
-	$registerLocationShipping = new \Register\Location ();
-	$registerLocationBilling = new \Register\Location ();
 	$parameters = array ();
 	$parameters ['code'] = $rmaCode;
-
-	$billingAddressParams = array ();
-	$billingAddressParams ['name'] = $_REQUEST ['billing_address'];
-	$billingAddressParams ['address_1'] = $_REQUEST ['billing_address'];
-	$billingAddressParams ['address_2'] = $_REQUEST ['billing_address2'];
-	$billingAddressParams ['city'] = $_REQUEST ['billing_city'];
-	$billingAddressParams ['zip_code'] = $_REQUEST ['billing_zip'];
-	$billingAddressParams ['notes'] = "";
-	$billingAddressParams ['region_id'] = $_REQUEST ['billing_province'];
-	$billingAddressParams ['country_id'] = $_REQUEST ['billing_country'];
-
-	$shippingAddressParams = array ();
-	$shippingAddressParams ['name'] = $_REQUEST ['shipping_address'];
-	$shippingAddressParams ['address_1'] = $_REQUEST ['shipping_address'];
-	$shippingAddressParams ['address_2'] = $_REQUEST ['shipping_address2'];
-	$shippingAddressParams ['city'] = $_REQUEST ['shipping_city'];
-	$shippingAddressParams ['zip_code'] = $_REQUEST ['shipping_zip'];
-	$shippingAddressParams ['notes'] = "";
-	$shippingAddressParams ['region_id'] = $_REQUEST ['shipping_province'];
-	$shippingAddressParams ['country_id'] = $_REQUEST ['shipping_country'];
-
-	// add user address(es) if they don't exist yet
-	if (! $registerLocationShipping->findExistingByAddress ( $shippingAddressParams )) $registerLocationShipping->add ( $shippingAddressParams );
-	if (empty ( $_REQUEST ['billing_same_as_shipping'] )) {
-		if (! $registerLocationBilling->findExistingByAddress ( $billingAddressParams )) $registerLocationBilling->add ( $billingAddressParams );
-	}
 
 	// upsert shipment info, use the location recently provided
 	if (! $shippingShipment->id) {
@@ -129,11 +101,61 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 		$parameters ['document_number'] = uniqid ();
 		$parameters ['date_entered'] = date ( "Y-m-d H:i:s" );
 		$parameters ['status'] = 'NEW';
-		$parameters ['send_contact_id'] = $rma->item ()->request->customer->id;
-		$parameters ['rec_contact_id'] = $rma->approvedBy ()->id;
-		$parameters ['send_location_id'] = $registerLocationShipping->id;
+		$parameters ['send_customer_id'] = $rma->item ()->request->customer->id;
+		$parameters ['receive_customer_id'] = $rma->approvedBy ()->id;
+
+        if (!empty($_REQUEST ['shipping_address_picker'])) {
+            $parameters ['send_location_id'] = $_REQUEST ['shipping_address_picker'];
+        } else {
+            $registerLocationShipping = new \Register\Location ();
+            $shippingAddressParams = array ();
+            $shippingAddressParams ['name'] = $_REQUEST ['shipping_address'];
+            $shippingAddressParams ['address_1'] = $_REQUEST ['shipping_address'];
+            $shippingAddressParams ['address_2'] = $_REQUEST ['shipping_address2'];
+            $shippingAddressParams ['city'] = $_REQUEST ['shipping_city'];
+            $shippingAddressParams ['zip_code'] = $_REQUEST ['shipping_zip'];
+            $shippingAddressParams ['notes'] = "";
+            $shippingAddressParams ['region_id'] = $_REQUEST ['shipping_province'];
+            $shippingAddressParams ['country_id'] = $_REQUEST ['shipping_country'];
+
+            // add user address(es) if they don't exist yet
+            if (! $registerLocationShipping->findExistingByAddress ( $shippingAddressParams )) $registerLocationShipping->add ( $shippingAddressParams );
+            $parameters ['send_location_id'] = $registerLocationShipping->id;
+        }
+
+        // RMA request has a new billing contact to be added
+		if (empty($_REQUEST['billing_contact_picker'])) {
+            
+            $newUser = new Register\Person();
+            $newUser->add(array(
+                'login' => preg_replace('/\s+/', '', strtolower($_REQUEST['billing_firstname']))  . '-' . preg_replace('/\s+/', '', strtolower($_REQUEST['billing_lastname'])),
+                'password' => uniqid(),
+                'first_name' => $_REQUEST['billing_firstname'],
+                'last_name' => $_REQUEST['billing_lastname'],
+                'timezone' => 'America/New_York',        
+                'organization_id' => $organizationId
+            ));
+            $registerContact = new Register\Contact();
+            $registerContact->add(array(
+                'person_id' => $newUser->id,
+                'description' =>  'Billing Email',
+                'type' => 'email',
+                'value' => $_REQUEST['billing_email'],
+                'notes' => 'email added during RMA return request'
+                )
+            );
+            $registerContact->add(array(
+                'person_id' => $newUser->id,
+                'description' =>  'Billing Phone',
+                'type' => 'phone',
+                'value' => $_REQUEST['billing_phone'],
+                'notes' => 'phone number added during RMA return request'
+                )
+            );
+		}
+		
 		$parameters ['instructions'] = (isset ( $_REQUEST ['delivery_instructions'] )) ? $_REQUEST ['delivery_instructions'] : '';
-		$parameters ['rec_location_id'] = defined('SPECTROS_LOCATION_ID') ? SPECTROS_LOCATION_ID : 1;
+		$parameters ['receive_location_id'] = defined('SPECTROS_LOCATION_ID') ? SPECTROS_LOCATION_ID : 1;
 		$parameters ['vendor_id'] = defined('SPECTROS_VENDOR_ID') ? SPECTROS_VENDOR_ID : 0;
 
 		// add shipment with package and items entries
@@ -159,7 +181,7 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 		if (! empty ( $_REQUEST ['cellular_access_point'] )) addShippedItem ( $shippingPackage->id, $rmaProductId, $rmaSerialNumber, 'OK', 1, 'Cellular Access Point' );
 	}
 	
-	// RMA status is changed to CUSTOMER_HIP @TODO, why didn't the table have that in the ENUM values?
+	// RMA status is changed to CUSTOMER_SHIP @TODO, why didn't the table have that in the ENUM values?
 	$rma->update(array('status'=>'PRINTED'));
 }
 
