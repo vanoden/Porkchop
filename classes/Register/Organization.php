@@ -196,10 +196,10 @@
 
 			return $object;
 		}
-		public function members() {
+		public function members($include_devices = true) {
 			app_log("Register::Organization::members()",'trace',__FILE__,__LINE__);
 			$customerlist = new CustomerList();
-			return $customerlist->find(array('organization_id' => $this->id));
+			return $customerlist->find(array('organization_id' => $this->id,'include_devices' => $include_devices));
 		}
 		public function product($product_id) {
 			$product = new \Product\Item($product_id);

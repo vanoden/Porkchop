@@ -74,7 +74,8 @@
 						department_id,
 						auth_method,
 						status,
-						timezone
+						timezone,
+						automation
 				FROM	register_users
 				WHERE   id = ?
 			";
@@ -109,6 +110,8 @@
 				$this->status = $customer->status;
 				$this->timezone = $customer->timezone;
 				$this->auth_method = $customer->auth_method;
+				if ($customer->automation == 0) $this->automation = false;
+				else $this->automation = true;
 				$this->_cached = 0;
 			}
 			else {
@@ -123,6 +126,7 @@
 				$this->status = null;
 				$this->timezone = null;
 				$this->auth_method = null;
+				$this->automation = false;
 				$this->_cached = 0;
 			}
 
@@ -278,6 +282,17 @@
 				}
 				else {
 					if (isset($parameters[$param])) $this->setMeta($id,$param,$parameters[$param]);
+				}
+			}
+
+			if (isset($parameters['automation']) && is_bool($parameters['automation'])) {
+				if ($parameters['automation']) {
+					$update_customer_query .= ",
+						automation = 1";
+				}
+				else {
+					$update_customer_query .= ",
+						automation = 0";
 				}
 			}
 
