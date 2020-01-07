@@ -293,5 +293,13 @@
 			if ($count == true) return $this->count;
 			return $people;
 		}
+
+		public function error() {
+			return $this->error;
+		}
+
+		public function count() {
+			return $this->count;
+		}
 	}
 ?>
