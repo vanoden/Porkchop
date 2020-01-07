@@ -53,7 +53,6 @@
     }
     
     .enter-shipping-form {
-         margin-left: 100px;
          border: dashed 1px #000;
          padding: 10px;
          max-width: 700px;
@@ -267,7 +266,7 @@
        shippingFieldsPopulated = true;
        shippingFields.forEach(function (element){checkForShippingValues(element)});
    
-       var billingFields = ['billing_firstname'];
+       var billingFields = ['billing_firstname', 'billing_email', 'billing_phone'];
        billingFieldsPopulated = true;
        billingFields.forEach(function (element){checkForBillingValues(element)});
    
@@ -284,11 +283,11 @@
        
        // show billing fields are required, if the they didn't check same as shipping
        var billingFieldItems = Array.prototype.slice.call(document.getElementsByClassName("billing_fields"));
-       if (billingFieldsPopulated || $('#billing_address_picker').val() > 0) {
-           billingFieldItems.forEach(function (element){updateFieldBackground(element, '#f0f8ff')});
+       if (billingFieldsPopulated || $('#billing_contact_picker').val() > 0) {
+           billingFieldItems.forEach(function (element){ updateFieldBackground(element, '#f0f8ff'); });
            document.getElementById("billing_fields_required").style.display="none";
        } else {
-           billingFieldItems.forEach(function (element){updateFieldBackground(element, 'rgba(240, 173, 140, 0.60)')});
+           billingFieldItems.forEach(function (element){ updateFieldBackground(element, 'rgba(240, 173, 140, 0.60)'); });
            document.getElementById("billing_fields_required").style.display="block";
            return false;
        }
@@ -346,6 +345,7 @@
        $('#' + addressContainer).show();
    }
    
+   // choose a shipping address, hide / show form fields
    function selectShippingAddress() {        
        if ($('#shipping_address_picker').val() > 0) {
            $('#add_new_shipping_address').hide();
@@ -370,6 +370,7 @@
        }
    }
    
+   // choose a billing address, hide / show form fields
    function selectBillingContact() {
        if ($('#billing_contact_picker').val() > 0) {
            $('#add_new_billing_contact').hide();
@@ -399,56 +400,56 @@
 <?php
    if ($rmaSubmitted) {
     ?>
-<h2 class="green">Your return is processing...</h2>
-<span class="container" style="float: right;"> <span class="label"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> 
-Please include the following form with your return: </span> <span class="value">&nbsp;<a href="/_support/rma_pdf/<?=$rmaCode?>" target="_blank"> <i class="fa fa-file"></i> Download </a></span>
-</span><br /> <br />
-<div class="container">
-   <span class="label"><i class="fa fa-address-card" aria-hidden="true"></i> Sending From: <br /></span> <span class="value">
-   <?=$sentFromLocation->address_1?> <?=$sentFromLocation->address_2?><br />
-   <?=$sentFromLocation->city?>, <?=$sentFromLocation->zip_code?><br /> <i><?=$sentFromLocation->notes?></i>
-   </span>
-</div>
-<div class="container">
-   <span class="label"><i class="fa fa-address-card-o" aria-hidden="true"></i> Shipping To: <br /></span> <span class="value">
-   <?=$sentToLocation->address_1?> <?=$sentToLocation->address_2?><br />
-   <?=$sentToLocation->city?>, <?=$sentToLocation->zip_code?><br /> <i><?=$sentToLocation->notes?></i>
-   </span>
-</div>
-<? if (!empty($shippingPackage->id)) { ?>
-<div class="container">
-   <span class="label"><i class="fa fa-envelope" aria-hidden="true"></i> Current Package Info: <br /></span> 
-   <span class="value">
-   Tracking #: <?=$shippingPackage->tracking_code;?><br/>
-   Height: <?=$shippingPackage->height;?><br/>
-   Width: <?=$shippingPackage->width;?><br/>
-   Depth: <?=$shippingPackage->depth;?><br/>
-   Weight: <?=$shippingPackage->weight;?><br/>
-   </span>
-</div>
-<? } ?>
-<div class="enter-shipping-form">
-   <u><b><?=empty($shippingPackage->id) ? "Add" : "Update"?> your shipment info:</b></u>
-   <form method="post" id="submit_package_details">
-      <div class="small-input">
-         <label for="tracking_code">Tracking Number</label> 
-         <input type="text" id="tracking_code" name="tracking_code" class="tracking_code" placeholder="1Z9999999999999999" value="<?=$shippingPackage->tracking_code;?>">
-         <label for="height">Height (in/cm)</label> 
-         <input type="text" id="height" name="height" class="height" placeholder="10" value="<?=$shippingPackage->height;?>"> 
-         <label for="width">Width (in/cm)</label> 
-         <input type="text" id="width" name="width" class="width" placeholder="5" value="<?=$shippingPackage->width;?>"> 
-         <label for="depth">Depth (in/cm)</label> 
-         <input type="text" id="depth" name="depth" class="depth" placeholder="5" value="<?=$shippingPackage->depth;?>"> 
-         <label for="weight">Weight (kg/lb)</label> 
-         <input type="text" id="weight" name="weight" class="weight" placeholder="1" value="<?=$shippingPackage->weight;?>"> 
-         <input type="hidden" name="form_submitted" value="package_details_submitted" />
-         <input id="add-package-details" type="submit" value="<?=empty($shippingPackage->id) ? "Add" : "Update"?> Package Details" class="btn" style="height: 35px;">
-      </div>
-   </form>
-</div>
-<hr />
-<?php
-   }
+    <h2 class="green">Your return is processing...</h2>
+    <span class="container" style="float: right;"> <span class="label"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> 
+    Please include the following form with your return: </span> <span class="value">&nbsp;<a href="/_support/rma_pdf/<?=$rmaCode?>" target="_blank"> <i class="fa fa-file"></i> Download </a></span>
+    </span><br /> <br />
+    <div class="container">
+       <span class="label"><i class="fa fa-address-card" aria-hidden="true"></i> Sending From: <br /></span> <span class="value">
+       <?=$sentFromLocation->address_1?> <?=$sentFromLocation->address_2?><br />
+       <?=$sentFromLocation->city?>, <?=$sentFromLocation->zip_code?><br /> <i><?=$sentFromLocation->notes?></i>
+       </span>
+    </div>
+    <div class="container">
+       <span class="label"><i class="fa fa-address-card-o" aria-hidden="true"></i> Shipping To: <br /></span> <span class="value">
+       <?=$sentToLocation->address_1?> <?=$sentToLocation->address_2?><br />
+       <?=$sentToLocation->city?>, <?=$sentToLocation->zip_code?><br /> <i><?=$sentToLocation->notes?></i>
+       </span>
+    </div>
+    <? if (!empty($shippingPackage->id)) { ?>
+        <div class="container">
+           <span class="label"><i class="fa fa-envelope" aria-hidden="true"></i> Current Package Info: <br /></span> 
+           <span class="value">
+           Tracking #: <?=$shippingPackage->tracking_code;?><br/>
+           Height: <?=$shippingPackage->height;?><br/>
+           Width: <?=$shippingPackage->width;?><br/>
+           Depth: <?=$shippingPackage->depth;?><br/>
+           Weight: <?=$shippingPackage->weight;?><br/>
+           </span>
+        </div>
+    <? } ?>
+    <div class="enter-shipping-form">
+       <u><b><?=empty($shippingPackage->id) ? "Add" : "Update"?> your shipment info:</b></u>
+       <form method="post" id="submit_package_details">
+          <div class="small-input">
+             <label for="tracking_code">Tracking Number</label> 
+             <input type="text" id="tracking_code" name="tracking_code" class="tracking_code" placeholder="1Z9999999999999999" value="<?=$shippingPackage->tracking_code;?>">
+             <label for="height">Height (in/cm)</label> 
+             <input type="text" id="height" name="height" class="height" placeholder="10" value="<?=$shippingPackage->height;?>"> 
+             <label for="width">Width (in/cm)</label> 
+             <input type="text" id="width" name="width" class="width" placeholder="5" value="<?=$shippingPackage->width;?>"> 
+             <label for="depth">Depth (in/cm)</label> 
+             <input type="text" id="depth" name="depth" class="depth" placeholder="5" value="<?=$shippingPackage->depth;?>"> 
+             <label for="weight">Weight (kg/lb)</label> 
+             <input type="text" id="weight" name="weight" class="weight" placeholder="1" value="<?=$shippingPackage->weight;?>"> 
+             <input type="hidden" name="form_submitted" value="package_details_submitted" />
+             <input id="add-package-details" type="submit" value="<?=empty($shippingPackage->id) ? "Add" : "Update"?> Package Details" class="btn" style="height: 35px;">
+          </div>
+       </form>
+    </div>
+    <hr />
+    <?php
+       }
    ?>
 <div class="container">
    <span class="label"><i class="fa fa-ticket" aria-hidden="true"></i> Ticket</span> <span class="value"><?=$rmaTicketNumber?> / <?=$rmaNumber?></span>
@@ -530,13 +531,16 @@ Please include the following form with your return: </span> <span class="value">
                   </select>
                   <div id="add_new_billing_contact" style="display: none;">
                      <label for="fname"><i class="fa fa-user"></i> Full Name</label>
-                     <input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John M. Doe" value="<?=$rmaCustomerFullName?>"> 
+                     <input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John M. Doe"> 
+                     
+                     <label for="fname"><i class="fa fa-user"></i> Last Name</label>
+                     <input type="text" id="billing_lastname" name="billing_lastname" class="billing_fields" placeholder="John M. Doe"> 
                      
                      <label for="fname"><i class="fa fa-envelope-o"></i> Email</label>
-                     <input type="text" id="billing_email" name="billing_email" class="billing_fields" placeholder="user@email.com" value="<?=$rmaCustomerEmail?>"> 
+                     <input type="text" id="billing_email" name="billing_email" class="billing_fields" placeholder="user@email.com"> 
                      
                      <label for="fname"><i class="fa fa-phone"></i> Phone</label>
-                     <input type="text" id="billing_phone" name="billing_phone" class="billing_fields" placeholder="John M. Doe" value="<?=$rmaCustomerPhone?>"> 
+                     <input type="text" id="billing_phone" name="billing_phone" class="billing_fields" placeholder="John M. Doe"> 
                   </div>
                </div>
                <input id="show-checklist-button" onclick="showTerms()" type="button" value="Next" class="btn" style="display: none;"><br />
@@ -597,15 +601,11 @@ Please include the following form with your return: </span> <span class="value">
      }
    ?>
 </div>
-<?php
-   } else {
-   ?>
-<h3>RMA not found, please file a <a href="/_support/request">support request</a> with us to continue.</h3>
+<?php } else { ?>
+    <h3>RMA not found, please file a <a href="/_support/request">support request</a> with us to continue.</h3>
 <?php
    }
-   } else {
+} else {
    ?>
-<h3>Not Authorized to view this RMA, please file a <a href="/_support/request">support request</a> with us to continue.</h3>
-<?php
-   }
-   ?>
+    <h3>Not Authorized to view this RMA, please file a <a href="/_support/request">support request</a> with us to continue.</h3>
+<?php } ?>
