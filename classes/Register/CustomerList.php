@@ -177,6 +177,12 @@
 				$find_person_query .= "
 				AND		organization_id = ".$GLOBALS['_database']->qstr($parameters['organization_id'],get_magic_quotes_gpc());
 			}
+			if (isset($parameters['automation'])) {
+				if ($parameters['automation']) $find_person_query .= "
+					AND		automation = 1";
+				else $find_person_query .= "
+					AND		automation = 0";
+			}
 
 			if (preg_match('/^(login|first_name|last_name|organization_id)$/',$parameters['_sort'])) {
 				$find_person_query .= " ORDER BY ".$parameters['_sort'];

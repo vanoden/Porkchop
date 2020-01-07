@@ -29,7 +29,6 @@
 		}
 
 		public function add($parameters) {
-		
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$add_object_query = "
@@ -196,10 +195,13 @@
 
 			return $object;
 		}
-		public function members($include_devices = true) {
+		public function members($type = 'all') {
 			app_log("Register::Organization::members()",'trace',__FILE__,__LINE__);
 			$customerlist = new CustomerList();
-			return $customerlist->find(array('organization_id' => $this->id,'include_devices' => $include_devices));
+			if ($type == 'automation') $automation = true;
+			elseif ($type == 'human') $automation = false;
+			else $automation = null;
+			return $customerlist->find(array('organization_id' => $this->id,'automation' => $automation));
 		}
 		public function product($product_id) {
 			$product = new \Product\Item($product_id);
