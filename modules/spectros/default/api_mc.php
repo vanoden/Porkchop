@@ -512,11 +512,11 @@
 		print formatOutput($response);
 	}
 
-	function flagAutomationDevices() {
+	function flagAutomationAccounts() {
 		$customerList = new \Spectros\CustomerList();
 		if (!$customerList->flagAutomationAccounts()) error($customerList->error());
 
-		$response = $schema->version();
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->updates = $customerList->count();
 		print formatOutput($response);
