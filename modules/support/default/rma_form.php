@@ -526,7 +526,7 @@
                      <option value="">--</option>
                      <option value="0">[add new]</option>
                      <?php foreach ($organizationUsers as $organizationUser) { ?>
-                        <option value="<?=$organizationUser->id?>"><?=$organizationUser->first_name?> <?=$organizationUser->last_name?> </option>
+                        <option value="<?=$organizationUser->id?>"<? if ($organizationUser->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$organizationUser->first_name?> <?=$organizationUser->last_name?> </option>
                      <?php } ?>
                   </select>
                   <div id="add_new_billing_contact" style="display: none;">

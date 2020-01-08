@@ -75,7 +75,7 @@ if ( $GLOBALS['_SESSION_']->customer->has_role('support user') ) $authorized = t
 $customerId = $GLOBALS['_SESSION_']->customer->id;
 $organizationId = $rma->item ()->request->customer->organization->id;
 $customerLocations = $GLOBALS['_SESSION_']->customer->locations();
-$organizationUsers = $rma->item ()->request->customer->organization->members();
+$organizationUsers = $rma->item ()->request->customer->organization->members('human');
 
 // get the shipment in question if it exists
 $shippingShipment = new \Shipping\Shipment ();
