@@ -389,6 +389,17 @@
            $('#show-checklist-button').show();
        }
    }
+    
+    // radio button checks to hide location name for 'personal address'
+    $(document).ready(function () {
+       $('input[type=radio][name=shipping_address_type]').change(function() {
+            if (this.value == 'personal') {
+                $('#shipping-radio-container').hide();
+            } else {
+                $('#shipping-radio-container').show();
+            }
+       });
+    });
 </script>
 <h1>Return Merchandise Authorization</h1>
 <?php
@@ -427,26 +438,37 @@
            Weight: <?=$shippingPackage->weight;?><br/>
            </span>
         </div>
-    <? } ?>
-    <div class="enter-shipping-form">
-       <u><b><?=empty($shippingPackage->id) ? "Add" : "Update"?> your shipment info:</b></u>
-       <form method="post" id="submit_package_details">
-          <div class="small-input">
-             <label for="tracking_code">Tracking Number</label> 
-             <input type="text" id="tracking_code" name="tracking_code" class="tracking_code" placeholder="1Z9999999999999999" value="<?=$shippingPackage->tracking_code;?>">
-             <label for="height">Height (in/cm)</label> 
-             <input type="text" id="height" name="height" class="height" placeholder="10" value="<?=$shippingPackage->height;?>"> 
-             <label for="width">Width (in/cm)</label> 
-             <input type="text" id="width" name="width" class="width" placeholder="5" value="<?=$shippingPackage->width;?>"> 
-             <label for="depth">Depth (in/cm)</label> 
-             <input type="text" id="depth" name="depth" class="depth" placeholder="5" value="<?=$shippingPackage->depth;?>"> 
-             <label for="weight">Weight (kg/lb)</label> 
-             <input type="text" id="weight" name="weight" class="weight" placeholder="1" value="<?=$shippingPackage->weight;?>"> 
-             <input type="hidden" name="form_submitted" value="package_details_submitted" />
-             <input id="add-package-details" type="submit" value="<?=empty($shippingPackage->id) ? "Add" : "Update"?> Package Details" class="btn" style="height: 35px;">
-          </div>
-       </form>
-    </div>
+    <? }
+    if ($_REQUEST ['form_submitted'] != 'package_details_submitted') {
+    ?>
+        <div class="enter-shipping-form">
+           <u><b><?=empty($shippingPackage->id) ? "Add" : "Update"?> your shipment info:</b></u>
+           <form method="post" id="submit_package_details">
+              <div class="small-input">
+                 <label for="tracking_code">Tracking Number</label> 
+                 <input type="text" id="tracking_code" name="tracking_code" class="tracking_code" placeholder="1Z9999999999999999" value="<?=$shippingPackage->tracking_code;?>">
+                 <label for="height">Height (in/cm)</label> 
+                 <input type="text" id="height" name="height" class="height" placeholder="10" value="<?=$shippingPackage->height;?>"> 
+                 <label for="width">Width (in/cm)</label> 
+                 <input type="text" id="width" name="width" class="width" placeholder="5" value="<?=$shippingPackage->width;?>"> 
+                 <label for="depth">Depth (in/cm)</label> 
+                 <input type="text" id="depth" name="depth" class="depth" placeholder="5" value="<?=$shippingPackage->depth;?>"> 
+                 <label for="weight">Weight (kg/lb)</label> 
+                 <input type="text" id="weight" name="weight" class="weight" placeholder="1" value="<?=$shippingPackage->weight;?>"> 
+                 <input type="hidden" name="form_submitted" value="package_details_submitted" />
+                 <input id="add-package-details" type="submit" value="<?=empty($shippingPackage->id) ? "Add" : "Update"?> Package Details" class="btn" style="height: 35px;">
+              </div>
+           </form>
+        </div>
+    <?php
+    } else {
+    ?>
+        <div class="enter-shipping-form">
+            <h3>Shipment info details have been saved, thank you!</h3>
+        </div>
+    <?php
+    }
+    ?>
     <hr />
     <?php
        }
@@ -482,8 +504,11 @@
                   </select>
                   <div id="add_new_shipping_address" style="display:none;">
                      <input type="radio" name="shipping_address_type" value="business" checked="checked"> Business <input type="radio" name="shipping_address_type" value="personal"> Personal
-                     <hr/><label for="fname"><i class="fa fa-building"></i> Location Name</label>
-                     <input type="text" id="shipping_location_name" name="shipping_location_name" class="shipping_fields" placeholder="Main Office / Warehouse" value="Main Office"> 
+                     <hr/>                 
+                     <span id="shipping-radio-container">
+                         <label for="fname"><i class="fa fa-building"></i> Location Name</label>
+                         <input type="text" id="shipping_location_name" name="shipping_location_name" placeholder="Main Office / Warehouse"> 
+                     </span>
                      <label for="adr"><i class="fa fa-address-card-o"></i> Address</label> 
                      <input type="text" id="shipping_address" name="shipping_address" class="shipping_fields" placeholder="542 W. 15th Street"> 
                      <input type="text" id="shipping_address2" name="shipping_address2" class="shipping_fields" placeholder="Suite 1">

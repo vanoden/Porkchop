@@ -2,13 +2,13 @@
 	namespace Register;
 
 	class Location extends \ORM\BaseModel {
+	
 		public $id;
 		public $name;
 		public $address_1;
 		public $address_2;
 		public $city;
-		public $region_id;
-		public $country_id;
+		public $province_id;
 		public $zip_code;
 		public $notes;
 		public $tableName = 'register_locations';
@@ -45,16 +45,35 @@
             return false;
         }
 
-		public function associateOrganization($organization_id) {
+		public function associateUser($user_id) {
 			$add_record_query = "
 				INSERT
-				INTO	register_organization_locations
-				(organization_id,location_id)
+				INTO	register_user_locations
+				(user_id,location_id)
 				VALUES	(?,?)
 				ON DUPLICATE KEY UPDATE
 				location_id = location_id
 			";
-			$bind_params = array($organization_id,$this->id);
+			$bind_params = array($user_id,$this->id);
+			query_log($add_record_query,$bind_params,true);
+			$GLOBALS['_database']->Execute($add_record_query,$bind_params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->_error = "SQL Error in Register::Location::associateUser(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			return true;
+		}
+
+		public function associateOrganization($organization_id, $location_name = '') {
+			$add_record_query = "
+				INSERT
+				INTO	register_organization_locations
+				(organization_id,location_id,name)
+				VALUES	(?,?,?)
+				ON DUPLICATE KEY UPDATE
+				location_id = location_id
+			";
+			$bind_params = array($organization_id,$this->id,$location_name);
 			query_log($add_record_query,$bind_params,true);
 			$GLOBALS['_database']->Execute($add_record_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {

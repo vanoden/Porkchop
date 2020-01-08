@@ -6,8 +6,7 @@ $page->requireRole ( "support user" );
  * add a new item included in the shipment
  *
  * @param int $package_id
- * @param
- *        	int$product_id
+ * @param int $product_id
  * @param string $serial_number
  * @param Enum $condition
  * @param int $quantity
@@ -75,7 +74,7 @@ if ( $GLOBALS['_SESSION_']->customer->has_role('support user') ) $authorized = t
 $customerId = $GLOBALS['_SESSION_']->customer->id;
 $organizationId = $rma->item ()->request->customer->organization->id;
 $customerLocations = $GLOBALS['_SESSION_']->customer->locations();
-$organizationUsers = $rma->item ()->request->customer->organization->members();
+$organizationUsers = $rma->item ()->request->customer->organization->members('human');
 
 // get the shipment in question if it exists
 $shippingShipment = new \Shipping\Shipment ();
@@ -93,6 +92,9 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 	// Each item from the form including accessories is added to the shipment as a shipping_item record
 	$parameters = array ();
 	$parameters ['code'] = $rmaCode;
+
+
+
 
 	// upsert shipment info, use the location recently provided
 	if (! $shippingShipment->id) {
@@ -115,12 +117,18 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
             $shippingAddressParams ['city'] = $_REQUEST ['shipping_city'];
             $shippingAddressParams ['zip_code'] = $_REQUEST ['shipping_zip'];
             $shippingAddressParams ['notes'] = "";
-            $shippingAddressParams ['region_id'] = $_REQUEST ['shipping_province'];
-            $shippingAddressParams ['country_id'] = $_REQUEST ['shipping_country'];
+            $shippingAddressParams ['province_id'] = $_REQUEST ['shipping_province'];
+            $shippingAddressParams ['notes'] = 'address added during RMA process';
 
-            // add user address(es) if they don't exist yet
+            // add user address(es) if they don't exist yet with the register location mapping relationships included
             if (! $registerLocationShipping->findExistingByAddress ( $shippingAddressParams )) $registerLocationShipping->add ( $shippingAddressParams );
+            $registerLocationShipping->details();            
             $parameters ['send_location_id'] = $registerLocationShipping->id;
+            if ($_REQUEST ['shipping_address_type'] == 'business') {
+                $registerLocationShipping->associateOrganization($organizationId, $_REQUEST['shipping_location_name']);
+            } else {
+                $registerLocationShipping->associateUser($customerId);
+            }
         }
 
         // RMA request has a new billing contact to be added
