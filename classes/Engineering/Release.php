@@ -65,44 +65,55 @@
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			$cache_item->delete();
 
+			$bind_params = array();
+
 			$update_object_query = "
 				UPDATE	engineering_releases
 				SET		id = id
 			";
 
-			if (isset($parameters['title']))
+			if (isset($parameters['title'])) {
 				$update_object_query .= ",
-						title = ".$GLOBALS['_database']->qstr($parameters['title'],get_magic_quotes_gpc());
+						title = ?";
+				array_push($bind_params,$parameters['title']);
+			}
 
-			if (isset($parameters['description']))
+			if (isset($parameters['description'])) {
 				$update_object_query .= ",
-						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
+						description = ?";
+				array_push($bind_params,$parameters['description']);
+			}
 
-			if (get_mysql_date($parameters['date_scheduled']))
+			if (get_mysql_date($parameters['date_scheduled'])) {
 				$update_object_query .= ",
-						date_scheduled = '".get_mysql_date($parameters['date_scheduled'])."'";
+						date_scheduled = ?";
+				array_push($bind_params,get_mysql_date($parameters['date_scheduled']));
+			}
 
-			if (get_mysql_date($parameters['date_released']))
+			if (get_mysql_date($parameters['date_released'])) {
 				$update_object_query .= ",
-						date_released = '".get_mysql_date($parameters['date_released'])."'";
+						date_released = ?";
+				array_push($bind_params,get_mysql_date($parameters['date_released']));
+			}
 
-			if (isset($parameters['status']))
-				if ($this->_valid_status($parameters['status']))
+			if (isset($parameters['status'])) {
+				if ($this->_valid_status($parameters['status'])) {
 					$update_object_query .= ",
-						status = '".$parameters['status']."'";
+						status = ?";
+					array_push($bind_params,$parameters['status']);
+				}
 				else {
 					$this->_error = "Invalid Status";
 					return false;
 				}
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
 
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
+			array_push($bind_params,$this->id);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Releases::update(): ".$GLOBALS['_database']->ErrorMsg();
