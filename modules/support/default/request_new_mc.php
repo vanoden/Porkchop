@@ -6,10 +6,9 @@
 	if ($_REQUEST['organization_id']) {
 		$organization = new \Register\Organization($_REQUEST['organization_id']);
 		if ($organization->id) {
-			$customerlist = new \Register\CustomerList();
-			$customers = $customerlist->find(array('organization_id' => $_REQUEST['organization_id']));
-			if ($customerlist->error) {
-				$page->addError("Error finding customers: ".$customerlist->error);
+			$customers = $organization->members('human');
+			if ($organization->error) {
+				$page->addError("Error finding customers: ".$organization->error);
 			}
 			elseif ($_REQUEST['btn_submit']) {
 				$request = new \Support\Request();
