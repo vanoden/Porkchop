@@ -22,4 +22,6 @@
 		$tech = $rma->approvedBy();
         $customer = $item->request()->customer;
 		$shipments = $rma->shipments();
+		if ($GLOBALS['_config']->site->https) $url = "https://".$GLOBALS['_config']->site->hostname."/_support/rma_form/".$rma->code;
+		else $url = "http://".$GLOBALS['_config']->site->hostname."/_support/rma_form/".$rma->code;
 	}

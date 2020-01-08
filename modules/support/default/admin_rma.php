@@ -13,6 +13,16 @@
 		<div class="tableCell"><?=$rma->status?></div>
 	</div>
 </div>
+<div class="tableBody">
+	<div class="tableRowHeader">
+		<div class="tableCell">RMA Form URL</div>
+	</div>
+	<div class="tableRow">
+		<div class="tableCell">
+			<a href="<?=$url?>"><?=$url?></a>
+		</div>
+	</div>
+</div>
 
 <h2>Ticket Details</h2>
 <div class="tableBody">
