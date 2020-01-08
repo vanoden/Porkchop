@@ -48,6 +48,10 @@
 			<input type="text" name="last_name" class="input value methodInput"/>
 		</div>
 		<div class="apiMethodParameter">
+			<span class="label apiLabel">automation</span>
+			<input type="text" name="automation" class="input value methodInput"/>
+		</div>
+		<div class="apiMethodParameter">
 			<span class="label apiLabel">password</span>
 			<input type="text" name="password" class="input value methodInput"/>
 		</div>
@@ -73,6 +77,10 @@
 		<div class="apiMethodParameter">
 			<span class="label apiLabel">last_name</span>
 			<input type="text" name="last_name" class="input value methodInput"/>
+		</div>
+		<div class="apiMethodParameter">
+			<span class="label apiLabel">automation</span>
+			<input type="text" name="automation" class="input value methodInput"/>
 		</div>
 		<div class="apiMethodParameter">
 			<span class="label apiLabel">password</span>

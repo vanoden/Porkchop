@@ -51,6 +51,7 @@
 				$this->status = $customer->status;
 				$this->timezone = $customer->timezone;
 				$this->auth_method = $customer->auth_method;
+				$this->automation = $customer->automation;
 				$customer->_cached = 1;
 
 				# In Case Cache Corrupted
@@ -555,6 +556,17 @@
 			}
 			return $locations;
 		}
+
+		public function human() {
+			if ($this->automation) return false;
+			return true;
+		}
+
+		public function automation() {
+			if ($this->automation) return true;
+			return false;
+		}
+
 		public function error() {
 			return $this->error;
 		}

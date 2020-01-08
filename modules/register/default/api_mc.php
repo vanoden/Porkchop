@@ -152,9 +152,13 @@
 			$parameters['organization_id'] = $organization->id;
 		}
 		
-		if ($_REQUEST['first_name']) $parameters['first_name'] = $_REQUEST['first_name'];
-		if ($_REQUEST['last_name']) $parameters['last_name'] = $_REQUEST['last_name'];
-		if ($_REQUEST['password']) $parameters['password'] = $_REQUEST['password'];
+		if (isset($_REQUEST['first_name'])) $parameters['first_name'] = $_REQUEST['first_name'];
+		if (isset($_REQUEST['last_name'])) $parameters['last_name'] = $_REQUEST['last_name'];
+		if (isset($_REQUEST['password'])) $parameters['password'] = $_REQUEST['password'];
+		if (isset($_REQUEST['automation'])) {
+			if ($_REQUEST['automation'] == 1) $parameters['automation'] = true;
+			else $parameters['automation'] = false;
+		}
 
 		# Update Customer
 		$customer->update($parameters);
@@ -487,6 +491,10 @@
 		}
 
 		if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['code'];
+		if (isset($_REQUEST['automation'])) {
+			if ($_REQUEST['automation'] == 1) $automation = true;
+			else $automation = false;
+		}
 
 		# Add Event
 		$user->add(
@@ -498,6 +506,7 @@
 				organization_id	=> $organization_id,
 				custom_1		=> $_REQUEST['custom_1'],
 				custom_2		=> $_REQUEST['custom_2'],
+				automation		=> $automation,
 			)
 		);
 

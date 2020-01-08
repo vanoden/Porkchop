@@ -77,6 +77,13 @@
       <span class="value"><?=$customer->login?></span>
       <span class="value">[<?=$customer->auth_method?>]</span>
    </div>
+   <div id="accountTypeQuestion" class="login-area">
+      <span class="label" style="display: inline;">Type:</span>
+		<select name="automation" class="value input">
+			<option value="0"<? if ($customer->human()) print " selected"; ?>>Human</option>
+			<option value="1"<? if ($customer->automation()) print " selected"; ?>>Automation</option>
+		</select>
+   </div>
    <!--	Start LOGIN Specs -->
    <div class="tableBody clean min-tablet">
       <div class="tableRowHeader">

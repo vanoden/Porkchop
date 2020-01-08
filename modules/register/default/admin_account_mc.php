@@ -48,6 +48,10 @@
 		if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
 		if (isset($_REQUEST["roles"]))			$parameters['roles']		= $_REQUEST["role"];
 		if (isset($_REQUEST["status"]))			$parameters['status']		= $_REQUEST["status"];
+		if (isset($_REQUEST["automation"])) {
+			if ($_REQUEST['automation']) $parameters['automation'] = true;
+			else $parameters['automation'] = false;
+		}
 
 		if (isset($_REQUEST['organization_id'])) {
 			$parameters["organization_id"] = $_REQUEST["organization_id"];
