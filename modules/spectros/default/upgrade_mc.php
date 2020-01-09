@@ -404,6 +404,13 @@
 							"view_order"	=> 90,
 							"alt"			=> "RMAs",
 							"description"	=> "RMAs"
+						),
+						array (
+							"title"	=> "Summary",
+							"target"	=> "/_support/summary",
+							"view_order"	=> 100,
+							"alt"			=> "Summary",
+							"description"	=> "Summary"
 						)
 					)
 				),

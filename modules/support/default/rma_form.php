@@ -401,6 +401,9 @@
        });
     });
 </script>
+<?	if ($page->errorCount() > 0) { ?>
+    <div class="form_error"><?=$page->errorString()?></div><br/><br/>
+<?	} ?>
 <h1>Return Merchandise Authorization</h1>
 <?php
    // make sure we're authorized and have a valid RMA present
@@ -511,7 +514,7 @@
                      </span>
                      <label for="adr"><i class="fa fa-address-card-o"></i> Address</label> 
                      <input type="text" id="shipping_address" name="shipping_address" class="shipping_fields" placeholder="542 W. 15th Street"> 
-                     <input type="text" id="shipping_address2" name="shipping_address2" class="shipping_fields" placeholder="Suite 1">
+                     <input type="text" id="shipping_address2" name="shipping_address2" placeholder="Suite 1">
                      Select your Country:
                      <select id="shipping_country" name="shipping_country" onchange="changeCountry('shipping_country', 'shipping_address_container', 'shipping_province', 'shipping_province_container')">
                         <option value="0">-</option>
@@ -556,16 +559,16 @@
                   </select>
                   <div id="add_new_billing_contact" style="display: none;">
                      <label for="fname"><i class="fa fa-user"></i> Full Name</label>
-                     <input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John M. Doe"> 
+                     <input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields" placeholder="John"> 
                      
                      <label for="fname"><i class="fa fa-user"></i> Last Name</label>
-                     <input type="text" id="billing_lastname" name="billing_lastname" class="billing_fields" placeholder="John M. Doe"> 
+                     <input type="text" id="billing_lastname" name="billing_lastname" class="billing_fields" placeholder="Doe"> 
                      
                      <label for="fname"><i class="fa fa-envelope-o"></i> Email</label>
                      <input type="text" id="billing_email" name="billing_email" class="billing_fields" placeholder="user@email.com"> 
                      
                      <label for="fname"><i class="fa fa-phone"></i> Phone</label>
-                     <input type="text" id="billing_phone" name="billing_phone" class="billing_fields" placeholder="John M. Doe"> 
+                     <input type="text" id="billing_phone" name="billing_phone" class="billing_fields" placeholder="123-555-5555"> 
                   </div>
                </div>
                <input id="show-checklist-button" onclick="showTerms()" type="button" value="Next" class="btn" style="display: none;"><br />

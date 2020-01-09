@@ -23,6 +23,7 @@
          * @param array $parameters, name value pairs to add and populate new object by
          */
 		public function add($parameters = array()) {
+		
 			if (! isset($parameters['code'])) $parameters['code'] = uniqid();
 			if (! isset($parameters['status'])) $parameters['status'] = 'NEW';
 			if (! isset($parameters['date_entered'])) $parameters['date_entered'] = date('Y-m-d H:i:s');

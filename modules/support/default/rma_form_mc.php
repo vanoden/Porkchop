@@ -34,6 +34,24 @@ function sortNames($a, $b) {
 	return strcmp($a->name, $b->name);
 }
 
+/**
+ * for any ORM objects log possible errors to the page and error_log
+ *
+ * @param obj $DataObject
+ */
+function logErrors($dataObject, $page) {
+    try {
+        if (method_exists ( $dataObject ,'error' )) {
+            if (!empty($dataObject->error())) {
+                if (!stristr($dataObject->error(), "no records found")) {
+                    $page->addError(get_class($dataObject) . ': ' . $dataObject->error());
+                    error_log(get_class($dataObject) . ': ' . $dataObject->error());
+                }
+            }
+        }
+    } catch (Exception $e) {}
+}
+
 // get cooresponding RMA from possible input values
 $rma = new \Support\Request\Item\RMA ();
 $rmaId = (isset ( $_REQUEST ['id'] )) ? $_REQUEST ['id'] : 0;
@@ -92,9 +110,6 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 	// Each item from the form including accessories is added to the shipment as a shipping_item record
 	$parameters = array ();
 	$parameters ['code'] = $rmaCode;
-
-
-
 
 	// upsert shipment info, use the location recently provided
 	if (! $shippingShipment->id) {
@@ -168,7 +183,12 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 
 		// add shipment with package and items entries
 		$shippingShipment->add ( $parameters );
-
+        $shippingShipment->details();
+        
+        // get the new shipment in question
+        $shippingShipment = new \Shipping\Shipment ();
+        $shippingShipment->get ( $rmaCode );
+        
 		// add a default "1st" package to the shipment, there should be at least that
 		$packageDetails = array ();
 		$packageDetails ['shipment_id'] = $shippingShipment->id;
@@ -221,3 +241,13 @@ if (!empty($shippingShipment->id)) {
     $shippingPackage = new \Shipping\Package ();
     $shippingPackage->getByShippingID($shippingShipment->id);
 }
+
+// process any errors if occurred
+if (isset($rma)) logErrors($rma, $page);
+if (isset($countryList)) logErrors($countryList, $page);
+if (isset($shippingShipment)) logErrors($shippingShipment, $page);
+if (isset($registerLocationShipping)) logErrors($registerLocationShipping, $page);
+if (isset($newUser)) logErrors($newUser, $page);
+if (isset($registerContact)) logErrors($registerContact, $page);
+if (isset($shippingPackage)) logErrors($shippingPackage, $page);
+
