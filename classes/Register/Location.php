@@ -68,12 +68,12 @@
 			$add_record_query = "
 				INSERT
 				INTO	register_organization_locations
-				(organization_id,location_id,name)
-				VALUES	(?,?,?)
+				(organization_id, location_id)
+				VALUES	(?,?)
 				ON DUPLICATE KEY UPDATE
 				location_id = location_id
 			";
-			$bind_params = array($organization_id,$this->id,$location_name);
+			$bind_params = array($organization_id,$this->id);
 			query_log($add_record_query,$bind_params,true);
 			$GLOBALS['_database']->Execute($add_record_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {

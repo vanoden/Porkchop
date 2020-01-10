@@ -91,8 +91,6 @@ if ( $GLOBALS['_SESSION_']->customer->has_role('support user') ) $authorized = t
 // get the addresses known for given customer and customer organization
 $customerId = $GLOBALS['_SESSION_']->customer->id;
 $organizationId = $rma->item ()->request->customer->organization->id;
-$customerLocations = $GLOBALS['_SESSION_']->customer->locations();
-$organizationUsers = $rma->item ()->request->customer->organization->members('human');
 
 // get the shipment in question if it exists
 $shippingShipment = new \Shipping\Shipment ();
@@ -151,7 +149,7 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
             
             $newUser = new Register\Person();
             $newUser->add(array(
-                'login' => preg_replace('/\s+/', '', strtolower($_REQUEST['billing_firstname']))  . '-' . preg_replace('/\s+/', '', strtolower($_REQUEST['billing_lastname'])),
+                'login' => preg_replace('/\s+/', '', strtolower($_REQUEST['billing_firstname']))  . '-' . preg_replace('/\s+/', '', strtolower($_REQUEST['billing_lastname'])) . rand (1, 10000),
                 'password' => uniqid(),
                 'first_name' => $_REQUEST['billing_firstname'],
                 'last_name' => $_REQUEST['billing_lastname'],
@@ -184,10 +182,6 @@ if ($_REQUEST ['form_submitted'] == 'submit') {
 		// add shipment with package and items entries
 		$shippingShipment->add ( $parameters );
         $shippingShipment->details();
-        
-        // get the new shipment in question
-        $shippingShipment = new \Shipping\Shipment ();
-        $shippingShipment->get ( $rmaCode );
         
 		// add a default "1st" package to the shipment, there should be at least that
 		$packageDetails = array ();
