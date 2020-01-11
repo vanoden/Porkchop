@@ -11,14 +11,21 @@
 	$page = new \Site\Page();
 
 	if (isset($_REQUEST['return']) && $_REQUEST['return'] == 'true') {
-		$target = $GLOBALS['_REQUEST_']->refererURI();
-		app_log("Return to ".$GLOBALS['_REQUEST_']->refererURI()." after login");
+		# This Is How They SHOULD Come In from Redirect
+		if (isset($_REQUEST['module']) && isset($_REQUEST['view'])) {
+			$target = "/_".$_REQUEST['module']."/".$_REQUEST['view'];
+		}
+		else {
+			$target = $GLOBALS['_REQUEST_']->refererURI();
+			app_log("Return to ".$GLOBALS['_REQUEST_']->refererURI()." after login");
+		}
 	}
 	elseif (isset($_POST['login_target']))
+		# This is how the SHOULD come in from FORM submit
 		$target = $_POST['login_target'];
 	elseif(isset($_GET['target']))
 		# Translate target
-		$target = preg_replace('/\:/','/',urldecode($_GET["target"]));
+		$target = urldecode($_GET["target"]);
 	elseif($GLOBALS['_config']->register->auth_target)
 		$target = $GLOBALS['_config']->register->auth_target;
 	if (! preg_match('/^\//',$target))

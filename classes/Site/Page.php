@@ -34,7 +34,9 @@
 			elseif (func_num_args() == 2 && gettype($args[0]) == "string" && gettype($args[1]) == "string") {
 				$this->get($args[0],$args[1],$args[2]);
 			}
-
+			else {
+				$this->fromRequest();
+			}
 		}
 
 		public function fromRequest() {
@@ -52,16 +54,18 @@
 
 		public function requireAuth() {
 			if (! $GLOBALS['_SESSION_']->customer->id > 0) {
-				header('location: /_register/login?return=true&module='.$this->module.'&view='.$this->view);
+				#header('location: /_register/login?return=true&module='.$this->module.'&view='.$this->view);
+				header('location: /_register/login?target='.urlencode($_SERVER['REQUEST_URI']));
 			}
 		}
 
 		public function requireRole($role) {
-
 			if ($this->module == 'register' && $this->view == 'login') {
 				# Do Nothing, we're Here
 			} elseif (! $GLOBALS['_SESSION_']->customer->id) {
-				header('location: /_register/login?return=true&module='.$this->module.'&view='.$this->view);
+				#header('location: /_register/login?return=true');
+				#header('location: /_register/login?return=true&module='.$this->module.'&view='.$this->view);
+				header('location: /_register/login?target='.urlencode($_SERVER['REQUEST_URI']));
 				exit;
 			} elseif (! $GLOBALS['_SESSION_']->customer->has_role($role)) {
 				header('location: /_register/permission_denied');
