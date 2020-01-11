@@ -112,6 +112,15 @@
 				"versions"			=> $admin_template,
 			),
 		),
+		"Shipping"		=> array(
+			"roles"			=> array(
+				"shipping manager"	=> array(),
+			),
+			"templates"		=> array(
+				"admin_shipments"			=> $admin_template,
+				"admin_shipment"			=> $admin_template,
+			),
+		),
         "Support"		=> array(
 			"roles"			=> array(
 				"support manager"	=> array(),
@@ -255,6 +264,20 @@
 					"view_order"	=> 10,
 					"alt"			=> "Product Management",
 					"description"	=> "Product Management"
+				),
+				array(
+					"title"			=> "Warehouse",
+					"view_order"	=> 18,
+					"alt"			=> "Warehouse Functions",
+					"description"	=> "Warehouse Management",
+					"items"			=> array(
+						array(
+							"title"		=> "Shipments",
+							"target"	=> "/_shipping/admin_shipments",
+							"alt"		=> "Shipments",
+							"description"	=> "Manage shipments"
+						),
+					),
 				),
 				array(
 					"title"			=> "Datalogger",
