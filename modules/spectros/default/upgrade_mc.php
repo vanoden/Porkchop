@@ -571,6 +571,20 @@
 			}
 		}
 	}
+
+	# Add 'misc' inventory item
+	$misc_item = new \Product\Item();
+	if (! $misc_item->get('misc')) {
+		$misc_item->add(array(
+			'code'	=> 'misc',
+			'type'	=> 'inventory',
+			'status'	=> 'ACTIVE',
+			'description'	=> 'Miscellaneous item for inventory tracking'
+		));
+		if ($misc_item->error()) {
+			$install_fail("Error adding misc item: ".$misc_item->error());
+		}
+	}
 	
 	foreach ($menus as $code => $menu) {
 		$nav_menu = new \Navigation\Menu();

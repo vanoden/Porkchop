@@ -497,7 +497,7 @@
          <form method="post" id="submit_rma_form">
             <div class="row">
                <div id="shipping_address_form" class="col-50">
-                  Select your Address:
+                  Select your Location:
                   <select id="shipping_address_picker" name="shipping_address_picker" onchange="selectShippingAddress()">
                      <option value="">--</option>
                      <option value="0">[add new]</option>

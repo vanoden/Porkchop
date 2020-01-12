@@ -103,5 +103,9 @@
 			if (is_numeric($number)) return $number + 1;
 			return 1;
 		}
-		
+
+		public function items() {
+			$itemList = new \Shipping\ItemList();
+			return $itemList->find(array('package_id' => $this->id));
+		}
 	}

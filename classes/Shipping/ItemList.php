@@ -19,6 +19,12 @@
 				array_push($bind_params,$parameters['shipment_id']);
 			}
 
+			if ($parameters['package_id']) {
+				$find_objects_query .= "
+				AND		package_id = ?";
+				array_push($bind_params,$parameters['package_id']);
+			}
+
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Shipping::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();

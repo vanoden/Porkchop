@@ -23,6 +23,7 @@
          * @param array $parameters, name value pairs to add and populate new object by
          */
 		public function add($parameters = array()) {
+			$this->_error = null;
 		
 			if (! isset($parameters['code'])) $parameters['code'] = uniqid();
 			if (! isset($parameters['status'])) $parameters['status'] = 'NEW';
