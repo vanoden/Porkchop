@@ -817,7 +817,7 @@
 				}
 				if (preg_match('/SQL\sError/',$error)) {
 				    // SQL errors in the error log, then output to page is standard "site error message"
-    				app_log($error, 'error')				
+    				app_log($error, 'error');		
 					$error_string .= "Internal site error";
 				}
 				else {
