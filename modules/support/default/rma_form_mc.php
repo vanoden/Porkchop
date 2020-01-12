@@ -12,9 +12,7 @@ $optional_contents = array(
 );
 $misc_inventory_code = 'misc';
 $misc_inventory_item = new \Product\Item();
-if (! $misc_inventory_item->get($misc_inventory_code)) {
-	$page->addError("No product found for '$misc_inventory_code'");
-}
+if (! $misc_inventory_item->get($misc_inventory_code)) $page->addError("No product found for '$misc_inventory_code'");
 
 /**
  * for country name sorting
@@ -41,7 +39,10 @@ function logErrors($dataObject, $page) {
                 }
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) {
+        $page->addError('An application exception has occurred.');
+        app_log($e->getMessage(),'error');
+    }
 }
 
 // get cooresponding RMA from possible input values
@@ -115,9 +116,7 @@ if ($page->errorCount() < 1 && $_REQUEST ['form_submitted'] == 'submit') {
 
         if (!empty($_REQUEST ['shipping_address_picker'])) {
 			$registerLocationShipping = new \Register\Location($_REQUEST['shipping_address_picker']);
-			if (! $registerLocationShipping->id) {
-				$page->addError("Error finding location: ".$registerLocationShipping->error());
-			}
+			if (! $registerLocationShipping->id) $page->addError("Error finding location: ".$registerLocationShipping->error());
         } else {
             $registerLocationShipping = new \Register\Location ();
 			$registerLocationShipping->add(array(
@@ -131,8 +130,7 @@ if ($page->errorCount() < 1 && $_REQUEST ['form_submitted'] == 'submit') {
 			));
 			if ($registerLocationShipping->error()) {
 				$page->addError("Failed to add location: ".$registerLocationShipping->error());
-			}
-			else {
+			} else {
 				// add user address(es) if they don't exist yet with the register location mapping relationships included
 				if ($_REQUEST ['shipping_address_type'] == 'business') {
 					$registerLocationShipping->associateOrganization($organization->id, $_REQUEST['shipping_location_name']);
@@ -143,8 +141,7 @@ if ($page->errorCount() < 1 && $_REQUEST ['form_submitted'] == 'submit') {
 		}
 		if (! $registerLocationShipping->id) {
 			$page->addError("No location identified for return shipping");
-		}
-		else {
+		} else {
 			$parameters['send_location_id'] = $registerLocationShipping->id;
 
     	    // RMA request has a new billing contact to be added
@@ -179,13 +176,11 @@ if ($page->errorCount() < 1 && $_REQUEST ['form_submitted'] == 'submit') {
 		
 			$parameters ['instructions'] = (isset ( $_REQUEST ['delivery_instructions'] )) ? $_REQUEST ['delivery_instructions'] : '';
 			$parameters ['receive_location_id'] = $GLOBALS['_config']->support->rma_location_id;
-			//$parameters ['vendor_id'] = defined('SPECTROS_VENDOR_ID') ? SPECTROS_VENDOR_ID : 0;
 
 			// add shipment with package and items entries
 			if (! $shippingShipment->add ( $parameters )) {
 				$page->addError("Error creating shipment: ".$shippingShipment->error());
-			}
-			else {
+			} else {
 				// add a default "1st" package to the shipment, there should be at least that
 				$packageDetails = array ();
 				$packageDetails ['shipment_id'] = $shippingShipment->id;
@@ -196,8 +191,7 @@ if ($page->errorCount() < 1 && $_REQUEST ['form_submitted'] == 'submit') {
 				$shippingPackage = $shippingShipment->add_package($packageDetails);
 				if ($shippingShipment->error()) {
 					$page->addError("Error adding package to shipment: ".$shippingShipment->error());
-				}
-				else {
+				} else {
 					// each item from the form including accessories is added to the shipment as a shipping_item record
 					$shippingShipment->add_item(array(
 						'shipment_id'	=> $shippingShipment->id,

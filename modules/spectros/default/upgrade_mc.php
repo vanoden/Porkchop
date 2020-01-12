@@ -572,7 +572,7 @@
 		}
 	}
 
-	# Add 'misc' inventory item
+	// Add 'misc' inventory item
 	$misc_item = new \Product\Item();
 	if (! $misc_item->get('misc')) {
 		$misc_item->add(array(

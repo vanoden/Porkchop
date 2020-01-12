@@ -29,6 +29,9 @@
 			if (! isset($parameters['status'])) $parameters['status'] = 'NEW';
 			if (! isset($parameters['date_entered'])) $parameters['date_entered'] = date('Y-m-d H:i:s');
 			
+			// @TODO a FEDEX vs UPS vs USPS reference?
+			if (! isset($parameters['vendor_id'])) $parameters['vendor_id'] = 0;
+			
 			if (isset($parameters['send_customer_id'])) {
 				$parameters['send_contact_id'] = $parameters['send_customer_id'];
 			}
@@ -59,7 +62,7 @@
 				return false;
 			}
 			
-		    parent::add($parameters);
+		    return parent::add($parameters);
 		}
 		
         /**
