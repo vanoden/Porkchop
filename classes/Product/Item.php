@@ -463,5 +463,8 @@
 			}
 			return 1;
 		}
+		public function error() {
+			return $this->error;
+		}
 	}
 ?>
