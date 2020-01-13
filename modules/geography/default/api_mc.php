@@ -176,7 +176,7 @@
 			if (! $country->id) error("Country not found");
 
 			$province = new \Geography\Province();
-			if (! $province->get($country->id,$_REQUEST['name'])) error("Country not found");
+			if (! $province->get($country->id,$_REQUEST['name'])) error("Province not found");
 		}
 		elseif (isset($_REQUEST['id'])) {
 			$province = new \Geography\Province($_REQUEST['id']);
