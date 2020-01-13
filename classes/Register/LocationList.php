@@ -1,14 +1,14 @@
 <?php
 	namespace Register;
 
-	class PrivilegeList {
+	class LocationList {
 		private $_count = 0;
 		private $_error;
 
 		public function find($parameters = array()) {
 			$find_objects_query = "
-				SELECT  rp.id
-				FROM    register_privileges rp
+				SELECT  id
+				FROM    register_locations
 				WHERE   id = id
 			";
 
@@ -17,13 +17,13 @@
 			query_log($find_objects_query);
             $rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
             if (! $rs) {
-                $this->_error = "SQL Error in Register::PrivilegeList::find(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->_error = "SQL Error in Register::LocationList::find(): ".$GLOBALS['_database']->ErrorMsg();
                 return null;
             }
 
             $objects = array();
             while (list($id) = $rs->FetchRow()) {
-                $object = new \Register\Privilege($id,array('recursive' => $parameters['recursive']));
+                $object = new \Register\Location($id,array('recursive' => $parameters['recursive']));
                 array_push($objects,$object);
                 $this->_count ++;
             }

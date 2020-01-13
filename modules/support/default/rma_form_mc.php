@@ -10,6 +10,13 @@ $optional_contents = array(
 	'usb_comm_cable'	=> 'USB Cable',
 	'cellular_access_point'	=> 'Cellular Access Point'
 );
+
+# Get Warehouse Address
+$configuration = new \Site\Configuration("module/support/rma_location_id");
+if ($configuration->get()) $parameters ['receive_location_id'] = $configuration->value();
+else $page->addError("Default RMA Address Not Configured");
+
+# Get Misc Inventory Product
 $misc_inventory_code = 'misc';
 $misc_inventory_item = new \Product\Item();
 if (! $misc_inventory_item->get($misc_inventory_code)) {
@@ -192,8 +199,6 @@ if ($page->errorCount() < 1) {
 				}
 			
 				$parameters ['instructions'] = (isset ( $_REQUEST ['delivery_instructions'] )) ? $_REQUEST ['delivery_instructions'] : '';
-				$parameters ['receive_location_id'] = $GLOBALS['_config']->support->rma_location_id;
-				//$parameters ['vendor_id'] = defined('SPECTROS_VENDOR_ID') ? SPECTROS_VENDOR_ID : 0;
 	
 				// add shipment with package and items entries
 				if (! $shippingShipment->add ( $parameters )) {

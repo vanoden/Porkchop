@@ -584,9 +584,45 @@
 			'description'	=> 'Miscellaneous item for inventory tracking'
 		));
 		if ($misc_item->error()) {
-			$install_fail("Error adding misc item: ".$misc_item->error());
+			install_fail("Error adding misc item: ".$misc_item->error());
 		}
 	}
+
+	# Add Default Shipping Location
+	$configuration = new \Site\Configuration("module/support/rma_location_id");
+	$rma_location_id = $configuration->value();
+	if (empty($rma_location_id)) {
+		$organizationList = new \Register\OrganizationList();
+		list($organization) = $organizationList->find(array('name' => 'Spectros Instruments'));
+		if (! $organization->id) {
+			install_fail("Cannot find owner organization");
+		}
+		list($location) = $organization->locations();
+		if (! $location->id) {
+			install_log("Adding default location to ".$organization->name,'notice');
+			$country = new \Geography\Country();
+			$country->get('United States of America');
+			$province = new \Geography\Province();
+			$province->get($country->id,"Massachusetts");
+			$location = new \Register\Location();
+			$location->add(array(
+				'name'	=> 'Office',
+				'address_1'	=> '17D Airport Road',
+				'city'		=> 'Hopedale',
+				'zip_code'	=> '01747',
+				'province_id'	=> $province->id
+			));
+		}
+		else {
+			install_log("Organization has default location",'notice');
+		}
+		$location->associateOrganization($organization->id);
+		$rma_location_id = $location->id;
+	}
+	else {
+		$location = new \Register\Location($rma_location_id);
+	}
+	install_log("RMA Destination is set to '".$location->name."' in ".$location->city.", ".$location->province()->abbreviation,'notice');
 	
 	foreach ($menus as $code => $menu) {
 		$nav_menu = new \Navigation\Menu();

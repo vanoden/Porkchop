@@ -104,21 +104,24 @@
 				WHERE	id = id
 			";
 
+			$bind_params = array();
 			if (isset($parameters['name'])) {
 				if (isset($parameters['_like']) && in_array("name",$parameters['_like'])) {
 					$get_organizations_query .= "
 					AND		name like '%".preg_replace('/[^\w\-\.\_\s]/','',$parameters['name'])."%'";
 				} else {
 					$get_organizations_query .= "
-					AND		name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
+					AND		name = ?";
+					array_push($bind_params,$parameters['name']);
 				}
 			}
-			
+
 			if (isset($parameters['code'])) {
 				$get_organizations_query .= "
-				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc());
+				AND		code = ?";
+				array_push($bind_params,$parameters['code']);
 			}
-			
+
 			if (isset($parameters['status']) && is_array($parameters['status'])) {
 				$icount = 0;
 				$get_organizations_query .= "
@@ -132,7 +135,8 @@
 				$get_organizations_query .= ")";
 			} elseif (isset($parameters['status'])) {
 				$get_organizations_query .= "
-				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+				AND		status = ?";
+				array_push($bind_params,$parameters['status']);
 			} else
 				$get_organizations_query .= "
 				AND		status IN ('NEW','ACTIVE')";
@@ -147,7 +151,8 @@
 			}
 			if (isset($parameters['reseller_id'])) {
 				$get_organizations_query .= "
-				AND		reseller_id = ".$GLOBALS['_database']->qstr($parameters['reseller_id'],get_magic_quotes_gpc());
+				AND		reseller_id = ?";
+				array_push($bind_params,$parameters['reseller_id']);
 			}
 
 			$get_organizations_query .= "
@@ -163,8 +168,8 @@
 					LIMIT	".$parameters['_limit'];
 			}
 			
-			query_log($get_organizations_query);
-			$rs = $GLOBALS['_database']->Execute($get_organizations_query);
+			query_log($get_organizations_query,$bind_params);
+			$rs = $GLOBALS['_database']->Execute($get_organizations_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in register::organization::find: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
