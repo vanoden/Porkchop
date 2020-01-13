@@ -216,6 +216,65 @@
 
 		print formatOutput($response);
 	}
+
+	###################################################
+	### Add a Package to a Shipment					###
+	###################################################
+	function addPackage() {
+		$parameters = array();
+		$shipment = new \Shipping\Shipment($_REQUEST['shipment_id']);
+		if ($shipment->id) $parameters['shipment_id'] = $shipment->id;
+		else error("Shipment not found");
+
+		$package = $shipment->addPackage();
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->package = $package;
+
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Update a Package							###
+	###################################################
+	function updatePackage() {
+		$shipment = new \Shipping\Shipment($_REQUEST['shipment_id']);
+		$package = $shipment->package($_REQUEST['id']);
+		if ($shipment->error) app_error("Error finding package: ".$shipment->error,'error',__FILE__,__LINE__);
+		if (! $shipment->id) error("Request not found");
+
+		$parameters = array();
+		$shipment->update(
+			$parameters
+		);
+		if ($shipment->error) app_error("Error updating shipment: ".$shipment->error,'error',__FILE__,__LINE__);
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->shipment = $shipment;
+
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Find matching Packages						###
+	###################################################
+	function findPackages() {
+		$packageList = new \Shipping\PackageList();
+		
+		$parameters = array();
+		if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
+		
+		$packages = $packageList->find($parameters);
+		if ($packageList->error) app_error("Error finding shipments: ".$packageList->error);
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->package = $packages;
+
+		print formatOutput($response);
+	}
+
 	###################################################
 	### Manage Support Schema						###
 	###################################################
