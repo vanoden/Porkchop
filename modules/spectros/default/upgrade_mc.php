@@ -2,6 +2,8 @@
 	$default_Template = "default.html";
 	$admin_template = "admin.html";
 
+	$vendors = array('DHL','FedEx','UPS','USPS');
+
 	$modules = array(
 		"Company"		=> array(
 		),
@@ -655,6 +657,14 @@
 					install_fail("Error adding menu item ".$subitem["title"].": ".$subnav_item->error());
 				}
 			}
+		}
+	}
+
+	# Add Shipping Vendors
+	foreach ($vendors as $vendorName) {
+		$vendor = new \Shipping\Vendor();
+		if (!$vendor->get($vendorName)) {
+			$vendor->add(array('name' => $vendorName));
 		}
 	}
 	install_log("Upgrade completed successfully",'notice');
