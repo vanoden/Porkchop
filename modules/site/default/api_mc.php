@@ -447,6 +447,48 @@
 		api_log('content',$_REQUEST,$response);
 		print formatOutput($response);
 	}
+	function deleteConfiguration() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+		$response = new \HTTP\Response();
+		$configuration = new \Site\Configuration($_REQUEST['key']);
+		if ($configuration->delete()) {
+			$response->success = 1;
+		}
+		else {
+			$response->success = 0;
+			$response->error = $configuration->error();
+		}
+		print formatOutput($response);
+	}
+	function setConfiguration() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+		$response = new \HTTP\Response();
+		$configuration = new \Site\Configuration($_REQUEST['key']);
+		if ($configuration->set($_REQUEST['value'])) {
+			$response->success = 1;
+			$response->configuration = $configuration;
+		}
+		else {
+			$response->success = 0;
+			$response->error = $configuration->error();
+		}
+		print formatOutput($response);
+	}
+	function getConfiguration() {
+		if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+		$response = new \HTTP\Response();
+		$configuration = new \Site\Configuration($_REQUEST['key']);
+		if ($configuration->get($_REQUEST['key'])) {
+			$response->success = 1;
+			$response->key = $configuration->key();
+			$response->value = $configuration->value();
+		}
+		else {
+			$response->success = 0;
+			$response->error = $configuration->error();
+		}
+		print formatOutput($response);
+	}
 
 	###################################################
 	### Manage Site Schema							###

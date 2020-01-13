@@ -157,6 +157,22 @@
 				$this->setVersion(5);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 6) {
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `site_configurations` (
+						`key`	varchar(255) NOT NULL PRIMARY KEY,
+						`value` varchar(255)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating page_widgets table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(6);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}
