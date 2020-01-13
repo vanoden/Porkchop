@@ -54,7 +54,6 @@
 
 		public function requireAuth() {
 			if (! $GLOBALS['_SESSION_']->customer->id > 0) {
-				#header('location: /_register/login?return=true&module='.$this->module.'&view='.$this->view);
 				header('location: /_register/login?target='.urlencode($_SERVER['REQUEST_URI']));
 			}
 		}
@@ -63,8 +62,6 @@
 			if ($this->module == 'register' && $this->view == 'login') {
 				# Do Nothing, we're Here
 			} elseif (! $GLOBALS['_SESSION_']->customer->id) {
-				#header('location: /_register/login?return=true');
-				#header('location: /_register/login?return=true&module='.$this->module.'&view='.$this->view);
 				header('location: /_register/login?target='.urlencode($_SERVER['REQUEST_URI']));
 				exit;
 			} elseif (! $GLOBALS['_SESSION_']->customer->has_role($role)) {
@@ -819,6 +816,8 @@
 					$error_string .= $delimiter;
 				}
 				if (preg_match('/SQL\sError/',$error)) {
+				    // SQL errors in the error log, then output to page is standard "site error message"
+    				app_log($error, 'error');		
 					$error_string .= "Internal site error";
 				}
 				else {

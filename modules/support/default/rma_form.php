@@ -592,6 +592,7 @@
                      <br> <br />
                   </div>
                </div>
+               <input type="hidden" id="code" name="code" value="<?=$rma->code?>">
                <input type="hidden" name="form_submitted" value="submit" /> <input id="submit-form-button" type="button" value="Submit Return" onclick="submitForm()" class="btn" style="display: none;"><br />
          </form>
          </div>

@@ -46,3 +46,11 @@
 	# Session
 	$_config->session = new stdClass();
 	$_config->session->cookie = new stdClass();
+	
+    $_config->support = new stdClass();
+    $_config->support->return_notification = (object) array(
+       "from"      => 'no-reply@spectrosinstruments.com',
+       "subject"   => 'Return Materials Authorization',
+       "template"  => TEMPLATES."/support/return_authorized.html"
+    );
+    $_config->support->rma_location_id = 1;
