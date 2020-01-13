@@ -114,6 +114,51 @@
 				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 2) {
+				$table = new \Database\Schema\Table('shipping_items');
+				if (! $table->has_column('shipment_id')) {
+					# Things We Have To Do
+					$alter_table_query = "
+						ALTER TABLE `shipping_items` ADD `shipment_id` INT(11)
+					";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error adding column to shipping_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+				}
+
+				$itemList = new \Shipping\ItemList();
+				$items = $itemList->find();
+				foreach ($items as $item) {
+					if (empty($item->package_id)) $item->delete();
+					if ($item->error()) {
+						$this->_error = "Error deleting item: ".$item->error();
+						return false;
+					}
+					$package = new \Shipping\Package($item->package_id);
+					if ($item->package_id != $package->id) {
+						$item->update(array('shipment_id' => $package->shipment_id));
+						if ($item->error()) {
+							$this->_error = "Error updating item: ".$item->error();
+							return false;
+						}
+					}
+				}
+
+				$alter_table_query = "
+					ALTER TABLE `shipping_items` ADD FOREIGN KEY `fk_shipping_items_shipment` (`shipment_id`) REFERENCES `shipping_shipments` (`id`)";
+
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error adding foreign key to shipping_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+				
+
+				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			$this->addRoles(array(
 				'shipping manager'	=> 'Can browse all shipments'
 			));

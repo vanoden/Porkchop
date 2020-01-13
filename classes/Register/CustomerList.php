@@ -184,10 +184,10 @@
 					AND		automation = 0";
 			}
 
-			if (preg_match('/^(login|first_name|last_name|organization_id)$/',$parameters['_sort'])) {
+			if (isset($parameters['_sort']) && preg_match('/^(login|first_name|last_name|organization_id)$/',$parameters['_sort'])) {
 				$find_person_query .= " ORDER BY ".$parameters['_sort'];
 			}
-			elseif ($parameters['_sort'] == 'full_name') {
+			elseif (isset($parameters['sort']) && $parameters['_sort'] == 'full_name') {
 				$find_person_query .= " ORDER BY first_name,last_name";
 			}
 			else

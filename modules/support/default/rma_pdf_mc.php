@@ -91,10 +91,10 @@ $pdf->Ln ();
 
 // Set some content to print
 $html = <<<EOD
-<table style="width:75%;  border: solid 1px #000;">
+<table style="width:90%;  border: solid 1px #000;">
   <tr>
     <th style="background-color:grey; color:white;"><strong>Customer</strong></th>
-    <th style="background-color:grey; color:white;"><strong></strong></th>
+    <th style="background-color:grey; color:white;"><strong>Company</strong></th>
   </tr>
   <tr>
     <td>$rmaCustomerFullName</td>
@@ -102,7 +102,7 @@ $html = <<<EOD
   </tr>
 </table>
 <br/><br/><br/>
-<table style="width:75%">
+<table style="width:90%">
   <tr>
     <th style="background-color:grey; color:white; border: solid 1px #000;"><strong>RMA #</strong></th>
     <th></th>
@@ -115,7 +115,7 @@ $html = <<<EOD
   </tr>
 </table>
 <br/><br/>
-<table style="width:75%">
+<table style="width:90%">
   <tr>
     <th style="background-color:grey; color:white; border: solid 1px #000;"><strong>Ticket #</strong></th>
     <th></th>
@@ -139,12 +139,13 @@ $html = <<<EOD
 EOD;
 
 foreach ( $itemsInShipment as $item ) {
+	$product = new \Product\Item($item->product_id);
 	$html .= "<tr>
-	    <td>{$rmaProductCode}</td>
+	    <td>{$product->code}</td>
 	    <td>1</td>
-	    <td>{$item['serial_number']}</td>
-		<td>{$item['description']}</td>
-	    <td>{$item['condition']}</td>
+	    <td>{$item->serial_number}</td>
+		<td>{$item->description}</td>
+	    <td>{$item->condition}</td>
  	</tr>
 	";
 }
@@ -161,6 +162,10 @@ $html .= "
   </tr>
 </table>";
 
+$location = new \Register\Location($GLOBALS['_config']->support->rma_location_id);
+$formatted_location = $GLOBALS['_SESSION_']->company->name."<br/>Attn: Service Department<br/>".$location->address_1;
+if (!empty($location->address_2)) $formatted_location .= "<br/>".$location->address_2;
+$formatted_location .= "<br/>".$location->city.",".$location->province()->abbreviation." ".$location->zip_code;
 $html .= "
 <br/><br/><br/>
 <table style=\"width:100%; font-size: 11px;\" cellspacing=\"10\" cellpadding=\"10\">
@@ -168,9 +173,9 @@ $html .= "
     <th>Shipping Label - Cut Out and Attach to Package	</th>
     <th>Shipping Label - Cut Out and Attach to Package	</th>
   </tr>
-  <tr style=\"font-size: 15px;\">
-    <td style=\"border:1px dashed #000;\">Spectros Instruments, Inc<br/>Attn: Returns Department<br/>17D Airport Road<br/>Hopedale, MA 01747</td>
-    <td style=\"border:1px dashed #000;\">Spectros Instruments, Inc<br/>Attn: Returns Department<br/>17D Airport Road<br/>Hopedale, MA 01747</td>
+  <tr style=\"font-size: 20px;\">
+    <td style=\"border:1px dashed #000;\">{$formatted_location}</td>
+    <td style=\"border:1px dashed #000;\">{$formatted_location}</td>
   </tr>
 </table>";
 

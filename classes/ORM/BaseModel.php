@@ -116,6 +116,13 @@
             return false;
 		}
 
+		public function delete($columnName = 'id') {
+			$deleteObjectQuery = "DELETE FROM `$this->tableName` WHERE `$columnName` = ?";
+			$this->execute($deleteObjectQuery,array($this->id));
+			if ($this->_error) return false;
+			return true;
+		}
+
         /**
          * get the error that may have happened on the DB level
          *

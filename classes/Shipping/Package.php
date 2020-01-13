@@ -44,7 +44,7 @@
 			$parameters['number'] = $number;
 		
 		    // add entry	
-            parent::add($parameters);
+            return parent::add($parameters);
 		}
 		
         /**
@@ -75,7 +75,7 @@
 			}
         
 		    // update entry
-            parent::update($parameters);
+            return parent::update($parameters);
         }
 		
 		/**
@@ -102,6 +102,33 @@
 			list($number) = $rs->FetchRow();
 			if (is_numeric($number)) return $number + 1;
 			return 1;
+		}
+
+		public function add_item($parameters = array()) {
+			$product = new \Product\Item($parameters['product_id']);
+			if (! $product->id) {
+				$this->_error = "Product '".$parameters['product_id']."' not found";
+				return false;
+			}
+			if (empty($parameters['description'])) {
+				$parameters['description'] = $product->description;
+			}
+			if (! isset($parameters['quantity'])) $parameters['quantity'] = 1;
+
+			$item = new \Shipping\Item();
+			if ($item->add(array(
+				'shipment_id'	=> $this->shipment_id,
+				'package_id'	=> $this->id,
+				'serial_number'	=> $parameters['serial_number'],
+				'condition'		=> $parameters['condition'],
+				'product_id'	=> $product->id,
+				'quantity'		=> $parameters['quantity'],
+				'description'	=> $parameters['description']
+			))) return $item;
+			else {
+				$this->_error = "Error adding item to package: ".$item->error();
+				return null;
+			}
 		}
 
 		public function items() {

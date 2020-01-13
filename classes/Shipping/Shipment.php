@@ -59,7 +59,7 @@
 				return false;
 			}
 			
-		    parent::add($parameters);
+		    return parent::add($parameters);
 		}
 		
         /**
@@ -69,7 +69,7 @@
          */
 		public function update($parameters = array()) {
 			if (isset($parameters['type']) && isset($parameters['number'])) $parameters['document_number'] = sprintf("%s-%06d",$parameters['type'],$parameters['number']);
-            parent::update($parameters);
+            return parent::update($parameters);
 		}
 
         /**
@@ -108,16 +108,14 @@
 		 * for current shipment, get the items included
 		 */
 		public function get_items() {
-			$itemsInShipment = array();
-			if ($this->id) {
-				$items = $this->execute('SELECT * FROM shipping_packages sp INNER JOIN shipping_items si on sp.id = si.package_id  where sp.shipment_id = ?', array($this->id));
-				foreach ($items as $item) $itemsInShipment[] = $item;
-				return $itemsInShipment;
-			} else {
-				$this->_error = "no shipment id was found";
+			$itemList = new ItemList();
+			$items = $itemList->find(array('shipment_id' => $this->id));
+			if ($itemList->error()) {
+				$this->_error = "Error getting items: ".$itemList->error();
+				return null;
 			}
+			return $items;
 		}
-		
 		
 		public function vendor() {
 			return new \Shipping\Vendor($this->vendor_id);

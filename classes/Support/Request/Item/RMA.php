@@ -11,6 +11,7 @@
 		public $item;
 		private $item_id;
 		public $status;
+		public $_exists = false;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -140,7 +141,7 @@
 		
 		public function get($code) {
 			$get_object_query = "
-				SELECT	*
+				SELECT	id
 				FROM	support_rmas
 				WHERE	code = ?
 			";
@@ -170,13 +171,23 @@
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
-			$this->id = $object->id;
-			$this->code = $object->code;
-			$this->date_approved = $object->date_approved;
-			$this->timestamp_approved = $object->timestamp_approved;
-			$this->approved_id = $object->approved_id;
-			$this->status = $object->status;
-			$this->item_id = $object->item_id;			
+			if (!empty($object)) {
+				$this->id = $object->id;
+				$this->code = $object->code;
+				$this->date_approved = $object->date_approved;
+				$this->timestamp_approved = $object->timestamp_approved;
+				$this->approved_id = $object->approved_id;
+				$this->status = $object->status;
+				$this->item_id = $object->item_id;
+				$this->_exists = true;
+			}
+			else {
+				$this->id = null;
+				$this->code = null;
+				$this->status = null;
+				$this->item_id = null;
+				$this->_exists = false;
+			}
 			return true;
 		}
 
@@ -211,8 +222,7 @@
 		}
 
 		public function exists() {
-			if (is_numeric($this->id)) return true;
-			return false;
+			return $this->_exists;
 		}
 
 		public function error() {

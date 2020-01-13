@@ -486,7 +486,7 @@
    <span class="label"><i class="fa fa-wrench" aria-hidden="true"></i> Approved By</span> <span class="value"><?=$rmaApprovedByName?> - <?=$rmaDateApproved?> - Status: <?=$rmaStatus?></span>
 </div>
 <div class="container">
-   <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Product</span> <span class="value"><?=$rmaProductCode?> - <?=$rmaSerialNumber?></span>
+   <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Product</span> <span class="value"><?=$rmaProduct->code?> - <?=$rmaSerialNumber?></span>
 </div>
 <?php
    if (! $rmaSubmitted) {

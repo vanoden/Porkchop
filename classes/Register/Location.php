@@ -16,7 +16,7 @@
 
 		public function __construct($id = 0,$parameters = array()) {
 			parent::__construct($id);
-			if ($parameters['recursive']) {
+			if (isset($parameters['recursive']) && $parameters['recursive']) {
 				$this->province = new \Geography\Province($this->province_id);
 				$this->country = new \Geography\Country($this->province->country_id);
 			}
