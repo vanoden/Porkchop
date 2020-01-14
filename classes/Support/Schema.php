@@ -269,17 +269,20 @@
 				// Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-				// product warranty page table
-				$alter_table_query = "	
-					ALTER TABLE `support_rmas` add column billing_contact_id int(11)
-				";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering support_rmas table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
+				$table = new \Database\Schema\Table('support_rmas');
+				if (! $table->has_column('billing_contact_id')) {
+					// product warranty page table
+					$alter_table_query = "	
+						ALTER TABLE `support_rmas` add column billing_contact_id int(11)
+					";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering support_rmas table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
 				}
 
-				$this->setVersion(6);
+				$this->setVersion(7);
 				$GLOBALS['_database']->CommitTrans();
 			}
 
