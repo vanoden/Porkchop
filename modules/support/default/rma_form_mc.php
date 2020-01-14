@@ -197,7 +197,10 @@ if ($page->errorCount() < 1) {
 						'notes' => 'phone number added during RMA return request'
 						)
 					);
+					$_REQUEST['billing_contact_picker'] = $newUser->id;
 				}
+				$rma->update(array('billing_contact_id' => $_REQUEST['billing_contact_picker']));
+				if ($rma->error()) $page->addError('Unable to store billing contact: '.$rma->error());
 			
 				$parameters ['instructions'] = (isset ( $_REQUEST ['delivery_instructions'] )) ? $_REQUEST ['delivery_instructions'] : '';
 	
@@ -245,10 +248,9 @@ if ($page->errorCount() < 1) {
 								}
 							}
 						}
+						// RMA status is changed to CUSTOMER_SHIP @TODO, why didn't the table have that in the ENUM values?
+						$rma->update(array('shipment_id' => $shippingShipment->id,'status'=>'PRINTED'));
 					}
-
-					// RMA status is changed to CUSTOMER_SHIP @TODO, why didn't the table have that in the ENUM values?
-					$rma->update(array('status'=>'PRINTED'));
 				}
 			}
 		}

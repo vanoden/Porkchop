@@ -13,11 +13,13 @@
 				FROM	register_contacts
 				WHERE	id = id
 			";
+			$bind_params = array();
 			
 			if (isset($parameters['type'])) {
 				if (preg_match('/^(email|sms|phone|facebook)$/',$parameters['type'])) {
 					$get_contacts_query .= "
-					AND	`type` = ".$GLOBALS['_database']->qstr($parameters['type'],get_magic_quotes_gpc());
+					AND	`type` = ?";
+					array_push($bind_params,$parameters['type']);
 				} else {
 					$this->error = "Invalid contact type";
 					return undef;
@@ -27,7 +29,8 @@
 			if (isset($parameters['user_id'])) {
 				if (preg_match('/^\d+$/',$parameters['user_id'])) {
 					$get_contacts_query .= "
-						AND	person_id = ".$GLOBALS['_database']->qstr($parameters['user_id'],get_magic_quotes_gpc());
+						AND	person_id = ?";
+					array_push($bind_params,$parameters['user_id']);
 				} else {
 					$this->error = "Invalid user id";
 					return undef;
@@ -35,7 +38,8 @@
 			} elseif (isset($parameters['person_id'])) {
 				if (preg_match('/^\d+$/',$parameters['person_id'])) {
 					$get_contacts_query .= "
-						AND	person_id = ".$GLOBALS['_database']->qstr($parameters['person_id'],get_magic_quotes_gpc());
+						AND	person_id = ?";
+					array_push($bind_params,$parameters['person_id']);
 				} else {
 					$this->error = "Invalid user id";
 					return undef;
@@ -54,10 +58,11 @@
 					return undef;
 				}
 			}
+
+			$get_contacts_query .= "
+				ORDER BY notify DESC";
 			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_contacts_query
-			);
+			$rs = $GLOBALS['_database']->Execute($get_contacts_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Register::ContactList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;

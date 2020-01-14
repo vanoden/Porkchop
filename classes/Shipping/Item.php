@@ -10,5 +10,5 @@
 		public $quantity;
 		public $description;
 		public $tableName = 'shipping_items';
-        public $fields = array('id','package_id','product_id','serial_number','condition','quantity', 'description');
+        public $fields = array('id','package_id','product_id','shipment_id','serial_number','condition','quantity', 'description');
 	}

@@ -12,6 +12,18 @@
 		<div class="tableCell"><?=$rma->date_approved?></div>
 		<div class="tableCell"><?=$rma->status?></div>
 	</div>
+	<div class="tableRowHeader">
+		<div class="tableCell">Billing Contact</div>
+		<div class="tableCell">Contact Phone</div>
+		<div class="tableCell">Contact Email</div>
+		<div class="tableCell"></div>
+	</div>
+	<div class="tableRow">
+		<div class="tableCell"><a href="/_register/admin_account/<?=$contact->code?>"><?=$contact->full_name()?></a></div>
+		<div class="tableCell"><?=$contact->phone()->value?></div>
+		<div class="tableCell"><?=$contact->email()->value?></div>
+		<div class="tableCell"></div>
+	</div>
 </div>
 <div class="tableBody">
 	<div class="tableRowHeader">

@@ -24,8 +24,7 @@ $rmaDateApproved = date ( "m/d/Y", strtotime ( $rma->date_approved ) );
 $rmaProductCode = $rma->item ()->product ? $rma->item ()->product->code : "";
 
 // get the shipment in question if it exists
-$shippingShipment = new \Shipping\Shipment ();
-$shippingShipment->get ( $rmaCode );
+$shippingShipment = new \Shipping\Shipment ($rma->shipment_id);
 $itemsInShipment = $shippingShipment->get_items ();
 $rmaInstructions = $shippingShipment->instructions ? $shippingShipment->instructions : "NONE";
 

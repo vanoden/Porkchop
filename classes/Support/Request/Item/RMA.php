@@ -2,7 +2,7 @@
 	namespace Support\Request\Item;
 
 	class RMA {
-	
+		public $id;
 		private $_error;
 		public $code;
 		private $approved_id;
@@ -12,6 +12,7 @@
 		private $item_id;
 		public $status;
 		public $_exists = false;
+		protected $billing_contact_id;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -108,6 +109,28 @@
 				array_push($bind_params,$parameters['status']);
 			}
 
+			if (isset($parameters['billing_contact_id'])) {
+				$contact = new \Register\Customer($parameters['billing_contact_id']);
+				if (! $contact->id) {
+					$this->_error = "Billing Contact Not Found";
+					return false;
+				}
+				$update_action_query .= ",
+					billing_contact_id = ?";
+				array_push($bind_params,$parameters['billing_contact_id']);
+			}
+
+			if (isset($parameters['shipment_id'])) {
+				$shipment = new \Shipping\Shipment($parameters['shipment_id']);
+				if (! $shipment->id) {
+					$this->_error = "Shipment Not Found";
+					return false;
+				}
+				$update_action_query .= ",
+					shipment_id = ?";
+				array_push($bind_params,$parameters['shipment_id']);
+			}
+
 			if (isset($parameters['approved_id']) && $parameters['approved_id'] > 0) {
 				$admin = new \Register\Customer($parameters['approved_id']);
 				if ($admin->error) {
@@ -179,6 +202,8 @@
 				$this->approved_id = $object->approved_id;
 				$this->status = $object->status;
 				$this->item_id = $object->item_id;
+				$this->billing_contact_id = $object->billing_contact_id;
+				$this->shipment_id = $object->shipment_id;
 				$this->_exists = true;
 			}
 			else {
@@ -199,6 +224,10 @@
 				return null;
 			}
 			return $shipments;
+		}
+
+		public function billingContact() {
+			return new \Register\Customer($this->billing_contact_id);
 		}
 
 		public function approvedBy() {

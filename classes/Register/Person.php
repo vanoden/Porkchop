@@ -146,6 +146,7 @@
 				$full_name .= $this->last_name;
 			}
 			if (! strlen($full_name)) $full_name = $this->code;
+			if (! strlen($full_name)) $full_name = '[empty]';
 			return $full_name;
 		}
 		public function password_strength($string) {
@@ -475,6 +476,18 @@
 			$contactlist = new ContactList();
 			$parameters['person_id'] = $this->id;
 			return $contactlist->find($parameters);
+		}
+		public function phone() {
+			if (! $this->id) return new \Register\Contact();
+			$contactlist = new ContactList();
+			list($phone) = $contactlist->find(array('person_id' => $this->id,'type' => 'phone'));
+			return $phone;
+		}
+		public function email() {
+			if (! $this->id) return new \Register\Contact();
+			$contactlist = new ContactList();
+			list($email) = $contactlist->find(array('person_id' => $this->id,'type' => 'email'));
+			return $email;
 		}
 		public function notifyContact($parameters = array()) {
 			$contact = new Contact();

@@ -94,6 +94,10 @@
          * @param array $parameters, name value pairs to add by
          */
 		public function add_item($parameters) {
+			if (! $this->id) {
+				$this->_error = "Shipping id not set";
+				return null;
+			}
 			$parameters['shipment_id'] = $this->id;
 			$item = new \Shipping\Item();
 			if ($item->add($parameters)) {
@@ -108,6 +112,7 @@
 		 * for current shipment, get the items included
 		 */
 		public function get_items() {
+			if (! $this->id) return array();
 			$itemList = new ItemList();
 			$items = $itemList->find(array('shipment_id' => $this->id));
 			if ($itemList->error()) {
