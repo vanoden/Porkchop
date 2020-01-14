@@ -16,7 +16,7 @@
 		public $date_received;
 		public $user_received_id;
 		public $tableName = 'shipping_packages';
-        public $fields = array('id','shipment_id','number','tracking_code','status','condition','height','width','depth','weight','shipping_cost','date_received','user_received_id');
+        public $fields = array('id','shipment_id','number','tracking_code','status','condition','height','width','depth','weight','shipping_cost','date_received','user_received_id','vendor_id');
         
         /**
          * add by params
@@ -24,29 +24,29 @@
          * @param array $parameters, name value pairs to add and populate new object by
          */
         public function add($parameters = array()) {
-        
+
             // shipment_id is required            
             if (empty($parameters['shipment_id'])) {
 				$this->_error = "Shipment ID Required";
 				return false;
             }
-            
+
             // check shipment exists
         	$shipment = new \Shipping\Shipment($parameters['shipment_id']);
 			if (! $shipment->id) {
 				$this->_error = "Shipment Not Found";
 				return false;
 			}
-	
+
         	// get next number for shipment
 			$number = $this->get_next_number($shipment->id);
 			if (! isset($number)) return false;			
 			$parameters['number'] = $number;
-		
+
 		    // add entry	
             return parent::add($parameters);
 		}
-		
+
         /**
          * get object in question
          */
@@ -58,14 +58,13 @@
     			foreach ($this->fields as $field) $this->$field = $object->$field;
 			}
 		}
-		
+
         /**
          * update by params
          * 
          * @param array $parameters, name value pairs to update object by
          */
         public function update($parameters = array()) {
-        
 			if (isset($parameters['user_received']) && is_numeric($parameters['user_received'])) {
 				$customer = new \Register\Customer($parameters['user_received']);
 				if (! $customer->id) {
@@ -73,7 +72,7 @@
 					return false;
 				}
 			}
-        
+
 		    // update entry
             return parent::update($parameters);
         }

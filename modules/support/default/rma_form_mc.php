@@ -24,21 +24,12 @@ if (! $misc_inventory_item->get($misc_inventory_code)) {
 }
 app_log("Misc Item ID: ".$misc_inventory_item->id,'notice');
 
-/**
- * for country name sorting
- *
- * @param string $a
- * @param string $b
- */
-function sortNames($a, $b) {
-	return strcmp($a->name, $b->name);
-}
 
 /**
  * for any ORM objects log possible errors to the page and error_log
  *
  * @param obj $DataObject
- */
+Seems redundant, we have a built in logger?
 function logErrors($dataObject, $page) {
     try {
         if (method_exists ( $dataObject ,'error' )) {
@@ -51,7 +42,7 @@ function logErrors($dataObject, $page) {
         }
     } catch (Exception $e) {}
 }
-
+*/
 // get the addresses known for given customer and customer organization
 $customerId = $GLOBALS['_SESSION_']->customer->id;
 $organization = $GLOBALS['_SESSION_']->customer->organization;
@@ -100,21 +91,12 @@ if ($page->errorCount() < 1) {
 	if ( $GLOBALS['_SESSION_']->customer->has_role('support user') ) $authorized = true;
 
 	// get the shipment in question if it exists
-	$shippingShipment = new \Shipping\Shipment ();
-	$shippingDocument = sprintf("RMA%06d",$rma->number());
-	while ($shippingShipment->get ( $shippingDocument )) {
-		if (preg_match('/^RMA(\d{6})\-(\d+)$/',$shippingDocument,$matches)) {
-			$shippingDocument = "RMA".$matches[1]."-".$matches[2] + 1;
-		}
-		else {
-			$shippingDocument .= "-1";
-		}
-	}
-	
+	$shippingShipment = new \Shipping\Shipment($rma->shipment_id);
+	$shippingDocument = $rma->number();
+
 	// get existing geography for form fields
 	$countryList = new \Geography\CountryList ();
 	$allCountriesList = $countryList->find();
-	usort($allCountriesList, "sortNames");
 
 	// process the form submission for the return request
 	if (isset($_REQUEST['form_submitted']) && $_REQUEST ['form_submitted'] == 'submit') {
@@ -258,20 +240,16 @@ if ($page->errorCount() < 1) {
 	
 	// process the form submission for the adding package and tracking details
 	if ($_REQUEST ['form_submitted'] == 'package_details_submitted') {
-	
 		$shippingPackage = new \Shipping\Package ();
 		$shippingPackage->getByShippingID($shippingShipment->id);
 		$packageDetails = array ();
 		$packageDetails ['shipment_id'] = $shippingShipment->id;
 		$packageDetails ['tracking_code'] = (isset ( $_REQUEST ['tracking_code'] )) ? $_REQUEST ['tracking_code'] : '';
-		$packageDetails ['height'] = (isset ( $_REQUEST ['height'] )) ? floatval( $_REQUEST ['height'] ) : 0;
-		$packageDetails ['width'] = (isset ( $_REQUEST ['width'] )) ? floatval( $_REQUEST ['width'] ) : 0;
-		$packageDetails ['depth'] = (isset ( $_REQUEST ['depth'] )) ?  floatval( $_REQUEST ['depth'] ) : 0;
-		$packageDetails ['weight'] = (isset ( $_REQUEST ['weight'] )) ? floatval( $_REQUEST ['weight'] ) : 0;		
+		$shippingShipment->update(array('vendor_id' => $_REQUEST ['vendor_id']));	
 		if (!empty($shippingPackage->id)) {
-			$shippingPackage->update ( $packageDetails );
+			if (!$shippingPackage->update ( $packageDetails )) $page->addError("Error submitting shipping details: ".$shippingPackage->error());
 		} else {
-			$shippingPackage->add ( $packageDetails );
+			if (!$shippingPackage->add ( $packageDetails )) $page->addError("Error submitting shipping details: ".$shippingPackage->error());
 		}
 	}
 	
@@ -286,6 +264,7 @@ if ($page->errorCount() < 1) {
 	}
 }
 
+/* Seems redundant, we have a built-in logger
 // process any errors if occurred
 if (isset($rma)) logErrors($rma, $page);
 if (isset($countryList)) logErrors($countryList, $page);
@@ -294,6 +273,9 @@ if (isset($registerLocationShipping)) logErrors($registerLocationShipping, $page
 if (isset($newUser)) logErrors($newUser, $page);
 if (isset($registerContact)) logErrors($registerContact, $page);
 if (isset($shippingPackage)) logErrors($shippingPackage, $page);
+*/
 
 $organizationUsers = $organization->members('human');
 $customerLocations = $GLOBALS['_SESSION_']->customer->locations();
+$shippingVendorList = new \Shipping\VendorList();
+$shippingVendors = $shippingVendorList->find();

@@ -434,11 +434,8 @@
         <div class="container">
            <span class="label"><i class="fa fa-envelope" aria-hidden="true"></i> Current Package Info: <br /></span> 
            <span class="value">
+		   Vendor: <?=$shippingShipment->vendor()->name?><br/>
            Tracking #: <?=$shippingPackage->tracking_code;?><br/>
-           Height: <?=$shippingPackage->height;?><br/>
-           Width: <?=$shippingPackage->width;?><br/>
-           Depth: <?=$shippingPackage->depth;?><br/>
-           Weight: <?=$shippingPackage->weight;?><br/>
            </span>
         </div>
     <? }
@@ -450,14 +447,12 @@
               <div class="small-input">
                  <label for="tracking_code">Tracking Number</label> 
                  <input type="text" id="tracking_code" name="tracking_code" class="tracking_code" placeholder="1Z9999999999999999" value="<?=$shippingPackage->tracking_code;?>">
-                 <label for="height">Height (in/cm)</label> 
-                 <input type="text" id="height" name="height" class="height" placeholder="10" value="<?=$shippingPackage->height;?>"> 
-                 <label for="width">Width (in/cm)</label> 
-                 <input type="text" id="width" name="width" class="width" placeholder="5" value="<?=$shippingPackage->width;?>"> 
-                 <label for="depth">Depth (in/cm)</label> 
-                 <input type="text" id="depth" name="depth" class="depth" placeholder="5" value="<?=$shippingPackage->depth;?>"> 
-                 <label for="weight">Weight (kg/lb)</label> 
-                 <input type="text" id="weight" name="weight" class="weight" placeholder="1" value="<?=$shippingPackage->weight;?>"> 
+                 <label for="vendor_id">Shipping Vendor</label> 
+                 <select id="vendor_id" name="vendor_id" class="tracking_code" placeholder="10">
+					<option value="">Select</option>
+				<?	foreach ($shippingVendors as $shippingVendor) { ?>
+					<option value="<?=$shippingVendor->id?>"<? if ($shipment->vendor_id == $shippingVendor->id) print " selected";?>><?=$shippingVendor->name?></option>
+				<?	} ?>
                  <input type="hidden" name="form_submitted" value="package_details_submitted" />
                  <input id="add-package-details" type="submit" value="<?=empty($shippingPackage->id) ? "Add" : "Update"?> Package Details" class="btn" style="height: 35px;">
               </div>

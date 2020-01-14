@@ -35,7 +35,7 @@
 <div class="table">
 	<div class="tableRowHeader">
 		<div class="tableCell">Package <?=$package->id?></div>
-		<div class="tableCell">Tracking Number <?=$package->tracking_number?></div>
+		<div class="tableCell">Tracking Number <?=$package->tracking_code?></div>
 	</div>
 </div>
 <div class="table">

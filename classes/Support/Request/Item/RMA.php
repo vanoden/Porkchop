@@ -235,7 +235,8 @@
 			return new \Support\Request\Item($this->item_id);
 		}
 		public function number() {
-			return sprintf("RMA%05d",$this->id);
+			app_log("RMA Number ".sprintf("RMA%05d",$this->id));
+			return sprintf("RMA%06d",$this->id);
 		}
 		public function events() {
 			return null;

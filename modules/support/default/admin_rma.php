@@ -74,6 +74,7 @@
 		<div class="tableCell">Shipped</div>
 		<div class="tableCell">Shipper</div>
 	</div>
+	<?	if ($shipment->id) { ?>
     <div class="tableRow">
 	    <div class="tableCell"><a href="/_shipping/admin_shipment?id=<?=$shipment->id?>"><?=$shipment->number()?></a></div>
 	    <div class="tableCell"><?=$shipment->status?></div>
@@ -82,4 +83,5 @@
 	    <div class="tableCell"><?=$shipment->date_shipped?></div>
 	    <div class="tableCell"><?=$shipment->vendor?></div>
     </div>
+	<?	} ?>
 </div>
