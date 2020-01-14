@@ -162,7 +162,12 @@ $html .= "
   </tr>
 </table>";
 
-$location = new \Register\Location($GLOBALS['_config']->support->rma_location_id);
+# Get Warehouse Address
+$configuration = new \Site\Configuration("module/support/rma_location_id");
+if ($configuration->value()) $receive_location_id = $configuration->value();
+else $page->addError("Default RMA Address Not Configured");
+
+$location = new \Register\Location($receive_location_id);
 $formatted_location = $GLOBALS['_SESSION_']->company->name."<br/>Attn: Service Department<br/>".$location->address_1;
 if (!empty($location->address_2)) $formatted_location .= "<br/>".$location->address_2;
 $formatted_location .= "<br/>".$location->city.",".$location->province()->abbreviation." ".$location->zip_code;
