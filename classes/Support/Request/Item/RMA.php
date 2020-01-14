@@ -216,14 +216,8 @@
 			return true;
 		}
 
-		public function shipments() {
-			$shipmentList = new \Shipping\ShipmentList();
-			$shipments = $shipmentList->find(array('document_id' => $this->number()));
-			if ($shipmentList->error()) {
-				$this->_error = $shipmentList->error();
-				return null;
-			}
-			return $shipments;
+		public function shipment() {
+			return new \Shipping\Shipment($this->shipment_id);
 		}
 
 		public function billingContact() {
