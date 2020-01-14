@@ -13,7 +13,7 @@ $optional_contents = array(
 
 # Get Warehouse Address
 $configuration = new \Site\Configuration("module/support/rma_location_id");
-if ($configuration->get()) $parameters ['receive_location_id'] = $configuration->value();
+if ($configuration->value()) $receive_location_id = $configuration->value();
 else $page->addError("Default RMA Address Not Configured");
 
 # Get Misc Inventory Product
@@ -133,6 +133,7 @@ if ($page->errorCount() < 1) {
 			$parameters ['status'] = 'NEW';
 			$parameters ['send_customer_id'] = $rmaItem->request->customer->id;
 			$parameters ['receive_customer_id'] = $rma->approvedBy ()->id;
+			$parameters ['receive_location_id'] = $receive_location_id;
 	
 			if (!empty($_REQUEST ['shipping_address_picker'])) {
 				$registerLocationShipping = new \Register\Location($_REQUEST['shipping_address_picker']);
