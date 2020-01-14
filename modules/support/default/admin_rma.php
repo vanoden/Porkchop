@@ -67,20 +67,19 @@
 <h2>Shipments</h2>
 <div class="tableBody">
 	<div class="tableRowHeader">
+		<div class="tableCell">Number</div>
 		<div class="tableCell">Status</div>
+		<div class="tableCell">Entered</div>
+		<div class="tableCell">By</div>
 		<div class="tableCell">Shipped</div>
 		<div class="tableCell">Shipper</div>
 	</div>
-<?php
-    if ($shipments) {
-	    foreach ($shipments as $shipment) { ?>
-	    <div class="tableRow">
-		    <div class="tableCell"><?=$shipment->status?></div>
-		    <div class="tableCell"><?=$shipment->date_shipped?></div>
-		    <div class="tableCell"><?=$shipment->vendor?></div>
-	    </div>
-    <?php
-        } 
-    }
-?>
+    <div class="tableRow">
+	    <div class="tableCell"><a href="/_shipping/admin_shipment?id=<?=$shipment->id?>"><?=$shipment->number()?></a></div>
+	    <div class="tableCell"><?=$shipment->status?></div>
+	    <div class="tableCell"><?=$shipment->date_entered?></div>
+	    <div class="tableCell"><?=$shipment->send_contact()->full_name()?></div>
+	    <div class="tableCell"><?=$shipment->date_shipped?></div>
+	    <div class="tableCell"><?=$shipment->vendor?></div>
+    </div>
 </div>

@@ -132,6 +132,7 @@
 		}
 
 		public function items() {
+			if (empty($this->id)) return array();
 			$itemList = new \Shipping\ItemList();
 			return $itemList->find(array('package_id' => $this->id));
 		}

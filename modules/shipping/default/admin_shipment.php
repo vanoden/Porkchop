@@ -7,8 +7,25 @@
 	<span class="value"><?=$shipment->document_number?></span>
 </div>
 <div class="container">
+	<span class="label">Status</span>
+	<span class="value"><?=$shipment->status?></span>
+</div>
+<div class="container">
+	<span class="label">Entered By</span>
+	<span class="value"><?=$shipment->send_contact()->full_name()?></span>
+</div>
+<div class="container">
+	<span class="label">Entered On</span>
+	<span class="value"><?=$shipment->date_entered?></span>
+</div>
+<div class="container">
+	<span class="label">Shipped On</span>
+	<span class="value"><?=$shipment->date_shipped?></span>
+</div>
+<div class="container">
 	<span class="label">Vendor</span>
 	<select class="value input" name="vendor_id">
+		<option value="">Not Specified</option>
 <?	foreach ($vendors as $vendor) { ?>
 		<option value="<?=$vendor->id?>"<? if ($shipment->vendor_id == $vendor->id) print " selected"; ?>><?=$vendor->name?></option>
 <?	} ?>

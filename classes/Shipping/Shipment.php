@@ -121,7 +121,14 @@
 			}
 			return $items;
 		}
-		
+		public function items() {
+			return $this->get_items();
+		}
+		public function packages() {
+			if (empty($this->id)) return array();
+			$packageList = new \Shipping\PackageList();
+			return $packageList->find(array('shipment_id' => $this->id));
+		}
 		public function vendor() {
 			return new \Shipping\Vendor($this->vendor_id);
 		}
@@ -140,5 +147,9 @@
 
 		public function rec_location() {
 			return new \Register\Location($this->rec_location_id);
+		}
+
+		public function number() {
+			return sprintf("%06d",$this->id);
 		}
 	}

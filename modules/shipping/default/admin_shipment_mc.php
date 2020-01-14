@@ -6,3 +6,5 @@
 
 	$vendorList = new \Shipping\VendorList();
 	$vendors = $vendorList->find();
+
+	$packages = $shipment->packages();
