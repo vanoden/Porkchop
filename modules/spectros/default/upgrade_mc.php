@@ -704,6 +704,15 @@
 		}
 	}
 
+	# Publish Default Dashboard
+	$dashboard = new \Monitor\Dashboard();
+	if ($dashboard->get('concept')) {
+		$dashboard->update(array('status' => 'PUBLISHED'));
+	}
+	else {
+		install_fail("concept dashboard not found!");
+	}
+
 	# Add Shipping Vendors
 	foreach ($vendors as $vendorName) {
 		$vendor = new \Shipping\Vendor();
