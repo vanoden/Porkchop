@@ -622,7 +622,15 @@
 	else {
 		$location = new \Register\Location($rma_location_id);
 	}
-	install_log("RMA Destination is set to '".$location->name."' in ".$location->city.", ".$location->province()->abbreviation,'notice');
+	install_log("Office location is set to '".$location->name."' in ".$location->city.", ".$location->province()->abbreviation);
+	$configuration = new \Site\Configuration("module/support/rma_location_id");
+	if (empty($configuration->value())) {
+		install_log("Setting default RMA destination location",'notice');
+		$configuration->set($rma_location_id);
+	}
+	else {
+		install_log("RMA Dest already set to ".$configuration->value());
+	}
 	
 	foreach ($menus as $code => $menu) {
 		$nav_menu = new \Navigation\Menu();
