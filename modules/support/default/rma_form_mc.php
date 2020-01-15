@@ -1,6 +1,6 @@
 <?php
 $page = new \Site\Page ();
-$page->requireRole ( "support user" );
+$page->requireAuth();
 
 $optional_contents = array(
 	'power_cord'	=> 'Power Cord',
