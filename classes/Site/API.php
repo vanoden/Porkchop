@@ -26,7 +26,7 @@
 		###################################################
 		### Just See if Server Is Communicating			###
 		###################################################
-		function ping() {
+		public function ping() {
 			$response = new \HTTP\Response();
 			$response->header->session = $GLOBALS['_SESSION_']->code;
 			$response->header->method = $_REQUEST["method"];
@@ -34,8 +34,6 @@
 			$response->message = "PING RESPONSE";
 			$response->success = 1;
 	
-			$_comm = new \Monitor\Communication();
-			$_comm->update(json_encode($response));
 			api_log($response);
 			print $this->formatOutput($response);
 		}
@@ -102,6 +100,33 @@
 			$response->success = 1;
 			$response->version = $version;
 			print $this->formatOutput($response);
+		}
+		public function _form() {
+			$form = '';
+			$methods = $this->_methods();
+
+			$cr = "\n";
+			$t = "\t";
+			foreach ($methods as $name => $params) {
+				$form .= $t.'<form method="post" action="/_'.$this->_name.'/api" name="'.$name.'">'.$cr;
+				$form .= $t.$t.'<input type="hidden" name="method" value="'.$name.'" />'.$cr;
+				$form .= $t.$t.'<div class="apiMethod">'.$cr;
+				$form .= $t.$t.'<div class="h3 apiMethodTitle">'.$name.'</div>'.$cr;
+				foreach ($params as $param => $options) {
+					if ($options['required']) $required = ' required';
+					else $required = '';
+					if (isset($options['default'])) $default = $options['default'];
+					else $default = '';
+					$form .= $t.$t.$t.'<div class="apiParameter">'.$cr;
+					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required.'">'.$param.'</span>'.$cr;
+					$form .= $t.$t.$t.$t.'<input type="text" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+					$form .= $t.$t.$t.'</div>'.$cr;
+				}
+				$form .= $t.$t.$t.'<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>'.$cr;
+				$form .= $t.$t.'</div>'.$cr;
+				$form .= $t.'</form>'.$cr;
+			}
+			return $form;
 		}
 	}
 ?>
