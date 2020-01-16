@@ -80,6 +80,14 @@
 			return $document->content();
 		}
 
+		public function apiMethods() {
+			$methods = $this->_methods();
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->method = $methods;
+			print $this->formatOutput($response);
+		}
+
 		# Manage Module Schema
 		public function schemaVersion() {
 			if ($this->_schema->error) {
