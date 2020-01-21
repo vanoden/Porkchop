@@ -318,7 +318,7 @@
 ?>
 </div>
 <?	} ?>
-<?	if ($rmalist->count() > 0) { ?>
+<?	if (isset($rmalist) && $rmalist->count() > 0) { ?>
 <div style="width: 756px;">
 <h2>Authorized Returns</h2>
 <?		foreach ($rmas as $rma) { ?>
