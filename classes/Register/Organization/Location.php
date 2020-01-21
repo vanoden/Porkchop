@@ -145,7 +145,7 @@
 
 			if ($parameters['name'])
 				$update_object_query .= ",
-						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
+						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc);
 
 			// Update Object
 			$update_object_query = "
@@ -154,11 +154,11 @@
 			
 			if (preg_match('/^[\w\-\.]+$/',$parameters['host']))
 				$update_object_query .= ",
-					host = ".$GLOBALS['_database']->qstr($parameters['host'],get_magic_quotes_gpc());
+					host = ".$GLOBALS['_database']->qstr($parameters['host'],get_magic_quotes_gpc);
 			
 			if (preg_match('/^\d+$/',$parameters['domain_id']))
 				$update_object_query .= ",
-					domain_id = ".$GLOBALS['_database']->qstr($parameters['domain_id'],get_magic_quotes_gpc());
+					domain_id = ".$GLOBALS['_database']->qstr($parameters['domain_id'],get_magic_quotes_gpc);
 
 			$update_object_query .= "
 				WHERE	id = ?

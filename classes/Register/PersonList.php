@@ -21,7 +21,7 @@
 			}
 			if (isset($parameters['code'])) {
 				$find_person_query .= "
-				AND		login = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc());
+				AND		login = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc);
 			}
 			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
@@ -37,7 +37,7 @@
 				}
 				else {
 					$find_person_query .= "
-						AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+						AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
 				}
 			}
 			else {
@@ -47,26 +47,26 @@
 	
 			if (isset($parameters['first_name'])) {
 				$find_person_query .= "
-				AND		first_name = ".$GLOBALS['_database']->qstr($parameters['first_name'],get_magic_quotes_gpc());
+				AND		first_name = ".$GLOBALS['_database']->qstr($parameters['first_name'],get_magic_quotes_gpc);
 			}
 	
 			if (isset($parameters['last_name'])) {
 				$find_person_query .= "
-				AND		last_name = ".$GLOBALS['_database']->qstr($parameters['last_name'],get_magic_quotes_gpc());
+				AND		last_name = ".$GLOBALS['_database']->qstr($parameters['last_name'],get_magic_quotes_gpc);
 			}
 	
 			if (isset($parameters['email_address'])) {
 				$find_person_query .= "
-				AND		email_address = ".$GLOBALS['_database']->qstr($parameters['email_address'],get_magic_quotes_gpc());
+				AND		email_address = ".$GLOBALS['_database']->qstr($parameters['email_address'],get_magic_quotes_gpc);
 			}
 
 			if (isset($parameters['department_id'])) {
 				$find_person_query .= "
-				AND		department_id = ".$GLOBALS['_database']->qstr($parameters['department_id'],get_magic_quotes_gpc());
+				AND		department_id = ".$GLOBALS['_database']->qstr($parameters['department_id'],get_magic_quotes_gpc);
 			}
 			if (isset($parameters['organization_id'])) {
 				$find_person_query .= "
-				AND		organization_id = ".$GLOBALS['_database']->qstr($parameters['organization_id'],get_magic_quotes_gpc());
+				AND		organization_id = ".$GLOBALS['_database']->qstr($parameters['organization_id'],get_magic_quotes_gpc);
 			}
 
 			if (preg_match('/^(login|first_name|last_name|organization_id)$/',$parameters['_sort'])) {

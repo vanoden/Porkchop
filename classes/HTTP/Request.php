@@ -228,18 +228,4 @@
 		public function error() {
 			return $this->_error;
 		}
-		
-		/**
-		 * clean characters to prevent XSS/Injection attacks via user input on the system
-		 * @param $input
-		 */
-		public function cleanCharacters($input) {
-    		$input = str_replace("`","",$input);
-    		$input = str_replace("\"","",$input);
-    		$input = str_replace(";","",$input);
-    		$input = str_replace("/","",$input);
-    		$input = str_replace("\\","",$input);
-    		$input = str_replace("*","",$input);
-    		return $input;
-		}
 	}

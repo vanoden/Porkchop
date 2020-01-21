@@ -60,12 +60,12 @@
 
 		// @TODO make this global
 		public function sanatizeInput($value) {
-		    return $GLOBALS['_database']->qstr($value,get_magic_quotes_gpc());
+		    return $GLOBALS['_database']->qstr($value,get_magic_quotes_gpc);
 		}
 		
 		// @TODO make this global
 		public function sanatizeInputSearch($value) {
-		    return preg_replace("/'$/","",preg_replace("/^'/","",$GLOBALS['_database']->qstr($value,get_magic_quotes_gpc())));
+		    return preg_replace("/'$/","",preg_replace("/^'/","",$GLOBALS['_database']->qstr($value,get_magic_quotes_gpc)));
 		}
 		
 		// @TODO make this global

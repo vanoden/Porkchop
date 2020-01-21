@@ -125,8 +125,8 @@
 		        <div class="tableCell" style="width: 100%;">Description</div>
 	        </div> <!-- end row header -->
 	        <div class="tableRow">
-		        <div class="tableCell">
-			        <?=$item->description?>
+		        <div class="tableCell" style="max-width: 500px; overflow:scroll;">
+			        <pre><?=$item->description?></pre>
 		        </div>
 	        </div>
         </div>		

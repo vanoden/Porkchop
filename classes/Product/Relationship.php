@@ -65,10 +65,10 @@
 			";
 			if (preg_match('/^\d+$/',$parameters['parent_id']))
 				$find_objects_query .= "
-				AND		parent_id = ".$GLOBALS['_database']->qstr($parameters['parent_id'],get_magic_quotes_gpc());
+				AND		parent_id = ".$GLOBALS['_database']->qstr($parameters['parent_id'],get_magic_quotes_gpc);
 			if ($parameters['child_id'])
 				$find_objects_query .= "
-				AND		child_id = ".$GLOBALS['_database']->qstr($parameters['child_id'],get_magic_quotes_gpc());
+				AND		child_id = ".$GLOBALS['_database']->qstr($parameters['child_id'],get_magic_quotes_gpc);
 
 			$find_objects_query .= "
 				ORDER BY view_order

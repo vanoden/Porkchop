@@ -26,7 +26,7 @@
 					foreach ($parameters['type'] as $type) {
 						if ($count) $find_product_query .= ",";
 						$count ++;
-						$find_product_query .= $GLOBALS['_database']->qstr($type,get_magic_quotes_gpc());
+						$find_product_query .= $GLOBALS['_database']->qstr($type,get_magic_quotes_gpc);
 					}
 					$find_product_query .= ")";
 				}

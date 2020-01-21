@@ -14,7 +14,7 @@
 			if (isset($parameters["mac_address"])) {
 				if (preg_match('/^[a-f\d\:]{17}$/',$parameters['mac_address'])) {
 					$find_objects_query .= "
-						AND		mac_address = ".$GLOBALS['_database']->qstr($parameters['mac_address'],get_magic_quotes_gpc());
+						AND		mac_address = ".$GLOBALS['_database']->qstr($parameters['mac_address'],get_magic_quotes_gpc);
 				}
 				else {
 					$this->_error = "Invalid mac address";
@@ -24,7 +24,7 @@
 			if (isset($parameters["ip_address"])) {
 				if (preg_match('/^\d+\.\d+\.\d+\.\d+$/',$parameters['ip_address'])) {
 					$find_objects_query .= "
-						AND		ip_address = ".$GLOBALS['_database']->qstr($parameters['ip_address'],get_magic_quotes_gpc());
+						AND		ip_address = ".$GLOBALS['_database']->qstr($parameters['ip_address'],get_magic_quotes_gpc);
 				}
 				else {
 					$this->_error = "Invalid ip address";
@@ -34,7 +34,7 @@
 			if (isset($parameters["hostname"])) {
 				if (preg_match('/^[\w\.\-]+$/',$parameters['hostname'])) {
 					$find_objects_query .= "
-						AND		hostname = ".$GLOBALS['_database']->qstr($parameters['hostname'],get_magic_quotes_gpc());
+						AND		hostname = ".$GLOBALS['_database']->qstr($parameters['hostname'],get_magic_quotes_gpc);
 				}
 				else {
 					$this->_error = "Invalid hostname";
