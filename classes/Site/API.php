@@ -1,140 +1,552 @@
 <?php
 	namespace Site;
 
-	class API {
-		protected $_error;
-		protected $response;
-		protected $module;
-		protected $_admin_role = 'administrator';
-		protected $_default_home = '/';
-		protected $_schema;
-		protected $_version;
-		protected $_name;
-		protected $_release;
+	/* Base Class for APIs */
+	class API extends \API {
 
 		public function __construct() {
-			$this->response = new \HTTP\Response();
+			$this->_name = 'site';
+			$this->_version = '0.1.1';
+			$this->_release = '2020-01-17';
+			$this->_schema = new \Site\Schema();
+			parent::__construct();
 		}
-
-		public function admin_role() {
-			return $this->_admin_role;
-		}
-		public function default_home() {
-			return $this->_default_home;
-		}
-
+		
 		###################################################
-		### Just See if Server Is Communicating			###
+		### Query Page List								###
 		###################################################
-		public function ping() {
+		public function findPages() {
+			# Default StyleSheet
+			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'content.message.xsl';
 			$response = new \HTTP\Response();
-			$response->header->session = $GLOBALS['_SESSION_']->code;
-			$response->header->method = $_REQUEST["method"];
-			$response->header->date = $this->system_time();
-			$response->message = "PING RESPONSE";
-			$response->success = 1;
 	
-			api_log($response);
+			# Initiate Page List
+			$page_list = new \Site\PageList();
+	
+			# Find Matching Threads
+			$parameters = array();
+			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+			if (isset($_REQUEST['module'])) $parameters['module'] = $_REQUEST['module'];
+			if (isset($_REQUEST['options'])) $parameters['options'] = $_REQUEST['options'];
+			$pages = $page_list->find($parameters);
+	
+			# Error Handling
+			if ($page_list->error) error($page_list->error);
+			else{
+				$response->page = $pages;
+				$response->success = 1;
+			}
+	
+			api_log('content',$_REQUEST,$response);
+	
+			# Send Response
 			print $this->formatOutput($response);
 		}
-
 		###################################################
-		### System Time									###
+		### Get Details regarding Specified Page		###
 		###################################################
-		private function system_time() {
-			return date("Y-m-d H:i:s");
-		}
-		###################################################
-		### Return Properly Formatted Error Message		###
-		###################################################
-		public function error($message) {
-			$_REQUEST["stylesheet"] = '';
-			error_log($message);
-			$response->message = $message;
-			$response->success = 0;
-			print $this->formatOutput($response);
-			exit;
-		}
-
-		###################################################
-		### Application Error							###
-		###################################################
-		public function app_error($message,$file = __FILE__,$line = __LINE__) {
-			app_log($message,'error',$file,$line);
-			$this->error('Application Error');
-		}
-		###################################################
-		### Convert Object to XML						###
-		###################################################
-		public function formatOutput($object) {
-			if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
-				$format = 'json';
-				header('Content-Type: application/json');
+		public function getPage() {
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
+			$response = new \HTTP\Response();
+	
+			# Initiate Page Object
+			$page = new \Site\Page();
+			if (isset($_REQUEST['module'])) $page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index']);
+			elseif (isset($_REQUEST['target'])) $page->get('content','index',$_REQUEST['target']);
+	
+			# Error Handling
+			if ($page->error) error($page->error);
+			elseif ($page->id) {
+				$response->request = $_REQUEST;
+				$response->page = $page;
+				$response->success = 1;
 			}
 			else {
-				$format = 'xml';
-				header('Content-Type: application/xml');
+				$response->success = 0;
+				$response->error = "Page not found";
 			}
-			$document = new \Document($format);
-			$document->prepare($object);
-			return $document->content();
-		}
-
-		public function apiMethods() {
-			$methods = $this->_methods();
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->method = $methods;
+	
+			api_log('content',$_REQUEST,$response);
+	
+			# Send Response
 			print $this->formatOutput($response);
 		}
-
-		# Manage Module Schema
-		public function schemaVersion() {
-			if ($this->_schema->error) {
-				$this->app_error("Error getting version: ".$this->_schema->error,__FILE__,__LINE__);
-			}
-			$version = $this->_schema->version();
+		public function addPage() {
+			if (! $GLOBALS['_SESSION_']->customer->can('change content pages')) error("Permission Denied");
+	
+			if (! $_REQUEST['module']) error("Module required");
+			if (! $_REQUEST['view']) error("View required");
+			if (! $_REQUEST['index']) $_REQUEST['index'] = '';
+			if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['module'])) error("Invalid module name");
+			if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['view'])) error("Invalid view name");
+	
+			$page = new \Site\Page();
+			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) error("Page already exists");
+			$page->add($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index']);
+			if ($page->error) error("Error adding page: ".$page->error);
+	
 			$response = new \HTTP\Response();
 			$response->success = 1;
-			$response->version = $version;
+			$response->page = $page;
 			print $this->formatOutput($response);
 		}
-		public function schemaUpgrade() {
-			if ($this->_schema->error) {
-				$this->app_error("Error getting version: ".$this->_schema->error,__FILE__,__LINE__);
-			}
-			$version = $this->_schema->upgrade();
+		###################################################
+		### Get Details regarding Specified Product		###
+		###################################################
+		public function addMessage() {
+			if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+	
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
 			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $version;
+	
+			# Initiate Product Object
+			$_content = new Content();
+	
+			# Find Matching Threads
+			$message = $_content->add(
+				array (
+					'name'			=> $_REQUEST['name'],
+					'target'		=> $_REQUEST['target'],
+					'title'			=> $_REQUEST['title'],
+					'content'		=> $_REQUEST['content']
+				)
+			);
+	
+			# Error Handling
+			if ($_content->error) error($_content->error);
+			else{
+				$response->message = $message;
+				$response->success = 1;
+			}
+	
+			api_log('content',$_REQUEST,$response);
+	
+			# Send Response
 			print $this->formatOutput($response);
 		}
-		public function _form() {
-			$form = '';
-			$methods = $this->_methods();
-
-			$cr = "\n";
-			$t = "\t";
-			foreach ($methods as $name => $params) {
-				$form .= $t.'<form method="post" action="/_'.$this->_name.'/api" name="'.$name.'">'.$cr;
-				$form .= $t.$t.'<input type="hidden" name="method" value="'.$name.'" />'.$cr;
-				$form .= $t.$t.'<div class="apiMethod">'.$cr;
-				$form .= $t.$t.'<div class="h3 apiMethodTitle">'.$name.'</div>'.$cr;
-				foreach ($params as $param => $options) {
-					if ($options['required']) $required = ' required';
-					else $required = '';
-					if (isset($options['default'])) $default = $options['default'];
-					else $default = '';
-					$form .= $t.$t.$t.'<div class="apiParameter">'.$cr;
-					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required.'">'.$param.'</span>'.$cr;
-					$form .= $t.$t.$t.$t.'<input type="text" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;
-					$form .= $t.$t.$t.'</div>'.$cr;
+		###################################################
+		### Update Specified Message					###
+		###################################################
+		public function updateMessage() {
+			if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+	
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
+			$response = new \HTTP\Response();
+	
+			# Initiate Product Object
+			$content = new Content($_REQUEST['id']);
+			if (! $content->id) error("Message '".$_REQUEST['id']."' not found");
+	
+			# Find Matching Threads
+			$content->update(
+				array (
+					'name'			=> $_REQUEST['name'],
+					'title'			=> $_REQUEST['title'],
+					'content'		=> $_REQUEST['content']
+				)
+			);
+	
+			# Error Handling
+			if ($content->error) error($content->error);
+			else{
+				$response->content = $content;
+				$response->success = 1;
+			}
+	
+			api_log('content',$_REQUEST,$response);
+			# Send Response
+			print $this->formatOutput($response);
+		}
+		###################################################
+		### Purge Cache of Specified Message			###
+		###################################################
+		public function purgeMessage() {
+			if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+	
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
+			$response = new \HTTP\Response();
+	
+			# Initiate Product Object
+			$_content = new Content();
+	
+			# Get Message
+			$message = $_content->get($_REQUEST['target']);
+			if ($_content->error)
+			{
+				app_error($_content->error,__FILE__,__LINE__);
+				error("Application error");
+			}
+			if (! $message->id)
+				error("Unable to find matching message");
+	
+			# Purge Cache for message
+			$_content->purge_cache($message->id);
+	
+			# Error Handling
+			if ($_content->error) error($_content->error);
+			else{
+				$response->message = "Success";
+				$response->success = 1;
+			}
+	
+			api_log('content',$_REQUEST,$response);
+			# Send Response
+			print $this->formatOutput($response);
+		}
+	
+		###################################################
+		### Get Metadata for current view				###
+		###################################################
+		public function getMetadata() {
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
+			$response = new \HTTP\Response();
+	
+			# Initiate Metadata Object
+			$_metadata = new \Site\Page\Metadata();
+	
+			# Find Matching Views
+			$metadata = $_metadata->get(
+				$_REQUEST['module'],
+				$_REQUEST['view'],
+				$_REQUEST['index']
+			);
+	
+			# Error Handling
+			if ($_metadata->error) error($_metadata->error);
+			else{
+				$response->metadata = $metadata;
+				$response->success = 1;
+			}
+	
+			# Send Response
+			api_log('content',$_REQUEST,$response);
+			print $this->formatOutput($response);
+		}
+		###################################################
+		### Get Metadata for current view				###
+		###################################################
+		public function findMetadata() {
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
+			$response = new \HTTP\Response();
+	
+			# Initiate Metadata Object
+			$_metadata = new \Site\Page\Metadata();
+	
+			# Find Matching Views
+			$metadata = $_metadata->find(
+				array (
+					'id'		=> $_REQUEST['id'],
+					'module'	=> $_REQUEST['module'],
+					'view'		=> $_REQUEST['view'],
+					'index'		=> $_REQUEST['index'],
+				)
+			);
+	
+			# Error Handling
+			if ($_metadata->error) error($_metadata->error);
+			else{
+				$response->metadata = $metadata;
+				$response->success = 1;
+			}
+	
+			# Send Response
+			api_log('content',$_REQUEST,$response);
+			print $this->formatOutput($response);
+		}
+		###################################################
+		### Add Page Metadata							###
+		###################################################
+		public function addMetadata() {
+			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
+	
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
+			$response = new \HTTP\Response();
+	
+			# Initiate Metadata Object
+			$_metadata = new \Site\Page\Metadata();
+	
+			# Find Matching Threads
+			$metadata = $_metadata->add(
+				array(
+					'module'		=> $_REQUEST['module'],
+					'view'			=> $_REQUEST['view'],
+					'index'			=> $_REQUEST['index'],
+					'format'		=> $_REQUEST['format'],
+					'content'		=> $_REQUEST['content']
+				)
+			);
+	
+			# Error Handling
+			if ($_metadata->error) error($_metadata->error);
+			else{
+				$response->metadata = $metadata;
+				$response->success = 1;
+			}
+	
+			# Send Response
+			api_log('content',$_REQUEST,$response);
+			print $this->formatOutput($response);
+		}
+		###################################################
+		### Update Page Metadata						###
+		###################################################
+		public function updateMetadata() {
+			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
+	
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
+			$response = new \HTTP\Response();
+	
+			# Initiate Metadata Object
+			$_metadata = new \Site\Page\Metadata();
+	
+			# Find Metadata On Key
+			$current = $_metadata->get(
+				array(
+					'module'		=> $_REQUEST['module'],
+					'view'			=> $_REQUEST['view'],
+					'index'			=> $_REQUEST['index'],
+				)
+			);
+			if ($current->id) {
+				$response->message = "Updating id ".$current->id;
+				# Find Matching Threads
+				$metadata = $_metadata->update(
+					$current->id,
+					array(
+						'format'		=> $_REQUEST['format'],
+						'content'		=> $_REQUEST['content']
+					)
+				);
+			}
+			else
+			{
+				error("Could not find matching object");
+			}
+	
+			# Error Handling
+			if ($_metadata->error) error($_metadata->error);
+			else{
+				#$response->request = $_REQUEST;
+				$response->metadata = $metadata;
+				$response->success = 1;
+			}
+	
+			# Send Response
+			api_log('content',$_REQUEST,$response);
+			print $this->formatOutput($response);
+		}
+		public function setPageMetadata() {
+			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
+	
+			$response = new \HTTP\Response();
+	
+			$page = new \Site\Page();
+			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+				if ($page->setMetadata($_REQUEST['key'],$_REQUEST['value'])) {
+					$response->success = 1;
+					$response->metadata = array('key' => $_REQUEST['key'],'value' => $_REQUEST['value']);
 				}
-				$form .= $t.$t.$t.'<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>'.$cr;
-				$form .= $t.$t.'</div>'.$cr;
-				$form .= $t.'</form>'.$cr;
+				else {
+					$response->success = 0;
+					$response->error = "Error setting metadata: ".$page->errorString();
+				}
 			}
-			return $form;
+			elseif ($page->errorCount()) {
+				$response->success = 0;
+				$response->error = "Error finding page '".$_REQUEST['module'].":".$_REQUEST['view']."': ".$page->errorString();
+			}
+			else {
+				$response->success = 0;
+				$response->error = "Page '".$_REQUEST['module'].":".$_REQUEST['view']."' Not Found";
+			}
+			print $this->formatOutput($response);
+		}
+		###################################################
+		### Get List of Site Navigation Menus			###
+		###################################################
+		public function findNavigationMenus() {
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
+			$response = new \HTTP\Response();
+	
+			# Initiate Product Object
+			$menulist = new \Navigation\MenuList();
+	
+			# Find Matching Threads
+			$menus = $menulist->find(
+				array (
+					'id'			=> $_REQUEST['id'],
+					'parent_id'		=> $_REQUEST['parent_id'],
+				)
+			);
+	
+			# Error Handling
+			if ($menulist->error) error($menulist->error);
+			else{
+				$response->menu = $menus;
+				$response->success = 1;
+			}
+	
+			# Send Response
+			api_log('content',$_REQUEST,$response);
+			print $this->formatOutput($response);
+		}
+		###################################################
+		### Get Items from a Site Navigation Menu		###
+		###################################################
+		public function findNavigationItems() {
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
+			$response = new \HTTP\Response();
+	
+			# Get Menu
+			$menu = new \Navigation\Menu();
+			if (! $menu->get($_REQUEST['code'])) error("Menu not found");
+	
+			# Find Matching Threads
+			$items = $menu->items();
+	
+			# Error Handling
+			if ($menu->error) error($menu->error);
+			else{
+				$response->item = $items;
+				$response->success = 1;
+			}
+	
+			# Send Response
+			api_log('content',$_REQUEST,$response);
+			print $this->formatOutput($response);
+		}
+		public function deleteConfiguration() {
+			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+			$response = new \HTTP\Response();
+			$configuration = new \Site\Configuration($_REQUEST['key']);
+			if ($configuration->delete()) {
+				$response->success = 1;
+			}
+			else {
+				$response->success = 0;
+				$response->error = $configuration->error();
+			}
+			print $this->formatOutput($response);
+		}
+		public function setConfiguration() {
+			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+			$response = new \HTTP\Response();
+			$configuration = new \Site\Configuration($_REQUEST['key']);
+			if ($configuration->set($_REQUEST['value'])) {
+				$response->success = 1;
+				$response->configuration = $configuration;
+			}
+			else {
+				$response->success = 0;
+				$response->error = $configuration->error();
+			}
+			print $this->formatOutput($response);
+		}
+		public function getConfiguration() {
+			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+			$response = new \HTTP\Response();
+			$configuration = new \Site\Configuration($_REQUEST['key']);
+			if ($configuration->get($_REQUEST['key'])) {
+				$response->success = 1;
+				$response->key = $configuration->key();
+				$response->value = $configuration->value();
+			}
+			else {
+				$response->success = 0;
+				$response->error = $configuration->error();
+			}
+			print $this->formatOutput($response);
+		}
+
+		public function _methods() {
+			return array(
+				'ping'			=> array(),
+				'findPages'	=> array(
+					'name'		=> array(),
+					'module'	=> array(),
+					'options'	=> array(),
+				),
+				'getPage'	=> array(
+					'module'	=> array(),
+					'view'		=> array(),
+					'index'		=> array(),
+					'target'	=> array(),
+				),
+				'addPage'	=> array(
+					'module'	=> array('required' => true),
+					'view'		=> array('required' => true),
+					'index'		=> array(),
+				),
+				'addMessage'	=> array(
+					'name'		=> array('required' => true),
+					'title'		=> array(),
+					'content'	=> array(),
+				),
+				'updateMessage'	=> array(
+					'id'		=> array('required' => true),
+					'name'		=> array(),
+					'title'		=> array(),
+					'content'	=> array(),
+				),
+				'purgeMessage'	=> array(
+					'target'	=> array(),
+				),
+				'getMetadata'	=> array(
+					'module'	=> array('required' => true),
+					'view'		=> array('required' => true),
+					'index'		=> array(),
+				),
+				'findMetadata'	=> array(
+					'id'	=> array('required' => true),
+					'module'	=> array('required' => true),
+					'view'		=> array('required' => true),
+					'index'		=> array(),
+				),
+				'addMetadata'	=> array(
+					'module'	=> array('required' => true),
+					'view'		=> array('required' => true),
+					'index'		=> array(),
+					'format'	=> array(),
+					'content'	=> array(),
+				),
+				'updateMetadata'	=> array(
+					'module'	=> array('required' => true),
+					'view'		=> array('required' => true),
+					'index'		=> array(),
+					'format'	=> array(),
+					'content'	=> array(),
+				),
+				'setPageMetadata'	=> array(
+					'module'	=> array('required' => true),
+					'view'		=> array('required' => true),
+					'key'		=> array(),
+					'value'		=> array(),
+				),
+				'findNavigationMenus'	=> array(
+					'id'		=> array(),
+					'parent_id'	=> array()
+				),
+				'setConfiguration'	=> array(
+					'key'		=> array('required' => true),
+					'value'		=> array('required' => true),
+				),
+				'getConfiguration'	=> array(
+					'key'		=> array('required' => true),
+				),
+				'deleteConfiguration'	=> array(
+					'key'		=> array('required' => true),
+				),
+			);
 		}
 	}
 ?>
