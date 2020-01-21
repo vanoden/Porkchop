@@ -1,7 +1,7 @@
 <?php
 	namespace Build;
 
-	class API Extends \Site\API {
+	class API Extends \API {
 
 		public function __construct() {
 			$this->_admin_role = 'build manager';
