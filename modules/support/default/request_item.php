@@ -1,6 +1,13 @@
 <style>
 	div.container {	width: 100%; clear: both;	}
 	div.toggleContainer {	width: 100%; clear: both; display: none; }
+    pre {
+        white-space: pre-wrap;
+        white-space: -moz-pre-wrap;
+        white-space: -pre-wrap;
+        white-space: -o-pre-wrap;
+        word-wrap: break-word;
+    }
 </style>
 <script>
 	function showForm(form) {
@@ -84,7 +91,7 @@
 	        </div> <!-- end row header -->
 	        <div class="tableRow">
 		        <div class="tableCell">
-			        <?=$item->description?>
+			        <pre><?=strip_tags($item->description)?></pre>
 		        </div>
 	        </div>
 	        <div class="tableRow button-bar">
@@ -292,7 +299,9 @@
 	    <td><?=$requested_by?></td>
     </tr>
     <tr><th colspan="2">Note</th></tr>
-    <tr><td colspan="2"><?=$action->description?></td></tr>
+    <tr><td colspan="2">        
+        <pre><?=strip_tags($action->description)?></pre>
+    </td></tr>
 </table>
 <? } else { ?>
 <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
@@ -311,7 +320,9 @@
 	    <td><?=$action->status?></td>
     </tr>
     <tr><th colspan="5">Description</th></tr>
-    <tr><td colspan="5"><?=$action->description?></td></tr>
+    <tr><td colspan="5">
+        <pre><?=strip_tags($action->description)?></pre>
+    </td></tr>
 </table>
 <?	} 
 } 

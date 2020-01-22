@@ -9,6 +9,13 @@
    .events-toggle {
         cursor: pointer;
    }
+   pre {
+        white-space: pre-wrap;
+        white-space: -moz-pre-wrap;
+        white-space: -pre-wrap;
+        white-space: -o-pre-wrap;
+        word-wrap: break-word;
+   }
 </style>
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -125,8 +132,8 @@
 		        <div class="tableCell" style="width: 100%;">Description</div>
 	        </div> <!-- end row header -->
 	        <div class="tableRow">
-		        <div class="tableCell" style="max-width: 500px; overflow:scroll;">
-			        <pre><?=$item->description?></pre>
+		        <div class="tableCell" style="max-width: 500px; overflow:scroll;">			        
+			        <pre><?=strip_tags($item->description)?></pre>
 		        </div>
 	        </div>
         </div>		
@@ -157,7 +164,7 @@
 		        <div class="tableCell">
 			        <select name="item_status" class="value input">
 				        <?	foreach ($statuses as $status) { ?>
-				        <option value="<?=$status?>"><?=ucwords(str_replace("_"," ", strtolower($status)))?></option>
+				            <option value="<?=$status?>"><?=ucwords(str_replace("_"," ", strtolower($status)))?></option>
 				        <?	} ?>
 			        </select>
 		        </div>
@@ -206,7 +213,11 @@
 	            <td><?=$requested_by?></td>
             </tr>
             <tr><th colspan="2">Note</th></tr>
-            <tr><td colspan="2"><?=$action->description?></td></tr>
+            <tr>
+                <td colspan="2">
+                    <pre><?=strip_tags($action->description)?></pre>
+                </td>
+            </tr>
         </table>
         <? } else { ?>
         <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
@@ -225,7 +236,7 @@
 	            <td><?=$action->status?></td>
             </tr>
             <tr><th colspan="5">Description</th></tr>
-            <tr><td colspan="5"><?=$action->description?></td></tr>
+            <tr><td colspan="5"><pre><?=strip_tags($action->description)?></pre></td></tr>
         </table>
         <?php    
             }
