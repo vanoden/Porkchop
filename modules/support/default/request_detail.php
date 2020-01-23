@@ -264,7 +264,7 @@
                               <th colspan="2">Description</th>
                            <tr>
                               <td colspan="2">	    
-                                 <textarea class="event-log-description" readonly="readonly" style="border: solid 1px #EFEFEF; border-radius: 5px; height: 50px;"><?=strip_tags($event->description)?></textarea>
+                                 <pre><?=strip_tags($event->description)?></pre>
                               </td>
                            </tr>
                            </tr>

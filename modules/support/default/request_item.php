@@ -274,7 +274,6 @@
 <div style="width: 756px;">
 <h2>Actions</h2>
 <?	foreach ($actions as $action) {
-
 		if (isset($action->requestedBy)) {
 			$requested_by = $action->requestedBy->full_name();
 		} else {
@@ -288,45 +287,85 @@
 		}
 		
 		if ($action->type == "Note") {
+    ?>
+    <h3 style="padding-top: 20px;">Action Note</h3>
+    <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
+        <tr>
+            <th>Posted On</th>
+	        <th>Posted By</th>
+        </tr>
+        <tr>
+            <td><?=$action->date_requested?></td>
+	        <td><?=$requested_by?></td>
+        </tr>
+        <tr><th colspan="2">Note</th></tr>
+        <tr><td colspan="2">        
+            <pre><?=strip_tags($action->description)?></pre>
+        </td></tr>
+    </table>
+    <? } else { ?>
+        <h3 style="padding-top: 20px;">Action</h3>
+        <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
+            <tr>
+                <th>Date Requested</th>
+	            <th>Requested By</th>
+	            <th>Assigned To</th>
+	            <th>Type</th>
+	            <th>Status</th>
+            </tr>
+            <tr>
+                <td><a href="/_support/action/<?=$action->id?>"><?=$action->date_requested?></a></td>
+	            <td><?=$requested_by?></td>
+	            <td><?=$assigned_to?></td>
+	            <td><?=$action->type?></td>
+	            <td><?=$action->status?></td>
+            </tr>
+            <tr><th colspan="5">Description</th></tr>
+            <tr><td colspan="5">
+                <pre><?=strip_tags($action->description)?></pre>
+            </td></tr>
+        </table>
+    <?php
+    }
+    $actionEvents = $action->getEvents();
+    ?>
+    <h4>History</h4>
+    <?php 
+    if (!empty($actionEvents)) {
+        foreach ($actionEvents as $actionEvent) { 
+        ?>
+        <table style="width: 100%; padding-bottom: 10px;">
+           <tr>
+              <th>Event Date</th>
+              <th>User</th>
+           </tr>
+           <tr>
+              <td><?=$actionEvent->date_event?></td>
+              <td><?=$actionEvent->user->full_name()?></td>
+           </tr>
+           <tr>
+              <th colspan="2">Description</th>
+           <tr>
+              <td colspan="2">	    
+                 <pre><?=strip_tags($actionEvent->description)?></pre>
+              </td>
+           </tr>
+           </tr>
+        </table>
+        <?php
+	        }
+    } else {
+    ?>
+        <table style="width: 100%; padding-bottom: 10px;">
+           <tr>
+              <th colspan="2">No Events</th>
+            </tr>
+        </table>
+    <?php
+    }
+}
 ?>
-<table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
-    <tr>
-        <th>Posted On</th>
-	    <th>Posted By</th>
-    </tr>
-    <tr>
-        <td><?=$action->date_requested?></td>
-	    <td><?=$requested_by?></td>
-    </tr>
-    <tr><th colspan="2">Note</th></tr>
-    <tr><td colspan="2">        
-        <pre><?=strip_tags($action->description)?></pre>
-    </td></tr>
-</table>
-<? } else { ?>
-<table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
-    <tr>
-        <th>Date Requested</th>
-	    <th>Requested By</th>
-	    <th>Assigned To</th>
-	    <th>Type</th>
-	    <th>Status</th>
-    </tr>
-    <tr>
-        <td><a href="/_support/action/<?=$action->id?>"><?=$action->date_requested?></a></td>
-	    <td><?=$requested_by?></td>
-	    <td><?=$assigned_to?></td>
-	    <td><?=$action->type?></td>
-	    <td><?=$action->status?></td>
-    </tr>
-    <tr><th colspan="5">Description</th></tr>
-    <tr><td colspan="5">
-        <pre><?=strip_tags($action->description)?></pre>
-    </td></tr>
-</table>
-<?	} 
-} 
-?>
+<br/><br/><br/>
 </div>
 <?	} ?>
 <?	if (isset($rmalist) && $rmalist->count() > 0) { ?>

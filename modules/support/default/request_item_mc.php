@@ -163,6 +163,7 @@ Description: ".$action->description
 	$adminlist = new \Register\CustomerList();
 	$admins = $adminlist->find(array('role' => 'support user'));
 	$actionlist = new \Support\Request\Item\ActionList();	
+	
 	$actions = $actionlist->find(array('item_id' => $item->id));
 	if ($actionlist->error()) $page->addError($actionlist->error());
 
