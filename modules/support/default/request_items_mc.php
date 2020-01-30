@@ -32,7 +32,9 @@
 	if (isset($_REQUEST['product_id']) && $_REQUEST['product_id'] !== 'ALL') $selectedProduct = $parameters['product_id'] = $_REQUEST['product_id'];
 	if (isset($_REQUEST['serial_number']) && $_REQUEST['serial_number'] !== 'ALL') $selectedSerialNumber = $parameters['serial_number'] = $_REQUEST['serial_number'];
 
-    // get items based on current search
+    // get items based on current search    
+    $parameters['sort_by'] = 'ticket';
+    if (!empty($_REQUEST['sort_by'])) $parameters['sort_by'] = $_REQUEST['sort_by'];
 	$itemlist = new \Support\Request\ItemList();
 	$items = $itemlist->find($parameters);
 	if ($itemlist->error()) $page->addError($itemlist->error());

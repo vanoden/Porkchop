@@ -11,6 +11,7 @@
 			$find_objects_query = "
 				SELECT	s.id
 				FROM	support_request_items s
+				INNER JOIN support_requests sr ON s.request_id = sr.id
 				WHERE	s.id = s.id
 			";
 
@@ -19,6 +20,7 @@
                 $find_objects_query = "
                 SELECT	s.id
                 FROM    support_request_items s
+                    INNER JOIN support_requests sr ON s.request_id = sr.id
                     WHERE s.serial_number LIKE '%".$parameters['searchTerm']."%' 
                     OR s.description LIKE '%".$parameters['searchTerm']."%' ";
             }
@@ -36,7 +38,7 @@
 			}            
 
 			$bind_params = array();
-			if (isset($parameters['request_id'])) {
+			if (!empty($parameters['request_id'])) {
 				$request = new \Support\Request($parameters['request_id']);
 				if ($request->error()) {
 					$this->_error = $request->error();
@@ -50,18 +52,18 @@
 				AND s.request_id = ?";
 				array_push($bind_params,$request->id);
 			}
-			if (isset($parameters['product_id'])) {
+			if (!empty($parameters['product_id'])) {
 				$find_objects_query .= "
 					AND	s.product_id = ?";
 				array_push($bind_params,$parameters['product_id']);
 			}
-			if (isset($parameters['serial_number'])) {
+			if (!empty($parameters['serial_number'])) {
 				$find_objects_query .= "
 					AND	s.serial_number = ?";
 				array_push($bind_params,$parameters['serial_number']);
 			}
 
-			if (isset($parameters['status']) && !empty($parameters['status'])) {
+			if (!empty($parameters['status']) && !empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 
 					$find_objects_query .= "
@@ -91,9 +93,44 @@
 					AND	s.request_id IN (".join(',',$requestids).")";
 			}
 			
-			$find_objects_query .= "
-				ORDER BY s.id DESC
-			";
+            // adjust results for sorted by column from ui sortable table
+			switch ($parameters['sort_by']) {
+                case 'requested':
+			        $find_objects_query .= "
+				        ORDER BY sr.date_request DESC
+			        ";
+                break;
+                case 'requestor':
+			        $find_objects_query .= "
+				        ORDER BY sr.customer_id DESC
+			        ";
+                break;
+                case 'organization':
+			        $find_objects_query .= "
+				        ORDER BY sr.organization_id DESC
+			        ";
+                break;
+                case 'product':
+			        $find_objects_query .= "
+				        ORDER BY s.product_id DESC
+			        ";
+                break;
+                case 'serial':
+			        $find_objects_query .= "
+				        ORDER BY s.serial_number DESC
+			        ";
+                break;
+                case 'status':
+			        $find_objects_query .= "
+				        ORDER BY s.status DESC
+			        ";
+                break;
+                default:
+                    $find_objects_query .= "
+                        ORDER BY s.id DESC
+                    ";
+                break;
+			}
 			
 			query_log($find_objects_query);
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
