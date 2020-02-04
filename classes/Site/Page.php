@@ -832,7 +832,8 @@
 		}
 
 		public function errorCount() {
-			if ($this->error) array_push($this->errors, $this->error);
+		    if (empty($this->errors)) $this->errors = array();
+			if (!empty($this->error)) array_push($this->errors, $this->error);
 			return count($this->_errors);
 		}
 	}

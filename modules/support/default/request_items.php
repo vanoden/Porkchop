@@ -1,4 +1,48 @@
+<script src="/js/sort.js"></script>
 <script>
+    // document loaded - start table sort
+    window.addEventListener('DOMContentLoaded', (event) => {     
+        <?php
+		switch ($parameters['sort_by']) {
+            case 'requested':
+                ?>
+                SortableTable.sortColumn('date-sortable-column', 'down');
+                <?php
+            break;       
+            case 'requestor':
+                ?>
+                SortableTable.sortColumn('requestor-sortable-column', 'down');
+                <?php
+            break;        
+            case 'organization':
+                ?>
+                SortableTable.sortColumn('organization-sortable-column', 'down');
+                <?php
+            break;
+            case 'product':
+                ?>
+                SortableTable.sortColumn('product-sortable-column', 'down');
+                <?php
+            break;
+            case 'serial':
+                ?>
+                SortableTable.sortColumn('serial-sortable-column', 'down');
+                <?php
+            break;
+            case 'status':
+                ?>
+                SortableTable.sortColumn('status-sortable-column', 'down');
+                <?php
+            break;
+            default:
+                ?>
+                SortableTable.sortColumn('ticket-sortable-column', 'down');
+                <?php
+            break;
+		}
+        ?>
+    });
+
     // update report from UI change
 	function updateReport() {
 		var pageForm = document.getElementById('pageForm');	
@@ -36,7 +80,9 @@
 
 <div style="width: 756px;">
 	<form id="pageForm" name="filterForm" method="get" action="/_support/request_items"  autocomplete="off">
-	    <input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />
+	    <input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />	    
+	    <input id="sort_by" type="hidden" name="sort_by" value="" />
+	    <input id="sort_direction" type="hidden" name="sort_direction" value="desc" />
 	    <input id="min_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['min_date']?>" />
 	    <div style="width: 100%; border: solid 1px #888a85; padding: 10px; margin: 10px; margin-left: 0px;">
 	    <h3 style="padding: 0px; margin: 0px;">Filter Results</h3><br/>
@@ -83,37 +129,37 @@
 <!--	Start First Row-->
 <div class="tableBody min-tablet">
 	<div class="tableRowHeader">
-		<div class="tableCell" style="width: 9%;">Ticket #</div>
-		<div class="tableCell" style="width: 17%;">Date Requested</div>
-		<div class="tableCell" style="width: 20%;">Requestor</div>
-		<div class="tableCell" style="width: 20%;">Organization</div>
-		<div class="tableCell" style="width: 13%;">Product</div>
-		<div class="tableCell" style="width: 12%;">Serial #</div>
-		<div class="tableCell" style="width: 9%;">Status</div>
+		<div id="ticket-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'ticket'; updateReport()">Ticket #</div>
+		<div id="date-sortable-column" class="tableCell sortableHeader"  style="width: 20%;" onclick="document.getElementById('sort_by').value = 'requested'; updateReport()">Date Requested</div>
+		<div id="requestor-sortable-column" class="tableCell sortableHeader" style="width: 15%;" onclick="document.getElementById('sort_by').value = 'requestor'; updateReport()">Requestor</div>
+		<div id="organization-sortable-column" class="tableCell sortableHeader" style="width: 20%;" onclick="document.getElementById('sort_by').value = 'organization'; updateReport()">Organization</div>
+		<div id="product-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'product'; updateReport()">Product</div>
+		<div id="serial-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'serial'; updateReport()">Serial #</div>
+		<div id="status-sortable-column" class="tableCell sortableHeader" style="width: 9%;" onclick="document.getElementById('sort_by').value = 'status'; updateReport()">Status</div>
 	</div> <!-- end row header -->
     <?	foreach ($items as $item) { ?>
-	    <div class="tableRow">
-		    <div class="tableCell">
-			    <span class="value"><a href="/_support/request_item/<?=$item->id?>"><?=$item->ticketNumber()?></a></span>
-		    </div>
-		    <div class="tableCell">
-			    <span class="value"><?=$item->request->date_request?></span>
-		    </div>
-		    <div class="tableCell">
-			    <span class="value"><?=$item->request->customer->full_name()?></span>
-		    </div>
-		    <div class="tableCell">
-			    <span class="value"><?=$item->request->customer->organization->name?></span>
-		    </div>
-		    <div class="tableCell">
-			    <span class="value"><?=$item->product->code?></span>
-		    </div>
-		    <div class="tableCell">
-			    <span class="value"><?=$item->serial_number?></span>
-		    </div>
-		    <div class="tableCell">
-			    <span class="value"><?=ucwords(strtolower($item->status))?></span>
-		    </div>
-	    </div>
+        <div class="tableRow">
+	        <div class="tableCell">
+		        <span class="value"><a href="/_support/request_item/<?=$item->id?>"><?=$item->ticketNumber()?></a></span>
+	        </div>
+	        <div class="tableCell">
+		        <span class="value"><?=$item->request->date_request?></span>
+	        </div>
+	        <div class="tableCell">
+		        <span class="value"><?=$item->request->customer->full_name()?></span>
+	        </div>
+	        <div class="tableCell">
+		        <span class="value"><?=$item->request->customer->organization->name?></span>
+	        </div>
+	        <div class="tableCell">
+		        <span class="value"><?=$item->product->code?></span>
+	        </div>
+	        <div class="tableCell">
+		        <span class="value"><?=$item->serial_number?></span>
+	        </div>
+	        <div class="tableCell">
+		        <span class="value"><?=ucwords(strtolower($item->status))?></span>
+	        </div>
+        </div>
     <?	} ?>
 </div>

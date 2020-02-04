@@ -201,10 +201,17 @@
 			}
 			return true;
 		}
+
+        public function getEvents() {
+            $eventsList = new \Support\Request\Item\Action\EventList();
+            return $eventsList->find(array('action_id' => $this->id));
+        }
+		
 		public function valid_status($status) {
 			if (in_array($status,array("NEW","ASSIGNED","ACTIVE","PENDING CUSTOMER","PENDING VENDOR","CANCELLED","COMPLETED","CLOSED"))) return true;
 			return false;
 		}
+		
 		public function internalLink() {
 			if ($GLOBALS['_config']->site->https) return "https://".$GLOBALS['_config']->site->hostname."/_support/action/".$this->id;
 			return "http://".$GLOBALS['_config']->site->hostname."/_support/action/".$this->id;

@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item\Action;
 
 	class EventList {
@@ -44,4 +44,3 @@
 			return $objects;
 		}
 	}
-?>

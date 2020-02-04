@@ -69,23 +69,23 @@
 
 			if (isset($parameters['name']))
 				$update_object_query .= ",
-						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
+						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc);
 
 			if (isset($parameters['status']))
 				$update_object_query .= ",
-						status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+						status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
 
 			if (isset($parameters['is_reseller']) && is_numeric($parameters['is_reseller']))
 				$update_object_query .= ",
-						is_reseller = ".$GLOBALS['_database']->qstr($parameters['is_reseller'],get_magic_quotes_gpc());
+						is_reseller = ".$GLOBALS['_database']->qstr($parameters['is_reseller'],get_magic_quotes_gpc);
 
 			if (isset($parameters['assigned_reseller_id']) && is_numeric($parameters['assigned_reseller_id']))
 				$update_object_query .= ",
-						assigned_reseller_id = ".$GLOBALS['_database']->qstr($parameters['assigned_reseller_id'],get_magic_quotes_gpc());
+						assigned_reseller_id = ".$GLOBALS['_database']->qstr($parameters['assigned_reseller_id'],get_magic_quotes_gpc);
 
 			if (isset($parameters['notes']))
 				$update_object_query .= ",
-						notes = ".$GLOBALS['_database']->qstr($parameters['notes'],get_magic_quotes_gpc());
+						notes = ".$GLOBALS['_database']->qstr($parameters['notes'],get_magic_quotes_gpc);
 
 			$update_object_query .= "
 				WHERE	id = ?

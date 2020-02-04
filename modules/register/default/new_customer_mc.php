@@ -65,10 +65,10 @@
 					// Add Customer Record to Database
 					$customer->add(
 						array(
-							"login"				=> $HTTPRequest->cleanCharacters($_REQUEST['login']),
-							"password"			=> $HTTPRequest->cleanCharacters($_REQUEST['password']),
-							"first_name"		=> $HTTPRequest->cleanCharacters($_REQUEST['first_name']),
-							"last_name"			=> $HTTPRequest->cleanCharacters($_REQUEST['last_name']),
+							"login"				=> $_REQUEST['login'],
+							"password"			=> $_REQUEST['password'],
+							"first_name"		=> $_REQUEST['first_name'],
+							"last_name"			=> $_REQUEST['last_name'],
 							"validation_key"	=> $validation_key,
 						)
 					);
@@ -87,8 +87,8 @@
 							$customer->addContact(
 								array(
 									"type"			=> "email",
-									"description"	=> $HTTPRequest->cleanCharacters($_REQUEST['email_type']),
-									"value"			=> $HTTPRequest->cleanCharacters($_REQUEST['email_address']),
+									"description"	=> $_REQUEST['email_type'],
+									"value"			=> $_REQUEST['email_address'],
 									"notify"		=> 1
 								)
 							);
@@ -103,8 +103,8 @@
 							$customer->addContact(
 								array(
 									"type"			=> "phone",
-									"description"	=> $HTTPRequest->cleanCharacters($_REQUEST['phone_type']),
-									"value"			=> $HTTPRequest->cleanCharacters($_REQUEST['phone_number'])
+									"description"	=> $_REQUEST['phone_type'],
+									"value"			=> $_REQUEST['phone_number']
 								)
 							);
 
@@ -116,23 +116,23 @@
 						// Initialize Register Queued Object
 						$queuedCustomer = new \Register\Queue();
 						$queuedCustomerData = array();
-						$queuedCustomerData['name'] = $HTTPRequest->cleanCharacters($_REQUEST['organization_name']);
+						$queuedCustomerData['name'] = $_REQUEST['organization_name']);
 						$queuedCustomerData['code'] = time();
 						$queuedCustomerData['is_reseller'] = 0;
 						$queuedCustomerData['assigned_reseller_id'] = NULL;
 						if (isset($_REQUEST['reseller']) && $_REQUEST['reseller'] == "yes") {
 							$queuedCustomerData['is_reseller'] = 1;
-							$queuedCustomerData['assigned_reseller_id'] = $HTTPRequest->cleanCharacters($_REQUEST['assigned_reseller_id']);
+							$queuedCustomerData['assigned_reseller_id'] = $_REQUEST['assigned_reseller_id'];
 						}
-						$queuedCustomerData['address'] = $HTTPRequest->cleanCharacters($_REQUEST['address']);
-						$queuedCustomerData['city'] = $HTTPRequest->cleanCharacters($_REQUEST['city']);
-						$queuedCustomerData['state'] = $HTTPRequest->cleanCharacters($_REQUEST['state']);
-						$queuedCustomerData['zip'] = $HTTPRequest->cleanCharacters($_REQUEST['zip']);
-						$queuedCustomerData['phone'] = $HTTPRequest->cleanCharacters($_REQUEST['phone']);
-						$queuedCustomerData['cell'] = $HTTPRequest->cleanCharacters($_REQUEST['cell']);
-						$queuedCustomerData['product_id'] = $HTTPRequest->cleanCharacters($_REQUEST['product_id']);
+						$queuedCustomerData['address'] = $_REQUEST['address'];
+						$queuedCustomerData['city'] = $_REQUEST['city'];
+						$queuedCustomerData['state'] = $_REQUEST['state'];
+						$queuedCustomerData['zip'] = $_REQUEST['zip'];
+						$queuedCustomerData['phone'] = $_REQUEST['phone'];
+						$queuedCustomerData['cell'] = $_REQUEST['cell'];
+						$queuedCustomerData['product_id'] = $_REQUEST['product_id'];
 						if (empty($queuedCustomerData['product_id'])) $queuedCustomerData['product_id'] = 0;
-						$queuedCustomerData['serial_number'] = $HTTPRequest->cleanCharacters($_REQUEST['serial_number']);
+						$queuedCustomerData['serial_number'] = $_REQUEST['serial_number'];
 						$queuedCustomerData['register_user_id'] = $customer->id;                           
 						$queuedCustomer->add($queuedCustomerData);
 						

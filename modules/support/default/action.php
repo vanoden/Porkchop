@@ -11,6 +11,13 @@
    }
    div.container {	width: 100%; clear: both;	}
    div.toggleContainer {	width: 100%; clear: both; display: none; }
+   pre {
+        white-space: pre-wrap;
+        white-space: -moz-pre-wrap;
+        white-space: -pre-wrap;
+        white-space: -o-pre-wrap;
+        word-wrap: break-word;
+   }
 </style>
 <script>
    function showForm(form) {
@@ -85,7 +92,9 @@
       </div>
       <div class="tableRow">
          <div class="tableCell"><?=$item->product->code?></div>
-         <div class="tableCell"><?=$item->product->description?></div>
+         <div class="tableCell">
+            <pre><?=strip_tags($item->product->description)?></pre>
+         </div>
          <div class="tableCell"><a href="/_monitor/admin_details/<?=$item->serial_number?>/<?=$item->product->code?>"><?=$item->serial_number?></a></div>
          <div class="tableCell"></div>
          <div class="tableCell"></div>
@@ -96,7 +105,9 @@
          <div class="tableCell">Description</div>
       </div>
       <div class="tableRow">
-         <div class="tableCell"><?=$action->description?></div>
+         <div class="tableCell">     
+             <pre><?=strip_tags($action->description)?></pre>
+         </div>
       </div>
    </div>
    <div class="tableBody min-tablet marginTop_20">
@@ -133,9 +144,7 @@
           </select>
        </div>
        <div class="container">
-          <span class="label">
-          Description
-          </span>
+          <span class="label">Description</span>
           <textarea name="description" class="value input" style="width: 650px"></textarea>
        </div>
        <div class="form_footer">
@@ -178,7 +187,7 @@
       <th colspan="2">Description</th>
    <tr>
       <td colspan="2">	    
-         <textarea class="event-log-description" readonly="readonly"><?=strip_tags($event->description)?></textarea>
+         <pre><?=strip_tags($event->description)?></pre>
       </td>
    </tr>
    </tr>

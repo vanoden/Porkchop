@@ -88,13 +88,13 @@
 
 			if ($paramters['page_id'])
 				$find_data_query .= "
-					AND		page_id = ".$GLOBALS['_database']->qstr($parameters['page_id'],get_magic_quotes_gpc());
+					AND		page_id = ".$GLOBALS['_database']->qstr($parameters['page_id'],get_magic_quotes_gpc);
 			if ($parameters['key'])
 				$find_data_query .= "
-					AND		`key` = ".$GLOBALS['_database']->qstr($parameters['key'],get_magic_quotes_gpc());
+					AND		`key` = ".$GLOBALS['_database']->qstr($parameters['key'],get_magic_quotes_gpc);
 			if ($parameters['value'])
 				$find_data_query .= "
-					AND		value = ".$GLOBALS['_database']->qstr($parameters['value'],get_magic_quotes_gpc());
+					AND		value = ".$GLOBALS['_database']->qstr($parameters['value'],get_magic_quotes_gpc);
 
 			$rs = $GLOBALS['_database']->Execute($find_data_query);
 			if (! $rs)

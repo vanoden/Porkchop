@@ -31,9 +31,7 @@
 				return false;
 			}
 			
-			if (isset($parameters['product_id']) && empty($parameters['product_id'])) {
-			    $parameters['product_id'] = 0;
-			}
+			if (isset($parameters['product_id']) && empty($parameters['product_id'])) $parameters['product_id'] = 0;
 
 			if (! isset($parameters['line'])) {
 				$this->_error = "line number required";
@@ -86,7 +84,9 @@
 			app_log("Added support item $id");
 			return $this->update($parameters);
 		}
+		
 		public function update($parameters) {
+		
 			// Bust Cache
 			$cache_key = "support.request.item[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -135,6 +135,7 @@
 			}
 			return $this->details();
 		}
+		
 		public function details() {
 			$cache_key = "support.request.item[".$this->id."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -180,13 +181,13 @@
 				if ($object->id) $result = $cache->set($object);
 				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);	
 			}
-
 			return true;
 		}
 
 		public function request() {
 			return new \Support\Request($this->request_id);
 		}
+		
 		public function addAction($parameters) {
 			$parameters['item_id'] = $this->id;
 			$action = new \Support\Request\Item\Action();
@@ -197,6 +198,7 @@
 				return false;
 			}
 		}
+		
 		public function addRMA($parameters) {
 			$parameters['item_id'] = $this->id;
 			$rma = new \Support\Request\Item\RMA();
@@ -209,6 +211,7 @@
 				return false;
 			}
 		}
+		
 		public function addComment($parameters) {
 			$parameters['item_id'] = $this->id;
 			if ($parameters['status'] != $this->status) {
@@ -222,12 +225,15 @@
 				return false;
 			}
 		}
+		
 		public function error() {
 			return $this->_error;
 		}
+		
 		public function statuses() {
 			return array("NEW", "ACTIVE", "PENDING_VENDOR", "PENDING_CUSTOMER", "COMPLETE", "CLOSED");
 		}
+		
 		public function openActions() {
 			$actionlist = new \Support\Request\Item\ActionList();
 			$actions = $actionlist->find(array('item_id' => $this->id));
@@ -237,9 +243,11 @@
 			}
 			return $count;
 		}
+		
 		public function ticketNumber() {
 			return sprintf("%06d",$this->id);
 		}
+		
 		public function internalLink() {
 			if ($GLOBALS['_config']->site->https) return "https://".$GLOBALS['_config']->site->hostname."/_support/item/".$this->id;
 			return "http://".$GLOBALS['_config']->site->hostname."/_support/item/".$this->id;

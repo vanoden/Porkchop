@@ -22,8 +22,8 @@
 			if (isset($parameters['department_id'])) {
 				$update_admin_query = "
 					UPDATE	register_users
-					SET		department_id = ".$GLOBALS['_database']->qstr($parameters['department_id'],get_magic_quotes_gpc())."
-					WHERE	id = ".$GLOBALS['_database']->qstr($id,get_magic_quotes_gpc());
+					SET		department_id = ".$GLOBALS['_database']->qstr($parameters['department_id'],get_magic_quotes_gpc)."
+					WHERE	id = ".$GLOBALS['_database']->qstr($id,get_magic_quotes_gpc);
 				$GLOBALS['_database']->Execute($update_admin_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error in register::admin::update: ".$GLOBALS['_database']->ErrorMsg();

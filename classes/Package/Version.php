@@ -217,7 +217,7 @@
 				$parameters['status'] = strtoupper($parameters['status']);
 				if (preg_match('/^(NEW|PUBLISHED|HIDDEN)$/',$parameters['status'])) {
 					$update_object_query .= ",
-					status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+					status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
 				}
 				else {
 					$this->error = "Invalid status";
