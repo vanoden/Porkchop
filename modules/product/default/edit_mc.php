@@ -51,6 +51,8 @@
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
 			$item->addMeta("spec_table_image",$_REQUEST["spec_table_image"]);
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			$item->addMeta("default_dashboard_id",$_REQUEST["default_dashboard_id"]);
+			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
 
 			$image = new \Media\Image();
 			if ($_REQUEST['new_image_code']) {
@@ -133,6 +135,8 @@
 				if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
 				$item->addMeta("spec_table_image",$_REQUEST["spec_table_image"]);
 				if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+				$item->addMeta("default_dashboard_id",$_REQUEST["default_dashboard_id"]);
+				if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
 
 				if ($_REQUEST['new_image_code'])
 				{
@@ -158,4 +162,6 @@
 	$manuals = $documentlist->find();
 	$imagelist = new \Media\ImageList();
 	$tables = $imagelist->find();
+	$dashboardlist = new \Monitor\DashboardList();
+	$dashboards = $dashboardlist->find();
 ?>

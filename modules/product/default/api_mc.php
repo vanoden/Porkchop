@@ -88,8 +88,13 @@
 	### Get Specified Product						###
 	###################################################
 	function getProduct() {
-		$product = new \Product\Item();
-		$product->get($_REQUEST['code']);
+		if (isset($_REQUEST['id'])) {
+			$product = new \Product\Item($_REQUEST['id']);
+		}
+		else {
+			$product = new \Product\Item();
+			$product->get($_REQUEST['code']);
+		}
 
 		if ($product->error) error("Error getting product: ".$product->error);
 		$response = new \HTTP\Response();
