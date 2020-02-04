@@ -443,6 +443,28 @@
 			}
 			return $metadata;
 		}
+		public function getMetadata($key) {
+			$get_meta_query = "
+				SELECT	value
+				FROM	product_metadata
+				WHERE	product_id = ?
+				AND		`key` = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_meta_query,
+				array($this->id,$key)
+			);
+			if (! $rs) {
+				$this->error = "SQL Error in Product::Item::getMetadata: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			list($value) = $rs->FetchRow();
+			return (object) array(
+				'product_id'	=> $this->id,
+				'key'			=> $key,
+				'value'			=> $value
+			);
+		}
 		public function addMeta($key,$value) {
 			$add_meta_query = "
 				REPLACE
