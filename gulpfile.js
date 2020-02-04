@@ -107,3 +107,9 @@ gulp.task('ico', () =>
 		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );
+
+gulp.task('dashboards', () =>
+	gulp.src('html.src/dashboards/**/*.html')
+		.pipe(debug())
+		.pipe(gulp.dest('html'))
+);
