@@ -1,6 +1,6 @@
 		<table>
-		<?	if ($GLOBALS['_page']->error) { ?>
-		<tr><td align="center" class="form_error"><?=$GLOBALS['_page']->error?></td></tr>
+		<?	if ($page->errorCount() > 0) { ?>
+		<tr><td align="center" class="form_error"><?=$page->errorString()?></td></tr>
 		<?	}
 			else
 			{
