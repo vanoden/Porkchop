@@ -1,10 +1,7 @@
 <?
-	# Check Permissions
-	if (! $GLOBALS['_SESSION_']->customer->has_role("product manager")) {
-		header("location: /_product/browse");
-		exit;
-	}
-	
+	$page = new \Site\Page();
+	$page->requireRole('product manager');
+
 	# Initialize Class
 	$item = new \Product\Item();
 
@@ -18,7 +15,7 @@
 	# Handle Actions
 	if ($_REQUEST['submit'] == "Update") {
 		if (! $_REQUEST['code']) {
-			$GLOBALS['_page']->error = "Code required";
+			$page->addError("Code required");
 		}
 		else {
 			app_log("Admin ".$GLOBALS['_SESSION_']->customer->first_name." editing product ".$_REQUEST['code'],'notice',__FILE__,__LINE__);
@@ -29,7 +26,7 @@
 			);
 			if ($item->error) {
 				app_log("Error updating item: ".$item->error,'error',__FILE__,__LINE__);
-				$GLOBALS['_page']->error = "Error updating Item";
+				$page->addError("Error updating Item");
 			}
 			$item->addMeta("name",$_REQUEST["name"]);
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
@@ -67,16 +64,16 @@
 	}
 	elseif ($_REQUEST['submit'] == "Add") {
 		if (! $_REQUEST['code']) {
-			$GLOBALS['_page']->error = "Code required";
+			$page->addError("Code required");
 		}
 		elseif (! $_REQUEST['status']) {
-			$GLOBALS['_page']->error = "Status required";
+			$page->addError("Status required");
 		}
 		elseif (! $_REQUEST['type']) {
-			$GLOBALS['_page']->error = "Type required";
+			$page->addError("Type required");
 		}
 		elseif ($item->id) {
-			$GLOBALS['_page']->error = "Product with code already exists";
+			$page->addError("Product with code already exists");
 		}
 		else {
 			app_log("Admin ".$GLOBALS['_SESSION_']->customer->first_name." adding product ".$_REQUEST['code'],'notice',__FILE__,__LINE__);
@@ -90,7 +87,7 @@
 			if ($item->error)
 			{
 				app_log("Error adding item: ".$item->error,'error',__FILE__,__LINE__);
-				$GLOBALS['_page']->error = "Error adding Item";
+				$page->addError("Error adding Item");
 			}
 			else
 			{
@@ -98,7 +95,7 @@
 				$parent->get($_REQUEST['parent_code']);
 				if ($parent->error) {
 					app_log("Error finding item ".$_REQUEST['parent_code'],'error',__FILE__,__LINE__);
-					$GLOBALS['_page']->error = "Error finding parent";
+					$page->addError("Error finding parent");
 				}
 				elseif ($parent->id) {
 					$relationship = new \Product\Relationship();
@@ -148,13 +145,13 @@
 		}
 	}
 	elseif($_REQUEST['submit']){
-		$GLOBALS['_page']->error = "Invalid request";
+		$page->addError("Invalid request");
 	}
 
 	# Get Product
 	$item->get($_REQUEST['code']);
 	if ($item->error) {
-		$GLOBALS['_page']->error = "Error loading item '".$_REQUEST['code']."': ".$item->error;
+		$page->addError("Error loading item '".$_REQUEST['code']."': ".$item->error);
 	}
 	
 	# Get Manuals
