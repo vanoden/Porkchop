@@ -8,12 +8,12 @@
 </script>
 <form name="orgDetails" method="POST">
 <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
-<?  if ($GLOBALS['_page']->error) { ?>
-<div class="form_error"><?=$GLOBALS['_page']->error?></div>
+<?  if ($page->errorCount() > 0) { ?>
+<div class="form_error"><?=$page->errorString() > 0?></div>
 <?  }
-	elseif ($GLOBALS['_page']->success) {
+	elseif ($page->success) {
 ?>
-<div class="form_success"><?=$GLOBALS['_page']->success?></div>
+<div class="form_success"><?=$page->success?></div>
 <?  } ?>
 <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
 
