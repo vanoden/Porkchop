@@ -45,17 +45,17 @@
 		$customer_id = $token->consume($_REQUEST['token']);
 		if ($token->error) {
 			app_log("Error in password recovery: ".$token->error,'error',__FILE__,__LINE__);
-			$page->error = "Error in password recovery.  Admins have been notified.  Please try again later.";
+			$page->addError("Error in password recovery.  Admins have been notified.  Please try again later.");
 		}
 		elseif ($customer_id > 0) {
 			$customer = new \Register\Customer($customer_id);
 			if ($customer->error) {
 				app_log("Error getting customer: ".$customer->error,'error',__FILE__,__LINE__);
-				$page->error = "Token error";
+				$page->addError("Token error");
 			}
 			elseif(! $customer->id) {
 				app_log("Customer not found!",'notice',__FILE__,__LINE__);
-				$page->error = "Token error";
+				$page->addError("Token error");
 			}
 			else {
 				$GLOBALS['_SESSION_']->assign($customer->id);
@@ -67,21 +67,21 @@
 			}
 		}
 		else {
-			$page->error = "Sorry, your recovery token was not recognized or has expired";
+			$page->addError("Sorry, your recovery token was not recognized or has expired");
 		}
 	}
 	elseif (isset($_REQUEST['login'])) {
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
 		$customer = new \Register\Customer();
 		if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
-			$GLOBALS['_page']->error = "Authentication failed";
+			$page->addError("Authentication failed");
 		}
 		elseif ($customer->error) {
 			app_log("Error in authentication: ".$customer->error,'error',__FILE__,__LINE__);
-			$GLOBALS['_page']->error .= "Application Error";
+			$page->addError("Application Error");
 		}
 		elseif ($customer->message) {
-			$GLOBALS['_page']->error .= $customer->message;
+			$page->addError($customer->message);
 		}
 		else {
 			$customer->get($_REQUEST['login']);
