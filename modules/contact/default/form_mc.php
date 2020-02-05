@@ -1,4 +1,6 @@
 <?
+	$page = new \Site\Page();
+
 	# Handle Submit
 	if ($_REQUEST['btn_submit']) {
 		app_log('Contact form submitted by '.$_REQUEST['first_name'].' '.$_REQUEST['last_name'].' <'.$_REQUEST['email_address'].'>','notice',__FILE__,__LINE__);
@@ -36,13 +38,13 @@
 			$event = new \Contact\Event();
 			if ($event->error) {
 				app_log("Error initializing ContactEvent: ".$event->error,'error',__FILE__,__LINE__);
-				$GLOBALS['_page']->error = "Sorry, there was an error submitting the contact form.  Please call.";
+				$page->addError("Sorry, there was an error submitting the contact form.  Please call.");
 			}
 			else {
 				$event->add($_REQUEST);
 				if ($event->error) {
 					app_log("Error submitting ContactEvent: ".$event->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_page']->error = "Sorry, there was an error submitting the contact form.  Please call.";
+					$page->addError("Sorry, there was an error submitting the contact form.  Please call.");
 				}
 				else {
 					app_log("Contact Form Submitted: ".print_r($form_data,true),'notice',__FILE__,__LINE__);
@@ -62,7 +64,7 @@
 					$role = new \Register\Role();
 					$role->notify("contact admin",$message);
 					if ($role->error) {
-						$GLOBALS['_page']->error = "Sorry, I was unable to contact representatives.  Please call.";
+						$page->addError("Sorry, I was unable to contact representatives.  Please call.");
 						app_log("Error notifying role members: ".$role->error,'error',__FILE__,__LINE__);
 					}
 					else {
