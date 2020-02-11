@@ -16,8 +16,8 @@
 	}
 </script>
 <h2>Edit Product</h2>
-<?	if ($GLOBALS['_page']->error) { ?>
-<div class="form_error"><?=$GLOBALS['_page']->error?></div>
+<?	if ($page->errorCount() > 0) { ?>
+<div class="form_error"><?=$page->errorString()?></div>
 <?	} ?>
 <form name="productEdit" method="post" action="/_product/edit">
 <input type="hidden" name="code" id="code" value="<?=$item->code?>" />
@@ -71,6 +71,15 @@
 	<div class="input-horiz">
 		<span class="label">Accuracy</span>
 		<input type="text" class="value input wide_md" name="accuracy" id="accuracy" value="<?=$item->accuracy?>" />
+	</div>
+	<div class="input-horiz">
+		<span class="label">Default Dashboard</span>
+		<select class="value input wide_md" name="default_dashboard_id" id="default_dashboard_id">
+<?	$default_dashboard = $item->getMetadata('default_dashboard_id');
+	foreach($dashboards as $dashboard) { ?>
+			<option value="<?=$dashboard->id?>"<? if ($default_dashboard->value == $dashboard->id) { print " selected"; } ?>><?=$dashboard->name?></option>
+<?	} ?>
+		</select>
 	</div>
 	<div class="input-horiz">
 		<span class="label">Manual</span>

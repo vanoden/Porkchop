@@ -1,9 +1,3 @@
-<?  if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin'))
-    {
-        print "<span class=\"form_error\">You are not authorized for this view!</span>";
-        return;
-    }
-?>
 <script language="Javascript">
 	function selectOrganization(elem)
 	{
@@ -12,8 +6,8 @@
 	}
 </script>
 <h2>Calibration Credits</h2>
-<?	if ($page->error) { ?>
-<div class="form_error" colspan="2"><?=$page->error?></div>
+<?	if ($page->errorCount() > 0) { ?>
+<div class="form_error" colspan="2"><?=$page->errorString()?></div>
 <?	} ?>
 <?	if ($page->success) { ?>
 <div class="form_success" colspan="2"><?=$page->success?></div>

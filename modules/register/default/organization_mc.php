@@ -13,7 +13,7 @@
 		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
 			$organization = new \Register\Organization($_REQUEST['organization_id']);
 			if ($organization->error) {
-				$GLOBALS['_page']->error = "Unable to load organization: ".$organization->error;
+				$page->addError("Unable to load organization: ".$organization->error);
 			}
 		}
 		elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
@@ -27,9 +27,9 @@
 	else $organization = $GLOBALS['_SESSION_']->customer->organization;
 
 	if ($_REQUEST['method']) {
-		$GLOBALS['_page']->success = $_REQUEST['method'];
+		$page->success = $_REQUEST['method'];
 		if (! $_REQUEST['name']) {
-			$GLOBALS['_page']->error = "Name required";
+			$page->addError("Name required");
 		}
 		else {
 			$parameters = array(
@@ -50,10 +50,10 @@
 				$organization->update($parameters);
 
 				if ($organization->error) {
-					$GLOBALS['_page']->error = "Error updating organization";
+					$page->addError("Error updating organization");
 				}
 				else {
-					$GLOBALS['_page']->success = "Organization Updated Successfully";
+					$page->success = "Organization Updated Successfully";
 				}
 				if ($_REQUEST['new_login']) {
 					$present_customer = new \Register\Customer();
@@ -61,7 +61,7 @@
 					# Make Sure Login is unique
 					$present_customer->get($_REQUEST['new_login']);
 					if ($present_customer->id) {
-						$GLOBALS['_page']->error = "Login already exists";
+						$page->addError("Login already exists");
 					}
 					else {
 						$customer = new \Register\Customer();
@@ -75,10 +75,10 @@
 							)
 						);
 						if ($customer->error) {
-							$GLOBALS['_page']->error = "Error adding customer to organization: ".$customer->error;
+							$page->addError("Error adding customer to organization: ".$customer->error);
 						}
 						else {
-							$GLOBALS['_page']->success = "Customer added to organization";
+							$page->success = "Customer added to organization";
 						}
 					}
 				}
@@ -90,15 +90,15 @@
 				$present_org = new \Register\Organization();
 				$present_org->get($parameters['code']);
 				if ($present_org->id) {
-					$GLOBALS['_page']->error = "Organization code already used";
+					$page->addError("Organization code already used");
 				} else {
 					# Add Existing Organization
 					$organization = new \Register\Organization();
 					$organization->add($parameters);
 					if ($organization->error) {
-						$GLOBALS['_page']->error = "Error updating organization";
+						$page->addError("Error updating organization: ".$organization->error);
 					} else {
-						$GLOBALS['_page']->success = "Organization ".$organization->id." Created Successfully";
+						$page->success = "Organization ".$organization->id." Created Successfully";
 					}
 				}
 			}
@@ -107,7 +107,7 @@
 	if ($organization->id) {
 		$members = $organization->members();
 		if ($organization->error) {
-			$GLOBALS['_page']->error = "Error finding members: ".$organization->error;
+			$page->addError("Error finding members: ".$organization->error);
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 	}

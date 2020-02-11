@@ -51,7 +51,10 @@
 
 		public function writeln($message,$level = 'debug',$file = null,$line = null) {
 			list($file,$line) = $this->caller($file,$line);
-
+			if (is_object($message)) {
+				app_log("Object send to Site::Logger::File::writeln(): ".print_r(debug_backtrace(),true),'warning');
+				$message = print_r($message,true);
+			}
 			$this->write($message."\n",$level,$file,$line);
 		}
 	}
