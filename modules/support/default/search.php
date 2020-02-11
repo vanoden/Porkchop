@@ -5,7 +5,6 @@
 <h2 style="display: inline-block;">Search Support Requests</h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 Searched for: <strong><?=$searchTerm?></strong>
-
 <h3>Request Items</h3>
 <!--	Start First Row-->
 <div class="tableBody min-tablet">
@@ -41,8 +40,6 @@ Searched for: <strong><?=$searchTerm?></strong>
     <?php } ?>
 </div>
 <!--End first row-->
-
-
 <?php
 // show the none found message
 if (empty($supportRequestList)) {
@@ -51,9 +48,7 @@ if (empty($supportRequestList)) {
 <?php
 }
 ?>
-
 <h3>Request Tickets</h3>
-
 <!--	Start Request Item-->
 <?	foreach ($supportItemList as $item) { ?>
 <div class="tableBody min-tablet">
@@ -153,10 +148,33 @@ if (empty($supportItemList)) {
     } 
     ?>
     </div>
-<?php	} ?>
-
+<?php	}
+if (count($customers) > 0) { 
+?>
+    <h3>Customer Accounts</h3>
+    <table cellpadding="0" cellspacing="0" class="body">
+	    <tr><th class="label accountsLoginLabel">Login</th>
+		    <th class="label accountsFirstLabel">First Name</th>
+		    <th class="label accountsLastLabel">Last Name</th>
+		    <th class="label accountsOrgLabel">Organization</th>
+		    <th class="label accountsStatus">Status</th>
+		    <th class="label accountsLastActive">Last Active</th>
+	    </tr>
+	    <?	foreach ($customers as $customer) { ?>
+	    <tr>
+        	<td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->login?></a></td>
+		    <td class="value<?=$greenbar?>"><?=$customer->first_name?></td>
+		    <td class="value<?=$greenbar?>"><?=$customer->last_name?></td>
+		    <td class="value<?=$greenbar?>"><a href="/_register/organization?organization_id=<?=$customer->organization->id?>"><?=$customer->organization->name?></a></td>
+		    <td class="value<?=$greenbar?>"><?=$customer->status?></td>
+		    <td class="value<?=$greenbar?>"><?=$customer->last_active()?></td>
+	    </tr>
+    </table>
+<?php 
+    }
+} 
+?>
 <h3>Pending Product Registrations</h3>
-
 <!--	Start First Row-->
 <div class="tableBody min-tablet">
     <div class="tableRowHeader">
