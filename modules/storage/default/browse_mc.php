@@ -8,12 +8,9 @@
     $repository->get($_REQUEST['code']);
     if ($repository->error) {
         $page->addError($repository->error);
-    }
-    elseif(! $repository->id) {
+    } elseif(! $repository->id) {
         $page->addError("Repository not found");
-    }
-    else {
+    } else {
 		$directories = $repository->directories($_REQUEST['path']);
 		$files = $repository->files($_REQUEST['path']);
     }
-?>
