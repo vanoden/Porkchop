@@ -1,7 +1,6 @@
 <?php
 $page = new \Site\Page ();
 $page->requireAuth();
-
 $optional_contents = array(
 	'power_cord'	=> 'Power Cord',
 	'filters'		=> 'Filters',
@@ -19,30 +18,9 @@ else $page->addError("Default RMA Address Not Configured");
 # Get Misc Inventory Product
 $misc_inventory_code = 'misc';
 $misc_inventory_item = new \Product\Item();
-if (! $misc_inventory_item->get($misc_inventory_code)) {
-	$page->addError("No product found for '$misc_inventory_code'");
-}
+if (! $misc_inventory_item->get($misc_inventory_code)) $page->addError("No product found for '$misc_inventory_code'");
 app_log("Misc Item ID: ".$misc_inventory_item->id,'notice');
 
-
-/**
- * for any ORM objects log possible errors to the page and error_log
- *
- * @param obj $DataObject
-Seems redundant, we have a built in logger?
-function logErrors($dataObject, $page) {
-    try {
-        if (method_exists ( $dataObject ,'error' )) {
-            if (!empty($dataObject->error())) {
-                if (!stristr($dataObject->error(), "no records found")) {
-                    $page->addError(get_class($dataObject) . ': ' . $dataObject->error());
-                    app_log(get_class($dataObject) . ': ' . $dataObject->error(),'error');
-                }
-            }
-        }
-    } catch (Exception $e) {}
-}
-*/
 // get the addresses known for given customer and customer organization
 $customerId = $GLOBALS['_SESSION_']->customer->id;
 $organization = $GLOBALS['_SESSION_']->customer->organization;
@@ -56,8 +34,7 @@ if ($rmaId) {
 	$rma = new \Support\Request\Item\RMA ( $_REQUEST ['id'] );
 } elseif ($rmaCode) {
 	if (!$rma->get ( $rmaCode )) $page->addError("Error getting RMA: ".$rma->error());
-}
-else {
+} else {
 	$page->addError("RMA Code or ID required");
 }
 
@@ -70,6 +47,7 @@ if ($rma->exists ()) {
 
 // get any values for UI, check if they exist
 if ($page->errorCount() < 1) {
+
 	$rmaNumber = $rma->number () ? $rma->number () : "";
 	$rmaItem = $rma->item();
 	$rmaItemId = $rmaItem ? $rmaItem->id : "";
@@ -135,8 +113,7 @@ if ($page->errorCount() < 1) {
 				));
 				if ($registerLocationShipping->error()) {
 					$page->addError("Failed to add location: ".$registerLocationShipping->error());
-				}
-				else {
+				} else {
 					// add user address(es) if they don't exist yet with the register location mapping relationships included
 					if ($_REQUEST ['shipping_address_type'] == 'business') {
 						$registerLocationShipping->associateOrganization($organization->id, $_REQUEST['shipping_location_name']);
@@ -147,8 +124,7 @@ if ($page->errorCount() < 1) {
 			}
 			if (! $registerLocationShipping->id) {
 				$page->addError("No location identified for return shipping");
-			}
-			else {
+			} else {
 				$parameters['send_location_id'] = $registerLocationShipping->id;
 	
 				// RMA request has a new billing contact to be added
@@ -189,8 +165,7 @@ if ($page->errorCount() < 1) {
 				// add shipment with package and items entries
 				if (! $shippingShipment->add ( $parameters )) {
 					$page->addError("Error creating shipment: ".$shippingShipment->error());
-				}
-				else {
+				} else {
 					// add a default "1st" package to the shipment, there should be at least that
 					$packageDetails = array ();
 					$packageDetails ['shipment_id'] = $shippingShipment->id;
@@ -201,8 +176,7 @@ if ($page->errorCount() < 1) {
 					$shippingPackage = $shippingShipment->add_package($packageDetails);
 					if ($shippingShipment->error()) {
 						$page->addError("Error adding package to shipment: ".$shippingShipment->error());
-					}
-					else {
+					} else {
 						// each item from the form including accessories is added to the shipment as a shipping_item record
 						$shippingPackage->add_item(array(
 							'product_id'	=> $rmaItem->product->id,
@@ -215,8 +189,7 @@ if ($page->errorCount() < 1) {
 							$page->addError("Error adding item to shipment: ".$shippingPackage->error());
 							$shippingShipment->delete();
 							$shippingShipment = null;
-						}
-						else {
+						} else {
 							foreach ($optional_contents as $code => $name) {
 								if (! empty ( $_REQUEST[$code] )) {
 									$shippingPackage->add_item(array(
@@ -230,7 +203,8 @@ if ($page->errorCount() < 1) {
 								}
 							}
 						}
-						// RMA status is changed to CUSTOMER_SHIP @TODO, why didn't the table have that in the ENUM values?
+						
+						// RMA status is changed to CUSTOMER_SHIP
 						$rma->update(array('shipment_id' => $shippingShipment->id,'status'=>'PRINTED'));
 					}
 				}
@@ -263,17 +237,6 @@ if ($page->errorCount() < 1) {
 		$shippingPackage->getByShippingID($shippingShipment->id);
 	}
 }
-
-/* Seems redundant, we have a built-in logger
-// process any errors if occurred
-if (isset($rma)) logErrors($rma, $page);
-if (isset($countryList)) logErrors($countryList, $page);
-if (isset($shippingShipment)) logErrors($shippingShipment, $page);
-if (isset($registerLocationShipping)) logErrors($registerLocationShipping, $page);
-if (isset($newUser)) logErrors($newUser, $page);
-if (isset($registerContact)) logErrors($registerContact, $page);
-if (isset($shippingPackage)) logErrors($shippingPackage, $page);
-*/
 
 $organizationUsers = $organization->members('human');
 $customerLocations = $GLOBALS['_SESSION_']->customer->locations();

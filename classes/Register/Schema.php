@@ -2,9 +2,11 @@
 	namespace Register;
 	
 	class Schema Extends \Database\BaseSchema {
+	
 		public $module = "register";
 		
 		public function upgrade() {
+		
 			$this->error = null;
 			
 			if ($this->version() < 1) {
@@ -24,6 +26,7 @@
 							UNIQUE KEY `UK_CODE` (`code`)
 						)
 					";
+					
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error creating organizations table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
@@ -42,6 +45,7 @@
 							INDEX `IDX_PARENT` (`parent_id`)
 						)
 					";
+					
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error creating register_departments table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
@@ -74,6 +78,7 @@
 							KEY `idx_unsubscribe_key` (`unsubscribe_key`)
 						)
 					";
+					
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error creating register_users table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
@@ -95,6 +100,7 @@
 							CONSTRAINT `register_contact_listing_ibfk_1` FOREIGN KEY (`person_id`) REFERENCES `register_users` (`id`)
 						)
 					";
+					
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error creating register_contacts table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
@@ -110,6 +116,7 @@
 							UNIQUE KEY `uk_name` (`name`)
 						)
 					";
+					
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error creating register_roles table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
@@ -125,20 +132,22 @@
 							FOREIGN KEY `register_users_roles_ibfk_2` (`role_id`) REFERENCES `register_roles` (`id`)
 						)
 					";
+					
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error creating register_users_roles table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
+				
 				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 0) {
 				app_log("Upgrading schema to version 2", 'notice', __FILE__, __LINE__);
 
-				# Start Transaction
-				if (!$GLOBALS['_database']->BeginTrans())
-					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				// Start Transaction 
+				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
 				
 				$create_table_query = "
 						CREATE TABLE IF NOT EXISTS `register_organization_products` (
@@ -151,6 +160,7 @@
 							FOREIGN KEY `fk_product` (`product_id`) REFERENCES `product_products` (`id`)
 						)
 					";
+					
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error creating register_organization_products table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
@@ -160,6 +170,7 @@
 				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 3) {
 				app_log("Upgrading schema to version 3", 'notice', __FILE__, __LINE__);
 				
@@ -189,6 +200,7 @@
 				$this->setVersion(3);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 4) {
 				app_log("Upgrading schema to version 4", 'notice', __FILE__, __LINE__);
 				
@@ -210,6 +222,7 @@
 				$this->setVersion(4);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 5) {
 				app_log("Upgrading schema to version 5", 'notice', __FILE__, __LINE__);
 				
@@ -237,6 +250,7 @@
 				$this->setVersion(5);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 6) {
 				app_log("Upgrading schema to version 6", 'notice', __FILE__, __LINE__);
 				
@@ -265,6 +279,7 @@
 				$this->setVersion(6);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 7) {
 				app_log("Upgrading schema to version 7", 'notice', __FILE__, __LINE__);
 				
@@ -286,6 +301,7 @@
 				$this->setVersion(7);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 8) {
 				app_log("Upgrading schema to version 8", 'notice', __FILE__, __LINE__);
 				
@@ -307,6 +323,7 @@
 				$this->setVersion(8);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 9) {
 				app_log("Upgrading schema to version 9", 'notice', __FILE__, __LINE__);
 				
@@ -340,6 +357,7 @@
 				$this->setVersion(9);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 10) {
 				app_log("Upgrading schema to version 10", 'notice', __FILE__, __LINE__);
 				
@@ -372,6 +390,7 @@
 				$this->setVersion(10);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 11) {
 				app_log("Upgrading schema to version 11", 'notice', __FILE__, __LINE__);
 				
@@ -399,6 +418,7 @@
 				$this->setVersion(11);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 12) {
 				app_log("Upgrading schema to version 12", 'notice', __FILE__, __LINE__);
 				
@@ -449,6 +469,7 @@
 				$this->setVersion(12);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 13) {
 	
 				app_log("Upgrading schema to version 13",'notice',__FILE__,__LINE__);
@@ -786,7 +807,7 @@
 	
 				app_log("Upgrading schema to version 19",'notice',__FILE__,__LINE__);
 	
-				# Start Transaction
+				// Start Transaction 
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 			
 				$alter_table_query = "

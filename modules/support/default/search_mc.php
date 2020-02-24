@@ -15,6 +15,8 @@
     $supportItemList = $supportItemList->find($searchTermArray);   
 	$actionlist = new \Support\Request\Item\ActionList();
 	$actions = $actionlist->find($searchTermArray);
+    $customerList = new \Register\CustomerList();
+    $customers = $customerList->find($searchTermArray);
 
 	// get current registrations
 	$registrationQueueList = new \Support\RegistrationQueueList();

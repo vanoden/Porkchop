@@ -7,7 +7,7 @@
 		public $count;
 		
 		public function find($parameters = array()) {
-		
+	
 			$get_contacts_query = "
 				SELECT	id
 				FROM	register_contacts
@@ -59,9 +59,12 @@
 				}
 			}
 
+			// search for requestList looks like only by value would be meaningful
+            if (isset($parameters['searchTerm'])) $get_contacts_query .= " AND value LIKE '%" . $parameters['searchTerm'] . "%'";
+
 			$get_contacts_query .= "
 				ORDER BY notify DESC";
-			
+
 			$rs = $GLOBALS['_database']->Execute($get_contacts_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Register::ContactList::find(): ".$GLOBALS['_database']->ErrorMsg();

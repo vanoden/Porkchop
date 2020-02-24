@@ -2,6 +2,7 @@
 	namespace Navigation;
 
 	class Item {
+	
 		private $_error;
 		public $id;
 		private $menu_id;
@@ -80,7 +81,7 @@
 				array_push($bind_params,$parent->id);
 			}
 
-query_log($get_object_query,$bind_params);
+            query_log($get_object_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 
 			if (! $rs) {
@@ -91,8 +92,7 @@ query_log($get_object_query,$bind_params);
 			if ($id) {
 				$this->id = $id;
 				return $this->details();
-			}
-			else {
+			} else {
 				return false;
 			}
 		}
@@ -144,7 +144,6 @@ query_log($get_object_query,$bind_params);
 				$this->_error = "SQL Error in Navigation::Item::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-
 			return $this->details();
 		}
 
@@ -159,6 +158,7 @@ query_log($get_object_query,$bind_params);
 				$this->_error = "SQL Error in Navigation::Item::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
 			$object = $rs->FetchNextObject(false);
 			if ($object->id) {
 				$this->id = $object->id;
@@ -173,8 +173,7 @@ query_log($get_object_query,$bind_params);
 				else $this->external = false;
 				if ($object->ssl) $this->ssl = true;
 				else $this->ssl = false;
-			}
-			else {
+			} else {
 				$this->id = null;
 				$this->menu = new Menu(null);
 				$this->title = null;
@@ -207,8 +206,7 @@ query_log($get_object_query,$bind_params);
 			list($count) = $rs->FetchRow();
 			if ($count > 0) {
 				return true;
-			}
-			else {
+			} else {
 				return false;
 			}
 		}
@@ -217,4 +215,3 @@ query_log($get_object_query,$bind_params);
 			return $this->_error;
 		}
 	}
-?>

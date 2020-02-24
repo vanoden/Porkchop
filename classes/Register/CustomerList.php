@@ -183,6 +183,15 @@
 				else $find_person_query .= "
 					AND		automation = 0";
 			}
+			
+			// search by term supported
+            if (isset($parameters['searchTerm'])) $find_person_query .= " AND (
+                    last_name LIKE '%" . $parameters['searchTerm'] . "%'
+                    OR middle_name LIKE '%" . $parameters['searchTerm'] . "%'
+                    OR first_name LIKE '%" . $parameters['searchTerm'] . "%'
+                    OR login LIKE '%" . $parameters['searchTerm'] . "%'
+                    OR title LIKE '%" . $parameters['searchTerm'] . "%'
+                )";
 
 			if (isset($parameters['_sort']) && preg_match('/^(login|first_name|last_name|organization_id)$/',$parameters['_sort'])) {
 				$find_person_query .= " ORDER BY ".$parameters['_sort'];
