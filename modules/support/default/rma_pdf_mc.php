@@ -1,7 +1,7 @@
 <?php
 require THIRD_PARTY . '/autoload.php';
 $page = new \Site\Page ();
-$page->requireRole ( "support user" );
+#$page->requireRole ( "support user" );
 
 // get cooresponding RMA from possible input values
 $rma = new \Support\Request\Item\RMA ();
