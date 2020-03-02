@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Storage;
 
 	class Repository {
@@ -137,6 +137,33 @@
 			
 			return $this->details();
 		}
+		
+		public function find($name) {
+		
+			$get_object_query = "
+				SELECT	id
+				FROM	storage_repositories
+				WHERE	name = ?
+			";
+			
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($name)
+			);
+			
+			if (! $rs) {
+				$this->error = "SQL Error in Storage::Repository::find(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			
+			list($this->id) = $rs->FetchRow();
+			if (! $this->id) {
+				$this->error = "Repository not found";
+				return false;
+			}
+			
+			return $this->details();
+		}
 
 		public function details() {
 		
@@ -195,9 +222,9 @@
 				$this->error = "SQL Error in Storage::Repository::setMetadata: ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			
 			return true;
 		}
+		
 		public function _metadata($key) {
 			$get_value_query = "
 				SELECT	value
@@ -216,6 +243,7 @@
 			list($value) = $rs->FetchRow();
 			return $value;
 		}
+		
 		private function _valid_code($string) {
 			if (preg_match('/^\w[\w\-\_\.]*$/',$string)) return true;
 			return false;

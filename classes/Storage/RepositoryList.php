@@ -1,12 +1,11 @@
-<?
+<?php
 	namespace Storage;
 
 	class RepositoryList {
 		public $error;
 		public $count;
 
-		public function _construct() {
-		}
+		public function _construct() {}
 
 		public function find($parameters = array()) {
 			$get_objects_query = "
@@ -38,4 +37,3 @@
 			return $repositories;
 		}
 	}
-?>

@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Storage;
 
 	class DirectoryList {
@@ -64,4 +64,3 @@
 			return $this->count;
 		}
 	}
-?>

@@ -160,6 +160,24 @@ Description: ".$action->description
 		);
 		if ($item->error()) $page->addError($item->error());
 	}
+	
+	// upload files if upload button is pressed
+    if ($_REQUEST['btn_submit'] == 'Upload') {
+
+	    $file = new \Storage\File();
+	    $parameters = array();
+        $parameters['repository_name'] = $_REQUEST['repository_name'];
+        $parameters['type'] = $_REQUEST['type'];
+        $parameters['ref_id'] = $item->id;
+	    $uploadResponse = $file->upload($parameters);
+	    
+	    if (!empty($file->error)) $page->addError($file->error);
+	    if (!empty($file->success)) $page->success = $file->success;
+	}
+	
+	$filesList = new \Storage\FileList();
+	$filesUploaded = $filesList->find(array('type' => 'support ticket', 'ref_id' => $item->id));
+	
 	$adminlist = new \Register\CustomerList();
 	$admins = $adminlist->find(array('role' => 'support user'));
 	$actionlist = new \Support\Request\Item\ActionList();	

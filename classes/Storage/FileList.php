@@ -1,27 +1,56 @@
-<?
+<?php
 	namespace Storage;
 
 	class FileList {
+	
 		public $error;
 		public $count;
 
-		public function _construct() {
-		}
+		public function _construct() {}
 
+        /**
+         * construct a new list of files
+         * 
+         * @param array $parameters, name value pairs to find files by
+         */
 		public function find($parameters = array()) {
+		
+    		$fileType = new \Storage\FileType();
 			$get_objects_query = "
-				SELECT	id
-				FROM	storage_files
-				WHERE	id = id
+				SELECT sf.id
+				FROM storage_files sf
+				LEFT JOIN storage_files_types sft ON sft.code = sf.code
+				WHERE sf.id = sf.id
 			";
 			$bind_params = array();
+
+			if (isset($parameters['ref_id']) && strlen($parameters['ref_id']) && isset($parameters['type']) && strlen($parameters['type'])) {
+			
+				if (preg_match('/^\d+$/', $parameters['ref_id'])) {
+					$get_objects_query .= "
+						AND sft.ref_id = ?";
+					array_push($bind_params, $parameters['ref_id']);
+				} else {
+					$this->error = "Invalid reference ID";
+					return false;
+				}
+				
+				if (in_array($parameters['type'], $fileType->referenceTypes)) {
+                    $get_objects_query .= "
+						AND sft.type = ?";
+					array_push($bind_params, $parameters['type']);
+				} else {
+					$this->error = "Invalid file reference type";
+					return false;
+				}
+			}
+			
 			if (isset($parameters['name']) && strlen($parameters['name'])) {
 				if (preg_match('/^[\w\-\_.\s]+$/',$parameters['name'])) {
 					$get_objects_query .= "
-						AND		name = ?";
+						AND sf.name = ?";
 					array_push($bind_params,$parameters['name']);
-				}
-				else {
+				} else {
 					$this->error = "Invalid name";
 					return false;
 				}
@@ -30,18 +59,17 @@
 			if (isset($parameters['repository_id'])) {
 				if (preg_match('/^\d+$/',$parameters['repository_id'])) {
 					$get_objects_query .= "
-						AND		repository_id = ?";
+						AND sf.repository_id = ?";
 					array_push($bind_params,$parameters['repository_id']);
-				}
-				else {
-					$this->error = "Invalid repository id";
+				} else {
+					$this->error = "Invalid repository ID";
 					return false;
 				}
 			}
 
 			if (isset($parameters['path'])) {
 				$get_objects_query .= "
-					AND		path = ?";
+					AND sf.path = ?";
 				array_push($bind_params,$parameters['path']);
 			}
 
@@ -51,6 +79,7 @@
 				$this->error = "SQL Error in Storage::FileList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
 			$files = array();
 			while(list($id) = $rs->FetchRow()) {
 				$file = new File($id);
@@ -62,4 +91,3 @@
 			return $files;
 		}
 	}
-?>

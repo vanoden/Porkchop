@@ -89,8 +89,7 @@
             $object = $rs->FetchNextObject(false);
 			if (is_numeric($object->id)) {
     			foreach ($this->fields as $field) $this->$field = $object->$field;
-			}
-			else {
+			} else {
 				foreach ($this->fields as $field) $this->$field = null;
 			}
 			return true;
