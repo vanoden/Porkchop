@@ -270,6 +270,7 @@
 	<!-- END Comment Form -->
 </div>
 </form>
+
 <div style="width: 756px;">
     <br/><hr/><h2>Documents</h2><br/>
     <?php

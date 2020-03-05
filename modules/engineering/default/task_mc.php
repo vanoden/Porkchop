@@ -41,7 +41,7 @@
     }
 
     // edit task or add event
-	if (isset($_REQUEST['btn_submit']) || isset($_REQUEST['btn_add_event'])) {
+	if (($_REQUEST['btn_submit'] == 'Submit') || isset($_REQUEST['btn_add_event'])) {
 		$msgs = array();
 		$parameters = array();
 		if (isset($_REQUEST['title'])) {
@@ -157,6 +157,7 @@
 		}
 
 		if (is_numeric($task->id) && $task->id > 0) {
+		
 			/************************************/
 			/* Email Internal Notifications		*/
 			/************************************/
@@ -250,33 +251,46 @@
 				}
 			}
 		}
-
-		if (isset($_REQUEST['notes']) && strlen($_REQUEST['notes'])) {
-			if (strtoupper($_REQUEST['new_status']) != $task->status) {
-				$old_status = $task->status;
-				$task->update(array('status'=>$_REQUEST['new_status']));
-				if ($task->error) {
-					$page->addError($task->error);
-				} else {
-					$_REQUEST['notes'] = "Status changed from $old_status to ".strtoupper($_REQUEST['new_status'])."<br>\n".$_REQUEST['notes'];
-					$page->success = "Updated applied successfully";
-				}
+    
+		if (strtoupper($_REQUEST['new_status']) != $task->status) {
+    		if (empty($_REQUEST['notes'])) $_REQUEST['notes'] = "";
+			$old_status = $task->status;
+			$task->update(array('status'=>$_REQUEST['new_status']));
+			if ($task->error) {
+				$page->addError($task->error);
 			} else {
+				$_REQUEST['notes'] = "Status changed from $old_status to ".strtoupper($_REQUEST['new_status'])."<br>\n".$_REQUEST['notes'];
 				$page->success = "Updated applied successfully";
 			}
-			$event = new \Engineering\Event();
-			$event->add(array(
-				'task_id'		=> $task->id,
-				'person_id'		=> $_REQUEST['event_person_id'],
-				'date_added'	=> $_REQUEST['date_event'],
-				'description'	=> $_REQUEST['notes']
-			));
-			if ($event->error()) $page->addError($event->error());
 		} else {
-		    // if they tried to do an event update without description, then show error
-		    if (isset($_REQUEST['btn_add_event'])) $page->addError("'Event Update' could not be added, 'Event Description' is required.");
+			$page->success = "Updated applied successfully";
 		}
+		$event = new \Engineering\Event();
+		$event->add(array(
+			'task_id'		=> $task->id,
+			'person_id'		=> $_REQUEST['event_person_id'],
+			'date_added'	=> $_REQUEST['date_event'],
+			'description'	=> $_REQUEST['notes']
+		));
+		if ($event->error()) $page->addError($event->error());
 	}
+
+    // upload files if upload button is pressed
+    if ($_REQUEST['btn_submit'] == 'Upload') {
+
+	    $file = new \Storage\File();
+	    $parameters = array();
+        $parameters['repository_name'] = $_REQUEST['repository_name'];
+        $parameters['type'] = $_REQUEST['type'];
+        $parameters['ref_id'] = $task->id;
+	    $uploadResponse = $file->upload($parameters);
+	    
+	    if (!empty($file->error)) $page->addError($file->error);
+	    if (!empty($file->success)) $page->success = $file->success;
+	}
+	
+	$filesList = new \Storage\FileList();
+	$filesUploaded = $filesList->find(array('type' => 'engineering task', 'ref_id' => $task->id));
 	
 	$peopleList = new \Register\CustomerList();
 	$people = $peopleList->find(array("status" => array('NEW','ACTIVE')));

@@ -172,6 +172,47 @@
       </div>
    </form>
 </div>
+
+<div style="width: 756px;">
+    <br/><hr/><h2>Documents</h2><br/>
+    <?php
+    if ($filesUploaded) {
+    ?>
+        <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
+            <tr>
+                <th>File Name</th>
+                <th>User</th>
+                <th>Organization</th>
+                <th>Uploaded</th>
+            </tr>
+            <?php
+            foreach ($filesUploaded as $fileUploaded) {
+            ?>
+                <tr>
+                    <td><a href="/_storage/downloadfile?file_id=<?=$fileUploaded->id?>" target="_blank"><?=$fileUploaded->name?></a></td>
+                    <td><?=$fileUploaded->user->first_name?> <?=$fileUploaded->user->last_name?></td>
+                    <td><?=$fileUploaded->user->organization->name?></td>
+                    <td><?=date("M. j, Y, g:i a", strtotime($fileUploaded->date_created))?></td>
+                </tr>
+            <?php
+            }
+            ?>
+        </table>
+    <?php
+    }
+    ?>
+    <form name="repoUpload" action="/_support/request_item/<?=$action->id?>" method="post" enctype="multipart/form-data">
+    <div class="container">
+        <span class="label">Upload File</span>
+        <input type="hidden" name="repository_name" value="Ticket Attachments" />
+        <input type="hidden" name="type" value="support action" />
+        <input type="file" name="uploadFile" />
+        <input type="submit" name="btn_submit" class="button" value="Upload" />
+    </div>
+    </form>
+    <br/><br/>
+</div>
+
 <h2>History</h2>
 <?php	foreach ($events as $event) { ?>
 <table style="width: 100%; padding-bottom: 10px;">
