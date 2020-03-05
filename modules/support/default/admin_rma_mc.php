@@ -16,8 +16,7 @@
 
 	if (! $rma->id) {
 		$page->addError("RMA Not Found");
-	}
-	else {
+	} else {
         $item = $rma->item();
 		$tech = $rma->approvedBy();
         $customer = $item->request()->customer;
@@ -26,3 +25,20 @@
 		else $url = "http://".$GLOBALS['_config']->site->hostname."/_support/rma_form/".$rma->code;
 		$contact = $rma->billingContact();
 	}
+	
+    // upload files if upload button is pressed
+    if ($_REQUEST['btn_submit'] == 'Upload') {
+
+	    $file = new \Storage\File();
+	    $parameters = array();
+        $parameters['repository_name'] = $_REQUEST['repository_name'];
+        $parameters['type'] = $_REQUEST['type'];
+        $parameters['ref_id'] = $rma->id;
+	    $uploadResponse = $file->upload($parameters);
+	    
+	    if (!empty($file->error)) $page->addError($file->error);
+	    if (!empty($file->success)) $page->success = $file->success;
+	}
+	
+	$filesList = new \Storage\FileList();
+	$filesUploaded = $filesList->find(array('type' => 'support rma', 'ref_id' => $rma->id));
