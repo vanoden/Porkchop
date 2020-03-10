@@ -116,7 +116,7 @@
 						// Initialize Register Queued Object
 						$queuedCustomer = new \Register\Queue();
 						$queuedCustomerData = array();
-						$queuedCustomerData['name'] = $_REQUEST['organization_name']);
+						$queuedCustomerData['name'] = $_REQUEST['organization_name'];
 						$queuedCustomerData['code'] = time();
 						$queuedCustomerData['is_reseller'] = 0;
 						$queuedCustomerData['assigned_reseller_id'] = NULL;

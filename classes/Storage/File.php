@@ -2,19 +2,21 @@
 	namespace Storage;
 
 	class File {
+	
 		private $_repository_id;
 		public $code;
 		public $id;
 		public $error;
+		public $success;
 		public $uri;
 		public $read_protect;
 		public $write_protect;
 		public $mime_type;
 		public $size;
 		public $timestamp;
+		public $name;
 		private $path;
 		private $original_name;
-		private $name;
 
 		public function __construct($id = 0) {
 			if ($id > 0) {
@@ -76,6 +78,7 @@
 		}
 		
 		public function update($parameters = array()) {
+		
 			$update_object_query = "
 				UPDATE	storage_files
 				SET		id = id";
@@ -87,16 +90,19 @@
 						display_name = ?";
 				array_push($bind_params,$parameters['display_name']);
 			}
+			
 			if (isset($parameters['description'])) {
 				$update_object_query .= ",
 						description = ?";
 				array_push($bind_params,$parameters['description']);
 			}
+			
 			if (isset($parameters['path'])) {
 				$update_object_query .= ",
 						path = ?";
 				array_push($bind_params,$parameters['path']);
 			}
+			
 			query_log($update_object_query);
 			$update_object_query .= "
 				WHERE	id = ?
@@ -113,37 +119,45 @@
 		}
 
 		public function get($code) {
+		
 			$get_object_query = "
 				SELECT	id
 				FROM	storage_files
 				WHERE	code = ?
 			";
+			
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
 				array($code)
 			);
+			
 			if (! $rs) {
 				$this->error = "SQL Error in Storage::File::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
 			list($this->id) = $rs->FetchRow();
 			return $this->details();
 		}
 
 		public function details() {
+		
 			$get_object_query = "
 				SELECT	*
 				FROM	storage_files
 				WHERE	id = ?
 			";
+			
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
 				array($this->id)
 			);
+			
 			if (! $rs) {
 				$this->error = "SQL Error in Storage::File::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
 			$object = $rs->FetchNextObject(false);
 			if ($object->id) {
 				$this->code = $object->code;
@@ -166,6 +180,7 @@
 				$this->id = null;
 				$this->code = null;
 			}
+			
 			return true;
 		}
 
@@ -232,7 +247,9 @@
 		}
 
 		public function grant($id,$type) {
+		
 			if ($type == 'read') {
+			
 				if ($this->read_protect == 'NONE') return true;
 				else if ($this->read_protect == 'AUTH') return true;
 				else if ($this->read_protect == 'ROLE') {
@@ -263,6 +280,7 @@
 						return false;
 					}
 				}
+		
 				return false;
 				
 			} else if ($type == 'write') {
@@ -334,8 +352,7 @@
 				}
 				
 				return false;
-			}
-			else if ($type == 'write') {
+			} else if ($type == 'write') {
 				if ($this->write_protect == 'NONE') {
 					$this->error = "File is globally writable";
 					return false;
@@ -370,6 +387,7 @@
 		}
 
 		public function readable($user_id) {
+		
 			// World Readable 
 			if ($this->read_protect == 'NONE') return true;
 
@@ -389,10 +407,12 @@
 					AND		sfr.role_id = rur.role_id
 					AND		rur.user_id = ?
 				";
+				
 				$rs = $GLOBALS['_database']->Execute(
 					$get_privileges_query,
 					array($this->id,$user_id)
 				);
+				
 				if (! $rs) {
 					$this->error = "SQL Error in Storage::File::readable(): ".$GLOBALS['_database']->ErrorMsg();
 					return false;
@@ -401,7 +421,6 @@
 				list($ok) = $rs->fetchrow();
 				if ($ok > 0) return true;
 			}
-			
 			return false;
 		}
 
@@ -412,17 +431,93 @@
         public function code() {
             return $this->code;
         }
-        
+
+        public function addError($errorMessage = '') {
+            $this->error = $errorMessage;        
+            return $this->error;
+        }
+
         public function error() {
             return $this->error;
         }
-        
+
+        public function success() {
+            return $this->success;
+        }
+
 		public function downloadURI() {
 			return '/_storage/file/'.$this->code.'/download';
 		}
-		
+
 		public function exists() {
 			if ($this->id && file_exists($this->path())) return true;
 			return false;
+		}
+		
+		public function upload($parameters) {
+		
+		    // make sure we have a file present in the request to upload it
+    		if (empty($_FILES)) $this->addError("Repository not found");
+		
+		    // make sure all the required parameters are set for upload to continue
+            if (! preg_match('/^\//',$parameters['path'])) $parameters['path'] = '/'.$parameters['path'];
+		    $factory = new \Storage\RepositoryFactory();
+		    $repository = $factory->find($parameters['repository_name']);
+
+		    if ($factory->error) {
+			    $this->addError("Error loading repository: ".$factory->error);
+		    } else if (! $repository->id) {
+			    $this->addError("Repository not found");
+		    } else {
+			    app_log("Identified repo '".$repository->name."'");
+			    
+			    if (! file_exists($_FILES['uploadFile']['tmp_name'])) {
+				    $this->addError("Temp file '" . $_FILES['uploadFile']['tmp_name'] . "' not found");
+			    } else {
+			    
+				    // Check for Conflict 
+				    $filelist = new \Storage\FileList();
+				    list($existing) = $filelist->find(
+					    array(
+						    'repository_id' => $repository->id,
+						    'path'	=> $parameters['path'],
+						    'name' => $_FILES['uploadFile']['name'],
+                		)
+          			);
+          			
+         			if ($existing->id) {
+					    $this->addError("File already exists with that name in repo ". $repository->name);
+				    } else {
+				    
+					    // Add File to Library
+					    if ($this->error) $this->addError("Error initializing file: " . $this->error);
+					    $this->add(
+						    array(
+							    'repository_id'     => $repository->id,
+							    'name'              => $_FILES['uploadFile']['name'],
+							    'path'				=> $parameters['path'],
+							    'mime_type'         => $_FILES['uploadFile']['type'],
+							    'size'              => $_FILES['uploadFile']['size'],
+                			)
+					    );
+
+					    // Upload File Into Repository 
+					    if ($this->error) $this->addError("Error adding file: " . $this->error);
+					    elseif (! $repository->addFile($this, $_FILES['uploadFile']['tmp_name'])) {
+						    $this->delete();
+						    $this->addError('Unable to add file to repository: '.$repository->error);
+					    } else {
+						    app_log("Stored file ".$this->id." at ".$repostory->path."/".$this->code);
+						    $this->success = "File uploaded";
+
+                            // add file type refrence for this file to be a part of the support ticket
+                            if (isset($parameters['type']) && isset($parameters['ref_id'])) {
+                                $fileType = new \Storage\FileType();
+                                $fileType->add(array('code' => $this->code, 'type' => $parameters['type'], 'ref_id' => $parameters['ref_id']));	
+                            }
+					    }
+				    }
+			    }
+		    }
 		}
 	}

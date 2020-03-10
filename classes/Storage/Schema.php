@@ -1,7 +1,8 @@
-<?
+<?php
 	namespace Storage;
 
 	class Schema {
+	
 		public $error;
 		public $errno;
 		private $info_table = "storage__info";
@@ -15,11 +16,13 @@
 		}
 
 		public function version() {
-			# See if Schema is Available
+		
+			// See if Schema is Available
 			$schema_list = $GLOBALS['_database']->MetaTables();
 
 			if (! in_array($this->info_table,$schema_list)) {
-				# Create __info table
+			
+				// Create __info table
 				$create_table_query = "
 					CREATE TABLE `".$this->info_table."` (
 						label	varchar(100) not null primary key,
@@ -33,7 +36,7 @@
 				}
 			}
 
-			# Check Current Schema Version
+			// Check Current Schema Version
 			$get_version_query = "
 				SELECT	value
 				FROM	`".$this->info_table."`
@@ -47,17 +50,17 @@
 			}
 
 			list($version) = $rs->FetchRow();
-			if (! $version) $version = 0;
+			if (!$version) $version = 0;
 			return $version;
 		}
 	
 		public function upgrade() {
+		
 			$current_schema_version = $this->version();
-
 			if ($current_schema_version < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
 
-				# Start Transaction
+				// Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans())
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
@@ -72,6 +75,7 @@
 						UNIQUE KEY `uk_storage_code` (`code`)
 					)
 				";
+				
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating repositories table in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
@@ -89,6 +93,7 @@
 						FOREIGN KEY `fk_repository_id` (`repository_id`) REFERENCES `storage_repositories` (`id`)
 					)
 				";
+				
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating repository metadata table in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
@@ -118,6 +123,7 @@
 						FOREIGN KEY `fk_user_id` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
+				
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating files table in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
@@ -135,6 +141,7 @@
 						FOREIGN KEY `fk_file_id` (`file_id`) REFERENCES `storage_files` (`id`)
 					)
 				";
+				
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating file metadata table in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
@@ -154,6 +161,7 @@
 						FOREIGN KEY `fk_role` (`role_id`) REFERENCES `register_roles` (`id`)
 					)
 				";
+				
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating file metadata table in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
@@ -170,6 +178,7 @@
 					ON DUPLICATE KEY UPDATE
 						value = $current_schema_version
 				";
+				
 				$GLOBALS['_database']->Execute($update_schema_version);
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
@@ -177,9 +186,12 @@
 					$GLOBALS['_database']->RollbackTrans();
 					return 0;
 				}
+				
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($current_schema_version < 2) {
+			
 				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
@@ -217,7 +229,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
-			# Add Roles
+			// Add Roles
 			foreach ($this->roles as $name => $description) {
 				$role = new \Register\Role();
 				if (! $role->get($name)) {
@@ -230,6 +242,48 @@
 				}
 				return true;
 			}
+			
+			if ($current_schema_version < 3) {
+			
+				app_log("Upgrading schema to version 3",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+		        $add_table_query = "
+                    CREATE TABLE `storage_files_types` (
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `code` varchar(100) NOT NULL,
+                      `type` ENUM('support request','support ticket','support action','support rma','support warranty','engineering task','engineering release','engineering project','engineering product'),
+                      `ref_id` int(11) NOT NULL,
+                      PRIMARY KEY (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+		        ";
+		        
+				$GLOBALS['_database']->Execute($add_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering file table in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+			    $current_schema_version = 3;
+			    $update_schema_version = "
+				    INSERT
+				    INTO	`".$this->info_table."`
+				    VALUES	('schema_version',$current_schema_version)
+				    ON DUPLICATE KEY UPDATE
+					    value = $current_schema_version
+			    ";
+			    $GLOBALS['_database']->Execute($update_schema_version);
+			    if ($GLOBALS['_database']->ErrorMsg()) {
+				    $this->error = "SQL Error in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+				    app_log($this->error,'error',__FILE__,__LINE__);
+				    $GLOBALS['_database']->RollbackTrans();
+				    return 0;
+			    }
+			    $GLOBALS['_database']->CommitTrans();
+			}
 		}
 	}
-?>

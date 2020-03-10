@@ -30,7 +30,7 @@
 			if ($product->error) error("Error adding product: ".$product->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
-			$response->product = $product;
+			$response->item = $product;
 	
 			print $this->formatOutput($response);
 		}
@@ -55,7 +55,7 @@
 			if ($product->error) error("Error updating product: ".$product->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
-			$response->product = $product;
+			$response->item = $product;
 	
 			print formatOutput($response);
 		}
@@ -75,7 +75,7 @@
 			if ($product->error) error("Error getting product: ".$product->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
-			$response->product = $product;
+			$response->item = $product;
 	
 			print $this->formatOutput($response);
 		}

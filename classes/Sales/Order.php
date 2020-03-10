@@ -2,6 +2,7 @@
 	namespace Sales;
 
 	class Order extends \ORM\BaseModel {
+	
 		public $id;
 		private $customer_id;
 		private $salesperson_id;
