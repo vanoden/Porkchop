@@ -60,6 +60,8 @@
 	}
 	
     // upload files if upload button is pressed
+    $configuration = new \Site\Configuration('support_attachments');
+    $repository = $configuration->value();
     if ($_REQUEST['btn_submit'] == 'Upload') {
 
 	    $file = new \Storage\File();

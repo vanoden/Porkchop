@@ -1,4 +1,16 @@
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<link rel="stylesheet" href="/css/datepicker.min.css">
+<script src="/js/datepicker.min.js"></script> 
+<script>
+   $( function() {
+        const picker = datepicker('#date_due', {
+          formatter: (input, date, instance) => {
+            const value = date.toLocaleDateString()
+            input.value = value
+          }
+        });
+   } );
+</script>
 <style>
     .eventLogEntry {
         max-width: 200px; 
@@ -86,7 +98,7 @@
                <?	} ?>
             </div>
             <div class="tableCell">
-               <input id="date_due" type="text" name="date_due" class="value input wide_100per" value="<?=$form['date_due']?>" />
+               <input id="date_due" type="text" name="date_due" class="value input wide_100per" value="<?=$form['date_due']?>" autocomplete="off"/>
             </div>
          </div>
       </div>
@@ -338,7 +350,7 @@
         <form name="repoUpload" action="/_engineering/task/<?=$form['code'];?>" method="post" enctype="multipart/form-data">
         <div class="container">
             <span class="label">Upload File</span>
-            <input type="hidden" name="repository_name" value="Ticket Attachments" />
+            <input type="hidden" name="repository_name" value="<?=$repository?>" />
             <input type="hidden" name="type" value="engineering task" />
             <input type="file" name="uploadFile" />
             <input type="submit" name="btn_submit" class="button" value="Upload" />

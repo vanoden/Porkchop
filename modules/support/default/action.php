@@ -204,7 +204,7 @@
     <form name="repoUpload" action="/_support/request_item/<?=$action->id?>" method="post" enctype="multipart/form-data">
     <div class="container">
         <span class="label">Upload File</span>
-        <input type="hidden" name="repository_name" value="Ticket Attachments" />
+        <input type="hidden" name="repository_name" value="<?=$repository?>" />
         <input type="hidden" name="type" value="support action" />
         <input type="file" name="uploadFile" />
         <input type="submit" name="btn_submit" class="button" value="Upload" />

@@ -510,11 +510,11 @@
 						    app_log("Stored file ".$this->id." at ".$repostory->path."/".$this->code);
 						    $this->success = "File uploaded";
 
-                            // add file type refrence for this file to be a part of the support ticket
-                            if (isset($parameters['type']) && isset($parameters['ref_id'])) {
-                                $fileType = new \Storage\FileType();
-                                $fileType->add(array('code' => $this->code, 'type' => $parameters['type'], 'ref_id' => $parameters['ref_id']));	
-                            }
+                            // @TODO add the reference here about the file type belonging to the ticket or task, which ever
+                            //                            // add file type refrence for this file to be a part of the support ticket
+                            //                            if (isset($parameters['type']) && isset($parameters['ref_id'])) {
+                            //                                $fileType->add(array('code' => $this->code, 'type' => $parameters['type'], 'ref_id' => $parameters['ref_id']));	
+                            //                            }
 					    }
 				    }
 			    }

@@ -29,6 +29,7 @@
 						value	varchar(255)
 					)
 				";
+
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->error = "SQL Error creating info table in Storage::Schema::version(): ".$GLOBALS['_database']->ErrorMsg();
@@ -57,6 +58,7 @@
 		public function upgrade() {
 		
 			$current_schema_version = $this->version();
+			
 			if ($current_schema_version < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
 
@@ -228,47 +230,64 @@
 				}
 				$GLOBALS['_database']->CommitTrans();
 			}
-
-			// Add Roles
-			foreach ($this->roles as $name => $description) {
-				$role = new \Register\Role();
-				if (! $role->get($name)) {
-					app_log("Adding role '$name'");
-					$role->add(array('name' => $name,'description' => $description));
-				}
-				if ($role->error) {
-					$this->_error = "Error adding role '$name': ".$role->error;
-					return false;
-				}
-				return true;
-			}
+		
+			if ($current_schema_version < 4) {
 			
-			if ($current_schema_version < 3) {
-			
-				app_log("Upgrading schema to version 3",'notice',__FILE__,__LINE__);
+				app_log("Upgrading schema to version 4",'notice',__FILE__,__LINE__);
 
-				# Start Transaction
+				// Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-		        $add_table_query = "
-                    CREATE TABLE `storage_files_types` (
-                      `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `code` varchar(100) NOT NULL,
-                      `type` ENUM('support request','support ticket','support action','support rma','support warranty','engineering task','engineering release','engineering project','engineering product'),
-                      `ref_id` int(11) NOT NULL,
-                      PRIMARY KEY (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-		        ";
-		        
-				$GLOBALS['_database']->Execute($add_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error altering file table in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
+                // add site configurations for the new engineering/support file uploads 
+			    $update_site_configurations = "INSERT INTO `site_configurations` (`key`, `value`) VALUES ('support_attachments','Ticket Attachments');";
+			    $GLOBALS['_database']->Execute($update_site_configurations);
+			    if ($GLOBALS['_database']->ErrorMsg()) {
+				    $this->error = "SQL Error in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+				    app_log($this->error,'error',__FILE__,__LINE__);
+				    $GLOBALS['_database']->RollbackTrans();
+				    return 0;
+			    }
+			    
+                // add storage repo for the new engineering/support file uploads 
+			    $add_storage_repo = "INSERT INTO `storage_repositories` (`code`, `name`, `type`, `status`) VALUES ('Ticket Attachments', 'Ticket Attachments', 'Local', 'ACTIVE');";
+			    $GLOBALS['_database']->Execute($add_storage_repo);
+			    if ($GLOBALS['_database']->ErrorMsg()) {
+				    $this->error = "SQL Error in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+				    app_log($this->error,'error',__FILE__,__LINE__);
+				    $GLOBALS['_database']->RollbackTrans();
+				    return 0;
+			    }
 
-			    $current_schema_version = 3;
+			    // get the storage repo added to then add meta data
+			    $get_id_query = "SELECT	id FROM	`storage_repositories` WHERE	code = 'Ticket Attachments'";
+			    $rs = $GLOBALS['_database']->Execute($get_id_query);
+			    if (! $rs) {
+				    $this->error = "SQL Error in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+				    return null;
+			    }
+			    list($repo_id) = $rs->FetchRow();
+
+                // add storage repo metadata for the new engineering/support file uploads
+			    $add_storage_repo = "INSERT INTO `storage_repository_metadata` (`repository_id`,`key`,`value`) VALUES ('" . $repo_id . "', 'endpoint', '');";
+			    $GLOBALS['_database']->Execute($add_storage_repo);
+			    if ($GLOBALS['_database']->ErrorMsg()) {
+				    $this->error = "SQL Error in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+				    app_log($this->error,'error',__FILE__,__LINE__);
+				    $GLOBALS['_database']->RollbackTrans();
+				    return 0;
+			    }
+
+                // add storage repo metadata for the new engineering/support file uploads
+			    $add_storage_repo = "INSERT INTO `storage_repository_metadata` (`repository_id`,`key`,`value`) VALUES ('" . $repo_id . "', 'path', '/storage/ticket_attachments');";
+			    $GLOBALS['_database']->Execute($add_storage_repo);
+			    if ($GLOBALS['_database']->ErrorMsg()) {
+				    $this->error = "SQL Error in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+				    app_log($this->error,'error',__FILE__,__LINE__);
+				    $GLOBALS['_database']->RollbackTrans();
+				    return 0;
+			    }
+
+			    $current_schema_version = 4;
 			    $update_schema_version = "
 				    INSERT
 				    INTO	`".$this->info_table."`
@@ -284,6 +303,20 @@
 				    return 0;
 			    }
 			    $GLOBALS['_database']->CommitTrans();
+			}
+
+			// Add Roles
+			foreach ($this->roles as $name => $description) {
+				$role = new \Register\Role();
+				if (! $role->get($name)) {
+					app_log("Adding role '$name'");
+					$role->add(array('name' => $name,'description' => $description));
+				}
+				if ($role->error) {
+					$this->_error = "Error adding role '$name': ".$role->error;
+					return false;
+				}
+				return true;
 			}
 		}
 	}

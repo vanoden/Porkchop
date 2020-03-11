@@ -397,9 +397,7 @@
 
 	function schemaVersion() {
 		$schema = new \Storage\Schema();
-		if ($schema->error) {
-			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
-		}
+		if ($schema->error) app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		$version = $schema->version();
 		$response = new \HTTP\Response();
 		$response->success = 1;
@@ -408,9 +406,7 @@
 	}
 	function schemaUpgrade() {
 		$schema = new \Storage\Schema();
-		if ($schema->error) {
-			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
-		}
+		if ($schema->error) app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		$version = $schema->upgrade();
 		$response = new \HTTP\Response();
 		$response->success = 1;

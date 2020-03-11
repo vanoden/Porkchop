@@ -15,35 +15,12 @@
          */
 		public function find($parameters = array()) {
 		
-    		$fileType = new \Storage\FileType();
 			$get_objects_query = "
 				SELECT sf.id
 				FROM storage_files sf
-				LEFT JOIN storage_files_types sft ON sft.code = sf.code
 				WHERE sf.id = sf.id
 			";
 			$bind_params = array();
-
-			if (isset($parameters['ref_id']) && strlen($parameters['ref_id']) && isset($parameters['type']) && strlen($parameters['type'])) {
-			
-				if (preg_match('/^\d+$/', $parameters['ref_id'])) {
-					$get_objects_query .= "
-						AND sft.ref_id = ?";
-					array_push($bind_params, $parameters['ref_id']);
-				} else {
-					$this->error = "Invalid reference ID";
-					return false;
-				}
-				
-				if (in_array($parameters['type'], $fileType->referenceTypes)) {
-                    $get_objects_query .= "
-						AND sft.type = ?";
-					array_push($bind_params, $parameters['type']);
-				} else {
-					$this->error = "Invalid file reference type";
-					return false;
-				}
-			}
 			
 			if (isset($parameters['name']) && strlen($parameters['name'])) {
 				if (preg_match('/^[\w\-\_.\s]+$/',$parameters['name'])) {
