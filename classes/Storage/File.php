@@ -509,12 +509,12 @@
 					    } else {
 						    app_log("Stored file ".$this->id." at ".$repostory->path."/".$this->code);
 						    $this->success = "File uploaded";
-
-                            // @TODO add the reference here about the file type belonging to the ticket or task, which ever
-                            //                            // add file type refrence for this file to be a part of the support ticket
-                            //                            if (isset($parameters['type']) && isset($parameters['ref_id'])) {
-                            //                                $fileType->add(array('code' => $this->code, 'type' => $parameters['type'], 'ref_id' => $parameters['ref_id']));	
-                            //                            }
+						    
+                            // add file type refrence for this file to be a part of the support/engineering ticket
+                            if (isset($parameters['type']) && isset($parameters['ref_id'])) {
+                                $fileMetaData = new \Storage\FileMetaData();
+                                $fileMetaData->add(array('file_id' => $this->id, 'key' => $parameters['type'], 'value' => $parameters['ref_id']));   
+                            }                            
 					    }
 				    }
 			    }
