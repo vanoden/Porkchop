@@ -29,9 +29,9 @@
 	}
 </style>
 <div class="title">Add Product</div>
-<?	if ($GLOBALS['_page']->error) { ?>
+<?php	if ($GLOBALS['_page']->error) { ?>
 <div class="form_error"><?=$GLOBALS['_page']->error?></div>
-<?	} ?>
+<?php	} ?>
 <form name="productEdit" method="post" action="/_product/edit">
 <input type="hidden" name="parent_code" id="parent_code" value="<?=$_REQUEST["parent_code"]?>" />
 <div class="body">
@@ -89,9 +89,9 @@
 	</div>
 	<div class="editImages" id="itemImages">
 		<span class="label">Images</span>
-<?	foreach($item->image as $image) { ?>
+<?php	foreach($item->image as $image) { ?>
 		<div class="editItemImage"><img class="editItemThumbnail" src="/_media/api?method=downloadMediaFile&code=<?=$image->files[0]->code ?>" /></div>
-<?	} ?>
+<?php	} ?>
 		<div class="editItemImage"><input type="button" name="addImageButton" value="Add Image" onclick="selectImage()" /></div>
 	</div>
 	<hr style="width: 900px; clear: both; visibility: hidden;" />

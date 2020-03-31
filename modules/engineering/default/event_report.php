@@ -1,9 +1,9 @@
 <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
 <div style="width: 756px;">
 	<h1>Event Report</h1>
-	<?	if ($page->errorCount()) { ?>
+	<?php	if ($page->errorCount()) { ?>
 	<div class="form_error"><?=$page->errorString()?></div>
-	<?	} ?>
+	<?php	} ?>
 	<h2>Filters</h2>
 	<form action="/_engineering/event_report" method="get">
 	<table class="min-tablet">
@@ -17,23 +17,23 @@
 		<td><input type="text" name="date_end" class="value input" value="<?=$_REQUEST['date_end']?>" /></td>
 		<td><select name="project_id" class="value input">
 				<option value="">Any</option>
-<?	foreach ($projects as $project) { ?>
-				<option value="<?=$project->id?>"<? if ($project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
-<?	} ?>
+<?php	foreach ($projects as $project) { ?>
+				<option value="<?=$project->id?>"<?php	if ($project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
+<?php	} ?>
 			</select>
 		</td>
 		<td><select name="product_id" class="value input">
 				<option value="">Any</option>
-<?	foreach ($products as $product) { ?>
-				<option value="<?=$product->id?>"<? if ($product->id == $_REQUEST['product_id']) print " selected"; ?>><?=$product->title?></option>
-<?	} ?>
+<?php	foreach ($products as $product) { ?>
+				<option value="<?=$product->id?>"<?php	if ($product->id == $_REQUEST['product_id']) print " selected"; ?>><?=$product->title?></option>
+<?php	} ?>
 			</select>
 		</td>
 		<td><select name="user_id" class="value input">
 				<option value="">Any</option>
-<?	foreach ($users as $user) { ?>
-				<option value="<?=$user->id?>"<? if ($user->id == $_REQUEST['user_id']) print " selected"; ?>><?=$user->full_name()?></option>
-<?	} ?>
+<?php	foreach ($users as $user) { ?>
+				<option value="<?=$user->id?>"<?php	if ($user->id == $_REQUEST['user_id']) print " selected"; ?>><?=$user->full_name()?></option>
+<?php	} ?>
 			</select>
 		</td>
 	</tr>
@@ -44,7 +44,7 @@
 	</table>
 	</form>
 	<h2>Events</h2>
-	<?	foreach ($events as $event) {
+	<?php	foreach ($events as $event) {
 		$person = $event->person();
 		$task = $event->task();
 		$project = $task->project();
@@ -66,5 +66,5 @@
 	<tr><th colspan="5">Description</th></tr>
 	<tr><td colspan="5"><?=$event->description?></td></tr>
 	</table>
-	<?	} ?>
+	<?php	} ?>
 </div>

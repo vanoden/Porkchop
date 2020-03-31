@@ -1,4 +1,4 @@
-<?
+<?php
 	if (! $GLOBALS['_SESSION_']->customer->id) {
 		header("location: /_register/login?target=_monitor:assets");
 		exit;
@@ -20,4 +20,3 @@
 		$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
 	}
 	$assets = $assetList->find($parameters);
-?>

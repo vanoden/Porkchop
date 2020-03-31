@@ -24,18 +24,18 @@
 		<div class="tableCell">Index</div>
 		<div class="tableCell">Metadata</div>
 	</div>
-<?	foreach ($pages as $page) { ?>
+<?php	foreach ($pages as $page) { ?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_site/page?module=<?=$page->module?>&view=<?=$page->view?>&index=<?=$page->index?>"><?=$page->module?></a></div>
 		<div class="tableCell"><?=$page->view?></div>
 		<div class="tableCell"><?=$page->index?></div>
 		<div class="tableCell">
-<?	foreach ($page->metadata as $key => $value) { ?>
+<?php	foreach ($page->metadata as $key => $value) { ?>
 			<span><?=$key?>:</span>
 			<span><?=$value?></span>
-<?	} ?>
+<?php	} ?>
 		</div>
 		</a>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>

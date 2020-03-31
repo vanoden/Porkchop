@@ -1,4 +1,4 @@
-<?
+<?php
 	require(MODULES."/session/_classes/session.php");
 	$_session = new Session();
 

@@ -119,4 +119,3 @@
 		app_log($string,'error',__FILE__,__LINE__);
 		return;
 	}
-?>

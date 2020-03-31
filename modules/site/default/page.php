@@ -18,12 +18,12 @@
 	}
 </script>
 <div class="title">Edit Page Parameters</div>
-<?	if ($page->errorCount()) { ?>
+<?php	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
-<?	}
+<?php	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?	} ?>
+<?php	} ?>
 <div class="container_narrow">
 	<span class="label">Module</span><span><?=$module?></span>
 </div>
@@ -47,7 +47,7 @@
 		<div class="tableCell">Value</div>
 		<div class="tableCell">Actions</div>
 	</div>
-<?	$idx = 0;
+<?php	$idx = 0;
 	foreach ($metadata as $record) { 
 ?>
 	<div class="tableRow">
@@ -58,7 +58,7 @@
 			<input type="button" name="drop_<?=$idx?>" value="Drop" class="button" onclick="dropMeta('<?=$idx?>');" />
 		</div>
 	</div>
-<?	
+<?php	
 		$idx ++;
 	}
 ?>

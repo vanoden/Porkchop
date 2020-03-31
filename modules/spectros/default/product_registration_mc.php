@@ -1,4 +1,4 @@
-<?
+<?php
 	require_module("contact");
 	require_module("email");
 

@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	###################################################
 	### expire_users.php							###
 	### This program identifies users that have not	###
@@ -32,4 +32,3 @@
 		else
 			print "<div class=\"form_success\">$count Organizations Expired before $date</div>";
 	}
-?>

@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	#######################################################
 	### functions.php									###
 	### Standard Functions for the Root Seven			###
@@ -243,4 +243,3 @@
 		# Return Results
 		return $points;
 	}
-?>

@@ -4,4 +4,3 @@
 
 	$menuList = new \Navigation\MenuList();
 	$menus = $menuList->find();
-?>

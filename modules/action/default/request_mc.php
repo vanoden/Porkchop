@@ -1,4 +1,4 @@
-<?
+<?php
 	require_module('action');
 	
 	if ($_REQUEST['btn_submit'])
@@ -19,4 +19,3 @@
 			$GLOBALS['_page']->success = "Thank you for your patience.  You will be contacted shortly.";
 		}
 	}
-?>

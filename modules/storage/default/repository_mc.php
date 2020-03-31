@@ -68,4 +68,3 @@
     	    $form['endpoint'] = $repository->endpoint;
 		}
     }
-?>

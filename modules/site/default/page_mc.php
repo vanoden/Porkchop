@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->requireRole('administrator');
 
@@ -33,4 +33,3 @@
 	else {
 		$page->addError("Page ".$_REQUEST['module']."/".$_REQUEST['view']." index ".$_REQUEST['index']." not found");
 	}
-?>

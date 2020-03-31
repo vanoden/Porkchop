@@ -13,17 +13,13 @@
 	}
 </script>
 <h2>Monitor API Sessions</h2>
-<?	if ($GLOBALS['_page']->error) { ?>
+<?php	if ($GLOBALS['_page']->error) { ?>
 <div class="form_error" colspan="4"><?=$GLOBALS['_page']->error?></div>
-<?	} ?>
+<?php	} ?>
 <div class="form_instruction" colspan="4"><?=$GLOBALS['_page']->instruction?></div>
 
 <form action="comm_dashboard" method="POST">
 <h3>Filter</h3>
-	
-	
-
-	
 <!--	START First Table -->
 	<div class="tableBody min-tablet marginTop_20">
 	<div class="tableRowHeader">
@@ -65,7 +61,7 @@
 	<th class="label resultlabel labelRequest">Request</th>
 	<th class="label resultlabel labelResponse">Response</th>
 </tr>
-<?	$session_id = 0;
+<?php	$session_id = 0;
 	foreach($communications as $communication) {
 		$session = $communication->session;
 		$customer = $session->customer;

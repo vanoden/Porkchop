@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page('spectros','cal_report');
 
 	if (! $GLOBALS['_SESSION_']->customer->has_role("monitor admin")) {
@@ -52,4 +52,3 @@
 		app_log($string,'error',__FILE__,__LINE__);
 		return;
 	}
-?>

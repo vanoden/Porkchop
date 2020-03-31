@@ -1,4 +1,4 @@
-<?
+<?php
 	$productList = new \Product\ItemList();
 	$parent = new \Product\Item();
 	
@@ -15,4 +15,3 @@
 		$parent->name = "Our Products";
 	}
 	$products = $productList->find(array("parent_id" => $_REQUEST['parent_id']));
-?>

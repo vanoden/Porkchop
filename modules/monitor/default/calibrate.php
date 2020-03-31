@@ -3,12 +3,12 @@
 <input type="hidden" name="code" value="<?=$asset->code?>">
 <table class="body">
 <tr><th align="left" class="title">Device Calibration Check <span style="font-weight: normal">You have <?=$available?> credits available</span></td></tr>
-<?	if ($GLOBALS['_page']->success) { ?>
+<?php	if ($GLOBALS['_page']->success) { ?>
 <tr><td align="left" class="form_success"><?=$GLOBALS['_page']->success?></td></tr>
-<?	} ?>
-<?	if ($GLOBALS['_page']->error) { ?>
+<?php	} ?>
+<?php	if ($GLOBALS['_page']->error) { ?>
 <tr><td align="left" class="form_error"><?=$GLOBALS['_page']->error?></td></tr>
-<?	} ?>
+<?php	} ?>
 </table>
 <table class="body" cellpadding="0" cellspacing="0">
 <tr><td class="title" colspan="6">Monitor</td></tr>
@@ -49,7 +49,7 @@
 	<th align="left" class="label">Calib. Conc.</th>
 	<th align="left" class="label">Actual Reading</th>
 </tr>
-<?	# Loop Through Verification History
+<?php	# Loop Through Verification History
 	foreach ($verifications as $verification)
 	{
 ?>
@@ -59,7 +59,7 @@
 	<td align="right" class="value"><?=$verification->custom_2?></td>
 	<td align="right" class="value"><?=$verification->custom_3?></td>
 </tr>
-<?	} ?>
+<?php	} ?>
 </form>
 </table>
 

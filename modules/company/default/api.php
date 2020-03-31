@@ -1,6 +1,5 @@
 	<script language="Javascript">
-        function goMethodUrl(url)
-        {
+        function goMethodUrl(url) {
             location.href = '/_company/api/&amp;method='+url;
             return true;
         }

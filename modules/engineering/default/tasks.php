@@ -6,9 +6,9 @@
 		return true;
 	}
 </script>
-<?	if ($page->error) { ?>
+<?php	if ($page->error) { ?>
     <div class="form_error"><?=$page->error?></div>
-<?	} ?>
+<?php	} ?>
 <div class="breadcrumbs">
     <a class="breadcrumb" href="/_engineering/home">Engineering</a> > Tasks
 </div>

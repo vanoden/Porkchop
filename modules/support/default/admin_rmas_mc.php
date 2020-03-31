@@ -17,9 +17,7 @@
 
 	$rmaList = new \Support\Request\Item\RMAList();
 	$rmas = $rmaList->find($parameters);
-	if ($rmaList->error()) {
-		$page->addError($rmaList->error());
-	}
+	if ($rmaList->error()) $page->addError($rmaList->error());
 
 	$organizationList = new \Register\OrganizationList();
 	$organizations = $organizationList->find();

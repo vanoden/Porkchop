@@ -7,7 +7,7 @@
 		<div class="tableCell">Source</div>
 		<div class="tableCell">Destination</div>
 	</div>
-<?	foreach ($shipments as $shipment) {
+<?php	foreach ($shipments as $shipment) {
 		$vendor = new \Shipping\Vendor($shipment->vendor_id);
 		$sender = new \Register\Customer($shipment->send_contact_id);
 		$receiver = new \Register\Customer($shipment->rec_contact_id);
@@ -20,5 +20,5 @@
 		<div class="tableCell"><?=$sender->full_name()?></div>
 		<div class="tableCell"><?=$receiver->full_name()?></div>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>

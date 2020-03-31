@@ -1,4 +1,4 @@
-<?
+<?php	
 	if (! $GLOBALS['_SESSION_']->authenticated()) {
 		header("location: /_register/login?target=_monitor:assets");
 		exit;
@@ -25,4 +25,3 @@
 		print "Dashboard '".$dashboard_name."' Not Found";
 	}
 	exit;
-?>

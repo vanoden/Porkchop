@@ -15,9 +15,9 @@
 </div>
 
 <!-- Error Messaging -->
-<?	if ($page->errorCount()) { ?>
+<?php	if ($page->errorCount()) { ?>
     <div class="form_error"><?=$page->errorString()?></div>
-<?	} ?>
+<?php	} ?>
 
 <div>
 	<form name="requestForm" method="post">
@@ -37,9 +37,9 @@
 		        <div class="tableCell">
 			        <select class="value wide_100per" name="requestor_id">
 				        <option value="">Select</option>
-				        <?	foreach ($customers as $customer) { ?>
+				        <?php	foreach ($customers as $customer) { ?>
 				        <option value="<?=$customer->id?>"<? if ($customer->id == $_REQUEST['customer_id']) print " selected"; ?>><?=$customer->full_name()?></option>
-				        <?	} ?>
+				        <?php	} ?>
 			        </select>
 		        </div>
 		        <div class="tableCell">Gas Monitor</div>

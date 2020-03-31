@@ -1,6 +1,6 @@
-<?	if ($page->errorCount()) { ?>
+<?php	if ($page->errorCount()) { ?>
     <div class="form_error"><?=$page->errorString()?></div>
-<?	} ?>
+<?php	} ?>
 <form name="noteForm" method="post">
     <input type="hidden" name="request_id" value="<?=$request->id?>" />
     <h1>Request Note for <?=$request->code?></h1>

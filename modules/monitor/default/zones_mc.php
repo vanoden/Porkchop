@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	if ($todi == "add_hub")
 	{
 		# Prepare Query
@@ -89,4 +89,3 @@
 			}
 		}
 	}
-?>

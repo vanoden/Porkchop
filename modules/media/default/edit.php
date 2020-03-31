@@ -10,9 +10,9 @@
 	}
 </style>
 <div class="title">Edit Media Item</div>
-<?	if ($GLOBALS['_page']->error) { ?>
+<?php	if ($GLOBALS['_page']->error) { ?>
 <div class="form_error"><?=$GLOBALS['_page']->error?></div>
-<?	} ?>
+<?php	} ?>
 <form name="mediaEdit" method="post" action="/_media/edit">
 <input type="hidden" name="code" id="code" value="<?=$item->code?>" />
 <div class="body">

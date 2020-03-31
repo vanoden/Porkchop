@@ -34,4 +34,3 @@
 	# Get Organizations
 	$organizationlist = new \Register\OrganizationList();
 	$organizations = $organizationlist->find();
-?>

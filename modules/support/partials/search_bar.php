@@ -154,11 +154,11 @@
         sideNavSubMenu.addClass('sub-current'); 
     });
 </script>
-<?	if ($_REQUEST['btn_all']) { ?>
+<?php	if ($_REQUEST['btn_all']) { ?>
     <a class="button more" href="/_support/requests">Open Requests</a>
-<?	} else { ?>
+<?php	} else { ?>
     <a class="button more" href="/_support/requests?btn_all=true">All Requests</a>
-<?	} ?>
+<?php	} ?>
 &nbsp;| 
     <a class="button more green-background" href="/_support/request_items">Requests &gt; Tickets</a>
 &nbsp;| 

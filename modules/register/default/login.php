@@ -1,10 +1,7 @@
 <script language="Javascript">
-	function loginSubmitEnter(e)
-	{
+	function loginSubmitEnter(e) {
 		var code = (e.keyCode ? e.keyCode : e.which);
-		if (code == 13) {
-			document.loginForm.submit();
-		}
+		if (code == 13) document.loginForm.submit();
 	}
 </script>
 <div id="reg_form" onkeypress="return loginSubmitEnter(event)" class="body">
@@ -12,9 +9,9 @@
 		<input type="hidden" name="login_target" value="<?=$target?>" />
 		<div id="register_form">
 <!--			<div class="title">Site Login</div>-->
-<? if ($page->errorCount() > 0) { ?>
+<?php if ($page->errorCount() > 0) { ?>
 			<div class="form_error registerLoginError"><?=$page->errorString()?></div>
-<? } ?>
+<?php } ?>
 			<div id="register_important">
 				<p class="value form_instruction">This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</p>
 			</div>

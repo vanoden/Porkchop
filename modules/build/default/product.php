@@ -4,11 +4,11 @@
 	}
 </script>
 <h2>Build Product</h2>
-<?	if ($page->errorCount() > 0) { ?>
+<?php	if ($page->errorCount() > 0) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
-<?	} elseif ($page->success) { ?>
+<?php	} elseif ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?	} ?>
+<?php	} ?>
 <form action="/_build/product" method="post">
 <input type="hidden" name="id" value="<?=$product->id?>" />
 <div class="container">

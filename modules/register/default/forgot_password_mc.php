@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	$page = new \Site\Page();
 
 	# Handle Actions

@@ -10,9 +10,9 @@
 <div style="width: 756px;">
 	<a href="/_support/requests" class="breadcrumbs">&gt; Requests</a>
 	<a href="/_support/request/<?=$request->code?>" class="breadcrumbs">&gt; <?=$request->code?></a>
-	<?	if ($page->errorCount()) { ?>
+	<?php	if ($page->errorCount()) { ?>
 	<div class="form_error"><?=$page->errorString()?></div>
-	<?	} ?>
+	<?php	} ?>
 	<form name="noteForm" method="post">
 	<input type="hidden" name="request_id" value="<?=$request->id?>" />
 	<h1>Request Action for <?=$request->code?></h1>
@@ -49,23 +49,23 @@
 		<div class="label">Requested By</div>
 		<select class="value input" name="requestor_id">
 			<option value="">Select</option>
-		<?	foreach ($users as $user) {
+		<?php	foreach ($users as $user) {
 				if ($user->has_role('monitor asset')) continue;
 		?>
 			<option value="<?=$user->id?>"><?=$user->full_name()?></option>
-		<?	} ?>
+		<?php	} ?>
 		</select>
 	</div>
 	<div class="container_narrow">
 		<div class="label">Assigned To</div>
 		<select class="value input" name="assigned_id">
 			<option value="">Select</option>
-		<?	foreach ($users as $user) {
+		<?php	foreach ($users as $user) {
 				if ($user->has_role('monitor asset')) continue;
 				if (! $user->has_role('support user')) continue;
 		?>
 			<option value="<?=$user->id?>"><?=$user->full_name()?></option>
-		<?	} ?>
+		<?php	} ?>
 		</select>
 	</div>
 	<div class="container_narrow">

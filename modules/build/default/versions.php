@@ -7,7 +7,7 @@
 		<div class="tableCell">Tarball</div>
 		<div class="tableCell">Built By</div>
 	</div>
-<?	foreach ($versions as $version) {
+<?php	foreach ($versions as $version) {
 	$user = $version->user();
 ?>
 	<div class="tableRow">
@@ -17,5 +17,5 @@
 		<div class="tableCell"><?=$version->tarball?></div>
 		<div class="tableCell"><?=$user->full_name()?></a></div>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>

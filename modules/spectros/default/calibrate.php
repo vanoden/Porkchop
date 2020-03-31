@@ -1,10 +1,10 @@
 <div class="title" colspan="2">Record Calibration Data</div>
-<?	if ($page->error) { ?>
+<?php	if ($page->error) { ?>
 <div class="form_error" colspan="2"><?=$page->error?></div>
-<?	} ?>
-<?	if ($page->success) { ?>
+<?php	} ?>
+<?php	if ($page->success) { ?>
 <div class="form_success" colspan="2"><?=$page->success?></div>
-<?	} ?>
+<?php	} ?>
 <div class="form_instruction">Enter your calibration information here.  You have <?=$available_credits?> credits available.</div>
 <table class="body" style="width: 600px;">
 <form method="post" name="calibrationForm" action="/_spectros/calibrate">

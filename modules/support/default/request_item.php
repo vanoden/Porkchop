@@ -42,12 +42,12 @@
 	<!-- START Request Form -->
 	<form name="requestForm" method="post">
         <input type="hidden" name="item_id" value="<?=$item->id?>" />
-        <?	if ($page->errorCount()) { ?>
+        <?php	if ($page->errorCount()) { ?>
         <div class="form_error"><?=$page->errorString()?></div>
-        <? } ?>
-        <?	if ($page->success) { ?>
+        <?php	} ?>
+        <?php	if ($page->success) { ?>
         <div class="form_success"><?=$page->success?></div>
-        <?	} ?>
+        <?php	} ?>
 		        
 	    <!--	Start First Row-->
         <div class="tableBody min-tablet marginTop_20">
@@ -75,9 +75,9 @@
 		        <div class="tableCell">
 			        <select class="value input" name="product_id">
 				        <option value="">N/A</option>
-				        <?	foreach ($products as $product) { ?>
-				        <option value="<?=$product->id?>"<? if ($product->id == $item->product->id) print " selected";?>><?=$product->code?></option>
-				        <?	} ?>
+				        <?php	foreach ($products as $product) { ?>
+				        <option value="<?=$product->id?>"<?php	if ($product->id == $item->product->id) print " selected";?>><?=$product->code?></option>
+				        <?php	} ?>
 			        </select>
 		        </div>
 		        <div class="tableCell">
@@ -100,11 +100,11 @@
 		        <input type="button" name="btn_add_rma" class="button secondary" value="Authorize Return" onclick="showForm('rma');" />
 		        <input type="button" name="btn_ship_item" class="button secondary" value="Ship Product" onclick="showForm('shipping');" />
 		        <input type="button" name="btn_add_note" class="button secondary" value="Add Comment" onclick="showForm('comment');" />
-        <?	if ($item->status == 'CLOSED') { ?>
+        <?php	if ($item->status == 'CLOSED') { ?>
 		        <input type="submit" name="btn_reopen_item" class="button" value="Reopen Item" />
-        <?	} else { ?>
+        <?php	} else { ?>
 		        <input type="submit" name="btn_close_item" class="button" value="Close Item" />
-        <?	} ?>
+        <?php	} ?>
 	        </div>
         </div>
         <!--End first row-->
@@ -133,17 +133,17 @@
 				</div>
 				<div class="tableCell">
 					<select name="action_requested_by" class="value input">
-                    <?	foreach ($admins as $admin) { ?>
-					  <option value="<?=$admin->id?>"<? if ($admin->id == $GLOBALS['_SESSION_']->customer->id) print " selected";?>><?=$admin->full_name()?></option>
-                    <?	} ?>
+                    <?php	foreach ($admins as $admin) { ?>
+					  <option value="<?=$admin->id?>"<?php	if ($admin->id == $GLOBALS['_SESSION_']->customer->id) print " selected";?>><?=$admin->full_name()?></option>
+                    <?php	} ?>
 					</select>
 				</div>
 				<div class="tableCell">
 					<select name="action_assigned_to" class="value input">
 						<option value="">Unassigned</option>
-                        <?	foreach ($admins as $admin) { ?>
+                        <?php	foreach ($admins as $admin) { ?>
 					        <option value="<?=$admin->id?>"><?=$admin->full_name()?></option>
-                        <?	} ?>
+                        <?php	} ?>
 					</select>
 				</div>
 				<div class="tableCell">
@@ -311,10 +311,10 @@
     <br/><br/>
 </div>
 
-<?	if (count($actions) > 0) { ?>
+<?php	if (count($actions) > 0) { ?>
 <div style="width: 756px;">
 <h2>Actions</h2>
-<?	foreach ($actions as $action) {
+<?php	foreach ($actions as $action) {
 		if (isset($action->requestedBy)) {
 			$requested_by = $action->requestedBy->full_name();
 		} else {
@@ -344,7 +344,7 @@
             <pre><?=strip_tags($action->description)?></pre>
         </td></tr>
     </table>
-    <? } else { ?>
+    <?php	} else { ?>
         <h3 style="padding-top: 20px;">Action</h3>
         <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
             <tr>
@@ -408,11 +408,11 @@
 ?>
 <br/><br/><br/>
 </div>
-<?	} ?>
-<?	if (isset($rmalist) && $rmalist->count() > 0) { ?>
+<?php	} ?>
+<?php	if (isset($rmalist) && $rmalist->count() > 0) { ?>
 <div style="width: 756px;">
 <h2>Authorized Returns</h2>
-<?		foreach ($rmas as $rma) { ?>
+<?php		foreach ($rmas as $rma) { ?>
 	<div class="tableBody min-tablet">
 		<div class="tableRowHeader">
 			<div class="tableCell">Number</div>
@@ -425,13 +425,13 @@
 	        <div class="tableCell"><?=$rma->approvedBy()->full_name()?></div>
         </div>
     </div>
-<?		} ?>
+<?php		} ?>
 </div>
-<?	} ?>
-<?	if (count($comments) > 0) { ?>
+<?php	} ?>
+<?php	if (count($comments) > 0) { ?>
     <!--	Start Request Item-->
     <h3>Comments</h3>
-    <?		foreach ($comments as $comment) { ?>
+    <?php		foreach ($comments as $comment) { ?>
     <div class="tableBody min-tablet">
 	    <div class="tableRowHeader">
 		    <div class="tableCell" style="width: 60%;">Date Entered</div>
@@ -456,8 +456,8 @@
 		    </div>
 	    </div>
     </div>
-<?		} ?>
+<?php		} ?>
 <!--End Request Item -->
 <!-- END Comments Section -->
 <!--	 ==================================== -->
-<?	} ?>
+<?php	} ?>

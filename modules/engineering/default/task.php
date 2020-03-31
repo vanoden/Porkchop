@@ -59,18 +59,18 @@
 	  		<span><a href="/_engineering/task/<?=$form['code'];?>"><?php print " ".$form['code'];?></a></span>
 		<? } ?>
 	  </h2>
-      <?	if ($page->errorCount()) { ?>
+      <?php	if ($page->errorCount()) { ?>
       <div class="form_error"><?=$page->errorString()?></div>
-      <?	}
+      <?php	}
          if ($page->success) { ?>
       		<div class="form_success"><?=$page->success?> [<a href="/_engineering/tasks">Finished</a>] | [<a href="/_engineering/task">Create Another</a>] </div>
-      <?	} ?>
-      <?	if (! isset($task->id)) { ?>
+      <?php	} ?>
+      <?php	if (! isset($task->id)) { ?>
       <div class="container_narrow">
          <div class="label">Code</div>
          <input type="text" name="code" class="value input" value="<?=$form['code']?>" />
       </div>
-      <?	} ?>
+      <?php	} ?>
       <!--	Start First Row-->
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
@@ -85,17 +85,17 @@
             <div class="tableCell">
                <select name="product_id" class="value input wide_100per">
                   <option value="">Select</option>
-                  <?	foreach ($products as $product) { ?>
+                  <?php	foreach ($products as $product) { ?>
                   <option value="<?=$product->id?>"<? if ($product->id == $form['product_id']) print " selected"; ?>><?=$product->title?></option>
-                  <?	} ?>
+                  <?php	} ?>
                </select>
             </div>
             <div class="tableCell">
-               <?	if (isset($task->id)) { ?>
+               <?php	if (isset($task->id)) { ?>
                 <span class="value"><?=$form['date_added']?></span>
-               <?	} else { ?>
+               <?php	} else { ?>
                 <input id="date_added" type="text" name="date_added" class="value input wide_100per" value="<?=$form['date_added']?>" />
-               <?	} ?>
+               <?php	} ?>
             </div>
             <div class="tableCell">
                <input id="date_due" type="text" name="date_due" class="value input wide_100per" value="<?=$form['date_due']?>" autocomplete="off"/>
@@ -121,9 +121,9 @@
                </select>
             </div>
             <div class="tableCell">
-               <?	if (isset($task->id)) { ?>
+               <?php	if (isset($task->id)) { ?>
                <span class="value"><?=$task->status?></span>
-               <?	} else { ?>
+               <?php	} else { ?>
                <select name="status" class="value input wide_100per">
                   <option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
                   <option value="hold"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
@@ -132,7 +132,7 @@
                   <option value="testing"<? if ($form['status'] == "TESTING") print " selected"; ?>>Testing</option>
                   <option value="complete"<? if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
                </select>
-               <?	}	?>
+               <?php	}	?>
             </div>
             <div class="tableCell">
                <select name="priority" class="value input wide_100per">
@@ -155,40 +155,40 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <?	if (isset($task->id)) {
+               <?php	if (isset($task->id)) {
                   $requestor = $task->requestedBy(); ?>
                <span class="value"><?=$requestor->first_name?> <?=$requestor->last_name?></span>
-               <?	} else { ?>
+               <?php	} else { ?>
                <select name="requested_id" class="value input wide_100per">
                   <option value="">Select</option>
-                  <?	foreach($people as $person) { ?>
+                  <?php	foreach($people as $person) { ?>
                   <option value="<?=$person->id?>"<? if ($person->id == $form['requested_id']) print " selected"; ?>><?=$person->login?></option>
-                  <?	} ?>
+                  <?php	} ?>
                </select>
-               <?	}	?>
+               <?php	}	?>
             </div>
             <div class="tableCell">
                <select name="assigned_id" class="value input wide_100per">
                   <option value="">Unassigned</option>
-                  <?	foreach($techs as $person) { ?>
+                  <?php	foreach($techs as $person) { ?>
                     <option value="<?=$person->id?>"<? if ($person->id == $form['assigned_id']) print " selected"; ?>><?=$person->login?></option>
-                  <?	} ?>
+                  <?php	} ?>
                </select>
             </div>
             <div class="tableCell">
                <select name="release_id" class="value input wide_100per">
                   <option value="">Not Scheduled</option>
-                  <?	foreach($releases as $release) { ?>
+                  <?php	foreach($releases as $release) { ?>
                   <option value="<?=$release->id?>"<? if ($release->id == $form['release_id']) print " selected"; ?>><?=$release->title?></option>
-                  <?	} ?>
+                  <?php	} ?>
                </select>
             </div>
             <div class="tableCell">
                <select name="project_id" class="value input wide_100per">
                   <option value="">No Project</option>
-                  <?	foreach($projects as $project) { ?>
+                  <?php	foreach($projects as $project) { ?>
                   <option value="<?=$project->id?>"<? if ($project->id == $form['project_id'] || $project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
-                  <?	} ?>
+                  <?php	} ?>
                </select>
             </div>
          </div>
@@ -222,7 +222,7 @@
       <!-- End Fourth Row -->
 
       <!-- Start Fifth Row -->
-      <?	if ($task->id) { ?>      
+      <?php	if ($task->id) { ?>      
       
       <h3>Comment Update</h3>
       <!-- Start comment Row -->
@@ -249,7 +249,7 @@
              <div class="tableCell" style="width: 15%;">Person</div>
              <div class="tableCell" style="width: 65%;">Description</div>
           </div>
-          <?	
+          <?php	
             foreach ($commentsList as $comment) {
             $person = $comment->person();
              ?>
@@ -266,7 +266,7 @@
              </textarea>
              </div>
           </div>
-          <?	} ?>
+          <?php	} ?>
        </div>
 
       <h3>Event Update</h3>
@@ -282,9 +282,9 @@
             </div>
             <div class="tableCell">
                <select name="event_person_id" class="value input wide_100per">
-                  <?	foreach ($people as $person) { ?>
+                  <?php	foreach ($people as $person) { ?>
                   <option value="<?=$person->id?>"<? if ($person->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$person->code?></option>
-                  <?	} ?>
+                  <?php	} ?>
                </select>
             </div>
             <div class="tableCell">
@@ -382,7 +382,7 @@
              <textarea class="event-log-description" readonly="readonly"><?=strip_tags($event->description);?></textarea>
              </div>
           </div>
-      <?	} ?>
+      <?php	} ?>
    </div>
-   <?	}	?>
+   <?php	}	?>
 </div>

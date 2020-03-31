@@ -1,4 +1,4 @@
-<?
+<?php
     require_module("event");
     
     $event_item = new EventItem();
@@ -18,4 +18,3 @@
 		print "Ok";
 	}
 	exit;
-?>

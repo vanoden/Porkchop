@@ -16,34 +16,34 @@
 <h2 style="display: inline-block;"><i class='fa fa-check-square-o' aria-hidden='true'></i> Action Report</h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 <div>
-	<?	if ($page->errorCount()) { ?>
+	<?php	if ($page->errorCount()) { ?>
     	<div class="form_error"><?=$page->errorString()?></div>
-	<?	} ?>
+	<?php	} ?>
 	
 	<form name="reportForm" id="reportForm" method="get" action="/_support/admin_actions">
 	    <h3><u>Report Filters</u></h3><br/>
 	    <input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />
 	    <span class="label">Status</span>
 	    <div class="checkbox-row">
-		    <input type="checkbox" name="status_new" value="1" onclick="updateReport()"<? if ($_REQUEST['status_new']) print " checked";?> />
+		    <input type="checkbox" name="status_new" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_new']) print " checked";?> />
 		    <span class="value">NEW</span>
-		    <input type="checkbox" name="status_active" value="1" onclick="updateReport()"<? if ($_REQUEST['status_active']) print " checked";?> />
+		    <input type="checkbox" name="status_active" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_active']) print " checked";?> />
 		    <span class="value">ACTIVE</span>
-		    <input type="checkbox" name="status_pending_customer" value="1" onclick="updateReport()"<? if ($_REQUEST['status_pending_customer']) print " checked";?> />
+		    <input type="checkbox" name="status_pending_customer" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_pending_customer']) print " checked";?> />
 		    <span class="value">PENDING CUSTOMER</span>
-		    <input type="checkbox" name="status_pending_vendor" value="1" onclick="updateReport()"<? if ($_REQUEST['status_pending_vendor']) print " checked";?> />
+		    <input type="checkbox" name="status_pending_vendor" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_pending_vendor']) print " checked";?> />
 		    <span class="value">PENDING VENDOR</span>
-		    <input type="checkbox" name="status_cancelled" value="1" onclick="updateReport()"<? if ($_REQUEST['status_cancelled']) print " checked";?> />
+		    <input type="checkbox" name="status_cancelled" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_cancelled']) print " checked";?> />
 		    <span class="value">CANCELLED</span>
-		    <input type="checkbox" name="status_complete" value="1" onclick="updateReport()"<? if ($_REQUEST['status_complete']) print " checked";?> />
+		    <input type="checkbox" name="status_complete" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_complete']) print " checked";?> />
 		    <span class="value">COMPLETE</span>
 	    </div><br/>
         <span class="label">Assigned To</span>
 	    <select name="assigned_id" class="value input" name="assigned_to" onchange="updateReport()" />
 		    <option value="">Any</option>
-            <?	foreach ($admins as $admin) { ?>
-		            <option value="<?=$admin->id?>"<? if ($_REQUEST['assigned_id'] == $admin->id) print " selected"; ?>><?=$admin->full_name()?></option>
-            <?	} ?>
+            <?php	foreach ($admins as $admin) { ?>
+		            <option value="<?=$admin->id?>"<?php	if ($_REQUEST['assigned_id'] == $admin->id) print " selected"; ?>><?=$admin->full_name()?></option>
+            <?php	} ?>
 	    </select>	
 	</form>
 </div>
@@ -56,7 +56,7 @@
 	<th>Status</th>
 	<th>Device</th>
 </tr>
-<?	foreach ($actions as $action) {
+<?php	foreach ($actions as $action) {
 	if ($action->assignedTo->id > 0) $assigned_to = $action->assignedTo->full_name();
 	else $assigned_to = "Unassigned";
 ?>
@@ -67,5 +67,5 @@
 	    <td><?=$action->status?></td>
 	    <td><?=$action->item->product->code?> - <?=$action->item->serial_number?></td>
     </tr>
-<?	} ?>
+<?php	} ?>
 </table>

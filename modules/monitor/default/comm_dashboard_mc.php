@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = $GLOBALS['_page'];
 	$page->requireRole('administrator');
 	$page->instruction = "Set filters and click 'Submit'";
@@ -42,8 +42,6 @@
 
 	function cleanUp($string) {
 		$string = prettyPrint($string);
-		//$string = preg_replace('/\r?\n/','\n',$string);
 		$string = preg_replace('/\'/',"'",$string);
 		return $string;
 	}
-?>

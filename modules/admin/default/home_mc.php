@@ -1,4 +1,4 @@
-<?	
+<?php
 	$page = new \Site\Page();
 
 	if (role('administrator')) {

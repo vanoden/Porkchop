@@ -1,4 +1,4 @@
-<?	
+<?php
 	if (preg_match("/^\w{32}$/",$target))
 	{
 		# Confirm Correct Email Sent
@@ -64,4 +64,3 @@
 	{
 		$result = "Sorry, the link you entered was invalid!";
 	}
-?>

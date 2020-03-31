@@ -1,21 +1,21 @@
 <div class="body">
-<?	if ($parent->code) { ?>
+<?php	if ($parent->code) { ?>
 	<div class="productParent">
 		<div class="productParentContent">
 			<div class="label productParentLabel"><?=$parent->name?></div>
 			<div class="value parentDescription"><?=$parent->description?></div>
-<?		if ($GLOBALS['_SESSION_']->customer->has_role('product manager')) { ?>
+<?php		if ($GLOBALS['_SESSION_']->customer->has_role('product manager')) { ?>
 			<div class="productEdit"><a href="/_product/edit/<?=$parent->code?>">Edit</a></div>
-<?		} ?>
+<?php		} ?>
 		</div>
 		<div class="productParentImages">
-<?		foreach ($parent->image as $image) { ?>
+<?php		foreach ($parent->image as $image) { ?>
 			<a href="/_media/api?method=downloadMediaFile&code=<?=$image->files[0]->code ?>"><img class="productThumbnail" src="/_media/api?method=downloadMediaFile&code=<?=$image->files[0]->code ?>" /></a>
-<?		} ?>
+<?php		} ?>
 		</div>
 	</div>
-<?	} ?>
-<?	foreach ($products as $product) {
+<?php	} ?>
+<?php	foreach ($products as $product) {
 		if (! $product->name) $product->name = 'Unknown';
 		if ($product->type == "group") {
 ?>
@@ -24,7 +24,7 @@
 		<div class="label productLabel"><a class="productLabel" href="<?=PATH?>/_product/browse/<?=$product->code?>"><?=$product->name?></a></div>
 		<div class="value productDescription"><?=$product->short_description?></div>
 	</div>
-<?		}
+<?php		}
 		else {
 ?>
 	<div class="product">
@@ -32,7 +32,7 @@
 		<div class="label productLabel"><a class="productLabel" href="<?=PATH?>/_product/show/<?=$product->code?>"><?=$product->name?></a></div>
 		<div class="value productDescription"><?=$product->short_description?></div>
 	</div>
-<?		}
+<?php		}
 	}
 	if ($GLOBALS['_SESSION_']->customer->has_role('product manager')) { ?>
 	<div class="product">
@@ -41,5 +41,5 @@
 		<div class="label productLabel"><input type="submit" name="btn_add" class="button" value="Add a Product" /></div>
 		</form>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>

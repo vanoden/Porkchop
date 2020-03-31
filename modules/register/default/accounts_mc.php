@@ -1,4 +1,4 @@
- <?PHP
+ <?php
 	###################################################
 	### accounts_mc.php								###
 	### This program collects registration info		###
@@ -50,4 +50,3 @@
 		$page->error = "You are not authorized to see this view";
 		$customers = array();
 	}
-?>

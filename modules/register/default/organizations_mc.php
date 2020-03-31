@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	###################################################
 	### organizations_mc.php						###
 	### This program collects registration info		###
@@ -56,4 +56,3 @@
 		$page->error = "You are not permitted to see this view";
 		$organizations = array();
 	}
-?>

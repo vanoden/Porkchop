@@ -1,10 +1,10 @@
 <div class="title">Repository <?=$repository->code?></div>
-<?  if ($page->errorCount() > 0) { ?>
+<?php	 if ($page->errorCount() > 0) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
-<?  }
+<?php	 }
     if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?  } ?>
+<?php	 } ?>
 <form name="repositoryForm" action="/_storage/repository" method="post">
 <input type="hidden" name="id" value="<?=$repository->id?>" />
 <div class="container">
@@ -13,23 +13,23 @@
 </div>
 <div class="container">
     <span class="label">Type</span>
-<?  if ($repository->id) { ?>
+<?php	 if ($repository->id) { ?>
     <span class="value"><?=$repository->type?></span>
-<?  } else { ?>
+<?php	 } else { ?>
     <select name="type" class="value input wide_xl">
-        <option value="Local"<? if ($form['type'] == "local") print " selected"; ?>>Local</option>
-        <option value="S3"<? if ($form['type'] == "S3") print " selected"; ?>>Amazon S3</option>
-        <option value="Drive"<? if ($form['type'] == "Drive") print " selected"; ?>>Google Drive</option>
-        <option value="DropBox"<? if ($form['type'] == "DropBox") print " selected"; ?>>DropBox</option>
+        <option value="Local"<?php	if ($form['type'] == "local") print " selected"; ?>>Local</option>
+        <option value="S3"<?php	if ($form['type'] == "S3") print " selected"; ?>>Amazon S3</option>
+        <option value="Drive"<?php	if ($form['type'] == "Drive") print " selected"; ?>>Google Drive</option>
+        <option value="DropBox"<?php	if ($form['type'] == "DropBox") print " selected"; ?>>DropBox</option>
     </select>
-<?  } ?>
+<?php	 } ?>
 </div>
 <div class="container">
     <span class="label">Status</span>
     <select name="status" class="value input wide_xl">
-        <option value="NEW"<? if ($form['status'] == "NEW") print " selected"; ?>>NEW</option>
-        <option value="ACTIVE"<? if ($form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
-        <option value="DISABLED"<? if ($form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
+        <option value="NEW"<?php	if ($form['status'] == "NEW") print " selected"; ?>>NEW</option>
+        <option value="ACTIVE"<?php	if ($form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
+        <option value="DISABLED"<?php	if ($form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
     </select>
 </div>
 <div class="container">
@@ -46,7 +46,7 @@
     <input type="button" name="btn_back" class="button" value="Back" onclick="window.location.href='/_storage/repositories';" />
 </div>
 </form>
-<?	if ($repository->id) { ?>
+<?php	if ($repository->id) { ?>
 <form name="repoUpload" action="/_storage/file" method="post" enctype="multipart/form-data">
 <div class="container">
 	<span class="label">Upload File</span>
@@ -55,4 +55,4 @@
 	<input type="submit" name="btn_submit" class="button" value="Upload" />
 </div>
 </form>
-<?	} ?>
+<?php	} ?>
