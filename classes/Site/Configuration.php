@@ -86,6 +86,12 @@
 			}
 		}
 
+        public function getByKey($key) {
+            $this->key = $key;
+            $this->get($key);
+            return $this->value;
+        }
+
 		public function value() {
 			return $this->value;
 		}

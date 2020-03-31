@@ -201,7 +201,7 @@
     <?php
     }
     ?>
-    <form name="repoUpload" action="/_support/request_item/<?=$action->id?>" method="post" enctype="multipart/form-data">
+    <form name="repoUpload" action="/_support/action/<?=$action->id?>" method="post" enctype="multipart/form-data">
     <div class="container">
         <span class="label">Upload File</span>
         <input type="hidden" name="repository_name" value="<?=$repository?>" />

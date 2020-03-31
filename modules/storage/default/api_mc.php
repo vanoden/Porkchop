@@ -124,6 +124,7 @@
 		api_log($response);
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Set Repository Metadata						###
 	###################################################
@@ -145,6 +146,7 @@
 		api_log($response);
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Get Repository Metadata						###
 	###################################################
@@ -313,6 +315,7 @@
 		api_log($response);
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Set File Metadata							###
 	###################################################
@@ -336,8 +339,9 @@
 		api_log($response);
 		print formatOutput($response);
 	}
+	
 	###################################################
-	### Get File Metadata						###
+	### Get File Metadata						    ###
 	###################################################
 	function getFileMetadata() {
 		if (! $GLOBALS['_SESSION_']->customer->has_role('storage upload')) error('storage upload role required');
@@ -404,6 +408,7 @@
 		$response->version = $version;
 		print formatOutput($response);
 	}
+	
 	function schemaUpgrade() {
 		$schema = new \Storage\Schema();
 		if ($schema->error) app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
@@ -413,12 +418,14 @@
 		$response->version = $version;
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### System Time									###
 	###################################################
 	function system_time() {
 		return date("Y-m-d H:i:s");
 	}
+	
 	###################################################
 	### Application Error							###
 	###################################################
@@ -426,6 +433,7 @@
 		app_log($message,'error',$file,$line);
 		error('Application Error');
 	}
+	
 	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
