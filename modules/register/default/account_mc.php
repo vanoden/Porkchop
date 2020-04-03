@@ -29,7 +29,7 @@
 		if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
 		if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
 			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
-				$page->addError("Passwords do not match");
+				$page->error .= "Passwords do not match";
 				goto load;
 			}
 			else
@@ -42,7 +42,7 @@
 			$customer->update($parameters);
 			if ($customer->error) {
 				app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
-				$page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
+				$page->error = "Error updating customer information.  Our admins have been notified.  Please try again later";
 				goto load;
 			}
 		}
@@ -65,14 +65,14 @@
 			$customer->add($parameters);
 	
 			if ($customer->error) {
-				$page->addError($customer->error);
+				$page->error .= $customer->error;
 				goto load;
 			}
 
 			if ($customer->id) {
 				$GLOBALS['_SESSION_']->update(array("user_id" => $customer->{id}));
 				if ($GLOBALS['_SESSION_']->error) {
-					$page->addError("Error updating session: ".$GLOBALS['_SESSION_']->error);
+					$page->error .= "Error updating session: ".$GLOBALS['_SESSION_']->error;
 					goto load;
 				}
 			}
@@ -87,7 +87,7 @@
 			);
 			if ($_contact->error) {
 				app_log("Error sending registration confirmation: ".$_contact->error,'error',__FILE__,__LINE__);
-				$page->addError("Sorry, we were unable to complete your registration");
+				$page->error = "Sorry, we were unable to complete your registration";
 				goto load;
 			}
 
@@ -107,42 +107,61 @@
 				app_log("Updating contact record",'debug',__FILE__,__LINE__);
 				$contact = new \Register\Contact($contact_id);
 
-				if ($_REQUEST['notify'][$contact_id]) $notify = true;
-				else $notify = false;
-				$parameters = array(
-					"type"			=> $_REQUEST['type'][$contact_id],
-					"description"	=> $_REQUEST['description'][$contact_id],
-					"value"			=> $_REQUEST['value'][$contact_id],
-					"notes"			=> $_REQUEST['notes'][$contact_id],
-					"notify"		=> $notify
-				);
-
 				# Update Existing Contact Record
-				$contact->update($parameters);
+				$contact->update(
+					array(
+						"type"			=> $_REQUEST['type'][$contact_id],
+						"description"	=> $_REQUEST['description'][$contact_id],
+						"value"			=> $_REQUEST['value'][$contact_id],
+						"notes"			=> $_REQUEST['notes'][$contact_id]
+					)
+				);
 				if ($contact->error) {
-					$page->addError("Error updating contact: ".$customer->error);
+					$page->error .= "Error updating contact: ".$customer->error;
 					goto load;
 				}
 			}
 			else {
 				app_log("Adding contact record",'debug',__FILE__,__LINE__);
 				# Create Contact Record
-
-				if ($_REQUEST['notify'][0]) $notify = true;
-				else $notify = false;
 				$customer->addContact(
 					array(
 						"person_id"		=> $customer_id,
 						"type"			=> $_REQUEST['type'][0],
 						"description"	=> $_REQUEST['description'][0],
 						"value"			=> $_REQUEST['value'][0],
-						"notes"			=> $_REQUEST['notes'][0],
-						"notify"		=> $notify
+						"notes"			=> $_REQUEST['notes'][0]
 					)
 				);
 				if ($customer->error) {
-					$page->addError("Error adding contact: ".$customer->error);
+					$page->error .= "Error adding contact: ".$customer->error;
 					goto load;
+				}
+			}
+		}
+
+		# Get List Of Possible Roles
+		app_log("Checking roles",'notice',__FILE__,__LINE__);
+		$rolelist = new \Register\RoleList();
+		$available_roles = $rolelist->find();
+		app_log("Found ".$rolelist->count." roles",'trace',__FILE__,__LINE__);
+
+		# Loop through all roles and apply
+		# changes if necessary
+		foreach ($available_roles as $role) {
+			app_log("Checking role ".$role->name."[".$role->id."]",'trace',__FILE__,__LINE__);
+			if (isset($_REQUEST['role'][$role->id]) && $_REQUEST['role'][$role->id]) {
+				app_log("Role is selected",'trace',__FILE__,__LINE__);
+				if (! $customer->has_role($role->name)) {
+					app_log("Adding role ".$role->name." for ".$customer->login,'debug',__FILE__,__LINE__);
+					$customer->add_role($role->id);
+				}
+			}
+			else {
+				app_log("Role is not selected",'trace',__FILE__,__LINE__);
+				if ($customer->has_role($role->name)){
+					app_log("Role ".$role->name." being revoked from ".$customer->login,'debug',__FILE__,__LINE__);
+					$customer->drop_role($role->id);
 				}
 			}
 		}

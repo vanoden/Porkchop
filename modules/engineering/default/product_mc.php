@@ -15,8 +15,9 @@
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$product->get($code);
 	}
-
-	if (isset($_REQUEST['btn_submit'])) {
+	
+	if ($_REQUEST['btn_submit'] == 'Submit') {
+	
 		$parameters = array();
 		if (isset($_REQUEST['title'])) $parameters['title'] = $_REQUEST['title'];
 		else {
@@ -51,9 +52,28 @@
 		$form['code'] = $product->code;
 		$form['title'] = $product->title;
 		$form['description'] = $product->description;
-	}
-	elseif ($page->error) {
+	} elseif ($page->error) {
 		$form['code'] = $_REQUEST['code'];
 		$form['title'] = $_REQUEST['title'];
 		$form['description'] = $_REQUEST['description'];
 	}
+	
+    // upload files if upload button is pressed
+    $configuration = new \Site\Configuration('support_attachments');
+    $repository = $configuration->value();
+    if ($_REQUEST['btn_submit'] == 'Upload') {
+
+	    $file = new \Storage\File();
+	    $parameters = array();
+        $parameters['repository_name'] = $_REQUEST['repository_name'];
+        $parameters['type'] = $_REQUEST['type'];
+        $parameters['ref_id'] = $product->id;
+	    $uploadResponse = $file->upload($parameters);
+	    
+	    if (!empty($file->error)) $page->addError($file->error);
+	    if (!empty($file->success)) $page->success = $file->success;
+	}
+	
+	$filesList = new \Storage\FileList();
+	$filesUploaded = $filesList->find(array('type' => 'engineering product', 'ref_id' => $product->id));
+

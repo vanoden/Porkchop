@@ -86,3 +86,22 @@
         $actions = array();
         $page->addError('Request could not be found');
     }
+    
+    // upload files if upload button is pressed
+    $configuration = new \Site\Configuration('support_attachments');
+    $repository = $configuration->value();
+    if ($_REQUEST['btn_submit'] == 'Upload') {
+
+	    $file = new \Storage\File();
+	    $parameters = array();
+        $parameters['repository_name'] = $_REQUEST['repository_name'];
+        $parameters['type'] = $_REQUEST['type'];
+        $parameters['ref_id'] = $request->id;
+	    $uploadResponse = $file->upload($parameters);
+	    
+	    if (!empty($file->error)) $page->addError($file->error);
+	    if (!empty($file->success)) $page->success = $file->success;
+	}
+	
+	$filesList = new \Storage\FileList();
+	$filesUploaded = $filesList->find(array('type' => 'support request', 'ref_id' => $request->id));

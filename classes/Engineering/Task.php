@@ -30,13 +30,11 @@
 			if (isset($parameters['code']) && strlen($parameters['code'])) {
 				if (preg_match('/^[\w\-\.\_\s]+$/',$parameters['code'])) {
 					$code = $parameters['code'];
-				}
-				else {
+				} else {
 					$this->_error = "Invalid code";
 					return false;
 				}
-			}
-			else {
+			} else {
 				$code = uniqid();
 			}
 
@@ -74,8 +72,7 @@
 			if (isset($parameters['status'])) {
 				if ($this->_valid_status($parameters['status'])) {
 					$status = strtoupper($parameters['status']);
-				}
-				else {
+				} else {
 					$this->_error = "Invalid status";
 					return false;
 				}
@@ -177,9 +174,7 @@
 					$update_object_query .= ",
 						status = ?";
 					array_push($bind_params,$parameters['status']);
-				}
-				
-				else {
+				} else {
 					$this->_error = "Invalid status";
 					return false;
 				}
@@ -190,8 +185,7 @@
 					$update_object_query .= ",
 						priority = ?";
 					array_push($bind_params,$parameters['priority']);
-				}
-				else {
+				} else {
 					$this->_error = "Invalid priority";
 					return false;
 				}
@@ -202,8 +196,7 @@
 					$update_object_query .= ",
 						type = ?";
 					array_push($bind_params,$parameters['type']);
-				}
-				else {
+				} else {
 					$this->_error = "Invalid type '".$parameters['type']."'";
 					return false;
 				}
@@ -214,8 +207,7 @@
 					$update_object_query .= ",
 						date_added = ?";
 					array_push($bind_params,get_mysql_date($parameters['date_added']));
-				}
-				elseif (strlen($parameters['date_added'])) {
+				} elseif (strlen($parameters['date_added'])) {
 					$this->_error = "Invalid date";
 					return false;
 				}

@@ -1,3 +1,4 @@
+<!--Comment for testing-->
 <script type="text/javascript">
 	function submitForm() {
 		if (document.register.password.value.length > 0 || document.register.password_2.value.length > 0) {
