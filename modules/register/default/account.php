@@ -19,6 +19,15 @@
 		
 		return true;
 	}
+
+   // submit a delete contact with the hidden form
+   function submitDelete(contactId) {
+       var confirmDelete = confirm("Delete contact entry for user?");
+       if (confirmDelete == true) {
+           document.getElementById("register-contacts-id").value = contactId;
+           document.getElementById("delete-contact").submit();
+       }
+   }
 </script>
 <style type="text/css">
 /*
@@ -117,7 +126,7 @@
 		<td><input type="text" name="value[<?=$contact->id?>]" class="value input contactValueColumn" value="<?=$contact->value?>" /></td>
 		<td><input type="text" name="notes[<?=$contact->id?>]" class="value input contactNotesColumn" value="<?=$contact->notes?>" /></td>
 		<td style="width: 70px;text-align:center;"><input type="checkbox" name="notify[<?=$contact->id?>]" value="1"<? if ($contact->notify) print " checked"; ?> /></td>
-		<td style="width: 70px;text-align:center;"><input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X" /></td>
+		<td style="width: 70px;text-align:center;"><input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X"  onclick="submitDelete(<?=$contact->id?>)" /></td>
 	</tr>
 <?	} ?>
     
@@ -151,4 +160,9 @@
 <div id="accountFormSubmit">
 	<input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton" onclick="return submitForm();" />
 </div>
+</form>
+<!-- hidden for for "delete contact" -->
+<form id="delete-contact" name="delete-contact" action="<?=PATH?>/_register/account" method="post">
+   <input type="hidden" id="submit-type" name="submit-type" value="delete-contact"/>
+   <input type="hidden" id="register-contacts-id" name="register-contacts-id" value=""/>
 </form>
