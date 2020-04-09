@@ -14,9 +14,17 @@
 		}
 		return true;
 	}
+
+   // submit a delete contact with the hidden form
+   function submitDelete(contactId) {
+       var confirmDelete = confirm("Delete contact entry for user?");
+       if (confirmDelete == true) {
+           document.getElementById("register-contacts-id").value = contactId;
+           document.getElementById("delete-contact").submit();
+       }
+   }
 </script>
-<style type="text/css">
-</style>
+<style type="text/css"></style>
 <form name="register" action="<?=PATH?>/_register/account" method="POST">
 <input type="hidden" name="target" value="<?=$target?>"/>
 <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
@@ -26,7 +34,7 @@
 <?php }
 	if ($page->success) {
 ?>
-<div class="form_success"><?=$page->success?></div>
+    <div class="form_success"><?=$page->success?></div>
 <?php } ?>
 <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
 
@@ -60,11 +68,9 @@
 </div>
 	
 <hr style="width: 100%; color: white; clear: both; height: 0px;"/>
-    
-    
+
 <!-- Contact Options -->
 <div class="form_instruction">Add methods of contact</div>
-
 	
 <table cellpadding="0" cellspacing="0" class="body contactMethods">
 	<tr>
@@ -76,53 +82,57 @@
 		<td class="label" style="width: 70px;text-align:center;">Drop</td>
 	</tr>
     
-<?phpforeach ($contacts as $contact) { ?>
-	<tr>
-    <td>
-			<select class="value input" name="type[<?=$contact->id?>]">
-							<?php	foreach (array_keys($contact_types) as $contact_type) { ?>
-								<option value="<?=$contact_type?>"<?phpif ($contact_type == $contact->type) print " selected";?>><?=$contact_types[$contact_type]?></option>
-							<?php	} ?>
-			</select>
-		</td>
-		<td>
-			<input type="text" name="description[<?=$contact->id?>]" class="value input contactDescriptionColumn" value="<?=$contact->description?>" />
-		</td>
-		<td><input type="text" name="value[<?=$contact->id?>]" class="value input contactValueColumn" value="<?=$contact->value?>" /></td>
-		<td><input type="text" name="notes[<?=$contact->id?>]" class="value input contactNotesColumn" value="<?=$contact->notes?>" /></td>
-		<td style="width: 70px;text-align:center;"><input type="checkbox" name="notify[<?=$contact->id?>]" value="1"<?phpif ($contact->notify) print " checked"; ?> /></td>
-		<td style="width: 70px;text-align:center;"><input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X" /></td>
-	</tr>
-<?php} ?>
+    <?php foreach ($contacts as $contact) { ?>
+	    <tr>
+        <td>
+			    <select class="value input" name="type[<?=$contact->id?>]">
+				    <?php	foreach (array_keys($contact_types) as $contact_type) { ?>
+					    <option value="<?=$contact_type?>"<?phpif ($contact_type == $contact->type) print " selected";?>><?=$contact_types[$contact_type]?></option>
+				    <?php	} ?>
+			    </select>
+		    </td>
+		    <td>
+			    <input type="text" name="description[<?=$contact->id?>]" class="value input contactDescriptionColumn" value="<?=$contact->description?>" />
+		    </td>
+		    <td><input type="text" name="value[<?=$contact->id?>]" class="value input contactValueColumn" value="<?=$contact->value?>" /></td>
+		    <td><input type="text" name="notes[<?=$contact->id?>]" class="value input contactNotesColumn" value="<?=$contact->notes?>" /></td>
+		    <td style="width: 70px;text-align:center;"><input type="checkbox" name="notify[<?=$contact->id?>]" value="1"<? if ($contact->notify) print " checked"; ?> /></td>
+		    <td style="width: 70px;text-align:center;"><input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X"  onclick="submitDelete(<?=$contact->id?>)" /></td>
+	    </tr>
+    <?php } ?>
     
 	<tr>
     <td>
-			<select class="value input" name="type[0]">
-			<option value="0">Select</option>
+		<select class="value input" name="type[0]">
+		    <option value="0">Select</option>
             <?phpforeach (array_keys($contact_types) as $contact_type) { ?>
                         <option value="<?=$contact_type?>"><?=$contact_types[$contact_type]?></option>
             <?php} ?>
-			</select>
-		</td>
+		</select>
+	</td>
 	<td><input type="text" name="description[0]" class="value input contactDescriptionColumn" /></td>
 	<td><input type="text" name="value[0]" class="value input contactValueColumn" /></td>
 	<td><input type="text" name="notes[0]" class="value input contactNotesColumn" /></td>
 </tr>
 </table>
-    
-    
+
 <?php if ($customer->auth_method == 'local') { ?>
-<div class="form_instruction">Fill in below to change your password.  Leave empty for no change.</div>
-<div id="accountPasswordQuestion">
-	<span class="label registerLabel registerPasswordLabel">*Password:</span>
-	<input type="password" class="value registerValue registerPasswordValue" name="password" />
-</div>
-<div id="accountPasswordConfirm">
-	<span class="label registerLabel registerPasswordLabel">*Confirm Password:</span>
-	<input type="password" class="value registerValue registerPasswordValue" name="password_2" />
-</div>
+    <div class="form_instruction">Fill in below to change your password.  Leave empty for no change.</div>
+    <div id="accountPasswordQuestion">
+	    <span class="label registerLabel registerPasswordLabel">*Password:</span>
+	    <input type="password" class="value registerValue registerPasswordValue" name="password" />
+    </div>
+    <div id="accountPasswordConfirm">
+	    <span class="label registerLabel registerPasswordLabel">*Confirm Password:</span>
+	    <input type="password" class="value registerValue registerPasswordValue" name="password_2" />
+    </div>
 <?php } ?>
 <div id="accountFormSubmit">
 	<input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton" onclick="return submitForm();" />
 </div>
+</form>
+<!-- hidden for for "delete contact" -->
+<form id="delete-contact" name="delete-contact" action="<?=PATH?>/_register/account" method="post">
+   <input type="hidden" id="submit-type" name="submit-type" value="delete-contact"/>
+   <input type="hidden" id="register-contacts-id" name="register-contacts-id" value=""/>
 </form>

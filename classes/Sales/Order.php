@@ -4,24 +4,24 @@
 	class Order extends \ORM\BaseModel {
 	
 		public $id;
-		private $customer_id;
-		private $salesperson_id;
+		public $customer_id;
+		public $salesperson_id;
 		public $status;
 
 		public function add($parameters) {
-			$customer = new \Register\User($parameters['customer_id']);
+			$customer = new \Register\Customer($parameters['customer_id']);
 			if (! $customer->id) {
 				$this->_error = "Customer not found";
 				return false;
 			}
-			$salesperson = new \Register\User($parameters['salesperson_id']);
+			$salesperson = new \Register\Admin($parameters['salesperson_id']);
 			if (! $salesperson->id) {
 				$this->_error = "Salesperson not found";
 				return false;
 			}
 			if ($parameters['status']) $status = $parameters['status'];
 			else $status = 'NEW';
-			if ($parameters['code']) $code = $parameters['code']);
+			if ($parameters['code']) $code = $parameters['code'];
 			else $code = uniqid();
 
 			$add_object_query = "
@@ -29,7 +29,7 @@
 				INTO	sales_orders
 				(		id,code,customer_id,salesperson_id,status)
 				VALUES
-				(		null,?,?,?,'NEW')
+				(		null,?,?,?,?)
 			";
 			$GLOBALS['_database']->Execute($add_object_query,array($code,$customer->id,$salesperson->id,$status));
 			if ($GLOBALS['_database']->ErrorMsg()) {
@@ -37,8 +37,7 @@
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
-			$event = new \Sales\Order\Event();
-			$event->add(array('order_id' => $this->id,'new_status' => $status,'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "CREATE"));
+			$this->addEvent(array('new_status' => $status,'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "CREATE"));
 			return $this->update($parameters);
 		}
 
@@ -62,7 +61,7 @@
 				$this->_error = "SQL Error in Sales::Order::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			$event->add(array('order_id' => $this->id,'new_status' => $status,'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "UPDATE"));
+			$this->addEvent(array('new_status' => $status,'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "UPDATE"));
 			return $this->details();
 		}
 
@@ -119,6 +118,7 @@
 			return new \Register\User($this->customer_id);
 		}
 
+		
 		public function addItem($item) {
 			
 		}
@@ -127,6 +127,11 @@
 
 		}
 
+		private function addEvent($parameters = array()) {
+			$event = new \Sales\Order\Event();
+			$parameters['order_id'] = $this->id;
+			$event->add($parameters);
+		}
 		public function error() {
 			return $this->_error;
 		}

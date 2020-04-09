@@ -465,9 +465,9 @@
 	function getCollectionCT() {
 		# Get Collection
 		$collection = new \Spectros\Collection();
-		if ($collection->error) app_error("Error finding collection: ".$collection->error,__FILE__,__LINE__);
+		if ($collection->error()) app_error("Error finding collection: ".$collection->error(),__FILE__,__LINE__);
 		$collection->get($_REQUEST['collection_code']);
-		if ($collection->error) error("Error finding collection: ".$collection->error);
+		if ($collection->error()) error("Error finding collection: ".$collection->error());
 		if (! isset($collection->id)) error("Collection not found");
 		
 		# Get Monitor
@@ -499,13 +499,13 @@
 	function generateReport() {
 		# Get Collection
 		$collection = new \Spectros\Collection();
-		if ($collection->error) app_error("Error finding collection: ".$collection->error,__FILE__,__LINE__);
+		if ($collection->error()) app_error("Error finding collection: ".$collection->error(),__FILE__,__LINE__);
 		$collection->get($_REQUEST['code']);
-		if ($collection->error) error("Error finding collection: ".$collection->error);
+		if ($collection->error()) error("Error finding collection: ".$collection->error());
 		if (! isset($collection->id)) error("Collection not found");
 		
 		# Generate Report
-		if (! $collection->generateReport()) error($collection->error);
+		if (! $collection->generateReport()) error($collection->error());
 	
 		$response->success = 1;
 		$response->report_code = $collection->report_code;

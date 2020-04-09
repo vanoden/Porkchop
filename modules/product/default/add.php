@@ -29,8 +29,8 @@
 	}
 </style>
 <div class="title">Add Product</div>
-<?php	if ($GLOBALS['_page']->error) { ?>
-<div class="form_error"><?=$GLOBALS['_page']->error?></div>
+<?php	if ($page->errorCount() > 0) { ?>
+<div class="form_error"><?=$page->errorString()?></div>
 <?php	} ?>
 <form name="productEdit" method="post" action="/_product/edit">
 <input type="hidden" name="parent_code" id="parent_code" value="<?=$_REQUEST["parent_code"]?>" />
