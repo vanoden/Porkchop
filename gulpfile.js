@@ -60,7 +60,8 @@ gulp.task('js', () =>
 		.pipe(data(() => (
 			{
 				"field": "content",
-				"static_version": staticVersion
+				"static_version": staticVersion,
+				"num": "${num}"
 			}
 		)))
 		.pipe(template())
