@@ -1,7 +1,7 @@
 <h2>Build Product</h2>
-<?	if ($page->errorCount() > 0) { ?>
+<?php	if ($page->errorCount() > 0) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
-<?	} ?>
+<?php	} ?>
 <form action="/_build/product_new" method="post">
 <div class="container">
 	<span class="label">Name</span>

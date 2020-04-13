@@ -1,4 +1,4 @@
-<?
+<?php
     require_module("action");
     
     $_requests = new ActionRequests();
@@ -7,4 +7,3 @@
             "status"    => array("NEW","ASSIGNED","OPEN")
         )
     );
-?>

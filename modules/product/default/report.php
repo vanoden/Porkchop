@@ -1,4 +1,4 @@
-<?  if (! role('product manager'))
+<?php  if (! role('product manager'))
     {
         print "<span class=\"form_error\">You are not authorized for this view!</span>";
         return;
@@ -26,7 +26,7 @@
 		<th class="label descValue">Description</th>
 		<th class="label smallValue">Object</th>
 	</tr>
-<?	foreach ($products as $product) { ?>
+<?php	foreach ($products as $product) { ?>
 	<tr><td class="value codeValue<?=$greenbar?>"><a href="/_product/edit/<?=$product->code?>"><?=$product->code?></a></td>
 		<td class="value smallValue<?=$greenbar?>"><?=$product->type?></td>
 		<td class="value smallValue<?=$greenbar?>"><?=$product->status?></td>
@@ -37,7 +37,7 @@
 			metadata[<?=$product->id?>] = "<? foreach (get_object_vars($product) as $key => $value) { print "$key=$value\\n"; } ?>";
 		</script>
 	</tr>
-<?	
+<?php	
 		if (isset($greenbar) && $greenbar)
 			$greenbar = '';
 		else

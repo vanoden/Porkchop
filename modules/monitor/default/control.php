@@ -1,6 +1,6 @@
 <div class="pageBody pageMonitorBody pageMonitorControlBody">
     <form name="controlForm" method="post">
-<?  for ($zone = 1; $zone <= 8; $zone ++) { ?>
+<?php  for ($zone = 1; $zone <= 8; $zone ++) { ?>
     <div id="zone<?=$zone?>" class="zoneBlock">
         <input type="hidden" name="zone_id<?=$zone?>">
         <div class="zoneHeader">
@@ -43,6 +43,6 @@
             </div>
         </div>
     </div>
-<?  } ?>
+<?php  } ?>
 </form>
 </div>

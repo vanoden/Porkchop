@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 
 	if (! $GLOBALS['_SESSION_']->customer->id) {
@@ -78,6 +78,4 @@
 			$page->error = "Error loading messages: ".$message_list->error;
 		}
 	}
-
 	app_log("Populating view",'trace',__FILE__,__LINE__);
-?>

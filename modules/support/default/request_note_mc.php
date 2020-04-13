@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
@@ -21,4 +21,3 @@
 			exit;
 		}
 	}
-?>

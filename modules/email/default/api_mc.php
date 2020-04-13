@@ -241,16 +241,15 @@
 	}
 
 	function formatOutput($object,$options = '') {
-        	if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
-                        $format = 'json';
-                        header('Content-Type: application/json');
-                }
-                else {
-                        $format = 'xml';
-                        header('Content-Type: application/xml');
-                }
-                $document = new \Document($format);
-                $document->prepare($object);
-                return $document->content();
+    	if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
+                $format = 'json';
+                header('Content-Type: application/json');
         }
-?>
+        else {
+                $format = 'xml';
+                header('Content-Type: application/xml');
+        }
+        $document = new \Document($format);
+        $document->prepare($object);
+        return $document->content();
+    }

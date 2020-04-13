@@ -36,12 +36,12 @@
 		productOpt0.value = '';
 		productOpt0.innerHTML = 'None';
 		productSelect.appendChild(productOpt0);
-<?	foreach ($products as $product) { ?>
+<?php	foreach ($products as $product) { ?>
 		var productOpt<?=$product->id?> = document.createElement('option');
 		productOpt<?=$product->id?>.value = '<?=$product->id?>';
 		productOpt<?=$product->id?>.innerHTML = '<?=$product->code?>';
 		productSelect.appendChild(productOpt<?=$product->id?>);
-<?	} ?>
+<?php	} ?>
 		productCell1.appendChild(productSelect);
 		var productCell2 = document.createElement('div');
 		productCell2.classList.add('tableCell');
@@ -79,9 +79,9 @@
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 
 <!-- Error Messaging -->
-<?	if ($page->errorCount()) { ?>
+<?php	if ($page->errorCount()) { ?>
     <div class="form_error"><?=$page->errorString()?></div>
-<?	} ?>
+<?php	} ?>
     <div>
 	    <form name="requestForm" method="post">
 	        <input type="hidden" name="request_id" value="<?=$request->id?>" />
@@ -99,17 +99,17 @@
 		        <div class="tableCell">
 			        <select name="organization_id" class="value wide_100per" onchange="populateCustomers();">
 				        <option value="">Select</option>
-				        <?	foreach ($organizations as $organization) { ?>
-				        <option value="<?=$organization->id?>"<? if ($organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
-				        <?	} ?>
+				        <?php	foreach ($organizations as $organization) { ?>
+				        <option value="<?=$organization->id?>"<?php	if ($organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
+				        <?php	} ?>
 			        </select>
 		        </div>
 		        <div class="tableCell">
 			        <select class="value wide_100per" name="requestor_id">
 				        <option value="">Select</option>
-				        <?	foreach ($customers as $customer) { ?>
-				        <option value="<?=$customer->id?>"<? if ($customer->id == $_REQUEST['customer_id']) print " selected"; ?>><?=$customer->full_name()?></option>
-				        <?	} ?>
+				        <?php	foreach ($customers as $customer) { ?>
+				        <option value="<?=$customer->id?>"<?php	if ($customer->id == $_REQUEST['customer_id']) print " selected"; ?>><?=$customer->full_name()?></option>
+				        <?php	} ?>
 			        </select>
 		        </div>
 		        <div class="tableCell">
@@ -122,9 +122,9 @@
 		        </div>
 		        <div class="tableCell">
 			        <select class="value wide_100per" name="status">
-				        <option value="NEW"<? if ($_REQUEST['status'] == 'NEW') print " selected"; ?>>New</option>
-				        <option value="OPEN"<? if ($_REQUEST['status'] == 'OPEN') print " selected"; ?>>Open</option>
-				        <option value="CLOSED"<? if ($_REQUEST['status'] == 'CLOSED') print " selected"; ?>>Closed</option>
+				        <option value="NEW"<?php	if ($_REQUEST['status'] == 'NEW') print " selected"; ?>>New</option>
+				        <option value="OPEN"<?php	if ($_REQUEST['status'] == 'OPEN') print " selected"; ?>>Open</option>
+				        <option value="CLOSED"<?php	if ($_REQUEST['status'] == 'CLOSED') print " selected"; ?>>Closed</option>
 			        </select>
 		        </div>
 	        </div>
@@ -156,9 +156,9 @@
 		        <div class="tableCell">
 			        <select name="product_id[0]" class="value wide_100per">
 				        <option value="">None</option>
-				        <?	foreach ($products as $product) { ?>
+				        <?php	foreach ($products as $product) { ?>
 				        <option value="<?=$product->id?>"><?=$product->code?></option>
-				        <?	} ?>
+				        <?php	} ?>
 			        </select>
 		        </div>
 		        <div class="tableCell">

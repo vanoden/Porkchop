@@ -1,4 +1,4 @@
-<?
+<?php
 	require_once(MODULES."/media/_classes/default.php");
 
 	# Check Permissions
@@ -37,4 +37,3 @@
 		}
 		$item = $_item->get($_REQUEST['code']);
 	}
-?>

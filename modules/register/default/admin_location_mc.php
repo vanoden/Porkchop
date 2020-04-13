@@ -64,4 +64,3 @@
 		$selected_country = $selected_province->country();
 		$provinces = $selected_country->provinces();
 	}
-?>

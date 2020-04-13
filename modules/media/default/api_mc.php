@@ -1,4 +1,4 @@
-<?
+<?php
 	###############################################
     ### Handle API Request for Media Info and	###
     ### Management								###
@@ -329,4 +329,3 @@
 			return $output;
 		}
 	}
-?>

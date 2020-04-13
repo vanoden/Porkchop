@@ -1,11 +1,11 @@
 <script src="https://www.google.com/recaptcha/api.js"></script>
 <div class="body">
-	<?PHP
+	<?php
 		# Display Error Message If Any
 		if ($page->error) {
 	?>
 	<div class="form_error"><?=$page->error?></div>
-	<?PHP
+	<?php
 		}
 	?>
 	<!-- Main Body -->

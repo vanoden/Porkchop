@@ -4,7 +4,7 @@
 		return true;
 	}
 </script>
-<?	foreach ($menus as $menu) { ?>
+<?php	foreach ($menus as $menu) { ?>
 <form name="menuForm" action="/_navigation/menus" method="post">
 <input type="hidden" name="id" value="<?=$menu->id?>" />
 <div class="container">
@@ -22,4 +22,4 @@
 	</div>
 </div>
 </form>
-<?  } ?>
+<?php  } ?>

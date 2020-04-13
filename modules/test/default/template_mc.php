@@ -14,4 +14,3 @@
 	if ($template->error()) {
 		print "Error: ".$template->error();
 	}
-?>

@@ -4,12 +4,12 @@
 <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
 <h2 style="display: inline-block;">Releases</h2>
 <a class="button more" href="/_engineering/release">New Release</a>
-<?	if ($page->errorCount()) { ?>
+<?php	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorCount()?></div>
-<?	}
+<?php	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?	} ?>
+<?php	} ?>
 <!--	START First Table -->
 	<div class="tableBody min-tablet">
 	<div class="tableRowHeader">

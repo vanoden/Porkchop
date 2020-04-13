@@ -1,5 +1,2 @@
-<?
-	foreach my ($pages as $page) {
-		print_r($page);
-	}
-?>
+<?php
+	foreach my ($pages as $page) print_r($page);

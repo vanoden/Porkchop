@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page('spectros','admin_collections');
 	$page->requireRole('administrator');
 

@@ -4,4 +4,3 @@
 
     $repositoryList = new \Storage\RepositoryList();
     $repositories = $repositoryList->find();
-?>

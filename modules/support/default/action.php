@@ -44,12 +44,12 @@
          <a href="/_support/request_detail/<?=$request->code?>" class="breadcrumbs">Request <?=$request->code?></a>
          <a href="/_support/request_item/<?=$item->id?>" class="breadcrumbs">Line <?=$item->line?></a>
          <input type="hidden" name="action_id" value="<?=$action->id?>" />
-         <?	if ($page->errorCount()) { ?>
+         <?php	if ($page->errorCount()) { ?>
             <div class="form_error"><?=$page->errorString()?></div>
          <? } ?>
-         <?	if ($page->success) { ?>
+         <?php	if ($page->success) { ?>
             <div class="form_success"><?=$page->success?></div>
-         <?	} ?>
+         <?php	} ?>
       </div>
    </div>
    <h2 style="display: inline-block;"><i class='fa fa-check-square-o' aria-hidden='true'></i> Request Action <?=$request->code?>-<?=$item->line?>-<?=$action->id?></h2>
@@ -128,9 +128,9 @@
           <span class="label">User</span>
           <select name="user_id" class="value input">
              <option value="">Select</option>
-             <?	foreach ($admins as $admin) { ?>
+             <?php	foreach ($admins as $admin) { ?>
              <option value="<?=$admin->id?>"<? if ($admin->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$admin->full_name()?></option>
-             <?	} ?>
+             <?php	} ?>
           </select>
        </div>
        <div class="container_narrow">
@@ -201,7 +201,7 @@
     <?php
     }
     ?>
-    <form name="repoUpload" action="/_support/request_item/<?=$action->id?>" method="post" enctype="multipart/form-data">
+    <form name="repoUpload" action="/_support/action/<?=$action->id?>" method="post" enctype="multipart/form-data">
     <div class="container">
         <span class="label">Upload File</span>
         <input type="hidden" name="repository_name" value="<?=$repository?>" />
@@ -233,5 +233,5 @@
    </tr>
    </tr>
 </table>
-<?	} ?>
+<?php	} ?>
 </div>

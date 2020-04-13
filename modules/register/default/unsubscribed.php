@@ -1,7 +1,7 @@
 		<table>
-		<?	if ($GLOBALS['_page']->error) { ?>
+		<?php	if ($GLOBALS['_page']->error) { ?>
 		<tr><td align="center" class="form_error"><?=$GLOBALS['_page']->error?></td></tr>
-		<?	}
+		<?php	}
 			else
 			{
 		?>
@@ -12,5 +12,5 @@
 				newsletters in the future, just <a href="/_register/login">login</a> to our site and change your account
 				settings.  Thank You.</td></tr>
 		</form>
-		<?	} ?>
+		<?php	} ?>
 		<table>

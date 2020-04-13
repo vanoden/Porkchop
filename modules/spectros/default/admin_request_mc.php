@@ -1,4 +1,4 @@
-<?
+<?php
 	require_module('action');
 	require_module('register');
 
@@ -26,6 +26,4 @@
 
 	$_customer = new RegisterCustomer();
 	$customers = $_customer->find(array("_sort" => "last_name"));
-
 	$_organization = new RegisterOrganization();
-?>

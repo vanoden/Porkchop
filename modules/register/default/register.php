@@ -16,9 +16,9 @@
 <form name="register" action="/_register/register" method="POST">
 	<input type="hidden" name="target" value="<?=$target?>">
 	<div class="instruction"><r7_page.message id=100></div>
-	<?	if ($page->error) { ?>
+	<?php	if ($page->error) { ?>
 	    <div class="form_error"><?=$page->error?></div>
-	<?	} ?>
+	<?php	} ?>
 	<div id="registerFormSubmit">
 		<div class="form-group">
 			<div id="registerFirstName" class="registerQuestion">

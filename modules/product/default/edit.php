@@ -16,9 +16,9 @@
 	}
 </script>
 <h2>Edit Product</h2>
-<?	if ($page->errorCount() > 0) { ?>
+<?php	if ($page->errorCount() > 0) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
-<?	} ?>
+<?php	} ?>
 <form name="productEdit" method="post" action="/_product/edit">
 <input type="hidden" name="code" id="code" value="<?=$item->code?>" />
 <input type="hidden" name="deleteImage" id="deleteImage" value="" />
@@ -75,37 +75,37 @@
 	<div class="input-horiz">
 		<span class="label">Default Dashboard</span>
 		<select class="value input wide_md" name="default_dashboard_id" id="default_dashboard_id">
-<?	$default_dashboard = $item->getMetadata('default_dashboard_id');
+<?php	$default_dashboard = $item->getMetadata('default_dashboard_id');
 	foreach($dashboards as $dashboard) { ?>
 			<option value="<?=$dashboard->id?>"<? if ($default_dashboard->value == $dashboard->id) { print " selected"; } ?>><?=$dashboard->name?></option>
-<?	} ?>
+<?php	} ?>
 		</select>
 	</div>
 	<div class="input-horiz">
 		<span class="label">Manual</span>
 		<select class="value input wide_md" name="manual_id" id="manual_id">
-<?	foreach($manuals as $manual) { ?>
+<?php	foreach($manuals as $manual) { ?>
 			<option value="<?=$manual->id?>"<? if ($item->manual_id == $manual->id) { print " selected"; } ?>><?=$manual->name?></option>
-<?	} ?>
+<?php	} ?>
 		</select>
 	</div>
 	<div class="input-horiz">
 		<span class="label">Spec Table</span>
 		<select class="value input wide_md" name="spec_table_image" id="spec_table_image">
 			<option value="Select"></option>
-<?	foreach($tables as $table) { ?>
+<?php	foreach($tables as $table) { ?>
 			<option value="<?=$table->id?>"<? if ($item->spec_table_image == $table->id) { print " selected"; } ?>><?=$table->name?></option>
-<?	} ?>
+<?php	} ?>
 		</select>
 	</div>
 	<div class="input-horiz" id="itemImages">
 		<span class="label align-top">Images</span>
-<?	foreach($item->image as $image) { ?>
+<?php	foreach($item->image as $image) { ?>
 		<div class="editItemImage" id="ItemImageDiv_<?=$image->code?>">
 			<input type="button" name="btn_drop" class="editItemThumbnail" onclick="dropImage('<?=$image->code?>')" value="X" />
 			<img class="editItemThumbnail" src="/_media/api?method=downloadMediaFile&code=<?=$image->files[0]->code?>">
 		</div>
-<?	} ?>
+<?php	} ?>
 		<div class="editItemImage" id="newImageBox">
             <input type="button" name="addImageButton" value="" class="add-image" onclick="initImageSelectWizard()" />
             <input type="hidden" name="new_image_code" id="new_image_code" />

@@ -1,4 +1,4 @@
-<?
+<?php
 	require_once(MODULES."/admin/_classes/admin.php");
 
 	$name = $GLOBALS['_page']->query_vars_array[0];
@@ -30,4 +30,3 @@
 	{
 		print "Module '$name' not installed";
 	}
-?>

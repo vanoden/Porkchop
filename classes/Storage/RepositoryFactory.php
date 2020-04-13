@@ -12,6 +12,7 @@
          * int $id
          */
 		public function create($type, $id = null) {
+		
 			if (preg_match('/^(local|file|filesystem)$/i', $type)) {
 				return new Repository\Local($id);
 			} else if (preg_match('/^(s3|sss|aws)$/i', $type)) {
@@ -34,19 +35,20 @@
          * string $name
          */
 		public function find($name) {
+		
 			$repository = new Repository();
 			$repository->find($name);
+			
 			if (! $repository->id) {
 				$this->error = "Repository not found";
 				return false;
 			}
+			
 			if ($repository->type == "Local") {
 				return new Repository\Local($repository->id);
-			}
-			else if ($repository->type == "S3") {
+			} else if ($repository->type == "s3") {
 				return new Repository\S3($repository->id);
-			}
-			else {
+			} else {
 				$this->error = "Unsupported Repository Type";
 				return false;
 			}
@@ -58,18 +60,18 @@
          * int $id
          */
 		public function load($id) {
+			
 			$repository = new Repository($id);
 			if (! $repository->id) {
 				$this->error = "Repository not found";
 				return false;
 			}
+			
 			if ($repository->type == "Local") {
 				return new Repository\Local($repository->id);
-			}
-			else if ($repository->type == "S3") {
+			} else if ($repository->type == "s3") {
 				return new Repository\S3($repository->id);
-			}
-			else {
+			} else {
 				$this->error = "Unsupported Repository Type";
 				return false;
 			}
@@ -81,19 +83,19 @@
          * string $id
          */
 		public function get($code) {
+		
 			$repository = new Repository();
 			$repository->get($code);
 			if (! $repository->id) {
 				$this->error = "Repository not found";
 				return false;
 			}
+		
 			if ($repository->type == "Local") {
 				return new Repository\Local($repository->id);
-			}
-			else if ($repository->type == "S3") {
+			} else if ($repository->type == "s3") {
 				return new Repository\S3($repository->id);
-			}
-			else {
+			} else {
 				$this->error = "Unsupported Repository Type";
 				return false;
 			}

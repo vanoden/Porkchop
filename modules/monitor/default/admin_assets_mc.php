@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 	if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) return;
 

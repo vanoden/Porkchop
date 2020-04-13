@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	$_monitor = new Monitor();
 	
 	require 'XML/Unserializer.php';
@@ -12,12 +12,7 @@
 
 	# Get Event Information
 	$monitor->monitor = $_monitor->details($_REQUEST["id"]);
-
-	//print_r($event);
-	if (! $_REQUEST["id"])
-	{
-	}
-
+	if (! $_REQUEST["id"]) {}
+	
 	$xml->serialize($monitor);
 	header('Content-Type: application/xml');
-?>

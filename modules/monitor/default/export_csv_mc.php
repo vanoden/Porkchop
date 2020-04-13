@@ -1,4 +1,4 @@
-<?
+<?php	
 	$collection = new \Monitor\Collection();
 
 	# Get Events from Database
@@ -45,4 +45,3 @@
 		}
 	}
 	exit;
-?>

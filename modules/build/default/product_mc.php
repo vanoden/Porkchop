@@ -11,8 +11,6 @@
 			"minor_version" => $_REQUEST['minor_version'],
 			"workspace"		=> $_REQUEST['workspace']
 		);
-		if (! $product->update($parameters)) {
-			$page->addError($product->error());
-		}
+		
+		if (! $product->update($parameters)) $page->addError($product->error());
 	}
-?>

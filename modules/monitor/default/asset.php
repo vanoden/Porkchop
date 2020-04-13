@@ -11,9 +11,9 @@
 <input type="hidden" name="id" value="<?=$asset->id?>" />
 <? if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>
-<?	} else if ($page->success) { ?>
+<?php	} else if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?	} ?>
+<?php	} ?>
 <div class="title">Monitor</div>
 <div id="container">
 	<div class="label">Serial Number</div>
@@ -34,7 +34,7 @@
 	<th class="label">Agent</th>
 	<th class="label">Status</th>
 </tr>
-<?	if ($communication->timestamp > 0) { 
+<?php	if ($communication->timestamp > 0) { 
 		$timearray = $GLOBALS['_SESSION_']->localtime($communication->timestamp);
 		$request_time = sprintf("%d/%d/%04d %02d:%02d:%02d",$timearray['month'],$timearray['day'],$timearray['year'],$timearray['hour'],$timearray['minute'],$timearray['second']); ?>
 <tr><td class="value responseValue" nowrap><?=$request_time?></td>
@@ -44,9 +44,9 @@
 	<td class="value responseValue"><?=$request->user_agent?></td>
 	<td class="value responseValue"><?=$communication->result?></td>
 </tr>
-<?	} else { ?>
+<?php	} else { ?>
 <tr><td class="value" colspan="6">None recorded</td></tr>
-<?	} ?>
+<?php	} ?>
 </table>
 <div class="title">Zones</div>
 <table class="body" cellpadding="0" cellspacing="0">
@@ -57,7 +57,7 @@
 	<th class="label zoneLabel" style="width: 140px;">Last Reading</th>
 	<th class="label zoneLabel" style="width: 100px;">Last Value</th>
 </tr>
-<?	$greenbar = '';
+<?php	$greenbar = '';
 	foreach ($sensors as $sensor) {
 		$reading = $sensor->lastReading();
 		$datetime = $GLOBALS['_SESSION_']->localtime($reading->timestamp);
@@ -70,7 +70,7 @@
 	<td class="value zoneValue <?=$greenbar?>"><? if ($reading->timestamp) { print $reading_time; } ?></td>
 	<td class="value zoneValue <?=$greenbar?>" style="text-align: right"><?=$reading->value?>&nbsp;&nbsp;&nbsp;&nbsp;</td>
 </tr>
-<?		if ($greenbar) $greenbar = '';
+<?php		if ($greenbar) $greenbar = '';
 		else $greenbar = 'greenbar';
 	}
 ?>
@@ -86,6 +86,6 @@
 	<td	class="value"><?=$message->level?></td>
 	<td class="value"><?=$message->message?></td>
 </tr>
-<?	}
+<?php	}
 ?>
 </table>

@@ -4,4 +4,3 @@
 
 	$queue = new \Email\Queue();
 	$messages = $queue->messages();
-?>

@@ -1,4 +1,4 @@
-<?
+<?php
 	require_module('session');
 
 	$_session = new Session();
@@ -10,4 +10,3 @@
 
 	if ($_session->error)
 		$GLOBALS['_page']->error = "Error loading active sessions: ".$_session->error;
-?>

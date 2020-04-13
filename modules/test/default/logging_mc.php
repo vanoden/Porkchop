@@ -71,4 +71,4 @@ Level<br>
 </select>
 <input type="submit" name="btn_submit" value="Write to Log" />
 </form>
-<?	} ?>
+<?php	} ?>

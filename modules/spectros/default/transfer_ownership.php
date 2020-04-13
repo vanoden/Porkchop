@@ -30,25 +30,25 @@
 	}
 </script>
 <div class="title">Transfer Device Ownership</div>
-<?	if ($page->error) { ?>
+<?php	if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>
-<?	}
+<?php	}
 	elseif ($page->success) {
 ?>
 <div class="form_success"><?=$page->success?></div>
-<?	}
+<?php	}
 	else {
 ?>
 <div class="form_instruction">Please Select a Device to Transfer, an Organization to Transfer it to and a reason for the transfer.</div>
-<?	} ?>
+<?php	} ?>
 <form id="transferForm" method="post">
 <div class="question_container">
 	<div class="label">Device Serial</div>
 	<select id="asset_id" class="input" name="asset_id" onchange="selectedDevice();">
 		<option value="">Select One</option>
-<?	foreach ($assets as $asset) { ?>
+<?php	foreach ($assets as $asset) { ?>
 		<option value="<?=$asset->id?>"<? if ($_REQUEST['asset_id'] == $asset->id) print " selected";?>><?=$asset->code?></option>
-<?	} ?>
+<?php	} ?>
 	</select>
 </div>
 <div class="transferDeviceDetailContainer" id="transferDeviceDetails">
@@ -70,9 +70,9 @@
 	<div class="label">Transfer To</div>
 	<select class="input" name="organization_id">
 		<option value="">Select One</option>
-<?	foreach ($organizations as $organization) { ?>
+<?php	foreach ($organizations as $organization) { ?>
 		<option value="<?=$organization->id?>"<? if ($organization->id == $_REQUEST['organization_id']) print " selected";?>><?=$organization->name?></option>
-<?	} ?>
+<?php	} ?>
 	</select>
 </div>
 <div class="question_container">

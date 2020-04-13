@@ -3,7 +3,4 @@
 
 	// Get Documents
 	$_item = new MediaItem();
-	$items = $_item->find(
-		array(
-			"type" => "document"
-		)
+	$items = $_item->find(array("type" => "document");

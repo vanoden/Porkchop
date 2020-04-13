@@ -29,9 +29,7 @@
 	
             app_log('Storage::File::add(): '.print_r($parameters,true));
             
-			if (! isset($parameters['code']) || ! strlen($parameters['code'])) {
-				$parameters['code'] = uniqid();
-			}
+			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
 			
 			if (! preg_match('/^[\w\-\.\_]+$/',$parameters['code'])) {
 				$this->error = "Invalid code '".$parameters['code']."'";
@@ -206,7 +204,6 @@
 				$this->error = "SQL Error in Storage::File::delete(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			
 			return true;
 		}
 
@@ -349,9 +346,9 @@
 						$this->error = "Role not found";
 						return false;
 					}
-				}
-				
+				}				
 				return false;
+
 			} else if ($type == 'write') {
 				if ($this->write_protect == 'NONE') {
 					$this->error = "File is globally writable";
@@ -454,7 +451,7 @@
 			return false;
 		}
 		
-		public function upload($parameters) {
+		public function upload ($parameters) {
 		
 		    // make sure we have a file present in the request to upload it
     		if (empty($_FILES)) $this->addError("Repository not found");
@@ -472,13 +469,17 @@
 			    app_log("Identified repo '".$repository->name."'");
 			    
 			    if (! file_exists($_FILES['uploadFile']['tmp_name'])) {
-				    $this->addError("Temp file '" . $_FILES['uploadFile']['tmp_name'] . "' not found");
+			        if (empty($_FILES['uploadFile']['tmp_name'])) {
+    			        $this->addError("No file was selected to upload.");			        
+			        } else {
+    			        $this->addError("Temp file '" . $_FILES['uploadFile']['tmp_name'] . "' not found");
+			        }
 			    } else {
 			    
 				    // Check for Conflict 
 				    $filelist = new \Storage\FileList();
 				    list($existing) = $filelist->find(
-					    array(
+					    array (
 						    'repository_id' => $repository->id,
 						    'path'	=> $parameters['path'],
 						    'name' => $_FILES['uploadFile']['name'],

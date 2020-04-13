@@ -1,5 +1,4 @@
-<?
-	if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')){
+<?php		if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')){
 		print "<span class=\"form_error\">You are not authorized for this view!</span>";
 		return;
 	}
@@ -30,9 +29,9 @@
 					return true;
 				}
 			</script>
-<?	if ($page->error) { ?>
+<?php	if ($page->error) { ?>
 			<div class="form_error"><?=$page->error?></div>\
-<?	} ?>
+<?php	} ?>
 			<form id="filterForm" name="filterForm" method="get" action="/_monitor/admin_assets">
 			<input id="sort" type="hidden" name="sort" value="<?=$_REQUEST['sort']?>"/>
 			<input id="sort_order" type="hidden" name="sort_order" value="<?=$_REQUEST['sort_order']?>"/>
@@ -48,17 +47,17 @@
 				<td class="value">
 					<select name="product_id" class="value input">
 						<option value="">All</option>
-			<?	foreach ($products as $product) { ?>
-						<option value="<?=$product->id?>"<? if (isset($_REQUEST['product_id']) && $product->id == $_REQUEST['product_id']) print " selected";?>><?=$product->code?></option>
-			<?	} ?>
+			<?php	foreach ($products as $product) { ?>
+						<option value="<?=$product->id?>"<?php	if (isset($_REQUEST['product_id']) && $product->id == $_REQUEST['product_id']) print " selected";?>><?=$product->code?></option>
+			<?php	} ?>
 					</select>
 				</td>
 				<td class="value">
 					<select name="organization_id" class="value input">
 						<option value="">All</option>
-			<?	foreach ($organizations as $organization) { ?>
-						<option value="<?=$organization['id']?>"<? if (key_exists('organization_id',$_REQUEST) && $organization['id'] == $_REQUEST['organization_id']) print " selected";?>><?=$organization['name']?></option>
-			<?	} ?>
+			<?php	foreach ($organizations as $organization) { ?>
+						<option value="<?=$organization['id']?>"<?php	if (key_exists('organization_id',$_REQUEST) && $organization['id'] == $_REQUEST['organization_id']) print " selected";?>><?=$organization['name']?></option>
+			<?php	} ?>
 					</select>
 				</td>
 			</tr>
@@ -78,7 +77,7 @@
 				<th class="label">Last Comm</th>
 				<th class="label">Result</th>
 			</tr>
-			<?	$greenbar = '';
+			<?php	$greenbar = '';
 				foreach ($assets as $asset) {
 				$communication = $asset->last_communication();
 				if (isset($communication)) {
@@ -97,8 +96,7 @@
 				<td class="value <?=$greenbar?>"><?=$last_hit?></td>
 				<td class="value <?=$greenbar?>"><?=$result?></td>
 			</tr>
-			<?
-					if ($greenbar) $greenbar = '';
+			<?php						if ($greenbar) $greenbar = '';
 					else $greenbar = 'greenbar';
 				} ?>
 			</table>

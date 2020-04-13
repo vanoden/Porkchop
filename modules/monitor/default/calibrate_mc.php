@@ -1,5 +1,5 @@
-<?
-	###############################################
+<?php		
+    ###############################################
 	### Load API Objects						###
     ###############################################
 	# Product
@@ -110,9 +110,6 @@ error_log("Found asset '".$_REQUEST['code']."'");
 			"asset_id"	=> $asset->id,
 		)
 	);
-	if ($_verification->error)
-	{
+	if ($_verification->error) {
 		$GLOBALS['_page']->error = "Error loading verifications: ".$_verification->error;
 	}
-
-?>

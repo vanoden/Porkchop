@@ -57,7 +57,7 @@
                 <div class="label" style="float: left; width: 60px;">Points</div>
                 <div class="label columnJobSite" style="float: left; width: 200px;">Last Calibration</div>
             </div>
-<?	foreach ($monitors as $monitor) { ?>
+<?php	foreach ($monitors as $monitor) { ?>
 		<div class="monitorsRow">
                 <div class="value monitorCodeValue" style="float: left; width: 100px;"><a href="javascript:void(0)" onclick="submitForm('{code}')"><?=$monitor['code']?></a></div>
                 <div class="value monitorLabelValue" style="float: left; width: 190px;"><?=$monitor['label']?></div>
@@ -66,7 +66,7 @@
                 <div class="value columnJobSite monitorLastCalValue" style="float: left; width: 200px;"><?=$monitor['last_calibrated']?></div>
                 <div style="visibility: none; clear: both;"></div>
             </div>
-<?	} ?>
+<?php	} ?>
         </div>
     </div>
 </div>

@@ -68,12 +68,12 @@
 		<a href="/_support/requests">Support Home</a>
     	<a href="/_support/requests">Requests</a> &gt; Tickets
 	</div>
-	<?	if ($page->errorCount()) { ?>
+	<?php	if ($page->errorCount()) { ?>
 	    <div class="form_error"><?=$page->errorString()?></div>
-	<? } ?>
-	<?	if ($page->success) { ?>
+	<?php	} ?>
+	<?php	if ($page->success) { ?>
 	    <div class="form_success"><?=$page->success?></div>
-	<?	} ?>
+	<?php	} ?>
 </div>
 <h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i> Request [Tickets]</h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
@@ -93,10 +93,10 @@
         <div style="width: 42%; float:left; padding-left: 10px;">
 	        <span class="label"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
 	        <select id="product_id" name="product_id" class="value input collectionField" onchange="updateReport()">
-    	         <option value="ALL"<? if ($product == $selectedProduct) print " selected"; ?>>ALL</option>
-                <?	foreach ($products as $product) { ?>
-		            <option value="<?=$product->id?>"<? if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?></option>
-                <?	} ?>
+    	         <option value="ALL"<?php	if ($product == $selectedProduct) print " selected"; ?>>ALL</option>
+                <?php	foreach ($products as $product) { ?>
+		            <option value="<?=$product->id?>"<?php	if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?></option>
+                <?php	} ?>
 	        </select>
 	    </div>
         <div style="width: 33%; float:left;">
@@ -108,17 +108,17 @@
 	    
 	    <span class="label"><i class="fa fa-filter" aria-hidden="true"></i> Status</span>
 	    <div class="checkbox-row">
-		    <input type="checkbox" name="status_new" value="1" onclick="updateReport()"<? if ($_REQUEST['status_new']) print " checked";?> />
+		    <input type="checkbox" name="status_new" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_new']) print " checked";?> />
 		    <span class="value">NEW</span>
-		    <input type="checkbox" name="status_active" value="1" onclick="updateReport()"<? if ($_REQUEST['status_active']) print " checked";?> />
+		    <input type="checkbox" name="status_active" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_active']) print " checked";?> />
 		    <span class="value">ACTIVE</span>
-		    <input type="checkbox" name="status_pending_customer" value="1" onclick="updateReport()"<? if ($_REQUEST['status_pending_customer']) print " checked";?> />
+		    <input type="checkbox" name="status_pending_customer" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_pending_customer']) print " checked";?> />
 		    <span class="value">PENDING CUSTOMER</span>
-		    <input type="checkbox" name="status_pending_vendor" value="1" onclick="updateReport()"<? if ($_REQUEST['status_pending_vendor']) print " checked";?> />
+		    <input type="checkbox" name="status_pending_vendor" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_pending_vendor']) print " checked";?> />
 		    <span class="value">PENDING VENDOR</span>
-		    <input type="checkbox" name="status_complete" value="1" onclick="updateReport()"<? if ($_REQUEST['status_complete']) print " checked";?> />
+		    <input type="checkbox" name="status_complete" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_complete']) print " checked";?> />
 		    <span class="value">COMPLETE</span>
-		    <input type="checkbox" name="status_closed" value="1" onclick="updateReport()"<? if ($_REQUEST['status_closed']) print " checked";?> />
+		    <input type="checkbox" name="status_closed" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_closed']) print " checked";?> />
 		    <span class="value">CLOSED</span>
 	    </div>
 	    
@@ -137,7 +137,7 @@
 		<div id="serial-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'serial'; updateReport()">Serial #</div>
 		<div id="status-sortable-column" class="tableCell sortableHeader" style="width: 9%;" onclick="document.getElementById('sort_by').value = 'status'; updateReport()">Status</div>
 	</div> <!-- end row header -->
-    <?	foreach ($items as $item) { ?>
+    <?php	foreach ($items as $item) { ?>
         <div class="tableRow">
 	        <div class="tableCell">
 		        <span class="value"><a href="/_support/request_item/<?=$item->id?>"><?=$item->ticketNumber()?></a></span>
@@ -161,5 +161,5 @@
 		        <span class="value"><?=ucwords(strtolower($item->status))?></span>
 	        </div>
         </div>
-    <?	} ?>
+    <?php	} ?>
 </div>

@@ -49,7 +49,7 @@
 						<select name="product_id" class="value input <?=$disabled?>">
 							<option value="">Select</option>
 <?php	foreach ($products as $product) { ?>
-							<option value="<?=$product->id?>"<? if ($product_id == $product->id) print " selected";?>><?=$product->code?></option>
+							<option value="<?=$product->id?>"<?php	if ($product_id == $product->id) print " selected";?>><?=$product->code?></option>
 <?php	} ?>
 						</select>
 					</div>
@@ -57,7 +57,7 @@
 						<select name="organization_id" class="value input <?=$disabled?>">
 							<option value="">Select</option>
 <?php	foreach ($organizations as $organization) { ?>
-							<option value="<?=$organization->id?>"<? if ($asset->organization->id == $organization->id) print " selected";?>><?=$organization->name?></option>
+							<option value="<?=$organization->id?>"<?php	if ($asset->organization->id == $organization->id) print " selected";?>><?=$organization->name?></option>
 <?php	} ?>
 						</select>
 					</div>
@@ -117,7 +117,7 @@
 				<div class="tablerow">
 					<div class="tableCell" style="width: 100%">None recorded</div>
 				</div>
-<?  } ?>
+<?php	 } ?>
 			</div>
 			<div class="tableTitle">
 				<div class="tableCell">
@@ -150,13 +150,13 @@
 					<div class="tableCell"><select name="model_id[<?=$sensor->id?>]" class="value input" />
 						<option value="">Select</option>
 <?php			foreach ($models as $model) { ?>
-						<option value="<?=$model->id?>"<? if ($model->id == $sensor->model_id) print " selected"; ?>><?=$model->code?></option>
-<?				} ?>
+						<option value="<?=$model->id?>"<?php	if ($model->id == $sensor->model_id) print " selected"; ?>><?=$model->code?></option>
+<?php				} ?>
 						</select>
 					</div>
 					<div class="tableCell"><?=$sensor->model->units?></div>
 					<div class="tableCell"><?=$reading->value?></div>
-					<div class="tableCell"><? if (isset($reading->timestamp)) print date('m/d/Y H:i:s',$reading->timestamp);?></div>
+					<div class="tableCell"><?php	if (isset($reading->timestamp)) print date('m/d/Y H:i:s',$reading->timestamp);?></div>
 				</div>
 <?php		} ?>
 				<div class="tableCell"><input type="text" name="sensor_code[0]" class="value input" value="" <?=$disabled?> /></div>
@@ -164,13 +164,13 @@
 						<option value="">Select</option>
 <?php		foreach ($models as $model) { ?>
 						<option value="<?=$model->id?>"><?=$model->code?></option>
-<?			} ?>
+<?php			} ?>
 						</select>
 					</div>
 				<div class="tableCell">&nbsp;</div>
 			</div>
 <!-- Support Plugin -->
-<?			$module = new \Site\Module();
+<?php			$module = new \Site\Module();
 			if ($module->get('support')) { ?>
 			<div class="tableTitle">
 				<div class="tableCell">
@@ -206,9 +206,9 @@
 				</div>
 <?php			} ?>
 			</div>
-<?			} ?>
+<?php			} ?>
 <!-- Calibration Plugin -->
-<?		$module = new \Site\Module();
+<?php		$module = new \Site\Module();
 		if ($module->get('spectros')) {
 ?>
 			<div class="tableTitle">
@@ -240,7 +240,7 @@
 <?php		} ?>
 				</div>
 			</div>
-<?		} ?>
+<?php		} ?>
 <!-- Message -->
 			<div class="tableTitle">
 				<div class="tableCell">
@@ -264,9 +264,9 @@
 					<div class="tableCell"><?=$message->level?></div>
 					<div class="tableCell"><?=$message->message?></div>
 				</div>
-<?			} ?>
+<?php			} ?>
 			</div>
-<?	}
+<?php	}
 	else {
 ?>
 			<div class="tableBody">
@@ -274,5 +274,5 @@
 					<div class="tableCell"><input type="submit" name="btn_submit" class="button" value="Add Asset"/></div>
 				</div>
 			</div>
-<?	} ?>
+<?php	} ?>
 		</form>

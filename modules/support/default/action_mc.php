@@ -1,18 +1,17 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
 
 	if ($_REQUEST['action_id']) {
 		$action = new \Support\Request\Item\Action($_REQUEST['action_id']);
-	}
-	elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
+	} elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
 		$action = new \Support\Request\Item\Action($GLOBALS['_REQUEST_']->query_vars_array[0]);
-	}
-	else {
+	} else {
 		$page->addError("Action not found!");
 		return;
 	}
+	
 	if ($action->error()) {
 		$page->addError($action->error());
 	}
@@ -21,9 +20,11 @@
 	$request = $item->request;
 	
 	if ($_REQUEST['btn_add_event']) {
+	
 		if ($_REQUEST['status'] != $action->status) {
 			$_REQUEST['description'] .= "<br>Status changed from ".$action->status." to ".$_REQUEST['status'];
 		}
+		
 		$action->update(array('status' => 'ACTIVE'));
 		$parameters = array(
 			'action_id'		=> $action->id,
@@ -31,30 +32,28 @@
 			'user_id'		=> $_REQUEST['user_id'],
 			'description'	=> $_REQUEST['description']
 		);
+		
 		if ($action->addEvent($parameters)) {
 			$page->success = "Event created";
 			if ($_REQUEST['status'] != $action->status) {
 				$action->update(array('status' => $_REQUEST['status']));
 			}
-		}
-		else {
+		} else {
 			$page->addError($action->error());
 		}
 	}
 	if ($_REQUEST['btn_assign_action']) {
 		$user = new \Register\Customer($_REQUEST['assigned_id']);
+		
 		if ($user->error) {
 			$page->addError($user->error);
-		}
-		elseif (! $user->id) {
+		} elseif (! $user->id) {
 			$page->addError("Cannot find assigned user");
-		}
-		else {
+		} else {
 			$action->update(array('assigned_id' => $user->id));
 			if ($action->error()) {
 				$page->addError($action->error());
-			}
-			else {
+			} else {
 				$parameters = array(
 					'action_id'		=> $action->id,
 					'date_event'	=> $_REQUEST['date_event'],
@@ -65,8 +64,7 @@
 					if ($_REQUEST['status'] != $action->status) {
 						$action->update(array('status' => $_REQUEST['status']));
 					}
-				}
-				else {
+				} else {
 					$page->addError($action->error());
 				}
 				$page->success = "[SUPPORT] Action Assigned to ".$user->full_name();
@@ -89,7 +87,7 @@
 	}
 	
     // upload files if upload button is pressed
-    $configuration = new \Site\Configuration('support_attachments');
+    $configuration = new \Site\Configuration('support_attachments_s3');
     $repository = $configuration->value();
     if ($_REQUEST['btn_submit'] == 'Upload') {
 

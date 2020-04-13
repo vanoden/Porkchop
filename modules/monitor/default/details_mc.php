@@ -1,4 +1,4 @@
-<?
+<?php
 	# Product
 	#require_once(MODULES.'/product/_classes/product.php');
 	# Monitor Classes
@@ -40,4 +40,3 @@
 			return 0;
 		}
 	}
-?>
