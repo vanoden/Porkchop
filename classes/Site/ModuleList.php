@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Site;
 
 	class ModuleList {
@@ -51,4 +51,3 @@
 			return $this->_count;
 		}
 	}
-?>

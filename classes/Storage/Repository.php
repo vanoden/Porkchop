@@ -19,6 +19,7 @@
 		public function add($parameters) {
 		
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
+			if (isset($parameters['type'])) $this->type = $parameters['type'];
 			
 			if (! $this->_valid_code($parameters['code'])) {
 				$this->error = "Invalid code";
@@ -186,9 +187,29 @@
 			$object = $rs->FetchNextObject(false);
 			$this->name = $object->name;
 			$this->type = $object->type;
-			if (isset($object->endpoint)) $this->endpoint = $object->endpoint;
 			$this->code = $object->code;
 			$this->status = $object->status;
+			
+			$get_object_query = "
+				SELECT	*
+				FROM	`storage_repository_metadata`
+				WHERE	`repository_id` = ?
+			";
+			
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($this->id)
+			);
+			
+			if (! $rs) {
+				$this->error = "SQL Error in Storage::Repository::details(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			
+			while ($row = $rs->fetchRow(false)) {
+			    $this->$row['key'] = $row['value'];
+			}
+			
 			return true;
 		}
 		
@@ -200,6 +221,32 @@
 		public function directories($path = "/") {
 			$directorylist = new DirectoryList();
 			return $directorylist->find(array('repository_id' => $this->id,'path' => $path));
+		}
+
+        public function _updateMetadata($key, $value) {
+		
+            $update_object_query = "
+				UPDATE	`storage_repository_metadata`
+				SET		`repository_id` = `repository_id`
+			";
+			$bind_params = array();
+			if (!empty($key)) {
+				$update_object_query .= ",
+				`value` = ?";
+				array_push($bind_params, $value);
+			}
+			$update_object_query .= "
+				WHERE	`repository_id` = ? AND `key` = ?
+			";            
+			array_push($bind_params, $this->id);
+			array_push($bind_params, $key);
+			query_log($update_object_query);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Storage::Repository::_updateMetadata(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+            return true;
 		}
 		
 		public function _setMetadata($key,$value) {

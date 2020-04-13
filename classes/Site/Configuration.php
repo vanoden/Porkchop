@@ -2,8 +2,8 @@
 	namespace Site;
 	
 	class Configuration {
-		private $key;
-		private $value;
+		public $key;
+		public $value;
 		private $_error;
 
 		public function __construct($key = null) {
@@ -53,7 +53,7 @@
 				return true;
 			}
 		}
-
+		
 		public function get($key) {
 			$get_config_query = "
 				SELECT	`key`,`value`

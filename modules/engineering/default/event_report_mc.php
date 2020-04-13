@@ -2,9 +2,7 @@
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
-	if (! $_REQUEST['btn_submit']) {
-		$_REQUEST['date_start'] = date('m/d/Y',time() - 604800);
-	}
+	if (! $_REQUEST['btn_submit']) $_REQUEST['date_start'] = date('m/d/Y',time() - 604800);
 
 	$parameters = array();
 	if ($_REQUEST['project_id']) $parameters['project_id'] = $_REQUEST['project_id'];
