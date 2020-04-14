@@ -487,7 +487,7 @@
           			);
           			
          			if ($existing->id) {
-					    $this->addError("File already exists with that name in repo ". $repository->name);
+					    $this->addError("File already exists with that name in repository: ". $repository->name);
 				    } else {
 				    
 					    // Add File to Library

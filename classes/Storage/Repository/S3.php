@@ -80,7 +80,7 @@
 
             // Upload an object by streaming the contents of a file
             $result = $this->s3Client->putObject(array(
-                'Bucket'     => $this->configuration->getByKey('bucket'),
+                'Bucket'     => $this->bucket,
                 'Key'        => "/" . $file->code(),
                 'SourceFile' => $path,
                 'Metadata'   => array(
@@ -98,7 +98,7 @@
 		public function retrieveFile($file) {
 
 			// Load contents from filesystem 
-			$fh = fopen("https://" . $this->configuration->getByKey('bucket') . ".s3.amazonaws.com/" . $file->code,'rb');
+			$fh = fopen("https://" . $this->bucket . ".s3.amazonaws.com/" . $file->code,'rb');
 			if (FALSE === $fh) {
 				$this->error = "Failed to open file";
 				return false;

@@ -2,6 +2,7 @@
 	namespace Site;
 	
 	class Configuration {
+	
 		public $key;
 		public $value;
 		private $_error;
@@ -32,7 +33,7 @@
 			}
 		}
 
-		public function set($value) {
+		public function set($value='') {
 			$set_config_query = "
 				INSERT
 				INTO	site_configurations
@@ -55,6 +56,7 @@
 		}
 		
 		public function get($key) {
+		
 			$get_config_query = "
 				SELECT	`key`,`value`
 				FROM	site_configurations

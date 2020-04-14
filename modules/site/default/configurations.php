@@ -20,7 +20,7 @@
 		document.forms[0].submit();
 	}
 </script>
-<div class="title">Edit Page Parameters</div>
+<div class="title">Edit Site Configuration</div>
 <?php	
 if ($page->errorCount()) {
 ?>
@@ -35,6 +35,7 @@ if ($page->success) { ?>
 <form method="post" action="/_site/configurations">
     <input type="hidden" name="key" value="" />
     <input type="hidden" name="value" value="" />
+    <input type="hidden" name="todo" value="" />
     <div class="subheading">Manage Site Configurations</div>
     <div class="table">
 	    <div class="tableRowHeader">
@@ -65,3 +66,4 @@ if ($page->success) { ?>
 	    </div>
     </div>
 </form>
+
