@@ -1,4 +1,4 @@
-<?
+<?php
 	class PorkchopModule
 	{
 		public $error;
@@ -119,4 +119,3 @@
 			return $metadata;
 		}
 	}
-?>

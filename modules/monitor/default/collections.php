@@ -24,12 +24,12 @@
 		return true;
 	}
 </script>
-<?	if ($GLOBALS['_page']->error) { ?>
+<?php	if ($GLOBALS['_page']->error) { ?>
 <div class="form_error"><?=$GLOBALS['_page']->error?></div>
-<?	} ?>
-<?	if ($GLOBALS['_page']->success) { ?>
+<?php	} ?>
+<?php	if ($GLOBALS['_page']->success) { ?>
 <div class="form_success"><?=$GLOBALS['_page']->success?></div>
-<?	} ?>
+<?php	} ?>
 <form name="collectionsForm" method="post">
 <input id="delete_collection" type="hidden" name="delete_collection" value=""/>
 <input type="hidden" id="start" name="start" value="0">
@@ -43,7 +43,7 @@
 	<th class="label columnLabel collectionFinishedColumn">Finished</th>
 	<th class="label columnLabel columnLabelRight collectionDeleteColumn"><span class="mobile-hide">Delete</span><span class="mobile-show"><img src="/img/_global/icon_trashcan.svg"></span></th>
 </tr>
-<?	foreach ($collections as $collection) {
+<?php	foreach ($collections as $collection) {
 		$name = $collection->metadata('name');
 		if (! $name) $name = "[none]";
 		
@@ -55,8 +55,7 @@
 	<td class="value columnValue collectionFinishedColumn<?=$greenbar?>"><?=date("m/d/y H:m",$collection->timestamp_end)?></td>
 	<td class="value columnValue columnValueRight collectionDeleteColumn<?=$greenbar?>"><input type="button" name="delete_collection" value="x" onclick="deleteCollection(<?=$collection->id?>)" /></td>
 </tr>
-<?
-		if ($greenbar) $greenbar = "";
+<?php			if ($greenbar) $greenbar = "";
 		else $greenbar = " greenbar";
 	}
 ?>

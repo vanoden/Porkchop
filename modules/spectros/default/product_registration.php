@@ -17,9 +17,9 @@
 	}
 </style>
 <h2>Contact Information</h2>
-<?	if ($GLOBALS['_page']->error) { ?>
+<?php	if ($GLOBALS['_page']->error) { ?>
 <span class="form_error"><?=$GLOBALS['_page']->error?></span>
-<?	} ?>
+<?php	} ?>
 <form method="POST" action="/_spectros/product_registration">
 <table class="body">
 <tr><td id="registrationFormLeftColumn">

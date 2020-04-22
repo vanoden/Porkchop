@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	###################################################
 	### register_mc.php								###
 	### This program collects registration info		###
@@ -206,4 +206,3 @@
 	$contact_types = $_contact->types;
 	
 	if (! isset($target)) $target = '';
-?>

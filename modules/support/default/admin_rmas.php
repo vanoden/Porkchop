@@ -19,26 +19,26 @@
 	<div class="tableRow">
 		<div class="tableCell">
 			<select name="status" class="value input">
-				<option value="NEW"<? if ($_REQUEST['status'] == "NEW") print " selected"; ?>>New</option>
-				<option value="ACCEPTED"<? if ($_REQUEST['status'] == "ACCEPTED") print " selected"; ?>>Accepted</option>
-				<option value="PRINTED"<? if ($_REQUEST['status'] == "PRINTED") print " selected"; ?>>Printed</option>
-				<option value="CLOSED"<? if ($_REQUEST['status'] == "CLOSED") print " selected"; ?>>Closed</option>
+				<option value="NEW"<?php	if ($_REQUEST['status'] == "NEW") print " selected"; ?>>New</option>
+				<option value="ACCEPTED"<?php	if ($_REQUEST['status'] == "ACCEPTED") print " selected"; ?>>Accepted</option>
+				<option value="PRINTED"<?php	if ($_REQUEST['status'] == "PRINTED") print " selected"; ?>>Printed</option>
+				<option value="CLOSED"<?php	if ($_REQUEST['status'] == "CLOSED") print " selected"; ?>>Closed</option>
 			</select>
 		</div>
 		<div class="tableCell">
 			<select name="organization_id" class="value input">
 				<option value="">All</option>
-<?	foreach ($organizations as $organization) { ?>
-				<option value="<?=$organization->id?>"<? if ($organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
-<?	} ?>
+<?php	foreach ($organizations as $organization) { ?>
+				<option value="<?=$organization->id?>"<?php	if ($organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
+<?php	} ?>
 			</select>
 		</div>
 		<div class="tableCell">
 			<select name="product_id" class="value input">
 				<option value="">All</option>
-<?	foreach ($products as $product) { ?>
-				<option value="<?=$product->id?>"<? if ($product->id == $_REQUEST['product_id']) print " selected";?>><?=$product->code?></option>
-<?	} ?>
+<?php	foreach ($products as $product) { ?>
+				<option value="<?=$product->id?>"<?php	if ($product->id == $_REQUEST['product_id']) print " selected";?>><?=$product->code?></option>
+<?php	} ?>
 			</select>
 		</div>
 		<div class="tableCell">
@@ -53,9 +53,9 @@
 	</div>
 </div>
 </form>
-<?	if ($page->errorCount()) { ?>
+<?php	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
-<?	} ?>
+<?php	} ?>
 <div class="table">
 	<div class="tableRowHeader">
 		<div class="tableCell">RMA Number</div>
@@ -67,7 +67,7 @@
 		<div class="tableCell">Authorized</div>
 		<div class="tableCell">By</div>
 	</div>
-<?	foreach ($rmas as $rma) {
+<?php	foreach ($rmas as $rma) {
 		$item = $rma->item();
 		$customer = $item->request()->customer;
 ?>
@@ -81,5 +81,5 @@
 		<div class="tableCell"><?=$rma->date_approved?></div>
 		<div class="tableCell"><?=$rma->approvedBy()->full_name()?></div>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>

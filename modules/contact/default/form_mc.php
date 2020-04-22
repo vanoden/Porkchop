@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 
 	# Handle Submit
@@ -83,4 +83,3 @@
 	}
 	else
 		app_log('Contact Form Loaded from '.$_SERVER['HTTP_X_FORWARDED_FOR'],'debug',__FILE__,__LINE__);
-?>

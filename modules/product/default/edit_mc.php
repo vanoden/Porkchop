@@ -1,4 +1,4 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->requireRole('product manager');
 
@@ -161,4 +161,3 @@
 	$tables = $imagelist->find();
 	$dashboardlist = new \Monitor\DashboardList();
 	$dashboards = $dashboardlist->find();
-?>

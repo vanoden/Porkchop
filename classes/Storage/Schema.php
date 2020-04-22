@@ -304,7 +304,50 @@
 			    }
 			    $GLOBALS['_database']->CommitTrans();
 			}
+			
+			if ($current_schema_version < 5) {
+			
+				app_log("Upgrading schema to version 5",'notice',__FILE__,__LINE__);
 
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+		        $add_table_query = "
+                    CREATE TABLE `storage_files_types` (
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `code` varchar(100) NOT NULL,
+                      `type` ENUM('support request','support ticket','support action','support rma','support warranty','engineering task','engineering release','engineering project','engineering product'),
+                      `ref_id` int(11) NOT NULL,
+                      PRIMARY KEY (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+		        ";
+		        
+				$GLOBALS['_database']->Execute($add_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering file table in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+			    $current_schema_version = 5;
+			    $update_schema_version = "
+				    INSERT
+				    INTO	`".$this->info_table."`
+				    VALUES	('schema_version',$current_schema_version)
+				    ON DUPLICATE KEY UPDATE
+					    value = $current_schema_version
+			    ";
+			    $GLOBALS['_database']->Execute($update_schema_version);
+			    if ($GLOBALS['_database']->ErrorMsg()) {
+				    $this->error = "SQL Error in Storage::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+				    app_log($this->error,'error',__FILE__,__LINE__);
+				    $GLOBALS['_database']->RollbackTrans();
+				    return 0;
+			    }
+			    $GLOBALS['_database']->CommitTrans();
+			}
+			
 			// Add Roles
 			foreach ($this->roles as $name => $description) {
 				$role = new \Register\Role();

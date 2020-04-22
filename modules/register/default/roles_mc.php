@@ -4,4 +4,3 @@
 
 	$roleList = new \Register\RoleList();
 	$roles = $roleList->find();
-?>

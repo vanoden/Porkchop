@@ -7,12 +7,12 @@
    <form name="project_form" action="/_engineering/project" method="post">
       <input type="hidden" name="project_id" value="<?=$project->id?>" />
       <h2>Engineering Project</h2>
-      <?	if ($page->errorCount()) { ?>
+      <?php	if ($page->errorCount()) { ?>
       	<div class="form_error"><?=$page->errorString()?></div>
-      <?	}
+      <?php	}
          if ($page->success) { ?>
       	<div class="form_success"><?=$page->success?> [<a href="/_engineering/projects">Finished</a>] | [<a href="/_engineering/project">Create Another</a>] </div>
-      <?	} ?>
+      <?php	} ?>
       <!--	START First Table -->
       <div class="tableBody min-tablet marginTop_20">
          <div class="tableRowHeader">
@@ -31,9 +31,9 @@
             <div class="tableCell">
                <select name="manager_id" class="value input" style="width: 240px">
                   <option value="">Unassigned</option>
-                  <?	foreach ($managers as $manager) { ?>
+                  <?php	foreach ($managers as $manager) { ?>
                   <option value="<?=$manager->id?>"<? if ($manager->id == $project->manager->id) print " selected"; ?>><?=$manager->code?></option>
-                  <?	} ?>
+                  <?php	} ?>
                </select>
             </div>
             <div class="tableCell" style="min-width: 100px;">
@@ -106,7 +106,7 @@
     </div>
 
    <!--	START First Table -->
-   <?	if ($project->id) { ?>
+   <?php	if ($project->id) { ?>
    <h3>Tasks</h3>
    <div class="tableBody min-tablet marginTop_20">
       <div class="tableRowHeader">
@@ -115,7 +115,7 @@
          <div class="tableCell" style="width: 25%;">Tech</div>
          <div class="tableCell" style="width: 25%;">Status</div>
       </div>
-      <?	foreach ($tasks as $task) {
+      <?php	foreach ($tasks as $task) {
          $worker = $task->assignedTo(); ?>
       <div class="tableRow">
          <div class="tableCell">
@@ -131,10 +131,10 @@
             <?=$task->status?>
          </div>
       </div>
-      <?	} ?>
+      <?php	} ?>
    </div>
    <br/><br/>
    <a href="/_engineering/task?project_id=<?=$project->id?>" class="button">Add Task</a>
-   <?	} ?>
+   <?php	} ?>
    <!--	END First Table -->	
 </div>

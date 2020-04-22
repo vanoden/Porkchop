@@ -1,4 +1,4 @@
-<?
+<?php	
 	$LDAPServerAddress1 = "192.168.30.11";
 	$LDAPServerAddress2 = "192.168.30.12";
 	$LDAPServerPort="389";
@@ -27,4 +27,3 @@
 			}
 		}
 	}
-?>

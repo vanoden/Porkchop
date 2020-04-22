@@ -13,4 +13,3 @@
 	if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 
 	$packages = $packagelist->find($parameters);
-?>

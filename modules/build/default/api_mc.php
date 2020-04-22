@@ -10,9 +10,7 @@
 		$function_name = $_REQUEST["method"];
 		$api->$function_name();
 		exit;
-	}
-	else {
+	} else {
 		$page->requireRole($api->admin_role());
 		print $api->_form();
 	}
-?>

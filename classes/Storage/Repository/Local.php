@@ -94,8 +94,13 @@
 			$this->endpoint = $this->_endpoint();
 		}
 
-		public function addFile($file,$path) {
-			// Write contents to filesystem
+        /**
+         * Write contents to filesystem
+         *
+         * @param $file
+         * @param $path
+         */
+		public function addFile($file, $path) {
 			return move_uploaded_file($path,$this->_path()."/".$file->code());
 		}
 

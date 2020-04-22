@@ -1,4 +1,4 @@
-<?
+<?php
 	require_module('action');
 	require_module('monitor');
 
@@ -62,4 +62,3 @@
 	
 	$asset = new MonitorAsset();
 	$asset->get($_REQUEST['asset_code']);
-?>

@@ -54,3 +54,4 @@
        "template"  => TEMPLATES."/support/return_authorized.html"
     );
     $_config->support->rma_location_id = 1;
+

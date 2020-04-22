@@ -3,9 +3,7 @@
 	$page->requireRole('register manager');
 
 	$role_name = $_REQUEST['name'];
-	if (empty($role_name)) {
-		$role_name = $GLOBALS['_REQUEST_']->query_vars_array[0];
-	}
+	if (empty($role_name)) $role_name = $GLOBALS['_REQUEST_']->query_vars_array[0];
 
 	$role = new \Register\Role();
 	if ($role->get($role_name)) {
@@ -22,8 +20,6 @@
 			}
 		}
 		$privileges = $role->privileges();
-	}
-	else {
+	} else {
 		$page->addError("Role not found");
 	}
-?>

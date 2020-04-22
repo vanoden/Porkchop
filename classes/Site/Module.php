@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Site;
 
 	class Module {
@@ -87,4 +87,3 @@
 			return null;
 		}
 	}
-?>

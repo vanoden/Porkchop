@@ -154,9 +154,9 @@
 <h2 style="display: inline-block;"><i class='fa fa-users' aria-hidden='true'></i> Customer Registrations </h2>
 <?php include(MODULES.'/register/partials/search_bar.php'); ?>
 <div style="width: 100%;">
-   <?	if ($page->errorCount()) { ?>
+   <?php	if ($page->errorCount()) { ?>
    <div class="form_error"><?=$page->errorString()?></div>
-   <?	} ?>
+   <?php	} ?>
    <form action="/_register/pending_customers" method="post" autocomplete="off">
 	  <input id="min_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['min_date']?>" />
 	  <input id="max_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['max_date']?>" />
@@ -218,7 +218,7 @@
 	  ?>
 	<div class="tableRow">
 		<div class="tableCell"><?=$queuedCustomer->name?>
-<?	if ($queuedCustomer->is_reseller) { ?>&nbsp;[Reseller]<? } ?>
+<?php	if ($queuedCustomer->is_reseller) { ?>&nbsp;[Reseller]<?php	} ?>
 		<br>
 		<form method="POST" id="customer_add_form_<?=$queuedCustomer->id?>" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
 		<?php

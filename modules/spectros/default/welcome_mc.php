@@ -1,4 +1,4 @@
-<?
+<?php
 	$menus = array(
 		(object) array(
 			"label"			=> "My Account",
@@ -26,4 +26,3 @@
 			)
 		);
 	}
-?>

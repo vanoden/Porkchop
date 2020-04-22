@@ -7,7 +7,7 @@
 		<div class="tableCell">Workspace</div>
 		<div class="tableCell">Last Version</div>
 	</div>
-<?	foreach ($products as $product) {
+<?php	foreach ($products as $product) {
 	$last_version = $product->lastVersion();
 ?>
 	<div class="tableRow">
@@ -17,7 +17,7 @@
 		<div class="tableCell"><?=$product->workspace?></div>
 		<div class="tableCell"><a href="/_build/version?id=<?=$last_version->id?>"><?=$last_version->number?></a></div>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>
 <div class="form_footer">
 	<form action="/_build/product_new" method="post">

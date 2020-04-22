@@ -20,28 +20,28 @@
 	}
 </script>
 <div class="title">Location</div>
-<?	if ($page->errorCount() > 0) { ?>
+<?php	if ($page->errorCount() > 0) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
-<?	}
+<?php	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?	} ?>
+<?php	} ?>
 <form name="locationForm" method="post" action="/_register/admin_location">
 <input type="hidden" name="id" value="<?=$location->id?>" />
-<? if (isset($_REQUEST['organization_id'])) { ?>
+<?php	if (isset($_REQUEST['organization_id'])) { ?>
 <div class="container">
 	<span class="label">Organization</span>
 	<a href="/_register/organization/<?=$organization->code?>" class="value"><?=$organization->name?></a>
 	<input type="hidden" name="organization_id" value="<?=$organization->id?>" />
 </div>
-<?	}
+<?php	}
 	if (isset($_REQUEST['user_id'])) { ?>
 <div class="container">
 	<span class="label">Customer</span>
 	<span class="value"><?=$user->full_name()?></span>
 	<input type="hidden" name="user_id" value="<?=$user->id?>" />
 </div>
-<?	} ?>
+<?php	} ?>
 <div class="container">
 	<span class="label">Name</span>
 	<input type="text" name="name" class="value input" value="<?=$location->name?>" />
@@ -62,9 +62,9 @@
 	<span class="label">Country</span>
 	<select name="country_id" class="value input" onchange="popProvinceSelect();">
 		<option value="">Select</option>
-<?	foreach ($countries as $country) { ?>
-		<option value="<?=$country->id?>"<? if ($country->id == $selected_country->id) print " selected"; ?>><?=$country->name?></option>
-<?	} ?>
+<?php	foreach ($countries as $country) { ?>
+		<option value="<?=$country->id?>"<?php	if ($country->id == $selected_country->id) print " selected"; ?>><?=$country->name?></option>
+<?php	} ?>
 	</select>
 </div>
 <div class="container">
@@ -72,11 +72,11 @@
 	<select name="province_id" class="value input">
 <?php	if (isset($country->id) && $country->id > 0 && is_array($provinces)) {
 			foreach ($provinces as $province) {
-?>		<option value="<?=$province->id?>"<? if ($province->id == $selected_province->id) print " selected"; ?>><?=$province->name?></option>
-<?			}
+?>		<option value="<?=$province->id?>"<?php	if ($province->id == $selected_province->id) print " selected"; ?>><?=$province->name?></option>
+<?php			}
 		} else { ?>
 		<option value="">Choose Country First</option>
-<?		} ?>
+<?php		} ?>
 	</select>
 </div>
 <div class="container">

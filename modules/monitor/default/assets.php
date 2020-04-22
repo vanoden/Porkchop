@@ -12,9 +12,9 @@
 		width: 280px;
 	}
 </style>
-<?	if ($page->error) { ?>
+<?php	if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>
-<?	} ?>
+<?php	} ?>
 <div class="title">Monitors [<?=count($assets)?>]</div>
 <table class="body" cellpadding="0" cellspacing="0">
 <tr><th class="label serialNumberLabel">Serial Number</th>
@@ -22,7 +22,7 @@
 	<th class="label modelLabel">Model</th>
 	<th class="label nameLabel">Name</th>
 </tr>
-<?	$greebar = '';
+<?php	$greebar = '';
 	foreach ($assets as $asset) {
 ?>
 <tr><td class="value <?=$greenbar?>"><a href="/_monitor/asset/<?=$asset->code?>"><?=$asset->code?></a></td>

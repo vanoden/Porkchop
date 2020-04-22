@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	$page = new \Site\Page();
 
 	$companyList = new \Company\CompanyList();
@@ -7,4 +7,3 @@
 		$company = new stdClass();
 		$company->name = "us";
 	}
-?>

@@ -1,9 +1,9 @@
-<?	if ($page->errorCount()) { ?>
+<?php	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
-<?	};
+<?php	};
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?	} ?>
+<?php	} ?>
 <form method="post" action="/_register/role">
 <input type="hidden" name="name" value="<?=$role->name?>" />
 <div class="title">Role <?=$role->name?></div>
@@ -16,5 +16,5 @@
 	<div class="rolePrivilegeContainer">
 		<span class="value"><?=$privilege->name?></span>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>

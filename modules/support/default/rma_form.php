@@ -401,9 +401,9 @@
        });
     });
 </script>
-<?	if ($page->errorCount() > 0) { ?>
+<?php	if ($page->errorCount() > 0) { ?>
     <div class="form_error"><?=$page->errorString()?></div><br/><br/>
-<?	} ?>
+<?php	} ?>
 <h1>Return Merchandise Authorization</h1>
 <?php
    // make sure we're authorized and have a valid RMA present
@@ -450,9 +450,9 @@
                  <label for="vendor_id">Shipping Vendor</label> 
                  <select id="vendor_id" name="vendor_id" class="tracking_code" placeholder="10">
 					<option value="">Select</option>
-				<?	foreach ($shippingVendors as $shippingVendor) { ?>
+				<?php	foreach ($shippingVendors as $shippingVendor) { ?>
 					<option value="<?=$shippingVendor->id?>"<? if ($shipment->vendor_id == $shippingVendor->id) print " selected";?>><?=$shippingVendor->name?></option>
-				<?	} ?>
+				<?php	} ?>
                  <input type="hidden" name="form_submitted" value="package_details_submitted" />
                  <input id="add-package-details" type="submit" value="<?=empty($shippingPackage->id) ? "Add" : "Update"?> Package Details" class="btn" style="height: 35px;">
               </div>

@@ -150,4 +150,3 @@
 		$document->prepare($object);
 		return $document->content();
 	}
-?>

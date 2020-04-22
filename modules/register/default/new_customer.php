@@ -193,9 +193,9 @@
                                 <div id="product_details" style="display:none;">
                                     <span class="label" style="display: block"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
                                     <select id="product_id" name="product_id" class="value input collectionField" style="display: block" onchange="document.getElementById('serial_number_message').style.display = 'none';">
-                                        <option value="" <? if (isset($selectedProduct) && $product==$selectedProduct) print " selected"; ?>>---</option>
+                                        <option value="" <?php	if (isset($selectedProduct) && $product==$selectedProduct) print " selected"; ?>>---</option>
                                         <?php	foreach ($productsAvailable as $product) { ?>
-                                            <option value="<?=$product->id?>" <? if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>>
+                                            <option value="<?=$product->id?>" <?php	if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>>
                                                 <?=$product->code?> -
                                                     <?=$product->description?>
                                             </option>
@@ -290,4 +290,3 @@
             </form>
             <?php
     }
-?>

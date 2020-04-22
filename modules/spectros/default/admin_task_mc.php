@@ -1,4 +1,4 @@
-<?
+<?php
 	require_module('action');
 	require_module('register');
 	require_module('monitor');
@@ -81,4 +81,3 @@
 	$assets = $_asset->find();
 	
 	$taskEvents = $task->events();
-?>

@@ -9,6 +9,9 @@
 					"description"	=> "Super User"
 				),
 			),
+			"templates"		=> array(
+				"configurations"		=> "admin.html",
+			),
 		),
 		"Content"		=> array(
 			"roles"			=> array(
@@ -138,4 +141,3 @@
 			),
 		),
 	);
-?>

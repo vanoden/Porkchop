@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	require 'XML/Unserializer.php';
     require 'XML/Serializer.php';
     $options = array(
@@ -17,4 +17,3 @@
 		print $_monitor->error;
 		exit;
 	}
-?>

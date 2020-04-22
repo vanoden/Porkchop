@@ -4,8 +4,7 @@
 
 	if ($_REQUEST['id']) {
 		$menu = new \Navigation\Menu($_REQUEST['id']);
-	}
-	elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
+	} elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$menu = new \Navigation\Menu();
 		$menu->get($code);
@@ -45,12 +44,12 @@
 			}
 		}
 	}
+	
 	if ($_REQUEST['delete']) {
 		$item = new \Navigation\Item($_REQUEST['delete']);
 		$item->delete();
 	}
 
-	if (isset($menu)) {
-		$items = $menu->items();
-	}
-?>
+	if (isset($menu)) $items = $menu->items();
+		
+	

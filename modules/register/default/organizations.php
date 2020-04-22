@@ -24,9 +24,9 @@
 <div id="search_container">
 	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput wide_md"/>
 	<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
-	<input type="checkbox" name="hidden" class="checkbox" value="1"<? if ($_REQUEST['hidden']) print " checked"; ?> /><span class="status">Hidden</span>
-	<input type="checkbox" name="expired" class="checkbox" value="1"<? if ($_REQUEST['expired']) print " checked"; ?> /><span class="status">Expired</span>
-	<input type="checkbox" name="deleted" class="checkbox" value="1"<? if ($_REQUEST['deleted']) print " checked"; ?> /><span class="status">Deleted</span>
+	<input type="checkbox" name="hidden" class="checkbox" value="1"<?php	if ($_REQUEST['hidden']) print " checked"; ?> /><span class="status">Hidden</span>
+	<input type="checkbox" name="expired" class="checkbox" value="1"<?php	if ($_REQUEST['expired']) print " checked"; ?> /><span class="status">Expired</span>
+	<input type="checkbox" name="deleted" class="checkbox" value="1"<?php	if ($_REQUEST['deleted']) print " checked"; ?> /><span class="status">Deleted</span>
 	
 	<input type="hidden" id="start" name="start" value="0">
 </div>
@@ -37,13 +37,13 @@
 	<th class="label organizationsCodeLabel">Status</th>
 	<th class="label organizationsCodeLabel">Members</th>
 </tr>
-<?	foreach ($organizations as $organization) { ?>
+<?php	foreach ($organizations as $organization) { ?>
 <tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/organization?organization_id=".$organization->id?>"><?=$organization->code?></a></td>
 	<td class="value<?=$greenbar?>"><?=$organization->name?></td>
 	<td class="value<?=$greenbar?>"><?=$organization->status?></td>
 	<td class="value<?=$greenbar?>"><?=$organization->activeCount()?></td>
 </tr>
-<?		if ($greenbar) $greenbar = '';
+<?php		if ($greenbar) $greenbar = '';
 		else $greenbar = " greenbar";
 	}
 ?>
@@ -60,10 +60,9 @@
 </div>
 </form>
 
-<?
-	if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+<?php		if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 ?>
 <form action="<?=PATH?>/_register/organization" method="get">
 <div class="button-bar"><span style="text-align: center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span></div>
-<?	} ?>
+<?php	} ?>
 </form>

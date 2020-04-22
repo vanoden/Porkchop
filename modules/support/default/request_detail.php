@@ -55,12 +55,12 @@
 <h2 style="display: inline-block;">Request: <span><?=$request->code?></span></h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 <div style="width: 756px;">
-	<?	if ($page->errorCount()) { ?>
+	<?php	if ($page->errorCount()) { ?>
 	    <div class="form_error"><?=$page->errorString()?></div>
-	<? } ?>
-	<?	if ($page->success) { ?>
+	<?php	} ?>
+	<?php	if ($page->success) { ?>
 	    <div class="form_success"><?=$page->success?></div>
-	<?	} ?>
+	<?php	} ?>
 	<form name="requestForm" method="post">
         <input type="hidden" name="request_id" value="<?=$request->id?>" />
         <!--	Start First Row-->
@@ -92,17 +92,17 @@
         </div>
         <div class="container">
 	        <input type="submit" name="btn_cancel" class="button" value="Cancel Request" />
-        <?	if (in_array($request->status,array('CLOSED','COMPLETE','CANCELLED'))) { ?>
+        <?php	if (in_array($request->status,array('CLOSED','COMPLETE','CANCELLED'))) { ?>
 	        <input type="submit" name="btn_reopen" class="button" value="Reopen Request" />
-        <?	} else { ?>
+        <?php	} else { ?>
 	        <input type="submit" name="btn_close" class="button" value="Close Request" />
-        <?	} ?>
+        <?php	} ?>
         </div>
         <!--End first row-->		
 
         <h3>Request Tickets</h3>
         <!--	Start Request Item-->
-        <?	foreach ($items as $item) { ?>
+        <?php	foreach ($items as $item) { ?>
         <div class="tableBody min-tablet">
 	        <div class="tableRowHeader">
 		        <div class="tableCell" style="width: 10%;">Ticket</div>
@@ -137,7 +137,7 @@
 		        </div>
 	        </div>
         </div>		
-        <?	} ?>	
+        <?php	} ?>	
         <!--End Request Item -->	
 		        
         <h3>Add Ticket</h3>
@@ -153,9 +153,9 @@
 		        <div class="tableCell">
 			        <select name="product_id" class="value input">
 				        <option value="">N/A</option>
-				        <?	foreach ($products as $product) { ?>
+				        <?php	foreach ($products as $product) { ?>
 				            <option value="<?=$product->id?>"><?=$product->code?></option>
-				        <?	} ?>
+				        <?php	} ?>
 		        </select>
 		        </div>
 		        <div class="tableCell">
@@ -163,9 +163,9 @@
 		        </div>
 		        <div class="tableCell">
 			        <select name="item_status" class="value input">
-				        <?	foreach ($statuses as $status) { ?>
+				        <?php	foreach ($statuses as $status) { ?>
 				            <option value="<?=$status?>"><?=ucwords(str_replace("_"," ", strtolower($status)))?></option>
-				        <?	} ?>
+				        <?php	} ?>
 			        </select>
 		        </div>
 	        </div>
@@ -185,7 +185,7 @@
 	        </div>
         </div>		
         <!--End Request Item -->
-        <?	if (count($actions) > 0) { ?>
+        <?php	if (count($actions) > 0) { ?>
         <div style="width: 756px;">
         <h2>Actions</h2>
         <?php
@@ -219,7 +219,7 @@
                 </td>
             </tr>
         </table>
-        <? } else { ?>
+        <?php	} else { ?>
         <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
             <tr>
                 <th>Date Requested</th>
@@ -280,8 +280,8 @@
         }
         ?><br/>
         </div>
-        <?	} ?>
-        <?	if (isset($supportItemComments) && count($supportItemComments) > 0) { ?>
+        <?php	} ?>
+        <?php	if (isset($supportItemComments) && count($supportItemComments) > 0) { ?>
             <!--	Start Request Item-->
             <h3>Comments</h3>
             <?php	
@@ -313,9 +313,9 @@
 		            </div>
 	            </div>
             </div>
-            <?	}	
+            <?php	}	
              } ?>
-        <?	} ?>
+        <?php	} ?>
 	</form>
 	
     <!-- begin file upload -->

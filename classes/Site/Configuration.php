@@ -2,8 +2,9 @@
 	namespace Site;
 	
 	class Configuration {
-		private $key;
-		private $value;
+	
+		public $key;
+		public $value;
 		private $_error;
 
 		public function __construct($key = null) {
@@ -32,7 +33,7 @@
 			}
 		}
 
-		public function set($value) {
+		public function set($value='') {
 			$set_config_query = "
 				INSERT
 				INTO	site_configurations
@@ -53,8 +54,9 @@
 				return true;
 			}
 		}
-
+		
 		public function get($key) {
+		
 			$get_config_query = "
 				SELECT	`key`,`value`
 				FROM	site_configurations
@@ -85,6 +87,12 @@
 				return true;
 			}
 		}
+
+        public function getByKey($key) {
+            $this->key = $key;
+            $this->get($key);
+            return $this->value;
+        }
 
 		public function value() {
 			return $this->value;

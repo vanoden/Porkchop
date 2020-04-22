@@ -8,12 +8,12 @@
       <input type="hidden" name="release_id" value="<?=$release->id?>" />
       <h2>Engineering Release</h2>
       <!--	Error Checking -->
-      <?	if ($page->errorCount()) { ?>
+      <?php	if ($page->errorCount()) { ?>
       <div class="form_error"><?=$page->errorString()?></div>
-      <?	}
+      <?php	}
          if ($page->success) { ?>
                 <div class="form_success"><?=$page->success?> [<a href="/_engineering/releases">Finished</a>] | [<a href="/_engineering/release">Create Another</a>] </div>
-      <?	} ?>
+      <?php	} ?>
       <!--	END Error Checking -->	
       <!--	START First Table -->
       <div class="tableBody min-tablet">
@@ -128,7 +128,7 @@
               <div class="tableCell" style="width: 20%;">&nbsp;</div>
            </div>
            <!-- end row header -->
-           <?	foreach ($tasks as $task) { 
+           <?php	foreach ($tasks as $task) { 
               $project = $task->project();
               $product = $task->product();
               ?>
@@ -156,7 +156,7 @@
                 ?>
               </div>
            </div>
-           <?		
+           <?php		
               if (! $greenbar) $greenbar = 'greenbar'; else $greenbar = '';
             }
            ?>
@@ -164,5 +164,5 @@
     </div>
     <!--	END First Table -->
     </div>
-<?	} ?>
+<?php	} ?>
 

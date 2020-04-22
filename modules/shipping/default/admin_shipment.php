@@ -26,12 +26,12 @@
 	<span class="label">Vendor</span>
 	<select class="value input" name="vendor_id">
 		<option value="">Not Specified</option>
-<?	foreach ($vendors as $vendor) { ?>
-		<option value="<?=$vendor->id?>"<? if ($shipment->vendor_id == $vendor->id) print " selected"; ?>><?=$vendor->name?></option>
-<?	} ?>
+<?php	foreach ($vendors as $vendor) { ?>
+		<option value="<?=$vendor->id?>"<?php	if ($shipment->vendor_id == $vendor->id) print " selected"; ?>><?=$vendor->name?></option>
+<?php	} ?>
 	</select>
 </div>
-<?	foreach ($packages as $package) { ?>
+<?php	foreach ($packages as $package) { ?>
 <div class="table">
 	<div class="tableRowHeader">
 		<div class="tableCell">Package <?=$package->id?></div>
@@ -44,7 +44,7 @@
 		<div class="tableCell">Product</div>
 		<div class="tableCell">Serial Number</div>
 	</div>
-<?	$items = $package->items();
+<?php	$items = $package->items();
 	foreach ($items as $item) {
 ?>
 	<div class="tableRow">
@@ -52,6 +52,6 @@
 		<div class="tableCell"><?=$item->product()->code?></div>
 		<div class="tableCell"><?=$item->serial_number?></div>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>
-<? } ?>
+<?php	} ?>

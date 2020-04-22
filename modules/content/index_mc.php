@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	# Clean Up Page Name
 	$page = preg_replace("/[^\w\-\_\.]/","",$page);
 
@@ -15,4 +15,3 @@
 
 	# Get Company Info
 	$company_info = get_company($company_id);
-?>

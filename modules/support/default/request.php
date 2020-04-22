@@ -173,12 +173,12 @@
 		productOpt0.value = '';
 		productOpt0.innerHTML = 'None';
 		productSelect.appendChild(productOpt0);
-<?	foreach ($products as $product) { ?>
+<?php	foreach ($products as $product) { ?>
 		var productOpt<?=$product->id?> = document.createElement('option');
 		productOpt<?=$product->id?>.value = '<?=$product->id?>';
 		productOpt<?=$product->id?>.innerHTML = '<?=$product->code?>';
 		productSelect.appendChild(productOpt<?=$product->id?>);
-<?	} ?>
+<?php	} ?>
 		productCell1.appendChild(productSelect);
 
 		var productCell2 = document.createElement('div');
@@ -231,12 +231,12 @@
 	}
 </script>
 <h2><i class='fa fa-phone' aria-hidden='true'></i> Request Support</h2>
-<?	if ($page->errorCount()) { ?>
+<?php	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
-<?	}
+<?php	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?	} else { ?>
+<?php	} else { ?>
 <form name="supportRequest" method="post" action="/_support/request">
 <div class="form_instruction">
 	Select your problem type from the list.  Then clearly define your problem.  Make sure to list relevant Serial Numbers for any devices referenced.
@@ -274,9 +274,9 @@
 		<div class="table_cell" style="width: 100px;">
 			<select id="product_id0" name="product_id[0]" class="value input">
 				<option value="">None</option>
-<?	foreach ($products as $product) { ?>
+<?php	foreach ($products as $product) { ?>
 				<option value="<?=$product->id?>"><?=$product->code?></option>
-<?	} ?>
+<?php	} ?>
 			</select>
 		</div>
 		<div class="table_cell" style="width: 100px;">		

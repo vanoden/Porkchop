@@ -41,12 +41,12 @@
 		return true;
 	}
 </script>
-<?	if ($page->error) { ?>
+<?php	if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>
-<?	} ?>
-<?	if ($page->success) { ?>
+<?php	} ?>
+<?php	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?	} ?>
+<?php	} ?>
 <form name="collectionsForm" method="post" id="collectionsForm">
 <input id="delete_collection" type="hidden" name="delete_collection" value=""/>
 <input id="sort" type="hidden" name="sort" value="<?=$_REQUEST['sort']?>"/>
@@ -64,9 +64,9 @@
 <tr><td class="value">
 		<select name="organization_id" class="value input">
 			<option value="">All</option>
-<?	foreach ($organizations as $organization) { ?>
+<?php	foreach ($organizations as $organization) { ?>
 			<option value="<?=$organization->id?>"<? if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
-<?	} ?>
+<?php	} ?>
 		</select>
 	</td>
 	<td class="value">
@@ -94,7 +94,7 @@
 	<th class="label columnLabel collectionFinishedColumn"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('date_end');">Finished</a></th>
 	<th class="label columnLabel collectionDeleteColumn">Delete</td>
 </tr>
-<?	foreach ($collections as $collection)
+<?php	foreach ($collections as $collection)
 	{
 		if (! $collection->name) $collection->name = "[none]";
 		
@@ -106,7 +106,7 @@
 	<td class="value columnValue collectionFinishedColumn<?=$greenbar?>"><?=date("Y-m-d H:m",$collection->timestamp_end)?></td>
 	<td class="value columnValue collectionDeleteColumn<?=$greenbar?>" style="text-align: center"><input type="button" style="padding-left: 2px; padding-right: 2px; padding-top: 0px; height: 18px; font-weight: bold" name="delete_collection" value="x" onclick="deleteCollection(<?=$collection->id?>)" /></td>
 </tr>
-<?
+<?php
 		if ($greenbar) $greenbar = "";
 		else $greenbar = " greenbar";
 	}

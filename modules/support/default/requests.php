@@ -15,7 +15,7 @@
 	    <th>Type</th>
 	    <th>Status</th>
     </tr>
-    <?	foreach ($requests as $request) { ?>
+    <?php	foreach ($requests as $request) { ?>
         <tr><td><a href="/_support/request_detail/<?=$request->code?>"><?=$request->code?></a></td>
 	        <td><?=$request->date_request?></td>
 	        <td><?=$request->customer->first_name?> <?=$request->customer->last_name?></td>
@@ -23,5 +23,5 @@
 	        <td><?=$request->type?></td>
 	        <td><?=$request->status?></td>
         </tr>
-    <?	} ?>
+    <?php	} ?>
 </table>

@@ -1,4 +1,4 @@
-<?
+<?php
 	$collection = new \Monitor\Collection();
 
 	# Get Events from Database
@@ -36,7 +36,7 @@
 				foreach($readings as $reading) {
 					$time = new DateTime('now',$timezone);
 					$time->setTimeStamp($reading->timestamp);
-			
+
 					$localtime = $time->format("Y/m/d H:i");
 	
 					print $localtime.",".$sensor->asset->code.",".$sensor->code.",".$reading->value."\r\n";
@@ -45,4 +45,3 @@
 		}
 	}
 	exit;
-?>

@@ -7,7 +7,7 @@
 		<div class="tableCell">To</div>
 		<div class="tableCell">From</div>
 	</div>
-<?	foreach ($messages as $message) { ?>
+<?php	foreach ($messages as $message) { ?>
 	<div class="tableRow">
 		<div class="tableCell"><?=$message->date_created?></div>
 		<div class="tableCell"><?=$message->status?></div>
@@ -16,5 +16,5 @@
 		<div class="tableCell"><?=$message->to?></div>
 		<div class="tableCell"><?=$message->from?></div>
 	</div>
-<?	}	?>
+<?php	}	?>
 </div>

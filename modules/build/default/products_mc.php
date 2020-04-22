@@ -4,4 +4,3 @@
 
 	$productList = new \Build\ProductList();
 	$products = $productList->find();
-?>

@@ -1,4 +1,4 @@
-<?
+<?php
 	if (! in_array('monitor admin',$GLOBALS['_SESSION_']->customer->role))
 	{
 		return;
@@ -35,6 +35,6 @@
 		if ($_credit->error)
 			$GLOBALS['_page']->error = "Error getting credits for organization: ".$_credit->error;
 	}
+	
 	# Reference Information
 	$organizations = $_organization->find();
-?>

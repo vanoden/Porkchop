@@ -1,4 +1,5 @@
 <?php
+
 	/**
 	  * Register new potential customers
 	  *

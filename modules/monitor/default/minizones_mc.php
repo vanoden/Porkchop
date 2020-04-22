@@ -1,4 +1,4 @@
-<?
+<?php	
     for ($i = 1;$i <= 4; $i++)
     {
         for ($j = 9; $j >= 1; $j--)
@@ -62,10 +62,10 @@
 <form name="miniZone" action="/_monitor/minizones" method="Post">
 <input type="hidden" name="history[<?=$i?>][<?=$j?>]" value="<?=$history[$i][$j]?>">
 <div style="height: 240px; width: 340px;border: 1px solid black">
-<?  for ($i = 1; $i <= 4; $i ++) { ?>
-    <?  for ($j = 0;$j <= 9; $j++) { ?>
+<?php	 for ($i = 1; $i <= 4; $i ++) { ?>
+    <?php	 for ($j = 0;$j <= 9; $j++) { ?>
     <input type="hidden" name="history[<?=$i?>][<?=$j?>]" value="<?=$history[$i][$j]?>">
-    <?  } ?>
+    <?php	 } ?>
     <input type="hidden" name="status[<?=$i?>]" value="<?=$status[$i]?>">
     <div class="panel" style="text-align: center;float: left; width: 85px">
         <div class="panel_head" style="border: 1px solid black; width: 100%">
@@ -84,9 +84,9 @@
             <span style="display: block"><?=$time[$i]?></span>
         </div>
     </div>
-<?  } ?>
+<?php	 } ?>
 </div>
 </form>
 </body>
 </html>
-<?  exit; ?>
+<?php	 exit; ?>

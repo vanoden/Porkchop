@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	$page = new \Site\Page();
 	$page->requireAuth();
 
@@ -70,4 +70,3 @@
 		else header("Location: /_register/unsubscribed");
 		exit;
 	}
-?>

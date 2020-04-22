@@ -33,12 +33,12 @@
 
 </script>
 	<h2>Customers</h2>
-<?	if ($page->error) { ?>
+<?php	if ($page->error) { ?>
 	<div class="form_error"><?=$page->error?></div>
-<?	} ?>
-<?	if ($page->success) { ?>
+<?php	} ?>
+<?php	if ($page->success) { ?>
 	<div class="form_success"><?=$page->success?></div>
-<?	} ?>
+<?php	} ?>
 	<div id="search_container">
 		<form id="custSearch" method="get" class="float: left">
 		<input type="text" id="searchAccountInput" name="search" value="<?=$_REQUEST['search']?>" class="value input searchInput wide_md"/>
@@ -57,7 +57,7 @@
 		<th class="label accountsStatus">Status</th>
 		<th class="label accountsLastActive">Last Active</th>
 	</tr>
-	<?	foreach ($customers as $customer) { ?>
+	<?php	foreach ($customers as $customer) { ?>
 	<tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->login?></a></td>
 		<td class="value<?=$greenbar?>"><?=$customer->first_name?></td>
 		<td class="value<?=$greenbar?>"><?=$customer->last_name?></td>
@@ -65,11 +65,11 @@
 		<td class="value<?=$greenbar?>"><?=$customer->status?></td>
 		<td class="value<?=$greenbar?>"><?=$customer->last_active()?></td>
 	</tr>
-<?		if ($greenbar) $greenbar = '';
+<?php		if ($greenbar) $greenbar = '';
 		else $greenbar = " greenbar";
 	}
 ?>
-<?
+<?php
 	if (role('register manager'))
 	{
 ?>
@@ -77,7 +77,7 @@
 	<form action="<?=PATH?>/_register/register" method="get">
 	<div class="button-bar"><input type="submit" name="button_submit" value="Add Account" class="input button"/></div>
 	</form>
-<?	} ?>
+<?php	} ?>
 <!--    Standard Page Navigation Bar ADMIN ONLY -->
 <div class="pager_bar">
 	<div class="pager_controls">

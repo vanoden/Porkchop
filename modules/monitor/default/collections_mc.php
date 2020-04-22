@@ -1,4 +1,4 @@
-<?
+<?php
 	$max_records = 10;
 
 	if (! $GLOBALS['_SESSION_']->customer->id) {
@@ -44,4 +44,3 @@
     $last_offset = $total_collections - $max_records;
 
     if ($next_offset > count($collections)) $next_offset = $_REQUEST['start'] + count($collections);
-?>

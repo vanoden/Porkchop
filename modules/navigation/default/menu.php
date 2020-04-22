@@ -9,9 +9,9 @@
 		document.forms[0].submit();
 	}
 </script>
-<?	if ($page->errorCount()) { ?>
+<?php	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
-<?	} ?>
+<?php	} ?>
 <form name="menuForm" action="/_navigation/menu" method="post">
 <input type="hidden" name="id" value="<?=$menu->id?>" />
 <input type="hidden" name="delete" value="" />
@@ -26,7 +26,7 @@
 <div class="container">
 	<span class="label">Items</span>
 </div>
-<?	foreach ($items as $item) { ?>
+<?php	foreach ($items as $item) { ?>
 <table class="body" style="clear: both">
 <tr><th>Title</th>
 	<th>Target</th>
@@ -43,7 +43,7 @@
 <tr><th colspan="4">Description</th></tr>
 <tr><td colspan="4"><textarea name="description[<?=$item->id?>]" class="value input" style="width: 100%"><?=$item->description?></textarea></td></tr>
 </table>
-<?	} ?>
+<?php	} ?>
 <table class="body" style="clear: both">
 <tr><th>Title</th>
 	<th>Target</th>

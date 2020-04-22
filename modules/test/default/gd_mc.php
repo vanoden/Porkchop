@@ -8,4 +8,3 @@
 	imagepng($image);
 	imagedestroy($image);
 	exit;
-?>

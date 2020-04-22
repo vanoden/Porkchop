@@ -1,4 +1,4 @@
-<div  style="text-align:center">
+<div style="text-align:center">
     <h3>
         Thank you for registering with <?=$company->name?>
     </h3>

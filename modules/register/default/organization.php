@@ -8,13 +8,13 @@
 </script>
 <form name="orgDetails" method="POST">
 <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
-<?  if ($page->errorCount() > 0) { ?>
+<?php	 if ($page->errorCount() > 0) { ?>
 <div class="form_error"><?=$page->errorString() > 0?></div>
-<?  }
+<?php	 }
 	elseif ($page->success) {
 ?>
 <div class="form_success"><?=$page->success?></div>
-<?  } ?>
+<?php	 } ?>
 <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
 
 <!--	Start First Row-->
@@ -35,22 +35,22 @@
 		</div>
 		<div class="tableCell">
 			<select name="status" id="organizationStatusValue" class="wide_100per">
-				<?		foreach (array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED") as $status) { ?>
-				<option value="<?=$status?>"<? if ($status == $organization->status) print " selected"; ?>><?=$status?></option>
-				<?		} ?>
+				<?php		foreach (array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED") as $status) { ?>
+				<option value="<?=$status?>"<?php	if ($status == $organization->status) print " selected"; ?>><?=$status?></option>
+				<?php		} ?>
 			</select>
 		</div>
 		<div class="tableCell">
-			<input name="is_reseller" type="checkbox" value="1" <? if($organization->is_reseller) print " checked"?> />
+			<input name="is_reseller" type="checkbox" value="1" <?php	if($organization->is_reseller) print " checked"?> />
 		</div>
 		<div class="tableCell">
 			<select name="assigned_reseller_id" class="wide_100per">
 				<option value="">Select</option>
-				<?	foreach ($resellers as $reseller) {
+				<?php	foreach ($resellers as $reseller) {
 				if ($organization->id == $reseller->id) continue;
 				?>
-				<option value="<?=$reseller->id?>"<? if($organization->reseller->id == $reseller->id) print " selected";?>><?=$reseller->name?></option>
-				<?	} ?>
+				<option value="<?=$reseller->id?>"<?php	if($organization->reseller->id == $reseller->id) print " selected";?>><?=$reseller->name?></option>
+				<?php	} ?>
 			</select>
 		</div>
 	</div>
@@ -72,7 +72,7 @@
 	
 <h3>Current Users</h3>
 <!--	Start First Row-->
-<?	if ($organization->id) { ?>
+<?php	if ($organization->id) { ?>
 <div class="tableBody min-tablet">
 	<div class="tableRowHeader">
 		<div class="tableCell value" style="width: 20%;">Username</div>
@@ -81,7 +81,7 @@
 		<div class="tableCell value" style="width: 10%;">Status</div>
 		<div class="tableCell value" style="width: 30%;">Last Active</div>
 	</div>
-<?	foreach ($members as $member) { ;?>
+<?php	foreach ($members as $member) { ;?>
 	<div class="tableRow">
 		<div class="tableCell">
 			<a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->login?></a>
@@ -99,7 +99,7 @@
 			<?=$member->last_active()?>
 		</div>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>
 <!--End first row-->	
 		
@@ -137,7 +137,7 @@
 		<div class="tableCell value" style="width: 20%;">Province</div>
 		<div class="tableCell value" style="width: 20%;">Region</div>
 	</div>
-<?	foreach ($locations as $location) { ;?>
+<?php	foreach ($locations as $location) { ;?>
 	<div class="tableRow">
 		<div class="tableCell">
 			<a href="/_register/admin_location?organization_id=<?=$organization->id?>&id=<?=$location->id?>"><?=$location->name?></a>
@@ -155,11 +155,11 @@
 			<?=$location->province()->country()->name?>
 		</div>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>
 <div class="tableFooter min-tablet">
 	<input type="button" name="method" value="Add Location" class="button" onclick="addLocation()"/>
 </div>
 <!--End first row-->
-<?	} ?>
+<?php	} ?>
 </form>

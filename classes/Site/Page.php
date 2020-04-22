@@ -2,6 +2,7 @@
     namespace Site;
     
     class Page {
+    
 	    public $id;
 	    public $module = 'content';
 	    public $view = 'index';
