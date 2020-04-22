@@ -8,11 +8,11 @@
 			$add_object_query = "
 				INSERT
 				INTO	sales_order_events
-				(		id,order_id,date_event,user_id)
+				(		id,order_id,date_event,user_id,new_status)
 				VALUES
-				(		null,?,?,?)
+				(		null,?,sysdate(),?,?)
 			";
-			$GLOBALS['_database']->Execute($add_object_query,array($parameters["name"]));
+			$GLOBALS['_database']->Execute($add_object_query,array($parameters["order_id"],$parameters['user_id'],$parameters['new_status']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Sales::Event::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
