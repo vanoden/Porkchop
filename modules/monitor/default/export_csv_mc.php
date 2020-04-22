@@ -4,8 +4,8 @@
 	# Get Events from Database
 	$collection->get($_REQUEST['code']);
 
-	if ($collection->error) {
-		print "Error: ".$collection->error;
+	if ($collection->error()) {
+		print "Error: ".$collection->error();
 	}
 	elseif (! $collection->id) {
 		print "Error: Collection not found";
@@ -13,8 +13,8 @@
 	else {
 		# Collection Sensors
 		$sensors = $collection->sensors();
-		if ($collection->error) {
-			print "Error getting sensors: ".$collection->error;
+		if ($collection->error()) {
+			print "Error getting sensors: ".$collection->error();
 			return;
 		}
 
@@ -28,8 +28,8 @@
 		foreach ($sensors as $sensor) {
 			app_log("Exporting data for collection '".$collection->id."' sensor '".$sensor->id,'debug',__FILE__,__LINE__);
 			$readings = $collection->readings($sensor->id);
-			if ($collection->error) {
-				app_log("Error exporting data: ".$collection->error,'error',__FILE__,__LINE__);
+			if ($collection->error()) {
+				app_log("Error exporting data: ".$collection->error(),'error',__FILE__,__LINE__);
 			}
 			else
 			{
