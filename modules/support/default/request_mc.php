@@ -7,14 +7,7 @@
 	#######################################################
 
 	$page = new \Site\Page();
-
-	// Make sure customer is signed in
-	if (! $GLOBALS['_SESSION_']->customer->id) {
-	
-		// Send to login page
-		header("location: /_register/login?target=_support:request");
-		exit;
-	}
+	$page->requireAuth();
 
 	if ($_REQUEST['btn_submit']) {
 	
