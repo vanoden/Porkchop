@@ -16,6 +16,7 @@
 			"templates"	=> array(
 				"page"	=> $admin_template,
 				"pages"	=> $admin_template,
+				"configurations"	=> $admin_template
 			),
 		),
 		"Geography"		=> array(
