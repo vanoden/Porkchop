@@ -476,6 +476,13 @@
 							"description"	=> "Page Management"
 						),
 						array (
+							"title"	=> "Configurations",
+							"target"	=> "/_site/configurations",
+							"view_order"	=> 20,
+							"alt"			=> "Site Configurations",
+							"description"	=> "Site Configurations"
+						),
+						array (
 							"title"	=> "API Sessions",
 							"target"	=> "/_monitor/comm_dashboard",
 							"view_order"	=> 20,
