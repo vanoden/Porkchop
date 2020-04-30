@@ -120,8 +120,9 @@
 						order_id INT(11) NOT NULL,
 						type enum('CREATE','UPDATE','CANCEL','APPROVE','COMPLETE') NOT NULL,
 						new_status enum('NEW','QUOTE','CANCELLED','APPROVED','COMPLETE') NOT NULL,
-						user_id INT(11) NOT NULL,
+						`user_id` INT(11) NOT NULL,
 						PRIMARY KEY `pk_id` (`id`),
+						INDEX `idx_user_id` (`user_id`,`type`),
 						FOREIGN KEY `fk_order_id` (`order_id`) REFERENCES `sales_orders` (`id`),
 						FOREIGN KEY `fk_user_id` (`user_id`) REFERENCES `register_users` (`id`)
 					)
@@ -146,13 +147,14 @@
 						quantity decimal(5,2) NOT NULL DEFAULT 1,
 						unit_price decimal(11,2) NOT NULL DEFAULT 0,
 						PRIMARY KEY `pk_id` (`id`),
+						UNIQUE KEY `uk_order_line` (`order_id`,`line_number`),
 						FOREIGN KEY `fk_order_id` (`order_id`) REFERENCES `sales_orders` (`id`),
-						FOREIGN KEY `fk_user_id` (`user_id`) REFERENCES `register_users` (`id`)
+						FOREIGN KEY `fk_product_id` (`product_id`) REFERENCES `product_products` (`id`)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating sales_order_events table in Sales::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error creating sales_order_items table in Sales::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error,'error',__FILE__,__LINE__);
 					$GLOBALS['_database']->RollbackTrans();
 					return false;

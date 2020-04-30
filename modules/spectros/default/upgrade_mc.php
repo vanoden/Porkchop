@@ -16,6 +16,7 @@
 			"templates"	=> array(
 				"page"	=> $admin_template,
 				"pages"	=> $admin_template,
+				"configurations"	=> $admin_template
 			),
 		),
 		"Geography"		=> array(
@@ -473,6 +474,13 @@
 							"view_order"	=> 20,
 							"alt"			=> "Page Management",
 							"description"	=> "Page Management"
+						),
+						array (
+							"title"	=> "Configurations",
+							"target"	=> "/_site/configurations",
+							"view_order"	=> 20,
+							"alt"			=> "Site Configurations",
+							"description"	=> "Site Configurations"
 						),
 						array (
 							"title"	=> "API Sessions",

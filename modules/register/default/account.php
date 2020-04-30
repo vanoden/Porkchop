@@ -58,12 +58,12 @@
 <div id="accountTimeZoneQuestion" class="registerQuestion">
 	<span class="label registerLabel registerTimeZoneLabel">*Time Zone:</span>
 	<select id="timezone" name="timezone" class="value input collectionField">
-<?phpforeach (timezone_identifiers_list() as $timezone) {
+<?php foreach (timezone_identifiers_list() as $timezone) {
 		if (isset($customer->timezone)) $selected_timezone = $customer->timezone;
 		else $selected_timezone = 'UTC';
 ?>
-		<option value="<?=$timezone?>"<?phpif ($timezone == $selected_timezone) print " selected"; ?>><?=$timezone?></option>
-<?php} ?>
+		<option value="<?=$timezone?>"<?php if ($timezone == $selected_timezone) print " selected"; ?>><?=$timezone?></option>
+<?php } ?>
 	</select>
 </div>
 	
@@ -87,7 +87,7 @@
         <td>
 			    <select class="value input" name="type[<?=$contact->id?>]">
 				    <?php	foreach (array_keys($contact_types) as $contact_type) { ?>
-					    <option value="<?=$contact_type?>"<?phpif ($contact_type == $contact->type) print " selected";?>><?=$contact_types[$contact_type]?></option>
+					    <option value="<?=$contact_type?>"<?php if ($contact_type == $contact->type) print " selected";?>><?=$contact_types[$contact_type]?></option>
 				    <?php	} ?>
 			    </select>
 		    </td>
@@ -105,9 +105,9 @@
     <td>
 		<select class="value input" name="type[0]">
 		    <option value="0">Select</option>
-            <?phpforeach (array_keys($contact_types) as $contact_type) { ?>
+            <?php foreach (array_keys($contact_types) as $contact_type) { ?>
                         <option value="<?=$contact_type?>"><?=$contact_types[$contact_type]?></option>
-            <?php} ?>
+            <?php } ?>
 		</select>
 	</td>
 	<td><input type="text" name="description[0]" class="value input contactDescriptionColumn" /></td>
