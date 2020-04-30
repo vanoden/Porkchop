@@ -49,11 +49,11 @@
 		<div class="form-group">
 			<div id="registerWorkEmail" class="registerQuestion">
 				<span class="label registerLabel registerLoginLabel">*Work Email:</span>
-				<input type="text" class="value registerValue registerLoginValue" name="work_email" value="<?=$_REQUEST['work_email']?>" />
+				<input type="email" class="value registerValue registerLoginValue" name="work_email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" value="<?=$_REQUEST['work_email']?>" />
 			</div>
 			<div id="registerHomeEmail" class="registerQuestion">
 				<span class="label registerLabel registerLoginLabel">*Home Email:</span>
-				<input type="text" class="value registerValue registerLoginValue" name="home_email" value="<?=$_REQUEST['home_email']?>" />
+				<input type="email" class="value registerValue registerLoginValue" name="home_email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" value="<?=$_REQUEST['home_email']?>" />
 			</div>
 		</div>
 		

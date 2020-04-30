@@ -503,8 +503,9 @@
 					    );
 
 					    // Upload File Into Repository 
+					    $destinationPath = $parameters['type'] . "/" . $parameters['ref_id']  . "/";
 					    if ($this->error) $this->addError("Error adding file: " . $this->error);
-					    elseif (! $repository->addFile($this, $_FILES['uploadFile']['tmp_name'])) {
+					    elseif (! $repository->addFile($this, $_FILES['uploadFile']['tmp_name'], $destinationPath)) {
 						    $this->delete();
 						    $this->addError('Unable to add file to repository: '.$repository->error);
 					    } else {

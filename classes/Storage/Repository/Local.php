@@ -101,7 +101,7 @@
          * @param $path
          */
 		public function addFile($file, $path) {
-			return move_uploaded_file($path,$this->_path()."/".$file->code());
+			return move_uploaded_file($path, $this->_path() . "/" . $file->code());
 		}
 
 		public function retrieveFile($file) {

@@ -8,4 +8,28 @@
         public $value;
 		public $tableName = 'storage_file_metadata';
         public $fields = array('file_id','key','value');
+        
+        /**
+         * get by file
+         *
+         * @param \Storage\File $file
+         */
+		public function getByFile($file) {
+	      if ($file->id) {
+		    $getObjectQuery = "SELECT `file_id` FROM `$this->tableName` WHERE `file_id` = ?";
+		    print $getObjectQuery;
+		    $rs = $this->execute($getObjectQuery, array($file->id));
+            if ($rs) {
+                list($file_id) = $rs->FetchRow();
+                if ($file_id) {
+                    $this->file_id = $file_id;
+                    return $this->details();
+                }
+            }
+            $this->_error = "ERROR: no records found for this value.";
+            return false;		      
+	      }
+	      return false;
+		}
+        
 	}

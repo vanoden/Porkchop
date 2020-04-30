@@ -76,12 +76,12 @@
          * @param $file
          * @param $path
          */
-		public function addFile($file, $path) {
+		public function addFile($file, $path, $destinationPath = '') {
 
             // Upload an object by streaming the contents of a file
             $result = $this->s3Client->putObject(array(
                 'Bucket'     => $this->bucket,
-                'Key'        => "/" . $file->code(),
+                'Key'        => $destinationPath . "/" . $file->code(),
                 'SourceFile' => $path,
                 'Metadata'   => array(
                     'Source' => 'Uploaded from Website'

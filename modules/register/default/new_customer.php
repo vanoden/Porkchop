@@ -244,7 +244,7 @@
                                         <option value="Work Email">Work Email</option>
                                         <option value="Home Email">Home Email</option>
                                     </select>
-                                    <input type="text" id="email" class="value registerValue registerLoginValue" name="email_address" value="<?=!empty($_REQUEST['email_address']) ? $_REQUEST['email_address'] : " " ?>" placeholder="me@business.com" maxlength="50" />
+                                    <input type="email" id="email" class="value registerValue registerLoginValue" name="email_address" value="<?=!empty($_REQUEST['email_address']) ? $_REQUEST['email_address'] : " " ?>" placeholder="me@business.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" maxlength="50" />
                                 </div>
                                 <span class="label registerLabel registerLoginLabel">*Login:</span>
                                 <input type="text" id="login" class="value registerValue registerLoginValue" style="<?=($page->loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : " " ?>" onchange="checkUserName()" maxlength="50" />
