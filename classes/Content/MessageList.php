@@ -11,7 +11,7 @@
 
 			if (isset($parameters['target']) && strlen($parameters['target']))
 				$get_contents_query .= "
-				AND		target = ".$GLOBALS['_database']->qstr($parameters['target'],get_magic_quotes_gpc);
+				AND		target = ".$GLOBALS['_database']->qstr($parameters['target'],get_magic_quotes_gpc());
 
 			$rs = $GLOBALS['_database']->Execute($get_contents_query);
 			if (! $rs) {

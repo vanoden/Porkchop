@@ -14,7 +14,7 @@
 			if ($parameters['name']) {
 				if (preg_match('/^[\w\-\.]+$/',$parameters['name'])) {
 					$find_objects_query .= "
-					AND		domain_name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc);
+					AND		domain_name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
 				}
 				else {
 					$this->error = "Invalid domain name";
@@ -29,7 +29,7 @@
 					return false;
 				}
 				$find_objects_query .= "
-				AND		location_id = ".$GLOBALS['_database']->qstr($parameters['location_id'],get_magic_quotes_gpc);
+				AND		location_id = ".$GLOBALS['_database']->qstr($parameters['location_id'],get_magic_quotes_gpc());
 			}
 
 

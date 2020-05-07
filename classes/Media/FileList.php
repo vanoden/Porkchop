@@ -18,7 +18,7 @@
 			}
 			if (array_key_exists('index',$parameters) and preg_match('/^\d+$/',$parameters['index'])) {
 				$get_code_query .= "
-				AND		`index` = ".$GLOBALS['_database']->qstr($parameters['index'],get_magic_quotes_gpc);
+				AND		`index` = ".$GLOBALS['_database']->qstr($parameters['index'],get_magic_quotes_gpc());
 			}
 			$rs = $GLOBALS['_database']->Execute(
 				$get_code_query

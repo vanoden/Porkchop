@@ -119,6 +119,7 @@
 				if ($login) {
 					$customer = new \Register\Customer();
 					$customer->authenticate($login,$password);
+					
 					if ($customer->error) {
 						$this->error = "Error authenticating customer: ".$customer->error;
 						error_log("Failed: ".$this->error);

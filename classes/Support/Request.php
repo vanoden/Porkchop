@@ -123,7 +123,7 @@
 			if ($parameters['status']) {
 				if ($this->valid_status($parameters['status'])) {
 					$update_object_query .= ",
-					status	= ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
+					status	= ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
 				} else {
 					$this->_error = "Invalid status";
 					return false;

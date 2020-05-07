@@ -16,11 +16,11 @@
 			
 			if (isset($parameters['key']))
 				$get_object_query .= "
-					AND `key` = ".$GLOBALS['_database']->qstr($parameters['key'], get_magic_quotes_gpc);
+					AND `key` = ".$GLOBALS['_database']->qstr($parameters['key'], get_magic_quotes_gpc());
 
 			if (isset($parameters['value']))
 				$get_object_query .= "
-					AND `value` = ".$GLOBALS['_database']->qstr($parameters['key'], get_magic_quotes_gpc);
+					AND `value` = ".$GLOBALS['_database']->qstr($parameters['key'], get_magic_quotes_gpc());
 					
 			$get_object_query .= "
 					ORDER BY `key`

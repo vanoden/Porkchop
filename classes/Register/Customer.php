@@ -223,9 +223,9 @@
 			$get_user_query = "
 				SELECT	id
 				FROM	register_users
-				WHERE	login = ".$GLOBALS['_database']->qstr($login,get_magic_quotes_gpc)."
+				WHERE	login = ".$GLOBALS['_database']->qstr($login,get_magic_quotes_gpc())."
 			";
-
+            
 			$rs = $GLOBALS['_database']->Execute($get_user_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
@@ -450,7 +450,7 @@
 			$get_role_query = "
 				SELECT	id
 				FROM	register_roles
-				WHERE	name = ".$GLOBALS['_database']->qstr($name,get_magic_quotes_gpc);
+				WHERE	name = ".$GLOBALS['_database']->qstr($name,get_magic_quotes_gpc());
 	
 			$rs = $GLOBALS['_database']->Execute($get_role_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {

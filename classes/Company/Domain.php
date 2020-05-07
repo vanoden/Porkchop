@@ -96,7 +96,7 @@
 				)
 				VALUES
 				(		".$parameters['company_id'].",
-						".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc).",
+						".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc()).",
 						".$parameters['status']."
 				)
 			";
@@ -124,7 +124,7 @@
 
 			if ($parameters['name'])
 				$update_object_query .= ",
-						domain_name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc);
+						domain_name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
 
 			if (preg_match('/^(0|1)$/',$parameters['active']))
 				$update_object_query .= ",

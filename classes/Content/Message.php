@@ -165,7 +165,7 @@
 
 			foreach ($ok_params as $parameter) {
 				if (isset($parameters[$parameter])) $update_content_query .= ",
-						$parameter = ".$GLOBALS['_database']->qstr($parameters[$parameter],get_magic_quotes_gpc);
+						$parameter = ".$GLOBALS['_database']->qstr($parameters[$parameter],get_magic_quotes_gpc());
 			}
 
 			$update_content_query .= "

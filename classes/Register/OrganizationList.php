@@ -41,7 +41,7 @@
 			}
 			elseif (isset($parameters['status'])) {
 				$get_organizations_query .= "
-				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
+				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
 			}
 			else
 				$get_organizations_query .= "
@@ -57,7 +57,7 @@
 			}
 			if (isset($parameters['reseller_id'])) {
 				$get_organizations_query .= "
-				AND		reseller_id = ".$GLOBALS['_database']->qstr($parameters['reseller_id'],get_magic_quotes_gpc);
+				AND		reseller_id = ".$GLOBALS['_database']->qstr($parameters['reseller_id'],get_magic_quotes_gpc());
 			}
 
 			$get_organizations_query .= "

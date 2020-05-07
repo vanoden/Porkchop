@@ -13,13 +13,13 @@
 			";
 			if (isset($parameters['module']))
 				$get_object_query .= "
-					AND		module = ".$GLOBALS['_database']->qstr($parameters['module'],get_magic_quotes_gpc);
+					AND		module = ".$GLOBALS['_database']->qstr($parameters['module'],get_magic_quotes_gpc());
 			if (isset($parameters['view']))
 				$get_object_query .= "
-					AND		view = ".$GLOBALS['_database']->qstr($parameters['view'],get_magic_quotes_gpc);
+					AND		view = ".$GLOBALS['_database']->qstr($parameters['view'],get_magic_quotes_gpc());
 			if (isset($parameters['index']))
 				$get_object_query .= "
-					AND		`index` = ".$GLOBALS['_database']->qstr($parameters['index'],get_magic_quotes_gpc);
+					AND		`index` = ".$GLOBALS['_database']->qstr($parameters['index'],get_magic_quotes_gpc());
 			$get_object_query .= "
 					ORDER BY module,view
 			";

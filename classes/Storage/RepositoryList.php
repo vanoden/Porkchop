@@ -15,7 +15,7 @@
 			";
 			if (isset($parameters['code']) && strlen($parameters['code'])) {
 				$get_objects_query .= "
-				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc);
+				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc());
 			}
 			$get_objects_query .= "
 				AND		status != 'DISABLED'";

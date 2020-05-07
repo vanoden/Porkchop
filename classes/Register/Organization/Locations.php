@@ -100,15 +100,15 @@
 
 			if ($parameters['name'])
 				$update_object_query .= ",
-						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc);
+						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
 
 			if (preg_match('/^\d+$/',$parameters['organization_id']))
 				$update_object_query .= ",
-					organization_id = ".$GLOBALS['_database']->qstr($parameters['organization_id'],get_magic_quotes_gpc);
+					organization_id = ".$GLOBALS['_database']->qstr($parameters['organization_id'],get_magic_quotes_gpc());
 
 			if (preg_match('/^\d+$/',$parameters['location_id']))
 				$update_object_query .= ",
-					location_id = ".$GLOBALS['_database']->qstr($parameters['location_id'],get_magic_quotes_gpc);
+					location_id = ".$GLOBALS['_database']->qstr($parameters['location_id'],get_magic_quotes_gpc());
 
 			$update_object_query .= "
 				WHERE organization_id = ? AND location_id = ?

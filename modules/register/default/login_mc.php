@@ -36,7 +36,7 @@
 		header("location: ".PATH.$target);
 		exit;
 	}
-
+	
 	# Handle Input
 	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
 		app_log('Auth By Token','debug',__FILE__,__LINE__);

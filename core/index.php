@@ -23,6 +23,19 @@
 	### License along with this program.  If not, see				###
 	### <http://www.gnu.org/licenses/>.								###
 	###################################################################
+	
+    /**
+     * PHP 7 compatability 
+     *
+     * Changelog:
+     *  7.4.0	This function has been deprecated.
+     *  5.4.0	Always returns FALSE because the magic quotes feature was removed from PHP.
+     */
+    if (!function_exists('get_magic_quotes_gpc')) {
+        function get_magic_quotes_gpc() {
+            return FALSE;
+        }
+    } 
 
 	define("MODE","http");
 	###################################################

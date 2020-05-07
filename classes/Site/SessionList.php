@@ -11,7 +11,7 @@
 
 			if (isset($parameters['code']) and preg_match('/^\w+$/',$parameters['code'])) {
 				$find_objects_query .= "
-				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc);
+				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc());
 			}
 			if (isset($parameters['expired'])) {
 				$find_objects_query .= "

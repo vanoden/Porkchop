@@ -8,10 +8,9 @@
 	<form name="loginForm" method="post" action="<?=PATH?>/_register/login">
 		<input type="hidden" name="login_target" value="<?=$target?>" />
 		<div id="register_form">
-<!--			<div class="title">Site Login</div>-->
-<?php if ($page->errorCount() > 0) { ?>
-			<div class="form_error registerLoginError"><?=$page->errorString()?></div>
-<?php } ?>
+            <?php if ($page->errorCount() > 0) { ?>
+			    <div class="form_error registerLoginError"><?=$page->errorString()?></div>
+            <?php } ?>
 			<div id="register_important">
 				<p class="value form_instruction">This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</p>
 			</div>

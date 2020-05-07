@@ -76,7 +76,7 @@
 				INTO	company_companies
 				(name)
 				VALUES
-				(".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc).")";
+				(".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc()).")";
 			$GLOBALS['_database']->Execute($add_object_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in company::Company::add: ".$GLOBALS['_database']->ErrorMsg();
@@ -95,7 +95,7 @@
 
 			if ($parameters['name'])
 				$update_object_query .= ",
-					name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc);
+					name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
 
 			# Update Object
 			$update_object_query = "

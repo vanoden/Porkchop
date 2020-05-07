@@ -14,24 +14,24 @@
 
 			if (isset($parameters['package_id']) and preg_match('/^\d+$/',$parameters['package_id']))
 				$find_objects_query .= "
-				AND		package_id = ".$GLOBALS['_database']->qstr($parameters['package_id'],get_magic_quotes_gpc);
+				AND		package_id = ".$GLOBALS['_database']->qstr($parameters['package_id'],get_magic_quotes_gpc());
 
 			if (isset($parameters['major']) and preg_match('/^\d+$/',$parameters['major']))
 				$find_objects_query .= "
-				AND		major = ".$GLOBALS['_database']->qstr($parameters['major'],get_magic_quotes_gpc);
+				AND		major = ".$GLOBALS['_database']->qstr($parameters['major'],get_magic_quotes_gpc());
 
 			if (isset($parameters['minor']) and preg_match('/^\d+$/',$parameters['minor']))
 				$find_objects_query .= "
-				AND		minor = ".$GLOBALS['_database']->qstr($parameters['minor'],get_magic_quotes_gpc);
+				AND		minor = ".$GLOBALS['_database']->qstr($parameters['minor'],get_magic_quotes_gpc());
 
 			if (isset($parameters['build']) and preg_match('/^\d+$/',$parameters['build']))
 				$find_objects_query .= "
-				AND		build = ".$GLOBALS['_database']->qstr($parameters['build'],get_magic_quotes_gpc);
+				AND		build = ".$GLOBALS['_database']->qstr($parameters['build'],get_magic_quotes_gpc());
 
 
 			if (isset($parameters['status']) and preg_match('/^(NEW|PUBLISHED|HIDDEN)$/',$parameters['status']))
 				$find_objects_query .= "
-				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
+				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
 
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {

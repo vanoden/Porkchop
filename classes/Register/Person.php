@@ -269,13 +269,13 @@
 					if ($param == "password") {
 						app_log("Changing password",'notice',__FILE__,__LINE__);
 						$update_customer_query .= ",
-							`password` = password(".$GLOBALS['_database']->qstr($parameters[$param],get_magic_quotes_gpc).")";
+							`password` = password(".$GLOBALS['_database']->qstr($parameters[$param],get_magic_quotes_gpc()).")";
 					}
 					else {
 						if (isset($parameters[$param]) && $this->$param != $parameters[$param]) {
 							app_log("Updating $param to ".$parameters[$param],'notice',__FILE__,__LINE__);
 							$update_customer_query .= ",
-								".$valid_params[$param]." = ".$GLOBALS['_database']->qstr($parameters[$param],get_magic_quotes_gpc);
+								".$valid_params[$param]." = ".$GLOBALS['_database']->qstr($parameters[$param],get_magic_quotes_gpc());
 						}
 						else {
 							app_log("$param unchanged",'trace',__FILE__,__LINE__);
@@ -382,11 +382,11 @@
 			$get_results_query = "
 				SELECT	person_id
 				FROM	register_person_metadata
-				WHERE	`key` = ".$GLOBALS['_database']->qstr($key,get_magic_quotes_gpc);
+				WHERE	`key` = ".$GLOBALS['_database']->qstr($key,get_magic_quotes_gpc());
 			
 			if ($value)
 				$get_results_query .= "
-				AND		value = ".$GLOBALS['_database']->qstr($value,get_magic_quotes_gpc);
+				AND		value = ".$GLOBALS['_database']->qstr($value,get_magic_quotes_gpc());
 			
 			$rs = $GLOBALS['_database']->Execute($get_results_query);
 			if (! $rs)

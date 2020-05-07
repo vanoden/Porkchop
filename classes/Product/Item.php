@@ -101,7 +101,7 @@
 			# Loop Through Parameters
 			foreach (array_keys($parameters) as $parameter) {
 				if ($ok_params[$parameter]) {
-					$value = $GLOBALS['_database']->qstr($parameters[$parameter],get_magic_quotes_gpc);
+					$value = $GLOBALS['_database']->qstr($parameters[$parameter],get_magic_quotes_gpc());
 					$update_product_query .= ",
 					$parameter	= $value";
 				}
