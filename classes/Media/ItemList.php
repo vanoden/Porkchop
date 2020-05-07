@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Media;
 
 	class ItemList {
@@ -48,4 +48,3 @@
 			return $objects;
 		}
 	}
-?>

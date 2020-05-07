@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Package;
 
 	class Schema {
@@ -143,4 +143,3 @@
 			}
 		}
 	}
-?>

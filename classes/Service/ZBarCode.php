@@ -74,4 +74,3 @@
 			return $this->_error;
 		}
 	}
-?>

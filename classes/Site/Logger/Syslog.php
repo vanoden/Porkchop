@@ -45,4 +45,3 @@
 			return $syslog_xref[$level];
 		}
 	}
-?>

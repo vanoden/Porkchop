@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Package;
 
 	class Package {
@@ -215,4 +215,3 @@
 			return $version->add($parameters);
 		}
 	}
-?>

@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item\Action;
 
 	class Event {
@@ -114,4 +114,3 @@
 			return $this->_error;
 		}
 	}
-?>

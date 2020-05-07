@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Navigation;
 
 	class ItemList {
@@ -50,4 +50,3 @@
 			return $this->_error;
 		}
 	}
-?>

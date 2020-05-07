@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Company;
 
 	class CompanyList {

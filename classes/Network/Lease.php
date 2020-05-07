@@ -107,4 +107,3 @@
 			return $rs->FetchNextObject(false);
 		}
 	}
-?>

@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Company;
 
 	class DomainList {
@@ -47,4 +47,3 @@
 			return $objects;
 		}
 	}
-?>

@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Media;
 
 	class Item {
@@ -273,4 +273,4 @@
 			return array("read" => $read, "write" => $write);
 		}
 	}
-?>
+

@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Navigation;
 
 	class Schema Extends \Database\BaseSchema {
@@ -60,4 +60,3 @@
 			return true;
 		}
 	}
-?>

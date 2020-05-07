@@ -133,4 +133,3 @@
 			return $this->_error;
 		}
 	}
-?>

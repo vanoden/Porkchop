@@ -165,4 +165,3 @@
 			return $this->_error;
 		}
 	}
-?>

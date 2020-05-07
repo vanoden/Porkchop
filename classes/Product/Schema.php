@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Product;
 
 	class Schema {
@@ -266,4 +266,3 @@
 			}
 		}
 	}
-?>

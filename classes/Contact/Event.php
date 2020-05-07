@@ -1,5 +1,4 @@
-<?
-
+<?php
 	namespace Contact;
 
 	class Event {
@@ -104,4 +103,3 @@
 			return $object;
 		}
 	}
-?>

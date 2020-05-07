@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Content;
 	
 	class MessageList {
@@ -27,4 +27,3 @@
 			return $messages;
 		}
 	}
-?>

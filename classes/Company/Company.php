@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Company;
 
 	class Company {
@@ -118,4 +118,3 @@
 			return $this->details($id);
 		}
 	}
-?>

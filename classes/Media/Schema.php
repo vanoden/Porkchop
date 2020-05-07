@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Media;
 
 	class Schema {

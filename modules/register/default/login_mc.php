@@ -8,8 +8,8 @@
 	### the customer id if login successful.				###
 	### A. Caravello 8/25/2002								###
 	###########################################################
-	$page = new \Site\Page();
-
+	$page = new \Site\Page();	
+    $target = "";
 	if (isset($_REQUEST['return']) && $_REQUEST['return'] == 'true') {
 		# This Is How They SHOULD Come In from Redirect
 		if (isset($_REQUEST['module']) && isset($_REQUEST['view'])) {

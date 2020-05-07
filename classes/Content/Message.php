@@ -204,4 +204,3 @@
 			cache_unset("content[".$id."]");
 		}
     }
-?>

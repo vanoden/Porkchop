@@ -48,4 +48,3 @@
 			return $this->_error;
 		}
 	}
-?>

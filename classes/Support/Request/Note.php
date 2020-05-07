@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request;
 
 	class note {
@@ -87,4 +87,3 @@
 			return $this->_error;
 		}
 	}
-?>

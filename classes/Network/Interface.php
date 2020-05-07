@@ -115,4 +115,3 @@
 			return $this->_error;
 		}
 	}
-?>

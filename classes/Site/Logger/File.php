@@ -58,4 +58,3 @@
 			$this->write($message."\n",$level,$file,$line);
 		}
 	}
-?>

@@ -317,4 +317,3 @@
 			return $this->count;
 		}
 	}
-?>

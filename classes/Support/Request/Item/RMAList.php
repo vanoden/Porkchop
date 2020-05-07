@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item;
 	
 	class RMAList {
@@ -96,4 +96,3 @@
 			return $this->_count;
 		}
 	}
-?>

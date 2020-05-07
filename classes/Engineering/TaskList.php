@@ -199,4 +199,3 @@
 			return $this->_error;
 		}
 	}
-?>

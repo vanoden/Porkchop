@@ -182,4 +182,3 @@
 			print $this->formatOutput($response);
 		}
 	}
-?>

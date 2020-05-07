@@ -1,6 +1,6 @@
-<?
-	# Event Logging and Querying
+<?php
 
+	# Event Logging and Querying
 	require THIRD_PARTY.'/vendor/autoload.php';
 	use Elasticsearch\ClientBuilder;
 
@@ -50,5 +50,3 @@
 			return $response;
 		}
 	}
-
-?>

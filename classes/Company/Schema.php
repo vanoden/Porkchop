@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Company;
 
 	class Schema Extends \Database\BaseSchema {
@@ -137,4 +137,3 @@
 			return true;
 		}
 	}
-?>

@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Company;
 
 	class Domain {
@@ -160,4 +160,3 @@
 			return $this->details($id);
 		}
 	}
-?>

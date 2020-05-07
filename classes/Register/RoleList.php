@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Register;
 
 	class RoleList {
@@ -28,4 +28,3 @@
 			return $this->_error;
 		}
 	}
-?>

@@ -1,4 +1,4 @@
-<?
+<?php
 	class LibraryInit
 	{
 		public $error;
@@ -111,4 +111,3 @@
 	{
 
 	}
-?>

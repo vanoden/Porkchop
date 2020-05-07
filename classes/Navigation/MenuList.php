@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Navigation;
 
 	class MenuList {
@@ -41,4 +41,3 @@
 			return $this->_error;
 		}
 	}
-?>

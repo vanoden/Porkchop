@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Contact;
 
 	class Schema Extends \Database\BaseSchema {
@@ -43,4 +43,3 @@
 			return true;
 		}
 	}
-?>

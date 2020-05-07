@@ -105,4 +105,3 @@
 			return $this->_error;
 		}
 	}
-?>

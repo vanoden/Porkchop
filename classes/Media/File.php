@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Media;
 
 	class File {
@@ -139,4 +139,3 @@
 			return $object;
 		}
 	}
-?>

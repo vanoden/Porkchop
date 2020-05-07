@@ -84,4 +84,3 @@
 			list($current_schema_version) = $rs->FetchRow();
 		}
 	}
-?>

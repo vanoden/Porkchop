@@ -26,4 +26,3 @@
 			$this->write($message,$level,$file,$line);
 		}
 	}
-?>

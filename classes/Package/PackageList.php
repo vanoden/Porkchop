@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Package;
 
 	class PackageList {
@@ -43,4 +43,3 @@
 			return $objects;
 		}
 	}
-?>

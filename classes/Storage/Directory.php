@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Storage;
 
 	class Directory {
@@ -30,4 +30,3 @@
 			return $this->name;
 		}
 	}
-?>

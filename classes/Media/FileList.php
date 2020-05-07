@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Media;
 
 	class FileList {
@@ -34,4 +34,3 @@
 			return $objects;
 		}
 	}
-?>

@@ -232,4 +232,3 @@
 			return $this->_error;
 		}
 	}
-?>

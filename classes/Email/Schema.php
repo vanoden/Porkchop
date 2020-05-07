@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Email;
 
 	class Schema Extends \Database\BaseSchema {
@@ -65,4 +65,3 @@
 			return true;
 		}
 	}
-?>
