@@ -63,6 +63,7 @@
 			app_log($message,'error',$file,$line);
 			$this->error('Application Error');
 		}
+		
 		###################################################
 		### Convert Object to XML						###
 		###################################################

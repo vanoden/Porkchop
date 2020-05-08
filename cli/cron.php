@@ -1,4 +1,4 @@
-<?PHP	
+<?php
 	###################################################
 	### cron.php									###
 	### This module is a content management and 	###

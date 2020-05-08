@@ -119,7 +119,7 @@
   <a class="active" href="/_engineering/home"><i class="fa fa-cogs"></i> Engineering</a>
   <div class="search-container">
     <form action="/_engineering/search" method="get">
-      <input type="text" value="<?=preg_replace("/[^A-Za-z0-9 ]/", '', $_REQUEST['search'])?>" placeholder="Search.." name="search" style="background-color:white;"/>
+      <input type="text" value="<?=isset($_REQUEST['search']) ? preg_replace("/[^A-Za-z0-9 ]/", '', $_REQUEST['search']) : ''?>" placeholder="Search.." name="search" style="background-color:white;"/>
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
   </div>

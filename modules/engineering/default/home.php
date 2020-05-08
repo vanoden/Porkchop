@@ -36,9 +36,9 @@
 <tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
 	<td class="value"><?=$task->date_added?></td>
 	<td class="value"><?=$requestor->login?></td>
-	<td class="value"><?=$worker->login?></td>
+	<td class="value"><?=isset($worker->login) ? $worker->login : ''?></td>
 	<td class="value"><?=$task->status?></td>
-	<td class="value"><?=$task->priority.$thing?></td>
+	<td class="value"><?=isset($thing) ? $task->priority.$thing : $task->priority?></td>
 <?php	} ?>
 </table>
 <br>

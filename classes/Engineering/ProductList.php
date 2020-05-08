@@ -15,7 +15,7 @@
 			";
 
             // if search term, then constrain by that
-            if ($parameters['searchTerm']) {            
+            if (isset($parameters['searchTerm'])) {
                 $find_objects_query = "
                 SELECT	`id`
                 FROM	`engineering_products`

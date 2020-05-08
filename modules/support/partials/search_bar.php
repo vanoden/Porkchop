@@ -154,7 +154,7 @@
         sideNavSubMenu.addClass('sub-current'); 
     });
 </script>
-<?php	if ($_REQUEST['btn_all']) { ?>
+<?php	if (isset($_REQUEST['btn_all'])) { ?>
     <a class="button more" href="/_support/requests">Open Requests</a>
 <?php	} else { ?>
     <a class="button more" href="/_support/requests?btn_all=true">All Requests</a>
@@ -168,7 +168,7 @@
   <a class="active" href="/_support/requests"><i class="fa fa-phone" aria-hidden="true"></i> Support</a>
   <div class="search-container">
     <form action="/_support/search" method="get">
-      <input type="text" value="<?=preg_replace("/[^A-Za-z0-9 ]/", '', $_REQUEST['search'])?>" placeholder="Search.." name="search" style="background-color:white;"/>
+      <input type="text" value="<?=isset($_REQUEST['search']) ? preg_replace("/[^A-Za-z0-9 ]/", '', $_REQUEST['search']) : ''?>" placeholder="Search.." name="search" style="background-color:white;"/>
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
   </div>

@@ -4,7 +4,7 @@
 	$page->requireRole('support user');
 
 	$parameters = array('status' => array('NEW','OPEN'));
-	if ($_REQUEST['btn_all']) $parameters = array();
+	if (isset($_REQUEST['btn_all'])) $parameters = array();
 
 	$requestList = new \Support\RequestList();
 	$requests = $requestList->find($parameters);
