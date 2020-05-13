@@ -4,7 +4,7 @@
 
 	$product = new \Build\Product($_REQUEST['id']);
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		$parameters = array(
 			"description"	=> $_REQUEST['description'],
 			"major_version"	=> $_REQUEST['major_version'],

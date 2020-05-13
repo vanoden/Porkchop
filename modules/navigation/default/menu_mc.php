@@ -10,7 +10,7 @@
 		$menu->get($code);
 	}
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		$parameters = array(
 			"code"	=> $_REQUEST['code'],
 			"title"	=> $_REQUEST['menu_title']

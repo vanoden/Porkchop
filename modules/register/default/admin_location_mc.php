@@ -11,7 +11,7 @@
 		$user = new \Register\Person($_REQUEST['user_id']);
 	}
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		if (empty($_REQUEST['zip_code'])) $page->addError("Zip Code required");
 		$province = new \Geography\Province($_REQUEST['province_id']);
 		if (! $province->id) $page->addError("Province '".$_REQUEST['province_id']."' not found");

@@ -10,7 +10,7 @@
 			if ($organization->error) {
 				$page->addError("Error finding customers: ".$organization->error);
 			}
-			elseif ($_REQUEST['btn_submit']) {
+			elseif (isset($_REQUEST['btn_submit'])) {
 				$request = new \Support\Request();
 				$request->add(
 					array(

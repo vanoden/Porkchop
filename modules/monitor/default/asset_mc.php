@@ -33,7 +33,7 @@
 		$page->error = "Permission Denied";
 	}
 	else {
-		if ($_REQUEST['btn_submit']) {
+		if (isset($_REQUEST['btn_submit'])) {
 			$asset->update(array("name" => $_REQUEST['name']));
 			if ($asset->error) {
 				$page->error = "Error setting name: ".$asset->error;

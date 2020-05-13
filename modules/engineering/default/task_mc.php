@@ -8,7 +8,7 @@
 
     // create new task or get existing if the "code" is passed
 	$task = new \Engineering\Task();
-	if ($_REQUEST['task_id']) {
+	if (isset($_REQUEST['task_id'])) {
 		$task = new \Engineering\Task($_REQUEST['task_id']);
 	} elseif (isset($_REQUEST['code'])) {
 		$task->get($_REQUEST['code']);
@@ -41,7 +41,7 @@
     }
 
     // edit task or add event
-	if (($_REQUEST['btn_submit'] == 'Submit') || isset($_REQUEST['btn_add_event'])) {
+	if (isset($_REQUEST['btn_submit']) && ($_REQUEST['btn_submit'] == 'Submit') || isset($_REQUEST['btn_add_event'])) {
 		$msgs = array();
 		$parameters = array();
 		if (isset($_REQUEST['title'])) {
@@ -124,7 +124,9 @@
 			# Task Exists, Update
 			if ($task->update($parameters)) {
 				$page->success = "Updates applied";
-				app_log("Task updated, status now ".$parameters['status'],'debug',__FILE__,__LINE__);
+				$statusLogged = "";
+				if (isset($parameters['status'])) $statusLogged = $parameters['status'];
+				app_log("Task updated, status now ".$statusLogged,'debug',__FILE__,__LINE__);
 			} else {
 				$page->addError("Error saving updates: ".$task->error());
 			}
@@ -189,6 +191,7 @@
 
 				// Create Template
 				app_log("Populating notification email");
+				$url = '';
 				if ($GLOBALS['_config']->site->https) $url = "https://".$GLOBALS['_config']->site->hostname."/_engineering/task/".$task->code;
 				else "http://".$GLOBALS['_config']->site->hostname."/_engineering/task/".$task->code;
 				if ($project->id > 0) $project_title = $project->title;
@@ -213,7 +216,7 @@
 	
 				if (isset($old_id)) {
 					// Existing Task
-					if ($tech_status) {
+					if (isset($tech_status)) {
 						$tech = $task->assignedTo();
 						app_log("Notifying tech ".$tech->login." of updated assignment");
 						$notice_template->addParam('MESSAGE',"The following task was $tech_status to you");
@@ -256,7 +259,7 @@
     		if (empty($_REQUEST['notes'])) $_REQUEST['notes'] = "";
 			$old_status = $task->status;
 			$task->update(array('status'=>$_REQUEST['new_status']));
-			if ($task->error) {
+			if (isset($task->error)) {
 				$page->addError($task->error);
 			} else {
 				$_REQUEST['notes'] = "Status changed from $old_status to ".strtoupper($_REQUEST['new_status'])."<br>\n".$_REQUEST['notes'];
@@ -278,7 +281,7 @@
     // upload files if upload button is pressed
     $configuration = new \Site\Configuration('engineering_attachments_s3');
     $repository = $configuration->value();
-    if ($_REQUEST['btn_submit'] == 'Upload') {
+    if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 
 	    $file = new \Storage\File();
 	    $parameters = array();
@@ -296,7 +299,8 @@
 	
 	$peopleList = new \Register\CustomerList();
 	$people = $peopleList->find(array("status" => array('NEW','ACTIVE')));
-	if ($peoplelist->error) $page->addError($peoplelist->error);
+	
+	if (isset($peoplelist->error)) $page->addError($peoplelist->error);
 
 	$role = new \Register\Role();
 	$role->get("engineering user");

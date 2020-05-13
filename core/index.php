@@ -35,8 +35,8 @@
         function get_magic_quotes_gpc() {
             return FALSE;
         }
-    } 
-
+    }
+  
 	define("MODE","http");
 	###################################################
 	### Load Dependencies							###

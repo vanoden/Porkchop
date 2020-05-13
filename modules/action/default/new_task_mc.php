@@ -2,7 +2,7 @@
 	require_module('action');
 	require_module('monitor');
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		$request = new ActionRequest();
 		$request->add(
 			array(

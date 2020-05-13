@@ -7,7 +7,7 @@
 
 	$role = new \Register\Role();
 	if ($role->get($role_name)) {
-		if ($_REQUEST['btn_submit']) {
+		if (isset($_REQUEST['btn_submit'])) {
 			if ($role->update(
 				array(
 					'description'	=> $_REQUEST['description']

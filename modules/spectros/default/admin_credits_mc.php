@@ -13,7 +13,7 @@
 				$product = $organization->product($cal_product->id);
 				if ($product->error) $page->addError("Error finding calibration verification credits: ".$product->error());
 				else {
-					if ($_REQUEST['btn_submit']) {
+					if (isset($_REQUEST['btn_submit'])) {
 						if ((preg_match('/^\d+$/',$_REQUEST['add_credits'])) and ($_REQUEST['add_credits'] > 0)) {
 							$product->add($_REQUEST['add_credits']);
 							if ($product->error()) {

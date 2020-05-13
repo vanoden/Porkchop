@@ -14,7 +14,7 @@
 	if (isset($_REQUEST['level'])) $level = $_REQUEST['level'];
 	else $level = 'error';
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		print "Writing message to $log_type<br>\n";
 
 		$log = \Site\Logger::get_instance(array('type' => $log_type,'path' => $log_path,'level' => $log_level));

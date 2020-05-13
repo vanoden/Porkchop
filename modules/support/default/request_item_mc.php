@@ -151,7 +151,7 @@ Description: ".$action->description
 		$item->addComment($parameters);
 		if ($item->error()) $page->addError("Unable to add comment: ".$item->error());
 	}
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		$item->update(
 			array(
 				'serial_number'		=> $_REQUEST['serial_number'],

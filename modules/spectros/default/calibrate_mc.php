@@ -47,7 +47,7 @@
 	if ($credits > 0) $available_credits = $credits;
 	else $available_credits = 0;
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		$date_calibration = get_mysql_date($_REQUEST['date_calibration']);
 
 		# See if Credits available

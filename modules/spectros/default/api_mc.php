@@ -10,7 +10,6 @@
 		"release"	=> "2015-01-20"
 	);
 
-	#app_log("Server Vars: ".print_r($_SERVER,true),'debug');
 	app_log("Request: ".print_r($_REQUEST,true),'debug');
 
 	###############################################
@@ -92,6 +91,7 @@
 	###################################################
 	function findCalibrationVerificationCredits() {
 		$parameters = array();
+		
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
 			$organization = new \Register\Organization();
@@ -521,6 +521,16 @@
 		$response->updates = $customerList->count();
 		print formatOutput($response);
 	}
+
+    /**
+     * Maintenance Cron
+     *   Create a "tickler" (Tony's word not mine) cron to notify admins of outstanding tasks/events/problems
+     */
+    function maintenance_report() {
+        $reminder = new \Email\Reminder();
+        $reminder->gather();
+        print formatOutput($reminder->remind());
+    }
 
 	function schemaVersion() {
 		$schema = new \Spectros\Schema();

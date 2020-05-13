@@ -17,7 +17,7 @@
 		$page->addError("Asset must be assigned to an organization");
 	}
 	else {
-		if ($_REQUEST['btn_submit']) {
+		if (isset($_REQUEST['btn_submit'])) {
 			$request = new \Support\Request();
 			$request->add(
 				array(

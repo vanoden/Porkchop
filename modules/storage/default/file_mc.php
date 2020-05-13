@@ -14,7 +14,7 @@
 	
 	if (preg_match('/^download$/i',$GLOBALS['_REQUEST_']->query_vars_array[1])) $_REQUEST['btn_submit'] = 'Download';
 	
-	if ($_REQUEST['btn_submit'] == 'Download') {
+	if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Download') {
 		$file->download();
 	} elseif ($_REQUEST['btn_submit'] == 'Update') {
 	
@@ -28,7 +28,7 @@
 		if ($file->error()) $page->addError("Update error: ".$file->error());
 		else $page->success = "File updated";
 		
-	} elseif ($_REQUEST['btn_submit'] == 'Upload') {
+	} elseif (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 	
 		if (! preg_match('/^\//',$_REQUEST['path'])) $_REQUEST['path'] = '/'.$_REQUEST['path'];
 		$factory = new \Storage\RepositoryFactory();

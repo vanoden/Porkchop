@@ -9,7 +9,7 @@
 	$page = new \Site\Page();
 	$page->requireAuth();
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 	
 		// Enter Support Request
 		$parameters = array(

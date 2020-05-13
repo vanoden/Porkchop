@@ -2,7 +2,7 @@
 	$page = new \Site\Page();
 	$page->requireRole('engineering user');
 
-	if (! $_REQUEST['btn_submit']) {
+	if (! isset($_REQUEST['btn_submit'])) {
 		$_REQUEST['new'] = 1;
 		$_REQUEST['active'] = 1;
 		$_REQUEST['broken'] = 1;

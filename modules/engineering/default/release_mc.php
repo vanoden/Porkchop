@@ -14,7 +14,7 @@
 		$release->get($code);
 	}
 	
-	if ($_REQUEST['btn_submit'] == 'Submit') {
+	if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Submit') {
 		$parameters = array();
 		if (isset($_REQUEST['title'])) $parameters['title'] = $_REQUEST['title'];
 		else {
@@ -78,7 +78,7 @@
     // upload files if upload button is pressed
     $configuration = new \Site\Configuration('engineering_attachments_s3');
     $repository = $configuration->value();
-    if ($_REQUEST['btn_submit'] == 'Upload') {
+    if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 
 	    $file = new \Storage\File();
 	    $parameters = array();

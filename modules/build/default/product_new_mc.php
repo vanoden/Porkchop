@@ -2,7 +2,7 @@
 	$page = new \Site\Page();
 	$page->requireRole('build user');
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		$parameters = array(
 			'name'	=> $_REQUEST['name'],
 			'architecture'	=> $_REQUEST['architecture'],

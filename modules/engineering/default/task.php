@@ -55,9 +55,9 @@
    <form id="task_form" name="task_form" action="/_engineering/task" method="post">
       <input type="hidden" name="task_id" value="<?=$task->id?>" />
       <h2>Engineering Task: 
-	  	<? if ($form['code']) { ?>
+	  	<?php if ($form['code']) { ?>
 	  		<span><a href="/_engineering/task/<?=$form['code'];?>"><?php print " ".$form['code'];?></a></span>
-		<? } ?>
+		<?php } ?>
 	  </h2>
       <?php	if ($page->errorCount()) { ?>
       <div class="form_error"><?=$page->errorString()?></div>
@@ -86,7 +86,7 @@
                <select name="product_id" class="value input wide_100per">
                   <option value="">Select</option>
                   <?php	foreach ($products as $product) { ?>
-                  <option value="<?=$product->id?>"<? if ($product->id == $form['product_id']) print " selected"; ?>><?=$product->title?></option>
+                  <option value="<?=$product->id?>"<?php if ($product->id == $form['product_id']) print " selected"; ?>><?=$product->title?></option>
                   <?php	} ?>
                </select>
             </div>
@@ -115,9 +115,9 @@
             <div class="tableCell"><input type="text" name="estimate" class="value input wide_100per" value="<?=$form['estimate']?>" /></div>
             <div class="tableCell">
                <select name="type" class="value input wide_100per">
-                  <option value="bug"<? if ($form['type'] == "BUG") print " selected"; ?>>Bug</option>
-                  <option value="feature"<? if ($form['type'] == "FEATURE") print " selected"; ?>>Feature</option>
-                  <option value="test"<? if ($form['type'] == "TEST") print " selected"; ?>>Test</option>
+                  <option value="bug"<?php if ($form['type'] == "BUG") print " selected"; ?>>Bug</option>
+                  <option value="feature"<?php if ($form['type'] == "FEATURE") print " selected"; ?>>Feature</option>
+                  <option value="test"<?php if ($form['type'] == "TEST") print " selected"; ?>>Test</option>
                </select>
             </div>
             <div class="tableCell">
@@ -125,21 +125,21 @@
                <span class="value"><?=$task->status?></span>
                <?php	} else { ?>
                <select name="status" class="value input wide_100per">
-                  <option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
-                  <option value="hold"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
-                  <option value="active"<? if ($form['status'] == "ACTIVE") print " selected"; ?>>Active</option>
-                  <option value="cancelled"<? if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
-                  <option value="testing"<? if ($form['status'] == "TESTING") print " selected"; ?>>Testing</option>
-                  <option value="complete"<? if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
+                  <option value="new"<?php if ($form['status'] == "NEW") print " selected"; ?>>New</option>
+                  <option value="hold"<?php if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
+                  <option value="active"<?php if ($form['status'] == "ACTIVE") print " selected"; ?>>Active</option>
+                  <option value="cancelled"<?php if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
+                  <option value="testing"<?php if ($form['status'] == "TESTING") print " selected"; ?>>Testing</option>
+                  <option value="complete"<?php if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
                </select>
                <?php	}	?>
             </div>
             <div class="tableCell">
                <select name="priority" class="value input wide_100per">
-                  <option value="normal"<? if ($form['priority'] == "NORMAL") print " selected"; ?>>Normal</option>
-                  <option value="important"<? if ($form['priority'] == "IMPORTANT") print " selected"; ?>>Important</option>
-                  <option value="urgent"<? if ($form['priority'] == "URGENT") print " selected"; ?>>Urgent</option>
-                  <option value="critical"<? if ($form['priority'] == "CRITICAL") print " selected"; ?>>Critical</option>
+                  <option value="normal"<?php if ($form['priority'] == "NORMAL") print " selected"; ?>>Normal</option>
+                  <option value="important"<?php if ($form['priority'] == "IMPORTANT") print " selected"; ?>>Important</option>
+                  <option value="urgent"<?php if ($form['priority'] == "URGENT") print " selected"; ?>>Urgent</option>
+                  <option value="critical"<?php if ($form['priority'] == "CRITICAL") print " selected"; ?>>Critical</option>
                </select>
             </div>
          </div>
@@ -162,7 +162,7 @@
                <select name="requested_id" class="value input wide_100per">
                   <option value="">Select</option>
                   <?php	foreach($people as $person) { ?>
-                  <option value="<?=$person->id?>"<? if ($person->id == $form['requested_id']) print " selected"; ?>><?=$person->login?></option>
+                  <option value="<?=$person->id?>"<?php if ($person->id == $form['requested_id']) print " selected"; ?>><?=$person->login?></option>
                   <?php	} ?>
                </select>
                <?php	}	?>
@@ -171,7 +171,7 @@
                <select name="assigned_id" class="value input wide_100per">
                   <option value="">Unassigned</option>
                   <?php	foreach($techs as $person) { ?>
-                    <option value="<?=$person->id?>"<? if ($person->id == $form['assigned_id']) print " selected"; ?>><?=$person->login?></option>
+                    <option value="<?=$person->id?>"<?php if ($person->id == $form['assigned_id']) print " selected"; ?>><?=$person->login?></option>
                   <?php	} ?>
                </select>
             </div>
@@ -179,7 +179,7 @@
                <select name="release_id" class="value input wide_100per">
                   <option value="">Not Scheduled</option>
                   <?php	foreach($releases as $release) { ?>
-                  <option value="<?=$release->id?>"<? if ($release->id == $form['release_id']) print " selected"; ?>><?=$release->title?></option>
+                  <option value="<?=$release->id?>"<?php if ($release->id == $form['release_id']) print " selected"; ?>><?=$release->title?></option>
                   <?php	} ?>
                </select>
             </div>
@@ -187,7 +187,7 @@
                <select name="project_id" class="value input wide_100per">
                   <option value="">No Project</option>
                   <?php	foreach($projects as $project) { ?>
-                  <option value="<?=$project->id?>"<? if ($project->id == $form['project_id'] || $project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
+                  <option value="<?=$project->id?>"<?php if ($project->id == $form['project_id'] || $project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
                   <?php	} ?>
                </select>
             </div>
@@ -210,7 +210,7 @@
                <select name="prerequisite_id" class="value input" style="max-width: 250px;">
                   <option value="">None</option>
                   <?php	foreach($tasklist as $prerequisiteTask) { ?>
-                    <option value="<?=$prerequisiteTask->id?>"<? if ($prerequisiteTask->id == $form['prerequisite_id']) print " selected"; ?>><?=$prerequisiteTask->title?></option>
+                    <option value="<?=$prerequisiteTask->id?>"<?php if ($prerequisiteTask->id == $form['prerequisite_id']) print " selected"; ?>><?=$prerequisiteTask->title?></option>
                   <?php	} ?>
                </select>
             </div>
@@ -283,19 +283,19 @@
             <div class="tableCell">
                <select name="event_person_id" class="value input wide_100per">
                   <?php	foreach ($people as $person) { ?>
-                  <option value="<?=$person->id?>"<? if ($person->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$person->code?></option>
+                  <option value="<?=$person->id?>"<?php if ($person->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$person->code?></option>
                   <?php	} ?>
                </select>
             </div>
             <div class="tableCell">
                <select name="new_status" class="value input wide_100per">
-                  <option value="new"<? if ($task->status == 'NEW') print ' selected'; ?>>New</option>
-                  <option value="hold"<? if ($task->status == 'HOLD') print ' selected'; ?>>Hold</option>
-                  <option value="active"<? if ($task->status == 'ACTIVE') print ' selected'; ?>>Active</option>
-                  <option value="broken"<? if ($task->status == 'BROKEN') print ' selected'; ?>>Broken</option>
-                  <option value="testing"<? if ($task->status == 'TESTING') print ' selected'; ?>>Testing</option>
-                  <option value="cancelled"<? if ($task->status == 'CANCELLED') print ' selected'; ?>>Cancelled</option>
-                  <option value="complete"<? if ($task->status == 'COMPLETE') print ' selected'; ?>>Complete</option>
+                  <option value="new"<?php if ($task->status == 'NEW') print ' selected'; ?>>New</option>
+                  <option value="hold"<?php if ($task->status == 'HOLD') print ' selected'; ?>>Hold</option>
+                  <option value="active"<?php if ($task->status == 'ACTIVE') print ' selected'; ?>>Active</option>
+                  <option value="broken"<?php if ($task->status == 'BROKEN') print ' selected'; ?>>Broken</option>
+                  <option value="testing"<?php if ($task->status == 'TESTING') print ' selected'; ?>>Testing</option>
+                  <option value="cancelled"<?php if ($task->status == 'CANCELLED') print ' selected'; ?>>Cancelled</option>
+                  <option value="complete"<?php if ($task->status == 'COMPLETE') print ' selected'; ?>>Complete</option>
                </select>
             </div>
          </div>

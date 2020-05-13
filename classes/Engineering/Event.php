@@ -144,12 +144,10 @@
 			};
 
 			$object = $rs->FetchNextObject(false);
-
-			$this->date_event = $object->date_event;
-			$this->person_id = $object->person_id;
-			$this->task_id = $object->task_id;
-			$this->description = $object->description;
-
+			$this->date_event = isset($object->date_event) ? $object->date_event : "";
+			$this->person_id = isset($object->person_id) ? $object->person_id : "";
+			$this->task_id = isset($object->task_id) ? $object->task_id : "";
+			$this->description  = isset($object->description) ? $object->description : "";
 			return true;
 		}
 

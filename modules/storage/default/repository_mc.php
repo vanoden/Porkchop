@@ -9,7 +9,7 @@
 		if ($factory->error) $page->addError("Cannot load repository #".$_REQUEST['id'].": ".$factory->error);
 	}
 
-	if ($_REQUEST['btn_submit'] && ! $page->errorCount()) {
+	if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 	
 		$parameters = array();
 		$parameters['name'] = $_REQUEST['name'];

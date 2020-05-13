@@ -2,7 +2,7 @@
 	$page = new \Site\Page();
 
 	# Handle Submit
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		app_log('Contact form submitted by '.$_REQUEST['first_name'].' '.$_REQUEST['last_name'].' <'.$_REQUEST['email_address'].'>','notice',__FILE__,__LINE__);
 
 		# Check reCAPTCHA
@@ -25,8 +25,7 @@
 		$context = stream_context_create($options);
 		$result = file_get_contents($url,false,$context);
 
-		if (preg_match('/^true/',$result))
-		{
+		if (preg_match('/^true/',$result)) {
 			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
 
 			# Don't need to store these fields
