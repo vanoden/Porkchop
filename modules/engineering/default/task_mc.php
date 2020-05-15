@@ -19,8 +19,7 @@
 	}
 
     // add task comment
-    if (isset($_REQUEST['btn_add_comment'])) {
-    
+    if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Add Comment') {
         $msgs = array();
 		if (isset($_REQUEST['content'])) {
             $engineeringComment = new \Engineering\Comment();
@@ -41,7 +40,7 @@
     }
 
     // edit task or add event
-	if (isset($_REQUEST['btn_submit']) && ($_REQUEST['btn_submit'] == 'Submit') || isset($_REQUEST['btn_add_event'])) {
+	if (isset($_REQUEST['method']) && in_array($_REQUEST['method'],array('Submit','Add Event'))) {
 		$msgs = array();
 		$parameters = array();
 		if (isset($_REQUEST['title'])) {
@@ -281,7 +280,7 @@
     // upload files if upload button is pressed
     $configuration = new \Site\Configuration('engineering_attachments_s3');
     $repository = $configuration->value();
-    if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
+    if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Upload') {
 
 	    $file = new \Storage\File();
 	    $parameters = array();

@@ -31,16 +31,25 @@
         // disable buttons to prevent duplicate clicks
         $( "#btn_submit" ).click(function() {
             $( "#btn_submit" ).val("please wait...");
+			$( "#method" ).val("Submit");
             $( "#task_form" ).submit();
             $( "#btn_submit" ).click(false);
         });
         $( "#btn_add_comment" ).click(function() {
             $( "#btn_add_comment" ).val("please wait...");
+			$( "#method" ).val("Add Comment");
             $( "#task_form" ).submit();
             $( "#btn_add_comment" ).click(false);
         });
         $( "#btn_add_event" ).click(function() {
             $( "#btn_add_event" ).val("please wait...");
+			$( "#method" ).val("Add Event");
+            $( "#task_form" ).submit();
+            $( "#btn_add_event" ).click(false);
+        });
+        $( "#btn_upload" ).click(function() {
+            $( "#btn_add_event" ).val("please wait...");
+			$( "#method" ).val("Upload");
             $( "#task_form" ).submit();
             $( "#btn_add_event" ).click(false);
         });
@@ -54,6 +63,7 @@
    <?php include(MODULES.'/engineering/partials/search_bar.php'); ?> 
    <form id="task_form" name="task_form" action="/_engineering/task" method="post">
       <input type="hidden" name="task_id" value="<?=$task->id?>" />
+	  <input type="hidden" name="method" id="method" value="" />
       <h2>Engineering Task: 
 	  	<?php if ($form['code']) { ?>
 	  		<span><a href="/_engineering/task/<?=$form['code'];?>"><?php print " ".$form['code'];?></a></span>
@@ -353,7 +363,7 @@
             <input type="hidden" name="repository_name" value="<?=$repository?>" />
             <input type="hidden" name="type" value="engineering task" />
             <input type="file" name="uploadFile" />
-            <input type="submit" name="btn_submit" class="button" value="Upload" />
+            <input type="submit" name="btn_upload" class="button" value="Upload" />
         </div>
         </form>
         <br/><br/>
