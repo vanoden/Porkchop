@@ -529,7 +529,10 @@
     function maintenance_report() {
         $reminder = new \Email\Reminder();
         $reminder->gather();
-        print formatOutput($reminder->remind());
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->item = $reminder->remind();
+        print formatOutput($response);
     }
 
 	function schemaVersion() {
