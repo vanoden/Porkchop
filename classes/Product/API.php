@@ -27,7 +27,7 @@
 					'type'			=> $_REQUEST['type']
 				)
 			);
-			if ($product->error) error("Error adding product: ".$product->error);
+			if ($product->error) $this->error("Error adding product: ".$product->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->item = $product;
@@ -41,8 +41,8 @@
 		public function updateItem() {
 			$product = new \Product\Item();
 			$product->get($_REQUEST['code']);
-			if ($product->error) error("Error finding product: ".$product->error);
-			if (! $product->id) error("Product not found");
+			if ($product->error) $this->error("Error finding product: ".$product->error);
+			if (! $product->id) $this->error("Product not found");
 	
 			$product->update(
 				array(
@@ -52,7 +52,7 @@
 					'description'	=> $_REQUEST['description'],
 				)
 			);
-			if ($product->error) error("Error updating product: ".$product->error);
+			if ($product->error) $this->error("Error updating product: ".$product->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->item = $product;
@@ -72,7 +72,7 @@
 				$product->get($_REQUEST['code']);
 			}
 	
-			if ($product->error) error("Error getting product: ".$product->error);
+			if ($product->error) $this->error("Error getting product: ".$product->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->item = $product;
@@ -91,7 +91,7 @@
 			if (isset($_REQUEST['status'])) $parameters["status"] = $_REQUEST['status'];
 			if (isset($_REQUEST['type']) && !empty($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 			$products = $productlist->find($parameters);
-			if ($productlist->error) error("Error finding products: ".$productlist->error);
+			if ($productlist->error) $this->error("Error finding products: ".$productlist->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->product = $products;
@@ -107,13 +107,13 @@
 			if (defined($_REQUEST['parent_code']))
 			{
 				$parent = $_product->get($_REQUEST['parent_code']);
-				if (! $parent->id) error("Parent product '".$_REQUEST['parent_code']."' not found");
+				if (! $parent->id) $this->error("Parent product '".$_REQUEST['parent_code']."' not found");
 				$_REQUEST['parent_id'] = $parent->id;
 			}
 			if ($_REQUEST['child_code'])
 			{
 				$child = $_product->get($_REQUEST['child_code']);
-				if (! $child->id) error("Child product '".$_REQUEST['child_code']."' not found");
+				if (! $child->id) $this->error("Child product '".$_REQUEST['child_code']."' not found");
 				$_REQUEST['child_id'] = $child->id;
 			}
 			if (! $_REQUEST['child_id'])
@@ -126,7 +126,7 @@
 					'child_id'	=> $_REQUEST['child_id'],
 				)
 			);
-			if ($relationship->error) error("Error adding relationship: ".$relationship->error);
+			if ($relationship->error) $this->error("Error adding relationship: ".$relationship->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->relationship = $relationship;
@@ -141,12 +141,12 @@
 			if ($_REQUEST['parent_code']) {
 				$parent = new \Product\Item();
 				if ($parent->get($_REQUEST['parent_code'])) $_REQUEST['parent_id'] = $parent->id;
-				else error("Parent not found");
+				else $this->error("Parent not found");
 			}
 			if ($_REQUEST['child_code']) {
 				$child = new \Product\Item();
 				if ($child->get($_REQUEST['child_code'])) $_REQUEST['child_id'] = $child->id;
-				else error("Child not found");
+				else $this->error("Child not found");
 			}
 			if (! $_REQUEST['child_id'])
 				error("child_id or valid child_code required");
@@ -154,7 +154,7 @@
 			$relationship = new \Product\Relationship();
 			$relationship->get($_REQUEST['parent_id'],$_REQUEST['child_id']);
 	
-			if ($relationship->error) error("Error getting relationship: ".$relationship->error);
+			if ($relationship->error) $this->error("Error getting relationship: ".$relationship->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->relationship = $relationship;
@@ -183,7 +183,7 @@
 			$_relationship = new ProductRelationship();
 			$relationships = $_relationship->find($parameters);
 	
-			if ($_relationship->error) error("Error finding relationships: ".$_relationship->error);
+			if ($_relationship->error) $this->error("Error finding relationships: ".$_relationship->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->relationship = $relationships;
@@ -218,19 +218,19 @@
 		### Add Product to Group						###
 		###################################################
 		public function addGroupItem() {
-			if (! preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['group_code'])) error("group_code required for addGroupItem method");
-			if (! preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['item_code'])) error("group_code required for addGroupItem method");
+			if (! preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['group_code'])) $this->error("group_code required for addGroupItem method");
+			if (! preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['item_code'])) $this->error("group_code required for addGroupItem method");
 	
 			$group = new \Product\Group();
-			if (!$group->get($_REQUEST['group_code'])) error("Error finding group: ".$group->error);
-			if (! $group->id) error("Group not found");
+			if (!$group->get($_REQUEST['group_code'])) $this->error("Error finding group: ".$group->error);
+			if (! $group->id) $this->error("Group not found");
 	
 			$item = new \Product\Item();
-			if (!$item->get($_REQUEST['item_code'])) error("Error finding item: ".$item->error);
-			if (!$item->id) error("Item not found");
+			if (!$item->get($_REQUEST['item_code'])) $this->error("Error finding item: ".$item->error);
+			if (!$item->id) $this->error("Item not found");
 	
 			$group->addItem($item);
-			if ($group->error) error("Error adding item to group: ".$group->error);
+			if ($group->error) $this->error("Error adding item to group: ".$group->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 	
@@ -242,12 +242,12 @@
 		###################################################
 		public function findGroupItems() {
 			$group = new \Product\Group();
-			if (!$group->get($_REQUEST['code'])) error("Product Group Not Found");
-			if ($group->error()) error("Error finding group: ".$group->error());
-			if (! $group->id) error("Group not found");
+			if (!$group->get($_REQUEST['code'])) $this->error("Product Group Not Found");
+			if ($group->error()) $this->error("Error finding group: ".$group->error());
+			if (! $group->id) $this->error("Group not found");
 
 			$items = $group->items();
-			if ($group->error()) error("Error finding items: ".$group->error());
+			if ($group->error()) $this->error("Error finding items: ".$group->error());
 	
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -266,12 +266,12 @@
 			$_product = new Product();
 			$product = $_product->get($_REQUEST['product_code']);
 			if ($_product->error) app_error("Error finding product: ".$_product->error,__FILE__,__LINE__);
-			if (! $product->id) error("Product not found");
+			if (! $product->id) $this->error("Product not found");
 	
 			$_image = new MediaItem();
 			$image = $_image->get($_REQUEST['image_code']);
 			if ($_image->error) app_error("Error finding image: ".$_image->error,__FILE__,__LINE__);
-			if (! $image->id) error("Image not found");
+			if (! $image->id) $this->error("Image not found");
 	
 	
 			$_product->addImage($product->id,$image->id,$_REQUEST['label']);
@@ -292,7 +292,7 @@
 			$_product = new Product();
 			$product = $_product->get($_REQUEST['code']);
 			if ($_product->error) app_error("Error finding product: ".$_product->error,__FILE__,__LINE__);
-			if (! $product->id) error("Product not found");
+			if (! $product->id) $this->error("Product not found");
 	
 			$_product->addMeta($product->id,$_REQUEST['key'],$_REQUEST['value']);
 			if ($_product->error) app_error("Error adding metadata: ".$_product->error,__FILE__,__LINE__);
