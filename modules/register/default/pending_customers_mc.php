@@ -30,7 +30,7 @@
 
     // update customer notes from UI request
     app_log("updateNotes");
-	if ($_REQUEST['action'] == 'updateNotes') {
+	if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'updateNotes') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);
 	    $queuedCustomer->update(array('notes' => $_REQUEST['notes']));
         $page->success = true;
@@ -38,7 +38,7 @@
 
     // update customer status from UI request
     app_log("updateStatus");
-	if ($_REQUEST['action'] == 'updateStatus') {
+	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updateStatus') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
 	    $queuedCustomer->update(array('status' => $_REQUEST['status']));
 	    if ($_REQUEST['status'] == 'APPROVED')$queuedCustomer->syncLiveAccount();
@@ -47,7 +47,7 @@
 
     // assign customer and/or generate new organization if needed
     app_log("denyCustomer");
-	if ($_REQUEST['action'] == 'denyCustomer') {
+	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'denyCustomer') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
 	    $queuedCustomer->update(array('status' => 'DENIED'));
         $page->success = true;
@@ -55,7 +55,7 @@
 
     // assign customer and/or generate new organization if needed
     app_log("assignCustomer");
-	if ($_REQUEST['action'] == 'assignCustomer') {
+	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'assignCustomer') {
 	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
 	    $queuedCustomer->update(array('status' => 'APPROVED'));
 	    $queuedCustomer->syncLiveAccount();
@@ -72,13 +72,13 @@
 
     // process form posted filters for results
     app_log("Filters");
-    if ($_REQUEST['VERIFYING']) $statusFiltered[] = $_REQUEST['VERIFYING'];
-    if ($_REQUEST['PENDING']) $statusFiltered[] = $_REQUEST['PENDING'];
-    if ($_REQUEST['APPROVED']) $statusFiltered[] = $_REQUEST['APPROVED'];
-    if ($_REQUEST['DENIED']) $statusFiltered[] = $_REQUEST['DENIED'];
-    if ($_REQUEST['search']) $searchTerm = $_REQUEST['search'];
-    if ($_REQUEST['dateStart']) $dateStart = $_REQUEST['dateStart'];
-    if ($_REQUEST['dateEnd']) $dateEnd = $_REQUEST['dateEnd'];
+    if (isset($_REQUEST['VERIFYING'])) $statusFiltered[] = $_REQUEST['VERIFYING'];
+    if (isset($_REQUEST['PENDING'])) $statusFiltered[] = $_REQUEST['PENDING'];
+    if (isset($_REQUEST['APPROVED'])) $statusFiltered[] = $_REQUEST['APPROVED'];
+    if (isset($_REQUEST['DENIED'])) $statusFiltered[] = $_REQUEST['DENIED'];
+    if (isset($_REQUEST['search'])) $searchTerm = $_REQUEST['search'];
+    if (isset($_REQUEST['dateStart'])) $dateStart = $_REQUEST['dateStart'];
+    if (isset($_REQUEST['dateEnd'])) $dateEnd = $_REQUEST['dateEnd'];
     
     // set to default of no options selected
     if (empty($statusFiltered)) $_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';

@@ -43,13 +43,17 @@
 			$product->get($_REQUEST['code']);
 			if ($product->error) $this->error("Error finding product: ".$product->error);
 			if (! $product->id) $this->error("Product not found");
-	
+	        $productStatus = $_REQUEST['status'];
+	        if (empty($productStatus)) $productStatus = 'ACTIVE';
+	        $productDescription = $_REQUEST['description'];
+	        if (empty($productDescription)) $productDescription = '';
+	        
 			$product->update(
 				array(
 					'name'			=> $_REQUEST['name'],
 					'type'			=> $_REQUEST['type'],
-					'status'		=> $_REQUEST['status'],
-					'description'	=> $_REQUEST['description'],
+					'status'		=> $productStatus,
+					'description'	=> $productDescription,
 				)
 			);
 			if ($product->error) $this->error("Error updating product: ".$product->error);

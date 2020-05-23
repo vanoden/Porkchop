@@ -15,7 +15,7 @@
     $page->serialError = false;
     
     // if form submit
-	if ($_REQUEST['btnSubmit']) {
+	if (isset($_REQUEST['btnSubmit'])) {
 
         if ($GLOBALS['_SESSION_']->customer->id) {
 

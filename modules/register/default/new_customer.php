@@ -247,10 +247,10 @@
                                     <input type="email" id="email" class="value registerValue registerLoginValue" name="email_address" value="<?=!empty($_REQUEST['email_address']) ? $_REQUEST['email_address'] : " " ?>" placeholder="me@business.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" maxlength="50" />
                                 </div>
                                 <span class="label registerLabel registerLoginLabel">*Login:</span>
-                                <input type="text" id="login" class="value registerValue registerLoginValue" style="<?=($page->loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : " " ?>" onchange="checkUserName()" maxlength="50" />
+                                <input type="text" id="login" class="value registerValue registerLoginValue" style="<?=isset($page->loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : " " ?>" onchange="checkUserName()" maxlength="50" />
                                 <div id="login-message" style="display:inline; font-size: 10px;"></div>
                                 <?php
-                                    if ($page->loginTaken) {
+                                    if (isset($page->loginTaken)) {
                                  ?>
                                     <div style="color:red; font-size: 12px;">
                                         <?=$page->error;?>

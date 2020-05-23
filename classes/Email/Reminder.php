@@ -17,6 +17,7 @@ class Reminder {
     public $openTasksCount;
 
     public function __construct($argument = null) {
+        date_default_timezone_set('America/New_York');
         $this->currentYear = date('Y');
         $new_year = $this->observedDate(date('Y-m-d', strtotime("first day of january $this->currentYear")));
         $mlk_day = date('Y-m-d', strtotime("january $this->currentYear third monday"));

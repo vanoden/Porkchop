@@ -152,7 +152,7 @@
   <a class="active" href="/_register/pending_customers"><i class="fa fa-user" aria-hidden="true"></i> Regististrations</a>
   <div class="search-container">
     <form action="/_register/pending_customers" method="get">
-      <input type="text" value="<?=preg_replace("/[^A-Za-z0-9 ]/", '', $_REQUEST['search'])?>" placeholder="Search.." name="search" style="background-color:white;"/>
+      <input type="text" value="<?=isset($_REQUEST['search']) ? preg_replace("/[^A-Za-z0-9 ]/", '', $_REQUEST['search']) : ''?>" placeholder="Search.." name="search" style="background-color:white;"/>
       <button type="submit"><i class="fa fa-search"></i></button>
     </form>
   </div>

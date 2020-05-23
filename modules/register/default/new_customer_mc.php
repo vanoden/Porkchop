@@ -16,7 +16,7 @@
 	global $_config;
 	
 	// handle form submit	
-	if ($_REQUEST['method'] == "register") {
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "register") {
 	
 		// Check reCAPTCHA 2.0
 		$url = "https://www.google.com/recaptcha/api/siteverify";
@@ -180,7 +180,7 @@
 		}
 	}
 
-	if ($_REQUEST['method'] == "verify") {
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "verify") {
 		app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
 		
 		// Initialize Customer Object

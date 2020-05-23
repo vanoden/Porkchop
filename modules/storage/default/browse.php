@@ -65,4 +65,4 @@
                     <input type="submit" name="btn_submit" class="button" value="Upload" />
                 </div>
             </form>
-            <?	} ?>
+            <?php	} ?>

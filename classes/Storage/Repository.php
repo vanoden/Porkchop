@@ -16,7 +16,7 @@
 			}
 		}
 
-		public function add($parameters) {
+		public function add($parameters = array()) {
 		
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
 			if (isset($parameters['type'])) $this->type = $parameters['type'];

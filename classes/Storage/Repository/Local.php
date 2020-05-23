@@ -11,7 +11,7 @@
 			$this->type = 'Local';
 		}
 
-		public function add($parameters) {
+		public function add($parameters = array()) {
 			app_log("Creating local repository ".$parameters['name'],'notice');
 			if (! isset($parameters['path'])) {
 				$this->error = "Path required";

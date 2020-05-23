@@ -10,7 +10,6 @@
 	}
 
 	if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
-	
 		$parameters = array();
 		$parameters['name'] = $_REQUEST['name'];
 		$parameters['type'] = $_REQUEST['type'];
@@ -28,7 +27,7 @@
         } else {
 			$repository = $factory->create($_REQUEST['type']);
 			if ($factory->error) $page->addError($factory->error);
-            $repository->add($parameters);
+            $repository->add($parameters);           
             $page->success = "Repository created";
         }
 
@@ -49,18 +48,25 @@
 		    $repository = $factory->get($repository->code);
     		$repository->_setMetadata('path',$_REQUEST['path']);
         	$repository->_setMetadata('endpoint',$_REQUEST['endpoint']);
+            if ($_REQUEST['type'] == 's3') {
+	            $repository->_setMetadata('accessKey', $_REQUEST['accessKey']);
+		        $repository->_setMetadata('secretKey', $_REQUEST['secretKey']);
+		        $repository->_setMetadata('bucket', $_REQUEST['bucket']);
+		        $repository->_setMetadata('region', $_REQUEST['region']);            
+            } 
             $form['code'] = $repository->code;
             $form['name'] = $repository->name;
             $form['type'] = $repository->type;
             $form['status'] = $repository->status;
-            $form['path'] = $repository->path;
-            $form['endpoint'] = $repository->endpoint;
-    	    if ($repository->accessKey) $form['accessKey'] = $repository->accessKey;
-    	    if ($repository->secretKey) $form['secretKey'] = $repository->secretKey;
-    	    if ($repository->region) $form['region'] = $repository->region;
-    	    if ($repository->bucket) $form['bucket'] = $repository->bucket;
+    	    $form['path'] = $repository->_metadata('path');
+    	    $form['endpoint'] = $repository->_metadata('endpoint');
+            if ($_REQUEST['type'] == 's3') {
+        	    if (isset($repository->accessKey)) $form['accessKey'] = $repository->accessKey;
+        	    if (isset($repository->secretKey)) $form['secretKey'] = $repository->secretKey;
+        	    if (isset($repository->region)) $form['region'] = $repository->region;
+        	    if (isset($repository->bucket)) $form['bucket'] = $repository->bucket;
+            }
         }
-        
 	} elseif (! $page->errorCount()) {
 	
 		if (isset($_REQUEST['code'])) {
@@ -73,11 +79,11 @@
     	    $form['name'] = $repository->name;
     	    $form['type'] = $repository->type;
     	    $form['status'] = $repository->status;
-    	    $form['path'] = $repository->path;
-    	    $form['endpoint'] = $repository->endpoint;
-    	    if ($repository->accessKey) $form['accessKey'] = $repository->accessKey;
-    	    if ($repository->secretKey) $form['secretKey'] = $repository->secretKey;
-    	    if ($repository->region) $form['region'] = $repository->region;
-    	    if ($repository->bucket) $form['bucket'] = $repository->bucket;
+    	    $form['path'] = $repository->_metadata('path');
+    	    $form['endpoint'] = $repository->_metadata('endpoint');
+    	    $form['accessKey'] = $repository->_metadata('accessKey');
+    	    $form['secretKey'] = $repository->_metadata('secretKey');
+    	    $form['region'] = $repository->_metadata('region');
+    	    $form['bucket'] = $repository->_metadata('bucket');
 		}
     }

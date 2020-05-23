@@ -38,7 +38,7 @@
             $this->client = $this->aws->get('S3');		
 		}
 
-        public function update($parameters) {
+        public function update($parameters = array()) {
         
             // create the repo, then continue to add the custom values needed for S3 only
             parent::update($parameters);
@@ -48,17 +48,6 @@
 		    $this->_updateMetadata('bucket', $parameters['bucket']);
 		    $this->_updateMetadata('region', $parameters['region']);
 		}
-		
-        public function add($parameters) {
-        
-            // create the repo, then continue to add the custom values needed for S3 only
-            parent::add($parameters);
-            		
-		    $this->_setMetadata('accessKey', $parameters['accessKey']);
-		    $this->_setMetadata('secretKey', $parameters['secretKey']);
-		    $this->_setMetadata('bucket', $parameters['bucket']);
-		    $this->_setMetadata('region', $parameters['region']);
-		}	
 		
 		private function _path($path = null) {
 			if (isset($path)) $this->_setMetadata('path', $path);

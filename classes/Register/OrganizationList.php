@@ -25,7 +25,7 @@
 			$string = preg_replace('/\*/','%',$string);
 
 			$get_organizations_query .= "
-				WHERE name like '$string'";
+				WHERE name like '%$string%'";
 
 			if (isset($parameters['status']) && is_array($parameters['status'])) {
 				$icount = 0;
@@ -72,7 +72,7 @@
 					$get_organizations_query .= "
 					LIMIT	".$parameters['_limit'];
 			}
-			query_log($get_organizations_query);
+			query_log($get_organizations_query);			
 			$rs = $GLOBALS['_database']->Execute($get_organizations_query);
 			if (! $rs) {
 				$this->error = "SQL Error in register::organization::find: ".$GLOBALS['_database']->ErrorMsg();

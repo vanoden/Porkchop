@@ -18,6 +18,7 @@
     }
     ?>
 </script>
+
 <div class="title">Repository <?=$repository->code?></div>
 <?php	 if ($page->errorCount() > 0) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
@@ -68,7 +69,7 @@
             <input type="text" name="accessKey" class="value input wide_xl" value="<?=$form['accessKey']?>" />
             
             <span class="label">Secret Key</span>
-            <input type="text" name="secretKey" class="value input wide_xl" value="<?=$form['secretKey']?>" />
+            <input type="password" name="secretKey" class="value input wide_xl" value="<?=$form['secretKey']?>" />
             
             <span class="label">Bucket</span>
             <input type="text" name="bucket" class="value input wide_xl" value="<?=$form['bucket']?>" />

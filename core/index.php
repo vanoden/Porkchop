@@ -31,6 +31,7 @@
      *  7.4.0	This function has been deprecated.
      *  5.4.0	Always returns FALSE because the magic quotes feature was removed from PHP.
      */
+    # error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
     if (!function_exists('get_magic_quotes_gpc')) {
         function get_magic_quotes_gpc() {
             return FALSE;
