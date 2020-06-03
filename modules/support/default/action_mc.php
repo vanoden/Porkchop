@@ -3,7 +3,7 @@
 	$page->fromRequest();
 	$page->requireRole('support user');
 
-	if ($_REQUEST['action_id']) {
+	if (isset($_REQUEST['action_id'])) {
 		$action = new \Support\Request\Item\Action($_REQUEST['action_id']);
 	} elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
 		$action = new \Support\Request\Item\Action($GLOBALS['_REQUEST_']->query_vars_array[0]);
@@ -12,19 +12,12 @@
 		return;
 	}
 	
-	if ($action->error()) {
-		$page->addError($action->error());
-	}
-	
+	if ($action->error()) $page->addError($action->error());
 	$item = $action->item;
 	$request = $item->request;
 	
-	if ($_REQUEST['btn_add_event']) {
-	
-		if ($_REQUEST['status'] != $action->status) {
-			$_REQUEST['description'] .= "<br>Status changed from ".$action->status." to ".$_REQUEST['status'];
-		}
-		
+	if (isset($_REQUEST['btn_add_event'])) {
+		if ($_REQUEST['status'] != $action->status) $_REQUEST['description'] .= "<br>Status changed from ".$action->status." to ".$_REQUEST['status'];
 		$action->update(array('status' => 'ACTIVE'));
 		$parameters = array(
 			'action_id'		=> $action->id,
@@ -35,14 +28,12 @@
 		
 		if ($action->addEvent($parameters)) {
 			$page->success = "Event created";
-			if ($_REQUEST['status'] != $action->status) {
-				$action->update(array('status' => $_REQUEST['status']));
-			}
+			if ($_REQUEST['status'] != $action->status) $action->update(array('status' => $_REQUEST['status']));
 		} else {
 			$page->addError($action->error());
 		}
 	}
-	if ($_REQUEST['btn_assign_action']) {
+	if (isset($_REQUEST['btn_assign_action'])) {
 		$user = new \Register\Customer($_REQUEST['assigned_id']);
 		
 		if ($user->error) {
@@ -61,9 +52,7 @@
 					'description'	=> "Action assigned to ".$user->full_name()
 				);
 				if ($action->addEvent($parameters)) {
-					if ($_REQUEST['status'] != $action->status) {
-						$action->update(array('status' => $_REQUEST['status']));
-					}
+					if ($_REQUEST['status'] != $action->status) $action->update(array('status' => $_REQUEST['status']));
 				} else {
 					$page->addError($action->error());
 				}

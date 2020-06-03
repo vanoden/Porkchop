@@ -80,7 +80,20 @@
             
             return $result;
 		}
-
+		
+		/**
+		 * for public API, unset the AWS info for security
+		 */
+		public function unsetAWS() {
+		    unset($this->aws);
+		    unset($this->client);
+		    unset($this->configuration);
+		    unset($this->secretKey);
+		    unset($this->Array);
+		    unset($this->credentials);
+		    unset($this->s3Client);
+	    }
+		
         /**
          * Load contents from filesystem
          */

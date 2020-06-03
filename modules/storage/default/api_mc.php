@@ -100,7 +100,7 @@
 		api_log($response);
 		print formatOutput($response);
 	}
-
+  
 	###################################################
 	### Find matching Repository					###
 	###################################################
@@ -115,14 +115,23 @@
 		if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 	
 		$repositories = $repositorylist->find($parameters);
-
+        $shownRepositories = array();
+        foreach ($repositories as $repository) {
+            if (get_class($repository) == 'Storage\Repository\S3') {
+                $repository->unsetAWS();
+                $shownRepositories[] = $repository;        
+            } else {
+                $shownRepositories[] = $repository;
+            }
+            
+        }
 		if ($repositorylist->error) app_error("Error finding repositories: ".$repositorylist->error,__FILE__,__LINE__);
 		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->repository = $repositories;
+		$response->repository = $shownRepositories;
 
-		api_log($response);
-		print formatOutput($response);
+		api_log($shownRepositories);
+		print formatOutput($shownRepositories);
 	}
 	
 	###################################################

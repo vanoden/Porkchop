@@ -46,7 +46,7 @@
          <input type="hidden" name="action_id" value="<?=$action->id?>" />
          <?php	if ($page->errorCount()) { ?>
             <div class="form_error"><?=$page->errorString()?></div>
-         <? } ?>
+         <?php } ?>
          <?php	if ($page->success) { ?>
             <div class="form_success"><?=$page->success?></div>
          <?php	} ?>
@@ -129,7 +129,7 @@
           <select name="user_id" class="value input">
              <option value="">Select</option>
              <?php	foreach ($admins as $admin) { ?>
-             <option value="<?=$admin->id?>"<? if ($admin->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$admin->full_name()?></option>
+             <option value="<?=$admin->id?>"<?php if ($admin->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$admin->full_name()?></option>
              <?php	} ?>
           </select>
        </div>
@@ -162,7 +162,7 @@
          <select name="assigned_id" class="value input">
             <option value="">Select</option>
             <?php	foreach ($admins as $admin) { ?>
-            <option value="<?=$admin->id?>"<? if ($admin->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$admin->full_name()?></option>
+            <option value="<?=$admin->id?>"<?php if ($admin->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$admin->full_name()?></option>
             <?php	} ?>
          </select>
       </div>
@@ -233,5 +233,5 @@
    </tr>
    </tr>
 </table>
-<?php	} ?>
+<?php	}  ?>
 </div>
