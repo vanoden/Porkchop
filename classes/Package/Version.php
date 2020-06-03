@@ -93,6 +93,10 @@
 				return false;
 			}
 
+			if (! defined($parameters['status'])) {
+				$parameters['status'] = 'NEW';
+			}
+
             // Add File to Repository
             parent::add(array(
                 'repository_id' => $parameters['repository_id'],
@@ -114,7 +118,7 @@
 				(		id,package_id,major,minor,build,status,user_id,date_created
 				)
 				VALUES
-				(		?,?,?,?,?,'NEW',?,sysdate())
+				(		?,?,?,?,?,?,?,sysdate())
 			";
 			$GLOBALS['_database']->Execute(
 				$insert_object_query,
@@ -124,6 +128,7 @@
 					$parameters['major'],
 					$parameters['minor'],
 					$parameters['build'],
+					$parameters['status'],
 					$GLOBALS['_SESSION_']->customer->id
 				)
 			);
