@@ -117,18 +117,34 @@
 			$cr = "\n";
 			$t = "\t";
 			foreach ($methods as $name => $params) {
-				$form .= $t.'<form method="post" action="/_'.$this->_name.'/api" name="'.$name.'">'.$cr;
+				// See if method has file inputs
+				$has_file_inputs = false;
+				foreach ($params as $param => $options) {
+					if (isset($options['type']) && $options['type'] == 'file') {
+						$has_file_inputs = true;
+						continue;
+					}
+				}
+				if ($has_file_inputs) {
+					$form .= $t.'<form method="post" action="/_'.$this->_name.'/api" name="'.$name.'" enctype="multipart/form-data">'.$cr;
+				}
+				else {
+					$form .= $t.'<form method="post" action="/_'.$this->_name.'/api" name="'.$name.'">'.$cr;
+				}
 				$form .= $t.$t.'<input type="hidden" name="method" value="'.$name.'" />'.$cr;
 				$form .= $t.$t.'<div class="apiMethod">'.$cr;
 				$form .= $t.$t.'<div class="h3 apiMethodTitle">'.$name.'</div>'.$cr;
+
+				// Add Parameters
 				foreach ($params as $param => $options) {
 					if ($options['required']) $required = ' required';
 					else $required = '';
+					if (! isset($options['type'])) $options['type'] = 'text';
 					if (isset($options['default'])) $default = $options['default'];
 					else $default = '';
 					$form .= $t.$t.$t.'<div class="apiParameter">'.$cr;
 					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required.'">'.$param.'</span>'.$cr;
-					$form .= $t.$t.$t.$t.'<input type="text" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+					$form .= $t.$t.$t.$t.'<input type="'.$options['type'].'" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;
 					$form .= $t.$t.$t.'</div>'.$cr;
 				}
 				$form .= $t.$t.$t.'<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>'.$cr;
