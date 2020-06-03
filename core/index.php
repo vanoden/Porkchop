@@ -38,9 +38,6 @@
         }
     }
   
-    error_reporting(E_ALL);
-
-  
 	define("MODE","http");
 	###################################################
 	### Load Dependencies							###
