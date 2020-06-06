@@ -11,7 +11,6 @@
 	} elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$item = new \Support\Request\Item($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
-
 	$request = $item->request;
 
 	if ($_REQUEST['btn_complete']) {
@@ -68,6 +67,7 @@ Description: ".$action->description
 		}
 	}
 	if ($_REQUEST['btn_add_rma']) {
+	
 		// Make Sure Notification Template is available
 		$return_notification = $GLOBALS['_config']->support->return_notification;
 		if (! isset($return_notification) || empty($return_notification)) {
