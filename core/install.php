@@ -21,7 +21,7 @@
 	require '../config/config.php';
 
 	# We'll handle errors ourselves, thank you very much
-	#error_reporting(0);
+	error_reporting(0);
 
 	###################################################
 	### Load API Objects							###
@@ -167,6 +167,8 @@
 	install_log("Creating Schema");
 	$company_schema = new \Company\Schema();
 	$session_schema = new \Site\Schema();
+	$geography_schema = new \Geography\Schema();
+	$register_schema = new \Register\Schema();
 
 	install_log("Starting session");
 	$_SESSION_ = new \Site\Session();
