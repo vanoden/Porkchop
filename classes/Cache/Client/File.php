@@ -116,4 +116,8 @@
 				}
 			}
 		}
+
+		public function stats() {
+			return array();
+		}
 	}
