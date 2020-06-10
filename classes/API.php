@@ -137,7 +137,7 @@
 
 				// Add Parameters
 				foreach ($params as $param => $options) {
-					if ($options['required']) $required = ' required';
+					if (isset($options['required']) && $options['required']) $required = ' required';
 					else $required = '';
 					if (! isset($options['type'])) $options['type'] = 'text';
 					if (isset($options['default'])) $default = $options['default'];
