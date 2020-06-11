@@ -15,6 +15,9 @@
 	if ($_REQUEST['method'] == "Apply") {
 		# Initialize Admin Object
 		$_customer = new \Register\Admin();
+		
+		$passwordStrength = 8;
+		if (isset($_GLOBALS['_config']->register->minimum_password_strength)) $passwordStrength = $_GLOBALS['_config']->register->minimum_password_strength;
 		if ($_customer->password_strength($_REQUEST['password']) < $_GLOBALS['_config']->register->minimum_password_strength) {
 			$page->error = "Password not strong enough";
 		}

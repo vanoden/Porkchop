@@ -35,10 +35,13 @@
         return true;
     }
 
-    // check reseller toggle
+    // check reseller toggle and password strength
     $(document).ready(function() {
         $("#has_item_checkbox").change(function() {
             $("#product_details").toggle();
+        });
+        $("#password").change(function() {
+            checkPasswordStrength();
         });
     });
 
@@ -72,6 +75,23 @@
                 loginField.css('border', '2px solid red');
                 loginMessage.html('login is not available');
                 loginMessage.css('color', 'red');
+            }
+        });
+    }
+
+    // make sure we have a solid user password for the new account
+    function checkPasswordStrength() {
+        var passwordField = $("#password");        
+        var passwordMessage = $("#password-message");
+        $.get('/_register/api?method=checkPasswordStrength&password=' + passwordField.val(), function(data, status) {
+            if (data == 1) {
+                passwordField.css('border', '2px solid green');
+                passwordMessage.html('strong password');
+                passwordMessage.css('color', 'green');
+            } else {
+                passwordField.css('border', '2px solid red');
+                passwordMessage.html('please use a stronger password');
+                passwordMessage.css('color', 'red');
             }
         });
     }
@@ -260,7 +280,8 @@
                                          }
                                      ?>
                                         <span class="label registerLabel registerPasswordLabel">*Password:</span>
-                                        <input type="password" class="value registerValue registerPasswordValue" name="password" />
+                                        <input id="password" type="password" class="value registerValue registerPasswordValue" name="password" />
+                                        <div id="password-message" style="display:inline; font-size: 10px;"></div>
                                         <br/>
                                         <span class="label registerLabel registerPasswordLabel">*Confirm Password:</span>
                                         <input type="password" class="value registerValue registerPasswordValue" name="password_2" />

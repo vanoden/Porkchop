@@ -7,7 +7,7 @@
    <form name="product_form" action="/_engineering/product" method="post">
       <input type="hidden" name="product_id" value="<?=$product->id?>" />      
       <h2>Engineering Product</h2>
-      <?php	if ($page->errorCount()) { ?>
+      <?php	if ($page->error) { ?>
           <div class="form_error"><?=$page->errorString()?></div>
       <?php	}
          if ($page->success) { ?>
@@ -21,7 +21,7 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <input type="text" name="code" class="value wide_100per" value="<?=$form['code']?>" />
+               <input type="text" name="code" class="value wide_100per" <?=isset($form['code']) ? 'readonly="readonly" style="color:#666;"' : ''?> value="<?=$form['code']?>" />
             </div>
             <div class="tableCell">
                <input type="text" name="title" class="value wide_100per" value="<?=$form['title']?>" />

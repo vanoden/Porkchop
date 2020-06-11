@@ -160,7 +160,7 @@
    }
    ?>
 <h2 style="display: inline-block;">Pending Product Registrations
-   <?=($page->isSearchResults)? "[Found Customers: ". count($registrationQueueList)."]" : "";?>
+   <?=isset($page->isSearchResults) ? "[Found Customers: ". count($registrationQueueList)."]" : "";?>
 </h2>
 
 <!--	START First Table -->

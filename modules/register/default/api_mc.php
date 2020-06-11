@@ -104,7 +104,7 @@
 			error('Permission denied');
 		}
 
-		if ($_REQUEST["login"] and (! $_REQUEST{"code"})) $_REQUEST['code'] = $_REQUEST['login'];
+		if ($_REQUEST["login"] and (! $_REQUEST["code"])) $_REQUEST['code'] = $_REQUEST['login'];
 		$customer->get($_REQUEST["code"]);
 
 		# Error Handling
@@ -225,6 +225,21 @@
     	$customer = new Register\Customer();    	
     	if ($customer->get($_REQUEST["login"])) print "0";
 		else print "1";
+	}
+	
+	/**
+	 * check if password is strong enought
+	 */
+	function checkPasswordStrength() {
+    	$person = new Register\Person();    	
+    	$strength = $person->password_strength($_REQUEST["password"]);
+        $minPasswordStrength = 8;
+		if (isset($_GLOBALS['_config']->register->minimum_password_strength)) $minPasswordStrength = $_GLOBALS['_config']->register->minimum_password_strength;
+    	if ($strength < $minPasswordStrength) {
+    	    print "1";
+    	} else {
+        	print "0";
+    	}
 	}
 	
 	###################################################

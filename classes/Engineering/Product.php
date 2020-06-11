@@ -19,18 +19,18 @@
 			if (isset($parameters['code']) && strlen($parameters['code'])) {
 				if (preg_match('/^[\w\-\.\_\s]+$/',$parameters['code'])) {
 					$code = $parameters['code'];
-				}
-				else {
+				} else {
 					$this->_error = "Invalid code";
 					return null;
 				}
-			}
-			else {
+			} else {
 				$code = uniqid();
 			}
 
-			$check_dups = new Product();
-			if ($check_dups->get($code)) {
+            // check for existing product that may exists, else it's an update
+            $check_dups = new Product();
+			$check_dups->get($code);
+			if (!empty($check_dups->id)) {
 				$this->_error = "Duplicate code";
 				return null;
 			}

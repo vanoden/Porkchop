@@ -4,6 +4,8 @@
 
 	$parameters = array();
 	if (isset($_REQUEST['status']) && !empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+	if ($parameters['status'] == 'ALL') unset($parameters['status']);
+	
 	if (isset($_REQUEST['organization_id']) && is_numeric($_REQUEST['organization_id'])) $parameters['organization_id'] = $_REQUEST['organization_id'];
 	if (isset($_REQUEST['product_id']) && is_numeric($_REQUEST['product_id'])) $parameters['product_id'] = $_REQUEST['product_id'];
 	if (isset($_REQUEST['date_start']) && get_mysql_date($_REQUEST['date_start'])) {

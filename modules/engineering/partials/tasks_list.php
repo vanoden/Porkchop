@@ -4,13 +4,13 @@
         <?=isset($tasks) ? count($tasks) : "0"?>
     ]</h2>
     <?php
-     if (!$page->isSearchResults) {
+     if (!isset($page->isSearchResults)) {
     ?>
         <input type="button" name="btn_new_task" value="Add Task" class="button more" onclick="newTask();"/>
     <?php
     }
         // if we're not doing a task search, show the filter bar
-        if (!$page->isSearchResults) {
+        if (!isset($page->isSearchResults)) {
     ?>
         <!--	START First Table -->
 	    <div class="tableBody min-tablet">

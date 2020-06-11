@@ -195,7 +195,7 @@
    }
    ?>
 <h2 style="display: inline-block;">Pending Customers
-   <?=isset($page->isSearchResults)? "[Found Customers: ". count($queuedCustomersList)."]" : "";?>
+   <?=isset($page->isSearchResults) ? "[Found Customers: ". count($queuedCustomersList)."]" : "";?>
 </h2>
 <!--	START First Table -->
 <div class="tableBody" style="min-width: 100%;">

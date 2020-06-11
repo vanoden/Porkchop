@@ -17,6 +17,7 @@
 	    public $template;
 	    public $success;
 	    private $_errors = array ();
+	    
 	    public function __construct() {
 		    $args = func_get_args ();
 		    if (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
@@ -177,6 +178,7 @@
 
 		    return true;
 	    }
+	    
 	    public function load_template() {
 		    if (isset ( $this->metadata->template )) {
 			    app_log ( "Loading template '" . $this->metadata->template . "' from page metadata", 'debug', __FILE__, __LINE__ );
@@ -203,6 +205,7 @@
 		    else $html = '<r7 object="page" property="view"/>';
 		    return $this->parse ( $html );
 	    }
+	    
 	    public function parse($message) {
 		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
 		    while ( preg_match ( $module_pattern, $message, $matched ) ) {
@@ -217,6 +220,7 @@
 		    // Return Messsage
 		    return $message;
 	    }
+	    
 	    private function parse_element($string) {
 		    // Initialize Array to hold Parameters
 		    $parameters = array ();
@@ -243,6 +247,7 @@
 		    }
 		    return $parameters;
 	    }
+	    
 	    public function replace($string) {
 	    
 		    // Initialize Replacement Buffer

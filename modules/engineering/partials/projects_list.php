@@ -1,8 +1,8 @@
 <h2 style="display: inline-block;">Projects
-    <?=($page->isSearchResults)? "[Matched Projects: ". count($projects)."]" : "";?>
+    <?=isset($page->isSearchResults) ? "[Matched Projects: ". count($projects)."]" : "";?>
 </h2>
 <?php
- if (!$page->isSearchResults) {
+ if (!isset($page->isSearchResults)) {
 ?>
     <a class="button more" href="/_engineering/project">New Project</a>
 <?php
