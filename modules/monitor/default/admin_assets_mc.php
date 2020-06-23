@@ -17,7 +17,7 @@
 	# Get Asset Count Before Pagination
 	$assetlist = new \Monitor\AssetList();
 	$assetlist->find($parameters,false);
-	if ($assetlist->error) $page->error = "Error finding assets: ".$assetlist->error;
+	if ($assetlist->error) $page->addError("Error finding assets: ".$assetlist->error);
 	$total_assets = $assetlist->count;
 
 	# Pagination
@@ -53,4 +53,4 @@
 			"type"	=> "unique"
 		)
 	);
-	if ($productlist->error) $GLOBALS['_page']->error = "Error getting products for selection: ".$productlist->error;
+	if ($productlist->error) $page->addError("Error getting products for selection: ".$productlist->error);

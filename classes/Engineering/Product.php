@@ -43,11 +43,7 @@
 				(		?,?)
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($code,$_REQUEST['title'])
-			);
-
+            $rs = executeSQLByParams($add_object_query,array($code,$_REQUEST['title']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Product::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -85,6 +81,7 @@
 				array($this->id)
 			);
 
+            $rs = executeSQLByParams($find_objects_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Products::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;

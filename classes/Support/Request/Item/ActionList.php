@@ -80,10 +80,8 @@
 					}
 					$get_list_query .= ")";
 				}
-			}
-			
-			query_log($get_list_query);
-			$rs = $GLOBALS['_database']->Execute($get_list_query,$bind_parameters);
+			}			
+			$rs = executeSQLByParams($get_list_query, $bind_parameters);
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ActionList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

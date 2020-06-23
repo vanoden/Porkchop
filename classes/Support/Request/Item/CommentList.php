@@ -28,9 +28,7 @@
 				";
 				array_push($bind_params,$item->id);
 			}
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
-			app_log("Query executed");
+			$rs = executeSQLByParams($find_objects_query, $bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::Item::CommentList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

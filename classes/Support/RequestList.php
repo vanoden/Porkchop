@@ -78,8 +78,8 @@
             if (isset($parameters['searchTerm'])) $find_requests_query .= " AND sr.code LIKE '%" . $parameters['searchTerm'] . "%'";
 
 			$find_requests_query .= " ORDER BY date_request DESC";
-				
-			$rs = $GLOBALS['_database']->Execute($find_requests_query);
+			$rs = executeSQLByParams($find_requests_query, array());
+			
 			if (! $rs) {
 				$this->_error = "SQL Error in SupportRequest::find: ".$GLOBALS['_database']->ErrorMsg();
 				return null;

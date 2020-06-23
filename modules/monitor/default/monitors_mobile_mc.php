@@ -12,8 +12,7 @@
 	
 	# Get Monitors for Organization
 	$monitors = $_monitor->catalog();
-	if ($_monitor->error)
-	{
+	if ($_monitor->error) {
 		print $_monitor->error;
 		exit;
 	}

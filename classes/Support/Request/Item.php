@@ -64,18 +64,16 @@
 				VALUES
 				    (?,?,?,?,?,?)
 			";
-			query_log($add_item_query);
-			$GLOBALS['_database']->Execute(
-				$add_item_query,
-				array(
-					$parameters['request_id'],
-					$parameters['line'],
-					$parameters['product_id'],
-					$parameters['serial_number'],
-					$parameters['quantity'],
-					$parameters['description']
-				)
-			);
+			
+            $rs = executeSQLByParams($add_item_query, array(
+				$parameters['request_id'],
+				$parameters['line'],
+				$parameters['product_id'],
+				$parameters['serial_number'],
+				$parameters['quantity'],
+				$parameters['description']
+			));
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Item::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -125,10 +123,8 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-			query_log($update_object_query);	
-			$GLOBALS['_database']->Execute(
-				$update_object_query,$bind_params
-			);
+            $rs = executeSQLByParams($update_object_query, $bind_params);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Item::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -154,7 +150,8 @@
 					FROM	support_request_items
 					WHERE	id = ?
 				";
-				$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
+
+                $rs = executeSQLByParams($get_object_query, array($this->id));
 				if (! $rs) {
 					$this->_error = "SQL Error in Support::Request::Item::details(): ".$GLOBALS['_database']->ErrorMsg();
 					return false;

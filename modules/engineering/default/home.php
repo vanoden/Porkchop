@@ -11,9 +11,9 @@
    <a href="/_engineering/home">Engineering</a>
 </div>
 <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
-<?php if ($page->error) { ?>
-    <div class="form_error"><?=$page->error?></div>
-<?php	} ?>
+<?php	 if ($page->errorCount() > 0) { ?>
+    <div class="form_error"><?=$page->errorString()?></div>
+<?php	 } ?>
 <h2 style="display: inline-block;">Unassigned Tasks</h2>
 <a class="button more" href="/_engineering/tasks">Manage Tasks</a>
 <a class="button more" href="/_engineering/event_report">Event Report</a>

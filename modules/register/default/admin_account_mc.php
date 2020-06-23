@@ -17,7 +17,7 @@
 		if ($customer->id)
 			$customer_id = $customer->id;
 		else
-			$page->error = "Customer not found";
+			$page->addError("Customer not found");
 	} else $customer_id = $GLOBALS['_SESSION_']->customer->id;
 
 	app_log($GLOBALS['_SESSION_']->customer->login." accessing account of customer ".$customer_id,'notice',__FILE__,__LINE__);
@@ -54,7 +54,7 @@
 		}
 		if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
 			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
-				$page->error .= "Passwords do not match";
+				$page->addError("Passwords do not match");
 				goto load;
 			}
 			else
@@ -68,7 +68,7 @@
 			$customer->update($parameters);
 			if ($customer->error) {
 				app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
-				$page->error = "Error updating customer information.  Our admins have been notified.  Please try again later";
+                $page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
 				goto load;
 			}
 		} else {
@@ -91,14 +91,14 @@
 			$customer->add($parameters);
 	
 			if ($customer->error) {
-				$page->error .= $customer->error;
+				$page->addError($customer->error);
 				goto load;
 			}
 
 			if ($customer->id) {
 				$GLOBALS['_SESSION_']->update(array("user_id" => $customer->{id}));
 				if ($GLOBALS['_SESSION_']->error) {
-					$page->error .= "Error updating session: ".$GLOBALS['_SESSION_']->error;
+					$page->addError("Error updating session: ".$GLOBALS['_SESSION_']->error);
 					goto load;
 				}
 			}
@@ -113,7 +113,7 @@
 			);
 			if ($_contact->error) {
 				app_log("Error sending registration confirmation: ".$_contact->error,'error',__FILE__,__LINE__);
-				$page->error = "Sorry, we were unable to complete your registration";
+				$page->addError("Sorry, we were unable to complete your registration");
 				goto load;
 			}
 
@@ -148,7 +148,7 @@
 					)
 				);
 				if ($contact->error) {
-					$page->error .= "Error updating contact: ".$customer->error;
+					$page->addError("Error updating contact: ".$customer->error);
 					goto load;
 				}
 			} else {
@@ -170,7 +170,7 @@
 				);
 
 				if ($customer->error) {
-					$page->error .= "Error adding contact: ".$customer->error;
+					$page->addError("Error adding contact: ".$customer->error);
 					goto load;
 				}
 			}

@@ -25,10 +25,7 @@
                 ORDER BY title ASC";
             }
 
-			$rs = $GLOBALS['_database']->Execute(
-				$find_objects_query
-			);
-
+            $rs = executeSQLByParams($find_objects_query,array());
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::ProductList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;

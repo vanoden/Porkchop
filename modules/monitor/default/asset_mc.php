@@ -17,26 +17,26 @@
 		$asset = new \Monitor\Asset();
 		$asset->getSimple($GLOBALS['_REQUEST_']->query_vars_array[0]);
 		if ($asset->error) {
-			$page->error = "Error loading asset: ".$asset->error;
+			$page->addError("Error loading asset: ".$asset->error);
 			return;
 		}
 	}
 	else {
-		$page->error = "Monitor Not Specified";
+		$page->addError("Monitor Not Specified");
 		return;
 	}
 
 	if (! $asset->id) {
-		$page->error = "Monitor not found";
+		$page->addError("Monitor not found");
 	}
 	elseif ($asset->organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) {
-		$page->error = "Permission Denied";
+		$page->addError("Permission Denied");
 	}
 	else {
 		if (isset($_REQUEST['btn_submit'])) {
 			$asset->update(array("name" => $_REQUEST['name']));
 			if ($asset->error) {
-				$page->error = "Error setting name: ".$asset->error;
+				$page->addError("Error setting name: ".$asset->error);
 			}
 			else {
 				$page->success = "Monitor updated successfully";
@@ -61,7 +61,7 @@
 		list($communication) = $comm_list->find($parameters);
 		if ($comm_list->error) {
 			app_log("Error querying for communications: ".$comm_list->error,'error',__FILE__,__LINE__);
-			$page->error = 'Error loading comm records';
+			$page->addError('Error loading comm records');
 		}
 	
 		$session = new \Site\Session($communication->session->id);
@@ -75,7 +75,7 @@
 		$message_list = new \Monitor\MessageList();
 		$messages = $message_list->find(array("asset_id" => $asset->id,'_limit' => 5));
 		if ($message_list->error) {
-			$page->error = "Error loading messages: ".$message_list->error;
+			$page->addError("Error loading messages: ".$message_list->error);
 		}
 	}
 	app_log("Populating view",'trace',__FILE__,__LINE__);

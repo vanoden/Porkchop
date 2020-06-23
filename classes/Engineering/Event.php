@@ -66,17 +66,14 @@
 				VALUES
 				(		?,?,?,?)
 			";
-
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
+			
+			$rs = executeSQLByParams($add_object_query,array(
 					$task->id,
 					$person->id,
 					$date_added,
 					$parameters['description']
-				)
-			);
-
+			));
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Event::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -115,9 +112,8 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
-
+			
+            $rs = executeSQLByParams($update_object_query,$bind_paramss);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Events::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -133,11 +129,7 @@
 				WHERE	id = ?
 			";
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-
+			$rs = executeSQLByParams($get_object_query,array($this->id));			
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::Event::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

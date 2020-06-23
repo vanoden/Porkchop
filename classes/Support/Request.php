@@ -24,10 +24,8 @@
 				FROM	support_request_items
 				WHERE	request_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_line_query, array($this->id)
-			);
 			
+            $rs = executeSQLByParams($get_line_query, array($this->id));
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::nextLine(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -43,11 +41,8 @@
 				FROM	support_requests
 				WHERE	code = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
 			
+			$rs = executeSQLByParams($get_object_query, array($code));
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -96,9 +91,9 @@
 				$customer->organization->id,
 				$parameters['status'],
 				$parameters['type']
-			);
-
-			$GLOBALS['_database']->Execute($add_object_query,$bind_params);			
+			);			
+            $rs = executeSQLByParams($add_object_query,$bind_params);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::add(): ".$GLOBALS['_database']->ErrorMsg();
 				query_log($add_object_query);
@@ -131,11 +126,8 @@
 			}
 
 			$update_object_query .= "
-				WHERE	id = ?";
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
+				WHERE	id = ?";			
+            $rs = executeSQLByParams($update_object_query, array($this->id));
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::update(): ".$GLOBALS['_database']->ErrorMsg();
@@ -169,11 +161,7 @@
 					FROM	support_requests
 					WHERE	id = ?
 				";
-	
-				$rs = $GLOBALS['_database']->Execute(
-					$get_request_query,
-					array($this->id)
-				);
+        	    $rs = executeSQLByParams($get_request_query, array($this->id));
 	
 				if (! $rs) {
 					$this->_error = "SQL Error in SupportRequest::details: ".$GLOBALS['_database']->ErrorMsg();
@@ -265,8 +253,9 @@
 				SELECT	max(code)
 				FROM	support_requests
 				WHERE	code LIKE 'SI-_____'
-			";
-			$rs = $GLOBALS['_database']->Execute($get_max_query);
+			";			
+            $rs = executeSQLByParams($get_max_query, array());
+			
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::nextCode(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

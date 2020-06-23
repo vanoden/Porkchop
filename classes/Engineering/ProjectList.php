@@ -36,9 +36,8 @@
 
 			$find_objects_query .= "
 				ORDER BY title ASC";
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 
+            $rs = executeSQLByParams($find_objects_query,$bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::ProjectList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -73,8 +72,7 @@
                   ORDER BY title ASC";
             }
 
-			$rs = $GLOBALS['_database']->Execute( $find_objects_query );
-
+            $rs = executeSQLByParams($find_objects_query,$bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::ProjectList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;

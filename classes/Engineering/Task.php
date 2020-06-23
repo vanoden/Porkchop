@@ -119,18 +119,13 @@
 				(		?,?,?,?,?,?,?,?)
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($code,$parameters['title'],$type,$status,$date_added,$parameters['requested_id'],$product->id,$prerequisite_id)
-			);
-
+            $rs = executeSQLByParams($add_object_query,array($code,$parameters['title'],$type,$status,$date_added,$parameters['requested_id'],$product->id,$prerequisite_id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Task::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
-
 			return $this->update($parameters);
 		}
 
@@ -321,8 +316,7 @@
 				WHERE	id = ?";
 			array_push($bind_params,$this->id);
 
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
-
+            $rs = executeSQLByParams($update_object_query, $bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Task::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -338,11 +332,8 @@
 				FROM	engineering_tasks
 				WHERE	code = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-
+			
+            $rs = executeSQLByParams($get_object_query, array($code));
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::Task::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -375,12 +366,8 @@
 					FROM	engineering_tasks
 					WHERE	id = ?
 				";
-	
-				$rs = $GLOBALS['_database']->Execute(
-					$get_object_query,
-					array($this->id)
-				);
-	
+				
+				$rs = executeSQLByParams($get_object_query, array($this->id));
 				if (! $rs) {
 					$this->_error = "SQL Error in Engineering::Task::details(): ".$GLOBALS['_database']->ErrorMsg();
 					return false;
@@ -451,11 +438,8 @@
 				SET		assigned_id = ?
 				WHERE	id = ?
 				";
-				$GLOBALS['_database']->Execute(
-					$update_task_query,
-					array($person->id,$this->id)
-				);
 
+                $rs = executeSQLByParams($update_task_query, array($person->id,$this->id));
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->_error = "SQL Error in Engineering::Task::assignTo(): ".$GLOBALS['_database']->ErrorMsg();
 					return false;
@@ -476,10 +460,8 @@
 					SET		status = ?
 					WHERE	id = ?
 				";
-				$GLOBALS['_database']->Execute(
-					$update_object_query,
-					array($status,$this->id)
-				);
+				
+				$rs = executeSQLByParams($update_object_query, $update_object_query, array($status,$this->id));
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->_error = "SQL Error in Engineering::Task::setStatus(): ".$GLOBALS['_database']->ErrorMsg();
 					return false;

@@ -6,11 +6,12 @@
 	if (preg_match('/^\d+$/',$_REQUEST['id'])) {
 		// Get Asset
 		$asset = new \Monitor\Asset($_REQUEST['id']);
-		if ($asset->error) $page->error = "Error loading asset: ".$asset->error;
+		if ($asset->error) $page->addError("Error loading asset: ".$asset->error);
+		
 	}
 	else {
 		$asset = new \Monitor\Asset();
-		if ($asset->error) $page->error = "Error initializing asset: ".$asset->error;
+		if ($asset->error) $page->addError("Error initializing asset: ".$asset->error);
 	}
 
 	if (! $asset->id) {
@@ -22,7 +23,7 @@
 			$product = new \Product\Item();
 			$product->get($_REQUEST['product_code']);
 			if ($product->error) {
-				$page->error = "Error finding product: ".$product->error;
+				$page->error = $page->addError("Error finding product: ".$product->error);
 				return;
 			}
 		}
@@ -38,7 +39,7 @@
 					"product_id"	=> $product->id
 				)
 			);
-			if ($assetlist->error) $page->error = "Error loading asset: ".$assetlist->error;
+			if ($assetlist->error) $page->addError("Error loading asset: ".$assetlist->error);
 			if (isset($asset_found->id)) $asset = $asset_found;
 		}
 	}
@@ -64,7 +65,7 @@
 					"organization_id"	=> $_REQUEST['organization_id'],
 				)
 			);
-			if ($asset->error) $page->error = "Error adding asset: ".$asset->error;
+			if ($asset->error) $page->addError("Error adding asset: ".$asset->error);
 		}
 
 		if ($asset->id) {
@@ -84,7 +85,7 @@
 							"model_id"	=> $_REQUEST['model_id'][$id]
 						)
 					);
-					if ($sensor->error) $page->error .= "<br>Error updating sensor ".$_REQUEST['sensor_code'].": ".$sensor->error;
+					if ($sensor->error) $page->addError("<br>Error updating sensor ".$_REQUEST['sensor_code'].": ".$sensor->error);
 				}
 				else {
 					$sensor->add(
@@ -96,7 +97,7 @@
 						)
 					);
 					if ($sensor->error)
-						$page->error .= "<br>Error adding sensor ".$_REQUEST['sensor_code'].": ".$sensor->error;
+						$page->addError("<br>Error adding sensor ".$_REQUEST['sensor_code'].": ".$sensor->error);
 					else
 						$page->success .= "<br>Added sensor ".$_REQUEST['sensor_code'][$id];
 				}
@@ -107,7 +108,7 @@
 	if (isset($asset->id)) {
 		# Get Sensors
 		$sensors = $asset->sensors();
-		if ($asset->error) $page->error = "Error getting sensors for asset: ".$asset->error;
+		if ($asset->error) $page->addError("Error getting sensors for asset: ".$asset->error);
 
 		$asset_code = $asset->code;
 		$product_id = $asset->product->id;
@@ -120,7 +121,7 @@
 		list($communication) = $comm_list->find($parameters);
 		if ($comm_list->error) {
 			app_log("Error querying for communications: ".$comm_list->error,'error',__FILE__,__LINE__);
-			$page->error = 'Error loading comm records';
+			$page->addError('Error loading comm records');
 		}
 
         $session = new \Site\Session($communication->session->id);
@@ -142,7 +143,7 @@
 		)
 	);
 		
-	if ($productlist->error) $page->error = "Error getting products for selection: ".$productlist->error;
+	if ($productlist->error) $page->addError("Error getting products for selection: ".$productlist->error);
 	$organizationlist = new \Register\OrganizationList();
 	$organizations = $organizationlist->find();
 
