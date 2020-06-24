@@ -75,13 +75,7 @@
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
-
-            $rs = executeSQLByParams($find_objects_query,$bind_params);
+            $rs = executeSQLByParams($update_object_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Products::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;

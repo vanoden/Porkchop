@@ -153,7 +153,7 @@
 				";
 				app_log("Getting details for project ".$this->id);
 	
-                $rs = executeSQLByParams($find_objects_query,array($this->id));
+                $rs = executeSQLByParams($get_object_query,array($this->id));
 				if (! $rs) {
 					$this->_error = "SQL Error in Engineering::Project::details(): ".$GLOBALS['_database']->ErrorMsg();
 					return null;

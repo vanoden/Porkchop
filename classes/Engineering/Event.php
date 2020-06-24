@@ -113,7 +113,7 @@
 			";
 			array_push($bind_params,$this->id);
 			
-            $rs = executeSQLByParams($update_object_query,$bind_paramss);
+            $rs = executeSQLByParams($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Events::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
