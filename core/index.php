@@ -95,7 +95,7 @@
 	### Connect to Memcache if so configured		###
 	###################################################
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
-	if ($_CACHE_->error) test_fail('Unable to initiate Cache client: '.$_CACHE_->error);
+	if ($_CACHE_->error) $logger->write('Unable to initiate Cache client: '.$_CACHE_->error(),'error');
 	$logger->write("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
