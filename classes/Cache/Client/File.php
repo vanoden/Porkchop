@@ -120,4 +120,8 @@
 		public function stats() {
 			return array();
 		}
+
+		public function error() {
+			return $this->error;
+		}
 	}
