@@ -1,6 +1,5 @@
 <?php
 	require_module('session');
-
 	$_session = new Session();
 	$sessions = $_session->find(
 		array(
@@ -8,5 +7,4 @@
 		)
 	);
 
-	if ($_session->error)
-		$GLOBALS['_page']->error = "Error loading active sessions: ".$_session->error;
+	if ($_session->error) $GLOBALS['_page']->error = "Error loading active sessions: ".$_session->error;

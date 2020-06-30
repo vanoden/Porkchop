@@ -81,9 +81,7 @@
 				LIMIT ".$parameters['_limit'];
 			}
 
-			query_log($find_objects_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
-
+            $rs = executeSQLByParams($find_objects_query,$bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::TaskList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -174,16 +172,14 @@
 				$find_objects_query .= "
 				LIMIT ".$parameters['_limit'];
 			}
-			query_log($find_objects_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 
+            $rs = executeSQLByParams($find_objects_query,$bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::TaskList::search(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
 			$tasks = array();
-
 			while (list($id) = $rs->FetchRow()) {
 				$task = new Task($id);
 				array_push($tasks,$task);

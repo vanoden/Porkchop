@@ -69,15 +69,13 @@
 				VALUES
 				(		?,?,?,?)
 			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
+			
+            $rs = executeSQLByParams($add_object_query, array(
 					$action->id,
 					$date_event,
 					$user->id,
 					$parameters['description']
-				)
-			);
+			));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Event::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

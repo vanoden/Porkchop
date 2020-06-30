@@ -59,11 +59,11 @@
 <form name="register" action="<?=PATH?>/_register/admin_account" method="POST">
    <input type="hidden" name="target" value="<?=$target?>"/>
    <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
-   <?php  if ($page->error) { ?>
-   <div>
-      <h1 style="display:inline; margin-bottom: 25px; color: darkred;"><?=$page->error?></h1>
-   </div>
-   <?php  }
+    <?php	 if ($page->errorCount() > 0) { ?>
+        <div class="form_error"><?=$page->errorString()?></div>
+    <?php	 } ?>
+   
+   <?php
       if ($page->success) {
       ?>
    <div class="form_success">

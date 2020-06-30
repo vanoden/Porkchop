@@ -177,10 +177,21 @@
 			$path = $caller['file'];
 			$line = $caller['line'];
 		}
-
 		$GLOBALS['logger']->writeln($message,$level,$path,$line);
 	}
-
+	
+	function executeSQLByParams($query, $bindParams) {
+        $queryTime = microtime(true);
+		$resultSet = $GLOBALS['_database']->Execute($query, $bindParams);
+        query_log_time(microtime(true)-$queryTime, $query, $bindParams);
+        return $resultSet;
+	}
+	
+	function query_log_time($timeMilliseconds, $query,$params = array()) {
+		$level = 'debug';
+		app_log('Query Time Audit: ' . $timeMilliseconds . 'ms '.$query."\n".print_r($params,true),$level);
+	}
+	
 	function query_log($query,$params = array(),$path = null,$line = null) {
 		if (is_bool($path)) {
 			$level = 'debug';

@@ -43,7 +43,7 @@
                     OR prq.notes LIKE '%".$parameters['searchTerm']."%' ";
             }
 
-			$rs = $GLOBALS['_database']->Execute( $get_queued_registration_query );
+            $rs = executeSQLByParams($get_queued_registration_query);			
 			if (! $rs) {
 				$this->error = "SQL Error in RegistrationQueueList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;

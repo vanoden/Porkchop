@@ -131,9 +131,8 @@
                     ";
                 break;
 			}
+			$rs = executeSQLByParams($find_objects_query, $bind_params);
 			
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -153,8 +152,7 @@
 		public function getSerialNumbersAvailable() {
 		
 			$find_objects_query .= "SELECT DISTINCT(serial_number) FROM support_request_items ORDER BY serial_number ASC";
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			$rs = executeSQLByParams($find_objects_query, array());
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -170,8 +168,7 @@
 		public function getProductsAvailable() {
 		
 			$find_objects_query .= "SELECT id, code, name, description FROM product_products WHERE status = 'active' GROUP BY code ORDER BY code ASC";
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			$rs = executeSQLByParams($find_objects_query, array());
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

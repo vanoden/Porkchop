@@ -54,15 +54,12 @@
 				(		item_id,author_id,date_comment,content)
 				VALUES
 				(		?,?,sysdate(),?)
-			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
+			";	
+			$rs = executeSQLByParams($add_object_query, array(
 					$item->id,
 					$author->id,
 					$parameters['content']
-				)
-			);
+			));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Comment::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -80,11 +77,9 @@
 				SELECT	*
 				FROM	support_item_comments
 				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
+			";			
+			$rs = executeSQLByParams($get_object_query, array($this->id));
+			
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::Comment::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

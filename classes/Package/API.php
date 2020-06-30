@@ -160,11 +160,9 @@
 			app_log(print_r($_FILES,true));
 			if ($_FILES['file']['type']) {
 				$mime_type = $_FILES['file']['type'];
-			}
-			elseif(guess_mime_type($_FILES['file']['name'])) {
+			} elseif(guess_mime_type($_FILES['file']['name'])) {
 				$mime_type = guess_mime_type($_FILES['file']['name']);
-			}
-			else $this->error("Can't guess mime-type for ".$_FILES['file']['name']);
+			} else $this->error("Can't guess mime-type for ".$_FILES['file']['name']);
 	
 			$version->add(
 				array(
@@ -179,13 +177,25 @@
 					'mime_type'     => $mime_type
 				)
 			);
-			if ($version->error) error("Error adding version: ".$version->error);
+			if ($version->error) $this->error("Error adding version: ".$version->error);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->version = $version;
 	
 			api_log($response);
 			print $this->formatOutput($response);
+		}
+		
+		###################################################
+		### Return Properly Formatted Error Message		###
+		###################################################
+		public function error($message) {
+			$_REQUEST["stylesheet"] = '';
+			error_log($message);
+			$response->message = $message;
+			$response->success = 0;
+			print $this->formatOutput($response);
+			exit;
 		}
 
 		###################################################
@@ -300,7 +310,7 @@
 	
 			$version->download();
 		}
-
+		
 		public function _methods() {
 			return array(
 				'ping'	=> array(),

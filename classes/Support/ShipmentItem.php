@@ -18,11 +18,8 @@
 				SELECT	id, action_id, shipment_id, user_id, product_id, serial_number, quantity
 				FROM	support_shipment_items
 				WHERE	serial_number = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_request_query,
-				array($serialNumber)
-			);
+			";			
+			$rs = executeSQLByParams($get_request_query,array($serialNumber));
 			
 			if (! $rs) {
 				$this->error = "SQL Error in ShipmentItem::findBySerial: ".$GLOBALS['_database']->ErrorMsg();

@@ -9,14 +9,11 @@
 	$organization = $asset->organization;
 	if (! $product->id) {
 		$page->addError("Product not found");
-	}
-	elseif (! $asset->id) {
+	} elseif (! $asset->id) {
 		$page->addError("Asset not found");
-	}
-	elseif (! $organization->id) {
+	} elseif (! $organization->id) {
 		$page->addError("Asset must be assigned to an organization");
-	}
-	else {
+	} else {
 		if (isset($_REQUEST['btn_submit'])) {
 			$request = new \Support\Request();
 			$request->add(
@@ -43,8 +40,7 @@
 					header('location: /_monitor/admin_details/'.$asset->code."/".$product->code);
 					exit;
 				}
-			}
-			elseif($request->error()) {
+			} elseif($request->error()) {
 				$page->addError($request->error());
 			}
 		}
@@ -52,4 +48,3 @@
 
 	$customerlist = new \Register\CustomerList();
 	$customers = $customerlist->find(array('organization_id' => $organization->id));
-?>

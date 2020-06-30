@@ -42,7 +42,8 @@
 	                FROM	`product_registration_queue`
 	                WHERE	`customer_id` = " . $customerId;
 
-                $rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
+                $rs = executeSQLByParams($get_queued_contacts_query, array());
+                
                 if (! $rs) {
 	                $this->error = "SQL Error in RegistrationQueue::getByCustomer(): ".$GLOBALS['_database']->ErrorMsg();
 	                return null;
@@ -62,7 +63,7 @@
 	                SELECT	*
 	                FROM	`product_registration_queue`
 	                WHERE	id = " . $this->id;
-                $rs = $GLOBALS['_database']->Execute( $get_queued_registration_query );
+                $rs = executeSQLByParams($get_queued_registration_query, array());    
                 if (! $rs) {
 	                $this->error = "SQL Error in RegistrationQueue::details(): ".$GLOBALS['_database']->ErrorMsg();
 	                return null;
@@ -105,8 +106,8 @@
 				WHERE	id = ?";
 				
             array_push($bind_params,$this->id);
-            query_log($update_registration_query);
-            $GLOBALS['_database']->Execute($update_registration_query,$bind_params);
+            $rs = executeSQLByParams($update_registration_query, $bind_params);
+            
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in RegistrationQueue::update: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -152,17 +153,14 @@
             
             if (empty($parameters['distributor_name'])) $parameters['distributor_name'] = NULL;
             if (empty($parameters['serial_number'])) $parameters['serial_number'] = NULL;
-			$rs = $GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
+            $rs = executeSQLByParams($add_object_query, array(
     				$parameters['customer_id'],
 					$parameters['product_id'],
 					$parameters['serial_number'],
 					$parameters['date_created'],
 					$parameters['date_purchased'],
 					$parameters['distributor_name'],
-				)
-			);
+				));
 			if (! $rs) {
 				$this->error = "SQL Error in \Register\Queue::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;

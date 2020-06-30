@@ -1,11 +1,11 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('engineering user');
+	$page->requireRole('engineering user');    
 
 	$tasklist = new \Engineering\TaskList();
 	$unassigned_tasks = $tasklist->find(array("assigned_id" => '0',"_limit" => 50));
 	$my_tasks = $tasklist->find(array("assigned_id" => $GLOBALS['_SESSION_']->customer->id,"status" => array('NEW','ACTIVE'),"_limit" => 50));
-	if ($tasklist->error()) $page->error = $tasklist->error();
+	if ($tasklist->error()) $page->addError($tasklist->error());
 
 	$releaselist = new \Engineering\ReleaseList();
 	$releases = $releaselist->find(array("_limit" => 50));
