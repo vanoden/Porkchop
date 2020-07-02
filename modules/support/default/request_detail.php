@@ -16,6 +16,16 @@
         white-space: -o-pre-wrap;
         word-wrap: break-word;
    }
+   
+    hr {
+        border: 0;
+        height: 5px;
+        background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+        width: 75%;
+        margin: 50px;
+        margin-left: 0px;
+        margin-bottom: 25px;
+    }
 </style>
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -278,7 +288,7 @@
             <?php
             }
         }
-        ?><br/>
+        ?>
         </div>
         <?php	} ?>
         <?php	if (isset($supportItemComments) && count($supportItemComments) > 0) { ?>
@@ -316,6 +326,67 @@
             <?php	}	
              } ?>
         <?php	} ?>
+
+      <!-- Start Hours Worked -->
+      <hr/>
+      <h3>Hours Worked</h3>
+      
+      <!-- Start comment Row -->
+      <div class="tableBody min-tablet">
+         <div class="tableRowHeader">
+            <div class="tableCell">Add hours worked</div>
+         </div>
+         <div class="tableRow">
+            <div class="tableCell">
+               <input id="hours_worked" name="hours_worked" type="number" step="0.01" class="tableCell" style="width: 20%;" />
+            </div>
+         </div>
+         <div class="tableRow button-bar">
+            <input id="btn_add_hours" type="submit" name="btn_add_hours" class="button" value="Add Hours" />
+         </div>
+      </div>
+      <!-- End comment Row -->
+          
+       <!--	Start First Row-->
+       <h3>All Hours Worked</h3>
+       <div class="tableBody min-tablet">
+          <div class="tableRowHeader">
+             <div class="tableCell" style="width: 20%;">Date</div>
+             <div class="tableCell" style="width: 15%;">Person</div>
+             <div class="tableCell" style="width: 65%;">Amount</div>
+          </div>
+          <?php	
+            $hourSummary = array();
+            foreach ($hoursLoggedList as $hours) {
+            $person = new \Register\Person($hours->user_id);
+            if (!isset($hourSummary[$person->login])) $hourSummary[$person->login] = 0;
+            $hourSummary[$person->login] = $hourSummary[$person->login] + $hours->number_of_hours;
+             ?>
+          <div class="tableRow">
+             <div class="tableCell">
+                <i><?=date("M dS Y h:i A", strtotime($hours->date_worked))?></i>
+             </div>
+             <div class="tableCell">
+               <strong><?=$person->login?></strong>
+             </div>
+             <div class="tableCell eventLogEntry">
+                <strong><?=$hours->number_of_hours?></strong>
+             </div>
+          </div>
+          <?php	
+          }
+          ?>
+          <div style="margin: 10px; padding: 10px; width: 300%; border: solid 1px #666;">
+              <h3 style="font-size: 12px;"><u>Hourly Summary</u></h3>
+              <?php
+              foreach ($hourSummary as $worker => $hoursTotal) {
+              ?>
+              <p style="margin-left: 20px;"><strong><?=$worker?></strong> - <strong><?=$hoursTotal?></strong></p>
+              <?php
+              }
+              ?>
+          </div>
+       </div>
 	</form>
 	
     <!-- begin file upload -->

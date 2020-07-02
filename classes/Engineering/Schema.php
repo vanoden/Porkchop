@@ -461,5 +461,53 @@
 				}
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+            // VERSION 9
+			if ($current_schema_version < 9) {
+				app_log("Upgrading schema to version 9",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+                    CREATE TABLE `engineering_task_hours` (
+                      `id` int NOT NULL AUTO_INCREMENT,
+                      `date_worked` datetime DEFAULT NULL,
+                      `number_of_hours` decimal(5,2) DEFAULT 0,
+                      `code` varchar(100) NOT NULL,
+                      `user_id` int DEFAULT NULL,
+                      PRIMARY KEY (`id`),
+                      KEY `engineering_task_hours_ibfk_1` (`code`),
+                      KEY `engineering_task_hours_ibfk_2` (`user_id`),
+                      CONSTRAINT `engineering_task_hours_ibfk_1` FOREIGN KEY (`code`) REFERENCES `engineering_tasks` (`code`),
+                      CONSTRAINT `engineering_task_hours_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+				";
+
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating task hours table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$current_schema_version = 9;
+				$update_schema_version = "
+					INSERT
+					INTO	engineering__info
+					VALUES	('schema_version', $current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}			
 		}
 	}

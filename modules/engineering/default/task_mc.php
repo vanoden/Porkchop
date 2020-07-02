@@ -38,7 +38,22 @@
 			$page->addError("Comment required");
 		}
     }
-
+    
+    // add task hours
+    if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Add Hours') {
+        if (isset($_REQUEST['hours_worked']) && !empty($_REQUEST['hours_worked'])) {
+            $engineeringHours = new \Engineering\Hours();
+            $engineeringHours->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $task->code, 'number_of_hours' =>  abs($_REQUEST['hours_worked']), 'date_worked' => date("Y-m-d H:i:s", time())));
+            if ($engineeringHours->error()) {
+                $page->addError("Error adding hours: ".$engineeringHours->error());
+            } else {
+                $page->success = "Hours added";
+            }
+		} else {
+			$page->addError("Please add hours worked as a number");
+		}
+    }
+    
     // edit task or add event
 	if (isset($_REQUEST['method']) && in_array($_REQUEST['method'],array('Submit','Add Event'))) {
 		$msgs = array();
@@ -320,6 +335,10 @@
 	// get engineering comments 
     $engineeringComments = new \Engineering\CommentList();
 	$commentsList = $engineeringComments->find(array('code'=>$task->code));
+	
+    // get engineering hours logged 
+    $hoursList = new \Engineering\HoursList();
+	$hoursLoggedList = $hoursList->find(array('code'=>$task->code));
 	
 	$form = array();
 	if ($task->id) {

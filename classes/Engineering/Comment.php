@@ -34,7 +34,7 @@
 			}
 
             // get a correct date added field
-			if (get_mysql_date($parameters['date_comment'])) {
+			if (isset($parameters['date_comment']) && get_mysql_date($parameters['date_comment'])) {
 				$date_comment = get_mysql_date($parameters['date_comment']);
 			} else {
 				$date_comment = date('Y-m-d H:i:s');
@@ -62,7 +62,7 @@
 				VALUES
 				(?,?,?,?)";
 
-            $rs = executeSQLByParams(($add_object_query,array($date_comment, $parameters['user_id'], $parameters['content'], $code));
+            $rs = executeSQLByParams($add_object_query, array($date_comment, $parameters['user_id'], $parameters['content'], $code));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Comment::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -96,7 +96,7 @@
 				}
 			}
 			
-			if (get_mysql_date($parameters['date_comment'])) {
+			if (isset($parameters['date_comment']) && get_mysql_date($parameters['date_comment'])) {
 				$date_comment = get_mysql_date($parameters['date_comment']);
 			} else {
 				$date_comment = date('Y-m-d H:i:s');

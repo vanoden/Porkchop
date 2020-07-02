@@ -285,6 +285,37 @@
 				$this->setVersion(7);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+			if ($this->version() < 8) {
+				app_log("Upgrading schema to version 8",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				// create task for support section employee hours
+                $create_table_query = "	
+                    CREATE TABLE `support_task_hours` (
+                      `id` int NOT NULL AUTO_INCREMENT,
+                      `date_worked` datetime DEFAULT NULL,
+                      `number_of_hours` decimal(5,2) DEFAULT 0,
+                      `code` varchar(100) NOT NULL,
+                      `user_id` int DEFAULT NULL,
+                      PRIMARY KEY (`id`),
+                      KEY `support_task_hours_ibfk_1` (`code`),
+                      KEY `support_task_hours_ibfk_2` (`user_id`),
+                      CONSTRAINT `support_task_hours_ibfk_1` FOREIGN KEY (`code`) REFERENCES `support_requests` (`code`),
+                      CONSTRAINT `support_task_hours_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+                ";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating support_task_hours table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(8);
+				$GLOBALS['_database']->CommitTrans();
+			}
 
 			$this->addRoles(array(
 				'support manager'	=> 'Full control over requests, actions, etc',
