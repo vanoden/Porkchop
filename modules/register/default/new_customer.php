@@ -198,7 +198,7 @@
                             <div class="form-group">
                                 <div id="registerCompanyName">
                                     <h3>*Company/Organization Name:</h3>
-                                    <input type="text" class="value registerValue long-field" name="organization_name" value="<?=!empty($_REQUEST['organization_name']) ? $_REQUEST['organization_name'] : " " ?>" placeholder="Company LLC" maxlength="50" />
+                                    <input type="text" class="value registerValue long-field" name="organization_name" value="<?=!empty($_REQUEST['organization_name']) ? $_REQUEST['organization_name'] : "" ?>" placeholder="Company LLC" maxlength="50" />
                                     <div class="small-text">
                                         <input id="is_reseller_checkbox" type="checkbox" name="reseller" value="yes"> Are you a reseller? (wish sell our products and services)
                                         <br/>
@@ -236,19 +236,19 @@
 
                                 <h3>Business Address</h3>
                                 <label for="address"><i class="fa fa-address-card-o"></i> Address</label>
-                                <input type="text" id="address" class="long-field" name="address" placeholder="542 W. 15th Street" value="<?=!empty($_REQUEST['address']) ? $_REQUEST['address'] : " " ?>" maxlength="50" />
+                                <input type="text" id="address" class="long-field" name="address" placeholder="542 W. 15th Street" value="<?=!empty($_REQUEST['address']) ? $_REQUEST['address'] : "" ?>" maxlength="50" />
                                 <label for="city"><i class="fa fa-institution"></i> City</label>
-                                <input type="text" id="city" name="city" placeholder="New York" value="<?=!empty($_REQUEST['city']) ? $_REQUEST['city'] : " " ?>" maxlength="50" />
+                                <input type="text" id="city" name="city" placeholder="New York" value="<?=!empty($_REQUEST['city']) ? $_REQUEST['city'] : "" ?>" maxlength="50" />
                                 <label for="state">State/Region</label>
-                                <input type="text" id="state" name="state" placeholder="NY" value="<?=!empty($_REQUEST['state']) ? $_REQUEST['state'] : " " ?>" maxlength="10" />
+                                <input type="text" id="state" name="state" placeholder="NY" value="<?=!empty($_REQUEST['state']) ? $_REQUEST['state'] : "" ?>" maxlength="10" />
                                 <label for="zip">Zip/Postal Code</label>
-                                <input type="text" id="zip" name="zip" placeholder="10001" value="<?=!empty($_REQUEST['zip']) ? $_REQUEST['zip'] : " " ?>" maxlength="20" />
+                                <input type="text" id="zip" name="zip" placeholder="10001" value="<?=!empty($_REQUEST['zip']) ? $_REQUEST['zip'] : "" ?>" maxlength="20" />
                                 <br>
                                 <h3>Contact Info</h3>
                                 <span class="label registerLabel registerFirstNameLabel">*First Name:</span>
-                                <input type="text" class="value registerValue registerFirstNameValue long-field" name="first_name" value="<?=!empty($_REQUEST['first_name']) ? $_REQUEST['first_name'] : " " ?>" placeholder="John" maxlength="50" />
+                                <input type="text" class="value registerValue registerFirstNameValue long-field" name="first_name" value="<?=!empty($_REQUEST['first_name']) ? $_REQUEST['first_name'] : "" ?>" placeholder="John" maxlength="50" />
                                 <span class="label registerLabel registerLastNameLabel">*Last Name:</span>
-                                <input type="text" class="value registerValue registerLastNameValue long-field" name="last_name" value="<?=!empty($_REQUEST['last_name']) ? $_REQUEST['last_name'] : " " ?>" placeholder="Doe" maxlength="50" />
+                                <input type="text" class="value registerValue registerLastNameValue long-field" name="last_name" value="<?=!empty($_REQUEST['last_name']) ? $_REQUEST['last_name'] : "" ?>" placeholder="Doe" maxlength="50" />
                                 <label for="state" style="clear: both">Phone Number</label>
                                 <div class="container contactContainer">
                                     <select name="phone_type" class="input contactTypeInput">
@@ -256,7 +256,7 @@
                                         <option value="Home Phone">Home Phone</option>
                                         <option value="Mobile Phone">Mobile Phone</option>
                                     </select>
-                                    <input type="text" id="phone" name="phone_number" placeholder="555-555-5555" value="<?=!empty($_REQUEST['phone_number']) ? $_REQUEST['phone_number'] : " " ?>" maxlength="50" />
+                                    <input type="text" id="phone" name="phone_number" placeholder="555-555-5555" value="<?=!empty($_REQUEST['phone_number']) ? $_REQUEST['phone_number'] : "" ?>" maxlength="50" />
                                 </div>
                                 <span class="label registerLabel registerLoginLabel">*Email Address:</span>
                                 <div class="container contactContainer">
@@ -264,10 +264,10 @@
                                         <option value="Work Email">Work Email</option>
                                         <option value="Home Email">Home Email</option>
                                     </select>
-                                    <input type="email" id="email" class="value registerValue registerLoginValue" name="email_address" value="<?=!empty($_REQUEST['email_address']) ? $_REQUEST['email_address'] : " " ?>" placeholder="me@business.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" maxlength="50" />
+                                    <input type="email" id="email" class="value registerValue registerLoginValue" name="email_address" value="<?=!empty($_REQUEST['email_address']) ? $_REQUEST['email_address'] : "" ?>" placeholder="me@business.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" maxlength="50" />
                                 </div>
                                 <span class="label registerLabel registerLoginLabel">*Login:</span>
-                                <input type="text" id="login" class="value registerValue registerLoginValue" style="<?=isset($page->loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : " " ?>" onchange="checkUserName()" maxlength="50" />
+                                <input type="text" id="login" class="value registerValue registerLoginValue" style="<?=isset($page->loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onchange="checkUserName()" maxlength="50" />
                                 <div id="login-message" style="display:inline; font-size: 10px;"></div>
                                 <?php
                                     if (isset($page->loginTaken)) {

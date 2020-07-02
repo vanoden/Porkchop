@@ -44,4 +44,8 @@
 		public function flush() {
 			return true;
 		}
+
+		public function error() {
+			return null;
+		}
 	}
