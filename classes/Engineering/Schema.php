@@ -461,7 +461,7 @@
 				}
 				$GLOBALS['_database']->CommitTrans();
 			}
-			
+
             // VERSION 9
 			if ($current_schema_version < 9) {
 				app_log("Upgrading schema to version 9",'notice',__FILE__,__LINE__);
@@ -509,5 +509,52 @@
 				}
 				$GLOBALS['_database']->CommitTrans();
 			}			
+
+			if ($current_schema_version < 10) {
+				app_log("Upgrading to version 10",'notice');
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$drop_table_query = "
+					DROP TABLE `engineering_task_hours`
+				";
+				$GLOBALS['_database']->Execute($drop_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error dropping task hours table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$create_table_query = "
+                    ALTER TABLE `engineering_events` ADD `hours_worked` decimal(5,2) not null default 0
+				";
+
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error updating events table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$current_schema_version = 10;
+				$update_schema_version = "
+					INSERT
+					INTO	engineering__info
+					VALUES	('schema_version', $current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}
 		}
 	}

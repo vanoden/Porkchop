@@ -62,16 +62,17 @@
 			$add_object_query = "
 				INSERT
 				INTO	engineering_events
-				(		task_id,person_id,date_event,description)
+				(		task_id,person_id,date_event,description,hours_worked)
 				VALUES
-				(		?,?,?,?)
+				(		?,?,?,?,?)
 			";
 			
 			$rs = executeSQLByParams($add_object_query,array(
 					$task->id,
 					$person->id,
 					$date_added,
-					$parameters['description']
+					$parameters['description'],
+					$parameters['hours_worked']
 			));
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
