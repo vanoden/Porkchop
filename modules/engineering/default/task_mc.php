@@ -31,14 +31,14 @@
 				'task_id'	=> $task->id,
 				'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
 				'date_added'	=> date('Y-m-d H:i:s'),
-				'description'	=> join('<br>',$msgs)
+				'description'	=> join('<br>',$msgs),
 			));
 			if ($event->error()) $page->addError("Error creating event: ".$event->error());
 		} else {
 			$page->addError("Comment required");
 		}
     }
-    
+   /* 
     // add task hours
     if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Add Hours') {
         if (isset($_REQUEST['hours_worked']) && !empty($_REQUEST['hours_worked'])) {
@@ -53,7 +53,7 @@
 			$page->addError("Please add hours worked as a number");
 		}
     }
-    
+   */ 
     // edit task or add event
 	if (isset($_REQUEST['method']) && in_array($_REQUEST['method'],array('Submit','Add Event'))) {
 		$msgs = array();
@@ -150,7 +150,8 @@
 					'task_id'	=> $task->id,
 					'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
 					'date_added'	=> date('Y-m-d H:i:s'),
-					'description'	=> join('<br>',$msgs)
+					'description'	=> join('<br>',$msgs),
+					'hours_worked'	=> 0
 				));
 				if ($event->error()) $page->addError("Error creating event: ".$event->error());
 			}
@@ -164,7 +165,8 @@
 					'task_id'	=> $task->id,
 					'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
 					'date_added'	=> date('Y-m-d H:i:s'),
-					'description'	=> 'Task created'
+					'description'	=> 'Task created',
+					'hours_worked'	=> 0
 				));
 				app_log("Task created",'debug',__FILE__,__LINE__);
 			} else {
@@ -287,7 +289,8 @@
 			'task_id'		=> $task->id,
 			'person_id'		=> $_REQUEST['event_person_id'],
 			'date_added'	=> $_REQUEST['date_event'],
-			'description'	=> $_REQUEST['notes']
+			'description'	=> $_REQUEST['notes'],
+			'hours_worked'	=> $_REQUEST['hours_worked']
 		));
 		if ($event->error()) $page->addError($event->error());
 	}

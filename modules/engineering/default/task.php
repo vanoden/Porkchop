@@ -300,74 +300,13 @@
           </div>
           <?php	} ?>
        </div>
-       
-      <!-- Start 6th Row -->
-      <hr/>
-      <h3>Hours Worked</h3>
-      
-      <!-- Start comment Row -->
-      <div class="tableBody min-tablet">
-         <div class="tableRowHeader">
-            <div class="tableCell">Add hours worked</div>
-         </div>
-         <div class="tableRow">
-            <div class="tableCell">
-               <input id="hours_worked" name="hours_worked" type="number" step="0.01" class="tableCell" style="width: 20%;" />
-            </div>
-         </div>
-         <div class="tableRow button-bar">
-            <input id="btn_add_hours" type="submit" name="btn_add_hours" class="button" value="Add Hours" />
-         </div>
-      </div>
-      <!-- End comment Row -->
-          
-       <!--	Start First Row-->
-       <h3>All Hours Worked</h3>
-       <div class="tableBody min-tablet">
-          <div class="tableRowHeader">
-             <div class="tableCell" style="width: 20%;">Date</div>
-             <div class="tableCell" style="width: 15%;">Person</div>
-             <div class="tableCell" style="width: 65%;">Amount</div>
-          </div>
-          <?php	
-            $hourSummary = array();
-            foreach ($hoursLoggedList as $hours) {
-            $person = new \Register\Person($hours->user_id);
-            if (!isset($hourSummary[$person->login])) $hourSummary[$person->login] = 0;
-            $hourSummary[$person->login] = $hourSummary[$person->login] + $hours->number_of_hours;
-             ?>
-          <div class="tableRow">
-             <div class="tableCell">
-                <i><?=date("M dS Y h:i A", strtotime($hours->date_worked))?></i>
-             </div>
-             <div class="tableCell">
-               <strong><?=$person->login?></strong>
-             </div>
-             <div class="tableCell eventLogEntry">
-                <strong><?=$hours->number_of_hours?></strong>
-             </div>
-          </div>
-          <?php	
-          }
-          ?>
-          <div style="margin: 10px; padding: 10px; width: 300%; border: solid 1px #666;">
-              <h3 style="font-size: 12px;"><u>Hourly Summary</u></h3>
-              <?php
-              foreach ($hourSummary as $worker => $hoursTotal) {
-              ?>
-              <p style="margin-left: 20px;"><strong><?=$worker?></strong> - <strong><?=$hoursTotal?></strong></p>
-              <?php
-              }
-              ?>
-          </div>
-       </div>
-       
       <hr/>
       <h3>Event Update</h3>
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
             <div class="tableCell">Event Date</div>
             <div class="tableCell">Person</div>
+            <div class="tableCell">Hours</div>
             <div class="tableCell">New Status</div>
          </div>
          <div class="tableRow">
@@ -380,6 +319,9 @@
                   <option value="<?=$person->id?>"<?php if ($person->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$person->code?></option>
                   <?php	} ?>
                </select>
+            </div>
+            <div class="tableCell">
+               <input type="text" name="hours_worked" class="value input" value="0" />
             </div>
             <div class="tableCell">
                <select name="new_status" class="value input wide_100per">
@@ -457,9 +399,10 @@
    <h3>Event Log</h3>
    <div class="tableBody min-tablet">
       <div class="tableRowHeader">
-         <div class="tableCell" style="width: 20%;">Date</div>
-         <div class="tableCell" style="width: 15%;">Person</div>
-         <div class="tableCell" style="width: 65%;">Description</div>
+         <div class="tableCell" style="width: 15%;">Date</div>
+         <div class="tableCell" style="width: 12%;">Person</div>
+         <div class="tableCell" style="width: 10%;">Hours</div>
+         <div class="tableCell" style="width: 63%;">Description</div>
       </div>
       <?php	
         foreach ($events as $event) {
@@ -472,6 +415,9 @@
              <div class="tableCell">
                 <strong><?=$person->login?></strong>
              </div>
+			 <div class="tableCell">
+				<span><?=$event->hours_worked?></span>
+			 </div>
              <div class="tableCell eventLogEntry">
              <textarea class="event-log-description" readonly="readonly"><?=strip_tags($event->description);?></textarea>
              </div>
