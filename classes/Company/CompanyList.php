@@ -20,7 +20,7 @@
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
 				$company = new Company($id);
-				array_push($objects,$company->details());
+				array_push($objects,$company);
 				$this->count ++;
 			}
 			return $objects;
