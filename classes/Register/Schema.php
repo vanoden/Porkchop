@@ -143,7 +143,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			
-			if ($this->version() < 0) {
+			if ($this->version() < 2) {
 				app_log("Upgrading schema to version 2", 'notice', __FILE__, __LINE__);
 
 				// Start Transaction 
