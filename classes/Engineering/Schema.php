@@ -463,7 +463,7 @@
 			}
 
             // VERSION 9
-			if ($current_schema_version < 9) {
+			if ($current_schema_version == -1) {
 				app_log("Upgrading schema to version 9",'notice',__FILE__,__LINE__);
 
 				// Start Transaction
