@@ -522,6 +522,9 @@
 			$class = new $class_name();
 			$class_version = $class->version();
 			if ($class->error) install_fail($class->error);
+			$class->upgrade();
+			if ($class->error) install_fail("Upgrade from version ".$class->version().": ".$class->error);
+			if ($class->version() != $class_version) install_log("Upgraded $module_name from $class_version to ".$class->version(),'notice');
 		} catch (Exception $e) {
 			install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
         }
