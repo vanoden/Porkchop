@@ -27,7 +27,7 @@
 		exit;
 	}
 	# Only Developers Can See The API
-	elseif (! in_array('monitor admin',$GLOBALS['_SESSION_']->customer->roles)) {
+	elseif (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) {
 		header("location: /_monitor/home");
 		exit;
 	}
@@ -49,11 +49,6 @@
 	### Add Calibration Verification Credits		###
 	###################################################
 	function addCalibrationVerificationCredits() {
-		if (! isset($GLOBALS['_config']->spectros->calibration_product)) error("Calibration Product not configured");
-		$cal_product = new \Product\Item();
-		$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
-		if (! $cal_product->id) error("Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found");
-
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
 			$organization = new \Register\Organization();
@@ -72,9 +67,9 @@
 			error("You do not have privileges");
 		}
 
-		$product = $organization->product($cal_product->id);
+		$product = new \Spectros\CalibrationVerification\Credit($organization->id);
 		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
-		$product->add($_REQUEST['quantity']);
+		$product->add($_REQUEST['quantity'],array('note' => $_REQUEST['note']));
 		if ($product->error) app_error("Error adding calibration verification credits: ".$product->error,__FILE__,__LINE__);
 
 		app_log($_REQUEST['quantity']." Credits added for organization ".$organization_id);
@@ -101,7 +96,7 @@
 			$parameters['organization_id'] = $organization->id;
 		}
 
-		$creditlist = new \Spectros\Calibration\Verification\CreditList();
+		$creditlist = new \Spectros\CalibrationVerification\CreditList();
 		if ($creditlist->error) app_error("Error finding calibration verification credits: ".$creditlist->error,__FILE__,__LINE__);
 		$credits = $creditlist->find($parameters);
 		if ($creditlist->error) app_error("Error finding credits: ".$creditlist->error,__FILE__,__LINE__);
@@ -139,7 +134,7 @@
 		if ($organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('spectros admin')) {
 			error("You do not have privileges");
 		}
-		$product = $organization->product($cal_product->id);
+		$product = new \Spectros\CalibrationVerification\Credit($organization->id);
 		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
 
 		app_log($product->count()." Credits available for organization ".$organization->id);
@@ -155,29 +150,24 @@
 	### Use Calibration Verification Credit			###
 	###################################################
 	function consumeCalibrationVerificationCredit() {
-		if (! isset($GLOBALS['_config']->spectros->calibration_product)) error("Calibration Product not configured");
-		$cal_product = new \Product\Item();
-		$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
-		if (! $cal_product->id) error("Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found");
-
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
-			$organization = new \Register\Organization();
+			$organization = new \Spectros\Organization();
 			$organization->get($_REQUEST['organization']);
 			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
 		}
 		elseif ($_REQUEST['organization_id']) {
-			$organization = new \Register\Organization($_REQUEST['oranization_id']);
+			$organization = new \Spectros\Organization($_REQUEST['oranization_id']);
 		}
 		else {
-			$organization = new \Register\Organization($GLOBALS['_SESSION_']->customer->organization->id);
+			$organization = new \Spectros\Organization($GLOBALS['_SESSION_']->customer->organization->id);
 		}
 
 		if ($organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('spectros admin')) {
 			error("You do not have privileges");
 		}
-		$product = $organization->product($cal_product->id);
+		$product = new \Spectros\CalibrationVerification\Credit($organization->id);
 		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
 		$product->consume();
 		if ($product->error) app_error("Error consuming credits: ".$credit->error,__FILE__,__LINE__);
@@ -204,7 +194,7 @@
 		if (! $asset->id) error("Asset '".$request->serial."' not found",__FILE__,__LINE__);
 
 		# Find Verification Record
-		$verificationlist = new \Spectros\Calibration\VerificationList();
+		$verificationlist = new \Spectros\CalibrationVerificationList();
 		list($verification) = $verificationlist->find(array("asset_code" => $request->serial));
 
 		if ($verificationlist->error) app_error("Unable to find calibration verification: ".$verificationlist->error);
@@ -220,11 +210,6 @@
 	### Add a Calibration Verification				###
 	###################################################
 	function addCalibrationVerification() {
-		if (! isset($GLOBALS['_config']->spectros->calibration_product)) error("Calibration Product not configured");
-		$cal_product = new \Product\Item();
-		$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
-		if (! $cal_product->id) error("Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found");
-
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
 			$organization = new \Register\Organization();
@@ -255,7 +240,7 @@
 		$date_calibration = get_mysql_date($_REQUEST['date_calibration']);
 
 		# See if Credits available
-		$product = $organization->product($cal_product->id);
+		$product = new \Spectros\CalibrationVerification\Credit($organization->id);
 		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
 		if ($product->count() < 1) {
 			app_log("Calibration credits for '".$organization->name."' = ".$product->count(),'info',__FILE__,__LINE__);
@@ -377,7 +362,7 @@
 			$parameters['asset_id'] = $asset->id;
 		}
 
-		$verificationlist = new \Spectros\Calibration\VerificationList();
+		$verificationlist = new \Spectros\CalibrationVerificationList();
 		if ($verificationlist->error) app_error("Error initializing verification: ".$verificationlist->error,__FILE__,__LINE__);
 		$verifications = $verificationlist->find($parameters);
 		if ($verificationlist->error) app_error("Error finding verifications: ".$verificationlist->error,__FILE__,__LINE__);
