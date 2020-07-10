@@ -205,8 +205,8 @@
 		}
 		public function product($product_id) {
 			$product = new \Product\Item($product_id);
-			if ($product->error) {
-				$this->error = $product->error;
+			if ($product->error()) {
+				$this->error = $product->error();
 				return null;
 			}
 			if (! $product->id) {
