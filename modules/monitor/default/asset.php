@@ -23,7 +23,7 @@ if ($page->success) { ?>
 	<div class="label">Name</div>
 	<div class="value"><input type="text" name="name" class="value input" style="width: 250px" value="<?=$asset->name?>" /></div>
 	<div class="label">Model</div>
-	<div class="value"><?=$asset->product->name?></div>
+	<div class="value"><?=$asset->product->name?></div>	
 </div>
 <div class="form_footer" colspan="4"><input type="submit" name="btn_submit" class="button" /></div>
 </form>
