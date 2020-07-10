@@ -86,7 +86,13 @@
 		public function details() {
 			$getObjectQuery = "SELECT * FROM $this->tableName WHERE	id = ?";
 			$rs = $this->execute($getObjectQuery, array($this->id));
-            $object = $rs->FetchNextObject(false);
+			if (! $rs) {
+				$parent = get_called_class();
+				$method = debug_backtrace()[1]['function'];
+				$this->_error = "SQL Error in $parent::$method: ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			$object = $rs->FetchNextObject(false);
 			if (is_numeric($object->id)) {
     			foreach ($this->fields as $field) $this->$field = $object->$field;
 			} else {
