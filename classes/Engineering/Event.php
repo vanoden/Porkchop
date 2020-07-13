@@ -58,6 +58,8 @@
 			else {
 				$person = new \Register\Person($GLOBALS['_SESSION_']->customer->id);
 			}
+
+			if (! isset($parameters['hours_worked'])) $parameters['hours_worked'] = 0;
 			
 			$add_object_query = "
 				INSERT
