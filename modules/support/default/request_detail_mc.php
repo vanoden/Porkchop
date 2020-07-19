@@ -48,22 +48,6 @@
 	}
 
 	if ($_REQUEST['btn_reopen']) $request->update(array('status' => 'OPEN'));
-
-    // add task hours
-    if (isset($_REQUEST['btn_add_hours']) && $_REQUEST['btn_add_hours'] == 'Add Hours') {
-        if (isset($_REQUEST['hours_worked']) && !empty($_REQUEST['hours_worked'])) {
-            $supportHours = new \Support\Hours();
-            $supportHours->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $request->code, 'number_of_hours' =>  abs($_REQUEST['hours_worked']), 'date_worked' => date("Y-m-d H:i:s", time())));
-            if ($supportHours->error()) {
-                $page->addError("Error adding hours: ".$supportHours->error());
-            } else {
-                $page->success = "Hours added";
-            }
-		} else {
-			$page->addError("Please add hours worked as a number");
-		}
-    }
-
     if ($hasRequest) {
 	    $items = $request->items();
 
@@ -117,10 +101,6 @@
 	    if (!empty($file->error)) $page->addError($file->error);
 	    if (!empty($file->success)) $page->success = $file->success;
 	}
-	
-    // get engineering hours logged 
-    $hoursList = new \Support\HoursList();
-	$hoursLoggedList = $hoursList->find(array('code'=>$request->code));
 	
 	$filesList = new \Storage\FileList();
 	$filesUploaded = $filesList->find(array('type' => 'support request', 'ref_id' => $request->id));

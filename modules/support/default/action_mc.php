@@ -23,7 +23,8 @@
 			'action_id'		=> $action->id,
 			'date_event'	=> $_REQUEST['date_event'],
 			'user_id'		=> $_REQUEST['user_id'],
-			'description'	=> $_REQUEST['description']
+			'description'	=> $_REQUEST['description'],
+			'hours_worked'	=> $_REQUEST['hours_worked']
 		);
 		
 		if ($action->addEvent($parameters)) {
@@ -49,7 +50,8 @@
 					'action_id'		=> $action->id,
 					'date_event'	=> $_REQUEST['date_event'],
 					'user_id'		=> $GLOBALS['_SESSION_']->customer->id,
-					'description'	=> "Action assigned to ".$user->full_name()
+					'description'	=> "Action assigned to ".$user->full_name(),
+					'hours_worked'	=> $_REQUEST['hours_worked']
 				);
 				if ($action->addEvent($parameters)) {
 					if ($_REQUEST['status'] != $action->status) $action->update(array('status' => $_REQUEST['status']));

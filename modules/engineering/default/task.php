@@ -48,6 +48,7 @@
             $( "#task_form" ).submit();
             $( "#btn_submit" ).click(false);
         });
+        
         $( "#btn_add_comment" ).click(function() {
             $( "#btn_add_comment" ).val("please wait...");
 			$( "#method" ).val("Add Comment");
@@ -68,12 +69,21 @@
             $( "#task_form" ).submit();
             $( "#btn_add_event" ).click(false);
         });
+        
         $( "#btn_upload" ).click(function() {
             $( "#btn_add_event" ).val("please wait...");
 			$( "#method" ).val("Upload");
             $( "#task_form" ).submit();
             $( "#btn_add_event" ).click(false);
         });
+
+        $( "#btn_add_testing" ).click(function() {
+            $( "#btn_add_testing" ).val("please wait...");
+			$( "#method" ).val("Testing");
+            $( "#task_form" ).submit();
+            $( "#btn_add_testing" ).click(false);
+        });
+        
     });
 </script>
 <div>
@@ -245,17 +255,33 @@
                   <?php	} ?>
                </select>
             </div>
-         </div>
+         </div>   
        <div class="tableRow button-bar">
         <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
        </div>
       </div>
       <!-- End Fourth Row -->
-
+      
       <!-- Start Fifth Row -->
       <?php	if ($task->id) { ?>      
+               
+      <!-- Start comment Row -->
+      <h3>Testing Information</h3>
+      <div class="tableBody min-tablet">
+         <div class="tableRowHeader">
+            <div class="tableCell">Update Testing Instructions</div>
+         </div>
+         <div class="tableRow">
+            <div class="tableCell">
+               <textarea name="testing_details" class="wide_100per"><?=strip_tags($form['testing_details'])?></textarea>
+            </div>
+         </div>
+         <div class="tableRow button-bar">
+            <input id="btn_add_testing" type="submit" name="btn_add_testing" class="button" value="Update Testing Info" />
+         </div>
+      </div>
+      <!-- End comment Row -->
       
-      <hr/>
       <h3>Comment Update</h3>
       <!-- Start comment Row -->
       <div class="tableBody min-tablet">
@@ -293,14 +319,14 @@
                <strong><?=$person->login?></strong>
              </div>
              <div class="tableCell eventLogEntry">
-             <textarea class="event-log-description" readonly="readonly">
+             <pre>
                 <?=strip_tags($comment->content)?>
-             </textarea>
+             </pre>
              </div>
           </div>
           <?php	} ?>
        </div>
-      <hr/>
+      
       <h3>Event Update</h3>
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
@@ -356,7 +382,7 @@
    </form>
    
     <div style="width: 756px;">
-        <br/><hr/><h2>Documents</h2><br/>
+        <br/><h3>Documents</h3><br/>
         <?php
         if ($filesUploaded) {
         ?>
@@ -419,7 +445,7 @@
 				<span><?=$event->hours_worked?></span>
 			 </div>
              <div class="tableCell eventLogEntry">
-             <textarea class="event-log-description" readonly="readonly"><?=strip_tags($event->description);?></textarea>
+             <pre><?=strip_tags($event->description);?></pre>
              </div>
           </div>
       <?php	} ?>

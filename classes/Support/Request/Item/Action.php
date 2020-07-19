@@ -187,7 +187,7 @@
 			return $this->_error;
 		}
 
-		public function addEvent($parameters) {
+		public function addEvent($parameters) {		
 			$parameters['action_id'] = $this->id;
 			$event = new \Support\Request\Item\Action\Event();
 			$event->add($parameters);

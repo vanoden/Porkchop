@@ -38,22 +38,22 @@
 			$page->addError("Comment required");
 		}
     }
-   /* 
-    // add task hours
-    if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Add Hours') {
-        if (isset($_REQUEST['hours_worked']) && !empty($_REQUEST['hours_worked'])) {
-            $engineeringHours = new \Engineering\Hours();
-            $engineeringHours->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $task->code, 'number_of_hours' =>  abs($_REQUEST['hours_worked']), 'date_worked' => date("Y-m-d H:i:s", time())));
-            if ($engineeringHours->error()) {
-                $page->addError("Error adding hours: ".$engineeringHours->error());
-            } else {
-                $page->success = "Hours added";
-            }
-		} else {
-			$page->addError("Please add hours worked as a number");
-		}
+    
+    // add task testing details
+    if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Testing') {
+        $parameters = array();
+        $parameters['testing_details'] = $_REQUEST['testing_details'];
+        $task->update($parameters);
+        $event = new \Engineering\Event();    
+		$event->add(array(
+			'task_id'	=> $task->id,
+			'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
+			'date_added'	=> date('Y-m-d H:i:s'),
+			'description'	=> 'Testing Instructions Updated',
+		));
+		if ($event->error()) $page->addError("Error creating event: ".$event->error());
     }
-   */ 
+
     // edit task or add event
 	if (isset($_REQUEST['method']) && in_array($_REQUEST['method'],array('Submit','Add Event'))) {
 		$msgs = array();
@@ -298,8 +298,7 @@
     // upload files if upload button is pressed
     $configuration = new \Site\Configuration('engineering_attachments_s3');
     $repository = $configuration->value();
-    if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Upload') {
-
+    if (isset($_REQUEST['btn_upload']) && $_REQUEST['btn_upload'] == 'Upload') {
 	    $file = new \Storage\File();
 	    $parameters = array();
         $parameters['repository_name'] = $_REQUEST['repository_name'];
@@ -366,6 +365,7 @@
 		$project = $task->project();
 		$form['project_id'] = $project->id;
         $form['prerequisite_id'] = $task->prerequisite_id;
+        $form['testing_details'] = $task->testing_details;
 		$eventlist = new \Engineering\EventList();
 		$events = $eventlist->find(array('task_id'=> $task->id));
 		if ($eventlist->error()) $page->addError($eventlist->error());
@@ -384,6 +384,7 @@
 		$form['description'] = $_REQUEST['description'];
 		$form['release_id'] = $_REQUEST['release_id'];
 		$form['prerequisite_id'] = $_REQUEST['prerequisite_id'];
+		$form['testing_details'] = $_REQUEST['testing_details'];
 	} else {
 		$form['code'] = uniqid();
 		$form['product_id'] = '';

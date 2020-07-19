@@ -74,7 +74,7 @@
          <div class="tableCell">Entered By</div>
          <div class="tableCell">Action Type</div>
          <div class="tableCell">Assigned To</div>
-         <div class="tableCell">Ticked Status</div>
+         <div class="tableCell">Action Status</div>
       </div>
       <div class="tableRow">
          <div class="tableCell"><a href="/_support/request_item/<?=$item->id?>"><?=$item->ticketNumber()?></a></div>
@@ -143,6 +143,10 @@
              <option value="COMPLETE">Complete</option>
           </select>
        </div>
+      <div class="container_narrow">
+        <span class="label">Hours Worked</span>
+        <input type="text" name="hours_worked" class="value input" value="0" />
+      </div>
        <div class="container">
           <span class="label">Description</span>
           <textarea name="description" class="value input" style="width: 650px"></textarea>
@@ -214,22 +218,24 @@
 </div>
 
 <h2>History</h2>
-<?php	foreach ($events as $event) { ?>
+<?php	foreach ($events as $event) {?>
 <table style="width: 100%; padding-bottom: 10px;">
    <tr>
       <th>Event Date</th>
       <th>User</th>
+      <th>Hours Worked</th>
    </tr>
    <tr>
       <td><?=$event->date_event?></td>
       <td><?=$event->user->full_name()?></td>
+      <td><?=$event->hours?></td>
    </tr>
    <tr>
-      <th colspan="2">Description</th>
+      <th colspan="3">Description</th>
    <tr>
-      <td colspan="2">	    
-         <pre><?=strip_tags($event->description)?></pre>
-      </td>
+   <td colspan="3">	    
+     <pre><?=strip_tags($event->description)?></pre>
+   </td>
    </tr>
    </tr>
 </table>
