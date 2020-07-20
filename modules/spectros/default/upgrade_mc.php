@@ -227,7 +227,7 @@
 			"items"	=> array(
 				array(
 					"title"			=> "Customer",
-					"view_order"	=> 10,
+					"view_order"	=> 5,
 					"alt"			=> "Customer",
 					"description"	=> "Customer Management Tools",
 					"items" 		=> array(
