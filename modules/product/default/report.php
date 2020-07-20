@@ -1,9 +1,3 @@
-<?php  if (! role('product manager'))
-    {
-        print "<span class=\"form_error\">You are not authorized for this view!</span>";
-        return;
-    }
-?>
 <script language="JavaScript">
 	var metadata = new Array();
 	function showMeta(id) {
@@ -17,7 +11,7 @@
 	.descValue { width: 30%; }
 </style>
 <div class="body">
-	<h2>Products</h2>
+	<h2>Products</h2><a href="/_product/edit">New Product</a>
 	<table class="body">
 	<tr><th class="label codeValue">Code</th>
 		<th class="label smallValue">Type</th>
