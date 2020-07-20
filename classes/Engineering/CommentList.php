@@ -34,6 +34,9 @@
 				AND		code = '" . $parameters['code'] . "'";
 			}
 			
+			$find_objects_query .= "
+				ORDER BY date_comment DESC
+			";
 			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
 				$find_objects_query .= "
 				LIMIT ".$parameters['_limit'];

@@ -27,6 +27,7 @@
 				AND		action_id = ?
 				";
 				array_push($bind_params,$action->id);
+				$find_objects_query .= "ORDER BY `id` DESC";
 			}
             $rs = executeSQLByParams($find_objects_query, $bind_params);
 			if (! $rs) {

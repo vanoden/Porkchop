@@ -104,7 +104,7 @@
 			}
 
 			$find_objects_query .= "
-				ORDER BY date_event
+				ORDER BY date_event DESC
 			";
 
 			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {

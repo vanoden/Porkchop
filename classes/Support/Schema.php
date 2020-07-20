@@ -285,7 +285,7 @@
 				$this->setVersion(7);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			
+						
 			if ($this->version() == -1) {
 				app_log("Upgrading schema to version 8",'notice',__FILE__,__LINE__);
 

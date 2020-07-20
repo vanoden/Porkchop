@@ -7,6 +7,7 @@
 		public $code;
 		public $title;
 		public $description;
+		public $testing_details;
 		public $status;
 		public $type;
 		public $estimate;
@@ -58,8 +59,7 @@
 			if (isset($parameters['type'])) {
 				if ($this->_valid_type($parameters['type'])) {
 					$type = strtoupper($parameters['type']);
-				}
-				else {
+				} else {
 					$this->_error = "Invalid Task Type";
 					return false;
 				}
@@ -130,6 +130,7 @@
 		}
 
 		public function update($parameters = array()) {
+		
 			// Bust Cache
 			$cache_key = "engineering.task[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -162,6 +163,12 @@
 				$update_object_query .= ",
 						description = ?";
 				array_push($bind_params,$parameters['description']);
+			}
+
+			if (isset($parameters['testing_details'])) {
+				$update_object_query .= ",
+						`testing_details` = ?";
+				array_push($bind_params,$parameters['testing_details']);
 			}
 
 			if (isset($parameters['status'])) {
@@ -380,6 +387,7 @@
 			$this->code = $object->code;
 			$this->title = $object->title;
 			$this->description = $object->description;
+			$this->testing_details = $object->testing_details;
 			$this->date_added = $object->date_added;
 			$this->date_due = $object->date_due;
 			$this->status = $object->status;
