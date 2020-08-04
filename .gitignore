@@ -5,7 +5,6 @@ classes/Media
 classes/Solvay
 html
 html.src
-third_party
 modules/monitor/spectros
 modules/contact/spectros
 modules/action/spectros
