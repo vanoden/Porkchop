@@ -1,4 +1,4 @@
-<?
+<?php
 	###################################################
 	### install.php									###
 	### This module is a content management and 	###
@@ -98,7 +98,7 @@
 <table>
 <tr><th colspan="2">Porchop Web Installer V2.0</th></tr>
 </table>
-<? if ($errorstr) print "<table><tr><td colspan=\"2\" class=\"error\">There are errors in your submittal:<br>$errorstr</td></tr></table>";?>
+<?php if ($errorstr) print "<table><tr><td colspan=\"2\" class=\"error\">There are errors in your submittal:<br>$errorstr</td></tr></table>";?>
 <table>
 <tr><th>Company Name</th><td><input type="text" name="company_name" value="<?=$_REQUEST['company_name']?>"/></td></tr>
 </table>
@@ -119,7 +119,7 @@
 </form>
 </body>
 </html>
-<?
+<?php
 		exit;
 	}
 
