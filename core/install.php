@@ -194,6 +194,15 @@
 		exit;
 	}
 
+	###################################################
+	### Check Install Status...no over-installs		###
+	###################################################
+	$site_config = new \Site\Configuration;
+	if ($site_config->get("_install_complete")) {
+		install_log("Installation already completed");
+		exit;
+	}
+
 	install_log("Starting session");
 	$_SESSION_ = new \Site\Session();
 
@@ -326,6 +335,8 @@
 			exit;
 		}
 	}
+
+	$site_config->set("_install_complete",1);
 
 	install_log("Installation completed successfully");
 
