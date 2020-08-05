@@ -159,23 +159,21 @@ class Person {
         return $password_strength;
     }
     
-    public function add($parameters) {
+    public function add($parameters = array()) {
         if (!preg_match("/^[\w\-\_@\.\+\s]{2,100}\$/", $parameters['login'])) {
             $this->error = "Invalid Login";
             return null;
         }
-        if (!$GLOBALS['_config']->no_password) {
+        if (! isset($GLOBALS['_config']->no_password) or !($GLOBALS['_config']->no_password)) {
             $password_length = strlen($parameters['password']);
 
-            if ($this->password_strength($parameters['password']) < $GLOBALS['_config']
-                ->register
-                ->minimum_password_strength) {
+            if (isset($GLOBALS['_config']->register->minimum_password_strength) && $this->password_strength($parameters['password']) < $GLOBALS['_config']->register->minimum_password_strength) {
                 $this->error = "Password too weak.";
-                return null;
+                return false;
             }
             if ($password_length > 100) {
                 $this->error = "Password too long.";
-                return null;
+                return false;
             }
         }
 
@@ -196,9 +194,6 @@ class Person {
 					status,
 					login,
 					password,
-					first_name,
-					last_name,
-					organization_id,
 					timezone,
 					validation_key
 				)
@@ -211,9 +206,6 @@ class Person {
 					?,
 					password(?),
 					?,
-					?,
-					?,
-					?,
 					?
 				)
 			";
@@ -223,42 +215,23 @@ class Person {
             $parameters['status'],
             $parameters['login'],
             $parameters['password'],
-            $parameters['first_name'],
-            $parameters['last_name'],
-            $parameters['organization_id'],
             $parameters['timezone'],
             $parameters['validation_key']
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Person::add: Error: " . $GLOBALS['_database']->ErrorMsg() . " Query: " . preg_replace("/[\t\r\n]/", " ", $add_user_query);
-            return null;
+            $this->error = "SQL Error in Register::Person::add(): Error: " . $GLOBALS['_database']->ErrorMsg() . " Query: " . preg_replace("/[\t\r\n]/", " ", $add_user_query);
+            return false;
         }
         $this->id = $GLOBALS['_database']->Insert_ID();
         app_log("Added customer " . $parameters['login'] . " [" . $this->id . "]", 'debug', __FILE__, __LINE__);
-        return $this->details();
+        return $this->update($parameters);
     }
 
     public function update($parameters = array()) {
         if (!$this->id) {
             $this->error = "User ID Required for Update";
-            return null;
+            return false;
         }
-
-        if ((!role("register manager")) and ($GLOBALS['_SESSION_']
-            ->customer->id != $this->id)) {
-            $this->error = "Only Customer Managers can update accounts besides their own.";
-            return null;
-        }
-        # Valid Parameters
-        $valid_params = array(
-            "first_name" => 'first_name',
-            "last_name" => 'last_name',
-            "login" => 'login',
-            "password" => 'password',
-            "organization_id" => 'organization_id',
-            "status" => 'status',
-            "timezone" => 'timezone'
-        );
 
         # Loop through and apply changes
         $update_customer_query = "
@@ -266,27 +239,42 @@ class Person {
 				SET		id = id
 			";
 
-        foreach (array_keys($valid_params) as $param) {
-            if (isset($parameters[$param])) {
-                if ($param == "password") {
-                    app_log("Changing password", 'notice', __FILE__, __LINE__);
-                    $update_customer_query .= ",
-							`password` = password(" . $GLOBALS['_database']->qstr($parameters[$param], get_magic_quotes_gpc()) . ")";
-                }
-                else {
-                    if (isset($parameters[$param]) && $this->$param != $parameters[$param]) {
-                        app_log("Updating $param to " . $parameters[$param], 'notice', __FILE__, __LINE__);
-                        $update_customer_query .= ",
-								" . $valid_params[$param] . " = " . $GLOBALS['_database']->qstr($parameters[$param], get_magic_quotes_gpc());
-                    }
-                    else {
-                        app_log("$param unchanged", 'trace', __FILE__, __LINE__);
-                    }
-                }
-            }
-            else {
-                if (isset($parameters[$param])) $this->setMeta($id, $param, $parameters[$param]);
-            }
+        $bind_params = array();
+        if (isset($parameters['first_name'])) {
+            $update_customer_query .= ",
+                first_name = ?";
+            array_push($bind_params,$parameters['first_name']);
+        }
+        if (isset($parameters['last_name'])) {
+            $update_customer_query .= ",
+                last_name = ?";
+            array_push($bind_params,$parameters['last_name']);
+        }
+        if (isset($parameters['login'])) {
+            $update_customer_query .= ",
+                login = ?";
+            array_push($bind_params,$parameters['login']);
+        }
+        if (isset($parameters['organization_id'])) {
+            $update_customer_query .= ",
+                organization_id = ?";
+            array_push($bind_params,$parameters['organization_id']);
+        }
+        if (isset($parameters['status'])) {
+            $update_customer_query .= ",
+                status = ?";
+            array_push($bind_params,$parameters['status']);
+        }
+        if (isset($parameters['timezone'])) {
+            $update_customer_query .= ",
+                timezone = ?";
+            array_push($bind_params,$parameters['timezone']);
+        }
+        if (isset($parameters['password'])) {
+            app_log("Changing password", 'notice', __FILE__, __LINE__);
+            $update_customer_query .= ",
+                `password` = password(?)";
+            array_push($bind_params,$parameters['password']);
         }
 
         if (isset($parameters['automation']) && is_bool($parameters['automation'])) {
@@ -303,12 +291,10 @@ class Person {
         $update_customer_query .= "
 				WHERE	id = ?
 			";
-
-        $GLOBALS['_database']->Execute($update_customer_query, array(
-            $this->id
-        ));
+        array_push($bind_params,$this->id);
+        $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in RegisterPerson::update: " . $GLOBALS['_database']->ErrorMsg();
+            $this->error = "SQL Error in Register::Person::update(): " . $GLOBALS['_database']->ErrorMsg();
             return null;
         }
 
@@ -332,7 +318,7 @@ class Person {
             $id
         ));
         if (!$rs) {
-            $this->error = "SQL Error in Product::getMeta: " . $GLOBALS['_database']->ErrorMsg();
+            $this->error = "SQL Error in Register::Person::getMeta(): " . $GLOBALS['_database']->ErrorMsg();
             return null;
         }
         $metadata = array();
@@ -370,7 +356,7 @@ class Person {
             $value
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in RegisterPerson::setMeta: " . $GLOBALS['_database']->ErrorMsg();
+            $this->error = "SQL Error in Register::Person::setMeta(): " . $GLOBALS['_database']->ErrorMsg();
             return null;
         }
         return 1;
@@ -387,7 +373,7 @@ class Person {
 
         $rs = $GLOBALS['_database']->Execute($get_results_query);
         if (!$rs) {
-            $this->error = "SQL Error in RegisterPerson::searchMeta: " . $GLOBALS['_database']->ErrorMsg();
+            $this->error = "SQL Error in Register::Person::searchMeta(): " . $GLOBALS['_database']->ErrorMsg();
             return null;
         }
         $objects = array();
@@ -413,7 +399,7 @@ class Person {
             $this->id
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = $GLOBALS['_database']->ErrorMsg();
+            $this->error = "SQL Error in Register::Person::verify_email(): ".$GLOBALS['_database']->ErrorMsg();
             return false;
         }
         list($id, $unverified_key) = $rs->fields;
@@ -441,7 +427,7 @@ class Person {
             $this->id
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = $GLOBALS['_database']->ErrorMsg();
+            $this->error = "SQL Error in Register::Person::verify_email(): ".$GLOBALS['_database']->ErrorMsg();
             return false;
         }
         $this->id = $id;
@@ -586,7 +572,7 @@ class Person {
             $this->id
         ));
         if (!$rs) {
-            $this->error = "SQL Error in Register::Person::lcations: " . $GLOBALS['_database']->ErrorMsg();
+            $this->error = "SQL Error in Register::Person::locations: " . $GLOBALS['_database']->ErrorMsg();
             return null;
         }
         $locations = array();
