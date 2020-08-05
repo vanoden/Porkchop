@@ -12,8 +12,6 @@
 	define ( 'APPLICATION_LOG_TYPE', 'File' );
 	define ( 'APPLICATION_LOG', '/var/log/apache2/application.log');
 	define ( 'APPLICATION_LOG_LEVEL', 'debug');
-	define ( 'SPECTROS_LOCATION_ID', 1);
-	define ( 'SPECTROS_VENDOR_ID', 0);
 
 	# Initialize config
 	$_config = new stdClass();
