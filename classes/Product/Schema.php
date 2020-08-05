@@ -1,61 +1,17 @@
 <?php
 	namespace Product;
 
-	class Schema {
-		public $error;
-		public $errno;
-		private $module = 'product';
-
-		public function __construct() {
-			$this->upgrade();
-		}
-
-		public function version() {
-			# See if Schema is Available
-			$schema_list = $GLOBALS['_database']->MetaTables();
-			$info_table = "product__info";
-
-			if (! in_array($info_table,$schema_list)) {
-				# Create __info table
-				$create_table_query = "
-					CREATE TABLE `$info_table` (
-						label	varchar(100) not null primary key,
-						value	varchar(255)
-					)
-				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating info table in Product::Schema::version(): ".$GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
-			}
-
-			# Check Current Schema Version
-			$get_version_query = "
-				SELECT	value
-				FROM	`$info_table`
-				WHERE	label = 'schema_version'
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_version_query);
-			if (! $rs) {
-				$this->error = "SQL Error in Product::Schema::version(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-
-			list($version) = $rs->FetchRow();
-			if (! $version) $version = 0;
-			return $version;
-		}
+	class Schema Extends \Database\BaseSchema {
+		public $module = 'product';
 	
-		public function upgrade() {
-			$current_schema_version = $this->version();
+		public function upgrade($max_version = 999) {
+			$this->error = null;
 
-			if ($current_schema_version < 1) {
+			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
-				if (! $GLOBALS['_database']->BeginTrans())
+				if (!$GLOBALS['_database']->BeginTrans())
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$create_table_query = "
@@ -70,30 +26,32 @@
 						UNIQUE KEY `uk_product_code` (`code`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating products table in ProductInit::__construct: ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_products table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
+				# Media Items Table Required
+				$media_schema = new \Media\Schema;
+				if (! $media_schema->upgrade()) {
+					$this->error = "Cannot upgrade Media Schema: ".$media_schema->error();
+					return false;
+				}
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `product_images` (
 						`product_id`	int(11) NOT NULL,
 						`image_id`		int(11) NOT NULL,
 						`label`			varchar(100) NOT NULL,
 						PRIMARY KEY `PK_PRODUCT_IMAGE` (`product_id`,`image_id`),
-						FOREIGN KEY `FK_PRODUCT_ID` (`product_id`) REFERENCES `product_products` (`id`),
+						FOREIGN KEY `FK_PRODUCT_IMAGE_ID` (`product_id`) REFERENCES `product_products` (`id`),
 						FOREIGN KEY `FK_IMAGE_ID` (`image_id`) REFERENCES `media_items` (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating product_images table in ProductInit::__construct: ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_images table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
 				$create_table_query = "
@@ -105,12 +63,10 @@
 						FOREIGN KEY `FK_PRODUCT_ID` (`product_id`) REFERENCES `product_products` (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating product_types table in ProductInit::__construct: ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_relations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
 				$create_table_query = "
@@ -121,49 +77,19 @@
 						`value`			text,
 						PRIMARY KEY `PK_ID` (`id`),
 						UNIQUE KEY (`product_id`,`key`),
-						FOREIGN KEY `FK_PRODUCT_ID` (`product_id`) REFERENCES `product_products` (`id`)
+						FOREIGN KEY `FK_METADATA_PRODUCT_ID` (`product_id`) REFERENCES `product_products` (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating product_metadata table in ProductInit::__construct: ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
-				$add_roles_query = "
-					INSERT
-					INTO	register_roles
-					VALUES	(null,'product manager','Can view/edit products'),
-							(null,'product reporter','Can view products')
-				";
-				$GLOBALS['_database']->Execute($add_roles_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error adding product roles in ProductInit::__construct: ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
-				}
-
-				$current_schema_version = 1;
-				$update_schema_version = "
-					INSERT
-					INTO	".$this->module."__info
-					VALUES	('schema_version',$current_schema_version)
-					ON DUPLICATE KEY UPDATE
-						value = $current_schema_version
-				";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Product::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
-				}
+				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($current_schema_version < 2) {
+			if ($this->version() < 2 and $max_version > 2) {
 				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
@@ -182,12 +108,10 @@
 						UNIQUE KEY `uk_vendor_code` (`code`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating product_vendors table in Product::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_vendors table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
 				$create_table_query = "
@@ -199,12 +123,10 @@
 						FOREIGN KEY `fk_location_id` (`location_id`) REFERENCES `register_locations` (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating product_vendor_locations table in Product::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_vendor_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
 				$create_table_query = "
@@ -221,13 +143,10 @@
 						FOREIGN KEY `FK_VENDOR_ID` (`vendor_id`) REFERENCES `product_vendors` (`id`)
 					)
 				";
-
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating product_vendor_items table in Product::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_vendor_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
 				$alter_table_query = "
@@ -239,30 +158,15 @@
 					ADD		`total_purchased`	decimal(10,2) NOT NULL DEFAULT 0,
 					ADD		`total_cost`		decimal(10,2) NOT NULL DEFAULT 0
 				";
-				$GLOBALS['_database']->Execute($alter_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error altering product_products table in Product::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
-				$current_schema_version = 2;
-				$update_schema_version = "
-					INSERT
-					INTO	".$this->module."__info
-					VALUES	('schema_version',$current_schema_version)
-					ON DUPLICATE KEY UPDATE
-						value = $current_schema_version
-				";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Product::Schema::upgrade() ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return 0;
-				}
+				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			return true;
 		}
 	}
