@@ -5,6 +5,7 @@
 		public $error = null;
 		public $level = 'debug';
 		public $connected = false;
+		public $html = false;
 
 		public function caller($file,$line) {
 			if (isset($file)) return array($file,$line);
@@ -44,7 +45,12 @@
 			}
 
 			# Build String
-			return "$date [$pid] [$level] $module::$view $file:$line $session_id $customer_id $message\n";
+			if ($this->html) {
+				return "$date [$pid] [$level] $module::$view $file:$line $session_id $customer_id $message<br>\n";
+			}
+			else {
+				return "$date [$pid] [$level] $module::$view $file:$line $session_id $customer_id $message\n";
+			}
 		}
 
 		public function compares ($level = "debug") {

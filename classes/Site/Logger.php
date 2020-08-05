@@ -15,6 +15,8 @@
 			if (strtolower($parameters['type']) == "syslog") {
 				if (! isset($parameters['host'])) $parameters['host'] = '127.0.0.1';
 				return new \Site\Logger\Syslog($parameters);
+			} elseif (strtolower($parameters['type']) == "screen") {
+				return new \Site\Logger\Screen($parameters);
 			} elseif (strtolower($parameters['type']) == "file") {
 				if (! isset($parameters['path'])) $parameters['path'] = APPLICATION_LOG;
 				return new \Site\Logger\File($parameters);
