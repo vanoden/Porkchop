@@ -57,16 +57,31 @@
 				return null;
 			}
 			$object = $rs->FetchNextObject(false);
-			$this->status = $object->status;
-			$this->comments = $object->comments;
-			$this->name = $object->domain_name;
-			$this->date_registered = $object->date_registered;
-			$this->date_created = $object->date_created;
-			$this->date_expires = $object->date_expires;
-			$this->registration_period = $object->registration_period;
-			$this->register = $object->register;
-			$this->company = new Company($object->company_id);
-			return $object;
+			if (isset($object->id)) {
+				$this->status = $object->status;
+				$this->comments = $object->comments;
+				$this->name = $object->domain_name;
+				$this->date_registered = $object->date_registered;
+				$this->date_created = $object->date_created;
+				$this->date_expires = $object->date_expires;
+				$this->registration_period = $object->registration_period;
+				$this->register = $object->register;
+				$this->company = new Company($object->company_id);
+				return true;
+			}
+			else {
+				$this->object = null;
+				$this->status = null;
+				$this->comments = null;
+				$this->name = null;
+				$this->date_registered = null;
+				$this->date_created = null;
+				$this->date_expires = null;
+				$this->registration_period = null;
+				$this->register = null;
+				$this->company = new Company();
+				return false;
+			}
 		}
 
 		public function add($parameters = array()) {
@@ -157,6 +172,6 @@
 				return false;
 			}
 			
-			return $this->details($id);
+			return $this->details();
 		}
 	}
