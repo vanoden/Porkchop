@@ -36,7 +36,7 @@
 				$create_table_query = "
 						CREATE TABLE IF NOT EXISTS `register_departments` (
 							`id`			int(11) NOT NULL AUTO_INCREMENT,
-							`name`			varchar(255) NOT NULL,
+							`name`			varchar(150) NOT NULL,
 							`description`	text,
 							`manager_id`	int(11),
 							`parent_id`		int(11),
@@ -148,7 +148,13 @@
 
 				// Start Transaction 
 				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
-				
+
+				// Requires Product Schema
+				$product_schema = new \Product\Schema;
+				if (! $product_schema->upgrade(1)) {
+					$this->error = "Error upgrading product schema: ".$product_schema->error();
+					return false;
+				}
 				$create_table_query = "
 						CREATE TABLE IF NOT EXISTS `register_organization_products` (
 							`organization_id`	int(11) NOT NULL,
@@ -156,8 +162,8 @@
 							`quantity`			decimal(9,2) NOT NULL,
 							`date_expires`		datetime DEFAULT '9999-12-31 23:59:59',
 							PRIMARY KEY `pk_organization_product` (`organization_id`,`product_id`),
-							FOREIGN KEY `fk_organization` (`organization_id`) REFERENCES `register_organizations` (`id`),
-							FOREIGN KEY `fk_product` (`product_id`) REFERENCES `product_products` (`id`)
+							FOREIGN KEY `fk_orgproduct_organization` (`organization_id`) REFERENCES `register_organizations` (`id`),
+							FOREIGN KEY `fk_orgproduct_product` (`product_id`) REFERENCES `product_products` (`id`)
 						)
 					";
 					
@@ -265,7 +271,7 @@
 							`date_expires`	datetime DEFAULT '1990-01-01 00:00:00',
 							`client_ip`		varchar(32),
 							PRIMARY KEY (`person_id`),
-							FOREIGN KEY `fk_person_id` (`person_id`) REFERENCES `register_users` (`id`)
+							FOREIGN KEY `fk_token_person_id` (`person_id`) REFERENCES `register_users` (`id`)
 						)
 					";
 				$GLOBALS['_database']->Execute($create_table_query);
@@ -402,7 +408,7 @@
 						CREATE TABLE IF NOT EXISTS `register_role_privileges` (
 							`id`			int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 							`role_id` 		int(11) NOT NULL,
-							`privilege`		varchar(255) NOT NULL,
+							`privilege`		varchar(150) NOT NULL,
 							INDEX `idx_role_id` (`role_id`),
 							UNIQUE KEY `uk_privilege` (`privilege`),
 							FOREIGN KEY `fk_role_id` (`role_id`) REFERENCES `register_roles` (`id`)
@@ -531,7 +537,7 @@
 						role_id int(11) NOT NULL,
 						privilege_id int(11) NOT NULL,
 						PRIMARY KEY `pk_role_privilege` (`role_id`,`privilege_id`),
-						FOREIGN KEY `fk_role_id` (`role_id`) REFERENCES `register_roles` (`id`),
+						FOREIGN KEY `fk_roles_id` (`role_id`) REFERENCES `register_roles` (`id`),
 						FOREIGN KEY `fk_privilege_id` (`privilege_id`) REFERENCES `register_privileges` (`id`)
 					)
 				";
@@ -619,6 +625,12 @@
 					return null;
 				}
 
+				$geography_schema = new \Geography\Schema;
+				if (! $geography_schema->upgrade()) {
+					$this->error = "Error upgrading Geography Schema: ".$geography_schema->error();
+					return false;
+				}
+
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS register_locations (
 						id INT(11) NOT NULL AUTO_INCREMENT,
@@ -665,8 +677,8 @@
 						user_id INT(11) NOT NULL,
 						location_id INT(11) NOT NULL,
 						PRIMARY KEY `pk_user_loc` (`user_id`,`location_id`),
-						FOREIGN KEY `fk_user_id` (`user_id`) REFERENCES `register_users` (`id`),
-						FOREIGN KEY `fk_loc_id` (`location_id`) REFERENCES `register_locations` (`id`)
+						FOREIGN KEY `fk_loc_user_id` (`user_id`) REFERENCES `register_users` (`id`),
+						FOREIGN KEY `fk_reg_loc_id` (`location_id`) REFERENCES `register_locations` (`id`)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
