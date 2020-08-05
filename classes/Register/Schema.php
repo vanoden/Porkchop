@@ -2,13 +2,13 @@
 	namespace Register;
 	
 	class Schema Extends \Database\BaseSchema {
-	
+
 		public $module = "register";
-		
+
 		public function upgrade() {
-		
+
 			$this->error = null;
-			
+
 			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1", 'notice', __FILE__, __LINE__);
 				
@@ -713,7 +713,7 @@
 				}
 				foreach ($constraints as $constraint) {
 					if ($constraint->type != 'PRIMARY KEY') {
-						app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table,'notice');
+						app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table);
 						if (!$constraint->drop()) {
 							$this->error = "Error dropping constraint '".$constraint->name."': ".$constraint->error();
 							return false;
@@ -787,7 +787,7 @@
 				}
 				foreach ($constraints as $constraint) {
 					if ($constraint->type == 'FOREIGN KEY') {
-						app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table,'notice');
+						app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table);
 						if (!$constraint->drop()) {
 							$this->error = "Error dropping constraint '".$constraint->name."': ".$constraint->error();
 							return false;

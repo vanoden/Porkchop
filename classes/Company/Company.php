@@ -60,7 +60,7 @@
 				return $object;
 			}
 			else {
-				app_log("No company found for id '".$this->id."'",'error');
+				app_log("No company found for id '".$this->id."'",'debug');
 				return new \stdClass();
 			}
 		}

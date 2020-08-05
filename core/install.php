@@ -26,7 +26,7 @@
 	ini_set('display_errors','1');
 	ini_set('display_startup_errors','1');
 	#set_error_handler("install_log_error");
-	error_reporting(E_ALL);
+	error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 
 	###################################################
 	### Load API Objects							###
@@ -44,7 +44,7 @@
 	###################################################
 	### Connect to Logger							###
 	###################################################
-	$logger = \Site\Logger::get_instance(array('type' => "Screen",'level' => 'debug','html' => true));
+	$logger = \Site\Logger::get_instance(array('type' => "Screen",'level' => 'info','html' => true));
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
 		print "Logger error\n";
