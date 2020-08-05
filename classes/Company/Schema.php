@@ -11,7 +11,7 @@
 				$create_companies_query = "
 					CREATE TABLE IF NOT EXISTS `company_companies` (
 						`id` int(5) NOT NULL auto_increment,
-						`name` varchar(255) NOT NULL default '',
+						`name` varchar(150) NOT NULL default '',
 						`login` varchar(50) NOT NULL default '',
 						`primary_domain` int(5) NOT NULL default '0',
 						`status` int(1) default '1',
@@ -22,6 +22,7 @@
 				";
 				if (! $this->executeSQL($create_companies_query)) {
 					$this->error = "SQL Error creating company_companies table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error .= $create_companies_query;
 					app_log($this->error, 'error');
 					return false;
 				}
@@ -78,7 +79,7 @@
 						`company_id` int(5) NOT NULL default '0',
 						PRIMARY KEY  (`id`),
 						UNIQUE KEY `uk_domain` (`domain_name`),
-						FOREIGN KEY `fk_company_id` (`company_id`) REFERENCES `company_companies` (`id`)
+						FOREIGN KEY `fk_domain_company_id` (`company_id`) REFERENCES `company_companies` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_domains_query)) {
@@ -93,7 +94,10 @@
 			if ($this->version() < 3) {
 				# Make Sure Register Users is present
 				$user_schema = new \Register\Schema();
-				$user_schema->upgrade();
+				if (! $user_schema->upgrade()) {
+					$this->error = "Cannot upgrade Register Schema: ".$user_schema->error();
+					return false;
+				}
 				if ($user_schema->version() < 1) {
 					$this->error = "Cannot continue, Register Schema ver < 1";
 					return false;
