@@ -24,11 +24,11 @@
 					  `prev_session` varchar(100) NOT NULL DEFAULT '',
 					  `refer_url` text,
 					  PRIMARY KEY (`id`),
-					  KEY `company_id` (`company_id`,`user_id`),
-					  KEY `code` (`code`),
-					  KEY `end_time` (`last_hit_date`),
-					  KEY `idx_active` (`company_id`,`active`,`id`,`user_id`),
-					  FOREIGN KEY `fk_company_id` (`company_id`) REFERENCES `company_companies` (`id`)
+					  KEY `idx_sess_company_id` (`company_id`,`user_id`),
+					  KEY `idx_sess_code` (`code`),
+					  KEY `idx_sess_end_time` (`last_hit_date`),
+					  KEY `idx_sess_active` (`company_id`,`active`,`id`,`user_id`),
+					  FOREIGN KEY `fk_sess_company_id` (`company_id`) REFERENCES `company_companies` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
@@ -160,7 +160,7 @@
 			if ($this->version() < 6) {
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `site_configurations` (
-						`key`	varchar(255) NOT NULL PRIMARY KEY,
+						`key`	varchar(150) NOT NULL PRIMARY KEY,
 						`value` varchar(255)
 					)
 				";
