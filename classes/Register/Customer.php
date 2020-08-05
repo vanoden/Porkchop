@@ -23,7 +23,7 @@
 				array($code)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in RegisterPerson::get: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::get: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			
@@ -47,7 +47,7 @@
 			parent::update($parameters);
 
 			// roles
-			if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 				$rolelist = new RoleList();
 				$roles = $rolelist->find();
 				foreach ($roles as $role) {
