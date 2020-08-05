@@ -148,36 +148,39 @@
 				return undef;
 			}
 
-			if ($parameters['name'])
-				$update_object_query .= ",
-						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
-
 			# Update Object
 			$update_object_query = "
 				UPDATE	company_locations
 				SET		id = id";
-			
-			if (preg_match('/^[\w\-\.]+$/',$parameters['host']))
-				$update_object_query .= ",
-					host = ".$GLOBALS['_database']->qstr($parameters['host'],get_magic_quotes_gpc());
-			
-			if (preg_match('/^\d+$/',$parameters['domain_id']))
-				$update_object_query .= ",
-					domain_id = ".$GLOBALS['_database']->qstr($parameters['domain_id'],get_magic_quotes_gpc());
 
+			$bind_params = array();
+			if (isset($parameters['name'])) {
+				$update_object_query .= ",
+					name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
+
+			if (preg_match('/^\w[\w\-\.]+$/',$parameters['host'])) {
+				$update_object_query .= ",
+					host = ?";
+				array_push($bind_params,$parameters['host']);
+			}
+
+			if (preg_match('/^\d+$/',$parameters['domain_id'])) {
+				$update_object_query .= ",
+					domain_id = ?";
+				array_push($bind_params,$parameters['domain_id']);
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
+			array_push($bind_params,$this->id);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Company::Location::update: ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				return false;
 			}
-			return $this->details($id);
+			return $this->details();
 		}
 	}
