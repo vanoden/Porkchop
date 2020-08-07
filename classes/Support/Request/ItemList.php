@@ -55,7 +55,6 @@
 			    ";
 			}
 
-            // 
 			$bind_params = array();
 			if (!empty($parameters['request_id'])) {
 				$request = new \Support\Request($parameters['request_id']);

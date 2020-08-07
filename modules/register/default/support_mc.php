@@ -2,9 +2,6 @@
 	$page = new \Site\Page();
 	$page->requireAuth();
 	
-    // testing
-    $GLOBALS ['_SESSION_']->customer->id = 1;
-    
     // apply any filters
     $searchQuery = array('customer_id' => $GLOBALS ['_SESSION_']->customer->id);
     if (isset($_REQUEST['status']) && !empty($_REQUEST['status'])) $searchQuery['status'] = array($_REQUEST['status']);
