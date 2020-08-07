@@ -6,8 +6,8 @@
 		private $_error;
 		private $_count;
 
-		public function find($parameters = array()) {		
-
+		public function find($parameters = array()) {
+		
 			$find_objects_query = "
 				SELECT	s.id
 				FROM	support_request_items s
@@ -27,7 +27,6 @@
             
 			// if a minimum date is set, constrain on it
 			if (isset($parameters['min_date'])) {
-			
 			    $minDate = date("Y-m-d H:i:s", strtotime($parameters['min_date']));
 			    $find_objects_query = "
 				    SELECT	s.id
@@ -35,8 +34,28 @@
 				    INNER JOIN support_requests sr ON s.request_id = sr.id
 				    WHERE	sr.date_request > '$minDate'
 			    ";
-			}            
+			}
+			if (isset($parameters['max_date'])) {
+			    $maxDate = date("Y-m-d H:i:s", strtotime($parameters['max_date']));
+			    $find_objects_query = "
+				    SELECT	s.id
+				    FROM	support_request_items s
+				    INNER JOIN support_requests sr ON s.request_id = sr.id
+				    WHERE	sr.date_request < '$maxDate'
+			    ";
+			}
+			if (isset($parameters['min_date']) && isset($parameters['max_date'])) {
+    			$minDate = date("Y-m-d H:i:s", strtotime($parameters['min_date']));
+			    $maxDate = date("Y-m-d H:i:s", strtotime($parameters['max_date']));
+			    $find_objects_query = "
+				    SELECT	s.id
+				    FROM	support_request_items s
+				    INNER JOIN support_requests sr ON s.request_id = sr.id
+				    WHERE	sr.date_request < '$maxDate' AND sr.date_request > '$minDate'
+			    ";
+			}
 
+            // 
 			$bind_params = array();
 			if (!empty($parameters['request_id'])) {
 				$request = new \Support\Request($parameters['request_id']);
@@ -57,6 +76,13 @@
 					AND	s.product_id = ?";
 				array_push($bind_params,$parameters['product_id']);
 			}
+			
+			if (!empty($parameters['customer_id'])) {
+				$find_objects_query .= "
+					AND	sr.customer_id = ?";
+				array_push($bind_params,$parameters['customer_id']);
+			}
+			
 			if (!empty($parameters['serial_number'])) {
 				$find_objects_query .= "
 					AND	s.serial_number = ?";
@@ -125,12 +151,18 @@
 				        ORDER BY s.status DESC
 			        ";
                 break;
+                case 'ticket_id':
+			        $find_objects_query .= "
+				        ORDER BY s.id DESC
+			        ";
+                break;
                 default:
                     $find_objects_query .= "
                         ORDER BY s.id DESC
                     ";
                 break;
 			}
+			
 			$rs = executeSQLByParams($find_objects_query, $bind_params);
 			
 			if (! $rs) {

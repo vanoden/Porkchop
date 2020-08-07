@@ -301,4 +301,4 @@
     setVisibility('generic_form', 'none');
     setVisibility('form_footer', 'none');
 </script>
-<? } ?>
+<?php } ?>
