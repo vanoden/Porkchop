@@ -434,7 +434,7 @@
             </div>
         </div>
          <?php
-            if (isset($supportItems)) {
+            if (isset($supportItems) && is_array($supportItems)) {
                 foreach($supportItems as $supportItem) {
              ?>
             <div class="row data-container"> 

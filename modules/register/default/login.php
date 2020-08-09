@@ -7,7 +7,7 @@
 <div id="reg_form" onkeypress="return loginSubmitEnter(event)" class="body">
 	<form name="loginForm" method="post" action="<?=PATH?>/_register/login">
 		<input type="hidden" name="login_target" value="<?=$target?>" />
-		<div id="register_form">
+		<div id="register_form">		
             <?php if ($page->errorCount() > 0) { ?>
 			    <div class="form_error registerLoginError"><?=$page->errorString()?></div>
             <?php } ?>
@@ -22,7 +22,14 @@
 				<div id="register_password">
 					<span class="label labelRegisterPassword">Password</span>
 					<input class="value input valueRegisterPassword" type="password" name="password">
-				</div>
+				</div>			
+				<?php				
+				if (isset($_SESSION['isRemovedAccount']) && $_SESSION['isRemovedAccount'] == 1) {
+				?>
+    				<div class="g-recaptcha" data-sitekey="6LeTdfgSAAAAAPZ5Fb-J6R_X9GctCVy8l2MrUCuO"></div>
+				<?php
+				}
+				?>
 			</div>
 			<div id="register_submit">
 				<a class="button buttonRegisterLogin" href="#" onclick="document.loginForm.submit();">Sign In</a>

@@ -8,7 +8,8 @@
 	### the customer id if login successful.				###
 	### A. Caravello 8/25/2002								###
 	###########################################################
-	$page = new \Site\Page();	
+	session_start();
+	$page = new \Site\Page();
     $target = "";
 	if (isset($_REQUEST['return']) && $_REQUEST['return'] == 'true') {
 		# This Is How They SHOULD Come In from Redirect
@@ -69,21 +70,59 @@
 		else {
 			$page->addError("Sorry, your recovery token was not recognized or has expired");
 		}
-	}
-	elseif (isset($_REQUEST['login'])) {
+	} elseif (isset($_REQUEST['login'])) {
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
 		$customer = new \Register\Customer();
 		if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
+		    $customer->get($_REQUEST['login']);
+		    if ($customer->status == 'EXPIRED' || $customer->status == 'DELETED') {
+		    
+                # Check reCAPTCHA
+		        $url = "https://www.google.com/recaptcha/api/siteverify";
+		        $data = array(
+			        'secret'	=> $GLOBALS['_config']->captcha->private_key,
+			        'response'	=> $_REQUEST['g-recaptcha-response'],
+			        'remoteip'	=> $_SERVER['REMOTE_ADDR'],
+		        );
+	        
+		        $options = array(
+			        'http'	=> array(
+				        'method'	=> 'POST',
+				        'content'	=> http_build_query($data),
+			        ),
+		        );
+		        
+		        # Don't need to store these fields
+		        unset($_REQUEST['g-recaptcha-response']);
+		        unset($_REQUEST['btn_submit']);
+
+		        $context = stream_context_create($options);
+		        $result = file_get_contents($url,false,$context);
+		        $captcha_success = json_decode($result);
+
+		        if ($captcha_success->success == true) {
+			        app_log("ReCAPTCHA presented and SOLVED for " . $customer->status . " Customer (must be a human attempting)" , 'debug' , __FILE__ , __LINE__);
+		        } else {
+			        $page->addError("Sorry, CAPTCHA Invalid.  Please Try Again");
+			        app_log("ReCAPTCHA presented and FAILED for " . $customer->status . " Customer" , 'debug' , __FILE__ , __LINE__);
+		        }
+		    
+		        // if a old or deleted account login, then we'll force over to the login page with a captcha
+    		    $_SESSION['isRemovedAccount'] = 1;
+			    app_log("Customer ".$customer->id. " " . $customer->status . " login ATTEMPTED",'notice',__FILE__,__LINE__);
+			    app_log("login_target = $target",'notice',__FILE__,__LINE__);	
+			    header("location: ".PATH.'/_register/login');	
+		    } else {
+    			app_log("Customer ".$customer->id." login failed",'notice',__FILE__,__LINE__);
+			    app_log("login_target = $target",'notice',__FILE__,__LINE__);
+		    }
 			$page->addError("Authentication failed");
-		}
-		elseif ($customer->error) {
+		} elseif ($customer->error) {
 			app_log("Error in authentication: ".$customer->error,'error',__FILE__,__LINE__);
 			$page->addError("Application Error");
-		}
-		elseif ($customer->message) {
+		} elseif ($customer->message) {
 			$page->addError($customer->message);
-		}
-		else {
+		} else {
 			$customer->get($_REQUEST['login']);
 			$GLOBALS['_SESSION_']->assign($customer->id);
 			$GLOBALS['_SESSION_']->touch();
