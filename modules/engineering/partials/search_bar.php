@@ -102,7 +102,7 @@
 </style>
 <script>
     // TODO let's consolidate all this together, this is a local hack for the requirment now
-    $(document).ready(function (){
+    $(document).ready(function () {
 
         // add current class to the engineering section and add the sub-menu and add the "cog" icon
         var sideNav = $('#menu a[href="/_engineering/home"]');

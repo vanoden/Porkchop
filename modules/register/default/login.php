@@ -23,8 +23,8 @@
 					<span class="label labelRegisterPassword">Password</span>
 					<input class="value input valueRegisterPassword" type="password" name="password">
 				</div>			
-				<?php				
-				if (isset($_SESSION['isRemovedAccount']) && $_SESSION['isRemovedAccount'] == 1) {
+				<?php
+				if ((isset($_SESSION['isRemovedAccount']) && $_SESSION['isRemovedAccount'] == 1) || $_SESSION['failedAttemptCount'] > 2) {
 				?>
     				<div class="g-recaptcha" data-sitekey="6LeTdfgSAAAAAPZ5Fb-J6R_X9GctCVy8l2MrUCuO"></div>
 				<?php

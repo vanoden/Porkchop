@@ -8,20 +8,19 @@
 	### the customer id if login successful.				###
 	### A. Caravello 8/25/2002								###
 	###########################################################
-	session_start();
+	session_start();	
+	if (!isset($_SESSION['failedAttemptCount'])) $_SESSION['failedAttemptCount'] = 0;
 	$page = new \Site\Page();
     $target = "";
 	if (isset($_REQUEST['return']) && $_REQUEST['return'] == 'true') {
 		# This Is How They SHOULD Come In from Redirect
 		if (isset($_REQUEST['module']) && isset($_REQUEST['view'])) {
 			$target = "/_".$_REQUEST['module']."/".$_REQUEST['view'];
-		}
-		else {
+		} else {
 			$target = $GLOBALS['_REQUEST_']->refererURI();
 			app_log("Return to ".$GLOBALS['_REQUEST_']->refererURI()." after login");
 		}
-	}
-	elseif (isset($_POST['login_target']))
+	} elseif (isset($_POST['login_target']))
 		# This is how the SHOULD come in from FORM submit
 		$target = $_POST['login_target'];
 	elseif(isset($_GET['target']))
@@ -47,18 +46,15 @@
 		if ($token->error) {
 			app_log("Error in password recovery: ".$token->error,'error',__FILE__,__LINE__);
 			$page->addError("Error in password recovery.  Admins have been notified.  Please try again later.");
-		}
-		elseif ($customer_id > 0) {
+		} elseif ($customer_id > 0) {
 			$customer = new \Register\Customer($customer_id);
 			if ($customer->error) {
 				app_log("Error getting customer: ".$customer->error,'error',__FILE__,__LINE__);
 				$page->addError("Token error");
-			}
-			elseif(! $customer->id) {
+			} elseif(! $customer->id) {
 				app_log("Customer not found!",'notice',__FILE__,__LINE__);
 				$page->addError("Token error");
-			}
-			else {
+			} else {
 				$GLOBALS['_SESSION_']->assign($customer->id);
 
 				app_log("Customer ".$customer->id." logged in by token",'notice',__FILE__,__LINE__);
@@ -66,8 +62,7 @@
 				header("location: /_register/account");
 				exit;
 			}
-		}
-		else {
+		} else {
 			$page->addError("Sorry, your recovery token was not recognized or has expired");
 		}
 	} elseif (isset($_REQUEST['login'])) {
@@ -75,7 +70,7 @@
 		$customer = new \Register\Customer();
 		if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
 		    $customer->get($_REQUEST['login']);
-		    if ($customer->status == 'EXPIRED' || $customer->status == 'DELETED') {
+		    if ((isset($_SESSION['isRemovedAccount']) && $_SESSION['isRemovedAccount'] == 1) || $_SESSION['failedAttemptCount'] > 2 || $customer->status == 'EXPIRED' || $customer->status == 'DELETED') {
 		    
                 # Check reCAPTCHA
 		        $url = "https://www.google.com/recaptcha/api/siteverify";
@@ -102,6 +97,8 @@
 
 		        if ($captcha_success->success == true) {
 			        app_log("ReCAPTCHA presented and SOLVED for " . $customer->status . " Customer (must be a human attempting)" , 'debug' , __FILE__ , __LINE__);
+			        $_SESSION['failedAttemptCount'] = 0;
+			        $customer->update(array('status' => 'ACTIVE'));
 		        } else {
 			        $page->addError("Sorry, CAPTCHA Invalid.  Please Try Again");
 			        app_log("ReCAPTCHA presented and FAILED for " . $customer->status . " Customer" , 'debug' , __FILE__ , __LINE__);
@@ -116,6 +113,10 @@
     			app_log("Customer ".$customer->id." login failed",'notice',__FILE__,__LINE__);
 			    app_log("login_target = $target",'notice',__FILE__,__LINE__);
 		    }
+		    
+		    // track failed attempts at login for 
+		    $_SESSION['failedAttemptCount'] = $_SESSION['failedAttemptCount'] + 1;
+		    if ($_SESSION['failedAttemptCount'] > 3) $customer->update(array('status' => 'EXPIRED'));
 			$page->addError("Authentication failed");
 		} elseif ($customer->error) {
 			app_log("Error in authentication: ".$customer->error,'error',__FILE__,__LINE__);

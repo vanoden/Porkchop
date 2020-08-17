@@ -16,18 +16,21 @@
     // flag if we have an actual request or not to show for the UI
     $hasRequest = true;
 	if (empty($request->id)) $hasRequest = false;
-	
 	if ($_REQUEST['btn_add_item']) {
-		$parameters = array(
-			'line'			=> $request->nextLine(),
-			'product_id'	=> $_REQUEST['product_id'],
-			'serial_number'	=> $_REQUEST['serial_number'],
-			'status'		=> $_REQUEST['item_status'],
-			'description'	=> $_REQUEST['item_description'],
-			'quantity'		=> 0
-		);
-		$request->addItem($parameters);
-		if ($request->error()) $page->addError($request->error());
+	    if (!empty($_REQUEST['serial_number']) && !empty($_REQUEST['item_description'])) {
+            $parameters = array(
+	            'line'			=> $request->nextLine(),
+	            'product_id'	=> $_REQUEST['product_id'],
+	            'serial_number'	=> $_REQUEST['serial_number'],
+	            'status'		=> $_REQUEST['item_status'],
+	            'description'	=> $_REQUEST['item_description'],
+	            'quantity'		=> 0
+            );
+		    $request->addItem($parameters);
+		    if ($request->error()) $page->addError($request->error());
+	    } else {
+    	    $page->addError('Serial Number and Description required for adding a ticket');
+	    }
 	}
 
 	if ($_REQUEST['btn_cancel']) {

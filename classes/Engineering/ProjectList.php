@@ -72,7 +72,7 @@
                   ORDER BY title ASC";
             }
 
-            $rs = executeSQLByParams($find_objects_query,$bind_params);
+            $rs = executeSQLByParams($find_objects_query, array());
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::ProjectList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
