@@ -18,7 +18,7 @@
                 $create_table_query = "
                     CREATE TABLE IF NOT EXISTS `support_requests` (
 						id INT(11) NOT NULL AUTO_INCREMENT,
-						code varchar(255) NOT NULL,
+						code varchar(150) NOT NULL,
                         customer_id INT(11) NOT NULL,
                         organization_id INT(11) NOT NULL,
                         date_request datetime,
@@ -117,9 +117,9 @@
 						product_id INT(11) NOT NULL,
 						quantity INT(11) NOT NULL DEFAULT 1,
 						description TEXT,
-						PRIMARY KEY `pk_id` (`id`),
-						FOREIGN KEY `fk_event` (`event_id`) REFERENCES `support_action_events` (`id`),
-						FOREIGN KEY `fk_user` (`user_id`) REFERENCES `register_users` (`id`)
+						PRIMARY KEY `pk_part_id` (`id`),
+						FOREIGN KEY `fk_part_event` (`event_id`) REFERENCES `support_action_events` (`id`),
+						FOREIGN KEY `fk_part_user` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
@@ -149,11 +149,11 @@
                         date_approved datetime,
 						shipment_id INT(11),
                         status enum('NEW','SHIPPED','RECEIVED') NOT NULL DEFAULT 'NEW',
-						PRIMARY KEY `pk_id` (`id`),
-						FOREIGN KEY `fk_item` (`item_id`) REFERENCES `support_request_items` (`id`),
-						FOREIGN KEY `fk_approver` (`approved_id`) REFERENCES `register_users` (`id`),
-						INDEX `idx_date` (`date_approved`),
-						INDEX `idx_status` (`status`,`date_approved`)
+						PRIMARY KEY `pk_rma_id` (`id`),
+						FOREIGN KEY `fk_rma_item` (`item_id`) REFERENCES `support_request_items` (`id`),
+						FOREIGN KEY `fk_rma_approver` (`approved_id`) REFERENCES `register_users` (`id`),
+						INDEX `idx_rma_date` (`date_approved`),
+						INDEX `idx_rma_status` (`status`,`date_approved`)
 					)
                 ";
 				if (! $this->executeSQL($create_table_query)) {
@@ -170,9 +170,9 @@
                         author_id INT(11) NOT NULL,
                         date_comment datetime,
 						content text,
-						PRIMARY KEY `pk_id` (`id`),
-						FOREIGN KEY `fk_item` (`item_id`) REFERENCES `support_request_items` (`id`),
-						FOREIGN KEY `fk_author` (`author_id`) REFERENCES `register_users` (`id`),
+						PRIMARY KEY `pk_comment_id` (`id`),
+						FOREIGN KEY `fk_comment_item` (`item_id`) REFERENCES `support_request_items` (`id`),
+						FOREIGN KEY `fk_comment_author` (`author_id`) REFERENCES `register_users` (`id`),
 						INDEX `idx_date` (`date_comment`)
 					)
                 ";
