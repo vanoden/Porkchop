@@ -182,63 +182,6 @@
 					),
 				),
 				array(
-					"title"			=> "Datalogger",
-					"view_order"	=> 20,
-					"alt"			=> "Datalogger",
-					"description"	=> "Datalogger Management",
-					"items"			=> array(
-						array (
-							"title"	=> "Monitors",
-							"target"	=> "/_monitor/admin_assets",
-							"view_order"	=> 10,
-							"alt"			=> "Monitors",
-							"description"	=> "Monitors"
-						),
-						array (
-							"title"	=> "Jobs",
-							"target"	=> "/_monitor/admin_collections",
-							"view_order"	=> 10,
-							"alt"			=> "Jobs",
-							"description"	=> "Collection Management"
-						),
-						array (
-							"title"	=> "Credits",
-							"target"	=> "/_spectros/admin_credits",
-							"view_order"	=> 10,
-							"alt"			=> "Calibration Credits",
-							"description"	=> "Calibration Credit Management"
-						),
-						array (
-							"title"	=> "Calibrations",
-							"target"	=> "/_spectros/cal_report",
-							"view_order"	=> 40,
-							"alt"			=> "Calibration Report",
-							"description"	=> "Calibration Report"
-						),
-						array (
-							"title"	=> "Transfer Device",
-							"target"	=> "/_spectros/transfer_ownership",
-							"view_order"	=> 50,
-							"alt"			=> "Transfer Device",
-							"description"	=> "Device Transfers"
-						),
-						array (
-							"title"	=> "Sensor Models",
-							"target"	=> "/_monitor/sensor_models",
-							"view_order"	=> 90,
-							"alt"			=> "Sensor Model Management",
-							"description"	=> "Sensor Model Management"
-						),
-						array (
-							"title"	=> "Dashboards",
-							"target"	=> "/_monitor/dashboards",
-							"view_order"	=> 95,
-							"alt"			=> "Monitor Dashboard Management",
-							"description"	=> "Monitor Dashboard Management"
-						)
-					)
-				),
-				array(
 					"title"			=> "Engineering",
 					"target"		=> "/_engineering/home",
 					"view_order"	=> 50,
@@ -415,12 +358,15 @@
 
 	# Process Modules
 	foreach ($modules as $module_name => $module_data) {
+		install_log($module_name);
 		# Update Schema
 		$class_name = "\\$module_name\\Schema";
 		try {
 			$class = new $class_name();
 			$class_version = $class->version();
-			if ($class->error) install_fail($class->error);
+			if (! $class->upgrade()) {
+				install_fail("Error upgrading $module_name schema: ".$class->error());
+			}
 		} catch (Exception $e) {
 			install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
         }
@@ -449,7 +395,7 @@
 				install_log("Found role $role_name",'debug');
 			}
 		}
-	    //install_log("Add new template settings");
+	    install_log("Add new template settings");
 	    foreach ($module_data['templates'] as $view => $template) {
 	        $page = new \Site\Page(strtolower($module_name),$view);
 	        if ($page->error) {
