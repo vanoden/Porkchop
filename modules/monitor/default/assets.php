@@ -30,8 +30,7 @@
 	<td class="value <?=$greenbar?>"><?=$asset->product->code?></td>
 	<td class="value <?=$greenbar?>"><?=$asset->name?></td>
 </tr>
-<?
-		if ($greenbar) $greenbar = '';
-		else $greenbar = "greenbar";
+    <?
+		if ($greenbar) $greenbar = ''; else $greenbar = "greenbar";
 	} ?>
 </table>

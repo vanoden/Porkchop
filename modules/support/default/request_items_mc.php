@@ -15,8 +15,7 @@
     		$parameters['min_date'] = $_REQUEST['min_date'];
     		$minDate = $_REQUEST['min_date'];
 		}
-	}
-	else {
+	} else {
 		$parameters = array(
 			'status'	=> array(
 				'NEW','ACTIVE','PENDING_CUSTOMER','PENDING_VENDOR'
@@ -35,6 +34,7 @@
     // get items based on current search    
     $parameters['sort_by'] = 'ticket';
     if (!empty($_REQUEST['sort_by'])) $parameters['sort_by'] = $_REQUEST['sort_by'];
+    if (!empty($_REQUEST['sort_direction'])) $parameters['sort_direction'] = $_REQUEST['sort_direction'];
 	$itemlist = new \Support\Request\ItemList();
 	$items = $itemlist->find($parameters);
 	if ($itemlist->error()) $page->addError($itemlist->error());

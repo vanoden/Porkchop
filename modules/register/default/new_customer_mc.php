@@ -157,8 +157,7 @@
 						if ($template->error()) {
 							app_log($template->error(),'error');
 							$page->addError("Error generating verification email, please contact us at ".$_config->site->support_email." to complete your registration, thank you!");
-						}
-						else {
+						} else {
 							$message = new \Email\Message($_config->register->verify_email);
 							$message->html(true);
 							$message->body($template->output());
@@ -178,7 +177,49 @@
 		   $page->addError("Please confirm your humanity, solve captcha below.");
 		}
 	}
-
+	
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "resend") {
+	
+            // Generate Validation Key
+		    $validation_key = md5(microtime());
+            $customer = new \Register\Customer();
+            $verifiedCustomer = $customer->get($_REQUEST['login']);
+            if ($verifiedCustomer) {
+            
+                $customer->update(array('validation_key' => $validation_key));
+            
+                // create the verify account email
+                $verify_url = $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $_REQUEST['login'];
+                if ($_config->site->https) $verify_url = "https://$verify_url";
+                else $verify_url = "http://$verify_url";
+                $template = new \Content\Template\Shell(
+	                array(
+		                'path'	=> $_config->register->verify_email->template,
+		                'parameters'	=> array(
+			                'VERIFYING.URL' => $verify_url
+		                )
+	                )
+                );
+                if ($template->error()) {
+	                app_log($template->error(),'error');
+	                $page->addError("Error generating verification email, please contact us at ".$_config->site->support_email." to complete your registration, thank you!");
+                } else {
+	                $message = new \Email\Message($_config->register->verify_email);
+	                $message->html(true);
+	                $message->body($template->output());
+	                if (! $customer->notify($message)) {
+		                $page->addError("Confirmation email could not be sent, please contact us at ".$_config->site->support_email." to complete your registration, thank you!");
+		                app_log("Error sending confirmation email: ".$customer->error(),'error');
+	                } else {
+		                // show thank you page
+		                header("Location: /_register/thank_you");
+	                }
+                }
+            } else {
+                $page->addError("Account not found.");
+            }
+	}
+	
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "verify") {
 		app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
 		

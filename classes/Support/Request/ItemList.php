@@ -119,45 +119,47 @@
 			}
 			
             // adjust results for sorted by column from ui sortable table
+            $sortDirection = 'DESC';
+            if (isset($parameters['sort_direction']) && $parameters['sort_direction'] == 'asc') $sortDirection = 'ASC';
 			switch ($parameters['sort_by']) {
                 case 'requested':
 			        $find_objects_query .= "
-				        ORDER BY sr.date_request DESC
+				        ORDER BY sr.date_request $sortDirection
 			        ";
                 break;
                 case 'requestor':
 			        $find_objects_query .= "
-				        ORDER BY sr.customer_id DESC
+				        ORDER BY sr.customer_id $sortDirection
 			        ";
                 break;
                 case 'organization':
 			        $find_objects_query .= "
-				        ORDER BY sr.organization_id DESC
+				        ORDER BY sr.organization_id $sortDirection
 			        ";
                 break;
                 case 'product':
 			        $find_objects_query .= "
-				        ORDER BY s.product_id DESC
+				        ORDER BY s.product_id $sortDirection
 			        ";
                 break;
                 case 'serial':
 			        $find_objects_query .= "
-				        ORDER BY s.serial_number DESC
+				        ORDER BY s.serial_number $sortDirection
 			        ";
                 break;
                 case 'status':
 			        $find_objects_query .= "
-				        ORDER BY s.status DESC
+				        ORDER BY s.status $sortDirection
 			        ";
                 break;
                 case 'ticket_id':
 			        $find_objects_query .= "
-				        ORDER BY s.id DESC
+				        ORDER BY s.id $sortDirection
 			        ";
                 break;
                 default:
                     $find_objects_query .= "
-                        ORDER BY s.id DESC
+                        ORDER BY s.id $sortDirection
                     ";
                 break;
 			}

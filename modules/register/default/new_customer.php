@@ -165,7 +165,7 @@
 <?php
     if (isset($page->isVerifedAccount)) {
         if ($page->isVerifedAccount) {
-?>
+    ?>
     <h3>Your account has been verified, thank you!</h3>
     <br>
     <h5>You may login to your account <a href="/_register/login">here</a>.</h5>
@@ -173,9 +173,14 @@
     <h6><i><strong>Note:</strong> Our account administrators will soon fully approve your account to use our platform.</i></h6>
     <?php        
         } else {
-?>
+    ?>
         <h3>Account could not be verified</h3>
         <h5>Please check your <strong>spam / other</strong> mail folders in case you still need to find the correct verification link.</h5>
+        <form name="register" action="/_register/new_customer" method="POST">
+            <input type="hidden" name="method" value="resend">
+            <input type="hidden" name="login" value="<?=$_REQUEST['login'];?>">
+            <input type="submit" class="button" value="Resend Email" style="height: 35px; width: 190px;">
+        </form>
         <?php
         }
     } else {

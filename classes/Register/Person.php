@@ -228,6 +228,7 @@ class Person {
     }
 
     public function update($parameters = array()) {
+    
         if (!$this->id) {
             $this->error = "User ID Required for Update";
             return false;
@@ -275,6 +276,12 @@ class Person {
             $update_customer_query .= ",
                 `password` = password(?)";
             array_push($bind_params,$parameters['password']);
+        }
+
+        if (isset($parameters['validation_key'])) {
+            $update_customer_query .= ",
+                validation_key = ?";
+            array_push($bind_params,$parameters['validation_key']);
         }
 
         if (isset($parameters['automation']) && is_bool($parameters['automation'])) {

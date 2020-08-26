@@ -72,11 +72,9 @@
 	    <th>Status</th>
     </tr>
     <?php	
-        foreach ($requests as $request) { 
+        foreach ($requests as $request) {
             $productInfo = $request->items();
-            try {
-                $supportRequestItem = new Support\Request\Item($productInfo[0]->request->id);
-            } catch (Exception $e) {}
+            $supportRequestItem = new Support\Request\Item($productInfo[0]->request->id);
     ?>
         <tr>
             <td><a href="/_support/request_detail/<?=$request->code?>"><?=$request->code?></a></td>
@@ -118,7 +116,7 @@
 	        <td>&nbsp;</td>
         </tr>
         
-    <?	} ?>
+    <?php	} ?>
 </table>
 <?php
 if (empty($requests) && $firstSearch) {

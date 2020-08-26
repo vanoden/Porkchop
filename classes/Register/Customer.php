@@ -18,10 +18,12 @@
 				FROM	register_users
 				WHERE	login = ?
 			";
+			
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
 				array($code)
 			);
+			
 			if (! $rs) {
 				$this->error = "SQL Error in Register::Customer::get: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
