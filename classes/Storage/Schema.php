@@ -109,8 +109,8 @@
 						`id`			int(11) NOT NULL AUTO_INCREMENT,
 						`code`			varchar(100) NOT NULL,
 						`repository_id`	int(11) NOT NULL,
-						`path` 			varchar(255) NOT NULL,
-						`name`			varchar(255) NOT NULL,
+						`path` 			varchar(150) NOT NULL,
+						`name`			varchar(150) NOT NULL,
 						`mime_type`		varchar(255) NOT NULL,
 						`size`			int(11) NOT NULL,
 						`date_created`	datetime,
@@ -121,8 +121,8 @@
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `uk_code` (`code`),
 						UNIQUE KEY `uk_file_name` (`repository_id`,`path`,`name`),
-						FOREIGN KEY `fk_repository_id` (`repository_id`) REFERENCES `storage_repositories` (`id`),
-						FOREIGN KEY `fk_user_id` (`user_id`) REFERENCES `register_users` (`id`)
+						FOREIGN KEY `fk_file_repository_id` (`repository_id`) REFERENCES `storage_repositories` (`id`),
+						FOREIGN KEY `fk_file_user_id` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
 				

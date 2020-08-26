@@ -80,8 +80,8 @@
    <div id="accountTypeQuestion" class="login-area">
       <span class="label" style="display: inline;">Type:</span>
 		<select name="automation" class="value input">
-			<option value="0"<? if ($customer->human()) print " selected"; ?>>Human</option>
-			<option value="1"<? if ($customer->automation()) print " selected"; ?>>Automation</option>
+			<option value="0"<?php if ($customer->human()) print " selected"; ?>>Human</option>
+			<option value="1"<?php if ($customer->automation()) print " selected"; ?>>Automation</option>
 		</select>
    </div>
    <!--	Start LOGIN Specs -->
@@ -98,7 +98,7 @@
             <select class="value input registerValue" name="organization_id">
                <option value="">Select</option>
                <?php	foreach ($organizations as $organization) {	?>
-               <option value="<?=$organization->id?>"<? if ($organization->id == $customer->organization->id) print " selected"; ?>><?=$organization->name?></option>
+               <option value="<?=$organization->id?>"<?php if ($organization->id == $customer->organization->id) print " selected"; ?>><?=$organization->name?></option>
                <?php	} ?>
             </select>
          </div>
@@ -225,7 +225,7 @@
    <h3>Status</h3>
    <select class="input" name="status">
       <?php	foreach(array('NEW','ACTIVE','EXPIRED','DELETED') as $status) {?>
-      <option value="<?=$status?>"<? if ($status == $customer->status) print " selected"; ?>><?=$status?></option>
+      <option value="<?=$status?>"<?php if ($status == $customer->status) print " selected"; ?>><?=$status?></option>
       <?php	}	?>
    </select>
    <h3>Assigned Roles</h3>
@@ -240,7 +240,7 @@
          foreach($all_roles as $role) {
          ?>
       <tr>
-         <td class="value<?=$greenbar?>"><input type="checkbox" name="role[<?=$role->id?>]" value="1" <? if ($customer->has_role($role->name)) print " CHECKED";?>/></td>
+         <td class="value<?=$greenbar?>"><input type="checkbox" name="role[<?=$role->id?>]" value="1" <?php if ($customer->has_role($role->name)) print " CHECKED";?>/></td>
          <td class="value<?=$greenbar?>"><?=$role->name?></td>
          <td class="value<?=$greenbar?>"><?=$role->description?></td>
       </tr>

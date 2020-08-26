@@ -32,7 +32,10 @@ Run composer
 ```
 php composer.phar install --no-dev
 ```
-
+Install XML Serializer
+```
+pear install channel://pear.php.net/XML_UnSerializer-0.21.0
+```
 ## Configuration
 
 Copy the file '/config/config.php.dist' to '/config/config.php'.  Edit the file with your database connection information and other things specific to your site.

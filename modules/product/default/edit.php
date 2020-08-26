@@ -47,9 +47,9 @@
 		<span class="label">Status</span>
 		<select name="status" class="value input wide_sm">
 			<option value="">Select</option>
-			<option value="ACTIVE"<? if ($item->status == 'ACTIVE') print " selected"; ?>>ACTIVE</option>
-			<option value="HIDDEN"<? if ($item->status == 'HIDDEN') print " selected"; ?>>HIDDEN</option>
-			<option value="DELETED"<? if ($item->status == 'DELETED') print " selected"; ?>>DELETED</option>
+			<option value="ACTIVE"<?php if ($item->status == 'ACTIVE') print " selected"; ?>>ACTIVE</option>
+			<option value="HIDDEN"<?php if ($item->status == 'HIDDEN') print " selected"; ?>>HIDDEN</option>
+			<option value="DELETED"<?php if ($item->status == 'DELETED') print " selected"; ?>>DELETED</option>
 		</select>
 	</div>
 	<div class="input-horiz" id="itemShortDescription">
@@ -85,7 +85,7 @@
 		<select class="value input wide_md" name="default_dashboard_id" id="default_dashboard_id">
 <?php	$default_dashboard = $item->getMetadata('default_dashboard_id');
 	foreach($dashboards as $dashboard) { ?>
-			<option value="<?=$dashboard->id?>"<? if ($default_dashboard->value == $dashboard->id) { print " selected"; } ?>><?=$dashboard->name?></option>
+			<option value="<?=$dashboard->id?>"<?php if ($default_dashboard->value == $dashboard->id) { print " selected"; } ?>><?=$dashboard->name?></option>
 <?php	} ?>
 		</select>
 	</div>
@@ -93,7 +93,7 @@
 		<span class="label">Manual</span>
 		<select class="value input wide_md" name="manual_id" id="manual_id">
 <?php	foreach($manuals as $manual) { ?>
-			<option value="<?=$manual->id?>"<? if ($item->manual_id == $manual->id) { print " selected"; } ?>><?=$manual->name?></option>
+			<option value="<?=$manual->id?>"<?php if ($item->manual_id == $manual->id) { print " selected"; } ?>><?=$manual->name?></option>
 <?php	} ?>
 		</select>
 	</div>
@@ -102,7 +102,7 @@
 		<select class="value input wide_md" name="spec_table_image" id="spec_table_image">
 			<option value="Select"></option>
 <?php	foreach($tables as $table) { ?>
-			<option value="<?=$table->id?>"<? if ($item->spec_table_image == $table->id) { print " selected"; } ?>><?=$table->name?></option>
+			<option value="<?=$table->id?>"<?php if ($item->spec_table_image == $table->id) { print " selected"; } ?>><?=$table->name?></option>
 <?php	} ?>
 		</select>
 	</div>

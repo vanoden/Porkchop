@@ -139,8 +139,8 @@
 						`vendor_sku`	varchar(255),
 						UNIQUE KEY `UK_VENDOR_ITEM` (`vendor_id`,`product_id`),
 						KEY `IDX_PRODUCT` (`product_id`),
-						FOREIGN KEY `FK_PRODUCT_ID` (`product_id`) REFERENCES `product_products` (`id`),
-						FOREIGN KEY `FK_VENDOR_ID` (`vendor_id`) REFERENCES `product_vendors` (`id`)
+						FOREIGN KEY `FK_VENDOR_PRODUCT_ID` (`product_id`) REFERENCES `product_products` (`id`),
+						FOREIGN KEY `FK_PRODUCT_VENDOR_ID` (`vendor_id`) REFERENCES `product_vendors` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {

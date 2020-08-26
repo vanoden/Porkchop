@@ -1,3 +1,4 @@
+cache
 classes/Spectros
 classes/Monitor
 classes/Action
@@ -9,8 +10,9 @@ modules/monitor/spectros
 modules/contact/spectros
 modules/action/spectros
 modules/event/spectros
-modules/monitor/solvay
+modules/monitor/local
 modules/brand
+modules/local
 templates
 tmp
 node_modules/

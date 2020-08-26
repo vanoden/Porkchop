@@ -18,7 +18,7 @@
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `shipping_vendors` (
 						id INT(11) NOT NULL AUTO_INCREMENT,
-						name VARCHAR(255) NOT NULL,
+						name VARCHAR(150) NOT NULL,
 						account_number VARCHAR(255),
 						PRIMARY KEY `pk_vendor_id` (`id`),
 						UNIQUE KEY `uk_name` (`name`)
@@ -34,7 +34,7 @@
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `shipping_shipments` (
 						id INT(11) NOT NULL AUTO_INCREMENT,
-						code varchar(255) NOT NULL,
+						code varchar(150) NOT NULL,
 						document_number varchar(255) NOT NULL,
 						date_entered datetime NOT NULL,
 						date_shipped datetime,
