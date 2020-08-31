@@ -1,0 +1,92 @@
+<style>
+	zoneLabel {
+		width: 150px;
+	}
+	zoneValue {
+		margin-right: 15px;
+		margin-left: 15px;
+	}
+</style>
+<form name="assetForm" method="post" action="/_monitor/asset" class="monitor-form">
+<input type="hidden" name="id" value="<?=$asset->id?>" />
+<?php if ($page->errorCount() > 0) { ?>
+<div class="form_error"><?=$page->errorString()?></div>
+<?php	} else if ($page->success) { ?>
+<div class="form_success"><?=$page->success?></div>
+<?php	} ?>
+<h2>Monitor</h2>
+<ul class="form-fields monitor">
+	<li><label for="serialNumber">Serial Number</label><input type="text" name="serialNumber" value="<?=$asset->code?>" disabled/></li>
+	<li><label for="name">Name</label><input type="text" name="Name" value="<?=$asset->name?>" disabled/></li>
+	<li><label for="model">Model</label><input type="text" name="productName" value="<?=$asset->product->name?>" disabled/></li>
+	<li><label for="calibrated">Calibrated</label><input type="text" name="calibrated" value="Unsupported" disabled/></li>
+</ul>
+<ul class="form-buttons">
+	<li><input type="submit" name="btn_submit" class="button" /></li>
+</ul>
+</form>
+<div class="title">Last Communication</div>
+<table class="body" cellpadding="0" cellspacing="0" width="900px">
+<tr><th class="label">Date Hit</th>
+	<th class="label">IP Address</th>
+	<th class="label">URI</th>
+	<th class="label">Method</th>
+	<th class="label">Agent</th>
+	<th class="label">Status</th>
+</tr>
+<?php	if ($communication->timestamp > 0) { 
+		$timearray = $GLOBALS['_SESSION_']->localtime($communication->timestamp);
+		$request_time = sprintf("%d/%d/%04d %02d:%02d:%02d",$timearray['month'],$timearray['day'],$timearray['year'],$timearray['hour'],$timearray['minute'],$timearray['second']); ?>
+<tr><td class="value responseValue" nowrap><?=$request_time?></td>
+	<td class="value responseValue"><?=$request->client_ip?></td>
+	<td class="value responseValue"><?=$request->uri?></td>
+	<td class="value responseValue"><?=$request->post->method?></td>
+	<td class="value responseValue"><?=$request->user_agent?></td>
+	<td class="value responseValue"><?=$communication->result?></td>
+</tr>
+<?php	} else { ?>
+<tr><td class="value" colspan="4">None recorded</td></tr>
+<?php	} ?>
+</table>
+<div class="title">Zones</div>
+<table class="body" cellpadding="0" cellspacing="0">
+<tr><th class="label zoneLabel" style="width: 50px;">ID</th>
+	<th class="label zoneLabel" style="width: 180px;">Name</th>
+	<th class="label zoneLabel" style="width: 120px;">Model</th>
+	<th class="label zoneLabel" style="width: 120px;">Units</th>
+	<th class="label zoneLabel" style="width: 140px;">Last Reading</th>
+	<th class="label zoneLabel" style="width: 100px;">Last Value</th>
+</tr>
+<?php	$greenbar = '';
+	foreach ($sensors as $sensor) {
+		$reading = $sensor->lastReading();
+		$datetime = $GLOBALS['_SESSION_']->localtime($reading->timestamp);
+		$reading_time = sprintf("%d/%d/%4d %02d:%02d:%02d",$datetime["month"],$datetime["day"],$datetime["year"],$datetime['hour'],$datetime['minute'],$datetime['second']);
+?>
+<tr><td class="value zoneValue <?=$greenbar?>" style="text-align: right"><?=$sensor->code?>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td class="value zoneValue <?=$greenbar?>"><?=$sensor->name?></td>
+	<td class="value zoneValue <?=$greenbar?>"><?=$sensor->model->code?></td>
+	<td class="value zoneValue <?=$greenbar?>"><?=$sensor->model->units?></td>
+	<td class="value zoneValue <?=$greenbar?>"><? if ($reading->timestamp) { print $reading_time; } ?></td>
+	<td class="value zoneValue <?=$greenbar?>" style="text-align: right"><?=$reading->value?>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</tr>
+<?php		
+        if ($greenbar) $greenbar = '';
+		else $greenbar = 'greenbar';
+	}
+?>
+</table>
+<div class="title">Messages</div>
+<table class="body" cellpadding="0" cellspacing="0">
+<tr><th class="label">Date</th>
+	<th class="label">Level</th>
+	<th class="label">Message</th>
+</tr>
+<?php  foreach ($messages as $message) { ?>
+<tr><td class="value"><?=$message->localtime?></td>
+	<td	class="value"><?=$message->level?></td>
+	<td class="value"><?=$message->message?></td>
+</tr>
+<?php	}
+?>
+</table>
