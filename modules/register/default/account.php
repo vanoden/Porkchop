@@ -28,7 +28,7 @@
 <form name="register" action="<?=PATH?>/_register/account" method="POST">
 <input type="hidden" name="target" value="<?=$target?>"/>
 <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
-<span class="title">Account Settings</span>
+<h2>Account Settings</h2>
 <?php if ($page->error) { ?>
     <div><?=$page->error?></div>
 <?php }
