@@ -4,26 +4,30 @@
 	class BaseSchema {
 		public $errno;
 		public $error;
-		private $info_table;
+		public $module;
+		public $infoTable;
+		public $infoKey;
 
 		public function __construct() {
-			$this->info_table = strtolower($this->module)."__info";
-
+			if (! isset($this->infoTable))
+				$this->infoTable = strtolower($this->module)."__info";
+			if (! isset($this->infoKey))
+				$this->infoKey = 'schema_version';
 			// Create Info Table If Not Exists
 			$this->initInfoTable();
 
 			// Upgrade to Latest Version
-			$this->upgrade();
+#			$this->upgrade();
 		}
 
 		private function initInfoTable() {
 			# See if Schema is Available
 			$schema_list = $GLOBALS['_database']->MetaTables();
 
-			if (! in_array($this->info_table,$schema_list)) {
+			if (! in_array($this->infoTable,$schema_list)) {
 				# Create __info table
 				$create_table_query = "
-					CREATE TABLE `".$this->info_table."` (
+					CREATE TABLE `".$this->infoTable."` (
 						label   varchar(100) not null primary key,
 						value   varchar(255)
 					)
@@ -40,8 +44,8 @@
 			# Check Current Schema Version
 			$get_version_query = "
 				SELECT  value
-				FROM    `".$this->info_table."`
-				WHERE   label = 'schema_version'
+				FROM    `".$this->infoTable."`
+				WHERE   label = '".$this->infoKey."'
 			";
 
 			$rs = $GLOBALS['_database']->Execute($get_version_query);
@@ -59,8 +63,8 @@
 			$this->current_version = $version;
 			$update_schema_version = "
 				INSERT
-				INTO    `".$this->info_table."`
-				VALUES  ('schema_version',?)
+				INTO    `".$this->infoTable."`
+				VALUES  ('".$this->infoKey."',?)
 				ON DUPLICATE KEY UPDATE
 					value = ?
 			";

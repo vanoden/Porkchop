@@ -41,7 +41,7 @@
 
 		# Get Records
 		$organizations = $organizationlist->find($find_parameters);
-		if ($organizationlist->error) $GLOBALS['_page']->error = "Error finding organizations: ".$organizationlist->error;
+		if ($organizationlist->error) $page->addError("Error finding organizations: ".$organizationlist->error);
 
 		if ($_REQUEST['start'] < $organizations_per_page)
 			$prev_offset = 0;
@@ -53,6 +53,6 @@
 		if ($next_offset > count($organizations)) $next_offset = $_REQUEST['start'] + count($organizations);
 	}
 	else {
-		$page->error = "You are not permitted to see this view";
+		$page->addError("You are not permitted to see this view");
 		$organizations = array();
 	}

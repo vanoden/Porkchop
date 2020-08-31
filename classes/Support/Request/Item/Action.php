@@ -81,9 +81,7 @@
 				VALUES
 				(		?,sysdate(),?,?,?,?,?,?,?)
 			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
+            $rs = executeSQLByParams($add_object_query, array(
 					$item->id,
 					$datetime,
 					$requestedBy->id,
@@ -92,8 +90,8 @@
 					$parameters['description'],
 					$assignedTo->id,
 					0
-				)
-			);
+			));
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Action::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -150,8 +148,8 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-
-			$GLOBALS['_database']->Execute($update_action_query,$bind_params);
+			$rs = executeSQLByParams($update_action_query, $bind_params);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Action::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -166,10 +164,8 @@
 				FROM	support_item_actions
 				WHERE	id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_action_query,
-				array($this->id)
-			);
+			$rs = executeSQLByParams($get_action_query, array($this->id));
+			
 			query_log($get_action_query);
 			if (! $rs) {
 				$this->_error = "SQL Error in SupportRequest::details: ".$GLOBALS['_database']->ErrorMsg();
@@ -191,7 +187,7 @@
 			return $this->_error;
 		}
 
-		public function addEvent($parameters) {
+		public function addEvent($parameters) {		
 			$parameters['action_id'] = $this->id;
 			$event = new \Support\Request\Item\Action\Event();
 			$event->add($parameters);

@@ -60,7 +60,7 @@ if (empty($supportRequestList)) {
     </div> <!-- end row header -->
     <div class="tableRow">
         <div class="tableCell">
-            <a href="/_support/request_item/<?=$item->id?>"><?=$item->ticketNumber()?></a>
+            <a href="/_support/request_item/<?=$item->id?>"><?=(isset($item)) ? $item->ticketNumber() : ''?></a>
         </div>
         <div class="tableCell">
             <?=$item->product->code?>
@@ -172,7 +172,6 @@ if (count($customers) > 0) {
     </table>
 <?php 
     }
-} 
 ?>
 <h3>Pending Product Registrations</h3>
 <!--	Start First Row-->

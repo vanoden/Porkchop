@@ -34,7 +34,7 @@
 			}
 
             // get a correct date added field
-			if (get_mysql_date($parameters['date_comment'])) {
+			if (isset($parameters['date_comment']) && get_mysql_date($parameters['date_comment'])) {
 				$date_comment = get_mysql_date($parameters['date_comment']);
 			} else {
 				$date_comment = date('Y-m-d H:i:s');
@@ -61,12 +61,8 @@
 				(date_comment,user_id,content,code)
 				VALUES
 				(?,?,?,?)";
-				
-			$GLOBALS['_database']->Execute (
-				$add_object_query,
-				array($date_comment, $parameters['user_id'], $parameters['content'], $code)
-			);
 
+            $rs = executeSQLByParams($add_object_query, array($date_comment, $parameters['user_id'], $parameters['content'], $code));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Comment::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -100,7 +96,7 @@
 				}
 			}
 			
-			if (get_mysql_date($parameters['date_comment'])) {
+			if (isset($parameters['date_comment']) && get_mysql_date($parameters['date_comment'])) {
 				$date_comment = get_mysql_date($parameters['date_comment']);
 			} else {
 				$date_comment = date('Y-m-d H:i:s');
@@ -108,12 +104,12 @@
 
 			$update_object_query .= " WHERE	id = ?";
 			array_push($bind_params,$this->id);
-
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+            $rs = executeSQLByParams($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Comment::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
 			return $this->details();
 		}
 
@@ -124,12 +120,8 @@
 				FROM	engineering_task_comments
 				WHERE	id = ?
 			";
-			
-			$rs = $GLOBALS['_database']->Execute (
-				$get_object_query,
-				array($id)
-			);
-			
+
+			$rs = executeSQLByParams($get_object_query, array($id));			
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::Comment::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -150,13 +142,9 @@
 				SELECT	*, unix_timestamp(date_comment) timestamp_added
 				FROM	engineering_task_comments
 				WHERE	id = ?
-			";
-
-			$rs = $GLOBALS['_database']->Execute (
-				$get_object_query,
-				array($this->id)
-			);
-
+			";			
+			
+			$rs = executeSQLByParams($get_object_query, array($this->id));
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::Task::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

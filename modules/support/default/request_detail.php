@@ -16,6 +16,16 @@
         white-space: -o-pre-wrap;
         word-wrap: break-word;
    }
+   
+    hr {
+        border: 0;
+        height: 5px;
+        background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+        width: 75%;
+        margin: 50px;
+        margin-left: 0px;
+        margin-bottom: 25px;
+    }
 </style>
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -278,7 +288,7 @@
             <?php
             }
         }
-        ?><br/>
+        ?>
         </div>
         <?php	} ?>
         <?php	if (isset($supportItemComments) && count($supportItemComments) > 0) { ?>
@@ -316,6 +326,7 @@
             <?php	}	
              } ?>
         <?php	} ?>
+      <!-- End comment Row -->
 	</form>
 	
     <!-- begin file upload -->

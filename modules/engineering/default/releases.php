@@ -16,7 +16,8 @@
 		<div class="tableCell" style="width: 20%;">Code</div>
 		<div class="tableCell" style="width: 40%;">Title</div>
 		<div class="tableCell" style="width: 15%;">Status</div>
-		<div class="tableCell" style="width: 25%;">Released On</div>
+		<div class="tableCell" style="width: 12%;">Released On</div>
+		<div class="tableCell" style="width: 12%;">Status</div>
 	</div>
 <?php
 	foreach ($releases as $release) {
@@ -33,6 +34,9 @@
 		</div>
 		<div class="tableCell">
 			<?=$release->date_released?>
+		</div>
+		<div class="tableCell">
+			<?=$release->status?>
 		</div>
 	</div>
 <?php	} ?>

@@ -18,7 +18,7 @@
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `geography_countries` (
 						id INT(4) NOT NULL AUTO_INCREMENT,
-						name VARCHAR(255) NOT NULL,
+						name VARCHAR(150) NOT NULL,
 						abbreviation VARCHAR(100),
 						view_order INT(11) NOT NULL DEFAULT 500,
 						PRIMARY KEY `pk_id` (`id`),
@@ -36,9 +36,9 @@
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `geography_provinces` (
 						id INT(11) NOT NULL AUTO_INCREMENT,
-						code varchar(255) NOT NULL,
+						code varchar(150) NOT NULL,
 						country_id INT(4) NOT NULL,
-						name varchar(255) NOT NULL,
+						name varchar(150) NOT NULL,
 						type varchar(100),
 						abbreviation varchar(100) NOT NULL,
 						label	varchar(255),

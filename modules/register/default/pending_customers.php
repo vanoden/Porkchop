@@ -158,8 +158,6 @@
    <div class="form_error"><?=$page->errorString()?></div>
    <?php	} ?>
    <form action="/_register/pending_customers" method="post" autocomplete="off">
-	  <input id="min_date" type="hidden" name="min_date" readonly value="<?=isset($_REQUEST['min_date']) ? $_REQUEST['min_date'] : ''?>" />
-	  <input id="max_date" type="hidden" name="min_date" readonly value="<?=isset($_REQUEST['max_date']) ? $_REQUEST['max_date'] : ''?>" />
 	  <table>
 		 <tr>
 			<th><span class="label"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> Start Date</th>
@@ -167,8 +165,8 @@
 			<th><span class="label"><i class="fa fa-filter" aria-hidden="true"></i> Status</span></th>
 		 </tr>
 		 <tr>
-			<td><input type="text" id="dateStart" name="dateStart" class="value input" value="<?=isset($_REQUEST['dateStart']) ? $_REQUEST['dateStart'] : ''?>" /></td>
-			<td><input type="text" id="dateEnd" name="dateEnd" class="value input" value="<?=isset($_REQUEST['dateEnd']) ? $_REQUEST['dateEnd'] : ''?>" /></td>
+			<td><input type="text" id="dateStart" name="dateStart" class="value input" value="<?=isset($_REQUEST['fromDate']) ? $_REQUEST['fromDate'] : ''?>" /></td>
+			<td><input type="text" id="dateEnd" name="dateEnd" class="value input" value="<?=isset($_REQUEST['toDate']) ? $_REQUEST['toDate'] : ''?>" /></td>
 			<td style="width: 50%;">
 			   <?php foreach ($queuedCustomers->possibleStatus as $possibleStatus) { ?>
 			   <input type="checkbox" name="<?=$possibleStatus?>" value="<?=$possibleStatus?>"
@@ -195,7 +193,7 @@
    }
    ?>
 <h2 style="display: inline-block;">Pending Customers
-   <?=isset($page->isSearchResults)? "[Found Customers: ". count($queuedCustomersList)."]" : "";?>
+   <?=isset($page->isSearchResults) ? "[Found Customers: ". count($queuedCustomersList)."]" : "";?>
 </h2>
 <!--	START First Table -->
 <div class="tableBody" style="min-width: 100%;">

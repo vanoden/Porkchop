@@ -11,9 +11,8 @@
 	if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) {
 		if ($GLOBALS['_SESSION_']->customer->organization->id) {
 			$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
-		}
-		else {
-			$page->error = "Must belong to an organization";
+		} else {
+			$page->addError("Must belong to an organization");
 		}
 	}
 	elseif($_REQUEST['organization_id']) {

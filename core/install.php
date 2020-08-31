@@ -1,4 +1,4 @@
-<?
+<?php
 	###################################################
 	### install.php									###
 	### This module is a content management and 	###
@@ -17,11 +17,16 @@
 	error_log("\$_REQUEST: ".print_r($_REQUEST,true));
 	$errorstr = '';
 
+	$pid = getMyPid();
+
 	# Load Config
 	require '../config/config.php';
 
 	# We'll handle errors ourselves, thank you very much
-	error_reporting(0);
+	ini_set('display_errors','1');
+	ini_set('display_startup_errors','1');
+	#set_error_handler("install_log_error");
+	error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 
 	###################################################
 	### Load API Objects							###
@@ -31,34 +36,37 @@
 
 	# Autoload Classes
 	spl_autoload_register('load_class');
+
 	# Database Abstraction
 	require THIRD_PARTY.'/adodb/adodb-php/adodb-exceptions.inc.php';
 	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
 
-        ###################################################
-        ### Connect to Logger                                                   ###
-        ###################################################
-        $logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG));
-        if ($logger->error()) {
-                error_log("Error initializing logger: ".$logger->error());
-                print "Logger error\n";
-                exit;
-        }
-        $logger->connect();
-        if ($logger->error()) {
-                error_log("Error initializing logger: ".$logger->error());
-                print "Logger error\n";
-                exit;
-        }
+	###################################################
+	### Connect to Logger							###
+	###################################################
+	$logger = \Site\Logger::get_instance(array('type' => "Screen",'level' => 'info','html' => true));
+	if ($logger->error()) {
+		error_log("Error initializing logger: ".$logger->error());
+		print "Logger error\n";
+		exit;
+	}
+	$logger->connect();
+	if ($logger->error()) {
+		error_log("Error initializing logger: ".$logger->error());
+		print "Logger error\n";
+		exit;
+	}
 
 	# Don't Cache this Page
 	header("Expires: 0");
 	header("Cache-Control: no-cache, must-revalidate");
 
+	$_SESSION_ = new \Site\Session;
+	$_SESSION_->elevate();
 	###################################################
 	### Check Input									###
 	###################################################
-	if ($_REQUEST['submit']) {
+	if (isset($_REQUEST['submit'])) {
 		if ($_REQUEST['password_1'] != $_REQUEST['password_2'])
 			$errorstr .= "Passwords Don't Match!<br>";
 		if (! $_REQUEST['company_name'])
@@ -67,13 +75,15 @@
 			$errorstr .= "Password Required";
 	}
 
-	preg_match("/(\w+\.\w+)\$/",$_SERVER["HTTP_HOST"],$matches);
+	preg_match("/(\w[\w\-\.]+)\$/",$_SERVER["HTTP_HOST"],$matches);
 	$domain_name = $matches[1];
 
 	###################################################
 	### Ask a few questions							###
 	###################################################
-	if ((! $_REQUEST['submit']) or ($errorstr))	{
+	if ((! isset($_REQUEST['submit'])) or ($errorstr))	{
+		if (! isset($_REQUEST['company_name'])) $_REQUEST['company_name'] = "";
+		if (! isset($_REQUEST['admin_login'])) $_REQUEST['admin_login'] = "admin";
 ?>
 <html>
 <head>
@@ -98,7 +108,7 @@
 <table>
 <tr><th colspan="2">Porchop Web Installer V2.0</th></tr>
 </table>
-<? if ($errorstr) print "<table><tr><td colspan=\"2\" class=\"error\">There are errors in your submittal:<br>$errorstr</td></tr></table>";?>
+<?php if ($errorstr) print "<table><tr><td colspan=\"2\" class=\"error\">There are errors in your submittal:<br>$errorstr</td></tr></table>";?>
 <table>
 <tr><th>Company Name</th><td><input type="text" name="company_name" value="<?=$_REQUEST['company_name']?>"/></td></tr>
 </table>
@@ -106,9 +116,6 @@
 <tr><th>Admin Login</th><td><input type="text" name="admin_login" value="<?=$_REQUEST['admin_login']?>"/></td></tr>
 <tr><th>Password</th><td><input type="password" name="password_1" value=""/></td></tr>
 <tr><th>Confirm</th><td><input type="password" name="password_2" value=""/></td></tr>
-</table>
-<table>
-<tr><th>Database</th><td><input type="text" name="schema" value="<?=$_REQUEST['schema']?>"/></td></tr>
 </table>
 <table>
 <tr><th>Maintenance Mode?</th><td><input type="radio" name="status" value="1"/>No &nbsp; <input type="radio" name="status" value="0"/>Yes</td></tr>
@@ -119,7 +126,7 @@
 </form>
 </body>
 </html>
-<?
+<?php
 		exit;
 	}
 
@@ -166,14 +173,35 @@
 
 	install_log("Creating Company Schema");
 	$company_schema = new \Company\Schema();
-	$company_schema->upgrade();
+	if (! $company_schema->upgrade()) {
+		install_log("Error creating Company schema: ".$company_schema->error());
+		exit;
+	}
 	install_log("Creating Session Schema");
 	$session_schema = new \Site\Schema();
-	$session_schema->upgrade();
+	if (! $session_schema->upgrade()) {
+		install_log("Error creating Site schema: ".$site_schema->error());
+		exit;
+	}
 	$geography_schema = new \Geography\Schema();
-	$geography_schema->upgrade();
+	if (! $geography_schema->upgrade()) {
+		install_log("Error creating Geography schema: ".$geography_schema->error());
+		exit;
+	}
 	$register_schema = new \Register\Schema();
-	$register_schema->upgrade();
+	if (! $register_schema->upgrade()) {
+		install_log("Error creating Register schema: ".$register_schema->error());
+		exit;
+	}
+
+	###################################################
+	### Check Install Status...no over-installs		###
+	###################################################
+	$site_config = new \Site\Configuration;
+	if ($site_config->get("_install_complete")) {
+		install_log("Installation already completed");
+		exit;
+	}
 
 	install_log("Starting session");
 	$_SESSION_ = new \Site\Session();
@@ -236,11 +264,11 @@
 	}
 	else {
 		$location->add(array(
-				name	=> $_SERVER['SERVER_NAME'],
-				host	=> $_SERVER['SERVER_NAME'],
-				domain_id => $domain->id,
-				company_id => $company->id,
-				code	=> uniqid()
+				"name"	=> $_SERVER['SERVER_NAME'],
+				"host"	=> $_SERVER['SERVER_NAME'],
+				"domain_id" => $domain->id,
+				"company_id" => $company->id,
+				"code"	=> uniqid()
 			)
 		);
 		if ($location->error) {
@@ -288,15 +316,15 @@
 	install_log("Getting available roles");
 	$rolelist = new \Register\RoleList();
 	$roles = $rolelist->find();
-	if ($rolelist->error) {
+	if ($rolelist->error()) {
 		install_log("Error getting roles: ".$rolelist->error,'error');
 		exit;
 	}
 
 	install_log("Granting roles");
 	foreach ($roles as $role) {		
-		if ($admin->has_role($role->code)) {
-			install_log("Already has role ".$role->code);
+		if ($admin->has_role($role->name)) {
+			install_log("Already has role ".$role->name);
 			continue;
 		}
 		install_log("Granting ".$role->name."[".$role->id."]");
@@ -308,12 +336,19 @@
 		}
 	}
 
+	$site_config->set("_install_complete",1);
+
 	install_log("Installation completed successfully");
 
 	function install_log($message = '',$level = 'info') {
 		print date('Y/m/d H:i:s');
+		print " [".$GLOBALS["pid"]."]";
 		print " [$level]";
 		print ": $message<br>\n";
 		flush();
+	}
+
+	function install_log_error($errno, $errstr, $errfile, $errline) {
+		print_r("Err $errno, $errstr :: $errfile line $errline",true);
 	}
 ?>

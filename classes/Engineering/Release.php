@@ -45,11 +45,7 @@
 				(		?,?)
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($code,$title)
-			);
-
+			$rs = executeSQLByParams($add_object_query,array($code,$title));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Release::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -113,7 +109,7 @@
 			";
 
 			array_push($bind_params,$this->id);
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+            $rs = executeSQLByParams($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Releases::update(): ".$GLOBALS['_database']->ErrorMsg();
@@ -129,10 +125,8 @@
 				FROM	engineering_releases
 				WHERE	code = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
+			
+			$rs = executeSQLByParams($get_object_query,array($code));			
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::Release::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -165,12 +159,8 @@
 					FROM	engineering_releases
 					WHERE	id = ?
 				";
-	
-				$rs = $GLOBALS['_database']->Execute(
-					$get_object_query,
-					array($this->id)
-				);
-	
+
+            	$rs = executeSQLByParams($get_object_query,array($this->id));
 				if (! $rs) {
 					$this->_error = "SQL Error in Engineering::Release::details(): ".$GLOBALS['_database']->ErrorMsg();
 					return false;
@@ -206,11 +196,7 @@
 				WHERE	id = ?
 			";
 
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
-
+            $rs = executeSQLByParams($update_object_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Release::released(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

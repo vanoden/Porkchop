@@ -72,8 +72,7 @@
 			}
 
 			query_log($find_objects_query,$bind_params);
-			
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+            $rs = executeSQLByParams($find_objects_query, $bind_params);
 			
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::RMAList::find(): ".$GLOBALS['_database']->ErrorMsg();

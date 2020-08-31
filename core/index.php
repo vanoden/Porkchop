@@ -23,7 +23,7 @@
 	### License along with this program.  If not, see				###
 	### <http://www.gnu.org/licenses/>.								###
 	###################################################################
-	
+
     /**
      * PHP 7 compatability 
      *
@@ -38,6 +38,15 @@
         }
     }
   
+    // PHP_VERSION_ID is available as of PHP 5.2.7, if version is lower than that, then emulate it
+    if (!defined('PHP_VERSION_ID')) {
+        $version = explode('.', PHP_VERSION);
+        define('PHP_VERSION_ID', ($version[0] * 10000 + $version[1] * 100 + $version[2]));
+    }
+    
+    // ignore all the isset warnings for now
+    if (PHP_VERSION_ID > 70000) error_reporting(~E_DEPRECATED & ~E_NOTICE);
+    
 	define("MODE","http");
 	###################################################
 	### Load Dependencies							###
@@ -95,7 +104,7 @@
 	### Connect to Memcache if so configured		###
 	###################################################
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
-	if ($_CACHE_->error) test_fail('Unable to initiate Cache client: '.$_CACHE_->error);
+	if ($_CACHE_->error) $logger->write('Unable to initiate Cache client: '.$_CACHE_->error(),'error');
 	$logger->write("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################

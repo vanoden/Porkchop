@@ -47,12 +47,8 @@
 				VALUES
 				(		?,?)
 			";
-
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($code,$_REQUEST['title'])
-			);
-
+			
+			$rs = executeSQLByParams($add_object_query, array($code,$_REQUEST['title']));			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Project::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -108,11 +104,7 @@
 			";
 			array_push($bind_params,$this->id);
 
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				$bind_params
-			);
-
+            $rs = executeSQLByParams($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Projects::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -128,12 +120,8 @@
 				FROM	engineering_projects
 				WHERE	code = ?
 			";
-
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-
+			
+            $rs = executeSQLByParams($get_object_query,array($code));
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::Project::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -165,11 +153,7 @@
 				";
 				app_log("Getting details for project ".$this->id);
 	
-				$rs = $GLOBALS['_database']->Execute(
-					$get_object_query,
-					array($this->id)
-				);
-	
+                $rs = executeSQLByParams($get_object_query,array($this->id));
 				if (! $rs) {
 					$this->_error = "SQL Error in Engineering::Project::details(): ".$GLOBALS['_database']->ErrorMsg();
 					return null;

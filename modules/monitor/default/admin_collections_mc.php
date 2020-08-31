@@ -20,7 +20,7 @@
 		$page->success = "Deleted Collection ".$_REQUEST['delete_collection'];
 		$collection = new \Monitor\Collection($_REQUEST['delete_collection']);
 		$collection->update(array("status" => "DELETED"));
-		if ($collection->error) $page->error = "Error updating collection, admins contacted";
+		if ($collection->error) $page->addError("Error updating collection, admins contacted");
 	}
 
 	# Filters

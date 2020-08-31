@@ -14,6 +14,7 @@
 		public $comment;
 		public $create_time;
 		public $collation;
+		private $_error;
 
 		public function __construct($name) {
 			if (preg_match('/^\w[\w\_]*$/',$name)) {

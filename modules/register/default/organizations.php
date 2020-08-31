@@ -20,6 +20,10 @@
 <section>
 	<article class="segment">
 		<h2>Organizations</h2>
+        <?php	 if ($page->errorCount() > 0) { ?>
+            <div class="form_error"><?=$page->errorString()?></div>
+        <?php	 } ?>
+		
 <form id="orgSearch" method="get" class="float: left">
 <div id="search_container">
 	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput wide_md"/>

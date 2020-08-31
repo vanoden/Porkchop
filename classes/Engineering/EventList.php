@@ -104,16 +104,15 @@
 			}
 
 			$find_objects_query .= "
-				ORDER BY date_event
+				ORDER BY date_event DESC
 			";
 
 			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
 				$find_objects_query .= "
 				LIMIT ".$parameters['_limit'];
 			}
-
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
-
+			
+            $rs = executeSQLByParams($find_objects_query,$bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::EventList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;

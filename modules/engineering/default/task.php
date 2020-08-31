@@ -1,6 +1,19 @@
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <link rel="stylesheet" href="/css/datepicker.min.css">
 <script src="/js/datepicker.min.js"></script> 
+
+<style>
+    hr {
+        border: 0;
+        height: 5px;
+        background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+        width: 75%;
+        margin: 50px;
+        margin-left: 0px;
+        margin-bottom: 25px;
+    }
+</style>
+
 <script>
    $( function() {
         const picker = datepicker('#date_due', {
@@ -35,24 +48,42 @@
             $( "#task_form" ).submit();
             $( "#btn_submit" ).click(false);
         });
+        
         $( "#btn_add_comment" ).click(function() {
             $( "#btn_add_comment" ).val("please wait...");
 			$( "#method" ).val("Add Comment");
             $( "#task_form" ).submit();
             $( "#btn_add_comment" ).click(false);
         });
+        
+        $( "#btn_add_hours" ).click(function() {
+            $( "#btn_add_hours" ).val("please wait...");
+			$( "#method" ).val("Add Hours");
+            $( "#task_form" ).submit();
+            $( "#btn_add_hours" ).click(false);
+        });
+        
         $( "#btn_add_event" ).click(function() {
             $( "#btn_add_event" ).val("please wait...");
 			$( "#method" ).val("Add Event");
             $( "#task_form" ).submit();
             $( "#btn_add_event" ).click(false);
         });
+        
         $( "#btn_upload" ).click(function() {
             $( "#btn_add_event" ).val("please wait...");
 			$( "#method" ).val("Upload");
             $( "#task_form" ).submit();
             $( "#btn_add_event" ).click(false);
         });
+
+        $( "#btn_add_testing" ).click(function() {
+            $( "#btn_add_testing" ).val("please wait...");
+			$( "#method" ).val("Testing");
+            $( "#task_form" ).submit();
+            $( "#btn_add_testing" ).click(false);
+        });
+        
     });
 </script>
 <div>
@@ -224,15 +255,32 @@
                   <?php	} ?>
                </select>
             </div>
-         </div>
+         </div>   
        <div class="tableRow button-bar">
         <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
        </div>
       </div>
       <!-- End Fourth Row -->
-
+      
       <!-- Start Fifth Row -->
       <?php	if ($task->id) { ?>      
+               
+      <!-- Start comment Row -->
+      <h3>Testing Information</h3>
+      <div class="tableBody min-tablet">
+         <div class="tableRowHeader">
+            <div class="tableCell">Update Testing Instructions</div>
+         </div>
+         <div class="tableRow">
+            <div class="tableCell">
+               <textarea name="testing_details" class="wide_100per"><?=strip_tags($form['testing_details'])?></textarea>
+            </div>
+         </div>
+         <div class="tableRow button-bar">
+            <input id="btn_add_testing" type="submit" name="btn_add_testing" class="button" value="Update Testing Info" />
+         </div>
+      </div>
+      <!-- End comment Row -->
       
       <h3>Comment Update</h3>
       <!-- Start comment Row -->
@@ -271,19 +319,20 @@
                <strong><?=$person->login?></strong>
              </div>
              <div class="tableCell eventLogEntry">
-             <textarea class="event-log-description" readonly="readonly">
+             <pre>
                 <?=strip_tags($comment->content)?>
-             </textarea>
+             </pre>
              </div>
           </div>
           <?php	} ?>
        </div>
-
+      
       <h3>Event Update</h3>
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
             <div class="tableCell">Event Date</div>
             <div class="tableCell">Person</div>
+            <div class="tableCell">Hours</div>
             <div class="tableCell">New Status</div>
          </div>
          <div class="tableRow">
@@ -296,6 +345,9 @@
                   <option value="<?=$person->id?>"<?php if ($person->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$person->code?></option>
                   <?php	} ?>
                </select>
+            </div>
+            <div class="tableCell">
+               <input type="text" name="hours_worked" class="value input" value="0" />
             </div>
             <div class="tableCell">
                <select name="new_status" class="value input wide_100per">
@@ -330,7 +382,7 @@
    </form>
    
     <div style="width: 756px;">
-        <br/><hr/><h2>Documents</h2><br/>
+        <br/><h3>Documents</h3><br/>
         <?php
         if ($filesUploaded) {
         ?>
@@ -373,9 +425,10 @@
    <h3>Event Log</h3>
    <div class="tableBody min-tablet">
       <div class="tableRowHeader">
-         <div class="tableCell" style="width: 20%;">Date</div>
-         <div class="tableCell" style="width: 15%;">Person</div>
-         <div class="tableCell" style="width: 65%;">Description</div>
+         <div class="tableCell" style="width: 15%;">Date</div>
+         <div class="tableCell" style="width: 12%;">Person</div>
+         <div class="tableCell" style="width: 10%;">Hours</div>
+         <div class="tableCell" style="width: 63%;">Description</div>
       </div>
       <?php	
         foreach ($events as $event) {
@@ -388,8 +441,11 @@
              <div class="tableCell">
                 <strong><?=$person->login?></strong>
              </div>
+			 <div class="tableCell">
+				<span><?=$event->hours_worked?></span>
+			 </div>
              <div class="tableCell eventLogEntry">
-             <textarea class="event-log-description" readonly="readonly"><?=strip_tags($event->description);?></textarea>
+             <pre><?=strip_tags($event->description);?></pre>
              </div>
           </div>
       <?php	} ?>

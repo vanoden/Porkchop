@@ -12,9 +12,9 @@
 		width: 280px;
 	}
 </style>
-<?php	if ($page->error) { ?>
-<div class="form_error"><?=$page->error?></div>
-<?php	} ?>
+<?php	 if ($page->errorCount() > 0) { ?>
+    <div class="form_error"><?=$page->errorString()?></div>
+<?php	 } ?>
 <div class="title">Monitors [<?=count($assets)?>]</div>
 <table class="body" cellpadding="0" cellspacing="0">
 <tr><th class="label serialNumberLabel">Serial Number</th>
@@ -30,8 +30,7 @@
 	<td class="value <?=$greenbar?>"><?=$asset->product->code?></td>
 	<td class="value <?=$greenbar?>"><?=$asset->name?></td>
 </tr>
-<?
-		if ($greenbar) $greenbar = '';
-		else $greenbar = "greenbar";
+    <?
+		if ($greenbar) $greenbar = ''; else $greenbar = "greenbar";
 	} ?>
 </table>

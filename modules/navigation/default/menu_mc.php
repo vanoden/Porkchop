@@ -51,5 +51,3 @@
 	}
 
 	if (isset($menu)) $items = $menu->items();
-		
-	

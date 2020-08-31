@@ -7,6 +7,7 @@
 		public $date_event;
 		public $user;
 		public $description;
+		public $hours;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -31,6 +32,7 @@
 				$this->_error = "Action required";
 				return false;
 			}
+			if (!isset($parameters['hours_worked'])) $parameters['hours_worked'] = 0;
 			if (isset($parameters['user_id'])) {
 				$user = new \Register\Customer($parameters['user_id']);
 				if ($user->error) {
@@ -64,20 +66,20 @@
 				(		action_id,
 						date_event,
 						user_id,
-						description
+						description,
+						hours
 				)
 				VALUES
-				(		?,?,?,?)
+				(		?,?,?,?,?)
 			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
+			
+            $rs = executeSQLByParams($add_object_query, array(
 					$action->id,
 					$date_event,
 					$user->id,
-					$parameters['description']
-				)
-			);
+					$parameters['description'],
+					$parameters['hours_worked']
+			));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Event::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -107,6 +109,7 @@
 			$this->user = new \Register\Customer($object->user_id);
 			$this->date_event = $object->date_event;
 			$this->description = $object->description;
+			$this->hours = $object->hours;
 			return true;
 		}
 

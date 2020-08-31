@@ -9,6 +9,7 @@
 		public $type;
 		private $_flat = false;
 		public $_cached = 0;
+		private $_error;
 
 		public function __construct($id = 0,$flat = false) {
 			if ($flat) $this->_flat = true;

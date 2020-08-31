@@ -31,10 +31,29 @@
 <tr><td class="label">Add</td>
 	<td class="value"><input type="text" name="add_credits" value="0" class="value input" /></td>
 </tr>
+<tr><td class="label">PO# or Notes</td>
+	<td class="value"><input type="text" name="note" value="" class="value input" style="width: 90%" /></td>
+</tr>
 <tr><td class="label" colspan="2" style="text-align: center">
 		<input type="submit" name="btn_submit" value="Submit" class="button"/>
 	</td>
 </tr>
 <?php	} ?>
 </form>
+</table>
+
+<h3>History</h3>
+<table class="body">
+<tr><th>Date</th>
+	<th>User</th>
+	<th>Quantity</th>
+	<th>Notes</th>
+</tr>
+<?php	foreach ($audit_records as $record) { ?>
+<tr><td><?=$record->date_added?></td>
+	<td><?=$record->user()->full_name()?></td>
+	<td><?=$record->credits?></td>
+	<td><?=$record->note?></td>
+</tr>
+<?php	} ?>
 </table>

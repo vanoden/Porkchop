@@ -3,40 +3,43 @@
     // document loaded - start table sort
     window.addEventListener('DOMContentLoaded', (event) => {     
         <?php
-		switch ($parameters['sort_by']) {
+        $sortDirection = 'desc';
+        if ($_REQUEST['sort_direction'] == 'desc') $sortDirection = 'asc';
+        
+		switch ($parameters['sort_by']) {   
             case 'requested':
                 ?>
-                SortableTable.sortColumn('date-sortable-column', 'down');
+                SortableTable.sortColumn('date-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
                 <?php
             break;       
             case 'requestor':
                 ?>
-                SortableTable.sortColumn('requestor-sortable-column', 'down');
+                SortableTable.sortColumn('requestor-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
                 <?php
             break;        
             case 'organization':
                 ?>
-                SortableTable.sortColumn('organization-sortable-column', 'down');
+                SortableTable.sortColumn('organization-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
                 <?php
             break;
             case 'product':
                 ?>
-                SortableTable.sortColumn('product-sortable-column', 'down');
+                SortableTable.sortColumn('product-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
                 <?php
             break;
             case 'serial':
                 ?>
-                SortableTable.sortColumn('serial-sortable-column', 'down');
+                SortableTable.sortColumn('serial-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
                 <?php
             break;
             case 'status':
                 ?>
-                SortableTable.sortColumn('status-sortable-column', 'down');
+                SortableTable.sortColumn('status-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
                 <?php
             break;
             default:
                 ?>
-                SortableTable.sortColumn('ticket-sortable-column', 'down');
+                SortableTable.sortColumn('ticket-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
                 <?php
             break;
 		}
@@ -68,12 +71,12 @@
 		<a href="/_support/requests">Support Home</a>
     	<a href="/_support/requests">Requests</a> &gt; Tickets
 	</div>
-	<?php	if ($page->errorCount()) { ?>
+	<?php if ($page->errorCount()) { ?>
 	    <div class="form_error"><?=$page->errorString()?></div>
-	<?php	} ?>
-	<?php	if ($page->success) { ?>
+	<?php } ?>
+	<?php if ($page->success) { ?>
 	    <div class="form_success"><?=$page->success?></div>
-	<?php	} ?>
+	<?php } ?>
 </div>
 <h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i> Request [Tickets]</h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
@@ -82,7 +85,7 @@
 	<form id="pageForm" name="filterForm" method="get" action="/_support/request_items"  autocomplete="off">
 	    <input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />	    
 	    <input id="sort_by" type="hidden" name="sort_by" value="" />
-	    <input id="sort_direction" type="hidden" name="sort_direction" value="desc" />
+	    <input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" />
 	    <input id="min_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['min_date']?>" />
 	    <div style="width: 100%; border: solid 1px #888a85; padding: 10px; margin: 10px; margin-left: 0px;">
 	    <h3 style="padding: 0px; margin: 0px;">Filter Results</h3><br/>
@@ -94,9 +97,9 @@
 	        <span class="label"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
 	        <select id="product_id" name="product_id" class="value input collectionField" onchange="updateReport()">
     	         <option value="ALL"<?php	if ($product == $selectedProduct) print " selected"; ?>>ALL</option>
-                <?php	foreach ($products as $product) { ?>
+                <?php foreach ($products as $product) { ?>
 		            <option value="<?=$product->id?>"<?php	if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?></option>
-                <?php	} ?>
+                <?php } ?>
 	        </select>
 	    </div>
         <div style="width: 33%; float:left;">
@@ -108,15 +111,15 @@
 	    
 	    <span class="label"><i class="fa fa-filter" aria-hidden="true"></i> Status</span>
 	    <div class="checkbox-row">
-		    <input type="checkbox" name="status_new" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_new']) print " checked";?> />
+		    <input type="checkbox" name="status_new" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_new']) print " checked";?> />
 		    <span class="value">NEW</span>
 		    <input type="checkbox" name="status_active" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_active']) print " checked";?> />
 		    <span class="value">ACTIVE</span>
-		    <input type="checkbox" name="status_pending_customer" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_pending_customer']) print " checked";?> />
+		    <input type="checkbox" name="status_pending_customer" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_pending_customer']) print " checked";?> />
 		    <span class="value">PENDING CUSTOMER</span>
 		    <input type="checkbox" name="status_pending_vendor" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_pending_vendor']) print " checked";?> />
 		    <span class="value">PENDING VENDOR</span>
-		    <input type="checkbox" name="status_complete" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_complete']) print " checked";?> />
+		    <input type="checkbox" name="status_complete" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_complete']) print " checked";?> />
 		    <span class="value">COMPLETE</span>
 		    <input type="checkbox" name="status_closed" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_closed']) print " checked";?> />
 		    <span class="value">CLOSED</span>

@@ -30,14 +30,15 @@
 					return false;
 				}
 			}
-			$drop_constraint_query = "
-				ALTER TABLE `".$this->table."` DROP INDEX `".$this->name."`";
-			$GLOBALS['_database']->Execute($drop_constraint_query);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error dropping INDEX `".$this->name."` from ".$this->table." in Database::Table::Constraint::drop(): ".$GLOBALS['_database']->ErrorMsg().": $drop_constraint_query";
-				return false;
+			else {
+				$drop_constraint_query = "
+					ALTER TABLE `".$this->table."` DROP INDEX `".$this->name."`";
+				$GLOBALS['_database']->Execute($drop_constraint_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->_error = "SQL Error dropping INDEX `".$this->name."` from ".$this->table." in Database::Table::Constraint::drop(): ".$GLOBALS['_database']->ErrorMsg().": $drop_constraint_query";
+					return false;
+				}
 			}
-
 			return true;
 		}
 

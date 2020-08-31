@@ -9,9 +9,11 @@
 </style>
 <form name="assetForm" method="post" action="/_monitor/asset">
 <input type="hidden" name="id" value="<?=$asset->id?>" />
-<? if ($page->error) { ?>
-<div class="form_error"><?=$page->error?></div>
-<?php	} else if ($page->success) { ?>
+<?php	 if ($page->errorCount() > 0) { ?>
+    <div class="form_error"><?=$page->errorString()?></div>
+<?php	 } ?>
+<?php
+if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
 <?php	} ?>
 <div class="title">Monitor</div>
@@ -21,7 +23,7 @@
 	<div class="label">Name</div>
 	<div class="value"><input type="text" name="name" class="value input" style="width: 250px" value="<?=$asset->name?>" /></div>
 	<div class="label">Model</div>
-	<div class="value"><?=$asset->product->name?></div>
+	<div class="value"><?=$asset->product->name?></div>	
 </div>
 <div class="form_footer" colspan="4"><input type="submit" name="btn_submit" class="button" /></div>
 </form>

@@ -5,39 +5,32 @@
 	if (isset($_REQUEST['btn_submit'])) {
 		$asset = new \Monitor\Asset($_REQUEST['asset_id']);
 		$old_org = $asset->organization;
-
 		if (! $asset->id) {
-			$page->error = "Asset not found";
-		}
-		else {
+			$page->addError("Asset not found");
+		} else {
 			$organization = new \Register\Organization($_REQUEST['organization_id']);
 			if (! $organization->id) {
-				$page->error = "Organization not found";
-			}
-			else {
+				$page->addError("Organization not found");
+			} else {
 				$asset->update(array('organization_id' => $_REQUEST['organization_id']));
 				if ($asset->error) {
-					$page->error = "Error transferring device: ".$asset->error;
-				}
-				elseif ($_REQUEST['transferDeviceAccountConfirm'] == 1) {
+					$page->addError("Error transferring device: ".$asset->error);
+				} elseif ($_REQUEST['transferDeviceAccountConfirm'] == 1) {
 					$customer = new \Register\Customer();
 					$customer->get($asset->code);
 					if (! $customer->id) {
-						$page->error = "Customer not found";
-					}
-					else {
+						$page->addError("Customer not found");
+					} else {
 						$customer->update(array("organization_id" => $_REQUEST['organization_id']));
 						if ($customer->error) {
-							$page->error = "Error transferring account: ".$customer->error.".  Please transfer manually.";
+							$page->addError("Error transferring account: ".$customer->error.".  Please transfer manually.");
 							app_log("Error transferring account: ".$customer->error,'debug',__FILE__,__LINE__);
-						}
-						else {
+						} else {
 							$page->success = "Device and Account Transferred Successfully from "+$old_org->name;
 							app_log("Transferred device and account ".$customer->code,'debug',__FILE__,__LINE__);
 						}
 					}
-				}
-				else {
+				} else {
 					$page->success = "Device Transferred Successfully from "+$old_org->name;
 					app_log("Transferred account ".$asset->code,'debug',__FILE__,__LINE__);
 				}
@@ -58,7 +51,7 @@
 					);
 					if ($event->error) {
 						app_log("Failed to record event: ".$event->error,'error',__FILE__,__LINE__);
-						$page->error = "Transfer successed, but failed to record event";
+						$page->addError("Transfer successed, but failed to record event");
 					}
 				}
 			}
@@ -70,4 +63,3 @@
 
 	$organizationlist = new \Register\OrganizationList();
 	$organizations = $organizationlist->find(array("_flat" => true));
-?>

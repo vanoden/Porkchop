@@ -19,29 +19,29 @@
 	if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Submit') {
 	
 		$parameters = array();
-		if (isset($_REQUEST['title'])) $parameters['title'] = $_REQUEST['title'];
-		else {
+		if (isset($_REQUEST['title'])) {
+    		$parameters['title'] = $_REQUEST['title'];
+		} else {
 			$page->error = "Title required";
 		}
+		
 		if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
 		if (isset($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
 
 		app_log("Submitted product form",'debug',__FILE__,__LINE__);
+		
 		if ($product->id) {
 			if ($product->update($parameters)) {
 				$page->success = "Updates applied";
 				app_log("Product updated",'debug',__FILE__,__LINE__);
-			}
-			else {
+			} else {
 				$page->error = "Error saving updates: ".$product->error();
 			}
-		}
-		else {
+		} else {        		
 			if ($product->add($parameters)) {
 				$page->success = "Product Created";
 				app_log("Product created",'debug',__FILE__,__LINE__);
-			}
-			else {
+			} else {
 				$page->error = "Error creating product: ".$product->error();
 			}
 		}

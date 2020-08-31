@@ -39,15 +39,13 @@
 				VALUES
 				(		?,?,?,?)
 			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$author->id,
-					$request->id,
-					get_mysql_date($parameters['date_note']),
-					$parameters['description']
-				)
-			);
+            $rs = executeSQLByParams($add_object_query, array(
+				$author->id,
+				$request->id,
+				get_mysql_date($parameters['date_note']),
+				$parameters['description']
+			));
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Note::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -66,11 +64,9 @@
 						description
 				FROM	support_notes
 				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_request_query,
-				array($this->id)
-			);
+			";			
+			$rs = executeSQLByParams($get_request_query, array($this->id));
+			
 			if (! $rs) {
 				$this->_error = "SQL Error in SupportRequest::details: ".$GLOBALS['_database']->ErrorMsg();
 				return null;

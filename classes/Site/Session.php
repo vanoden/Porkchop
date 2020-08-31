@@ -20,6 +20,7 @@
 		public $first_hit_date;
 		public $last_hit_date;
 		public $isMobile = false;
+		public $isRemovedAccount = false;
 		private $cookie_name;
 		private $cookie_domain;
 		private $cookie_expires;

@@ -1,8 +1,8 @@
 <h2 style="display: inline-block;">Products
-    <?=($page->isSearchResults)? "[Matched Products: ". count($products)."]" : "";?>
+    <?=isset($page->isSearchResults) ? "[Matched Products: ". count($products)."]" : "";?>
 </h2>
 <?php
- if (!$page->isSearchResults) {
+ if (!isset($page->isSearchResults)) {
 ?>
     <a class="button more" href="/_engineering/product">New Product</a>
 <?php

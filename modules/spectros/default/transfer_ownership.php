@@ -30,10 +30,11 @@
 	}
 </script>
 <div class="title">Transfer Device Ownership</div>
-<?php	if ($page->error) { ?>
-<div class="form_error"><?=$page->error?></div>
-<?php	}
-	elseif ($page->success) {
+<?php	 if ($page->errorCount() > 0) { ?>
+    <div class="form_error"><?=$page->errorString()?></div>
+<?php	 } ?>
+<?php
+	if ($page->success) {
 ?>
 <div class="form_success"><?=$page->success?></div>
 <?php	}

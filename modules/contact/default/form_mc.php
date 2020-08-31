@@ -44,16 +44,13 @@
 				if ($event->error) {
 					app_log("Error submitting ContactEvent: ".$event->error,'error',__FILE__,__LINE__);
 					$page->addError("Sorry, there was an error submitting the contact form.  Please call.");
-				}
-				else {
+				} else {
 					app_log("Contact Form Submitted: ".print_r($form_data,true),'notice',__FILE__,__LINE__);
 
 					# Notify Admins
 					$message_body  = "Contact Form Submitted on ".date('m/d/Y H:i')."<br>\r\n";
 					$message_body .= "<table>\r\n";
-					foreach(array_keys($_REQUEST) as $field) {
-						$message_body .= "<tr><th>$field</th><td>".$_REQUEST[$field]."</td></tr>";
-					}
+					foreach(array_keys($_REQUEST) as $field) $message_body .= "<tr><th>$field</th><td>".$_REQUEST[$field]."</td></tr>";
 					$message_body .= "</table>";
 					$message = array(
 						"from"		=> "contact_form@".$GLOBALS['_SESSION_']->domain,
@@ -65,17 +62,14 @@
 					if ($role->error) {
 						$page->addError("Sorry, I was unable to contact representatives.  Please call.");
 						app_log("Error notifying role members: ".$role->error,'error',__FILE__,__LINE__);
-					}
-					else {
+					} else {
 						# Display Confirmation Page
 						header("location: /_contact/thankyou");
 						exit;
 					}
 				}
 			}
-		}
-		else
-		{
+		} else {
 			app_log("reCaptcha failed: $result",'notice',__FILE__,__LINE__);
 			print "Error submitting form: ".$result;
 		}

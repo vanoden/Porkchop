@@ -18,7 +18,7 @@
 					CREATE TABLE IF NOT EXISTS `content_messages` (
 					  `id` int(6) NOT NULL AUTO_INCREMENT,
 					  `company_id` int(5) NOT NULL DEFAULT '0',
-					  `target` varchar(255) NOT NULL DEFAULT '',
+					  `target` varchar(150) NOT NULL DEFAULT '',
 					  `view_order` int(3) NOT NULL DEFAULT '500',
 					  `active` int(1) NOT NULL DEFAULT '1',
 					  `deleted` int(1) NOT NULL DEFAULT '0',
@@ -30,7 +30,7 @@
 					  PRIMARY KEY (`id`),
 					  UNIQUE KEY `uk_target` (`company_id`,`target`),
 					  KEY `idx_main` (`company_id`,`target`,`deleted`),
-					  FOREIGN KEY `fk_company_id` (`company_id`) REFERENCES `company_companies` (`id`)
+					  FOREIGN KEY `fk_message_company_id` (`company_id`) REFERENCES `company_companies` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {

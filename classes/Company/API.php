@@ -49,19 +49,21 @@
 			list($company) = $companylist->find();
 	
 			# Update Company
-			$company->update(
+			if ($company->update(
 				array(
 					"name"			=> $_REQUEST["name"],
 					"status"		=> $_REQUEST["category"]
 				)
-			);
-	
-			# Error Handling
-			if ($company->error) $this->error($company->error);
-			else{
+			)) {
 				$response = new \HTTP\Response();
 				$response->company = $company;
 				$response->success = 1;
+			}
+			else if ($company->error) {
+				$this->error($company->error);
+			}
+			else{
+				$this->error("Unhandled exception");
 			}
 	
 			# Send Response
@@ -71,11 +73,10 @@
 		public function _methods() {
 			return array(
 				'ping'	=> array(),
-				'getcompany'	=> array(
-				),
+				'getcompany'	=> array(),
 				'updateCompany'	=> array(
-					'name'			=> array(),
-					'organization_id'	=> array(),
+					'name'		=> array(),
+					'status'	=> array(),
 				),
 			);
 		}

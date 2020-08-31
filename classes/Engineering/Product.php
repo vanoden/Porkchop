@@ -19,18 +19,18 @@
 			if (isset($parameters['code']) && strlen($parameters['code'])) {
 				if (preg_match('/^[\w\-\.\_\s]+$/',$parameters['code'])) {
 					$code = $parameters['code'];
-				}
-				else {
+				} else {
 					$this->_error = "Invalid code";
 					return null;
 				}
-			}
-			else {
+			} else {
 				$code = uniqid();
 			}
 
-			$check_dups = new Product();
-			if ($check_dups->get($code)) {
+            // check for existing product that may exists, else it's an update
+            $check_dups = new Product();
+			$check_dups->get($code);
+			if (!empty($check_dups->id)) {
 				$this->_error = "Duplicate code";
 				return null;
 			}
@@ -43,11 +43,7 @@
 				(		?,?)
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($code,$_REQUEST['title'])
-			);
-
+            $rs = executeSQLByParams($add_object_query,array($code,$_REQUEST['title']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Product::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -79,12 +75,7 @@
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
-
+            $rs = executeSQLByParams($update_object_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Products::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;

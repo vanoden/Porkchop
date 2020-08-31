@@ -7,6 +7,7 @@
 		public $code;
 		public $title;
 		public $description;
+		public $testing_details;
 		public $status;
 		public $type;
 		public $estimate;
@@ -58,8 +59,7 @@
 			if (isset($parameters['type'])) {
 				if ($this->_valid_type($parameters['type'])) {
 					$type = strtoupper($parameters['type']);
-				}
-				else {
+				} else {
 					$this->_error = "Invalid Task Type";
 					return false;
 				}
@@ -119,22 +119,18 @@
 				(		?,?,?,?,?,?,?,?)
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($code,$parameters['title'],$type,$status,$date_added,$parameters['requested_id'],$product->id,$prerequisite_id)
-			);
-
+            $rs = executeSQLByParams($add_object_query,array($code,$parameters['title'],$type,$status,$date_added,$parameters['requested_id'],$product->id,$prerequisite_id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Task::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
-
 			return $this->update($parameters);
 		}
 
 		public function update($parameters = array()) {
+		
 			// Bust Cache
 			$cache_key = "engineering.task[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -167,6 +163,12 @@
 				$update_object_query .= ",
 						description = ?";
 				array_push($bind_params,$parameters['description']);
+			}
+
+			if (isset($parameters['testing_details'])) {
+				$update_object_query .= ",
+						`testing_details` = ?";
+				array_push($bind_params,$parameters['testing_details']);
 			}
 
 			if (isset($parameters['status'])) {
@@ -321,8 +323,7 @@
 				WHERE	id = ?";
 			array_push($bind_params,$this->id);
 
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
-
+            $rs = executeSQLByParams($update_object_query, $bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Task::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -338,11 +339,8 @@
 				FROM	engineering_tasks
 				WHERE	code = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-
+			
+            $rs = executeSQLByParams($get_object_query, array($code));
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::Task::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -375,12 +373,8 @@
 					FROM	engineering_tasks
 					WHERE	id = ?
 				";
-	
-				$rs = $GLOBALS['_database']->Execute(
-					$get_object_query,
-					array($this->id)
-				);
-	
+				
+				$rs = executeSQLByParams($get_object_query, array($this->id));
 				if (! $rs) {
 					$this->_error = "SQL Error in Engineering::Task::details(): ".$GLOBALS['_database']->ErrorMsg();
 					return false;
@@ -393,6 +387,7 @@
 			$this->code = $object->code;
 			$this->title = $object->title;
 			$this->description = $object->description;
+			$this->testing_details = $object->testing_details;
 			$this->date_added = $object->date_added;
 			$this->date_due = $object->date_due;
 			$this->status = $object->status;
@@ -451,11 +446,8 @@
 				SET		assigned_id = ?
 				WHERE	id = ?
 				";
-				$GLOBALS['_database']->Execute(
-					$update_task_query,
-					array($person->id,$this->id)
-				);
 
+                $rs = executeSQLByParams($update_task_query, array($person->id,$this->id));
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->_error = "SQL Error in Engineering::Task::assignTo(): ".$GLOBALS['_database']->ErrorMsg();
 					return false;
@@ -476,10 +468,8 @@
 					SET		status = ?
 					WHERE	id = ?
 				";
-				$GLOBALS['_database']->Execute(
-					$update_object_query,
-					array($status,$this->id)
-				);
+				
+				$rs = executeSQLByParams($update_object_query, $update_object_query, array($status,$this->id));
 				if ($GLOBALS['_database']->ErrorMsg()) {
 					$this->_error = "SQL Error in Engineering::Task::setStatus(): ".$GLOBALS['_database']->ErrorMsg();
 					return false;

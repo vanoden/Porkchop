@@ -78,16 +78,14 @@
 				VALUES
 				(		?,?,?,?,?)
 			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$code,
-					$item->id,
-					$approvedBy->id,
-					$date_approved,
-					'NEW'
-				)
-			);
+            $rs = executeSQLByParams($add_object_query, array(
+	            $code,
+	            $item->id,
+	            $approvedBy->id,
+	            $date_approved,
+	            'NEW'
+            ));
+
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::RMA::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -153,8 +151,8 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-	
-			$GLOBALS['_database']->Execute($update_action_query,$bind_params);
+            $rs = executeSQLByParams($update_action_query, $bind_params);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Item::RMA::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -167,10 +165,8 @@
 				SELECT	id
 				FROM	support_rmas
 				WHERE	code = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,array($code)
-			);
+			";			
+            $rs = executeSQLByParams($get_object_query, array($code));
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::RMA::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -186,9 +182,7 @@
 				FROM	support_rmas
 				WHERE	id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,array($this->id)
-			);
+            $rs = executeSQLByParams($get_object_query, array($this->id));
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::RMA::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

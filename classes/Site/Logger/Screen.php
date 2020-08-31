@@ -7,6 +7,9 @@
 			if (isset($parameters['level'])) {
 				$this->level = $parameters['level'];
 			}
+			if (isset($parameters['html']) && $parameters['html']) {
+				$this->html = true;
+			}
 		}
 
 		public function connect() {

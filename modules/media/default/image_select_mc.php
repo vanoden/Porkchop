@@ -1,7 +1,6 @@
 <html>
 	<script language="javascript">
-		function selectImage(code)
-		{
+		function selectImage(code) {
 			window.opener.endImageSelectWizard(code);
 			window.close();
 			return false;
@@ -20,7 +19,7 @@
 	# Loop Through and Display Images
 	foreach ($images as $image)
 	{ ?>
-<a href="javascript:void(0)" onclick="return selectImage('<?=$image->code?>');" class="mediaImageSelect" style="float: left; width: 110px; height: 110px; background-color: gray; display: block; overflow: hidden;"><img style="width: 100px;" src="/_media/api?method=downloadMediaFile&code=<?=$image->files[0]->code?>" class="mediaImageSelect" /></a>
+        <a href="javascript:void(0)" onclick="return selectImage('<?=$image->code?>');" class="mediaImageSelect" style="float: left; width: 110px; height: 110px; background-color: gray; display: block; overflow: hidden;"><img style="width: 100px;" src="/_media/api?method=downloadMediaFile&code=<?=$image->files[0]->code?>" class="mediaImageSelect" /></a>
 <?php	}
 ?>
 </body>

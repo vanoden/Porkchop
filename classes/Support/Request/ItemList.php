@@ -6,8 +6,8 @@
 		private $_error;
 		private $_count;
 
-		public function find($parameters = array()) {		
-
+		public function find($parameters = array()) {
+		
 			$find_objects_query = "
 				SELECT	s.id
 				FROM	support_request_items s
@@ -27,7 +27,6 @@
             
 			// if a minimum date is set, constrain on it
 			if (isset($parameters['min_date'])) {
-			
 			    $minDate = date("Y-m-d H:i:s", strtotime($parameters['min_date']));
 			    $find_objects_query = "
 				    SELECT	s.id
@@ -35,7 +34,26 @@
 				    INNER JOIN support_requests sr ON s.request_id = sr.id
 				    WHERE	sr.date_request > '$minDate'
 			    ";
-			}            
+			}
+			if (isset($parameters['max_date'])) {
+			    $maxDate = date("Y-m-d H:i:s", strtotime($parameters['max_date']));
+			    $find_objects_query = "
+				    SELECT	s.id
+				    FROM	support_request_items s
+				    INNER JOIN support_requests sr ON s.request_id = sr.id
+				    WHERE	sr.date_request < '$maxDate'
+			    ";
+			}
+			if (isset($parameters['min_date']) && isset($parameters['max_date'])) {
+    			$minDate = date("Y-m-d H:i:s", strtotime($parameters['min_date']));
+			    $maxDate = date("Y-m-d H:i:s", strtotime($parameters['max_date']));
+			    $find_objects_query = "
+				    SELECT	s.id
+				    FROM	support_request_items s
+				    INNER JOIN support_requests sr ON s.request_id = sr.id
+				    WHERE	sr.date_request < '$maxDate' AND sr.date_request > '$minDate'
+			    ";
+			}
 
 			$bind_params = array();
 			if (!empty($parameters['request_id'])) {
@@ -57,6 +75,13 @@
 					AND	s.product_id = ?";
 				array_push($bind_params,$parameters['product_id']);
 			}
+			
+			if (!empty($parameters['customer_id'])) {
+				$find_objects_query .= "
+					AND	sr.customer_id = ?";
+				array_push($bind_params,$parameters['customer_id']);
+			}
+			
 			if (!empty($parameters['serial_number'])) {
 				$find_objects_query .= "
 					AND	s.serial_number = ?";
@@ -94,46 +119,53 @@
 			}
 			
             // adjust results for sorted by column from ui sortable table
+            $sortDirection = 'DESC';
+            if (isset($parameters['sort_direction']) && $parameters['sort_direction'] == 'asc') $sortDirection = 'ASC';
 			switch ($parameters['sort_by']) {
                 case 'requested':
 			        $find_objects_query .= "
-				        ORDER BY sr.date_request DESC
+				        ORDER BY sr.date_request $sortDirection
 			        ";
                 break;
                 case 'requestor':
 			        $find_objects_query .= "
-				        ORDER BY sr.customer_id DESC
+				        ORDER BY sr.customer_id $sortDirection
 			        ";
                 break;
                 case 'organization':
 			        $find_objects_query .= "
-				        ORDER BY sr.organization_id DESC
+				        ORDER BY sr.organization_id $sortDirection
 			        ";
                 break;
                 case 'product':
 			        $find_objects_query .= "
-				        ORDER BY s.product_id DESC
+				        ORDER BY s.product_id $sortDirection
 			        ";
                 break;
                 case 'serial':
 			        $find_objects_query .= "
-				        ORDER BY s.serial_number DESC
+				        ORDER BY s.serial_number $sortDirection
 			        ";
                 break;
                 case 'status':
 			        $find_objects_query .= "
-				        ORDER BY s.status DESC
+				        ORDER BY s.status $sortDirection
+			        ";
+                break;
+                case 'ticket_id':
+			        $find_objects_query .= "
+				        ORDER BY s.id $sortDirection
 			        ";
                 break;
                 default:
                     $find_objects_query .= "
-                        ORDER BY s.id DESC
+                        ORDER BY s.id $sortDirection
                     ";
                 break;
 			}
 			
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+			$rs = executeSQLByParams($find_objects_query, $bind_params);
+			
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -153,8 +185,7 @@
 		public function getSerialNumbersAvailable() {
 		
 			$find_objects_query .= "SELECT DISTINCT(serial_number) FROM support_request_items ORDER BY serial_number ASC";
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			$rs = executeSQLByParams($find_objects_query, array());
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -170,8 +201,7 @@
 		public function getProductsAvailable() {
 		
 			$find_objects_query .= "SELECT id, code, name, description FROM product_products WHERE status = 'active' GROUP BY code ORDER BY code ASC";
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			$rs = executeSQLByParams($find_objects_query, array());
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

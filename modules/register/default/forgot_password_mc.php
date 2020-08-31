@@ -34,7 +34,7 @@
 				$contact->get('email',$_REQUEST['email_address']);
 				if ($contact->error) {
 					app_log("Error finding contact: ".$contact->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_page']->error = "Error finding contact info, please try again later";
+					$page->addError("Error finding contact info, please try again later");
 					return null;
 				}
 
@@ -42,12 +42,12 @@
 					$customer = new \Register\Customer($contact->person->id);
 					if ($customer->error) {
 						app_log("Forgot Password Error: ".$customer->error,'error',__FILE__,__LINE__);
-						$page->error = "Form error";
+						$page->addError("Form error");
 						return;
 					}
 					if (! $customer) {
 						app_log("Forgot Password Error: Customer not found",'error',__FILE__,__LINE__);
-						$page->error = "Form error";
+						$page->addError("Form error");
 						return;
 					}
 					app_log("Identified customer for email ".$_REQUEST['email_address'],'debug',__FILE__,__LINE__);
@@ -55,7 +55,7 @@
 					# Make Sure the Customer Has a Real Login
 					if (! isset($customer->code) or ! strlen($customer->code)) {
 						app_log("Customer has invalid login",'error',__FILE__,__LINE__);
-						$GLOBALS['_page']->error .= "Sorry, you have not been given access to this site.";
+						$page->addError("Sorry, you have not been given access to this site.");
 						return;
 					}
 		
@@ -64,7 +64,7 @@
 					$token->add($customer->id);
 					if ($token->error) {
 						app_log("Error generating password token: ".$token->error,'error',__FILE__,__LINE__);
-						$GLOBALS['_page']->error = "Error generating password token";
+						$page->addError("Error generating password token");
 						return;
 					}
 					app_log("Generated password token '".$token->code."'",'debug',__FILE__,__LINE__);
@@ -78,7 +78,7 @@
 					# Send Link
 					if (! file_exists($GLOBALS['_config']->register->forgot_password->template)) {
 						app_log("Template '".$GLOBALS['_config']->register->forgot_password->template."' not found",'error',__FILE__,__LINE__);
-						$page->error = "Template '".$GLOBALS['_config']->register->forgot_password->template."' not found";
+						$page->addError("Template '".$GLOBALS['_config']->register->forgot_password->template."' not found");
 						return;
 					}
 					try {
@@ -86,7 +86,7 @@
 					}
 					catch (Exception $e) {
 						app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
-						$page->error = "Template load failed.  Try again later";
+						$page->addError("Template load failed.  Try again later");
 						return;
 					}
 
@@ -106,7 +106,7 @@
 					app_log("Sending Forgot Password Link",'debug',__FILE__,__LINE__);
 					$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
 					if (\Email\Transport::error()) {
-						$page->error = "Error sending email, please contact us at service@spectrosinstruments.com";
+						$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
 						app_log("Error initializing email transport: ".\Email\Transport::error(),'error',__FILE__,__LINE__);
 						return;
 					}
@@ -114,7 +114,7 @@
 					$transport->token($GLOBALS['_config']->email->token);
 					$transport->deliver($message);
 					if ($transport->error) {
-						$page->error = "Error sending email, please contact us at service@spectrosinstruments.com";
+						$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
 						app_log("Error sending forgot password link: ".$transport->error,'error',__FILE__,__LINE__);
 						return;
 					}
@@ -126,11 +126,11 @@
 				header("location: /_register/password_token_sent");
 			}
 			else {
-				$page->error .= "Sorry, but the email address you gave was not valid!";
+				$page->addError("Sorry, but the email address you gave was not valid!");
 			}
 		}
 		else {
-			$page->error = "Sorry, CAPTCHA Invalid.  Please Try Again";
+			$page->addError("Sorry, CAPTCHA Invalid.  Please Try Again");
 		}
 	}
 
