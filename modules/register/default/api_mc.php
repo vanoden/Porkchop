@@ -1144,7 +1144,7 @@
 		}
 		$document = new \Document($format);
 		$document->prepare($object);
-		if ($GLOBAL['_config']->site->force_content_length) {
+		if ($GLOBALS['_config']->site->force_content_length) {
 			$content = $document->content();
 			header('Content-Length: '.strlen($content));
 			return $content;
