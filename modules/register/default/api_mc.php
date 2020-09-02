@@ -1144,6 +1144,12 @@
 		}
 		$document = new \Document($format);
 		$document->prepare($object);
-		return $document->content();
+		if ($GLOBAL['_config']->site->force_content_length) {
+			$content = $document->content();
+			header('Content-Length: '.strlen($content));
+			return $content;
+		}
+		else {
+			return $document->content();
+		}
 	}
-	
