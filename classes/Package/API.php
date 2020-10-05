@@ -190,6 +190,7 @@
 		### Return Properly Formatted Error Message		###
 		###################################################
 		public function error($message) {
+			if (!isset($response)) $response = new \HTTP\Response();
 			$_REQUEST["stylesheet"] = '';
 			error_log($message);
 			$response->message = $message;
