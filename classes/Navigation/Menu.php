@@ -130,11 +130,9 @@
 		    if (isset ( $parameters ['type'] ) && $parameters ['type'] == 'left_nav') {
 			    if (! isset ( $parameters ['nav_id'] )) $parameters ['nav_id'] = 'left_nav';
 			    if (! isset ( $parameters ['a_class'] )) $parameters ['a_class'] = 'left_nav_button';
-			    $html .= '<nav id="' . $parameters ['nav_id'] . '">';
+			    $html .= '<nav style="top: 0px; position: fixed; padding-top: 25px;" id="' . $parameters ['nav_id'] . '">';
 			    $items = $this->cascade ();
-			    foreach ( $items as $item ) {
-				    $html .= '<a class="' . $parameters ['a_class'] . '">' . $item->title . "</a>";
-			    }
+			    foreach ( $items as $item ) $html .= '<a class="' . $parameters ['a_class'] . '">' . $item->title . "</a>";
 		    } else {
 			    // Defaults
 			    if (! isset ( $parameters ['nav_id'] )) $parameters ['nav_id'] = 'left_nav';
@@ -142,7 +140,7 @@
 			    if (! isset ( $parameters ['subnav_button_class'] )) $parameters ['subnav_button_class'] = 'left_subnav_button';
 
 			    // Nav Container
-			    $html .= '<nav id="' . $parameters ['nav_id'] . '">' . "\n";
+			    $html .= '<nav style="top: 0px; position: fixed; padding-top: 25px;" id="' . $parameters ['nav_id'] . '">' . "\n";
 			    $items = $this->cascade ();
 			    foreach ( $items as $item ) {
 				    if ($item->hasChildren ()) $has_children = 1;
