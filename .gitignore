@@ -4,8 +4,8 @@ classes/Monitor
 classes/Action
 classes/Media
 classes/Solvay
-html
-html.src
+html/
+html.src/
 modules/monitor/spectros
 modules/contact/spectros
 modules/action/spectros
