@@ -120,7 +120,7 @@
 	    <span class="label registerLabel registerPasswordLabel">*Password:</span>
 	    <input type="password" class="value registerValue registerPasswordValue" name="password" />
     </div>
-    <div id="accountPasswordConfirm">
+    <div id="accountPasswordConfirm" style="clear:both;">
 	    <span class="label registerLabel registerPasswordLabel">*Confirm Password:</span>
 	    <input type="password" class="value registerValue registerPasswordValue" name="password_2" />
     </div>

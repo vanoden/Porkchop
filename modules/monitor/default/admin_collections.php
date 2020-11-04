@@ -5,6 +5,10 @@
 .collectionStartedColumn { width: 24%; }
 .collectionFinishedColumn {	width: 24%;	}
 .collectionDeleteColumn {	width: 6%;}
+    h3 {
+        clear:both;
+        padding-top: 20px;
+    }
 </style>
 <script language="Javascript">
 	function newCollection() {

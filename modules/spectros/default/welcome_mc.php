@@ -22,7 +22,7 @@
 			(object) array(
 				"label"			=> "Site Administration",
 				"description"	=> "Administrative Tools",
-				"target"		=> "/_spectros/admin_home"
+				"target"		=> "/_admin/admin_home"
 			)
 		);
 	}
