@@ -1,3 +1,10 @@
+<style>
+    h3 {
+        clear:both;
+        padding-top: 20px;
+    }
+</style>
+
 <h2>Organization Details</h2>
 <script language="JavaScript">
 	function addLocation() {
@@ -69,7 +76,7 @@
 	<input type="submit" name="method" value="Apply" class="button"/>
 </div>
 <!--End first row-->
-	
+
 <h3>Current Users</h3>
 <!--	Start First Row-->
 <?php	if ($organization->id) { ?>

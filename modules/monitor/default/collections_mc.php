@@ -5,12 +5,13 @@
 		header("location: /_register/login?target=_monitor:assets");
 		exit;
 	}
+
 	if (! $GLOBALS['_SESSION_']->customer->organization->id) {
 		header("location: /_register/login?target=_monitor:assets");
 		exit;
 	}
 
-	# Handle Deletes
+	// Handle Deletes
 	if ($_REQUEST['delete_collection']) {
 		$collection = new \Monitor\Collection($_REQUEST['delete_collection']);
 		$collection->update(array("status" => "DELETED"));
@@ -18,22 +19,20 @@
 		else $GLOBALS['_page']->success = "Deleted Collection ".$_REQUEST['delete_collection'];
 	}
 
-    # Filters
+    // Filters
     $parameters = array();
 	$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
 
-    # Get Job Count Before Pagination
+    // Get Job Count Before Pagination
     $collectionlist = new \Monitor\CollectionList();
     $collections = $collectionlist->find($parameters,false);
     $total_collections = $collectionlist->count;
 
-    # Pagination
+    // Pagination
     $parameters["_limit"] = $max_records;
     $parameters["_offset"] = $_REQUEST['start'];
 
-    # Sort
-
-    # Get Jobs
+    // Get Jobs
     $collections = $collectionlist->find($parameters);
 
     if ($_REQUEST['start'] < $max_records)
