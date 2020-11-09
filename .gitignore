@@ -4,6 +4,7 @@ classes/Monitor
 classes/Action
 classes/Media
 classes/Solvay
+classes/Brand
 html
 html.src
 modules/monitor/spectros
