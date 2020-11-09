@@ -34,14 +34,15 @@
 			$add_object_query = "
 				INSERT
 				INTO	register_organizations
-				(		id,code,date_created)
+				(		id,code,name,date_created)
 				VALUES
-				(		null,?,sysdate())
+				(		null,?,?,sysdate())
 			";
 			$rs = $GLOBALS['_database']->Execute(
 				$add_object_query,
 				array(
-					$parameters['code']
+					$parameters['code'],
+					$parameters['name']
 				)
 			);
 			if (! $rs) {			
