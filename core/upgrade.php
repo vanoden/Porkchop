@@ -29,20 +29,20 @@
 	# Base Classes
 	if (isset($_config->schema)) $base_classes = $_config->schema;
 	else $base_classes = array(
-        "Media"         => 3,
-        "Product"       => 1,
-        "Site"          => 5,
-        "Content"       => 3,
+		"Media"         => 3,
+		"Product"       => 2,
+		"Site"          => 6,
+		"Content"       => 3,
 		"Navigation"	=> 2,
-        "Register"      => 12,
-        "Company"       => 3,
-        "Storage"       => 1,
-        "Email"         => 1,
-        "Package"       => 1,
-        "Contact"       => 2,
-        "Support"       => 3,
-        "Engineering"   => 6
-    );
+		"Register"      => 19,
+		"Company"       => 3,
+		"Storage"       => 5,
+		"Email"         => 2,
+		"Package"       => 2,
+		"Contact"       => 2,
+	);
+	//	"Support"       => 7,
+	//	"Engineering"   => 6
 
 	# Set Templates As Necessary
 	if (isset($_config->templates)) $admin_templates = $_config->templates;
@@ -117,6 +117,22 @@
 	else install_log("version.txt not found",'warn');
 
 	###################################################
+	### Connect to Logger                           ###
+	###################################################
+	$logger = \Site\Logger::get_instance(array('type' => "Screen",'level' => 'info','html' => true));
+	if ($logger->error()) {
+		error_log("Error initializing logger: ".$logger->error());
+		print "Logger error\n";
+		exit;
+	}
+	$logger->connect();
+	if ($logger->error()) {
+		error_log("Error initializing logger: ".$logger->error());
+		print "Logger error\n";
+		exit;
+	}
+
+	###################################################
 	### Connect to Database							###
 	###################################################
 	install_log("Connecting to database ".$GLOBALS['_config']->database->master->hostname.":".$GLOBALS['_config']->database->master->port);
@@ -140,7 +156,7 @@
 	###################################################
 	### Connect to Memcache if so configured		###
 	###################################################
-	install_log("Connecting to ".$GLOBALS['_config']->Cache->mechanism." cache");
+	install_log("Connecting to ".$GLOBALS['_config']->cache->mechanism." cache");
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
 	if ($_CACHE_->error) install_fail('Unable to initiate Cache client: '.$_CACHE_->error);
 	if ($_CACHE_->mechanism() == 'Memcache') {
@@ -160,6 +176,10 @@
 		$class_name = "\\$base_class\\Schema";
 		try {
 			$class = new $class_name();
+			$class_version = $class->version();
+			if (! $class->upgrade()) {
+				install_fail($class->error());
+			}
 			$class_version = $class->version();
 		} catch (Exception $e) {
 			install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());

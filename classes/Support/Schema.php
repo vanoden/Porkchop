@@ -321,5 +321,6 @@
 				'support manager'	=> 'Full control over requests, actions, etc',
 				'support user'		=> 'Can work with support requests'
 			));
+			return true;
 		}
 	}
