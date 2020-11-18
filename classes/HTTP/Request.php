@@ -194,7 +194,7 @@
 				if (preg_match('/(.*)\?([\w\.\_\-]+\=.*)/',$element,$matches)) {
 					$element = $matches[1];
 					$rest = $matches[2];
-					$elements = str_split("&",$rest);
+					$elements = preg_split('/&/',$rest);
 					foreach($elements as $element) {
 						if (preg_match("/=/",$element)) {
 							list($label,$value) = preg_split("/=/",$element);
