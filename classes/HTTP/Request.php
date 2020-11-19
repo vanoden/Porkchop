@@ -191,6 +191,18 @@
 			$parsed_vars = preg_split("@/@",$this->query_vars);
 			$qv_counter = 0;
 			foreach ($parsed_vars as $element) {
+				if (preg_match('/(.*)\?([\w\.\_\-]+\=.*)/',$element,$matches)) {
+					$element = $matches[1];
+					$rest = $matches[2];
+					$elements = preg_split('/&/',$rest);
+					foreach($elements as $element) {
+						if (preg_match("/=/",$element)) {
+							list($label,$value) = preg_split("/=/",$element);
+							$this->query_vars_array[$label] = $value;
+							$this->parameters[$label] = $value;
+						}
+					}
+				}
 				$this->query_vars_array[$qv_counter] = $element;
 				if (preg_match("/=/",$element)) {
 					list($label,$value) = preg_split("/=/",$element);
@@ -223,6 +235,10 @@
 		public function parameters() {
 			foreach ($_POST as $label => $value) $this->parameters[$label] = $value;
 			return $this->parameters;
+		}
+
+		public function parameter($key) {
+			return $this->parameters[$key];
 		}
 		
 		public function error() {

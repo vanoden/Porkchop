@@ -4,8 +4,14 @@ classes/Monitor
 classes/Action
 classes/Media
 classes/Solvay
+<<<<<<< HEAD
+html/
+html.src/
+=======
+classes/Brand
 html
 html.src
+>>>>>>> 318b43e3fe0e8793e3d938f4558fff30fe6b77a3
 modules/monitor/spectros
 modules/contact/spectros
 modules/action/spectros

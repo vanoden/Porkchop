@@ -39,7 +39,14 @@
 					return false;
 				}
 
-				$this->setVersion(1);
+				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 3) {
+				// Existing upgrade tool already had version 3...don't want to add conflicts later
+				app_log("Upgrading schema to version 3",'notice',__FILE__,__LINE__);
+
+				$this->setVersion(3);
 				$GLOBALS['_database']->CommitTrans();
 			}
 

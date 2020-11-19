@@ -38,7 +38,7 @@
 						`state_id` int(3) NOT NULL default '0',
 						`zip_code` int(5) NOT NULL default '0',
 						`zip_ext` int(4) NOT NULL default '0',
-						`content` text NOT NULL,
+						`content` text,
 						`order_number_sequence` int(8) NOT NULL default '0',
 						`area_code` int(3) NOT NULL default '0',
 						`phone_pre` int(3) NOT NULL default '0',

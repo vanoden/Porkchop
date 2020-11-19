@@ -29,8 +29,10 @@
 				    $this->view = $args [0] ['view'];
 				    if ($args [0] ['index']) $this->index = $args [0] ['index'];
 			    }
-		    } elseif (func_num_args () == 2 && gettype ( $args [0] ) == "string" && gettype ( $args [1] ) == "string") {
+		    } elseif (func_num_args () == 2 && gettype ( $args [0] ) == "string" && gettype ( $args [1] ) == "string" && isset ( $args[2])) {
 			    $this->get ( $args [0], $args [1], $args [2] );
+		    } elseif (func_num_args () == 2 && gettype ( $args [0] ) == "string" && gettype ( $args [1] ) == "string") {
+			    $this->get ( $args [0], $args [1] );
 		    } else {
 			    $this->fromRequest ();
 		    }

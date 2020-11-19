@@ -16,7 +16,7 @@
 <form name="orgDetails" method="POST">
 <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
 <?php	 if ($page->errorCount() > 0) { ?>
-<div class="form_error"><?=$page->errorString() > 0?></div>
+<div class="form_error"><?=$page->errorString()?></div>
 <?php	 }
 	elseif ($page->success) {
 ?>
