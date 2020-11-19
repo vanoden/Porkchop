@@ -27,7 +27,7 @@
 	<td class="value"><select name="organization_id" class="value input">
 			<option value="">All</option>
 <?php	foreach ($organizations as $organization) { ?>
-			<option value="<?=$organization->id?>"<? if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
+			<option value="<?=$organization->id?>"<?php if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
 <?php	} ?>
 		</select>
 	</td>
@@ -35,7 +35,7 @@
 	<td class="value"><select name="product_id" class="value input">
 			<option value="">All</option>
 <?php	foreach ($products as $product) { ?>
-			<option value="<?=$product->id?>"<? if ($product->id == $_REQUEST['product_id']) print " selected"; ?>><?=$product->code?></option>
+			<option value="<?=$product->id?>"<?php if ($product->id == $_REQUEST['product_id']) print " selected"; ?>><?=$product->code?></option>
 <?php	} ?>
 		</select>
 	</td>

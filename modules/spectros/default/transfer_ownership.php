@@ -48,7 +48,7 @@
 	<select id="asset_id" class="input" name="asset_id" onchange="selectedDevice();">
 		<option value="">Select One</option>
 <?php	foreach ($assets as $asset) { ?>
-		<option value="<?=$asset->id?>"<? if ($_REQUEST['asset_id'] == $asset->id) print " selected";?>><?=$asset->code?></option>
+		<option value="<?=$asset->id?>" <?php if ($_REQUEST['asset_id'] == $asset->id) print "selected";?>><?=$asset->code?></option>
 <?php	} ?>
 	</select>
 </div>
@@ -72,7 +72,7 @@
 	<select class="input" name="organization_id">
 		<option value="">Select One</option>
 <?php	foreach ($organizations as $organization) { ?>
-		<option value="<?=$organization->id?>"<? if ($organization->id == $_REQUEST['organization_id']) print " selected";?>><?=$organization->name?></option>
+		<option value="<?=$organization->id?>" <?php if ($organization->id == $_REQUEST['organization_id']) print "selected";?>><?=$organization->name?></option>
 <?php	} ?>
 	</select>
 </div>

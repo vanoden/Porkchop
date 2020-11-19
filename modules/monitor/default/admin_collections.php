@@ -69,17 +69,17 @@
 		<select name="organization_id" class="value input">
 			<option value="">All</option>
 <?php	foreach ($organizations as $organization) { ?>
-			<option value="<?=$organization->id?>"<? if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
+			<option value="<?=$organization->id?>"<?php if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
 <?php	} ?>
 		</select>
 	</td>
 	<td class="value">
 		<select name="status" class="value input">
 			<option value="">All</option>
-			<option value="NEW"<? if ($_REQUEST['status'] == "NEW") print " selected"; ?>>NEW</option>
-			<option value="ACTIVE"<? if ($_REQUEST['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
-			<option value="COMPLETE"<? if ($_REQUEST['status'] == "COMPLETE") print " selected"; ?>>COMPLETE</option>
-			<option value="DELETED"<? if ($_REQUEST['status'] == "DELETED") print " selected"; ?>>DELETED</option>
+			<option value="NEW" <?php if ($_REQUEST['status'] == "NEW") print " selected"; ?>>NEW</option>
+			<option value="ACTIVE" <?php if ($_REQUEST['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
+			<option value="COMPLETE" <?php if ($_REQUEST['status'] == "COMPLETE") print " selected"; ?>>COMPLETE</option>
+			<option value="DELETED" <?php if ($_REQUEST['status'] == "DELETED") print " selected"; ?>>DELETED</option>
 		</select>
 	</td>
 	<td class="value"><input type="text" name="date_start" class="value input" value="<?=$_REQUEST['date_start']?>"/></td>

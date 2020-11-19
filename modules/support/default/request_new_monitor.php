@@ -38,16 +38,16 @@
 			        <select class="value wide_100per" name="requestor_id">
 				        <option value="">Select</option>
 				        <?php	foreach ($customers as $customer) { ?>
-				        <option value="<?=$customer->id?>"<? if ($customer->id == $_REQUEST['customer_id']) print " selected"; ?>><?=$customer->full_name()?></option>
+				        <option value="<?=$customer->id?>" <?php if ($customer->id == $_REQUEST['customer_id']) print "selected"; ?>><?=$customer->full_name()?></option>
 				        <?php	} ?>
 			        </select>
 		        </div>
 		        <div class="tableCell">Gas Monitor</div>
 		        <div class="tableCell">
 			        <select class="value wide_100per" name="status">
-				        <option value="NEW"<? if ($_REQUEST['status'] == 'NEW') print " selected"; ?>>New</option>
-				        <option value="OPEN"<? if ($_REQUEST['status'] == 'OPEN') print " selected"; ?>>Open</option>
-				        <option value="CLOSED"<? if ($_REQUEST['status'] == 'CLOSED') print " selected"; ?>>Closed</option>
+				        <option value="NEW" <?php if ($_REQUEST['status'] == 'NEW') print "selected"; ?>>New</option>
+				        <option value="OPEN" <?php if ($_REQUEST['status'] == 'OPEN') print "selected"; ?>>Open</option>
+				        <option value="CLOSED" <?php if ($_REQUEST['status'] == 'CLOSED') print "selected"; ?>>Closed</option>
 			        </select>
 		        </div>
 	        </div>

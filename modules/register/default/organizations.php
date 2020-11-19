@@ -28,9 +28,9 @@
 <div id="search_container">
 	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput wide_md"/>
 	<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
-	<input type="checkbox" name="hidden" class="checkbox" value="1"<?php	if ($_REQUEST['hidden']) print " checked"; ?> /><span class="status">Hidden</span>
-	<input type="checkbox" name="expired" class="checkbox" value="1"<?php	if ($_REQUEST['expired']) print " checked"; ?> /><span class="status">Expired</span>
-	<input type="checkbox" name="deleted" class="checkbox" value="1"<?php	if ($_REQUEST['deleted']) print " checked"; ?> /><span class="status">Deleted</span>
+	<input type="checkbox" name="hidden" class="checkbox" value="1" <?php if ($_REQUEST['hidden']) print "checked"; ?> /><span class="status">Hidden</span>
+	<input type="checkbox" name="expired" class="checkbox" value="1" <?php if ($_REQUEST['expired']) print "checked"; ?> /><span class="status">Expired</span>
+	<input type="checkbox" name="deleted" class="checkbox" value="1" <?php if ($_REQUEST['deleted']) print "checked"; ?> /><span class="status">Deleted</span>
 	
 	<input type="hidden" id="start" name="start" value="0">
 </div>

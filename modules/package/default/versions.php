@@ -48,8 +48,8 @@
       <td><?=$version->repository->name?></td>
       <td><?=$version->name()?></td>
       <td>
-         <?php if ($version->status != 'PUBLISHED') { ?><input type="button" name="btn_submit" class="button" value="Publish" onclick="publish(<?=$version->id?>);" /><? } ?>
-         <?php if ($version->status != 'HIDDEN') { ?><input type="button" name="btn_submit" class="button" value="Hide" onclick="hide(<?=$version->id?>);" /><? } ?>
+         <?php if ($version->status != 'PUBLISHED') { ?><input type="button" name="btn_submit" class="button" value="Publish" onclick="publish(<?=$version->id?>);" /><?php } ?>
+         <?php if ($version->status != 'HIDDEN') { ?><input type="button" name="btn_submit" class="button" value="Hide" onclick="hide(<?=$version->id?>);" /><?php } ?>
          <input type="button" name="btn_submit" class="button" value="Download" onclick="download(<?=$version->id?>);" />
       </td>
    </tr>

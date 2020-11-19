@@ -152,7 +152,7 @@
             <input type="text" name="notes[<?=$contact->id?>]" class="value wide_100per" value="<?=$contact->notes?>" />
          </div>
          <div class="tableCell">
-            <input type="checkbox" name="notify[<?=$contact->id?>]" value="1"<? if ($contact->notify) print " checked"; ?> />
+            <input type="checkbox" name="notify[<?=$contact->id?>]" value="1" <?php if ($contact->notify) print "checked"; ?> />
          </div>
          <div class="tableCell">
             <input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X" style="cursor: pointer;" onclick="submitDelete(<?=$contact->id?>)" />

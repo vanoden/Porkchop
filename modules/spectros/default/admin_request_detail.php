@@ -32,7 +32,7 @@
 	<td class="value">
 		<select name="status" class="value input">
 		<?php	foreach ($statii as $status) { ?>
-			<option value="<?=$status?>"<? if ($status == $request->status) print " selected"; ?>><?=$status?></option>
+			<option value="<?=$status?>"<?php if ($status == $request->status) print " selected"; ?>><?=$status?></option>
 		<?php	} ?>
 		</select>
 	</td>
@@ -41,7 +41,7 @@
 		<select name="user_assigned" class="value input">
 			<option value="">Assign to</option>
 		<?php	foreach ($techs as $tech) { ?>
-			<option value="<?=$tech->id?>"<? if ($request->user_assigned == $tech->id) print " selected";?>><?=$tech->first_name?> <?=$tech->last_name?></option>
+			<option value="<?=$tech->id?>"<?php if ($request->user_assigned == $tech->id) print " selected";?>><?=$tech->first_name?> <?=$tech->last_name?></option>
 		<?php	} ?>
 		</select>
 	</td>
@@ -70,7 +70,7 @@
 	<td class="value">
 		<select name="user_requested" class="value input">
 <?php	foreach ($techs as $tech) { ?>
-			<option value="<?=$tech->id?>"<? if ($tech->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$tech->first_name?> <?=$tech->last_name?></option>
+			<option value="<?=$tech->id?>"<?php if ($tech->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$tech->first_name?> <?=$tech->last_name?></option>
 <?php	} ?>
 		</select></td>
 </tr>
@@ -87,7 +87,7 @@
 	<td class="value">
 		<select name="status" class="value input">
 		<?php	foreach ($statii as $status) { ?>
-			<option value="<?=$status?>"<? if ($status == $request->status) print " selected"; ?>><?=$status?></option>
+			<option value="<?=$status?>"<?php if ($status == $request->status) print " selected"; ?>><?=$status?></option>
 		<?php	} ?>
 		</select>
 	</td>
@@ -97,7 +97,7 @@
 		<select name="user_assigned" class="value input">
 			<option value="0">Unassigned</option>
 <?php	foreach ($techs as $tech) { ?>
-			<option value="<?=$tech->id?>"<? if ($tech->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$tech->first_name?> <?=$tech->last_name?></option>
+			<option value="<?=$tech->id?>"<?php if ($tech->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$tech->first_name?> <?=$tech->last_name?></option>
 <?php	} ?>
 		</select>
 	</td>

@@ -33,8 +33,8 @@
 		</div>
 		<div class="tableCell">
 			<select name="_active" class="value input wide_xs">
-				<option value="1"<? if ($parameters['_active']) print " selected"; ?>>Active</option>
-				<option value="0"<? if (! $parameters['_active']) print " selected"; ?>>All</option>
+				<option value="1" <?php if ($parameters['_active']) print " selected"; ?>>Active</option>
+				<option value="0" <?php if (! $parameters['_active']) print " selected"; ?>>All</option>
 			</select>
 		</div>
 		<div class="tableCell">
@@ -84,7 +84,7 @@
 	<td class="value responseValue"><input type="button" name="btnRequest[<?=$session_id?>]" value="Show" class="button" onClick="showRequest(<?=$session_id?>)" /></td>
 	<td class="value responseValue"><input type="button" name="btnResponse[<?=$session_id?>]" value="Show" class="button" onClick="showResponse(<?=$session_id?>)" /></td>
 </tr>
-<?
+<?php
 }
 ?>
 </table>

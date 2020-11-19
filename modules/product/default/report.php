@@ -28,7 +28,7 @@
 		<td class="value descValue<?=$greenbar?>"><?=$product->short_description?></td>
 		<td class="value smallValue<?=$greenbar?>"><input type="button" name="btn_show_<?=$product->id?>" onclick="showMeta(<?=$product->id?>)" value="Show" /></td>
 		<script language="JavaScript">
-			metadata[<?=$product->id?>] = "<? foreach (get_object_vars($product) as $key => $value) { print "$key=$value\\n"; } ?>";
+			metadata[<?=$product->id?>] = "<?php foreach (get_object_vars($product) as $key => $value) { print "$key=$value\\n"; } ?>";
 		</script>
 	</tr>
 <?php	
