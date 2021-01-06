@@ -13,7 +13,7 @@
 		$customers_per_page = $_REQUEST['page_size'];
 	else
 		$customers_per_page = 15;
-	if (! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
+	if (isset($_REQUEST['start']) && ! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
 
 	# Security - Only Register Module Operators or Managers can see other customers
 	if ($GLOBALS['_SESSION_']->customer->has_role('register reporter') or $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
@@ -23,9 +23,9 @@
 		$find_parameters = array();
 		
 		$find_parameters['status'] = array('NEW','ACTIVE');
-		if ($_REQUEST['deleted']) array_push($find_parameters['status'],'DELETED');
-		if ($_REQUEST['expired']) array_push($find_parameters['status'],'EXPIRED');
-		if ($_REQUEST['hidden']) array_push($find_parameters['status'],'HIDDEN');
+		if (isset($_REQUEST['deleted'])) array_push($find_parameters['status'],'DELETED');
+		if (isset($_REQUEST['expired'])) array_push($find_parameters['status'],'EXPIRED');
+		if (isset($_REQUEST['hidden'])) array_push($find_parameters['status'],'HIDDEN');
 		if (isset($_REQUEST['search']) && strlen($_REQUEST['search'])) $find_parameters['_search'] = $_REQUEST['search'];
 
 		# Get Count before Pagination
@@ -38,7 +38,7 @@
 		$customers = $customer_list->find($find_parameters);
 		if ($customer_list->error) $page->error = "Error finding customers: ".$customer_list->error;
 		
-		if ($_REQUEST['start'] < $customers_per_page)
+		if (isset($_REQUEST['start']) && $_REQUEST['start'] < $customers_per_page)
 			$prev_offset = 0;
 		else
 			$prev_offset = $_REQUEST['start'] - $customers_per_page;
