@@ -7,7 +7,7 @@
 
 	$editPage = new \Site\Page();
 	if ($editPage->get($_REQUEST['module'],$_REQUEST['view'],$index)) {
-		if ($_REQUEST['todo']) {
+		if (isset($_REQUEST['todo'])) {
 			if ($_REQUEST['todo'] == 'drop') {
 				if ($editPage->unsetMetadata($_REQUEST['key'])) {
 					$page->success = "Metadata dropped";

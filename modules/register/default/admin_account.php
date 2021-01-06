@@ -238,15 +238,14 @@
       <?php	
          $greenbar = '';
          foreach($all_roles as $role) {
+             if ($greenbar) $greenbar = ''; else $greenbar = ' greenbar';
          ?>
       <tr>
          <td class="value<?=$greenbar?>"><input type="checkbox" name="role[<?=$role->id?>]" value="1" <?php if ($customer->has_role($role->name)) print " CHECKED";?>/></td>
          <td class="value<?=$greenbar?>"><?=$role->name?></td>
          <td class="value<?=$greenbar?>"><?=$role->description?></td>
       </tr>
-      <?php
-         if ($greenbar) $greenbar = '';
-         else $greenbar = ' greenbar';
+      <?php        
          }
          ?>
    </table>

@@ -20,22 +20,22 @@
 		<th class="label descValue">Description</th>
 		<th class="label smallValue">Object</th>
 	</tr>
-<?php	foreach ($products as $product) { ?>
+<?php	
+foreach ($products as $product) { 
+    if (isset($greenbar) && $greenbar) $greenbar = ''; else $greenbar = ' greenbar';
+?>
 	<tr><td class="value codeValue<?=$greenbar?>"><a href="/_product/edit/<?=$product->code?>"><?=$product->code?></a></td>
-		<td class="value smallValue<?=$greenbar?>"><?=$product->type?></td>
-		<td class="value smallValue<?=$greenbar?>"><?=$product->status?></td>
-		<td class="value nameValue<?=$greenbar?>"><?=$product->name?></td>
-		<td class="value descValue<?=$greenbar?>"><?=$product->short_description?></td>
+		<td class="value smallValue<?=$greenbar?>"><?=isset($product->type) ? $product->type : ''?></td>
+		<td class="value smallValue<?=$greenbar?>"><?=isset($product->status) ? $product->status : ''?></td>
+		<td class="value nameValue<?=$greenbar?>"><?=isset($product->name) ? $product->name : ''?></td>
+		<td class="value descValue<?=$greenbar?>"><?=isset($product->short_description) ? $product->short_description : ''?></td>
 		<td class="value smallValue<?=$greenbar?>"><input type="button" name="btn_show_<?=$product->id?>" onclick="showMeta(<?=$product->id?>)" value="Show" /></td>
 		<script language="JavaScript">
 			metadata[<?=$product->id?>] = "<?php foreach (get_object_vars($product) as $key => $value) { print "$key=$value\\n"; } ?>";
 		</script>
 	</tr>
 <?php	
-		if (isset($greenbar) && $greenbar)
-			$greenbar = '';
-		else
-			$greenbar = ' greenbar';
-	} ?>
+	} 
+	?>
 	</table>
 </div>

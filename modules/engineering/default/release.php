@@ -128,7 +128,8 @@
               <div class="tableCell" style="width: 20%;">&nbsp;</div>
            </div>
            <!-- end row header -->
-           <?php	foreach ($tasks as $task) { 
+           <?php	
+           foreach ($tasks as $task) { 
               $project = $task->project();
               $product = $task->product();
               ?>

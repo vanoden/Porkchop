@@ -41,20 +41,20 @@
 	    <th class="label columnLabel collectionFinishedColumn">Finished</th>
 	    <th class="label columnLabel columnLabelRight collectionDeleteColumn"><span class="mobile-hide">Delete</span><span class="mobile-show"><img src="/img/_global/icon_trashcan.svg"></span></th>
     </tr>
-    <?php	foreach ($collections as $collection) {
+    <?php	
+        foreach ($collections as $collection) {
+            if ($greenbar) $greenbar = ""; else $greenbar = " greenbar";
 		    $name = $collection->metadata('name');
-		    if (! $name) $name = "[none]";
-		    
+		    if (! $name) $name = "[none]";    
     ?>
-    <tr><td class="value columnValue columnValueLeft collectionNameColumn<?=$greenbar?>"><a href="/_monitor/dashboard/<?=$collection->code?>" id="Collection[<?=$collection->id?>]"><?=$name?></a></td>
-	    <td class="value columnValue collectionCustomerColumn<?=$greenbar?>"><?=$collection->metadata('customer')?></td>
-	    <td class="value columnValue collectionStatusColumn<?=$greenbar?>"><?=$collection->status?></td>
-	    <td class="value columnValue collectionStartedColumn<?=$greenbar?>"><?=date("m/d/y H:m",$collection->timestamp_start)?></td>
-	    <td class="value columnValue collectionFinishedColumn<?=$greenbar?>"><?=date("m/d/y H:m",$collection->timestamp_end)?></td>
-	    <td class="value columnValue columnValueRight collectionDeleteColumn<?=$greenbar?>"><input type="button" name="delete_collection" value="x" onclick="deleteCollection(<?=$collection->id?>)" /></td>
-    </tr>
-    <?php			if ($greenbar) $greenbar = "";
-		    else $greenbar = " greenbar";
+        <tr><td class="value columnValue columnValueLeft collectionNameColumn<?=$greenbar?>"><a href="/_monitor/dashboard/<?=$collection->code?>" id="Collection[<?=$collection->id?>]"><?=$name?></a></td>
+	        <td class="value columnValue collectionCustomerColumn<?=$greenbar?>"><?=$collection->metadata('customer')?></td>
+	        <td class="value columnValue collectionStatusColumn<?=$greenbar?>"><?=$collection->status?></td>
+	        <td class="value columnValue collectionStartedColumn<?=$greenbar?>"><?=date("m/d/y H:m",$collection->timestamp_start)?></td>
+	        <td class="value columnValue collectionFinishedColumn<?=$greenbar?>"><?=date("m/d/y H:m",$collection->timestamp_end)?></td>
+	        <td class="value columnValue columnValueRight collectionDeleteColumn<?=$greenbar?>"><input type="button" name="delete_collection" value="x" onclick="deleteCollection(<?=$collection->id?>)" /></td>
+        </tr>
+    <?php
 	    }
     ?>
     </table>

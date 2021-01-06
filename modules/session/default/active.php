@@ -27,6 +27,7 @@
 <?php
 	$_user = new RegisterPerson();
 	foreach ($sessions as $session) {
+    	if (! $greenbar) $greenbar = 'greenbar'; else $greenbar = '';
 		list($hit) = $_session->last_hit($session->id);
 		$user = $_user->details($session->customer_id);
 ?>
@@ -36,9 +37,7 @@
 	<td class="value <?=$greenbar?>"><?=$session->last_hit_date?></td>
 	<td class="value <?=$greenbar?>"><?=$hit->script?></td>
 </tr>
-<?php
-		if (! $greenbar) $greenbar = 'greenbar';
-		else $greenbar = '';
+<?php	
 	}
 ?>
 </table>

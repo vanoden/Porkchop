@@ -98,10 +98,10 @@
 	<th class="label columnLabel collectionFinishedColumn"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('date_end');">Finished</a></th>
 	<th class="label columnLabel collectionDeleteColumn">Delete</td>
 </tr>
-<?php	foreach ($collections as $collection)
-	{
+<?php	
+foreach ($collections as $collection) {
+        if ($greenbar) $greenbar = ""; else $greenbar = " greenbar";
 		if (! $collection->name) $collection->name = "[none]";
-		
 ?>
 <tr><td class="value columnValue collectionNameColumn<?=$greenbar?>"><a href="/_monitor/dashboard/<?=$collection->code?>" id="Collection[<?=$collection->id?>]"><?=$collection->name?></a></td>
 	<td class="value columnValue collectionCustomerColumn<?=$greenbar?>"><?=$collection->organization->name?></td>
@@ -111,8 +111,6 @@
 	<td class="value columnValue collectionDeleteColumn<?=$greenbar?>" style="text-align: center"><input type="button" style="padding-left: 2px; padding-right: 2px; padding-top: 0px; height: 18px; font-weight: bold" name="delete_collection" value="x" onclick="deleteCollection(<?=$collection->id?>)" /></td>
 </tr>
 <?php
-		if ($greenbar) $greenbar = "";
-		else $greenbar = " greenbar";
 	}
 ?>
 </table>

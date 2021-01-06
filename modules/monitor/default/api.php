@@ -333,6 +333,17 @@
 			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
 		</div>
 		</form>
+		<form method="post" action="/_monitor/api" name="findCollectionSensorsByVertices">
+		<input type="hidden" name="method" value="findCollectionSensorsByVertices">
+		<div class="apiMethod">
+			<div class="h3 apiMethodTitle">findCollectionSensorsByVertices</div>
+			<div class="apiParameter">
+				<span class="label apiLabel">collection_code</span>
+				<input type="text" name="collection_code" class="value input apiInput"/>
+			</div>
+			<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+		</div>
+		</form>
 		<form method="post" action="/_monitor/api" name="addCollectionSensor">
 		<input type="hidden" name="method" value="addCollectionSensor">
 		<div class="apiMethod">

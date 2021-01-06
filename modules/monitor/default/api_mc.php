@@ -580,6 +580,37 @@
 		app_log("findCollectionSensors(): $elapsed_time elapsed",'debug',__FILE__,__LINE__);
 		print formatOutput($response);
 	}
+	
+	###################################################
+	### Find Sensors in Collection					###
+	###################################################
+	function findCollectionSensorsByVertices() {
+		$start_time = microtime(true);
+		app_log("findCollectionSensorsByVertices(): called",'trace',__FILE__,__LINE__);
+		if (! array_key_exists('collection_code',$_REQUEST)) error('collection_code required');
+		if (! array_key_exists('organization_id',$_REQUEST)) $_REQUEST['organization_id'] = '';
+
+		$collection = new \Monitor\Collection();
+		if ($collection->error) error("Error finding collection: ".$collection->error);
+		$collection->get($_REQUEST['collection_code'],$_REQUEST['organization_id']);
+		if ($collection->error) error("Error finding collection: ".$collection->error);
+		if (! $collection->id) error("Collection not found");
+
+		$sensors = $collection->sensorsByVertice($collection->id);
+		if ($collection->error) error("Error finding collection: ".$collection->error);
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->sensor = $sensors;
+
+		$_comm = new \Monitor\Communication();
+		$_comm->update(json_encode($response));
+		api_log($response);
+		$elapsed_time = microtime(true) - $start_time;
+		app_log("findCollectionSensorsByVertices(): $elapsed_time elapsed",'debug',__FILE__,__LINE__);
+		print formatOutput($response);
+	}
+	
 	function dygraphData() {
 		$collection = new \Monitor\Collection();
 		if (! isset($_REQUEST['code'])) error("Invalid or no id given to graph");

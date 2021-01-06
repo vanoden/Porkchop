@@ -26,7 +26,7 @@
 		
 <form id="orgSearch" method="get" class="float: left">
 <div id="search_container">
-	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput wide_md"/>
+	<input type="text" id="searchOrganizationInput" name="name" value="<?=isset($_REQUEST['name']) ? $_REQUEST['name']: ''?>" class="value input searchInput wide_md"/>
 	<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
 	<input type="checkbox" name="hidden" class="checkbox" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><span class="status">Hidden</span>
 	<input type="checkbox" name="expired" class="checkbox" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><span class="status">Expired</span>
@@ -41,6 +41,7 @@
 	<th class="label organizationsCodeLabel">Status</th>
 	<th class="label organizationsCodeLabel">Members</th>
 </tr>
+
 <?php	
 foreach ($organizations as $organization) { 
     if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
@@ -50,7 +51,7 @@ foreach ($organizations as $organization) {
 	<td class="value<?=$greenbar?>"><?=$organization->status?></td>
 	<td class="value<?=$greenbar?>"><?=$organization->activeCount()?></td>
 </tr>
-<?php		
+<?php
 	}
 ?>
 </table>
@@ -66,7 +67,8 @@ foreach ($organizations as $organization) {
 </div>
 </form>
 
-<?php		if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+<?php		
+    if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 ?>
 <form action="<?=PATH?>/_register/organization" method="get">
 <div class="button-bar"><span style="text-align: center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span></div>
