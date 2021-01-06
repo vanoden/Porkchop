@@ -37,7 +37,7 @@
             return FALSE;
         }
     }
-  
+    
     // PHP_VERSION_ID is available as of PHP 5.2.7, if version is lower than that, then emulate it
     if (!defined('PHP_VERSION_ID')) {
         $version = explode('.', PHP_VERSION);

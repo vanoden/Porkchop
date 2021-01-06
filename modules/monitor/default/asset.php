@@ -61,6 +61,7 @@ if ($page->success) { ?>
 </tr>
 <?php	$greenbar = '';
 	foreach ($sensors as $sensor) {
+    	if ($greenbar) $greenbar = ''; else $greenbar = 'greenbar';
 		$reading = $sensor->lastReading();
 		$datetime = $GLOBALS['_SESSION_']->localtime($reading->timestamp);
 		$reading_time = sprintf("%d/%d/%4d %02d:%02d:%02d",$datetime["month"],$datetime["day"],$datetime["year"],$datetime['hour'],$datetime['minute'],$datetime['second']);
@@ -72,8 +73,7 @@ if ($page->success) { ?>
 	<td class="value zoneValue <?=$greenbar?>"><?php if ($reading->timestamp) { print $reading_time; } ?></td>
 	<td class="value zoneValue <?=$greenbar?>" style="text-align: right"><?=$reading->value?>&nbsp;&nbsp;&nbsp;&nbsp;</td>
 </tr>
-<?php		if ($greenbar) $greenbar = '';
-		else $greenbar = 'greenbar';
+<?php    
 	}
 ?>
 </table>

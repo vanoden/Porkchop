@@ -24,13 +24,14 @@
 </tr>
 <?php	$greebar = '';
 	foreach ($assets as $asset) {
+    	if ($greenbar) $greenbar = ''; else $greenbar = "greenbar";
 ?>
 <tr><td class="value <?=$greenbar?>"><a href="/_monitor/asset/<?=$asset->code?>"><?=$asset->code?></a></td>
 	<td class="value <?=$greenbar?>"><?=$asset->sensorCount()?></td>
 	<td class="value <?=$greenbar?>"><?=$asset->product->code?></td>
 	<td class="value <?=$greenbar?>"><?=$asset->name?></td>
 </tr>
-    <?
-		if ($greenbar) $greenbar = ''; else $greenbar = "greenbar";
-	} ?>
+    <?php
+	} 
+	?>
 </table>

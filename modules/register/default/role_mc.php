@@ -2,7 +2,7 @@
 	$page = new \Site\Page();
 	$page->requireRole('register manager');
 
-	$role_name = $_REQUEST['name'];
+	$role_name = isset($_REQUEST['name']) ? $_REQUEST['name']: '';
 	if (empty($role_name)) $role_name = $GLOBALS['_REQUEST_']->query_vars_array[0];
 
 	$role = new \Register\Role();
@@ -14,8 +14,7 @@
 				)
 			)) {
 				$page->success = "Role Updated";
-			}
-			else {
+			} else {
 				$page->addError("Role update failed: ".$role->error);
 			}
 		}

@@ -206,10 +206,7 @@
 				return false;
 			}
 			
-			while ($row = $rs->fetchRow(false)) {
-			    $this->$row['key'] = $row['value'];
-			}
-			
+			while ($row = $rs->fetchRow(false)) $this->$row['key'] = $row['value'];
 			return true;
 		}
 		

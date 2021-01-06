@@ -2,7 +2,7 @@
 	$page = new \Site\Page();
 	$page->requireRole('product manager');
 
-	# Valid Item Types
+	// Valid Item Types
 	$item_types = array(
 		"inventory",
 		"unique",
@@ -11,42 +11,35 @@
 		"note"
 	);
 
+	// Fetch Code from Query String if not Posted
 	$new_item = false;
-	# Fetch Code from Query String if not Posted
 	if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
 		$item = new \Product\Item($_REQUEST['id']);
-	}
-	elseif (isset($_REQUEST['code']) && $_REQUEST['code']) {
+	} elseif (isset($_REQUEST['code']) && $_REQUEST['code']) {
 		$item = new \Product\Item();
 		$item->get($_REQUEST['code']);
 		if ($item->id) $new_item = false;
 		else $new_item = true;
-	}
-	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+	} elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$item = new \Product\Item();
 		$item->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
 		if ($item->id) $new_item = false;
 		else $new_item = true;
-	}
-	else {
+	} else {
 		$new_item = true;
 	}
 
-	if (! $new_item && ! $item->id) {
-		$page->addError("Item not found");
-	}
-	# Handle Actions
-	elseif ($_REQUEST['submit']) {
-		if (! $_REQUEST['code']) {
+	if (! $new_item && ! $item->id) $page->addError("Item not found");
+	
+	// Handle Actions
+	elseif (isset($_REQUEST['submit'])) {
+		if (! isset($_REQUEST['code'])) {
 			$page->addError("Code required");
-		}
-		elseif (! $_REQUEST['status']) {
+		} elseif (! isset($_REQUEST['status'])) {
 			$page->addError("Status required");
-		}
-		elseif (! $_REQUEST['type']) {
+		} elseif (! isset($_REQUEST['type'])) {
 			$page->addError("Type required");
-		}
-		else {
+		} else {
 			if ($new_item) {
 				app_log("Admin ".$GLOBALS['_SESSION_']->customer->first_name." editing product ".$_REQUEST['code'],'notice',__FILE__,__LINE__);
 				$item->add(array(
@@ -130,13 +123,11 @@
 		}
 	}
 
-	# Get Product
-	$item->get($_REQUEST['code']);
-	if ($item->error) {
-		$page->addError("Error loading item '".$_REQUEST['code']."': ".$item->error);
-	}
+	// Get Product
+	if (isset($_REQUEST['code'])) $item->get($_REQUEST['code']);
+	if (isset($item->error)) $page->addError("Error loading item '".$_REQUEST['code']."': ".$item->error);
 	
-	# Get Manuals
+	// Get Manuals
 	$documentlist = new \Media\DocumentList();
 	$manuals = $documentlist->find();
 	$imagelist = new \Media\ImageList();

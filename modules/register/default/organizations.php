@@ -26,11 +26,11 @@
 		
 <form id="orgSearch" method="get" class="float: left">
 <div id="search_container">
-	<input type="text" id="searchOrganizationInput" name="name" value="<?=$_REQUEST['name']?>" class="value input searchInput wide_md"/>
+	<input type="text" id="searchOrganizationInput" name="name" value="<?=isset($_REQUEST['name']) ? $_REQUEST['name']: ''?>" class="value input searchInput wide_md"/>
 	<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
-	<input type="checkbox" name="hidden" class="checkbox" value="1" <?php if ($_REQUEST['hidden']) print "checked"; ?> /><span class="status">Hidden</span>
-	<input type="checkbox" name="expired" class="checkbox" value="1" <?php if ($_REQUEST['expired']) print "checked"; ?> /><span class="status">Expired</span>
-	<input type="checkbox" name="deleted" class="checkbox" value="1" <?php if ($_REQUEST['deleted']) print "checked"; ?> /><span class="status">Deleted</span>
+	<input type="checkbox" name="hidden" class="checkbox" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><span class="status">Hidden</span>
+	<input type="checkbox" name="expired" class="checkbox" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><span class="status">Expired</span>
+	<input type="checkbox" name="deleted" class="checkbox" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><span class="status">Deleted</span>
 	
 	<input type="hidden" id="start" name="start" value="0">
 </div>
@@ -41,14 +41,16 @@
 	<th class="label organizationsCodeLabel">Status</th>
 	<th class="label organizationsCodeLabel">Members</th>
 </tr>
-<?php	foreach ($organizations as $organization) { ?>
+<?php foreach ($organizations as $organization) { 
+    if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
+?>
 <tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/organization?organization_id=".$organization->id?>"><?=$organization->code?></a></td>
 	<td class="value<?=$greenbar?>"><?=$organization->name?></td>
 	<td class="value<?=$greenbar?>"><?=$organization->status?></td>
 	<td class="value<?=$greenbar?>"><?=$organization->activeCount()?></td>
 </tr>
-<?php		if ($greenbar) $greenbar = '';
-		else $greenbar = " greenbar";
+<?php	
+        
 	}
 ?>
 </table>

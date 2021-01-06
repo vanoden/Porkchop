@@ -71,9 +71,7 @@
 	<td class="value<?=$greenbar?>"><?=$verification->getMetadata('monitor_reading')?></td>
 	<td class="value<?=$greenbar?>"><?=$verification->getMetadata('detector_voltage')?></td>
 </tr>
-<?php		if (isset($greenbar) && $greenbar)
-			$greenbar = '';
-		else
-			$greenbar = ' greenbar';
+<?php		
+        if (isset($greenbar) && $greenbar) $greenbar = ''; else $greenbar = ' greenbar';
 	} ?>
 </table>
