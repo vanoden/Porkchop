@@ -60,7 +60,7 @@
 
 	// make sure the serial number is valid
 	function checkSerial(lineNumber) {
-	
+
 		var productInput = document.getElementById('product_id'+lineNumber);
 		checkProduct(lineNumber);
 		var productID = productInput.options[productInput.selectedIndex].value;

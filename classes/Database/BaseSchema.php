@@ -9,15 +9,10 @@
 		public $infoKey;
 
 		public function __construct() {
-			if (! isset($this->infoTable))
-				$this->infoTable = strtolower($this->module)."__info";
-			if (! isset($this->infoKey))
-				$this->infoKey = 'schema_version';
+			if (! isset($this->infoTable)) $this->infoTable = strtolower($this->module)."__info";
+			if (! isset($this->infoKey)) $this->infoKey = 'schema_version';
 			// Create Info Table If Not Exists
 			$this->initInfoTable();
-
-			// Upgrade to Latest Version
-#			$this->upgrade();
 		}
 
 		private function initInfoTable() {
