@@ -15,7 +15,7 @@
 	###############################################
 	### Load API Objects						###
     ###############################################
-	# Identify Asset
+	// Identify Asset
 	$asset = new \Monitor\Asset();
 	if ($asset->error) {
 		app_log("Failed to initiate MonitorAsset",'error',__FILE__,__LINE__);
@@ -23,13 +23,13 @@
 		exit;
 	}
 
-	# Call Requested Event
+	// Call Requested Event
 	if (isset($_REQUEST["method"])) {
 		$message = "Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code;
 		if (array_key_exists('asset_code',$_REQUEST)) $message .= " for asset ".$_REQUEST['asset_code'];
 		app_log($message,'debug',__FILE__,__LINE__);
 
-		# Comm Dashboard
+		// Comm Dashboard
 		$comm = new \Monitor\Communication();
 		$store_request = $GLOBALS['_REQUEST_'];
 		$this_post = $_POST;
@@ -41,12 +41,12 @@
 			app_log("Error in api comm storage: ".$comm->error,'error',__FILE__,__LINE__);
 		}
 
-		# Call the Specified Method
+		// Call the Specified Method
 		$function_name = $_REQUEST["method"];
 		$function_name($api);
 		exit;
 	}
-	# Only Developers Can See The API
+	// Only Developers Can See The API
 	elseif (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) {
 		header("location: /_monitor/home");
 		exit;
@@ -109,7 +109,7 @@
 		if ($collector->error) app_error("Error finding collector: ".$collector->error,__FILE__,__LINE__);
 		if (! $collector->id) error("Collector not found");
 		if ($_REQUEST['product_code']) {
-			# Get Product ID
+			// Get Product ID
 			$product = new \Product\Item($_REQUEST['product_id']);
 			if (! $product->id) error("Could not find product matching ".$_REQUEST['product_code']);
 		}
@@ -175,7 +175,7 @@
 			$_REQUEST['timestamp_start'] = $time->getTimeStamp();
 		}
 		elseif (isset($_REQUEST['timestamp_start'])) {
-			# All set
+			// All set
 		}
 		else $_REQUEST['timestamp_start'] = time();
 
@@ -184,7 +184,7 @@
 			$_REQUEST['timestamp_end'] = $time->getTimeStamp();
 		}
 		elseif ($_REQUEST['timestamp_end']) {
-			# All set
+			// All set
 		}
 		else $_REQUEST['timestamp_end'] = time() + 86400;
 
@@ -201,7 +201,7 @@
 		if ($collection->error) app_error("Error adding collection: ".$collection->error,__FILE__,__LINE__);
 		else app_log("Collection '".$collection->code."' created",'debug',__FILE__,__LINE__);
 
-		# Timezone
+		// Timezone
 		$timezone = new DateTimeZone($GLOBALS['_SESSION_']->timezone);
 		$time = new DateTime('now',$timezone);
 		$time->setTimeStamp($collection->timestamp_start);
@@ -223,7 +223,7 @@
 	### Update a Collection							###
 	###################################################
 	function updateCollection() {
-		# Find Requested Collection
+		// Find Requested Collection
 		$collection = new \Monitor\Collection();
 		if ($collection->error) app_error("Error initializing collection: ".$collection->error,__FILE__,__LINE__);
 		$collection->get($_REQUEST['code']);
@@ -232,7 +232,7 @@
 
 		$parameters = array();
 
-		# Find Requested Organization
+		// Find Requested Organization
 		if ($_REQUEST['organization_code']) {
 			if ($GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
 				$organization = new \Register\Organization();
@@ -275,11 +275,11 @@
 			$parameters['name'] = $_REQUEST['name'];
 		}
 
-		# Update Collection
+		// Update Collection
 		$collection->update($parameters);
 		if ($collection->error) app_error("Error adding collection: ".$collection->error,__FILE__,__LINE__);
 
-		# Timezone
+		// Timezone
 		$timezone = new DateTimeZone($GLOBALS['_SESSION_']->timezone);
 		$time = new DateTime('now',$timezone);
 		$time->setTimeStamp($collection->timestamp_start);
@@ -386,7 +386,7 @@
 		$collection->get($_REQUEST['code']);
 		if ($collection->error) error("Error finding collection: ".$collection->error);
 
-		# Timezone
+		// Timezone
 		$timezone = new DateTimeZone($GLOBALS['_SESSION_']->timezone);
 		$time = new DateTime('now',$timezone);
 		$time->setTimeStamp($collection->timestamp_start);
@@ -628,7 +628,7 @@
 			$organization = $GLOBALS['_SESSION_']->customer->organization;
 		}
 
-		# Get Collection from Database
+		// Get Collection from Database
 		$collection->get($_REQUEST['code'],$organization->id);
 		if ($collection->error) error($collection->error);
 		if (! $collection->id) error("Collection not found");
@@ -696,7 +696,7 @@
 
 		$collection = new \Monitor\Collection();
 	
-		# Get Collection from Database
+		// Get Collection from Database
 		$collection->get($_REQUEST['code'],$organization->id);
 	
 		if ($collection->error) error($collection->error);
@@ -904,7 +904,7 @@
 			$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
 		}
 		else {
-			# Privileges support access
+			// Privileges support access
 		}
 
 		$assets = $assetlist->find($parameters);
@@ -1080,7 +1080,7 @@
 		else
 			$organization = $GLOBALS['_SESSION_']->customer->organization;
 
-		# Get Asset (Monitor) by code
+		// Get Asset (Monitor) by code
 		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['asset_code'])) error("Valid asset_code required");
 		$assetlist = new \Monitor\AssetList();
 		if ($assetlist->error) app_error("Error initializing Asset: ".$assetlist->error,__FILE__,__LINE__);
@@ -1088,7 +1088,7 @@
 		if ($assetlist->error) app_error("Error finding Asset: ".$assetlist->error,__FILE__,__LINE__);
 		if (! $asset->id) error("Could not find Asset '".$_REQUEST['asset_code']."' for organization '".$organization->id."'");
 
-		# Get Sensor by asset id/code
+		// Get Sensor by asset id/code
 		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['sensor_code'])) error("Valid sensor_code required");
 		$sensor = new \Monitor\Sensor();
 		if ($sensor->error) app_error("Error initializing sensor: ".$sensor->error,__FILE__,__LINE__);
@@ -1096,7 +1096,7 @@
 		if ($sensor->error) app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
 		if (! $sensor->id) error("Sensor ".$_REQUEST['sensor_code']." not found for asset ".$_REQUEST['asset_code']);
 
-		# Set Status
+		// Set Status
 		$status = new \Monitor\Sensor\Status($sensor->id,$_REQUEST['key']);
 		if ($status->error) app_error("Error initializing status: ".$status->error);
 		$status->set($_REQUEST['value']);
@@ -1128,7 +1128,7 @@
 		else
 			$organization = $GLOBALS['_SESSION_']->customer->organization;
 
-		# Get Asset (Monitor) by code
+		// Get Asset (Monitor) by code
 		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['asset_code'])) error("Valid asset_code required");
 		$assetlist = new \Monitor\AssetList();
 		if ($assetlist->error) app_error("Error initializing Asset: ".$assetlist->error,__FILE__,__LINE__);
@@ -1136,7 +1136,7 @@
 		if ($assetlist->error) app_error("Error finding Asset: ".$assetlist->error,__FILE__,__LINE__);
 		if (! $asset->id) error("Could not find Asset '".$_REQUEST['asset_code']."' for organization '".$organization->id."'");
 
-		# Get Sensor by asset id/code
+		// Get Sensor by asset id/code
 		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['sensor_code'])) error("Valid sensor_code required");
 		$sensor = new \Monitor\Sensor();
 		if ($sensor->error) app_error("Error initializing sensor: ".$sensor->error,__FILE__,__LINE__);
@@ -1144,7 +1144,7 @@
 		if ($sensor->error) app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
 		if (! $sensor->id) error("Sensor ".$_REQUEST['sensor_code']." not found for asset ".$_REQUEST['asset_code']);
 
-		# Add Reading
+		// Add Reading
 		$reading = new \Monitor\Reading();
 		if ($reading->error) app_error("Error adding reading: ".$reading->error);
 		$reading->add(
@@ -1341,7 +1341,7 @@
 		if (! $GLOBALS['_SESSION_']->customer->organization->id)
 			error("Must belong to an organization");
 			
-		# Get Asset (Monitor) by code
+		// Get Asset (Monitor) by code
 		if (preg_match('/^[\w\-\.\_]+$/',$_REQUEST['asset_code'])) {
 			$assetlist = new \Monitor\AssetList();
 			if ($assetlist->error) app_error("Error initializing AssetList: ".$assetlist->error,__FILE__,__LINE__);
@@ -1353,7 +1353,7 @@
 			error("Valid asset_code required");
 		}
 
-		# Get Sensor by asset id/code
+		// Get Sensor by asset id/code
 		if ($_REQUEST['sensor_code']) {
 			if (! $asset->id) error("asset_code required when sensor_code specified.");
 			if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['sensor_code'])) error("Invalid sensor_code");
@@ -1364,7 +1364,7 @@
 			if (! $sensor->id) error("Sensor ".$_REQUEST['sensor_code']." not found for asset ".$_REQUEST['asset_code']);
 		}
 
-		# Get Collection
+		// Get Collection
 		if ($_REQUEST['collection_code']) {
 			if (! preg_match('/^\w+$/',$_REQUEST['collection_code'])) error("Invalid collection code");
 			$collection = new \Monitor\Collection();
@@ -1373,7 +1373,7 @@
 			if (! $collection->id) error("Collection not found");
 		}
 
-		# Add Message
+		// Add Message
 		$parameters = array();
 
 		$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
@@ -1608,3 +1608,45 @@
 		$document->prepare($object);
 		return $document->content();
 	}
+	
+    function addAlertThreshold() {
+	    $alertThreshold = new \Monitor\AlertThreshold();
+	    $response = new \HTTP\Response();
+        $success = $alertThreshold->add(array('sensor_id' => $_REQUEST['sensor_id'], 'operator' => $_REQUEST['operator'], 'value' => $_REQUEST['value']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Threshold could not be added";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Threshold was added successfully";
+        }
+    	print formatOutput($response);
+	}
+
+    function editAlertThreshold() {
+	    $alertThreshold = new \Monitor\AlertThreshold($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertThreshold->update(array('sensor_id' => $_REQUEST['sensor_id'], 'operator' => $_REQUEST['operator'], 'value' => $_REQUEST['value']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Threshold could not be edited";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Threshold was edited successfully";
+        }
+    	print formatOutput($response);  
+    }
+    
+    function removeAlertThreshold() {
+	    $alertThreshold = new \Monitor\AlertThreshold($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertThreshold->delete();
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Threshold could not be deleted";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Threshold was deleted successfully";
+        }
+    	print formatOutput($response);  
+    }
