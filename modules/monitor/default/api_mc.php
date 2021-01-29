@@ -9,7 +9,6 @@
 		"version"	=> "0.1.2",
 		"release"	=> "2018-07-02"
 	);
-
 	app_log("Request: ".print_r($_REQUEST,true),'debug',__FILE__,__LINE__);
 
 	###############################################
