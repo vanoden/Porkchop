@@ -98,6 +98,35 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			if ($this->version() < 2) {
+
+				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$table_query = "
+					ALTER TABLE `alert_threshold` MODIFY `operator` enum('<','>','=') NOT NULL DEFAULT '<';
+				";
+				if (! $this->executeSQL($table_query)) {
+					$this->error = "SQL Error altering `alert_threshold` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$table_query = "
+					ALTER TABLE `alert_threshold` MODIFY `value` decimal(10,2) NULL;
+				";
+				if (! $this->executeSQL($table_query)) {
+					$this->error = "SQL Error altering alert_threshold table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			$this->addRoles(array(
 				'alert manager'	    => 'Can view/edit assets, sensors and collections',
 				'alert reporter'	=> 'Can view assets, sensors and collections',

@@ -1610,7 +1610,7 @@
 	}
 	
     function addAlertThreshold() {
-	    $alertThreshold = new \Monitor\AlertThreshold();
+	    $alertThreshold = new \Alert\AlertThreshold();
 	    $response = new \HTTP\Response();
         $success = $alertThreshold->add(array('sensor_id' => $_REQUEST['sensor_id'], 'operator' => $_REQUEST['operator'], 'value' => $_REQUEST['value']));
         if (!$success) {
@@ -1624,7 +1624,7 @@
 	}
 
     function editAlertThreshold() {
-	    $alertThreshold = new \Monitor\AlertThreshold($_REQUEST['id']);
+	    $alertThreshold = new \Alert\AlertThreshold($_REQUEST['id']);
 	    $response = new \HTTP\Response();
         $success = $alertThreshold->update(array('sensor_id' => $_REQUEST['sensor_id'], 'operator' => $_REQUEST['operator'], 'value' => $_REQUEST['value']));
         if (!$success) {
@@ -1638,7 +1638,7 @@
     }
     
     function removeAlertThreshold() {
-	    $alertThreshold = new \Monitor\AlertThreshold($_REQUEST['id']);
+	    $alertThreshold = new \Alert\AlertThreshold($_REQUEST['id']);
 	    $response = new \HTTP\Response();
         $success = $alertThreshold->delete();
         if (!$success) {
