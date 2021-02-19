@@ -1,5 +1,5 @@
 <?php
-	namespace Monitor;
+	namespace Alert;
 
 	class AlertTriggerThreshold extends \ORM\BaseModel {
 		public $trigger_id;

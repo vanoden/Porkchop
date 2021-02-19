@@ -642,3 +642,199 @@
       <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
    </div>
 </form>
+<form method="post" action="/_monitor/api" name="addAlertTrigger">
+   <input type="hidden" name="method" value="addAlertTrigger">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">addAlertTrigger</div>
+      <div class="apiParameter">      
+         <span class="label apiLabel">name</span>
+         <input type="text" name="name" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">enabled</span>
+         <input type="text" name="enabled" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="editAlertTrigger">
+   <input type="hidden" name="method" value="editAlertTrigger">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">editAlertTrigger</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">id</span>
+         <input type="text" name="id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">name</span>
+         <input type="text" name="name" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">enabled</span>
+         <input type="text" name="enabled" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="removeAlertTrigger">
+   <input type="hidden" name="method" value="removeAlertTrigger">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">removeAlertTrigger</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">id</span>
+         <input type="text" name="id" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="addAlertTriggerEscalation">
+   <input type="hidden" name="method" value="addAlertTriggerEscalation">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">addAlertTriggerEscalation</div>
+      <div class="apiParameter">      
+         <span class="label apiLabel">trigger_id</span>
+         <input type="text" name="trigger_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">type</span>
+         <input type="text" name="type" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">parameters</span>
+         <input type="text" name="parameters" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="editAlertTriggerEscalation">
+   <input type="hidden" name="method" value="editAlertTriggerEscalation">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">editAlertTriggerEscalation</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">id</span>
+         <input type="text" name="id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">trigger_id</span>
+         <input type="text" name="trigger_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">type</span>
+         <input type="text" name="type" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">parameters</span>
+         <input type="text" name="parameters" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="removeAlertTriggerEscalation">
+   <input type="hidden" name="method" value="removeAlertTriggerEscalation">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">removeAlertTriggerEscalation</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">id</span>
+         <input type="text" name="id" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="addAlertTriggerThreshold">
+   <input type="hidden" name="method" value="addAlertTriggerThreshold">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">addAlertTriggerThreshold</div>
+      <div class="apiParameter">      
+         <span class="label apiLabel">trigger_id</span>
+         <input type="text" name="trigger_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">threshold_id</span>
+         <input type="text" name="threshold_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">group_id</span>
+         <input type="text" name="group_id" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="editAlertTriggerThreshold">
+   <input type="hidden" name="method" value="editAlertTriggerThreshold">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">editAlertTriggerThreshold</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">trigger_id</span>
+         <input type="text" name="trigger_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">trigger_id</span>
+         <input type="text" name="trigger_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">threshold_id</span>
+         <input type="text" name="threshold_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">group_id</span>
+         <input type="text" name="group_id" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="removeAlertTriggerThreshold">
+   <input type="hidden" name="method" value="removeAlertTriggerThreshold">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">removeAlertTriggerThreshold</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">trigger_id</span>
+         <input type="text" name="trigger_id" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="addAlertAction">
+   <input type="hidden" name="method" value="addAlertAction">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">addAlertAction</div>
+      <div class="apiParameter">      
+         <span class="label apiLabel">escalation_id</span>
+         <input type="text" name="escalation_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">status</span>
+         <input type="text" name="status" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="editAlertAction">
+   <input type="hidden" name="method" value="editAlertAction">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">editAlertAction</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">id</span>
+         <input type="text" name="id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">escalation_id</span>
+         <input type="text" name="escalation_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">status</span>
+         <input type="text" name="status" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="removeAlertAction">
+   <input type="hidden" name="method" value="removeAlertAction">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">removeAlertAction</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">id</span>
+         <input type="text" name="id" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>

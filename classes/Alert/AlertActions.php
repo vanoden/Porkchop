@@ -1,5 +1,5 @@
 <?php
-	namespace Monitor;
+	namespace Alert;
 
 	class AlertActions extends \ORM\BaseModel {
 		public $id;
