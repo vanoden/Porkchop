@@ -123,6 +123,20 @@
 					return false;
 				}
 
+	            $create_table_query = "
+		            CREATE TABLE IF NOT EXISTS `alert_profiles` (
+			            `id` int(11) NOT NULL AUTO_INCREMENT,
+			            `organization_id` int(11) NULL,
+			            `profile_settings_data`  text,
+			            PRIMARY KEY (`id`)
+		            )";
+		            
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating `alert_profiles` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
 				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
 			}

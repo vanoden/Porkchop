@@ -838,3 +838,48 @@
       <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
    </div>
 </form>
+<form method="post" action="/_monitor/api" name="addAlertProfile">
+   <input type="hidden" name="method" value="addAlertProfile">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">addAlertProfile</div>
+      <div class="apiParameter">      
+         <span class="label apiLabel">organization_id</span>
+         <input type="text" name="organization_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">profile_settings_data</span>
+         <input type="text" name="profile_settings_data" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="editAlertProfile">
+   <input type="hidden" name="method" value="editAlertProfile">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">editAlertProfile</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">id</span>
+         <input type="text" name="id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">organization_id</span>
+         <input type="text" name="organization_id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">
+         <span class="label apiLabel">profile_settings_data</span>
+         <input type="text" name="profile_settings_data" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
+<form method="post" action="/_monitor/api" name="removeAlertProfile">
+   <input type="hidden" name="method" value="removeAlertProfile">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">removeAlertProfile</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">id</span>
+         <input type="text" name="id" class="value input apiInput"/>
+      </div>
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>

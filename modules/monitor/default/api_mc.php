@@ -1651,9 +1651,9 @@
     }
     
 	function addAlertTrigger() {
-        $alertThreshold = new \Alert\AlertTrigger();
+        $alertTrigger = new \Alert\AlertTrigger();
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->add(array('name' => $_REQUEST['name'], 'enabled' => $_REQUEST['enabled']));
+        $success = $alertTrigger->add(array('name' => $_REQUEST['name'], 'enabled' => $_REQUEST['enabled']));
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Trigger could not be added";
@@ -1665,9 +1665,9 @@
 	}
 	
 	function editAlertTrigger() {
-	    $alertThreshold = new \Alert\AlertTrigger($_REQUEST['id']);
+	    $alertTrigger = new \Alert\AlertTrigger($_REQUEST['id']);
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->update(array('id' => $_REQUEST['id'], 'name' => $_REQUEST['name'], 'enabled' => $_REQUEST['enabled']));
+        $success = $alertTrigger->update(array('id' => $_REQUEST['id'], 'name' => $_REQUEST['name'], 'enabled' => $_REQUEST['enabled']));
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Trigger could not be edited";
@@ -1679,9 +1679,9 @@
 	}
 	
 	function removeAlertTrigger() {
-        $alertThreshold = new \Alert\AlertTrigger($_REQUEST['id']);
+        $alertTrigger = new \Alert\AlertTrigger($_REQUEST['id']);
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->delete();
+        $success = $alertTrigger->delete();
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Trigger could not be deleted";
@@ -1693,9 +1693,9 @@
 	}
 	
 	function addAlertTriggerEscalation() {
-        $alertThreshold = new \Alert\AlertTriggerEscalation();
+        $alertTriggerEscalation = new \Alert\AlertTriggerEscalation();
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->add(array('trigger_id' => $_REQUEST['trigger_id'], 'type' => $_REQUEST['type'], 'parameters' => $_REQUEST['parameters'])); 
+        $success = $alertTriggerEscalation->add(array('trigger_id' => $_REQUEST['trigger_id'], 'type' => $_REQUEST['type'], 'parameters' => $_REQUEST['parameters'])); 
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Trigger Escalation could not be added";
@@ -1707,9 +1707,9 @@
 	}
 	
 	function editAlertTriggerEscalation() {
-	    $alertThreshold = new \Alert\AlertTriggerEscalation($_REQUEST['id']);
+	    $alertTriggerEscalation = new \Alert\AlertTriggerEscalation($_REQUEST['id']);
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->update(array('id' => $_REQUEST['id'], 'trigger_id' => $_REQUEST['trigger_id'], 'type' => $_REQUEST['type'], 'parameters' => $_REQUEST['parameters']));
+        $success = $alertTriggerEscalation->update(array('id' => $_REQUEST['id'], 'trigger_id' => $_REQUEST['trigger_id'], 'type' => $_REQUEST['type'], 'parameters' => $_REQUEST['parameters']));
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Trigger Escalation could not be edited";
@@ -1721,9 +1721,9 @@
 	}
 	
 	function removeAlertTriggerEscalation() {
-        $alertThreshold = new \Alert\AlertTriggerEscalation($_REQUEST['id']);
+        $alertTriggerEscalation = new \Alert\AlertTriggerEscalation($_REQUEST['id']);
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->delete();
+        $success = $alertTriggerEscalation->delete();
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Trigger Escalation could not be deleted";
@@ -1735,9 +1735,9 @@
 	}
 	
     function addAlertTriggerThreshold() {
-        $alertThreshold = new \Alert\AlertTriggerThreshold();
+        $alertTriggerThreshold = new \Alert\AlertTriggerThreshold();
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->add(array('trigger_id' => $_REQUEST['trigger_id'], 'threshold_id' => $_REQUEST['threshold_id'], 'group_id' => $_REQUEST['group_id'])); 
+        $success = $alertTriggerThreshold->add(array('trigger_id' => $_REQUEST['trigger_id'], 'threshold_id' => $_REQUEST['threshold_id'], 'group_id' => $_REQUEST['group_id'])); 
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Trigger Threshold could not be added";
@@ -1749,9 +1749,9 @@
 	}
 	
 	function editAlertTriggerThreshold() {
-	    $alertThreshold = new \Alert\AlertTriggerThreshold($_REQUEST['id']);
+	    $alertTriggerThreshold = new \Alert\AlertTriggerThreshold($_REQUEST['id']);
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->update(array('id' => $_REQUEST['id'], 'trigger_id' => $_REQUEST['trigger_id'], 'threshold_id' => $_REQUEST['threshold_id'], 'group_id' => $_REQUEST['group_id']));
+        $success = $alertTriggerThreshold->update(array('id' => $_REQUEST['id'], 'trigger_id' => $_REQUEST['trigger_id'], 'threshold_id' => $_REQUEST['threshold_id'], 'group_id' => $_REQUEST['group_id']));
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Trigger Threshold could not be edited";
@@ -1763,9 +1763,9 @@
 	}
 		
 	function removeAlertTriggerThreshold() {
-        $alertThreshold = new \Alert\AlertTriggerThreshold($_REQUEST['trigger_id']);
+        $alertTriggerThreshold = new \Alert\AlertTriggerThreshold($_REQUEST['trigger_id']);
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->delete();
+        $success = $alertTriggerThreshold->delete();
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Trigger Threshold could not be deleted";
@@ -1777,9 +1777,9 @@
 	}
 	
     function addAlertAction() {
-        $alertThreshold = new \Alert\AlertAction();
+        $alertAction = new \Alert\AlertAction();
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->add(array('escalation_id' => $_REQUEST['escalation_id'], 'status' => $_REQUEST['status'])); 
+        $success = $alertAction->add(array('escalation_id' => $_REQUEST['escalation_id'], 'status' => $_REQUEST['status'])); 
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Action could not be added";
@@ -1791,9 +1791,9 @@
 	}
 
 	function editAlertAction() {
-	    $alertThreshold = new \Alert\AlertAction($_REQUEST['id']);
+	    $alertAction = new \Alert\AlertAction($_REQUEST['id']);
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->update(array('id' => $_REQUEST['id'], 'escalation_id' => $_REQUEST['escalation_id'], 'status' => $_REQUEST['status']));
+        $success = $alertAction->update(array('id' => $_REQUEST['id'], 'escalation_id' => $_REQUEST['escalation_id'], 'status' => $_REQUEST['status']));
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Action could not be edited";
@@ -1805,15 +1805,57 @@
 	}
 	
 	function removeAlertAction() {
-        $alertThreshold = new \Alert\AlertAction($_REQUEST['trigger_id']);
+        $alertAction = new \Alert\AlertAction($_REQUEST['trigger_id']);
 	    $response = new \HTTP\Response();
-        $success = $alertThreshold->delete();
+        $success = $alertAction->delete();
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Action could not be deleted";
         } else {
             $response->success = 1;
             $response->error = "Alert Action was deleted successfully";
+        }
+    	print formatOutput($response);  
+	}
+	
+	function addAlertProfile() {
+        $alertProfile = new \Alert\AlertProfile();
+	    $response = new \HTTP\Response();
+        $success = $alertProfile->add(array('organization_id' => $_REQUEST['organization_id'], 'profile_settings_data' => $_REQUEST['profile_settings_data'])); 
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Profile could not be added";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Profile was added successfully";
+        }
+    	print formatOutput($response);
+	}
+	
+	function editAlertProfile() {
+	    $alertProfile = new \Alert\AlertProfile($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertProfile->update(array('id' => $_REQUEST['id'], 'organization_id' => $_REQUEST['organization_id'], 'profile_settings_data' => $_REQUEST['profile_settings_data']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Profile could not be edited";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Profile was edited successfully";
+        }
+    	print formatOutput($response);
+	}
+		
+	function removeAlertProfile() {
+        $alertProfile = new \Alert\AlertProfile($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertProfile->delete();
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Profile could not be deleted";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Profile was deleted successfully";
         }
     	print formatOutput($response);  
 	}

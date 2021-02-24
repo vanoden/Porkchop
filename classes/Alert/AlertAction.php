@@ -1,7 +1,7 @@
 <?php
 	namespace Alert;
 
-	class AlertActions extends \ORM\BaseModel {
+	class AlertAction extends \ORM\BaseModel {
 		public $id;
 		public $escalation_id;
 		public $status;
