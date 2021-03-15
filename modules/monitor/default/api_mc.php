@@ -1821,7 +1821,7 @@
 	function addAlertProfile() {
         $alertProfile = new \Alert\AlertProfile();
 	    $response = new \HTTP\Response();
-        $success = $alertProfile->add(array('organization_id' => $_REQUEST['organization_id'], 'profile_settings_data' => $_REQUEST['profile_settings_data'])); 
+        $success = $alertProfile->add(array('public' => $_REQUEST['public'], 'name' => $_REQUEST['name'], 'organization_id' => $_REQUEST['organization_id'], 'profile_settings_data' => $_REQUEST['profile_settings_data'])); 
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Profile could not be added";
@@ -1835,7 +1835,7 @@
 	function editAlertProfile() {
 	    $alertProfile = new \Alert\AlertProfile($_REQUEST['id']);
 	    $response = new \HTTP\Response();
-        $success = $alertProfile->update(array('id' => $_REQUEST['id'], 'organization_id' => $_REQUEST['organization_id'], 'profile_settings_data' => $_REQUEST['profile_settings_data']));
+        $success = $alertProfile->update(array('id' => $_REQUEST['id'], 'public' => $_REQUEST['public'], 'name' => $_REQUEST['name'], 'organization_id' => $_REQUEST['organization_id'], 'profile_settings_data' => $_REQUEST['profile_settings_data']));
         if (!$success) {
             $response->success = 0;
             $response->error = "Alert Profile could not be edited";

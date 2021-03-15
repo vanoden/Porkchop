@@ -843,6 +843,14 @@
    <div class="apiMethod">
       <div class="h3 apiMethodTitle">addAlertProfile</div>
       <div class="apiParameter">      
+         <span class="label apiLabel">public</span>
+         <input type="text" name="public" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">      
+         <span class="label apiLabel">name</span>
+         <input type="text" name="name" class="value input apiInput"/>
+      </div>      
+      <div class="apiParameter">      
          <span class="label apiLabel">organization_id</span>
          <input type="text" name="organization_id" class="value input apiInput"/>
       </div>
@@ -861,6 +869,14 @@
          <span class="label apiLabel">id</span>
          <input type="text" name="id" class="value input apiInput"/>
       </div>
+      <div class="apiParameter">      
+         <span class="label apiLabel">public</span>
+         <input type="text" name="public" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">      
+         <span class="label apiLabel">name</span>
+         <input type="text" name="name" class="value input apiInput"/>
+      </div>     
       <div class="apiParameter">
          <span class="label apiLabel">organization_id</span>
          <input type="text" name="organization_id" class="value input apiInput"/>
