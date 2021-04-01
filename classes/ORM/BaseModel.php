@@ -129,6 +129,21 @@
 		}
 
         /**
+         * get max value from a column in the current DB table
+         */
+		public function maxColumnValue($column='id') {
+			$getMaxValueQuery = "SELECT MAX(`$column`) FROM `$this->tableName`";
+			$rs = $this->execute($getMaxValueQuery, array());
+            if ($rs) {
+                list($value) = $rs->FetchRow();
+                return $value;
+            } else {
+                $this->_error = "ERROR: no columns found for max value.";
+                return false;
+            }
+		}
+
+        /**
          * get the error that may have happened on the DB level
          *
          * @params string $query, prepared statement query
