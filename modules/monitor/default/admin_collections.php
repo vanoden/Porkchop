@@ -69,17 +69,17 @@
 		<select name="organization_id" class="value input">
 			<option value="">All</option>
 <?php	foreach ($organizations as $organization) { ?>
-			<option value="<?=$organization->id?>"<? if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
+			<option value="<?=$organization->id?>"<?php if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
 <?php	} ?>
 		</select>
 	</td>
 	<td class="value">
 		<select name="status" class="value input">
 			<option value="">All</option>
-			<option value="NEW"<? if ($_REQUEST['status'] == "NEW") print " selected"; ?>>NEW</option>
-			<option value="ACTIVE"<? if ($_REQUEST['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
-			<option value="COMPLETE"<? if ($_REQUEST['status'] == "COMPLETE") print " selected"; ?>>COMPLETE</option>
-			<option value="DELETED"<? if ($_REQUEST['status'] == "DELETED") print " selected"; ?>>DELETED</option>
+			<option value="NEW" <?php if ($_REQUEST['status'] == "NEW") print " selected"; ?>>NEW</option>
+			<option value="ACTIVE" <?php if ($_REQUEST['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
+			<option value="COMPLETE" <?php if ($_REQUEST['status'] == "COMPLETE") print " selected"; ?>>COMPLETE</option>
+			<option value="DELETED" <?php if ($_REQUEST['status'] == "DELETED") print " selected"; ?>>DELETED</option>
 		</select>
 	</td>
 	<td class="value"><input type="text" name="date_start" class="value input" value="<?=$_REQUEST['date_start']?>"/></td>
@@ -98,10 +98,10 @@
 	<th class="label columnLabel collectionFinishedColumn"><a href="javascript:void(0)" class="label columnLabel" onclick="sort('date_end');">Finished</a></th>
 	<th class="label columnLabel collectionDeleteColumn">Delete</td>
 </tr>
-<?php	foreach ($collections as $collection)
-	{
+<?php	
+foreach ($collections as $collection) {
+        if ($greenbar) $greenbar = ""; else $greenbar = " greenbar";
 		if (! $collection->name) $collection->name = "[none]";
-		
 ?>
 <tr><td class="value columnValue collectionNameColumn<?=$greenbar?>"><a href="/_monitor/dashboard/<?=$collection->code?>" id="Collection[<?=$collection->id?>]"><?=$collection->name?></a></td>
 	<td class="value columnValue collectionCustomerColumn<?=$greenbar?>"><?=$collection->organization->name?></td>
@@ -111,8 +111,6 @@
 	<td class="value columnValue collectionDeleteColumn<?=$greenbar?>" style="text-align: center"><input type="button" style="padding-left: 2px; padding-right: 2px; padding-top: 0px; height: 18px; font-weight: bold" name="delete_collection" value="x" onclick="deleteCollection(<?=$collection->id?>)" /></td>
 </tr>
 <?php
-		if ($greenbar) $greenbar = "";
-		else $greenbar = " greenbar";
 	}
 ?>
 </table>

@@ -430,7 +430,7 @@
        <?=$sentToLocation->city?>, <?=$sentToLocation->zip_code?><br /> <i><?=$sentToLocation->notes?></i>
        </span>
     </div>
-    <? if (!empty($shippingPackage->id)) { ?>
+    <?php if (!empty($shippingPackage->id)) { ?>
         <div class="container">
            <span class="label"><i class="fa fa-envelope" aria-hidden="true"></i> Current Package Info: <br /></span> 
            <span class="value">
@@ -438,7 +438,7 @@
            Tracking #: <?=$shippingPackage->tracking_code;?><br/>
            </span>
         </div>
-    <? }
+    <?php }
     if ($_REQUEST ['form_submitted'] != 'package_details_submitted') {
     ?>
         <div class="enter-shipping-form">
@@ -451,7 +451,7 @@
                  <select id="vendor_id" name="vendor_id" class="tracking_code" placeholder="10">
 					<option value="">Select</option>
 				<?php	foreach ($shippingVendors as $shippingVendor) { ?>
-					<option value="<?=$shippingVendor->id?>"<? if ($shipment->vendor_id == $shippingVendor->id) print " selected";?>><?=$shippingVendor->name?></option>
+					<option value="<?=$shippingVendor->id?>"<?php if ($shipment->vendor_id == $shippingVendor->id) print " selected";?>><?=$shippingVendor->name?></option>
 				<?php	} ?>
                  <input type="hidden" name="form_submitted" value="package_details_submitted" />
                  <input id="add-package-details" type="submit" value="<?=empty($shippingPackage->id) ? "Add" : "Update"?> Package Details" class="btn" style="height: 35px;">
@@ -549,7 +549,7 @@
                      <option value="">--</option>
                      <option value="0">[add new]</option>
                      <?php foreach ($organizationUsers as $organizationUser) { ?>
-                        <option value="<?=$organizationUser->id?>"<? if ($organizationUser->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$organizationUser->first_name?> <?=$organizationUser->last_name?> </option>
+                        <option value="<?=$organizationUser->id?>"<?php if ($organizationUser->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$organizationUser->first_name?> <?=$organizationUser->last_name?> </option>
                      <?php } ?>
                   </select>
                   <div id="add_new_billing_contact" style="display: none;">

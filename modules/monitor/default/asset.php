@@ -61,6 +61,7 @@ if ($page->success) { ?>
 </tr>
 <?php	$greenbar = '';
 	foreach ($sensors as $sensor) {
+    	if ($greenbar) $greenbar = ''; else $greenbar = 'greenbar';
 		$reading = $sensor->lastReading();
 		$datetime = $GLOBALS['_SESSION_']->localtime($reading->timestamp);
 		$reading_time = sprintf("%d/%d/%4d %02d:%02d:%02d",$datetime["month"],$datetime["day"],$datetime["year"],$datetime['hour'],$datetime['minute'],$datetime['second']);
@@ -69,11 +70,10 @@ if ($page->success) { ?>
 	<td class="value zoneValue <?=$greenbar?>"><?=$sensor->name?></td>
 	<td class="value zoneValue <?=$greenbar?>"><?=$sensor->model->code?></td>
 	<td class="value zoneValue <?=$greenbar?>"><?=$sensor->model->units?></td>
-	<td class="value zoneValue <?=$greenbar?>"><? if ($reading->timestamp) { print $reading_time; } ?></td>
+	<td class="value zoneValue <?=$greenbar?>"><?php if ($reading->timestamp) { print $reading_time; } ?></td>
 	<td class="value zoneValue <?=$greenbar?>" style="text-align: right"><?=$reading->value?>&nbsp;&nbsp;&nbsp;&nbsp;</td>
 </tr>
-<?php		if ($greenbar) $greenbar = '';
-		else $greenbar = 'greenbar';
+<?php    
 	}
 ?>
 </table>
@@ -83,7 +83,7 @@ if ($page->success) { ?>
 	<th class="label">Level</th>
 	<th class="label">Message</th>
 </tr>
-<?  foreach ($messages as $message) { ?>
+<?php  foreach ($messages as $message) { ?>
 <tr><td class="value"><?=$message->localtime?></td>
 	<td	class="value"><?=$message->level?></td>
 	<td class="value"><?=$message->message?></td>

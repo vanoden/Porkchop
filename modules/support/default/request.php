@@ -60,7 +60,7 @@
 
 	// make sure the serial number is valid
 	function checkSerial(lineNumber) {
-	
+
 		var productInput = document.getElementById('product_id'+lineNumber);
 		checkProduct(lineNumber);
 		var productID = productInput.options[productInput.selectedIndex].value;
@@ -119,7 +119,6 @@
 	    min-width: 300px;
 	    margin: 0px 25px 0px 25px;
 	}
-	
 </style>
 <script>
 	var line = 0;
@@ -173,12 +172,12 @@
 		productOpt0.value = '';
 		productOpt0.innerHTML = 'None';
 		productSelect.appendChild(productOpt0);
-<?php	foreach ($products as $product) { ?>
-		var productOpt<?=$product->id?> = document.createElement('option');
-		productOpt<?=$product->id?>.value = '<?=$product->id?>';
-		productOpt<?=$product->id?>.innerHTML = '<?=$product->code?>';
-		productSelect.appendChild(productOpt<?=$product->id?>);
-<?php	} ?>
+        <?php	foreach ($products as $product) { ?>
+            var productOpt<?=$product->id?> = document.createElement('option');
+            productOpt<?=$product->id?>.value = '<?=$product->id?>';
+            productOpt<?=$product->id?>.innerHTML = '<?=$product->code?>';
+            productSelect.appendChild(productOpt<?=$product->id?>);
+        <?php	} ?>
 		productCell1.appendChild(productSelect);
 
 		var productCell2 = document.createElement('div');
@@ -232,10 +231,10 @@
 </script>
 <h2><i class='fa fa-phone' aria-hidden='true'></i> Request Support</h2>
 <?php	if ($page->errorCount()) { ?>
-<div class="form_error"><?=$page->errorString()?></div>
+    <div class="form_error"><?=$page->errorString()?></div>
 <?php	}
 	if ($page->success) { ?>
-<div class="form_success"><?=$page->success?></div>
+    <div class="form_success"><?=$page->success?></div>
 <?php	} else { ?>
 <form name="supportRequest" method="post" action="/_support/request">
 <div class="form_instruction">
@@ -274,9 +273,9 @@
 		<div class="table_cell" style="width: 100px;">
 			<select id="product_id0" name="product_id[0]" class="value input">
 				<option value="">None</option>
-<?php	foreach ($products as $product) { ?>
-				<option value="<?=$product->id?>"><?=$product->code?></option>
-<?php	} ?>
+                <?php	foreach ($products as $product) { ?>
+				    <option value="<?=$product->id?>"><?=$product->code?></option>
+                <?php	} ?>
 			</select>
 		</div>
 		<div class="table_cell" style="width: 100px;">		

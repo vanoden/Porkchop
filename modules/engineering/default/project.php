@@ -32,17 +32,17 @@
                <select name="manager_id" class="value input" style="width: 240px">
                   <option value="">Unassigned</option>
                   <?php	foreach ($managers as $manager) { ?>
-                  <option value="<?=$manager->id?>"<? if ($manager->id == $project->manager->id) print " selected"; ?>><?=$manager->code?></option>
+                  <option value="<?=$manager->id?>"<?php if ($manager->id == $project->manager->id) print " selected"; ?>><?=$manager->code?></option>
                   <?php	} ?>
                </select>
             </div>
             <div class="tableCell" style="min-width: 100px;">
                <select name="status" class="value input wide_100per">
-                  <option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
-                  <option value="open"<? if ($form['status'] == "OPEN") print " selected"; ?>>Open</option>
-                  <option value="hold"<? if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
-                  <option value="cancelled"<? if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
-                  <option value="complete"<? if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
+                  <option value="new" <?php if ($form['status'] == "NEW") print " selected"; ?>>New</option>
+                  <option value="open" <?php if ($form['status'] == "OPEN") print " selected"; ?>>Open</option>
+                  <option value="hold" <?php if ($form['status'] == "HOLD") print " selected"; ?>>Hold</option>
+                  <option value="cancelled" <?php if ($form['status'] == "CANCELLED") print " selected"; ?>>Cancelled</option>
+                  <option value="complete" <?php if ($form['status'] == "COMPLETE") print " selected"; ?>>Complete</option>
                </select>
             </div>	  
          </div>

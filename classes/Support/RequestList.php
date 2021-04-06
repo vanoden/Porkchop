@@ -4,7 +4,7 @@
 	class RequestList {
 		private $_error;
 		public $count;
-	
+		public $fields = array('code','customer_id','organization_id','date_request','type','status');	
 		public function find($parameters = array()) {
 		
 			// Get Requests for Admin
@@ -76,8 +76,16 @@
 			
             // search for requestList looks like only by code would be meaningful
             if (isset($parameters['searchTerm'])) $find_requests_query .= " AND sr.code LIKE '%" . $parameters['searchTerm'] . "%'";
-
-			$find_requests_query .= " ORDER BY date_request DESC";
+            
+            // code	customer_id	organization_id	date_request	type	status
+            if (isset($parameters['sort_by']) && isset($parameters['sort_direction'])) {
+                $parameters['sort_direction'] = ($parameters['sort_direction'] == 'desc') ? 'desc' : 'asc';
+                if (!in_array($parameters['sort_by'], $this->fields)) $parameters['sort_by'] = 'code';
+                $find_requests_query .= " ORDER BY " . $parameters['sort_by'] . " " . $parameters['sort_direction'];
+            } else {
+                $find_requests_query .= " ORDER BY date_request DESC";
+            }
+            
 			$rs = executeSQLByParams($find_requests_query, array());
 			
 			if (! $rs) {

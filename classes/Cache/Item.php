@@ -14,14 +14,15 @@
 		}
 
 		public function set($value) {
+		
 			if (! $this->_key) {
 				$this->error = "Key required";
 				return null;
 			}
+			
 			if ($this->_client->set($this->_key,$value)) {
 				return true;
-			}
-			else {
+			} else {
 				$this->error = $this->_client->error;
 				return false;
 			}

@@ -9,13 +9,12 @@
 		"version"	=> "0.1.2",
 		"release"	=> "2018-07-02"
 	);
-
 	app_log("Request: ".print_r($_REQUEST,true),'debug',__FILE__,__LINE__);
 
 	###############################################
 	### Load API Objects						###
     ###############################################
-	# Identify Asset
+	// Identify Asset
 	$asset = new \Monitor\Asset();
 	if ($asset->error) {
 		app_log("Failed to initiate MonitorAsset",'error',__FILE__,__LINE__);
@@ -23,13 +22,13 @@
 		exit;
 	}
 
-	# Call Requested Event
+	// Call Requested Event
 	if (isset($_REQUEST["method"])) {
 		$message = "Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code;
 		if (array_key_exists('asset_code',$_REQUEST)) $message .= " for asset ".$_REQUEST['asset_code'];
 		app_log($message,'debug',__FILE__,__LINE__);
 
-		# Comm Dashboard
+		// Comm Dashboard
 		$comm = new \Monitor\Communication();
 		$store_request = $GLOBALS['_REQUEST_'];
 		$this_post = $_POST;
@@ -41,12 +40,12 @@
 			app_log("Error in api comm storage: ".$comm->error,'error',__FILE__,__LINE__);
 		}
 
-		# Call the Specified Method
+		// Call the Specified Method
 		$function_name = $_REQUEST["method"];
 		$function_name($api);
 		exit;
 	}
-	# Only Developers Can See The API
+	// Only Developers Can See The API
 	elseif (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) {
 		header("location: /_monitor/home");
 		exit;
@@ -109,7 +108,7 @@
 		if ($collector->error) app_error("Error finding collector: ".$collector->error,__FILE__,__LINE__);
 		if (! $collector->id) error("Collector not found");
 		if ($_REQUEST['product_code']) {
-			# Get Product ID
+			// Get Product ID
 			$product = new \Product\Item($_REQUEST['product_id']);
 			if (! $product->id) error("Could not find product matching ".$_REQUEST['product_code']);
 		}
@@ -175,7 +174,7 @@
 			$_REQUEST['timestamp_start'] = $time->getTimeStamp();
 		}
 		elseif (isset($_REQUEST['timestamp_start'])) {
-			# All set
+			// All set
 		}
 		else $_REQUEST['timestamp_start'] = time();
 
@@ -184,7 +183,7 @@
 			$_REQUEST['timestamp_end'] = $time->getTimeStamp();
 		}
 		elseif ($_REQUEST['timestamp_end']) {
-			# All set
+			// All set
 		}
 		else $_REQUEST['timestamp_end'] = time() + 86400;
 
@@ -201,7 +200,7 @@
 		if ($collection->error) app_error("Error adding collection: ".$collection->error,__FILE__,__LINE__);
 		else app_log("Collection '".$collection->code."' created",'debug',__FILE__,__LINE__);
 
-		# Timezone
+		// Timezone
 		$timezone = new DateTimeZone($GLOBALS['_SESSION_']->timezone);
 		$time = new DateTime('now',$timezone);
 		$time->setTimeStamp($collection->timestamp_start);
@@ -223,7 +222,7 @@
 	### Update a Collection							###
 	###################################################
 	function updateCollection() {
-		# Find Requested Collection
+		// Find Requested Collection
 		$collection = new \Monitor\Collection();
 		if ($collection->error) app_error("Error initializing collection: ".$collection->error,__FILE__,__LINE__);
 		$collection->get($_REQUEST['code']);
@@ -232,7 +231,7 @@
 
 		$parameters = array();
 
-		# Find Requested Organization
+		// Find Requested Organization
 		if ($_REQUEST['organization_code']) {
 			if ($GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
 				$organization = new \Register\Organization();
@@ -275,11 +274,11 @@
 			$parameters['name'] = $_REQUEST['name'];
 		}
 
-		# Update Collection
+		// Update Collection
 		$collection->update($parameters);
 		if ($collection->error) app_error("Error adding collection: ".$collection->error,__FILE__,__LINE__);
 
-		# Timezone
+		// Timezone
 		$timezone = new DateTimeZone($GLOBALS['_SESSION_']->timezone);
 		$time = new DateTime('now',$timezone);
 		$time->setTimeStamp($collection->timestamp_start);
@@ -386,7 +385,7 @@
 		$collection->get($_REQUEST['code']);
 		if ($collection->error) error("Error finding collection: ".$collection->error);
 
-		# Timezone
+		// Timezone
 		$timezone = new DateTimeZone($GLOBALS['_SESSION_']->timezone);
 		$time = new DateTime('now',$timezone);
 		$time->setTimeStamp($collection->timestamp_start);
@@ -580,6 +579,37 @@
 		app_log("findCollectionSensors(): $elapsed_time elapsed",'debug',__FILE__,__LINE__);
 		print formatOutput($response);
 	}
+	
+	###################################################
+	### Find Sensors in Collection					###
+	###################################################
+	function findCollectionSensorsByVertices() {
+		$start_time = microtime(true);
+		app_log("findCollectionSensorsByVertices(): called",'trace',__FILE__,__LINE__);
+		if (! array_key_exists('collection_code',$_REQUEST)) error('collection_code required');
+		if (! array_key_exists('organization_id',$_REQUEST)) $_REQUEST['organization_id'] = '';
+
+		$collection = new \Monitor\Collection();
+		if ($collection->error) error("Error finding collection: ".$collection->error);
+		$collection->get($_REQUEST['collection_code'],$_REQUEST['organization_id']);
+		if ($collection->error) error("Error finding collection: ".$collection->error);
+		if (! $collection->id) error("Collection not found");
+
+		$sensors = $collection->sensorsByVertice($collection->id);
+		if ($collection->error) error("Error finding collection: ".$collection->error);
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->sensor = $sensors;
+
+		$_comm = new \Monitor\Communication();
+		$_comm->update(json_encode($response));
+		api_log($response);
+		$elapsed_time = microtime(true) - $start_time;
+		app_log("findCollectionSensorsByVertices(): $elapsed_time elapsed",'debug',__FILE__,__LINE__);
+		print formatOutput($response);
+	}
+	
 	function dygraphData() {
 		$collection = new \Monitor\Collection();
 		if (! isset($_REQUEST['code'])) error("Invalid or no id given to graph");
@@ -597,7 +627,7 @@
 			$organization = $GLOBALS['_SESSION_']->customer->organization;
 		}
 
-		# Get Collection from Database
+		// Get Collection from Database
 		$collection->get($_REQUEST['code'],$organization->id);
 		if ($collection->error) error($collection->error);
 		if (! $collection->id) error("Collection not found");
@@ -665,7 +695,7 @@
 
 		$collection = new \Monitor\Collection();
 	
-		# Get Collection from Database
+		// Get Collection from Database
 		$collection->get($_REQUEST['code'],$organization->id);
 	
 		if ($collection->error) error($collection->error);
@@ -873,7 +903,7 @@
 			$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
 		}
 		else {
-			# Privileges support access
+			// Privileges support access
 		}
 
 		$assets = $assetlist->find($parameters);
@@ -1049,7 +1079,7 @@
 		else
 			$organization = $GLOBALS['_SESSION_']->customer->organization;
 
-		# Get Asset (Monitor) by code
+		// Get Asset (Monitor) by code
 		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['asset_code'])) error("Valid asset_code required");
 		$assetlist = new \Monitor\AssetList();
 		if ($assetlist->error) app_error("Error initializing Asset: ".$assetlist->error,__FILE__,__LINE__);
@@ -1057,7 +1087,7 @@
 		if ($assetlist->error) app_error("Error finding Asset: ".$assetlist->error,__FILE__,__LINE__);
 		if (! $asset->id) error("Could not find Asset '".$_REQUEST['asset_code']."' for organization '".$organization->id."'");
 
-		# Get Sensor by asset id/code
+		// Get Sensor by asset id/code
 		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['sensor_code'])) error("Valid sensor_code required");
 		$sensor = new \Monitor\Sensor();
 		if ($sensor->error) app_error("Error initializing sensor: ".$sensor->error,__FILE__,__LINE__);
@@ -1065,7 +1095,7 @@
 		if ($sensor->error) app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
 		if (! $sensor->id) error("Sensor ".$_REQUEST['sensor_code']." not found for asset ".$_REQUEST['asset_code']);
 
-		# Set Status
+		// Set Status
 		$status = new \Monitor\Sensor\Status($sensor->id,$_REQUEST['key']);
 		if ($status->error) app_error("Error initializing status: ".$status->error);
 		$status->set($_REQUEST['value']);
@@ -1097,7 +1127,7 @@
 		else
 			$organization = $GLOBALS['_SESSION_']->customer->organization;
 
-		# Get Asset (Monitor) by code
+		// Get Asset (Monitor) by code
 		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['asset_code'])) error("Valid asset_code required");
 		$assetlist = new \Monitor\AssetList();
 		if ($assetlist->error) app_error("Error initializing Asset: ".$assetlist->error,__FILE__,__LINE__);
@@ -1105,7 +1135,7 @@
 		if ($assetlist->error) app_error("Error finding Asset: ".$assetlist->error,__FILE__,__LINE__);
 		if (! $asset->id) error("Could not find Asset '".$_REQUEST['asset_code']."' for organization '".$organization->id."'");
 
-		# Get Sensor by asset id/code
+		// Get Sensor by asset id/code
 		if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['sensor_code'])) error("Valid sensor_code required");
 		$sensor = new \Monitor\Sensor();
 		if ($sensor->error) app_error("Error initializing sensor: ".$sensor->error,__FILE__,__LINE__);
@@ -1113,7 +1143,7 @@
 		if ($sensor->error) app_error("Error finding sensor: ".$sensor->error,__FILE__,__LINE__);
 		if (! $sensor->id) error("Sensor ".$_REQUEST['sensor_code']." not found for asset ".$_REQUEST['asset_code']);
 
-		# Add Reading
+		// Add Reading
 		$reading = new \Monitor\Reading();
 		if ($reading->error) app_error("Error adding reading: ".$reading->error);
 		$reading->add(
@@ -1310,7 +1340,7 @@
 		if (! $GLOBALS['_SESSION_']->customer->organization->id)
 			error("Must belong to an organization");
 			
-		# Get Asset (Monitor) by code
+		// Get Asset (Monitor) by code
 		if (preg_match('/^[\w\-\.\_]+$/',$_REQUEST['asset_code'])) {
 			$assetlist = new \Monitor\AssetList();
 			if ($assetlist->error) app_error("Error initializing AssetList: ".$assetlist->error,__FILE__,__LINE__);
@@ -1322,7 +1352,7 @@
 			error("Valid asset_code required");
 		}
 
-		# Get Sensor by asset id/code
+		// Get Sensor by asset id/code
 		if ($_REQUEST['sensor_code']) {
 			if (! $asset->id) error("asset_code required when sensor_code specified.");
 			if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['sensor_code'])) error("Invalid sensor_code");
@@ -1333,7 +1363,7 @@
 			if (! $sensor->id) error("Sensor ".$_REQUEST['sensor_code']." not found for asset ".$_REQUEST['asset_code']);
 		}
 
-		# Get Collection
+		// Get Collection
 		if ($_REQUEST['collection_code']) {
 			if (! preg_match('/^\w+$/',$_REQUEST['collection_code'])) error("Invalid collection code");
 			$collection = new \Monitor\Collection();
@@ -1342,7 +1372,7 @@
 			if (! $collection->id) error("Collection not found");
 		}
 
-		# Add Message
+		// Add Message
 		$parameters = array();
 
 		$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
@@ -1576,4 +1606,256 @@
 		$document = new \Document($format);
 		$document->prepare($object);
 		return $document->content();
+	}
+	
+    function addAlertThreshold() {
+	    $alertThreshold = new \Alert\AlertThreshold();
+	    $response = new \HTTP\Response();
+        $success = $alertThreshold->add(array('sensor_id' => $_REQUEST['sensor_id'], 'operator' => $_REQUEST['operator'], 'value' => $_REQUEST['value']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Threshold could not be added";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Threshold was added successfully";
+        }
+    	print formatOutput($response);
+	}
+
+    function editAlertThreshold() {
+	    $alertThreshold = new \Alert\AlertThreshold($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertThreshold->update(array('sensor_id' => $_REQUEST['sensor_id'], 'operator' => $_REQUEST['operator'], 'value' => $_REQUEST['value']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Threshold could not be edited";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Threshold was edited successfully";
+        }
+    	print formatOutput($response);  
+    }
+    
+    function removeAlertThreshold() {
+	    $alertThreshold = new \Alert\AlertThreshold($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertThreshold->delete();
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Threshold could not be deleted";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Threshold was deleted successfully";
+        }
+    	print formatOutput($response);  
+    }
+    
+	function addAlertTrigger() {
+        $alertTrigger = new \Alert\AlertTrigger();
+	    $response = new \HTTP\Response();
+        $success = $alertTrigger->add(array('name' => $_REQUEST['name'], 'enabled' => $_REQUEST['enabled']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Trigger could not be added";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Trigger was added successfully";
+        }
+    	print formatOutput($response);
+	}
+	
+	function editAlertTrigger() {
+	    $alertTrigger = new \Alert\AlertTrigger($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertTrigger->update(array('id' => $_REQUEST['id'], 'name' => $_REQUEST['name'], 'enabled' => $_REQUEST['enabled']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Trigger could not be edited";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Trigger was edited successfully";
+        }
+    	print formatOutput($response);
+	}
+	
+	function removeAlertTrigger() {
+        $alertTrigger = new \Alert\AlertTrigger($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertTrigger->delete();
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Trigger could not be deleted";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Trigger was deleted successfully";
+        }
+    	print formatOutput($response);  
+	}
+	
+	function addAlertTriggerEscalation() {
+        $alertTriggerEscalation = new \Alert\AlertTriggerEscalation();
+	    $response = new \HTTP\Response();
+        $success = $alertTriggerEscalation->add(array('trigger_id' => $_REQUEST['trigger_id'], 'type' => $_REQUEST['type'], 'parameters' => $_REQUEST['parameters'])); 
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Trigger Escalation could not be added";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Trigger Escalation was added successfully";
+        }
+    	print formatOutput($response);
+	}
+	
+	function editAlertTriggerEscalation() {
+	    $alertTriggerEscalation = new \Alert\AlertTriggerEscalation($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertTriggerEscalation->update(array('id' => $_REQUEST['id'], 'trigger_id' => $_REQUEST['trigger_id'], 'type' => $_REQUEST['type'], 'parameters' => $_REQUEST['parameters']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Trigger Escalation could not be edited";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Trigger Escalation was edited successfully";
+        }
+    	print formatOutput($response);
+	}
+	
+	function removeAlertTriggerEscalation() {
+        $alertTriggerEscalation = new \Alert\AlertTriggerEscalation($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertTriggerEscalation->delete();
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Trigger Escalation could not be deleted";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Trigger Escalation was deleted successfully";
+        }
+    	print formatOutput($response);  
+	}
+	
+    function addAlertTriggerThreshold() {
+        $alertTriggerThreshold = new \Alert\AlertTriggerThreshold();
+	    $response = new \HTTP\Response();
+        $success = $alertTriggerThreshold->add(array('trigger_id' => $_REQUEST['trigger_id'], 'threshold_id' => $_REQUEST['threshold_id'], 'group_id' => $_REQUEST['group_id'])); 
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Trigger Threshold could not be added";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Trigger Threshold was added successfully";
+        }
+    	print formatOutput($response);
+	}
+	
+	function editAlertTriggerThreshold() {
+	    $alertTriggerThreshold = new \Alert\AlertTriggerThreshold($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertTriggerThreshold->update(array('id' => $_REQUEST['id'], 'trigger_id' => $_REQUEST['trigger_id'], 'threshold_id' => $_REQUEST['threshold_id'], 'group_id' => $_REQUEST['group_id']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Trigger Threshold could not be edited";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Trigger Threshold was edited successfully";
+        }
+    	print formatOutput($response);
+	}
+		
+	function removeAlertTriggerThreshold() {
+        $alertTriggerThreshold = new \Alert\AlertTriggerThreshold($_REQUEST['trigger_id']);
+	    $response = new \HTTP\Response();
+        $success = $alertTriggerThreshold->delete();
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Trigger Threshold could not be deleted";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Trigger Threshold was deleted successfully";
+        }
+    	print formatOutput($response);  
+	}
+	
+    function addAlertAction() {
+        $alertAction = new \Alert\AlertAction();
+	    $response = new \HTTP\Response();
+        $success = $alertAction->add(array('escalation_id' => $_REQUEST['escalation_id'], 'status' => $_REQUEST['status'])); 
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Action could not be added";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Action was added successfully";
+        }
+    	print formatOutput($response);
+	}
+
+	function editAlertAction() {
+	    $alertAction = new \Alert\AlertAction($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertAction->update(array('id' => $_REQUEST['id'], 'escalation_id' => $_REQUEST['escalation_id'], 'status' => $_REQUEST['status']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Action could not be edited";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Action was edited successfully";
+        }
+    	print formatOutput($response);
+	}
+	
+	function removeAlertAction() {
+        $alertAction = new \Alert\AlertAction($_REQUEST['trigger_id']);
+	    $response = new \HTTP\Response();
+        $success = $alertAction->delete();
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Action could not be deleted";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Action was deleted successfully";
+        }
+    	print formatOutput($response);  
+	}
+	
+	function addAlertProfile() {
+        $alertProfile = new \Alert\AlertProfile();
+	    $response = new \HTTP\Response();
+        $success = $alertProfile->add(array('public' => $_REQUEST['public'], 'name' => $_REQUEST['name'], 'organization_id' => $_REQUEST['organization_id'], 'profile_settings_data' => $_REQUEST['profile_settings_data'])); 
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Profile could not be added";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Profile was added successfully";
+        }
+    	print formatOutput($response);
+	}
+	
+	function editAlertProfile() {
+	    $alertProfile = new \Alert\AlertProfile($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertProfile->update(array('id' => $_REQUEST['id'], 'public' => $_REQUEST['public'], 'name' => $_REQUEST['name'], 'organization_id' => $_REQUEST['organization_id'], 'profile_settings_data' => $_REQUEST['profile_settings_data']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Profile could not be edited";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Profile was edited successfully";
+        }
+    	print formatOutput($response);
+	}
+		
+	function removeAlertProfile() {
+        $alertProfile = new \Alert\AlertProfile($_REQUEST['id']);
+	    $response = new \HTTP\Response();
+        $success = $alertProfile->delete();
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Profile could not be deleted";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Profile was deleted successfully";
+        }
+    	print formatOutput($response);  
 	}

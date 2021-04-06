@@ -24,7 +24,7 @@
 			    $this->id = $args [0];
 			    $this->details ();
 		    } elseif (func_num_args () == 1 && gettype ( $args [0] ) == "array") {
-			    if ($args [0] ['method']) {
+			    if (isset($args [0] ['method'])) {
 				    $this->method = $args [0] ['method'];
 				    $this->view = $args [0] ['view'];
 				    if ($args [0] ['index']) $this->index = $args [0] ['index'];

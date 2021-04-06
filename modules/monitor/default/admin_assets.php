@@ -80,15 +80,16 @@
     </tr>
     <?php	$greenbar = '';
 	    foreach ($assets as $asset) {
-	    $communication = $asset->last_communication();
-	    if (isset($communication)) {
-		    $last_hit = $communication->session->last_hit_date;
-		    if ($communication->response->success) $result = "Success";
-		    else $result = "Error";
-	    } else {
-		    $last_hit = "Never";
-		    $result = "";
-	    }
+	        if ($greenbar) $greenbar = ''; else $greenbar = 'greenbar';
+	        $communication = $asset->last_communication();
+	        if (isset($communication)) {
+		        $last_hit = $communication->session->last_hit_date;
+		        if ($communication->response->success) $result = "Success";
+		        else $result = "Error";
+	        } else {
+		        $last_hit = "Never";
+		        $result = "";
+	        }
     ?>
     <tr>
         <td class="value <?=$greenbar?>"><a href="/_monitor/admin_details/<?=$asset->code?>/<?=$asset->product->code?>" class="value"><?=$asset->code?></a></td>
@@ -98,8 +99,6 @@
 	    <td class="value <?=$greenbar?>"><?=$result?></td>
     </tr>
     <?php						
-        if ($greenbar) $greenbar = '';
-		    else $greenbar = 'greenbar';
 	    }
     ?>
     </table>

@@ -24,6 +24,8 @@ do
 		fi
 		if output=$(git status --porcelain --untracked-files=no) && [ ! -z "$output" ]
 		then
+			echo -n "Directory "
+			echo $DIR
 			REPO=`/bin/cat .git/config|/bin/grep url|/bin/sed -rn 's/.*(\/(SpectrosInstruments|vanoden)\/[a-z\_\-]+).*/\1/p'`
 			echo "Repo '${REPO}' modifications: "
 			echo $output

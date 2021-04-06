@@ -33,9 +33,9 @@
             </div>
             <div class="tableCell">
                <select name="status" class="value wide_100per">
-                  <option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
-                  <option value="testing"<? if ($form['status'] == "TESTING") print " selected"; ?>>Testing</option>
-                  <option value="released"<? if ($form['status'] == "RELEASED") print " selected"; ?>>Released</option>
+                  <option value="new" <?php if ($form['status'] == "NEW") print "selected"; ?>>New</option>
+                  <option value="testing" <?php if ($form['status'] == "TESTING") print "selected"; ?>>Testing</option>
+                  <option value="released" <?php if ($form['status'] == "RELEASED") print "selected"; ?>>Released</option>
                </select>
             </div>
             <div class="tableCell">
@@ -128,7 +128,8 @@
               <div class="tableCell" style="width: 20%;">&nbsp;</div>
            </div>
            <!-- end row header -->
-           <?php	foreach ($tasks as $task) { 
+           <?php	
+           foreach ($tasks as $task) { 
               $project = $task->project();
               $product = $task->product();
               ?>

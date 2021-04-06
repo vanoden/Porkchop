@@ -94,7 +94,7 @@
 		    </td>
 		    <td><input type="text" name="value[<?=$contact->id?>]" class="value input contactValueColumn" value="<?=$contact->value?>" /></td>
 		    <td><input type="text" name="notes[<?=$contact->id?>]" class="value input contactNotesColumn" value="<?=$contact->notes?>" /></td>
-		    <td><input type="checkbox" name="notify[<?=$contact->id?>]" value="1"<? if ($contact->notify) print " checked"; ?> /></td>
+		    <td><input type="checkbox" name="notify[<?=$contact->id?>]" value="1" <?php if ($contact->notify) print "checked"; ?> /></td>
 		    <td><input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X"  onclick="submitDelete(<?=$contact->id?>)" /></td>
 	    </tr>
     <?php } ?>

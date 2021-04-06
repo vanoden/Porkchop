@@ -86,7 +86,8 @@
 		array("support","request_item"),
 		array("support","request_items"),
 		array("support","request_new"),
-		array("support","requests")
+		array("support","requests"),
+		array("alert","alert_profile"),
 	);
 
 	###################################################
