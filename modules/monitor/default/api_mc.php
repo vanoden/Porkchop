@@ -1859,3 +1859,17 @@
         }
     	print formatOutput($response);  
 	}
+	
+    function generateForCollection() {
+        $alertProfile = new \Alert\AlertProfile($_REQUEST['id']);
+        $response = new \HTTP\Response();
+        $success = $alertProfile->generateForCollection(array('name' => $_REQUEST['name']));
+        if (!$success) {
+            $response->success = 0;
+            $response->error = "Alert Profile could not be generated from profile JSON";
+        } else {
+            $response->success = 1;
+            $response->error = "Alert Profile was generated from profile JSON";
+        }
+    	print formatOutput($response);  
+    }

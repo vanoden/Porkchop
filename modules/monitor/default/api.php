@@ -899,3 +899,18 @@
       <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
    </div>
 </form>
+<form method="post" action="/_monitor/api" name="generateForCollection">
+   <input type="hidden" name="method" value="generateForCollection">
+   <div class="apiMethod">
+      <div class="h3 apiMethodTitle">generateForCollection</div>
+      <div class="apiParameter">
+         <span class="label apiLabel">id</span>
+         <input type="text" name="id" class="value input apiInput"/>
+      </div>
+      <div class="apiParameter">      
+         <span class="label apiLabel">name</span>
+         <input type="text" name="name" class="value input apiInput"/>
+      </div>     
+      <div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="methodSubmit"/></div>
+   </div>
+</form>
