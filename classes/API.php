@@ -33,8 +33,11 @@
 			$response->header->date = $this->system_time();
 			$response->message = "PING RESPONSE";
 			$response->success = 1;
-	
+
+			$comm = new \Monitor\Communication();
+			$comm->update(json_encode($response));
 			api_log($response);
+	
 			print $this->formatOutput($response);
 		}
 
