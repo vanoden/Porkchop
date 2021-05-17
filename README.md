@@ -36,9 +36,19 @@ Install XML Serializer
 ```
 pear install channel://pear.php.net/XML_UnSerializer-0.21.0
 ```
-## Configuration
+### Configuration
 
 Copy the file '/config/config.php.dist' to '/config/config.php'.  Edit the file with your database connection information and other things specific to your site.
+
+### Setup
+
+Call the Install script to run the initialization tasks:
+
+http://your.domain.name/_install
+
+Call the Upgrade script to apply recent updates to schema, etc:
+
+http://your.domain.name/_upgrade
 
 ## Use
 
