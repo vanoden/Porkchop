@@ -67,7 +67,7 @@
 		}
 	} elseif (isset($_REQUEST['login'])) {
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
-		$customer = new \Register\Customer();
+		$customer = new \Register\Customer();		
 		if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
 		    $customer->get($_REQUEST['login']);
 		    if ((isset($_SESSION['isRemovedAccount']) && $_SESSION['isRemovedAccount'] == 1) || $_SESSION['failedAttemptCount'] > 2 || $customer->status == 'EXPIRED' || $customer->status == 'DELETED') {

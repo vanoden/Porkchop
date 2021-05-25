@@ -35,8 +35,13 @@ class Person {
         if ($person->id) return true;
         else return false;
     }
-
+    
+    public function setId($id=0) {
+        $this->id = $id;
+    }
+    
     public function details() {
+    
         $cache_key = "customer[" . $this->id . "]";
 
         # Cached Customer Object, Yay!

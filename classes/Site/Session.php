@@ -43,6 +43,7 @@
 			# Fetch Company Information
 			$this->location = new \Company\Location();
 			$this->location->getByHost($_SERVER['SERVER_NAME']);
+			
 			if (! $this->location->id) {
 				$this->error = "Location not configured";
 				return null;
@@ -61,6 +62,7 @@
 				$this->error = "Domain '".$this->domain->id."' not found for location ".$this->location->id;
 				return null;
 			}
+			
 			$this->company = new \Company\Company($this->domain->company->id);
 			if ($this->company->error) {
 				$this->error = "Error finding company: ".$this->company->error;

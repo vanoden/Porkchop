@@ -1,4 +1,4 @@
-<?php	
+<?php
 	if (role('register manager') || role('monitor admin') || role('action user')) {
 		# You are amongst friends
 	}
