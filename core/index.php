@@ -92,6 +92,7 @@
 		$GLOBALS['_config']->database->master->password,
 		$GLOBALS['_config']->database->schema
 	);
+	
 	if ($_database->ErrorMsg()) {
 		print "Error connecting to database:<br>\n";
 		print $_database->ErrorMsg();

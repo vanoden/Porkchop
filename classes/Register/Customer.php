@@ -23,12 +23,10 @@
 				$get_object_query,
 				array($code)
 			);
-			
 			if (! $rs) {
 				$this->error = "SQL Error in Register::Customer::get: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
 			return $this->details();
@@ -134,6 +132,7 @@
 
 		// Check login and password against configured authentication mechanism
 		function authenticate ($login,$password) {
+		
 			if (! $login) return 0;
 
 			// Get Authentication Method
@@ -147,13 +146,12 @@
 				$get_user_query,
 				array($login)
 			);
-
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL error in register::customer::authenticate: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
-			list($id,$this->auth_method,$status) = $rs->fields;
+			list($id,$this->auth_method,$status) = $rs->fields;			
 			if (! $id) {
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
 				return 0;
@@ -219,7 +217,7 @@
 				return null;
 			}
 			list($id) = $rs->FetchRow();
-
+			
             // Login Failed
 			if (! $id) return 0;
 			$this->id = $id;

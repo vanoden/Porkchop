@@ -35,8 +35,7 @@
 			list($id) = $rs->FetchRow();
 			if ($id) {
 				$this->id = $id;
-			}
-			else {
+			} else {
 				# Make Sure User Has Privileges
 				app_log("No match found for message '$code', adding",'info',__FILE__,__LINE__);
 				if (! $GLOBALS['_SESSION_']->customer->has_role('content developer')) {
