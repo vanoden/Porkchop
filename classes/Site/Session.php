@@ -44,7 +44,7 @@
 			$this->location = new \Company\Location();
 			$this->location->getByHost($_SERVER['SERVER_NAME']);
 			if (! $this->location->id) {
-				$this->error = "Location not configured";
+				$this->error = "Location ".$_SERVER['SERVER_NAME']." not configured";
 				return null;
 			}
 			if (! $this->location->domain->id) {
