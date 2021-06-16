@@ -71,8 +71,8 @@
 		###################################################
 		### Convert Object to XML						###
 		###################################################
-		public function formatOutput($object) {
-			if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
+		public function formatOutput($object,$format = 'xml') {
+			if ($format == 'json' || (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json')) {
 				$format = 'json';
 				header('Content-Type: application/json');
 			}
