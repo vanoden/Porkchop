@@ -1,11 +1,11 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
 
 	$request = new \Support\Request($_REQUEST['request_id']);
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		$request->addNote(
 			array(
 				'date_note' => date('Y-m-d H:i:s'),
@@ -21,4 +21,3 @@
 			exit;
 		}
 	}
-?>

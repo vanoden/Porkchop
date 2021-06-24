@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item;
 
 	class Action {
@@ -75,23 +75,23 @@
 						type,
 						status,
 						description,
-						assigned_id
+						assigned_id,
+						entered_id
 				)
 				VALUES
-				(		?,sysdate(),?,?,?,?,?,?)
+				(		?,sysdate(),?,?,?,?,?,?,?)
 			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
+            $rs = executeSQLByParams($add_object_query, array(
 					$item->id,
 					$datetime,
 					$requestedBy->id,
 					$parameters['type'],
 					$status,
 					$parameters['description'],
-					$assignedTo->id
-				)
-			);
+					$assignedTo->id,
+					0
+			));
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Action::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -148,8 +148,8 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-
-			$GLOBALS['_database']->Execute($update_action_query,$bind_params);
+			$rs = executeSQLByParams($update_action_query, $bind_params);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Support::Request::Action::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -164,10 +164,8 @@
 				FROM	support_item_actions
 				WHERE	id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_action_query,
-				array($this->id)
-			);
+			$rs = executeSQLByParams($get_action_query, array($this->id));
+			
 			query_log($get_action_query);
 			if (! $rs) {
 				$this->_error = "SQL Error in SupportRequest::details: ".$GLOBALS['_database']->ErrorMsg();
@@ -189,7 +187,7 @@
 			return $this->_error;
 		}
 
-		public function addEvent($parameters) {
+		public function addEvent($parameters) {		
 			$parameters['action_id'] = $this->id;
 			$event = new \Support\Request\Item\Action\Event();
 			$event->add($parameters);
@@ -199,9 +197,19 @@
 			}
 			return true;
 		}
+
+        public function getEvents() {
+            $eventsList = new \Support\Request\Item\Action\EventList();
+            return $eventsList->find(array('action_id' => $this->id));
+        }
+		
 		public function valid_status($status) {
 			if (in_array($status,array("NEW","ASSIGNED","ACTIVE","PENDING CUSTOMER","PENDING VENDOR","CANCELLED","COMPLETED","CLOSED"))) return true;
 			return false;
 		}
+		
+		public function internalLink() {
+			if ($GLOBALS['_config']->site->https) return "https://".$GLOBALS['_config']->site->hostname."/_support/action/".$this->id;
+			return "http://".$GLOBALS['_config']->site->hostname."/_support/action/".$this->id;
+		}
 	}
-?>

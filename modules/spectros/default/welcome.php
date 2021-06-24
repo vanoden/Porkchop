@@ -8,10 +8,10 @@
 	}
 </style>
 <div id="welcome_menu">
-<?	foreach ($menus as $menu) { ?>
+<?php	foreach ($menus as $menu) { ?>
 	<div class="welcome_menu_item">
 		<a class="label welcome_menu_label" href="<?=$menu->target?>"><?=$menu->label?></a>
 		<span class="value welcome_menu_description"><?=$menu->description?></span>
 	</div>
-<?	} ?>
+<?php	} ?>
 </div>

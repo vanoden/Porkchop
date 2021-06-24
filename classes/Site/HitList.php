@@ -14,7 +14,7 @@
 
 			if ($parameters['session_id'])
 				$find_objects_query .= "
-					AND	session_id = ".$GLOBALS['_database']->qstr($parameters['session_id'],get_magic_quotes_gpc);
+					AND	session_id = ".$GLOBALS['_database']->qstr($parameters['session_id'],get_magic_quotes_gpc());
 			$find_objects_query .= "
 				ORDER BY id desc
 			";
@@ -28,10 +28,9 @@
 			}
 			$hits = array();
 			while (list($id) = $rs->FetchRow()) {
-				$hit = new SessionHit($id);
+				$hit = new Hit($id);
 				array_push($hits,$hit);
 			}
 			return $hits;
 		}
 	}
-?>

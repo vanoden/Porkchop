@@ -1,0 +1,143 @@
+<?php
+	# Map Of Modules/Views
+	$modules = array(
+		"Company"		=> array(
+		),
+		"Site"			=> array(
+			"roles"			=> array(
+				"administrator"	=> array(
+					"description"	=> "Super User"
+				),
+			),
+			"templates"		=> array(
+				"configurations"		=> "admin.html",
+			),
+		),
+		"Content"		=> array(
+			"roles"			=> array(
+				"developer"		=> array(
+					"description"	=> "Content Developer"
+				),
+				"operator"		=> array(),
+			),
+		),
+        "Register"		=> array(
+			"roles"			=> array(
+				"register manager"	=> array(
+					"description"		=> "Manager Organizations and Users"
+				),
+				"register reporter"	=> array(
+					"description"		=> "View Organizations and Users"
+				),
+			),
+			"templates"		=> array(
+				"organizations"		=> "admin.html",
+				"organization"		=> "admin.html",
+				"accounts"			=> "admin.html",
+				"admin_account"		=> "admin.html",
+				"pending_customers"	=> "admin.html",
+			),
+		),
+        "Contact"		=> array(
+			"roles"			=> array(
+				"contact admin"	=> array(),
+			),
+		),
+        "Storage"		=> array(
+			"roles"			=> array(
+				"storage manager"	=> "admin.html",
+				"storage upload"	=> "admin.html",
+			),
+			"templates"		=> array(
+				"repositories"		=> "admin.html",
+				"repository"		=> "admin.html",
+				"browse"			=> "admin.html",
+			),
+		),
+		"Media"			=> array(
+			"roles"			=> array(
+				"media developer"	=> array(),
+				"media manager"		=> array(),
+				"media reporter"	=> array(),
+			),
+		),
+        "Product"		=> array(
+			"roles"			=> array(
+				"product manager"	=> array(),
+				"product reporter"	=> array(),
+			),
+			"templates"		=> array(
+				"report"			=> "admin.html",
+				"edit"				=> "admin.html",
+			),
+		),
+        "Email"			=> array(
+			"roles"			=> array(
+				"manager"		=> array(),
+			),
+		),
+        "Package"		=> array(
+			"roles"			=> array(
+				"package manager"	=> array(),
+			),
+			"templates"		=> array(
+				"packages"			=> "admin.html",
+				"package"			=> "admin.html",
+				"versions"			=> "admin.html",
+			),
+		),
+        "Support"		=> array(
+			"roles"			=> array(
+			),
+			"templates"		=> array(
+				"request_new"		=> "admin.html",
+				"requests"			=> "admin.html",
+				"request_detail"	=> "admin.html",
+				"request_items"		=> "admin.html",
+				"request_item"		=> "admin.html",
+				"action"			=> "admin.html",
+				"admin_actions"		=> "admin.html",
+				"summary"			=> "admin.html",
+				"admin_rmas"		=> "admin.html",
+				"admin_rma"			=> "admin.html",
+			),
+		),
+        "Engineering"	=> array(
+			"roles"			=> array(
+				"engineering manager"	=> array(),
+				"engineering reporter"	=> array(),
+			),
+			"templates"		=> array(
+				"home"				=> "admin.html",
+				"tasks"				=> "admin.html",
+				"task"				=> "admin.html",
+				"releases"			=> "admin.html",
+				"release"			=> "admin.html",
+				"products"			=> "admin.html",
+				"product"			=> "admin.html",
+				"projects"			=> "admin.html",
+				"project"			=> "admin.html",
+				"event_report"		=> "admin.html",
+				"search"			=> "admin.html",
+			),
+		),
+		"Action"		=> array(
+			"roles"			=> array(
+				"action manager"	=> array(),
+				"action user"		=> array(),
+			),
+		),
+		"Monitor"		=> array(
+			"roles"			=> array(
+				"monitor admin"		=> array(),
+				"monitor manager"	=> array(),
+				"monitor reporter"	=> array(),
+				"monitor asset"		=> array(),
+			),
+			"templates"		=> array(
+				"admin_assets"		=> "admin.html",
+				"admin_details"		=> "admin.html",
+				"comm_dashboard"	=> "admin.html",
+			),
+		),
+	);

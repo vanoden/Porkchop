@@ -32,5 +32,20 @@
 		public function get($key) {
 			return null;
 		}
+
+		public function keys() {
+			return array();
+		}
+
+		public function stats() {
+			return array();
+		}
+
+		public function flush() {
+			return true;
+		}
+
+		public function error() {
+			return null;
+		}
 	}
-?>

@@ -1,4 +1,4 @@
-<?
+<?php
 	#######################################################
 	### support::request								###
 	### Form for customers to submit support requests.	###
@@ -7,16 +7,11 @@
 	#######################################################
 
 	$page = new \Site\Page();
+	$page->requireAuth();
 
-	# Make sure customer is signed in
-	if (! $GLOBALS['_SESSION_']->customer->id) {
-		# Send to login page
-		header("location: /_register/login?target=_support:request");
-		exit;
-	}
-
-	if ($_REQUEST['btn_submit']) {
-		# Enter Support Request
+	if (isset($_REQUEST['btn_submit'])) {
+	
+		// Enter Support Request
 		$parameters = array(
 			"customer_id"	=> $GLOBALS['_SESSION_']->customer->id,
 			"type" 			=> 'service',
@@ -27,13 +22,13 @@
 		if ($request->error()) {
 			app_log("Error adding support request: ".$request->error(),'error',__FILE__,__LINE__);
 			$page->addError("Error submitting request: ".$request->error());
-		}
-		else {
+		} else {
 			$body = "The following service request was submitted:
 	Request: ".$request->code."<br>
 	Type: ".$_REQUEST['type']."<br>
 	URL: http://".$GLOBALS['_config']->site->hostname."/_support/request_detail/".$request->code;
 
+        if ($_REQUEST['type'] == 'gas monitor') {
 			foreach ($_REQUEST['product_id'] as $line => $pid) {
 				$parameters = array(
 					'line'			=> $line,
@@ -43,14 +38,27 @@
 					'quantity'		=> 1
 				);
 				$item = $request->addItem($parameters);
-				if ($request->error()) {
-					$page->addError("Error adding item to request: ".$request->error());
-				}
+				if ($request->error()) $page->addError("Error adding item to request: ".$request->error());
 
 				$body .= "<br>
 	Ticket: ".$item->id."<br>
 	&nbsp;&nbsp;".$item->product->code." ".$item->serial_number.": ".$item->description;
 			}
+        } else {
+            $parameters = array(
+	            'line'			=> 0,
+	            'product_id'	=> 0,
+	            'serial_number'	=> '',
+	            'description'	=> $_REQUEST['description'],
+	            'quantity'		=> 1
+            );
+            $item = $request->addItem($parameters);
+            if ($request->error()) $page->addError("Error adding item to request: ".$request->error());
+
+            $body .= "<br>
+	Ticket: ".$item->id."<br>
+	&nbsp;&nbsp;".$item->description;
+        }
 
 			$message = new \Email\Message(
 				array(
@@ -60,21 +68,15 @@
 				)
 			);
 			$message->html(true);
-			if (0) {
-				$GLOBALS['_SESSION_']->customer->notify($message);
-			}
-			else {
-				$role = new \Register\Role();
-				$role->get('support user');
-				$role->notify($message);
-				if ($role->error) {
-					app_log("Error sending request notification: ".$role->error);
-				}
-			}
+			
+            $role = new \Register\Role();
+            $role->get('support user');
+            $role->notify($message);
+            
+            if ($role->error) app_log("Error sending request notification: ".$role->error);
 			$page->success = 'Support request '.$request->code.' submitted.  A representative will follow up shortly';
 		}
 	}
 
 	$productlist = new \Product\ItemList();
 	$products = $productlist->find(array('type' => array('inventory','unique','kit')));
-?>

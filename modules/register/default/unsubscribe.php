@@ -1,7 +1,7 @@
 		<table>
-		<?	if ($GLOBALS['_page']->error) { ?>
-		<tr><td align="center" class="form_error"><?=$GLOBALS['_page']->error?></td></tr>
-		<?	}
+		<?php	if ($page->errorCount() > 0) { ?>
+		<tr><td align="center" class="form_error"><?=$page->errorString()?></td></tr>
+		<?php	}
 			else
 			{
 		?>
@@ -17,5 +17,5 @@
 		<tr><td align="center" class="copy_2"><input type="submit" name="btn_submit" value="Submit" class="button"></td></tr>
 		<tr><td align="center"><a href="/">Not Sure? Visit our Web Site and Find Out More!</a></td></tr>
 		</form>
-		<?	} ?>
+		<?php	} ?>
 		<table>

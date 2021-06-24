@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Media;
 
 	class DocumentList {
@@ -11,4 +11,3 @@
 			return itemlist::find($parameters);
 		}
 	}
-?>

@@ -18,7 +18,7 @@
 				return null;
 			}
 			$this->product = new \Product\Item($product_id);
-			if ($this->product->error) {
+			if ($this->product->error()) {
 				$this->error = "Error loading product: ".$this->product->error;
 				return null;
 			}
@@ -118,5 +118,12 @@
 			app_log("Organization ".$this->organization->name." has ".$this->quantity." of ".$this->product->code,'trace');
 			return 1;
         }
+
+		public function organization() {
+			return $this->organization;
+		}
+
+		public function error() {
+			return $this->error;
+		}
     }
-?>

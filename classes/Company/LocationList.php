@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Company;
 
 	class LocationList {
@@ -46,4 +46,3 @@
 			return $objects;
 		}
 	}
-?>

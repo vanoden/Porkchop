@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Company;
 
 	class Location {
@@ -83,23 +83,29 @@
 			}
 
 			$object = $rs->FetchNextObject(false);
-			$this->company = new \Company\Company($object->company_id);
-			$this->code = $object->code;
-			$this->address_1 = $object->address_1;
-			$this->address_2 = $object->address_2;
-			$this->city = $object->city;
-			$this->state_id = $object->state_id;
-			$this->zip_code = $object->zip_code;
-			$this->zip_ext = $object->zip_ext;
-			$this->content = $object->content;
-			$this->order_number_sequence = $object->order_number_sequence;
-			$this->active = $object->active;
-			$this->name = $object->name;
-			$this->service_contact = $object->service_contact;
-			$this->sales_contact = $object->sales_contact;
-			$this->domain = new \Company\Domain($object->domain_id);
-			$this->host = $object->host;
-			return $object;
+			if ($object) {
+				$this->id = $object->id;
+				$this->company = new \Company\Company($object->company_id);
+				$this->code = $object->code;
+				$this->address_1 = $object->address_1;
+				$this->address_2 = $object->address_2;
+				$this->city = $object->city;
+				$this->state_id = $object->state_id;
+				$this->zip_code = $object->zip_code;
+				$this->zip_ext = $object->zip_ext;
+				$this->content = $object->content;
+				$this->order_number_sequence = $object->order_number_sequence;
+				$this->active = $object->active;
+				$this->name = $object->name;
+				$this->service_contact = $object->service_contact;
+				$this->sales_contact = $object->sales_contact;
+				$this->domain = new \Company\Domain($object->domain_id);
+				$this->host = $object->host;
+				return $object;
+			}
+			else {
+				return new \stdClass();
+			}
 		}
 
 		public function add($parameters = array()) {
@@ -142,37 +148,39 @@
 				return undef;
 			}
 
-			if ($parameters['name'])
-				$update_object_query .= ",
-						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
-
 			# Update Object
 			$update_object_query = "
 				UPDATE	company_locations
 				SET		id = id";
-			
-			if (preg_match('/^[\w\-\.]+$/',$parameters['host']))
-				$update_object_query .= ",
-					host = ".$GLOBALS['_database']->qstr($parameters['host'],get_magic_quotes_gpc());
-			
-			if (preg_match('/^\d+$/',$parameters['domain_id']))
-				$update_object_query .= ",
-					domain_id = ".$GLOBALS['_database']->qstr($parameters['domain_id'],get_magic_quotes_gpc());
 
+			$bind_params = array();
+			if (isset($parameters['name'])) {
+				$update_object_query .= ",
+					name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
+
+			if (preg_match('/^\w[\w\-\.]+$/',$parameters['host'])) {
+				$update_object_query .= ",
+					host = ?";
+				array_push($bind_params,$parameters['host']);
+			}
+
+			if (preg_match('/^\d+$/',$parameters['domain_id'])) {
+				$update_object_query .= ",
+					domain_id = ?";
+				array_push($bind_params,$parameters['domain_id']);
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
+			array_push($bind_params,$this->id);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Company::Location::update: ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				return false;
 			}
-			return $this->details($id);
+			return $this->details();
 		}
 	}
-?>

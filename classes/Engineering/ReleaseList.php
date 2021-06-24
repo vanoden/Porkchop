@@ -24,11 +24,8 @@
 				$find_objects_query .= "
 				LIMIT ".$parameters['_limit'];
 			}
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute(
-				$find_objects_query,$bind_params
-			);
-
+			
+			$rs = executeSQLByParams($find_objects_query,$bind_params);			
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::ReleaseList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -48,4 +45,3 @@
 			return $this->_error;
 		}
 	}
-?>

@@ -1,4 +1,4 @@
-<?  if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin'))
+<?php  if (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin'))
     {
         print "<span class=\"form_error\">You are not authorized for this view!</span>";
         return;
@@ -9,9 +9,9 @@
 	.orgValue { width: 250px; }
 	table.body { width: 1200px;	}
 </style>
-<?	if ($page->error) { ?>
+<?php	if ($page->error) { ?>
 <div class="form_error"><?=$page->error?></div>
-<?	} ?>
+<?php	} ?>
 <h2>Event Filter</h2>
 <table class="body">
 <form name="eventFilter" method="get" action="/_spectros/cal_report">
@@ -26,17 +26,17 @@
 	<td class="value"><input type="text" name="date_end" class="value input" value="<?=$date_end?>" /></td>
 	<td class="value"><select name="organization_id" class="value input">
 			<option value="">All</option>
-<?	foreach ($organizations as $organization) { ?>
-			<option value="<?=$organization->id?>"<? if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
-<?	} ?>
+<?php	foreach ($organizations as $organization) { ?>
+			<option value="<?=$organization->id?>"<?php if (isset($_REQUEST['organization_id']) && $organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
+<?php	} ?>
 		</select>
 	</td>
 	<td class="value"><input type="text" name="asset_code" class="value input" value="<?=$asset_code?>" /></td>
 	<td class="value"><select name="product_id" class="value input">
 			<option value="">All</option>
-<?	foreach ($products as $product) { ?>
-			<option value="<?=$product->id?>"<? if ($product->id == $_REQUEST['product_id']) print " selected"; ?>><?=$product->code?></option>
-<?	} ?>
+<?php	foreach ($products as $product) { ?>
+			<option value="<?=$product->id?>"<?php if ($product->id == $_REQUEST['product_id']) print " selected"; ?>><?=$product->code?></option>
+<?php	} ?>
 		</select>
 	</td>
 </tr>
@@ -57,7 +57,7 @@
 	<th class="label">Reading</th>
 	<th class="label">Voltage</th>
 </tr>
-<?	foreach ($verifications as $verification) {
+<?php	foreach ($verifications as $verification) {
     $greenbar = '';
 ?>
 <tr><td class="value dateValue<?=$greenbar?>"><?=$verification->date_request?></td>
@@ -71,9 +71,7 @@
 	<td class="value<?=$greenbar?>"><?=$verification->getMetadata('monitor_reading')?></td>
 	<td class="value<?=$greenbar?>"><?=$verification->getMetadata('detector_voltage')?></td>
 </tr>
-<?		if (isset($greenbar) && $greenbar)
-			$greenbar = '';
-		else
-			$greenbar = ' greenbar';
+<?php		
+        if (isset($greenbar) && $greenbar) $greenbar = ''; else $greenbar = ' greenbar';
 	} ?>
 </table>

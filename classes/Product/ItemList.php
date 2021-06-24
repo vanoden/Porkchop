@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Product;
 
 	class ItemList {
@@ -16,6 +16,7 @@
 				ON		r.product_id = p.id
 				WHERE	p.status != 'DELETED'";
 
+			$bind_params = array();
 			# Filter on Given Parameters
 			if (isset($parameters['type'])) {
 				if (is_array($parameters['type'])) {
@@ -31,12 +32,15 @@
 				}
 				else {
 					$find_product_query .= "
-					AND		p.type = ".$GLOBALS['_database']->qstr($parameters["type"],get_magic_quotes_gpc());
+					AND		p.type = ?";
+					array_push($bind_params,$parameters["type"]);
 				}
 			}
-			if (isset($parameters['status']))
+			if (isset($parameters['status'])) {
 				$find_product_query .= "
-				AND		p.status = ".$GLOBALS['_database']->qstr($parameters["type"],get_magic_quotes_gpc());
+				AND		p.status = ?";
+				array_push($bind_params,strtoupper($parameters["status"]));
+			}
 			else
 				$find_product_query .= "
 				AND		p.status = 'ACTIVE'";
@@ -44,8 +48,7 @@
 			if (isset($parameters['category_code'])) {
 				if (is_array($parameters['category_code'])) {
 					$category_ids = array();
-					foreach ($parameters['category_code'] as $category_code)
-					{
+					foreach ($parameters['category_code'] as $category_code) {
 						list($category) = $this->find(
 							array(
 								code	=> $category_code
@@ -77,26 +80,27 @@
 					return null;
 				}
 				$find_product_query .= "
-				AND		r.parent_id = $category_id";
+				AND		r.parent_id = ?";
+				array_push($bind_params,$category_id);
 			}
-			elseif (isset($parameters['category_id'])) $find_product_query .= "
-				AND		r.parent_id = $category_id";
-
-			if (isset($parameters['status']) and preg_match('/^(active|hidden|deleted)$/i',$parameters["status"])) $find_product_query .= "
-				AND		p.status = ".$parameters["status"];
-
-			if (isset($parameters['id']) and preg_match('/^\d+$/',$parameters['id'])) $find_product_query .= "
-				AND		p.id = ".$parameters['id'];
-
+			elseif (isset($parameters['category_id'])) {
+				$find_product_query .= "
+				AND		r.parent_id = ?";
+				array_push($bind_params,$category_id);
+			}
+			if (isset($parameters['id']) and preg_match('/^\d+$/',$parameters['id'])) {
+				$find_product_query .= "
+				AND		p.id = ?";
+				array_push($bind_params,$parameters['id']);
+			}
 			if (isset($parameters['_sort']) && preg_match('/^[\w\_]+$/',$parameters['_sort']))
 				$find_product_query .= "
 				ORDER BY p.".$parameters['_sort'];
 			else	
-				$find_product_query .= "
-				ORDER BY r.view_order,p.name";
+			    $find_product_query .= "ORDER BY p.id";
 
 			query_log($find_product_query);
-			$rs = $GLOBALS['_database']->Execute($find_product_query);
+			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -109,5 +113,8 @@
 			}
 			return $items;
 		}
+
+		public function error() {
+			return $this->error;
+		}
 	}
-?>

@@ -37,4 +37,3 @@
 			return $this->_cookies;
 		}
 	}
-?>

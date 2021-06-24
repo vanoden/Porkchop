@@ -1,119 +1,17 @@
-<?
+<?php
 	namespace Company;
 
-	class Schema {
-		public $errno;
-		public $error;
+	class Schema Extends \Database\BaseSchema {
 		public $module = "Company";
-		
-		public function __construct() {
-			$this->upgrade();
-		}
-		public function version() {
-			# See if Schema is Available
-			$schema_list = $GLOBALS['_database']->MetaTables();
-			$info_table = strtolower($this->module)."__info";
 
-			if (! in_array($info_table,$schema_list)) {
-                # Create __info table
-                $create_table_query = "
-                    CREATE TABLE `$info_table` (
-                        label   varchar(100) not null primary key,
-                        value   varchar(255)
-                    )
-                ";
-                $GLOBALS['_database']->Execute($create_table_query);
-                if ($GLOBALS['_database']->ErrorMsg()) {
-                    $this->error = "SQL Error creating info table in ".$this->module."Schema::version: ".$GLOBALS['_database']->ErrorMsg();
-                    return null;
-                }
-            }
-
-            # Check Current Schema Version
-            $get_version_query = "
-                SELECT  value
-                FROM    `$info_table`
-                WHERE   label = 'schema_version'
-            ";
-
-            $rs = $GLOBALS['_database']->Execute($get_version_query);
-            if (! $rs) {
-                $this->error = "SQL Error in ".$this->module."::version: ".$GLOBALS['_database']->ErrorMsg();
-                return null;
-            }
-
-            list($version) = $rs->FetchRow();
-            if (! $version) $version = 0;
-            return $version;
-		}
 		public function upgrade() {
-			$this->error = '';
-			$info_table = strtolower($this->module)."__info";
+			$this->error = null;
 
-			# See if Schema is Available
-			$schema_list = $GLOBALS['_database']->MetaTables();
-
-			if (! in_array($info_table,$schema_list)) {
-				# Create company__info table
-				$create_table_query = "
-					CREATE TABLE `$info_table` (
-						label	varchar(100) not null primary key,
-						value	varchar(255)
-					)
-				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating info table in ".$this->module."Schema::upgrade: ".$GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
-			}
-
-			# Check Current Schema Version
-			$get_version_query = "
-				SELECT	value
-				FROM	`$info_table`
-				WHERE	label = 'schema_version'
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_version_query);
-			if (! $rs) {
-				$this->error = "SQL Error in ".$this->module."Schema::upgrade: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-
-			list($current_schema_version) = $rs->FetchRow();
-
-			if ($current_schema_version < 1) {
-				$update_schema_query = "
-					INSERT
-					INTO	company__info
-					VALUES	('schema_version',1)
-					ON DUPLICATE KEY UPDATE
-							value = 1
-				";
-				$GLOBALS['_database']->Execute($update_schema_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Company::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
-				$current_schema_version = 1;
-
-				$update_schema_version = "
-					UPDATE	company__info
-					SET		value = $current_schema_version
-					WHERE	label = 'schema_version'
-				";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Company::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
-			}
-			if ($current_schema_version < 2) {
+			if ($this->version() < 2) {
 				$create_companies_query = "
 					CREATE TABLE IF NOT EXISTS `company_companies` (
 						`id` int(5) NOT NULL auto_increment,
-						`name` varchar(255) NOT NULL default '',
+						`name` varchar(150) NOT NULL default '',
 						`login` varchar(50) NOT NULL default '',
 						`primary_domain` int(5) NOT NULL default '0',
 						`status` int(1) default '1',
@@ -122,11 +20,13 @@
 						UNIQUE KEY `name` (`name`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_companies_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Site::Companies::schema_manager(): ".$GLOBALS['_database']->ErrorMsg();
-					return undef;
+				if (! $this->executeSQL($create_companies_query)) {
+					$this->error = "SQL Error creating company_companies table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error .= $create_companies_query;
+					app_log($this->error, 'error');
+					return false;
 				}
+
 				$create_locations_query = "
 					CREATE TABLE IF NOT EXISTS `company_locations` (
 						`id` int(8) NOT NULL auto_increment,
@@ -138,7 +38,7 @@
 						`state_id` int(3) NOT NULL default '0',
 						`zip_code` int(5) NOT NULL default '0',
 						`zip_ext` int(4) NOT NULL default '0',
-						`content` text NOT NULL,
+						`content` text,
 						`order_number_sequence` int(8) NOT NULL default '0',
 						`area_code` int(3) NOT NULL default '0',
 						`phone_pre` int(3) NOT NULL default '0',
@@ -152,17 +52,18 @@
 						`service_contact` int(11) NOT NULL default '0',
 						`sales_contact` int(11) NOT NULL default '0',
 						`domain_id` int(11) unsigned NOT NULL default '0',
-						`host` varchar(45) NOT NULL default '',
+						`host` varchar(100) NOT NULL default '',
 						PRIMARY KEY  (`id`),
 						UNIQUE KEY `location_key` (`company_id`,`code`),
 						FOREIGN KEY `fk_company_id` (`company_id`) REFERENCES company_companies (`id`) 
 					)
 				";
-				$GLOBALS['_database']->Execute($create_locations_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Company::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					return null;
+				if (! $this->executeSQL($create_locations_query)) {
+					$this->error = "SQL Error creating company_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
+
 				$create_domains_query = "
 					CREATE TABLE IF NOT EXISTS `company_domains` (
 						`id` int(11) NOT NULL auto_increment,
@@ -178,37 +79,30 @@
 						`company_id` int(5) NOT NULL default '0',
 						PRIMARY KEY  (`id`),
 						UNIQUE KEY `uk_domain` (`domain_name`),
-						FOREIGN KEY `fk_company_id` (`company_id`) REFERENCES `company_companies` (`id`)
+						FOREIGN KEY `fk_domain_company_id` (`company_id`) REFERENCES `company_companies` (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_domains_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Company::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					return null;
+				if (! $this->executeSQL($create_domains_query)) {
+					$this->error = "SQL Error creating company_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
-				$current_schema_version = 2;
-
-				$update_schema_version = "
-					UPDATE	company__info
-					SET		value = $current_schema_version
-					WHERE	label = 'schema_version'
-				";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Company::Schema::update(): ".$GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
+				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
 			}
 			
-			if ($current_schema_version < 3) {
+			if ($this->version() < 3) {
 				# Make Sure Register Users is present
 				$user_schema = new \Register\Schema();
-				$user_schema->upgrade();
+				if (! $user_schema->upgrade()) {
+					$this->error = "Cannot upgrade Register Schema: ".$user_schema->error();
+					return false;
+				}
 				if ($user_schema->version() < 1) {
 					$this->error = "Cannot continue, Register Schema ver < 1";
 					return false;
 				}
-				$create_companies_query = "
+				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `company_departments` (
 						`id` int(5) NOT NULL auto_increment,
 						`code` varchar(32) NOT NULL default '',
@@ -220,12 +114,13 @@
 						UNIQUE KEY `uk_code` (`code`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_companies_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Company::Schema::update(): ".$GLOBALS['_database']->ErrorMsg();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating company_departments table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
-				$create_locations_query = "
+
+				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `company_department_users` (
 						`department_id` int(5) NOT NULL auto_increment,
 						`user_id` int(11) NOT NULL,
@@ -234,25 +129,15 @@
 						FOREIGN KEY `fk_user_id` (`user_id`) REFERENCES register_users (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_locations_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Company::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating company_department_users table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
-				$current_schema_version = 3;
-
-				$update_schema_version = "
-					UPDATE	company__info
-					SET		value = $current_schema_version
-					WHERE	label = 'schema_version'
-				";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Company::Schema::update(): ".$GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
+				$this->setVersion(3);
+				$GLOBALS['_database']->CommitTrans();
 			}
+			return true;
 		}
 	}
-?>

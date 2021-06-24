@@ -7,21 +7,26 @@ const fs = require('fs');
 var today = new Date();
 var month = today.getMonth() + 1;
 
+const configJSON = fs.readFileSync('html.src/gulp_config.json');
+const configDict = JSON.parse(configJSON);
+
+const videoPath = configDict.videoPath;
+const docsPath = configDict.docsPath;
 const staticVersion = today.getFullYear()+"."+month+"."+today.getDate()+"."+today.getHours()+"."+today.getMinutes();
-const videoPath = 'http://assets.spectrosinstruments.com/video';
-const docsPath = 'http://assets.spectrosinstruments.com/docs';
 
 gulp.task('hello', function() {
 	console.log('Hello, Tony');
 });
 
-gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif'], () =>
+gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico', 'dashboards'], () =>
 	gulp.src('html.src/**/*.html')
 		.pipe(data(() => (
 			{
 				"static_version": staticVersion,
 				"video_path": videoPath,
 				"docs_path": docsPath,
+				"company_name": configDict.companyName,
+				"company": configDict.companyCode,
 				"header": fs.readFileSync('tmp/header.html', 'utf8'),
 				"footer": fs.readFileSync('tmp/footer.html', 'utf8')
 			}
@@ -39,7 +44,8 @@ gulp.task('pre', () =>
 				"video_path": videoPath,
 				"docs_path": docsPath,
                 "header": fs.readFileSync('html.src/pre/header.html', 'utf8'),
-                "footer": fs.readFileSync('html.src/pre/footer.html', 'utf8')
+                "footer": fs.readFileSync('html.src/pre/footer.html', 'utf8'),
+				"title": 'Interscan Corporation'
             }
         )))
         .pipe(template().on('error',function(e){
@@ -54,7 +60,8 @@ gulp.task('js', () =>
 		.pipe(data(() => (
 			{
 				"field": "content",
-				"static_version": staticVersion
+				"static_version": staticVersion,
+				"num": "${num}"
 			}
 		)))
 		.pipe(template())
@@ -92,6 +99,18 @@ gulp.task('jpegs', () =>
 
 gulp.task('gif', () =>
 	gulp.src('html.src/**/*.gif')
+		.pipe(debug())
+		.pipe(gulp.dest('html'))
+);
+
+gulp.task('ico', () =>
+	gulp.src('html.src/**/*.ico')
+		.pipe(debug())
+		.pipe(gulp.dest('html'))
+);
+
+gulp.task('dashboards', () =>
+	gulp.src('html.src/dashboards/**/*.html')
 		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );

@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Media;
 
 	class Item {
@@ -80,11 +80,11 @@
 				}
 				if ($label == "type")
 					$find_object_query .= "
-					AND	i.type = ".$GLOBALS['_database']->qstr($value,get_magic_quotes_gpc);
+					AND	i.type = ".$GLOBALS['_database']->qstr($value,get_magic_quotes_gpc());
 				else
 					$find_object_query .= "
 					AND (	m.label = '".$label."'
-						AND m.value = ".$GLOBALS['_database']->qstr($value,get_magic_quotes_gpc)."
+						AND m.value = ".$GLOBALS['_database']->qstr($value,get_magic_quotes_gpc())."
 					)";
 			}
 			app_log("Query: $find_object_query",'debug',__FILE__,__LINE__);
@@ -273,4 +273,4 @@
 			return array("read" => $read, "write" => $write);
 		}
 	}
-?>
+

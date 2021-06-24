@@ -108,7 +108,7 @@
 		$response = new \HTTP\Response();
 
 		# Initiate Product Object
-		$_content = new Content();
+		$content = new \Content\Message();
 
 		# Find Matching Threads
 		$message = $_content->add(
@@ -121,13 +121,13 @@
 		);
 
 		# Error Handling
-		if ($_content->error) error($_content->error);
+		if ($content->error) error($content->error);
 		else{
 			$response->message = $message;
 			$response->success = 1;
 		}
 
-		api_log('content',$_REQUEST,$response);
+		api_log('content',$REQUEST,$response);
 
 		# Send Response
 		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
@@ -431,5 +431,3 @@
         $document->prepare($object);
         return $document->content();
     }
-
-?>

@@ -1,17 +1,20 @@
-<?
-        # Initiate Image Object
-        $_user = new Customer();
+<?php
+	$page = new \Site\Page();
 
-        # Add Event
-        $_user->verify_email($_REQUEST['login'],$_REQUEST['validation_key']);
+    // Initiate Image Object
+    $user = new Customer();
 
-        # Error Handling
-        if ($_user->error)
-		{
-			print "Sorry, would could not process your request!";
-		}
-        else
-		{
+	if ($user->get($_REQUEST['login'])) {
+	
+		// Add Event
+		if ($user->verify_email($_REQUEST['validation_key'])) {
 			print "Thank you, please go to <a href=\"/_register/login\">http://<?=$GLOBALS['_location']->hostname?>/_register/login</a> to login to the site.\n";
-        }
-?>
+		} elseif ($user->error) {
+			$page->addError("Sorry, would could not process your request!");
+		} else {
+			$page->addError("Invalid key, please try again");
+    	}
+    	
+	} else {
+		$page->addError("Invalid key, please try again");
+	}

@@ -1,4 +1,4 @@
-<?	if (! in_array('monitor admin',$GLOBALS['_SESSION_']->customer->roles))
+<?php	if (! in_array('monitor admin',$GLOBALS['_SESSION_']->customer->roles))
 	{
 		print "<span class=\"form_error\">You are not authorized for this view!</span>";
 		return;
@@ -17,20 +17,20 @@
 	}
 </script><table class="body" cellpadding="0" cellspacing="0">
 <tr><td class="title" colspan="3">Calibration Credit Management</td></tr>
-<?	if ($GLOBALS['_page']->success) { ?>
+<?php	if ($GLOBALS['_page']->success) { ?>
 <tr><td class="form_success" colspan="3"><?=$GLOBALS['_page']->success?></td></tr>
-<?	} ?>
-<?	if ($GLOBALS['_page']->error) { ?>
+<?php	} ?>
+<?php	if ($GLOBALS['_page']->error) { ?>
 <tr><td class="form_error" colspan="3"><?=$GLOBALS['_page']->error?></td></tr>
-<?	} ?>
+<?php	} ?>
 <form name="companyForm" method="post" action="/_monitor/admin_credits">
 <tr><td class="label">Choose Organization</td>
 	<td class="value">
 		<select name="organization_id" class="input value">
 			<option value="">Select</option>
-		<?	foreach ($organizations as $sel_organization) { ?>
-			<option value="<?=$sel_organization->id?>"<? if ($sel_organization->id == $_REQUEST['organization_id']) print " selected";?>><?=$sel_organization->name?></option>
-		<?	} ?>
+		<?php	foreach ($organizations as $sel_organization) { ?>
+			<option value="<?=$sel_organization->id?>"<?php	if ($sel_organization->id == $_REQUEST['organization_id']) print " selected";?>><?=$sel_organization->name?></option>
+		<?php	} ?>
 		</select>
 	</td>
 	<td class="value"><input type="button" name="btn_credits" class="button" value="Get Credits" onclick="getCompany()" /></td>
@@ -38,7 +38,7 @@
 </form>
 </table>
 <br>
-<?	if ($organization->id) { ?>
+<?php	if ($organization->id) { ?>
 <table class="body" cellpadding="0" cellspacing="0">
 <tr><td class="title" colspan="2">Calibration Credits</td></tr>
 <form name="creditForm" method="post" action="/_monitor/admin_credits">
@@ -63,4 +63,4 @@
 </tr>
 </form>
 </table>
-<?	} ?>
+<?php	} ?>

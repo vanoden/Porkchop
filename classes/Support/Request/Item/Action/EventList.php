@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item\Action;
 
 	class EventList {
@@ -27,11 +27,9 @@
 				AND		action_id = ?
 				";
 				array_push($bind_params,$action->id);
+				$find_objects_query .= "ORDER BY `id` DESC";
 			}
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute(
-				$find_objects_query,$bind_params
-			);
+            $rs = executeSQLByParams($find_objects_query, $bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::EventList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -44,4 +42,3 @@
 			return $objects;
 		}
 	}
-?>

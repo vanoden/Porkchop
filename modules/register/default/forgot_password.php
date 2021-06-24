@@ -1,13 +1,8 @@
 <script src="https://www.google.com/recaptcha/api.js"></script>
 <div class="body">
-	<?PHP
-		# Display Error Message If Any
-		if ($page->error) {
-	?>
-	<div class="form_error"><?=$page->error?></div>
-	<?PHP
-		}
-	?>
+    <?php	 if ($page->errorCount() > 0) { ?>
+        <div class="form_error"><?=$page->errorString()?></div>
+    <?php	 } ?> 
 	<!-- Main Body -->
 	<FORM ACTION="forgot_password" METHOD="POST">
 	<INPUT TYPE="HIDDEN" NAME="action" VALUE="submit">

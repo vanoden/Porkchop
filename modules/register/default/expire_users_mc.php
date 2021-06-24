@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	###################################################
 	### expire_users.php							###
 	### This program identifies users that have not	###
@@ -7,8 +7,7 @@
 	###################################################
 
 	# Security - Only Register Module Operators or Managers can see other customers
-	if (role('register manager'))
-	{
+	if (role('register manager')) {
 		$expires = strtotime("-12 month", time());
 		$date = date('m/d/Y',$expires);
 
@@ -32,4 +31,3 @@
 		else
 			print "<div class=\"form_success\">$count Organizations Expired before $date</div>";
 	}
-?>

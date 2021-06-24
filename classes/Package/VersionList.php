@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Package;
 
 	class VersionList {
@@ -47,4 +47,3 @@
 			return $objects;
 		}
 	}
-?>

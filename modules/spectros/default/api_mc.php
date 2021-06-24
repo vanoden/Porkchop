@@ -10,7 +10,6 @@
 		"release"	=> "2015-01-20"
 	);
 
-	#app_log("Server Vars: ".print_r($_SERVER,true),'debug');
 	app_log("Request: ".print_r($_REQUEST,true),'debug');
 
 	###############################################
@@ -28,7 +27,7 @@
 		exit;
 	}
 	# Only Developers Can See The API
-	elseif (! in_array('monitor admin',$GLOBALS['_SESSION_']->customer->roles)) {
+	elseif (! $GLOBALS['_SESSION_']->customer->has_role('monitor admin')) {
 		header("location: /_monitor/home");
 		exit;
 	}
@@ -50,11 +49,6 @@
 	### Add Calibration Verification Credits		###
 	###################################################
 	function addCalibrationVerificationCredits() {
-		if (! isset($GLOBALS['_config']->spectros->calibration_product)) error("Calibration Product not configured");
-		$cal_product = new \Product\Item();
-		$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
-		if (! $cal_product->id) error("Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found");
-
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
 			$organization = new \Register\Organization();
@@ -73,9 +67,9 @@
 			error("You do not have privileges");
 		}
 
-		$product = $organization->product($cal_product->id);
+		$product = new \Spectros\CalibrationVerification\Credit($organization->id);
 		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
-		$product->add($_REQUEST['quantity']);
+		$product->add($_REQUEST['quantity'],array('note' => $_REQUEST['note']));
 		if ($product->error) app_error("Error adding calibration verification credits: ".$product->error,__FILE__,__LINE__);
 
 		app_log($_REQUEST['quantity']." Credits added for organization ".$organization_id);
@@ -92,6 +86,7 @@
 	###################################################
 	function findCalibrationVerificationCredits() {
 		$parameters = array();
+		
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
 			$organization = new \Register\Organization();
@@ -101,7 +96,7 @@
 			$parameters['organization_id'] = $organization->id;
 		}
 
-		$creditlist = new \Spectros\Calibration\Verification\CreditList();
+		$creditlist = new \Spectros\CalibrationVerification\CreditList();
 		if ($creditlist->error) app_error("Error finding calibration verification credits: ".$creditlist->error,__FILE__,__LINE__);
 		$credits = $creditlist->find($parameters);
 		if ($creditlist->error) app_error("Error finding credits: ".$creditlist->error,__FILE__,__LINE__);
@@ -139,7 +134,7 @@
 		if ($organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('spectros admin')) {
 			error("You do not have privileges");
 		}
-		$product = $organization->product($cal_product->id);
+		$product = new \Spectros\CalibrationVerification\Credit($organization->id);
 		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
 
 		app_log($product->count()." Credits available for organization ".$organization->id);
@@ -155,29 +150,24 @@
 	### Use Calibration Verification Credit			###
 	###################################################
 	function consumeCalibrationVerificationCredit() {
-		if (! isset($GLOBALS['_config']->spectros->calibration_product)) error("Calibration Product not configured");
-		$cal_product = new \Product\Item();
-		$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
-		if (! $cal_product->id) error("Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found");
-
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
-			$organization = new \Register\Organization();
+			$organization = new \Spectros\Organization();
 			$organization->get($_REQUEST['organization']);
 			if ($organization->error) app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 			if (! $organization->id) error("Organization not found");
 		}
 		elseif ($_REQUEST['organization_id']) {
-			$organization = new \Register\Organization($_REQUEST['oranization_id']);
+			$organization = new \Spectros\Organization($_REQUEST['oranization_id']);
 		}
 		else {
-			$organization = new \Register\Organization($GLOBALS['_SESSION_']->customer->organization->id);
+			$organization = new \Spectros\Organization($GLOBALS['_SESSION_']->customer->organization->id);
 		}
 
 		if ($organization->id != $GLOBALS['_SESSION_']->customer->organization->id && ! $GLOBALS['_SESSION_']->customer->has_role('spectros admin')) {
 			error("You do not have privileges");
 		}
-		$product = $organization->product($cal_product->id);
+		$product = new \Spectros\CalibrationVerification\Credit($organization->id);
 		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
 		$product->consume();
 		if ($product->error) app_error("Error consuming credits: ".$credit->error,__FILE__,__LINE__);
@@ -204,7 +194,7 @@
 		if (! $asset->id) error("Asset '".$request->serial."' not found",__FILE__,__LINE__);
 
 		# Find Verification Record
-		$verificationlist = new \Spectros\Calibration\VerificationList();
+		$verificationlist = new \Spectros\CalibrationVerificationList();
 		list($verification) = $verificationlist->find(array("asset_code" => $request->serial));
 
 		if ($verificationlist->error) app_error("Unable to find calibration verification: ".$verificationlist->error);
@@ -220,11 +210,6 @@
 	### Add a Calibration Verification				###
 	###################################################
 	function addCalibrationVerification() {
-		if (! isset($GLOBALS['_config']->spectros->calibration_product)) error("Calibration Product not configured");
-		$cal_product = new \Product\Item();
-		$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
-		if (! $cal_product->id) error("Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found");
-
 		# Find Requested Organization
 		if ($_REQUEST['organization']) {
 			$organization = new \Register\Organization();
@@ -255,7 +240,7 @@
 		$date_calibration = get_mysql_date($_REQUEST['date_calibration']);
 
 		# See if Credits available
-		$product = $organization->product($cal_product->id);
+		$product = new \Spectros\CalibrationVerification\Credit($organization->id);
 		if ($product->error) app_error("Error finding calibration verification credits: ".$product->error,__FILE__,__LINE__);
 		if ($product->count() < 1) {
 			app_log("Calibration credits for '".$organization->name."' = ".$product->count(),'info',__FILE__,__LINE__);
@@ -377,7 +362,7 @@
 			$parameters['asset_id'] = $asset->id;
 		}
 
-		$verificationlist = new \Spectros\Calibration\VerificationList();
+		$verificationlist = new \Spectros\CalibrationVerificationList();
 		if ($verificationlist->error) app_error("Error initializing verification: ".$verificationlist->error,__FILE__,__LINE__);
 		$verifications = $verificationlist->find($parameters);
 		if ($verificationlist->error) app_error("Error finding verifications: ".$verificationlist->error,__FILE__,__LINE__);
@@ -465,9 +450,9 @@
 	function getCollectionCT() {
 		# Get Collection
 		$collection = new \Spectros\Collection();
-		if ($collection->error) app_error("Error finding collection: ".$collection->error,__FILE__,__LINE__);
+		if ($collection->error()) app_error("Error finding collection: ".$collection->error(),__FILE__,__LINE__);
 		$collection->get($_REQUEST['collection_code']);
-		if ($collection->error) error("Error finding collection: ".$collection->error);
+		if ($collection->error()) error("Error finding collection: ".$collection->error());
 		if (! isset($collection->id)) error("Collection not found");
 		
 		# Get Monitor
@@ -499,18 +484,41 @@
 	function generateReport() {
 		# Get Collection
 		$collection = new \Spectros\Collection();
-		if ($collection->error) app_error("Error finding collection: ".$collection->error,__FILE__,__LINE__);
+		if ($collection->error()) app_error("Error finding collection: ".$collection->error(),__FILE__,__LINE__);
 		$collection->get($_REQUEST['code']);
-		if ($collection->error) error("Error finding collection: ".$collection->error);
+		if ($collection->error()) error("Error finding collection: ".$collection->error());
 		if (! isset($collection->id)) error("Collection not found");
 		
 		# Generate Report
-		if (! $collection->generateReport()) error($collection->error);
+		if (! $collection->generateReport()) error($collection->error());
 	
 		$response->success = 1;
 		$response->report_code = $collection->report_code;
 		print formatOutput($response);
 	}
+
+	function flagAutomationAccounts() {
+		$customerList = new \Spectros\CustomerList();
+		if (!$customerList->flagAutomationAccounts()) error($customerList->error());
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->updates = $customerList->count();
+		print formatOutput($response);
+	}
+
+    /**
+     * Maintenance Cron
+     *   Create a "tickler" (Tony's word not mine) cron to notify admins of outstanding tasks/events/problems
+     */
+    function maintenance_report() {
+        $reminder = new \Email\Reminder();
+        $reminder->gather();
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->item = $reminder->remind();
+        print formatOutput($response);
+    }
 
 	function schemaVersion() {
 		$schema = new \Spectros\Schema();
@@ -582,4 +590,3 @@
 			error("Invalid xml in request");
 		}
 	}
-?>

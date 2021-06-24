@@ -39,7 +39,7 @@
 				$find_objects_query .= "
 					LIMIT	0,".$parameters['_limit'];
 			}
-
+            query_log($find_objects_query);
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {
 				$this->error = "Error finding session: ".$GLOBALS['_database']->ErrorMsg();
@@ -54,4 +54,3 @@
 			return $objects;
 		}
 	}
-?>

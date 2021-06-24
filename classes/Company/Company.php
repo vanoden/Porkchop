@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Company;
 
 	class Company {
@@ -60,7 +60,7 @@
 				return $object;
 			}
 			else {
-				app_log("No company found for id '".$this->id."'",'error');
+				app_log("No company found for id '".$this->id."'",'debug');
 				return new \stdClass();
 			}
 		}
@@ -84,7 +84,7 @@
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			
-			return $this->update($this->id,$parameters);
+			return $this->update($parameters);
 		}
 
 		public function update($parameters = array()){
@@ -93,29 +93,36 @@
 				return undef;
 			}
 
-			if ($parameters['name'])
-				$update_object_query .= ",
-					name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
-
 			# Update Object
 			$update_object_query = "
 				UPDATE	company_companies
 				SET		id = id";
-			
+
+			$bind_params = array();
+			if (isset($parameters['name'])) {
+				$update_object_query .= ",
+					name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
+			if (isset($parameters['status'])) {
+				$update_object_query .= ",
+					status = ?";
+				array_push($bind_params,$parameters['status']);
+			}
+
 			$update_object_query .= "
 				WHERE	id = ?
 			";
+			array_push($bind_params,$this->id);
 
 			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
+				$update_object_query,$bind_params
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Site::Company::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return undef;
 			}
 			
-			return $this->details($id);
+			return true;
 		}
 	}
-?>

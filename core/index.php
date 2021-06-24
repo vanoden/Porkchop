@@ -1,4 +1,4 @@
-<?PHP	
+<?php
 	###################################################################
 	### html/index.php												###
 	###																###
@@ -8,7 +8,7 @@
 	###																###
 	### Copyright (C) 2014 Anthony Caravello						###
 	###																###
-    ### This program is free software: you can redistribute it and/	###
+	### This program is free software: you can redistribute it and/	###
 	### or modify it under the terms of the GNU General Public		###
 	### License as published by the Free Software Foundation, 		###
 	### either version 3 of the License, or any later version.		###
@@ -24,13 +24,36 @@
 	### <http://www.gnu.org/licenses/>.								###
 	###################################################################
 
-
+    /**
+     * PHP 7 compatability 
+     *
+     * Changelog:
+     *  7.4.0	This function has been deprecated.
+     *  5.4.0	Always returns FALSE because the magic quotes feature was removed from PHP.
+     */
+    # error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
+    if (!function_exists('get_magic_quotes_gpc')) {
+        function get_magic_quotes_gpc() {
+            return FALSE;
+        }
+    }
+    
+    // PHP_VERSION_ID is available as of PHP 5.2.7, if version is lower than that, then emulate it
+    if (!defined('PHP_VERSION_ID')) {
+        $version = explode('.', PHP_VERSION);
+        define('PHP_VERSION_ID', ($version[0] * 10000 + $version[1] * 100 + $version[2]));
+    }
+    
+    // ignore all the isset warnings for now
+    if (PHP_VERSION_ID > 70000) error_reporting(~E_DEPRECATED & ~E_NOTICE);
+    
+	define("MODE","http");
 	###################################################
 	### Load Dependencies							###
 	###################################################
 	# Load Config
 	require '../config/config.php';
-
+	
 	# General Utilities
 	require INCLUDES.'/functions.php';
 	spl_autoload_register('load_class');
@@ -40,6 +63,22 @@
 
 	# Debug Variables
 	$_debug_queries = array();
+
+	###################################################
+	### Connect to Logger							###
+	###################################################
+	$logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG));
+	if ($logger->error()) {
+		error_log("Error initializing logger: ".$logger->error());
+		print "Logger error\n";
+		exit;
+	}
+	$logger->connect();
+	if ($logger->error()) {
+		error_log("Error initializing logger: ".$logger->error());
+		print "Logger error\n";
+		exit;
+	}
 
 	###################################################
 	### Connect to Database							###
@@ -53,29 +92,28 @@
 		$GLOBALS['_config']->database->master->password,
 		$GLOBALS['_config']->database->schema
 	);
+	
 	if ($_database->ErrorMsg()) {
 		print "Error connecting to database:<br>\n";
 		print $_database->ErrorMsg();
-		app_log("Error connecting to database: ".$_database->ErrorMsg(),'error',__FILE__,__LINE__);
+		$logger->write("Error connecting to database: ".$_database->ErrorMsg(),'error');
 		exit;
 	}
-	app_log("Database Initiated",'trace',__FILE__,__LINE__);
-
+	$logger->write("Database Initiated",'trace');
+    
 	###################################################
 	### Connect to Memcache if so configured		###
 	###################################################
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
-	if ($_CACHE_->error) {
-		test_fail('Unable to initiate Cache client: '.$_CACHE_->error);
-	}
-	app_log("Cache Initiated",'trace',__FILE__,__LINE__);
+	if ($_CACHE_->error) $logger->write('Unable to initiate Cache client: '.$_CACHE_->error(),'error');
+	$logger->write("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
 	### Initialize Session							###
 	###################################################
 	$_SESSION_ = new \Site\Session();
 	$_SESSION_->start();
-	app_log("Session initiated",'trace',__FILE__,__LINE__);
+	$logger->write("Session initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
 	### Parse Request								###
@@ -100,31 +138,29 @@
 	# Create Session
 	$_SESSION_->start();
 	if ($_SESSION_->error) {
-		app_log($_SESSION_->error,'error',__FILE__,__LINE__);
+		$logger->write($_SESSION_->error,'error',__FILE__,__LINE__);
 		exit;
 	}
 
 	# Create Hit Record
 	$_SESSION_->hit();
-	if ($_SESSION_->message) {
-	    $page_message = $_SESSION_->message;
-	}
+	if ($_SESSION_->message) $page_message = $_SESSION_->message;
 
 	# Access Logging in Application Log
-	app_log("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."'",'info',__FILE__,__LINE__);
+	$logger->write("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."'",'info',__FILE__,__LINE__);
 
 	# Load Page Information
 	$_page = new \Site\Page();
 	$_page->get($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
 	if ($_page->error) {
 		print "Error: ".$_page->error;
-		app_log("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
+		$logger->write("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
 		exit;
 	}
 	if (! $_page->id) {
 		$_page->module = $_REQUEST_->module;
 		$_page->view = $_REQUEST_->view;
 		$_page->index = $_REQUEST_->index;
+		$_page->applyStyle();
 	}
 	print $_page->load_template();
-?>

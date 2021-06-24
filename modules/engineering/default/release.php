@@ -8,12 +8,12 @@
       <input type="hidden" name="release_id" value="<?=$release->id?>" />
       <h2>Engineering Release</h2>
       <!--	Error Checking -->
-      <?	if ($page->error) { ?>
-      <div class="form_error"><?=$page->error?></div>
-      <?	}
+      <?php	if ($page->errorCount()) { ?>
+      <div class="form_error"><?=$page->errorString()?></div>
+      <?php	}
          if ($page->success) { ?>
-      <div class="form_success"><?=$page->success?> [<a href="/_engineering/releases">Finished</a>] | [<a href="/_engineering/release">Create Another</a>] </div>
-      <?	} ?>
+                <div class="form_success"><?=$page->success?> [<a href="/_engineering/releases">Finished</a>] | [<a href="/_engineering/release">Create Another</a>] </div>
+      <?php	} ?>
       <!--	END Error Checking -->	
       <!--	START First Table -->
       <div class="tableBody min-tablet">
@@ -33,9 +33,9 @@
             </div>
             <div class="tableCell">
                <select name="status" class="value wide_100per">
-                  <option value="new"<? if ($form['status'] == "NEW") print " selected"; ?>>New</option>
-                  <option value="testing"<? if ($form['status'] == "TESTING") print " selected"; ?>>Testing</option>
-                  <option value="released"<? if ($form['status'] == "RELEASED") print " selected"; ?>>Released</option>
+                  <option value="new" <?php if ($form['status'] == "NEW") print "selected"; ?>>New</option>
+                  <option value="testing" <?php if ($form['status'] == "TESTING") print "selected"; ?>>Testing</option>
+                  <option value="released" <?php if ($form['status'] == "RELEASED") print "selected"; ?>>Released</option>
                </select>
             </div>
             <div class="tableCell">
@@ -72,16 +72,49 @@
          </div>
       </div>
       <!--	END Second Table -->
-      <?php
-         if (!$page->success) {
-         ?>
       <div class="container">
          <input type="submit" name="btn_submit" class="button" value="Submit">
       </div>
-      <?php
-         }
-         ?>
    </form>
+    <div style="width: 756px;">
+        <br/><hr/><h2>Documents</h2><br/>
+        <?php
+        if ($filesUploaded) {
+        ?>
+            <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
+                <tr>
+                    <th>File Name</th>
+                    <th>User</th>
+                    <th>Organization</th>
+                    <th>Uploaded</th>
+                </tr>
+                <?php
+                foreach ($filesUploaded as $fileUploaded) {
+                ?>
+                    <tr>
+                        <td><a href="/_storage/downloadfile?file_id=<?=$fileUploaded->id?>" target="_blank"><?=$fileUploaded->name?></a></td>
+                        <td><?=$fileUploaded->user->first_name?> <?=$fileUploaded->user->last_name?></td>
+                        <td><?=$fileUploaded->user->organization->name?></td>
+                        <td><?=date("M. j, Y, g:i a", strtotime($fileUploaded->date_created))?></td>
+                    </tr>
+                <?php
+                }
+                ?>
+            </table>
+        <?php
+        }
+        ?>
+        <form name="repoUpload" action="/_engineering/release/<?=$form['code']?>" method="post" enctype="multipart/form-data">
+        <div class="container">
+            <span class="label">Upload File</span>
+            <input type="hidden" name="repository_name" value="<?=$repository?>" />
+            <input type="hidden" name="type" value="engineering release" />
+            <input type="file" name="uploadFile" />
+            <input type="submit" name="btn_submit" class="button" value="Upload" />
+        </div>
+        </form>
+        <br/><br/>
+    </div>
 </div>
 <!--	START First Table -->
 <?php	if ($release->id) { ?>
@@ -95,7 +128,8 @@
               <div class="tableCell" style="width: 20%;">&nbsp;</div>
            </div>
            <!-- end row header -->
-           <?	foreach ($tasks as $task) { 
+           <?php	
+           foreach ($tasks as $task) { 
               $project = $task->project();
               $product = $task->product();
               ?>
@@ -123,7 +157,7 @@
                 ?>
               </div>
            </div>
-           <?		
+           <?php		
               if (! $greenbar) $greenbar = 'greenbar'; else $greenbar = '';
             }
            ?>
@@ -131,4 +165,5 @@
     </div>
     <!--	END First Table -->
     </div>
-<?	} ?>
+<?php	} ?>
+

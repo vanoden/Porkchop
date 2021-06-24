@@ -112,7 +112,6 @@
 						`assigned_id` int(11) NOT NULL DEFAULT 0,
 						`date_due` datetime,
 						`priority` enum('NORMAL','IMPORTANT','URGENT','CRITICAL') NOT NULL DEFAULT 'NORMAL',
-                        `prerequisite_id` varchar(11) DEFAULT NULL,
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `UK_CODE` (`code`),
 						FOREIGN KEY `fk_product_id` (`product_id`) REFERENCES `engineering_products` (`id`),
@@ -342,6 +341,256 @@
 				}
 				$GLOBALS['_database']->CommitTrans();
 			}		
+			
+            // VERSION 6
+			if ($current_schema_version < 6) {
+				app_log("Upgrading schema to version 6",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `engineering_tasks` MODIFY `status` enum('NEW','HOLD','ACTIVE','CANCELLED','TESTING','COMPLETE') DEFAULT 'NEW'
+				";
+
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering engineering_tasks table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$current_schema_version = 6;
+				$update_schema_version = "
+					INSERT
+					INTO	engineering__info
+					VALUES	('schema_version', $current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}
+			
+            // VERSION 7
+			if ($current_schema_version < 7) {
+				app_log("Upgrading schema to version 7",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `engineering_tasks` MODIFY `status` enum('NEW','HOLD','ACTIVE','CANCELLED','BROKEN','TESTING','COMPLETE') DEFAULT 'NEW'
+				";
+
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering engineering_tasks table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$current_schema_version = 7;
+				$update_schema_version = "
+					INSERT
+					INTO	engineering__info
+					VALUES	('schema_version', $current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}
+			
+            // VERSION 8
+			if ($current_schema_version < 8) {
+				app_log("Upgrading schema to version 8",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+                    CREATE TABLE `engineering_task_comments` (
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `date_comment` datetime DEFAULT NULL,
+                      `content` text DEFAULT NULL,
+                      `code` varchar(100) NOT NULL,  
+                      `user_id` int(11) DEFAULT NULL,
+                      PRIMARY KEY (`id`),
+                      CONSTRAINT `engineering_tasks_comments_ibfk_1` FOREIGN KEY (`code`) REFERENCES `engineering_tasks` (`code`),
+                      CONSTRAINT `engineering_tasks_comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+				";
+
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating products table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$current_schema_version = 8;
+				$update_schema_version = "
+					INSERT
+					INTO	engineering__info
+					VALUES	('schema_version', $current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+            // VERSION 9
+			if ($current_schema_version == -1) {
+				app_log("Upgrading schema to version 9",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+                    CREATE TABLE `engineering_task_hours` (
+                      `id` int NOT NULL AUTO_INCREMENT,
+                      `date_worked` datetime DEFAULT NULL,
+                      `number_of_hours` decimal(5,2) DEFAULT 0,
+                      `code` varchar(100) NOT NULL,
+                      `user_id` int DEFAULT NULL,
+                      PRIMARY KEY (`id`),
+                      KEY `engineering_task_hours_ibfk_1` (`code`),
+                      KEY `engineering_task_hours_ibfk_2` (`user_id`),
+                      CONSTRAINT `engineering_task_hours_ibfk_1` FOREIGN KEY (`code`) REFERENCES `engineering_tasks` (`code`),
+                      CONSTRAINT `engineering_task_hours_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+				";
+
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating task hours table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$current_schema_version = 9;
+				$update_schema_version = "
+					INSERT
+					INTO	engineering__info
+					VALUES	('schema_version', $current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}			
+
+			if ($current_schema_version < 10) {
+				app_log("Upgrading to version 10",'notice');
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$drop_table_query = "
+					DROP TABLE `engineering_task_hours`
+				";
+				$GLOBALS['_database']->Execute($drop_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error dropping task hours table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$create_table_query = "
+                    ALTER TABLE `engineering_events` ADD `hours_worked` decimal(5,2) not null default 0
+				";
+
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error updating events table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$current_schema_version = 10;
+				$update_schema_version = "
+					INSERT
+					INTO	engineering__info
+					VALUES	('schema_version', $current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}
+			
+			if ($current_schema_version < 11) {
+				app_log("Upgrading to version 11",'notice');
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+                    ALTER TABLE `engineering_tasks` ADD `testing_details` TEXT DEFAULT NULL
+				";
+
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error updating events table in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+
+				$current_schema_version = 11;
+				$update_schema_version = "
+					INSERT
+					INTO	engineering__info
+					VALUES	('schema_version', $current_schema_version)
+					ON DUPLICATE KEY UPDATE
+						value = $current_schema_version
+				";
+				$GLOBALS['_database']->Execute($update_schema_version);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return 0;
+				}
+				$GLOBALS['_database']->CommitTrans();
+			}		
 		}
 	}
-?>

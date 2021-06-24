@@ -7,14 +7,15 @@
 		public function find($parameters = array()) {
 			$find_objects_query = "
 				SELECT	ee.id
-				FROM	(engineering_events ee,
-						engineering_tasks et,
-						engineering_products ep)
+				FROM	engineering_events ee
+				JOIN	engineering_tasks et
+				ON		ee.task_id = et.id
+				JOIN	engineering_products ep
+				ON		ep.id = et.product_id
 				LEFT OUTER JOIN
 						engineering_projects epr
 				ON		epr.id = et.project_id
-				WHERE	ee.task_id = et.id
-				AND		et.product_id = ep.id
+				WHERE	ee.id = ee.id
 			";
 
 			$bind_params = array();
@@ -44,7 +45,7 @@
 					return null;
 				}
 				$find_objects_query .= "
-				AND		ee.user_id = ?";
+				AND		ee.person_id = ?";
 				array_push($bind_params,$user->id);
 			}
 
@@ -103,16 +104,15 @@
 			}
 
 			$find_objects_query .= "
-				ORDER BY date_event
+				ORDER BY date_event DESC
 			";
 
 			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
 				$find_objects_query .= "
 				LIMIT ".$parameters['_limit'];
 			}
-
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
-
+			
+            $rs = executeSQLByParams($find_objects_query,$bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::EventList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -132,4 +132,3 @@
 			return $this->_error;
 		}
 	}
-?>

@@ -11,9 +11,9 @@
    <a href="/_engineering/home">Engineering</a>
 </div>
 <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
-<? if ($page->error) { ?>
-    <div class="form_error"><?=$page->error?></div>
-<?	} ?>
+<?php	 if ($page->errorCount() > 0) { ?>
+    <div class="form_error"><?=$page->errorString()?></div>
+<?php	 } ?>
 <h2 style="display: inline-block;">Unassigned Tasks</h2>
 <a class="button more" href="/_engineering/tasks">Manage Tasks</a>
 <a class="button more" href="/_engineering/event_report">Event Report</a>
@@ -24,21 +24,26 @@
 	<th class="label column_person">Requested By</th>
 	<th class="label column_person">Assigned To</th>
 	<th class="label column_status">Status</th>
+	<th class="label column_status">Priority</th>
 </tr>
 <?php
 	foreach ($unassigned_tasks as $task) {
 		$requestor = $task->requestedBy();
 		$worker = $task->assignedTo();
+		$prerequisite = $task->prerequisite();
+		if ($prerequisite->id && $prerequisite->status != 'COMPLETE') continue;
 ?>
 <tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
 	<td class="value"><?=$task->date_added?></td>
 	<td class="value"><?=$requestor->login?></td>
-	<td class="value"><?=$worker->login?></td>
+	<td class="value"><?=isset($worker->login) ? $worker->login : ''?></td>
 	<td class="value"><?=$task->status?></td>
+	<td class="value"><?=isset($thing) ? $task->priority.$thing : $task->priority?></td>
 <?php	} ?>
 </table>
 <br>
 <h2 style="display: inline-block;">Your Tasks</h2>
+<a class="button more" href="/_engineering/tasks?assigned_id=<?=$GLOBALS['_SESSION_']->customer->id?>">See All</a>
 <table class="body">
 <tr>
 	<th class="label column_title">Title</th>
@@ -46,17 +51,21 @@
 	<th class="label column_person">Requested By</th>
 	<th class="label column_person">Assigned To</th>
 	<th class="label column_status">Status</th>
+	<th class="label column_status">Priority</th>
 </tr>
 <?php
 	foreach ($my_tasks as $task) {
 		$requestor = $task->requestedBy();
 		$worker = $task->assignedTo();
+		$prerequisite = $task->prerequisite();
+		if ($prerequisite->id && $prerequisite->status != 'COMPLETE') continue;
 ?>
 <tr><td class="value"><a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a></td>
 	<td class="value"><?=$task->date_added?></td>
 	<td class="value"><?=$requestor->login?></td>
 	<td class="value"><?=$worker->login?></td>
 	<td class="value"><?=$task->status?></td>
+	<td class="value"><?=$task->priority?></td>
 <?php	} ?>
 </table>
 <br>

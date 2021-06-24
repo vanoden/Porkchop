@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Event;
 	# Event Logging and Querying
 
@@ -38,5 +38,3 @@
 			return $response;
 		}
 	}
-
-?>

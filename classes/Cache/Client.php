@@ -8,4 +8,3 @@
 			else return new \Cache\Client\None($properties);
 		}
 	}
-?>

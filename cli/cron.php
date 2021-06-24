@@ -1,4 +1,4 @@
-<?PHP	
+<?php
 	###################################################
 	### cron.php									###
 	### This module is a content management and 	###
@@ -11,77 +11,78 @@
 	### Modifications								###
 	###################################################
 
+	###################################################
+	### Load Dependencies							###
+	###################################################
+	# Load Config
+	require '../config/config.php';
+
+	# Some HTTP Stuff
+	$_SERVER['HTTP_HOST'] = "localhost";
+	$_SERVER['REQUEST_URI'] = $argv[1];
+
+	# General Utilities
+	require INCLUDES.'/functions.php';
+	spl_autoload_register('load_class');
+
+	# Database Abstraction
+	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
+
 	error_log("###### Page: ".$_SERVER["REQUEST_URI"]."######");
 	error_log("\$_REQUEST: ".print_r($_REQUEST,true));
 
-	# Load Config
-	require '/www/html/config.php';
-
-	# Some HTTP Stuff
-	$_SERVER['HTTP_HOST'] = "ops-test-01.dev.buydomains.com";
-	$_SERVER['REQUEST_URI'] = $argv[1];
-
 	# Debug Variables
 	$_debug_queries = array();
+
 	###################################################
-	### Load API Objects							###
+	### Connect to Logger							###
 	###################################################
-	# General Utilities
-	require INCLUDES.'/functions.php';
-	# Company Classes
-	require MODULES.'/company/_classes/company.php';
-	# Session Classes
-	require MODULES.'/session/_classes/session.php';
-	# Database Abstraction
-	require THIRD_PARTY.'/adodb/adodb.inc.php';
-	# Page Handling
-	require MODULES.'/content/_classes/page.php';
-	# Messages
-	require MODULES.'/content/_classes/content.php';
-	# Person (Visitor/Customer/Admin)
-	require MODULES.'/register/_classes/register.php';
+	$logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG));
+	if ($logger->error()) {
+		error_log("Error initializing logger: ".$logger->error());
+		print "Logger error\n";
+		exit;
+	}
+	$logger->connect();
+	if ($logger->error()) {
+		error_log("Error initializing logger: ".$logger->error());
+		print "Logger error\n";
+		exit;
+	}
 
 	###################################################
 	### Initialize Common Objects					###
 	###################################################
 	# Connect to Database
 	$_database = NewADOConnection('mysqli');
-	$_database->port = $GLOBALS['_config']->database->master->port;
+	if ($GLOBALS['_config']->database->master->port) $_database->port = $GLOBALS['_config']->database->master->port;
 	$_database->Connect(
 		$GLOBALS['_config']->database->master->hostname,
 		$GLOBALS['_config']->database->master->username,
 		$GLOBALS['_config']->database->master->password,
 		$GLOBALS['_config']->database->schema
 	);
-	if ($_database->ErrorMsg())
-	{
-		print "Error connecting to database: ".$_database->ErrorMsg();
-		error_log($_database->ErrorMsg());
+	if ($_database->ErrorMsg()) {
+		print "Error connecting to database:<br>\n";
+		print $_database->ErrorMsg();
+		$logger->write("Error connecting to database: ".$_database->ErrorMsg(),'error');
 		exit;
 	}
+	$logger->write("Database Initiated",'trace');
 
-	# Connect to Memcache if so configured
-	if ($GLOBALS['_config']->cache_mechanism == 'memcache')
-	{
-		$_memcache = new Memcache;
-		$_memcache->addServer($GLOBALS['_config']->memcache->host,$GLOBALS['_config']->memcache->port);
-		$memcache_stats = @$_memcache->getExtendedStats();
-		$memcache_available = (bool) $memcache_stats[$GLOBALS['_config']->memcache->host.":".$GLOBALS['_config']->memcache->port];
-		if (! $memcache_available)
-		{
-			error_log("Memcached not reachable at ".$GLOBALS['_config']->memcache->host.":".$GLOBALS['_config']->memcache->port);
-			$GLOBALS['_config']->cache_mechanism = '';
-		}
-		elseif (@$_memcache->connect($GLOBALS['_config']->memcache->host,$GLOBALS['_config']->memcache->port))
-		{
-			// Memcache Connected
-		}
-		else
-		{
-			error_log("Cannot connect to memcached");
-			$GLOBALS['_config']->cache_mechanism = '';
-		}
-	}
+	###################################################
+	### Connect to Memcache if so configured		###
+	###################################################
+	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
+	if ($_CACHE_->error) test_fail('Unable to initiate Cache client: '.$_CACHE_->error);
+	$logger->write("Cache Initiated",'trace',__FILE__,__LINE__);
+
+	###################################################
+	### Initialize Session							###
+	###################################################
+	$_SESSION_ = new \Site\Session();
+	$_SESSION_->start();
+	$logger->write("Session initiated",'trace',__FILE__,__LINE__);
 
 	# Don't Cache this Page
 	header("Expires: 0");

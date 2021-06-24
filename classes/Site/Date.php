@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Site;
 
 	class Date {
@@ -16,4 +16,3 @@
 			return $datetime->format("M j G:i");
 		}
 	}
-?>

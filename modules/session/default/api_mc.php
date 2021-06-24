@@ -28,7 +28,7 @@
 		$response = new \HTTP\Response();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
 		$response->header->method = $_REQUEST["method"];
-		$response->header->date = system_time();
+		$response->header->date = time();
 		$response->message = "PING RESPONSE";
 		$response->success = 1;
 
@@ -43,7 +43,12 @@
 	###################################################
 	function getSession() {
 		$session = new \Site\Session();
-		$session->get($_REQUEST['code']);
+		if (isset($_REQUEST['code']) && strlen($_REQUEST['code']))
+			$session->get($_REQUEST['code']);
+		elseif($GLOBALS['_SESSION_']->code)
+			$session->get($GLOBALS['_SESSION_']->code);
+		else error("session code required");
+
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->session = $session;
@@ -56,7 +61,12 @@
 	###################################################
 	function getSessionHits() {
 		$session = new \Site\Session();
-		$session->get($_REQUEST['code']);
+		if (isset($_REQUEST['code']) && strlen($_REQUEST['code']))
+			$session->get($_REQUEST['code']);
+		elseif($GLOBALS['_SESSION_']->code)
+			$session->get($GLOBALS['_SESSION_']->code);
+		else error("session code required");
+
 		$hits = $session->hits();
 		$response->success = 1;
 		$response->hit = $hits;
@@ -139,4 +149,3 @@
 		$document->prepare($object);
 		return $document->content();
 	}
-?>

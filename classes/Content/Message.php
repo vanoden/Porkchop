@@ -35,8 +35,7 @@
 			list($id) = $rs->FetchRow();
 			if ($id) {
 				$this->id = $id;
-			}
-			else {
+			} else {
 				# Make Sure User Has Privileges
 				app_log("No match found for message '$code', adding",'info',__FILE__,__LINE__);
 				if (! $GLOBALS['_SESSION_']->customer->has_role('content developer')) {
@@ -116,10 +115,11 @@
 				INTO	content_messages
 				(		target,
 						company_id,
-						content
+						content,
+						date_modified
 				)
 				VALUES
-				(		?,?,'&nbsp')
+				(		?,?,'&nbsp',sysdate())
 			";
             $rs = $GLOBALS['_database']->Execute(
 				$insert_content_query,
@@ -161,7 +161,7 @@
 
             $update_content_query = "
                 UPDATE	content_messages
-				SET		id = id";
+				SET		date_modified = sysdate()";
 
 			foreach ($ok_params as $parameter) {
 				if (isset($parameters[$parameter])) $update_content_query .= ",
@@ -204,4 +204,3 @@
 			cache_unset("content[".$id."]");
 		}
     }
-?>

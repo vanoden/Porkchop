@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Site;
 	
 	class PageList {
@@ -36,4 +36,3 @@
 			return $pages;
 		}
 	}
-?>

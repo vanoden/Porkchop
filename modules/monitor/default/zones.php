@@ -33,7 +33,7 @@
 		<input type="hidden" name="todi" value="update">
 		<table width="500" bgcolor="#666666" cellpadding="1" cellspacing="1">
 		<tr><td class="heading_2" colspan="2">Monitored Zones<br><a href="/_monitor/event/<?=$id?>"><< Event</a></td></tr>
-		<?PHP
+		<?php
 			# Get Hubs Associated With Job
 			$hubs = get_event_hubs($id);
 
@@ -44,7 +44,7 @@
 				$assoc_hubs[$hub_info["hub_id"]] = 1;
 		?>
 		<tr><td class="heading_3" colspan="2">Hub: <?=$hub_info["name"]?></td></tr>
-		<?PHP
+		<?php
 				# Get Monitors Associated With Hub
 				$monitors = get_event_monitors($id,$hub_info["hub_id"]);
 
@@ -58,7 +58,7 @@
 		<tr><td class="heading_3">Zone</td>
 			<td class="heading_3">Location</td>
 		</tr>
-		<?PHP
+		<?php
 					# Get Zones For Monitor
 					$zones = get_event_points($id,$monitor_info["monitor_id"]);
 
@@ -68,12 +68,12 @@
 		?>
 		<tr><td class="copy_3"><?=$zone_info["zone"]?></td>
 			<td class="copy_3"><input name="location[<?=$zone_info["point_id"]?>]" size="30" class="input" value="<?=$zone_info["location"]?>"></td></tr>
-		<?PHP
+		<?php
 					}
 				}
 		?>
 		<tr><td colspan="2">Select Monitor To Add <select name="add_monitor[<?=$hub_info["hub_id"]?>]" class="input">
-		<?PHP
+		<?php
 				# Get All Monitors
 				$monitors = get_monitors();
 
@@ -83,18 +83,18 @@
 					if ($assoc_monitors[$monitor_info["monitor_id"]]) continue;
 		?>
 					<option value="<?=$monitor_info["monitor_id"]?>"><?=$monitor_info["label"]?></option>
-		<?PHP
+		<?php
 				}
 		?>
 				</select>
 				<input type="button" name="btn_monitor" value="Add" onclick="addMonitor(<?=$hub_info["hub_id"]?>)">
 			</td>
 		</tr>
-		<?PHP
+		<?php
 			}
 		?>
 		<tr><td colspan="2">Select Hub To Add <select name="add_hub" class="input">
-		<?PHP
+		<?php
 			# Get All Hubs
 			$hubs = get_hubs();
 
@@ -104,7 +104,7 @@
 				if ($assoc_hubs[$hub_info["hub_id"]]) continue;
 		?>
 					<option value="<?=$hub_info["hub_id"]?>"><?=$hub_info["name"]?></option>
-		<?PHP
+		<?php
 			}
 		?>
 				</select>

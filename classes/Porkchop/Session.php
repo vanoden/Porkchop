@@ -55,4 +55,3 @@
 			return $this->_error;
 		}
 	}
-?>

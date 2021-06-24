@@ -9,17 +9,16 @@
 			'phone'		=> "Phone Number",
 			'email'		=> "Email Address",
 			'sms'		=> "SMS-Text",
-			'facebook'	=> "FaceBook Account",
-			'twitter'	=> "Twitter Account",
-			'aim'		=> "AOL Instant Messenger"
+			'facebook'	=> "FaceBook Account"
 		);
-
+		
 		public function __construct($id = 0) {
 			if (is_numeric($id)) {
 				$this->id = $id;
 				$this->details();
 			}
 		}
+		
 		public function get($type,$value) {
 			$get_object_query = "
 				SELECT	id
@@ -42,7 +41,9 @@
 			$this->id = $id;
 			return $this->details();
 		}
+		
 		public function add($parameters = array()) {
+		
 			if (! preg_match('/^\d+$/',$parameters['person_id'])) {
 				$this->error = "Valid person_id required for addContact method";
 				return null;
@@ -52,40 +53,54 @@
 				return null;
 			}
 
+			if (! isset($parameters['notify'])) $parameters['notify'] = 0;
 			$add_contact_query = "
 				INSERT
-				INTO	register_contacts
-				(		person_id,
+				INTO	
+				    register_contacts
+				(		
+				        person_id,
+				        description,
 						type,
-						value
+						value,
+						notify,
+						notes
 				)
 				VALUES
-				(		?,?,?
+				(		
+				    ?,?,?,?,?,?
 				)
 			";
+			
 			$GLOBALS['_database']->Execute(
 				$add_contact_query,
 				array(
 					$parameters['person_id'],
+					$parameters['description'],
 					$parameters['type'],
-					$parameters['value']
+					$parameters['value'],
+					$parameters['notify'],
+					$parameters['notes']
 				)
 			);
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Register::Contact::add(): ".$GLOBALS['_database']->ErrorMSg();
 				return null;
 			}
-			return $this->update($GLOBALS['_database']->Insert_ID(),$parameters);
+					
+			return $GLOBALS['_database']->Insert_ID();
 		}
-		public function update($parameters = array()) {
-			if (! preg_match('/^\d+$/',$this->id)) {
+		
+		public function update($parameters = array(), $id = null) {
+		
+			if (! preg_match('/^[0-9]+$/',$this->id)) {
 				$this->error = "ID Required for update method.";
 				return 0;
 			}
+			
 			$bind_params = array();
-			$update_contact_query = "
-				UPDATE	register_contacts
-				SET		id = id";
+			$update_contact_query = " UPDATE register_contacts SET id = id";
 				
 			if ($parameters['type']) {
 				if (! array_key_exists($parameters['type'],$this->types)) {
@@ -129,6 +144,7 @@
 			}
 			return $this->details();
 		}
+		
 		public function delete() {
 			$delete_contact_query = "
 				DELETE
@@ -145,6 +161,46 @@
 			}
 			return 1;
 		}
+		
+		public function detailsByUserByTypeByDesc($person_id, $type='email', $desc='Work Email') {
+            $get_object_query = "
+				SELECT	id,
+						type,
+						value,
+						notes,
+						description,
+						notify,
+						person_id
+				FROM	register_contacts
+				WHERE 	person_id = ?
+				AND		type = ?
+				AND		description = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($person_id, $type, $desc)
+			);
+			if (! $rs) {
+				$this->error = "SQL Error in regiser::person::contactDetails: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			$contact = $rs->FetchNextObject(false);
+			if (isset($contact->id)) {
+				$this->id = $contact->id;
+				$this->type = $contact->type;
+				$this->value = $contact->value;
+				$this->notes = $contact->notes;
+				$this->description = $contact->description;
+				if ($contact->notify == 1) $this->notify = true;
+				else $this->notify = false;
+				$this->person = new \Register\Person($contact->person_id);
+			}
+			else {
+				$this->id = null;
+			}
+			return $contact;
+		}
+		
 		public function details() {
 			$get_object_query = "
 				SELECT	id,
@@ -182,4 +238,3 @@
 			return $contact;
 		}
 	}
-?>

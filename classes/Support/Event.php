@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support;
 
 	class Event {
@@ -24,14 +24,12 @@
 				VALUES
 				(		?,?,sysdate(),?)
 			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$parameters['request_id'],
-					$parameters['tech_id'],
-					$parameters['comment']
-				)
-			);
+            $rs = executeSQLByParams($add_object_query, array(
+				$parameters['request_id'],
+				$parameters['tech_id'],
+				$parameters['comment']
+			));
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in SupportEvent::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -88,14 +86,12 @@
 				$find_requests .= '';
 			}
 
-			$rs = $GLOBALS['_database']->Execute($find_requests_query);
-			if (! $rs)
-			{
+			$rs = executeSQLByParams($find_requests_query, array());
+					
+			if (! $rs) {
 				$this->error = "SQL Error in SupportRequest::find: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
-			}
-			else
-			{
+			} else {
 				$requests = array();
 			}
 		}
@@ -113,10 +109,8 @@
 				FROM	support_requests
 				WHERE	id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_request_query,
-				array($id)
-			);
+			$rs = executeSQLByParams($get_request_query, array($id));
+			
 			if (! $rs)
 			{
 				$this->error = "SQL Error in SupportRequest::details: ".$GLOBALS['_database']->ErrorMsg();
@@ -125,4 +119,3 @@
 			return $rs->FetchObject();
 		}
 	}
-?>

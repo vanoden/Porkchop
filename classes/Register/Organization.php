@@ -11,17 +11,18 @@
 		public $reseller;
 		public $notes;
 		public $_cached;
+		private $_nocache = false;
 
-		public function __construct($id = 0) {
-			# Clear Error Info
+		public function __construct($id = 0,$options = array()) {
+		
+			// Clear Error Info
 			$this->error = '';
 
-			# Database Initialization
-			$schema = new Schema();
-			if ($schema->error) {
-				$this->error = "Failed to initialize schema: ".$schema->error;
+			if (isset($options['nocache']) && $option['nocache']) {
+				$this->_nocache = true;
 			}
-			elseif ($id) {
+
+			if (isset($id) && is_numeric($id)) {
 				$this->id = $id;
 				$this->details();
 			}
@@ -33,18 +34,18 @@
 			$add_object_query = "
 				INSERT
 				INTO	register_organizations
-				(		id,code,date_created)
+				(		id,code,name,date_created)
 				VALUES
-				(		null,?,sysdate())
+				(		null,?,?,sysdate())
 			";
-
 			$rs = $GLOBALS['_database']->Execute(
 				$add_object_query,
 				array(
-					$parameters['code']
+					$parameters['code'],
+					$parameters['name']
 				)
 			);
-			if (! $rs) {
+			if (! $rs) {			
 				$this->error = "SQL Error in \Register\Organization::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
@@ -53,10 +54,11 @@
 		}
 
 		public function update($parameters = array()) {
+		
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			
-			# Bust Cache
+			// Bust Cache
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			$cache_item->delete();
@@ -86,7 +88,6 @@
 				$update_object_query .= ",
 						notes = ".$GLOBALS['_database']->qstr($parameters['notes'],get_magic_quotes_gpc());
 
-
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -95,13 +96,13 @@
 				$update_object_query,
 				array($this->id)
 			);
-			if (! $rs)
-			{
+			if (! $rs) {
 				$this->error = "SQL Error in \Register\Organization::update: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return $this->details();
 		}
+		
 		public function get($code = '') {
 			app_log("Register::Organization::get($code)",'trace',__FILE__,__LINE__);
 			$this->error = null;
@@ -122,14 +123,16 @@
 			$this->id = $id;
 			return $this->details();
 		}
+		
 		public function details() {
 			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
 			$this->error = null;
 
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
-			# Cached Organization Object, Yay!
-			if (($this->id) and ($organization = $cache_item->get())) {
+			
+			// Cached Organization Object, Yay!
+			if ((! $this->_nocache) and ($this->id) and ($organization = $cache_item->get())) {
 				$organization->_cached = 1;
 				$this->id = $organization->id;
 				$this->name = $organization->name;
@@ -140,7 +143,7 @@
 				$this->notes = $organization->notes;
 				$this->_cached = $organization->_cached;
 
-				# In Case Cache Corrupted
+				// In Case Cache Corrupted
 				if ($organization->id) {
 					app_log("Organization '".$this->name."' [".$this->id."] found in cache",'trace',__FILE__,__LINE__);
 					return $organization;
@@ -150,7 +153,7 @@
 				}
 			}
 
-			# Get Details for Organization
+			// Get Details for Organization
 			$get_details_query = "
 				SELECT	id,
 						code,
@@ -162,6 +165,7 @@
 				FROM	register_organizations
 				WHERE	id = ?
 			";
+			query_log($get_details_query);
 			$rs = $GLOBALS['_database']->Execute(
 				$get_details_query,
 				array($this->id)
@@ -185,23 +189,25 @@
 				return new \stdClass();
 			}
 
-			# Cache Customer Object
+			// Cache Customer Object
 			app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
 			if ($object->id) $result = $cache_item->set($object);
 			app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);
 
 			return $object;
 		}
-		public function members() {
+		public function members($type = 'all') {
 			app_log("Register::Organization::members()",'trace',__FILE__,__LINE__);
 			$customerlist = new CustomerList();
-			#print "Finding members of org $id<br>\n";
-			return $customerlist->find(array('organization_id' => $this->id));
+			if ($type == 'automation') $automation = true;
+			elseif ($type == 'human') $automation = false;
+			else $automation = null;
+			return $customerlist->find(array('organization_id' => $this->id,'automation' => $automation));
 		}
 		public function product($product_id) {
 			$product = new \Product\Item($product_id);
-			if ($product->error) {
-				$this->error = $product->error;
+			if ($product->error()) {
+				$this->error = $product->error();
 				return null;
 			}
 			if (! $product->id) {
@@ -215,6 +221,11 @@
 			$customerlist = new CustomerList();
 			$customers = $customerlist->find(array("organization_id" => $this->id,"status" => array('NEW','ACTIVE')));
 			return count($customers);
+		}
+
+		public function exists() {
+			if (isset($this->id) && is_numeric($this->id) && $this->id > 0) return true;
+			return false;
 		}
 		public function expire() {
 			$update_org_query = "
@@ -231,13 +242,32 @@
 				return false;
 			}
 			
-			# Bust Cache
+			// Bust Cache
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			$cache_item->delete();
 
 			return true;
 		}
-    }
 
-?>
+		public function locations($parameters = array()) {
+			$get_locations_query = "
+				SELECT	location_id
+				FROM	register_organization_locations
+				WHERE	organization_id = ?";
+			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->id));
+			if (! $rs) {
+				$this->error = "SQL Error in Register::Organization::lcations: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			$locations = array();
+			while (list($id) = $rs->FetchRow()) {
+				$location = new \Register\Location($id,$parameters);
+				array_push($locations,$location);
+			}
+			return $locations;
+		}
+		public function error() {
+			return $this->error;
+		}
+    }

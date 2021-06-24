@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Email\Transport;
 	
 	class Proxy {

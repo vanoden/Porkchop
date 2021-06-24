@@ -32,11 +32,48 @@ Run composer
 ```
 php composer.phar install --no-dev
 ```
-
-## Configuration
+Install XML Serializer
+```
+pear install channel://pear.php.net/XML_UnSerializer-0.21.0
+```
+### Configuration
 
 Copy the file '/config/config.php.dist' to '/config/config.php'.  Edit the file with your database connection information and other things specific to your site.
 
+### Setup
+
+Call the Install script to run the initialization tasks:
+
+http://your.domain.name/_install
+
+Call the Upgrade script to apply recent updates to schema, etc:
+
+http://your.domain.name/_upgrade
+
 ## Use
 
-This package was developed by Anthony Caravello.  It is released under the MIT license.  See LICENSE.txt for more information.
+This package was developed and is maintained by Anthony Caravello with the help of contributors.  It is released under the MIT license.  See LICENSE.txt for more information.
+
+## Docker Build Instructions
+
+**Install Docker**
+
+    https://docs.docker.com/get-docker/
+
+**Building the container**
+
+    $ cd docker/
+
+**Getting it running**
+
+    To start your environment, run this command in this folder of your local terminal: 
+        $ docker-compose up
+
+**Debugging**
+
+    Useful commands to work with your environment
+        $ docker-compose ps
+        $ docker-compose logs
+      
+**Connect to Docker MySQL**
+    $ mysql -h localhost -P 8082 --protocol=tcp -u spectros -p

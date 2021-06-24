@@ -1,4 +1,7 @@
-<?
+<?php
+	$page = new \Site\Page();
+	#$page->requireRole('administrator');
+
 	# Get Asset
 	if (! $_REQUEST['code']) {
 		$_REQUEST['code'] = $GLOBALS['_REQUEST_']->query_vars_array[0];
@@ -35,4 +38,3 @@
 		app_log($string,'error',__FILE__,__LINE__);
 		return;
 	}
-?>

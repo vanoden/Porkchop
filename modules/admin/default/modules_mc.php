@@ -1,7 +1,5 @@
-<?
-	require_once(MODULES."/admin/_classes/admin.php");
-
-	$_module = new PorkchopModule();
-	$modules = $_module->find();
-	if ($_module->error) $GLOBALS['_page']->error = "Error scanning modules: ".$_module->error;
-?>
+<?php
+	$page = new \Site\Page();
+	$moduleList = new \Site\ModuleList();
+	$modules = $moduleList->find();
+	if ($moduleList->error()) $page->addError("Error scanning modules: ".$moduleList->error());

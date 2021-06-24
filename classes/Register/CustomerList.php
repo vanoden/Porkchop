@@ -177,11 +177,26 @@
 				$find_person_query .= "
 				AND		organization_id = ".$GLOBALS['_database']->qstr($parameters['organization_id'],get_magic_quotes_gpc());
 			}
+			if (isset($parameters['automation'])) {
+				if ($parameters['automation']) $find_person_query .= "
+					AND		automation = 1";
+				else $find_person_query .= "
+					AND		automation = 0";
+			}
+			
+			// search by term supported
+            if (isset($parameters['searchTerm'])) $find_person_query .= " AND (
+                    last_name LIKE '%" . $parameters['searchTerm'] . "%'
+                    OR middle_name LIKE '%" . $parameters['searchTerm'] . "%'
+                    OR first_name LIKE '%" . $parameters['searchTerm'] . "%'
+                    OR login LIKE '%" . $parameters['searchTerm'] . "%'
+                    OR title LIKE '%" . $parameters['searchTerm'] . "%'
+                )";
 
-			if (preg_match('/^(login|first_name|last_name|organization_id)$/',$parameters['_sort'])) {
+			if (isset($parameters['_sort']) && preg_match('/^(login|first_name|last_name|organization_id)$/',$parameters['_sort'])) {
 				$find_person_query .= " ORDER BY ".$parameters['_sort'];
 			}
-			elseif ($parameters['_sort'] == 'full_name') {
+			elseif (isset($parameters['sort']) && $parameters['_sort'] == 'full_name') {
 				$find_person_query .= " ORDER BY first_name,last_name";
 			}
 			else
@@ -204,7 +219,9 @@
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
-				$customer = new Customer($id);
+				if (isset($parameters['role']) || ! $count) {
+					$customer = new Customer($id);
+				}
 				if (isset($parameters['role']) && ! $customer->has_role($parameters['role'])) continue;
 				if (! $count) array_push($people,$customer);
 				$this->count ++;
@@ -291,5 +308,12 @@
 			if ($count == true) return $this->count;
 			return $people;
 		}
+
+		public function error() {
+			return $this->error;
+		}
+
+		public function count() {
+			return $this->count;
+		}
 	}
-?>

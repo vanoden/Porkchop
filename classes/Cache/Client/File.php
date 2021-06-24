@@ -90,5 +90,38 @@
 				$this->error = "Cache client not connected";
 			}
 		}
+
+		public function keys($object = null) {
+			$keyArray = array();
+			if ($this->_connected) {
+				$keys = scandir($GLOBALS['_config']->cache->path."/");
+				foreach ($keys as $key) {
+					if (preg_match('/(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) {
+						if (is_null($object) || $object == $matches[1]) {
+							$key = sprintf("%s[%d]",$matches[1],$matches[2]);
+							array_push($keyArray,$key);
+						}
+					}
+				}
+			}
+			return $keyArray;
+		}
+		public function flush() {
+			if ($this->_connected) {
+				$keys = scandir($GLOBALS['_config']->cache->path."/");
+				foreach ($keys as $key) {
+					if (preg_match('/^[\w\-\.\_]+\[\d+\]$/')) {
+						delete($GLOBALS['_config']->cache->path."/".$key);
+					}
+				}
+			}
+		}
+
+		public function stats() {
+			return array();
+		}
+
+		public function error() {
+			return $this->error;
+		}
 	}
-?>

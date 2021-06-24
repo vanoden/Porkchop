@@ -1,6 +1,6 @@
-<?  if ($error_msg) { ?>
+<?php  if ($error_msg) { ?>
 <table class="error"><tr><td class="error"><?=$error_msg?></td></tr></table>
-<?  }
+<?php  }
 	else
 	{
 ?>
@@ -35,12 +35,12 @@
 				<tr><td class="heading_3">Zone</td>
 					<td class="heading_3">Last X</td>
 					<td class="heading_3">Last Y</td>
-				<?	for ($zone = 0; $zone < 4; $zone ++) { ?>
+				<?php	for ($zone = 0; $zone < 4; $zone ++) { ?>
 				<tr><td class="copy_3" style="color: #<?=$graph["color"]["data"][$zone]?>"><?=$graph["data"][$zone]["label"]?></td>
 					<td class="copy_3"><?=sprintf("%8.2f",$last_x[$zone])." ".$graph["axis"]["horizontal"]["units"]?></td>
 					<td class="copy_3"><?=$last_y[$zone]." ".$graph["axis"]["vertical"]["units"]?></td>
 				</tr>
-				<?	} ?>
+				<?php	} ?>
 				</table>
 			</td>
 		</tr>
@@ -48,4 +48,4 @@
 	</td>
 </tr>
 </table>
-<?  } ?>
+<?php  } ?>

@@ -1,103 +1,24 @@
 <?php
 	namespace Support;
 
-	class Schema {
-		public $errno;
-		public $error;
+	class Schema Extends \Database\BaseSchema {
 		public $module = "support";
-		private $roles = array(
-			'support manager'	=> 'Full control over requests, actions, etc',
-			'support user'		=> 'Can work with support requests'
-		);
 
-		public function __construct() {
-			$this->upgrade();
-		}
-		public function version() {
-			# See if Schema is Available
-			$schema_list = $GLOBALS['_database']->MetaTables();
-			$info_table = strtolower($this->module)."__info";
-
-			if (! in_array($info_table,$schema_list)) {
-                # Create __info table
-                $create_table_query = "
-                    CREATE TABLE `$info_table` (
-                        label   varchar(100) not null primary key,
-                        value   varchar(255)
-                    )
-                ";
-                $GLOBALS['_database']->Execute($create_table_query);
-                if ($GLOBALS['_database']->ErrorMsg()) {
-                    $this->error = "SQL Error creating info table in ".$this->module."Schema::version: ".$GLOBALS['_database']->ErrorMsg();
-                    return null;
-                }
-            }
-
-            # Check Current Schema Version
-            $get_version_query = "
-                SELECT  value
-                FROM    `$info_table`
-                WHERE   label = 'schema_version'
-            ";
-
-            $rs = $GLOBALS['_database']->Execute($get_version_query);
-            if (! $rs) {
-                $this->error = "SQL Error in ".$this->module."::version: ".$GLOBALS['_database']->ErrorMsg();
-                return null;
-            }
-
-            list($version) = $rs->FetchRow();
-            if (! $version) $version = 0;
-            return $version;
-		}
 		public function upgrade() {
-			$this->error = '';
-			$info_table = strtolower($this->module)."__info";
-
-			# See if Schema is Available
-			$schema_list = $GLOBALS['_database']->MetaTables();
-
-			if (! in_array($info_table,$schema_list)) {
-				# Create company__info table
-				$create_table_query = "
-					CREATE TABLE `$info_table` (
-						label	varchar(100) not null primary key,
-						value	varchar(255)
-					)
-				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating info table in ".$this->module."Schema::upgrade: ".$GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
-			}
-
-			# Check Current Schema Version
-			$get_version_query = "
-				SELECT	value
-				FROM	`$info_table`
-				WHERE	label = 'schema_version'
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_version_query);
-			if (! $rs) {
-				$this->error = "SQL Error in ".$this->module."Schema::upgrade: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-
-			list($current_schema_version) = $rs->FetchRow();
-            if ($current_schema_version < 1) {
-                app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
+			$this->error = null;
+			
+			if ($this->version() < 1) {
+                app_log("Upgrading schema to version 1", 'notice', __FILE__, __LINE__);
 
                 # Start Transaction
-                if (! $GLOBALS['_database']->BeginTrans())
-                    app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+                if (!$GLOBALS['_database']->BeginTrans())
+                    app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
 
 				# Collection of Items Requiring Action
                 $create_table_query = "
                     CREATE TABLE IF NOT EXISTS `support_requests` (
 						id INT(11) NOT NULL AUTO_INCREMENT,
-						code varchar(255) NOT NULL,
+						code varchar(150) NOT NULL,
                         customer_id INT(11) NOT NULL,
                         organization_id INT(11) NOT NULL,
                         date_request datetime,
@@ -110,11 +31,9 @@
 						INDEX `idx_status` (`status`,`date_request`)
 					)
                 ";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support_requests table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating support_requests table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
 					return false;
 				}
 
@@ -135,11 +54,9 @@
 						INDEX `idx_serial` (`product_id`,`serial_number`)
 					)
                 ";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support_request_items table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating support_request_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
 					return false;
 				}
 
@@ -164,11 +81,9 @@
 						INDEX `idx_date_request` (`date_requested`,`requested_id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support_actions table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating support_item_actions table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
 					return false;
 				}
 
@@ -187,11 +102,9 @@
 						FOREIGN KEY `fk_user` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support_events table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating support_action_events table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
 					return false;
 				}
 
@@ -204,37 +117,22 @@
 						product_id INT(11) NOT NULL,
 						quantity INT(11) NOT NULL DEFAULT 1,
 						description TEXT,
-						PRIMARY KEY `pk_id` (`id`),
-						FOREIGN KEY `fk_event` (`event_id`) REFERENCES `support_action_events` (`id`),
-						FOREIGN KEY `fk_user` (`user_id`) REFERENCES `register_users` (`id`)
+						PRIMARY KEY `pk_part_id` (`id`),
+						FOREIGN KEY `fk_part_event` (`event_id`) REFERENCES `support_action_events` (`id`),
+						FOREIGN KEY `fk_part_user` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support_parts table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating support_parts table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
 					return false;
 				}
 
-                $current_schema_version = 1;
-                $update_schema_version = "
-                    INSERT
-                    INTO    support__info
-                    VALUES  ('schema_version',$current_schema_version)
-                    ON DUPLICATE KEY UPDATE
-                        value = $current_schema_version
-                ";
-                $GLOBALS['_database']->Execute($update_schema_version);
-                if ($GLOBALS['_database']->ErrorMsg()) {
-                    $this->error = "SQL Error in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-                    app_log($this->error,'error',__FILE__,__LINE__);
-                    $GLOBALS['_database']->RollbackTrans();
-                    return undef;
-                }
-                $GLOBALS['_database']->CommitTrans();
+				$this->setVersion(1);
+				$GLOBALS['_database']->CommitTrans();
             }
-			if ($current_schema_version < 2) {
+            
+			if ($this->version() < 2) {
                 app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
                 # Start Transaction
@@ -251,18 +149,16 @@
                         date_approved datetime,
 						shipment_id INT(11),
                         status enum('NEW','SHIPPED','RECEIVED') NOT NULL DEFAULT 'NEW',
-						PRIMARY KEY `pk_id` (`id`),
-						FOREIGN KEY `fk_item` (`item_id`) REFERENCES `support_request_items` (`id`),
-						FOREIGN KEY `fk_approver` (`approved_id`) REFERENCES `register_users` (`id`),
-						INDEX `idx_date` (`date_approved`),
-						INDEX `idx_status` (`status`,`date_approved`)
+						PRIMARY KEY `pk_rma_id` (`id`),
+						FOREIGN KEY `fk_rma_item` (`item_id`) REFERENCES `support_request_items` (`id`),
+						FOREIGN KEY `fk_rma_approver` (`approved_id`) REFERENCES `register_users` (`id`),
+						INDEX `idx_rma_date` (`date_approved`),
+						INDEX `idx_rma_status` (`status`,`date_approved`)
 					)
                 ";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support_rmas table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating support_rmas table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
 					return false;
 				}
 
@@ -274,51 +170,157 @@
                         author_id INT(11) NOT NULL,
                         date_comment datetime,
 						content text,
-						PRIMARY KEY `pk_id` (`id`),
-						FOREIGN KEY `fk_item` (`item_id`) REFERENCES `support_request_items` (`id`),
-						FOREIGN KEY `fk_author` (`author_id`) REFERENCES `register_users` (`id`),
+						PRIMARY KEY `pk_comment_id` (`id`),
+						FOREIGN KEY `fk_comment_item` (`item_id`) REFERENCES `support_request_items` (`id`),
+						FOREIGN KEY `fk_comment_author` (`author_id`) REFERENCES `register_users` (`id`),
 						INDEX `idx_date` (`date_comment`)
 					)
                 ";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating support_item_comments table in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating support_item_comments table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
 					return false;
 				}
 
-                $current_schema_version = 2;
-                $update_schema_version = "
-                    INSERT
-                    INTO    support__info
-                    VALUES  ('schema_version',$current_schema_version)
-                    ON DUPLICATE KEY UPDATE
-                        value = $current_schema_version
+				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
+            }
+            
+            // update to schema 4 (new product registration -> /_support/register_product)
+            if ($this->version() < 4) {
+            
+                app_log("Upgrading schema to version 4",'notice',__FILE__,__LINE__);
+
+                // Start Transaction
+                if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+                
+				// product warranty page table
+                $create_table_query = "	
+                    CREATE TABLE `product_registration_queue` (
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `customer_id` int(11) DEFAULT NULL,
+                      `product_id` int(11) NOT NULL,
+                      `serial_number` varchar(255) DEFAULT NULL,
+                      `status` enum('PENDING','APPROVED','DENIED') DEFAULT 'PENDING',
+                      `date_created` datetime DEFAULT NULL,
+                      `date_purchased` datetime NOT NULL,
+                      `distributor_name` varchar(255) DEFAULT NULL,
+                      `notes` text,
+                      PRIMARY KEY (`id`),
+                      KEY `FK_CUSTOMER_ID` (`customer_id`),
+                      KEY `idx_serial` (`product_id`,`serial_number`),
+                      CONSTRAINT `product_registration_queue_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `product_products` (`id`),
+                      CONSTRAINT `product_registration_queue_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `register_users` (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
                 ";
-                $GLOBALS['_database']->Execute($update_schema_version);
-                if ($GLOBALS['_database']->ErrorMsg()) {
-                    $this->error = "SQL Error in Support::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-                    app_log($this->error,'error',__FILE__,__LINE__);
-                    $GLOBALS['_database']->RollbackTrans();
-                    return undef;
-                }
-                $GLOBALS['_database']->CommitTrans();
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_registration_queue table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(4);
+				$GLOBALS['_database']->CommitTrans();
             }
 
-			# Add Roles
-			foreach ($this->roles as $name => $description) {
-				$role = new \Register\Role();
-				if (! $role->get($name)) {
-					app_log("Adding role '$name'");
-					$role->add(array('name' => $name,'description' => $description));
-				}
-				if ($role->error) {
-					$this->_error = "Error adding role '$name': ".$role->error;
+            if ($this->version() < 5) {
+                app_log("Upgrading schema to version 5",'notice',__FILE__,__LINE__);
+
+                // Start Transaction
+                if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				// product warranty page table
+                $alter_table_query = "	
+                    ALTER TABLE `support_rmas` add document_id int(11)
+                ";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering support_rmas table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
 					return false;
 				}
-				return true;
+
+				$this->setVersion(5);
+				$GLOBALS['_database']->CommitTrans();
+            }
+
+            if ($this->version() < 6) {
+                app_log("Upgrading schema to version 6",'notice',__FILE__,__LINE__);
+
+                // Start Transaction
+                if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				// product warranty page table
+                $alter_table_query = "	
+                    ALTER TABLE `support_rmas` modify status enum ('NEW','ACCEPTED','PRINTED','CLOSED')
+                ";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering support_rmas table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(6);
+				$GLOBALS['_database']->CommitTrans();
+            }
+
+			if ($this->version() < 7) {
+				app_log("Upgrading schema to version 7",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$table = new \Database\Schema\Table('support_rmas');
+				if (! $table->has_column('billing_contact_id')) {
+					// product warranty page table
+					$alter_table_query = "	
+						ALTER TABLE `support_rmas` add column billing_contact_id int(11)
+					";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering support_rmas table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+				}
+
+				$this->setVersion(7);
+				$GLOBALS['_database']->CommitTrans();
 			}
+						
+			if ($this->version() == -1) {
+				app_log("Upgrading schema to version 8",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				// create task for support section employee hours
+                $create_table_query = "	
+                    CREATE TABLE `support_task_hours` (
+                      `id` int NOT NULL AUTO_INCREMENT,
+                      `date_worked` datetime DEFAULT NULL,
+                      `number_of_hours` decimal(5,2) DEFAULT 0,
+                      `code` varchar(100) NOT NULL,
+                      `user_id` int DEFAULT NULL,
+                      PRIMARY KEY (`id`),
+                      KEY `support_task_hours_ibfk_1` (`code`),
+                      KEY `support_task_hours_ibfk_2` (`user_id`),
+                      CONSTRAINT `support_task_hours_ibfk_1` FOREIGN KEY (`code`) REFERENCES `support_requests` (`code`),
+                      CONSTRAINT `support_task_hours_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+                ";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating support_task_hours table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(8);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			$this->addRoles(array(
+				'support manager'	=> 'Full control over requests, actions, etc',
+				'support user'		=> 'Can work with support requests'
+			));
+			return true;
 		}
 	}
-?>

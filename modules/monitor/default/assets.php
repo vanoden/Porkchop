@@ -12,29 +12,26 @@
 		width: 280px;
 	}
 </style>
+<?php	 if ($page->errorCount() > 0) { ?>
+    <div class="form_error"><?=$page->errorString()?></div>
+<?php	 } ?>
+<div class="title">Monitors [<?=count($assets)?>]</div>
 <table class="body" cellpadding="0" cellspacing="0">
-<tr><td colspan="4" class="title">Assets [<?=count($assets)?>]</td></tr>
-<tr><td class="label columnLabel columnLabelLeft serialNumberLabel">Serial Number</td>
-	<td class="label columnLabel zonesLabel">Zones</td>
-	<td class="label columnLabel modelLabel">Model</td>
-	<td class="label columnLabel columnLabelRight nameLabel">Name</td>
+<tr><th class="label serialNumberLabel">Serial Number</th>
+	<th class="label zonesLabel">Zones</th>
+	<th class="label modelLabel">Model</th>
+	<th class="label nameLabel">Name</th>
 </tr>
-<?	$greenbar = '';
+<?php	$greebar = '';
 	foreach ($assets as $asset) {
+    	if ($greenbar) $greenbar = ''; else $greenbar = "greenbar";
 ?>
-<tr><td class="value columnValue columnValueLeft <?=$greenbar?>"><a href="/_monitor/asset/<?=$asset->id?>"><?=$asset->code?></a></td>
-<?	app_log("Counting sensors",'debug',__FILE__,__LINE__); ?>
-	<td class="value columnValue <?=$greenbar?>"><?=count($asset->sensors())?></td>
-<?	app_log("Showing product code",'debug',__FILE__,__LINE__); ?>
-	<td class="value columnValue <?=$greenbar?>"><?=$asset->product->code?></td>
-<?	app_log("Showing asset name",'debug',__FILE__,__LINE__); ?>
-	<td class="value columnValue columnValueRight <?=$greenbar?>"><?=$asset->name?></td>
-<?	app_log("Finished line",'debug',__FILE__,__LINE__); ?>
+<tr><td class="value <?=$greenbar?>"><a href="/_monitor/asset/<?=$asset->code?>"><?=$asset->code?></a></td>
+	<td class="value <?=$greenbar?>"><?=$asset->sensorCount()?></td>
+	<td class="value <?=$greenbar?>"><?=$asset->product->code?></td>
+	<td class="value <?=$greenbar?>"><?=$asset->name?></td>
 </tr>
-<?
-		if ($greenbar) $greenbar = '';
-		else $greenbar = "greenbar";
-	} ?>
-<tr><td colspan="4" class="table_footer"></td></tr>
+    <?php
+	} 
+	?>
 </table>
-<? app_log("template completed"); ?>

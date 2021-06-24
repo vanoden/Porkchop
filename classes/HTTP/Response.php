@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace HTTP;
 
 	class Response {
@@ -76,4 +76,3 @@
 			return $this->_error;
 		}
 	}
-?>

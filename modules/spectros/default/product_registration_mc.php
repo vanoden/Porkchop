@@ -1,10 +1,9 @@
-<?
+<?php
 	require_module("contact");
 	require_module("email");
 
 	# Handle Submit
-	if ($_REQUEST['btn_submit'])
-	{
+	if (isset($_REQUEST['btn_submit'])) {
 		app_log('Contact form submitted by '.$_REQUEST['first_name'].' '.$_REQUEST['last_name'].' <'.$_REQUEST['email_address'].'>','notice',__FILE__,__LINE__);
 
 		# Check reCAPTCHA
@@ -38,13 +37,10 @@
 
 			# Store Data
 			$_event = new ContactEvent();
-			if ($_event->error)
-			{
+			if ($_event->error) {
 				app_log("Error initializing ContactEvent: ".$_event->error,'error',__FILE__,__LINE__);
 				$GLOBALS['_page']->error = "Sorry, there was an error submitting the contact form.  Please call.";
-			}
-			else
-			{
+			} else {
 				$_event->add($_REQUEST);
 				if ($_event->error)
 				{

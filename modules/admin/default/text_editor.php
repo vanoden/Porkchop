@@ -43,4 +43,4 @@
 </form>
 </body>
 </html>
-<?	exit; ?>
+<?php	exit; ?>

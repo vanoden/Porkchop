@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Site\Page;
 
 	class Metadata {
@@ -138,4 +138,3 @@
 			return $object;
 		}
 	}
-?>

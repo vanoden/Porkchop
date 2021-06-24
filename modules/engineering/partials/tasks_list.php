@@ -1,47 +1,58 @@
-<form>
+<form id="tasksListForm">
     <h2 style="display: inline-block;">Engineering Tasks [
         <?=($page->isSearchResults)? "Matched Tasks: " : "";?>
-        <?=count($tasks)?>
+        <?=isset($tasks) ? count($tasks) : "0"?>
     ]</h2>
     <?php
-     if (!$page->isSearchResults) {
+     if (!isset($page->isSearchResults)) {
     ?>
         <input type="button" name="btn_new_task" value="Add Task" class="button more" onclick="newTask();"/>
     <?php
     }
         // if we're not doing a task search, show the filter bar
-        if (!$page->isSearchResults) {
+        if (!isset($page->isSearchResults)) {
     ?>
         <!--	START First Table -->
 	    <div class="tableBody min-tablet">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 25%;">Assigned To</div>
-		    <div class="tableCell" style="width: 25%;">Project</div>
-		    <div class="tableCell" style="width: 50%;">Status</div>
+		    <div class="tableCell" style="width: 14%;">Assigned To</div>
+		    <div class="tableCell" style="width: 18%;">Product</div>
+		    <div class="tableCell" style="width: 16%;">Project</div>
+		    <div class="tableCell" style="width: 52%;">Status</div>
 	    </div>
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <select name="assigned_id" class="value input" onchange="document.forms[0].submit();">
+			    <select name="assigned_id" class="value input">
 				    <option value="">Any</option>
 				    <?	foreach ($assigners as $assigner) { ?>
-				    <option value="<?=$assigner->id?>"<? if ($assigner->id == $_REQUEST['assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
+				    <option value="<?=$assigner->id?>"<?php if ($assigner->id == $_REQUEST['assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
 				    <?	} ?>
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <select name="project_id" class="value input" onchange="document.forms[0].submit();">
+			    <select name="product_id" class="value input">
+				    <option value="">Any</option>
+				    <?	foreach ($products as $product) { ?>
+				    <option value="<?=$product->id?>"<?php if ($product->id == $_REQUEST['product_id']) print " selected"; ?>><?=$product->title?></option>
+				    <?	} ?>
+			    </select>
+		    </div>
+		    <div class="tableCell">
+			    <select name="project_id" class="value input">
 				    <option value="">Any</option>
 				    <?	foreach ($projects as $project) { ?>
-				    <option value="<?=$project->id?>"<? if ($project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
+				    <option value="<?=$project->id?>"<?php if ($project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
 				    <?	} ?>
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <input type="checkbox" name="new" value="1"<? if ($_REQUEST['new']) print " checked"; ?> />New
-			    <input type="checkbox" name="active" value="1"<? if ($_REQUEST['active']) print " checked"; ?> />Active
-			    <input type="checkbox" name="complete" value="1"<? if ($_REQUEST['complete']) print " checked"; ?>/>Completed
-			    <input type="checkbox" name="cancelled" value="1"<? if ($_REQUEST['cancelled']) print " checked"; ?> />Cancelled
-			    <input type="checkbox" name="hold" value="1"<? if ($_REQUEST['hold']) print " checked"; ?> />Hold
+			    <input type="checkbox" name="new" value="1"<?php if ($_REQUEST['new']) print " checked"; ?> />New
+			    <input type="checkbox" name="active" value="1"<?php if ($_REQUEST['active']) print " checked"; ?> />Active
+			    <input type="checkbox" name="broken" value="1"<?php if ($_REQUEST['broken']) print " checked"; ?> />Broken
+			    <input type="checkbox" name="testing" value="1"<?php if ($_REQUEST['testing']) print " checked"; ?> />Testing
+			    <input type="checkbox" name="complete" value="1"<?php if ($_REQUEST['complete']) print " checked"; ?>/>Completed
+			    <input type="checkbox" name="cancelled" value="1"<?php if ($_REQUEST['cancelled']) print " checked"; ?> />Cancelled
+			    <input type="checkbox" name="hold" value="1"<?php if ($_REQUEST['hold']) print " checked"; ?> />Hold
 		    </div>
 	    </div>
 	    <div class="form_footer" style="text-align: center; width: 100%">
@@ -52,7 +63,6 @@
     <?php  
     }
     ?>
-
     <!--	START First Table -->
 	    <div class="tableBody min-tablet">
 	    <div class="tableRowHeader">
@@ -66,12 +76,12 @@
 		    <div class="tableCell" style="width: 10%;">PreRequisite</div>
 	    </div>
     <?php
+        if (!isset($tasks)) $tasks = array();
 	    foreach ($tasks as $task) {
 		    $product = $task->product();
 		    $project = $task->project();
 		    $worker = $task->assignedTo();
-		    $prerequisiteTask = null;
-		    if (!empty($task->prerequisite_id)) $prerequisiteTask = new \Engineering\Task($task->prerequisite_id);
+			$prerequisiteTask = $task->prerequisite();
     ?>
 	    <div class="tableRow">
 		    <div class="tableCell">
@@ -98,11 +108,11 @@
 		    <div class="tableCell">
 	           <?php
 	           if (isset($prerequisiteTask->title)) {
-                   ?>
-                       <a href="/_engineering/task/<?=$prerequisiteTask->code?>"><?=$prerequisiteTask->title?></a>
-                    <?php
-                    }
-                    ?>
+               ?>
+                    <a href="/_engineering/task/<?=$prerequisiteTask->code?>"><?=$prerequisiteTask->title?></a>
+               <?php
+               }
+               ?>
 		    </div>
 	    </div>
     <?php	} ?>

@@ -1,4 +1,4 @@
-<?
+<?php
 	###################################################
 	### Make Sure MySQL Date is Valid               ###
 	###################################################
@@ -25,6 +25,7 @@
 		if (preg_match("/today/i",$date)) return date("Y-m-d");
 		if (preg_match("/now/i",$date)) return date("Y-m-d h:i:s");
 		if (preg_match("/tomorrow/i",$date)) return date("Y-m-d",time() + 86400);
+		if (preg_match('/^(19|20|21|22)\d{2}$/',$date)) return $date."-01-01 00:00:00";
 
 		# Handle OffSets
 		if (preg_match('/(\+|\-)\s*(\d+)\s*(hour|day|week)s?/i',$date,$matches)) {
@@ -176,82 +177,36 @@
 			$path = $caller['file'];
 			$line = $caller['line'];
 		}
-
-		# PHP Syslog Levels (also for level validation)
-		$syslog_xref = array(
-			"emergency" => LOG_EMERG,
-			"alert"		=> LOG_ALERT,
-			"critical"	=> LOG_CRIT,
-			"error"		=> LOG_ERR,
-			"warning"	=> LOG_WARNING,
-			"notice"	=> LOG_NOTICE,
-			"info"		=> LOG_INFO,
-			"debug"		=> LOG_DEBUG,
-			"trace"		=> LOG_DEBUG
-		);
-
-		# Make Sure Severity Level is Valid
-		$level = strtolower($level);
-		if (! array_key_exists($level,$syslog_xref)) $level = "info";
-
-		# Filter on log level
-		if     (APPLICATION_LOG_LEVEL == "error"   && in_array($level,array('trace','debug','info','notice','warning'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "warning" && in_array($level,array('trace','debug','info','notice'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "notice"  && in_array($level,array('trace','debug','info'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "info"    && in_array($level,array('trace','debug'))) return null;
-		elseif (APPLICATION_LOG_LEVEL == "debug"   && in_array($level,array('trace'))) return null;
-
-		# Replace Carriage Returns
-		$message = preg_replace('/\r*\n/',"\n",$message);
-
-		# Prepare Values for String
-		$date = date('Y/m/d H:i:s');
-		$path = preg_replace('#^'.BASE.'/#','',$path);
-
-		if ((array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'module'))) $module = $GLOBALS['_page']->module;
-		else $module = '-';
-		if ((array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'view'))) $view = $GLOBALS['_page']->view;
-		else $view = '-';
-		if (array_key_exists('_SESSION_',$GLOBALS)) {
-			if (property_exists($GLOBALS['_SESSION_'],'id')) $session_id = $GLOBALS['_SESSION_']->id;
-			else $session_id = '-';
-			if (isset($GLOBALS['_SESSION_']->customer)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
-			else $customer_id = '-';
-		}
-		else {
-			$session_id = '-';
-			$customer_id = '-';
-		}
-
-		# Build String
-		$string = "$date [$level] $module::$view $path:$line $session_id $customer_id $message\n";
-
-		# Send to appropriate log
-		if (preg_match('/^syslog$/i',APPLICATION_LOG)) {
-			syslog($syslog_xref[$level],$string);
-		}
-		elseif (is_dir(APPLICATION_LOG)) {
-			$log = fopen(APPLICATION_LOG."/application_log",'a');
-			fwrite($log,$string);
-			fclose($log);
-		}
-		elseif(APPLICATION_LOG) {
-			$log = fopen(APPLICATION_LOG,'a');
-			if (! $log) {
-				error_log("Cannot access application log: ".E_WARNING);
-			}
-			else {
-				fwrite($log,$string);
-				fclose($log);
-			}
-		}
-		else {
-			error_log($message);
-		}
+		$GLOBALS['logger']->writeln($message,$level,$path,$line);
 	}
-
-	function query_log($query,$path = 'unknown',$line = 'unknown') {
-		app_log($query,'trace',$path,$line);
+	
+	function executeSQLByParams($query, $bindParams) {
+        $queryTime = microtime(true);
+		$resultSet = $GLOBALS['_database']->Execute($query, $bindParams);
+        query_log_time(microtime(true)-$queryTime, $query, $bindParams);
+        return $resultSet;
+	}
+	
+	function query_log_time($timeMilliseconds, $query,$params = array()) {
+		$level = 'debug';
+		app_log('Query Time Audit: ' . $timeMilliseconds . 'ms '.$query."\n".print_r($params,true),$level);
+	}
+	
+	function query_log($query,$params = array(),$path = null,$line = null) {
+		if (is_bool($path)) {
+			$level = 'debug';
+			$path = null;
+		}
+		else {
+			$level = 'trace';
+		}
+		if (! isset($path)) {
+			$trace = debug_backtrace();
+			$caller = $trace[0];
+			$path = $caller['file'];
+			$line = $caller['line'];
+		}
+		app_log($query."\n".print_r($params,true),$level,$path,$line);
 	}
 
 	###############################################
@@ -411,6 +366,9 @@
 				case "txt":
 					return "text/plain";
 					break;
+                case "md5":
+                    return "text/plain";
+                    break;
 				default:
 					return null;
 			}

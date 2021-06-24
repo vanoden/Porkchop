@@ -45,11 +45,7 @@
 				(		?,?)
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($code,$title)
-			);
-
+			$rs = executeSQLByParams($add_object_query,array($code,$title));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Release::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -60,44 +56,60 @@
 		}
 
 		public function update($parameters = array()) {
+			// Bust Cache
+			$cache_key = "engineering.release[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
+
+			$bind_params = array();
+
 			$update_object_query = "
 				UPDATE	engineering_releases
 				SET		id = id
 			";
 
-			if (isset($parameters['title']))
+			if (isset($parameters['title'])) {
 				$update_object_query .= ",
-						title = ".$GLOBALS['_database']->qstr($parameters['title'],get_magic_quotes_gpc());
+						title = ?";
+				array_push($bind_params,$parameters['title']);
+			}
 
-			if (isset($parameters['description']))
+			if (isset($parameters['description'])) {
 				$update_object_query .= ",
-						description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
+						description = ?";
+				array_push($bind_params,$parameters['description']);
+			}
 
-			if (get_mysql_date($parameters['date_scheduled']))
+			if (get_mysql_date($parameters['date_scheduled'])) {
 				$update_object_query .= ",
-						date_scheduled = '".get_mysql_date($parameters['date_scheduled'])."'";
+						date_scheduled = ?";
+				array_push($bind_params,get_mysql_date($parameters['date_scheduled']));
+			}
 
-			if (get_mysql_date($parameters['date_released']))
+			if (get_mysql_date($parameters['date_released'])) {
 				$update_object_query .= ",
-						date_released = '".get_mysql_date($parameters['date_released'])."'";
+						date_released = ?";
+				array_push($bind_params,get_mysql_date($parameters['date_released']));
+			}
 
-			if (isset($parameters['status']))
-				if ($this->_valid_status($parameters['status']))
+			if (isset($parameters['status'])) {
+				if ($this->_valid_status($parameters['status'])) {
 					$update_object_query .= ",
-						status = '".$parameters['status']."'";
+						status = ?";
+					array_push($bind_params,$parameters['status']);
+				}
 				else {
 					$this->_error = "Invalid Status";
 					return false;
 				}
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
 
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
+			array_push($bind_params,$this->id);
+            $rs = executeSQLByParams($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Releases::update(): ".$GLOBALS['_database']->ErrorMsg();
@@ -113,10 +125,8 @@
 				FROM	engineering_releases
 				WHERE	code = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
+			
+			$rs = executeSQLByParams($get_object_query,array($code));			
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::Release::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -132,23 +142,34 @@
 			}
 		}
 		public function details() {
-			$get_object_query = "
-				SELECT	*
-				FROM	engineering_releases
-				WHERE	id = ?
-			";
+			$cache_key = "engineering.release[".$this->id."]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			if ($cache->error) {
+				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
+			}
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
+			# Cached Object, Yay!
+			if ($object = $cache->get()) {
+				app_log($cache_key." found in cache",'trace');
+				$this->_cached = true;
+			}
+			else {
+				$get_object_query = "
+					SELECT	*
+					FROM	engineering_releases
+					WHERE	id = ?
+				";
 
-			if (! $rs) {
-				$this->_error = "SQL Error in Engineering::Release::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			};
-
-			$object = $rs->FetchNextObject(false);
+            	$rs = executeSQLByParams($get_object_query,array($this->id));
+				if (! $rs) {
+					$this->_error = "SQL Error in Engineering::Release::details(): ".$GLOBALS['_database']->ErrorMsg();
+					return false;
+				};
+	
+				$object = $rs->FetchNextObject(false);
+				$this->id = $object->id;
+				$this->_cached = false;
+			}
 
 			$this->title = $object->title;
 			$this->code = $object->code;
@@ -157,7 +178,14 @@
 			$this->date_released = $object->date_released;
 			$this->date_scheduled = $object->date_scheduled;
 
-			return $object;
+			if (! $this->_cached) {
+				// Cache Object
+				app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
+				if ($object->id) $result = $cache->set($object);
+				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);	
+			}
+
+			return true;
 		}
 
 		public function released() {
@@ -168,11 +196,7 @@
 				WHERE	id = ?
 			";
 
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
-
+            $rs = executeSQLByParams($update_object_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Release::released(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -205,4 +229,3 @@
 			else return false;
 		}
 	}
-?>

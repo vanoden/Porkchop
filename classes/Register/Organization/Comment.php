@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Register\Organization;
 
 	class Comment {
@@ -96,4 +96,3 @@
 			return 1;
 		}
 	}
-?>

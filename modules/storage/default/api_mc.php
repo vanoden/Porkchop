@@ -62,8 +62,8 @@
 			array(
 				'code'				=> $_REQUEST['code'],
 				'name'				=> $_REQUEST['name'],
-				'type'				=> $_REQUEST['type'],
-				'status'			=> $_REQUEST['status']
+				'status'			=> $_REQUEST['status'],
+				'path'				=> $_REQUEST['path']
 			)
 		);
 		if ($repository->error) error("Error adding repository: ".$repository->error);
@@ -100,7 +100,7 @@
 		api_log($response);
 		print formatOutput($response);
 	}
-
+  
 	###################################################
 	### Find matching Repository					###
 	###################################################
@@ -115,15 +115,25 @@
 		if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 	
 		$repositories = $repositorylist->find($parameters);
-
+        $shownRepositories = array();
+        foreach ($repositories as $repository) {
+            if (get_class($repository) == 'Storage\Repository\S3') {
+                $repository->unsetAWS();
+                $shownRepositories[] = $repository;        
+            } else {
+                $shownRepositories[] = $repository;
+            }
+            
+        }
 		if ($repositorylist->error) app_error("Error finding repositories: ".$repositorylist->error,__FILE__,__LINE__);
 		$response = new \HTTP\Response();
 		$response->success = 1;
-		$response->repository = $repositories;
+		$response->repository = $shownRepositories;
 
-		api_log($response);
-		print formatOutput($response);
+		api_log($shownRepositories);
+		print formatOutput($shownRepositories);
 	}
+	
 	###################################################
 	### Set Repository Metadata						###
 	###################################################
@@ -145,6 +155,7 @@
 		api_log($response);
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Get Repository Metadata						###
 	###################################################
@@ -172,16 +183,21 @@
 	###################################################
 	function addFile() {
 		if (! $GLOBALS['_SESSION_']->customer->has_role('storage upload')) error('storage upload role required');
-		$repositorylist = new \Storage\RepositoryList();
-		list($repository) = $repositorylist->find(array('code' => $_REQUEST['repository_code']));
-		if (! $repository->id) error("Repository not found");
+
+        $factory = new \Storage\RepositoryFactory();
+        $repository = $factory->get($_REQUEST['repository_code']);
+        if ($factory->error) error("Error loading repository: ".$factory->error);
+        if (! $repository->id) error("Repository not found");
+        app_log("Identified repo '".$repository->name."'");
 
 		if (! $_REQUEST['name']) $_REQUEST['name'] = $_FILES['file']['name'];
 		if (! file_exists($_FILES['file']['tmp_name'])) error("Temp file '".$_FILES['file']['tmp_name']."' not found");
+		if (! $_REQUEST['mime_type']) $_REQUEST['mime_type'] = $_FILES['file']['type'];
 		if (! $_REQUEST['mime_type']) $_REQUEST['mime_type'] = mime_content_type($_FILES['file']['name']);
 		if (! $_REQUEST['mime_type']) $_REQUEST['mime_type'] = guess_mime_type($_FILES['file']['name']);
 		if (! $_REQUEST['mime_type']) error("mime_type not available for '".$_FILES['file']['name']."'");
 
+        app_log("Storing ".$_REQUEST['name']." to ".$repository->path);
 		if (isset($_REQUEST['read_protect']) && strlen($_REQUEST['read_protect']) && $_REQUEST['read_protect'] != 'NONE') {
 			if ($repository->endpoint) {
 				$this->error = "Can't protect a file in a repository with external endpoint";
@@ -197,11 +213,11 @@
 				'name' => $_REQUEST['name'],
 			)
 		);
-		if ($existing->id) error("File already exists with that name");
+		if ($existing->id) error("File already exists with that name in repo ".$repository->name);
 
 		# Add File to Library
 		$file = new \Storage\File();
-		if ($file->error) error("Error adding file: ".$file->error);
+		if ($file->error) error("Error initializing file: ".$file->error);
 		$file->add(
 			array(
 				'repository_id'		=> $repository->id,
@@ -220,6 +236,7 @@
 			$file->delete();
 			error('Unable to add file to repository: '.$repository->error);
 		}
+        app_log("Stored file ".$file->id." at ".$repostory->path."/".$file->code);
 
 		$response = new \HTTP\Response();
 		$response->success = 1;
@@ -307,6 +324,7 @@
 		api_log($response);
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### Set File Metadata							###
 	###################################################
@@ -330,8 +348,9 @@
 		api_log($response);
 		print formatOutput($response);
 	}
+	
 	###################################################
-	### Get File Metadata						###
+	### Get File Metadata						    ###
 	###################################################
 	function getFileMetadata() {
 		if (! $GLOBALS['_SESSION_']->customer->has_role('storage upload')) error('storage upload role required');
@@ -364,34 +383,58 @@
 		$file->repository->retrieveFile($file);
 		if ($file->error) app_error("Error getting file: ".$file->error,__FILE__,__LINE__);
 	}
+	
+	###################################################
+	### Set Empty Paths to Root						###
+	###################################################
+	function rootPath() {
+		$count = 0;
+		$repoList = new \Storage\RepositoryList();
+		$repos = $repoList->find();
+		foreach ($repos as $repo) {
+			$files = $repo->files();
+			foreach ($files as $file) {
+				if (! preg_match('/^\//',$file->path())) {
+					$file->update(array('path' => '/'.$file->path()));
+					$count ++;
+				}
+			}
+		}
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->count = $count;
+
+		api_log($response);
+		print formatOutput($response);
+	}
+
 	function schemaVersion() {
 		$schema = new \Storage\Schema();
-		if ($schema->error) {
-			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
-		}
+		if ($schema->error) app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		$version = $schema->version();
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->version = $version;
 		print formatOutput($response);
 	}
+	
 	function schemaUpgrade() {
 		$schema = new \Storage\Schema();
-		if ($schema->error) {
-			app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
-		}
+		if ($schema->error) app_error("Error getting version: ".$schema->error,__FILE__,__LINE__);
 		$version = $schema->upgrade();
 		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->version = $version;
 		print formatOutput($response);
 	}
+	
 	###################################################
 	### System Time									###
 	###################################################
 	function system_time() {
 		return date("Y-m-d H:i:s");
 	}
+	
 	###################################################
 	### Application Error							###
 	###################################################
@@ -399,6 +442,7 @@
 		app_log($message,'error',$file,$line);
 		error('Application Error');
 	}
+	
 	###################################################
 	### Return Properly Formatted Error Message		###
 	###################################################
@@ -425,4 +469,3 @@
 		$document->prepare($object);
 		return $document->content();
 	}
-?>

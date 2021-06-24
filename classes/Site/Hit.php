@@ -68,7 +68,7 @@
 
 			if ($parameters['session_id'])
 				$find_objects_query .= "
-					AND	session_id = ".$GLOBALS['_database']->qstr($parameters['session_id'],get_magic_quotes_gpc);
+					AND	session_id = ".$GLOBALS['_database']->qstr($parameters['session_id'],get_magic_quotes_gpc());
 			$find_objects_query .= "
 				ORDER BY id desc
 			";
@@ -120,4 +120,3 @@
 			
 		}
 	}
-?>

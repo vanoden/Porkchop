@@ -39,7 +39,7 @@
 		<form method="post" action="/_session/api">
 		<input type="hidden" name="method" value="addSession">
 		<div class="apiMethod">
-			<span class="apiMethodTitle">addSession</span>
+			<span class="h3 apiMethodTitle">addSession</span>
 			<div class="apiMethodParameter">
 				<span class="label apiLabel">login</span>
 				<input type="text" name="code" class="value input apiInput"/>

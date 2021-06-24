@@ -4,12 +4,12 @@
 	}
 </style>
 <div class="title">Request Details</div>
-<?	if ($GLOBALS['_page']->error) { ?>
+<?php	if ($GLOBALS['_page']->error) { ?>
 <div class="form_error"><?=$GLOBALS['_page']->error?></div>
-<?	}
+<?php	}
 	if ($GLOBALS['_page']->success) { ?>
 <div class="form_success"><?=$GLOBALS['_page']->success?></div>
-<?	} ?>
+<?php	} ?>
 <form name="request_form" method="post">
 <input type="hidden" name="request_code" value="<?=$_REQUEST["code"]?>"/>
 <table class="body form">
@@ -42,9 +42,9 @@
 	<td class="label">Status</td>
 	<td class="value">
 		<select name="status" class="value input">
-		<?	foreach ($statii as $status) { ?>
-			<option value="<?=$status?>"<? if ($status == $task->status) print " selected"; ?>><?=$status?></option>
-		<?	} ?>
+		<?php	foreach ($statii as $status) { ?>
+			<option value="<?=$status?>"<?php	if ($status == $task->status) print " selected"; ?>><?=$status?></option>
+		<?php	} ?>
 		</select>
 	</td>
 </tr>
@@ -54,9 +54,9 @@
 	<td class="value">
 		<select name="asset_id" class="value input">
 			<option value="">N/A</option>
-<?	foreach ($assets as $asset) { ?>
-			<option value="<?=$asset->id?>"<? if ($asset->id == $task->asset_id) print " selected"; ?>><?=$asset->code?></option>
-<?	} ?>
+<?php	foreach ($assets as $asset) { ?>
+			<option value="<?=$asset->id?>"<?php	if ($asset->id == $task->asset_id) print " selected"; ?>><?=$asset->code?></option>
+<?php	} ?>
 		</select>
 	</td>
 </tr>
@@ -66,9 +66,9 @@
 	<td class="value">
 		<select name="user_assigned" class="value input">
 			<option value="0">Unassigned</option>
-<?	foreach ($techs as $tech) { ?>
-			<option value="<?=$tech->id?>"<? if ($tech->id == $task->user_assigned) print " selected"; ?>><?=$tech->first_name?> <?=$tech->last_name?></option>
-<?	} ?>
+<?php	foreach ($techs as $tech) { ?>
+			<option value="<?=$tech->id?>"<?php	if ($tech->id == $task->user_assigned) print " selected"; ?>><?=$tech->first_name?> <?=$tech->last_name?></option>
+<?php	} ?>
 		</select>
 	</td>
 </tr>
@@ -80,12 +80,12 @@
 	</td>
 </tr>
 </table>
-<?	foreach ($tasks as $task) { ?>
+<?php	foreach ($tasks as $task) { ?>
 <table class="body form">
 <tr><td class="label">Title</td>
 </tr>
 </table>
-<?	} ?>
+<?php	} ?>
 <form action="/_spectros/admin_task" method="post">
 <input type="hidden" name="task_id" value="<?=$task->id?>"/>
 <div class="title">Add Event</div>
@@ -95,17 +95,17 @@
 	<td class="label">Person</td>
 	<td class="value">
 		<select name="user" class="value input">
-<?	foreach ($techs as $tech) { ?>
-			<option value="<?=$tech->id?>"<? if ($tech->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$tech->first_name?> <?=$tech->last_name?></option>
-<?	} ?>
+<?php	foreach ($techs as $tech) { ?>
+			<option value="<?=$tech->id?>"<?php	if ($tech->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$tech->first_name?> <?=$tech->last_name?></option>
+<?php	} ?>
 		</select>
 	</td>
 	<td class="label">New Status</td>
 	<td class="value">
 		<select name="status" class="value input">
-		<?	foreach ($statii as $status) { ?>
-			<option value="<?=$status?>"<? if ($status == $task->status) print " selected"; ?>><?=$status?></option>
-		<?	} ?>
+		<?php	foreach ($statii as $status) { ?>
+			<option value="<?=$status?>"<?php	if ($status == $task->status) print " selected"; ?>><?=$status?></option>
+		<?php	} ?>
 		</select>
 	</td>
 </tr>
@@ -117,12 +117,12 @@
 </form>
 <div class="title">Task Events</div>
 <table class="body form">
-<?	foreach ($taskEvents as $event) { ?>
+<?php	foreach ($taskEvents as $event) { ?>
 <tr><td class="label">Date</td>
 	<td class="value"><?=$event["timestamp"]?></td>
 	<td class="label">User</td>
 	<td class="value"><?=$event["user"]?></td>
 </tr>
-<tr><td class="value" colspan="4"><?=$event["description"]?></td></tr>
-<?	} ?>
+<tr><td class="value" colspan="4"><pre><?=$event["description"]?></pre></td></tr>
+<?php	} ?>
 </table>

@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Support\Request\Item;
 	
 	class ActionList {
@@ -6,13 +6,33 @@
 		public $count = 0;
 		
 		public function find($parameters = array()) {
+		
 			$get_list_query = "
-				SELECT	id
-				FROM	support_item_actions
-				WHERE	id = id
+				SELECT	`id`
+				FROM	`support_item_actions`
+				WHERE	`id` = `id`
 			";
-			$bind_parameters = array();
 			
+            // if search term, then constrain by that
+            if ($parameters['searchTerm']) {
+                $get_list_query = "
+				    SELECT	`id`
+				    FROM	`support_item_actions`
+				    WHERE `description` LIKE '%".$parameters['searchTerm']."%' 
+			    ";
+            }
+            
+            // if request detail page allow for querying multiple actions here
+            if (!empty($parameters['searchAllItems']) && !empty($parameters['itemIds'])) {
+                $commaList = implode(', ', $parameters['itemIds']);                
+                $get_list_query = "
+				    SELECT	`id`
+				    FROM	`support_item_actions`
+				    WHERE `item_id` IN (". $commaList.")
+			    ";
+            }
+            
+			$bind_parameters = array();
 			if (isset($parameters['item_id']) && $parameters['item_id'] > 0) {
 				$item = new \Support\Request\Item($parameters['item_id']);
 				if ($item->error()) {
@@ -43,6 +63,7 @@
 				";
 				array_push($bind_parameters,$admin->id);
 			}
+			
 			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					$get_list_query .= "
@@ -59,13 +80,13 @@
 					}
 					$get_list_query .= ")";
 				}
-			}
-			query_log($get_list_query);
-			$rs = $GLOBALS['_database']->Execute($get_list_query,$bind_parameters);
+			}			
+			$rs = executeSQLByParams($get_list_query, $bind_parameters);
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ActionList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
 				$object = new \Support\Request\Item\Action($id);
@@ -74,8 +95,8 @@
 			}
 			return $objects;
 		}
+		
 		public function error() {
 			return $this->_error;
 		}
 	}
-?>

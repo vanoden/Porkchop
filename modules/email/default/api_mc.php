@@ -6,8 +6,8 @@
     ###############################################
 	$_package = array(
 		"name"		=> "email",
-		"version"	=> "0.1.2",
-		"release"	=> "2015-01-21"
+		"version"	=> "0.2.1",
+		"release"	=> "2019-12-17"
 	);
 
 	app_log("Request: ".print_r($_REQUEST,true),'debug');
@@ -20,9 +20,8 @@
 	$response->method = $_REQUEST["method"];
 
 	# Call Requested Event
-	if ($_REQUEST["method"])
-	{
-		error_log("Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code." for asset ".$_REQUEST['asset_code']);
+	if ($_REQUEST["method"]) {
+		error_log("Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code);
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
 		$function_name();
@@ -67,6 +66,7 @@
 		$email->body($_REQUEST['body']);
 		
 		$transport = \Email\Transport::Create(array("provider" => $GLOBALS['_config']->email->provider));
+		if (empty($transport)) app_error("Invalid transport");
 		if (isset($GLOBALS['_config']->email->hostname)) $transport->hostname($GLOBALS['_config']->email->hostname);
 		if (isset($GLOBALS['_config']->email->username)) $transport->username($GLOBALS['_config']->email->username);
 		if (isset($GLOBALS['_config']->email->password)) $transport->password($GLOBALS['_config']->email->password);
@@ -82,6 +82,64 @@
 		}
 
 		header('Content-Type: application/xml');
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Get Emails									###
+	###################################################
+	function findQueueMessages() {
+		$response = new \HTTP\Response();
+
+		$queue = new \Email\Queue();
+		$messages = $queue->messages();
+		$response->success = 1;
+		$response->message = $messages;
+		
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Get Next Queued Email						###
+	###################################################
+	function nextUnsent() {
+		$response = new \HTTP\Response();
+
+		$queue = new \Email\Queue();
+		$message = $queue->takeNextUnsent();
+		$response->success = 1;
+		if (is_numeric($message->id) && $message->id > 0) {
+			app_log("Returning message ".$message->id,'notice');
+			$response->message = $message;
+		}
+		else {
+			app_log("No message returned",'notice');
+			unset($response->message);
+		}
+
+		print formatOutput($response);
+	}
+
+	###################################################
+	### Record Delivery Outcome						###
+	###################################################
+	function deliveryEvent() {
+		$response = new \HTTP\Response();
+
+		$message = new \Email\Queue\Message($_REQUEST['id']);
+		if (! $message->id) error("Message not found");
+		if ($message->recordEvent(
+			$_REQUEST['status'],
+			$_REQUEST['code'],
+			$_REQUEST['host'],
+			$_REQUEST['response']
+		)) {
+			$response->success = 1;
+		}
+		else {
+			$response->success = 0;
+			$response->error = $message->error();
+		}
 		print formatOutput($response);
 	}
 
@@ -183,16 +241,15 @@
 	}
 
 	function formatOutput($object,$options = '') {
-        	if ($_REQUEST['_format'] == 'json') {
-                        $format = 'json';
-                        header('Content-Type: application/json');
-                }
-                else {
-                        $format = 'xml';
-                        header('Content-Type: application/xml');
-                }
-                $document = new \Document($format);
-                $document->prepare($object);
-                return $document->content();
+    	if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
+                $format = 'json';
+                header('Content-Type: application/json');
         }
-?>
+        else {
+                $format = 'xml';
+                header('Content-Type: application/xml');
+        }
+        $document = new \Document($format);
+        $document->prepare($object);
+        return $document->content();
+    }

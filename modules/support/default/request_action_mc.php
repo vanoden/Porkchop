@@ -1,16 +1,14 @@
-<?
+<?php
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
-
 	$request = new \Support\Request($_REQUEST['request_id']);
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		$requestor = new \Register\Customer($_REQUEST['requestor_id']);
 		if (! $requestor->id) {
 			$page->addError("Requestor not found");
-		}
-		else {
+		} else {
 			$request->addAction(
 				array(
 					'date_action' 	=> $_REQUEST['date_action'],
@@ -31,10 +29,9 @@
 		}
 	}
 	
-	if (! $_REQUEST['btn_submit']) {
+	if (! isset($_REQUEST['btn_submit'])) {
 		$_REQUEST['requestor_id'] = $GLOBALS['_SESSION_']->customer->id;
 		$_REQUEST['date_action'] = date('m/d H:i');
 	}
 	$userlist = new \Register\CustomerList();
 	$users = $userlist->find();
-?>

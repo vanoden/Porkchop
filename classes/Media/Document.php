@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Media;
 
 	class Document extends \Media\File {
@@ -14,4 +14,3 @@
 			return parent::details($document->id);
 		}
 	}
-?>

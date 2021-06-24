@@ -4,19 +4,20 @@
 <?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
 <h2 style="display: inline-block;">Releases</h2>
 <a class="button more" href="/_engineering/release">New Release</a>
-<?	if ($page->errorCount()) { ?>
+<?php	if ($page->errorCount()) { ?>
 <div class="form_error"><?=$page->errorCount()?></div>
-<?	}
+<?php	}
 	if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>
-<?	} ?>
+<?php	} ?>
 <!--	START First Table -->
 	<div class="tableBody min-tablet">
 	<div class="tableRowHeader">
 		<div class="tableCell" style="width: 20%;">Code</div>
 		<div class="tableCell" style="width: 40%;">Title</div>
 		<div class="tableCell" style="width: 15%;">Status</div>
-		<div class="tableCell" style="width: 25%;">Released On</div>
+		<div class="tableCell" style="width: 12%;">Released On</div>
+		<div class="tableCell" style="width: 12%;">Status</div>
 	</div>
 <?php
 	foreach ($releases as $release) {
@@ -34,8 +35,10 @@
 		<div class="tableCell">
 			<?=$release->date_released?>
 		</div>
+		<div class="tableCell">
+			<?=$release->status?>
+		</div>
 	</div>
 <?php	} ?>
 </div>
 <!--	END First Table -->
-

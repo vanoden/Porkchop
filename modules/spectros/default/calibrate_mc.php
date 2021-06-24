@@ -1,15 +1,6 @@
 <?php
 	$page = new \Site\Page(array("module" => "spectros","view" => "calibrate"));
 
-	# Check Configuration
-	if (! isset($GLOBALS['_config']->spectros->calibration_product)) $GLOBALS['_page']->error = "Calibration Product not configured";
-	$cal_product = new \Product\Item();
-	$cal_product->get($GLOBALS['_config']->spectros->calibration_product);
-	if (! $cal_product->id) {
-		$page->error = "Calibration Product ".$GLOBALS['_config']->spectros->calibration_product." not found";
-		return;
-	}
-
 	if (! $_REQUEST['code']) {
 		$_REQUEST['code'] = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$_REQUEST['product'] = $GLOBALS['_REQUEST_']->query_vars_array[1];
@@ -33,7 +24,7 @@
 	}
 
 	# Show available credits
-	$product = $GLOBALS['_SESSION_']->customer->organization->product($cal_product->id);
+	$product = new \Spectros\CalibrationVerification\Credit($GLOBALS['_SESSION_']->customer->organization->id);
 	if ($product->error) app_error("Error initializing calibration verification credits: ".$product->error,__FILE__,__LINE__);
 
 	# See if Credits available
@@ -47,7 +38,7 @@
 	if ($credits > 0) $available_credits = $credits;
 	else $available_credits = 0;
 
-	if ($_REQUEST['btn_submit']) {
+	if (isset($_REQUEST['btn_submit'])) {
 		$date_calibration = get_mysql_date($_REQUEST['date_calibration']);
 
 		# See if Credits available
@@ -119,4 +110,3 @@
 		app_log($string,'error',__FILE__,__LINE__);
 		return;
 	}
-?>

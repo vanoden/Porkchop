@@ -1,50 +1,47 @@
-<?
-	$GLOBALS['_page']->instruction = "Set filters and click 'Submit'";
-	if (role('monitor manager')) {
-		if ($_REQUEST['btn_submit']) {
-			$parameters = array();
-			if ($_REQUEST['account_code'])
-				$parameters['account'] = $_REQUEST['account_code'];
-			if ($_REQUEST['_active'])
-				$parameters['date_start'] = date('Y-m-d H:i:s',time() - 300);
-			if ($_REQUEST['date_start'])
-				$parameters['date_start'] = $_REQUEST['date_start'];
-			$parameters['_active'] = $_REQUEST['_active'];
-			if ($_REQUEST['max_records']) 
-				$parameters['_limit'] = $_REQUEST['max_records'];
+<?php
+	$page = $GLOBALS['_page'];
+	$page->requireRole('administrator');
+	$page->instruction = "Set filters and click 'Submit'";
 
-			# Get Sessions
-			$commList = new \Monitor\CommunicationList();
-			$communications = $commList->find($parameters);
-			if ($commList->error) {
-				app_log("Error querying for communications: ".$commList->error,'error',__FILE__,__LINE__);
-				$GLOBALS['_page']->error = 'Error loading comm records';
-			}
-		}
-		else {
-			$communications = array();
-			$parameters['_active'] = 0;
-			$parameters['date_start'] = date('m/d/Y H:i',time() - 300);
-			$parameters['_limit'] = 10;
-		}
-
-		# Get Accounts
-		$customerlist = new \Register\CustomerList();
-		$accounts = $customerlist->find();
+	if (isset($_REQUEST['btn_submit'])) {
+		$parameters = array();
+		if ($_REQUEST['account_code'])
+			$parameters['account'] = $_REQUEST['account_code'];
+		if ($_REQUEST['_active'])
+			$parameters['date_start'] = date('Y-m-d H:i:s',time() - 900);
+		if ($_REQUEST['date_start'])
+			$parameters['date_start'] = $_REQUEST['date_start'];
+		$parameters['_active'] = $_REQUEST['_active'];
+		if ($_REQUEST['max_records']) 
+			$parameters['_limit'] = $_REQUEST['max_records'];
 	}
-	elseif ($GLOBALS['_SESSION_']->customer->id) {
-		$GLOBALS['_page']->error = "You do not have permissions for this view";
-		return;
+	elseif (isset($_REQUEST['account_code'])) {
+		$parameters['account'] = $_REQUEST['account_code'];
+		$parameters['_active'] = 1;
+		$parameters['date_start'] = date('Y-m-d H:i:s',time() - 86400);
+		$parametesr['_limit'] = 16;
 	}
 	else {
-		header("location: /_register/login?target=_monitor:comm_dashboard");
-		exit;
+		$communications = array();
+		$parameters['_active'] = 1;
+		$parameters['date_start'] = date('Y-m-d H:i:s',time() - 86400);
+		$parameters['_limit'] = 16;
 	}
-	
+
+	# Get Sessions
+	$commList = new \Monitor\CommunicationList();
+	$communications = $commList->find($parameters);
+	if ($commList->error) {
+		app_log("Error querying for communications: ".$commList->error,'error',__FILE__,__LINE__);
+		$page->error = 'Error loading comm records';
+	}
+
+	# Get Accounts
+	$customerlist = new \Register\CustomerList();
+	$accounts = $customerlist->find();
+
 	function cleanUp($string) {
 		$string = prettyPrint($string);
-		//$string = preg_replace('/\r?\n/','\n',$string);
 		$string = preg_replace('/\'/',"'",$string);
 		return $string;
 	}
-?>

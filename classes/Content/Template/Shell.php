@@ -6,14 +6,43 @@
 		private $_content;
 		private $_params = array();
 		
-		public function __construct($path = null) {
-			
+		public function __construct($argument = null) {
+			if (gettype($argument) == 'array') {
+				if ($argument['path']) {
+					if ($this->load($argument['path'])) {
+						app_log("Loaded template ".$argument['path']);
+						if($argument['parameters']) {
+							app_log("Adding parameters ".print_r($argument['parameters'],true));
+							$this->addParams($argument['parameters']);
+						}
+					}
+					else {
+						$this->_error = "Template file '".$argument['path']."' not found";
+					}
+				}
+			}
+			elseif (gettype($argument) == 'string') {
+				if (file_exists($argument)) {
+					if ($this->load($argument)) {
+						app_log("Loaded template ".$argument['path']);
+					}
+				}
+			}
+		}
+
+		public function load($path) {
+			if (file_exists($path)) {
+				if ($this->_content = file_get_contents($path)) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
 		}
 
 		public function content($content = null) {
-			if (isset($content)) {
-				$this->_content = $content;
-			}
+			if (isset($content)) $this->_content = $content;
 			return $this->_content;
 		}
 
@@ -21,8 +50,17 @@
 			$this->_params[$key] = $value;
 		}
 
+		public function addParams($params = array()) {
+			app_log("addParams(".print_r($params,true).")");
+			foreach ($params as $key=>$value) {
+				app_log("Adding param $key = $value");
+				$this->addParam($key,$value);
+			}
+		}
+
 		private function _process($message) {
 			$module_pattern = '/\$\{([\w\-\.\_\-]+)\}/is';
+
 			while (preg_match($module_pattern,$message,$matched)) {
 				$search = $matched[0];
 				$parse_message = "Replaced $search";
@@ -48,4 +86,3 @@
 			return $this->_error;
 		}
 	}
-?>

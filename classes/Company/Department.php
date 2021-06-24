@@ -45,19 +45,19 @@
 			";
 			if (isset($parameters['name'])) {
 				$update_object_query .= ",
-				name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc);
+				name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
 			}
 			if (isset($parameters['description'])) {
 				$update_object_query .= ",
-				description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc);
+				description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
 			}
 			if (isset($parameters['status'])) {
 				$update_object_query .= ",
-				status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc);
+				status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
 			}
 			if (isset($parameters['manager_id'])) {
 				$update_object_query .= ",
-				manager_id = ".$GLOBALS['_database']->qstr($parameters['manager_id'],get_magic_quotes_gpc);
+				manager_id = ".$GLOBALS['_database']->qstr($parameters['manager_id'],get_magic_quotes_gpc());
 			}
 
 			$update_object_query .= "
@@ -143,4 +143,3 @@
 			
 		}
 	}
-?>

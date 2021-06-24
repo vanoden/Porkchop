@@ -1,4 +1,4 @@
-<?
+<?php
 	namespace Media;
 
 	class Image extends Item {
@@ -25,4 +25,3 @@
 			print_r($file);
 		}
 	}
-?>

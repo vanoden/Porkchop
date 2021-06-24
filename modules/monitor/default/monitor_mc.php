@@ -1,5 +1,5 @@
-<?PHP
-	$monitor = new Monitor::Asset($_REQUEST["id"]);
+<?php
+	$_monitor = new Monitor();
 	
 	require 'XML/Unserializer.php';
     require 'XML/Serializer.php';
@@ -8,8 +8,11 @@
         XML_SERIALIZER_OPTION_RETURN_RESULT => true,
 		XML_SERIALIZER_OPTION_MODE			=> 'simplexml'
     );
-    $xml = new XML_Serializer($options);
+    $xml = &new XML_Serializer($options);
 
+	# Get Event Information
+	$monitor->monitor = $_monitor->details($_REQUEST["id"]);
+	if (! $_REQUEST["id"]) {}
+	
 	$xml->serialize($monitor);
 	header('Content-Type: application/xml');
-?>

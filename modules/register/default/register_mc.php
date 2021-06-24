@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	###################################################
 	### register_mc.php								###
 	### This program collects registration info		###
@@ -6,21 +6,23 @@
 	### A. Caravello 11/12/2002						###
 	###################################################
 
-	#error_log(print_r($_REQUEST,true));
-
 	$page = new \Site\Page();
 
 	###########################
 	### Handle Actions		###
 	###########################
+	
 	if ($_REQUEST['method'] == "Apply") {
 		# Initialize Admin Object
 		$_customer = new \Register\Admin();
+		
+		$passwordStrength = 8;
+		if (isset($_GLOBALS['_config']->register->minimum_password_strength)) $passwordStrength = $_GLOBALS['_config']->register->minimum_password_strength;
 		if ($_customer->password_strength($_REQUEST['password']) < $_GLOBALS['_config']->register->minimum_password_strength) {
-			$page->error = "Password not strong enough";
-		}
-		elseif ($_REQUEST["password"] != $_REQUEST["password_2"]) {
-			$page->error .= "Passwords do not match";
+			$page->addError("Password not strong enough");
+		} elseif ($_REQUEST["password"] != $_REQUEST["password_2"]) {
+			$page->addError("Passwords do not match");
+			
 		}
 		else {
 			# Default Login to Email Address
@@ -32,7 +34,7 @@
 			# Make Sure Login is unique
 			$already_exists = $_customer->get($_REQUEST['login']);
 			if ($already_exists->id) {
-				$page->error = "Sorry, login already taken";
+				$page->addError("Sorry, login already taken");
 				$_REQUEST['login'] = '';
 			}
 			else {
@@ -51,13 +53,13 @@
 				);
 				if ($_customer->error) {
 					app_log("Error adding customer: ".$_customer->error,'error',__FILE__,__LINE__);
-					$page->error .= "Sorry, there was an error adding your account.  Our admins have been notified.  Please try again later";
+					$page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher questions.");
 				}
 				else {
 					# Login New User by updating session
 					$GLOBALS['_SESSION_']->update(array("user_id" => $customer->{id}));
 					if ($GLOBALS['_SESSION_']->error) {
-						$page->error .= "Error updating session: ".$GLOBALS['_SESSION_']->error;
+						$page->addError("Error updating session: ".$GLOBALS['_SESSION_']->error);
 					}
 
 					# Create Contact Record
@@ -70,8 +72,7 @@
 								"value"			=> $_REQUEST['work_email']
 							)
 						);
-						if ($_customer->error)
-							app_log("Error adding Work Email '".$_REQUEST['work_email']."': ".$_customer->error,'error',__FILE__,__LINE__);
+						if ($_customer->error) app_log("Error adding Work Email '".$_REQUEST['work_email']."': ".$_customer->error,'error',__FILE__,__LINE__);
 					}
 					if ($_REQUEST['home_email']) {
 						# Create Contact Record
@@ -83,8 +84,7 @@
 								"value"			=> $_REQUEST['home_email']
 							)
 						);
-						if ($_customer->error)
-							app_log("Error adding Home Email '".$_REQUEST['home_email']."': ".$_customer->error,'error',__FILE__,__LINE__);
+						if ($_customer->error) app_log("Error adding Home Email '".$_REQUEST['home_email']."': ".$_customer->error,'error',__FILE__,__LINE__);
 					}
 	
 					# Generate Email Confirmation
@@ -109,7 +109,7 @@
 
 					$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
 					if (\Email\Transport::error()) {
-						$page->error = "Error initializing email transport: ".\Email\Transport::error();
+						$page->addError("Error initializing email transport: ".\Email\Transport::error());
 						return;
 					}
 
@@ -117,7 +117,7 @@
 					$transport->token($GLOBALS['_config']->email->token);
 					$transport->deliver($emessage);
 					if ($transport->error) {
-						$page->error = "Error sending notification: ".$transport->error;
+						$page->addError("Error sending notification: ".$transport->error);
 						return;
 					}
 
@@ -130,4 +130,3 @@
 			}
 		}
 	}
-?>

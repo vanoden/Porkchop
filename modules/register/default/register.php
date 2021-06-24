@@ -1,18 +1,13 @@
 <script type="text/javascript">
-	function submitForm()
-	{
-		if (document.register.password.value.length < 6)
-		{
+	function submitForm() {
+		if (document.register.password.value.length < 6) {
 			alert("Your password is too short.");
 			return false;
 		}
-
-		if (document.register.password.value != document.register.password_2.value)
-		{
+		if (document.register.password.value != document.register.password_2.value) {
 			alert("Your passwords don't match.");
 			return false;
 		}
-
 		return true;
 	}
 </script>
@@ -21,9 +16,9 @@
 <form name="register" action="/_register/register" method="POST">
 	<input type="hidden" name="target" value="<?=$target?>">
 	<div class="instruction"><r7_page.message id=100></div>
-	<?	if ($page->error) { ?>
-	<div class="form_error"><?=$page->error?></div>
-	<?	} ?>
+    <?php	 if ($page->errorCount() > 0) { ?>
+        <div class="form_error"><?=$page->errorString()?></div>
+    <?php	 } ?>
 	<div id="registerFormSubmit">
 		<div class="form-group">
 			<div id="registerFirstName" class="registerQuestion">
@@ -54,11 +49,11 @@
 		<div class="form-group">
 			<div id="registerWorkEmail" class="registerQuestion">
 				<span class="label registerLabel registerLoginLabel">*Work Email:</span>
-				<input type="text" class="value registerValue registerLoginValue" name="work_email" value="<?=$_REQUEST['work_email']?>" />
+				<input type="email" class="value registerValue registerLoginValue" name="work_email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" value="<?=$_REQUEST['work_email']?>" />
 			</div>
 			<div id="registerHomeEmail" class="registerQuestion">
 				<span class="label registerLabel registerLoginLabel">*Home Email:</span>
-				<input type="text" class="value registerValue registerLoginValue" name="home_email" value="<?=$_REQUEST['home_email']?>" />
+				<input type="email" class="value registerValue registerLoginValue" name="home_email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" value="<?=$_REQUEST['home_email']?>" />
 			</div>
 		</div>
 		

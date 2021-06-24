@@ -1,10 +1,12 @@
-<?PHP
+<?php
+	$page = new \Site\Page();
+	$page->requireAuth();
+
 	# No Spoofing!
 	$unsub_customer_id = '';
 
 	# Find Matching Record for Key
-	if ($r7_session["email_id"])
-	{
+	if ($r7_session["email_id"]) {
 		# Get Customer Record
 		$get_customer_query = "
 			SELECT	h.contact_id,
@@ -22,20 +24,17 @@
 		# Execute Query
 		list($unsub_customer_id,$unsubscribe_name) = exec_query_row($get_customer_query);
 	}
-	else
-	{
-		$GLOBALS['_page']->error = "Invalid key Returned!  We apologize for the problem. Please login to the web site to continue.";
+	else {
+		$page->addError("Invalid key Returned!  We apologize for the problem. Please login to the web site to continue.");
 		mail("tony@rootseven.com","Invalid Key sent to UnSubscribe!","Invalid key sent to unsubscribe form, key='".$r7_session["email_id"]."', company $company_id, session $session_id. Invalid Key Format");
 	}
 
-	if (! $unsub_customer_id)
-	{
-		$GLOBALS['_page']->error = "Invalid key Returned!  We apologize for the problem. Please login to the web site to continue.";
+	if (! $unsub_customer_id) {
+		$page->addError("Invalid key Returned!  We apologize for the problem. Please login to the web site to continue.");
 		mail("tony@rootseven.com","Invalid Key sent to UnSubscribe!","Invalid key sent to unsubscribe form, company $company_id, session $session_id.  No Key Match");
 	}
 	# Handle Unsubscribe Request
-	elseif ($todo)
-	{
+	elseif ($todo) {
 		# Get Email Address Being Refused
 		$get_email_query = "
 			SELECT	email_address
@@ -71,4 +70,3 @@
 		else header("Location: /_register/unsubscribed");
 		exit;
 	}
-?>

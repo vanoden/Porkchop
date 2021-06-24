@@ -16,6 +16,7 @@
 		}
 
 		public function add($parameters = array()) {
+		
 			if (isset($parameters['task_id'])) {
 				$task = new Task($parameters['task_id']);
 				if ($task->error()) {
@@ -39,24 +40,43 @@
 				$date_added = date('Y-m-d H:i:s');
 			}
 
+			if (isset($parameters['person_id'])) {
+				$person = new \Register\Person($parameters['person_id']);
+				if (! $person->id) {
+					$this->_error = "Person not found";
+					return false;
+				}
+			}
+			elseif (isset($parameters['person_code'])) {
+				$person = new \Register\Person();
+				$person->get($parameters['person_code']);
+				if (! $person->id) {
+					$this->_error = "Person not found";
+					return false;
+				}
+			}
+			else {
+				$person = new \Register\Person($GLOBALS['_SESSION_']->customer->id);
+			}
+
+			if (! isset($parameters['hours_worked'])) $parameters['hours_worked'] = 0;
+			
 			$add_object_query = "
 				INSERT
 				INTO	engineering_events
-				(		task_id,person_id,date_event,description)
+				(		task_id,person_id,date_event,description,hours_worked)
 				VALUES
-				(		?,?,?,?)
+				(		?,?,?,?,?)
 			";
-
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
+			
+			$rs = executeSQLByParams($add_object_query,array(
 					$task->id,
-					$parameters['person_id'],
+					$person->id,
 					$date_added,
-					$parameters['description']
-				)
-			);
-
+					$parameters['description'],
+					$parameters['hours_worked']
+			));
+			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Event::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -95,9 +115,8 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
-
+			
+            $rs = executeSQLByParams($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Events::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -113,24 +132,28 @@
 				WHERE	id = ?
 			";
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-
+			$rs = executeSQLByParams($get_object_query,array($this->id));			
 			if (! $rs) {
 				$this->_error = "SQL Error in Engineering::Event::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			};
 
 			$object = $rs->FetchNextObject(false);
-
-			$this->date_event = $object->date_event;
-			$this->person_id = $object->person_id;
-			$this->task_id = $object->task_id;
-			$this->description = $object->description;
-
-			return true;
+			if (isset($object->id)) {
+				$this->date_event	= $object->date_event;
+				$this->person_id	= $object->person_id;
+				$this->task_id		= $object->task_id;
+				$this->hours_worked	= $object->hours_worked;
+				$this->description	= $object->description;
+				return true;
+			}
+			else {
+				$this->id = null;
+				$this->date_event = null;
+				$this->person_id = null;
+				$this->hours_worked = 0;
+				return false;
+			}
 		}
 
 		public function person() {
@@ -145,4 +168,3 @@
 			return $this->_error;
 		}
 	}
-?>

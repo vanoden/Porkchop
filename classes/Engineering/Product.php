@@ -19,18 +19,18 @@
 			if (isset($parameters['code']) && strlen($parameters['code'])) {
 				if (preg_match('/^[\w\-\.\_\s]+$/',$parameters['code'])) {
 					$code = $parameters['code'];
-				}
-				else {
+				} else {
 					$this->_error = "Invalid code";
 					return null;
 				}
-			}
-			else {
+			} else {
 				$code = uniqid();
 			}
 
-			$check_dups = new Product();
-			if ($check_dups->get($code)) {
+            // check for existing product that may exists, else it's an update
+            $check_dups = new Product();
+			$check_dups->get($code);
+			if (!empty($check_dups->id)) {
 				$this->_error = "Duplicate code";
 				return null;
 			}
@@ -43,11 +43,7 @@
 				(		?,?)
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($code,$_REQUEST['title'])
-			);
-
+            $rs = executeSQLByParams($add_object_query,array($code,$_REQUEST['title']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Product::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -58,6 +54,11 @@
 		}
 
 		public function update($parameters = array()) {
+			// Bust Cache
+			$cache_key = "engineering.product[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
+
 			$update_object_query = "
 				UPDATE	engineering_products
 				SET		id = id
@@ -74,12 +75,7 @@
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
-
+            $rs = executeSQLByParams($update_object_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Products::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -111,33 +107,54 @@
 		}
 
 		public function details() {
-			$get_object_query = "
-				SELECT	*
-				FROM	engineering_products
-				WHERE	id = ?
-			";
+			$cache_key = "engineering.product[".$this->id."]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			if ($cache->error) {
+				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
+			}
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-
-			if (! $rs) {
-				$this->_error = "SQL Error in Engineering::Product::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			};
-
-			$object = $rs->FetchNextObject(false);
+			# Cached Object, Yay!
+			if ($object = $cache->get()) {
+				app_log($cache_key." found in cache",'trace');
+				$this->_cached = true;
+			}
+			else {
+				$get_object_query = "
+					SELECT	*
+					FROM	engineering_products
+					WHERE	id = ?
+				";
+	
+				$rs = $GLOBALS['_database']->Execute(
+					$get_object_query,
+					array($this->id)
+				);
+	
+				if (! $rs) {
+					$this->_error = "SQL Error in Engineering::Product::details(): ".$GLOBALS['_database']->ErrorMsg();
+					return null;
+				};
+	
+				$object = $rs->FetchNextObject(false);
+				$this->id = $object->id;
+				$this->_cached = false;
+			}
 
 			$this->title = $object->title;
 			$this->code = $object->code;
 			$this->description = $object->description;
 
-			return $object;
+			if (! $this->_cached) {
+				// Cache Object
+				app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
+				if ($object->id) $result = $cache->set($object);
+				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);	
+			}
+
+			return true;
 		}
 
 		public function error() {
 			return $this->_error;
 		}
 	}
-?>

@@ -1,4 +1,4 @@
-<?PHP
+<?php
 	# Root Seven Graph Functions
 	include ("/home/php_inc/graphs.php");
 
@@ -18,18 +18,10 @@
 	$graph["height"] = 400;
 	$graph["width"] = 650;
 	$graph["block"] = 0;
-#	$graph["key"]["top"] = 430;
-#	$graph["key"]["left"] = 380;
 	$graph["threshold"]["vertical"]["min"] = $event_info["alarm_min"];
 	$graph["color"]["background"] = "EEEEEE";
 	$graph["color"]["view"] = "FEFEFE";
 	$graph["color"]["axis"] = "000000";
-#	$graph["color"]["data"][0] = "0000aa";
-#	$graph["color"]["data"][1] = "aa0000";
-#	$graph["color"]["data"][2] = "00aa00";
-#	$graph["color"]["data"][3] = "bb00bb";
-#	$graph["color"]["data"][4] = "bbbb00";
-#	$graph["color"]["data"][5] = "00bbbb";
 
 #	Dennis new colors below
 	$graph["color"]["data"][0] = "990000";
