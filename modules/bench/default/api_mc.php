@@ -123,7 +123,18 @@
 
 		print formatOutput($response);
 	}
-	
+
+	function pingBuildService() {
+		$buildService = new \Build\API();
+		$result = $buildService->ping();
+
+		$response = new \HTTP\Response();
+		$response->success = 1;
+		$response->info = $result;
+
+		print formatOutput($response);
+	}
+
 	###################################################
 	### Get/Update Schema Version					###
 	###################################################
