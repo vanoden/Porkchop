@@ -8,8 +8,8 @@
 			$this->error = null;
 			$current_schema_version = $this->version();
 
-			if ($this->version() < 1) {
-				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
+			if ($this->version() < 2) {
+				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans())

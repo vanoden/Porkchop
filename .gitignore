@@ -19,5 +19,6 @@ modules/local
 templates
 tmp
 node_modules/
+third_party/hashfile
 package-lock.json
 __pycache__

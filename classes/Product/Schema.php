@@ -89,7 +89,7 @@
 				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			if ($this->version() < 2 and $max_version > 2) {
+			if ($this->version() < 2 and $max_version >= 2) {
 				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
@@ -165,6 +165,31 @@
 				}
 
 				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 3 and $max_version >= 3) {
+				app_log("Upgrading schema to version 3",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `product_prices` (
+						id			int(11) NOT NULL,
+						product_id	int(11) NOT NULL,
+						amount		decimal(10,2) default 0,
+						date_active	datetime NOT NULL,
+						status		enum('ACTIVE','INACTIVE') NOT NULL default('INACTIVE'),
+						currency_id	int(11) NOT NULL,
+						PRIMARY KEY `pk_price_id` (`id`),
+						KEY `idx_price` (`product_id`,`status`,`date_active`),
+						FOREIGN KEY `FK_PRODUCT_PRICE` (`product_id`) REFERENCES `product_products` (`id`),
+						FOREIGN KEY `FK_PRICE_CURRENCY` (`currency_id`) REFERENCES `sales_currencies` (`id`)
+					)
+				";
+
+				$this->setVersion(3);
 				$GLOBALS['_database']->CommitTrans();
 			}
 			return true;
