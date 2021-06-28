@@ -421,7 +421,7 @@
 		if ($assetlist->error) error("Error finding asset: ".$assetlist->error);
 		list($asset) = $assetlist->find(array('code' => $_REQUEST['asset_code']));
 		if ($assetlist->error) error("Error finding asset: ".$assetlist->error);
-		if (! $asset->id) error("Asset '".$REQUEST['asset_code']."' not found");
+		if (! $asset->id) error("Asset '".$_REQUEST['asset_code']."' not found");
 
 		$sensor = new \Monitor\Sensor();
 		if ($sensor->error) error("Error finding sensor: ".$sensor->error);
@@ -1113,6 +1113,7 @@
 	### Add a Reading								###
 	###################################################
 	function addReading() {
+	
 		if (! $GLOBALS['_SESSION_']->customer->id)
 			error("Authentication Required");
 		if ((! $GLOBALS['_SESSION_']->customer->organization->id) and (! in_array('monitor admin',$GLOBALS['_SESSION_']->customer->roles)))
