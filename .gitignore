@@ -4,6 +4,8 @@ classes/Monitor
 classes/Action
 classes/Media
 classes/Solvay
+html/
+html.src/
 classes/Brand
 html
 html.src
@@ -19,3 +21,4 @@ tmp
 node_modules/
 third_party/hashfile
 package-lock.json
+__pycache__

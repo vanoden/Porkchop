@@ -127,10 +127,10 @@
 			$response->success = 1;
 		}
 
-		api_log('content',$REQUEST,$response);
+		api_log('content',$_REQUEST,$response);
 
 		# Send Response
-		print formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+		print formatOutput($response);
 	}
 	###################################################
 	### Update Specified Message					###

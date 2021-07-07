@@ -1819,7 +1819,6 @@ INSERT INTO `monitor_collections` VALUES (1,'ABCD1234',1,NULL,NULL,NULL,NULL,NUL
 INSERT INTO `monitor_collection_sensors` VALUES (1,1,'RPI Temp',NULL,NULL);
 INSERT INTO `monitor_collection_sensors` VALUES (1,2,'RPI Humdity',NULL,NULL)
 
-
 /** RESTORE ALL THE REFERENTIAL INTEGRITY **/
 SET FOREIGN_KEY_CHECKS=1;
 
