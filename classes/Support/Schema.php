@@ -97,9 +97,9 @@
 						date_event datetime,
 						description TEXT,
 						hours DECIMAL(5,1) NOT NULL DEFAULT 0,
-						PRIMARY KEY `pk_event` (`id`),
-						FOREIGN KEY `fk_action` (`action_id`) REFERENCES `support_item_actions` (`id`),
-						FOREIGN KEY `fk_user` (`user_id`) REFERENCES `register_users` (`id`)
+						PRIMARY KEY `pk_support_event` (`id`),
+						FOREIGN KEY `fk_support_action` (`action_id`) REFERENCES `support_item_actions` (`id`),
+						FOREIGN KEY `fk_support_user` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
