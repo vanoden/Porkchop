@@ -187,6 +187,15 @@
 				"admin_dashboard"	=> $admin_template
 			),
 		),
+		"Alert"		=> array(
+			"roles"		=> array(
+                'alert manager'     => array(),
+                'alert reporter'    => array(),
+                'alert admin'       => array(),
+                'alert asset'       => array()
+			),
+			"templates"	=> array()
+		)
 	);
 
 	$modules['Spectros'] = array(
@@ -518,6 +527,11 @@
 	foreach ($modules as $module_name => $module_data) {
 		# Update Schema
 		$class_name = "\\$module_name\\Schema";
+		$schema_path = CLASSES."/$module_name/Schema.php";
+		if (! file_exists($schema_path)) {
+			install_log("Module $module_name not installed");
+			continue;
+		}
 		try {
 			$class = new $class_name();
 			$class_version = $class->version();
@@ -721,7 +735,13 @@
 		$dashboard->update(array('status' => 'PUBLISHED'));
 	}
 	else {
-		install_fail("concept dashboard not found!");
+		$dashboard->add(array("code" => "concept","template" => "/dashboards/concept/concept.html"));
+		if ($dashboard->error()) {
+			install_fail("concept dashboard not found and could not be added: ".$dashboard->error());
+		}
+		else {
+			install_log("Created concept dashboard");
+		}
 	}
 
 	# Add Shipping Vendors

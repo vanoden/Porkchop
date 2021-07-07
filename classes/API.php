@@ -115,10 +115,14 @@
 			if ($this->_schema->error) {
 				$this->app_error("Error getting version: ".$this->_schema->error,__FILE__,__LINE__);
 			}
-			$version = $this->_schema->upgrade();
 			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $version;
+			if ($this->_schema->upgrade()) {
+				$response->success = 1;
+				$response->version = $this->_schema->version();
+			}
+			else {
+				$this->app_error("Error upgrading schema: ".$this->_schema->error,__FILE__,__LINE__);
+			}
 			print $this->formatOutput($response);
 		}
 		public function _form() {
