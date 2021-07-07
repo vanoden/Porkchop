@@ -101,8 +101,8 @@
 						`condition` enum('OK','DAMAGED'),
 						quantity INT(11) NOT NULL,
 						description TEXT,
-						PRIMARY KEY `pk_id` (`id`),
-						FOREIGN KEY `fk_product` (`product_id`) REFERENCES `product_products` (`id`)
+						PRIMARY KEY `pk_shipment_item_id` (`id`),
+						FOREIGN KEY `fk_shipment_product` (`product_id`) REFERENCES `product_products` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
