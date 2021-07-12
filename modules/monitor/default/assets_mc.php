@@ -3,7 +3,7 @@
 		header("location: /_register/login?target=_monitor:assets");
 		exit;
 	}
-
+	
 	# Get Assets
 	$parameters = array();
 	$parameters['_flat'] = true;
