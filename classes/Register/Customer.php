@@ -195,22 +195,20 @@
 				    SELECT	id
 				    FROM	register_users
 				    WHERE	login = ?
-				    AND		password = CONCAT('*', UPPER(SHA1(UNHEX(SHA1('".$password."')))));
+				    AND		password = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?)))));
 			    ";
             } else {
 			    $get_user_query = "
 				    SELECT	id
 				    FROM	register_users
 				    WHERE	login = ?
-				    AND		password = password('".$password."')
+				    AND		password = password(?)
 			    ";
             }
+			$bind_params = array($login,$password);
 
 			$rs = $GLOBALS['_database']->Execute(
-				$get_user_query,
-				array(
-					$login
-				)
+				$get_user_query,$bind_params
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
