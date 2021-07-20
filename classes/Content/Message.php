@@ -163,18 +163,23 @@
                 UPDATE	content_messages
 				SET		date_modified = sysdate()";
 
+			$bind_params = array();
+
 			foreach ($ok_params as $parameter) {
-				if (isset($parameters[$parameter])) $update_content_query .= ",
-						$parameter = ".$GLOBALS['_database']->qstr($parameters[$parameter],get_magic_quotes_gpc());
+				if (isset($parameters[$parameter])) {
+					$update_content_query .= ",
+						$parameter = ?";
+					array_push($bind_params,$parameters[$parameter]);
+				}
 			}
 
 			$update_content_query .= "
 				WHERE   id = ?";
+			array_push($bind_params,$this->id);
 	
 			//error_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$update_content_query)));
             $rs = $GLOBALS['_database']->Execute(
-				$update_content_query,
-				array($this->id)
+				$update_content_query,$bind_params
 			);
             if (! $rs) {
                 $this->error = $GLOBALS['_database']->ErrorMsg();
