@@ -84,7 +84,7 @@
 			$content = new \Content\Message();
 
 			# Find Matching Threads
-			$message = $_content->add(
+			$message = $content->add(
 				array (
 					'name'			=> $_REQUEST['name'],
 					'target'		=> $_REQUEST['target'],
