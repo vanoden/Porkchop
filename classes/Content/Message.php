@@ -59,10 +59,10 @@
 
 			# Cached Content Object, Yay!	
 			if ($result = cache_get("content[".$this->id."]")) {
-				$this->name		= $result["name"];
-				$this->target	= $result["target"];
-				$this->title	= $result["title"];
-				$this->content	= $result["content"];
+				$this->name		= $result->name;
+				$this->target	= $result->target;
+				$this->title	= $result->title;
+				$this->content	= $result->content;
 				$this->cached	= 1;
 				return 1;
 			}
@@ -87,19 +87,19 @@
                 return 0;
             }
 
-            $result = $rs->FetchRow();
-			if (! isset($result['id'])) {
-				return new stdClass();
+            $result = $rs->FetchNextObject(false);
+			if (! isset($result->id)) {
+				return 0;
 			}
-
-            $this->name		= $result["name"];
-            $this->target	= $result["target"];
-            $this->title	= $result["title"];
-			$this->content	= $result["content"];
+			$this->id = $result->id;
+            $this->name		= $result->name;
+            $this->target	= $result->target;
+            $this->title	= $result->title;
+			$this->content	= $result->content;
 
 			cache_set("content[".$this->id."]",$result);
-            return 1;
-        }
+			return 1;
+		}
 
 		public function add($parameters = array()) {
 			$this->error = NULL;
@@ -177,7 +177,7 @@
 				WHERE   id = ?";
 			array_push($bind_params,$this->id);
 	
-			//error_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$update_content_query)));
+			query_log($update_content_query,$bind_params);
             $rs = $GLOBALS['_database']->Execute(
 				$update_content_query,$bind_params
 			);
