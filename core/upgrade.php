@@ -30,7 +30,7 @@
 	if (isset($_config->schema)) $base_classes = $_config->schema;
 	else $base_classes = array(
 		"Media"         => 3,
-		"Product"       => 2,
+		"Product"       => 3,
 		"Site"          => 6,
 		"Content"       => 3,
 		"Navigation"	=> 2,
@@ -65,7 +65,7 @@
 		array("package","packages"),
 		array("package","versions"),
 		array("product","edit"),
-        array("product","report"),
+		array("product","report"),
 		array("register","accounts"),
 		array("register","admin_account"),
 		array("register","organization"),
@@ -248,6 +248,22 @@
 		if ($location->error) install_fail("Error adding location: ".$location->error);
 	}
 
+	# Add Admin Roles
+	install_log("Checking 'administrator' role");
+	# Add administrator role
+	$role = new \Register\Role();
+	if (! $role->get('administrator')) {
+		install_log("Adding 'administrator' role");
+		$role->add(array('name' => 'administrator','description' => "Access to admin tools"));
+		if ($role->error) install_fail("Error adding role: ".$role->error);
+	}
+	install_log("Checking 'product manager' role");
+	if (! $role->get('product manager')) {
+		install_log("Adding 'product manager' role");
+		$role->add(array('name' => 'product manager','description' => "Manager of products"));
+		if ($role->error) install_fail("Error adding role: ".$role->error);
+	}
+
 	install_log("Add new template settings");
 	foreach ($admin_templates as $array) {
 		$module = $array[0];
@@ -270,14 +286,6 @@
 		}
 		$page->setMetadata("template","admin.html");
 		if ($page->error) install_fail("Could not add metadata to page: ".$page->error);
-	}
-
-	# Add administrator role
-	$role = new \Register\Role();
-	if (! $role->get('administrator')) {
-		install_log("Adding 'administrator' role");
-		$role->add(array('name' => 'administrator','description' => "Access to admin tools"));
-		if ($role->error) install_fail("Error adding role: ".$role->error);
 	}
 
 	install_log("Upgrade completed successfully");
