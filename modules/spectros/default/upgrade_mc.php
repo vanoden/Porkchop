@@ -527,7 +527,7 @@
 	foreach ($modules as $module_name => $module_data) {
 		# Update Schema
 		$class_name = "\\$module_name\\Schema";
-		$schema_path = CLASSES."/$module_name/Schema.php";
+		$schema_path = CLASS_PATH."/$module_name/Schema.php";
 		if (! file_exists($schema_path)) {
 			install_log("Module $module_name not installed");
 			continue;
