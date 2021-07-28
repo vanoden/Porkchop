@@ -137,15 +137,15 @@
 				UPDATE	company_domains
 				SET		id = id";
 
-			if ($parameters['name'])
+			if (isset($parameters['name']) && $parameters['name'])
 				$update_object_query .= ",
 						domain_name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
 
-			if (preg_match('/^(0|1)$/',$parameters['active']))
+			if (isset($parameters['active']) && preg_match('/^(0|1)$/',$parameters['active']))
 				$update_object_query .= ",
 						active = ".$parameters['active'];
 
-			if (preg_match('/^\d+$/',$parameters['status']))
+			if (isset($parameters['status']) && preg_match('/^\d+$/',$parameters['status']))
 				$update_object_query .= ",
 						status = ".$parameters['status'];
 
