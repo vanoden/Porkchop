@@ -165,7 +165,7 @@ class Person {
     }
     
     public function add($parameters = array()) {
-        if (!preg_match("/^[\w\-\_@\.\+\s]{2,100}\$/", $parameters['login'])) {
+        if (!validLogin($parameters['login'])) {
             $this->error = "Invalid Login";
             return null;
         }
@@ -256,12 +256,16 @@ class Person {
                 last_name = ?";
             array_push($bind_params,$parameters['last_name']);
         }
-        if (isset($parameters['login'])) {
+        if (isset($parameters['login']) and !empty($parameters['login'])) {
+		if (!validLogin($parameters['login'])) {
+			$this->error = "Invalid login";
+			return false;
+		}
             $update_customer_query .= ",
                 login = ?";
             array_push($bind_params,$parameters['login']);
         }
-        if (isset($parameters['organization_id'])) {
+        if (isset($parameters['organization_id']) and ! empty($parameters['organization_id'])) {
             $update_customer_query .= ",
                 organization_id = ?";
             array_push($bind_params,$parameters['organization_id']);
@@ -604,6 +608,11 @@ class Person {
         if ($this->automation) return true;
         return false;
     }
+
+	public function validLogin($login) {
+		if (preg_match("/^[\w\-\_@\.\+\s]{2,100}\$/", $login)) return true;
+		else return false;
+	}
 
     public function error() {
         return $this->error;
