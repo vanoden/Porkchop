@@ -115,13 +115,14 @@
 
 			# Initiate Product Object
 			$message = new \Content\Message();
-			if (isset($_REQUEST['id'])) {
+			if (isset($_REQUEST['id']) && $_REQUEST['id']) {
 				$message->id = $_REQUEST['id'];
-				$message->details();
+				if (! $message->details()) $this->error("Message id ".$_REQUEST['id']." not found");
 			}
-			elseif (isset($_REQUEST['target'])) {
-				$message->get($_REQUEST['target']);
+			elseif (isset($_REQUEST['target']) && $_REQUEST['target']) {
+				if (! $message->get($_REQUEST['target'])) $this->error("Message '".$_REQUEST['target']."' not found");
 			}
+			else $this->error("Must provide message id or target");
 			if (! $message->id) $this->error("Message '".$_REQUEST['id']."' not found");
 
 			$parameters = array();

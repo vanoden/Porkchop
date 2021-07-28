@@ -34,7 +34,7 @@ php composer.phar install --no-dev
 ```
 Install XML Serializer
 ```
-pear install channel://pear.php.net/XML_UnSerializer-0.21.0
+pear install channel://pear.php.net/XML_Serializer-0.21.0
 ```
 ### Configuration
 
