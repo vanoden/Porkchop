@@ -38,5 +38,5 @@
 	$parameters['_sort'] = 'version';
 	$parameters['_sort_desc'] = true; 
     $versionList = new \Package\VersionList();
-    $versions = $versionList->find(array('package_id' => $package->id));
+    $versions = $versionList->find($parameters);
 
