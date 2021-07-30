@@ -32,7 +32,11 @@
             exit;
         }
     }
-    
+
+	$parameters = array();
+	$parameters['package_id'] = $package->id;
+	$parameters['_sort'] = 'version';
+	$parameters['_sort_desc'] = true; 
     $versionList = new \Package\VersionList();
     $versions = $versionList->find(array('package_id' => $package->id));
 
