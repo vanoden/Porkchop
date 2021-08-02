@@ -276,27 +276,22 @@
 
 		// Personal Inventory (Online Products)
 		public function products($product='') {
-		
 			###############################################
 			## Get List of Purchased Products			###
 			###############################################
-			
+			$bind_params = array();
+
 			// Prepare Query
 			$get_products_query = "
-				SELECT	p.name,
-						p.description,
+				SELECT	p.id,
 						date_format(cp.expire_date,'%c/%e/%Y') expire_date,
-						p.sku,
-						p.sku code,
-						p.data,
 						cp.quantity,
 						unix_timestamp(sysdate()) - unix_timestamp(cp.expire_date) expired,
-						pt.group_flag,
-						p.test_flag
+						pt.group_flag
 				FROM	online_product.customer_products cp,
 						product.products p,
 						product.product_types pt
-				WHERE	cp.customer_id = '".$this->id."'
+				WHERE	cp.customer_id = ?
 				AND		p.product_id = cp.product_id
 				AND		p.type_id = pt.type_id
 				AND		cp.parent_id = 0
@@ -305,22 +300,31 @@
 				OR		pt.group_flag = 1)
 				AND		cp.void_flag = 0
 			";
-	
+			array_push($bind_params,$this->id);
+
 			// Conditional
-			if ($product) $get_products_query .= "AND p.sku = '".mysql_escape_string($product)."'\n";
-	
+			if (isset($product) && $product) {
+				$get_products_query .= "
+				AND p.sku = ?";
+				array_push($bind_params,$product);
+			}
+
 			// Execute Query
-			$rs = $GLOBALS['_database']->Execute($get_products_query);
+			$rs = $GLOBALS['_database']->Execute($get_products_query,$bind_params);
 			if ($rs->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			$products = array();
-			while ($product = $rs->FetchRow()) {
-				$_product = new Product($product['id']);
-				array_push($products,$_product->details($product["code"]));
+			while ($record = $rs->FetchRow()) {
+				$product = new \Product\Item($product['id']);
+				$product->expire_date = $record['expire_date'];
+				$product->quantity = $record['quantity'];
+				$product->expired = $record['expired'];
+				$product->group_flag = $record['group_flag'];
+				array_push($products,$product);
 			}
-			return $hubs;
+			return $products;
 		}
 
 		public function can($privilege_name) {
@@ -525,7 +529,14 @@
 			}
 			return $locations;
 		}
-				
+
+		public function exists($login) {
+			list($person) = $this->get($login);
+	
+			if ($person->id) return true;
+			else return false;
+		}
+
 		public function error() {
 			return $this->error;
 		}

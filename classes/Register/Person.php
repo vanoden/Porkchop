@@ -26,15 +26,6 @@ class Person {
             $this->details();
         }
     }
-
-    public function exists($login) {
-        list($person) = $this->find(array(
-            "login" => $login
-        ));
-
-        if ($person->id) return true;
-        else return false;
-    }
     
     public function setId($id=0) {
         $this->id = $id;
@@ -165,7 +156,7 @@ class Person {
     }
     
     public function add($parameters = array()) {
-        if (!validLogin($parameters['login'])) {
+        if (!$this->validLogin($parameters['login'])) {
             $this->error = "Invalid Login";
             return null;
         }
@@ -257,7 +248,7 @@ class Person {
             array_push($bind_params,$parameters['last_name']);
         }
         if (isset($parameters['login']) and !empty($parameters['login'])) {
-		if (!validLogin($parameters['login'])) {
+		if (!$this->validLogin($parameters['login'])) {
 			$this->error = "Invalid login";
 			return false;
 		}
