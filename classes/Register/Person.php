@@ -528,8 +528,8 @@ class Person {
                     ->email
                     ->provider
             ));
-            if (\Email\Transport::error()) {
-                $this->error = "Error initializing email transport: " . \Email\Transport::error();
+            if (! isset($transport)) {
+                $this->error = "Error initializing email transport";
                 app_log("Message to " . $contact->value . " failed: " . $this->error, 'error');
                 return false;
             }
