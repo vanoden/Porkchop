@@ -96,22 +96,22 @@
 		        $captcha_success = json_decode($result);
 
 		        if ($captcha_success->success == true) {
-			        app_log("ReCAPTCHA presented and SOLVED for " . $customer->status . " Customer (must be a human attempting)" , 'debug' , __FILE__ , __LINE__);
+			        app_log("ReCAPTCHA presented and SOLVED for " . $customer->status . " Customer (must be a human attempting)" , 'notice' , __FILE__ , __LINE__);
 			        $_SESSION['failedAttemptCount'] = 0;
 			        $customer->update(array('status' => 'ACTIVE'));
 		        } else {
 			        $page->addError("Sorry, CAPTCHA Invalid.  Please Try Again");
-			        app_log("ReCAPTCHA presented and FAILED for " . $customer->status . " Customer" , 'debug' , __FILE__ , __LINE__);
+			        app_log("ReCAPTCHA presented and FAILED for " . $customer->status . " Customer" , 'notice' , __FILE__ , __LINE__);
 		        }
 		    
 		        // if a old or deleted account login, then we'll force over to the login page with a captcha
     		    $_SESSION['isRemovedAccount'] = 1;
 			    app_log("Customer ".$customer->id. " " . $customer->status . " login ATTEMPTED",'notice',__FILE__,__LINE__);
-			    app_log("login_target = $target",'notice',__FILE__,__LINE__);	
+			    app_log("login_target = $target",'debug',__FILE__,__LINE__);	
 			    header("location: ".PATH.'/_register/login');	
 		    } else {
     			app_log("Customer ".$customer->id." login failed",'notice',__FILE__,__LINE__);
-			    app_log("login_target = $target",'notice',__FILE__,__LINE__);
+			    app_log("login_target = $target",'debug',__FILE__,__LINE__);
 		    }
 		    
 		    // track failed attempts at login for 
@@ -128,9 +128,9 @@
 			$GLOBALS['_SESSION_']->assign($customer->id);
 			$GLOBALS['_SESSION_']->touch();
 
-			app_log("Customer ".$customer->id." logged in",'notice',__FILE__,__LINE__);
-			app_log("login_target = $target",'notice',__FILE__,__LINE__);
-			app_log("Redirecting to ".PATH.$target,'notice',__FILE__,__LINE__);
+			app_log("Customer ".$customer->id." logged in",'debug',__FILE__,__LINE__);
+			app_log("login_target = $target",'debug',__FILE__,__LINE__);
+			app_log("Redirecting to ".PATH.$target,'debug',__FILE__,__LINE__);
 			header("location: ".PATH.$target);
 			exit;
 		}
