@@ -32,7 +32,7 @@
                <select name="manager_id" class="value input" style="width: 240px">
                   <option value="">Unassigned</option>
                   <?php	foreach ($managers as $manager) { ?>
-                  <option value="<?=$manager->id?>"<?php if ($manager->id == $project->manager->id) print " selected"; ?>><?=$manager->code?></option>
+                  <option value="<?=$manager->id?>"<?php if ($manager->id == $form['manager_id']) print " selected"; ?>><?=$manager->code?></option>
                   <?php	} ?>
                </select>
             </div>

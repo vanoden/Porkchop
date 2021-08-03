@@ -14,7 +14,6 @@
 	}
 
 	if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == "Submit") {
-	
 		$parameters = array();
 		if (isset($_REQUEST['title'])) {
 			$parameters['title'] = $_REQUEST['title'];
@@ -31,16 +30,18 @@
 				} else {
 					$page->error = "Error saving updates to project ".$project->id.": ".$project->error();
 				}
-			} else {
+			}
+			else {
 				if ($project->add($parameters)) {
 					$page->success = "Project Created";
 					app_log("Project created",'debug',__FILE__,__LINE__);
 				} else {
-					$page->error = "Error creating project: ".$project->error();
+					$page->addError("Error creating project: ".$project->error());
 				}
 			}
-		} else {
-			$page->error = "Title required";
+		}
+		else {
+			$page->addError("Title required");
 		}
 	}
 
@@ -51,7 +52,7 @@
 		$form['description'] = $project->description;
 		$form['status'] = $project->status;
 		$form['manager_id'] = $project->manager->id;
-	} elseif ($page->error) {
+	} elseif ($page->errorCount()) {
 		$form['code'] = $_REQUEST['code'];
 		$form['title'] = $_REQUEST['title'];
 		$form['status'] = $_REQUEST['status'];
@@ -59,20 +60,20 @@
 		$form['manager_id'] = $_REQUEST['manager_id'];
 	}
 	
-    // upload files if upload button is pressed
-    $configuration = new \Site\Configuration('engineering_attachments_s3');
-    $repository = $configuration->value();
-    if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
+	// upload files if upload button is pressed
+	$configuration = new \Site\Configuration('engineering_attachments_s3');
+	$repository = $configuration->value();
 
-	    $file = new \Storage\File();
-	    $parameters = array();
-        $parameters['repository_name'] = $_REQUEST['repository_name'];
-        $parameters['type'] = $_REQUEST['type'];
-        $parameters['ref_id'] = $project->id;
-	    $uploadResponse = $file->upload($parameters);
+	if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
+		$file = new \Storage\File();
+		$parameters = array();
+		$parameters['repository_name'] = $_REQUEST['repository_name'];
+		$parameters['type'] = $_REQUEST['type'];
+		$parameters['ref_id'] = $project->id;
+		$uploadResponse = $file->upload($parameters);
 	    
-	    if (!empty($file->error)) $page->addError($file->error);
-	    if (!empty($file->success)) $page->success = $file->success;
+		if (!empty($file->error)) $page->addError($file->error);
+		if (!empty($file->success)) $page->success = $file->success;
 	}
 	
 	$filesList = new \Storage\FileList();
@@ -84,4 +85,4 @@
 
 	$tasklist = new \Engineering\TaskList();
 	$tasks = $tasklist->find(array('project_id' => $project->id));
-	if ($tasklist->error()) $page->error = $tasklist->error();
+	if ($tasklist->error()) $page->addError($tasklist->error());
