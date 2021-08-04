@@ -159,7 +159,12 @@
 					else $default = '';
 					$form .= $t.$t.$t.'<div class="apiParameter">'.$cr;
 					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required.'">'.$param.'</span>'.$cr;
-					$form .= $t.$t.$t.$t.'<input type="'.$options['type'].'" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+					if ($options['type'] == "textarea") {
+						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$param.'">'.$default.'</textarea>'.$cr;
+					}
+					else {
+						$form .= $t.$t.$t.$t.'<input type="'.$options['type'].'" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+					}
 					$form .= $t.$t.$t.'</div>'.$cr;
 				}
 				$form .= $t.$t.$t.'<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>'.$cr;
