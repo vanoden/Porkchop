@@ -85,7 +85,7 @@ function addRequest() {
  * Update a Request
  */
 function updateRequest() {
-	$request = new SupportRequest ();
+	$request = new \Support\Request ();
 	$request->get ( $_REQUEST ['code'] );
 	if ($request->error) app_error ( "Error finding request: " . $request->error, 'error', __FILE__, __LINE__ );
 	if (! $request->id) error ( "Request not found" );
@@ -103,7 +103,7 @@ function updateRequest() {
  * Get Specified Request
  */
 function getRequest() {
-	$request = new SupportRequest ();
+	$request = new \Support\Request ();
 	$request->get ( $_REQUEST ['code'] );
 
 	if ($request->error) error ( "Error getting request: " . $request->error );
