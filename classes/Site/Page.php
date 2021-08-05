@@ -59,6 +59,22 @@
 			    exit ();
 		    }
 	    }
+        public function requirePrivilege($privilege) {
+            if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
+                return true;
+            }
+            elseif ($GLOBALS['_SESSION_']->customer->has_role('administrator')) {
+                return true;
+            }
+            elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    exit ();
+		    }
+            else {
+			    header ( 'location: /_register/permission_denied' );
+			    exit ();
+		    }
+        }
 	    public function get($module, $view, $index = null) {
 		    $parameters = array ($module, $view );
 		    if (strlen ( $index ) < 1) $index = null;
