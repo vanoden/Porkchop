@@ -201,24 +201,41 @@
 			}
 		}
 		public function addPrivilege($new_privilege) {
-			$privilege = new \Register\Privilege();
-			if ($privilege->get(array('privilege' => $new_privilege))) {
-				$add_privilege_query = "
-					INSERT	INTO	register_roles_privileges
-					VALUES  (?,?)
-				";
-				$GLOBALS['_database']->Execute($add_privilege_query,array($this->id,$privilege->id));
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Register::Role::addPrivilege(): ".$GLOBALS['_database']->ErrorMsg();
-					return false;
-				}
-			}
-			else {
-				$this->error = "privilege not found";
+            if (is_numeric($new_privilege))
+                $privilege = new \Register\Privilege($new_privilege);
+            else {
+    			$privilege = new \Register\Privilege();
+			    if (! $privilege->get(array('privilege' => $new_privilege))) {
+                    $this->error = "Can't get privilege $new_privilege";
+                    return false;
+                }
+            }
+			$add_privilege_query = "
+				INSERT	INTO	register_roles_privileges
+				VALUES  (?,?)
+			";
+			$GLOBALS['_database']->Execute($add_privilege_query,array($this->id,$privilege->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Register::Role::addPrivilege(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			return true;
+			else return true;
 		}
+
+        public function dropPrivilege($privilege_id) {
+            $drop_privilege_query = "
+                DELETE
+                FROM    register_roles_privileges
+                WHERE   role_id = ?
+                AND     privilege_id = ?
+            ";
+            $GLOBALS['_database']->Execute($drop_privilege_query,array($this->id,$privilege_id));
+            if ($GLOBALS['_database']->ErrorMsg()) {
+                $this->error = "SQL Error in Register::Role::dropPrivilege(): ".$GLOBALS['_database']->ErrorMsg();
+                return false;
+            }
+            return true;
+        }
 
 		public function privileges() {
 			$get_privileges_query = "
@@ -237,28 +254,31 @@
 			}
 			return $privileges;
 		}
-		public function has_privilege($name) {
-			$privilege = new \Register\Privilege();
-			if ($privilege->get($name)) {
-				$get_privilege_query = "
-					SELECT	1
-					FROM	register_roles_privileges
-					WHERE	role_id = ?
-					AND		privilege_id = ?
-				";
-				$rs = $GLOBALS['_database']->Execute($get_privilege_query,array($this->id,$name));
+		public function has_privilege($param) {
+            if (is_numeric($param)) {
+                $privilege = new \Register\Privilege($param);
+            }
+            else {
+       			$privilege = new \Register\Privilege();
+	    		if (! $privilege->get($param)) {
+                    return false;
+                }
+            }
+			$get_privilege_query = "
+				SELECT	1
+				FROM	register_roles_privileges
+				WHERE	role_id = ?
+				AND		privilege_id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_privilege_query,array($this->id,$param));
 
-				if (! $rs) {
-					$this->error = $GLOBALS['_database']->ErrorMsg();
-					return false;
-				}
-				list($found) = $rs->FetchRow();
-				if ($found == 1) {
-					return true;
-				}
-				else {
-					return false;
-				}
+			if (! $rs) {
+				$this->error = $GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			list($found) = $rs->FetchRow();
+			if ($found == 1) {
+				return true;
 			}
 			else {
 				return false;

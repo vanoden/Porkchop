@@ -93,11 +93,24 @@
 
             $rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
             if (! $rs) {
-                $this->_error = "SQL Error in Register::Privilege::details(): ".$GLOBALS['_databse']->ErrorMsg();
+                $this->_error = "SQL Error in Register::Privilege::details(): ".$GLOBALS['_database']->ErrorMsg();
                 return false;
             }
 
             list($this->id,$this->name,$this->description) = $rs->FetchRow();
+            return true;
+        }
+
+        public function delete() {
+            $delete_object_query = "
+                DELETE
+                FROM    register_privileges
+                WHERE   id = ?";
+            $GLOBALS['_database']->Execute($delete_object_query,$this->id);
+            if ($GLOBALS['_database']->ErrorMsg()) {
+                $this->_error = "SQL Error in Register::Privilege::delete(): ".$GLOBALS['_database']->ErrorMsg();
+                return false;
+            }
             return true;
         }
 

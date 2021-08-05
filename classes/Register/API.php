@@ -1063,6 +1063,12 @@
             }
         }
 
+        public function findPrivileges() {
+            $privilegeList = new \Register\PrivilegeList();
+            $privileges = $privilegeList->find();
+            return $privileges;
+        }
+
         function getLocation() {
             
         }
