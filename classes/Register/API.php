@@ -138,7 +138,7 @@
             $customer->update($parameters);
 
             # Error Handling
-            if ($_customer->error) app_error("Error updating customer: ".$_customer->error,__FILE__,__LINE__);
+            if ($customer->error) app_error("Error updating customer: ".$customer->error,__FILE__,__LINE__);
             $response = new \HTTP\Response();
             $response->customer = $customer;
             $response->success = 1;
@@ -196,7 +196,7 @@
          * check if a login exists already for user creating a new account
          */
         function checkLoginNotTaken() {
-            $customer = new Register\Customer();    	
+            $customer = new \Register\Customer();    	
             if ($customer->get($_REQUEST["login"])) print "0";
             else print "1";
         }
@@ -205,10 +205,10 @@
          * check if password is strong enought
          */
         function checkPasswordStrength() {
-            $person = new Register\Person();    	
+            $person = new \Register\Person();    	
             $strength = $person->password_strength($_REQUEST["password"]);
             $minPasswordStrength = 8;
-            if (isset($_GLOBALS['_config']->register->minimum_password_strength)) $minPasswordStrength = $_GLOBALS['_config']->register->minimum_password_strength;
+            if (isset($GLOBALS['_config']->register->minimum_password_strength)) $minPasswordStrength = $GLOBALS['_config']->register->minimum_password_strength;
             if ($strength < $minPasswordStrength) {
                 print "1";
             } else {
@@ -245,20 +245,17 @@
             $role = new \Register\Role();
             $role->get($_REQUEST['code']);
 
-            $response->request->parameter = $parameters;
-
             # Get List of Matching Admins
             $admins = $role->members();
 
             # Error Handling
             if ($role->error) $this->error($role->error);
 
-            $response = new \HTTP\Response();
-            $response->success = 1;
-            $response->admin = $admins;
+            $this->response->success = 1;
+            $this->response->admin = $admins;
 
             # Send Response
-            print $this->formatOutput($response);
+            print $this->formatOutput($this->response);
         }
         
         ###################################################
@@ -318,7 +315,7 @@
             if ($role->error) app_error("Error getting role: ".$role->error,'error',__FILE__,__LINE__);
             if (! $role->id) error("Role not found");
             
-            $person = new \Register\Person();
+            $person = new \Register\Customer();
             $person->get($_REQUEST['login']);
             if ($person->error) app_error("Error getting person: ".$person->error,'error',__FILE__,__LINE__);
             if (! $person->id) error("Person not found");
@@ -423,7 +420,7 @@
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'gallery.image.xsl';
 
             # Initiate Image Object
-            $_image = new Image();
+            $_image = new \Media\Image();
 
             # Add Event
             $_image->add(
@@ -451,8 +448,8 @@
         ###################################################
         function addCustomer() {
             # Initiate Response
-            $response->header->session = $GLOBALS['_SESSION_']->code;
-            $response->header->method = $_REQUEST["method"];
+            $this->response->header->session = $GLOBALS['_SESSION_']->code;
+            $this->response->header->method = $_REQUEST["method"];
 
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
@@ -488,25 +485,24 @@
             # Add Event
             $user->add(
                 array(
-                    first_name		=> $_REQUEST['first_name'],
-                    last_name		=> $_REQUEST['last_name'],
-                    login			=> $_REQUEST['login'],
-                    password		=> $_REQUEST['password'],
-                    organization_id	=> $organization_id,
-                    custom_1		=> $_REQUEST['custom_1'],
-                    custom_2		=> $_REQUEST['custom_2'],
-                    automation		=> $automation,
+                    'first_name'		=> $_REQUEST['first_name'],
+                    'last_name'		    => $_REQUEST['last_name'],
+                    'login'			    => $_REQUEST['login'],
+                    'password'		    => $_REQUEST['password'],
+                    'organization_id'	=> $organization_id,
+                    'custom_1'		    => $_REQUEST['custom_1'],
+                    'custom_2'		    => $_REQUEST['custom_2'],
+                    'automation'		=> $automation,
                 )
             );
 
             # Error Handling
             if ($user->error) error($user->error);
-            $response = new \HTTP\Response();
-            $response->customer = $user;
-            $response->success = 1;
+            $this->response->customer = $user;
+            $this->response->success = 1;
 
             # Send Response
-            print $this->formatOutput($response);
+            print $this->formatOutput($this->response);
         }
         
         function findContacts() {
@@ -567,8 +563,8 @@
         ###################################################
         function notifyContact() {
             # Initiate Response
-            $response->header->session = $GLOBALS['_SESSION_']->code;
-            $response->header->method = $_REQUEST["method"];
+            $this->response->header->session = $GLOBALS['_SESSION_']->code;
+            $this->response->header->method = $_REQUEST["method"];
 
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.contact.xsl';
@@ -576,24 +572,22 @@
             # Initiate Customer Object
             $user = new \Register\Customer($_REQUEST['id']);
 
+			$message = new \Email\Message();
+			$message->html(true);
+			$message->from($_REQUEST['from_address']);
+			$message->subject($_REQUEST['subject']);
+			$message->body($_REQUEST['body']);
+
             # Add Event
-            $user->notifyContact(
-                array (
-                    "subject"		=> $_REQUEST['subject'],
-                    "body"			=> $_REQUEST['body'],
-                    "from_address"	=> $_REQUEST['from_address'],
-                    "from_name"		=> $_REQUEST['from_name']
-                )
-            );
+            $user->notify($message);
 
             # Error Handling
             if ($user->error) $this->error($user->error);
-            
-            $response = new \HTTP\Response();
-            $response->success = 1;
+
+            $this->response->success = 1;
 
             # Send Response
-            print $this->formatOutput($response);
+            print $this->formatOutput($this->response);
         }
 
         ###################################################
@@ -747,7 +741,7 @@
                 $parameters['organization_id'] = $organization->id;
             }
             if ($_REQUEST['product']) {
-                $_product = new Product();
+                $_product = new \Product\Item();
                 $product = $_product->get($_REQUEST['product']);
                 if ($_product->error) app_error("Error getting product: ".$_product->error,__FILE__,__LINE__);
                 if (! $product->id) $this->error("Product not found");
@@ -758,11 +752,10 @@
             $response->request->parameter = $parameters;
 
             # Get List of Matching Products
-            $_orgproducts = new OrganizationOwnedProduct();
-            $products = $_orgproducts->find($parameters);
+            $products = new \Register\Organization\OwnedProduct($parameters['organization_id'],$parameters['product_id']);
 
             # Error Handling
-            if ($_orgproducts->error) app_error($_orgproducts->error,__FILE__,__LINE__);
+            if ($products->error) app_error($products->error,__FILE__,__LINE__);
 
             $response->success = 1;
             $response->product = $products;
@@ -785,7 +778,7 @@
             if (! $organization->id) $this->error("Organization not found");
 
             require_once(MODULES."/product/_classes/default.php");
-            $_product = new Product();
+            $_product = new \Product\Item();
             $product = $_product->get($_REQUEST['product']);
             if ($_product->error) app_error("Error getting product: ".$_product->error,__FILE__,__LINE__);
             if (! $product->id) $this->error("Product not found");
@@ -793,14 +786,10 @@
             $response = new \HTTP\Response();
 
             # Get List of Matching Products
-            $_orgproducts = new OrganizationOwnedProduct();
-            $product = $_orgproducts->get(
-                $organization->id,
-                $product->id
-            );
+            $product = new \Register\Organization\OwnedProduct($organization->id,$product->id);
 
             # Error Handling
-            if ($_orgproducts->error) app_error($_orgproducts->error,__FILE__,__LINE__);
+            if ($product->error) app_error($product->error,__FILE__,__LINE__);
 
             $response->success = 1;
             $response->product = $product;
@@ -823,7 +812,7 @@
             if (! $organization->id) $this->error("Organization not found");
 
             require_once(MODULES."/product/_classes/default.php");
-            $_product = new Product();
+            $_product = new \Product\Item();
             $product = $_product->get($_REQUEST['product']);
             if ($_product->error) app_error("Error getting product: ".$_product->error,__FILE__,__LINE__);
             if (! $product->id) $this->error("Product not found");
@@ -831,7 +820,7 @@
             $response = new \HTTP\Response();
 
             # Get List of Matching Products
-            $_orgproducts = new OrganizationOwnedProduct();
+            $_orgproducts = new \Register\Organization\OwnedProduct($organization->id,$product->id);
             $products = $_orgproducts->add(
                 $organization->id,
                 $product->id,
@@ -963,7 +952,7 @@
         
         function flagActiveCustomers() {
             $list = new \Register\CustomerList();
-            $counter = $list->activate();
+            $counter = $list->flagActive();
             $response = new \HTTP\Response();
             $response->success = 1;
             $response->activated = $counter;
@@ -977,6 +966,7 @@
         function getMemberLastActive() {
             $user = new \Register\Customer($_REQUEST['memberId']);
             $response = new \HTTP\Response();
+            $results = new \stdClass();
             $results->memberId = $_REQUEST['memberId'];
             $results->lastActive = $user->last_active();
             print $this->formatOutput($results,'json');
@@ -995,7 +985,7 @@
             
             $results = array();
             foreach ($organizationsFound as $organization) {
-                $newOrganization = new stdClass();
+                $newOrganization = new \stdClass();
                 $newOrganization->id = $organization->id;
                 $newOrganization->label = $organization->name;
                 $newOrganization->value = $organization->name;
@@ -1041,15 +1031,25 @@
 
         function addLocation() {
             $response = new \HTTP\Response();
-            $parameters = array();
+            $parameters = new \stdClass;
             $parameters->name = $_REQUEST['name'];
             $parameters->address_1 = $_REQUEST['address_1'];
             $parameters->address_2 = $_REQUEST['address_2'];
             $parameters->city = $_REQUEST['city'];
             $parameters->zip_code = $_REQUEST['zip_code'];
 
+            if ($_REQUEST['admin_id']) {
+                $parameters->admin_id = $_REQUEST['admin_id'];
+            }
+            elseif ($_REQUEST['admin_code']) {
+                $admin = new Admin();
+                if (! $admin->get($_REQUEST['admin_code'])) {
+                    $this->error = "Admin not found";
+                    return false;
+                }
+            }
             $province = new \Geography\Province();
-            if (! $province->get($_REQUEST['province'])) error("Province not found");
+            if (! $province->get($admin->id,$_REQUEST['province'])) error("Province not found");
             $parameters->province_id = $province->id;
 
             $location = new \Register\Location();

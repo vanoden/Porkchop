@@ -295,7 +295,7 @@
 			    } elseif ($property == "metadata") {
 				    if (isset ( $this->metadata->$parameter ["field"] )) $buffer = $this->metadata->$parameter ["field"];
 			    } elseif ($property == "navigation") {
-				    $menuList = new \Site\MenuList ();
+				    $menuList = new \Navigation\ItemList();
 				    if ($menuList->error) {
 					    $this->error = "Error initializing navigation module: " . $menuList->error;
 					    return '';
@@ -312,7 +312,7 @@
 
 				    if (count ( $menu->item )) {
 					    foreach ( $menu->item as $item ) {
-						    if (isset ( $parameter ['class'] )) $button_class = $parameters ['class'];
+						    if (isset ( $parameter ['class'] )) $button_class = $parameter ['class'];
 						    else {
 							    $button_class = "button_" . preg_replace ( "/\W/", "_", $menu->name );
 						    }
@@ -433,7 +433,7 @@
 				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
 				    elseif ($this->query_vars) $id = $this->query_vars;
 
-				    $product = new Product ( $id );
+				    $product = new \Product\Item( $id );
 				    if ($parameter ["format"] == "thumbnail") {
 					    if ($product->type->group) {
 						    $buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
@@ -462,7 +462,7 @@
 				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
 				    elseif ($this->query_vars) $id = $this->query_vars;
 
-				    $_product = new Product ();
+				    $_product = new \Product\Item();
 				    if (! $id) {
 					    $category = $_product->defaultCategory ();
 					    if ($_product->error) {
@@ -472,7 +472,8 @@
 				    } else {
 					    $category = $_product->details ( $id );
 				    }
-				    $products = $_product->find ( array ("category" => $category->code ) );
+                    $productList = new \Product\ItemList();
+				    $products = $productList->find( array ("category" => $category->code ) );
 
 				    // Loop Through Products
 				    foreach ( $products as $product_id ) {

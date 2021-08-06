@@ -488,11 +488,6 @@ class Person {
         return $email;
     }
     
-    public function notifyContact($parameters = array()) {
-        $contact = new Contact();
-        return $contact->notify($parameters);
-    }
-    
     public function notify($message) {
         # Make Sure We have identifed a person
         if (!preg_match('/^\d+$/', $this->id)) {

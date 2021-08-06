@@ -15,7 +15,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($find_session_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::CustomerList::activate(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::CustomerList::flagActive(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$counter = 0;
@@ -31,7 +31,7 @@
 					array($id)
 				);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Register::CustomerList::activate(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error in Register::CustomerList::flagActive(): ".$GLOBALS['_database']->ErrorMsg();
 					return null;
 				}
 			}
@@ -231,7 +231,7 @@
 		}
 		public function search($search_string,$limit = 0,$offset = 0) {
 			if (is_bool($limit) && $limit == true) $count = true;
-			else $count == false;
+			else $count = false;
 
 			app_log("Customer Search Requested",'debug',__FILE__,__LINE__);
 			$this->count = 0;
@@ -241,12 +241,12 @@
 				}
 				else {
 					app_log("Invalid Search String: '$search_string'",'warning',__FILE__,__LINE__);
-					$self->error = "Invalid Search String";
+					$this->error = "Invalid Search String";
 					return null;
 				}
 			}
 			else {
-				$self->error = "Search string required";
+				$this->error = "Search string required";
 				return null;
 			}
 			$find_person_query = "
