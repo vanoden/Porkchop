@@ -7,6 +7,7 @@
 		public $name;
 		public $description;
 		public $type;
+		public $status;
 		private $_flat = false;
 		public $_cached = 0;
 		private $_error;
@@ -243,6 +244,7 @@
 			$this->id = $object->id;
 			$this->code = $object->code;
 			$this->name = $object->name;
+			$this->status = $object->status;
 			$this->description = $object->description;
 			$this->type = $object->type;
 
