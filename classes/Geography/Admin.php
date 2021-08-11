@@ -29,6 +29,10 @@
 				$this->_error = "Name required";
 				return false;
 			}
+            if (! isset($parameters['abbreviation'])) {
+                $this->_error = "Abbreviation required";
+                return false;
+            }
 			if ($this->get($country->id,$parameters['name'])) {
 				$this->_error = "Area already exists";
 				return false;
@@ -39,11 +43,18 @@
 			$add_object_query = "
 				INSERT
 				INTO	geography_provinces
-				(		code,country_id,name)
+				(		abbreviation,code,country_id,name)
 				VALUES
-				(		?,?,?)
+				(		?,?,?,?)
 			";
-			$GLOBALS['_database']->Execute($add_object_query,array($parameters['code'],$country->id,$parameters['name']));
+			$GLOBALS['_database']->Execute(
+                $add_object_query,
+                array(
+                    $parameters['abbreviation'],
+                    $parameters['code'],
+                    $country->id,$parameters['name']
+                )
+            );
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Geography::Admin::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
