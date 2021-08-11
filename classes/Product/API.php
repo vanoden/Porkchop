@@ -96,18 +96,17 @@
 			if (isset($_REQUEST['type']) && !empty($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 			$products = $productlist->find($parameters);
 			if ($productlist->error) $this->error("Error finding products: ".$productlist->error);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->product = $products;
+			$this->response->success = 1;
+			$this->response->product = $products;
 	
-			print $this->formatOutput($response);
+			print $this->formatOutput($this->response);
 		}
 	
 		###################################################
 		### Add a Relationship							###
 		###################################################
 		public function addRelationship() {
-			$_product = new Product();
+			$_product = new \Product\Item();
 			if (defined($_REQUEST['parent_code']))
 			{
 				$parent = $_product->get($_REQUEST['parent_code']);
@@ -170,7 +169,7 @@
 		### Find Relationships							###
 		###################################################
 		public function findRelationships() {
-			$_product = new Product();
+			$_product = new \Product\Item();
 			if ($_REQUEST['parent_code'])
 			{
 				$parent = $_product->get($_REQUEST['parent_code']);
@@ -184,7 +183,7 @@
 			if (preg_match('/^\d+$/',$_REQUEST['parent_id'])) $parameters['parent_id'] = $_REQUEST['parent_id'];
 			if ($_REQUEST['child_id']) $parameters['child_id'] = $_REQUEST['child_id'];
 			
-			$_relationship = new ProductRelationship();
+			$_relationship = new \Product\Relationship();
 			$relationships = $_relationship->find($parameters);
 	
 			if ($_relationship->error) $this->error("Error finding relationships: ".$_relationship->error);
@@ -267,12 +266,12 @@
 			# Load Media Module
 			require_once(MODULES."/media/_classes/default.php");
 	
-			$_product = new Product();
+			$_product = new \Product\Item();
 			$product = $_product->get($_REQUEST['product_code']);
 			if ($_product->error) app_error("Error finding product: ".$_product->error,__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
 	
-			$_image = new MediaItem();
+			$_image = new \Media\Item();
 			$image = $_image->get($_REQUEST['image_code']);
 			if ($_image->error) app_error("Error finding image: ".$_image->error,__FILE__,__LINE__);
 			if (! $image->id) $this->error("Image not found");
@@ -293,7 +292,7 @@
 		### Add Metadata to Product						###
 		###################################################
 		public function addItemMetadata() {
-			$_product = new Product();
+			$_product = new \Product\Item();
 			$product = $_product->get($_REQUEST['code']);
 			if ($_product->error) app_error("Error finding product: ".$_product->error,__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
