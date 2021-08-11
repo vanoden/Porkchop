@@ -1,61 +1,11 @@
 <?php
 	namespace Network;
 
-	class Schema {
-		public $error;
-		public $errno;
-		private $module = "network";
-		private $class = "Network";
-		private $roles = array(
-			'network editor'	=> 'Can add/edit network info',
-			'network viewer'	=> 'Can see network info'
-		);
-
-		public function __construct() {
-			$this->upgrade();
-		}
+	class Schema Extends \Database\BaseSchema {
+		public $module = "network";
 		
-		public function version() {
-			# See if Schema is Available
-			$schema_list = $GLOBALS['_database']->MetaTables();
-			$info_table = $this->module."__info";
-
-			if (! in_array($info_table,$schema_list)) {
-				# Create __info table
-				$create_table_query = "
-					CREATE TABLE `$info_table` (
-						label	varchar(100) not null primary key,
-						value	varchar(255)
-					)
-				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating info table in ".$this->class."::Schema::version(): ".$GLOBALS['_database']->ErrorMsg();
-					return null;
-				}
-			}
-
-			# Check Current Schema Version
-			$get_version_query = "
-				SELECT	value
-				FROM	`$info_table`
-				WHERE	label = 'schema_version'
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_version_query);
-			if (! $rs) {
-				$this->error = "SQL Error in ".$this->class."::Schema::version(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-
-			list($version) = $rs->FetchRow();
-			if (! $version) $version = 0;
-			return $version;
-		}
 		public function upgrade() {
-			$current_schema_version = $this->version();
-
-			if ($current_schema_version < 1) {
+			if ($this->version() < 1) {
 				app_log("Upgrading ".$this->class." schema to version 1",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
@@ -70,12 +20,10 @@
 						UNIQUE KEY		`uk_name` (`name`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating network_domains table in ".$this->class."::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
 				$create_table_query = "
@@ -90,12 +38,25 @@
 						FOREIGN KEY `fk_domain` (`domain_id`) REFERENCES `network_domains` (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating network_hosts table in ".$this->class."::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `network_host_metadata` (
+						`host_id`	int(11) NOT NULL AUTO_INCREMENT,
+						`key`		varchar(255) NOT NULL,
+						`value`		varchar(11) NOT NULL,
+						PRIMARY KEY (`host_id`,`key`),
+						FOREIGN KEY `fk_meta_host_id` (`host_id`) REFERENCES `network_hosts` (`id`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating network_host_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
 				$create_table_query = "
@@ -111,50 +72,45 @@
 						FOREIGN KEY `fk_host` (`host_id`) REFERENCES `network_hosts` (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating network_adapters table in ".$this->class."::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `network_subnets` (
+						`id`			int(11) NOT NULL AUTO_INCREMENT,
+						`address`		bigint(8) NOT NULL,
+						`size`			bigint(8) NOT NULL,
+						`type`			enum('ipv4','ipv6') NOT NULL DEFAULT 'ipv4'
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `network_addresses` (
 						`id`			int(11) NOT NULL AUTO_INCREMENT,
-						`address`		varchar(255) NOT NULL,
-						`prefix`		varchar(255) NOT NULL,
-						`type`			enum('ipv4','ipv6') NOT NULL DEFAULT 'ipv4',
+						`address`		bigint(8) NOT NULL,
+						`subnet_id`	int(6) NOT NULL,
 						`adapter_id`	int(11) NOT NULL,
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `uk_address` (`address`),
 						FOREIGN KEY `fk_adapter` (`adapter_id`) REFERENCES `network_adapters` (`id`)
 					)
 				";
-				$GLOBALS['_database']->Execute($create_table_query);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating network_addresses table in ".$this->class."::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-					app_log($this->error,'error',__FILE__,__LINE__);
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
 				}
 
-				$current_schema_version = 1;
-				$update_schema_version = "
-					INSERT
-					INTO	".$this->module."__info
-					VALUES	('schema_version',$current_schema_version)
-					ON DUPLICATE KEY UPDATE
-						value = $current_schema_version
-				";
-				$GLOBALS['_database']->Execute($update_schema_version);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					app_log("SQL Error in ".$this->class."::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
-					$this->error = "Error adding roles to database";
-					$GLOBALS['_database']->RollbackTrans();
-					return null;
-				}
-				$GLOBALS['_database']->CommitTrans();
+                                $this->setVersion(1);
+                                $GLOBALS['_database']->CommitTrans();
 			}
 
 			# Add Roles
