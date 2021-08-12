@@ -36,7 +36,7 @@
 				return false;
 			}
 			
-			$this->code = $code;
+			$this->code = $parameters['code'];
 			if (! $this->_valid_type($parameters['mime_type'])) {
 				$this->error = "Invalid mime_type '".$parameters['mime_type']."'";
 				return false;
@@ -236,6 +236,10 @@
 				}
 			}
 			return $this->_repository_id;
+		}
+
+		public function repository() {
+			return new Repository($this->_repository_id);
 		}
 
 		private function _valid_type($name) {
@@ -450,7 +454,19 @@
 			if ($this->id && file_exists($this->path())) return true;
 			return false;
 		}
-		
+
+		public function setMetaData($key,$value) {
+			$metadata = new \Storage\FileMetadata($this->id);
+			$metadata->add($key,$value);
+			return true;
+		}
+
+		public function getMetadata($key) {
+			$metadata = new \Storage\FileMetadata($this->id);
+			$metadata->get($this->id,$key);
+			return $metadata;
+		}
+
 		public function upload ($parameters) {
 		
 		    // make sure we have a file present in the request to upload it
@@ -509,12 +525,12 @@
 						    $this->delete();
 						    $this->addError('Unable to add file to repository: '.$repository->error);
 					    } else {
-						    app_log("Stored file ".$this->id." at ".$repostory->path."/".$this->code);
+						    app_log("Stored file ".$this->id." at ".$repository->path."/".$this->code);
 						    $this->success = "File uploaded";
 						    
                             // add file type refrence for this file to be a part of the support/engineering ticket
                             if (isset($parameters['type']) && isset($parameters['ref_id'])) {
-                                $fileMetaData = new \Storage\FileMetaData();
+                                $fileMetaData = new \Storage\FileMetadata($this->id);
                                 $fileMetaData->add(array('file_id' => $this->id, 'key' => $parameters['type'], 'value' => $parameters['ref_id']));   
                             }                            
 					    }
