@@ -13,29 +13,6 @@
 			parent::__construct();
 		}
 
-		###################################################
-		### Add an Item									###
-		###################################################
-		public function addItem() {
-			$product = new \Product\Item();
-	
-			$product->add(
-				array(
-					'code'			=> $_REQUEST['code'],
-					'name'			=> $_REQUEST['name'],
-					'description'	=> $_REQUEST['description'],
-					'status'		=> $_REQUEST['status'],
-					'type'			=> $_REQUEST['type']
-				)
-			);
-			if ($product->error) $this->error("Error adding product: ".$product->error);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->item = $product;
-	
-			print $this->formatOutput($response);
-		}
-
 		/**
 		 * Add a Request
 		 */
@@ -51,7 +28,7 @@
 					$parameters ['customer_id'] = $customer->id;
 				}
 				if ($_REQUEST ['tech']) {
-					$admin = new RegisterAdmin ();
+					$admin = new \Register\Admin ();
 					$admin->get ( $_REQUEST ['admin'] );
 					if ($admin->error) $this->app_error ( "Error getting admin: " . $admin->error, 'error', __FILE__, __LINE__ );
 					if (! $admin->id) $this->error ( "Tech not found" );
@@ -125,41 +102,22 @@
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
-				'findItems'	=> array(
-					'code'		=> array(),
-					'name'		=> array(),
-					'status'	=> array(),
-					'type'		=> array(),
+				'getRequest'	=> array(
+					'code'		=> array()
 				),
-				'getItem'	=> array(
-					'code'	=> array(),
+				'addRequest'	=> array(
+					'customer'	=> array('required' => true),
+					'tech'		=> array(),
+					'status'	=> array()
 				),
-				'addItem'	=> array(
+				'updateRequest'	=> array(
 					'code'		=> array('required' => true),
-					'name'		=> array('required' => true),
-					'status'	=> array('default' => 'ACTIVE'),
-					'type'		=> array('required' => true),
+					'customer'	=> array(),
+					'tech'		=> array(),
+					'status'	=> array()
 				),
-				'updateItem'	=> array(
-					'code'		=> array('required' => true),
-					'name'		=> array(),
-					'status'	=> array(),
-					'type'		=> array(),
-				),
-				'findRelationships'	=> array(
-					'parent_code'	=> array('required' => true),
-					'child_code'	=> array('required' => true),
-				),
-				'addRelationship'	=> array(
-					'parent_code'	=> array('required' => true),
-					'child_code'	=> array('required' => true),
-				),
-				'getRelationship'	=> array(
-					'parent_code'	=> array('required' => true),
-					'child_code'	=> array('required' => true),
-				),
-				'findGroupItems'	=> array(
-					'code'			=> array('required' => true)
+				'findRequests'	=> array(
+					'status'	=> array('required' => true)
 				)
 			);
 		}
