@@ -54,7 +54,7 @@
 			$_REQUEST["stylesheet"] = '';
 			error_log($message);
 			$response = new \HTTP\Response();
-			$response->message = $message;
+			$response->error = $message;
 			$response->success = 0;
 			print $this->formatOutput($response);
 			exit;
