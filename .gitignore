@@ -4,6 +4,7 @@ classes/Monitor
 classes/Action
 classes/Media
 classes/Solvay
+classes/Alert
 html/
 html.src/
 classes/Brand
@@ -16,6 +17,7 @@ modules/event/spectros
 modules/monitor/local
 modules/brand
 modules/local
+modules/alert
 templates
 tmp
 node_modules/
