@@ -164,12 +164,13 @@
 				elseif (isset($matches[3])) {
 					$this->query_vars = $matches[2]."/".$matches[3];
 					$this->view = "index";
+					$this->index = $matches[2];
 				}
 				else {
 					$this->query_vars = $matches[2]."/";
 					$this->view = "index";
+					$this->index = $matches[2];
 				}
-				$this->index = $matches[2];
 				if (! isset($this->index)) $this->index = '';
 			}
 			elseif (! $this->module) {
