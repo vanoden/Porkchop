@@ -20,7 +20,11 @@
 	    
 	    public function __construct() {
 		    $args = func_get_args ();
-		    if (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
+			if (func_num_args() == 1 && gettype($args[0] == "integer")) {
+				$this->id = $args[0];
+				$this->details();
+			}
+		    elseif (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
 			    $this->id = $args [0];
 			    $this->details ();
 		    } elseif (func_num_args () == 1 && gettype ( $args [0] ) == "array") {
@@ -78,7 +82,6 @@
 	    public function get($module, $view, $index = null) {
 		    $parameters = array ($module, $view );
 		    if (strlen ( $index ) < 1) $index = null;
-
 		    // Prepare Query
 		    $get_object_query = "
 				    SELECT	id
@@ -96,8 +99,7 @@
 				    AND		(`index` is null or `index` = '')
 				    ";
 		    }
-		    query_log ( $get_object_query );
-		    app_log ( print_r ( $parameters, true ) );
+		    query_log($get_object_query, $parameters, true);
 		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, $parameters );
 		    if (! $rs) {
 			    $this->addError ( "SQL Error in Page::get: " . $GLOBALS ['_database']->ErrorMsg () );
@@ -108,8 +110,29 @@
 		    if (is_numeric ( $id )) {
 			    $this->id = $id;
 			    return $this->details ();
-		    } else {
-			    return false;
+		    }
+			elseif ($module == "content" && $view == "index") {
+				$message = new \Content\Message();
+				if ($message->get($index)) {
+					return $this->add($module,$view,$index);
+				}
+				elseif ($GLOBALS['_SESSION_']->customer->has_role('content developer')) {
+					return $this->get("content","edit");
+				}
+				else return false;
+			}
+			else {
+				// See if view exists...we should create it if it does
+				$file_path = MODULES."/".$module;
+				if (isset($GLOBALS['_config']->style->$module)) $file_path .= "/".$GLOBALS['_config']->style->$module;
+				else $file_path .= "/default";
+				if (file_exists($file_path."/".$view.".php") || file_exists($file_path."/".$view."_mc.php")) {
+					app_log("Request for $module::$view view, adding to pages",'notice');
+					return $this->add($module,$view);
+				}
+				else {
+				    return false;
+				}
 		    }
 		    return true;
 	    }
@@ -134,11 +157,12 @@
 		    $GLOBALS ['_database']->Execute ( $add_object_query, array ($this->module, $this->view, $this->index ) );
 		    if ($GLOBALS ['_database']->ErrorMsg ()) {
 			    $this->error = "SQL Error in Site::Page::add(): " . $GLOBALS ['_database']->ErrorMsg ();
-			    return null;
+				app_log($this->error,'error');
+			    return false;
 		    }
-		    $id = $GLOBALS ['_database']->Insert_ID ();
-		    app_log ( "Added page id " . $id );
-		    $this->details ( $id );
+		    $this->id = $GLOBALS ['_database']->Insert_ID ();
+		    app_log ( "Added page id " . $this->id );
+		    return $this->details();
 	    }
 	    public function details() {
 		    $get_details_query = "

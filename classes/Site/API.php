@@ -18,29 +18,28 @@
 		public function findPages() {
 			# Default StyleSheet
 			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'content.message.xsl';
-			$response = new \HTTP\Response();
-	
+
 			# Initiate Page List
 			$page_list = new \Site\PageList();
-	
+
 			# Find Matching Threads
 			$parameters = array();
 			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 			if (isset($_REQUEST['module'])) $parameters['module'] = $_REQUEST['module'];
 			if (isset($_REQUEST['options'])) $parameters['options'] = $_REQUEST['options'];
 			$pages = $page_list->find($parameters);
-	
+
 			# Error Handling
 			if ($page_list->error) error($page_list->error);
 			else{
-				$response->page = $pages;
-				$response->success = 1;
+				$this->response->page = $pages;
+				$this->response->success = 1;
 			}
-	
-			api_log('content',$_REQUEST,$response);
-	
+
+			api_log('content',$_REQUEST,$this->response);
+
 			# Send Response
-			print $this->formatOutput($response);
+			print $this->formatOutput($this->response);
 		}
 		###################################################
 		### Get Details regarding Specified Page		###

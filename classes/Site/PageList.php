@@ -5,29 +5,37 @@
 		public $error;
 
 		public function find($parameters = array()) {
+			$bind_params = array();
 			# Prepare Query
 			$get_object_query = "
 				SELECT	id
 				FROM	page_pages
 				WHERE	id = id
 			";
-			if (isset($parameters['module']))
+			if (isset($parameters['module']) && $parameters['module']) {
 				$get_object_query .= "
-					AND		module = ".$GLOBALS['_database']->qstr($parameters['module'],get_magic_quotes_gpc());
-			if (isset($parameters['view']))
+					AND		module = ?";
+				array_push($bind_params,$parameters['module']);
+			}
+			if (isset($parameters['view']) && $parameters['view']) {
 				$get_object_query .= "
-					AND		view = ".$GLOBALS['_database']->qstr($parameters['view'],get_magic_quotes_gpc());
-			if (isset($parameters['index']))
+					AND		view = ?";
+				array_push($bind_params,$parameters['view']);
+			}
+			if (isset($parameters['index']) && $parameters['index']) {
 				$get_object_query .= "
-					AND		`index` = ".$GLOBALS['_database']->qstr($parameters['index'],get_magic_quotes_gpc());
+					AND		`index` = ?";
+				array_push($bind_params,$parameters['index']);
+			}
 			$get_object_query .= "
 					ORDER BY module,view
 			";
-			$rs = $GLOBALS['_database']->Execute($get_object_query);
+			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in PageList::find: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+			query_log($get_object_query,$bind_params,true);
 			$pages = array();
 			while(list($id) = $rs->FetchRow()) {
 				$page = new \Site\Page($id);
