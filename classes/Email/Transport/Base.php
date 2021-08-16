@@ -2,7 +2,7 @@
 	namespace Email\Transport;
 
 	class Base {
-		private $_error;
+		protected $_error;
 
 		public function hostname() {
 			return $this->hostname;
