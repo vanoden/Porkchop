@@ -48,7 +48,6 @@
 		public function getMessage() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
-			$response = new \HTTP\Response();
 
 			# Initiate Product Object
 			$message = new \Content\Message($_REQUEST['id']);
@@ -62,15 +61,15 @@
 			# Error Handling
 			if ($message->error) $this->error($message->error);
 			else{
-				$response->request = $_REQUEST;
-				$response->message = $message;
-				$response->success = 1;
+				$this->response->request = $_REQUEST;
+				$this->response->message = $message;
+				$this->response->success = 1;
 			}
 
-			api_log('content',$_REQUEST,$response);
+			api_log('content',$_REQUEST,$this->response);
 
 			# Send Response
-			print $this->formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+			print $this->formatOutput($this->response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 		}
 		###################################################
 		### Get Details regarding Specified Product		###
@@ -94,7 +93,7 @@
 			);
 
 			# Error Handling
-			if ($content->error) error($content->error);
+			if ($content->error) $this->error($content->error);
 			else{
 				$response->message = $message;
 				$response->success = 1;
@@ -150,33 +149,31 @@
 		public function purgeMessage() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
-			$response = new \HTTP\Response();
 
 			# Initiate Product Object
-			$_content = new Content();
+			$message = new Message();
 
 			# Get Message
-			$message = $_content->get($_REQUEST['target']);
-			if ($_content->error)			{
-				$this->app_error($_content->error,__FILE__,__LINE__);
+			if (! $message->get($_REQUEST['target'])) {
+				$this->app_error($message->error,__FILE__,__LINE__);
 				$this->error("Application error");
 			}
 			if (! $message->id)
 			$this->error("Unable to find matching message");
 
 			# Purge Cache for message
-			$_content->purge_cache($message->id);
+			$message->purge_cache($message->id);
 
 			# Error Handling
-			if ($_content->error) error($_content->error);
+			if ($message->error) $this->error($message->error);
 			else{
-				$response->message = "Success";
-				$response->success = 1;
+				$this->response->message = "Success";
+				$this->response->success = 1;
 			}
 
-			api_log('content',$_REQUEST,$response);
+			api_log('content',$_REQUEST,$this->response);
 			# Send Response
-			print $this->formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+			print $this->formatOutput($this->response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 		}
 
 		###################################################
@@ -308,7 +305,7 @@
 			}
 
 			# Error Handling
-			if ($_metadata->error) error($_metadata->error);
+			if ($_metadata->error) $this->error($_metadata->error);
 			else{
 				#$response->request = $_REQUEST;
 				$response->metadata = $metadata;

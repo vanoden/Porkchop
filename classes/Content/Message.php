@@ -35,15 +35,19 @@
 			list($id) = $rs->FetchRow();
 			if ($id) {
 				$this->id = $id;
-			} else {
+			} elseif(false) {
 				# Make Sure User Has Privileges
-				app_log("No match found for message '$code', adding",'info',__FILE__,__LINE__);
+				app_log("No match found for message '$target', adding",'info',__FILE__,__LINE__);
 				if (! $GLOBALS['_SESSION_']->customer->has_role('content developer')) {
 					$this->error = "Sorry, insufficient privileges. Role 'content developer' required.";
 					return null;
 				}
 				$this->add(array("target" => $target));
 				if ($this->error) return null;
+			}
+			else {
+				$this->error = "Message not found";
+				return false;
 			}
 			return $this->details();
 		}
