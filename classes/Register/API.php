@@ -50,12 +50,11 @@
                 app_log("Authentication failed",'notice',__FILE__,__LINE__);
             }
             
-            $response = new \HTTP\Response();
-            $response->success = $result;
-            if (! $result) $response->message = "Invalid login password combination";
+            $this->response->success = $result;
+            if (! $result) $this->error("Invalid login password combination");
 
             # Send Response
-            print $this->formatOutput($response);
+            print $this->formatOutput($this->response);
         }
         
         ###################################################
