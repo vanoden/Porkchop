@@ -1,6 +1,11 @@
 <?php
-    $_content = new Content();
-    if (! $id) $id = $_REQUEST['id'];
-    if (! $id) $id = $GLOBALS['_REQUEST_']->query_vars_array[0];
-    print "ID=$id";
-    if ($id) $content = $_content->details($id);
+	if (isset($_REQUEST['id'])) {
+		$message = new \Content\Message($_REQUEST['id']);
+	}
+	else {
+		$message = new \Content\Message($GLOBALS['_REQUEST_']->index);
+		if (! $message->id) {
+			$message->name = $GLOBALS['_REQUEST_']->index;
+			$message->target = $GLOBALS['_REQUEST_']->index;
+		}
+	}

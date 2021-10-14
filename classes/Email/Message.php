@@ -61,4 +61,8 @@
 			if (isset($body)) $this->_body = $body;
 			return $this->_body;
 		}
+
+		public function error() {
+			return $this->_error;
+		}
 	}

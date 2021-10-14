@@ -24,25 +24,25 @@
 		    <div class="tableCell">
 			    <select name="assigned_id" class="value input">
 				    <option value="">Any</option>
-				    <?	foreach ($assigners as $assigner) { ?>
+				    <?php	foreach ($assigners as $assigner) { ?>
 				    <option value="<?=$assigner->id?>"<?php if ($assigner->id == $_REQUEST['assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
-				    <?	} ?>
+				    <?php	} ?>
 			    </select>
 		    </div>
 		    <div class="tableCell">
 			    <select name="product_id" class="value input">
 				    <option value="">Any</option>
-				    <?	foreach ($products as $product) { ?>
+				    <?php	foreach ($products as $product) { ?>
 				    <option value="<?=$product->id?>"<?php if ($product->id == $_REQUEST['product_id']) print " selected"; ?>><?=$product->title?></option>
-				    <?	} ?>
+				    <?php	} ?>
 			    </select>
 		    </div>
 		    <div class="tableCell">
 			    <select name="project_id" class="value input">
 				    <option value="">Any</option>
-				    <?	foreach ($projects as $project) { ?>
+				    <?php	foreach ($projects as $project) { ?>
 				    <option value="<?=$project->id?>"<?php if ($project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
-				    <?	} ?>
+				    <?php	} ?>
 			    </select>
 		    </div>
 		    <div class="tableCell">

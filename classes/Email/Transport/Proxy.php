@@ -53,10 +53,12 @@
 				app_log($content);
 				if (preg_match('/^ERROR\:\s(.*)$/',$content,$matches)) {
 					$this->_error = $matches[1];
+					$this->_result = "Failed";
 					return false;
 				}
 				elseif (preg_match('/Mailer\sError/',$content)) {
 					$this->_error = $content;
+					$this->_result = "Failed";
 					return false;
 				}
 				$this->_result = "Sent";

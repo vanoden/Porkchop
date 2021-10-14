@@ -233,6 +233,9 @@
 <?php	if ($page->errorCount()) { ?>
     <div class="form_error"><?=$page->errorString()?></div>
 <?php	}
+	if (empty($GLOBALS['_SESSION_']->customer->organization->id)) {
+		return;
+	}
 	if ($page->success) { ?>
     <div class="form_success"><?=$page->success?></div>
 <?php	} else { ?>

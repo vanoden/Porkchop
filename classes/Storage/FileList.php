@@ -15,8 +15,9 @@
          */
 		public function find($parameters = array()) {
 		
-		    if (empty($parameters['ref_id'])) return false;
-		    if (empty($parameters['type'])) return false;
+			# Why would we need this?! - A. Caravello
+#		    if (empty($parameters['ref_id'])) return false;
+#		    if (empty($parameters['type'])) return false;
 		
 			$get_objects_query = "
 				SELECT sf.id

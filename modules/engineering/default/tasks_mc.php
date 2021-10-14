@@ -19,6 +19,7 @@
 	if ($_REQUEST["testing"]) array_push($parameters['status'],'TESTING');
 	if ($_REQUEST["hold"]) array_push($parameters['status'],'HOLD');
 	if ($_REQUEST["project_id"]) $parameters['project_id'] = $_REQUEST['project_id'];
+	if ($_REQUEST["product_id"]) $parameters['product_id'] = $_REQUEST['product_id'];
 	if ($_REQUEST["assigned_id"]) $parameters['assigned_id'] = $_REQUEST['assigned_id'];
 
 	$tasks = $tasklist->find($parameters);

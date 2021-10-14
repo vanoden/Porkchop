@@ -114,8 +114,8 @@
 						`priority` enum('NORMAL','IMPORTANT','URGENT','CRITICAL') NOT NULL DEFAULT 'NORMAL',
 						PRIMARY KEY (`id`),
 						UNIQUE KEY `UK_CODE` (`code`),
-						FOREIGN KEY `fk_product_id` (`product_id`) REFERENCES `engineering_products` (`id`),
-						FOREIGN KEY `fk_person_id` (`requested_id`) REFERENCES `register_users` (`id`)
+						FOREIGN KEY `fk_task_product_id` (`product_id`) REFERENCES `engineering_products` (`id`),
+						FOREIGN KEY `fk_task_person_id` (`requested_id`) REFERENCES `register_users` (`id`)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
@@ -134,8 +134,8 @@
 						`description` text,
 						`date_event` datetime NOT NULL,
 						PRIMARY KEY (`id`),
-						FOREIGN KEY `fk_task_id` (`task_id`) REFERENCES engineering_tasks (`id`),
-						FOREIGN KEY `fk_person_id` (`person_id`) REFERENCES register_users (`id`)
+						FOREIGN KEY `fk_eng_task_id` (`task_id`) REFERENCES engineering_tasks (`id`),
+						FOREIGN KEY `fk_eng_person_id` (`person_id`) REFERENCES register_users (`id`)
 					)
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
@@ -431,9 +431,9 @@
                       `code` varchar(100) NOT NULL,  
                       `user_id` int(11) DEFAULT NULL,
                       PRIMARY KEY (`id`),
-                      CONSTRAINT `engineering_tasks_comments_ibfk_1` FOREIGN KEY (`code`) REFERENCES `engineering_tasks` (`code`),
-                      CONSTRAINT `engineering_tasks_comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+                      FOREIGN KEY `fk_eng_task_comments` (`code`) REFERENCES `engineering_tasks` (`code`),
+                      FOREIGN KEY `fk_eng_task_comment_users` (`user_id`) REFERENCES `register_users` (`id`)
+                    )
 				";
 
 				$GLOBALS['_database']->Execute($create_table_query);
@@ -517,7 +517,7 @@
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$drop_table_query = "
-					DROP TABLE `engineering_task_hours`
+					DROP TABLE IF EXISTS `engineering_task_hours`
 				";
 				$GLOBALS['_database']->Execute($drop_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {

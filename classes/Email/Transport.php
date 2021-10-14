@@ -3,7 +3,6 @@
 
 	class Transport {
 		private $_provider = 'smtp';
-		private $_error;
 
         public function __construct() {}
 		
@@ -25,9 +24,5 @@
 				app_log("Invalid Email Transport",'error');
 				return null;
 			}
-		}
-
-		public function error() {
-            return $this->_error;
 		}
 	}

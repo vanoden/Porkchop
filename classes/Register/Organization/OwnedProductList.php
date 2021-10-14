@@ -1,5 +1,5 @@
 <?php
-	namespace \Register\Organization;
+	namespace Register\Organization;
 	class OwnedProductList {
         public function find($parameters = array()) {
             $get_objects_query = "
@@ -30,7 +30,8 @@
             $objects = array();
 
             while (list($organization_id,$product_id) = $rs->FetchRow()) {
-                $object = $this->details();
+                $orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
+                $object = $orgProduct;
                 if ($this->error) {
                     $this->error = "Error getting details for OrganizationOwnedProduct: ".$this->error;
                     return null;

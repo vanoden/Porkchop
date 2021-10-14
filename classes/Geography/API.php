@@ -20,7 +20,7 @@
 			$parameters = array();
 			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = $_REQUEST['abbreviation'];
-			if (! $country->add($parameters)) app_error("Error adding country: ".$country->error());
+			if (! $country->add($parameters)) $this->app_error("Error adding country: ".$country->error());
 	
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -35,14 +35,14 @@
 		public function updateCountry() {
 			$country = new \Geography\Country();
 			$country->get($_REQUEST['code']);
-			if ($country->error) app_error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
-			if (! $country->id) error("Request not found");
+			if ($country->error) $this->app_error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
+			if (! $country->id) $this->error("Request not found");
 	
 			$parameters = array();
 			$country->update(
 				$parameters
 			);
-			if ($country->error) app_error("Error updating country: ".$country->error(),'error',__FILE__,__LINE__);
+			if ($country->error) $this->app_error("Error updating country: ".$country->error(),'error',__FILE__,__LINE__);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->country = $country;
@@ -57,7 +57,7 @@
 			if (isset($_REQUEST['name'])) {
 				$country = new \Geography\Country();
 				$country->get($_REQUEST['name']);
-				if ($country->error()) app_error($country->error());
+				if ($country->error()) $this->app_error($country->error());
 			}
 			elseif(isset($_REQUEST['id'])) {
 				$country = new \Geography\Country($_REQUEST['id']);
@@ -82,7 +82,7 @@
 			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 			
 			$countries = $countryList->find($parameters);
-			if ($countryList->error) app_error("Error finding countries: ".$countryList->error());
+			if ($countryList->error) $this->app_error("Error finding countries: ".$countryList->error);
 	
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -95,7 +95,7 @@
 		###################################################
 		public function addProvince() {
 			$country = new \Geography\Country($_REQUEST['country_id']);
-			if (! $country->id) app_error("Country not found");
+			if (! $country->id) $this->app_error("Country not found");
 	
 			$province = new \Geography\Province();
 	
@@ -103,7 +103,7 @@
 			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = $_REQUEST['abbreviation'];
 			$parameters['country_id'] = $country->id;
-			if (! $province->add($parameters)) app_error("Error adding province: ".$province->error());
+			if (! $province->add($parameters)) $this->app_error("Error adding province: ".$province->error());
 	
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -118,14 +118,14 @@
 		public function updateProvince() {
 			$country = new \Geography\Country();
 			$country->get($_REQUEST['code']);
-			if ($country->error) app_error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
-			if (! $country->id) error("Request not found");
+			if ($country->error) $this->app_error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
+			if (! $country->id) $this->error("Request not found");
 	
 			$parameters = array();
 			$country->update(
 				$parameters
 			);
-			if ($country->error) app_error("Error updating country: ".$country->error(),'error',__FILE__,__LINE__);
+			if ($country->error) $this->app_error("Error updating country: ".$country->error(),'error',__FILE__,__LINE__);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->country = $country;
@@ -139,14 +139,14 @@
 		public function getProvince() {
 			if (isset($_REQUEST['country_id'])) {
 				$country = new \Geography\Country($_REQUEST['country_id']);
-				if (! $country->id) error("Country not found");
+				if (! $country->id) $this->error("Country not found");
 	
 				$province = new \Geography\Province();
-				if (! $province->get($country->id,$_REQUEST['name'])) error("Province not found");
+				if (! $province->get($country->id,$_REQUEST['name'])) $this->error("Province not found");
 			}
 			elseif (isset($_REQUEST['id'])) {
 				$province = new \Geography\Province($_REQUEST['id']);
-				if (! $province->id) error("Province not found");
+				if (! $province->id) $this->error("Province not found");
 			}
 			else {
 				error("Not enough parameters");
@@ -169,7 +169,7 @@
 			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 			if ($_REQUEST['country_name']) {
 				$country = new \Geography\Country();
-				if (! $country->get($_REQUEST['country_name'])) app_error("Country not found");
+				if (! $country->get($_REQUEST['country_name'])) $this->app_error("Country not found");
 				$parameters['country_id'] = $country->id;
 			}
 			elseif ($_REQUEST['country_id']) {
@@ -178,7 +178,7 @@
 			}
 			
 			$provinces = $provinceList->find($parameters);
-			if ($provinceList->error) app_error("Error finding provinces: ".$provinceList->error());
+			if ($provinceList->error) $this->app_error("Error finding provinces: ".$provinceList->error());
 	
 			$response = new \HTTP\Response();
 			$response->success = 1;

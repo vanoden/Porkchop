@@ -4,6 +4,7 @@ classes/Monitor
 classes/Action
 classes/Media
 classes/Solvay
+classes/Alert
 classes/Brand
 html
 html.src
@@ -14,7 +15,12 @@ modules/event/spectros
 modules/monitor/local
 modules/brand
 modules/local
+modules/alert
 templates
 tmp
 node_modules/
+third_party/hashfile
 package-lock.json
+__pycache__
+third_party/composer.sha384sum
+.DS_Store

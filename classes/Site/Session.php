@@ -43,8 +43,9 @@
 			# Fetch Company Information
 			$this->location = new \Company\Location();
 			$this->location->getByHost($_SERVER['SERVER_NAME']);
+			
 			if (! $this->location->id) {
-				$this->error = "Location not configured";
+				$this->error = "Location ".$_SERVER['SERVER_NAME']." not configured";
 				return null;
 			}
 			if (! $this->location->domain->id) {
@@ -61,6 +62,7 @@
 				$this->error = "Domain '".$this->domain->id."' not found for location ".$this->location->id;
 				return null;
 			}
+			
 			$this->company = new \Company\Company($this->domain->company->id);
 			if ($this->company->error) {
 				$this->error = "Error finding company: ".$this->company->error;
@@ -477,7 +479,8 @@
 		function update ($parameters) {
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
-			if ($cache) $cache->unset();
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+			if ($cache) $cache->delete();
 			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
 
 			# Make Sure User Has Privileges to view other sessions
@@ -506,12 +509,12 @@
 				WHERE	id = ?
 			";
 
-			if (isset($_GLOBALS['_config']->log_queries))
+			if (isset($GLOBALS['_config']->log_queries))
 				app_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$update_session_query)),'debug',__FILE__,__LINE__);
 
 			$rs = $GLOBALS['_database']->Execute(
 				$update_session_query,
-				array($id)
+				array($this->id)
 			);
 			if (! $rs) {
 				$this->error = "SQL Error in Session::Session::update(): ".$GLOBALS['_database']->ErrorMsg();

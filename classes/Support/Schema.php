@@ -97,9 +97,9 @@
 						date_event datetime,
 						description TEXT,
 						hours DECIMAL(5,1) NOT NULL DEFAULT 0,
-						PRIMARY KEY `pk_event` (`id`),
-						FOREIGN KEY `fk_action` (`action_id`) REFERENCES `support_item_actions` (`id`),
-						FOREIGN KEY `fk_user` (`user_id`) REFERENCES `register_users` (`id`)
+						PRIMARY KEY `pk_support_event` (`id`),
+						FOREIGN KEY `fk_support_action` (`action_id`) REFERENCES `support_item_actions` (`id`),
+						FOREIGN KEY `fk_support_user` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
@@ -185,7 +185,7 @@
 				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
             }
-            
+
             // update to schema 4 (new product registration -> /_support/register_product)
             if ($this->version() < 4) {
             
@@ -211,7 +211,7 @@
                       KEY `idx_serial` (`product_id`,`serial_number`),
                       CONSTRAINT `product_registration_queue_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `product_products` (`id`),
                       CONSTRAINT `product_registration_queue_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `register_users` (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+                    )
                 ";
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error creating product_registration_queue table in ".$this->module."::Schema::upgrade(): ".$this->error;
@@ -285,8 +285,8 @@
 				$this->setVersion(7);
 				$GLOBALS['_database']->CommitTrans();
 			}
-						
-			if ($this->version() == -1) {
+
+			if ($this->version() < 8) {
 				app_log("Upgrading schema to version 8",'notice',__FILE__,__LINE__);
 
 				// Start Transaction
@@ -305,7 +305,7 @@
                       KEY `support_task_hours_ibfk_2` (`user_id`),
                       CONSTRAINT `support_task_hours_ibfk_1` FOREIGN KEY (`code`) REFERENCES `support_requests` (`code`),
                       CONSTRAINT `support_task_hours_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+                    )
                 ";
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error creating support_task_hours table in ".$this->module."::Schema::upgrade(): ".$this->error;

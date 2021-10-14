@@ -163,19 +163,29 @@
 				$this->_cached = false;
 			}
 
-			$this->title = $object->title;
-			$this->code = $object->code;
-			$this->description = $object->description;
-			$this->manager = new \Register\Customer($object->manager_id);
-			$this->status = $object->status;
+			if ($object->id) {
+				$this->id = $object->id;
+				$this->title = $object->title;
+				$this->code = $object->code;
+				$this->description = $object->description;
+				$this->manager = new \Register\Customer($object->manager_id);
+				$this->status = $object->status;
 
-			if (! $this->_cached) {
 				// Cache Object
 				app_log("Setting cache key ".$cache_key,'debug',__FILE__,__LINE__);
 				if ($object->id) $result = $cache->set($object);
-				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);	
+				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);
+				return true;
 			}
-			return true;
+			else {
+				$this->id = null;
+				$this->title = null;
+				$this->code = null;
+				$this->description = null;
+				$this->manager = null;
+				$this->status = null;
+				return false;
+			}
 		}
 
 		public function error() {

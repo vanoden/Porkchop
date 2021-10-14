@@ -18,7 +18,7 @@ gulp.task('hello', function() {
 	console.log('Hello, Tony');
 });
 
-gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico'], () =>
+gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico', 'dashboards'], () =>
 	gulp.src('html.src/**/*.html')
 		.pipe(data(() => (
 			{

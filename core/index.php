@@ -92,6 +92,7 @@
 		$GLOBALS['_config']->database->master->password,
 		$GLOBALS['_config']->database->schema
 	);
+	
 	if ($_database->ErrorMsg()) {
 		print "Error connecting to database:<br>\n";
 		print $_database->ErrorMsg();
@@ -157,9 +158,11 @@
 		exit;
 	}
 	if (! $_page->id) {
-		$_page->module = $_REQUEST_->module;
-		$_page->view = $_REQUEST_->view;
-		$_page->index = $_REQUEST_->index;
-		$_page->applyStyle();
+		if (! $_page->get('server','404')) {
+			$_page->module = $_REQUEST_->module;
+			$_page->view = $_REQUEST_->view;
+			$_page->index = $_REQUEST_->index;
+			$_page->applyStyle();
+		}
 	}
 	print $_page->load_template();

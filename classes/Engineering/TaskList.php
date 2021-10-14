@@ -29,6 +29,12 @@
 				array_push($bind_params,$parameters['project_id']);
 			}
 
+			if (isset($parameters['product_id']) && is_numeric($parameters['product_id'])) {
+				$find_objects_query .= "
+				AND		product_id = ?";
+				array_push($bind_params,$parameters['product_id']);
+			}
+
 			if (isset($parameters['assigned_id']) && is_numeric($parameters['assigned_id'])) {
 				$find_objects_query .= "
 				AND		assigned_id = ?";

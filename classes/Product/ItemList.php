@@ -13,7 +13,7 @@
 				FROM	product_products p
 				LEFT OUTER JOIN
 						product_relations r
-				ON		r.product_id = p.id
+				ON		p.id = r.product_id
 				WHERE	p.status != 'DELETED'";
 
 			$bind_params = array();
@@ -36,7 +36,7 @@
 					array_push($bind_params,$parameters["type"]);
 				}
 			}
-			if (isset($parameters['status'])) {
+			if (isset($parameters['status']) && strlen($parameters['status'])) {
 				$find_product_query .= "
 				AND		p.status = ?";
 				array_push($bind_params,strtoupper($parameters["status"]));
@@ -97,9 +97,10 @@
 				$find_product_query .= "
 				ORDER BY p.".$parameters['_sort'];
 			else	
-			    $find_product_query .= "ORDER BY p.id";
+			    $find_product_query .= "
+				ORDER BY p.id";
 
-			query_log($find_product_query);
+			query_log($find_product_query,$bind_params,true);
 			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();

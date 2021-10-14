@@ -35,16 +35,19 @@
 			list($id) = $rs->FetchRow();
 			if ($id) {
 				$this->id = $id;
-			}
-			else {
+			} elseif(false) {
 				# Make Sure User Has Privileges
-				app_log("No match found for message '$code', adding",'info',__FILE__,__LINE__);
+				app_log("No match found for message '$target', adding",'info',__FILE__,__LINE__);
 				if (! $GLOBALS['_SESSION_']->customer->has_role('content developer')) {
 					$this->error = "Sorry, insufficient privileges. Role 'content developer' required.";
 					return null;
 				}
 				$this->add(array("target" => $target));
 				if ($this->error) return null;
+			}
+			else {
+				$this->error = "Message not found";
+				return false;
 			}
 			return $this->details();
 		}
@@ -60,10 +63,10 @@
 
 			# Cached Content Object, Yay!	
 			if ($result = cache_get("content[".$this->id."]")) {
-				$this->name		= $result["name"];
-				$this->target	= $result["target"];
-				$this->title	= $result["title"];
-				$this->content	= $result["content"];
+				$this->name		= $result->name;
+				$this->target	= $result->target;
+				$this->title	= $result->title;
+				$this->content	= $result->content;
 				$this->cached	= 1;
 				return 1;
 			}
@@ -88,19 +91,19 @@
                 return 0;
             }
 
-            $result = $rs->FetchRow();
-			if (! isset($result['id'])) {
-				return new stdClass();
+            $result = $rs->FetchNextObject(false);
+			if (! isset($result->id)) {
+				return 0;
 			}
-
-            $this->name		= $result["name"];
-            $this->target	= $result["target"];
-            $this->title	= $result["title"];
-			$this->content	= $result["content"];
+			$this->id = $result->id;
+            $this->name		= $result->name;
+            $this->target	= $result->target;
+            $this->title	= $result->title;
+			$this->content	= $result->content;
 
 			cache_set("content[".$this->id."]",$result);
-            return 1;
-        }
+			return 1;
+		}
 
 		public function add($parameters = array()) {
 			$this->error = NULL;
@@ -164,18 +167,23 @@
                 UPDATE	content_messages
 				SET		date_modified = sysdate()";
 
+			$bind_params = array();
+
 			foreach ($ok_params as $parameter) {
-				if (isset($parameters[$parameter])) $update_content_query .= ",
-						$parameter = ".$GLOBALS['_database']->qstr($parameters[$parameter],get_magic_quotes_gpc());
+				if (isset($parameters[$parameter])) {
+					$update_content_query .= ",
+						$parameter = ?";
+					array_push($bind_params,$parameters[$parameter]);
+				}
 			}
 
 			$update_content_query .= "
 				WHERE   id = ?";
+			array_push($bind_params,$this->id);
 	
-			//error_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$update_content_query)));
+			query_log($update_content_query,$bind_params);
             $rs = $GLOBALS['_database']->Execute(
-				$update_content_query,
-				array($this->id)
+				$update_content_query,$bind_params
 			);
             if (! $rs) {
                 $this->error = $GLOBALS['_database']->ErrorMsg();

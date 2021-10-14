@@ -54,7 +54,7 @@
 			$_REQUEST["stylesheet"] = '';
 			error_log($message);
 			$response = new \HTTP\Response();
-			$response->message = $message;
+			$response->error = $message;
 			$response->success = 0;
 			print $this->formatOutput($response);
 			exit;
@@ -71,8 +71,8 @@
 		###################################################
 		### Convert Object to XML						###
 		###################################################
-		public function formatOutput($object) {
-			if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
+		public function formatOutput($object,$format = 'xml') {
+			if ($format == 'json' || (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json')) {
 				$format = 'json';
 				header('Content-Type: application/json');
 			}
@@ -115,10 +115,14 @@
 			if ($this->_schema->error) {
 				$this->app_error("Error getting version: ".$this->_schema->error,__FILE__,__LINE__);
 			}
-			$version = $this->_schema->upgrade();
 			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $version;
+			if ($this->_schema->upgrade()) {
+				$response->success = 1;
+				$response->version = $this->_schema->version();
+			}
+			else {
+				$this->app_error("Error upgrading schema: ".$this->_schema->error,__FILE__,__LINE__);
+			}
 			print $this->formatOutput($response);
 		}
 		public function _form() {
@@ -155,7 +159,12 @@
 					else $default = '';
 					$form .= $t.$t.$t.'<div class="apiParameter">'.$cr;
 					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required.'">'.$param.'</span>'.$cr;
-					$form .= $t.$t.$t.$t.'<input type="'.$options['type'].'" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+					if ($options['type'] == "textarea") {
+						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$param.'">'.$default.'</textarea>'.$cr;
+					}
+					else {
+						$form .= $t.$t.$t.$t.'<input type="'.$options['type'].'" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+					}
 					$form .= $t.$t.$t.'</div>'.$cr;
 				}
 				$form .= $t.$t.$t.'<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>'.$cr;
