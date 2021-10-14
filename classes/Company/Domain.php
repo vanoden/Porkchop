@@ -66,6 +66,7 @@
 				$this->date_expires = $object->date_expires;
 				$this->registration_period = $object->registration_period;
 				$this->register = $object->register;
+				$this->registrar = $object->register;
 				$this->company = new Company($object->company_id);
 				return true;
 			}
@@ -132,41 +133,66 @@
 				return undef;
 			}
 
+			$bind_params = array();
+
 			# Update Object
 			$update_object_query = "
 				UPDATE	company_domains
 				SET		id = id";
 
-			if (isset($parameters['name']) && $parameters['name'])
+			if (isset($parameters['name']) && $parameters['name']) {
 				$update_object_query .= ",
-						domain_name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
+						domain_name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
 
-			if (isset($parameters['active']) && preg_match('/^(0|1)$/',$parameters['active']))
+			if (isset($parameters['active']) && preg_match('/^(0|1)$/',$parameters['active'])) {
 				$update_object_query .= ",
-						active = ".$parameters['active'];
+						active = ?";
+				array_push($bind_params,$parameters['active']);
+			}
 
-			if (isset($parameters['status']) && preg_match('/^\d+$/',$parameters['status']))
+			if (isset($parameters['status']) && preg_match('/^\d+$/',$parameters['status'])) {
 				$update_object_query .= ",
-						status = ".$parameters['status'];
+						status = ?";
+				array_push($bind_params,$parameters['status']);
+			}
+
+			if (isset($parameters['registrar'])) {
+				$update_object_query .= ",
+						register = ?";
+				array_push($bind_params,$parameters['registrar']);
+			}
+
+			if (isset($parameters['date_registered'])) {
+				$update_object_query .= ",
+						date_registered = ?";
+				array_push($bind_params,get_mysql_date($parameters['date_registered']));
+			}
+
+			if (isset($parameters['date_expires'])) {
+				$update_object_query .= ",
+						date_expires = ?";
+				array_push($bind_params,get_mysql_date($parameters['date_expires']));
+			}
 
 			if (isset($parameters['location_id']) && strlen($parameters['location_id'])) {
-				$location = new \Site\Location($parameters['location_id']);
+				$location = new \Company\Location($parameters['location_id']);
 				if (! $location->id) {
 					$this->error = "Location ID not found";
 					return false;
 				}
 				$update_object_query .= ",
-					location_id = ".$location->id;
+					location_id = ?";
+				array_push($bind_params,$location->id);
 			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
+			array_push($bind_params,$this->id);
 
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Site::Domain::update: ".$GLOBALS['_database']->ErrorMsg();
 				return false;
