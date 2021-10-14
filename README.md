@@ -14,7 +14,14 @@ would load the 'account' view of the 'register' module populated with account in
 Nearly every module as an 'api' view.  This exposes the modules' methods for REST applications.  There is little that cannot be accessed or updated via the api's by a user with the appropriate roles.
 
 ## Installation
-
+Install Apache, cURL, PHP and PHP Modules
+```
+apt-get install apache2 php-common php-cli php-json php-mysql php-xml php-curl php-mysql php-pear curl
+```
+Enable mod-rewrite
+```
+sudo a2enmod rewrite
+```
 Clone the repository into a folder of your choice.  Configure your web server to use the 'html' subfolder as it's document root.
 
 You will need to configure the server to rewrite urls beginning with '/_' to load '/core/index.php'.  Look in /misc for a sample Apache configuration.
