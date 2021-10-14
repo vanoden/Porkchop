@@ -35,13 +35,13 @@
 
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Domain::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Company::Domain::find: ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				$domain = new \Site\Domain($id);
+				$domain = new \Company\Domain($id);
 				array_push($objects,$domain);
 			}
 			return $objects;
