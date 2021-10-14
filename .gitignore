@@ -18,4 +18,3 @@ templates
 tmp
 node_modules/
 package-lock.json
-third_party/composer-setup.php
