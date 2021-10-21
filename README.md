@@ -43,6 +43,20 @@ Install XML Serializer
 ```
 pear install channel://pear.php.net/XML_Serializer-0.21.0
 ```
+### Gulp
+gulp is a preprocessor we use to do some customization of static content, ie global headers and footers, js versioning, company branding.
+
+Make sure no existing node_modules folder
+```
+rm -rf node_modules/
+```
+Install npm
+```
+sudo apt-get install npm
+```
+Install gulp and includes
+ npm install gulp gulp-cli gulp-template gulp-data gulp-debug
+
 ### Configuration
 
 Copy the file '/config/config.php.dist' to '/config/config.php'.  Edit the file with your database connection information and other things specific to your site.
