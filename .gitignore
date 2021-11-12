@@ -26,3 +26,4 @@ package-lock.json
 __pycache__
 third_party/composer.sha384sum
 .DS_Store
+third_party/composer-setup.php
