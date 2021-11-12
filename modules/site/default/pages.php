@@ -17,6 +17,7 @@
 		border: 1px solid #999999;
 	}
 </style>
+<span class="title">Site Pages</span>
 <div class="table">
 	<div class="tableHead">
 		<div class="tableCell">Module</div>
