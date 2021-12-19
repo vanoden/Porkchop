@@ -56,7 +56,8 @@ sudo apt-get install npm
 ```
 Install gulp and includes
 ```
-npm install gulp gulp-cli gulp-template gulp-data gulp-debug
+npm install -g gulp
+npm install gulp-cli gulp-template gulp-data gulp-debug
 ```
 ### Configuration
 
