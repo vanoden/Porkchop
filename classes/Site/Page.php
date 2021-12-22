@@ -20,11 +20,10 @@
 	    
 	    public function __construct() {
 		    $args = func_get_args ();
-			if (func_num_args() == 1 && gettype($args[0] == "integer")) {
+			if (func_num_args() == 1 && gettype($args[0]) == "integer") {
 				$this->id = $args[0];
 				$this->details();
-			}
-		    elseif (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
+			} elseif (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
 			    $this->id = $args [0];
 			    $this->details ();
 		    } elseif (func_num_args () == 1 && gettype ( $args [0] ) == "array") {
