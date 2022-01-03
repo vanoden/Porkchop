@@ -90,6 +90,36 @@
 				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 2) {
+				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				# Sales Order Items
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `sales_currencies` (
+						id INT(11) NOT NULL AUTO_INCREMENT,
+						name varchar(256) NOT NULL,
+						symbol char(1),
+						PRIMARY KEY `pk_id` (`id`),
+						UNIQUE KEY `uk_sales_currency_name` (`name`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+				else {
+					app_log("Created sales_order_items table",'info');
+				}
+
+				app_log("Update version",'info');
+				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}
