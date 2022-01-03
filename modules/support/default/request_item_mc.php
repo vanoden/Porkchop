@@ -66,6 +66,7 @@ Description: ".$action->description
 			$assigned_to->notify($message);
 		}
 	}
+	
 	if ($_REQUEST['btn_add_rma']) {
 	
 		// Make Sure Notification Template is available
@@ -74,12 +75,23 @@ Description: ".$action->description
 			$page->addError("Return notification template not configured");
 			app_log("config->support->return_notification not set!",'error');
 			return false;
-		}
-		elseif (! file_exists($return_notification->template)) {
+		} elseif (! file_exists($return_notification->template)) {
 			$page->addError("Return Notification Email Template '".$return_notification->template."' not found");
 			app_log("File '".$return_notification->template."' not found! Set in config->support->return_notification setting",'error');
 			return false;
 		}
+
+        // get any known emails to ensure if they have notifications set to recieve RMA details via email
+        $requestedBy = $item->request()->customer;
+        $rmaCustomerEmails = $item->request->customer->contacts(array('type'=>'email'));
+        $hasEmailNotifications = false;
+        foreach ($rmaCustomerEmails as $customerEmail) {
+            if ($customerEmail->notify) $hasEmailNotifications = true;   
+        }
+        if (!$hasEmailNotifications){
+			$page->addError("Error: RMA Could not be processed, customer has <strong>no email address</strong> set to receive RMA notifications.");
+			return false;
+        }
 
 		// We create an RMA record.  Shipment is created by customer when they ship, or admin when received
 		$parameters = array(
@@ -99,7 +111,6 @@ Description: ".$action->description
 		if ($GLOBALS['_config']->site->https) $url = "https://".$GLOBALS['_config']->site->hostname."/_support/rma_form/".$rma->code;
 		else $url = "http://".$GLOBALS['_config']->site->hostname."/_support/rma_form/".$rma->code;
 
-		$requestedBy = $item->request()->customer;
 		$notice_template = new \Content\Template\Shell();
 		$notice_template->load($return_notification->template);
 		$notice_template->addParam('CUSTOMER.FIRST_NAME',$requestedBy->first_name);
