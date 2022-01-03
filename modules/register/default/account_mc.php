@@ -11,8 +11,7 @@
 	if (isset($GLOBALS['_SESSION_']->customer->id)) {
 		$customer_id = $GLOBALS['_SESSION_']->customer->id;
 		$customer = new \Register\Customer($customer_id);
-	}
-	else {
+	} else {
 		header("location: /_register/login?target=_register/account");
 		exit;
 	}

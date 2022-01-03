@@ -268,10 +268,20 @@
 		if (! $GLOBALS[_SESSION_]->customer->has_role("engineering user")) {
 			error("Permission denied");
 		}
+		if (isset($_REQUEST['owner_code'])) {
+			$owner = new \Register\Admin();
+			if (! $owner->get($_REQUEST['owner_code'])) {
+				app_error("Owner not found");
+			}
+		}
+		elseif (isset($_REQUEST['manager_id'])) {
+			$owner = new \Register\Admin($_REQUEST['manager_id']);
+		}
 		$project = new \Engineering\Project();
 		if ($project->error()) error("Error adding project: ".$project->error());
 		$project->add(
 			array(
+				'manager_id'	=> $owner->id,
 				'title'			=> $_REQUEST['title'],
 				'description'	=> $_REQUEST['description'],
 			)

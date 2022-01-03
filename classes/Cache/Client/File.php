@@ -7,7 +7,10 @@
 		public $error;
 
 		public function __construct($properties) {
-			if (preg_match('/^\//',$properties->path)) {
+			if (empty($properties->path)) {
+				$this->error = 'Cache path not defined';
+			}
+			else if (preg_match('/^\//',$properties->path)) {
 				if (is_dir($properties->path)) {
 					if (is_writable($properties->path)) {
 						$this->_path = $properties->path;
@@ -17,8 +20,14 @@
 						$this->error = "Cache path not writable";
 					}
 				}
+				else if (file_exists($properties->path)) {
+					$this->error = "Cache path '".$properties->path."' does not exist";
+				}
+				else if (empty(filetype($properties->path))) {
+					#$this->error = "Unknown file type for '".$properties->path."'";
+				}
 				else {
-					$this->error = "Cache path does not exist";
+					$this->error = "Cache path '".$properties->path."' is a ".filetype($properties->path);
 				}
 			}
 			else {
