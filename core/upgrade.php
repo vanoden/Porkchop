@@ -30,6 +30,7 @@
 	if (isset($_config->schema)) $base_classes = $_config->schema;
 	else $base_classes = array(
 		"Media"         => 3,
+		"Sales"			=> 1,
 		"Product"       => 3,
 		"Site"          => 6,
 		"Content"       => 3,
