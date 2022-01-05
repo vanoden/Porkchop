@@ -41,6 +41,10 @@
 			print $this->formatOutput($response);
 		}
 
+		public function requireRole($role_name) {
+			if (! $GLOBALS['_SESSION_']->has_role($role_name)) $this->error("Permission denied");
+		}
+
 		###################################################
 		### System Time									###
 		###################################################
