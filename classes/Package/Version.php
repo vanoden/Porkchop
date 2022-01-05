@@ -18,7 +18,6 @@
 		}
 
 		public function add($parameters = array()) {
-            
 			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) {
 				$this->error = "package manager role required";
 				return false;
@@ -93,7 +92,7 @@
 				return false;
 			}
 
-			if (! defined($parameters['status'])) {
+			if (! isset($parameters['status'])) {
 				$parameters['status'] = 'NEW';
 			}
 
