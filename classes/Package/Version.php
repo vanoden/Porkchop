@@ -120,9 +120,8 @@
 				VALUES
 				(		?,?,?,?,?,?,?,sysdate())
 			";
-			$GLOBALS['_database']->Execute(
-				$insert_object_query,
-				array(
+
+			$bind_params = array(
 					$this->id,
 					$parameters['package_id'],
 					$parameters['major'],
@@ -130,8 +129,10 @@
 					$parameters['build'],
 					$parameters['status'],
 					$GLOBALS['_SESSION_']->customer->id
-				)
 			);
+
+			query_log($insert_object_query,$bind_params);
+			$GLOBALS['_database']->Execute($insert_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Package::Version::add(): ".$GLOBALS['_database']->ErrorMsg();
 				$this->delete();
@@ -140,7 +141,7 @@
 
 			return $this->update($parameters);
 		}
-		
+
 		public function get($package_id,$major,$minor,$build) {
 		
 			$get_object_query = "

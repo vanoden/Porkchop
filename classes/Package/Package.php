@@ -61,12 +61,19 @@
 						repository_id
 				)
 				VALUES
-				(		?,?,?,sysdate(),'NEW',?)
+				(		?,?,?,sysdate(),'ACTIVE',?)
 			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($parameters['code'],$parameters['name'],$GLOBALS['_SESSION_']->customer->id,$parameters['repository_id'])
+
+			$bind_params = array(
+				$parameters['code'],
+				$parameters['name'],
+				$GLOBALS['_SESSION_']->customer->id,
+				$parameters['repository_id']
 			);
+
+			query_log($add_object_query,$bind_params);
+
+			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Package::Package::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
