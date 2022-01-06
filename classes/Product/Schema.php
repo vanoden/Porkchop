@@ -210,7 +210,7 @@
 						product_id	int(11) NOT NULL,
 						serial_number	varchar(256) NOT NULL,
 						date_created	datetime NOT NULL,
-						status		enum('ACTIVE','INACTIVE') NOT NULL default('INACTIVE'),
+						status		enum('ACTIVE','INACTIVE') NOT NULL default 'ACTIVE',
 						PRIMARY KEY `pk_product_instance_id` (`id`),
 						UNIQUE KEY `uk_product_instance_sn` (`product_id`,`serial_number`),
 						FOREIGN KEY `fk_product_instance_id` (`product_id`) REFERENCES `product_products` (`id`)
