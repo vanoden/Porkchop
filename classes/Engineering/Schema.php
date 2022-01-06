@@ -344,6 +344,25 @@
 				$this->setVersion(11);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+			if ($this->version() < 12) {
+				app_log("Upgrading to version 12",'notice');
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+                    ALTER TABLE `engineering_releases` ADD `package_version_id` int(11) DEFAULT NULL
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering engineering_releases table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(12);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;	
 		}
 

@@ -9,6 +9,7 @@
 		public $status;
 		public $date_scheduled;
 		public $date_released;
+		public $package_version_id;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -92,6 +93,12 @@
 				array_push($bind_params,get_mysql_date($parameters['date_released']));
 			}
 
+			if (isset($parameters['package_version_id'])) {
+				$update_object_query .= ",
+						package_version_id = ?";
+				array_push($bind_params,$parameters['package_version_id']);
+			}
+
 			if (isset($parameters['status'])) {
 				if ($this->_valid_status($parameters['status'])) {
 					$update_object_query .= ",
@@ -171,6 +178,7 @@
 				$this->_cached = false;
 			}
 
+			$this->package_version_id = $object->package_version_id;
 			$this->title = $object->title;
 			$this->code = $object->code;
 			$this->description = $object->description;
@@ -188,8 +196,12 @@
 			return true;
 		}
 
+		public function packageVersion() {
+			return new \Package\Version($this->package_version_id);
+		}
+
 		public function released() {
-			$update_object_query .= "
+			$update_object_query = "
 				UPDATE	engineering_releases
 				SET		status = 'RELEASED',
 						date_released = sysdate()

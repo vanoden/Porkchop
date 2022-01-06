@@ -294,6 +294,8 @@
 			app_log("Calling for parent details");
 			parent::details();
 
+			$this->id = $object->id;
+			$this->package_id = $object->package_id;
 			$this->package = new Package($object->package_id);
 			$this->major = $object->major;
 			$this->minor = $object->minor;
