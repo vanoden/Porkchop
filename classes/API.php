@@ -15,6 +15,10 @@
 			$this->response = new \HTTP\Response();
 		}
 
+		public function _methods() {
+			return array();
+		}
+
 		public function admin_role() {
 			return $this->_admin_role;
 		}
