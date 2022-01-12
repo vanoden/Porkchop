@@ -179,12 +179,19 @@
 			return $objects;
 		}
 
+		public function last($parameters = array()) {
+			$parameters["_limit"] = 1;
+			$parameters["sort_by"] = "requested";
+			$parameters["sort_direction"] = "DESC";
+			return $this->find($parameters);
+		}
+
 		/**
 		 * get serial numbers available for current support request items
 		 */
 		public function getSerialNumbersAvailable() {
 		
-			$find_objects_query .= "SELECT DISTINCT(serial_number) FROM support_request_items ORDER BY serial_number ASC";
+			$find_objects_query = "SELECT DISTINCT(serial_number) FROM support_request_items ORDER BY serial_number ASC";
 			$rs = executeSQLByParams($find_objects_query, array());
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
@@ -200,7 +207,7 @@
 		 */
 		public function getProductsAvailable() {
 		
-			$find_objects_query .= "SELECT id, code, name, description FROM product_products WHERE status = 'active' GROUP BY code ORDER BY code ASC";
+			$find_objects_query = "SELECT id, code, name, description FROM product_products WHERE status = 'active' GROUP BY code ORDER BY code ASC";
 			$rs = executeSQLByParams($find_objects_query, array());
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
