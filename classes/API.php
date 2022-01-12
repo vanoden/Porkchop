@@ -166,6 +166,13 @@
 					if ($options['type'] == "textarea") {
 						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$param.'">'.$default.'</textarea>'.$cr;
 					}
+					elseif (is_array($options['options'])) {
+						$form .= $t.$t.$t.$t.'<select class="value input apiInput" name="'.$param.'">';
+						foreach ($options['options'] as $optname) {
+							$form .= $t.$t.$t.$t.$t.'<option value="'.$optname.'">'.$optname.'</option>'.$cr;
+						}
+						$form .= $t.$t.$t.$t.'</select>';
+					}
 					else {
 						$form .= $t.$t.$t.$t.'<input type="'.$options['type'].'" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;
 					}
