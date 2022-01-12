@@ -339,9 +339,18 @@
 			return $value;
 		}
 
-		public function lastTicket() {
+		public function getTickets($parameters = array()) {
 			$ticketList = new \Support\Request\ItemList();
-			$ticket = $ticketList->last(array('product_code' => $this->product->code,'serial_number' => $this->serial_number));
+			$parameters['product_code']	= $this->product->code;
+			$parameters['serial_number'] = $this->code;
+			return $ticketList->find($parameters);
+		}
+
+		public function lastTicket($parameters = array()) {
+			$ticketList = new \Support\Request\ItemList();
+			$parameters['product_code']	= $this->product->code;
+			$parameters['serial_number'] = $this->code;
+			return $ticketList->last($parameters);
 		}
 		
 		public function error() {
