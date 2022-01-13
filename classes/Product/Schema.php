@@ -180,7 +180,7 @@
 						product_id	int(11) NOT NULL,
 						amount		decimal(10,2) default 0,
 						date_active	datetime NOT NULL,
-						status		enum('ACTIVE','INACTIVE') NOT NULL default('INACTIVE'),
+						status		enum('ACTIVE','INACTIVE') NOT NULL default 'INACTIVE',
 						currency_id	int(11) NOT NULL,
 						PRIMARY KEY `pk_price_id` (`id`),
 						KEY `idx_price` (`product_id`,`status`,`date_active`),
