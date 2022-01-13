@@ -108,6 +108,29 @@
 			print $this->formatOutput($response);
 		}
 
+		public function log($message) {
+			if (! API_LOG) return false;
+			$log = "";
+			$module = $GLOBALS['_REQUEST_']->module;
+			$login = $GLOBALS['_SESSION_']->customer->code;
+			$method = $_REQUEST['method'];
+			$host = $GLOBALS['_REQUEST_']->client_ip;
+
+			if (is_object($response) && $response->success) $status = "SUCCESS";
+			else $status = "FAILED";
+			$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+
+            if (is_dir(API_LOG))
+                $log = fopen(API_LOG."/".$module.".log",'a');
+            else
+                $log = fopen(API_LOG,'a');
+
+			fwrite($log,"[".date('m/d/Y H:i:s')."] $host $module $login $method $status $elapsed\n");
+			fwrite($log,"_REQUEST: ".print_r($_REQUEST,true));
+			fwrite($log,"_RESPONSE: ".print_r($response,true));
+			fclose($log);
+		}
+
 		# Manage Module Schema
 		public function schemaVersion() {
 			if ($this->_schema->error) {
