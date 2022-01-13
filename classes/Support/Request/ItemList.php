@@ -7,7 +7,8 @@
 		private $_count;
 
 		public function find($parameters = array()) {
-		
+			$bind_params = array();
+
 			$find_objects_query = "
 				SELECT	s.id
 				FROM	support_request_items s
@@ -16,46 +17,37 @@
 			";
 
             // if search term, then constrain by that
-            if ($parameters['searchTerm']) {            
-                $find_objects_query = "
-                SELECT	s.id
-                FROM    support_request_items s
-                    INNER JOIN support_requests sr ON s.request_id = sr.id
-                    WHERE s.serial_number LIKE '%".$parameters['searchTerm']."%' 
-                    OR s.description LIKE '%".$parameters['searchTerm']."%' ";
+            if ($parameters['searchTerm'] && preg_match('/^\w[\w\-\.\_\s]*$/',$parameters['searchTerm'])) {            
+                $find_objects_query .= "
+					AND (s.serial_number LIKE '%".$parameters['searchTerm']."%' 
+                    OR s.description LIKE '%".$parameters['searchTerm']."%') ";
             }
-            
+
 			// if a minimum date is set, constrain on it
 			if (isset($parameters['min_date'])) {
 			    $minDate = date("Y-m-d H:i:s", strtotime($parameters['min_date']));
-			    $find_objects_query = "
-				    SELECT	s.id
-				    FROM	support_request_items s
-				    INNER JOIN support_requests sr ON s.request_id = sr.id
-				    WHERE	sr.date_request > '$minDate'
+			    $find_objects_query .= "
+				    AND	sr.date_request > ?
 			    ";
+				array_push($bind_params,$minDate);
 			}
+
 			if (isset($parameters['max_date'])) {
 			    $maxDate = date("Y-m-d H:i:s", strtotime($parameters['max_date']));
 			    $find_objects_query = "
-				    SELECT	s.id
-				    FROM	support_request_items s
-				    INNER JOIN support_requests sr ON s.request_id = sr.id
-				    WHERE	sr.date_request < '$maxDate'
+				    AND	sr.date_request < ?
 			    ";
+				array_push($bind_params,$maxDate);
 			}
 			if (isset($parameters['min_date']) && isset($parameters['max_date'])) {
     			$minDate = date("Y-m-d H:i:s", strtotime($parameters['min_date']));
 			    $maxDate = date("Y-m-d H:i:s", strtotime($parameters['max_date']));
 			    $find_objects_query = "
-				    SELECT	s.id
-				    FROM	support_request_items s
-				    INNER JOIN support_requests sr ON s.request_id = sr.id
-				    WHERE	sr.date_request < '$maxDate' AND sr.date_request > '$minDate'
+				    AND sr.date_request < ? AND sr.date_request > ?
 			    ";
+				array_push($bind_params,$minDate,$maxDate);
 			}
 
-			$bind_params = array();
 			if (!empty($parameters['request_id'])) {
 				$request = new \Support\Request($parameters['request_id']);
 				if ($request->error()) {
@@ -75,6 +67,16 @@
 					AND	s.product_id = ?";
 				array_push($bind_params,$parameters['product_id']);
 			}
+			elseif (!empty($parameters['product_code'])) {
+				$product = new \Product\Item();
+				if (!$product->get($parameters['product_code'])) {
+					$this->_error = "Product not found";
+					return false;
+				}
+				$find_objects_query .= "
+					AND	s.product_id = ?";
+				array_push($bind_params,$product->id);
+			}
 			
 			if (!empty($parameters['customer_id'])) {
 				$find_objects_query .= "
@@ -88,9 +90,8 @@
 				array_push($bind_params,$parameters['serial_number']);
 			}
 
-			if (!empty($parameters['status']) && !empty($parameters['status'])) {
+			if (!empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
-
 					$find_objects_query .= "
 					AND	s.status IN (";
 					$started = 0;
@@ -104,6 +105,11 @@
 						$started = 1;
 					}
 					$find_objects_query .= ")";
+				}
+				else {
+					$find_objects_query .= "
+					AND s.status = ?";
+					array_push($bind_params,$parameters['status']);
 				}
 			}
 
@@ -163,12 +169,20 @@
                     ";
                 break;
 			}
-			
+			if (!empty($parameters['_limit']) && preg_match('/^\d+$/',$parameters['_limit'])) {
+				$find_objects_query .= "
+					LIMIT ".$parameters['_limit'];
+			}
+
+			query_log($find_objects_query,$bind_params);
 			$rs = executeSQLByParams($find_objects_query, $bind_params);
-			
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				app_log($this->_error,'error');
 				return false;
+			}
+			else {
+				app_log($rs->recordCount()." records returned");
 			}
 			$objects = array();
 			while(list($id) = $rs->FetchRow()) {
@@ -179,12 +193,19 @@
 			return $objects;
 		}
 
+		public function last($parameters = array()) {
+			$parameters["_limit"] = 1;
+			$parameters["sort_by"] = "requested";
+			$parameters["sort_direction"] = "DESC";
+			return $this->find($parameters);
+		}
+
 		/**
 		 * get serial numbers available for current support request items
 		 */
 		public function getSerialNumbersAvailable() {
 		
-			$find_objects_query .= "SELECT DISTINCT(serial_number) FROM support_request_items ORDER BY serial_number ASC";
+			$find_objects_query = "SELECT DISTINCT(serial_number) FROM support_request_items ORDER BY serial_number ASC";
 			$rs = executeSQLByParams($find_objects_query, array());
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
@@ -200,7 +221,7 @@
 		 */
 		public function getProductsAvailable() {
 		
-			$find_objects_query .= "SELECT id, code, name, description FROM product_products WHERE status = 'active' GROUP BY code ORDER BY code ASC";
+			$find_objects_query = "SELECT id, code, name, description FROM product_products WHERE status = 'active' GROUP BY code ORDER BY code ASC";
 			$rs = executeSQLByParams($find_objects_query, array());
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();

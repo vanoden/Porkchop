@@ -11,8 +11,7 @@
 	if (isset($GLOBALS['_SESSION_']->customer->id)) {
 		$customer_id = $GLOBALS['_SESSION_']->customer->id;
 		$customer = new \Register\Customer($customer_id);
-	}
-	else {
+	} else {
 		header("location: /_register/login?target=_register/account");
 		exit;
 	}
@@ -167,26 +166,6 @@
 		$available_roles = $rolelist->find();
 		app_log("Found ".$rolelist->count." roles",'trace',__FILE__,__LINE__);
 
-		# Loop through all roles and apply
-		# changes if necessary
-		foreach ($available_roles as $role) {
-			app_log("Checking role ".$role->name."[".$role->id."]",'trace',__FILE__,__LINE__);
-			if (isset($_REQUEST['role'][$role->id]) && $_REQUEST['role'][$role->id]) {
-				app_log("Role is selected",'trace',__FILE__,__LINE__);
-				if (! $customer->has_role($role->name)) {
-					app_log("Adding role ".$role->name." for ".$customer->login,'debug',__FILE__,__LINE__);
-					$customer->add_role($role->id);
-				}
-			}
-			else {
-				app_log("Role is not selected",'trace',__FILE__,__LINE__);
-				if ($customer->has_role($role->name)){
-					app_log("Role ".$role->name." being revoked from ".$customer->login,'debug',__FILE__,__LINE__);
-					$customer->drop_role($role->id);
-				}
-			}
-		}
-		
 		$page->success = 'Your changes have been saved';
 	}
 

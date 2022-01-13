@@ -20,11 +20,10 @@
 	    
 	    public function __construct() {
 		    $args = func_get_args ();
-			if (func_num_args() == 1 && gettype($args[0] == "integer")) {
+			if (func_num_args() == 1 && gettype($args[0]) == "integer") {
 				$this->id = $args[0];
 				$this->details();
-			}
-		    elseif (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
+			} elseif (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
 			    $this->id = $args [0];
 			    $this->details ();
 		    } elseif (func_num_args () == 1 && gettype ( $args [0] ) == "array") {
@@ -124,13 +123,14 @@
 			else {
 				// See if view exists...we should create it if it does
 				$file_path = MODULES."/".$module;
-				if (isset($GLOBALS['_config']->style->$module)) $file_path .= "/".$GLOBALS['_config']->style->$module;
+				if (isset($GLOBALS['_config']->style[$module])) $file_path .= "/".$GLOBALS['_config']->style[$module];
 				else $file_path .= "/default";
 				if (file_exists($file_path."/".$view.".php") || file_exists($file_path."/".$view."_mc.php")) {
 					app_log("Request for $module::$view view, adding to pages",'notice');
 					return $this->add($module,$view);
 				}
 				else {
+					app_log("Request for $module::$view view, not adding page: No '$file_path/".$view.".php or $file_path/".$view."_mc.php",'notice');
 				    return false;
 				}
 		    }

@@ -311,7 +311,7 @@
     <br/><br/>
 </div>
 
-<?php	if (count($actions) > 0) { ?>
+<?php	if (is_array($actions) && count($actions) > 0) { ?>
 <div style="width: 756px;">
 <h2>Actions</h2>
 <?php	foreach ($actions as $action) {
@@ -428,7 +428,7 @@
 <?php		} ?>
 </div>
 <?php	} ?>
-<?php	if (count($comments) > 0) { ?>
+<?php	if (is_array($comments) && count($comments) > 0) { ?>
     <!--	Start Request Item-->
     <h3>Comments</h3>
     <?php		foreach ($comments as $comment) { ?>

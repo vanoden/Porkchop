@@ -1,7 +1,7 @@
 <?php
 	namespace Sales;
 
-	class API Extends API {
+	class API Extends \API {
 
 		public function __construct() {
 			$this->_admin_role = 'sales manager';
@@ -222,7 +222,7 @@
 				),
 				'approveOrder'	=> array(
 					'order_code'	=> array('required' => true),
-				},
+				),
 				'cancelOrder'	=> array(
 					'order_code'	=> array('required' => true),
 				),

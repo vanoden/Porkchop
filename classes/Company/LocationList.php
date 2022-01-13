@@ -34,12 +34,12 @@
 
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::LocationList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Company::LocationList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				$location = new \Site\Location($id);
+				$location = new \Company\Location($id);
 				array_push($objects,$location);
 				$this->count ++;
 			}
