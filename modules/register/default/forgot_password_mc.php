@@ -105,9 +105,13 @@
 
 					app_log("Sending Forgot Password Link",'debug',__FILE__,__LINE__);
 					$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
-					if (\Email\Transport::error()) {
-						$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
-						app_log("Error initializing email transport: ".\Email\Transport::error(),'error',__FILE__,__LINE__);
+					if (! $transport) {
+						$page->addError("Error sending email, please contact us at ".$GLOBALS['_config']->site->support_email);
+						return;
+					}
+					if ($transport->error()) {
+						$page->addError("Error sending email, please contact us at ".$GLOBALS['_config']->site->support_email);
+						app_log("Error initializing email transport: ".$transport->error(),'error',__FILE__,__LINE__);
 						return;
 					}
 					$transport->hostname($GLOBALS['_config']->email->hostname);
