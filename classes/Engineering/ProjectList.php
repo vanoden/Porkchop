@@ -61,7 +61,7 @@
                 ORDER BY title ASC
 			";
 
-			if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['searchTerm']) {
+			if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['searchTerm'])) {
 				$this->_error = "Invalid characters in search term";
 				return null;
 			}
