@@ -38,7 +38,7 @@
 		
 			$repository = new Repository();
 			$repository->find($name);
-			
+
 			if (! $repository->id) {
 				$this->error = "Repository not found";
 				return false;

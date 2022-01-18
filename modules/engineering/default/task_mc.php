@@ -296,7 +296,7 @@
 	}
 
     // upload files if upload button is pressed
-    $configuration = new \Site\Configuration('engineering_attachments_s3');
+    $configuration = new \Site\Configuration('engineering_attachments_s3');    
     $repository = $configuration->value();
     if (isset($_REQUEST['btn_upload']) && $_REQUEST['btn_upload'] == 'Upload') {
 	    $file = new \Storage\File();

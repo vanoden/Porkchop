@@ -149,14 +149,13 @@
 			
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
-				array($name)
+				array(trim($name))
 			);
 			
 			if (! $rs) {
 				$this->error = "SQL Error in Storage::Repository::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			
 			list($this->id) = $rs->FetchRow();
 			if (! $this->id) {
 				$this->error = "Repository not found";

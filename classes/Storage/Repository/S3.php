@@ -35,7 +35,7 @@
             $this->aws = Aws::factory();
             
             // Get the client from the builder by namespace
-            $this->client = $this->aws->get('S3');		
+            $this->client = $this->aws->get('S3');
 		}
 
         public function update($parameters = array()) {
