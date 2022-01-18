@@ -1,3 +1,4 @@
+<a href="/_register/role">Create Role</a>
 <div class="tableBody">
 	<div class="tableRowHeader">
 		<div class="tableCell">Name</div>

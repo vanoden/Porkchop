@@ -5,7 +5,7 @@
 		public $error;
 		public $count = 0;
 
-		public function find($parameters) {
+		public function find($parameters = array()) {
 			$find_objects_query = "
 				SELECT	id
 				FROM	package_packages

@@ -15,6 +15,10 @@
 			$this->response = new \HTTP\Response();
 		}
 
+		public function _methods() {
+			return array();
+		}
+
 		public function admin_role() {
 			return $this->_admin_role;
 		}
@@ -39,6 +43,10 @@
 			api_log($response);
 	
 			print $this->formatOutput($response);
+		}
+
+		public function requireRole($role_name) {
+			if (! $GLOBALS['_SESSION_']->has_role($role_name)) $this->error("Permission denied");
 		}
 
 		###################################################
@@ -98,6 +106,29 @@
 			$response->success = 1;
 			$response->method = $methods;
 			print $this->formatOutput($response);
+		}
+
+		public function log($message) {
+			if (! API_LOG) return false;
+			$log = "";
+			$module = $GLOBALS['_REQUEST_']->module;
+			$login = $GLOBALS['_SESSION_']->customer->code;
+			$method = $_REQUEST['method'];
+			$host = $GLOBALS['_REQUEST_']->client_ip;
+
+			if (is_object($response) && $response->success) $status = "SUCCESS";
+			else $status = "FAILED";
+			$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+
+            if (is_dir(API_LOG))
+                $log = fopen(API_LOG."/".$module.".log",'a');
+            else
+                $log = fopen(API_LOG,'a');
+
+			fwrite($log,"[".date('m/d/Y H:i:s')."] $host $module $login $method $status $elapsed\n");
+			fwrite($log,"_REQUEST: ".print_r($_REQUEST,true));
+			fwrite($log,"_RESPONSE: ".print_r($response,true));
+			fclose($log);
 		}
 
 		# Manage Module Schema
@@ -161,6 +192,13 @@
 					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required.'">'.$param.'</span>'.$cr;
 					if ($options['type'] == "textarea") {
 						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$param.'">'.$default.'</textarea>'.$cr;
+					}
+					elseif (is_array($options['options'])) {
+						$form .= $t.$t.$t.$t.'<select class="value input apiInput" name="'.$param.'">';
+						foreach ($options['options'] as $optname) {
+							$form .= $t.$t.$t.$t.$t.'<option value="'.$optname.'">'.$optname.'</option>'.$cr;
+						}
+						$form .= $t.$t.$t.$t.'</select>';
 					}
 					else {
 						$form .= $t.$t.$t.$t.'<input type="'.$options['type'].'" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;

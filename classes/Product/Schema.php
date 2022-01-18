@@ -180,7 +180,7 @@
 						product_id	int(11) NOT NULL,
 						amount		decimal(10,2) default 0,
 						date_active	datetime NOT NULL,
-						status		enum('ACTIVE','INACTIVE') NOT NULL default('INACTIVE'),
+						status		enum('ACTIVE','INACTIVE') NOT NULL default 'INACTIVE',
 						currency_id	int(11) NOT NULL,
 						PRIMARY KEY `pk_price_id` (`id`),
 						KEY `idx_price` (`product_id`,`status`,`date_active`),
@@ -188,8 +188,41 @@
 						FOREIGN KEY `FK_PRICE_CURRENCY` (`currency_id`) REFERENCES `sales_currencies` (`id`)
 					)
 				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
 
 				$this->setVersion(3);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 4 and $max_version >= 4) {
+				app_log("Upgrading schema to version 4",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `product_instances` (
+						id			int(11) NOT NULL AUTO_INCREMENT,
+						product_id	int(11) NOT NULL,
+						serial_number	varchar(256) NOT NULL,
+						date_created	datetime NOT NULL,
+						status		enum('ACTIVE','INACTIVE') NOT NULL default 'ACTIVE',
+						PRIMARY KEY `pk_product_instance_id` (`id`),
+						UNIQUE KEY `uk_product_instance_sn` (`product_id`,`serial_number`),
+						FOREIGN KEY `fk_product_instance_id` (`product_id`) REFERENCES `product_products` (`id`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_instances table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(4);
 				$GLOBALS['_database']->CommitTrans();
 			}
 			return true;

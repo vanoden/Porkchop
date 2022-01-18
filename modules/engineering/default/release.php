@@ -45,10 +45,12 @@
       </div>
       <!--	END First Table -->
       <!--	START Second Table -->
-      <div class="tableBody half marginTop_20">
+      <div class="tableBody marginTop_20">
          <div class="tableRowHeader">
-            <div class="tableCell" style="width: 50%;">Date Scheduled</div>
-            <div class="tableCell" style="width: 50%;">Date Released</div>
+            <div class="tableCell" style="width: 25%;">Date Scheduled</div>
+            <div class="tableCell" style="width: 25%;">Date Released</div>
+            <div class="tableCell" style="width: 25%;">Package</div>
+            <div class="tableCell" style="width: 25%;">Version</div>
          </div>
          <!-- end row header -->
          <div class="tableRow">
@@ -57,6 +59,22 @@
             </div>
             <div class="tableCell">
                <input type="text" name="date_released" class="value wide_100per" value="<?=$form['date_released']?>" />
+            </div>
+            <div class="tableCell">
+               <select name="package_id" class="value wide_100per" value="<?=$form['package_id']?>" />
+				<option value="">None</option>
+				<?php foreach ($packages as $package) { ?>
+					<option value="<?=$package->id?>"<?php if ($_REQUEST['package_id'] == $package->id) print " selected";?>><?=$package->name?></option>
+				<?php } ?>
+			   </select>
+            </div>
+            <div class="tableCell">
+               <select name="package_version_id" class="value wide_100per" value="<?=$form['package_version_id']?>" />
+				<option value="">None</option>
+				<?php foreach ($versions as $version) { ?>
+					<option value="<?=$version->id?>"<?php if ($_REQUEST['package_version_id'] == $version->id) print " selected";?>><?=$version->version()?></option>
+				<?php } ?>
+			   </select>
             </div>
          </div>
       </div>
