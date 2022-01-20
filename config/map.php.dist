@@ -2,8 +2,10 @@
 	# Map Of Modules/Views
 	$modules = array(
 		"Company"		=> array(
+			"schema_version" => 3,
 		),
 		"Site"			=> array(
+			"schema_version" => 6,
 			"roles"			=> array(
 				"administrator"	=> array(
 					"description"	=> "Super User"
@@ -14,6 +16,7 @@
 			),
 		),
 		"Content"		=> array(
+			"schema_version" => 3,
 			"roles"			=> array(
 				"developer"		=> array(
 					"description"	=> "Content Developer"
@@ -22,6 +25,7 @@
 			),
 		),
         "Register"		=> array(
+			"schema_version": 19,
 			"roles"			=> array(
 				"register manager"	=> array(
 					"description"		=> "Manager Organizations and Users"
@@ -39,11 +43,13 @@
 			),
 		),
         "Contact"		=> array(
+			"schema_version" => 2,
 			"roles"			=> array(
 				"contact admin"	=> array(),
 			),
 		),
         "Storage"		=> array(
+			"schema_version" => 5,
 			"roles"			=> array(
 				"storage manager"	=> "admin.html",
 				"storage upload"	=> "admin.html",
@@ -55,6 +61,7 @@
 			),
 		),
 		"Media"			=> array(
+			"schema_version" => 3,
 			"roles"			=> array(
 				"media developer"	=> array(),
 				"media manager"		=> array(),
@@ -62,6 +69,7 @@
 			),
 		),
         "Product"		=> array(
+			"schema_version" => 4,
 			"roles"			=> array(
 				"product manager"	=> array(),
 				"product reporter"	=> array(),
@@ -72,11 +80,13 @@
 			),
 		),
         "Email"			=> array(
+			"schema_version" => 2,
 			"roles"			=> array(
 				"manager"		=> array(),
 			),
 		),
         "Package"		=> array(
+			"schema_version" => 2,
 			"roles"			=> array(
 				"package manager"	=> array(),
 			),
@@ -87,6 +97,7 @@
 			),
 		),
         "Support"		=> array(
+			"schema_version" => 7,
 			"roles"			=> array(
 			),
 			"templates"		=> array(
@@ -103,6 +114,7 @@
 			),
 		),
         "Engineering"	=> array(
+			"schema_version" => 6,
 			"roles"			=> array(
 				"engineering manager"	=> array(),
 				"engineering reporter"	=> array(),
