@@ -255,8 +255,8 @@
 			$version->get($package->id,$_REQUEST['major'],$_REQUEST['minor'],$_REQUEST['build']);
 			if ($version->error) $this->app_error("Error finding version: ".$version->error,__FILE__,__LINE__);
 			if (! $version->id) $this->error("Version not found");
-	
-			$version->download();
+			$file = $version->file();
+			$file->download();
 		}
 
 		###################################################
@@ -296,7 +296,8 @@
 			if ($version->error) $this->app_error("Error finding version: ".$version->error,__FILE__,__LINE__);
 			if (! $version->id) $this->error("Version not found");
 	
-			$version->download();
+			$file = $version->file();
+			$file->download();
 		}
 		
 		public function _methods() {

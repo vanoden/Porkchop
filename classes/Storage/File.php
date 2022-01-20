@@ -33,12 +33,14 @@
 			
 			if (! preg_match('/^[\w\-\.\_]+$/',$parameters['code'])) {
 				$this->error = "Invalid code '".$parameters['code']."'";
+				app_log($this->error,'notice');
 				return false;
 			}
 			
 			$this->code = $parameters['code'];
 			if (! $this->_valid_type($parameters['mime_type'])) {
 				$this->error = "Invalid mime_type '".$parameters['mime_type']."'";
+				app_log($this->error,'notice');
 				return false;
 			}
 
@@ -68,10 +70,12 @@
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Storage::File::add(): ".$GLOBALS['_database']->ErrorMsg();
+				app_log($this->error,'notice');
 				return false;
 			}
 			
 			$this->id = $GLOBALS['_database']->Insert_ID();
+			app_log("File '".$this->id."' uploaded");
 			return $this->update($parameters);
 		}
 		
@@ -168,6 +172,7 @@
 				$this->user = new \Register\Customer($object->user_id);
 				$this->date_created = $object->date_created;
 				$this->timestamp = strtotime($this->timestamp);
+				$this->_repository_id = $object->repository_id;
 				$factory = new RepositoryFactory();
 				$this->repository = $factory->load($object->repository_id);
 				if ($this->repository->endpoint) $this->uri = $this->repository->endpoint."/".$this->name;
@@ -239,7 +244,8 @@
 		}
 
 		public function repository() {
-			return new Repository($this->_repository_id);
+			$factory = new \Storage\RepositoryFactory();
+			return $factory->load($this->_repository_id);
 		}
 
 		private function _valid_type($name) {
