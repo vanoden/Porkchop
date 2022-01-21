@@ -194,7 +194,7 @@
 	
 			$package = new \Package\Package();
 			$package->get($_REQUEST['package_code']);
-			if ($package->error) api_error("Error getting package: ".$package->error,'error',__FILE__,__LINE__);
+			if ($package->error) $this->app_error("Error getting package: ".$package->error,'error',__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
 	
 			$version = new \Package\Version();
