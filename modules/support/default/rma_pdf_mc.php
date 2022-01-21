@@ -18,6 +18,15 @@ if ($rmaId) {
 $rmaNumber = $rma->number () ? $rma->number () : "";
 $rmaTicketNumber = $rma->item ()->ticketNumber () ? $rma->item ()->ticketNumber () : "";
 $rmaCustomerFullName = $rma->item ()->request->customer ? $rma->item ()->request->customer->full_name () : "";
+
+// get any known emails and phone numbers for PDF output
+$rmaCustomerEmails = $rma->item ()->request->customer->contacts(array('type'=>'email'));
+$rmaCustomerPhoneNumbers = $rma->item ()->request->customer->contacts(array('type'=>'phone'));
+$rmaCustomerEmailsOutput = "";
+foreach ($rmaCustomerEmails as $customerEmail) $rmaCustomerEmailsOutput .= $customerEmail->description . " : " . $customerEmail->value . "<br/>";
+$rmaCustomerPhoneNumberOutput = "";
+foreach ($rmaCustomerPhoneNumbers as $customerPhone) $rmaCustomerPhoneNumberOutput .= $customerPhone->description . " : " . $customerPhone->value . "<br/>";
+
 $rmaCustomerOrganizationName = $rma->item ()->request->customer->organization->name ? $rma->item ()->request->customer->organization->name : "";
 $rmaApprovedByName = $rma->approvedBy () ? $rma->approvedBy ()->full_name () : "";
 $rmaDateApproved = date ( "m/d/Y", strtotime ( $rma->date_approved ) );
@@ -96,7 +105,8 @@ $html = <<<EOD
     <th style="background-color:grey; color:white;"><strong>Company</strong></th>
   </tr>
   <tr>
-    <td>$rmaCustomerFullName</td>
+    <td>$rmaCustomerFullName<br/><br/><span style="font-size: 10px;">$rmaCustomerEmailsOutput $rmaCustomerPhoneNumberOutput</span>
+    </td>
     <td>$rmaCustomerOrganizationName</td>
   </tr>
 </table>

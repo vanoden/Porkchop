@@ -18,13 +18,14 @@
 		$parameters = array();
 		if (isset($_REQUEST['title'])) $parameters['title'] = $_REQUEST['title'];
 		else {
-			$page->error = "Title required";
+			$page->addError("Title required");
 		}
 		if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 		if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
 		if (isset($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
 		if (isset($_REQUEST['date_released'])) $parameters['date_released'] = $_REQUEST['date_released'];
 		if (isset($_REQUEST['date_scheduled'])) $parameters['date_scheduled'] = $_REQUEST['date_scheduled'];
+		if (isset($_REQUEST['package_version_id'])) $parameters['package_version_id'] = $_REQUEST['package_version_id'];
 
 		app_log("Submitted task form",'debug',__FILE__,__LINE__);
 		if ($release->id) {
@@ -32,7 +33,7 @@
 				$page->success = "Updates applied";
 				app_log("Release updated",'debug',__FILE__,__LINE__);
 			} else {
-				$page->error = "Error saving updates: ".$release->error();
+				$page->addError("Error saving updates: ".$release->error());
 			}
 		}
 		else {
@@ -40,7 +41,7 @@
 				$page->success = "Release Created";
 				app_log("Release created",'debug',__FILE__,__LINE__);
 			} else {
-				$page->error = "Error creating task: ".$release->error();
+				$page->addError("Error creating task: ".$release->error());
 			}
 		}
 	}
@@ -66,7 +67,7 @@
 		$form['description'] = $release->description;
 		$tasklist = new \Engineering\TaskList();
 		$tasks = $tasklist->find(array('release_id' => $release->id));
-	} elseif ($page->error) {
+	} elseif ($page->errorCount()) {
 		$form['code'] = $_REQUEST['code'];
 		$form['title'] = $_REQUEST['title'];
 		$form['date_released'] = $_REQUEST['date_released'];
@@ -93,4 +94,20 @@
 	
 	$filesList = new \Storage\FileList();
 	$filesUploaded = $filesList->find(array('type' => 'engineering release', 'ref_id' => $release->id));
-	
+
+	$packageList = new \Package\PackageList();
+	$packages = $packageList->find();
+
+	if ($release->package_version_id) {
+		$version = new \Package\Version($release->package_version_id);
+		$_REQUEST['package_version_id'] = $version->id;
+		$_REQUEST['package_id'] = $version->package_id;
+	}
+
+	if ($_REQUEST['package_id'] > 0) {
+		$versionList = new \Package\VersionList();
+		$versions = $versionList->find(array("package_id" => $_REQUEST['package_id']));
+	}
+	else {
+		$versions = array();
+	}

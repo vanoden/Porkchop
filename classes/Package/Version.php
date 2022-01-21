@@ -1,13 +1,14 @@
 <?php
 	namespace Package;
 
-	class Version extends \Storage\File {
+	class Version {
 	
 		public $error;
 		public $major;
 		public $minor;
 		public $build;
 		public $status;
+		private $_file;
 		private $extension;
 
 		public function __construct($id = 0) {
@@ -18,7 +19,6 @@
 		}
 
 		public function add($parameters = array()) {
-            
 			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) {
 				$this->error = "package manager role required";
 				return false;
@@ -78,7 +78,8 @@
 			}
 
 			// Set name based on package and version
-			$this->name($this->formatted_name());
+			$file = new \Storage\File();
+			$file->name($this->formatted_name());
 
 			$parameters['repository_id'] = $package->repository->id;
 			$parameters['name'] = $this->formatted_name();
@@ -86,32 +87,41 @@
 			if (! isset($parameters['size'])) $parameters['size'] = filesize($parameters['path']);
 
             // Open Repository for File Storage
+			app_log("Getting Repository");
 			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->load($package->repository->id);
 			if ($factory->error) {
 				$this->error = "Error finding repository: ".$factory->error;
+				app_log($this->error,'error');
 				return false;
 			}
 
-			if (! defined($parameters['status'])) {
+			if (! isset($parameters['status'])) {
 				$parameters['status'] = 'NEW';
+			}
+			elseif ($parameters['status'] == 'PUBLISHED' && ! isset($parameters['date_published'])) {
+				$parameters['date_published'] = get_mysql_date(time());
 			}
 
             // Add File to Repository
-            parent::add(array(
+			app_log("Adding file to repository");
+            $file->add(array(
                 'repository_id' => $parameters['repository_id'],
                 'name'          => $parameters['name'],
                 'size'          => $parameters['size'],
                 'mime_type'     => $parameters['mime_type'],
             ));
-			if (parent::error()) {
+			if ($file->error()) {
 				return false;
 			}
-			if (! $repository->addFile($this,$parameters['path'])) {
+			app_log(print_r($file,true));
+			$this->id = $file->id;
+			if (! $repository->addFile($file,$parameters['path'])) {
 				$this->error = "Error adding file to repository: ".$repository->error;
 				return false;
 			}
 
+			app_log("Adding version ".$file->id." to package");
 			$insert_object_query = "
 				INSERT
 				INTO	package_versions
@@ -120,9 +130,8 @@
 				VALUES
 				(		?,?,?,?,?,?,?,sysdate())
 			";
-			$GLOBALS['_database']->Execute(
-				$insert_object_query,
-				array(
+
+			$bind_params = array(
 					$this->id,
 					$parameters['package_id'],
 					$parameters['major'],
@@ -130,19 +139,20 @@
 					$parameters['build'],
 					$parameters['status'],
 					$GLOBALS['_SESSION_']->customer->id
-				)
 			);
+
+			query_log($insert_object_query,$bind_params);
+			$GLOBALS['_database']->Execute($insert_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Package::Version::add(): ".$GLOBALS['_database']->ErrorMsg();
-				$this->delete();
-				return null;
+				$file->delete();
+				return false;
 			}
 
 			return $this->update($parameters);
 		}
-		
+
 		public function get($package_id,$major,$minor,$build) {
-		
 			$get_object_query = "
 				SELECT	id
 				FROM	package_versions
@@ -170,6 +180,10 @@
 			return $this->details();
 		}
 
+		public function file() {
+			return new \Storage\File($this->id);
+		}
+
 		public function latest($package_id) {
 			$get_object_query = "
 				SELECT	id
@@ -193,7 +207,7 @@
 		}
 
 		public function formatted_name() {
-			app_log("Formatting name with ".$this->package->code."-".$this->major.".".$this->minor.".".$this->build.".".$this->extension);
+			app_log("Formatting name with ".$this->package->code."-".$this->major.".".$this->minor.".".$this->build.".".$this->extension,'trace');
 			return sprintf("%s-%d.%d.%d.%s",$this->package->code,$this->major,$this->minor,$this->build,$this->extension);
 		}
 
@@ -238,12 +252,20 @@
 				UPDATE	package_versions
 				SET		package_id = package_id
 			";
-			
+
+			$bind_params = array();
+
 			if (isset($parameters['status']) && strlen($parameters['status'])) {
 				$parameters['status'] = strtoupper($parameters['status']);
 				if (preg_match('/^(NEW|PUBLISHED|HIDDEN)$/',$parameters['status'])) {
 					$update_object_query .= ",
-					status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+					status = ?";
+					array_push($bind_params,$parameters['status']);
+					if ($parameters['status'] == 'PUBLISHED') {
+						$update_object_query .= ",
+						date_published = ?";
+						array_push($bind_params,get_mysql_date(time()));
+					}
 				} else {
 					$this->error = "Invalid status";
 					return false;
@@ -256,16 +278,11 @@
 				AND		minor = ?
 				AND		build = ?
 			";
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array(
-					$this->package->id,
-					$this->major,
-					$this->minor,
-					$this->build
-				)
-			);
-			
+			array_push($bind_params,$this->package->id,$this->major,$this->minor,$this->build);
+
+			query_log($update_object_query,$bind_params);
+
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Package::Version::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -291,21 +308,25 @@
 			}
 			
 			$object = $rs->FetchNextObject(false);
-			app_log("Calling for parent details");
-			parent::details();
-
+			$this->id = $object->id;
+			$this->package_id = $object->package_id;
 			$this->package = new Package($object->package_id);
 			$this->major = $object->major;
 			$this->minor = $object->minor;
 			$this->build = $object->build;
 			$this->status = $object->status;
-			$this->owner = new \Register\Person($object->user_id);
+			$this->owner_id = $object->user_id;
 			$this->date_created = $object->date_created;
 			$this->date_published = $object->date_published;
-			$factory = new \Storage\RepositoryFactory();
-			$this->repository = $factory->load($this->repository->id);
 
 			return true;
+		}
+		public function owner() {
+			return new \Register\Person($this->owner_id);
+		}
+		public function repository() {
+			return $this->file()->repository();
+			
 		}
 		
 		public function version() {

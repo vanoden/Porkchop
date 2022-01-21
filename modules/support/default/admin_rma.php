@@ -4,7 +4,7 @@
   <div class="form_error"><?=$page->errorString()?></div>
 <?php	}
  if ($page->success) { ?>
-    <div class="form_success"><?=$page->success?> [<a href="/_support/admin_rmas">Finished</a>] | [<a href="/_support/admin_rmas">Create Another</a>] </div>
+    <div class="form_success"><?=$page->success?> [<a href="/_support/rmas">Finished</a>] | [<a href="/_support/requests">View Requests</a>] </div>
 <?php	} ?>
 
 <div class="tableBody">
@@ -132,5 +132,18 @@
     </div>
     </form>
     <br/><br/>
+</div>
+
+<h2>RMA Customer Instructions</h2>
+<div class="tableBody">
+	<div class="tableRowHeader">
+		<div class="tableCell">Email Customer Again (resends email with RMA instructions)</div>
+	</div>
+    <div class="tableRow">
+        <form name="resendEmail" action="/_support/admin_rma/<?=$rma->code?>" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="email_customer" value="1" />
+            <input type="submit" name="btn_submit" class="button" value="Send" />
+        </form>
+    </div>
 </div>
 

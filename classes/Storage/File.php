@@ -33,12 +33,14 @@
 			
 			if (! preg_match('/^[\w\-\.\_]+$/',$parameters['code'])) {
 				$this->error = "Invalid code '".$parameters['code']."'";
+				app_log($this->error,'notice');
 				return false;
 			}
 			
 			$this->code = $parameters['code'];
 			if (! $this->_valid_type($parameters['mime_type'])) {
 				$this->error = "Invalid mime_type '".$parameters['mime_type']."'";
+				app_log($this->error,'notice');
 				return false;
 			}
 
@@ -68,10 +70,12 @@
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Storage::File::add(): ".$GLOBALS['_database']->ErrorMsg();
+				app_log($this->error,'notice');
 				return false;
 			}
 			
 			$this->id = $GLOBALS['_database']->Insert_ID();
+			app_log("File '".$this->id."' uploaded");
 			return $this->update($parameters);
 		}
 		
@@ -168,6 +172,7 @@
 				$this->user = new \Register\Customer($object->user_id);
 				$this->date_created = $object->date_created;
 				$this->timestamp = strtotime($this->timestamp);
+				$this->_repository_id = $object->repository_id;
 				$factory = new RepositoryFactory();
 				$this->repository = $factory->load($object->repository_id);
 				if ($this->repository->endpoint) $this->uri = $this->repository->endpoint."/".$this->name;
@@ -239,7 +244,8 @@
 		}
 
 		public function repository() {
-			return new Repository($this->_repository_id);
+			$factory = new \Storage\RepositoryFactory();
+			return $factory->load($this->_repository_id);
 		}
 
 		private function _valid_type($name) {
@@ -426,7 +432,9 @@
 		}
 
 		public function download() {
-			return $this->repository->retrieveFile($this);
+			$result = $this->repository->retrieveFile($this);
+			$this->error = $this->repository->error;
+			return $result;
 		}
 		
         public function code() {
@@ -475,7 +483,15 @@
 		    // make sure all the required parameters are set for upload to continue
             if (! preg_match('/^\//',$parameters['path'])) $parameters['path'] = '/'.$parameters['path'];
 		    $factory = new \Storage\RepositoryFactory();
-		    $repository = $factory->find($parameters['repository_name']);
+			if (!empty($parameters['repository_id'])) {
+				$repository = $factory->load($parameters['repository_id']);
+			}
+			elseif (!empty($parameters['repository_code'])) {
+				$repository = $factory->get($parameters['repository_code']);
+			}
+			elseif (!empty($parameters['repository_name'])) {
+				$repository = $factory->find($parameters['repository_name']);
+			}
 
 		    if ($factory->error) {
 			    $this->addError("Error loading repository: ".$factory->error);
@@ -485,8 +501,10 @@
 			    app_log("Identified repo '".$repository->name."'");
 			    
 			    if (! file_exists($_FILES['uploadFile']['tmp_name'])) {
-			        if (empty($_FILES['uploadFile']['tmp_name'])) {
-    			        $this->addError("No file was selected to upload.");			        
+			        if (empty($_FILES['uploadFile']['tmp_name']) && empty($_FILES['uploadFile']['name'])) {
+    			        $this->addError("No file was selected to upload");
+                    } else if (empty($_FILES['uploadFile']['tmp_name']) && !empty($_FILES['uploadFile']['name'])) {
+    			        $this->addError("File chosen was file too large: php.ini upload_max_filesize=".ini_get('upload_max_filesize'));
 			        } else {
     			        $this->addError("Temp file '" . $_FILES['uploadFile']['tmp_name'] . "' not found");
 			        }
@@ -520,20 +538,27 @@
 
 					    // Upload File Into Repository 
 					    $destinationPath = $parameters['type'] . "/" . $parameters['ref_id']  . "/";
-					    if ($this->error) $this->addError("Error adding file: " . $this->error);
-					    elseif (! $repository->addFile($this, $_FILES['uploadFile']['tmp_name'], $destinationPath)) {
-						    $this->delete();
-						    $this->addError('Unable to add file to repository: '.$repository->error);
-					    } else {
-						    app_log("Stored file ".$this->id." at ".$repository->path."/".$this->code);
-						    $this->success = "File uploaded";
-						    
-                            // add file type refrence for this file to be a part of the support/engineering ticket
-                            if (isset($parameters['type']) && isset($parameters['ref_id'])) {
-                                $fileMetaData = new \Storage\FileMetadata($this->id);
-                                $fileMetaData->add(array('file_id' => $this->id, 'key' => $parameters['type'], 'value' => $parameters['ref_id']));   
-                            }                            
-					    }
+				        try {
+					        if ($this->error) { 
+					            $this->addError("Error adding file: " . $this->error);
+					        } else if (! $repository->addFile($this, $_FILES['uploadFile']['tmp_name'], $destinationPath)) {
+						        $this->delete();
+						        $this->addError('Unable to add file to repository: '.$repository->error);
+					        } else {
+						        app_log("Stored file ".$this->id." at ".$repository->path."/".$this->code);
+						        $this->success = "File uploaded";
+						        
+                                // add file type refrence for this file to be a part of the support/engineering ticket
+                                if (isset($parameters['type']) && isset($parameters['ref_id'])) {
+                                    $fileMetaData = new \Storage\FileMetadata($this->id);
+                                    $fileMetaData->add(array('file_id' => $this->id, 'key' => $parameters['type'], 'value' => $parameters['ref_id']));   
+                                }                            
+					        }
+                        } catch (\Exception $e) {
+					        $this->delete();
+					        $this->addError('System Exception has occured, unable to add file to repository: '.$repository->error);
+    						app_log("repository->addFile(): Exception" . $e->getMessage(),'notice');
+                        }
 				    }
 			    }
 		    }

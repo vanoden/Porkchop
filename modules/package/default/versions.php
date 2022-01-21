@@ -42,11 +42,11 @@
    <tr>
       <td><?=$version->version()?></td>
       <td><?=$version->status?></td>
-      <td><?=$version->user->full_name()?></td>
+      <td><?php if (isset($version->owner_id)) { print $version->owner()->full_name(); } ?></td>
       <td><?=$version->date_created?></td>
       <td><?=$version->date_published?></td>
-      <td><?=$version->repository->name?></td>
-      <td><?=$version->name()?></td>
+      <td><?=$version->repository()->name?></td>
+      <td><?=$version->file()->name()?></td>
       <td>
          <?php if ($version->status != 'PUBLISHED') { ?><input type="button" name="btn_submit" class="button" value="Publish" onclick="publish(<?=$version->id?>);" /><?php } ?>
          <?php if ($version->status != 'HIDDEN') { ?><input type="button" name="btn_submit" class="button" value="Hide" onclick="hide(<?=$version->id?>);" /><?php } ?>

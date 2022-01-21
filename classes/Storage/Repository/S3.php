@@ -12,34 +12,39 @@
 	    protected $client;
 	    public $bucket;
 	    public $configuration;
-	    public $accessKey;
-	    public $secretKey;
 	    public $region;
+		private $_connected = false;
 	    
 		public function __construct($id = null) {
 
 			if ($id > 0) {
 				$this->id = $id;
-				$this->details();
+				if ($this->details()) {
+					$this->connect();
+				}
 			}
-			
-		    $this->configuration = new \Site\Configuration();
-		    $this->credentials = new Credentials($this->accessKey, $this->secretKey);
+		}
 
-            // Instantiate the S3 client with your AWS credentials
-            $this->s3Client = S3Client::factory ( array (
-                'credentials' => $this->credentials
-            ) );
+		public function connect() {
+			$this->configuration = new \Site\Configuration();
+			$this->credentials = new Credentials($this->accessKey(), $this->secretKey());
 
-            // Create a service builder using a configuration file
-            $this->aws = Aws::factory();
-            
-            // Get the client from the builder by namespace
-            $this->client = $this->aws->get('S3');		
+			// Instantiate the S3 client with your AWS credentials
+			$this->s3Client = S3Client::factory ( array (
+				'credentials' => $this->credentials
+			) );
+
+			// Create a service builder using a configuration file
+			$this->aws = Aws::factory();
+		
+			// Get the client from the builder by namespace
+			$this->client = $this->aws->get('S3');
+
+			$this->_connected = true;
 		}
 
         public function update($parameters = array()) {
-        
+
             // create the repo, then continue to add the custom values needed for S3 only
             parent::update($parameters);
 		
@@ -59,18 +64,34 @@
 			return $this->getMetadata('bucket');
 		}
 
+		public function accessKey($key = null) {
+			if (isset($key)) $this->_setMetadata('accessKey', $key);
+			return $this->getMetadata('accessKey');
+		}
+
+		public function secretKey($key = null) {
+			if (isset($key)) $this->_setMetadata('secretKey', $key);
+			return $this->getMetadata('secretKey');
+		}
+
         /**
          * Write contents to S3 cloud storage
          *
          * @param $file
          * @param $path
          */
-		public function addFile($file, $path, $destinationPath = '') {
+		public function addFile($file, $path) {
+			if (!$this->_connected) {
+				if (!$this->connect()) {
+					$this->error = "Failed to connect to S3 service";
+					return null;
+				}
+			}
 
             // Upload an object by streaming the contents of a file
             $result = $this->s3Client->putObject(array(
-                'Bucket'     => $this->bucket,
-                'Key'        => $destinationPath . "/" . $file->code(),
+                'Bucket'     => $this->_bucket(),
+                'Key'        => $file->code(),
                 'SourceFile' => $path,
                 'Metadata'   => array(
                     'Source' => 'Uploaded from Website'
@@ -98,23 +119,43 @@
          * Load contents from filesystem
          */
 		public function retrieveFile($file) {
-
-			// Load contents from filesystem 
-			$fh = fopen("https://" . $this->bucket . ".s3.amazonaws.com/" . $file->code,'rb');
-			if (FALSE === $fh) {
-				$this->error = "Failed to open file";
-				return false;
+			if (!$this->_connected) {
+				if (!$this->connect()) {
+					$this->error = "Failed to connect to S3 service";
+					return null;
+				}
 			}
 
-			header("Content-Type: ".$file->mime_type);
-			header('Content-Disposition: filename="'.$file->name().'"');
-			while (!feof($fh)) {
-				$buffer = fread($fh,8192);
-				print $buffer;
-				flush();
-				ob_flush();
+			$tmpFile = '/tmp/s3-'.$file->code();
+			app_log("Getting file ".$file->code());
+			// Load contents from filesystem
+			try {
+				$result = $this->s3Client->getObject(array(
+					'Bucket'	=> $this->_bucket(),
+					'Key'		=> $file->code(),
+					'SaveAs'	=> $tmpFile
+				));
+			} catch (\exception $e) {
+				$this->error = "Failed to get file: ".$e->getMessage();
+				return;
 			}
-			fclose($fh);
-			exit;
+			if (file_exists($tmpFile)) {
+				app_log("Downloaded File '".$tmpFile."' [".filesize($tmpFile)." bytes]",'notice');
+
+				$fh = fopen($tmpFile,'r');
+				header("Content-Type: ".$file->mime_type);
+				header('Content-Disposition: filename="'.$file->name().'"');
+				while (!feof($fh)) {
+					$buffer = fread($fh,8192);
+					print $buffer;
+					flush();
+					ob_flush();
+				}
+				fclose($fh);
+				exit;
+			}
+			else {
+				app_log("Failed to download file",'error');
+			}
 		}
 	}

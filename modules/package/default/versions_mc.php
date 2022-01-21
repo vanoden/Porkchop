@@ -25,9 +25,10 @@
 
     if ($_REQUEST['dothis'] == 'download') {
         $version = new \Package\Version($_REQUEST['version_id']);
-        $version->download();
-        if ($version->error()) {
-            $page->addError($version->error());
+		$file = $version->file();
+        $file->download();
+        if ($file->error()) {
+            $page->addError($file->error());
         } else {
             exit;
         }

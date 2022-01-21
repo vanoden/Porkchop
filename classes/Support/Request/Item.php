@@ -16,6 +16,7 @@
 		public function __construct($id = 0) {
 			if (is_numeric($id)) {
 				if ($id > 0) {
+					app_log("Load Support::Request::Item ".$id);
 					$this->id = $id;
 					$this->details();
 				}
