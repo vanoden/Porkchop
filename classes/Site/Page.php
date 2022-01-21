@@ -366,10 +366,18 @@
 			    } elseif ($property == "not_authorized") {
 				    $buffer .= "<div class=\"page_error\">Sorry, you are not authorized to see this view</div>";
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
+					if (isset($this->style)) {
+						if (file_exists(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php'))
+							$be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
+						elseif (file_exists(MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php'))
+							$be_file = MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php';
+						if (file_exists(MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php'))
+							$fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
+						elseif (file_exists(MODULES . '/' . $this->module . '/default/' . $this->view . '.php'))
+							$fe_file = MODULES . '/' . $this->module . '/default/' . $this->view . '.php';
+					}
+				    app_log ( "Loading $fe_file", 'debug', __FILE__, __LINE__ );
 				    ob_start ();
-				    $be_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php';
-				    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
 				    if (file_exists ( $be_file )) include ($be_file);
 				    if (file_exists ( $fe_file )) include ($fe_file);
 				    $buffer .= ob_get_clean ();
