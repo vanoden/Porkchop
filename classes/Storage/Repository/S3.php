@@ -69,7 +69,7 @@
 
             // Upload an object by streaming the contents of a file
             $result = $this->s3Client->putObject(array(
-                'Bucket'     => $this->bucket,
+                'Bucket'     => $this->_bucket(),
                 'Key'        => $destinationPath . "/" . $file->code(),
                 'SourceFile' => $path,
                 'Metadata'   => array(
