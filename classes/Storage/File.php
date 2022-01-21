@@ -432,7 +432,9 @@
 		}
 
 		public function download() {
-			return $this->repository->retrieveFile($this);
+			$result = $this->repository->retrieveFile($this);
+			$this->error = $this->repository->error;
+			return $result;
 		}
 		
         public function code() {
