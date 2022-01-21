@@ -188,11 +188,11 @@
 			// Get Template File
 			$internal_notification = $GLOBALS['_config']->engineering->internal_notification;
 			if (! isset($GLOBALS['_config']->engineering->internal_notification)) {
-				$page->error = "Notification template not configured";
+				$page->addError("Notification template not configured");
 				app_log("config->engineering->internal_notification not set!",'error');
 			}
 			elseif (! file_exists($internal_notification->template)) {
-				$page->error = "Support Internal Email Template '".$internal_notification->template."' not found";
+				$page->addError("Support Internal Email Template '".$internal_notification->template."' not found");
 				app_log("File '".$internal_notification->template."' not found! Set in config->engineering->internal_notification setting",'error');
 			}
 			else {
@@ -201,7 +201,7 @@
 				}
 				catch (Exception $e) {
 					app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
-					$page->error = "Template load failed.  Try again later";
+					$page->addError("Template load failed.  Try again later");
 					return;
 				}
 
@@ -296,12 +296,19 @@
 	}
 
     // upload files if upload button is pressed
-    $configuration = new \Site\Configuration('engineering_attachments_s3');    
-    $repository = $configuration->value();
-    if (isset($_REQUEST['btn_upload']) && $_REQUEST['btn_upload'] == 'Upload') {
+    $configuration = new \Site\Configuration('engineering_attachments');    
+    $repository_key = $configuration->value();
+	$repository = new \Storage\Repository();
+	if (empty($repository_key)) {
+		$page->addError("'engineering_attachments' configuration not set");
+	}
+	elseif (! $repository->get($repository_key)) {
+		$page->addError("Repository '".$repository_key."' not found");
+	}
+    elseif (isset($_REQUEST['btn_upload']) && $_REQUEST['btn_upload'] == 'Upload') {
 	    $file = new \Storage\File();
 	    $parameters = array();
-        $parameters['repository_name'] = $_REQUEST['repository_name'];
+        $parameters['repository_id'] = $repository->id;
         $parameters['type'] = $_REQUEST['type'];
         $parameters['ref_id'] = $task->id;
 	    $uploadResponse = $file->upload($parameters);

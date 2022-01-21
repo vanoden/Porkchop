@@ -481,8 +481,16 @@
 		    // make sure all the required parameters are set for upload to continue
             if (! preg_match('/^\//',$parameters['path'])) $parameters['path'] = '/'.$parameters['path'];
 		    $factory = new \Storage\RepositoryFactory();
-		    $repository = $factory->find($parameters['repository_name']);
-		    
+			if (!empty($parameters['repository_id'])) {
+				$repository = $factory->load($parameters['repository_id']);
+			}
+			elseif (!empty($parameters['repository_code'])) {
+				$repository = $factory->get($parameters['repository_code']);
+			}
+			elseif (!empty($parameters['repository_name'])) {
+				$repository = $factory->find($parameters['repository_name']);
+			}
+
 		    if ($factory->error) {
 			    $this->addError("Error loading repository: ".$factory->error);
 		    } else if (! $repository->id) {
