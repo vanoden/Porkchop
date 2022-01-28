@@ -21,6 +21,9 @@
                 $page->addError("Failed to delete privilege: ".$privilege->error());
             }
         }
+		else {
+			$page->addError("Privilege not found");
+		}
     }
     $privilegeList = new \Register\PrivilegeList();
     $privileges = $privilegeList->find();

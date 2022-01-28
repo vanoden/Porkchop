@@ -80,7 +80,9 @@
 				$this->_error = "SQL Error in Register::Privilege::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			list($this->id) = $rs->FetchRow();
+			list($id) = $rs->FetchRow();
+			if (! $id) return false;
+			$this->id = $id;
 			return $this->details();
 		}
 
@@ -102,6 +104,15 @@
         }
 
         public function delete() {
+			$delete_xref_query = "
+				DELETE
+				FROM	register_roles_privileges
+				WHERE	privilege_id = ?";
+			$GLOBALS['_database']->Execute($delete_xref_query,$this->id);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->_error = "SQL Error in Register::Privilege::delete(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
             $delete_object_query = "
                 DELETE
                 FROM    register_privileges

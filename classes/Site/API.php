@@ -101,7 +101,7 @@
 			$response = new \HTTP\Response();
 	
 			# Initiate Product Object
-			$_content = new Content();
+			$_content = new \Content\Message();
 	
 			# Find Matching Threads
 			$message = $_content->add(
@@ -136,7 +136,7 @@
 			$response = new \HTTP\Response();
 	
 			# Initiate Product Object
-			$content = new Content($_REQUEST['id']);
+			$content = new \Content\Message($_REQUEST['id']);
 			if (! $content->id) error("Message '".$_REQUEST['id']."' not found");
 	
 			# Find Matching Threads
@@ -170,26 +170,22 @@
 			$response = new \HTTP\Response();
 	
 			# Initiate Product Object
-			$_content = new Content();
+			$message = new \Content\Message();
 	
 			# Get Message
-			$message = $_content->get($_REQUEST['target']);
-			if ($_content->error)
-			{
-				app_error($_content->error,__FILE__,__LINE__);
-				error("Application error");
+			if ($message->get($_REQUEST['target'])) {
+				# Purge Cache for message
+				$message->purge_cache();
+		
+				# Error Handling
+				if ($message->error) error($message->error);
+				else{
+					$response->message = "Success";
+					$response->success = 1;
+				}
 			}
-			if (! $message->id)
-				error("Unable to find matching message");
-	
-			# Purge Cache for message
-			$_content->purge_cache($message->id);
-	
-			# Error Handling
-			if ($_content->error) error($_content->error);
-			else{
-				$response->message = "Success";
-				$response->success = 1;
+			else {
+				$this->app_error($message->error,__FILE__,__LINE__);
 			}
 	
 			api_log('content',$_REQUEST,$response);
@@ -200,150 +196,57 @@
 		###################################################
 		### Get Metadata for current view				###
 		###################################################
-		public function getMetadata() {
+		public function getPageMetadata() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
 			$response = new \HTTP\Response();
 	
-			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
-	
-			# Find Matching Views
-			$metadata = $_metadata->get(
-				$_REQUEST['module'],
-				$_REQUEST['view'],
-				$_REQUEST['index']
-			);
-	
-			# Error Handling
-			if ($_metadata->error) error($_metadata->error);
-			else{
-				$response->metadata = $metadata;
-				$response->success = 1;
+			$page = new \Site\Page();
+			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+				if ($metadata = $page->getMetadata($_REQUEST['key'])) {
+					$response->metadata = $metadata;
+					$response->success = 1;
+				}
+				else {
+					$this->app_error("Cannot get metadata: ".$page->error);
+				}
+			}
+			else {
+				app_error("Page not found");
 			}
 	
 			# Send Response
 			api_log('content',$_REQUEST,$response);
 			print $this->formatOutput($response);
 		}
+
 		###################################################
 		### Get Metadata for current view				###
 		###################################################
-		public function findMetadata() {
+		public function findPageMetadata() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
 			$response = new \HTTP\Response();
 	
-			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
-	
-			# Find Matching Views
-			$metadata = $_metadata->find(
-				array (
-					'id'		=> $_REQUEST['id'],
-					'module'	=> $_REQUEST['module'],
-					'view'		=> $_REQUEST['view'],
-					'index'		=> $_REQUEST['index'],
-				)
-			);
-	
-			# Error Handling
-			if ($_metadata->error) error($_metadata->error);
-			else{
+			$page = new \Site\Page();
+			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+				# Initiate Metadata Object
+				$metadata = $page->allMetadata();
+
 				$response->metadata = $metadata;
 				$response->success = 1;
+			}
+			else {
+				$this->app_error("Page not found");
 			}
 	
 			# Send Response
 			api_log('content',$_REQUEST,$response);
 			print $this->formatOutput($response);
 		}
-		###################################################
-		### Add Page Metadata							###
-		###################################################
-		public function addMetadata() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
-	
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
-			$response = new \HTTP\Response();
-	
-			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
-	
-			# Find Matching Threads
-			$metadata = $_metadata->add(
-				array(
-					'module'		=> $_REQUEST['module'],
-					'view'			=> $_REQUEST['view'],
-					'index'			=> $_REQUEST['index'],
-					'format'		=> $_REQUEST['format'],
-					'content'		=> $_REQUEST['content']
-				)
-			);
-	
-			# Error Handling
-			if ($_metadata->error) error($_metadata->error);
-			else{
-				$response->metadata = $metadata;
-				$response->success = 1;
-			}
-	
-			# Send Response
-			api_log('content',$_REQUEST,$response);
-			print $this->formatOutput($response);
-		}
-		###################################################
-		### Update Page Metadata						###
-		###################################################
-		public function updateMetadata() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
-	
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
-			$response = new \HTTP\Response();
-	
-			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
-	
-			# Find Metadata On Key
-			$current = $_metadata->get(
-				array(
-					'module'		=> $_REQUEST['module'],
-					'view'			=> $_REQUEST['view'],
-					'index'			=> $_REQUEST['index'],
-				)
-			);
-			if ($current->id) {
-				$response->message = "Updating id ".$current->id;
-				# Find Matching Threads
-				$metadata = $_metadata->update(
-					$current->id,
-					array(
-						'format'		=> $_REQUEST['format'],
-						'content'		=> $_REQUEST['content']
-					)
-				);
-			}
-			else
-			{
-				error("Could not find matching object");
-			}
-	
-			# Error Handling
-			if ($_metadata->error) error($_metadata->error);
-			else{
-				#$response->request = $_REQUEST;
-				$response->metadata = $metadata;
-				$response->success = 1;
-			}
-	
-			# Send Response
-			api_log('content',$_REQUEST,$response);
-			print $this->formatOutput($response);
-		}
+
 		public function setPageMetadata() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) $this->error("Permission Denied");
 	
 			$response = new \HTTP\Response();
 	
@@ -500,34 +403,21 @@
 				'purgeMessage'	=> array(
 					'target'	=> array(),
 				),
-				'getMetadata'	=> array(
+				'getPageMetadata'	=> array(
 					'module'	=> array('required' => true),
 					'view'		=> array('required' => true),
 					'index'		=> array(),
 				),
-				'findMetadata'	=> array(
+				'findPageMetadata'	=> array(
 					'id'	=> array('required' => true),
 					'module'	=> array('required' => true),
 					'view'		=> array('required' => true),
 					'index'		=> array(),
 				),
-				'addMetadata'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
-					'format'	=> array(),
-					'content'	=> array(),
-				),
-				'updateMetadata'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
-					'format'	=> array(),
-					'content'	=> array(),
-				),
 				'setPageMetadata'	=> array(
 					'module'	=> array('required' => true),
 					'view'		=> array('required' => true),
+					'index'		=> array(),
 					'key'		=> array(),
 					'value'		=> array(),
 				),

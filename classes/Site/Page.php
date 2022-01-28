@@ -116,7 +116,7 @@
 					return $this->add($module,$view,$index);
 				}
 				elseif ($GLOBALS['_SESSION_']->customer->has_role('content developer')) {
-					return $this->get("content","edit");
+					return $this->get("site","content_block");
 				}
 				else return false;
 			}
@@ -211,20 +211,18 @@
 			    }
 		    }
 
-		    // Load View Metadata
-		    $_metadata = new \Site\Page\Metadata ();
-		    $this->metadata = $_metadata->all ( $this->id );
-
-		    // Pull Key Metadata
-		    $this->template = $_metadata->get ( 'template' );
-
 		    return true;
 	    }
 
+		public function template() {
+			return $this->getMetadata('template');
+		}
+
 	    public function load_template() {
-		    if (isset ( $this->metadata->template )) {
-			    app_log ( "Loading template '" . $this->metadata->template . "' from page metadata", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $this->metadata->template );
+			$template = $this->template();
+		    if (isset ( $template )) {
+			    app_log ( "Loading template '" . $template . "' from page metadata", 'debug', __FILE__, __LINE__ );
+			    $html = file_get_contents ( HTML . "/" . $template );
 		    } elseif (file_exists ( HTML . "/" . $this->module . "." . $this->view . ".html" )) {
 			    app_log ( "Loading template '" . "/" . $this->module . "." . $this->view . ".html'", 'debug', __FILE__, __LINE__ );
 			    $html = file_get_contents ( HTML . "/" . $this->module . "." . $this->view . ".html" );
@@ -637,33 +635,28 @@
 			    exit ();
 		    }
 	    }
-	    public function metadata() {
-		    $get_data_query = "
-				    SELECT	`key`,
-						    `value`
-				    FROM	page_metadata
-				    WHERE	page_id = ?
-			    ";
-
-		    $rs = $GLOBALS ['_database']->Execute ( $get_data_query, array ($this->id ) );
-
-		    if (! $rs) {
-			    $this->error = "SQL Error in Site::Page::metadata(): " . $GLOBALS ['_database']->ErrorMsg ();
+	    public function allMetadata() {
+		    $metadataList = new \Site\Page\MetadataList();
+			$metaArray = $metadataList->find(array('page_id' => $this->id));
+		    if ($metadataList->error()) {
+				$this->error = $metadataList->error();
 			    return null;
 		    }
-		    $metadata = array ();
-		    while ( list ( $key, $value ) = $rs->FetchRow () ) {
-			    array_push ( $metadata, array ('key' => $key, 'value' => $value ) );
-		    }
-		    return $metadata;
+		    return $metaArray;
 	    }
+		public function getMetadata($key) {
+			$metadata = new \Site\Page\Metadata();
+			if ($metadata->get($this->id,$key)) {
+				return $metadata->value;
+			}
+			else {
+				return null;
+			}
+		}
+
 	    public function setMetadata($key, $value) {
 		    if (! isset ( $this->id )) {
 			    $this->addError ( "No page id" );
-			    return false;
-		    }
-		    if (! preg_match ( '/^\d+$/', $this->id )) {
-			    $this->addError ( "Invalid page id in Site::Page::setMetadata()" );
 			    return false;
 		    }
 		    if (! isset ( $key )) {
@@ -671,42 +664,19 @@
 			    return false;
 		    }
 
-		    $set_data_query = "
-                    REPLACE
-                    INTO    page_metadata
-                    (       page_id,`key`,value)
-                    VALUES
-                    (       ?,?,?)
-                ";
-		    $GLOBALS ['_database']->Execute ( $set_data_query, array ($this->id, $key, $value ) );
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->addError ( "SQL Error setting metadata in Site::Page::setMetadata(): " . $GLOBALS ['_database']->ErrorMsg () );
-			    return false;
-		    }
-		    return true;
+		    $metadata = new \Site\Page\Metadata();
+			$metadata->get($this->id,$key);
+			if (! isset($value)) {
+				$metadata->drop();
+			}
+
+		    if ($metadata->set($value)) return true;
+			else $this->addError($metadata->error());
+			return false;
 	    }
 	    public function unsetMetadata($key) {
-		    if (! preg_match ( '/^\d+$/', $this->id )) {
-			    $this->error = "Invalid page id in Site::Page::unsetMetadata(): ";
-			    return null;
-		    }
-		    if (! isset ( $key )) {
-			    $this->error = "Invalid key name in Site::Page::unsetMetadata(): ";
-			    return null;
-		    }
-
-		    $set_data_query = "
-                    DELETE
-                    FROM    page_metadata
-				    WHERE	page_id = ?
-				    AND		`key` = ?
-                ";
-		    $GLOBALS ['_database']->Execute ( $set_data_query, array ($this->id, $key ) );
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->error = "SQL Error setting metadata in Site::Page::unsetMetadata(): " . $GLOBALS ['_database']->ErrorMsg ();
-			    return null;
-		    }
-		    return true;
+			$metadata = new \Site\Page\Metadata($this->id,$key);
+		    return $metadata->drop();
 	    }
 	    public function addError($error) {
 		    $trace = debug_backtrace ();
