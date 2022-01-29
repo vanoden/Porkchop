@@ -27,6 +27,7 @@
 				    <?php	foreach ($assigners as $assigner) { ?>
 				    <option value="<?=$assigner->id?>"<?php if ($assigner->id == $_REQUEST['assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
 				    <?php	} ?>
+				    <option value="Unassigned" <?php if ($_REQUEST['assigned_id'] == "Unassigned") print " selected"; ?>>Unassigned</option>
 			    </select>
 		    </div>
 		    <div class="tableCell">

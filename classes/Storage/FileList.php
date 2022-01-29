@@ -14,11 +14,7 @@
          * @param array $parameters, name value pairs to find files by
          */
 		public function find($parameters = array()) {
-		
-			# Why would we need this?! - A. Caravello
-#		    if (empty($parameters['ref_id'])) return false;
-#		    if (empty($parameters['type'])) return false;
-		
+				
 			$get_objects_query = "
 				SELECT sf.id
 				FROM storage_files sf

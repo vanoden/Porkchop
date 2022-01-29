@@ -173,6 +173,51 @@
 				$this->setVersion(6);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+			if ($this->version() < 7) {
+			
+				$create_table_query = "
+	                CREATE TABLE IF NOT EXISTS `site_messages` (
+	                  `id` int(10) NOT NULL AUTO_INCREMENT,
+	                  `user_created` int(11) NOT NULL,
+	                  `date_created` timestamp NOT NULL,
+	                  `important` boolean NOT NULL,
+	                  `content` text,
+                      `parent_id` int(11) NULL,
+	                  PRIMARY KEY (`id`),
+	                  KEY `fk_user_created` (`user_created`),
+                      CONSTRAINT `register_users_ibfk_1` FOREIGN KEY (`user_created`) REFERENCES `register_users` (`id`)
+                    )
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating page_widgets table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$create_table_query = "
+	                CREATE TABLE IF NOT EXISTS `site_message_deliveries` (
+	                  `id` int(10) NOT NULL AUTO_INCREMENT,
+      	              `message_id` int(10) NOT NULL,
+      	              `user_id` int(10) NOT NULL,
+      	              `date_viewed` timestamp NOT NULL,
+      	              `date_acknowledged` timestamp NOT NULL,
+	                  PRIMARY KEY (`id`),
+	                  KEY `fk_message_id` (`message_id`),
+	                  KEY `fk_user_id` (`user_id`),
+                      CONSTRAINT `message_id_ibfk_1` FOREIGN KEY (`message_id`) REFERENCES `site_messages` (`id`),
+                      CONSTRAINT `user_id_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
+                    )
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating page_widgets table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(7);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}

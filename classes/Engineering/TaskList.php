@@ -41,6 +41,13 @@
 				array_push($bind_params,$parameters['assigned_id']);
 			}
 
+            // allow for "unassigned" searches of tasks = assigned_id default '0'
+			if (isset($parameters['assigned_id']) && $parameters['assigned_id'] == 'Unassigned') {
+				$find_objects_query .= "
+				AND		assigned_id = ?";
+				array_push($bind_params, 0);
+			}
+
 			if (isset($parameters['release_id']) && is_numeric($parameters['release_id'])) {
 				$find_objects_query .= "
 				AND		release_id = ?";
