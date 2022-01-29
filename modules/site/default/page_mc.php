@@ -28,7 +28,7 @@
 		$view = $editPage->view;
 		$index = $editPage->index;
 		if (! strlen($index)) $index = '[null]';
-		$metadata = $editPage->metadata();
+		$metadata = $editPage->allMetadata();
 	}
 	else {
 		$page->addError("Page ".$_REQUEST['module']."/".$_REQUEST['view']." index ".$_REQUEST['index']." not found");

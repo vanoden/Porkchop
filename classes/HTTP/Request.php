@@ -151,7 +151,7 @@
 			$this->uri = urldecode($this->uri);
 
 			# Parse Query String
-			if (preg_match("/^\/\_(\w+)\/(\w+)\/*(.+)*$/",$this->uri,$matches)) {
+			if (preg_match("/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/",$this->uri,$matches)) {
 				$this->module = $matches[1];
 			}
 

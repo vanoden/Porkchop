@@ -366,17 +366,25 @@
 		}
 
 		public function has_privilege($privilege_name) {
+			$privilege = new \Register\Privilege();
+			if (! $privilege->get($privilege_name)) {
+				if ($GLOBALS['_SESSION_']->customer->can("manage privileges")) {
+					$privilege->add(array('name' => $privilege_name));
+				}
+				else {
+					return false;
+				}
+			}
+
 			$check_privilege_query = "
 				SELECT	1
 				FROM	register_users_roles rur,
-						register_roles_privileges rrp,
-						register_privileges p
+						register_roles_privileges rrp
 				WHERE	rur.user_id = ?
 				AND		rrp.role_id = rur.role_id
-				AND		p.id = rrp.privilege_id
-				AND		p.name = ?
+				AND		rrp.privilege_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($check_privilege_query,array($this->id,$privilege_name));
+			$rs = $GLOBALS['_database']->Execute($check_privilege_query,array($this->id,$privilege->id));
 			if (! $rs) {
 				$this->error = "SQL Error in Register::Customer::has_privilege(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;

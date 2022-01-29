@@ -51,8 +51,8 @@
 	    foreach ($metadata as $record) { 
     ?>
 	    <div class="tableRow">
-		    <div class="tableCell"><?=$record['key']?><input id="key_<?=$idx?>" type="hidden" name="key_<?=$idx?>" value="<?=$record['key']?>" /></div>
-		    <div class="tableCell"><input id="value_<?=$idx?>" type="text" name="value_<?=$idx?>" value="<?=$record['value']?>" /></div>
+		    <div class="tableCell"><?=$record->key?><input id="key_<?=$idx?>" type="hidden" name="key_<?=$idx?>" value="<?=$record->key?>" /></div>
+		    <div class="tableCell"><input id="value_<?=$idx?>" type="text" name="value_<?=$idx?>" value="<?=$record->value?>" /></div>
 		    <div class="tableCell">
 			    <input type="button" name="update_<?=$idx?>" value="Update" class="button" onclick="updateMeta('<?=$idx?>');" />
 			    <input type="button" name="drop_<?=$idx?>" value="Drop" class="button" onclick="dropMeta('<?=$idx?>');" />

@@ -116,7 +116,7 @@
 					return $this->add($module,$view,$index);
 				}
 				elseif ($GLOBALS['_SESSION_']->customer->has_role('content developer')) {
-					return $this->get("content","edit");
+					return $this->get("site","content_block");
 				}
 				else return false;
 			}
@@ -211,20 +211,18 @@
 			    }
 		    }
 
-		    // Load View Metadata
-		    $_metadata = new \Site\Page\Metadata ();
-		    $this->metadata = $_metadata->all ( $this->id );
-
-		    // Pull Key Metadata
-		    $this->template = $_metadata->get ( 'template' );
-
 		    return true;
 	    }
-	    
+
+		public function template() {
+			return $this->getMetadata('template');
+		}
+
 	    public function load_template() {
-		    if (isset ( $this->metadata->template )) {
-			    app_log ( "Loading template '" . $this->metadata->template . "' from page metadata", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $this->metadata->template );
+			$template = $this->template();
+		    if (isset ( $template )) {
+			    app_log ( "Loading template '" . $template . "' from page metadata", 'debug', __FILE__, __LINE__ );
+			    $html = file_get_contents ( HTML . "/" . $template );
 		    } elseif (file_exists ( HTML . "/" . $this->module . "." . $this->view . ".html" )) {
 			    app_log ( "Loading template '" . "/" . $this->module . "." . $this->view . ".html'", 'debug', __FILE__, __LINE__ );
 			    $html = file_get_contents ( HTML . "/" . $this->module . "." . $this->view . ".html" );
@@ -247,7 +245,7 @@
 		    else $html = '<r7 object="page" property="view"/>';
 		    return $this->parse ( $html );
 	    }
-	    
+
 	    public function parse($message) {
 		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
 		    while ( preg_match ( $module_pattern, $message, $matched ) ) {
@@ -365,10 +363,18 @@
 			    } elseif ($property == "not_authorized") {
 				    $buffer .= "<div class=\"page_error\">Sorry, you are not authorized to see this view</div>";
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
+					if (isset($this->style)) {
+						if (file_exists(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php'))
+							$be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
+						elseif (file_exists(MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php'))
+							$be_file = MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php';
+						if (file_exists(MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php'))
+							$fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
+						elseif (file_exists(MODULES . '/' . $this->module . '/default/' . $this->view . '.php'))
+							$fe_file = MODULES . '/' . $this->module . '/default/' . $this->view . '.php';
+					}
+				    app_log ( "Loading $fe_file", 'debug', __FILE__, __LINE__ );
 				    ob_start ();
-				    $be_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php';
-				    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
 				    if (file_exists ( $be_file )) include ($be_file);
 				    if (file_exists ( $fe_file )) include ($fe_file);
 				    $buffer .= ob_get_clean ();
@@ -420,8 +426,9 @@
 						    $buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'0px\'; } </script>';
 						    $buffer .= "<div>";
 						    $buffer .= '<div id="r7_widget[' . $origin_id . ']">' . $message->content . '</div>';
-						    $buffer .= '<a class="porkchop_edit_button" href="javascript:void(0)" onclick="editContent(\'content\',\'' . $origin_id . '\',\'' . $message->id . '\')" onmouseover="highlightContent(\'content\');" onmouseout="blurContent(\'content\');">Edit</a>';
-						    $buffer .= "</div>";
+						    #$buffer .= '<a class="porkchop_edit_button" href="javascript:void(0)" onclick="editContent(\'content\',\'' . $origin_id . '\',\'' . $message->id . '\')" onmouseover="highlightContent(\'content\');" onmouseout="blurContent(\'content\');">Edit</a>';
+						    $buffer .= '<a href="/_content/edit?id='.$message->id.'">Edit</a>';
+                            $buffer .= "</div>";
 					    } else {
 						    $buffer .= $message->content;
 					    }
@@ -628,33 +635,28 @@
 			    exit ();
 		    }
 	    }
-	    public function metadata() {
-		    $get_data_query = "
-				    SELECT	`key`,
-						    `value`
-				    FROM	page_metadata
-				    WHERE	page_id = ?
-			    ";
-
-		    $rs = $GLOBALS ['_database']->Execute ( $get_data_query, array ($this->id ) );
-
-		    if (! $rs) {
-			    $this->error = "SQL Error in Site::Page::metadata(): " . $GLOBALS ['_database']->ErrorMsg ();
+	    public function allMetadata() {
+		    $metadataList = new \Site\Page\MetadataList();
+			$metaArray = $metadataList->find(array('page_id' => $this->id));
+		    if ($metadataList->error()) {
+				$this->error = $metadataList->error();
 			    return null;
 		    }
-		    $metadata = array ();
-		    while ( list ( $key, $value ) = $rs->FetchRow () ) {
-			    array_push ( $metadata, array ('key' => $key, 'value' => $value ) );
-		    }
-		    return $metadata;
+		    return $metaArray;
 	    }
+		public function getMetadata($key) {
+			$metadata = new \Site\Page\Metadata();
+			if ($metadata->get($this->id,$key)) {
+				return $metadata->value;
+			}
+			else {
+				return null;
+			}
+		}
+
 	    public function setMetadata($key, $value) {
 		    if (! isset ( $this->id )) {
 			    $this->addError ( "No page id" );
-			    return false;
-		    }
-		    if (! preg_match ( '/^\d+$/', $this->id )) {
-			    $this->addError ( "Invalid page id in Site::Page::setMetadata()" );
 			    return false;
 		    }
 		    if (! isset ( $key )) {
@@ -662,42 +664,19 @@
 			    return false;
 		    }
 
-		    $set_data_query = "
-                    REPLACE
-                    INTO    page_metadata
-                    (       page_id,`key`,value)
-                    VALUES
-                    (       ?,?,?)
-                ";
-		    $GLOBALS ['_database']->Execute ( $set_data_query, array ($this->id, $key, $value ) );
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->addError ( "SQL Error setting metadata in Site::Page::setMetadata(): " . $GLOBALS ['_database']->ErrorMsg () );
-			    return false;
-		    }
-		    return true;
+		    $metadata = new \Site\Page\Metadata();
+			$metadata->get($this->id,$key);
+			if (! isset($value)) {
+				$metadata->drop();
+			}
+
+		    if ($metadata->set($value)) return true;
+			else $this->addError($metadata->error());
+			return false;
 	    }
 	    public function unsetMetadata($key) {
-		    if (! preg_match ( '/^\d+$/', $this->id )) {
-			    $this->error = "Invalid page id in Site::Page::unsetMetadata(): ";
-			    return null;
-		    }
-		    if (! isset ( $key )) {
-			    $this->error = "Invalid key name in Site::Page::unsetMetadata(): ";
-			    return null;
-		    }
-
-		    $set_data_query = "
-                    DELETE
-                    FROM    page_metadata
-				    WHERE	page_id = ?
-				    AND		`key` = ?
-                ";
-		    $GLOBALS ['_database']->Execute ( $set_data_query, array ($this->id, $key ) );
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->error = "SQL Error setting metadata in Site::Page::unsetMetadata(): " . $GLOBALS ['_database']->ErrorMsg ();
-			    return null;
-		    }
-		    return true;
+			$metadata = new \Site\Page\Metadata($this->id,$key);
+		    return $metadata->drop();
 	    }
 	    public function addError($error) {
 		    $trace = debug_backtrace ();

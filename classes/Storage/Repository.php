@@ -286,6 +286,10 @@
 			list($value) = $rs->FetchRow();
 			return $value;
 		}
+
+		public function getMetadata($key) {
+			return $this->_metadata($key);
+		}
 		
 		private function _valid_code($string) {
 			if (preg_match('/^\w[\w\-\_\.]*$/',$string)) return true;
