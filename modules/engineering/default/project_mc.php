@@ -45,6 +45,8 @@
 		}
 	}
 
+    $filesList = new \Storage\FileList();
+    $filesUploaded = array();
 	if ($project->id) {
 		$project->details();
 		$form['code'] = $project->code;
@@ -52,6 +54,7 @@
 		$form['description'] = $project->description;
 		$form['status'] = $project->status;
 		$form['manager_id'] = $project->manager->id;
+    	$filesUploaded = $filesList->find(array('type' => 'engineering project', 'ref_id' => $project->id));
 	} elseif ($page->errorCount()) {
 		$form['code'] = $_REQUEST['code'];
 		$form['title'] = $_REQUEST['title'];
@@ -75,9 +78,6 @@
 		if (!empty($file->error)) $page->addError($file->error);
 		if (!empty($file->success)) $page->success = $file->success;
 	}
-	
-	$filesList = new \Storage\FileList();
-	$filesUploaded = $filesList->find(array('type' => 'engineering project', 'ref_id' => $project->id));
 
 	$role = new \Register\Role();
 	$role->get("engineering user");
