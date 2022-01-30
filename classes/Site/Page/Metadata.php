@@ -112,15 +112,26 @@ class Metadata {
 				$this->value = $object->value;
 				return true;
 			}
+            return false;
 		}
 
 		public function drop() {
+			if (empty($this->id)) {
+				$this->error = "Metadata id not set";
+				return false;
+			}
 			$drop_key_query = "
 				DELETE
 				FROM	page_metadata
 				WHERE	id = ?
 			";
+			query_log($drop_key_query,array($this->id),true);
 			$GLOBALS['_database']->Execute($drop_key_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Site::Page::Metadata::drop(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			return true;
 		}
 
 		public function error() {

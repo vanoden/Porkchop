@@ -675,7 +675,8 @@
 			return false;
 	    }
 	    public function unsetMetadata($key) {
-			$metadata = new \Site\Page\Metadata($this->id,$key);
+			$metadata = new \Site\Page\Metadata();
+            $metadata->get($this->id,$key);
 		    return $metadata->drop();
 	    }
 	    public function addError($error) {
