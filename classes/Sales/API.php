@@ -2,7 +2,6 @@
 	namespace Sales;
 
 	class API Extends \API {
-
 		public function __construct() {
 			$this->_admin_role = 'sales manager';
 			$this->_name = 'sales';
@@ -10,6 +9,8 @@
 			$this->_release = '2021-06-16';
 			$this->_schema = new \Sales\Schema();
 			parent::__construct();
+
+			$response = new \HTTP\Response();
 		}
 
 		###################################################
@@ -21,21 +22,26 @@
 			$parameters = array();
 			if ($GLOBALS['_SESSION_']->customer->has_role('salesperson')) {
 				if (isset($_REQUEST['customer_id'])) $parameters['customer_id'] = $_REQUEST['customer_id'];
+				elseif(isset($_REQUEST['customer_code'])) {
+					$customer = new \Register\Customer();
+					$customer->get($_REQUEST['customer_code']);
+					$parameters['customer_id'] = $customer->id;
+				}
 				else $parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->id;
 				if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 				else $parameters['status'] = 'QUOTE';
 				if (isset($_REQUEST['salesperson_code'])) $parameters['salesperson_code'] = $_REQUEST['salesperson_code'];
 				else $parameters['salesperson_id'] = $GLOBALS['_SESSION_']->customer->id;
+				if (isset($_REQUEST['customer_order_number'])) $parameters['customer_order_number'] = $_REQUEST['customer_order_number'];
 			}
-			else if ($GLOBALS['_SESSION_']->authenticated()) {
+			elseif ($GLOBALS['_SESSION_']->authenticated()) {
 				$parameters['salesperson_id'] = $GLOBALS['_SESSION_']->customer->id;
 				$parameters['status'] = 'REQUEST';
 			}
 			else {
 				$parameters['status'] = 'REQUEST';
 			}
-			if (! $order->add($parameters)) app_error("Error adding order: ".$order->error());
-
+			if (! $order->add($parameters)) $this->app_error("Error adding order: ".$order->error());
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->order = $order;
@@ -50,6 +56,16 @@
 			$order = new \Sales\Order();
 			if (! $order->get($_REQUEST['code'])) {
 				error("Error finding order: ".$order->error());
+			}
+
+			if ($GLOBALS['_SESSION_']->customer->has_role('sale manager')) {
+				# OK To Update
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->id == $order->customer_id) {
+				# OK To Update
+			}
+			else {
+				$this->app_error("Permission Denied");
 			}
 
 			$parameters = array();
@@ -92,7 +108,7 @@
 			if ($_REQUEST['organization_code']) $parameters['organization_code'] = $_REQUEST['organization_code'];
 
 			$orders = $orderList->find($parameters);
-			if ($orderList->error) app_error("Error finding orders: ".$orderList->error());
+			if ($orderList->error) $this->app_error("Error finding orders: ".$orderList->error());
 
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -135,6 +151,7 @@
 			);
 	
 			if (! $order->addItem($parameters)) $this->app_error("Error adding order item: ".$order->error());
+			$item = new \Sales\Order\Item($order->lastItemID());
 	
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -152,7 +169,7 @@
 				error("Error finding order: ".$order->error());
 			}
 	
-			$item = $order->getItem($_REQUEST['line']);
+			$item = $order->getItem($_REQUEST['line_number']);
 			if (! $item) $this->error("Item not found: ".$order->error());
 	
 			$parameters = array();
@@ -162,6 +179,8 @@
 	
 			$item->update($parameters);
 			if ($item->error) $this->app_error("Error updating item: ".$item->error(),'error');
+	
+			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->item = $item;
 	
@@ -190,7 +209,7 @@
 		### Find matching Provinces						###
 		###################################################
 		public function findOrderItems() {
-			$itemList = new \Sale\Order\ItemList();
+			$itemList = new \Sales\Order\ItemList();
 
 			$parameters = array();
 			if ($_REQUEST['order_code']) $parameters['order_code'] = $_REQUEST['order_code'];
@@ -241,11 +260,15 @@
 				),
 				'updateOrderItem'	=> array(
 					'order_code'	=> array('required' => true),
-					'line'			=> array('required' => true),
+					'line_number'	=> array('required' => true),
 					'product_code'	=> array(),
 					'quantity'		=> array(),
 					'price'			=> array(),
 					'deleted'		=> array(),
+				),
+				'dropOrderItem'	=> array(
+					'order_code'	=> array('required'	=> true),
+					'line_number'	=> array('required'	=> true),
 				),
 			);
 		}

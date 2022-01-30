@@ -91,7 +91,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 2) {
-				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
+				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans())
@@ -108,16 +108,43 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating sales_currencies table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
 				else {
-					app_log("Created sales_order_items table",'info');
+					app_log("Created sales_currencies table",'info');
 				}
 
 				app_log("Update version",'info');
 				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 3) {
+				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				# Sales Order Items
+				$alter_table_query = "
+					ALTER TABLE `sales_order_items`
+					ADD	COLUMN `status` enum('OPEN','VOID,'FULFILLED','RETURNED') NOT NULL DEFAULT 'OPEN',
+					ADD COLUMN `cost` decimal(10,4),
+					ADD CONSTRAINT `idx_order_item_status` (`status`)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error altering sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+				else {
+					app_log("Updated sales_order_items table",'info');
+				}
+
+				app_log("Update version",'info');
+				$this->setVersion(3);
 				$GLOBALS['_database']->CommitTrans();
 			}
 			return true;
