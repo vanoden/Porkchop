@@ -9,6 +9,7 @@
 	    private $_updateQuery;
 	    private $_addQuery;
 	    protected $_error;
+		protected $ukColumn = 'code';
 	
         /**
          * construct ORM
@@ -107,8 +108,8 @@
          * @param string $code
          * @param string $columnName, which column we search for the code value by
          */
-		public function get($code, $columnName='code') {
-			$getObjectQuery = "SELECT id FROM `$this->tableName` WHERE `$columnName` = ?";
+		public function get($code) {
+			$getObjectQuery = "SELECT id FROM `$this->tableName` WHERE `$this->ukColumn` = ?";
 			$rs = $this->execute($getObjectQuery, array($code));
             if ($rs) {
                 list($id) = $rs->FetchRow();
@@ -121,8 +122,8 @@
             return false;
 		}
 
-		public function delete($columnName = 'id') {
-			$deleteObjectQuery = "DELETE FROM `$this->tableName` WHERE `$columnName` = ?";
+		public function delete() {
+			$deleteObjectQuery = "DELETE FROM `$this->tableName` WHERE `id` = ?";
 			$this->execute($deleteObjectQuery,array($this->id));
 			if ($this->_error) return false;
 			return true;
