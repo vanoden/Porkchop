@@ -30,7 +30,7 @@
 				$this->_error = "SQL Error in Support::Request::nextLine(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			
+
 			list($line) = $rs->FetchRow();
 			return $line + 1;
 		}
@@ -134,7 +134,7 @@
 				return null;
 			}
 			
-			return $this->details($id);
+			return $this->details();
 		}
 
 		private function details() {
