@@ -61,6 +61,9 @@
 		public function error($message) {
 			$_REQUEST["stylesheet"] = '';
 			error_log($message);
+            if (preg_match('/SQL\sError/',$message)) {
+                $message = "Application Data Error";
+            }
 			$response = new \HTTP\Response();
 			$response->error = $message;
 			$response->success = 0;
