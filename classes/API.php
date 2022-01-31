@@ -78,7 +78,7 @@
 			app_log($message,'error',$file,$line);
 			$this->error('Application Error');
 		}
-		
+
 		###################################################
 		### Convert Object to XML						###
 		###################################################
@@ -118,7 +118,7 @@
 			$login = $GLOBALS['_SESSION_']->customer->code;
 			$method = $_REQUEST['method'];
 			$host = $GLOBALS['_REQUEST_']->client_ip;
-
+			$response = new \HTTP\Response();
 			if (is_object($response) && $response->success) $status = "SUCCESS";
 			else $status = "FAILED";
 			$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
