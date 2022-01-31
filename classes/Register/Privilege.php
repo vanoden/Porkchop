@@ -4,6 +4,9 @@
 	class Privilege {
 		public $id;
 		private $_error;
+		public $description;
+		public $name;
+		public $module;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -48,6 +51,12 @@
                 array_push($bind_params,$parameters['name']);
             }
 
+            if ($parameters['module']) {
+                $update_object_query .= ",
+                module = ?";
+                array_push($bind_params,$parameters['module']);
+            }
+
             if ($parameters['description']) {
                 $update_object_query .= ",
                 description = ?";
@@ -88,7 +97,7 @@
 
         public function details() {
             $get_object_query = "
-                SELECT  id,name,description
+                SELECT  id,name,description,module
                 FROM    register_privileges
                 WHERE   id = ?
             ";
@@ -99,7 +108,7 @@
                 return false;
             }
 
-            list($this->id,$this->name,$this->description) = $rs->FetchRow();
+            list($this->id,$this->name,$this->description,$this->module) = $rs->FetchRow();
             return true;
         }
 

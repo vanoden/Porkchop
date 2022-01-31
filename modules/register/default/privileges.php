@@ -7,8 +7,10 @@
 <?php
     foreach ($privileges as $privilege) { ?>
 <form name="privilege_delete" method="post">
-<span class="label" style="display: inline-block; width: 250px;"><?=$privilege->name?></span>
-<input type="hidden" name="delete_id" value="<?=$privilege->id?>">
+<input type="text" name="name[<?=$privilege->id?>]" class="value input" style="display: inline-block; width: 250px;" value="<?=$privilege->name?>"/>
+<input type="text" name="module[<?=$privilege->id?>]" class="value input" style="display: inline-block; width: 150px;" value="<?=$privilege->module?>"/>
+<input type="hidden" name="privilege_id" value="<?=$privilege->id?>">
+<input type="submit" name="btn_update" value="Update" class="button">
 <input type="submit" name="btn_delete" value="Delete" class="button">
 </form>
 <?php  } ?>
