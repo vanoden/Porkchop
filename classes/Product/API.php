@@ -102,19 +102,54 @@
 			print $this->formatOutput($this->response);
 		}
 	
+        ###################################################
+        ### Add a Price                                 ###
+        ###################################################
+        public function addPrice() {
+            $parameters = array();
+            $product = new \Product\Item();
+            if (! $product->get($_REQUEST['product_code'])) $this->error("Product not found");
+            $parameters['product_id'] = $product->id;
+            if (! preg_match('/^\d[\d\.]*$/',$_REQUEST['amount'])) $this->error("Valid price required");
+            $parameters['amount'] = $_REQUEST['amount'];
+
+            if (isset($_REQUEST['date_active']) && get_mysql_date($_REQUEST['date_active'])) {
+                $parameters['date_active'] = get_mysql_date($_REQUEST['date_active']);
+            }
+            elseif (isset($_REQUEST['date_active'])) $this->error("Invalid date_active");
+            else $parameters['date_active'] = get_mysql_date(time());
+
+            if (! $product->addPrice($parameters)) $this->error($product->error());
+            $this->response->success = 1;
+            print $this->formatOutput($this->response);
+        }
+
+        ###################################################
+        ### Get a Product Price                         ###
+        ###################################################
+        public function getPrice() {
+            $parameters = array();
+            $product = new \Product\Item();
+            if (! $product->get($_REQUEST['product_code'])) $this->error("Product not found");
+            $parameters['product_id'] = $product->id;
+            $price =  $product->getPrice($parameters);
+            if ($product->error()) $this->error($product->error());
+            $this->response->success = 1;
+            $this->response->price = $price;
+            print $this->formatOutput($this->response);
+        }
+
 		###################################################
 		### Add a Relationship							###
 		###################################################
 		public function addRelationship() {
 			$_product = new \Product\Item();
-			if (defined($_REQUEST['parent_code']))
-			{
+			if (defined($_REQUEST['parent_code'])) {
 				$parent = $_product->get($_REQUEST['parent_code']);
 				if (! $parent->id) $this->error("Parent product '".$_REQUEST['parent_code']."' not found");
 				$_REQUEST['parent_id'] = $parent->id;
 			}
-			if ($_REQUEST['child_code'])
-			{
+			if ($_REQUEST['child_code']) {
 				$child = $_product->get($_REQUEST['child_code']);
 				if (! $child->id) $this->error("Child product '".$_REQUEST['child_code']."' not found");
 				$_REQUEST['child_id'] = $child->id;
@@ -506,6 +541,15 @@
 					'name'		=> array(),
 					'status'	=> array(),
 					'type'		=> array(),
+				),
+                'addPrice'      => array(
+                    'product_code'  => array('required' => true),
+                    'amount'        => array('required' => true),
+                    'date_active'   => array('default' => get_mysql_date(time())),
+                    'status'        => array('required' => true,'default' => 'ACTIVE','options' => array('INACTIVE','ACTIVE')),
+                ),
+				'getPrice'		=> array(
+					'product_code'	=> array('required' => true)
 				),
 				'findRelationships'	=> array(
 					'parent_code'	=> array('required' => true),
