@@ -12,17 +12,19 @@ class Order extends \ORM\BaseModel {
 		public $customer_order_number;
 		private $lastID;
 
-		public function add($parameters) {
+		public function add($parameters = array()) {
 			$customer = new \Register\Customer($parameters['customer_id']);
 			if (! $customer->id) {
 				$this->_error = "Customer not found";
 				return false;
 			}
-			$salesperson = new \Register\Admin($parameters['salesperson_id']);
-			if (! $salesperson->id) {
-				$this->_error = "Salesperson not found";
-				return false;
-			}
+            if (isset($parameters['salesperson_id'])) {
+    			$salesperson = new \Register\Admin($parameters['salesperson_id']);
+	    		if (! $salesperson->id) {
+		    		$this->_error = "Salesperson not found";
+			    	return false;
+			    }
+            }
 			if ($parameters['status']) $status = $parameters['status'];
 			else $status = 'NEW';
 			if ($parameters['code']) $code = $parameters['code'];
@@ -35,8 +37,9 @@ class Order extends \ORM\BaseModel {
 				VALUES
 				(		null,?,?,?,?)
 			";
+			$bind_params = array($code,$customer->id,$salesperson->id,$status);
             query_log($add_object_query,$bind_params);
-			$GLOBALS['_database']->Execute($add_object_query,array($code,$customer->id,$salesperson->id,$status));
+			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Sales::Order::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -145,6 +148,49 @@ class Order extends \ORM\BaseModel {
 			return new \Register\Customer($this->customer_id);
 		}
 
+        public function approve() {
+            if ($this->update(array('status' => 'APPROVED'))) {
+                $this->addEvent(array('order_id' => $this->id, 'new_status' => 'APPROVED'));
+                $customer = new \Register\Customer($this->customer_id);
+                $service_request = new \Support\Request();
+                if ($service_request->add(array(
+                    'customer_id' => $customer->id,
+                    'organization_id' => $customer->organization->id,
+                    'type'          => 'ORDER',
+                    'code'          => 'SO_'.$this->id
+                ))) {
+					app_log("Created request ".$service_request->code);
+					$line = 0;
+                    foreach ($this->items() as $item) {
+						app_log("Adding product ".$item->product_id);
+						$line ++;
+                        if ($ticket = $service_request->addItem(array(
+                            'product_id'    => $item->product_id,
+                            'quantity'      => $item->quantity,
+                            'status'        => 'NEW',
+                            'description'   => $item->description,
+							'line'			=> $line
+                        ))) {
+							app_log("Added ticket ".$ticket->code);
+						}
+						else {
+							$this->error($service_request->error());
+							return false;
+						}
+                    }
+                }
+				return true;
+			}
+			else {
+				return false;
+			}
+        }
+
+		public function cancel($reason = '') {
+			if (! $this->update(array('status' => 'CANCELLED','message' => $reason))) return false;
+			return true;
+		}
+
 		private function nextNumber() {
 			$get_number_query = "
 				SELECT	max(line_number)
@@ -161,6 +207,10 @@ class Order extends \ORM\BaseModel {
 		}
 
 		public function addItem($parameters) {
+			if (empty($parameters['price'])) {
+				$this->error("Price required for line item");
+				return null;
+			}
 			$insert_item_query = "
 				INSERT
 				INTO	sales_order_items
@@ -178,20 +228,21 @@ class Order extends \ORM\BaseModel {
 			$parameters['line_number'] = $this->nextNumber();
 			$bind_params = array(
 				$this->id,
-				$parameters->line_number(),
-				$parameters->product_id,
-				$parameters->description,
-				$parameters->quantity,
-				$parameters->price
+				$parameters['line_number'],
+				$parameters['product_id'],
+				$parameters['description'],
+				$parameters['quantity'],
+				$parameters['price']
 			);
+			query_log($insert_item_query,$bind_params,true);
 			$GLOBALS['_database']->Execute($insert_item_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error("SQL Error in Sales::Order::addItem(): ".$GLOBALS['_database']->ErrorMsg());
+				app_log("Error: ".$this->error(),'error');
 				return false;
 			}
-			list($id) = $GLOBALS['_database']->Insert_ID();
-			$this->lastID = $id;
-			return $id;
+			$this->lastID = $GLOBALS['_database']->Insert_ID();
+			return true;
 		}
 
 		public function getItem($line_number) {
@@ -203,8 +254,8 @@ class Order extends \ORM\BaseModel {
 			return $item->update(array('status' => 'VOID'));
 		}
 
-		public function items($parameters) {
-			$parameters->order_id = $this->id;
+		public function items($parameters = array()) {
+			$parameters['order_id'] = $this->id;
 			$itemList = new Order\ItemList();
 			$items = $itemList->find($parameters);
 			if ($itemList->error()) {
@@ -222,7 +273,8 @@ class Order extends \ORM\BaseModel {
 			$event->add($parameters);
 		}
 
-		public function error() {
+		public function error($error = null) {
+            if (isset($error)) $this->_error = $error;
 			return $this->_error;
 		}
 

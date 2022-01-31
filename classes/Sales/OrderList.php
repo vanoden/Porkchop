@@ -19,11 +19,13 @@
 				AND		id = ?";
 				array_push($bind_params,$parameters['id']);
 			}
+
 			if (!empty($parameters['customer_id'])) {
 				$find_order_query .= "
 				AND		customer_id = ?";
 				array_push($bind_params,$parameters['customer_id']);
 			}
+
 			if (!empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					$statii = "";
@@ -44,9 +46,10 @@
 			}
 
 			$find_order_query .= "
-				ORDER BY order_id, line_number
+				ORDER BY id
 			";
 
+			query_log($find_order_query,$bind_params,true);
 			$rs = $GLOBALS['_database']->Execute($find_order_query,$bind_params);
 			if (! $rs) {
 				$this->error("SQL Error in Sales::OrderList(): ".$GLOBALS['_database']->ErrorMsg());
@@ -54,6 +57,7 @@
 			}
 			$orders = array();
 			while (list($id) = $rs->FetchRow()) {
+				app_log("Adding order $id");
 				$order = new \Sales\Order($id);
 				array_push($orders,$order);
 				$this->_count ++;
@@ -63,7 +67,8 @@
 		public function count() {
 			return $this->_count;
 		}
-		public function error() {
+		public function error($message = null) {
+			if (isset($message)) $this->_error = $message;
 			return $this->_error;
 		}
 	}

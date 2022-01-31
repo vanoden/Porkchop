@@ -18,37 +18,51 @@
 		###################################################
 		public function addOrder() {
 			$order = new \Sales\Order();
-
 			$parameters = array();
+
 			if ($GLOBALS['_SESSION_']->customer->has_role('salesperson')) {
 				if (isset($_REQUEST['customer_id'])) $parameters['customer_id'] = $_REQUEST['customer_id'];
 				elseif(isset($_REQUEST['customer_code'])) {
 					$customer = new \Register\Customer();
-					$customer->get($_REQUEST['customer_code']);
-					$parameters['customer_id'] = $customer->id;
-				}
-				else $parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->id;
-				if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+					if ($customer->get($_REQUEST['customer_code'])) {
+    					$parameters['customer_id'] = $customer->id;
+                        $parameters['organization_id'] = $customer->organization->id;
+                    }
+                    else {
+                        $this->error("Customer '".$_REQUEST['customer_code']."' not found");
+                    }
+                }
+				else {
+                    $parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->id;
+                    $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+                }
+
+				if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 				else $parameters['status'] = 'QUOTE';
-				if (isset($_REQUEST['salesperson_code'])) $parameters['salesperson_code'] = $_REQUEST['salesperson_code'];
+				if (!empty($_REQUEST['salesperson_code'])) {
+                    $salesperson = new \Register\Customer();
+                    if (! $salesperson->get($_REQUEST['salesperson_code'])) $this->error("Salesperson '".$_REQUEST['salesperson_code']."' not found");
+                }
 				else $parameters['salesperson_id'] = $GLOBALS['_SESSION_']->customer->id;
-				if (isset($_REQUEST['customer_order_number'])) $parameters['customer_order_number'] = $_REQUEST['customer_order_number'];
+				if (!empty($_REQUEST['customer_order_number'])) $parameters['customer_order_number'] = $_REQUEST['customer_order_number'];
 			}
 			elseif ($GLOBALS['_SESSION_']->authenticated()) {
-				$parameters['salesperson_id'] = $GLOBALS['_SESSION_']->customer->id;
-				$parameters['status'] = 'REQUEST';
+				$parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->id;
+				$parameters['status'] = 'NEW';
 			}
 			else {
-				$parameters['status'] = 'REQUEST';
+                $this->error("Not authenticated");
+				$parameters['status'] = 'NEW';
 			}
-			if (! $order->add($parameters)) $this->app_error("Error adding order: ".$order->error());
+            if (isset($_REQUEST['customer_order_number'])) $parameters['customer_order_number'] = $_REQUEST['customer_order_number'];
+			if (! $order->add($parameters)) $this->error("Error adding order: ".$order->error());
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->order = $order;
 
 			print $this->formatOutput($response);
 		}
-	
+
 		###################################################
 		### Update a Sales Order						###
 		###################################################
@@ -58,15 +72,78 @@
 				error("Error finding order: ".$order->error());
 			}
 
-			if ($GLOBALS['_SESSION_']->customer->has_role('sale manager')) {
+			if ($GLOBALS['_SESSION_']->customer->can('edit sales order')) {
 				# OK To Update
-			}
-			elseif ($GLOBALS['_SESSION_']->customer->id == $order->customer_id) {
-				# OK To Update
+                if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+                if (!empty($_REQUEST['salesperson_code'])) {
+                    $salesperson = new \Register\Customer();
+                    if (!$salesperson->get($_REQUEST['salesperson_code'])) $this->error("Salesperson not found");
+                    else $parameters['salesperson_id'] = $salesperson->id;
+                }
 			}
 			else {
 				$this->app_error("Permission Denied");
 			}
+
+			$parameters = array();
+			if (! $order->update($parameters)) {
+				$this->error("Error updating order: ".$order->error());
+			}
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->order = $order;
+
+			print $this->formatOutput($response);
+		}
+
+		###################################################
+		### Update a Sales Order						###
+		###################################################
+		public function approveOrder() {
+			$order = new \Sales\Order();
+			if (! $order->get($_REQUEST['code'])) {
+				$this->error("Error finding order: ".$order->error());
+			}
+
+			if ($GLOBALS['_SESSION_']->customer->can('approve sales order')) {
+				# OK To Update
+                $order = new \Sales\Order();
+                if (! $order->get($_REQUEST['code'])) $this->error("Order not found");
+                if (in_array($order->status,array('APPROVED','CANCELLED','COMPLETE'))) $this->error("Order not ready for approval");
+                if (! $order->approve()) $this->error($order->error());
+			}
+            else $this->error("Permission denied");
+
+			$parameters = array();
+			if (! $order->update($parameters)) {
+				$this->error("Error updating order: ".$order->error());
+			}
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->order = $order;
+
+			print $this->formatOutput($response);
+		}
+
+		###################################################
+		### Update a Sales Order						###
+		###################################################
+		public function cancelOrder() {
+			$order = new \Sales\Order();
+			if (! $order->get($_REQUEST['code'])) {
+				error("Error finding order: ".$order->error());
+			}
+
+			if ($GLOBALS['_SESSION_']->customer->can('edit sales order')) {
+				# OK To Update
+                $order = new \Sales\Order();
+                if (! $order->get($_REQUEST['code'])) $this->error("Order not found");
+                if (in_array($order->status,array('CANCELLED','COMPLETE'))) $this->error("Order not ready for cancellation");
+                if (! $order->cancel()) $this->error($order->error());
+			}
+            else $this->error("Permission denied");
 
 			$parameters = array();
 			if (! $order->update($parameters)) {
@@ -99,13 +176,33 @@
 		###################################################
 		### Find matching Sales Orders					###
 		###################################################
-		function findOrders() {
+		public function findOrders() {
 			$orderList = new \Sales\OrderList();
 
 			$parameters = array();
-			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
-			if ($_REQUEST['customer_code']) $parameters['customer_code'] = $_REQUEST['customer_code'];
-			if ($_REQUEST['organization_code']) $parameters['organization_code'] = $_REQUEST['organization_code'];
+			if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+            if (! $GLOBALS['_SESSION_']->customer->id) $this->error("Permission Denied");
+			elseif (! $GLOBALS['_SESSION_']->customer->can('browse sales orders')) {
+                $parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->id;
+                $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+            }
+            elseif (isset($_REQUEST['customer_code'])) {
+                $customer = new \Register\Customer();
+                if (! $customer->get($parameters['customer_code'])) $this->error("Customer not found");
+                $parameters['customer_id'] = $customer->id;
+            }
+
+			if (!empty($_REQUEST['salesperson_code'])) {
+                $salesperson = new \Register\Customer();
+                if (! $salesperson->get($parameters['salesperson_code'])) $this->error("Salesperson '".$_REQUEST['salesperson_code']."' not found");
+                $parameters['salesperson_id'] = $salesperson->id;
+            }
+
+			if (! $GLOBALS['_SESSION_']->customer->can('browse sales orders') && !empty($_REQUEST['organization_code'])) {
+                $organization = new \Register\Organization();
+                if (! $organization->get($_REQUEST['organization_code'])) $this->error("Organization not found");
+                $parameters['organization_id'] = $organization->id;
+            }
 
 			$orders = $orderList->find($parameters);
 			if ($orderList->error) $this->app_error("Error finding orders: ".$orderList->error());
@@ -120,7 +217,7 @@
 		###################################################
 		### Add an Item to an Order						###
 		###################################################
-		function addOrderItem() {
+		public function addOrderItem() {
 			$order = new \Sales\Order();
 			if (isset($_REQUEST['order_code'])) {
 				if (! $order->get($_REQUEST['order_code'])) {
@@ -163,7 +260,7 @@
 		###################################################
 		### Update an Order Item						###
 		###################################################
-		function updateOrderItem() {
+		public function updateOrderItem() {
 			$order = new \Sales\Order();
 			if ($order->get($_REQUEST['order_code'])) {
 				error("Error finding order: ".$order->error());
@@ -225,25 +322,39 @@
 			print $this->formatOutput($response);
 		}
 
+        ###################################################
+        ### API Form                                    ###
+        ###################################################
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
 				'addOrder'		=> array(
-					'code'			=> array('required' => true),
+					'code'			=> array(),
 					'customer_code'	=> array('required' => true),
 					'status'		=> array(),
 					'salesperson_code'	=> array(),
+                    'customer_order_number' => array(),
 					'date_quote'	=> array(),
 					'date_order'	=> array(),
 				),
+                'customer_order_number' => array(),
+                `updateOrder`   => array(
+					'code'			=> array('required' => true),
+					'status'		=> array(),
+					'salesperson_code'	=> array(),
+                    'customer_order_number' => array(),
+					'date_quote'	=> array(),
+					'date_order'	=> array(),
+                ),
 				'getOrder'		=> array(
 					'code'			=> array('required' => true),
 				),
 				'approveOrder'	=> array(
-					'order_code'	=> array('required' => true),
+					'code'	=> array('required' => true),
 				),
 				'cancelOrder'	=> array(
-					'order_code'	=> array('required' => true),
+					'code'	=> array('required' => true),
+                    'reason'    => array('required' => true)
 				),
 				'findOrders' => array(
 					'organization_code' => array(),
@@ -256,6 +367,7 @@
 					'order_code'	=> array('required'	=> true),
 					'product_code'	=> array('required'	=> true),
 					'quantity'		=> array('required' => true, 'default' => '1'),
+					'description'	=> array(),
 					'price'			=> array('required' => true),
 				),
 				'updateOrderItem'	=> array(

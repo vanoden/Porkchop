@@ -19,7 +19,7 @@
 					CREATE TABLE IF NOT EXISTS `sales_orders` (
 						id INT(4) NOT NULL AUTO_INCREMENT,
 						code VARCHAR(255) NOT NULL,
-						salesperson_id INT(11) NOT NULL,
+						salesperson_id INT(11),
 						status enum('NEW','QUOTE','CANCELLED','APPROVED','COMPLETE') NOT NULL DEFAULT 'NEW',
 						customer_id INT(11) NOT NULL,
 						PRIMARY KEY `pk_id` (`id`),
@@ -121,7 +121,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 3) {
-				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
+				app_log("Upgrading schema to version 3",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans())
@@ -130,9 +130,9 @@
 				# Sales Order Items
 				$alter_table_query = "
 					ALTER TABLE `sales_order_items`
-					ADD	COLUMN `status` enum('OPEN','VOID,'FULFILLED','RETURNED') NOT NULL DEFAULT 'OPEN',
+					ADD	COLUMN `status` enum('OPEN','VOID','FULFILLED','RETURNED') NOT NULL DEFAULT 'OPEN',
 					ADD COLUMN `cost` decimal(10,4),
-					ADD CONSTRAINT `idx_order_item_status` (`status`)
+					ADD INDEX `idx_order_item_status` (`status`)
 				";
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error altering sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
@@ -145,6 +145,83 @@
 
 				app_log("Update version",'info');
 				$this->setVersion(3);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 4) {
+				app_log("Upgrading schema to version 4",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				# Sales Order Items
+				$alter_table_query = "
+					ALTER TABLE `sales_orders`
+					ADD	COLUMN `customer_order_number` varchar(255),
+					ADD INDEX `idx_customer_order_num` (`customer_id`,`customer_order_number`)
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering sales_orders table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+				else {
+					app_log("Updated sales_orders table",'info');
+				}
+
+				app_log("Update version",'info');
+				$this->setVersion(4);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 5) {
+				app_log("Upgrading schema to version 5",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				# Sales Order Items
+				$alter_table_query = "
+					ALTER TABLE `sales_orders`
+					ADD	COLUMN `organization_id` int(11),
+					ADD INDEX `idx_order_org_id` (`organization_id`,`status`)
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering sales_orders table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+				else {
+					app_log("Updated sales_orders table",'info');
+				}
+
+				app_log("Update version",'info');
+				$this->setVersion(5);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 6) {
+				app_log("Upgrading schema to version 6",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				# Sales Order Items
+				$alter_table_query = "
+					ALTER TABLE `sales_order_events`
+					ADD	COLUMN `message` text(512)
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering sales_order_events table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+				else {
+					app_log("Updated sales_order_events table",'info');
+				}
+
+				app_log("Update version",'info');
+				$this->setVersion(6);
 				$GLOBALS['_database']->CommitTrans();
 			}
 			return true;

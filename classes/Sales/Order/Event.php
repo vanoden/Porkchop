@@ -12,6 +12,7 @@
 				VALUES
 				(		null,?,sysdate(),?,?)
 			";
+            if (!isset($parameters['user_id'])) $parameters['user_id'] = $GLOBALS['_SESSION_']->customer->id;
 			$GLOBALS['_database']->Execute($add_object_query,array($parameters["order_id"],$parameters['user_id'],$parameters['new_status']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Sales::Event::add(): ".$GLOBALS['_database']->ErrorMsg();
@@ -35,6 +36,10 @@
 				$update_object_query .= ", abbreviation = ?";
 				array_push($bind_params,$parameters['abbreviation']);
 			}
+            if (isset($parameters['message'])) {
+                $update_object_query .= ", message = ?";
+                array_push($bind_params,$parameters['message']);
+            }
 
 			$update_object_query .= "
 				WHERE	id = ?";
@@ -65,6 +70,7 @@
 				$this->id = $object->id;
 				$this->name = $object->name;
 				$this->abbreviation = $object->abbreviation;
+                $this->message = $object->message();
 				return true;
 			}
 			else {
