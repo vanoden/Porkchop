@@ -6,7 +6,7 @@
 <?php } ?>
 <?php
     foreach ($privileges as $privilege) { ?>
-<form name="privilege_delete" method="post">
+<form name="privilege_delete" action="/_register/privileges" method="post">
 <input type="text" name="name[<?=$privilege->id?>]" class="value input" style="display: inline-block; width: 250px;" value="<?=$privilege->name?>"/>
 <input type="text" name="module[<?=$privilege->id?>]" class="value input" style="display: inline-block; width: 150px;" value="<?=$privilege->module?>"/>
 <input type="hidden" name="privilege_id" value="<?=$privilege->id?>">
@@ -14,7 +14,7 @@
 <input type="submit" name="btn_delete" value="Delete" class="button">
 </form>
 <?php  } ?>
-<form name="privilege_add">
+<form name="privilege_add" action="/_register/privileges" method="post">
 <input type="text" name="newPrivilege" class="input" style="display: inline-block">
 <input type="submit" name="btn_add" value="Add" class="button">
 </form>

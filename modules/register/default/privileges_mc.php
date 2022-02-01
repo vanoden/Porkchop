@@ -2,7 +2,7 @@
     $page = new \Site\Page();
     $page->requirePrivilege('manage privileges');
 
-    if ($_REQUEST['newPrivilege']) {
+    if (! empty($_REQUEST['newPrivilege'])) {
         $privilege = new \Register\Privilege();
         if ($privilege->add(array('name' => $_REQUEST['newPrivilege']))) {
             $page->success = "Privilege Added";
