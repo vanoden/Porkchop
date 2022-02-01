@@ -112,6 +112,7 @@
             $parameters['product_id'] = $product->id;
             if (! preg_match('/^\d[\d\.]*$/',$_REQUEST['amount'])) $this->error("Valid price required");
             $parameters['amount'] = $_REQUEST['amount'];
+			if (preg_match('/^(ACTIVE|INACTIVE)$/i',$_REQUEST['status'])) $parameters['status'] = strtoupper($_REQUEST['status']);
 
             if (isset($_REQUEST['date_active']) && get_mysql_date($_REQUEST['date_active'])) {
                 $parameters['date_active'] = get_mysql_date($_REQUEST['date_active']);
