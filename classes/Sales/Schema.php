@@ -134,7 +134,7 @@
 					ADD COLUMN `cost` decimal(10,4),
 					ADD INDEX `idx_order_item_status` (`status`)
 				";
-				if (! $this->executeSQL($create_table_query)) {
+				if (! $this->executeSQL($alter_table_query)) {
 					$this->error = "SQL Error altering sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
