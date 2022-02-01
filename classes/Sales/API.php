@@ -221,21 +221,21 @@
 			$order = new \Sales\Order();
 			if (isset($_REQUEST['order_code'])) {
 				if (! $order->get($_REQUEST['order_code'])) {
-					error("Order not found: ".$order->error());
+					$this->error("Order not found: ".$order->error());
 				}
 			}
 			else {
-				error("Order Code required");
+				$this->error("Order Code required");
 			}
 
 			if (isset($_REQUEST['product_code'])) {
 				$product = new \Product\Item();
 				if (! $product->get($_REQUEST['product_code'])) {
-					error("Cannot find product: ".$product->error());
+					$this->error("Cannot find product: ".$product->error());
 				}
 			}
 			else {
-				error("Product Code required");
+				$this->error("Product Code required");
 			}
 			if (! $product->id) $this->error("Product not found");
 
@@ -247,7 +247,7 @@
 				'quantity'		=> $_REQUEST['quantity']
 			);
 	
-			if (! $order->addItem($parameters)) $this->app_error("Error adding order item: ".$order->error());
+			if (! $order->addItem($parameters)) $this->error("Error adding order item: ".$order->error());
 			$item = new \Sales\Order\Item($order->lastItemID());
 	
 			$response = new \HTTP\Response();
