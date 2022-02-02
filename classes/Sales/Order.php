@@ -127,7 +127,6 @@ class Order extends \ORM\BaseModel {
 			}
 			$object = $rs->FetchNextObject(false);
 			if ($this->id) {
-				app_log("Got details for ".$this->id);
 				$this->id = $object->id;
 				$this->code = $object->code;
 				$this->salesperson_id = $object->salesperson_id;
@@ -188,6 +187,14 @@ class Order extends \ORM\BaseModel {
 
 		public function cancel($reason = '') {
 			if (! $this->update(array('status' => 'CANCELLED','message' => $reason))) return false;
+			if (! $this->addEvent(
+				array(
+					'order_id' => $this->id,
+					'user_id' => $GLOBALS['_SESSION_']->customer->id,
+					'new_status' => 'CANCELLED',
+					'message'	=> $reason
+				)
+			)) return false;
 			return true;
 		}
 
@@ -270,7 +277,10 @@ class Order extends \ORM\BaseModel {
 		private function addEvent($parameters = array()) {
 			$event = new \Sales\Order\Event();
 			$parameters['order_id'] = $this->id;
-			$event->add($parameters);
+			if (! $event->add($parameters)) {
+				$this->error($event->error());
+				return false;
+			}
 		}
 
 		public function error($error = null) {

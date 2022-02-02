@@ -14,6 +14,7 @@
 		}
 
 		public function add($parameters) {
+			$this->_error = null;
 			if (empty($parameters['name'])) {
 				$this->error("Currency name required");
 				return false;
@@ -35,6 +36,24 @@
 		}
 
 		public function update($parameters) {
+			$update_object_query = "
+				UPDATE	sales_currencies
+				SET		id = id
+			";
+			$bind_params = array();
+			if (!empty($parameters['symbol'])) {
+				$update_object_query .= ",
+						symbol = ?";
+				array_push($bind_params,$parameters['symbol']);
+			}
+			$update_object_query .= "
+				WHERE	id = ?";
+			array_push($bind_params,$this->id);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error("SQL Error in Sales::Currency::update(): ".$GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
 			return $this->details();
 		}
 

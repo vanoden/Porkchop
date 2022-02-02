@@ -132,23 +132,14 @@
 		###################################################
 		public function cancelOrder() {
 			$order = new \Sales\Order();
-			if (! $order->get($_REQUEST['code'])) {
-				error("Error finding order: ".$order->error());
-			}
-
-			if ($GLOBALS['_SESSION_']->customer->can('edit sales order')) {
+			if ($GLOBALS['_SESSION_']->customer->can('edit sales order') || $GLOBALS['_SESSION_']->customer->id == $order->customer_id) {
 				# OK To Update
                 $order = new \Sales\Order();
                 if (! $order->get($_REQUEST['code'])) $this->error("Order not found");
-                if (in_array($order->status,array('CANCELLED','COMPLETE'))) $this->error("Order not ready for cancellation");
+                if (in_array($order->status,array('CANCELLED','COMPLETE'))) $this->error($order->status." order not ready for cancellation");
                 if (! $order->cancel()) $this->error($order->error());
 			}
             else $this->error("Permission denied");
-
-			$parameters = array();
-			if (! $order->update($parameters)) {
-				error("Error updating order: ".$order->error());
-			}
 
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -162,9 +153,9 @@
 		###################################################
 		public function getOrder() {
 			$order = new \Sales\Order();
-			if (! $order->get($_REQUEST['code'])) {
-				error("Error getting order: ".$order->error());
-			}
+
+			if (! $order->get($_REQUEST['code'])) $this->error("Error getting order: ".$order->error());
+			if (! $GLOBALS['_SESSION_']->customer->can('browse sales orders') && $GLOBALS['_SESSION_']->customer->id != $order->customer_id) $this->error("Permission denied");
 
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -303,7 +294,7 @@
 		}
 
 		###################################################
-		### Find matching Provinces						###
+		### Find order items							###
 		###################################################
 		public function findOrderItems() {
 			$itemList = new \Sales\Order\ItemList();
@@ -311,6 +302,7 @@
 			$parameters = array();
 			if ($_REQUEST['order_code']) $parameters['order_code'] = $_REQUEST['order_code'];
 			if ($_REQUEST['product_code']) $parameters['product_code'] = $_REQUEST['product_code'];
+			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 
 			$items = $itemList->find($parameters);
 			if ($itemList->error()) error("Error finding items: ".$itemList->error());
@@ -318,6 +310,110 @@
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->item = $items;
+
+			print $this->formatOutput($response);
+		}
+
+		###################################################
+		### Add A Currency								###
+		###################################################
+		public function addCurrency() {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit currencies')) $this->error("Permission Denied");
+
+			if (empty($_REQUEST['name'])) $this->error("Currency name required");
+			$parameters = array('name' => $_REQUEST['name']);
+			if (!empty($_REQUEST['symbol'])) $parameters['symbol'] = $_REQUEST['symbol'];
+
+			$currency = new \Sales\Currency();
+			if ($currency->get($_REQUEST['name'])) $this->error("Currency already exists");
+	
+			if (! $currency->add($parameters)) $this->error("Error adding currency: ".$currency->error());
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->currency = $currency;
+
+			print $this->formatOutput($response);
+		}
+
+		###################################################
+		### Update A Currency							###
+		###################################################
+		public function updateCurrency() {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit currencies')) $this->error("Permission Denied");
+
+			if (empty($_REQUEST['name'])) $this->error("Currency name required");
+			$parameters = array('name' => $_REQUEST['name']);
+			if (!empty($_REQUEST['symbol'])) $parameters['symbol'] = $_REQUEST['symbol'];
+
+			$currency = new \Sales\Currency();
+			if (! $currency->get($_REQUEST['name'])) $this->error("Currency not found");
+	
+			if (! $currency->update($parameters)) $this->error("Error updating currency: ".$currency->error());
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->currency = $currency;
+
+			print $this->formatOutput($response);
+		}
+
+		###################################################
+		### Get A Currency								###
+		###################################################
+		public function getCurrency() {
+			if (empty($_REQUEST['name'])) $this->error("Currency name required");
+
+			$currency = new \Sales\Currency();
+			if (! $currency->get($_REQUEST['name'])) $this->error("Currency not found");
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->currency = $currency;
+
+			print $this->formatOutput($response);
+		}
+
+		###################################################
+		### Find matching Currencies					###
+		###################################################
+		public function findCurrencies() {
+			$currencyList = new \Sales\CurrencyList();
+
+			$parameters = array();
+
+			$currencies = $currencyList->find($parameters);
+			if ($currencyList->error()) $this->error("Error finding currencies: ".$currencyList->error());
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->currency = $currencies;
+
+			print $this->formatOutput($response);
+		}
+
+		###################################################
+		### Find matching Order Events					###
+		###################################################
+		public function findOrderEvents() {
+			if (! $GLOBALS['_SESSION_']->authenticated()) $this->error("Authentication required");
+
+			$eventList = new \Sales\Order\EventList();
+
+			$parameters = array();
+			if (empty($_REQUEST['order_code'])) $this->error("Order code required");
+			$order = new \Sales\Order();
+			if (! $order->get($_REQUEST['order_code'])) $this->error("Order not found");
+			$parameters['order_id'] = $order->id;
+			
+			if (! $GLOBALS['_SESSION_']->customer->can("browse sales orders") && $order->customer_id != $GLOBALS['_SESSION_']->customer->id) $this->error("Permission denied");
+
+			$events = $eventList->find($parameters);
+			if ($eventList->error()) $this->error("Error finding events: ".$eventList->error());
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->event = $events;
 
 			print $this->formatOutput($response);
 		}
@@ -337,7 +433,6 @@
 					'date_quote'	=> array(),
 					'date_order'	=> array(),
 				),
-                'customer_order_number' => array(),
                 `updateOrder`   => array(
 					'code'			=> array('required' => true),
 					'status'		=> array(),
@@ -382,6 +477,26 @@
 					'order_code'	=> array('required'	=> true),
 					'line_number'	=> array('required'	=> true),
 				),
+				'findOrderItems'	=> array(
+					'order_code'	=> array(),
+					'product_code'	=> array(),
+					'status'		=> array()
+				),
+				'addCurrency'		=> array(
+					'name'			=> array('required' => true),
+					'symbol'		=> array()
+				),
+				'updateCurrency'	=> array(
+					'name'			=> array('required' => true),
+					'symbol'		=> array()
+				),
+				'getCurrency'		=> array(
+					'name'			=> array('required' => true)
+				),
+				'findCurrencies'	=> array(),
+				'findOrderEvents'	=> array(
+					'order_code'	=> array()
+				)
 			);
 		}
 	}
