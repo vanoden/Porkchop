@@ -18,8 +18,9 @@
 		###################################################
 		public function getCompany() {
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'person.customer.xsl';
-	
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'company.xsl';
+
+			if (! $GLOBALS['_SESSION_']->has_role('administrator')) $this->deny();
 			# Initiate Company List
 			$companylist = new \Company\CompanyList();
 			
@@ -43,6 +44,8 @@
 		public function updateCompany() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'company.xsl';
+
+			if (! $GLOBALS['_SESSION_']->has_role('administrator')) $this->deny();
 	
 			# Initiate Company Object
 			$companylist = new \Company\CompanyList();

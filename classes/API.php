@@ -80,6 +80,18 @@
 		}
 
 		###################################################
+		### Send Proper Permission Denied Response		###
+		###################################################
+		public function deny() {
+			$_REQUEST["stylesheet"] = '';
+			$response = new \HTTP\Response();
+			$response->error = "Permission Denied";
+			$response->success = 0;
+			print $this->formatOutput($response);
+			exit;
+		}
+
+		###################################################
 		### Convert Object to XML						###
 		###################################################
 		public function formatOutput($object,$format = 'xml') {
