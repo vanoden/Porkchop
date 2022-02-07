@@ -51,7 +51,7 @@
 					foreach ($parameters['category_code'] as $category_code) {
 						list($category) = $this->find(
 							array(
-								code	=> $category_code
+								'code'	=> $category_code
 							)
 						);
 						array_push($category_ids,$category->id);
@@ -62,7 +62,7 @@
 				elseif(preg_match('/^[\w\-\_\.\s]+$/',$parameters['category_code'])) {
 					list($category) = $this->find(
 						array(
-							code	=> $parameters['category_code']
+							'code'	=> $parameters['category_code']
 						)
 					);
 					$parameters['category_id'] = $category->id;
@@ -71,7 +71,7 @@
 
 			if (isset($parameters['category'])) {
 				# Get Parent ID
-				$_parent = new Product($parameters["category"]);
+				$_parent = new \Product\Item($parameters["category"]);
 				$category_id = $_parent->id;
 
 				if (! $category_id)
@@ -86,7 +86,7 @@
 			elseif (isset($parameters['category_id'])) {
 				$find_product_query .= "
 				AND		r.parent_id = ?";
-				array_push($bind_params,$category_id);
+				array_push($bind_params,$parameters['category_id']);
 			}
 			if (isset($parameters['id']) and preg_match('/^\d+$/',$parameters['id'])) {
 				$find_product_query .= "
@@ -100,7 +100,7 @@
 			    $find_product_query .= "
 				ORDER BY p.id";
 
-			query_log($find_product_query,$bind_params,true);
+			query_log($find_product_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
