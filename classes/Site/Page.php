@@ -98,7 +98,7 @@
 				    AND		(`index` is null or `index` = '')
 				    ";
 		    }
-		    query_log($get_object_query, $parameters, true);
+		    query_log($get_object_query, $parameters);
 		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, $parameters );
 		    if (! $rs) {
 			    $this->addError ( "SQL Error in Page::get: " . $GLOBALS ['_database']->ErrorMsg () );
