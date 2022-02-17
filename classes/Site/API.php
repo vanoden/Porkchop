@@ -74,7 +74,7 @@
 		}
 		
 		public function addPage() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content pages')) error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('edit site pages')) error("Permission Denied");
 	
 			if (! $_REQUEST['module']) error("Module required");
 			if (! $_REQUEST['view']) error("View required");
@@ -97,7 +97,7 @@
 		### Get Details regarding Specified Product		###
 		###################################################
 		public function addMessage() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) error("Permission Denied");
 	
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
@@ -133,7 +133,7 @@
 		### Update Specified Message					###
 		###################################################
 		public function updateMessage() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) error("Permission Denied");
 	
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
@@ -168,7 +168,7 @@
 		### Purge Cache of Specified Message			###
 		###################################################
 		public function purgeMessage() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) error("Permission Denied");
 	
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
@@ -251,7 +251,7 @@
 		}
 
 		public function setPageMetadata() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) $this->error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('edit site pages')) $this->error("Permission Denied");
 	
 			$response = new \HTTP\Response();
 	
