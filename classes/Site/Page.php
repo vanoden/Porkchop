@@ -98,7 +98,7 @@
 				    AND		(`index` is null or `index` = '')
 				    ";
 		    }
-		    query_log($get_object_query, $parameters, true);
+		    query_log($get_object_query, $parameters);
 		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, $parameters );
 		    if (! $rs) {
 			    $this->addError ( "SQL Error in Page::get: " . $GLOBALS ['_database']->ErrorMsg () );
@@ -675,7 +675,8 @@
 			return false;
 	    }
 	    public function unsetMetadata($key) {
-			$metadata = new \Site\Page\Metadata($this->id,$key);
+			$metadata = new \Site\Page\Metadata();
+            $metadata->get($this->id,$key);
 		    return $metadata->drop();
 	    }
 	    public function addError($error) {

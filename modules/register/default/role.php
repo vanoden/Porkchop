@@ -16,10 +16,12 @@
 <span class="label">Description</span><input type="text" name="description" class="value input" value="<?=$role->description?>" />
 <input type="hidden" name="id" value="<?=$role->id?>">
 <div id="rolePrivilegesContainer">
-<span class="label">Privileges</span>
+<span style="display: inline-block" class="label">Privileges</span>
+<a href="/_register/privileges">Manage</a>
 <?php	foreach ($privileges as $privilege) { ?>
 	<div class="rolePrivilegeContainer">
-		<span class="value"><?=$privilege->name?></span>
+		<span class="value" style="display: inline-block; width: 75px;"><?=$privilege->module?></span>
+		<span class="value" style="display: inline-block; width: 200px;"><?=$privilege->name?></span>
         <input type="checkbox" name="privilege[<?=$privilege->id?>]" value="1"<?php if ($role->has_privilege($privilege->id)) print " checked";?>>
 	</div>
 <?php	} ?>

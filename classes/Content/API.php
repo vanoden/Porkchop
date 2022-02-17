@@ -214,10 +214,10 @@
 			$response = new \HTTP\Response();
 
 			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
+			$metadataList = new \Site\Page\MetadataList();
 
 			# Find Matching Views
-			$metadata = $_metadata->find(
+			$metadata = $metadataList->find(
 				array (
 					'id'		=> $_REQUEST['id'],
 					'module'	=> $_REQUEST['module'],
@@ -227,7 +227,7 @@
 			);
 
 			# Error Handling
-			if ($_metadata->error) $this->error($_metadata->error);
+			if ($metadataList->error) $this->error($metadataList->error);
 			else{
 				$response->metadata = $metadata;
 				$response->success = 1;
@@ -241,28 +241,21 @@
 		### Add Page Metadata							###
 		###################################################
 		public function addMetadata() {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit page metadata'));
+
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
 			$response = new \HTTP\Response();
 
 			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
+			$page = new \Site\Page();
 
 			# Find Matching Threads
-			$metadata = $_metadata->add(
-				array(
-					'module'		=> $_REQUEST['module'],
-					'view'			=> $_REQUEST['view'],
-					'index'			=> $_REQUEST['index'],
-					'format'		=> $_REQUEST['format'],
-					'content'		=> $_REQUEST['content']
-				)
-			);
+			$page->setMetadata($_REQUEST['key'], $_REQUEST['value']);
 
 			# Error Handling
-			if ($_metadata->error) $this->error($_metadata->error);
+			if ($page->error) $this->error($page->error);
 			else{
-				$response->metadata = $metadata;
 				$response->success = 1;
 			}
 
@@ -274,48 +267,9 @@
 		### Update Page Metadata						###
 		###################################################
 		public function updateMetadata() {
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
-			$response = new \HTTP\Response();
-
-			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
-
-			# Find Metadata On Key
-			$current = $_metadata->get(
-				array(
-					'module'		=> $_REQUEST['module'],
-					'view'			=> $_REQUEST['view'],
-					'index'			=> $_REQUEST['index'],
-				)
-			);
-			if ($current->id) {
-				$response->message = "Updating id ".$current->id;
-				# Find Matching Threads
-				$metadata = $_metadata->update(
-					$current->id,
-					array(
-						'format'		=> $_REQUEST['format'],
-						'content'		=> $_REQUEST['content']
-					)
-				);
-			}
-			else {
-				$this->error("Could not find matching object");
-			}
-
-			# Error Handling
-			if ($_metadata->error) $this->error($_metadata->error);
-			else{
-				#$response->request = $_REQUEST;
-				$response->metadata = $metadata;
-				$response->success = 1;
-			}
-
-			# Send Response
-			api_log('content',$_REQUEST,$response);
-			print $this->formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
+			return $this->addMetadata();
 		}
+
 		###################################################
 		### Get Details regarding Specified Product		###
 		###################################################
@@ -325,10 +279,10 @@
 			$response = new \HTTP\Response();
 
 			# Initiate Product Object
-			$_menu = new Menu();
+			$menuList = new \Navigation\MenuList();
 
 			# Find Matching Threads
-			$items = $_menu->find(
+			$items = $menuList->find(
 				array (
 					'id'			=> $_REQUEST['id'],
 					'parent_id'		=> $_REQUEST['parent_id'],
@@ -336,7 +290,7 @@
 			);
 
 			# Error Handling
-			if ($_menu->error) $this->error($_menu->error);
+			if ($menuList->error) $this->error($menuList->error);
 			else{
 				$response->item = $items;
 				$response->success = 1;

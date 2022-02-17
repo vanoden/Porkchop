@@ -368,7 +368,7 @@
 		public function has_privilege($privilege_name) {
 			$privilege = new \Register\Privilege();
 			if (! $privilege->get($privilege_name)) {
-				if ($GLOBALS['_SESSION_']->customer->can("manage privileges")) {
+				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
 					$privilege->add(array('name' => $privilege_name));
 				}
 				else {

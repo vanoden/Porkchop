@@ -61,6 +61,9 @@
 		public function error($message) {
 			$_REQUEST["stylesheet"] = '';
 			error_log($message);
+            if (preg_match('/SQL\sError/',$message)) {
+                $message = "Application Data Error";
+            }
 			$response = new \HTTP\Response();
 			$response->error = $message;
 			$response->success = 0;
@@ -75,7 +78,19 @@
 			app_log($message,'error',$file,$line);
 			$this->error('Application Error');
 		}
-		
+
+		###################################################
+		### Send Proper Permission Denied Response		###
+		###################################################
+		public function deny() {
+			$_REQUEST["stylesheet"] = '';
+			$response = new \HTTP\Response();
+			$response->error = "Permission Denied";
+			$response->success = 0;
+			print $this->formatOutput($response);
+			exit;
+		}
+
 		###################################################
 		### Convert Object to XML						###
 		###################################################
@@ -115,7 +130,7 @@
 			$login = $GLOBALS['_SESSION_']->customer->code;
 			$method = $_REQUEST['method'];
 			$host = $GLOBALS['_REQUEST_']->client_ip;
-
+			$response = new \HTTP\Response();
 			if (is_object($response) && $response->success) $status = "SUCCESS";
 			else $status = "FAILED";
 			$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;

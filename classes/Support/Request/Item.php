@@ -26,7 +26,6 @@
 		}
 
 		public function add($parameters) {
-
 			if (! isset($parameters['product_id'])) {	
 				$this->_error = "product ID is required";
 				return false;
@@ -80,7 +79,7 @@
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
-			app_log("Added support item $id");
+			app_log("Added support item $this->id");
 			return $this->update($parameters);
 		}
 		

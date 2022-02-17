@@ -225,6 +225,26 @@
 				$this->setVersion(4);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 5 and $max_version >= 5) {
+				app_log("Upgrading schema to version 5",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `product_prices`
+					MODIFY COLUMN id int(11) NOT NULL AUTO_INCREMENT
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(5);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}

@@ -43,7 +43,7 @@
 
 	if ($role->id) {
 		$privilegeList = new \Register\PrivilegeList();
-	    $privileges = $privilegeList->find();
+	    $privileges = $privilegeList->find(array('_sort' => 'module'));
 		if (isset($_REQUEST['btn_submit'])) {
 		    foreach ($privileges as $privilege) {
 		        if ($_REQUEST['privilege'][$privilege->id] == 1) {

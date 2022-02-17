@@ -1,27 +1,33 @@
 <?php
-	namespace Sales;
+	namespace Sales\Order;
 
-	class CurrencyList {
+	class EventList {
 		public $_count;
 		public $_error;
 
 		public function find($parameters = array()) {
 			$find_objects_query = "
 				SELECT	id
-				FROM	sales_currencies
+				FROM	sales_order_events
 				WHERE	id = id
 			";
 
 			$bind_params = array();
 
+			if (!empty($parameters['order_id'])) {
+				$find_objects_query .= "
+				AND		order_id = ?";
+				array_push($bind_params,$parameters['order_id']);
+			}
+
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error("SQL Error in Sales::CurrencyList::find(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->error("SQL Error in Sales::Order::EventList::find(): ".$GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				$object = new \Sales\Currency($id);
+				$object = new \Sales\Order\Event($id);
 				array_push($objects,$object);
 				$this->_count ++;
 			}

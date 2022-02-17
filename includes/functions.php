@@ -20,7 +20,14 @@
 	function _debug_print($message) {
 		error_log("DEBUG: ".$message);
 	}
-	function get_mysql_date($date,$range=0) {
+	function get_mysql_date($date = null,$range=0) {
+		if (empty($date)) {
+			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
+			$ident = $caller['class']."::".$caller['function']." (".$caller['file'].":".$caller['line'].")";
+			app_log("get_mysql_date() received empty date from $ident",'info');
+			return null;
+		}
+
 		# Handle Some Keywords
 		if (preg_match("/today/i",$date)) return date("Y-m-d");
 		if (preg_match("/now/i",$date)) return date("Y-m-d h:i:s");
@@ -188,7 +195,7 @@
 	}
 	
 	function query_log_time($timeMilliseconds, $query,$params = array()) {
-		$level = 'debug';
+		$level = 'trace';
 		app_log('Query Time Audit: ' . $timeMilliseconds . 'ms '.$query."\n".print_r($params,true),$level);
 	}
 	
