@@ -26,7 +26,7 @@
          * @param array $parameters, name value pairs to update object by
          */
         public function update($parameters = array()) {
-
+        
             $this->_updateQuery = "UPDATE `$this->tableName` SET id = id ";
             $this->values = $parameters;
 		    $bindParams = array();
