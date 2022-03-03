@@ -474,7 +474,7 @@
                       'value' => $_REQUEST['value']
                      )
                 );
-                if (!$success) $isSuccessful = false;siteMessageMetaData
+                if (!$success) $isSuccessful = false;
 	        }
             if (!$isSuccessful) {
                 $response->success = 0;
