@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class SiteMessageDeliveries extends \ORM\BaseModel {
+	class SiteMessageDelivery extends \ORM\BaseModel {
 	
         public $id;
         public $message_id;

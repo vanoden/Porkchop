@@ -158,6 +158,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 6) {
+			
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `site_configurations` (
 						`key`	varchar(150) NOT NULL PRIMARY KEY,
@@ -165,7 +166,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating page_widgets table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating site_configurations table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
@@ -190,7 +191,7 @@
                     )
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating page_widgets table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating site_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
@@ -210,7 +211,23 @@
                     )
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating page_widgets table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating site_message_deliveries table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+				
+				$create_table_query = "
+	                 CREATE TABLE `site_messages_metadata` (
+                      `item_id` int NOT NULL,
+                      `label` varchar(200) NOT NULL,
+                      `value` text,
+                      UNIQUE KEY `UK_ID_LABEL` (`item_id`,`label`),
+                      KEY `IDX_LABEL_VALUE` (`label`,`value`(32)),
+                      CONSTRAINT `site_messages_metadata_ibfk_1` FOREIGN KEY (`item_id`) REFERENCES `site_messages` (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating site_messages_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
