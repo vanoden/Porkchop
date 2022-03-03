@@ -33,7 +33,7 @@
 			
 			$siteMessages = array();
 			while (list($id) = $rs->FetchRow()) {
-			    $siteMessage = new \Site\SiteMessage();
+			    $siteMessage = new \Site\SiteMessage($id);
 			    $siteMessage->details();
 			    $this->count ++;
 			    array_push($siteMessages,$siteMessage);

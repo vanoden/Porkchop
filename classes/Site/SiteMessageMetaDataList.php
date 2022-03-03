@@ -24,6 +24,12 @@
 				array_push($bind_params,$parameters['label']);
 			}
 
+			if (isset($parameters['item_id'])) {
+				$get_site_messages_metadata_query .= "
+				AND item_id = ?";
+				array_push($bind_params,$parameters['item_id']);
+			}
+
 			query_log($get_site_messages_metadata_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_site_messages_metadata_query,$bind_params);
 			if (! $rs) {
@@ -33,12 +39,11 @@
 			
 			$siteMessages = array();
 			while (list($id) = $rs->FetchRow()) {
-			    $siteMessage = new \Site\SiteMessageMetaData();
+			    $siteMessage = new \Site\SiteMessageMetaData($id, $parameters['label']);
 			    $siteMessage->details();
 			    $this->count ++;
 			    array_push($siteMessages,$siteMessage);
 			}
-			
 			return $siteMessages;
 		}
         

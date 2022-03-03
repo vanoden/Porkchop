@@ -5,10 +5,16 @@
 
     a {
         text-decoration: none;
+        cursor: pointer;
+        color: blue;
     }
     
     a:visited {
         color: blue;
+    }
+    
+    a:not([href]):not([tabindex]) {
+        color:blue;
     }
     
     .messaging-page-wrapper {
@@ -120,88 +126,71 @@
 </style>
 <body>
 <div class="messaging-page-wrapper">
-
-  <div class="row full-column-row">
-    <div class="column full-column">
-      <div class="list-column year-column">
-        2022
-      </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="column left-column">
-      <div class="list-column">
-        <div style="flex: 1;"></div>
-        <div style="flex: 2;">
-            <div class="message-date"><a href="#">02/04/2022</a></div>
-        </div>
-        <div style="flex: 1;"></div>      
-      </div>
-      <div class="list-column">
-        <div style="flex: 1;">
-            <span class="message-icon">[ICON]</span>
-        </div>
-        <div style="flex: 2;">
-            <div class="message-title">System Outage</div>
-            <div class="message-sub-title">Power Issues</div>
-            <span>[A]</span><span>[B]</span><span>[C]</span>
-        </div>
-        <div style="flex: 1;"></div>
-        <div class="message-title-chevron">&#8250;</div>
-      </div>
-    </div>
-    <div class="column right-column">
-      <div class="messages-column">
-        <div class="message-subject">There has been a power outage that...</div>
-        <div class="message-text">
-            Your device has lost power for a period greater than your set threshold. 
-            Check your secure portal for more information on how this might affect your...
-        </div>
-        <div class="message-links-wrapper">
-            <span class="read-more-link"><a href="#">Read more &#8964;</a></span>
-            <span class="visit-portal-link" style="float:right"><a href="#">Visit your portal &#8250;</a></span>
+    <?php
+    $currentYear = '';
+    foreach ($userMessages as $userMessage) {
+        $siteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
+        $siteMessageMetaDataTitle = array_pop($siteMessageMetaDataList->find(array('item_id'=>$userMessage->id, 'label' => 'title')));
+        $siteMessageMetaDataCategory = array_pop($siteMessageMetaDataList->find(array('item_id'=>$userMessage->id, 'label' => 'category')));
+        $siteMessageMetaDataSummary = array_pop($siteMessageMetaDataList->find(array('item_id'=>$userMessage->id, 'label' => 'summary')));
+        $currentYearCheck = date('Y', strtotime($userMessage->date_created));
+        if ($currentYear != $currentYearCheck) {
+        $currentYear = $currentYearCheck;
+    ?>
+      <div class="row full-column-row">
+        <div class="column full-column">
+          <div class="list-column year-column">
+            <?=$currentYearCheck?>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-  
-  <div class="row">
-    <div class="column left-column">
-      <div class="list-column">
-        <div style="flex: 1;"></div>
-        <div style="flex: 2;">
-            <div class="message-date"><a href="#">02/04/2022</a></div>
+    <?php
+        }
+    ?>
+      <div class="row">
+        <div class="column left-column">
+          <div class="list-column">
+            <div style="flex: 1;">
+                <span class="message-icon">
+                    <img src="/img/messages/icon_tools_star_1C.svg" style="width: 20px;">
+                </span>
+            </div>
+            <div style="flex: 2;">
+                <div class="message-date"><a><?=date('m/d/Y', strtotime($userMessage->date_created));?></a></div>
+            </div>
+            <div style="flex: 1;"></div>      
+          </div>
+          <div class="list-column">
+            <div style="flex: 1;">
+                <span class="message-icon">
+                    <img src="/img/messages/icon_catgy_<?=$siteMessageMetaDataCategory->value?>_1C.svg" style="width: 25px">
+                </span>
+                <div style="margin:10px;"></div>
+                <span class="message-icon">
+                    <img src="/img/messages/icon_tools_check_2C.svg" style="width: 20px;">
+                </span>
+            </div>
+            <div style="flex: 2;">
+                <div class="message-title"><?=$siteMessageMetaDataSummary->value?></div>
+            </div>
+            <div style="flex: 1;"></div>
+            <div class="message-title-chevron">&#8250;</div>
+          </div>
         </div>
-        <div style="flex: 1;"></div>      
+        <div class="column right-column">
+          <div class="messages-column">
+            <div class="message-subject"><?=$siteMessageMetaDataTitle->value?></div>
+            <div class="message-text">
+                <?=$userMessage->content?>
+            </div>
+            <div class="message-links-wrapper">
+                <span class="read-more-link"><a>Read more &#8964;</a></span>
+                <span class="visit-portal-link" style="float:right"><a>Visit your portal &#8250;</a></span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="list-column">
-        <div style="flex: 1;">
-            <span class="message-icon">[ICON]</span>
-        </div>
-        <div style="flex: 2;">
-            <div class="message-title">System Outage</div>
-            <div class="message-sub-title">Power Issues</div>
-            <span>[A]</span><span>[B]</span><span>[C]</span>
-        </div>
-        <div style="flex: 1;"></div>
-        <div class="message-title-chevron">&#8250;</div>
-      </div>
-    </div>
-    <div class="column right-column">
-      <div class="messages-column">
-        <div class="message-subject">There has been a power outage that...</div>
-        <div class="message-text">
-            Your device has lost power for a period greater than your set threshold. 
-            Check your secure portal for more information on how this might affect your...
-        </div>
-        <div class="message-links-wrapper">
-            <span class="read-more-link"><a href="#">Read more &#8964;</a></span>
-            <span class="visit-portal-link" style="float:right"><a href="#">Visit your portal &#8250;</a></span>
-        </div>
-      </div>
-    </div>
-  </div>
-  
+      <?php
+        }
+    ?>
 </div>
-
