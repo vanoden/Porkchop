@@ -208,7 +208,7 @@
             $strength = $person->password_strength($_REQUEST["password"]);
             $minPasswordStrength = 8;
             if (isset($GLOBALS['_config']->register->minimum_password_strength)) $minPasswordStrength = $GLOBALS['_config']->register->minimum_password_strength;
-            if ($strength < $minPasswordStrength) {
+            if ($strength >= $minPasswordStrength) {
                 print "1";
             } else {
                 print "0";
