@@ -174,7 +174,6 @@
 				$this->setVersion(6);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			
 			if ($this->version() < 7) {
 			
 				$create_table_query = "
@@ -233,6 +232,22 @@
 				}
 
 				$this->setVersion(7);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 8) {
+			
+				$create_table_query = "
+					ALTER TABLE `site_message_deliveries`
+					MODIFY `date_viewed` timestamp NULL default NULL,
+					MODIFY `date_acknowledged` timestamp NULL default NULL
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating site_configurations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(8);
 				$GLOBALS['_database']->CommitTrans();
 			}
 			return true;
