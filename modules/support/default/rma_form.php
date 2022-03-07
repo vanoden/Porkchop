@@ -326,14 +326,13 @@
    function changeCountry(countryDropdownId, addressContainer, provinceDropdownId, provinceAddressContainer) {
        var countryDropdown = document.getElementById(countryDropdownId);
        $('#' + addressContainer).hide();
-       $.get('/_support/api?method=getProvinces&country_id=' + countryDropdown.value, function(data, status){
+       $.get('/geography/api?method=getProvinces&_format=json&country_id=' + countryDropdown.value, function(data, status){
            console.log(data);
            $('#' + provinceAddressContainer).show();
-           data = $.parseJSON(data);
            $('#' + provinceDropdownId).html('');
            $('#' + provinceDropdownId).append('<option value="0">-</option>');
-           if (data.length > 0) {
-              for (var i = 0; i <= data.length; i++) $('#' + provinceDropdownId).append('<option value="' + data[i].id + '">' + data[i].name + '</option>');
+           if (data.province.length > 0) {
+              for (var i = 0; i <= data.province.length; i++) $('#' + provinceDropdownId).append('<option value="' + data.province[i].id + '">' + data.province[i].name + '</option>');
            } else {		    	
               $('#' + provinceDropdownId).append('<option value="0">' + getDropdownSelectedText(countryDropdownId) + '</option>');
            }
