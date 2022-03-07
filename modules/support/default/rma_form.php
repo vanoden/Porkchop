@@ -326,7 +326,7 @@
    function changeCountry(countryDropdownId, addressContainer, provinceDropdownId, provinceAddressContainer) {
        var countryDropdown = document.getElementById(countryDropdownId);
        $('#' + addressContainer).hide();
-       $.get('/geography/api?method=getProvinces&_format=json&country_id=' + countryDropdown.value, function(data, status){
+       $.get('/_geography/api?method=findProvinces&_format=json&country_id=' + countryDropdown.value, function(data, status){
            console.log(data);
            $('#' + provinceAddressContainer).show();
            $('#' + provinceDropdownId).html('');
