@@ -4,7 +4,14 @@
 	class Event extends \ORM\BaseModel {
 		public $id;
 
-		public function add($parameters) {
+		public function __construct($id = 0) {
+			if ($id > 0) {
+				$this->id = $id;
+				$this->details();
+			}
+		}
+
+		public function add($parameters = array()) {
 			$add_object_query = "
 				INSERT
 				INTO	sales_order_events
@@ -12,6 +19,7 @@
 				VALUES
 				(		null,?,sysdate(),?,?)
 			";
+            if (!isset($parameters['user_id'])) $parameters['user_id'] = $GLOBALS['_SESSION_']->customer->id;
 			$GLOBALS['_database']->Execute($add_object_query,array($parameters["order_id"],$parameters['user_id'],$parameters['new_status']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Sales::Event::add(): ".$GLOBALS['_database']->ErrorMsg();
@@ -27,14 +35,18 @@
 				SET		id = id";
 
 			$bind_params = array();
-			if (isset($parameters['status'])) {
-				$update_object_query .= ", name = ?";
-				array_push($bind_params,$parameters['name']);
+			if (isset($parameters['new_status'])) {
+				$update_object_query .= ", new_status = ?";
+				array_push($bind_params,$parameters['new_status']);
 			}
 			if (isset($parameters['abbreviation'])) {
 				$update_object_query .= ", abbreviation = ?";
 				array_push($bind_params,$parameters['abbreviation']);
 			}
+            if (isset($parameters['message'])) {
+                $update_object_query .= ", message = ?";
+                array_push($bind_params,$parameters['message']);
+            }
 
 			$update_object_query .= "
 				WHERE	id = ?";
@@ -63,8 +75,11 @@
 			if ($this->id) {
 				app_log("Got details for ".$this->id);
 				$this->id = $object->id;
-				$this->name = $object->name;
-				$this->abbreviation = $object->abbreviation;
+				$this->order_id = $object->order_id;
+				$this->user_id = $object->user_id;
+				$this->date_event = $object->date_event;
+                $this->new_status = $object->new_status;
+                $this->message = $object->message;
 				return true;
 			}
 			else {

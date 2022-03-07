@@ -102,19 +102,55 @@
 			print $this->formatOutput($this->response);
 		}
 	
+        ###################################################
+        ### Add a Price                                 ###
+        ###################################################
+        public function addPrice() {
+            $parameters = array();
+            $product = new \Product\Item();
+            if (! $product->get($_REQUEST['product_code'])) $this->error("Product not found");
+            $parameters['product_id'] = $product->id;
+            if (! preg_match('/^\d[\d\.]*$/',$_REQUEST['amount'])) $this->error("Valid price required");
+            $parameters['amount'] = $_REQUEST['amount'];
+			if (preg_match('/^(ACTIVE|INACTIVE)$/i',$_REQUEST['status'])) $parameters['status'] = strtoupper($_REQUEST['status']);
+
+            if (isset($_REQUEST['date_active']) && get_mysql_date($_REQUEST['date_active'])) {
+                $parameters['date_active'] = get_mysql_date($_REQUEST['date_active']);
+            }
+            elseif (isset($_REQUEST['date_active'])) $this->error("Invalid date_active");
+            else $parameters['date_active'] = get_mysql_date(time());
+
+            if (! $product->addPrice($parameters)) $this->error($product->error());
+            $this->response->success = 1;
+            print $this->formatOutput($this->response);
+        }
+
+        ###################################################
+        ### Get a Product Price                         ###
+        ###################################################
+        public function getPrice() {
+            $parameters = array();
+            $product = new \Product\Item();
+            if (! $product->get($_REQUEST['product_code'])) $this->error("Product not found");
+            $parameters['product_id'] = $product->id;
+            $price =  $product->getPrice($parameters);
+            if ($product->error()) $this->error($product->error());
+            $this->response->success = 1;
+            $this->response->price = $price;
+            print $this->formatOutput($this->response);
+        }
+
 		###################################################
 		### Add a Relationship							###
 		###################################################
 		public function addRelationship() {
 			$_product = new \Product\Item();
-			if (defined($_REQUEST['parent_code']))
-			{
+			if (defined($_REQUEST['parent_code'])) {
 				$parent = $_product->get($_REQUEST['parent_code']);
 				if (! $parent->id) $this->error("Parent product '".$_REQUEST['parent_code']."' not found");
 				$_REQUEST['parent_id'] = $parent->id;
 			}
-			if ($_REQUEST['child_code'])
-			{
+			if ($_REQUEST['child_code']) {
 				$child = $_product->get($_REQUEST['child_code']);
 				if (! $child->id) $this->error("Child product '".$_REQUEST['child_code']."' not found");
 				$_REQUEST['child_id'] = $child->id;
@@ -258,7 +294,181 @@
 
 			print $this->formatOutput($response);
 		}
+
+		###################################################
+		### Add a Product Intance						###
+		###################################################
+		public function addInstance() {
+			if (! preg_match('/^[\w\-\_\.\:\(\)]+$/',$_REQUEST['code']))
+			 $this->error("code required to add instance");
 	
+			if (isset($_REQUEST['organization'])) {
+				if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+					$organization = new \Register\Organization($_REQUEST['organization_id']);
+				}
+				else {
+				 $this->error("No permissions to see other organizations data");
+				}
+			}
+			else {
+				$organization = $GLOBALS['_SESSION_']->customer->organization;
+			}
+	
+			$product = new \Product\Item();
+			$product->get($_REQUEST['product_code']);
+			if ($product->error) {
+				$this->app_error("Error finding product: ".$product->error,__FILE__,__LINE__);
+			 $this->error("No product found matching '".$_REQUEST['product_code']."'");
+			}
+	
+			$organization = new \Register\Organization($_REQUEST['organization_id']);
+			if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
+			if (! $organization->id) $this->error("No organization found matching '".$_REQUEST['organization']);
+	
+			$instance = new \Product\Instance();
+			if ($instance->error) $this->app_error("Error initializing instance: ".$instance->error,__FILE__,__LINE__);
+			$instance->add(
+				array(
+					'code'				=> $_REQUEST['code'],
+					'product_id'		=> $product->id,
+					'organization_id'	=> $organization->id,
+					'name'				=> $_REQUEST['code']
+				)
+			);
+			if ($instance->error) $this->error("Error adding instance: ".$instance->error);
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->instance = $instance;
+	
+			print $this->formatOutput($response);
+		}
+
+		###################################################
+		### Get Specified Instance						###
+		###################################################
+		public function getInstance() {
+			if (isset($_REQUEST['id'])) {
+				$instance = new \Product\Instance($_REQUEST['id']);
+			}
+			elseif (isset($_REQUEST['product_id'])) {
+				$instance = new \Product\Instance();
+				if ($instance->error) $this->app_error("Error initializing instance: ".$instance->error,__FILE__,__LINE__);
+				$instance->get($_REQUEST['code'],$_REQUEST['product_id']);
+			}
+			else {
+				$instance = new \Product\Instance();
+				if ($instance->error) $this->app_error("Error initializing instance: ".$instance->error,__FILE__,__LINE__);
+	
+				$instance->getSimple($_REQUEST['code']);
+				if ($instance->error) $this->app_error("Error finding instance(s): ".$instance->error,__FILE__,__LINE__);
+			}
+			if (! $GLOBALS['_SESSION_']->customer->has_role('product manager') && $instance->organization_id != $instance->organization_id)
+				$this->app_error("Permission Denied");
+	
+			$response = new \HTTP\Response();
+			if (isset($instance->code)) {
+				$response->success = 1;
+				$response->instance = $instance;
+			} else {
+				$response->success = '0';
+				$response->error = 'Instance '.$_REQUEST['code'].' not found';
+				$response->instance = $instance;
+			}
+	
+			print $this->formatOutput($response);
+		}
+
+		###################################################
+		### Update an Instance							###
+		###################################################
+		public function updateInstance() {
+			$instance = new \Product\Instance();
+			if ($instance->error) $this->app_error("Error initializing asset: ".$instance->error,__FILE__,__LINE__);
+			if (isset($_REQUEST['product_code']) && strlen($_REQUEST['product_code'])) {
+				$product = new \Product\Item();
+				$product->get($_REQUEST['product_code']);
+				$instance->get($_REQUEST['code'],$product->id);
+			}
+			else {
+				$instance->getSimple($_REQUEST['code']);
+			}
+			if ($instance->error) $this->app_error("Error finding instance: ".$instance->error,__FILE__,__LINE__);
+			if (! $instance->id) $this->error("Instance not found");
+	
+			$parameters = array();
+			if ($_REQUEST['name'])
+				$parameters['name'] = $_REQUEST['name'];
+		
+			if (isset($_REQUEST['organization'])) {
+				if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+					$organization = new \Register\Organization();
+					$organization->get($_REQUEST['organization_code']);
+					if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
+					$parameters['organization_id'] = $organization->id;
+				}
+				else {
+				 $this->error("No permissions to specify another organization");
+				}
+			}
+
+			$instance->update($parameters);
+			if ($instance->error) $this->app_error("Error updating instance: ".$instance->error,__FILE__,__LINE__);
+
+			$this->response->success = 1;
+			$this->response->instance = $instance;
+
+			print $this->formatOutput($this->response);
+		}
+
+		###################################################
+		### Find matching Instances						###
+		###################################################
+		public function findInstances() {
+			$instancelist = new \Product\InstanceList();
+			if ($instancelist->error) $this->app_error("Error initializing instance list: ".$instancelist->error,__FILE__,__LINE__);
+	
+			$parameters = array();
+			if (isset($_REQUEST['code']))
+				$parameters['code'] = $_REQUEST['code'];
+	
+			if (isset($_REQUEST['name']))
+				$parameters['name'] = $_REQUEST['name'];
+	
+			if (isset($_REQUEST['product_code']) && strlen($_REQUEST['product_code'])) {
+				$product = new \Product\Item();
+				$product->get($_REQUEST['product_code']);
+				if ($product->error) $this->app_error("Error finding product: ".$product->error,__FILE__,__LINE__);
+				if (! $product->id) $this->error("Product not found");
+				$parameters['product_id'] = $product->id;
+			}
+			if (isset($_REQUEST['organization_code']) && strlen($_REQUEST['organization_code'])) {
+				if ($GLOBALS['_SESSION_']->customer->has_role('monitor manager') && $GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
+					$organization = new \Register\Organization();
+					$organization->get($_REQUEST['organization_code']);
+					if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
+					$parameters['organization_id'] = $organization->id;
+				}
+				else {
+					app_log("Unauthorized attempt to access instances from another organization",'notice',__FILE__,__LINE__);
+				 $this->error("Permission Denied");
+				}
+			}
+			elseif(! $GLOBALS['_SESSION_']->customer->has_role('monitor manager')) {
+				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+			}
+			else {
+				# Privileges support access
+			}
+	
+			$instances = $instancelist->find($parameters);
+			if ($instancelist->error) $this->app_error("Error initializing instance(s): ".$instancelist->error,__FILE__,__LINE__);
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->instance = $instances;
+
+			print $this->formatOutput($response);
+		}
+
 		###################################################
 		### Add Image to Product						###
 		###################################################
@@ -333,6 +543,15 @@
 					'status'	=> array(),
 					'type'		=> array(),
 				),
+                'addPrice'      => array(
+                    'product_code'  => array('required' => true),
+                    'amount'        => array('required' => true),
+                    'date_active'   => array('default' => get_mysql_date(time())),
+                    'status'        => array('required' => true,'default' => 'ACTIVE','options' => array('INACTIVE','ACTIVE')),
+                ),
+				'getPrice'		=> array(
+					'product_code'	=> array('required' => true)
+				),
 				'findRelationships'	=> array(
 					'parent_code'	=> array('required' => true),
 					'child_code'	=> array('required' => true),
@@ -347,7 +566,28 @@
 				),
 				'findGroupItems'	=> array(
 					'code'			=> array('required' => true)
-				)
+				),
+				'getInstance'	=> array(
+					'code'		=> array('required' => true),
+				),
+				'addInstance'	=> array(
+					'code'		=> array('required' => true),
+					'product_code'	=> array(),
+					'name'		=> array(),
+					'organization_id'	=> array(),
+				),
+				'updateInstance'	=> array(
+					'code'		=> array('required'	=> true),
+					'product_code'	=> array(),
+					'name'		=> array(),
+					'organization_id'	=> array(),
+				),
+				'findInstances'	=> array(
+					'code'		=> array(),
+					'product_code'	=> array(),
+					'organization_code'	=> array(),
+					'name'		=> array(),
+				),
 			);
 		}
 	}

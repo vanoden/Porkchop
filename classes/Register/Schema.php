@@ -837,6 +837,29 @@
 				$this->setVersion(19);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 20) {
+	
+				app_log("Upgrading schema to version 20",'notice',__FILE__,__LINE__);
+	
+				// Start Transaction 
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+			
+				$alter_table_query = "
+					ALTER TABLE register_privileges ADD COLUMN `module` varchar(255) NOT NULL DEFAULT 'Unspecified',
+					ADD INDEX `idx_privilege_module` (`module`)
+				";
+	
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_privileges table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+						app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(20);
+				$GLOBALS['_database']->CommitTrans();
+			}
 
 			$this->addRoles(array(
 				'register manager'	=> 'Can view/edit customers and organizations',

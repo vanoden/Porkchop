@@ -61,12 +61,19 @@
 						repository_id
 				)
 				VALUES
-				(		?,?,?,sysdate(),'NEW',?)
+				(		?,?,?,sysdate(),'ACTIVE',?)
 			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($parameters['code'],$parameters['name'],$GLOBALS['_SESSION_']->customer->id,$parameters['repository_id'])
+
+			$bind_params = array(
+				$parameters['code'],
+				$parameters['name'],
+				$GLOBALS['_SESSION_']->customer->id,
+				$parameters['repository_id']
 			);
+
+			query_log($add_object_query,$bind_params);
+
+			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Package::Package::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -127,6 +134,14 @@
 						owner_id = ?";
 				array_push($bind_params,$parameters['owner_id']);
 			}
+			if (isset($parameters['package_version_id'])&& is_numeric($parameters['package_version_id'])) {
+				$update_object_query .= ",
+						package_version_id = ?";
+				array_push($bind_params,$parameters['package_version_id']);
+			}
+			else {
+				app_log("Package version not set");
+			}
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -185,6 +200,7 @@
 			$this->platform = $object->platform;
 			$factory = new \Storage\RepositoryFactory();
 			$this->repository = $factory->load($object->repository_id);
+			$this->package_version_id = $object->package_version_id;
 
 			return true;
 		}
@@ -213,5 +229,9 @@
 			$parameters['package_id'] = $this->id;
 			$version = new Version();
 			return $version->add($parameters);
+		}
+
+		public function packageVersion() {
+			return new \Package\Version($this->package_version_id);
 		}
 	}

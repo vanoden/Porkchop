@@ -66,7 +66,6 @@
    </form>
 
     <div style="width: 756px;">
-        <br/><hr/><h2>Documents</h2><br/>
         <?php
         if ($filesUploaded) {
         ?>
@@ -92,21 +91,28 @@
             </table>
         <?php
         }
+        if ($project->id) {
         ?>
-        <form name="repoUpload" action="/_engineering/project/<?=$form['code']?>" method="post" enctype="multipart/form-data">
-        <div class="container">
-	        <span class="label">Upload File</span>
-            <input type="hidden" name="repository_name" value="<?=$repository?>" />
-	        <input type="hidden" name="type" value="engineering project" />
-	        <input type="file" name="uploadFile" />
-	        <input type="submit" name="btn_submit" class="button" value="Upload" />
-        </div>
-        </form>
+            <br/><hr/><h2>Documents</h2><br/>
+            <form name="repoUpload" action="/_engineering/project/<?=$form['code']?>" method="post" enctype="multipart/form-data">
+                <div class="container">
+	                <span class="label">Upload File</span>
+                    <input type="hidden" name="repository_name" value="<?=$repository?>" />
+	                <input type="hidden" name="type" value="engineering project" />
+	                <input type="file" name="uploadFile" />
+	                <input type="submit" name="btn_submit" class="button" value="Upload" />
+                </div>
+            </form>
+        <?php
+        }
+        ?>
         <br/><br/>
     </div>
 
    <!--	START First Table -->
-   <?php	if ($project->id) { ?>
+   <?php	
+   if ($project->id) { 
+   ?>
    <h3>Tasks</h3>
    <div class="tableBody min-tablet marginTop_20">
       <div class="tableRowHeader">

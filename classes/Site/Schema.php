@@ -158,6 +158,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 6) {
+			
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `site_configurations` (
 						`key`	varchar(150) NOT NULL PRIMARY KEY,
@@ -165,12 +166,88 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating page_widgets table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating site_configurations table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
 
 				$this->setVersion(6);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 7) {
+			
+				$create_table_query = "
+	                CREATE TABLE IF NOT EXISTS `site_messages` (
+	                  `id` int(10) NOT NULL AUTO_INCREMENT,
+	                  `user_created` int(11) NOT NULL,
+	                  `date_created` timestamp NOT NULL,
+	                  `important` boolean NOT NULL,
+	                  `content` text,
+                      `parent_id` int(11) NULL,
+	                  PRIMARY KEY (`id`),
+	                  KEY `fk_user_created` (`user_created`),
+                      CONSTRAINT `register_users_ibfk_1` FOREIGN KEY (`user_created`) REFERENCES `register_users` (`id`)
+                    )
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating site_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$create_table_query = "
+	                CREATE TABLE IF NOT EXISTS `site_message_deliveries` (
+	                  `id` int(10) NOT NULL AUTO_INCREMENT,
+      	              `message_id` int(10) NOT NULL,
+      	              `user_id` int(10) NOT NULL,
+      	              `date_viewed` timestamp NOT NULL,
+      	              `date_acknowledged` timestamp NOT NULL,
+	                  PRIMARY KEY (`id`),
+	                  KEY `fk_message_id` (`message_id`),
+	                  KEY `fk_user_id` (`user_id`),
+                      CONSTRAINT `message_id_ibfk_1` FOREIGN KEY (`message_id`) REFERENCES `site_messages` (`id`),
+                      CONSTRAINT `user_id_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
+                    )
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating site_message_deliveries table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+				
+				$create_table_query = "
+	                 CREATE TABLE `site_messages_metadata` (
+                      `item_id` int NOT NULL,
+                      `label` varchar(200) NOT NULL,
+                      `value` text,
+                      UNIQUE KEY `UK_ID_LABEL` (`item_id`,`label`),
+                      KEY `IDX_LABEL_VALUE` (`label`,`value`(32)),
+                      CONSTRAINT `site_messages_metadata_ibfk_1` FOREIGN KEY (`item_id`) REFERENCES `site_messages` (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating site_messages_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(7);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 8) {
+			
+				$create_table_query = "
+					ALTER TABLE `site_message_deliveries`
+					MODIFY `date_viewed` timestamp NULL default NULL,
+					MODIFY `date_acknowledged` timestamp NULL default NULL
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating site_configurations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(8);
 				$GLOBALS['_database']->CommitTrans();
 			}
 			return true;

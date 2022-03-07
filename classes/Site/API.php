@@ -41,6 +41,7 @@
 			# Send Response
 			print $this->formatOutput($this->response);
 		}
+		
 		###################################################
 		### Get Details regarding Specified Page		###
 		###################################################
@@ -71,8 +72,9 @@
 			# Send Response
 			print $this->formatOutput($response);
 		}
+		
 		public function addPage() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content pages')) error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('edit site pages')) error("Permission Denied");
 	
 			if (! $_REQUEST['module']) error("Module required");
 			if (! $_REQUEST['view']) error("View required");
@@ -90,18 +92,19 @@
 			$response->page = $page;
 			print $this->formatOutput($response);
 		}
+		
 		###################################################
 		### Get Details regarding Specified Product		###
 		###################################################
 		public function addMessage() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) error("Permission Denied");
 	
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
 			$response = new \HTTP\Response();
 	
 			# Initiate Product Object
-			$_content = new Content();
+			$_content = new \Content\Message();
 	
 			# Find Matching Threads
 			$message = $_content->add(
@@ -125,18 +128,19 @@
 			# Send Response
 			print $this->formatOutput($response);
 		}
+		
 		###################################################
 		### Update Specified Message					###
 		###################################################
 		public function updateMessage() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) error("Permission Denied");
 	
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
 			$response = new \HTTP\Response();
 	
 			# Initiate Product Object
-			$content = new Content($_REQUEST['id']);
+			$content = new \Content\Message($_REQUEST['id']);
 			if (! $content->id) error("Message '".$_REQUEST['id']."' not found");
 	
 			# Find Matching Threads
@@ -159,37 +163,34 @@
 			# Send Response
 			print $this->formatOutput($response);
 		}
+		
 		###################################################
 		### Purge Cache of Specified Message			###
 		###################################################
 		public function purgeMessage() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content messages')) error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) error("Permission Denied");
 	
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
 			$response = new \HTTP\Response();
 	
 			# Initiate Product Object
-			$_content = new Content();
+			$message = new \Content\Message();
 	
 			# Get Message
-			$message = $_content->get($_REQUEST['target']);
-			if ($_content->error)
-			{
-				app_error($_content->error,__FILE__,__LINE__);
-				error("Application error");
+			if ($message->get($_REQUEST['target'])) {
+				# Purge Cache for message
+				$message->purge_cache();
+		
+				# Error Handling
+				if ($message->error) error($message->error);
+				else{
+					$response->message = "Success";
+					$response->success = 1;
+				}
 			}
-			if (! $message->id)
-				error("Unable to find matching message");
-	
-			# Purge Cache for message
-			$_content->purge_cache($message->id);
-	
-			# Error Handling
-			if ($_content->error) error($_content->error);
-			else{
-				$response->message = "Success";
-				$response->success = 1;
+			else {
+				$this->app_error($message->error,__FILE__,__LINE__);
 			}
 	
 			api_log('content',$_REQUEST,$response);
@@ -200,150 +201,57 @@
 		###################################################
 		### Get Metadata for current view				###
 		###################################################
-		public function getMetadata() {
+		public function getPageMetadata() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
 			$response = new \HTTP\Response();
 	
-			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
-	
-			# Find Matching Views
-			$metadata = $_metadata->get(
-				$_REQUEST['module'],
-				$_REQUEST['view'],
-				$_REQUEST['index']
-			);
-	
-			# Error Handling
-			if ($_metadata->error) error($_metadata->error);
-			else{
-				$response->metadata = $metadata;
-				$response->success = 1;
+			$page = new \Site\Page();
+			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+				if ($metadata = $page->getMetadata($_REQUEST['key'])) {
+					$response->metadata = $metadata;
+					$response->success = 1;
+				}
+				else {
+					$this->app_error("Cannot get metadata: ".$page->error);
+				}
+			}
+			else {
+				app_error("Page not found");
 			}
 	
 			# Send Response
 			api_log('content',$_REQUEST,$response);
 			print $this->formatOutput($response);
 		}
+
 		###################################################
 		### Get Metadata for current view				###
 		###################################################
-		public function findMetadata() {
+		public function findPageMetadata() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
 			$response = new \HTTP\Response();
 	
-			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
-	
-			# Find Matching Views
-			$metadata = $_metadata->find(
-				array (
-					'id'		=> $_REQUEST['id'],
-					'module'	=> $_REQUEST['module'],
-					'view'		=> $_REQUEST['view'],
-					'index'		=> $_REQUEST['index'],
-				)
-			);
-	
-			# Error Handling
-			if ($_metadata->error) error($_metadata->error);
-			else{
+			$page = new \Site\Page();
+			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+				# Initiate Metadata Object
+				$metadata = $page->allMetadata();
+
 				$response->metadata = $metadata;
 				$response->success = 1;
+			}
+			else {
+				$this->app_error("Page not found");
 			}
 	
 			# Send Response
 			api_log('content',$_REQUEST,$response);
 			print $this->formatOutput($response);
 		}
-		###################################################
-		### Add Page Metadata							###
-		###################################################
-		public function addMetadata() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
-	
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
-			$response = new \HTTP\Response();
-	
-			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
-	
-			# Find Matching Threads
-			$metadata = $_metadata->add(
-				array(
-					'module'		=> $_REQUEST['module'],
-					'view'			=> $_REQUEST['view'],
-					'index'			=> $_REQUEST['index'],
-					'format'		=> $_REQUEST['format'],
-					'content'		=> $_REQUEST['content']
-				)
-			);
-	
-			# Error Handling
-			if ($_metadata->error) error($_metadata->error);
-			else{
-				$response->metadata = $metadata;
-				$response->success = 1;
-			}
-	
-			# Send Response
-			api_log('content',$_REQUEST,$response);
-			print $this->formatOutput($response);
-		}
-		###################################################
-		### Update Page Metadata						###
-		###################################################
-		public function updateMetadata() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
-	
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
-			$response = new \HTTP\Response();
-	
-			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
-	
-			# Find Metadata On Key
-			$current = $_metadata->get(
-				array(
-					'module'		=> $_REQUEST['module'],
-					'view'			=> $_REQUEST['view'],
-					'index'			=> $_REQUEST['index'],
-				)
-			);
-			if ($current->id) {
-				$response->message = "Updating id ".$current->id;
-				# Find Matching Threads
-				$metadata = $_metadata->update(
-					$current->id,
-					array(
-						'format'		=> $_REQUEST['format'],
-						'content'		=> $_REQUEST['content']
-					)
-				);
-			}
-			else
-			{
-				error("Could not find matching object");
-			}
-	
-			# Error Handling
-			if ($_metadata->error) error($_metadata->error);
-			else{
-				#$response->request = $_REQUEST;
-				$response->metadata = $metadata;
-				$response->success = 1;
-			}
-	
-			# Send Response
-			api_log('content',$_REQUEST,$response);
-			print $this->formatOutput($response);
-		}
+
 		public function setPageMetadata() {
-			if (! $GLOBALS['_SESSION_']->customer->can('change content metadata')) error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('edit site pages')) $this->error("Permission Denied");
 	
 			$response = new \HTTP\Response();
 	
@@ -368,6 +276,7 @@
 			}
 			print $this->formatOutput($response);
 		}
+		
 		###################################################
 		### Get List of Site Navigation Menus			###
 		###################################################
@@ -398,6 +307,7 @@
 			api_log('content',$_REQUEST,$response);
 			print $this->formatOutput($response);
 		}
+		
 		###################################################
 		### Get Items from a Site Navigation Menu		###
 		###################################################
@@ -424,6 +334,7 @@
 			api_log('content',$_REQUEST,$response);
 			print $this->formatOutput($response);
 		}
+		
 		public function deleteConfiguration() {
 			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
 			$response = new \HTTP\Response();
@@ -437,6 +348,7 @@
 			}
 			print $this->formatOutput($response);
 		}
+		
 		public function setConfiguration() {
 			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
 			$response = new \HTTP\Response();
@@ -451,6 +363,7 @@
 			}
 			print $this->formatOutput($response);
 		}
+		
 		public function getConfiguration() {
 			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
 			$response = new \HTTP\Response();
@@ -466,7 +379,284 @@
 			}
 			print $this->formatOutput($response);
 		}
+		
+        public function addSiteMessage() {
+	        $siteMessage = new \Site\SiteMessage();
+	        $response = new \HTTP\Response();
+            $success = $siteMessage->add(
+                 array(
+                  'user_created' => $_REQUEST['user_created'],
+                  'date_created' => $_REQUEST['date_created'],
+                  'important' => $_REQUEST['important'],
+                  'content' => $_REQUEST['content'],
+                  'parent_id' => $_REQUEST['parent_id']
+                 )
+             );
+            if (!$success) {
+                $response->success = 0;
+                $response->error = "Site Message could not be added: ".$siteMessage->error();
+            } else {
+                $response->success = 1;
+				$response->id = $siteMessage->id;
+                $response->message = "Site Message was added successfully";
+            }
+        	print $this->formatOutput($response);
+	    }
+	    
+        public function editSiteMessage() {
+	        $siteMessage = new \Site\SiteMessage($_REQUEST['id']);
+	        $response = new \HTTP\Response();
+            $success = $siteMessage->update(
+                 array(
+                  'id' => $_REQUEST['id'],
+                  'user_created' => $_REQUEST['user_created'],
+                  'date_created' => $_REQUEST['date_created'],
+                  'important' => $_REQUEST['important'],
+                  'content' => $_REQUEST['content'],
+                  'parent_id' => $_REQUEST['parent_id']
+                 )
+            );            
+            if (!$success) {
+                $response->success = 0;
+                $response->error = "Site Message could not be edited";
+            } else {
+                $response->success = 1;
+                $response->message = "Site Message was edited successfully";
+            }
+        	print $this->formatOutput($response);
+        }
+        
+        public function removeSiteMessage() {
+            $siteMessage = new \Site\SiteMessage($_REQUEST['id']);
+	        $response = new \HTTP\Response();
+            $success = $siteMessage->delete();
+            if (!$success) {
+                $response->success = 0;
+                $response->error = "Site Message could not be deleted";
+            } else {
+                $response->success = 1;
+                $response->message = "Site Message was deleted successfully";
+            }
+        	print $this->formatOutput($response);  
+        }
 
+		public function getSiteMessage() {
+			$siteMessage = new \Site\SiteMessage($_REQUEST['id']);
+			$response = new \HTTP\Response();
+			if ($siteMessage->id) {
+				$response->success = 1;
+				$response->message = $siteMessage;
+			}
+			else {
+				$response->success = 0;
+				$response->error = $siteMessage->error();
+			}
+			print $this->formatOutput($response);
+		}
+        
+        public function addSiteMessageMetaData() {
+	        $siteMessageMetaData = new \Site\SiteMessageMetaData();
+	        $response = new \HTTP\Response();
+            $success = $siteMessageMetaData->add(
+                 array(
+                  'item_id' => $_REQUEST['item_id'],
+                  'label' => $_REQUEST['label'],
+                  'value' => $_REQUEST['value']
+                 )
+             );
+            if (!$success) {
+                $response->success = 0;
+                $response->error = "Site Message MetaData could not be added: ".$siteMessageMetaData->error();
+            } else {
+                $response->success = 1;
+				$response->id = $siteMessageMetaData->item_id;
+                $response->message = "Site Message MetaData was added successfully";
+            }
+        	print $this->formatOutput($response);
+	    }
+	            
+        public function editSiteMessageMetaData() {
+	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
+	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->find(array('item_id' => $_REQUEST['item_id'], 'label' => $_REQUEST['label']));
+	        $response = new \HTTP\Response();
+	        $isSuccessful = false;
+	        foreach ($siteMessageMetaDataListArray as $siteMessageMetaData) {
+                $success = $siteMessageMetaData->update(
+                     array(
+                      'item_id' => $_REQUEST['item_id'],
+                      'label' => $_REQUEST['label'],
+                      'value' => $_REQUEST['value']
+                     )
+                );
+                if (!$success) $isSuccessful = false;
+	        }
+            if (!$isSuccessful) {
+                $response->success = 0;
+                $response->error = "Site Message MetaData could not be edited";
+            } else {
+                $response->success = 1;
+                $response->message = "Site Message MetaData was edited successfully";
+            }
+        	print $this->formatOutput($response);
+        }
+        
+        public function removeSiteMessageMetaData() {
+	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
+	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->find(array('item_id' => $_REQUEST['item_id'], 'label' => $_REQUEST['label']));
+	        $response = new \HTTP\Response();
+	        $isSuccessful = false;
+	        foreach ($siteMessageMetaDataListArray as $siteMessageMetaData) {
+                $success = $siteMessageMetaData->delete();
+                if (!$success) $isSuccessful = false;
+	        }
+            if (!$isSuccessful) {
+                $response->success = 0;
+                $response->error = "Site Message MetaData could not be deleted";
+            } else {
+                $response->success = 1;
+                $response->message = "Site Message MetaData was deleted successfully";
+            }
+        	print $this->formatOutput($response);  
+        }
+
+        public function addSiteMessageDelivery() {
+	        $siteMessageDelivery = new \Site\SiteMessageDelivery();
+
+			$params = array();
+			if (isset($_REQUEST['to'])) {
+				$to = new \Register\Customer();
+				if ($from->get($_REQUEST['to'])) {
+					$params['user_id'] = $to->id;
+				}
+				else {
+					$this->error("to not found");
+				}
+			}
+			elseif (isset($_REQUEST['user_id'])) {
+				$params['user_id'] = $_REQUEST['user_id'];
+			}
+			else {
+				$params['user_id'] = $GLOBALS['_SESSION_']->customer->id;
+			}
+
+			if ($GLOBALS['_SESSION_']->customer->can('send admin in-site message')) {
+				# OK
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->id == $params['user_id']) {
+				# OK
+			}
+			else {
+				$this->deny();
+			}
+
+			if (isset($_REQUEST['message_id'])) {
+				$params['message_id'] = $_REQUEST['message_id'];
+			}
+			else {
+				$this->error("message_id required");
+			}
+
+	        $response = new \HTTP\Response();
+            $success = $siteMessageDelivery->add($params);
+
+            if (!$success) {
+                $response->success = 0;
+                $response->error = "Site Message could not be added: ".$siteMessageDelivery->error();
+            } else {
+                $response->success = 1;
+				$response->id = $siteMessageDelivery->id;
+                $response->message = "Site Message was added successfully";
+            }
+        	print $this->formatOutput($response);
+	    }
+	    
+        public function editSiteMessageDelivery() {
+            $siteMessageDelivery = new \Site\SiteMessageDelivery($_REQUEST['id']);            
+	        $response = new \HTTP\Response();
+            $success = $siteMessageDelivery->update(
+                 array(
+                  'id' => $_REQUEST['id'],
+                  'message_id' => $_REQUEST['message_id'],
+                  'user_id' => $_REQUEST['user_id'],
+                  'date_viewed' => $_REQUEST['date_viewed'],
+                  'date_acknowledged' => $_REQUEST['date_acknowledged']
+                 )
+            );
+            if (!$success) {
+                $response->success = 0;
+                $response->error = "Site Message could not be edited";
+            } else {
+                $response->success = 1;
+                $response->message = "Site Message was edited successfully";
+            }
+        	print $this->formatOutput($response);
+        }
+        
+        public function removeSiteMessageDelivery() {
+            $siteMessageDelivery = new \Site\SiteMessageDelivery($_REQUEST['id']);  
+	        $response = new \HTTP\Response();
+            $success = $siteMessageDelivery->delete();
+            if (!$success) {
+                $response->success = 0;
+                $response->error = "Site Message could not be deleted";
+            } else {
+                $response->success = 1;
+                $response->message = "Site Message was deleted successfully";
+            }
+        	print $this->formatOutput($response);  
+        }
+
+		public function findSiteMessageDeliveries() {
+			$deliveryList = new \Site\SiteMessageDeliveryList();
+			$params = array();
+			if (!empty($_REQUEST['from'])) {
+				$from = new \Register\Customer();
+				if ($from->get($_REQUEST['from'])) {
+					$params['user_created'] = $from->id;
+				}
+				else {
+					$this->error("from not found");
+				}
+			}
+			if (!empty($_REQUEST['to'])) {
+				$to = new \Register\Customer();
+				if ($to->get($_REQUEST['to'])) {
+					$params['user_id'] = $to->id;
+				}
+				else {
+					$this->error("to not found");
+				}
+			}
+			if (!empty($_REQUEST['viewed'])) {
+				if (preg_match('/^(1|true)$/',$_REQUEST['viewed'])) {
+					$params['viewed'] = true;
+				}
+				elseif (preg_match('/^(0|false)$/',$_REQUEST['viewed'])) {
+					$params['viewed'] = false;
+				}
+				else {
+					$this->error("Cannot understand 'viewed' param");
+				}
+			}
+			if (!empty($_REQUEST['acknowledged'])) {
+				if (preg_match('/^(1|true)$/',$_REQUEST['acknowledged'])) {
+					$params['acknowledged'] = true;
+				}
+				elseif (preg_match('/^(0|false)$/',$_REQUEST['acknowledged'])) {
+					$params['acknowledged'] = false;
+				}
+				else {
+					$this->error("Cannot understand 'acknowledged' param");
+				}
+			}
+			$deliveries = $deliveryList->find($params);
+			if ($deliveryList->error()) $this->error($deliveryList->error());
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->delivery = $deliveries;
+			print $this->formatOutput($response);
+		}
+ 
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
@@ -500,34 +690,21 @@
 				'purgeMessage'	=> array(
 					'target'	=> array(),
 				),
-				'getMetadata'	=> array(
+				'getPageMetadata'	=> array(
 					'module'	=> array('required' => true),
 					'view'		=> array('required' => true),
 					'index'		=> array(),
 				),
-				'findMetadata'	=> array(
+				'findPageMetadata'	=> array(
 					'id'	=> array('required' => true),
 					'module'	=> array('required' => true),
 					'view'		=> array('required' => true),
 					'index'		=> array(),
 				),
-				'addMetadata'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
-					'format'	=> array(),
-					'content'	=> array(),
-				),
-				'updateMetadata'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
-					'format'	=> array(),
-					'content'	=> array(),
-				),
 				'setPageMetadata'	=> array(
 					'module'	=> array('required' => true),
 					'view'		=> array('required' => true),
+					'index'		=> array(),
 					'key'		=> array(),
 					'value'		=> array(),
 				),
@@ -545,6 +722,62 @@
 				'deleteConfiguration'	=> array(
 					'key'		=> array('required' => true),
 				),
+				'addSiteMessage'	=> array(
+                    'user_created' => array('required' => true),
+                    'date_created' => array('required' => true),
+                    'important' => array('required' => true),
+                    'content' => array('required' => true),
+                    'parent_id' => array(),                    
+                 ),   
+				'editSiteMessage'	=> array(
+                    'id' => array('required' => true),
+                    'user_created' => array('required' => true),
+                    'date_created' => array('required' => true),
+                    'important' => array('required' => true),
+                    'content' => array('required' => true),
+                    'parent_id' => array(),
+                 ), 
+                 'removeSiteMessage'	=> array(
+                    'id' => array('required' => true)
+			     ),
+				'getSiteMessage'	=> array(
+					'id'	=> array('required' => true)
+				),
+				'addSiteMessageDelivery'	=> array(
+                    'message_id' => array('required' => true),
+                    'user_id' => array('required' => true),
+                    'date_viewed' => array('required' => true),
+                    'date_acknowledged' => array('required' => true)
+                 ),   
+				'editSiteMessageDelivery'	=> array(
+                    'id' => array('required' => true),
+                    'message_id' => array('required' => true),
+                    'user_id' => array('required' => true),
+                    'date_viewed' => array('required' => true),
+                    'date_acknowledged' => array('required' => true)
+                 ), 
+                 'removeSiteMessageDelivery'	=> array(
+                    'id' => array('required' => true)
+			     ),
+				'findSiteMessageDeliveries'	=> array(
+					'user_created'	=> array(),
+					'user_delivered'	=> array(),
+					'viewed'			=> array(),
+					'acknowledged'		=> array(),
+				),
+				 'addSiteMessageMetaData'	=> array(
+                    'item_id' => array('required' => true),
+                    'label' => array('required' => true),
+                    'value' => array('required' => true),
+                 ), 
+				 'editSiteMessageMetaData'	=> array(
+                    'item_id' => array('required' => true),
+                    'label' => array('required' => true),
+                    'value' => array('required' => true),
+                 ), 
+                 'removeSiteMessageMetaData'	=> array(
+                    'item_id' => array('required' => true)
+			     )
 			);
 		}
 	}

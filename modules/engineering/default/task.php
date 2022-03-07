@@ -36,6 +36,11 @@
         height: 50px;
         background-color: white;
     }
+    
+    input:disabled {
+        color: #a1a1a1;
+        background: #80808061;
+    }
 </style>
 <script>
     $(document).ready(function () {
@@ -62,6 +67,8 @@
             $( "#task_form" ).submit();
             $( "#btn_add_hours" ).click(false);
         });
+                
+        $( "#btn_add_event" ).attr('disabled', 'disabled');
         
         $( "#btn_add_event" ).click(function() {
             $( "#btn_add_event" ).val("please wait...");
@@ -84,6 +91,25 @@
             $( "#btn_add_testing" ).click(false);
         });
         
+        $( "#date_event" ).change(function() {
+            $( "#btn_add_event" ).removeAttr('disabled');
+        });
+        
+        $( "#event_person_id" ).change(function() {
+            $( "#btn_add_event" ).removeAttr('disabled');
+        });
+        
+        $( "#hours_worked" ).change(function() {
+            $( "#btn_add_event" ).removeAttr('disabled');
+        });
+        
+        $( "#new_status" ).change(function() {
+            $( "#btn_add_event" ).removeAttr('disabled');
+        });
+        
+        $( "#notes" ).change(function() {
+            $( "#btn_add_event" ).removeAttr('disabled');
+        });
     });
 </script>
 <div>
@@ -337,20 +363,20 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <input type="text" name="date_event" class="value input wide_100per" value="<?=date('m/d/Y H:i:s')?>" />
+               <input id="date_event" type="text" name="date_event" class="value input wide_100per" value="<?=date('m/d/Y H:i:s')?>" />
             </div>
             <div class="tableCell">
-               <select name="event_person_id" class="value input wide_100per">
+               <select id="event_person_id" name="event_person_id" class="value input wide_100per">
                   <?php	foreach ($people as $person) { ?>
                   <option value="<?=$person->id?>"<?php if ($person->id == $GLOBALS['_SESSION_']->customer->id) print " selected"; ?>><?=$person->code?></option>
                   <?php	} ?>
                </select>
             </div>
             <div class="tableCell">
-               <input type="text" name="hours_worked" class="value input" value="0" />
+               <input id="hours_worked" type="text" name="hours_worked" class="value input" value="0" />
             </div>
             <div class="tableCell">
-               <select name="new_status" class="value input wide_100per">
+               <select id="new_status" name="new_status" class="value input wide_100per">
                   <option value="new"<?php if ($task->status == 'NEW') print ' selected'; ?>>New</option>
                   <option value="hold"<?php if ($task->status == 'HOLD') print ' selected'; ?>>Hold</option>
                   <option value="active"<?php if ($task->status == 'ACTIVE') print ' selected'; ?>>Active</option>
@@ -371,7 +397,7 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <textarea name="notes" class="wide_100per"></textarea>
+               <textarea id="notes" name="notes" class="wide_100per"></textarea>
             </div>
          </div>
          <div class="tableRow button-bar">
@@ -412,7 +438,6 @@
         <form name="repoUpload" action="/_engineering/task/<?=$form['code'];?>" method="post" enctype="multipart/form-data">
         <div class="container">
             <span class="label">Upload File</span>
-            <input type="hidden" name="repository_name" value="<?=$repository?>" />
             <input type="hidden" name="type" value="engineering task" />
             <input type="file" name="uploadFile" />
             <input type="submit" name="btn_upload" class="button" value="Upload" />

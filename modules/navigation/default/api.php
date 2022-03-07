@@ -77,6 +77,10 @@
 					<input type="text" name="menu_code" class="value input apiInput"/>
 				</div>
 				<div class="apiParameter">
+					<span class="label apiLabel">parent_id</span>
+					<input type="text" name="parent_id" class="value input apiInput"/>
+				</div>
+				<div class="apiParameter">
 					<span class="label apiLabel">title</span>
 					<input type="text" name="title" class="value input apiInput"/>
 				</div>

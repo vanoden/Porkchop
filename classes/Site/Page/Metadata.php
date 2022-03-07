@@ -1,38 +1,31 @@
 <?php
 	namespace Site\Page;
 
-	class Metadata {
+use Aws\Iam\Exception\DeleteConflictException;
+use Elasticsearch\Endpoints\Indices\Alias\Delete;
+
+class Metadata {
+		public $id;
 		public $template;
+		public $page_id;
+		public $key;
+
+		public function __construct($id = null) {
+			if (!empty($id)) {
+				$this->id = $id;
+				$this->details();
+			}
+		}
 
 		###################################################
 		### Get Page Metadata							###
 		###################################################
-		public function all($page_id) {
-			$get_object_query = "
-				SELECT	`key`,value
-				FROM	page_metadata
-				WHERE	page_id = ?
-			";
+		public function get($page_id,$key) {
+			$this->page_id = $page_id;
+			$this->key = $key;
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($page_id)
-			);
-			if (! $rs) {
-				$this->error = "SQL Error getting view metadata in Site::Page::Metadata::get: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			$metadata = array();
-			while(list($key,$value) = $rs->FetchRow()) {
-				$metadata[$key] = $value;
-			}
-			$metadata = (object) $metadata;
-			return $metadata;
-		}
-		public function get($page_id,$key = '') {
-			if (! $key) return null;
 			$get_object_query = "
-				SELECT	value
+				SELECT	id
 				FROM	page_metadata
 				WHERE	page_id = ?
 				AND		`key` = ?
@@ -40,21 +33,23 @@
 
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
-				array($id,$key)
+				array($page_id,$key)
 			);
 			if (! $rs) {
 				$this->error = "SQL Error getting view metadata in Site::Page::Metadata::get: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
-			list($value) = $rs->FetchRow();
-			return $value;
+			list($id) = $rs->FetchRow();
+			$this->id = $id;
+			return $this->details();
 		}
-		public function set($page_id,$key,$value) {
-			if (! preg_match('/^\d+$/',$page_id)) {
+
+		public function set($value) {
+			if (! $this->page_id) {
 				$this->error = "Invalid page id in Site::Page::Metadata::set";
 				return null;
 			}
-			if (! isset($key)) {
+			if (! isset($this->key)) {
 				$this->error = "Invalid key name in Site::Page::Metadata::set";
 				return null;
 			}
@@ -68,73 +63,78 @@
 			";
 			$GLOBALS['_database']->Execute(
 				$set_data_query,
-				array($page_id,$key,$value)
+				array($this->page_id,$this->key,$value)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error setting metadata in Site::Page::Metadata::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			return $this->update($GLOBALS['_database']->Insert_ID(),$parameters);
+			return true;
 		}
-		###################################################
-		### Find Page Metadata							###
-		###################################################
-		public function find($parameters) {
-			$find_data_query = "
-				SELECT	id
-				FROM	page_metadata
-				WHERE	id = id
+
+		public function update($value) {
+			$update_metadata_query = "
+				UPDATE	page_metadata
+				SET		value = ?
+				WHERE	id = ?
 			";
-
-			if ($paramters['page_id'])
-				$find_data_query .= "
-					AND		page_id = ".$GLOBALS['_database']->qstr($parameters['page_id'],get_magic_quotes_gpc());
-			if ($parameters['key'])
-				$find_data_query .= "
-					AND		`key` = ".$GLOBALS['_database']->qstr($parameters['key'],get_magic_quotes_gpc());
-			if ($parameters['value'])
-				$find_data_query .= "
-					AND		value = ".$GLOBALS['_database']->qstr($parameters['value'],get_magic_quotes_gpc());
-
-			$rs = $GLOBALS['_database']->Execute($find_data_query);
-			if (! $rs)
-			{
-				$this->error = "SQL Error getting page metadata in Site::Page::Metadata::find: ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+			$GLOBALS['_database']->Execute($update_metadata_query,array($value,$this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Site::Page::Metadata::update(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
 			}
-			$object_array = array();
-			while (list($id) = $rs->FetchRow())
-			{
-				$object = $this->details($id);
-				array_push($object_array,$object);
-			}
-			return $object_array;
+			return $this->details();
 		}
+
 		###################################################
 		### Get Details for Metadata					###
 		###################################################
-		public function details($id = 0) {
+		public function details() {
 			$get_object_query = "
-				SELECT	`key`,
+				SELECT	page_id,
+						`key`,
 						value
 				FROM	page_metadata
 				WHERE	id = ?
 			";
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
-				array($id)
+				array($this->id)
 			);
 			if (! $rs)
 			{
 				$this->error = "SQL Error getting view metadata in Site::Page::Metadata::details: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
-			$object_array = array();
-			while (list($key,$value) = $rs->FetchRow())
-			{
-				$object_array[$key] = $value;
+			if ($object = $rs->FetchNextObject(false)) {
+				$this->page_id = $object->page_id;
+				$this->key = $object->key;
+				$this->value = $object->value;
+				return true;
 			}
-			$object = (object) $object_array;
-			return $object;
+            return false;
+		}
+
+		public function drop() {
+			if (empty($this->id)) {
+				$this->error = "Metadata id not set";
+				return false;
+			}
+			$drop_key_query = "
+				DELETE
+				FROM	page_metadata
+				WHERE	id = ?
+			";
+			query_log($drop_key_query,array($this->id),true);
+			$GLOBALS['_database']->Execute($drop_key_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Site::Page::Metadata::drop(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			return true;
+		}
+
+		public function error() {
+			return $this->error;
 		}
 	}

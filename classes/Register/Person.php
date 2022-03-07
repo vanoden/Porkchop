@@ -147,12 +147,19 @@ class Person {
     }
     
     public function password_strength($string) {
-        $password_strength = strlen($string);
-        if (preg_match('/[A-Z]/', $string)) $password_strength += 1;
-        if (preg_match('/[\@\$\_\-\.\!\&]/', $string)) $password_strength += 1;
-        if (preg_match('/\d/', $string)) $password_strength += 1;
-        if (preg_match('/[a-z]/', $string)) $password_strength += 1;
-        return $password_strength;
+		# Initial score on length alone
+		$password_strength = strlen($string);
+
+		# Subtract 1 as any one character will match below
+		$password_strength --;
+
+		# Add Points for Each Type of Char
+		if (preg_match('/[A-Z]/', $string)) $password_strength += 1;
+		if (preg_match('/[\@\$\_\-\.\!\&]/', $string)) $password_strength += 1;
+		if (preg_match('/\d/', $string)) $password_strength += 1;
+		if (preg_match('/[a-z]/', $string)) $password_strength += 1;
+
+		return $password_strength;
     }
     
     public function add($parameters = array()) {

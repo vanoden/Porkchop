@@ -18,44 +18,8 @@
 		$task->get($code);
 	}
 
-    // add task comment
-    if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Add Comment') {
-        $msgs = array();
-		if (isset($_REQUEST['content'])) {
-            $engineeringComment = new \Engineering\Comment();
-            $engineeringComment->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $task->code, 'content' => $_REQUEST['content']));
-            if ($engineeringComment->error()) $page->addError("Error creating comment: ".$engineeringComment->error());
-            array_push($msgs,"Comment added.");
-			$event = new \Engineering\Event();
-			$event->add(array(
-				'task_id'	=> $task->id,
-				'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
-				'date_added'	=> date('Y-m-d H:i:s'),
-				'description'	=> join('<br>',$msgs),
-			));
-			if ($event->error()) $page->addError("Error creating event: ".$event->error());
-		} else {
-			$page->addError("Comment required");
-		}
-    }
-    
-    // add task testing details
-    if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Testing') {
-        $parameters = array();
-        $parameters['testing_details'] = $_REQUEST['testing_details'];
-        $task->update($parameters);
-        $event = new \Engineering\Event();    
-		$event->add(array(
-			'task_id'	=> $task->id,
-			'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
-			'date_added'	=> date('Y-m-d H:i:s'),
-			'description'	=> 'Testing Instructions Updated',
-		));
-		if ($event->error()) $page->addError("Error creating event: ".$event->error());
-    }
-
-    // edit task or add event
-	if (isset($_REQUEST['method']) && in_array($_REQUEST['method'],array('Submit','Add Event'))) {
+    // edit task or add event, testing info or comment
+	if (isset($_REQUEST['method']) && !empty($_REQUEST['method'])) {
 		$msgs = array();
 		$parameters = array();
 		if (isset($_REQUEST['title'])) {
@@ -155,8 +119,7 @@
 				));
 				if ($event->error()) $page->addError("Error creating event: ".$event->error());
 			}
-		}
-		else {
+		} else {
 			# Create New Task
 			if ($task->add($parameters)) {
 				$page->success = "Task Created";
@@ -188,11 +151,11 @@
 			// Get Template File
 			$internal_notification = $GLOBALS['_config']->engineering->internal_notification;
 			if (! isset($GLOBALS['_config']->engineering->internal_notification)) {
-				$page->error = "Notification template not configured";
+				$page->addError("Notification template not configured");
 				app_log("config->engineering->internal_notification not set!",'error');
 			}
 			elseif (! file_exists($internal_notification->template)) {
-				$page->error = "Support Internal Email Template '".$internal_notification->template."' not found";
+				$page->addError("Support Internal Email Template '".$internal_notification->template."' not found");
 				app_log("File '".$internal_notification->template."' not found! Set in config->engineering->internal_notification setting",'error');
 			}
 			else {
@@ -201,7 +164,7 @@
 				}
 				catch (Exception $e) {
 					app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
-					$page->error = "Template load failed.  Try again later";
+					$page->addError("Template load failed.  Try again later");
 					return;
 				}
 
@@ -293,15 +256,53 @@
 			'hours_worked'	=> $_REQUEST['hours_worked']
 		));
 		if ($event->error()) $page->addError($event->error());
+		
+        // add task testing details
+	    if (isset($_REQUEST['testing_details']) && !empty($_REQUEST['testing_details'])) {
+            $parameters = array();
+            $parameters['testing_details'] = $_REQUEST['testing_details'];
+            $task->update($parameters);
+            $event = new \Engineering\Event();    
+		    $event->add(array(
+			    'task_id'	=> $task->id,
+			    'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
+			    'date_added'	=> date('Y-m-d H:i:s'),
+			    'description'	=> 'Testing Instructions Updated',
+		    ));
+		    if ($event->error()) $page->addError("Error creating testing details: ".$event->error());
+        }
+		
+        // add task comment   
+	    if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
+            $engineeringComment = new \Engineering\Comment();
+            $engineeringComment->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $task->code, 'content' => $_REQUEST['content']));
+            if ($engineeringComment->error()) $page->addError("Error creating comment: ".$engineeringComment->error());
+            array_push($msgs,"Comment added.");
+		    $event = new \Engineering\Event();
+		    $event->add(array(
+			    'task_id'	=> $task->id,
+			    'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
+			    'date_added'	=> date('Y-m-d H:i:s'),
+			    'description'	=> join('<br>',$msgs),
+		    ));
+		    if ($event->error()) $page->addError("Error creating comment: ".$event->error());
+	    }
 	}
 
     // upload files if upload button is pressed
-    $configuration = new \Site\Configuration('engineering_attachments_s3');
-    $repository = $configuration->value();
-    if (isset($_REQUEST['btn_upload']) && $_REQUEST['btn_upload'] == 'Upload') {
+    $configuration = new \Site\Configuration('engineering_attachments');    
+    $repository_key = $configuration->value();
+	$repository = new \Storage\Repository();
+	if (empty($repository_key)) {
+		$page->addError("'engineering_attachments' configuration not set");
+	}
+	elseif (! $repository->get($repository_key)) {
+		$page->addError("Repository '".$repository_key."' not found");
+	}
+    elseif (isset($_REQUEST['btn_upload']) && $_REQUEST['btn_upload'] == 'Upload') {
 	    $file = new \Storage\File();
 	    $parameters = array();
-        $parameters['repository_name'] = $_REQUEST['repository_name'];
+        $parameters['repository_id'] = $repository->id;
         $parameters['type'] = $_REQUEST['type'];
         $parameters['ref_id'] = $task->id;
 	    $uploadResponse = $file->upload($parameters);

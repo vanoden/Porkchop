@@ -7,11 +7,5 @@
 		public $error;
 
 		public function __construct() {
-			# Database Initialization
-			$init = new ProductInit();
-			if ($init->error) {
-				$this->error = $init->error;
-				return 0;
-			}
 		}
 	}
