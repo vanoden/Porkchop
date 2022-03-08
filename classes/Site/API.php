@@ -383,6 +383,12 @@
         public function addSiteMessage() {
 	        $siteMessage = new \Site\SiteMessage();
 	        $response = new \HTTP\Response();
+
+			if (empty($_REQUEST['user_created'])) $_REQUEST['user_created'] = $GLOBALS['_SESSION_']->customer->id;
+			if (empty($_REQUEST['date_created'])) $_REQUEST['date_created'] = get_mysql_date('now');
+			if (empty($_REQUEST['important'])) $_REQUEST['important'] = 0;
+			if (empty($_REQUEST['parent_id'])) $_REQUEST['parent_id'] = 0;
+
             $success = $siteMessage->add(
                  array(
                   'user_created' => $_REQUEST['user_created'],
