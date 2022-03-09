@@ -662,6 +662,19 @@
 			$response->delivery = $deliveries;
 			print $this->formatOutput($response);
 		}
+
+		public function mySiteMessageCount() {
+			$deliveryList = new \Site\SiteMessageDeliveryList();
+			$params = array();
+			$params['user_id'] = $GLOBALS['_SESSION_']->customer->id;
+			$params['acknowledged'] = false;
+			$deliveries = $deliveryList->find($params);
+			if ($deliveryList->error()) $this->error($deliveryList->error());
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->count = $deliveryList->count();
+			print $this->formatOutput($response);
+		}
  
 		public function _methods() {
 			return array(
@@ -771,6 +784,7 @@
 					'viewed'			=> array(),
 					'acknowledged'		=> array(),
 				),
+				'mySiteMessageCount' => array(),
 				 'addSiteMessageMetaData'	=> array(
                     'item_id' => array('required' => true),
                     'label' => array('required' => true),
