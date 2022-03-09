@@ -65,8 +65,12 @@
     }
 
     .message-date {
-        padding-bottom: 15px;
+        padding-bottom: 5px;
     }
+
+	.message-sender {
+		padding-bottom: 5px;
+	}
     
     .message-subject {
         font-size: 20px;
@@ -136,6 +140,7 @@
         $currentYearCheck = date('Y', strtotime($userMessage->date_created));
         if ($currentYear != $currentYearCheck) {
         $currentYear = $currentYearCheck;
+		$sender = new \Register\Customer($userMessage->user_created);
     ?>
       <div class="row full-column-row">
         <div class="column full-column">
@@ -156,16 +161,14 @@
                 </span>
             </div>
             <div style="flex: 2;">
-                <div class="message-date"><a><?=date('m/d/Y', strtotime($userMessage->date_created));?></a></div>
+                <div class="message-date"><?=date('m/d/Y', strtotime($userMessage->date_created));?></div>
             </div>
             <div style="flex: 1;"></div>      
           </div>
           <div class="list-column">
             <div style="flex: 1;">
-                <span class="message-icon">
-                    <img src="/img/messages/icon_catgy_<?=$siteMessageMetaDataCategory->value?>_1C.svg" style="width: 25px">
-                </span>
                 <div style="margin:10px;"></div>
+                <span class="message-sender"><?=$sender->full_name()?></span>
                 <span class="message-icon">
                     <img src="/img/messages/icon_tools_check_2C.svg" style="width: 20px;">
                 </span>
@@ -182,10 +185,6 @@
             <div class="message-subject"><?=$siteMessageMetaDataTitle->value?></div>
             <div class="message-text">
                 <?=$userMessage->content?>
-            </div>
-            <div class="message-links-wrapper">
-                <span class="read-more-link"><a>Read more &#8964;</a></span>
-                <span class="visit-portal-link" style="float:right"><a>Visit your portal &#8250;</a></span>
             </div>
           </div>
         </div>
