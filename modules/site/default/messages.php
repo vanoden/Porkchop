@@ -242,7 +242,7 @@
                 <div style="margin:10px;"></div>
                 <span class="message-sender"><?=$sender->full_name()?></span>
                 <span class="message-icon">
-                    <img src="/img/messages/icon_tools_check_2C.svg" style="width: 20px;">
+                    <img src="/img/messages/icon_catgy_<?=isset($siteMessageMetaDataValues['category'][0]->value) ? $siteMessageMetaDataValues['category'][0]->value : '';?>_1C.svg" style="width: 25px">
                 </span>
             </div>
             <div style="flex: 2;">
