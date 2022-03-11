@@ -17,6 +17,23 @@
         color:blue;
     }
     
+    .info-row.row {
+        padding: 10px;
+    }
+    
+    .info-row.row.selected {
+        background-color: #edfaff;
+    }  
+    
+    .info-row.row:hover{
+        background-color: #edfaff;
+        cursor:pointer;
+    }
+    
+    .bold {
+        font-weight: bolder;
+    }
+    
     .messaging-page-wrapper {
         margin: 50px;    
     }
@@ -55,7 +72,6 @@
     }
     
     .message-title {
-        font-weight: bold;
         white-space:nowrap;
     }
     
@@ -108,6 +124,13 @@
         font-size: 24px;
     }
     
+    .message-content {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 25px;
+
+    }
+    
     @media only screen and (max-width: 900px) {
       .row {
         flex-direction: column;
@@ -124,15 +147,65 @@
       }
     }
 </style>
+<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+<script>
+
+    // expand text to read the whole message
+    function expandText(messageId) {
+        document.getElementById('message-text-' + messageId).style.height = "150px";
+        document.getElementById('message-text-read-more-' + messageId).style.display = 'none';
+    }
+    
+    // mark the message individually as acknowledged
+    function acknowledged(messageId) {
+        $.post( "/_site/api", { method: "addSiteMessageMetaData", item_id: messageId, 'label' : 'acknowledged', 'value' : 'true' }, function( data ) {
+            document.getElementById('message-title-' + messageId).classList.remove('bold');
+            document.getElementById('message-subject-' + messageId).classList.remove('bold');
+            document.getElementById('message-date-' + messageId).classList.remove('bold');         
+        });
+    }
+    
+    // toggle all messages for acknowledged option
+    var isSelectAll = false;
+    function selectAll() {
+        var messages = document.getElementsByClassName("row info-row");
+        for (var i = 0; i < messages.length; i++) {
+            if (!isSelectAll) {
+                messages.item(i).classList.add('selected');
+            } else {
+                messages.item(i).classList.remove('selected');
+            }
+        }
+        isSelectAll = !isSelectAll;
+        document.getElementById('mark-acknowledged').disabled = !isSelectAll;
+    }
+    
+    // acknowledge all messages at once on button click
+    function acknowledgeAll() {
+        $.post( "/_site/api", { method: "acknowledgeSiteMessageByUserId", user_created: 2612, 'btn_submit' : 'Submit' }, function( data ) {
+            var messages = document.getElementsByClassName("row info-row");
+            for (var i = 0; i < messages.length; i++) acknowledged(messages[i].id.replace('row-', ''));
+            selectAll();
+            document.getElementById('selectAll').checked = false;
+        });
+    }
+</script>
 <body>
+
+<div class="row full-column-row">
+    <div style="flex: 1;">
+        <input type="checkbox" id="selectAll" name="selectAll" value="selectAll" onclick="selectAll()">
+        <label for="selectAll"> Select All</label><br>
+    </div>
+    <div style="flex: 1;"><button id="mark-acknowledged" disabled='disabled' onclick="acknowledgeAll()">Mark as Acknowledged</button></div>
+</div>
+
 <div class="messaging-page-wrapper">
     <?php
     $currentYear = '';
     foreach ($userMessages as $userMessage) {
         $siteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
-        $siteMessageMetaDataTitle = array_pop($siteMessageMetaDataList->find(array('item_id'=>$userMessage->id, 'label' => 'title')));
-        $siteMessageMetaDataCategory = array_pop($siteMessageMetaDataList->find(array('item_id'=>$userMessage->id, 'label' => 'category')));
-        $siteMessageMetaDataSummary = array_pop($siteMessageMetaDataList->find(array('item_id'=>$userMessage->id, 'label' => 'summary')));
+        $siteMessageMetaDataValues = $siteMessageMetaDataList->find(array('item_id'=>$userMessage->id));
         $currentYearCheck = date('Y', strtotime($userMessage->date_created));
         if ($currentYear != $currentYearCheck) {
         $currentYear = $currentYearCheck;
@@ -147,31 +220,25 @@
     <?php
         }
     ?>
-      <div class="row">
+      <div id="row-<?=$userMessage->id?>" class="row info-row" onclick="acknowledged('<?=$userMessage->id?>')">
         <div class="column left-column">
           <div class="list-column">
             <div style="flex: 1;">
-                <span class="message-icon">
-                    <img src="/img/messages/icon_tools_star_1C.svg" style="width: 20px;">
-                </span>
+                <span class="message-icon"></span>
             </div>
             <div style="flex: 2;">
-                <div class="message-date"><a><?=date('m/d/Y', strtotime($userMessage->date_created));?></a></div>
+                <div id="message-date-<?=$userMessage->id?>" class="message-date <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=date('m/d/Y', strtotime($userMessage->date_created));?></div>
             </div>
-            <div style="flex: 1;"></div>      
+            <div style="flex: 1;"></div>   
           </div>
           <div class="list-column">
             <div style="flex: 1;">
                 <span class="message-icon">
-                    <img src="/img/messages/icon_catgy_<?=$siteMessageMetaDataCategory->value?>_1C.svg" style="width: 25px">
-                </span>
-                <div style="margin:10px;"></div>
-                <span class="message-icon">
-                    <img src="/img/messages/icon_tools_check_2C.svg" style="width: 20px;">
+                    <img src="/img/messages/icon_catgy_<?=isset($siteMessageMetaDataValues['category'][0]->value) ? $siteMessageMetaDataValues['category'][0]->value : '';?>_1C.svg" style="width: 25px">
                 </span>
             </div>
             <div style="flex: 2;">
-                <div class="message-title"><?=$siteMessageMetaDataSummary->value?></div>
+                <div id="message-title-<?=$userMessage->id?>" class="message-title <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=isset($siteMessageMetaDataValues['title'][0]->value) ? $siteMessageMetaDataValues['summary'][0]->value : '';?></div>
             </div>
             <div style="flex: 1;"></div>
             <div class="message-title-chevron">&#8250;</div>
@@ -179,13 +246,17 @@
         </div>
         <div class="column right-column">
           <div class="messages-column">
-            <div class="message-subject"><?=$siteMessageMetaDataTitle->value?></div>
+            <div id="message-subject-<?=$userMessage->id?>" class="message-subject <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=isset($siteMessageMetaDataValues['summary'][0]->value) ? $siteMessageMetaDataValues['title'][0]->value : '';?></div>
             <div class="message-text">
-                <?=$userMessage->content?>
+                <div id="message-text-<?=$userMessage->id?>" class="message-content"><?=$userMessage->content?></div>
             </div>
             <div class="message-links-wrapper">
-                <span class="read-more-link"><a>Read more &#8964;</a></span>
-                <span class="visit-portal-link" style="float:right"><a>Visit your portal &#8250;</a></span>
+                <span class="read-more-link">
+                    <a onclick="expandText('<?=$userMessage->id?>')">
+                        <span id="message-text-read-more-<?=$userMessage->id?>">Read more &#8964;</span>
+                    </a>
+                </span>
+                <span class="visit-portal-link" style="float:right"><a href="/_monitor/collections">Visit your portal &#8250;</a></span>
             </div>
           </div>
         </div>

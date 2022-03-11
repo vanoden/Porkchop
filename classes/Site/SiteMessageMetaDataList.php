@@ -12,21 +12,21 @@
 			
 			$this->error = null;
 			$get_site_messages_metadata_query = "
-				SELECT	item_id
-				FROM	site_messages_metadata
-				WHERE	item_id = item_id
+				SELECT	`item_id`, `label`
+				FROM	`site_messages_metadata`
+				WHERE	`item_id` = `item_id`
 			";			
 
 			$bind_params = array();
 			if (isset($parameters['label'])) {
 				$get_site_messages_metadata_query .= "
-				AND label = ?";
+				AND `label` = ?";
 				array_push($bind_params,$parameters['label']);
 			}
 
 			if (isset($parameters['item_id'])) {
 				$get_site_messages_metadata_query .= "
-				AND item_id = ?";
+				AND `item_id` = ?";
 				array_push($bind_params,$parameters['item_id']);
 			}
 
@@ -38,14 +38,15 @@
 			}
 			
 			$siteMessages = array();
-			while (list($id) = $rs->FetchRow()) {
-			    $siteMessage = new \Site\SiteMessageMetaData($id, $parameters['label']);
-			    $siteMessage->details();
+			while (list($id, $label) = $rs->FetchRow()) {
+			    if (!isset($siteMessages[$label])) $siteMessages[$label] = array();
+			    $siteMessage = new \Site\SiteMessageMetaData($id, $label);
+			    $siteMessage->details();			    
 			    $this->count ++;
-			    array_push($siteMessages,$siteMessage);
+			    array_push($siteMessages[$label],$siteMessage);
 			}
 			return $siteMessages;
-		}
+		}		
         
         public function error() {
             return $this->_error;
