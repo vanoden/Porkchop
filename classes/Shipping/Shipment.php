@@ -129,6 +129,12 @@
 			$packageList = new \Shipping\PackageList();
 			return $packageList->find(array('shipment_id' => $this->id));
 		}
+		public function addPackage() {
+			return new \Shipping\Package(array('shipment_id' => $this->id));
+		}
+		public function package($id) {
+			return new \Shipping\Package($id);
+		}
 		public function vendor() {
 			return new \Shipping\Vendor($this->vendor_id);
 		}
