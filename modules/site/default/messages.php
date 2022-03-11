@@ -81,8 +81,12 @@
     }
 
     .message-date {
-        padding-bottom: 15px;
+        padding-bottom: 5px;
     }
+
+	.message-sender {
+		padding-bottom: 5px;
+	}
     
     .message-subject {
         font-size: 20px;
@@ -209,6 +213,7 @@
         $currentYearCheck = date('Y', strtotime($userMessage->date_created));
         if ($currentYear != $currentYearCheck) {
         $currentYear = $currentYearCheck;
+		$sender = new \Register\Customer($userMessage->user_created);
     ?>
       <div class="row full-column-row">
         <div class="column full-column">
@@ -228,13 +233,16 @@
             </div>
             <div style="flex: 2;">
                 <div id="message-date-<?=$userMessage->id?>" class="message-date <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=date('m/d/Y', strtotime($userMessage->date_created));?></div>
+
             </div>
             <div style="flex: 1;"></div>   
           </div>
           <div class="list-column">
             <div style="flex: 1;">
+                <div style="margin:10px;"></div>
+                <span class="message-sender"><?=$sender->full_name()?></span>
                 <span class="message-icon">
-                    <img src="/img/messages/icon_catgy_<?=isset($siteMessageMetaDataValues['category'][0]->value) ? $siteMessageMetaDataValues['category'][0]->value : '';?>_1C.svg" style="width: 25px">
+                    <img src="/img/messages/icon_tools_check_2C.svg" style="width: 20px;">
                 </span>
             </div>
             <div style="flex: 2;">

@@ -10,5 +10,11 @@
         public $date_acknowledged;
         public $tableName = 'site_message_deliveries';
         public $fields = array('id','message_id','user_id','date_viewed','date_acknowledged');
-        
+
+		public function __construct($id = null) {
+			if (isset($id)) {
+				$this->id = $id;
+				$this->details();
+			}
+		}        
 	}

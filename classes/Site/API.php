@@ -383,6 +383,12 @@
         public function addSiteMessage() {
 	        $siteMessage = new \Site\SiteMessage();
 	        $response = new \HTTP\Response();
+
+			if (empty($_REQUEST['user_created'])) $_REQUEST['user_created'] = $GLOBALS['_SESSION_']->customer->id;
+			if (empty($_REQUEST['date_created'])) $_REQUEST['date_created'] = get_mysql_date('now');
+			if (empty($_REQUEST['important'])) $_REQUEST['important'] = 0;
+			if (empty($_REQUEST['parent_id'])) $_REQUEST['parent_id'] = 0;
+
             $success = $siteMessage->add(
                  array(
                   'user_created' => $_REQUEST['user_created'],
@@ -439,7 +445,7 @@
             }
         	print $this->formatOutput($response);  
         }
-      
+        
         public function acknowledgeSiteMessageByUserId() {
             $siteMessages = new \Site\SiteMessagesList();
             $siteMessagesList = $siteMessages->find(array('user_created' => $_REQUEST['user_created']));
@@ -458,6 +464,20 @@
             $response->message = 'all messages for user ' . $_REQUEST['user_created'] . ' have been acknowledged.';
         	print $this->formatOutput($response);
 	    }
+
+		public function getSiteMessage() {
+			$siteMessage = new \Site\SiteMessage($_REQUEST['id']);
+			$response = new \HTTP\Response();
+			if ($siteMessage->id) {
+				$response->success = 1;
+				$response->message = $siteMessage;
+			}
+			else {
+				$response->success = 0;
+				$response->error = $siteMessage->error();
+			}
+			print $this->formatOutput($response);
+		}
         
         public function addSiteMessageMetaData() {
 	        $siteMessageMetaData = new \Site\SiteMessageMetaData();
@@ -526,15 +546,44 @@
 
         public function addSiteMessageDelivery() {
 	        $siteMessageDelivery = new \Site\SiteMessageDelivery();
+
+			$params = array();
+			if (isset($_REQUEST['to'])) {
+				$to = new \Register\Customer();
+				if ($from->get($_REQUEST['to'])) {
+					$params['user_id'] = $to->id;
+				}
+				else {
+					$this->error("to not found");
+				}
+			}
+			elseif (isset($_REQUEST['user_id'])) {
+				$params['user_id'] = $_REQUEST['user_id'];
+			}
+			else {
+				$params['user_id'] = $GLOBALS['_SESSION_']->customer->id;
+			}
+
+			if ($GLOBALS['_SESSION_']->customer->can('send admin in-site message')) {
+				# OK
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->id == $params['user_id']) {
+				# OK
+			}
+			else {
+				$this->deny();
+			}
+
+			if (isset($_REQUEST['message_id'])) {
+				$params['message_id'] = $_REQUEST['message_id'];
+			}
+			else {
+				$this->error("message_id required");
+			}
+
 	        $response = new \HTTP\Response();
-            $success = $siteMessageDelivery->add(
-                 array(
-                  'message_id' => $_REQUEST['message_id'],
-                  'user_id' => $_REQUEST['user_id'],
-                  'date_viewed' => $_REQUEST['date_viewed'],
-                  'date_acknowledged' => $_REQUEST['date_acknowledged']
-                 )
-             );
+            $success = $siteMessageDelivery->add($params);
+
             if (!$success) {
                 $response->success = 0;
                 $response->error = "Site Message could not be added: ".$siteMessageDelivery->error();
@@ -581,7 +630,71 @@
             }
         	print $this->formatOutput($response);  
         }
-        
+
+		public function findSiteMessageDeliveries() {
+			$deliveryList = new \Site\SiteMessageDeliveryList();
+			$params = array();
+			if (!empty($_REQUEST['from'])) {
+				$from = new \Register\Customer();
+				if ($from->get($_REQUEST['from'])) {
+					$params['user_created'] = $from->id;
+				}
+				else {
+					$this->error("from not found");
+				}
+			}
+			if (!empty($_REQUEST['to'])) {
+				$to = new \Register\Customer();
+				if ($to->get($_REQUEST['to'])) {
+					$params['user_id'] = $to->id;
+				}
+				else {
+					$this->error("to not found");
+				}
+			}
+			if (!empty($_REQUEST['viewed'])) {
+				if (preg_match('/^(1|true)$/',$_REQUEST['viewed'])) {
+					$params['viewed'] = true;
+				}
+				elseif (preg_match('/^(0|false)$/',$_REQUEST['viewed'])) {
+					$params['viewed'] = false;
+				}
+				else {
+					$this->error("Cannot understand 'viewed' param");
+				}
+			}
+			if (!empty($_REQUEST['acknowledged'])) {
+				if (preg_match('/^(1|true)$/',$_REQUEST['acknowledged'])) {
+					$params['acknowledged'] = true;
+				}
+				elseif (preg_match('/^(0|false)$/',$_REQUEST['acknowledged'])) {
+					$params['acknowledged'] = false;
+				}
+				else {
+					$this->error("Cannot understand 'acknowledged' param");
+				}
+			}
+			$deliveries = $deliveryList->find($params);
+			if ($deliveryList->error()) $this->error($deliveryList->error());
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->delivery = $deliveries;
+			print $this->formatOutput($response);
+		}
+
+		public function mySiteMessageCount() {
+			$deliveryList = new \Site\SiteMessageDeliveryList();
+			$params = array();
+			$params['user_id'] = $GLOBALS['_SESSION_']->customer->id;
+			$params['acknowledged'] = false;
+			$deliveries = $deliveryList->find($params);
+			if ($deliveryList->error()) $this->error($deliveryList->error());
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->count = $deliveryList->count();
+			print $this->formatOutput($response);
+		}
+ 
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
@@ -665,6 +778,9 @@
                  'removeSiteMessage'	=> array(
                     'id' => array('required' => true)
 			     ),
+				'getSiteMessage'	=> array(
+					'id'	=> array('required' => true)
+				),
 				'addSiteMessageDelivery'	=> array(
                     'message_id' => array('required' => true),
                     'user_id' => array('required' => true),
@@ -681,6 +797,13 @@
                  'removeSiteMessageDelivery'	=> array(
                     'id' => array('required' => true)
 			     ),
+				'findSiteMessageDeliveries'	=> array(
+					'user_created'	=> array(),
+					'user_delivered'	=> array(),
+					'viewed'			=> array(),
+					'acknowledged'		=> array(),
+				),
+				'mySiteMessageCount' => array(),
 				 'addSiteMessageMetaData'	=> array(
                     'item_id' => array('required' => true),
                     'label' => array('required' => true),
