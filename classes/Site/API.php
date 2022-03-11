@@ -445,6 +445,25 @@
             }
         	print $this->formatOutput($response);  
         }
+        
+        public function acknowledgeSiteMessageByUserId() {
+            $siteMessages = new \Site\SiteMessagesList();
+            $siteMessagesList = $siteMessages->find(array('user_created' => $_REQUEST['user_created']));
+            foreach ($siteMessagesList as $siteMessage) {
+                $siteMessageMetaData = new \Site\SiteMessageMetaData();
+                $success = $siteMessageMetaData->add(
+                     array(
+                      'item_id' => $siteMessage->id,
+                      'label' => 'acknowledged',
+                      'value' => 'true'
+                     )
+                 );
+            }        
+            $response = new \HTTP\Response();
+            $response->success = 1;
+            $response->message = 'all messages for user ' . $_REQUEST['user_created'] . ' have been acknowledged.';
+        	print $this->formatOutput($response);
+	    }
 
 		public function getSiteMessage() {
 			$siteMessage = new \Site\SiteMessage($_REQUEST['id']);
@@ -797,7 +816,10 @@
                  ), 
                  'removeSiteMessageMetaData'	=> array(
                     'item_id' => array('required' => true)
-			     )
+			     ),
+                 'acknowledgeSiteMessageByUserId'	=> array(
+                    'user_created' => array('required' => true)
+			     )	     
 			);
 		}
 	}

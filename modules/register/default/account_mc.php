@@ -50,15 +50,23 @@
 			app_log("Updating customer ".$customer_id,'debug',__FILE__,__LINE__);
 
 			$customer->update($parameters);
+			
+			// set the user to active if they're expired, this will ensure then can continue to login
+			if (isset($parameters["password"])) {
+			    if ($customer->status == 'EXPIRED') $customer->update(array('status' => 'ACTIVE'));
+			}
+			
 			if ($customer->error) {
 				app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
 				$page->error = "Error updating customer information.  Our admins have been notified.  Please try again later";
 				goto load;
 			}
-		}
-		else {
+			
+		} else {
+		
 			### THIS NEVER HAPPENS ###
 			app_log("New customer registration",'debug',__FILE__,__LINE__);
+			
 			# Default Login to Email Address
 			if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['email_address'];
 
