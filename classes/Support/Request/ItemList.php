@@ -47,6 +47,11 @@
 			    ";
 				array_push($bind_params,$minDate,$maxDate);
 			}
+			if (isset($parameters['organization_id'])) {
+				$find_objects_query .= "
+					AND	sr.organization_id = ?";
+				array_push($bind_params,$parameters['organization_id']);
+			}
 
 			if (!empty($parameters['request_id'])) {
 				$request = new \Support\Request($parameters['request_id']);
