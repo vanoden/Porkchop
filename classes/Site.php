@@ -14,7 +14,7 @@
 				$class_name = "\\$module_name\\Schema";
 				$schema_path = CLASS_PATH."/$module_name/Schema.php";
 				if (! file_exists($schema_path)) {
-					install_log("Module $module_name not installed");
+					$this->install_log("Module $module_name not installed");
 					continue;
 				}
 				try {
