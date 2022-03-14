@@ -64,7 +64,8 @@
 	    <div class="form_success"><?=$page->success?></div>
 	<?php } ?>
 </div>
-<h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i> Request [Tickets]</h2>
+<h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i>Support Tickets</h2>
+<a href="/_support/request">Create new request</a>
 
 <div style="width: 756px;">
 	<form id="pageForm" name="filterForm" method="get" action="/_support/tickets"  autocomplete="off">
