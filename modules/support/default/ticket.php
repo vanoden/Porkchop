@@ -65,7 +65,7 @@
 			        <span class="value"><?=$item->product->code?></span>
 		        </div>
 		        <div class="tableCell">
-			        <span class="value"><?=$item->serial_number?></span>
+			        <span class="value"><a href="/_monitor/asset/<?=$item->serial_number?>"><?=$item->serial_number?></a></span>
 		        </div>
 	        </div>
         </div>
