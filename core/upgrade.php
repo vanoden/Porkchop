@@ -103,8 +103,9 @@
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
 	if ($_CACHE_->error) install_fail('Unable to initiate Cache client: '.$_CACHE_->error);
 	if ($_CACHE_->mechanism() == 'Memcache') {
-		list($cache_service,$cache_stats) = each($_CACHE_->stats());
-		$site->install_log("Memcached host ".$cache_service." has ".$cache_stats['curr_items']." items");
+		foreach ($_CACHE_->stats() as $cache_service => $cache_stats) {
+			$site->install_log("Memcached host ".$cache_service." has ".$cache_stats['curr_items']." items");
+		}
 	}
 
 	# Unset Templates
