@@ -215,6 +215,14 @@
 				return $this->details();
 			}
 		}
+
+		public function transfer($org_id,$reason) {
+			if ($this->update(array('organization_id' => $org_id))) {
+				app_log("Transfered ".$this->serial_number." to $org_id",'notice');
+				return true;
+			}
+			else return false;
+		}
 		
 		public function details() {
 			$this->error = null;
