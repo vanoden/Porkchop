@@ -104,7 +104,7 @@ Description: ".$action->description
 			$page->addError("Unable to create RMA: ".$item->error());
 			return false;
 		}
-		app_log("RMA ".$rma->code." creaed",'info');
+		app_log("RMA ".$rma->code." created",'info');
 
 		// Create Template
 		app_log("Populating notification email");
@@ -131,6 +131,59 @@ Description: ".$action->description
 		else {
 			$page->addError("Error delivering notification: ".$requestedBy->error());
 			app_log("Error delivering notification: ".$requestedBy->error());
+		}
+	}
+	if ($_REQUEST['btn_transfer_item']) {
+		$organization = new \Register\Organization($_REQUEST['transfer_to']);
+		if ($organization->id) {
+			$parameters = array(
+				'type'				=> 'Transfer Ownership',
+				'date_requested'	=> date('Y-m-d H:i:s'),
+				'requested_id'		=> $item->request->customer->id,
+				'assigned_id'		=> $GLOBALS['_SESSION_']->customer->id,
+				'status'			=> 'NEW',
+				'description'		=> 'Transfer Device'
+			);
+
+			$action = $item->addAction($parameters);
+			if ($item->error()) {
+				$page->addError($item->error());
+			} else {
+				$page->success = "Action #".$action->id." added";
+			}
+			if ($item->status == "NEW") $item->update(array('status' => 'ACTIVE'));
+			$asset = new \Monitor\Asset();
+			if ($asset->get($item->serial_number,$item->product->id)) {
+				if ($asset->transfer($organization_id,$_REQUEST['transfer_reason'])) {
+					$_REQUEST['description'] = "Device transferred to ".$organization->name." because: ".$_REQUEST['transfer_reason'];
+					$action->update(array('status' => 'ACTIVE'));
+					$parameters = array(
+						'action_id'		=> $action->id,
+						'date_event'	=> date('Y-m-d H:i:s'),
+						'user_id'		=> $GLOBALS['_SESSION_']->customer->id,
+						'description'	=> $_REQUEST['description'],
+						'hours_worked'	=> 0
+					);
+					
+					if ($action->addEvent($parameters)) {
+						$page->success = "Device Transfered to ".$organization->name;
+						if ($_REQUEST['status'] != $action->status) $action->update(array('status' => $_REQUEST['status']));
+					} else {
+						$page->addError($action->error());
+					}
+					$action->update(array('status' => 'COMPLETE'));
+					$item->update(array('status' => 'COMPLETE'));
+				}
+				else {
+					$page->addError($asset->error());
+				}
+			}
+			else {
+				$page->addError($asset->error());
+			}
+		}
+		else {
+			$page->addError("Organization not found");
 		}
 	}
 	if ($_REQUEST['btn_add_shipment']) {
@@ -187,10 +240,13 @@ Description: ".$action->description
 	    if (!empty($file->error)) $page->addError($file->error);
 	    if (!empty($file->success)) $page->success = $file->success;
 	}
-	
+
+	$asset = new \Monitor\Asset();
+	$asset->get($item->serial_number,$item->product->id);
+
 	$filesList = new \Storage\FileList();
 	$filesUploaded = $filesList->find(array('type' => 'support ticket', 'ref_id' => $item->id));
-	
+
 	$adminlist = new \Register\CustomerList();
 	$admins = $adminlist->find(array('role' => 'support user'));
 	$actionlist = new \Support\Request\Item\ActionList();	
@@ -209,3 +265,6 @@ Description: ".$action->description
 	$commentlist = new \Support\Request\Item\CommentList();
 	$comments = $commentlist->find(array('item_id' => $item->id));
 	if ($commentlist->error()) $page->addError($commentlist->error());
+
+	$organizationList = new \Register\OrganizationList();
+	$organizations = $organizationList->find();

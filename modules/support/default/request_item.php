@@ -11,7 +11,7 @@
 </style>
 <script>
 	function showForm(form) {
-		var forms = ['action','rma','shipping','comment'];
+		var forms = ['action','rma','shipping','comment','transfer'];
 		forms.forEach(function(form) {
 			document.getElementById(form+'FormDiv').style.display = 'none';
 		});
@@ -98,6 +98,9 @@
 		        <input type="submit" name="btn_submit" class="button" value="Update Request Item" />
 		        <input type="button" name="btn_add_action" class="button" value="Add Action" onclick="showForm('action');" />
 		        <input type="button" name="btn_add_rma" class="button secondary" value="Authorize Return" onclick="showForm('rma');" />
+		<?php	if ($asset->id) { ?>
+		        <input type="button" name="btn_transfer_item" class="button secondary" value="Transfer Device" onclick="showForm('transfer');" />
+		<?php	} ?>
 		        <input type="button" name="btn_ship_item" class="button secondary" value="Ship Product" onclick="showForm('shipping');" />
 		        <input type="button" name="btn_add_note" class="button secondary" value="Add Comment" onclick="showForm('comment');" />
         <?php	if ($item->status == 'CLOSED') { ?>
@@ -226,6 +229,32 @@
 		<div class="form_footer">
 			<input type="button" name="btn_cancel_shipment" value="Cancel" class="button" onclick="hideForm('shipping');" />
 			<input type="submit" name="btn_add_shipment" value="Ship Item" class="button" />
+		</div>
+		</form>
+	</div>
+	
+	<!-- Transfer Form -->
+	<div id="transferFormDiv" class="toggleContainer">
+		<form name="transferForm" method="post" action="/_support/request_item">
+		<input type="hidden" name="item_id" value="<?=$item->id?>" />
+		<h2>Transfer Device</h2>
+		<div class="container">
+			<span class="label">Current Owner</span>
+			<span class="value"><?=$asset->organization->name?></span>
+			<span class="label">Transfer To</span>
+			<select class="value input" name="transfer_to">
+<?php		foreach ($organizations as $organization) { ?>
+				<option value="<?=$organization->id?>" <?php if ($organization->id == $item->request->customer->organization->id) print " SELECTED"; ?>><?=$organization->name?></option>
+<?php		} ?>
+			</select>
+			<select class="value input" name="transfer_reason">
+				<option value="Sold">Sold</option>
+				<option value="Correction">Correction</option>
+			</select>
+		</div>
+		<div class="form_footer">
+			<input type="button" name="btn_cancel_transfer" value="Cancel" class="button" onclick="hideForm('transfer');" />
+			<input type="submit" name="btn_transfer_item" value="Transfer Item" class="button" />
 		</div>
 		</form>
 	</div>
