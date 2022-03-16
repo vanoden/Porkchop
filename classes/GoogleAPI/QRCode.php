@@ -18,7 +18,20 @@
 			else $this->_content = $params['content'];
 			return true;
 		}
-			
+
+		public function read() {
+			$ch = curl_init();
+
+			curl_setopt($ch, CURLOPT_HEADER, 0);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_URL, $this->url);
+
+			$image = curl_exec($ch);
+			curl_close($ch);
+
+			return $image;
+		}
+
 		public function download($path = null) {
 			if (empty($this->_width) || !is_numeric($this->_width)) {
 				$this->error("Valid width not set");
@@ -41,7 +54,7 @@
 			$rh = fopen($this->url(),'rb');
 			if (!$rh) {
 				$this->error("Cannot access charts api");
-				throw new Exception('Download error...');
+				throw new \Exception('Download error...');
 				return false;
 			}
 			$wh = fopen($this->_filepath,'w+');
@@ -53,7 +66,7 @@
 				if (fwrite($wh, fread($rh, 4096)) === FALSE) {
 					return false;
 				}
-				flush;
+			//	flush();
 			}
 
 			fclose($rh);
