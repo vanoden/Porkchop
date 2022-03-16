@@ -1,7 +1,7 @@
 <?php
 require THIRD_PARTY . '/autoload.php';
 $page = new \Site\Page ();
-#$page->requireRole ( "support user" );
+$page->requireAuth();
 
 // get cooresponding RMA from possible input values
 $rma = new \Support\Request\Item\RMA ();
@@ -95,19 +95,32 @@ $style = array ('position' => '','align' => 'C','stretch' => false,'fitwidth' =>
 $pdf->Cell ( 0, 0, $rmaNumber, 0, 1 );
 $pdf->write1DBarcode ( $rmaNumber, 'C39', '', '', '', 18, 0.4, $style, 'N' );
 
+if ($GLOBALS['_config']->site->https) $qrl = 'https://'.$GLOBALS['_config']->site->hostname;
+else $qrl = 'http://'.$GLOBALS['_config']->site->hostname;
+$qrl .= '/_support/ticket/'.$rmaTicketNumber;
+
+$qrcode = new \GoogleAPI\QRCode();
+$qrcode->create(array('content' => $qrl,'width' => 200, 'height' => 300));
+if (!$qrcode->download()) {
+	print "Error downloading chart: ".$qrcode->error();
+	print "<br>\n".$qrcode->url()."\n";
+	error_log("QRCode Download Failed: ".$qrcode->error());
+	exit;
+}
+error_log("QRCode Download Success: ".$qrcode->error());
+
+$pdf->Image($qrcode->filePath(), 120, 17, 0, 0, 'PNG');
 $pdf->Ln ();
+
 
 // Set some content to print
 $html = <<<EOD
-<table style="width:90%;  border: solid 1px #000;">
-  <tr>
-    <th style="background-color:grey; color:white;"><strong>Customer</strong></th>
-    <th style="background-color:grey; color:white;"><strong>Company</strong></th>
-  </tr>
-  <tr>
-    <td>$rmaCustomerFullName<br/><br/><span style="font-size: 10px;">$rmaCustomerEmailsOutput $rmaCustomerPhoneNumberOutput</span>
+<table style="width: 275px;  border: solid 1px #000;">
+<tr><th style="background-color:grey; color:white;"><strong>Customer</strong></th></tr>
+<tr><td>$rmaCustomerFullName<br/>
+        $rmaCustomerOrganizationName<br/>
+        <span style="font-size: 10px;">$rmaCustomerEmailsOutput $rmaCustomerPhoneNumberOutput</span>
     </td>
-    <td>$rmaCustomerOrganizationName</td>
   </tr>
 </table>
 <br/><br/><br/>
@@ -180,16 +193,26 @@ $location = new \Register\Location($receive_location_id);
 $formatted_location = $GLOBALS['_SESSION_']->company->name."<br/>Attn: Service Department<br/>".$location->address_1;
 if (!empty($location->address_2)) $formatted_location .= "<br/>".$location->address_2;
 $formatted_location .= "<br/>".$location->city.",".$location->province()->abbreviation." ".$location->zip_code;
+
+$toLocation = new \Register\Location($shippingShipment->send_location_id);
+$formatted_to = $rmaCustomerFullName."<br/>";
+$formatted_to .= $rmaCustomerOrganizationName."<br/>";
+$formatted_to .= $toLocation->address_1;
+if (!empty($toLocation->address_2)) $formatted_to .= "<br>".$toLocation->address_2;
+$formatted_to .= "<br>".$toLocation->city;
+$formatted_to .= ", ".$toLocation->province()->abbreviation." ".$toLocation->zip_code;
+
+$customer_log = new \Register\Location($rma->item ()->request->customer->organization->location->id);
 $html .= "
 <br/><br/><br/>
 <table style=\"width:100%; font-size: 11px;\" cellspacing=\"10\" cellpadding=\"10\">
   <tr style=\"background-color:grey; color:white;\">
-    <th>Shipping Label - Cut Out and Attach to Package	</th>
-    <th>Shipping Label - Cut Out and Attach to Package	</th>
+    <th>Repair Address</th>
+    <th>Return Address</th>
   </tr>
   <tr style=\"font-size: 20px;\">
     <td style=\"border:1px dashed #000;\">{$formatted_location}</td>
-    <td style=\"border:1px dashed #000;\">{$formatted_location}</td>
+    <td style=\"border:1px dashed #000;\">{$formatted_to}</td>
   </tr>
 </table>";
 
