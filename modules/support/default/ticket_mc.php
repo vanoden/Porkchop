@@ -40,3 +40,7 @@
     $actionlist = new \Support\Request\Item\ActionList();
     $actions = $actionlist->find(array('item_id' => $item->id));
     if ($actionlist->error()) $page->addError($actionlist->error());
+
+    $filesList = new \Storage\FileList();
+    $filesUploaded = $filesList->find(array('type' => 'support ticket', 'ref_id' => $item->id));
+

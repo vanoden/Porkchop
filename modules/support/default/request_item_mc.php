@@ -237,7 +237,7 @@ Description: ".$action->description
         $parameters['ref_id'] = $item->id;
 	    $uploadResponse = $file->upload($parameters);
 	    
-	    if (!empty($file->error)) $page->addError($file->error);
+	    if (!empty($file->error())) $page->addError($file->error);
 	    if (!empty($file->success)) $page->success = $file->success;
 	}
 
