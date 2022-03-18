@@ -11,9 +11,8 @@
 		$item = new \Support\Request\Item($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
 	$request = $item->request;
-	if ($request->customer->organization->id != $GLOBALS['_SESSION_']->customer->organization->id) {
-		print "Permission denied";
-		return;
+	if ($request->customer->organization->id != $GLOBALS['_SESSION_']->customer->organization->id && !$GLOBALS['_SESSION_']->customer->can('browse support tickets')) {
+        return 403;
 	}
 
 	if ($_REQUEST['btn_reopen_item']) $item->update(array('status' => 'ACTIVE'));
