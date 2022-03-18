@@ -1,5 +1,5 @@
 <?php
-    global $_config;
+	global $_config;
 	$page = new \Site\Page();
 
 	if ($_REQUEST['item_id']) {
@@ -37,10 +37,10 @@
 	$comments = $commentlist->find(array('item_id' => $item->id));
 	if ($commentlist->error()) $page->addError($commentlist->error());
 
-    $actionlist = new \Support\Request\Item\ActionList();
-    $actions = $actionlist->find(array('item_id' => $item->id));
-    if ($actionlist->error()) $page->addError($actionlist->error());
+	$actionlist = new \Support\Request\Item\ActionList();
+	$actions = $actionlist->find(array('item_id' => $item->id));
+	if ($actionlist->error()) $page->addError($actionlist->error());
 
-    $filesList = new \Storage\FileList();
-    $filesUploaded = $filesList->find(array('type' => 'support ticket', 'ref_id' => $item->id));
+	$filesList = new \Storage\FileList();
+	$filesUploaded = $filesList->find(array('type' => 'support ticket', 'ref_id' => $item->id));
 
