@@ -501,11 +501,7 @@
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "monitor") {
-			    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
-			    ob_start ();
-			    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-			    if (file_exists ( MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php' )) include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-			    $buffer .= ob_get_clean ();
+				$buffer = $this->loadViewFiles($buffer);
 		    } elseif ($object == "session") {
 			    if ($property == "customer_id") $buffer = $GLOBALS ['_SESSION_']->customer->id;
 			    elseif ($property == "loggedin") {
@@ -583,13 +579,19 @@
             }
 		    app_log ( "Loading view " . $this->view . " of module " . $this->module, 'debug', __FILE__, __LINE__ );
 		    if (file_exists ( $be_file )) {
+				// Load Backend File
                 $res = include($be_file);
+
+				// Handle possible return codes
                 if ($res == 403) {
                     return '<span class="label page_response_code">Permission Denied</span>';
                 }
                 elseif ($res == 500) {
                     return '<span class="label page_response_code">Internal Error</span>';
                 }
+				elseif ($res == 404) {
+					return '<span class="label page_response_code">Resource not found</span>';
+				}
             }
 		    else app_log ( "Backend file '$be_file' for module " . $this->module . " not found" );
             if (file_exists ( $fe_file )) include ($fe_file);
