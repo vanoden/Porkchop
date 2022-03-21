@@ -8,6 +8,8 @@
         white-space: -o-pre-wrap;
         word-wrap: break-word;
     }
+	.tableBody {max-width: none;}
+	.flex-space-between {display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;}
 </style>
 <script>
 	function showForm(form) {
@@ -43,33 +45,23 @@
         <?php	} ?>
 		        
 	    <!--	Start First Row-->
-        <div class="tableBody min-tablet marginTop_20">
+        <div class="tableBody marginTop_20">
 	        <div class="tableRowHeader">
-		        <div class="tableCell" style="width: 20%;">Requested By</div>
-		        <div class="tableCell" style="width: 20%;">Requested On</div>
-		        <div class="tableCell" style="width: 10%;">Status</div>
-		        <div class="tableCell" style="width: 20%;">Product</div>
-		        <div class="tableCell" style="width: 20%;">Serial #</div>
+		        <div class="tableCell">Requestor</div>
+		        <div class="tableCell">Status</div>
+		        <div class="tableCell">Product</div>
+		        <div class="tableCell">Date</div>
+		        <div class="tableCell">Serial #</div>
 	        </div> <!-- end row header -->
 	        <div class="tableRow">
-		        <div class="tableCell">
-			        <?=$request->customer->full_name()?>
-		        </div>
-		        <div class="tableCell">
-			        <?=$item->request->date_request?>
-		        </div>
-		        <div class="tableCell">
-			        <span class="value"><?=$item->status?></span>
-		        </div>
-		        <div class="tableCell">
-			        <span class="value"><?=$item->product->code?></span>
-		        </div>
-		        <div class="tableCell">
-			        <span class="value"><a href="/_monitor/asset/<?=$item->serial_number?>"><?=$item->serial_number?></a></span>
-		        </div>
+		        <div class="tableCell"><?=$request->customer->full_name()?></div>
+		        <div class="tableCell"><?=$item->request->date_request?></div>
+		        <div class="tableCell"><span class="value"><?=$item->status?></span></div>
+		        <div class="tableCell"><span class="value"><?=$item->product->code?></span></div>
+		        <div class="tableCell"><span class="value"><a href="/_monitor/asset/<?=$item->serial_number?>"><?=$item->serial_number?></a></span></div>
 	        </div>
         </div>
-        <div class="tableBody min-tablet">
+        <div class="tableBody">
 	        <div class="tableRowHeader">
 		        <div class="tableCell" style="width: 100%;">Description</div>
 	        </div> <!-- end row header -->
@@ -97,18 +89,15 @@
 		<form name="commentForm" method="post" action="/_support/ticket">
 		<input type="hidden" name="item_id" value="<?=$item->id?>" />
 		<h2>Add Comment</h2>
-		<div class="tableBody min-tablet">
-			<div class="tableRowHeader">
-				<span class="label">Comment</span>
-			</div>
-			<div class="tableRow">
-				<div class="tableCell"><textarea class="value input" name="content"></textarea></div>
-			</div>
-			<div class="button-bar">
-				<input type="button" name="btn_cancel_comment" value="Cancel" class="button" onclick="hideForm('comment');" />
-				<input type="submit" name="btn_add_comment" value="Add Comment" class="button" />
-			</div>
-		</div><!-- END Table -->
+		<div class="tableBody">
+			<div class="tableRowHeader"><span class="label">Comment</span></div>
+			<div class="tableRow"><div class="tableCell"><textarea class="value input" name="content"></textarea></div>
+		</div>
+		<div class="button-bar">
+			<input type="button" name="btn_cancel_comment" value="Cancel" class="button" onclick="hideForm('comment');" />
+			<input type="submit" name="btn_add_comment" value="Add Comment" class="button" />
+		</div>
+	</div><!-- END Table -->
 			
 		</form>
 	</div>
@@ -116,12 +105,13 @@
 </div>
 </form>
 
-<div style="width: 756px;">
-    <br/><hr/><h2>Documents</h2>
+<div>
+    <hr/>
+	<h2>Documents</h2>
     <?php
     if ($filesUploaded) {
     ?><br/>
-        <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
+        <table>
             <tr>
 	            <th>File Name</th>
 	            <th>User</th>
@@ -163,7 +153,7 @@
 </div>
 
 <?php	if (is_array($actions) && count($actions) > 0) { ?>
-<div style="width: 756px;">
+<div>
 <h2>Actions</h2>
 <?php	foreach ($actions as $action) {
 		if (isset($action->requestedBy)) {
@@ -180,8 +170,8 @@
 		
 		if ($action->type == "Note") {
     ?>
-    <h3 style="padding-top: 20px;">Action Note</h3>
-    <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
+    <h3>Action Note</h3>
+    <table>
         <tr>
             <th>Posted On</th>
 	        <th>Posted By</th>
@@ -196,8 +186,8 @@
         </td></tr>
     </table>
     <?php	} else { ?>
-        <h3 style="padding-top: 20px;">Action</h3>
-        <table style="width: 100%; margin-bottom: 10px; border: 1px solid gray">
+        <h3>Action</h3>
+        <table>
             <tr>
                 <th>Date Requested</th>
 	            <th>Requested By</th>
@@ -226,7 +216,7 @@
     if (!empty($actionEvents)) {
         foreach ($actionEvents as $actionEvent) { 
         ?>
-        <table style="width: 100%; padding-bottom: 10px;">
+        <table>
            <tr>
               <th>Event Date</th>
               <th>User</th>
@@ -248,7 +238,7 @@
 	        }
     } else {
     ?>
-        <table style="width: 100%; padding-bottom: 10px;">
+        <table>
            <tr>
               <th colspan="2">No Events</th>
             </tr>
@@ -261,10 +251,10 @@
 </div>
 <?php	} ?>
 <?php	if (isset($rmalist) && $rmalist->count() > 0) { ?>
-<div style="width: 756px;">
+<div>
 <h2>Authorized Returns</h2>
 <?php		foreach ($rmas as $rma) { ?>
-	<div class="tableBody min-tablet">
+	<div class="tableBody">
 		<div class="tableRowHeader">
 			<div class="tableCell">Number</div>
 	        <div class="tableCell">Date Approved</div>
@@ -283,7 +273,7 @@
     <!--	Start Request Item-->
     <h3>Comments</h3>
     <?php		foreach ($comments as $comment) { ?>
-    <div class="tableBody min-tablet">
+    <div class="tableBody">
 	    <div class="tableRowHeader">
 		    <div class="tableCell" style="width: 60%;">Date Entered</div>
 		    <div class="tableCell" style="width: 40%;">Author</div>
