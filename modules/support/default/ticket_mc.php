@@ -11,6 +11,9 @@
 		$item = new \Support\Request\Item($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
 	$request = $item->request;
+    if (! $item->id) {
+        return 404;
+    }
 	if ($request->customer->organization->id != $GLOBALS['_SESSION_']->customer->organization->id && !$GLOBALS['_SESSION_']->customer->can('browse support tickets')) {
         return 403;
 	}
