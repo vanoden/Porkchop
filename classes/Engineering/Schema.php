@@ -363,6 +363,26 @@
 				$this->setVersion(12);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+			if ($this->version() < 13) {
+				app_log("Upgrading to version 13",'notice');
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+                    ALTER TABLE `engineering_releases` ADD `duplicate_task_id` int(11) DEFAULT NULL
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering engineering_releases table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(13);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			
 			return true;	
 		}
 

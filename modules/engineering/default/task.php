@@ -41,6 +41,12 @@
         color: #a1a1a1;
         background: #80808061;
     }
+    
+    #btn_submit {
+        min-width: 175px;
+        min-height: 50px;
+        border-radius: 10px;
+    }
 </style>
 <script>
     $(document).ready(function () {
@@ -52,13 +58,6 @@
 			$( "#method" ).val("Submit");
             $( "#task_form" ).submit();
             $( "#btn_submit" ).click(false);
-        });
-        
-        $( "#btn_add_comment" ).click(function() {
-            $( "#btn_add_comment" ).val("please wait...");
-			$( "#method" ).val("Add Comment");
-            $( "#task_form" ).submit();
-            $( "#btn_add_comment" ).click(false);
         });
         
         $( "#btn_add_hours" ).click(function() {
@@ -82,13 +81,6 @@
 			$( "#method" ).val("Upload");
             $( "#task_form" ).submit();
             $( "#btn_add_event" ).click(false);
-        });
-
-        $( "#btn_add_testing" ).click(function() {
-            $( "#btn_add_testing" ).val("please wait...");
-			$( "#method" ).val("Testing");
-            $( "#task_form" ).submit();
-            $( "#btn_add_testing" ).click(false);
         });
         
         $( "#date_event" ).change(function() {
@@ -282,9 +274,6 @@
                </select>
             </div>
          </div>   
-       <div class="tableRow button-bar">
-        <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
-       </div>
       </div>
       <!-- End Fourth Row -->
       
@@ -302,9 +291,6 @@
                <textarea name="testing_details" class="wide_100per"><?=strip_tags($form['testing_details'])?></textarea>
             </div>
          </div>
-         <div class="tableRow button-bar">
-            <input id="btn_add_testing" type="submit" name="btn_add_testing" class="button" value="Update Testing Info" />
-         </div>
       </div>
       <!-- End comment Row -->
       
@@ -319,11 +305,15 @@
                <textarea name="content" class="wide_100per"></textarea>
             </div>
          </div>
-         <div class="tableRow button-bar">
-            <input id="btn_add_comment" type="submit" name="btn_add_comment" class="button" value="Add Comment" />
-         </div>
       </div>
       <!-- End comment Row -->
+          
+    <div class="tableBody min-tablet">
+        <div class="tableRow button-bar">
+            <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
+        </div>
+    </div>
+          
           
        <!--	Start First Row-->
        <h3>Comments</h3>

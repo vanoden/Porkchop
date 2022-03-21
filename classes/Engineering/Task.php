@@ -2,6 +2,7 @@
 	namespace Engineering;
 
 	class Task {
+	
 		private $_error;
 		public $id;
 		public $code;
@@ -14,6 +15,7 @@
 		public $date_added;
 		public $date_due;
 		public $priority;
+		public $duplicate_task_id;
 		public $prerequisite_id;
 		private $release_id;
 		private $product_id;
@@ -54,6 +56,17 @@
 					return false;
 				}
 				$prerequisite_id = $parameters['prerequisite_id'];
+			}
+
+			// process duplicate_task_id that may be set
+			$duplicate_task_id = NULL;
+			if (!empty($parameters['duplicate_task_id'])) {
+				$duplicateTask = new Task($parameters['duplicate_task_id']);
+				if (! $duplicateTask->id) {
+					$this->_error = "Duplicate task not found";
+					return false;
+				}
+				$duplicate_task_id = $parameters['duplicate_task_id'];
 			}
 
 			if (isset($parameters['type'])) {
@@ -114,12 +127,12 @@
 			$add_object_query = "
 				INSERT
 				INTO	engineering_tasks
-				(		code,title,type,status,date_added,requested_id,product_id,prerequisite_id)
+				(		code,title,type,status,date_added,requested_id,product_id,prerequisite_id,duplicate_task_id)
 				VALUES
-				(		?,?,?,?,?,?,?,?)
+				(		?,?,?,?,?,?,?,?,?)
 			";
 
-            $rs = executeSQLByParams($add_object_query,array($code,$parameters['title'],$type,$status,$date_added,$parameters['requested_id'],$product->id,$prerequisite_id));
+            $rs = executeSQLByParams($add_object_query,array($code,$parameters['title'],$type,$status,$date_added,$parameters['requested_id'],$product->id,$prerequisite_id,$duplicate_task_id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Task::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -302,6 +315,19 @@
 				}
 			}
 			
+            // allow for duplicate task to be passed or else set to NULL if none passed
+			if (isset($parameters['duplicate_task_id'])) {
+				$task = new Task($parameters['duplicate_task_id']);
+				if ($task->id) {
+					$update_object_query .= ",
+						duplicate_task_id = ".$task->id;
+				}
+				else {
+                    $update_object_query .= ",
+						duplicate_task_id = NULL";
+				}
+			}
+			
 			if (isset($parameters['project_id'])) {
 				$project = new \Engineering\Project($parameters['project_id']);
 				if ($project->id) {
@@ -402,6 +428,7 @@
 			$this->timestamp_added = $object->timestamp_added;
             $this->project_id = $object->project_id;
             $this->prerequisite_id = $object->prerequisite_id;
+            $this->duplicate_task_id = $object->duplicate_task_id;
 
 			if (! $this->_cached) {
 				// Cache Object
@@ -414,10 +441,17 @@
 			if ($prereq->id && $prereq->status != 'COMPLETE') $this->status = 'BLOCKED';
 			return true;
 		}
+		
 		public function prerequisite() {
 			$task = new \Engineering\Task($this->prerequisite_id);
 			return $task;
 		}
+		
+		public function duplicate() {
+			$task = new \Engineering\Task($this->duplicate_task_id);
+			return $task;
+		}
+		
 		public function release() {
 			return new Release($this->release_id);
 		}
