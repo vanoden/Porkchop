@@ -32,7 +32,7 @@
             api_log($response);
             print $this->formatOutput($response);
         }
-        
+ 
         ###################################################
         ### Authenticate Session						###
         ###################################################
@@ -44,7 +44,7 @@
             $customer = new \Register\Customer();
 
             $result = $customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
-            if ($customer->error) error($customer->error);
+            if ($customer->error) $this->error($customer->error);
 
             if ($result > 0) {
                 app_log("Assigning session ".$GLOBALS['_SESSION_']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
@@ -78,14 +78,14 @@
                 # Can Get Yourself
             }
             else {
-                error('Permission denied');
+                $this->deny();
             }
 
             if ($_REQUEST["login"] and (! $_REQUEST["code"])) $_REQUEST['code'] = $_REQUEST['login'];
             $customer->get($_REQUEST["code"]);
 
             # Error Handling
-            if ($customer->error) error($customer->error);
+            if ($customer->error) $this->error($customer->error);
             else{
                 $response = new \HTTP\Response();
                 $response->customer = $customer;
@@ -95,7 +95,7 @@
             # Send Response
             print $this->formatOutput($response);
         }
-        
+ 
         ###################################################
         ### Update Specified Customer					###
         ###################################################
@@ -103,28 +103,28 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
+            if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+                # Can Update Anyone
+            }
+            elseif ($GLOBALS['_SESSION_']->customer->login = $_REQUEST['code']) {
+                # Can Update Yourself
+            }
+            else {
+                $this->deny();
+            }
+
             # Initiate Product Object
             $customer = new \Register\Customer();
 
             # Find Customer
             $customer->get($_REQUEST['code']);
-            if ($customer->error) app_error("Error getting customer: ".$customer->error,__FILE__,__LINE__);
+            if ($customer->error) $this->app_error("Error getting customer: ".$customer->error,__FILE__,__LINE__);
             if (! $customer->id) $this->error("Customer not found");
-
-            if ($GLOBALS['_SESSION_']->customer->has_role('register admin')) {
-                # Can Update Anyone
-            }
-            elseif ($GLOBALS['_SESSION_']->customer->id = $customer->id) {
-                # Can Update Yourself
-            }
-            else {
-                error('Permission denied');
-            }
 
             if ($_REQUEST['organization']) {
                 $_organization = new \Register\Organization();
                 $organization = $_organization->get($_REQUEST['organization']);
-                if ($_organization->error) app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
+                if ($_organization->error) $this->app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
                 if (! $organization->id) $this->error("Organization not found");
                 $parameters['organization_id'] = $organization->id;
             }
@@ -141,7 +141,7 @@
             $customer->update($parameters);
 
             # Error Handling
-            if ($customer->error) app_error("Error updating customer: ".$customer->error,__FILE__,__LINE__);
+            if ($customer->error) $this->app_error("Error updating customer: ".$customer->error,__FILE__,__LINE__);
             $response = new \HTTP\Response();
             $response->customer = $customer;
             $response->success = 1;
@@ -164,8 +164,8 @@
                     app_log("Getting organization '".$_REQUEST['organization_code']."'",'debug',__FILE__,__LINE__);
                     $organization = new \Register\Organization();
                     $organization->get($_REQUEST["organization_code"]);
-                    if ($organization->error) app_error("Error finding organization: ".$organization->error,'error',__FILE__,__LINE__);
-                    if (! $organization->id) error("Could not find organization '".$_REQUEST["organization_code"]."'");
+                    if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,'error',__FILE__,__LINE__);
+                    if (! $organization->id) $this->error("Could not find organization '".$_REQUEST["organization_code"]."'");
                     $parameters['organization_id'] = $organization->id;
                 }
             }
@@ -173,7 +173,7 @@
                 $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
             }
             else {
-                error('Permission denied');
+                $this->deny();
             }
             if ($_REQUEST["code"]) $parameters["code"] = $_REQUEST["code"];
             elseif ($_REQUEST["login"]) $parameters["code"] = $_REQUEST["login"];
@@ -223,7 +223,7 @@
         ### Find Roles									###
         ###################################################
         function findRoles() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error('Permission denied');
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             $roleList = new \Register\RoleList();
             $roles = $roleList->find();
@@ -242,7 +242,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.rolemembers.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error('Permission denied');
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             # Initiate Role Object
             $role = new \Register\Role();
@@ -265,7 +265,7 @@
         ### Add a User Role								###
         ###################################################
         function addRole() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) error("Permission denied");
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             $role = new \Register\Role();
             $result = $role->add(
@@ -287,14 +287,14 @@
         ### Update an Existing Role						###
         ###################################################
         function updateRole() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) error("Permission denied");
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             $response = new \HTTP\Response();
 
             $role = new \Register\Role();
             $role->get($_REQUEST['name']);
-            if ($role->error) error($role->error);
-            if (! $role->id) error("Role not found");
+            if ($role->error) $this->error($role->error);
+            if (! $role->id) $this->error("Role not found");
             $parameters = array();
             if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
             if ($role->update($parameters)) {
@@ -311,17 +311,17 @@
         ### Add a User to a Role						###
         ###################################################
         function addRoleMember() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) error("Permission denied");
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             $role = new Role();
             $role->get($_REQUEST['name']);
-            if ($role->error) app_error("Error getting role: ".$role->error,'error',__FILE__,__LINE__);
-            if (! $role->id) error("Role not found");
+            if ($role->error) $this->app_error("Error getting role: ".$role->error,'error',__FILE__,__LINE__);
+            if (! $role->id) $this->error("Role not found");
             
             $person = new \Register\Customer();
             $person->get($_REQUEST['login']);
-            if ($person->error) app_error("Error getting person: ".$person->error,'error',__FILE__,__LINE__);
-            if (! $person->id) error("Person not found");
+            if ($person->error) $this->app_error("Error getting person: ".$person->error,'error',__FILE__,__LINE__);
+            if (! $person->id) $this->error("Person not found");
 
             $result = $role->addMember($person->id);
             if ($role->error) $this->error($role->error);
@@ -336,16 +336,16 @@
         ### Assign Privilege to Role					###
         ###################################################
         function addRolePrivilege() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) error('Permission Denied');
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             if ($_REQUEST['role']) {
                 $role = new \Register\Role();
                 $role->get($_REQUEST['role']);
-                if ($role->error) error ($role->error);
-                if (! $role->id) error ("Role not found");
+                if ($role->error) $this->error($role->error);
+                if (! $role->id) $this->error("Role not found");
             }
             else {
-                error('role required');
+                $this->error('role required');
             }
 
             $response = new \HTTP\Response();
@@ -353,7 +353,7 @@
                 $response->success = 1;
             }
             else {
-                error($role->error);
+                $this->error($role->error);
             }
 
             # Send Response
@@ -371,7 +371,7 @@
                 if (! $role->id) $this->error ("Role not found");
             }
             else {
-                error('role required');
+                $this->error('role required');
             }
 
             $privileges = $role->privileges();
@@ -395,7 +395,7 @@
                 if (! $customer->id) $this->error ("Customer not found");
             }
             else {
-                error('login required');
+                $this->error('login required');
             }
 
             $response = new \HTTP\Response();
@@ -461,21 +461,21 @@
             $user = new \Register\Customer();
             $user->get($_REQUEST['login']);
             if ($user->id) {
-                error("Duplicate Login");
+                $this->error("Duplicate Login");
             }
 
             $organization_id = 0;
             if ($_REQUEST['organization_id']) {
                 $organization = new \Register\Organization($_REQUEST['organization_id']);
-                if ($organization->error) app_error("Error finding organization: ",'error',__FILE__,__LINE__);
-                if (! $organization->id) error("Could not find organization by id");
+                if ($organization->error) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
+                if (! $organization->id) $this->error("Could not find organization by id");
                 $organization_id = $organization->id;
             }
             elseif ($_REQUEST['organization']) {
                 $organization = new \Register\Organization();
                 $organization->get($_REQUEST['organization']);
-                if ($organization->error) app_error("Error finding organization: ",'error',__FILE__,__LINE__);
-                if (! $organization->id) error("Could not find organization");
+                if ($organization->error) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
+                if (! $organization->id) $this->error("Could not find organization");
                 $organization_id = $organization->id;
             }
 
@@ -500,20 +500,20 @@
             );
 
             # Error Handling
-            if ($user->error) error($user->error);
+            if ($user->error) $this->error($user->error);
             $this->response->customer = $user;
             $this->response->success = 1;
 
             # Send Response
             print $this->formatOutput($this->response);
         }
-        
+ 
         function findContacts() {
             if (isset($_REQUEST['person'])) {
                 $customer = new \Register\Customer();
                 $customer->get($_REQUEST['person']);
                 if ($customer->error) $this->error($customer->error);
-                if (! $customer->id) app_error("Customer not found");
+                if (! $customer->id) $this->app_error("Customer not found");
             }
 
             $parameters = array();
@@ -552,10 +552,10 @@
             if ($user->get($_REQUEST['login'])) {
                 if ($user->verify_email($_REQUEST['validation_key'])) {
                     $response->success = 1;
-                } else error("Invalid validation key");
+                } else $this->error("Invalid validation key");
             } elseif ($user->error) $this->error($user->error);
             
-            else error("Invalid validation key");
+            else $this->error("Invalid validation key");
 
             # Send Response
             print $this->formatOutput($response);
@@ -605,7 +605,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error("Permission Denied");
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             # Initiate Object
             $organization = new \Register\Organization();
@@ -636,10 +636,10 @@
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organization.xsl';
 
             if (isset($_REQUEST['code']))
-                if ($GLOBALS['_SESSION_']->customer->has_role('register reporter') || $GLOBALS['_SESSION_']->customer->has_role('register admin') || $GLOBALS['_SESSION_']->organization->code == $_REQUEST['code'])
+                if ($GLOBALS['_SESSION_']->customer->has_role('register reporter') || $GLOBALS['_SESSION_']->customer->has_role('register manager') || $GLOBALS['_SESSION_']->organization->code == $_REQUEST['code'])
                     $org_code = $_REQUEST['code'];
                 else
-                    error("Permission denied");
+                    $this->deny();
             else $org_code = $GLOBALS['_SESSION_']->customer->organization->code;
 
             # Initiate Organization Object
@@ -666,7 +666,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error('Permission denied');
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             # Initiate Organization Object
             $organizationList = new \Register\OrganizationList();
@@ -701,7 +701,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) error('Permission denied');
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             # Initiate Organization Object
             $organizationList = new \Register\OrganizationList();
@@ -739,14 +739,14 @@
                 # Initiate Organization Object
                 $_organization = new \Register\Organization();
                 $organization = $_organization->get($_REQUEST['organization']);
-                if ($_organization->error) app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
+                if ($_organization->error) $this->app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
                 if (! $organization->id) $this->error("Organization not found");
                 $parameters['organization_id'] = $organization->id;
             }
             if ($_REQUEST['product']) {
                 $_product = new \Product\Item();
                 $product = $_product->get($_REQUEST['product']);
-                if ($_product->error) app_error("Error getting product: ".$_product->error,__FILE__,__LINE__);
+                if ($_product->error) $this->app_error("Error getting product: ".$_product->error,__FILE__,__LINE__);
                 if (! $product->id) $this->error("Product not found");
                 $parameters['product_id'] = $product->id;
             }
@@ -758,7 +758,7 @@
             $products = new \Register\Organization\OwnedProduct($parameters['organization_id'],$parameters['product_id']);
 
             # Error Handling
-            if ($products->error) app_error($products->error,__FILE__,__LINE__);
+            if ($products->error) $this->app_error($products->error,__FILE__,__LINE__);
 
             $response->success = 1;
             $response->product = $products;
@@ -777,13 +777,13 @@
             # Initiate Organization Object
             $_organization = new \Register\Organization();
             $organization = $_organization->get($_REQUEST['organization']);
-            if ($_organization->error) app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
+            if ($_organization->error) $this->app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
             if (! $organization->id) $this->error("Organization not found");
 
             require_once(MODULES."/product/_classes/default.php");
             $_product = new \Product\Item();
             $product = $_product->get($_REQUEST['product']);
-            if ($_product->error) app_error("Error getting product: ".$_product->error,__FILE__,__LINE__);
+            if ($_product->error) $this->app_error("Error getting product: ".$_product->error,__FILE__,__LINE__);
             if (! $product->id) $this->error("Product not found");
 
             $response = new \HTTP\Response();
@@ -792,7 +792,7 @@
             $product = new \Register\Organization\OwnedProduct($organization->id,$product->id);
 
             # Error Handling
-            if ($product->error) app_error($product->error,__FILE__,__LINE__);
+            if ($product->error) $this->app_error($product->error,__FILE__,__LINE__);
 
             $response->success = 1;
             $response->product = $product;
@@ -811,13 +811,13 @@
             # Initiate Organization Object
             $_organization = new \Register\Organization();
             $organization = $_organization->get($_REQUEST['organization']);
-            if ($_organization->error) app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
+            if ($_organization->error) $this->app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
             if (! $organization->id) $this->error("Organization not found");
 
             require_once(MODULES."/product/_classes/default.php");
             $_product = new \Product\Item();
             $product = $_product->get($_REQUEST['product']);
-            if ($_product->error) app_error("Error getting product: ".$_product->error,__FILE__,__LINE__);
+            if ($_product->error) $this->app_error("Error getting product: ".$_product->error,__FILE__,__LINE__);
             if (! $product->id) $this->error("Product not found");
 
             $response = new \HTTP\Response();
@@ -831,7 +831,7 @@
             );
 
             # Error Handling
-            if ($_orgproducts->error) app_error($_orgproducts->error,__FILE__,__LINE__);
+            if ($_orgproducts->error) $this->app_error($_orgproducts->error,__FILE__,__LINE__);
 
             $response->success = 1;
             $response->product = $products;
@@ -851,7 +851,7 @@
             else {
                 $organization = $GLOBALS['_SESSION_']->customer->organization;
             }
-            if (! $organization->id) error ("Organization required");
+            if (! $organization->id) $this->error("Organization required");
             $response = new \HTTP\Response();
             $response->success = 1;
             $response->location = $organization->locations(array('recursive' => true));
@@ -869,7 +869,7 @@
             else {
                 $organization = $GLOBALS['_SESSION_']->customer->organization;
             }
-            if (! $organization->id) error ("Organization required");
+            if (! $organization->id) $this->error("Organization required");
 
             $automation = null;
             $response = new \HTTP\Response();
@@ -1012,7 +1012,7 @@
             $parameters = array();
             if (isset($_REQUEST['organization']) && $GLOBALS['_SESSION_']->customer->has_role("location manager")) {
                 $organization = new \Register\Organization();
-                if (!$organization->get($_REQUEST['organization'])) error("Organization not found");
+                if (!$organization->get($_REQUEST['organization'])) $this->error("Organization not found");
                 $_REQUEST['organization_id'] = $organization->id;
             }
             elseif (isset($_REQUEST['organization_id']) && $GLOBALS['_SESSION_']->customer->has_role('location manager')) {
@@ -1052,7 +1052,7 @@
                 }
             }
             $province = new \Geography\Province();
-            if (! $province->get($admin->id,$_REQUEST['province'])) error("Province not found");
+            if (! $province->get($admin->id,$_REQUEST['province'])) $this->error("Province not found");
             $parameters->province_id = $province->id;
 
             $location = new \Register\Location();
@@ -1062,7 +1062,7 @@
                 print $this->formatOutput($response);
             }
             else {
-                error("Cannot add location: ".$location->error());
+                $this->error("Cannot add location: ".$location->error());
             }
         }
 
