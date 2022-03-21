@@ -103,6 +103,16 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
+            if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+                # Can Update Anyone
+            }
+            elseif ($GLOBALS['_SESSION_']->customer->login = $_REQUEST['code']) {
+                # Can Update Yourself
+            }
+            else {
+                $this->deny();
+            }
+
             # Initiate Product Object
             $customer = new \Register\Customer();
 
@@ -110,16 +120,6 @@
             $customer->get($_REQUEST['code']);
             if ($customer->error) $this->app_error("Error getting customer: ".$customer->error,__FILE__,__LINE__);
             if (! $customer->id) $this->error("Customer not found");
-
-            if ($GLOBALS['_SESSION_']->customer->has_role('register admin')) {
-                # Can Update Anyone
-            }
-            elseif ($GLOBALS['_SESSION_']->customer->id = $customer->id) {
-                # Can Update Yourself
-            }
-            else {
-                $this->deny();
-            }
 
             if ($_REQUEST['organization']) {
                 $_organization = new \Register\Organization();
@@ -223,7 +223,7 @@
         ### Find Roles									###
         ###################################################
         function findRoles() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             $roleList = new \Register\RoleList();
             $roles = $roleList->find();
@@ -242,7 +242,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.rolemembers.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             # Initiate Role Object
             $role = new \Register\Role();
@@ -605,7 +605,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register admin')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             # Initiate Object
             $organization = new \Register\Organization();
@@ -636,7 +636,7 @@
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organization.xsl';
 
             if (isset($_REQUEST['code']))
-                if ($GLOBALS['_SESSION_']->customer->has_role('register reporter') || $GLOBALS['_SESSION_']->customer->has_role('register admin') || $GLOBALS['_SESSION_']->organization->code == $_REQUEST['code'])
+                if ($GLOBALS['_SESSION_']->customer->has_role('register reporter') || $GLOBALS['_SESSION_']->customer->has_role('register manager') || $GLOBALS['_SESSION_']->organization->code == $_REQUEST['code'])
                     $org_code = $_REQUEST['code'];
                 else
                     $this->deny();
@@ -666,7 +666,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             # Initiate Organization Object
             $organizationList = new \Register\OrganizationList();
@@ -701,7 +701,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register admin')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
 
             # Initiate Organization Object
             $organizationList = new \Register\OrganizationList();
