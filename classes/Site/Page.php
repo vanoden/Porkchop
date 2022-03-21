@@ -584,12 +584,15 @@
 
 				// Handle possible return codes
                 if ($res == 403) {
+                    http_response_code(403);
                     return '<span class="label page_response_code">Permission Denied</span>';
                 }
                 elseif ($res == 500) {
+                    http_response_code(500);
                     return '<span class="label page_response_code">Internal Error</span>';
                 }
 				elseif ($res == 404) {
+                    http_response_code(404);
 					return '<span class="label page_response_code">Resource not found</span>';
 				}
             }

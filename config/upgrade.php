@@ -171,7 +171,7 @@
 			),
 		),
 		"Engineering"	=> array(
-			"schema"	=>12,
+			"schema"	=>13,
 			"roles"			=> array(
 				"engineering manager"	=> array(),
 				"engineering reporter"	=> array(),

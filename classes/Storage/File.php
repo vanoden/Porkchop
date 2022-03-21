@@ -249,7 +249,7 @@
 		}
 
 		private function _valid_type($name) {
-			if (preg_match('/^(image|application|text)\/(png|jpg|jpeg|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip|pdf|octet\-stream)$/',$name)) return true;
+			if (preg_match('/^(image|application|text|video)\/(png|jpg|jpeg|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip|pdf|octet\-stream|mp4)$/',$name)) return true;
 			return false;
 		}
 
