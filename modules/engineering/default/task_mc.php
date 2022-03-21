@@ -6,6 +6,10 @@
 	$tasklist = new \Engineering\TaskList();
 	$tasklist = $tasklist->find(array('status'=>array('NEW', 'ACTIVE')));
 
+    // get roles set for engineering to apply to tasks
+	$roleList = new \Engineering\RoleList();
+	$engineeringRoles = $roleList->find();
+
     // create new task or get existing if the "code" is passed
 	$task = new \Engineering\Task();
 	if (isset($_REQUEST['task_id'])) {
@@ -48,6 +52,10 @@
 			array_push($msgs,"Priority changed from ".$task->priority." to ".$_REQUEST['priority']);
 			$parameters['priority'] = $_REQUEST['priority'];
 		}
+		if (isset($_REQUEST['difficulty']) && $task->difficulty != strtoupper($_REQUEST['difficulty'])) {
+			array_push($msgs,"difficulty changed from ".$task->difficulty." to ".$_REQUEST['difficulty']);
+			$parameters['difficulty'] = $_REQUEST['difficulty'];
+		}
 		if (isset($_REQUEST['description']) && $task->description != $_REQUEST['description']) {
 			array_push($msgs,"Description updated");
 			$parameters['description'] = $_REQUEST['description'];
@@ -56,7 +64,11 @@
 			array_push($msgs,"Prerequisite updated");
 			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_id'];
 		}
-
+		if (isset($_REQUEST['role_id']) && $task->role_id != $_REQUEST['role_id']) {
+			array_push($msgs,"Required Role updated");
+			$parameters['role_id'] = $_REQUEST['role_id'];
+		}
+		
 		# Store Old Values to Recognize Change
 		$old_id = $task->id;
 		$old_release = $task->release();
@@ -99,7 +111,8 @@
 
 		app_log("Submitted task form",'debug',__FILE__,__LINE__);
 		if ($task->id) {
-			# Task Exists, Update
+				
+			// Task Exists, Update
 			if ($task->update($parameters)) {
 				$page->success = "Updates applied";
 				$statusLogged = "";
@@ -120,7 +133,7 @@
 				if ($event->error()) $page->addError("Error creating event: ".$event->error());
 			}
 		} else {
-			# Create New Task
+			// Create New Task
 			if ($task->add($parameters)) {
 				$page->success = "Task Created";
 				$event = new \Engineering\Event();
@@ -183,6 +196,7 @@
 				$notice_template->addParam('PRODUCT.TITLE',$product_title);
 				$notice_template->addParam('PROJECT.TITLE',$project_title);
 				$notice_template->addParam('TASK.PRIORITY',$task->priority);
+                $notice_template->addParam('TASK.DIFFICULTY',$task->difficulty);
 				$notice_template->addParam('TASK.TYPE',$task->type);
 				$notice_template->addParam('TASK.DATE_DUE',$task->date_due);
 				$notice_template->addParam('TASK.REQUESTED_BY',$requestedBy->full_name());
@@ -350,6 +364,8 @@
 		$form['title'] = $task->title;
 		$form['estimate'] = $task->estimate;
 		$form['priority'] = $task->priority;
+		$form['difficulty'] = $task->difficulty;
+		$form['role_id'] = $task->role_id;
 		$product = $task->product();
 		$form['product_id'] = $product->id;
 		$requestor = $task->requestedBy();
@@ -375,6 +391,8 @@
 		$form['title'] = $_REQUEST['title'];
 		$form['estimate'] = $_REQUEST['estimate'];
 		$form['priority'] = $_REQUEST['priority'];
+		$form['difficulty'] = $_REQUEST['difficulty'];
+		$form['role_id'] = $_REQUEST['role_id'];
 		$form['product_id'] = $_REQUEST['product_id'];
 		$form['requested_id'] = $_REQUEST['requested_id'];
 		$form['assigned_id'] = $_REQUEST['assigned_id'];
@@ -395,6 +413,8 @@
 		$form['type'] = '';
 		$form['status'] = '';
 		$form['priority'] = '';
+		$form['difficulty'] = '';
+		$form['role_id'] = '';
 		$form['assigned_id'] = '';
 		$form['requested_id'] = $GLOBALS['_SESSION_']->customer->id;
 		$form['description'] = '';

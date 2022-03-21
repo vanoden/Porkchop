@@ -55,6 +55,12 @@
 				array_push($bind_params, 0);
 			}
 			
+			if (isset($parameters['role_id']) && is_numeric($parameters['role_id'])) {
+				$find_objects_query .= "
+				AND		role_id = ?";
+				array_push($bind_params, 0);
+			}
+			
 			if (isset($parameters['release_id']) && is_numeric($parameters['release_id'])) {
 				$find_objects_query .= "
 				AND		release_id = ?";
@@ -93,6 +99,7 @@
 			$find_objects_query .= "
 				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
 						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
+						FIELD(difficulty,'PROJECT','HARD','NORMAL','EASY'),
 						date_added DESC
 			";
 
@@ -185,6 +192,7 @@
 			$find_objects_query .= "
 				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
 						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
+						FIELD(difficulty,'PROJECT','HARD','NORMAL','EASY'),
 						date_added DESC
 			";
 
