@@ -231,6 +231,13 @@
     .red {
          color: red;
     }
+
+	#rma_date_received {
+		width: 200px;
+	}
+	#rma_condition_received {
+		width: 200px;
+	}
 </style>
 <script type="text/javascript">
    // show the billing address form, step 2
@@ -402,6 +409,8 @@
 </script>
 <?php	if ($page->errorCount() > 0) { ?>
     <div class="form_error"><?=$page->errorString()?></div><br/><br/>
+<?php	} else if (!empty($page->success)) {?>
+	<div class="form_success"><?=$page->success?></div><br/><br/>
 <?php	} ?>
 <h1>Return Merchandise Authorization</h1>
 <?php
@@ -411,7 +420,11 @@
    ?>
 <div id="support_rma">
 <?php
-   if ($rmaSubmitted) {
+   if ($rmaReceived) { ?>
+	<h2 class="green">Your return was received<?php if ($shippingPackage->condition == "DAMAGED") print ' <span class="red">DAMAGED</span>';?></h2>
+	<span class="value">Received <?=$shippingPackage->date_received?> by <?=$shippingPackage->user_received()->full_name()?></span>
+<?php   }
+   elseif ($rmaSubmitted) {
     ?>
     <h2 class="green">Your return is processing...</h2>
     <span class="container" style="float: right;"> <span class="label"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> 
@@ -465,13 +478,28 @@
         </div>
     <?php
     }
+	if ($GLOBALS['_SESSION_']->customer->can('receive shipments') && !$rmaReceived) {
     ?>
+	<div class="container">
+        <form method="post" id="submit_package_details">
+		<input type="hidden" name="id" value="<?=$rma->id?>" />
+		<span class="label">Date Received</span>
+		<input id="rma_date_received" type="text" name="date_received" class="value input" value="<?=date('Y-m-d H:i:s')?>"/>
+		<span class="label">Condition of Package</span>
+		<select id="rma_condition_received" class="value input" style="display: block" name="condition">
+			<option value="OK">OK</option>
+			<option value="DAMAGED">Damaged</option>
+		</select>
+		<input type="submit" name="form_submitted" class="button" value="Receive Package" />
+		</form>
+	</div>
+	<?php } ?>
     <hr />
     <?php
        }
    ?>
 <div class="container">
-   <span class="label"><i class="fa fa-ticket" aria-hidden="true"></i> Ticket</span> <span class="value"><?=$rmaTicketNumber?> / <?=$rmaNumber?></span>
+   <span class="label"><i class="fa fa-ticket" aria-hidden="true"></i> Ticket</span> <a href="<?=$ticketLink?>" class="value"><?=$rmaTicketNumber?></a> / <?=$rmaNumber?></span>
 </div>
 <div class="container">
    <span class="label"><i class="fa fa-user" aria-hidden="true"></i> Contact</span> <span class="value"><?=$rmaCustomerFullName?> - <?=$rmaCustomerOrganizationName?></span>
@@ -480,7 +508,7 @@
    <span class="label"><i class="fa fa-wrench" aria-hidden="true"></i> Approved By</span> <span class="value"><?=$rmaApprovedByName?> - <?=$rmaDateApproved?> - Status: <?=$rmaStatus?></span>
 </div>
 <div class="container">
-   <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Product</span> <span class="value"><?=$rmaProduct->code?> - <?=$rmaSerialNumber?></span>
+   <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Product</span> <span class="value"><?=$rmaProduct->code?> - <a href="<?=$productLink?>"><?=$rmaSerialNumber?></a></span>
 </div>
 <?php
    if (! $rmaSubmitted) {

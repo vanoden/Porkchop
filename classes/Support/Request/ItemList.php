@@ -47,6 +47,11 @@
 			    ";
 				array_push($bind_params,$minDate,$maxDate);
 			}
+			if (isset($parameters['organization_id'])) {
+				$find_objects_query .= "
+					AND	sr.organization_id = ?";
+				array_push($bind_params,$parameters['organization_id']);
+			}
 
 			if (!empty($parameters['request_id'])) {
 				$request = new \Support\Request($parameters['request_id']);
@@ -77,17 +82,21 @@
 					AND	s.product_id = ?";
 				array_push($bind_params,$product->id);
 			}
+			elseif (!empty($parameters['serial_number'])) {
+				$asset = new \Monitor\Asset();
+				if (!$asset->getSimple($parameters['serial_number'])) {
+					$this->_error = "Asset not found";
+					return false;
+				}
+				$find_objects_query .= "
+					AND	s.serial_number = ?";
+				array_push($bind_params,$asset->code);
+			}
 			
 			if (!empty($parameters['customer_id'])) {
 				$find_objects_query .= "
 					AND	sr.customer_id = ?";
 				array_push($bind_params,$parameters['customer_id']);
-			}
-			
-			if (!empty($parameters['serial_number'])) {
-				$find_objects_query .= "
-					AND	s.serial_number = ?";
-				array_push($bind_params,$parameters['serial_number']);
 			}
 
 			if (!empty($parameters['status'])) {
@@ -174,7 +183,7 @@
 					LIMIT ".$parameters['_limit'];
 			}
 
-			query_log($find_objects_query,$bind_params);
+			query_log($find_objects_query,$bind_params,true);
 			$rs = executeSQLByParams($find_objects_query, $bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Support::Request::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();

@@ -209,6 +209,7 @@
 			// Add Ticket (item) To Request
 			$parameters['request_id'] = $this->id;
 			$item = new \Support\Request\Item();
+			if (!isset($parameters['line'])) $parameters['line'] = $this->nextLine();
 			$item->add($parameters);
 
 			if ($item->error()) {

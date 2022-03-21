@@ -12,7 +12,7 @@
 		public $zip_code;
 		public $notes;
 		public $tableName = 'register_locations';
-        public $fields = array('id','name','address_1','address_2','city','province_id','zip_code', 'notes');
+        public $fields = array('id','name','address_1','address_2','city','province_id','zip_code', 'notes','country_id');
 
 		public function __construct($id = 0,$parameters = array()) {
 			parent::__construct($id);
@@ -21,6 +21,13 @@
 				$this->country = new \Geography\Country($this->province->country_id);
 			}
 		}
+
+		public function add($parameters = array()) {
+			$province = new \Geography\Province($parameters['province_id']);
+			$parameters['country_id'] = $province->country_id;
+			return parent::add($parameters);
+		}
+
         /**
          * find existing entry by user provided address info
          *

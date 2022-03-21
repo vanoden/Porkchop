@@ -226,15 +226,38 @@ if ($page->errorCount() < 1) {
 			if (!$shippingPackage->add ( $packageDetails )) $page->addError("Error submitting shipping details: ".$shippingPackage->error());
 		}
 	}
+
+	if ($_REQUEST['form_submitted'] == 'Receive Package') {
+		$shippingPackage = new \Shipping\Package($shippingShipment->id);
+		$params = array(
+			"date_received" => $_REQUEST['date_received'],
+			"condition" => $_REQUEST['condition']
+		);
+		if (!$shippingPackage->receive($params)) {
+			$page->addError($shippingPackage->error());
+		}
+		else {
+			$page->success = "Receipt recorded";
+		}
+	}
 	
 	// set UI to submitted or not
 	$rmaSubmitted = false;
+	$rmaReceived = false;
 	if (!empty($shippingShipment->id)) {
 		$rmaSubmitted = true;
 		$sentFromLocation = $shippingShipment->send_location ();
 		$sentToLocation = $shippingShipment->rec_location ();
 		$shippingPackage = new \Shipping\Package ();
 		$shippingPackage->getByShippingID($shippingShipment->id);
+		if ($shippingPackage->status == "RECEIVED") $rmaReceived = true;
+	}
+
+	$ticketLink = "/_support/ticket/".$rmaTicketNumber;
+	$productLink = "/_monitor/asset/".$rmaSerialNumber;
+	if ($GLOBALS['_SESSION_']->customer->has_role('support manager')) {
+		$ticketLink = "/_support/request_item/".$rmaTicketNumber;
+		$productLink = "/_monitor/admin_details/$rmaSerialNumber/".$rmaProduct->code;
 	}
 }
 
