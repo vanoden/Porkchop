@@ -69,10 +69,10 @@ a.button:hover { background: #21b910;}
 a.button.btn-secondary { background: #8b8f8b; }
 a.button.btn-secondary:hover { background: #686c68;}
 #page-mgmt input, input, input[type=text], #page-mgmt select { padding: 0.1rem 0.4rem; background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); border-radius: 0; -khtml-border-radius: 0; box-shadow: none; margin: .25rem 0 0.8rem; font-size: 0.8rem; font-weight: 400; min-height: 1.6rem; width: 50%; -webkit-appearance: none; -moz-appearance: none;}
-#page-mgmt input[type=checkbox] { -webkit-appearance: checkbox; width: auto; }
+#page-mgmt input[type=checkbox] { -webkit-appearance: checkbox; width: auto; margin-bottom: 0.3rem; }
 .marginBottom2rem { margin-bottom: 2rem; }
 
-span.value, .tableRowHeader > *, span.label, #page-mgmt input, input, input[type=text] { font-size: 0.8rem;}
+span.value, .tableRowHeader > *, span.label, #page-mgmt input, input, input[type=text] { font-size: 0.8rem; }
 /* #pageForm > .forms-filter > span.value, #pageForm > .forms-filter > span.value {display: inline; width: 50%; } */
 input[type="text"], input[type=text], span.label { display: inline; }
 .hiddenMobile { display: none;}
@@ -158,7 +158,7 @@ input[type="text"], input[type=text], span.label { display: inline; }
 		<div id="date-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'requested'; updateReport()">Date Requested</div>
 		<div id="requestor-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'requestor'; updateReport()">Requestor</div>
 		<div id="product-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'product'; updateReport()">Product</div>
-		<div id="serial-sortable-column" class="tableCell sortableHeader hiddenMobile" onclick="document.getElementById('sort_by').value = 'serial'; updateReport()">Serial #</div>
+		<div id="serial-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'serial'; updateReport()">Serial #</div>
 		<div id="status-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'status'; updateReport()">Status</div>
 	</div> <!-- end row header -->
     <?php	foreach ($items as $item) { ?>
@@ -167,7 +167,7 @@ input[type="text"], input[type=text], span.label { display: inline; }
 			<div class="tableCell"><span class="value"><?=$item->request->date_request?></span></div>
 	        <div class="tableCell"><span class="value"><?=$item->request->customer->full_name()?></span></div>
 	        <div class="tableCell"><span class="value"><?=$item->product->code?></span></div>
-	        <div class="tableCell hiddenMobile"><span class="value"><?=$item->serial_number?></span></div>
+	        <div class="tableCell"><span class="value"><?=$item->serial_number?></span></div>
 	        <div class="tableCell"><span class="value"><?=ucwords(strtolower($item->status))?></span></div>
         </div>
     <?php	} ?>

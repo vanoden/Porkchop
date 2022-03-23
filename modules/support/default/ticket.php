@@ -28,7 +28,7 @@
 		return true;
 	}
 </script>
-<h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i> Ticket: <span><?=$item->ticketNumber()?></span></h2>
+<h2 style="display: inline-block;"><a href="/_support/tickets">Tickets</a> > </h2><h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i> Ticket: <span><?=$item->ticketNumber()?></span></h2>
 <form name="request_form" method="post" action="/_support/ticket">
 <input type="hidden" name="request_id" value="<?=$request->id?>" />
 <div><!-- START Main Div -->
