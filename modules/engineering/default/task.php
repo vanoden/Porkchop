@@ -271,7 +271,24 @@
                   <?php	foreach($tasklist as $prerequisiteTask) { ?>
                     <option value="<?=$prerequisiteTask->id?>"<?php if ($prerequisiteTask->id == $form['prerequisite_id']) print " selected"; ?>><?=$prerequisiteTask->title?></option>
                   <?php	} ?>
+               </select><br/>
+               <strong>Difficulty</strong>
+               <select name="difficulty" class="value input">
+                  <option value="EASY"<?php if ($form['difficulty'] == "EASY") print " selected"; ?>>Easy</option>
+                  <option value="NORMAL"<?php if ($form['difficulty'] == "NORMAL") print " selected"; ?>>Normal</option>
+                  <option value="HARD"<?php if ($form['difficulty'] == "HARD") print " selected"; ?>>Hard</option>
+                  <option value="PROJECT"<?php if ($form['difficulty'] == "PROJECT") print " selected"; ?>>Project</option>
                </select>
+               
+               <br/><br/>
+               <strong>Required Engineering Role</strong>
+               <br/>
+               <select name="role_id" class="value input" style="max-width: 250px;">
+                  <option value="">None</option>
+                  <?php	foreach($engineeringRoles as $engineeringRole) { ?>
+                    <option value="<?=$engineeringRole->id?>"<?php if ($engineeringRole->id == $form['role_id']) print " selected"; ?>><?=$engineeringRole->name?></option>
+                  <?php	} ?>
+               </select>               
             </div>
          </div>   
       </div>
@@ -308,12 +325,11 @@
       </div>
       <!-- End comment Row -->
           
-    <div class="tableBody min-tablet">
-        <div class="tableRow button-bar">
-            <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
-        </div>
-    </div>
-          
+      <div class="tableBody min-tablet">
+            <div class="tableRow button-bar">
+                <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
+            </div>
+      </div>
           
        <!--	Start First Row-->
        <h3>Comments</h3>
@@ -465,5 +481,14 @@
           </div>
       <?php	} ?>
    </div>
-   <?php	}	?>
+   <?php	} else {
+   ?>
+      <div class="tableBody min-tablet">
+            <div class="tableRow button-bar">
+                <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
+            </div>
+      </div>
+   <?php
+   }	
+   ?>
 </div>

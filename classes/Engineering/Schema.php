@@ -383,6 +383,87 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			
+			if ($this->version() < 14) {
+				app_log("Upgrading to version 14",'notice');
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `engineering_tasks` ADD COLUMN `difficulty` enum('EASY','NORMAL','HARD','PROJECT') NOT NULL DEFAULT 'NORMAL'
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering engineering_tasks table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$alter_table_query = "
+                    ALTER TABLE `engineering_tasks` ADD `duplicate_task_id` int(11) DEFAULT NULL
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering engineering_tasks table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$create_table_query = "
+                        CREATE TABLE `engineering_roles` (
+                          `id` int NOT NULL AUTO_INCREMENT,
+                          `name` varchar(45) NOT NULL,
+                          `description` varchar(255) NOT NULL DEFAULT '',
+                          PRIMARY KEY (`id`),
+                          UNIQUE KEY `uk_name` (`name`)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+					";
+					
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating engineering_roles table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+				
+				$create_table_query = "
+                        CREATE TABLE `engineering_users_roles` (
+                          `user_id` int NOT NULL AUTO_INCREMENT,
+                          `role_id` int NOT NULL,
+                          PRIMARY KEY (`user_id`,`role_id`),
+                          KEY `engineering_users_roles_ibfk_2` (`role_id`),
+                          CONSTRAINT `engineering_users_roles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `engineering_roles` (`id`),
+                          CONSTRAINT `engineering_users_roles_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `engineering_roles` (`id`)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=latin1
+					";
+					
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating engineering_users_roles table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$insert_engineering_roles = "
+					INSERT INTO `engineering_roles` (`name`, `description`) VALUES ('Systems Administrator', 'Systems Administrator'), ('Graphic Designer', 'Graphic Designer'), ('Web Programmer', 'Web Programmer'), ('Embedded Programmer', 'Embedded Programmer'), ('QA Automation', 'QA Automation');
+				";
+				$GLOBALS['_database']->Execute($insert_engineering_roles);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error building engineering_roles in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$alter_table_query = "					
+                    ALTER TABLE `engineering_tasks` ADD COLUMN `role_id` int(11) DEFAULT NULL, ADD CONSTRAINT `fk_engineering_roles_role_id` FOREIGN KEY (`role_id`)  REFERENCES `engineering_roles`(`id`)
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering engineering_tasks table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(14);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			
 			return true;	
 		}
 

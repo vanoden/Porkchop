@@ -227,7 +227,49 @@
 		public function path() {
 			return $this->path;
 		}
-		
+
+		public function fromPath($repository_id,$path) {
+			if (preg_match('/^(.*)\/([^\/]+)/',$path,$matches)) {
+				$path = $matches[1];
+				$file = $matches[2];
+			}
+			elseif (!empty($path)) {
+				$file = $path;
+				$path = "";
+			}
+			else {
+				$this->error("Path required");
+				return null;
+			}
+			$get_file_query = "
+				SELECT	id
+				FROM	storage_files
+				WHERE	repository_id = ?
+				AND		name = ?
+			";
+			$bind_params = array($repository_id,$file);
+			if (!empty($path)) {
+				$get_file_query .= "
+				AND		path = ?";
+				array_push($bind_params,$path);
+			}
+
+			query_log($get_file_query,$bind_params);
+			$rs = $GLOBALS['_database']->Execute($get_file_query,$bind_params);
+			if (! $rs) {
+				$this->error("SQL Error in Storage::File::fromPath(): ".$GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			list($file_id) = $rs->FetchRow();
+			if (!empty($file_id)) {
+				return new \Storage\File($file_id);
+			}
+			else {
+				$this->error("File not found");
+				return null;
+			}
+		}
+
 		public function repository_id($id = 0) {
 			if ($id > 0) {
 			

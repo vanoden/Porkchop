@@ -290,6 +290,11 @@
 		public function getMetadata($key) {
 			return $this->_metadata($key);
 		}
+
+		public function getFileFromPath($path) {
+			$file = new \Storage\File();
+			return $file->fromPath($this->id,$path);
+		}
 		
 		private function _valid_code($string) {
 			if (preg_match('/^\w[\w\-\_\.]*$/',$string)) return true;
