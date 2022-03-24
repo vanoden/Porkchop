@@ -423,6 +423,9 @@
    if ($rmaReceived) { ?>
 	<h2 class="green">Your return was received<?php if ($shippingPackage->condition == "DAMAGED") print ' <span class="red">DAMAGED</span>';?></h2>
 	<span class="value">Received <?=$shippingPackage->date_received?> by <?=$shippingPackage->user_received()->full_name()?></span>
+    <span class="container" style="float: right;"> <span class="label"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> 
+    Please include the following form with your return: </span> <span class="value">&nbsp;<a href="/_support/rma_pdf/<?=$rmaCode?>" target="_blank"> <i class="fa fa-file"></i> Download </a></span>
+    </span><br /> <br />
 <?php   }
    elseif ($rmaSubmitted) {
     ?>
@@ -430,6 +433,7 @@
     <span class="container" style="float: right;"> <span class="label"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> 
     Please include the following form with your return: </span> <span class="value">&nbsp;<a href="/_support/rma_pdf/<?=$rmaCode?>" target="_blank"> <i class="fa fa-file"></i> Download </a></span>
     </span><br /> <br />
+<?php	} ?>
     <div class="container">
        <span class="label"><i class="fa fa-address-card" aria-hidden="true"></i> Sending From: <br /></span> <span class="value">
        <?=$sentFromLocation->address_1?> <?=$sentFromLocation->address_2?><br />
@@ -450,8 +454,8 @@
            Tracking #: <?=$shippingPackage->tracking_code;?><br/>
            </span>
         </div>
-    <?php }
-    if ($_REQUEST ['form_submitted'] != 'package_details_submitted') {
+    <?php 
+    if (! $rmaReceived && $_REQUEST ['form_submitted'] != 'package_details_submitted') {
     ?>
         <div class="enter-shipping-form">
            <u><b><?=empty($shippingPackage->id) ? "Add" : "Update"?> your shipment info:</b></u>
@@ -471,13 +475,13 @@
            </form>
         </div>
     <?php
-    } else {
+    } elseif ($_REQUEST['form_submitted'] == 'package_details_submitted') {
     ?>
         <div class="enter-shipping-form">
             <h3>Shipment info details have been saved, thank you!</h3>
         </div>
     <?php
-    }
+    } 
 	if ($GLOBALS['_SESSION_']->customer->can('receive shipments') && !$rmaReceived) {
     ?>
 	<div class="container">

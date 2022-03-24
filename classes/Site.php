@@ -32,6 +32,14 @@
 					$this->install_fail($module_name." Schema version ".$class_version." doesn't match required version ".$module_data['schema']);
 				}
 
+				# Add Privileges
+				foreach ($module_date['privileges'] as $privilege_name) {
+					$privilege = new \Register\Privilege();
+					if (! $privilege->get($privilege_name)) {
+						$privilege->add(array('name' => $privilege_name));
+					}
+				}
+
 				# Add Roles
 				foreach ($module_data['roles'] as $role_name => $role_data) {
 					$role = new \Register\Role();
@@ -52,7 +60,8 @@
 						$this->install_log("Found role $role_name",'debug');
 					}
 				}
-				//install_log("Add new template settings");
+
+				# Assign Templates
 				foreach ($module_data['templates'] as $view => $template) {
 					$page = new \Site\Page(strtolower($module_name),$view);
 					if ($page->error) {
