@@ -2,6 +2,7 @@
 	namespace Content;
 
 	class Message {
+	
         public $id;
         public $name;
 		public $error;

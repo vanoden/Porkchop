@@ -1,7 +1,6 @@
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <link rel="stylesheet" href="/css/datepicker.min.css">
 <script src="/js/datepicker.min.js"></script> 
-
 <style>
     hr {
         border: 0;
@@ -47,6 +46,60 @@
         min-height: 50px;
         border-radius: 10px;
     }
+
+    #overlay {
+        display:none;
+        width: 100%;
+        height: 100%;
+        z-index: 200;
+        background-color:#00000090;
+        position:fixed;
+        top: 0;
+        left: 0px;
+    }
+    
+    #duplicate_task_name {
+        color: #888888;
+    }
+
+    #popup {
+        border: solid 2px #000;
+        border-radius: 5px;
+        display: none;
+        padding: 10px;
+        position: absolute;
+        top: 200px;
+        background: #fff;
+        width: 90%;
+        height: 750px;
+        z-index: 200;
+        overflow-y: scroll;
+    }
+    
+    #popupclose {
+        float: right;
+        margin: 2px;
+        font-size: 15px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    @media only screen and (max-width: 768px) {
+        #popup {
+            width: 100%;
+        }
+    }
+    
+    <?php
+        if ($_REQUEST['duplicate_btn_submit']) {
+    ?>
+        #popup, #overlay {
+            display:block;
+        }
+    <?php
+        }
+    ?>
+    
 </style>
 <script>
     $(document).ready(function () {
@@ -102,6 +155,33 @@
         $( "#notes" ).change(function() {
             $( "#btn_add_event" ).removeAttr('disabled');
         });
+        
+         // Initialize Popup
+        var closePopup = document.getElementById("popupclose");
+        var overlay = document.getElementById("overlay");
+        var popup = document.getElementById("popup");
+        var btn_duplicate = document.getElementById("btn_duplicate");
+        var duplicate_task_id = document.getElementById("duplicate_task_id");
+        var duplicate_task_name = document.getElementById("duplicate_task_name");
+        var duplicate_task_id_clear = document.getElementById("duplicate_task_id_clear");
+        
+        // Clear duplicate task ID
+        duplicate_task_id_clear.onclick = function() {
+            duplicate_task_id.value = '';
+            duplicate_task_name.value = '(none)';
+        };
+        
+        // Open Popup Event
+        btn_duplicate.onclick = function() {
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+        };
+
+        // Close Popup Event
+        closePopup.onclick = function() {
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
+        };    
     });
 </script>
 <div>
@@ -216,6 +296,7 @@
             <div class="tableCell">
                <?php	if (isset($task->id)) {
                   $requestor = $task->requestedBy(); ?>
+
                <span class="value"><?=$requestor->first_name?> <?=$requestor->last_name?></span>
                <?php	} else { ?>
                <select name="requested_id" class="value input wide_100per">
@@ -268,7 +349,7 @@
                <strong>Prerequisite</strong>
                <select name="prerequisite_id" class="value input" style="max-width: 250px;">
                   <option value="">None</option>
-                  <?php	foreach($tasklist as $prerequisiteTask) { ?>
+                  <?php	foreach($prerequisiteTasklist as $prerequisiteTask) { ?>
                     <option value="<?=$prerequisiteTask->id?>"<?php if ($prerequisiteTask->id == $form['prerequisite_id']) print " selected"; ?>><?=$prerequisiteTask->title?></option>
                   <?php	} ?>
                </select><br/>
@@ -288,7 +369,27 @@
                   <?php	foreach($engineeringRoles as $engineeringRole) { ?>
                     <option value="<?=$engineeringRole->id?>"<?php if ($engineeringRole->id == $form['role_id']) print " selected"; ?>><?=$engineeringRole->name?></option>
                   <?php	} ?>
-               </select>               
+               </select>
+               
+               <br/><br/>
+               <strong>Assign task as Duplicate</strong><br/>
+               Task Duplicates: 
+                <input type="hidden" id="duplicate_task_id" name="duplicate_task_id" value="<?=$form['duplicate_task_id']?>" />
+                <input type="text" id="duplicate_task_name" name="duplicate_task_name" value="<?=$form['duplicate_task_name']?>" readonly='readonly'/>
+                <input type="button" id="duplicate_task_id_clear" name="duplicate_task_id_clear" value="Clear" style="background:#999;"/>
+               <br/>
+                <input id="btn_duplicate" type="button" name="btn_submit" class="button" value="Search for Task"/>        
+                <div id="overlay"></div>
+                <div id="popup">
+                    <div class="popupcontrols">
+                        <span id="popupclose">X</span>
+                    </div>
+                    <div class="popupcontent">
+                        <h1>Find a task that is duplicate to this one</h1>
+                        <?php include(MODULES.'/engineering/partials/duplicate_tasks_finder.php'); ?>
+                    </div>
+                </div>
+                               
             </div>
          </div>   
       </div>
