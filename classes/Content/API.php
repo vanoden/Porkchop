@@ -42,6 +42,38 @@
 			# Send Response
 			print $this->formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 		}
+		
+		###################################################
+		### Search for Messages         s				###
+		###################################################
+		public function searchMessages() {
+		
+			# Default StyleSheet
+			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'content.message.xsl';
+			$response = new \HTTP\Response();
+
+			# Initiate Product Object
+			$message_list = new \Content\MessageList();
+
+			# Find Matching Threads
+			$parameters = array();
+			
+			if (isset($_REQUEST['string'])) $parameters['string'] = $_REQUEST['string'];
+			$messages = $message_list->search($parameters);
+
+			# Error Handling
+			if ($message_list->error) $this->error($message_list->error);
+			else {
+				$response->message = $messages;
+				$response->success = 1;
+			}
+
+			api_log('content',$_REQUEST,$response);
+
+			# Send Response
+			print $this->formatOutput($response);
+		}
+		
 		###################################################
 		### Get Details regarding Specified Message		###
 		###################################################
@@ -317,6 +349,9 @@
 				'findMessages'	=> array(
 					'name'		=> array(),
 					'options'	=> array(),
+				),
+				'searchMessages'	=> array(
+					'string'		=> array(),
 				),
 				'getMessage'	=> array(
 					'target'	=> array('required' => true),

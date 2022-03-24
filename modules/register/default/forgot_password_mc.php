@@ -17,6 +17,7 @@
 				'content'	=> http_build_query($data),
 			),
 		);
+		
 		# Don't need to store these fields
 		unset($_REQUEST['g-recaptcha-response']);
 		unset($_REQUEST['btn_submit']);
@@ -24,7 +25,22 @@
 		$context = stream_context_create($options);
 		$result = file_get_contents($url,false,$context);
 		$captcha_success = json_decode($result);
-
+		 
+		// allow for a QA or DEV bypass the captcha
+		if (isset($_REQUEST['captcha_auth'])) {
+		    if (!defined('ENVIROMENT')) {
+    		    $page->addError("Missing config ENVIROMENT constant."); 
+    		    return null;
+		    }		    
+		    if (!defined('QA_CAPTCHA_BYPASS')) {
+    		    $page->addError("Missing config QA_CAPTCHA_BYPASS constant."); 
+    		    return null;
+		    }
+		    if ((ENVIROMENT == 'QA') || (ENVIROMENT == 'DEV')) {   
+		        if (QA_CAPTCHA_BYPASS == $_REQUEST['captcha_auth']) $captcha_success->success = true;
+		    }
+		}
+		
 		if ($captcha_success->success == true) {
 			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
 
@@ -138,9 +154,7 @@
 		}
 	}
 
-	function valid_email($email)
-	{
+	function valid_email($email) {
 		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+$/",$email)) return 1;
 		else return 0;
 	}
-?>
