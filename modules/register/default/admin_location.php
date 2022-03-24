@@ -47,7 +47,7 @@
 	<input type="text" name="name" class="value input" value="<?=$location->name?>" />
 </div>
 <div class="container">
-	<span class="label">Address 2</span>
+	<span class="label">Address 1</span>
 	<input type="text" name="address_1" class="value input" value="<?=$location->address_1?>" />
 </div>
 <div class="container">

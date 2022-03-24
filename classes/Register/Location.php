@@ -93,4 +93,19 @@
 		public function province() {
 			return new \Geography\Province($this->province_id);
 		}
+
+		public function organization() {
+			$get_org_query = "
+				SELECT	organization_id
+				FROM	register_organization_locations
+				WHERE	location_id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_org_query,array($this->id));
+			if (! $rs) {
+				$this->error("SQL Error in Register::Location::organization(): ".$GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			list($org_id) = $rs->FetchRow();
+			return new \Register\Organization($org_id);
+		}
 	}

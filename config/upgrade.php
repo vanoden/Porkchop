@@ -19,6 +19,7 @@
 					"description"	=> "Super User"
 				),
 			),
+			"privileges"	=> array('send admin in-site message'),
 			"templates"	=> array(
 				"page"	=> $templates['admin'],
 				"pages"	=> $templates['admin'],
@@ -34,6 +35,10 @@
 		),
 		"Content"		=> array(
 			"schema"	=> 3,
+			"privileges"	=> array(
+				"edit content messages",
+				"browse content messages"
+			),
 			"roles"			=> array(
 				"developer"		=> array(
 					"description"	=> "Content Developer"
@@ -43,6 +48,10 @@
 		),
 		"Register"		=> array(
 			"schema"		=> 20,
+			"privileges"	=> array(
+				"manage privileges",
+				"manage organizations"
+			),
 			"roles"			=> array(
 				"register manager"	=> array(
 					"description"		=> "Manager Organizations and Users"
@@ -104,12 +113,19 @@
 		),
 		"Sales"			=> array(
 			"schema"	=> 7,
+			"privileges"	=> array(
+				"browse sales orders",
+				"approve sales order",
+				"edit sales order",
+				"edit currencies"
+			),
 			"roles"			=> array(
 				"sales manager"	=> array(),
 			),
 		),
 		"Product"		=> array(
 			"schema"	=> 5,
+			"privileges"	=> array("edit product prices"),
 			"roles"			=> array(
 				"product manager"	=> array(),
 				"product reporter"	=> array(),
@@ -138,6 +154,9 @@
 		),
 		"Shipping"		=> array(
 			"schema"	=> 3,
+			"privileges"	=> array(
+				"receive shipments"
+			),
 			"roles"			=> array(
 				"shipping manager"	=> array(),
 			),
@@ -148,6 +167,9 @@
 		),
 		"Support"		=> array(
 			"schema"	=> 8,
+			"privileges"	=> array(
+				"browse support tickets",
+			),
 			"roles"			=> array(
 				"support manager"	=> array(),
 				"support reporter"	=> array(),
@@ -171,7 +193,7 @@
 			),
 		),
 		"Engineering"	=> array(
-			"schema"	=>13,
+			"schema"	=>14,
 			"roles"			=> array(
 				"engineering manager"	=> array(),
 				"engineering reporter"	=> array(),

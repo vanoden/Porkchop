@@ -22,6 +22,31 @@
 		$task->get($code);
 	}
 
+    // get new and active tasks for the 'prerequisite' field
+	$tasklist = new \Engineering\TaskList();
+	$prerequisiteTasklist = $tasklist->find(array('status'=>array('NEW', 'ACTIVE')));
+
+    // get roles set for engineering to apply to tasks
+	$roleList = new \Engineering\RoleList();
+	$engineeringRoles = $roleList->find();
+	$parameters = array();
+	$parameters['status'] = array();
+	if ($_REQUEST["duplicate_new"]) array_push($parameters['status'],'NEW');
+	if ($_REQUEST["duplicate_active"]) array_push($parameters['status'],'ACTIVE');
+	if ($_REQUEST["duplicate_complete"]) array_push($parameters['status'],'COMPLETE');
+	if ($_REQUEST["duplicate_cancelled"]) array_push($parameters['status'],'CANCELLED');
+	if ($_REQUEST["duplicate_broken"]) array_push($parameters['status'],'BROKEN');
+	if ($_REQUEST["duplicate_testing"]) array_push($parameters['status'],'TESTING');
+	if ($_REQUEST["duplicate_hold"]) array_push($parameters['status'],'HOLD');
+	if ($_REQUEST["duplicate_project_id"]) $parameters['project_id'] = $_REQUEST['duplicate_project_id'];
+	if ($_REQUEST["duplicate_product_id"]) $parameters['product_id'] = $_REQUEST['duplicate_product_id'];
+	if ($_REQUEST["duplicate_assigned_id"]) $parameters['assigned_id'] = $_REQUEST['duplicate_assigned_id'];
+
+	$tasks = $tasklist->find($parameters);
+	if ($tasklist->error()) {
+		$page->error = $tasklist->error();
+	}
+
     // edit task or add event, testing info or comment
 	if (isset($_REQUEST['method']) && !empty($_REQUEST['method'])) {
 		$msgs = array();
@@ -63,6 +88,10 @@
 		if (isset($_REQUEST['prerequisite_id']) && $task->prerequisite_id != $_REQUEST['prerequisite_id']) {
 			array_push($msgs,"Prerequisite updated");
 			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_id'];
+		}
+		if (isset($_REQUEST['duplicate_task_id']) && $task->duplicate_task_id != $_REQUEST['duplicate_task_id']) {
+			array_push($msgs,"Duplicate Task updated");
+			$parameters['duplicate_task_id'] = $_REQUEST['duplicate_task_id'];
 		}
 		if (isset($_REQUEST['role_id']) && $task->role_id != $_REQUEST['role_id']) {
 			array_push($msgs,"Required Role updated");
@@ -335,7 +364,7 @@
 
 	$role = new \Register\Role();
 	$role->get("engineering user");
-	$techs = $role->members();
+	$assigners = $techs = $role->members();
 
 	$productlist = new \Engineering\ProductList();
 	$products = $productlist->find();
@@ -383,6 +412,7 @@
 		$form['project_id'] = $project->id;
         $form['prerequisite_id'] = $task->prerequisite_id;
         $form['testing_details'] = $task->testing_details;
+		$form['duplicate_task_id'] = $task->duplicate_task_id;
 		$eventlist = new \Engineering\EventList();
 		$events = $eventlist->find(array('task_id'=> $task->id));
 		if ($eventlist->error()) $page->addError($eventlist->error());
@@ -404,6 +434,7 @@
 		$form['release_id'] = $_REQUEST['release_id'];
 		$form['prerequisite_id'] = $_REQUEST['prerequisite_id'];
 		$form['testing_details'] = $_REQUEST['testing_details'];
+		$form['duplicate_task_id'] = $_REQUEST['duplicate_task_id'];
 	} else {
 		$form['code'] = uniqid();
 		$form['product_id'] = '';
@@ -421,5 +452,13 @@
 		$form['project_id'] = '';
 		$form['prerequisite_id'] = '';
 		$form['release_id'] = '';
+		$form['duplicate_task_id'] = '';
 		$task->date_added = 'now';
+	}
+	
+    // get the current title of the task that this task duplicates
+	$form['duplicate_task_name'] = '(none)';	
+	if (isset($form['duplicate_task_id'])) {
+        $duplicateTask = new \Engineering\Task($form['duplicate_task_id']);
+        $form['duplicate_task_name'] = $duplicateTask->title;
 	}
