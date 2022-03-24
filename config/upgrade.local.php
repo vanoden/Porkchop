@@ -305,15 +305,20 @@
 			"monitor asset"		=> array(),
 		),
 		"templates"		=> array(
-			"admin_assets"		=> $admin_template,
-			"admin_details"		=> $admin_template,
-			"comm_dashboard"	=> $admin_template,
-			"sensor_models"		=> $admin_template,
-			"sensor_model"		=> $admin_template,
-			"dashboards"		=> $admin_template,
-			"admin_dashboard"	=> $admin_template
+			"admin_assets"		=> $templates['admin'],
+			"admin_details"		=> $templates['admin'],
+			"comm_dashboard"	=> $templates['admin'],
+			"sensor_models"		=> $templates['admin'],
+			"sensor_model"		=> $templates['admin'],
+			"dashboards"		=> $templates['admin'],
+			"admin_dashboard"	=> $templates['admin']
 		),
 	);
+	$modules['Engineering']['roles']['Systems Administrator']	= array("description" => 'Linux, Web Administration');
+	$modules['Engineering']['roles']['Graphic Designer']		= array("description" => 'Graphic Designer');
+	$modules['Engineering']['roles']['Web Programmer']			= array("description" => 'PHP, Javascript Coding');
+	$modules['Engineering']['roles']['Embedded Programmer']		= array("description" => 'Perl, Python, C++ Coding');
+	$modules['Engineering']['roles']['QA Automation']			= array("description" => 'QA Automation');
 
 	$modules["Alert"] = array(
 		"schema"	=> 6,
@@ -327,16 +332,16 @@
 	);
 
 	$modules['Spectros'] = array(
-		"schema"	=> 8,
+		"schema"	=> 10,
 		"roles"			=> array(
-			"credit manager"	=> $admin_template,
+			"credit manager"	=> $templates['admin'],
 		),
 		"templates"		=> array(
-			"admin_home"		=> $admin_template,
-			"admin_credits"		=> $admin_template,
-			"cal_report"		=> $admin_template,
-			"transfer_ownership"	=> $admin_template,
-			"admin_collections"	=> $admin_template,
+			"admin_home"		=> $templates['admin'],
+			"admin_credits"		=> $templates['admin'],
+			"cal_report"		=> $templates['admin'],
+			"transfer_ownership"	=> $templates['admin'],
+			"admin_collections"	=> $templates['admin'],
 		),
 	);
 
