@@ -161,12 +161,13 @@
     }
     
     // mark the message individually as acknowledged
-    function acknowledged(messageId) {
-        $.post( "/_site/api", { method: "addSiteMessageMetaData", item_id: messageId, 'label' : 'acknowledged', 'value' : 'true' }, function( data ) {
+    function acknowledge(messageId) {
+        $.post( "/_site/api", { method: "acknowledgeSiteMessage", message_id: messageId }, function( data ) {
             document.getElementById('message-title-' + messageId).classList.remove('bold');
             document.getElementById('message-subject-' + messageId).classList.remove('bold');
             document.getElementById('message-date-' + messageId).classList.remove('bold');         
         });
+        document.getElementById('row-'+messageId).style.display = 'none';
     }
     
     // toggle all messages for acknowledged option
@@ -197,17 +198,21 @@
 <body>
 
 <div class="row full-column-row">
+    <form method="post" id="filterForm">
     <div style="flex: 1;">
-        <input type="checkbox" id="selectAll" name="selectAll" value="selectAll" onclick="selectAll()">
-        <label for="selectAll"> Select All</label><br>
+        <span class="value">Viewed</span>&nbsp;<input type="checkbox" name="seeViewed"<?php if ($params['viewed']) print " checked";?> />
+        <span class="value">Acknowledged</span>&nbsp;<input type="checkbox" name="seeAcknowledged"<?php if ($params['acknowledged']) print " checked";?> />
+        <input type="submit" name="btn_filter" value="Filter" />
     </div>
-    <div style="flex: 1;"><button id="mark-acknowledged" disabled='disabled' onclick="acknowledgeAll()">Mark as Acknowledged</button></div>
+    </form>
 </div>
 
 <div class="messaging-page-wrapper">
     <?php
     $currentYear = '';
-    foreach ($userMessages as $userMessage) {
+    foreach ($siteMessageDeliveries as $siteMessageDelivery) {
+        $siteMessageDelivery->view();
+		$userMessage = $siteMessageDelivery->message();
         $siteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
         $siteMessageMetaDataValues = $siteMessageMetaDataList->find(array('item_id'=>$userMessage->id));
         $currentYearCheck = date('Y', strtotime($userMessage->date_created));
@@ -225,12 +230,9 @@
     <?php
         }
     ?>
-      <div id="row-<?=$userMessage->id?>" class="row info-row" onclick="acknowledged('<?=$userMessage->id?>')">
+      <div id="row-<?=$siteMessageDelivery->id?>" class="row info-row">
         <div class="column left-column">
           <div class="list-column">
-            <div style="flex: 1;">
-                <span class="message-icon"></span>
-            </div>
             <div style="flex: 2;">
                 <div id="message-date-<?=$userMessage->id?>" class="message-date <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=date('m/d/Y', strtotime($userMessage->date_created));?></div>
 
@@ -238,12 +240,13 @@
             <div style="flex: 1;"></div>   
           </div>
           <div class="list-column">
-            <div style="flex: 1;">
-                <div style="margin:10px;"></div>
+            <div>
                 <span class="message-sender"><?=$sender->full_name()?></span>
-                <span class="message-icon">
-                    <img src="/img/messages/icon_catgy_<?=isset($siteMessageMetaDataValues['category'][0]->value) ? $siteMessageMetaDataValues['category'][0]->value : '';?>_1C.svg" style="width: 25px">
-                </span>
+                <div>
+<?php if (! $siteMessageDelivery->acknowledged()) { ?>
+					<input type="button" class="button" name="btn_ack[<?=$siteMessageDelivery->id?>]" value="Acknowledge" onclick="acknowledge('<?=$siteMessageDelivery->id?>');" />
+<?php } ?>
+					</div>
             </div>
             <div style="flex: 2;">
                 <div id="message-title-<?=$userMessage->id?>" class="message-title <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=isset($siteMessageMetaDataValues['title'][0]->value) ? $siteMessageMetaDataValues['summary'][0]->value : '';?></div>
@@ -257,14 +260,6 @@
             <div id="message-subject-<?=$userMessage->id?>" class="message-subject <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=isset($siteMessageMetaDataValues['summary'][0]->value) ? $siteMessageMetaDataValues['title'][0]->value : '';?></div>
             <div class="message-text">
                 <div id="message-text-<?=$userMessage->id?>" class="message-content"><?=$userMessage->content?></div>
-            </div>
-            <div class="message-links-wrapper">
-                <span class="read-more-link">
-                    <a onclick="expandText('<?=$userMessage->id?>')">
-                        <span id="message-text-read-more-<?=$userMessage->id?>">Read more &#8964;</span>
-                    </a>
-                </span>
-                <span class="visit-portal-link" style="float:right"><a href="/_monitor/collections">Visit your portal &#8250;</a></span>
             </div>
           </div>
         </div>
