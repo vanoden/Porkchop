@@ -7,7 +7,7 @@
 	$tasklist = $tasklist->find(array('status'=>array('NEW', 'ACTIVE')));
 
     // get roles set for engineering to apply to tasks
-	$roleList = new \Engineering\RoleList();
+	$roleList = new \Register\RoleList();
 	$engineeringRoles = $roleList->find();
 
     // create new task or get existing if the "code" is passed
@@ -27,7 +27,7 @@
 	$prerequisiteTasklist = $tasklist->find(array('status'=>array('NEW', 'ACTIVE')));
 
     // get roles set for engineering to apply to tasks
-	$roleList = new \Engineering\RoleList();
+	$roleList = new \Register\RoleList();
 	$engineeringRoles = $roleList->find();
 	$parameters = array();
 	$parameters['status'] = array();
