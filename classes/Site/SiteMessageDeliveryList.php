@@ -54,7 +54,7 @@
 				}
 			}
 
-			query_log($get_objects_query,$bind_params);
+			query_log($get_objects_query,$bind_params,true);
 			$rs = $GLOBALS['_database']->Execute($get_objects_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Site::SiteMessageDeliveryList::find: ".$GLOBALS['_database']->ErrorMsg();
@@ -67,7 +67,6 @@
 			    $this->_count ++;
 			    array_push($deliveries,$delivery);
 			}
-			
 			return $deliveries;
 		}
         
