@@ -73,7 +73,7 @@
 			}
 			
 			if (!empty($parameters['role_id'])) {
-				$role = new \Engineering\Role($parameters['role_id']);
+				$role = new \Register\Role($parameters['role_id']);
 				if (! $role->id) {
 					$this->_error = "Engineering Role not found";
 					return false;
@@ -239,7 +239,7 @@
 			}
 			
 			if (isset($parameters['role_id'])) {
-				$role = new \Engineering\Role($parameters['role_id']);
+				$role = new \Register\Role($parameters['role_id']);
 				if ($role->id) {
                     $update_object_query .= ",
 	                    role_id = ?";

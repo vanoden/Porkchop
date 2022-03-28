@@ -465,6 +465,15 @@
         	print $this->formatOutput($response);
 	    }
 
+        public function acknowledgeSiteMessage() {
+            $siteMessageDelivery = new \Site\SiteMessageDelivery();
+            if (! $siteMessageDelivery->get($_REQUEST['message_id'],$GLOBALS['_SESSION_']->customer->id)) $this->error("Message not found");
+            if (! $siteMessageDelivery->acknowledge()) $this->error($siteMessageDelivery->error());
+            $response = new \HTTP\Response();
+            $response->success = 1;
+        	print $this->formatOutput($response);
+        }
+
 		public function getSiteMessage() {
 			$siteMessage = new \Site\SiteMessage($_REQUEST['id']);
 			$response = new \HTTP\Response();
@@ -550,7 +559,7 @@
 			$params = array();
 			if (isset($_REQUEST['to'])) {
 				$to = new \Register\Customer();
-				if ($from->get($_REQUEST['to'])) {
+				if ($to->get($_REQUEST['to'])) {
 					$params['user_id'] = $to->id;
 				}
 				else {
