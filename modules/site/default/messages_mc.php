@@ -7,12 +7,10 @@
     // get current messages for user
     $params = array(
         "user_id"   => $GLOBALS['_SESSION_']->customer->id,
-        "viewed"    => true,
         "acknowledged" => false
     );
 
     if ($_REQUEST['btn_filter']) {
-        if (! $_REQUEST['seeViewed']) $params['viewed'] = false;
         if ($_REQUEST['seeAcknowledged']) $params['acknowledged'] = true;
     }
 

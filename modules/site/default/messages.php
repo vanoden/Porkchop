@@ -200,7 +200,6 @@
 <div class="row full-column-row">
     <form method="post" id="filterForm">
     <div style="flex: 1;">
-        <span class="value">Viewed</span>&nbsp;<input type="checkbox" name="seeViewed"<?php if ($params['viewed']) print " checked";?> />
         <span class="value">Acknowledged</span>&nbsp;<input type="checkbox" name="seeAcknowledged"<?php if ($params['acknowledged']) print " checked";?> />
         <input type="submit" name="btn_filter" value="Filter" />
     </div>
