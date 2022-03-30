@@ -14,6 +14,9 @@ class Person {
     public $department;
     public $_cached = 0;
     public $status;
+    public $_settings = array(
+	"date_format"	=> "US"
+    );
 
     public function __construct($id = 0) {
 
@@ -597,17 +600,35 @@ class Person {
         return true;
     }
 
-    public function automation() {
-        if ($this->automation) return true;
-        return false;
-    }
+	public function automation() {
+		if ($this->automation) return true;
+		return false;
+	}
 
 	public function validLogin($login) {
 		if (preg_match("/^[\w\-\_@\.\+\s]{2,100}\$/", $login)) return true;
 		else return false;
 	}
 
-    public function error() {
-        return $this->error;
-    }
+	public function settings($key) {
+		// Only Show If metadata key is in _settings array
+		if (! isset($this->_settings[$key])) return null;
+
+		// We will add a metadata search here
+
+		// If no matching metadata, return default
+		return $this->_settings[$key];
+	}
+
+	public function abbrev_name() {
+		return substr($this->first_name,0,1)." ".$this->last_name;
+	}
+
+	public function initials() {
+		return substr($this->first_name,0,1)." ".substr($this->last_name,0,1);
+	}
+
+	public function error() {
+		return $this->error;
+	}
 }
