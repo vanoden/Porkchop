@@ -47,7 +47,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 20,
+			"schema"		=> 21,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage organizations"
@@ -59,6 +59,9 @@
 				"register reporter"	=> array(
 					"description"		=> "View Organizations and Users"
 				),
+				"location manager"	=> array(
+					"description"		=> "Add, view or edit locations"
+				)
 			),
 			"templates"		=> array(
 				"organizations"		=> $templates['admin'],
@@ -193,7 +196,7 @@
 			),
 		),
 		"Engineering"	=> array(
-			"schema"	=>14,
+			"schema"	=> 14,
 			"roles"			=> array(
 				"engineering manager"	=> array(),
 				"engineering reporter"	=> array(),

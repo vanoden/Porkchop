@@ -215,35 +215,22 @@
 	    }
 
 		public function template() {
-			return $this->getMetadata('template');
+			$template = $this->getMetadata('template');
+			if (!empty($template)) return $template;
+			elseif (file_exists(HTML . "/" . $this->module . "." . $this->view . ".html")) return $this->module . "." . $this->view . ".html";
+			elseif ($this->view == 'api' && file_exists ( HTML . "/_api.html")) return "_api.html";
+			elseif (file_exists ( HTML . "/" . $this->module . ".html")) return $this->module . ".html";
+			elseif (isset ( $GLOBALS ['_config']->site->default_template)) return $GLOBALS ['_config']->site->default_template;
+			elseif (file_exists ( HTML . "/index.html")) return "index.html";
+			elseif (file_exists ( HTML . "/install.html" )) return "install.html";
+			else return null;
 		}
 
-	    public function load_template() {
+		public function load_template() {
 			$template = $this->template();
-		    if (isset ( $template )) {
-			    app_log ( "Loading template '" . $template . "' from page metadata", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $template );
-		    } elseif (file_exists ( HTML . "/" . $this->module . "." . $this->view . ".html" )) {
-			    app_log ( "Loading template '" . "/" . $this->module . "." . $this->view . ".html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $this->module . "." . $this->view . ".html" );
-		    } elseif ($this->view == 'api' && file_exists ( HTML . "/_api.html" )) {
-			    app_log ( "Loading template '_api.html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/_api.html" );
-		    } elseif (file_exists ( HTML . "/" . $this->module . ".html" )) {
-			    app_log ( "Loading template '" . "/" . $this->module . ".html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $this->module . ".html" );
-		    } elseif (isset ( $GLOBALS ['_config']->site->default_template )) {
-			    app_log ( "Loading template '" . $GLOBALS ['_config']->site->default_template . "'", 'debug', __FILE__, __LINE__ );
-			    if (! file_exists ( HTML . "/" . $GLOBALS ['_config']->site->default_template )) {
-				    app_log ( "Default template file not found!", 'error', __FILE__, __LINE__ );
-			    }
-			    $html = file_get_contents ( HTML . "/" . $GLOBALS ['_config']->site->default_template );
-		    } elseif (file_exists ( HTML . "/index.html" )) {
-			    app_log ( "Loading template '/index.html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/index.html" );
-		    } elseif (file_exists ( HTML . "/install.html" )) $html = file_get_contents ( HTML . "/install.html" );
-		    else $html = '<r7 object="page" property="view"/>';
-		    return $this->parse ( $html );
+			if (isset ( $template ) && file_exists(HTML."/".$template)) return $this->parse(file_get_contents(HTML."/".$template));
+			elseif (isset ($template)) app_log("Template ".HTML."/".$template." not found!",'error');
+			return $this->parse('<r7 object="page" property="view"/>');
 	    }
 
 	    public function parse($message) {
