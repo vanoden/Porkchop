@@ -341,7 +341,7 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <textarea name="description" class="wide_100per"><?=strip_tags($form['description'])?></textarea>
+               <textarea name="description" class="wide_100per" form="task_form"><?=strip_tags($form['description'])?></textarea>
             </div>
          </div>
          <div class="tableRow">
@@ -378,7 +378,7 @@
                 <input type="text" id="duplicate_task_name" name="duplicate_task_name" value="<?=$form['duplicate_task_name']?>" readonly='readonly'/>
                 <input type="button" id="duplicate_task_id_clear" name="duplicate_task_id_clear" value="Clear" style="background:#999;"/>
                <br/>
-                <input id="btn_duplicate" type="button" name="btn_submit" class="button" value="Search for Task"/>        
+                <input id="btn_duplicate" type="button" name="btn_duplicate" class="button" value="Search for Task"/>        
                 <div id="overlay"></div>
                 <div id="popup">
                     <div class="popupcontrols">
@@ -406,7 +406,7 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <textarea name="testing_details" class="wide_100per"><?=strip_tags($form['testing_details'])?></textarea>
+               <textarea id="testing_details" name="testing_details" class="wide_100per" form="task_form"><?=strip_tags($form['testing_details'])?></textarea>
             </div>
          </div>
       </div>
@@ -420,53 +420,19 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <textarea name="content" class="wide_100per"></textarea>
+               <textarea id="task_comment" name="task_comment" class="wide_100per" form="task_form"></textarea>
             </div>
          </div>
       </div>
       <!-- End comment Row -->
-          
-      <div class="tableBody min-tablet">
-            <div class="tableRow button-bar">
-                <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
-            </div>
-      </div>
-          
-       <!--	Start First Row-->
-       <h3>Comments</h3>
-       <div class="tableBody min-tablet">
-          <div class="tableRowHeader">
-             <div class="tableCell" style="width: 20%;">Date</div>
-             <div class="tableCell" style="width: 15%;">Person</div>
-             <div class="tableCell" style="width: 65%;">Description</div>
-          </div>
-          <?php	
-            foreach ($commentsList as $comment) {
-            $person = $comment->person();
-             ?>
-          <div class="tableRow">
-             <div class="tableCell">
-                <i><?=date("M dS Y h:i A", $comment->timestamp_added)?></i>
-             </div>
-             <div class="tableCell">
-               <strong><?=$person->login?></strong>
-             </div>
-             <div class="tableCell eventLogEntry">
-             <pre>
-                <?=strip_tags($comment->content)?>
-             </pre>
-             </div>
-          </div>
-          <?php	} ?>
-       </div>
-      
+                
       <h3>Event Update</h3>
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
             <div class="tableCell">Event Date</div>
             <div class="tableCell">Person</div>
             <div class="tableCell">Hours</div>
-            <div class="tableCell">New Status</div>
+            <div class="tableCell">Set New Status (Currently: <?=$task->status?>)</div>
          </div>
          <div class="tableRow">
             <div class="tableCell">
@@ -480,17 +446,18 @@
                </select>
             </div>
             <div class="tableCell">
-               <input id="hours_worked" type="text" name="hours_worked" class="value input" value="0" />
+               <input id="hours_worked" type="number" name="hours_worked" class="value input" value="0" form="task_form"/>
             </div>
             <div class="tableCell">
-               <select id="new_status" name="new_status" class="value input wide_100per">
-                  <option value="new"<?php if ($task->status == 'NEW') print ' selected'; ?>>New</option>
-                  <option value="hold"<?php if ($task->status == 'HOLD') print ' selected'; ?>>Hold</option>
-                  <option value="active"<?php if ($task->status == 'ACTIVE') print ' selected'; ?>>Active</option>
-                  <option value="broken"<?php if ($task->status == 'BROKEN') print ' selected'; ?>>Broken</option>
-                  <option value="testing"<?php if ($task->status == 'TESTING') print ' selected'; ?>>Testing</option>
-                  <option value="cancelled"<?php if ($task->status == 'CANCELLED') print ' selected'; ?>>Cancelled</option>
-                  <option value="complete"<?php if ($task->status == 'COMPLETE') print ' selected'; ?>>Complete</option>
+               <select id="new_status" name="new_status" class="value input wide_100per" form="task_form">
+                  <option value=""></option>
+                  <option value="new">New</option>
+                  <option value="hold">Hold</option>
+                  <option value="active">Active</option>
+                  <option value="broken">Broken</option>
+                  <option value="testing">Testing</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="complete">Complete</option>
                </select>
             </div>
          </div>
@@ -504,15 +471,48 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <textarea id="notes" name="notes" class="wide_100per"></textarea>
+               <textarea id="notes" name="notes" class="wide_100per" form="task_form"></textarea>
             </div>
-         </div>
-         <div class="tableRow button-bar">
-            <input id="btn_add_event" type="submit" name="btn_add_event" class="button" value="Add Event" />
          </div>
       </div>
       <!-- End event description Row -->
+      
+      <!-- entire page button submit -->
+      <div class="tableBody min-tablet">
+            <div class="tableRow button-bar">
+                <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
+            </div>
+      </div>
+      
    </form>
+   
+   <!--	Start First Row-->
+   <h3>Comments</h3>
+   <div class="tableBody min-tablet">
+      <div class="tableRowHeader">
+         <div class="tableCell" style="width: 20%;">Date</div>
+         <div class="tableCell" style="width: 15%;">Person</div>
+         <div class="tableCell" style="width: 65%;">Description</div>
+      </div>
+      <?php	
+        foreach ($commentsList as $comment) {
+        $person = $comment->person();
+         ?>
+      <div class="tableRow">
+         <div class="tableCell">
+            <i><?=date("M dS Y h:i A", $comment->timestamp_added)?></i>
+         </div>
+         <div class="tableCell">
+           <strong><?=$person->login?></strong>
+         </div>
+         <div class="tableCell eventLogEntry">
+         <pre>
+            <?=strip_tags($comment->content)?>
+         </pre>
+         </div>
+      </div>
+      <?php	} ?>
+   </div>
    
     <div style="width: 756px;">
         <br/><h3>Documents</h3><br/>
@@ -543,12 +543,12 @@
         }
         ?>
         <form name="repoUpload" action="/_engineering/task/<?=$form['code'];?>" method="post" enctype="multipart/form-data">
-        <div class="container">
-            <span class="label">Upload File</span>
-            <input type="hidden" name="type" value="engineering task" />
-            <input type="file" name="uploadFile" />
-            <input type="submit" name="btn_upload" class="button" value="Upload" />
-        </div>
+            <div class="container">
+                <span class="label">Upload File</span>
+                <input type="hidden" name="type" value="engineering task" />
+                <input type="file" name="uploadFile" />
+                <input type="submit" name="btn_upload" class="button" value="Upload" />
+            </div>
         </form>
         <br/><br/>
     </div>

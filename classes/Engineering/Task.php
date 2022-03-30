@@ -482,9 +482,10 @@
 				if ($object->id) $result = $cache->set($object);
 				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);	
 			}
-
-			$prereq = new \Engineering\Task($object->prerequisite_id);
-			if ($prereq->id && $prereq->status != 'COMPLETE') $this->status = 'BLOCKED';
+            if (isset($object->prerequisite_id) && !empty($object->prerequisite_id)) {
+			    $prereq = new \Engineering\Task($object->prerequisite_id);
+			    if ($prereq->id && $prereq->status != 'COMPLETE') $this->status = 'BLOCKED';
+            }
 			return true;
 		}
 		

@@ -277,7 +277,7 @@
 			}
 		}
     
-		if (strtoupper($_REQUEST['new_status']) != $task->status) {
+		if (!empty($_REQUEST['new_status']) && (strtoupper($_REQUEST['new_status']) != $task->status)) {
     		if (empty($_REQUEST['notes'])) $_REQUEST['notes'] = "";
 			$old_status = $task->status;
 			$task->update(array('status'=>$_REQUEST['new_status']));
@@ -290,6 +290,7 @@
 		} else {
 			$page->success = "Updated applied successfully";
 		}
+		
 		$event = new \Engineering\Event();
 		$event->add(array(
 			'task_id'		=> $task->id,
@@ -316,9 +317,9 @@
         }
 		
         // add task comment   
-	    if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
+	    if (isset($_REQUEST['task_comment']) && !empty($_REQUEST['task_comment'])) {
             $engineeringComment = new \Engineering\Comment();
-            $engineeringComment->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $task->code, 'content' => $_REQUEST['content']));
+            $engineeringComment->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $task->code, 'content' => $_REQUEST['task_comment']));
             if ($engineeringComment->error()) $page->addError("Error creating comment: ".$engineeringComment->error());
             array_push($msgs,"Comment added.");
 		    $event = new \Engineering\Event();
@@ -338,11 +339,9 @@
 	$repository = new \Storage\Repository();
 	if (empty($repository_key)) {
 		$page->addError("'engineering_attachments' configuration not set");
-	}
-	elseif (! $repository->get($repository_key)) {
+	} elseif (! $repository->get($repository_key)) {
 		$page->addError("Repository '".$repository_key."' not found");
-	}
-    elseif (isset($_REQUEST['btn_upload']) && $_REQUEST['btn_upload'] == 'Upload') {
+	} elseif (isset($_REQUEST['btn_upload']) && $_REQUEST['btn_upload'] == 'Upload') {
 	    $file = new \Storage\File();
 	    $parameters = array();
         $parameters['repository_id'] = $repository->id;
