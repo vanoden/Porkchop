@@ -21,24 +21,25 @@
 		# Don't need to store these fields
 		unset($_REQUEST['g-recaptcha-response']);
 		unset($_REQUEST['btn_submit']);
-
-		$context = stream_context_create($options);
-		$result = file_get_contents($url,false,$context);
-		$captcha_success = json_decode($result);
 		 
-		// allow for a QA or DEV bypass the captcha
-		if (isset($_REQUEST['captcha_auth'])) {
-		    if (!defined('ENVIROMENT')) {
-    		    $page->addError("Missing config ENVIROMENT constant."); 
-    		    return null;
-		    }		    
-		    if (!defined('QA_CAPTCHA_BYPASS')) {
-    		    $page->addError("Missing config QA_CAPTCHA_BYPASS constant."); 
-    		    return null;
-		    }
-		    if ((ENVIROMENT == 'QA') || (ENVIROMENT == 'DEV')) {   
-		        if (QA_CAPTCHA_BYPASS == $_REQUEST['captcha_auth']) $captcha_success->success = true;
-		    }
+		// Allow to bypass the captcha if config->captcha->bypass_key set
+		if (!empty($_REQUEST['captcha_bypass_key'])) {
+			app_log("User skipping captcha",'notice');
+			$captcha_success = new stdClass();
+			if (!empty($GLOBALS['_config']->captcha->bypass_key) && $_REQUEST['captcha_bypass_key'] == $GLOBALS['_config']->captcha->bypass_key) {
+				app_log("CAPTCHA bypassed with key",'notice');
+				$captcha_success->success = true;
+			}
+			else {
+				app_log("CAPTCHA bypass key invalid",'warn');
+				$captcha_success->success = false;
+			}
+		}
+		else {
+			app_log("Solicit CAPTCHA service",'notice');
+			$context = stream_context_create($options);
+			$result = file_get_contents($url,false,$context);
+			$captcha_success = json_decode($result);
 		}
 		
 		if ($captcha_success->success == true) {
