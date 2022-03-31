@@ -93,10 +93,11 @@
 		    $project = $taskItem->project();
 		    $worker = $taskItem->assignedTo();
 			$prerequisiteTask = $taskItem->prerequisite();
+			if ($task->id !== $taskItem->id) {
     ?>
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <input type="button" name="duplicate_btn_assign" class="duplicate_button" onclick="setTaskDuplicate(<?=$taskItem->id?>, '<?=str_replace("'","", $taskItem->title)?>')" value="Set Duplicate of" />
+   			    <input type="button" name="duplicate_btn_assign" class="duplicate_button" onclick="setTaskDuplicate(<?=$taskItem->id?>, '<?=str_replace("'","", $taskItem->title)?>')" value="Set Duplicate of" />		        
 		    </div>
 		    <div class="tableCell">
 			    <a href="/_engineering/task/<?=$taskItem->code?>"><?=$taskItem->title?></a>
@@ -129,6 +130,8 @@
                ?>
 		    </div>
 	    </div>
-    <?php	} ?>
+    <?php	}
+        } 
+        ?>
     </div>
 </form>
