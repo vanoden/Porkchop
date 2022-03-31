@@ -143,7 +143,7 @@
 				
 			// Task Exists, Update
 			if ($task->update($parameters)) {
-				$page->success = "Updates applied";
+				$page->success .= "Updates applied<br/>";
 				$statusLogged = "";
 				if (isset($parameters['status'])) $statusLogged = $parameters['status'];
 				app_log("Task updated, status now ".$statusLogged,'debug',__FILE__,__LINE__);
@@ -164,7 +164,7 @@
 		} else {
 			// Create New Task
 			if ($task->add($parameters)) {
-				$page->success = "Task Created";
+				$page->success .= "Task Created<br/>";
 				$event = new \Engineering\Event();
 				$event->add(array(
 					'task_id'	=> $task->id,
@@ -285,21 +285,22 @@
 				$page->addError($task->error);
 			} else {
 				$_REQUEST['notes'] = "Status changed from $old_status to ".strtoupper($_REQUEST['new_status'])."<br>\n".$_REQUEST['notes'];
-				$page->success = "Updated applied successfully";
+				$page->success .= "Status Updated applied successfully<br/>";
 			}
-		} else {
-			$page->success = "Updated applied successfully";
 		}
 		
-		$event = new \Engineering\Event();
-		$event->add(array(
-			'task_id'		=> $task->id,
-			'person_id'		=> $_REQUEST['event_person_id'],
-			'date_added'	=> $_REQUEST['date_event'],
-			'description'	=> $_REQUEST['notes'],
-			'hours_worked'	=> $_REQUEST['hours_worked']
-		));
-		if ($event->error()) $page->addError($event->error());
+		if (!empty($_REQUEST['hours_worked']) && !empty($_REQUEST['hours_worked'])) {
+		    $event = new \Engineering\Event();
+		    $event->add(array(
+			    'task_id'		=> $task->id,
+			    'person_id'		=> $_REQUEST['event_person_id'],
+			    'date_added'	=> $_REQUEST['date_event'],
+			    'description'	=> $_REQUEST['notes'],
+			    'hours_worked'	=> $_REQUEST['hours_worked']
+		    ));
+		    if ($event->error()) $page->addError($event->error());
+		    $page->success .= "Event added successfully<br/>";
+        }
 		
         // add task testing details
 	    if (isset($_REQUEST['testing_details']) && !empty($_REQUEST['testing_details'])) {

@@ -81,6 +81,9 @@
    }
    .vertical-align-top {
 	vertical-align: unset;
+   }   
+   .resend-verify-message {
+    font-size: 10px;
    }
 </style>
 <script>
@@ -128,6 +131,10 @@
    function denyCustomer(queueId) {
 	   $("#customer_add_" + queueId).val('denyCustomer');
 	   $("#customer_add_form_" + queueId).submit();
+   }
+   
+   function resend(queueId) {
+	  
    }
    
    // date picker with max date being current day
@@ -235,7 +242,9 @@
 			  case 'VERIFYING':
 			  ?>
 		   <span style="color: <?=colorCodeStatus("VERIFYING")?>">
-		   <i class="fa fa-clock-o" aria-hidden="true"></i> email validating
+    		   <i class="fa fa-clock-o" aria-hidden="true"></i> email validating
+    		   <br/>
+    		   <button type="button" class="resend-verify-message" onclick="resend(<?=$queuedCustomer->id?>)">Resend Verify Email Message</button>
 		   </span>
 		   <?php
 			  break;
