@@ -355,7 +355,7 @@
 			$engineeringEventsList = $engineeringEvents->find(array('task_id'=>$_REQUEST['duplicate_task_id']));
 			foreach ($engineeringEventsList as $engineeringEvent) {
 			    $newEngineeringEvent = new \Engineering\Event();
-			    $newEngineeringEvent->add(array('task_id' => $task->task_id, 'person_id' => $engineeringEventsList->person_id, 'description' => $engineeringEventsList->description, 'date_event' => $engineeringEventsList->date_event));		
+			    $newEngineeringEvent->add(array('task_id' => $task->task_id, 'person_id' => $engineeringEvent->person_id, 'description' => $engineeringEvent->description, 'date_event' => $engineeringEvent->date_event));		
 			}
 			
 			// pull over all the engineering_task_comments from the task that is duplicate of this one
