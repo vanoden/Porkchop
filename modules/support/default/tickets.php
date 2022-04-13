@@ -99,7 +99,6 @@
 		<input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" />
 		<input id="min_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['min_date']?>" />
 		<div id="filters" class="forms-filter">
-			<button class="btn-secondary" onclick="clearFilters()">Clear Filters</button>
 			<div class="flex-space-between form-basis">
 				<ul>
 					<li>
@@ -119,6 +118,7 @@
 						<label for="datepicker">After Date: <?=!empty($_REQUEST['min_date']) ? '[' . $_REQUEST['min_date']. ']' : '';?></label>
 						<input type="date" id="datepicker" value="<?=$minDate?>">
 					</li>
+					<button class="iconButton closeIcon" onclick="clearFilters()">Clear Filters</button>
 				</ul>
 			</div>
 	    
