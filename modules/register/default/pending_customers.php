@@ -133,8 +133,8 @@
 	   $("#customer_add_form_" + queueId).submit();
    }
    
-   function resend(queueId) {
-	  
+   function resend(customerId) {
+	  window.location.href = "/_register/pending_customers?verifyAgain="+customerId;
    }
    
    // date picker with max date being current day
@@ -162,8 +162,10 @@
 <?php include(MODULES.'/register/partials/search_bar.php'); ?>
 <div style="width: 100%;">
    <?php	if ($page->errorCount()) { ?>
-   <div class="form_error"><?=$page->errorString()?></div>
-   <?php	} ?>
+       <div class="form_error"><?=$page->errorString()?></div>
+   <?php } elseif ($page->success) { ?>
+        <div class="form_success"><?=$page->success?></div>
+   <?php } ?>
    <form action="/_register/pending_customers" method="post" autocomplete="off">
 	  <table>
 		 <tr>
@@ -244,7 +246,7 @@
 		   <span style="color: <?=colorCodeStatus("VERIFYING")?>">
     		   <i class="fa fa-clock-o" aria-hidden="true"></i> email validating
     		   <br/>
-    		   <button type="button" class="resend-verify-message" onclick="resend(<?=$queuedCustomer->id?>)">Resend Verify Email Message</button>
+    		   <button type="button" class="resend-verify-message" onclick="resend(<?=$queuedCustomer->register_user_id?>)">Resend Verify Email Message</button>
 		   </span>
 		   <?php
 			  break;

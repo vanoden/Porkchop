@@ -89,10 +89,6 @@
 			array_push($msgs,"Prerequisite updated");
 			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_id'];
 		}
-		if (isset($_REQUEST['duplicate_task_id']) && $task->duplicate_task_id != $_REQUEST['duplicate_task_id']) {
-			array_push($msgs,"Duplicate Task updated");
-			$parameters['duplicate_task_id'] = $_REQUEST['duplicate_task_id'];
-		}
 		if (isset($_REQUEST['role_id']) && $task->role_id != $_REQUEST['role_id']) {
 			array_push($msgs,"Required Role updated");
 			$parameters['role_id'] = $_REQUEST['role_id'];
@@ -180,7 +176,7 @@
 		}
 
 		if (is_numeric($task->id) && $task->id > 0) {
-		
+
 			/************************************/
 			/* Email Internal Notifications		*/
 			/************************************/
@@ -322,16 +318,54 @@
             $engineeringComment = new \Engineering\Comment();
             $engineeringComment->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $task->code, 'content' => $_REQUEST['task_comment']));
             if ($engineeringComment->error()) $page->addError("Error creating comment: ".$engineeringComment->error());
-            array_push($msgs,"Comment added.");
 		    $event = new \Engineering\Event();
 		    $event->add(array(
 			    'task_id'	=> $task->id,
 			    'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
 			    'date_added'	=> date('Y-m-d H:i:s'),
-			    'description'	=> join('<br>',$msgs),
+			    'description'	=> "Comment added."
 		    ));
 		    if ($event->error()) $page->addError("Error creating comment: ".$event->error());
 	    }
+	    
+	    // update task that this one duplicates with all the information about it
+	    if (isset($_REQUEST['duplicate_task_id']) && $task->duplicate_task_id != $_REQUEST['duplicate_task_id']) {
+	    
+            $parameters = array();
+            $parameters['duplicate_task_id'] = $_REQUEST['duplicate_task_id'];
+            $task->update($parameters);
+		    $event = new \Engineering\Event();
+		    $event->add(array(
+			    'task_id'	=> $task->id,
+			    'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
+			    'date_added'	=> date('Y-m-d H:i:s'),
+			    'description'	=> "Duplicate Task updated."
+		    ));
+		    if ($event->error()) $page->addError("Error creating comment: ".$event->error());
+			
+			// get all the info from the task set as duplicate to merge with this one
+			$taskDuplicating = new \Engineering\Task($_REQUEST['duplicate_task_id']);
+			$parameters = array();
+			$parameters['description'] = $task->description . " (From Duplicate Task: " . $taskDuplicating->description .")";
+			$parameters['testing_details'] = $task->testing_details . " (From Duplicate Task: " . $taskDuplicating->testing_details .")";
+            $task->update($parameters);
+			
+			// pull over all the engineering_events from the task that is duplicate of this one
+			$engineeringEvents = new \Engineering\EventList();
+			$engineeringEventsList = $engineeringEvents->find(array('task_id'=>$_REQUEST['duplicate_task_id']));
+			foreach ($engineeringEventsList as $engineeringEvent) {
+			    $newEngineeringEvent = new \Engineering\Event();
+			    $newEngineeringEvent->add(array('task_id' => $task->task_id, 'person_id' => $engineeringEvent->person_id, 'description' => $engineeringEvent->description, 'date_event' => $engineeringEvent->date_event));		
+			}
+			
+			// pull over all the engineering_task_comments from the task that is duplicate of this one
+			$engineeringCommentsList = new \Engineering\CommentList();
+			$engineeringCommentsItemsListed = $engineeringCommentsList->find(array('code'=>$taskDuplicating->code));
+			foreach ($engineeringCommentsItemsListed as $engineeringCommentItem) {
+			    $newEngineeringEvent = new \Engineering\Event();
+			    $newEngineeringEvent->add(array('date_comment' => $engineeringCommentItem->date_comment, 'content' => $engineeringCommentItem->content, 'code' => $task->code, 'user_id' => $engineeringCommentItem->user_id));
+			}
+		}
 	}
 
     // upload files if upload button is pressed

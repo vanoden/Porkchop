@@ -54,6 +54,7 @@
 			    <input type="checkbox" name="complete" value="1"<?php if ($_REQUEST['complete']) print " checked"; ?>/>Completed
 			    <input type="checkbox" name="cancelled" value="1"<?php if ($_REQUEST['cancelled']) print " checked"; ?> />Cancelled
 			    <input type="checkbox" name="hold" value="1"<?php if ($_REQUEST['hold']) print " checked"; ?> />Hold
+			    <input type="checkbox" name="duplicate" value="1"<?php if ($_REQUEST['duplicate']) print " checked"; ?> /><i>Include Duplicates</i>
 		    </div>
 	    </div>
 	    <div class="form_footer" style="text-align: center; width: 100%">
@@ -87,6 +88,14 @@
 	    <div class="tableRow">
 		    <div class="tableCell">
 			    <a href="/_engineering/task/<?=$taskItem->code?>"><?=$taskItem->title?></a>
+                <?php
+                    if (!empty($taskItem->duplicate_task_id)) {
+                    $taskDuplicated = new Engineering\Task($taskItem->duplicate_task_id);
+                ?>
+                    [duplicate of <a href="/_engineering/task/<?=$taskDuplicated->code?>"><?=$taskDuplicated->title?></a>]
+            	<?php
+	                }
+	            ?>
 		    </div>
 		    <div class="tableCell">
 			    <?=date('m/d/Y',$taskItem->timestamp_added)?>

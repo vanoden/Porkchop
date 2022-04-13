@@ -66,6 +66,11 @@
 				AND		release_id = ?";
 				array_push($bind_params,$parameters['release_id']);
 			}
+			
+			if (!isset($parameters['duplicate']) || empty($parameters['duplicate'])) {
+                $find_objects_query .= "
+				AND		duplicate_task_id IS NULL";
+			}
 
 			if (isset($parameters['status']) && !empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
