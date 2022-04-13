@@ -32,17 +32,19 @@ $rmaCode = (isset ( $_REQUEST ['code'] )) ? $_REQUEST ['code'] : 0;
 if (isset ( $GLOBALS ['_REQUEST_']->query_vars_array [0] )) $rmaCode = $GLOBALS ['_REQUEST_']->query_vars_array [0];
 if ($rmaId) {
 	$rma = new \Support\Request\Item\RMA ( $_REQUEST ['id'] );
-} elseif ($rmaCode) {
-	if (!$rma->get ( $rmaCode )) $page->addError("Error getting RMA: ".$rma->error());
-} else {
-	$page->addError("RMA Code or ID required");
+}
+elseif ($rmaCode) {
+	if (!$rma->get ( $rmaCode )) return 404;
+}
+else {
+	return 404;
 }
 
 // add events to page if they exist
 if ($rma->exists ()) {
 	$events = $rma->events ();
 } else {
-	$page->addError("RMA $rmaCode Not Found");
+	return 404;
 }
 
 // get any values for UI, check if they exist
@@ -65,8 +67,15 @@ if ($page->errorCount() < 1) {
 
 	// make sure customer belongs to the RMA, or we're an admin user wishing to view it
 	$authorized = true;
-	if ( $rmaItem->request->customer->id != $GLOBALS['_SESSION_']->customer->id ) $authorized = false;
-	if ( $GLOBALS['_SESSION_']->customer->has_role('support user') ) $authorized = true;
+	if ( $rmaItem->request->customer->id == $GLOBALS['_SESSION_']->customer->id ) {
+		// Ok
+	}
+	elseif ( $GLOBALS['_SESSION_']->customer->has_role('support user') ) {
+		// Ok
+	}
+	else {
+		return 403;
+	}
 
 	// get the shipment in question if it exists
 	$shippingShipment = new \Shipping\Shipment($rma->shipment_id);
@@ -78,15 +87,15 @@ if ($page->errorCount() < 1) {
 
 	// process the form submission for the return request
 	if (isset($_REQUEST['form_submitted']) && $_REQUEST ['form_submitted'] == 'submit') {
-	
+
 		// A shipping record is created status NEW.
 		// Each item from the form including accessories is added to the shipment as a shipping_item record
 		$parameters = array ();
 		//$parameters ['code'] = $rmaCode;
-	
+
 		// upsert shipment info, use the location recently provided
 		if (! $shippingShipment->id) {
-	
+
 			//$parameters ['code'] = $rmaCode;
 			$parameters ['document_number'] = $shippingDocument;
 			$parameters ['date_entered'] = date ( "Y-m-d H:i:s" );
@@ -94,7 +103,7 @@ if ($page->errorCount() < 1) {
 			$parameters ['send_customer_id'] = $rmaItem->request->customer->id;
 			$parameters ['receive_customer_id'] = $rma->approvedBy ()->id;
 			$parameters ['receive_location_id'] = $receive_location_id;
-	
+
 			if (!empty($_REQUEST ['shipping_address_picker'])) {
 				$registerLocationShipping = new \Register\Location($_REQUEST['shipping_address_picker']);
 				if (! $registerLocationShipping->id) {
@@ -240,17 +249,30 @@ if ($page->errorCount() < 1) {
 			$page->success = "Receipt recorded";
 		}
 	}
-	
+
 	// set UI to submitted or not
 	$rmaSubmitted = false;
 	$rmaReceived = false;
+	$rmaMessage = "Please fill out the form below to generate the RMA Document.  The document must be included with your returned items";
+
 	if (!empty($shippingShipment->id)) {
 		$rmaSubmitted = true;
 		$sentFromLocation = $shippingShipment->send_location ();
 		$sentToLocation = $shippingShipment->rec_location ();
 		$shippingPackage = new \Shipping\Package ();
 		$shippingPackage->getByShippingID($shippingShipment->id);
-		if ($shippingPackage->status == "RECEIVED") $rmaReceived = true;
+		if ($_REQUEST ['form_submitted'] == 'package_details_submitted') {
+			$rmaMessage = "You Package Information has been saved";
+		}
+		elseif ($shippingPackage->status == "RECEIVED") {
+			$rmaReceived = true;
+			$rmaMessage = "Your return was received";
+			if ($shippingPackage->condition == "DAMAGED") $rmaMessage .= ' <span class="red">DAMAGED</span>';
+		}
+		else {
+			$rmaReceived = false;
+			$rmaMessage = "Your return is processing...";
+		}
 	}
 
 	$ticketLink = "/_support/ticket/".$rmaTicketNumber;
@@ -265,3 +287,6 @@ $organizationUsers = $organization->members('human');
 $customerLocations = $GLOBALS['_SESSION_']->customer->locations();
 $shippingVendorList = new \Shipping\VendorList();
 $shippingVendors = $shippingVendorList->find();
+
+if (! $rmaReceived && !empty($shippingShipment->id) && empty($shippingPackage->tracking_code)) $showShippingForm = true;
+else $showShippingForm = false;

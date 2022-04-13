@@ -379,16 +379,42 @@ class Person {
         return 1;
     }
     
+    public function metadata($key) {
+	$bind_params = array();
+
+        $get_results_query = "
+				SELECT	value
+				FROM	register_person_metadata
+				WHERE	`person_id` = ?
+				AND	`key` = ?";
+
+	array_push($bind_params,$this->id);
+	array_push($bind_params,$key);
+
+        $rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
+        if (!$rs) {
+            $this->error = "SQL Error in Register::Person::metadata(): " . $GLOBALS['_database']->ErrorMsg();
+            return null;
+        }
+        list($value) = $rs->FetchRow();
+	return $value;
+    }
+    
     public function searchMeta($key, $value = '') {
+	$bind_params = array();
         $get_results_query = "
 				SELECT	person_id
 				FROM	register_person_metadata
-				WHERE	`key` = " . $GLOBALS['_database']->qstr($key, get_magic_quotes_gpc());
+				WHERE	`key` = ?";
+	array_push($bind_params,$key);
 
-        if ($value) $get_results_query .= "
-				AND		value = " . $GLOBALS['_database']->qstr($value, get_magic_quotes_gpc());
+        if ($value) {
+		$get_results_query .= "
+				AND		value = ?";
+		array_push($bind_params,$value);
+	}
 
-        $rs = $GLOBALS['_database']->Execute($get_results_query);
+        $rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
         if (!$rs) {
             $this->error = "SQL Error in Register::Person::searchMeta(): " . $GLOBALS['_database']->ErrorMsg();
             return null;
@@ -401,6 +427,7 @@ class Person {
         }
         return $objects;
     }
+
     # Process Email Verification Request
     function verify_email($validation_key) {
 
@@ -625,7 +652,11 @@ class Person {
 	}
 
 	public function initials() {
-		return substr($this->first_name,0,1)." ".substr($this->last_name,0,1);
+		return substr($this->first_name,0,1).substr($this->last_name,0,1);
+	}
+
+	public function icon() {
+		return new \Register\PersonIcon($this->id);
 	}
 
 	public function error() {
