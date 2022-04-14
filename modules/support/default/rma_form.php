@@ -486,7 +486,7 @@
 <?php	} ?>
 
 <!-- Receipt Info -->
-<?php	if ($GLOBALS['_SESSION_']->customer->can('receive shipments') && !$rmaReceived) { ?>
+<?php	if ($GLOBALS['_SESSION_']->customer->can('receive shipments') && $rmaSubmitted && !$rmaReceived) { ?>
 	<div class="container">
         <form method="post" id="submit_package_details">
 		<input type="hidden" name="id" value="<?=$rma->id?>" />
