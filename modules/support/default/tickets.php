@@ -111,7 +111,7 @@
 		    <span class="value">CLOSED</span>
 	    </div>
 	    
-	    <span style="float: right;"><a href="/_support/request_items" class="black"><i class="fa fa-ban" aria-hidden="true"></i> Clear Form</a></span>
+	    <span style="float: right;"><a href="/_support/tickets" class="black"><i class="fa fa-ban" aria-hidden="true"></i> Clear Form</a></span>
 	    <br/>
 	</form>
 </div>
