@@ -89,6 +89,17 @@
 			return $keyArray;
 		}
 
+		public function keyNames() {
+			$keyNames = array();
+			$keys = $this->_service->getAllKeys();
+			foreach ($keys as $key) {
+				preg_match('/^(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches);
+					$keyNames[$matches[1]] ++;
+				}
+			}
+			return $keyNames;
+		}
+
 		public function error() {
 			return $this->error;
 		}

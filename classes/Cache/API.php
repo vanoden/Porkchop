@@ -31,6 +31,25 @@
 	
 			print $this->formatOutput($response);
 		}
+
+		###################################################
+		### Get List of Cache Key Names					###
+		###################################################
+		public function findKeyNames() {
+			$client = $GLOBALS['_CACHE_'];
+	
+			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) $this->error('Permission denied');
+	
+			$keys = $client->keyNames();
+	
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->keyName = $keys;
+	
+			print $this->formatOutput($response);
+		}
+	
+		###################################################
 	
 		###################################################
 		### Get Specific Item from Cache				###
@@ -113,6 +132,8 @@
 				'findKeys'	=> array(
 					'object'	=> array(),
 				),
+				'keyNames'	=> array() {
+				},
 				'getItem'	=> array(
 					'object'	=> array('required' => true),
 					'id'		=> array('required' => true),

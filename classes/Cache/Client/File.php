@@ -131,6 +131,20 @@
 			}
 			return $keyArray;
 		}
+
+		public function keyNames() {
+			$keyNames = array();
+			if ($this->_connected) {
+				$keys = scandir($GLOBALS['_config']->cache->path."/");
+				foreach ($keys as $key) {
+					if (preg_match('/(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) {
+						$keyNames[$matches[1]] ++;
+					}
+				}
+			}
+			return $keyNames;
+		}
+
 		public function flush() {
 			if ($this->_connected) {
 				$keys = scandir($GLOBALS['_config']->cache->path."/");
