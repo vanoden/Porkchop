@@ -56,7 +56,7 @@
 			}
 
 			if (isset($parameters['code'])) {
-				$check = new \Support\Request\RMA();
+				$check = new \Support\Request\Item\RMA();
 				if ($check->get($parameters['code'])) {
 					$this->_error = "Code already used";
 					return false;

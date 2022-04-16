@@ -5,6 +5,7 @@
 	 * list of engineering tasks 
 	 */
 	class TaskList {
+	
 		private $_error;
 		private $count = 0;
 
@@ -47,11 +48,28 @@
 				AND		assigned_id = ?";
 				array_push($bind_params, 0);
 			}
-
+			
+			if (isset($parameters['duplicate_task_id']) && is_numeric($parameters['duplicate_task_id'])) {
+				$find_objects_query .= "
+				AND		duplicate_task_id = ?";
+				array_push($bind_params, 0);
+			}
+			
+			if (isset($parameters['role_id']) && is_numeric($parameters['role_id'])) {
+				$find_objects_query .= "
+				AND		role_id = ?";
+				array_push($bind_params, 0);
+			}
+			
 			if (isset($parameters['release_id']) && is_numeric($parameters['release_id'])) {
 				$find_objects_query .= "
 				AND		release_id = ?";
 				array_push($bind_params,$parameters['release_id']);
+			}
+			
+			if (!isset($parameters['duplicate']) || empty($parameters['duplicate'])) {
+                $find_objects_query .= "
+				AND		duplicate_task_id IS NULL";
 			}
 
 			if (isset($parameters['status']) && !empty($parameters['status'])) {
@@ -86,6 +104,7 @@
 			$find_objects_query .= "
 				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
 						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
+						FIELD(difficulty,'PROJECT','HARD','NORMAL','EASY'),
 						date_added DESC
 			";
 
@@ -178,6 +197,7 @@
 			$find_objects_query .= "
 				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
 						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
+						FIELD(difficulty,'PROJECT','HARD','NORMAL','EASY'),
 						date_added DESC
 			";
 

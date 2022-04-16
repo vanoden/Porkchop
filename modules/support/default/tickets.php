@@ -1,3 +1,4 @@
+<script defer src="/js/dateSelect.js"></script>
 <script src="/js/sort.js"></script>
 <script>
     // document loaded - start table sort
@@ -43,20 +44,41 @@
 		pageForm.submit();
 		return true;
 	}
+
+	function toggleFilters() {
+		var filterForm = document.getElementById('filters');
+		if (filterForm.style.display == "block") filterForm.style.display = "none";
+		else (filterForm.style.display = "block");
+	}
+
+	function clearFilters() {
+		document.getElementById('datepicker').removeEventListener("blur", pickerListener, false);
+		document.getElementById('serial_number').value = '';
+		document.getElementById('product_id').value = '';
+		document.getElementById('datepicker').value = '';
+		document.getElementById('min_date').value = '';
+		pageForm.submit();
+		return true;
+	}
 	
 	// date picker with max date being current day
-    window.onload = function() {
-       $("#datepicker").datepicker({
-            onSelect: function(dateText, inst) {
-                var minDate = document.getElementById('min_date');
-                minDate.value = dateText;
-                updateReport();
-            }, 
-            maxDate: '0'
-        });
-    }
+	window.addEventListener("load", () => {
+		var dateSelect = Object.create(DateSelect);
+		dateSelect.defaultDate = new Date();
+		dateSelect.showFields = false;
+		dateSelect.elem = document.getElementById('datepicker');
+		dateSelect.showForm();
+		document.getElementById('datepicker').addEventListener("blur", pickerListener, false);
+	});
+
+	function pickerListener() {
+		document.getElementById('min_date').value = document.getElementById('datepicker').value;
+		toggleFilters();
+		updateReport();
+	}
+
 </script>
-<div style="width: 756px;">
+<div>
 	<?php if ($page->errorCount()) { ?>
 	    <div class="form_error"><?=$page->errorString()?></div>
 	<?php } ?>
@@ -64,87 +86,99 @@
 	    <div class="form_success"><?=$page->success?></div>
 	<?php } ?>
 </div>
-<h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i>Support Tickets</h2>
-<a href="/_support/request">Create new request</a>
-
-<div style="width: 756px;">
-	<form id="pageForm" name="filterForm" method="get" action="/_support/tickets"  autocomplete="off">
-	    <input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />	    
-	    <input id="sort_by" type="hidden" name="sort_by" value="" />
-	    <input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" />
-	    <input id="min_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['min_date']?>" />
-	    <div style="width: 100%; border: solid 1px #888a85; padding: 10px; margin: 10px; margin-left: 0px;">
-	    <h3 style="padding: 0px; margin: 0px;">Filter Results</h3><br/>
-        <div style="width: 25%; float:left;">
-	        <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
-	        <input type="text" id="serial_number" name="serial_number" class="value input collectionField" value="<?=$selectedSerialNumber?>" onchange="updateReport()" />
-        </div>
-        <div style="width: 42%; float:left; padding-left: 10px;">
-	        <span class="label"><i class="fa fa-cog" aria-hidden="true"></i> Product:</span>
-	        <select id="product_id" name="product_id" class="value input collectionField" onchange="updateReport()">
-    	         <option value="ALL"<?php	if ($product == $selectedProduct) print " selected"; ?>>ALL</option>
-                <?php foreach ($products as $product) { ?>
-		            <option value="<?=$product->id?>"<?php	if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?></option>
-                <?php } ?>
-	        </select>
-	    </div>
-        <div style="width: 33%; float:left;">
-            <span class="label"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> After Date: <?=!empty($_REQUEST['min_date']) ? '[' . $_REQUEST['min_date']. ']' : '';?></span>
-            <input type="text" id="datepicker" value="<?=$minDate?>">
-        </div>
-        
-	    <div style="clear: both;"></div>
-	    
-	    <span class="label"><i class="fa fa-filter" aria-hidden="true"></i> Status</span>
-	    <div class="checkbox-row">
-		    <input type="checkbox" name="status_new" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_new']) print " checked";?> />
-		    <span class="value">NEW</span>
-		    <input type="checkbox" name="status_active" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_active']) print " checked";?> />
-		    <span class="value">ACTIVE</span>
-		    <input type="checkbox" name="status_pending_customer" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_pending_customer']) print " checked";?> />
-		    <span class="value">PENDING CUSTOMER</span>
-		    <input type="checkbox" name="status_pending_vendor" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_pending_vendor']) print " checked";?> />
-		    <span class="value">PENDING VENDOR</span>
-		    <input type="checkbox" name="status_complete" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_complete']) print " checked";?> />
-		    <span class="value">COMPLETE</span>
-		    <input type="checkbox" name="status_closed" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_closed']) print " checked";?> />
-		    <span class="value">CLOSED</span>
-	    </div>
-	    
-	    <span style="float: right;"><a href="/_support/tickets" class="black"><i class="fa fa-ban" aria-hidden="true"></i> Clear Form</a></span>
-	    <br/>
-	</form>
+<div class="secondaryHeader">
+	<h2>Support Tickets</h2>
+	<button class="expanding" onclick="toggleFilters()">Filter Results</button>
+	<button href="/_support/request">New Request</button>
 </div>
+<!--	Insert Filter Section -->
+<div>
+	<form id="pageForm" name="filterForm" method="get" action="/_support/tickets"  autocomplete="off">
+		<input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />	    
+		<input id="sort_by" type="hidden" name="sort_by" value="" />
+		<input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" />
+		<input id="min_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['min_date']?>" />
+		<div id="filters" class="forms-filter">
+			<div class="flex-space-between form-basis">
+				<ul>
+					<li>
+						<label for="serial_number"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</label>
+						<input type="text" id="serial_number" name="serial_number" class="value input collectionField" value="<?=$selectedSerialNumber?>" onchange="updateReport()" />
+					</li>
+					<li>
+						<label for="product_id">Product:</label>
+						<select id="product_id" name="product_id" class="value input collectionField" onchange="updateReport()">
+							<option value="ALL"<?php	if ($product == $selectedProduct) print " selected"; ?>>Choose a product</option>
+							<?php foreach ($products as $product) { ?>
+							<option value="<?=$product->id?>"<?php	if ($product->id == $selectedProduct) print " selected"; ?>><?=$product->code?></option>
+							<?php } ?>
+						</select>
+					</li>
+					<li>
+						<label for="datepicker">After Date: <?=!empty($_REQUEST['min_date']) ? '[' . $_REQUEST['min_date']. ']' : '';?></label>
+						<input type="date" id="datepicker" value="<?=$minDate?>">
+					</li>
+					<button class="iconButton closeIcon" onclick="clearFilters()">Clear Filters</button>
+				</ul>
+			</div>
+			<ul class="flex-space-between form-basis checkboxRow">
+				<li><h4>Status:</h4></li>
+				<li>
+					<input type="checkbox" name="status_new" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_new']) print " checked";?> />
+					<label for="status_new">New</label>
+						</li>
+				<li>
+					<input type="checkbox" name="status_active" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_active']) print " checked";?> />
+					<label for="status_active">Active</label>
+						</li>
+				<li>
+					<input type="checkbox" name="status_pending_customer" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_pending_customer']) print " checked";?> />
+					<label for="status_pending_customer">Pending Customer</label>
+						</li>
+				<li>
+					<input type="checkbox" name="status_pending_vendor" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_pending_vendor']) print " checked";?> />
+					<label for="status_pending_vendor">Pending Vendor</label>
+						</li>
+				<li>
+					<input type="checkbox" name="status_complete" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_complete']) print " checked";?> />
+					<label for="status_complete">Complete</label>
+						</li>
+				<li>
+					<input type="checkbox" name="status_closed" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_closed']) print " checked";?> />
+					<label for="status_closed">Closed</label>
+				</li>
+			</ul>
+		</form>
+	</div>
+<!--    End Filter Section -->
+
 <!--	Start First Row-->
-<div class="tableBody min-tablet">
+<div class="tableBody bandedRows">
 	<div class="tableRowHeader">
-		<div id="ticket-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'ticket'; updateReport()">Ticket #</div>
-		<div id="date-sortable-column" class="tableCell sortableHeader"  style="width: 20%;" onclick="document.getElementById('sort_by').value = 'requested'; updateReport()">Date Requested</div>
-		<div id="requestor-sortable-column" class="tableCell sortableHeader" style="width: 15%;" onclick="document.getElementById('sort_by').value = 'requestor'; updateReport()">Requestor</div>
-		<div id="product-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'product'; updateReport()">Product</div>
-		<div id="serial-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'serial'; updateReport()">Serial #</div>
-		<div id="status-sortable-column" class="tableCell sortableHeader" style="width: 9%;" onclick="document.getElementById('sort_by').value = 'status'; updateReport()">Status</div>
+		<div id="ticket-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'ticket'; updateReport()">Ticket #</div>
+		<div id="date-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'requested'; updateReport()">Requested</div>
+		<div id="requestor-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'requestor'; updateReport()">Requestor</div>
+		<div id="product-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'product'; updateReport()">Product</div>
+		<div id="serial-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'serial'; updateReport()">Serial #</div>
+		<div id="status-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'status'; updateReport()">Status</div>
 	</div> <!-- end row header -->
     <?php	foreach ($items as $item) { ?>
         <div class="tableRow">
-	        <div class="tableCell">
-		        <span class="value"><a href="/_support/ticket/<?=$item->id?>"><?=$item->ticketNumber()?></a></span>
-	        </div>
-	        <div class="tableCell">
-		        <span class="value"><?=$item->request->date_request?></span>
-	        </div>
-	        <div class="tableCell">
-		        <span class="value"><?=$item->request->customer->full_name()?></span>
-	        </div>
-	        <div class="tableCell">
-		        <span class="value"><?=$item->product->code?></span>
-	        </div>
-	        <div class="tableCell">
-		        <span class="value"><?=$item->serial_number?></span>
-	        </div>
-	        <div class="tableCell">
-		        <span class="value"><?=ucwords(strtolower($item->status))?></span>
-	        </div>
+	        <div class="tableCell"><span class="hiddenDesktop value">Ticket #</span>
+					<span class="value"><a href="/_support/ticket/<?=$item->id?>"><?=$item->ticketNumber()?></a></span></div>
+					<div class="tableCell"><span class="hiddenDesktop value">Requested: </span>
+					<span class="value"><?=shortDate($item->request->date_request)?></span></div>
+	        <div class="tableCell"><span class="hiddenDesktop value">Requested by: </span>
+					<span class="value avatar"><?=$item->request->customer->initials()?></span>
+					<span class="value"><?=$item->request->customer->full_name()?></span>
+			</div>
+	        <div class="tableCell"><span class="hiddenDesktop value">Product Name: </span>
+					<span class="value"><?=$item->product->code?></span></div>
+	        <div class="tableCell"><span class="hiddenDesktop value">Serial #: </span>
+					<span class="value"><?=$item->serial_number?></span></div>
+	        <div class="tableCell"><span class="hiddenDesktop value">Status: </span>
+					<span class="value"><?=ucwords(strtolower($item->status))?></span></div>
         </div>
     <?php	} ?>
 </div>
+<div>

@@ -28,7 +28,9 @@ gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico', 'dashbo
 				"company_name": configDict.companyName,
 				"company": configDict.companyCode,
 				"header": fs.readFileSync('tmp/header.html', 'utf8'),
-				"footer": fs.readFileSync('tmp/footer.html', 'utf8')
+				"footer": fs.readFileSync('tmp/footer.html', 'utf8'),
+				"footer_monitor": fs.readFileSync('tmp/footer.monitor.html', 'utf8'),
+				"header_2022": fs.readFileSync('tmp/header_2022.html', 'utf8')
 			}
 		)))
 		.pipe(template())

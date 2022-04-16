@@ -363,6 +363,55 @@
 				$this->setVersion(12);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+			if ($this->version() < 14) {
+				app_log("Upgrading to version 14",'notice');
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `engineering_tasks` ADD COLUMN `difficulty` enum('EASY','NORMAL','HARD','PROJECT') NOT NULL DEFAULT 'NORMAL'
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering engineering_tasks table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$alter_table_query = "
+                    ALTER TABLE `engineering_tasks` ADD `duplicate_task_id` int(11) DEFAULT NULL
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering engineering_tasks table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$insert_engineering_roles = "
+					INSERT INTO `register_roles` (`name`, `description`) VALUES ('systems administrator', 'systems administrator'), ('graphic designer', 'graphic designer'), ('web programmer', 'web programmer'), ('embedded programmer', 'embedded programmer'), ('qa automation', 'qa automation');
+				";
+				$GLOBALS['_database']->Execute($insert_engineering_roles);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating register_roles in Engineering::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+					app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$alter_table_query = "					
+                    ALTER TABLE `engineering_tasks` ADD COLUMN `role_id` int(11) DEFAULT NULL, ADD CONSTRAINT `fk_register_roles_role_id` FOREIGN KEY (`role_id`)  REFERENCES `register_roles`(`id`)
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering engineering_tasks table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(14);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			
 			return true;	
 		}
 

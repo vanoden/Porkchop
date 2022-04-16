@@ -1,7 +1,6 @@
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <link rel="stylesheet" href="/css/datepicker.min.css">
 <script src="/js/datepicker.min.js"></script> 
-
 <style>
     hr {
         border: 0;
@@ -41,6 +40,66 @@
         color: #a1a1a1;
         background: #80808061;
     }
+    
+    #btn_submit {
+        min-width: 175px;
+        min-height: 50px;
+        border-radius: 10px;
+    }
+
+    #overlay {
+        display:none;
+        width: 100%;
+        height: 100%;
+        z-index: 200;
+        background-color:#00000090;
+        position:fixed;
+        top: 0;
+        left: 0px;
+    }
+    
+    #duplicate_task_name {
+        color: #888888;
+    }
+
+    #popup {
+        border: solid 2px #000;
+        border-radius: 5px;
+        display: none;
+        padding: 10px;
+        position: absolute;
+        top: 200px;
+        background: #fff;
+        width: 90%;
+        height: 750px;
+        z-index: 200;
+        overflow-y: scroll;
+    }
+    
+    #popupclose {
+        float: right;
+        margin: 2px;
+        font-size: 15px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    @media only screen and (max-width: 768px) {
+        #popup {
+            width: 100%;
+        }
+    }
+    
+    <?php
+        if ($_REQUEST['duplicate_btn_submit']) {
+    ?>
+        #popup, #overlay {
+            display:block;
+        }
+    <?php
+        }
+    ?>
+    
 </style>
 <script>
     $(document).ready(function () {
@@ -52,13 +111,6 @@
 			$( "#method" ).val("Submit");
             $( "#task_form" ).submit();
             $( "#btn_submit" ).click(false);
-        });
-        
-        $( "#btn_add_comment" ).click(function() {
-            $( "#btn_add_comment" ).val("please wait...");
-			$( "#method" ).val("Add Comment");
-            $( "#task_form" ).submit();
-            $( "#btn_add_comment" ).click(false);
         });
         
         $( "#btn_add_hours" ).click(function() {
@@ -83,13 +135,6 @@
             $( "#task_form" ).submit();
             $( "#btn_add_event" ).click(false);
         });
-
-        $( "#btn_add_testing" ).click(function() {
-            $( "#btn_add_testing" ).val("please wait...");
-			$( "#method" ).val("Testing");
-            $( "#task_form" ).submit();
-            $( "#btn_add_testing" ).click(false);
-        });
         
         $( "#date_event" ).change(function() {
             $( "#btn_add_event" ).removeAttr('disabled');
@@ -110,6 +155,33 @@
         $( "#notes" ).change(function() {
             $( "#btn_add_event" ).removeAttr('disabled');
         });
+        
+         // Initialize Popup
+        var closePopup = document.getElementById("popupclose");
+        var overlay = document.getElementById("overlay");
+        var popup = document.getElementById("popup");
+        var btn_duplicate = document.getElementById("btn_duplicate");
+        var duplicate_task_id = document.getElementById("duplicate_task_id");
+        var duplicate_task_name = document.getElementById("duplicate_task_name");
+        var duplicate_task_id_clear = document.getElementById("duplicate_task_id_clear");
+        
+        // Clear duplicate task ID
+        duplicate_task_id_clear.onclick = function() {
+            duplicate_task_id.value = '';
+            duplicate_task_name.value = '(none)';
+        };
+        
+        // Open Popup Event
+        btn_duplicate.onclick = function() {
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+        };
+
+        // Close Popup Event
+        closePopup.onclick = function() {
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
+        };    
     });
 </script>
 <div>
@@ -224,6 +296,7 @@
             <div class="tableCell">
                <?php	if (isset($task->id)) {
                   $requestor = $task->requestedBy(); ?>
+
                <span class="value"><?=$requestor->first_name?> <?=$requestor->last_name?></span>
                <?php	} else { ?>
                <select name="requested_id" class="value input wide_100per">
@@ -268,7 +341,7 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <textarea name="description" class="wide_100per"><?=strip_tags($form['description'])?></textarea>
+               <textarea name="description" class="wide_100per" form="task_form"><?=strip_tags($form['description'])?></textarea>
             </div>
          </div>
          <div class="tableRow">
@@ -276,15 +349,49 @@
                <strong>Prerequisite</strong>
                <select name="prerequisite_id" class="value input" style="max-width: 250px;">
                   <option value="">None</option>
-                  <?php	foreach($tasklist as $prerequisiteTask) { ?>
+                  <?php	foreach($prerequisiteTasklist as $prerequisiteTask) { ?>
                     <option value="<?=$prerequisiteTask->id?>"<?php if ($prerequisiteTask->id == $form['prerequisite_id']) print " selected"; ?>><?=$prerequisiteTask->title?></option>
                   <?php	} ?>
+               </select><br/>
+               <strong>Difficulty</strong>
+               <select name="difficulty" class="value input">
+                  <option value="EASY"<?php if ($form['difficulty'] == "EASY") print " selected"; ?>>Easy</option>
+                  <option value="NORMAL"<?php if ($form['difficulty'] == "NORMAL") print " selected"; ?>>Normal</option>
+                  <option value="HARD"<?php if ($form['difficulty'] == "HARD") print " selected"; ?>>Hard</option>
+                  <option value="PROJECT"<?php if ($form['difficulty'] == "PROJECT") print " selected"; ?>>Project</option>
                </select>
+               
+               <br/><br/>
+               <strong>Required Engineering Role</strong>
+               <br/>
+               <select name="role_id" class="value input" style="max-width: 250px;">
+                  <option value="">None</option>
+                  <?php	foreach($engineeringRoles as $engineeringRole) { ?>
+                    <option value="<?=$engineeringRole->id?>"<?php if ($engineeringRole->id == $form['role_id']) print " selected"; ?>><?=$engineeringRole->name?></option>
+                  <?php	} ?>
+               </select>
+               
+               <br/><br/>
+               <strong>Assign task as Duplicate</strong><br/>
+               Task Duplicates: 
+                <input type="hidden" id="duplicate_task_id" name="duplicate_task_id" value="<?=$form['duplicate_task_id']?>" />
+                <input type="text" id="duplicate_task_name" name="duplicate_task_name" value="<?=$form['duplicate_task_name']?>" readonly='readonly'/>
+                <input type="button" id="duplicate_task_id_clear" name="duplicate_task_id_clear" value="Clear" style="background:#999;"/>
+               <br/>
+                <input id="btn_duplicate" type="button" name="btn_duplicate" class="button" value="Search for Task"/>        
+                <div id="overlay"></div>
+                <div id="popup">
+                    <div class="popupcontrols">
+                        <span id="popupclose">X</span>
+                    </div>
+                    <div class="popupcontent">
+                        <h1>Find a task that is duplicate to this one</h1>
+                        <?php include(MODULES.'/engineering/partials/duplicate_tasks_finder.php'); ?>
+                    </div>
+                </div>
+                               
             </div>
          </div>   
-       <div class="tableRow button-bar">
-        <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
-       </div>
       </div>
       <!-- End Fourth Row -->
       
@@ -299,11 +406,8 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <textarea name="testing_details" class="wide_100per"><?=strip_tags($form['testing_details'])?></textarea>
+               <textarea id="testing_details" name="testing_details" class="wide_100per" form="task_form"><?=strip_tags($form['testing_details'])?></textarea>
             </div>
-         </div>
-         <div class="tableRow button-bar">
-            <input id="btn_add_testing" type="submit" name="btn_add_testing" class="button" value="Update Testing Info" />
          </div>
       </div>
       <!-- End comment Row -->
@@ -316,50 +420,19 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <textarea name="content" class="wide_100per"></textarea>
+               <textarea id="task_comment" name="task_comment" class="wide_100per" form="task_form"></textarea>
             </div>
-         </div>
-         <div class="tableRow button-bar">
-            <input id="btn_add_comment" type="submit" name="btn_add_comment" class="button" value="Add Comment" />
          </div>
       </div>
       <!-- End comment Row -->
-          
-       <!--	Start First Row-->
-       <h3>Comments</h3>
-       <div class="tableBody min-tablet">
-          <div class="tableRowHeader">
-             <div class="tableCell" style="width: 20%;">Date</div>
-             <div class="tableCell" style="width: 15%;">Person</div>
-             <div class="tableCell" style="width: 65%;">Description</div>
-          </div>
-          <?php	
-            foreach ($commentsList as $comment) {
-            $person = $comment->person();
-             ?>
-          <div class="tableRow">
-             <div class="tableCell">
-                <i><?=date("M dS Y h:i A", $comment->timestamp_added)?></i>
-             </div>
-             <div class="tableCell">
-               <strong><?=$person->login?></strong>
-             </div>
-             <div class="tableCell eventLogEntry">
-             <pre>
-                <?=strip_tags($comment->content)?>
-             </pre>
-             </div>
-          </div>
-          <?php	} ?>
-       </div>
-      
+                
       <h3>Event Update</h3>
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
             <div class="tableCell">Event Date</div>
             <div class="tableCell">Person</div>
             <div class="tableCell">Hours</div>
-            <div class="tableCell">New Status</div>
+            <div class="tableCell">Set New Status (Currently: <?=$task->status?>)</div>
          </div>
          <div class="tableRow">
             <div class="tableCell">
@@ -373,17 +446,18 @@
                </select>
             </div>
             <div class="tableCell">
-               <input id="hours_worked" type="text" name="hours_worked" class="value input" value="0" />
+               <input id="hours_worked" type="number" name="hours_worked" class="value input" value="0" form="task_form"/>
             </div>
             <div class="tableCell">
-               <select id="new_status" name="new_status" class="value input wide_100per">
-                  <option value="new"<?php if ($task->status == 'NEW') print ' selected'; ?>>New</option>
-                  <option value="hold"<?php if ($task->status == 'HOLD') print ' selected'; ?>>Hold</option>
-                  <option value="active"<?php if ($task->status == 'ACTIVE') print ' selected'; ?>>Active</option>
-                  <option value="broken"<?php if ($task->status == 'BROKEN') print ' selected'; ?>>Broken</option>
-                  <option value="testing"<?php if ($task->status == 'TESTING') print ' selected'; ?>>Testing</option>
-                  <option value="cancelled"<?php if ($task->status == 'CANCELLED') print ' selected'; ?>>Cancelled</option>
-                  <option value="complete"<?php if ($task->status == 'COMPLETE') print ' selected'; ?>>Complete</option>
+               <select id="new_status" name="new_status" class="value input wide_100per" form="task_form">
+                  <option value=""></option>
+                  <option value="new">New</option>
+                  <option value="hold">Hold</option>
+                  <option value="active">Active</option>
+                  <option value="broken">Broken</option>
+                  <option value="testing">Testing</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="complete">Complete</option>
                </select>
             </div>
          </div>
@@ -397,15 +471,48 @@
          </div>
          <div class="tableRow">
             <div class="tableCell">
-               <textarea id="notes" name="notes" class="wide_100per"></textarea>
+               <textarea id="notes" name="notes" class="wide_100per" form="task_form"></textarea>
             </div>
-         </div>
-         <div class="tableRow button-bar">
-            <input id="btn_add_event" type="submit" name="btn_add_event" class="button" value="Add Event" />
          </div>
       </div>
       <!-- End event description Row -->
+      
+      <!-- entire page button submit -->
+      <div class="tableBody min-tablet">
+            <div class="tableRow button-bar">
+                <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
+            </div>
+      </div>
+      
    </form>
+   
+   <!--	Start First Row-->
+   <h3>Comments</h3>
+   <div class="tableBody min-tablet">
+      <div class="tableRowHeader">
+         <div class="tableCell" style="width: 20%;">Date</div>
+         <div class="tableCell" style="width: 15%;">Person</div>
+         <div class="tableCell" style="width: 65%;">Description</div>
+      </div>
+      <?php	
+        foreach ($commentsList as $comment) {
+        $person = $comment->person();
+         ?>
+      <div class="tableRow">
+         <div class="tableCell">
+            <i><?=date("M dS Y h:i A", $comment->timestamp_added)?></i>
+         </div>
+         <div class="tableCell">
+           <strong><?=$person->login?></strong>
+         </div>
+         <div class="tableCell eventLogEntry">
+         <pre>
+            <?=strip_tags($comment->content)?>
+         </pre>
+         </div>
+      </div>
+      <?php	} ?>
+   </div>
    
     <div style="width: 756px;">
         <br/><h3>Documents</h3><br/>
@@ -436,12 +543,12 @@
         }
         ?>
         <form name="repoUpload" action="/_engineering/task/<?=$form['code'];?>" method="post" enctype="multipart/form-data">
-        <div class="container">
-            <span class="label">Upload File</span>
-            <input type="hidden" name="type" value="engineering task" />
-            <input type="file" name="uploadFile" />
-            <input type="submit" name="btn_upload" class="button" value="Upload" />
-        </div>
+            <div class="container">
+                <span class="label">Upload File</span>
+                <input type="hidden" name="type" value="engineering task" />
+                <input type="file" name="uploadFile" />
+                <input type="submit" name="btn_upload" class="button" value="Upload" />
+            </div>
         </form>
         <br/><br/>
     </div>
@@ -475,5 +582,14 @@
           </div>
       <?php	} ?>
    </div>
-   <?php	}	?>
+   <?php	} else {
+   ?>
+      <div class="tableBody min-tablet">
+            <div class="tableRow button-bar">
+                <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
+            </div>
+      </div>
+   <?php
+   }	
+   ?>
 </div>

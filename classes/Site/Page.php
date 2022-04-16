@@ -215,35 +215,22 @@
 	    }
 
 		public function template() {
-			return $this->getMetadata('template');
+			$template = $this->getMetadata('template');
+			if (!empty($template)) return $template;
+			elseif (file_exists(HTML . "/" . $this->module . "." . $this->view . ".html")) return $this->module . "." . $this->view . ".html";
+			elseif ($this->view == 'api' && file_exists ( HTML . "/_api.html")) return "_api.html";
+			elseif (file_exists ( HTML . "/" . $this->module . ".html")) return $this->module . ".html";
+			elseif (isset ( $GLOBALS ['_config']->site->default_template)) return $GLOBALS ['_config']->site->default_template;
+			elseif (file_exists ( HTML . "/index.html")) return "index.html";
+			elseif (file_exists ( HTML . "/install.html" )) return "install.html";
+			else return null;
 		}
 
-	    public function load_template() {
+		public function load_template() {
 			$template = $this->template();
-		    if (isset ( $template )) {
-			    app_log ( "Loading template '" . $template . "' from page metadata", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $template );
-		    } elseif (file_exists ( HTML . "/" . $this->module . "." . $this->view . ".html" )) {
-			    app_log ( "Loading template '" . "/" . $this->module . "." . $this->view . ".html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $this->module . "." . $this->view . ".html" );
-		    } elseif ($this->view == 'api' && file_exists ( HTML . "/_api.html" )) {
-			    app_log ( "Loading template '_api.html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/_api.html" );
-		    } elseif (file_exists ( HTML . "/" . $this->module . ".html" )) {
-			    app_log ( "Loading template '" . "/" . $this->module . ".html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $this->module . ".html" );
-		    } elseif (isset ( $GLOBALS ['_config']->site->default_template )) {
-			    app_log ( "Loading template '" . $GLOBALS ['_config']->site->default_template . "'", 'debug', __FILE__, __LINE__ );
-			    if (! file_exists ( HTML . "/" . $GLOBALS ['_config']->site->default_template )) {
-				    app_log ( "Default template file not found!", 'error', __FILE__, __LINE__ );
-			    }
-			    $html = file_get_contents ( HTML . "/" . $GLOBALS ['_config']->site->default_template );
-		    } elseif (file_exists ( HTML . "/index.html" )) {
-			    app_log ( "Loading template '/index.html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/index.html" );
-		    } elseif (file_exists ( HTML . "/install.html" )) $html = file_get_contents ( HTML . "/install.html" );
-		    else $html = '<r7 object="page" property="view"/>';
-		    return $this->parse ( $html );
+			if (isset ( $template ) && file_exists(HTML."/".$template)) return $this->parse(file_get_contents(HTML."/".$template));
+			elseif (isset ($template)) app_log("Template ".HTML."/".$template." not found!",'error');
+			return $this->parse('<r7 object="page" property="view"/>');
 	    }
 
 	    public function parse($message) {
@@ -363,21 +350,7 @@
 			    } elseif ($property == "not_authorized") {
 				    $buffer .= "<div class=\"page_error\">Sorry, you are not authorized to see this view</div>";
 			    } else {
-					if (isset($this->style)) {
-						if (file_exists(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php'))
-							$be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
-						elseif (file_exists(MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php'))
-							$be_file = MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php';
-						if (file_exists(MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php'))
-							$fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
-						elseif (file_exists(MODULES . '/' . $this->module . '/default/' . $this->view . '.php'))
-							$fe_file = MODULES . '/' . $this->module . '/default/' . $this->view . '.php';
-					}
-				    app_log ( "Loading $fe_file", 'debug', __FILE__, __LINE__ );
-				    ob_start ();
-				    if (file_exists ( $be_file )) include ($be_file);
-				    if (file_exists ( $fe_file )) include ($fe_file);
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "navigation") {
 			    if ($property == "menu") {
@@ -390,13 +363,7 @@
 					    app_log ( "navigation menu references without code" );
 				    }
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
-				    ob_start ();
-				    $be_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php';
-				    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
-				    if (file_exists ( $be_file )) include ($be_file);
-				    if (file_exists ( $fe_file )) include ($fe_file);
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "content") {
 			    if ($property == "index") {
@@ -434,11 +401,7 @@
 					    }
 				    }
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "product") {
 			    // Load Product Class if Not Already Loaded
@@ -522,28 +485,17 @@
 					    }
 				    }
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "monitor") {
-			    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
-			    ob_start ();
-			    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-			    if (file_exists ( MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php' )) include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-			    $buffer .= ob_get_clean ();
+				$buffer = $this->loadViewFiles($buffer);
 		    } elseif ($object == "session") {
 			    if ($property == "customer_id") $buffer = $GLOBALS ['_SESSION_']->customer->id;
 			    elseif ($property == "loggedin") {
 				    if (isset ( $GLOBALS ['_SESSION_']->customer->id )) $buffer = "true";
 				    else $buffer = "false";
 			    } else {
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "register") {
 			    if (isset ( $parameter ['id'] ) and preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
@@ -561,12 +513,7 @@
 					    $buffer .= "<a class=\"register_welcomestring\" href=\"" . PATH . "/_register/login\">Log In</a>";
 				    }
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php' );
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
-				    app_log ( "View loaded successfully" );
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "company") {
 			    $companies = new \Company\CompanyList ();
@@ -575,10 +522,7 @@
 			    if ($property == "name") {
 				    $buffer .= $company->name;
 			    } else {
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
+                    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "news") {
 			    if ($property == "events") {
@@ -599,25 +543,51 @@
 					    }
 				    }
 			    } else {
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "adminbar") {
 			    if (role ( 'administrator' )) $buffer = "<div class=\"adminbar\" id=\"adminbar\" style=\"height:20px; width: 100%; position: absolute; top: 0px; left: 0px;\">Admin stuff goes here</div>\n";
 		    } else {
-			    ob_start ();
-			    app_log ( "Loading view " . $this->view . " of module " . $this->module, 'debug', __FILE__, __LINE__ );
-			    $be_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php';
-			    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
-			    if (file_exists ( $be_file )) include ($be_file);
-			    else app_log ( "Backend file '$be_file' for module " . $this->module . " not found" );
-			    if (file_exists ( $fe_file )) include ($fe_file);
-			    $buffer .= ob_get_clean ();
+                $buffer = $this->loadViewFiles($buffer);
 		    }
 		    return $buffer;
 	    }
+        public function loadViewFiles($buffer = "") {
+		    ob_start ();
+            if (isset($this->style)) {
+                if (file_exists(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php'))
+                    $be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
+                elseif (file_exists(MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php'))
+                    $be_file = MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php';
+                if (file_exists(MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php'))
+                    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
+                elseif (file_exists(MODULES . '/' . $this->module . '/default/' . $this->view . '.php'))
+                    $fe_file = MODULES . '/' . $this->module . '/default/' . $this->view . '.php';
+            }
+		    app_log ( "Loading view " . $this->view . " of module " . $this->module, 'debug', __FILE__, __LINE__ );
+		    if (file_exists ( $be_file )) {
+				// Load Backend File
+                $res = include($be_file);
+
+				// Handle possible return codes
+                if ($res == 403) {
+                    http_response_code(403);
+                    return '<span class="label page_response_code">Permission Denied</span>';
+                }
+                elseif ($res == 500) {
+                    http_response_code(500);
+                    return '<span class="label page_response_code">Internal Error</span>';
+                }
+				elseif ($res == 404) {
+                    http_response_code(404);
+					return '<span class="label page_response_code">Resource not found</span>';
+				}
+            }
+		    else app_log ( "Backend file '$be_file' for module " . $this->module . " not found" );
+            if (file_exists ( $fe_file )) include ($fe_file);
+		    $buffer .= ob_get_clean ();
+            return $buffer;
+        }
 	    public function requires($role = '_customer') {
 		    if ($role == '_customer') {
 			    if ($GLOBALS ['_SESSION_']->customer->id) {

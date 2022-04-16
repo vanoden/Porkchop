@@ -1,5 +1,5 @@
 <?php
-    global $_config;
+	global $_config;
 	$page = new \Site\Page();
 
 	if ($_REQUEST['item_id']) {
@@ -11,9 +11,11 @@
 		$item = new \Support\Request\Item($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
 	$request = $item->request;
-	if ($request->customer->organization->id != $GLOBALS['_SESSION_']->customer->organization->id) {
-		print "Permission denied";
-		return;
+    if (! $item->id) {
+        return 404;
+    }
+	if ($request->customer->organization->id != $GLOBALS['_SESSION_']->customer->organization->id && !$GLOBALS['_SESSION_']->customer->can('browse support tickets')) {
+        return 403;
 	}
 
 	if ($_REQUEST['btn_reopen_item']) $item->update(array('status' => 'ACTIVE'));
@@ -37,6 +39,10 @@
 	$comments = $commentlist->find(array('item_id' => $item->id));
 	if ($commentlist->error()) $page->addError($commentlist->error());
 
-    $actionlist = new \Support\Request\Item\ActionList();
-    $actions = $actionlist->find(array('item_id' => $item->id));
-    if ($actionlist->error()) $page->addError($actionlist->error());
+	$actionlist = new \Support\Request\Item\ActionList();
+	$actions = $actionlist->find(array('item_id' => $item->id));
+	if ($actionlist->error()) $page->addError($actionlist->error());
+
+	$filesList = new \Storage\FileList();
+	$filesUploaded = $filesList->find(array('type' => 'support ticket', 'ref_id' => $item->id));
+

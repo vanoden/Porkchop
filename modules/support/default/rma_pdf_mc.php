@@ -14,6 +14,11 @@ if ($rmaId) {
 	$rma->get ( $rmaCode );
 }
 
+// Authorization Requirements
+if ($GLOBALS['_SESSION_']->customer->organization->id != $rma->item()->request->customer->organization->id && !$GLOBALS['_SESSION_']->customer->has_role('support manager')) {
+	$page->addError("Permission Denied");
+	return;
+}
 // get any values for UI, check if they exist
 $rmaNumber = $rma->number () ? $rma->number () : "";
 $rmaTicketNumber = $rma->item ()->ticketNumber () ? $rma->item ()->ticketNumber () : "";
@@ -31,6 +36,7 @@ $rmaCustomerOrganizationName = $rma->item ()->request->customer->organization->n
 $rmaApprovedByName = $rma->approvedBy () ? $rma->approvedBy ()->full_name () : "";
 $rmaDateApproved = date ( "m/d/Y", strtotime ( $rma->date_approved ) );
 $rmaProductCode = $rma->item ()->product ? $rma->item ()->product->code : "";
+
 
 // get the shipment in question if it exists
 $shippingShipment = new \Shipping\Shipment ($rma->shipment_id);
@@ -97,7 +103,7 @@ $pdf->write1DBarcode ( $rmaNumber, 'C39', '', '', '', 18, 0.4, $style, 'N' );
 
 if ($GLOBALS['_config']->site->https) $qrl = 'https://'.$GLOBALS['_config']->site->hostname;
 else $qrl = 'http://'.$GLOBALS['_config']->site->hostname;
-$qrl .= '/_support/ticket/'.$rmaTicketNumber;
+$qrl .= '/_support/rma_form/'.$rmaCode;
 
 $qrcode = new \GoogleAPI\QRCode();
 $qrcode->create(array('content' => $qrl,'width' => 200, 'height' => 300));
@@ -185,12 +191,10 @@ $html .= "
 </table>";
 
 # Get Warehouse Address
-$configuration = new \Site\Configuration("module/support/rma_location_id");
-if ($configuration->value()) $receive_location_id = $configuration->value();
-else $page->addError("Default RMA Address Not Configured");
+$receive_location_id = $shippingShipment->rec_location_id;
 
 $location = new \Register\Location($receive_location_id);
-$formatted_location = $GLOBALS['_SESSION_']->company->name."<br/>Attn: Service Department<br/>".$location->address_1;
+$formatted_location = $location->organization()->name."<br/>".$location->name."<br/>".$location->address_1;
 if (!empty($location->address_2)) $formatted_location .= "<br/>".$location->address_2;
 $formatted_location .= "<br/>".$location->city.",".$location->province()->abbreviation." ".$location->zip_code;
 
