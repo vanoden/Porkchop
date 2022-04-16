@@ -11,7 +11,7 @@
 				$this->_error = 'Cache path not defined';
 			}
 			else if (preg_match('/^\//',$properties->path)) {
-				if (is_dir($properties->path)) {
+				if (is_dir($properties->path."/")) {
 					if (is_writable($properties->path)) {
 						$this->_path = $properties->path;
 						$this->_connected = true;

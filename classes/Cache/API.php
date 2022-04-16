@@ -35,7 +35,7 @@
 		###################################################
 		### Get List of Cache Key Names					###
 		###################################################
-		public function findKeyNames() {
+		public function keyNames() {
 			$client = $GLOBALS['_CACHE_'];
 	
 			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) $this->error('Permission denied');
@@ -132,8 +132,7 @@
 				'findKeys'	=> array(
 					'object'	=> array(),
 				),
-				'keyNames'	=> array() {
-				},
+				'keyNames'	=> array(),
 				'getItem'	=> array(
 					'object'	=> array('required' => true),
 					'id'		=> array('required' => true),
