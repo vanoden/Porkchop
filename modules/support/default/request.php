@@ -268,7 +268,7 @@
         
    }
 </script>
-<h2><i class='fa fa-phone' aria-hidden='true'></i> Request Support</h2>
+<h2>Request Support</h2>
 <?php	if ($page->errorCount()) { ?>
     <div class="form_error"><?=$page->errorString()?></div>
 <?php	}
