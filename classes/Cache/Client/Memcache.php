@@ -76,6 +76,19 @@
 			}
 		}
 
+		public function increment($key) {
+			if ($this->_connected) {
+				if ($this->_service->increment($key)) return $this->get($key);
+				else {
+					$this->_error = $this->_service->error();
+					return null;
+				}
+			}
+			else {
+				$this->error = "Cache client not connected";
+			}
+		}
+
 		public function keys($object = null) {
 			$keyArray = array();
 			$keys = $this->_service->getAllKeys();
@@ -87,6 +100,15 @@
 				}
 			}
 			return $keyArray;
+		}
+
+		public function keyNames() {
+			$keyNames = array();
+			$keys = $this->_service->getAllKeys();
+			foreach ($keys as $key) {
+				if (preg_match('/^(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) $keyNames[$matches[1]] ++;
+			}
+			return $keyNames;
 		}
 
 		public function error() {

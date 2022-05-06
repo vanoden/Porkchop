@@ -11,7 +11,7 @@
 				$this->_error = 'Cache path not defined';
 			}
 			else if (preg_match('/^\//',$properties->path)) {
-				if (is_dir($properties->path)) {
+				if (is_dir($properties->path."/")) {
 					if (is_writable($properties->path)) {
 						$this->_path = $properties->path;
 						$this->_connected = true;
@@ -116,6 +116,14 @@
 			}
 		}
 
+		public function increment($key) {
+			$current = $this->get($key);
+			if ($this->_error) return null;
+			if (! isset($current)) $current = 0;
+			$current ++;
+			return $this->set($key,$current);
+		}
+
 		public function keys($object = null) {
 			$keyArray = array();
 			if ($this->_connected) {
@@ -131,6 +139,20 @@
 			}
 			return $keyArray;
 		}
+
+		public function keyNames() {
+			$keyNames = array();
+			if ($this->_connected) {
+				$keys = scandir($GLOBALS['_config']->cache->path."/");
+				foreach ($keys as $key) {
+					if (preg_match('/(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) {
+						$keyNames[$matches[1]] ++;
+					}
+				}
+			}
+			return $keyNames;
+		}
+
 		public function flush() {
 			if ($this->_connected) {
 				$keys = scandir($GLOBALS['_config']->cache->path."/");

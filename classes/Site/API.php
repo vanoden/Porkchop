@@ -718,6 +718,13 @@
 			$response->count = $deliveryList->count();
 			print $this->formatOutput($response);
 		}
+
+		public function timestamp() {
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->timestamp = time();
+			print $this->formatOutput($response);
+		}
  
 		public function _methods() {
 			return array(
@@ -846,7 +853,8 @@
 			     ),
                  'acknowledgeSiteMessageByUserId'	=> array(
                     'user_created' => array('required' => true)
-			     )	     
+			     ),
+				'timestamp' => array()
 			);
 		}
 	}

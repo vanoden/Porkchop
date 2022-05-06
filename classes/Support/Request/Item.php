@@ -82,7 +82,7 @@
 			app_log("Added support item $this->id");
 			return $this->update($parameters);
 		}
-		
+
 		public function update($parameters) {
 		
 			// Bust Cache
