@@ -116,6 +116,14 @@
 			}
 		}
 
+		public function increment($key) {
+			$current = $this->get($key);
+			if ($this->_error) return null;
+			if (! isset($current)) $current = 0;
+			$current ++;
+			return $this->set($key,$current);
+		}
+
 		public function keys($object = null) {
 			$keyArray = array();
 			if ($this->_connected) {
