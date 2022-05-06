@@ -1,5 +1,15 @@
 <script>
-	function updateReport() {
+	function updateReport() {	    
+	    var inputs = document.querySelectorAll("input[type='checkbox']");
+	    var missingFilter = true;
+        for(var i = 0; i < inputs.length; i++) if (inputs[i].checked) missingFilter = false;     
+        if (missingFilter) {
+            document.getElementById('please-select-filter-msg').style.display = 'block';    
+            return false;
+        } else {
+            document.getElementById('please-select-filter-msg').style.display = 'none';
+        }
+        
     	var reportForm = document.getElementById('reportForm');
 		reportForm.filtered.value = 1;
 		reportForm.submit();
@@ -37,6 +47,7 @@
 		    <span class="value">CANCELLED</span>
 		    <input type="checkbox" name="status_complete" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_complete']) print " checked";?> />
 		    <span class="value">COMPLETE</span>
+		    <br/><br/><div id="please-select-filter-msg" style="display:none; color:red;">-- Please Select filter above --</div>
 	    </div><br/>
         <span class="label">Assigned To</span>
 	    <select name="assigned_id" class="value input" name="assigned_to" onchange="updateReport()" />
@@ -56,16 +67,21 @@
 	<th>Status</th>
 	<th>Device</th>
 </tr>
-<?php	foreach ($actions as $action) {
-	if ($action->assignedTo->id > 0) $assigned_to = $action->assignedTo->full_name();
-	else $assigned_to = "Unassigned";
+<?php	
+if (isset($actions) && !empty($actions)) {
+    foreach ($actions as $action) {
+	    if ($action->assignedTo->id > 0) $assigned_to = $action->assignedTo->full_name();
+	    else $assigned_to = "Unassigned";
+    ?>
+        <tr><td><a href="/_support/action/<?=$action->id?>"><?=$action->item->request->date_request?></a></td>
+	        <td><?=$action->item->request->customer->full_name()?></td>
+	        <td><?=$action->assignedTo->full_name()?></td>
+	        <td><?=$action->type?></td>
+	        <td><?=$action->status?></td>
+	        <td><?=$action->item->product->code?> - <?=$action->item->serial_number?></td>
+        </tr>
+    <?php	
+        }
+    } 
 ?>
-    <tr><td><a href="/_support/action/<?=$action->id?>"><?=$action->item->request->date_request?></a></td>
-	    <td><?=$action->item->request->customer->full_name()?></td>
-	    <td><?=$action->assignedTo->full_name()?></td>
-	    <td><?=$action->type?></td>
-	    <td><?=$action->status?></td>
-	    <td><?=$action->item->product->code?> - <?=$action->item->serial_number?></td>
-    </tr>
-<?php	} ?>
 </table>

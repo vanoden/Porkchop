@@ -7,6 +7,7 @@
 		private $_count;
 
 		public function find($parameters = array()) {
+		
 			$bind_params = array();
 
 			$find_objects_query = "
@@ -97,6 +98,19 @@
 				$find_objects_query .= "
 					AND	sr.customer_id = ?";
 				array_push($bind_params,$parameters['customer_id']);
+			}
+
+            // search for unassigned support tickets
+			if (isset($parameters['assigned_id']) && empty($parameters['assigned_id'])) {
+				$find_objects_query .= "
+					AND	s.assigned_id IS NULL";
+			}
+        
+            // search for support tickets by assigned
+			if (!empty($parameters['assigned_id'])) {
+				$find_objects_query .= "
+					AND	s.assigned_id = ?";
+				array_push($bind_params,$parameters['assigned_id']);
 			}
 
 			if (!empty($parameters['status'])) {

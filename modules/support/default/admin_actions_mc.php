@@ -30,5 +30,11 @@
 		$_REQUEST['status_pending_customer'] = true;
 		$_REQUEST['status_pending_vendor'] = true;
 	}
-	$actions = $actionlist->find($parameters);
+	
+	if (!empty($parameters['status'])) {
+    	$actions = $actionlist->find($parameters);
+	} else {
+	    $actions = array();
+	}
+	
 	if ($actionlist->error()) $page->addError($actionlist->error());

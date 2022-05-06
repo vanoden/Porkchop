@@ -264,6 +264,13 @@
 					"description"	=> "Package Management"
 				),
 				array(
+					"title"			=> "Dashboard",
+					"target"		=> "/_spectros/outstanding_requests",
+					"view_order"	=> 50,
+					"alt"			=> "Personal Dashboard",
+					"description"	=> "Personal Dashboard"
+				),
+				array(
 					"title"			=> "Site",
 					"view_order"	=> 80,
 					"alt"			=> "Site Management",
