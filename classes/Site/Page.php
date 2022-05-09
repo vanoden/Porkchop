@@ -48,6 +48,8 @@
 	    }
 	    public function requireAuth() {
 		    if (! $GLOBALS ['_SESSION_']->customer->id > 0) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 		    }
 	    }
@@ -55,9 +57,13 @@
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
 		    } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit ();
 		    } elseif (! $GLOBALS ['_SESSION_']->customer->has_role ( $role )) {
+				$counter = new \Site\Counter("permission_denied");
+				$counter->increment();
 			    header ( 'location: /_register/permission_denied' );
 			    exit ();
 		    }
@@ -572,14 +578,20 @@
 				// Handle possible return codes
                 if ($res == 403) {
                     http_response_code(403);
+					$counter = new \Site\Counter("return403");
+					$counter->increment();
                     return '<span class="label page_response_code">Permission Denied</span>';
                 }
                 elseif ($res == 500) {
                     http_response_code(500);
+					$counter = new \Site\Counter("return500");
+					$counter->increment();
                     return '<span class="label page_response_code">Internal Error</span>';
                 }
 				elseif ($res == 404) {
                     http_response_code(404);
+					$counter = new \Site\Counter("return404");
+					$counter->increment();
 					return '<span class="label page_response_code">Resource not found</span>';
 				}
             }

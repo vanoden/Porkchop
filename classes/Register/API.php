@@ -52,6 +52,7 @@
                 $GLOBALS['_SESSION_']->assign($customer->id);
             }
             else {
+				$this->_incrementCounter("incorrect");
                 app_log("Authentication failed",'notice',__FILE__,__LINE__);
             }
             

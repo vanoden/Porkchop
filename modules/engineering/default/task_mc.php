@@ -42,10 +42,13 @@
 	if ($_REQUEST["duplicate_product_id"]) $parameters['product_id'] = $_REQUEST['duplicate_product_id'];
 	if ($_REQUEST["duplicate_assigned_id"]) $parameters['assigned_id'] = $_REQUEST['duplicate_assigned_id'];
 
-	$tasks = $tasklist->find($parameters);
-	if ($tasklist->error()) {
-		$page->error = $tasklist->error();
+	// populate tasks for duplicate task popup window, if no user search issued, then no need to search all tasks
+	if (empty($parameters['status']) && empty($parameters['project_id']) && empty($parameters['product_id']) && empty($parameters['assigned_id'])) {
+    	$tasks = array();
+	} else {
+        $tasks = $tasklist->find($parameters);
 	}
+	if ($tasklist->error()) $page->error = $tasklist->error();
 
     // edit task or add event, testing info or comment
 	if (isset($_REQUEST['method']) && !empty($_REQUEST['method'])) {

@@ -553,6 +553,21 @@
         	print $this->formatOutput($response);  
         }
 
+        public function getSiteMessageMetaDataListByItemId () {
+	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
+	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->getListByItemId($_REQUEST['item_id']);
+	        $response = new \HTTP\Response();
+	        
+            if (empty($siteMessageMetaDataListArray)) {
+                $response->success = 0;
+                $response->error = "Site Message MetaData List could not be found for item_id: " . $_REQUEST['item_id'];
+            } else {
+                $response->success = 1;
+                $response->message = $siteMessageMetaDataListArray;
+            }
+        	print $this->formatOutput($response);  
+        }
+
         public function addSiteMessageDelivery() {
 	        $siteMessageDelivery = new \Site\SiteMessageDelivery();
 
@@ -810,6 +825,9 @@
                     'date_viewed' => array('required' => true),
                     'date_acknowledged' => array('required' => true)
                  ), 
+				 'getSiteMessageMetaDataListByItemId'	=> array(
+					'item_id'	=> array('required' => true)
+				 ),
                  'removeSiteMessageDelivery'	=> array(
                     'id' => array('required' => true)
 			     ),

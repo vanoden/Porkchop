@@ -33,6 +33,10 @@
 			return null;
 		}
 
+		public function increment($key) {
+			return null;
+		}
+
 		public function keys() {
 			return array();
 		}

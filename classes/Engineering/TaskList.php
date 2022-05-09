@@ -89,18 +89,41 @@
 						}
 					}
 					$find_objects_query .= ")";
-				}
-				else {
+				} else {
 					$find_objects_query .= "
-				AND		status = ?";
-				array_push($bind_params,$parameters['status']);
+				        AND		status = ?";
+				        array_push($bind_params,$parameters['status']);
 				}
 			}
 			else {
 				$find_objects_query .= "
 				AND		status NOT IN ('CANCELLED')";
 			}
-
+			
+            if (isset($parameters['priority']) && !empty($parameters['priority'])) {
+				if (is_array($parameters['priority'])) {
+					$icount = 0;
+					$find_objects_query .= "
+				AND		priority IN (";
+					foreach ($parameters['priority'] as $priority) {
+						if (preg_match('/^[\w\-\_\.\s]+$/',$priority)) {
+							if ($icount > 0) $find_objects_query .= ",";
+							$icount ++;
+							$find_objects_query .= "'".$priority."'";
+						}
+						else {
+							$this->_error = "Invalid priority";
+							return null;
+						}
+					}
+					$find_objects_query .= ")";
+				} else {
+					$find_objects_query .= "
+				        AND		priority = ?";
+				        array_push($bind_params,$parameters['status']);
+				}
+			}			
+			
 			$find_objects_query .= "
 				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
 						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
@@ -175,8 +198,7 @@
 							if ($icount > 0) $find_objects_query .= ",";
 							$icount ++;
 							$find_objects_query .= "'".$status."'";
-						}
-						else {
+						} else {
 							$this->_error = "Invalid status";
 							return null;
 						}
@@ -188,12 +210,35 @@
 				AND		status = ?";
 				array_push($bind_params,$parameters['status']);
 				}
-			}
-			else {
+			} else {
 				$find_objects_query .= "
 				AND		status NOT IN ('CANCELLED')";
 			}
-
+			
+			if (isset($parameters['priority']) && !empty($parameters['priority'])) {
+				if (is_array($parameters['priority'])) {
+					$icount = 0;
+					$find_objects_query .= "
+				AND		priority IN (";
+					foreach ($parameters['priority'] as $priority) {
+						if (preg_match('/^[\w\-\_\.\s]+$/',$priority)) {
+							if ($icount > 0) $find_objects_query .= ",";
+							$icount ++;
+							$find_objects_query .= "'".$priority."'";
+						}
+						else {
+							$this->_error = "Invalid priority";
+							return null;
+						}
+					}
+					$find_objects_query .= ")";
+				} else {
+					$find_objects_query .= "
+				        AND		priority = ?";
+				        array_push($bind_params,$parameters['status']);
+				}
+			}
+			
 			$find_objects_query .= "
 				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
 						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
