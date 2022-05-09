@@ -1,7 +1,7 @@
 <?php
 	namespace Cache\Client;
 
-	class File {
+	class File Extends \BaseClass {
 		private $_path;
 		private $_connected;
 		public $_error;
@@ -121,7 +121,9 @@
 			if ($this->_error) return null;
 			if (! isset($current)) $current = 0;
 			$current ++;
-			return $this->set($key,$current);
+			if ($this->set($key,$current)) {
+				return $this->get($key);
+			}
 		}
 
 		public function keys($object = null) {
@@ -166,10 +168,5 @@
 
 		public function stats() {
 			return array();
-		}
-
-		public function error($error = null) {
-			if (!empty($error)) $this->_error = $error;
-			return $this->_error;
 		}
 	}
