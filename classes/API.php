@@ -12,6 +12,9 @@
 		protected $_release;
 
 		public function __construct() {
+			$counterKey = "api.".$this->_name.".".$_REQUEST["method"];
+			$counter = new \Site\Counter($counterKey);
+			$counter->increment();
 			$this->response = new \HTTP\Response();
 		}
 
@@ -65,6 +68,10 @@
 			if (preg_match('/SQL\sError/',$message)) {
 				$message = "Application Data Error";
 			}
+
+			$counterKey = "api.".$this->_name.".".$_REQUEST['method'].".error";
+			$errCounter = new \Site\Counter($counterKey);
+			$errCounter->increment();
 
 			$response = new \HTTP\Response();
 			$response->error = $message;
@@ -172,6 +179,12 @@
 				$this->app_error("Error upgrading schema: ".$this->_schema->error,__FILE__,__LINE__);
 			}
 			print $this->formatOutput($response);
+		}
+
+		public function _incrementCounter($reason) {
+			$counterKey = "api.".$this->_name.".".$_REQUEST["method"].".".$reason;
+			$counter = new \Site\Counter($counterKey);
+			$counter->increment();
 		}
 		public function _form() {
 			$form = '';
