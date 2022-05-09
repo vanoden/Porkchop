@@ -99,7 +99,7 @@
 		<input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" />
 		<input id="min_date" type="hidden" name="min_date" readonly value="<?=$_REQUEST['min_date']?>" />
 		<div id="filters" class="forms-filter">
-			<div class="flex-space-between form-basis">
+			<div class="flex-space-between form-fields">
 				<ul>
 					<li>
 						<label for="serial_number"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</label>
@@ -121,28 +121,28 @@
 					<button class="iconButton closeIcon" onclick="clearFilters()">Clear Filters</button>
 				</ul>
 			</div>
-			<ul class="flex-space-between form-basis checkboxRow">
+			<ul class="flex-space-between form-fields checkboxRow">
 				<li><h4>Status:</h4></li>
 				<li>
 					<input type="checkbox" name="status_new" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_new']) print " checked";?> />
 					<label for="status_new">New</label>
-						</li>
+				</li>
 				<li>
 					<input type="checkbox" name="status_active" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_active']) print " checked";?> />
 					<label for="status_active">Active</label>
-						</li>
+				</li>
 				<li>
 					<input type="checkbox" name="status_pending_customer" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_pending_customer']) print " checked";?> />
 					<label for="status_pending_customer">Pending Customer</label>
-						</li>
+				</li>
 				<li>
 					<input type="checkbox" name="status_pending_vendor" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_pending_vendor']) print " checked";?> />
 					<label for="status_pending_vendor">Pending Vendor</label>
-						</li>
+				</li>
 				<li>
 					<input type="checkbox" name="status_complete" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_complete']) print " checked";?> />
 					<label for="status_complete">Complete</label>
-						</li>
+				</li>
 				<li>
 					<input type="checkbox" name="status_closed" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_closed']) print " checked";?> />
 					<label for="status_closed">Closed</label>
