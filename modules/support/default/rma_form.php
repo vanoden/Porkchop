@@ -138,7 +138,8 @@
 		}
 		else {
 			console.log('New Shipping address Selected');
-			document.getElementById('add_new_shipping_address').style.display = "flex";
+			// Show the Add New Shipping Info Container
+			document.getElementById('add_new_shipping_address').style.display = "inherit";
 		}
 
 		if (document.getElementById('shipping_address_picker').value == '') {
@@ -252,9 +253,9 @@
 <?php	} ?>
 
 <!-- Ticket Info -->
-<section class="form-group displayBlock-labels">
+<section>
 <h3 class="eyebrow">RMA Details</h3>
-			<ul class="form-fields">
+			<ul class="form-grid three-col">
 				<li><label for="">Contact</label><?=$rmaCustomerFullName?></li>
 				<li><label for="">Organization</label><?=$rmaCustomerOrganizationName?></li>
 				<li><label for="">Approved by</label><?=$rmaApprovedByName?></li>
@@ -300,7 +301,8 @@
 				</select>
 				</li>
 			</ul>
-			<ul id="add_new_shipping_address" class="form-fields connectBorder" style="display:none;">
+
+			<ul id="add_new_shipping_address" class="form-grid four-col connectBorder" style="display:none;">
 				<h4>Add New Shipping Info</h4>
 				<li class="form-selectors"><input type="radio" name="shipping_address_type" value="business" checked="checked"><label for="shipping_address_type">Business</label></li>
 				<li class="form-selectors"><input type="radio" name="shipping_address_type" value="personal"><label for="shipping_address_type">Personal</label></li>
@@ -323,11 +325,9 @@
 						<option value="0">-</option>
 					</select>
 				</li>
-				<!-- <div id="shipping_address_container" style="display:hidden;"> -->
 				<li id="shipping_address_container" style="display: none;"><label for="city">City</label><input type="text" id="shipping_city" name="shipping_city" class="shipping_fields"></li>
 				<li id="shipping_address_container" style="display: none;"><label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields">
 				</li>
-				<!-- </div> -->
 			</ul>
 		</section>
 
@@ -350,7 +350,7 @@
 			</ul>
 		</section>
 		<section class="form-group" id="add_new_billing_contact" style="display:none;">
-			<ul class="form-fields connectBorder">
+			<ul class="form-grid four-col connectBorder">
 			<h4>Add New Billing Address</h4>
 			<li><label for="fname">Full Name</label><input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields"></li>
 			<li><label for="fname">Last Name</label><input type="text" id="billing_lastname" name="billing_lastname" class="billing_fields"></li>
@@ -365,22 +365,22 @@
 			<a name="terms"></a>
 			<h3 class="eyebrow">Included Items</h3>
 			<p>* Only the specified item may be returned. Other contents may be discarded</p>
-			<ul class="form-fields connectBorder">
+			<ul class="form-grid three-col connectBorder">
 				<h4>Check boxes to confirm all applicable items are included</h4>
-				<li class="form-checks"><input type="checkbox" name="power_cord" value="power_cord"><label for="power_cord">Power Cord</label></li>
-				<li class="form-checks"><input type="checkbox" name="filters" value="filters"><label for="filters">Filters</label></li>
-				<li class="form-checks"><input type="checkbox" name="battery" value="battery"><label for="battery">Battery</label></li>
-				<li class="form-checks"><input type="checkbox" name="carry_bag" value="carry_bag"><label for="carry_bag">Carry Bag</label></li>
-				<li class="form-checks"><input type="checkbox" name="usb_comm_cable" value="usb_comm_cable"><label for="usb_comm_cable">USB Comm Cable</label></li>
-				<li class="form-checks"><input type="checkbox" name="cellular_access_point" value="cellular_access_point"><label for="cellular_access_point">Cellular Access Point (MiFi/JetPack)</label></li>
+				<li class="form-selectors"><input type="checkbox" name="power_cord" value="power_cord"><label for="power_cord">Power Cord</label></li>
+				<li class="form-selectors"><input type="checkbox" name="filters" value="filters"><label for="filters">Filters</label></li>
+				<li class="form-selectors"><input type="checkbox" name="battery" value="battery"><label for="battery">Battery</label></li>
+				<li class="form-selectors"><input type="checkbox" name="carry_bag" value="carry_bag"><label for="carry_bag">Carry Bag</label></li>
+				<li class="form-selectors"><input type="checkbox" name="usb_comm_cable" value="usb_comm_cable"><label for="usb_comm_cable">USB Comm Cable</label></li>
+				<li class="form-selectors"><input type="checkbox" name="cellular_access_point" value="cellular_access_point"><label for="cellular_access_point">Cellular Access Point (MiFi/JetPack)</label></li>
 				<div>
 					<li><label for="delivery_instructions">Special Delivery Instructions (provide if needed):</label></li>
 					<li><textarea id="delivery_instructions" name="delivery_instructions"></textarea></li>
 				</div>
-				<h4 class="eyebrow">Please Confirm</h4>
-				<li><input id="agree_package_properly" type="checkbox" name="agree_package_properly" value="agree_package_properly">
+				<h4 class="eyebrow">Please check the boxes below to accept the terms:</h4>
+				<li class="form-selectors"><input id="agree_package_properly" type="checkbox" name="agree_package_properly" value="agree_package_properly">
 				<label for="agree_package_properly">* Item must be packaged properly and a copy of the RMA included</label></li>
-				<li><input id="agree_payment_received" type="checkbox" name="agree_payment_received" value="agree_payment_received">
+				<li class="form-selectors"><input id="agree_payment_received" type="checkbox" name="agree_payment_received" value="agree_payment_received">
 				<label for="agree_payment_received">* Item will not be returned before payment is received</label></li>
 				<li id="agree_terms_message" class="error-text" style="display: none;">Please check you've confirmed the items above, thank you!</li>
 				<li id="shipping_fields_required" class="error-text" style="display: none;">Please finish entering your address for shipping</li>
