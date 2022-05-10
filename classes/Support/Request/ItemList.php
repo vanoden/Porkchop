@@ -18,11 +18,11 @@
 			";
 
             // if search term, then constrain by that
-            if ($parameters['searchTerm'] && preg_match('/^\w[\w\-\.\_\s]*$/',$parameters['searchTerm'])) {            
-                $find_objects_query .= "
+			if ($parameters['searchTerm'] && preg_match('/^\w[\w\-\.\_\s]*$/',$parameters['searchTerm'])) {            
+				$find_objects_query .= "
 					AND (s.serial_number LIKE '%".$parameters['searchTerm']."%' 
-                    OR s.description LIKE '%".$parameters['searchTerm']."%') ";
-            }
+					OR s.description LIKE '%".$parameters['searchTerm']."%') ";
+			}
 
 			// if a minimum date is set, constrain on it
 			if (isset($parameters['min_date'])) {
@@ -68,20 +68,24 @@
 				AND s.request_id = ?";
 				array_push($bind_params,$request->id);
 			}
+
+			$product = new \Product\Item();
 			if (!empty($parameters['product_id'])) {
-				$find_objects_query .= "
-					AND	s.product_id = ?";
-				array_push($bind_params,$parameters['product_id']);
+				$product = new \Product\Item($parameters['product_id']);
+				if (!$product->id) return array();
 			}
-			elseif (!empty($parameters['product_code'])) {
+			elseif(!empty($parameters['product_code'])) {
 				$product = new \Product\Item();
-				if (!$product->get($parameters['product_code'])) {
-					$this->_error = "Product not found";
-					return false;
-				}
+				if (!$product->get($parameters['product_code'])) return array();
+			}
+
+			if ($product->id && !empty($parameters['serial_number'])) {
+				$asset = new \Monitor\Asset();
+				if (! $asset->get($product->id,$parameters['serial_number'])) return array();
 				$find_objects_query .= "
-					AND	s.product_id = ?";
-				array_push($bind_params,$product->id);
+					AND	s.product_id = ?
+					AND	s.serial_number = ?";
+				array_push($bind_params,$product->id,$parameters['serial_number']);
 			}
 			elseif (!empty($parameters['serial_number'])) {
 				$asset = new \Monitor\Asset();
