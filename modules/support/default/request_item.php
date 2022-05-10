@@ -64,7 +64,7 @@
 			        <a href="/_support/request_detail/<?=$request->code?>"><?=$request->code?></a>
 		        </div>
 		        <div class="tableCell">
-			        <a href="/_register/admin_account/<?=$request->customer->code?>"><?=$request->customer->full_name()?></a>
+			        <a href="/_register/admin_account?customer_id=<?=$request->customer->id?>"><?=$request->customer->full_name()?></a>
 		        </div>
 		        <div class="tableCell">
 			        <span class="value"><?=$item->line?></span>
