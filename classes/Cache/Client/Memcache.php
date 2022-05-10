@@ -55,7 +55,7 @@
 			if ($this->_connected) {
 				if ($this->_service->delete($key)) return true;
 				else {
-					$this->error = "Unable to delete value from cache";
+					$this->error = "Unable to delete value from cache: ".$this->_service->getResultCode();
 					return false;
 				}
 			}
@@ -80,7 +80,7 @@
 			if ($this->_connected) {
 				if ($this->_service->increment($key)) return $this->get($key);
 				else {
-					$this->_error = $this->_service->error();
+					$this->_error = "Error incrementing key: ".$this->_service->getResultCode();
 					return null;
 				}
 			}
