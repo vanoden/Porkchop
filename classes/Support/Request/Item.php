@@ -249,4 +249,9 @@
 			if ($GLOBALS['_config']->site->https) return "https://".$GLOBALS['_config']->site->hostname."/_support/item/".$this->id;
 			return "http://".$GLOBALS['_config']->site->hostname."/_support/item/".$this->id;
 		}
+
+		public function rmas() {
+			$rmaList = new \Support\Request\Item\RMAList();
+			return $rmaList->find(array("item_id" => $this->id));
+		}
 	}
