@@ -45,6 +45,7 @@
 		}
 		else {
 			shippingFieldItems.forEach(function (element){updateFieldBackground(element, 'rgba(240, 173, 140, 0.60)')});
+			document.getElementById("form-error").style.display="block";
 			document.getElementById("shipping_fields_required").style.display="flex";
 			return false;
 		}
@@ -57,6 +58,7 @@
 		}
 		else {
 			billingFieldItems.forEach(function (element){ updateFieldBackground(element, 'rgba(240, 173, 140, 0.60)'); });
+			document.getElementById("form-error").style.display="block";
 			document.getElementById("billing_fields_required").style.display="flex";
 			return false;
 		}
@@ -64,6 +66,7 @@
 		// confirm terms of RMA are required
 		var confirmTermsItems = Array.prototype.slice.call(document.getElementsByClassName("confirm_terms"));
 		if (!document.getElementById("agree_package_properly").checked || !document.getElementById("agree_payment_received").checked) {
+			document.getElementById("form-error").style.display="block";
 			document.getElementById("agree_terms_message").style.display="flex";
 			confirmTermsItems.forEach(function (element){updateMessageColors(element, 'red')});
 			return false;
@@ -391,9 +394,14 @@
 				</div>
 				<h4 class="eyebrow">Please check the boxes below to accept the terms:</h4>
 				<li class="form-selectors"><input id="agree_package_properly" type="checkbox" name="agree_package_properly" value="agree_package_properly">
-				<label for="agree_package_properly">* Item must be packaged properly and a copy of the RMA included</label></li>
+				<label for="agree_package_properly">Item must be packaged properly and a copy of the RMA included</label></li>
 				<li class="form-selectors"><input id="agree_payment_received" type="checkbox" name="agree_payment_received" value="agree_payment_received">
-				<label for="agree_payment_received">* Item will not be returned before payment is received</label></li>
+				<label for="agree_payment_received">Item will not be returned before payment is received</label></li>
+			</ul>
+		</section>
+
+		<section id="form-error" style="display: none;">
+			<ul class="connectBorder errorText">
 				<li id="agree_terms_message" class="error-text" style="display: none;">Please check you've confirmed the items above, thank you!</li>
 				<li id="shipping_fields_required" class="error-text" style="display: none;">Please finish entering your address for shipping</li>
 				<li id="billing_fields_required" class="error-text" style="display: none;">Please finish entering your contact details for billing contact</li>
