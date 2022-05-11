@@ -40,11 +40,11 @@
 		// show shipping fields are required, unless they pick an existing address
 		var shippingFieldItems = Array.prototype.slice.call(document.getElementsByClassName("shipping_fields"));
 		if (checkFieldsArray(shippingFields) || document.getElementById('shipping_address_picker').value > 0) {
-			shippingFieldItems.forEach(function (element){updateFieldBackground(element, '#f0f8ff')});
+			shippingFieldItems.forEach(function (element){updateFieldBackground(element, '#fff')});
 			document.getElementById("shipping_fields_required").style.display="none";
 		}
 		else {
-			shippingFieldItems.forEach(function (element){updateFieldBackground(element, 'rgba(240, 173, 140, 0.60)')});
+			shippingFieldItems.forEach(function (element){updateFieldBackground(element, '#ed1c24')});
 			document.getElementById("form-error").style.display="block";
 			document.getElementById("shipping_fields_required").style.display="flex";
 			return false;
@@ -57,7 +57,7 @@
 			document.getElementById("billing_fields_required").style.display="none";
 		}
 		else {
-			billingFieldItems.forEach(function (element){ updateFieldBackground(element, 'rgba(240, 173, 140, 0.60)'); });
+			billingFieldItems.forEach(function (element){ updateFieldBackground(element, '#ed1c24'); });
 			document.getElementById("form-error").style.display="block";
 			document.getElementById("billing_fields_required").style.display="flex";
 			return false;
@@ -80,7 +80,9 @@
    
 	// update the field background colors
 	function updateFieldBackground(element, color) {
-		element.style.background = color;
+		element.style.outlineColor = color;
+		element.style.outlineWidth = "2px";
+		element.style.outlineStyle = "solid";
 	}
    
 	// update the message colors
@@ -148,7 +150,9 @@
 			if(x.matches) {
 				document.getElementById('add_new_shipping_address').style.display = "block";
 			} else {
-				document.getElementById('add_new_shipping_address').style.display = "grid";
+				document.getElementById('add_new_shipping_address').style.height = "auto";
+				document.getElementById('add_new_shipping_address').style.visibility = "visible";
+				document.getElementById('add_new_shipping_address').style.overflow = "auto";
 			}
 				
 			
@@ -316,7 +320,7 @@
 				</li>
 			</ul>
 
-			<ul id="add_new_shipping_address" class="form-grid four-col connectBorder" style="display: none;">
+			<ul id="add_new_shipping_address" class="form-grid four-col connectBorder" style="height: 0; overflow: hidden; visibility: hidden;">
 				<h4>Add New Shipping Info</h4>
 				<li class="form-selectors"><input type="radio" name="shipping_address_type" value="business" checked="checked"><label for="shipping_address_type">Business</label></li>
 				<li class="form-selectors"><input type="radio" name="shipping_address_type" value="personal"><label for="shipping_address_type">Personal</label></li>
@@ -379,9 +383,9 @@
 		<section class="form-group" id="checklist_form" style="display:none;">
 			<a name="terms"></a>
 			<h3 class="eyebrow">Included Items</h3>
-			<p>* Only the specified item may be returned. Other contents may be discarded</p>
 			<ul class="form-grid three-col connectBorder">
-				<h4>Check boxes to confirm all applicable items are included</h4>
+				<h4>Check boxes to confirm all applicable items are included*</h4>
+				<p>* Only the specified item may be returned. Other contents may be discarded</p>
 				<li class="form-selectors"><input type="checkbox" name="power_cord" value="power_cord"><label for="power_cord">Power Cord</label></li>
 				<li class="form-selectors"><input type="checkbox" name="filters" value="filters"><label for="filters">Filters</label></li>
 				<li class="form-selectors"><input type="checkbox" name="battery" value="battery"><label for="battery">Battery</label></li>
