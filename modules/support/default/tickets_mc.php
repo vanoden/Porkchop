@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->fromRequest();
+	$page->requireAuth();
 
 	if ($_REQUEST['filtered']) {
 		$parameters = array('status' => array());
