@@ -3,14 +3,14 @@
 <script type="text/javascript">
 	// show the billing address form, step 2
 	function showBilling() {
-		document.getElementById('billing_contact_form').style.display = 'flex';
+		document.getElementById('billing_contact_form').style.display = 'block';
 		document.getElementById('show-billing-button').style.display = 'none';
 		document.getElementById('show-checklist-button').style.display = 'flex';
 	}
    
 	// show step 3 terms of conditions for the return
 	function showTerms() {
-		document.getElementById('checklist_form').style.display = 'flex';
+		document.getElementById('checklist_form').style.display = 'block';
 		document.getElementById('show-checklist-button').style.display = 'none';
 		document.getElementById('submit-form-button').style.display = 'flex';
 	}
@@ -93,15 +93,16 @@
 	}
 
 	// country has been selected
-	function changeCountry(countryDropdownId, addressContainer, provinceDropdownId, provinceAddressContainer) {
-		var countryDropdown = document.getElementById(countryDropdownId);
-		var provinceDropdown = document.getElementById(provinceDropdownId);
-		document.getElementById(addressContainer).style.display = "hidden";
+	function changeCountry() {
+		var countryDropdown = document.getElementById('shipping_country');
+		var provinceDropdown = document.getElementById('shipping_province');
+		document.getElementById('shipping_address_city').style.display = "hidden";
+		document.getElementById('shipping_address_zip').style.display = "hidden";
 		var provinceList = Object.create(ProvinceList);
 		var countryId = countryDropdown.value;
 		var provinces = provinceList.find({country_id:countryId});
 		console.log(provinces);
-		document.getElementById(provinceAddressContainer).style.display = "block";
+		document.getElementById('shipping_province_container').style.display = "block";
 		provinceDropdown.innerHTML = '';
 		var defOpt = document.createElement('option');
 		defOpt.value = 0;
@@ -121,8 +122,9 @@
 	}
    
 	// a province has been selected
-	function changeProvince(addressContainer) {
-		document.getElementById(addressContainer).style.display = "block";
+	function changeProvince() {
+		document.getElementById('shipping_address_city').style.display = "block";
+		document.getElementById('shipping_address_zip').style.display = "block";
 	}
    
 	// choose a shipping address, hide / show form fields
@@ -139,7 +141,14 @@
 		else {
 			console.log('New Shipping address Selected');
 			// Show the Add New Shipping Info Container
-			document.getElementById('add_new_shipping_address').style.display = "inherit";
+			var x = window.matchMedia("(max-width: 750px)")
+			if(x.matches) {
+				document.getElementById('add_new_shipping_address').style.display = "block";
+			} else {
+				document.getElementById('add_new_shipping_address').style.display = "grid";
+			}
+				
+			
 		}
 
 		if (document.getElementById('shipping_address_picker').value == '') {
@@ -284,11 +293,13 @@
 	</form>
 <?php	} ?>
 
+
+<!-- ========== SHIPPING ADDRESS ========== -->
 <?php	if (! $rmaSubmitted) { ?>
 	<form method="post" id="submit_rma_form">
 		<section class="form-group" id="shipping_address_form">
 			<h3 class="eyebrow">Shipping Info</h3>
-			<ul class="form-fields">
+			<ul>
 				<li>
 				<label for="">Shipping from location:</label>
 				<select id="shipping_address_picker" name="shipping_address_picker" onchange="selectShippingAddress()">
@@ -302,7 +313,7 @@
 				</li>
 			</ul>
 
-			<ul id="add_new_shipping_address" class="form-grid four-col connectBorder" style="display:none;">
+			<ul id="add_new_shipping_address" class="form-grid four-col connectBorder" style="display: none;">
 				<h4>Add New Shipping Info</h4>
 				<li class="form-selectors"><input type="radio" name="shipping_address_type" value="business" checked="checked"><label for="shipping_address_type">Business</label></li>
 				<li class="form-selectors"><input type="radio" name="shipping_address_type" value="personal"><label for="shipping_address_type">Personal</label></li>
@@ -312,7 +323,7 @@
 				</li>
 				<li>
 				<label for="">Country:</label>
-				<select id="shipping_country" name="shipping_country" onchange="changeCountry('shipping_country', 'shipping_address_container', 'shipping_province', 'shipping_province_container')">
+				<select id="shipping_country" name="shipping_country" onchange="changeCountry()">
 					<option value="0">-</option>
 					<?php foreach ($allCountriesList as $country) {	?>
 						<option value="<?=$country->id?>"><?=$country->name?></option>
@@ -321,22 +332,23 @@
 				</li>
 				<li id="shipping_province_container">
 					<label for="shipping_province">State/Province</label>
-					<select id="shipping_province" name="shipping_province" onchange="changeProvince('shipping_address_container')" style="min-width: 210px;">
+					<select id="shipping_province" name="shipping_province" onchange="changeProvince()" style="min-width: 210px;">
 						<option value="0">-</option>
 					</select>
 				</li>
-				<li id="shipping_address_container" style="display: none;"><label for="city">City</label><input type="text" id="shipping_city" name="shipping_city" class="shipping_fields"></li>
-				<li id="shipping_address_container" style="display: none;"><label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields">
+				<li id="shipping_address_city" style="display: none;"><label for="city">City</label><input type="text" id="shipping_city" name="shipping_city" class="shipping_fields"></li>
+				<li id="shipping_address_zip" style="display: none;"><label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields">
 				</li>
 			</ul>
 		</section>
 
 		<input id="show-billing-button" onclick="showBilling()" type="button" value="Next" class="btn" style="display:none;">
 
+<!-- ========== BILLING ADDRESS ========== -->
 		<section class="form-group" id="billing_contact_form" style="display:none;">
 			<h3 class="eyebrow">Billing Info</h3>
 			<a name="billing"></a>
-			<ul class="form-fields">
+			<ul>
 				<li>
 					<label for="">Select user:</label>
 					<select id="billing_contact_picker" name="billing_contact_picker" onchange="selectBillingContact()">
