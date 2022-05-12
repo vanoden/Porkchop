@@ -218,8 +218,7 @@
 <h2>Return Merchandise Authorization</h2>
 <nav id="breadcrumb">
 	<ul>
-		<li><a href="/_support">Support</a></li>
-		<li><a href="/_support/tickets">Tickets</a></li>
+		<li><a href="/_support/tickets">All Tickets</a></li>
 		<li><a href="<?=$ticketLink?>" class="value">Ticket# <?=$rmaTicketNumber?></a></li>
 		<li><?=$rmaNumber?></li>
 	</ul>
