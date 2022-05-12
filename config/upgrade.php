@@ -191,8 +191,6 @@
 				"admin_rmas"			=> $templates['admin'],
 				"admin_rma"				=> $templates['admin'],
 				"summary"   			=> $templates['admin'],
-				"tickets"				=> "monitor.html",
-				"ticket"				=> "monitor.html"
 			),
 		),
 		"Engineering"	=> array(
