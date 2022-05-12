@@ -146,13 +146,14 @@
 		else {
 			console.log('New Shipping address Selected');
 			// Show the Add New Shipping Info Container
+				document.getElementById('add_new_shipping_address').style.height = "auto";
+				document.getElementById('add_new_shipping_address').style.visibility = "visible";
+				document.getElementById('add_new_shipping_address').style.overflow = "auto";
 			var x = window.matchMedia("(max-width: 750px)")
 			if(x.matches) {
 				document.getElementById('add_new_shipping_address').style.display = "block";
 			} else {
-				document.getElementById('add_new_shipping_address').style.height = "auto";
-				document.getElementById('add_new_shipping_address').style.visibility = "visible";
-				document.getElementById('add_new_shipping_address').style.overflow = "auto";
+				document.getElementById('add_new_shipping_address').style.display = "grid";
 			}
 				
 			
