@@ -15,4 +15,4 @@ then
 fi
 
 cd $DIR
-npm install --global gulp gulp-cli gulp-debug gulp-template gulp-data
+sudo npm install --global gulp gulp-cli gulp-debug gulp-template gulp-data
