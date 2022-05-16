@@ -3,14 +3,14 @@
 <script type="text/javascript">
 	// show the billing address form, step 2
 	function showBilling() {
-		document.getElementById('billing_contact_form').style.display = 'flex';
+		document.getElementById('billing_contact_form').style.display = 'block';
 		document.getElementById('show-billing-button').style.display = 'none';
 		document.getElementById('show-checklist-button').style.display = 'flex';
 	}
    
 	// show step 3 terms of conditions for the return
 	function showTerms() {
-		document.getElementById('checklist_form').style.display = 'flex';
+		document.getElementById('checklist_form').style.display = 'block';
 		document.getElementById('show-checklist-button').style.display = 'none';
 		document.getElementById('submit-form-button').style.display = 'flex';
 	}
@@ -40,11 +40,12 @@
 		// show shipping fields are required, unless they pick an existing address
 		var shippingFieldItems = Array.prototype.slice.call(document.getElementsByClassName("shipping_fields"));
 		if (checkFieldsArray(shippingFields) || document.getElementById('shipping_address_picker').value > 0) {
-			shippingFieldItems.forEach(function (element){updateFieldBackground(element, '#f0f8ff')});
+			shippingFieldItems.forEach(function (element){updateFieldBackground(element, '#fff')});
 			document.getElementById("shipping_fields_required").style.display="none";
 		}
 		else {
-			shippingFieldItems.forEach(function (element){updateFieldBackground(element, 'rgba(240, 173, 140, 0.60)')});
+			shippingFieldItems.forEach(function (element){updateFieldBackground(element, '#ed1c24')});
+			document.getElementById("form-error").style.display="block";
 			document.getElementById("shipping_fields_required").style.display="flex";
 			return false;
 		}
@@ -56,7 +57,8 @@
 			document.getElementById("billing_fields_required").style.display="none";
 		}
 		else {
-			billingFieldItems.forEach(function (element){ updateFieldBackground(element, 'rgba(240, 173, 140, 0.60)'); });
+			billingFieldItems.forEach(function (element){ updateFieldBackground(element, '#ed1c24'); });
+			document.getElementById("form-error").style.display="block";
 			document.getElementById("billing_fields_required").style.display="flex";
 			return false;
 		}
@@ -64,6 +66,7 @@
 		// confirm terms of RMA are required
 		var confirmTermsItems = Array.prototype.slice.call(document.getElementsByClassName("confirm_terms"));
 		if (!document.getElementById("agree_package_properly").checked || !document.getElementById("agree_payment_received").checked) {
+			document.getElementById("form-error").style.display="block";
 			document.getElementById("agree_terms_message").style.display="flex";
 			confirmTermsItems.forEach(function (element){updateMessageColors(element, 'red')});
 			return false;
@@ -77,7 +80,9 @@
    
 	// update the field background colors
 	function updateFieldBackground(element, color) {
-		element.style.background = color;
+		element.style.outlineColor = color;
+		element.style.outlineWidth = "2px";
+		element.style.outlineStyle = "solid";
 	}
    
 	// update the message colors
@@ -93,15 +98,16 @@
 	}
 
 	// country has been selected
-	function changeCountry(countryDropdownId, addressContainer, provinceDropdownId, provinceAddressContainer) {
-		var countryDropdown = document.getElementById(countryDropdownId);
-		var provinceDropdown = document.getElementById(provinceDropdownId);
-		document.getElementById(addressContainer).style.display = "hidden";
+	function changeCountry() {
+		var countryDropdown = document.getElementById('shipping_country');
+		var provinceDropdown = document.getElementById('shipping_province');
+		document.getElementById('shipping_address_city').style.display = "hidden";
+		document.getElementById('shipping_address_zip').style.display = "hidden";
 		var provinceList = Object.create(ProvinceList);
 		var countryId = countryDropdown.value;
 		var provinces = provinceList.find({country_id:countryId});
 		console.log(provinces);
-		document.getElementById(provinceAddressContainer).style.display = "block";
+		document.getElementById('shipping_province_container').style.display = "block";
 		provinceDropdown.innerHTML = '';
 		var defOpt = document.createElement('option');
 		defOpt.value = 0;
@@ -121,8 +127,9 @@
 	}
    
 	// a province has been selected
-	function changeProvince(addressContainer) {
-		document.getElementById(addressContainer).style.display = "block";
+	function changeProvince() {
+		document.getElementById('shipping_address_city').style.display = "block";
+		document.getElementById('shipping_address_zip').style.display = "block";
 	}
    
 	// choose a shipping address, hide / show form fields
@@ -139,7 +146,17 @@
 		else {
 			console.log('New Shipping address Selected');
 			// Show the Add New Shipping Info Container
-			document.getElementById('add_new_shipping_address').style.display = "inherit";
+				document.getElementById('add_new_shipping_address').style.height = "auto";
+				document.getElementById('add_new_shipping_address').style.visibility = "visible";
+				document.getElementById('add_new_shipping_address').style.overflow = "auto";
+			var x = window.matchMedia("(max-width: 750px)")
+			if(x.matches) {
+				document.getElementById('add_new_shipping_address').style.display = "block";
+			} else {
+				document.getElementById('add_new_shipping_address').style.display = "grid";
+			}
+				
+			
 		}
 
 		if (document.getElementById('shipping_address_picker').value == '') {
@@ -284,11 +301,13 @@
 	</form>
 <?php	} ?>
 
+
+<!-- ========== SHIPPING ADDRESS ========== -->
 <?php	if (! $rmaSubmitted) { ?>
 	<form method="post" id="submit_rma_form">
 		<section class="form-group" id="shipping_address_form">
 			<h3 class="eyebrow">Shipping Info</h3>
-			<ul class="form-fields">
+			<ul>
 				<li>
 				<label for="">Shipping from location:</label>
 				<select id="shipping_address_picker" name="shipping_address_picker" onchange="selectShippingAddress()">
@@ -302,7 +321,7 @@
 				</li>
 			</ul>
 
-			<ul id="add_new_shipping_address" class="form-grid four-col connectBorder" style="display:none;">
+			<ul id="add_new_shipping_address" class="form-grid four-col connectBorder" style="height: 0; overflow: hidden; visibility: hidden;">
 				<h4>Add New Shipping Info</h4>
 				<li class="form-selectors"><input type="radio" name="shipping_address_type" value="business" checked="checked"><label for="shipping_address_type">Business</label></li>
 				<li class="form-selectors"><input type="radio" name="shipping_address_type" value="personal"><label for="shipping_address_type">Personal</label></li>
@@ -312,7 +331,7 @@
 				</li>
 				<li>
 				<label for="">Country:</label>
-				<select id="shipping_country" name="shipping_country" onchange="changeCountry('shipping_country', 'shipping_address_container', 'shipping_province', 'shipping_province_container')">
+				<select id="shipping_country" name="shipping_country" onchange="changeCountry()">
 					<option value="0">-</option>
 					<?php foreach ($allCountriesList as $country) {	?>
 						<option value="<?=$country->id?>"><?=$country->name?></option>
@@ -321,22 +340,23 @@
 				</li>
 				<li id="shipping_province_container">
 					<label for="shipping_province">State/Province</label>
-					<select id="shipping_province" name="shipping_province" onchange="changeProvince('shipping_address_container')" style="min-width: 210px;">
+					<select id="shipping_province" name="shipping_province" onchange="changeProvince()" style="min-width: 210px;">
 						<option value="0">-</option>
 					</select>
 				</li>
-				<li id="shipping_address_container" style="display: none;"><label for="city">City</label><input type="text" id="shipping_city" name="shipping_city" class="shipping_fields"></li>
-				<li id="shipping_address_container" style="display: none;"><label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields">
+				<li id="shipping_address_city" style="display: none;"><label for="city">City</label><input type="text" id="shipping_city" name="shipping_city" class="shipping_fields"></li>
+				<li id="shipping_address_zip" style="display: none;"><label for="zip">Zip</label> <input type="text" id="shipping_zip" name="shipping_zip" class="shipping_fields">
 				</li>
 			</ul>
 		</section>
 
 		<input id="show-billing-button" onclick="showBilling()" type="button" value="Next" class="btn" style="display:none;">
 
+<!-- ========== BILLING ADDRESS ========== -->
 		<section class="form-group" id="billing_contact_form" style="display:none;">
 			<h3 class="eyebrow">Billing Info</h3>
 			<a name="billing"></a>
-			<ul class="form-fields">
+			<ul>
 				<li>
 					<label for="">Select user:</label>
 					<select id="billing_contact_picker" name="billing_contact_picker" onchange="selectBillingContact()">
@@ -364,9 +384,9 @@
 		<section class="form-group" id="checklist_form" style="display:none;">
 			<a name="terms"></a>
 			<h3 class="eyebrow">Included Items</h3>
-			<p>* Only the specified item may be returned. Other contents may be discarded</p>
 			<ul class="form-grid three-col connectBorder">
-				<h4>Check boxes to confirm all applicable items are included</h4>
+				<h4>Check boxes to confirm all applicable items are included*</h4>
+				<p>* Only the specified item may be returned. Other contents may be discarded</p>
 				<li class="form-selectors"><input type="checkbox" name="power_cord" value="power_cord"><label for="power_cord">Power Cord</label></li>
 				<li class="form-selectors"><input type="checkbox" name="filters" value="filters"><label for="filters">Filters</label></li>
 				<li class="form-selectors"><input type="checkbox" name="battery" value="battery"><label for="battery">Battery</label></li>
@@ -379,9 +399,14 @@
 				</div>
 				<h4 class="eyebrow">Please check the boxes below to accept the terms:</h4>
 				<li class="form-selectors"><input id="agree_package_properly" type="checkbox" name="agree_package_properly" value="agree_package_properly">
-				<label for="agree_package_properly">* Item must be packaged properly and a copy of the RMA included</label></li>
+				<label for="agree_package_properly">Item must be packaged properly and a copy of the RMA included</label></li>
 				<li class="form-selectors"><input id="agree_payment_received" type="checkbox" name="agree_payment_received" value="agree_payment_received">
-				<label for="agree_payment_received">* Item will not be returned before payment is received</label></li>
+				<label for="agree_payment_received">Item will not be returned before payment is received</label></li>
+			</ul>
+		</section>
+
+		<section id="form-error" style="display: none;">
+			<ul class="connectBorder errorText">
 				<li id="agree_terms_message" class="error-text" style="display: none;">Please check you've confirmed the items above, thank you!</li>
 				<li id="shipping_fields_required" class="error-text" style="display: none;">Please finish entering your address for shipping</li>
 				<li id="billing_fields_required" class="error-text" style="display: none;">Please finish entering your contact details for billing contact</li>

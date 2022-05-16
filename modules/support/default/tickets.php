@@ -90,12 +90,12 @@
 <div class="secondaryHeader">
 	<h2>Support Tickets</h2>
 	<button class="expanding" onclick="toggleFilters()">Filter Results</button>
-	<button href="/_support/request">New Request</button>
+	<button onclick="window.location.href='/_support/request';">New Request</button>
 </div>
 
 <!--	Insert Filter Section -->
 <div>
-	<form id="filterForm" name="filterForm" method="get" action="/_support/tickets"  autocomplete="off" class="bg-shaded" style="display: none;">
+	<form id="filterForm" name="filterForm" method="get" action="/_support/tickets"  autocomplete="off" class="bg-shaded padded" style="display: none;">
 		<input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />	    
 		<input id="sort_by" type="hidden" name="sort_by" value="" />
 		<input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" />

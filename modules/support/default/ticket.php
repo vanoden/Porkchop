@@ -40,11 +40,11 @@
 		        <div>Requestor</div><div>Status</div><div>Product</div><div>Date</div><div>Serial #</div>
 	        </div> <!-- end row header -->
 	        <div class="tableRow">
-		        <div><?=$request->customer->full_name()?></div>
-		        <div><?=$item->request->date_request?></div>
-		        <div><span class="value"><?=$item->status?></span></div>
-		        <div><span class="value"><?=$item->product->code?></span></div>
-		        <div><span class="value"><a href="/_monitor/asset/<?=$item->serial_number?>"><?=$item->serial_number?></a></span></div>
+		        <div><span class="hiddenDesktop value">Requestor: </span><?=$request->customer->full_name()?></div>
+		        <div><span class="hiddenDesktop value">Status: </span><?=$item->request->date_request?></div>
+		        <div><span class="hiddenDesktop value">Product: </span><span class="value"><?=$item->status?></span></div>
+		        <div><span class="hiddenDesktop value">Date: </span><span class="value"><?=$item->product->code?></span></div>
+		        <div><span class="hiddenDesktop value">Serial #: </span><span class="value"><a href="/_monitor/asset/<?=$item->serial_number?>"><?=$item->serial_number?></a></span></div>
 	        </div>
         </div>
 
@@ -108,10 +108,10 @@
 			</div>
 			<?php	foreach ($filesUploaded as $fileUploaded) {	?>
 				<div class="tableRow">
-					<div><a href="/_storage/downloadfile?file_id=<?=$fileUploaded->id?>" target="_blank"><?=$fileUploaded->name?></a></div>
-					<div><?=$fileUploaded->user->first_name?> <?=$fileUploaded->user->last_name?></div>
-					<div><?=$fileUploaded->user->organization->name?></div>
-					<div><?=date("M. j, Y, g:i a", strtotime($fileUploaded->date_created))?></div>
+					<div><span class="hiddenDesktop value">File Name: </span><a href="/_storage/downloadfile?file_id=<?=$fileUploaded->id?>" target="_blank"><?=$fileUploaded->name?></a></div>
+					<div><span class="hiddenDesktop value">User: </span><?=$fileUploaded->user->first_name?> <?=$fileUploaded->user->last_name?></div>
+					<div><span class="hiddenDesktop value">Organization: </span><?=$fileUploaded->user->organization->name?></div>
+					<div><span class="hiddenDesktop value">Uploaded: </span><?=date("M. j, Y, g:i a", strtotime($fileUploaded->date_created))?></div>
 				</div>
 			<?php	}	?>
 		</div><!-- end table -->
@@ -153,13 +153,14 @@
 					<div>Posted On</div><div>Posted By</div>
 				</div>
 				<div class="tableRow">
-					<div><?=$action->date_requested?></div><div><?=$requested_by?></div>
+					<div><span class="hiddenDesktop value">Date requested: </span><?=$action->date_requested?></div>
+					<div><span class="hiddenDesktop value">Requested by: </span><?=$requested_by?></div>
 				</div>
 				<div class="tableRowHeader">
 					<div>Note</div>
 				</div>
 				<div class="tableRow">
-					<div><pre><?=strip_tags($action->description)?></pre></div>
+					<div><span class="hiddenDesktop value">Description: </span><pre class="form-comments"><?=strip_tags($action->description)?></pre></div>
 				</div>
 			</div><!-- end table -->
 		
@@ -167,11 +168,14 @@
 			<div id="actionsForm">
 				<div class="tableBody">
 					<div class="tableRowHeader">
-						<div>Date Requested</div><div>Requested By</div><div>Assigned To</div><div>Type</div><div>Status</div>
+						<div>Date Requested</div><div>Requestor</div><div>Assigned To</div><div>Type</div><div>Status</div>
 					</div>
 					<div class="tableRow">
-						<div><a href="/_support/action/<?=$action->id?>"><?=$action->date_requested?></a></div>
-						<div><?=$requested_by?></div><div><?=$assigned_to?></div><div><?=$action->type?></div><div><?=$action->status?></div>
+						<div><span class="hiddenDesktop value">Date requested: </span><a href="/_support/action/<?=$action->id?>"><?=$action->date_requested?></a></div>
+						<div><span class="hiddenDesktop value">Requested by: </span><?=$requested_by?></div>
+						<div><span class="hiddenDesktop value">Assigned to: </span><?=$assigned_to?></div>
+						<div><span class="hiddenDesktop value">Type: </span><?=$action->type?></div>
+						<div><span class="hiddenDesktop value">Status: </span><?=$action->status?></div>
 					</div>
 				</div><!-- end table -->
 				<div class="tableBody">
@@ -179,7 +183,7 @@
 						<div>Description</div>							
 					</div>
 					<div class="tableRow">
-						<div><pre><?=strip_tags($action->description)?></pre></div>
+						<div><span class="hiddenDesktop value">Description: </span><pre class="form-comments"><?=strip_tags($action->description)?></pre></div>
 					</div>
 				</div><!-- end table -->
 		<?php	}	$actionEvents = $action->getEvents();	?>	
@@ -192,7 +196,9 @@
 						<div style="width: 10%;">Event Date</div><div style="width: 10%;">User</div><div style="width: 30%;">Description</div>
 					</div>
 					<div class="tableRow">
-						<div><?=$actionEvent->date_event?></div><div><?=$actionEvent->user->full_name()?></div><div><?=strip_tags($actionEvent->description)?></div>
+						<div><span class="hiddenDesktop value">Event Date: </span><?=$actionEvent->date_event?></div>
+						<div><span class="hiddenDesktop value">User: </span><?=$actionEvent->user->full_name()?></div>
+						<div><span class="hiddenDesktop value">Description: </span><?=strip_tags($actionEvent->description)?></div>
 					</div>
 				</div><!-- end table -->
 				<?php	}
@@ -224,9 +230,9 @@
 				</div>
 				<?php		foreach ($rmas as $rma) { ?>
 				<div class="tableRow">
-					<div><a href="/_support/rma_form/<?=$rma->code?>"><?=$rma->number()?></a></div>
-					<div><?=$rma->date_approved?></div>
-					<div><?=$rma->approvedBy()->full_name()?></div>
+					<div><span class="hiddenDesktop value">Number: </span><a href="/_support/rma_form/<?=$rma->code?>"><?=$rma->number()?></a></div>
+					<div><span class="hiddenDesktop value">Date approved: </span><?=$rma->date_approved?></div>
+					<div><span class="hiddenDesktop value">Approved by: </span><?=$rma->approvedBy()->full_name()?></div>
 				</div>
 				<?php		} ?>
 			</div>
@@ -237,21 +243,19 @@
 	<?php	if (is_array($comments) && count($comments) > 0) { ?>
     <!--	Start Request Item-->
     <h3 class="eyebrow">Comments</h3>
-    <div class="connectBorder">
-			<div class="tableBody connectBorder">
-				<div class="tableRowHeader secondary">
-					<div style="width: 10%;">Date Entered</div>
-					<div style="width: 10%;">Author</div>
-					<div style="width: 30%;">Comment</div>
-				</div> <!-- end row header -->
-				<?php		foreach ($comments as $comment) { ?>
-				<div class="tableRow">
-					<div><?=$comment->date_comment?></div>
-					<div><?=$comment->author->full_name()?></div>
-					<div><?=$comment->content?></div>
-				</div>
-				<?php		} ?>
+		<div class="tableBody connectBorder bandedRows">
+			<div class="tableRowHeader secondary">
+				<div style="width: 10%;">Date entered</div>
+				<div style="width: 10%;">Author</div>
+				<div style="width: 30%;">Comment</div>
+			</div> <!-- end row header -->
+			<?php		foreach ($comments as $comment) { ?>
+			<div class="tableRow">
+				<div><span class="hiddenDesktop value">Date: </span><?=$comment->date_comment?></div>
+				<div><span class="hiddenDesktop value">Author: </span><?=$comment->author->full_name()?></div>
+				<div class="form-comments"><span class="hiddenDesktop value">Comment: </span><?=$comment->content?></div>
 			</div>
+			<?php		} ?>
 		</div>
 	<?php	} ?>
 
