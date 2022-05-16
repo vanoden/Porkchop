@@ -14,25 +14,29 @@ const videoPath = configDict.videoPath;
 const docsPath = configDict.docsPath;
 const staticVersion = today.getFullYear()+"."+month+"."+today.getDate()+"."+today.getHours()+"."+today.getMinutes();
 
-gulp.task('hello', function() {
-	console.log('Hello, Tony');
-});
+//const contentBlocks = fs.readFileSync('html.src/gulp_contentBlocks.js');
 
-gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico', 'dashboards'], () =>
-	gulp.src('html.src/**/*.html')
-		.pipe(data(() => (
-			{
+html2process = {
 				"static_version": staticVersion,
 				"video_path": videoPath,
 				"docs_path": docsPath,
 				"company_name": configDict.companyName,
 				"company": configDict.companyCode,
 				"header": fs.readFileSync('tmp/header.html', 'utf8'),
-				"footer": fs.readFileSync('tmp/footer.html', 'utf8'),
-				"footer_monitor": fs.readFileSync('tmp/footer.monitor.html', 'utf8'),
-				"header_2022": fs.readFileSync('tmp/header_2022.html', 'utf8')
-			}
-		)))
+				"footer": fs.readFileSync('tmp/footer.html', 'utf8')
+};
+if (fs.existsSync('tmp/footer.monitor.html')) 
+	html2process.footer_monitor = fs.readFileSync('tmp/footer.monitor.html','utf8');
+if (fs.existsSync('tmp/header_2022.html')) 
+	html2process.header_2022 = fs.readFileSync('tmp/header_2022.html','utf8');
+
+gulp.task('hello', function() {
+	console.log('Hello, Tony');
+});
+
+gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico', 'dashboards'], () =>
+	gulp.src('html.src/**/*.html')
+		.pipe(data(() => (html2process)))
 		.pipe(template())
 		.pipe(debug())
 		.pipe(gulp.dest('html'))
