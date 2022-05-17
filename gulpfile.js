@@ -21,10 +21,12 @@ html2process = {
 				"video_path": videoPath,
 				"docs_path": docsPath,
 				"company_name": configDict.companyName,
-				"company": configDict.companyCode,
-				"header": fs.readFileSync('tmp/header.html', 'utf8'),
-				"footer": fs.readFileSync('tmp/footer.html', 'utf8')
+				"company": configDict.companyCode
 };
+if (fs.existsSync('tmp/header.html')) 
+	html2process.header = fs.readFileSync('tmp/header.html', 'utf8');
+if (fs.existsSync('tmp/footer.html')) 
+	html2process.footer = fs.readFileSync('tmp/footer.html', 'utf8')
 if (fs.existsSync('tmp/footer.monitor.html')) 
 	html2process.footer_monitor = fs.readFileSync('tmp/footer.monitor.html','utf8');
 if (fs.existsSync('tmp/header_2022.html')) 
