@@ -23,13 +23,14 @@ html2process = {
 				"company_name": configDict.companyName,
 				"company": configDict.companyCode
 };
-if (fs.existsSync('tmp/header.html')) 
+var preProcessPath = 'html.src/pre';
+if (fs.existsSync(preProcessPath+'/header.html')) 
 	html2process.header = fs.readFileSync('tmp/header.html', 'utf8');
-if (fs.existsSync('tmp/footer.html')) 
+if (fs.existsSync(preProcessPath+'/footer.html')) 
 	html2process.footer = fs.readFileSync('tmp/footer.html', 'utf8')
-if (fs.existsSync('tmp/footer.monitor.html')) 
+if (fs.existsSync(preProcessPath+'/footer.monitor.html')) 
 	html2process.footer_monitor = fs.readFileSync('tmp/footer.monitor.html','utf8');
-if (fs.existsSync('tmp/header_2022.html')) 
+if (fs.existsSync(preProcessPath+'/header_2022.html')) 
 	html2process.header_2022 = fs.readFileSync('tmp/header_2022.html','utf8');
 
 gulp.task('hello', function() {
@@ -45,14 +46,14 @@ gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico', 'dashbo
 );
 
 gulp.task('pre', () =>
-    gulp.src('html.src/pre/*.html')
+    gulp.src(preProcessPath+'/*.html')
         .pipe(data(() => (
             {
                 "static_version": staticVersion,
 				"video_path": videoPath,
 				"docs_path": docsPath,
-                "header": fs.readFileSync('html.src/pre/header.html', 'utf8'),
-                "footer": fs.readFileSync('html.src/pre/footer.html', 'utf8'),
+                "header": fs.readFileSync(preProcessPath+'/header.html', 'utf8'),
+                "footer": fs.readFileSync(preProcessPath+'/footer.html', 'utf8'),
 				"title": 'Interscan Corporation'
             }
         )))
