@@ -83,7 +83,7 @@
 						$this->install_log("Add template '$template' to $module_name::$view");
 						$page->setMetadata("template",$template);
 						if ($page->error) {
-							install_fail("Could not add metadata to page: ".$page->error);
+							$this->install_fail("Could not add metadata to page: ".$page->error);
 						}
 					}
 					else {
@@ -101,11 +101,11 @@
 				$organizationList = new \Register\OrganizationList();
 				list($organization) = $organizationList->find(array('name' => $company["name"]));
 				if (! $organization->id) {
-					install_fail("Cannot find owner organization");
+					$this->install_fail("Cannot find owner organization");
 				}
 				list($location) = $organization->locations();
 				if (! $location->id) {
-					install_log("Adding default location to ".$organization->name,'notice');
+					$this->install_log("Adding default location to ".$organization->name,'notice');
 					$country = new \Geography\Country();
 					$country->get('United States of America');
 					$province = new \Geography\Province();
@@ -120,7 +120,7 @@
 					));
 				}
 				else {
-					install_log("Organization has default location",'notice');
+					$this->install_log("Organization has default location",'notice');
 				}
 				$location->associateOrganization($organization->id);
 				$rma_location_id = $location->id;
