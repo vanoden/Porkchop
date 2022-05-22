@@ -164,7 +164,11 @@
 	else {
 		$site->install_log("No version.txt found",'warning');
 	}
+
+	$site->install_log("Load Modules");
 	$site->loadModules($modules);
+
+	$site->install_log("Populate Menus");
 	$site->populateMenus($menus);
 
 	$site->install_log("Upgrade completed successfully",'notice');
