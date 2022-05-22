@@ -1,37 +1,63 @@
 <?php
 	namespace Cache\Client;
 
-	class File {
+	class File Extends \BaseClass {
 		private $_path;
 		private $_connected;
-		public $error;
+		public $_error;
 
 		public function __construct($properties) {
-			if (preg_match('/^\//',$properties->path)) {
-				if (is_dir($properties->path)) {
+			if (empty($properties->path)) {
+				$this->_error = 'Cache path not defined';
+			}
+			else if (preg_match('/^\//',$properties->path)) {
+				if (is_dir($properties->path."/")) {
 					if (is_writable($properties->path)) {
 						$this->_path = $properties->path;
 						$this->_connected = true;
 					}
 					else {
-						$this->error = "Cache path not writable";
+						$this->_error = "Cache path not writable";
 					}
 				}
+				else if (file_exists($properties->path)) {
+					$this->_error = "Cache path '".$properties->path."' does not exist";
+				}
+				else if (empty(filetype($properties->path))) {
+					#$this->_error = "Unknown file type for '".$properties->path."'";
+				}
 				else {
-					$this->error = "Cache path does not exist";
+					$this->_error = "Cache path '".$properties->path."' is a ".filetype($properties->path);
 				}
 			}
 			else {
-				$this->error = "Cache path not valid";
+				$this->_error = "Cache path not valid";
 			}
 		}
 
 		public function mechanism () {
 			return 'File';
 		}
+
 		public function connect() {
-			$this->_connected = 1;
-			return true;
+			if (empty($this->_path)) {
+				$this->_error = "Cache path not configured";
+				return false;
+			}
+			elseif (!is_dir($this->_path)) {
+				$this->_error = "Cache path ".$this->_path." not found";
+				app_log("Cache directory ".$this->_path." not found",'_error');
+				return false;
+			}
+			elseif (!is_writable($this->_path)) {
+				$this->_error = "Cache path not writable";
+				app_log("Cache directory ".$this->_path." no writable",'_error');
+				return false;
+			}
+			else {
+				$this->_connected = 1;
+				return true;
+			}
 		}
 
 		public function connected() {
@@ -40,7 +66,10 @@
 		}
 
 		public function set($key,$value,$expires=0) {
-			if ($this->_connected) {
+			if (!$this->_connected && ! $this->connect()) {
+				return false;
+			}
+			else {
 				$path = $this->_path;
 				if ($fh = fopen($path."/".$key,'w')) {
 					$string = serialize($value);
@@ -49,13 +78,9 @@
 					return true;
 				}
 				else {
-					$this->error = "Unable to store value in cache";
+					$this->_error = "Unable to store value in cache";
 					return false;
 				}
-			}
-			else {
-				$this->error = "Cache client not connected";
-				return false;
 			}
 		}
 
@@ -64,7 +89,7 @@
 				$filename = $GLOBALS['_config']->cache->path."/".$key;
 				if (unlink($filename)) return true;
 				else {
-					$this->error = "Unable to unset cache";
+					$this->_error = "Unable to unset cache";
 					return false;
 				}
 			}
@@ -83,11 +108,21 @@
 					return $value;
 				}
 				else {
-					$this->error = "Cannot open cache file '$filename'";
+					$this->_error = "Cannot open cache file '$filename'";
 				}
 			}
 			else {
-				$this->error = "Cache client not connected";
+				$this->_error = "Cache client not connected";
+			}
+		}
+
+		public function increment($key) {
+			$current = $this->get($key);
+			if ($this->_error) return null;
+			if (! isset($current)) $current = 0;
+			$current ++;
+			if ($this->set($key,$current)) {
+				return $this->get($key);
 			}
 		}
 
@@ -106,6 +141,20 @@
 			}
 			return $keyArray;
 		}
+
+		public function keyNames() {
+			$keyNames = array();
+			if ($this->_connected) {
+				$keys = scandir($GLOBALS['_config']->cache->path."/");
+				foreach ($keys as $key) {
+					if (preg_match('/(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) {
+						$keyNames[$matches[1]] ++;
+					}
+				}
+			}
+			return $keyNames;
+		}
+
 		public function flush() {
 			if ($this->_connected) {
 				$keys = scandir($GLOBALS['_config']->cache->path."/");
@@ -119,9 +168,5 @@
 
 		public function stats() {
 			return array();
-		}
-
-		public function error() {
-			return $this->error;
 		}
 	}

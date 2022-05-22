@@ -12,7 +12,14 @@
 		protected $_release;
 
 		public function __construct() {
+			$counterKey = "api.".$this->_name.".".$_REQUEST["method"];
+			$counter = new \Site\Counter($counterKey);
+			$counter->increment();
 			$this->response = new \HTTP\Response();
+		}
+
+		public function _methods() {
+			return array();
 		}
 
 		public function admin_role() {
@@ -41,6 +48,10 @@
 			print $this->formatOutput($response);
 		}
 
+		public function requireRole($role_name) {
+			if (! $GLOBALS['_SESSION_']->has_role($role_name)) $this->error("Permission denied");
+		}
+
 		###################################################
 		### System Time									###
 		###################################################
@@ -53,6 +64,15 @@
 		public function error($message) {
 			$_REQUEST["stylesheet"] = '';
 			error_log($message);
+
+			if (preg_match('/SQL\sError/',$message)) {
+				$message = "Application Data Error";
+			}
+
+			$counterKey = "api.".$this->_name.".".$_REQUEST['method'].".error";
+			$errCounter = new \Site\Counter($counterKey);
+			$errCounter->increment();
+
 			$response = new \HTTP\Response();
 			$response->error = $message;
 			$response->success = 0;
@@ -67,7 +87,19 @@
 			app_log($message,'error',$file,$line);
 			$this->error('Application Error');
 		}
-		
+
+		###################################################
+		### Send Proper Permission Denied Response		###
+		###################################################
+		public function deny() {
+			$_REQUEST["stylesheet"] = '';
+			$response = new \HTTP\Response();
+			$response->error = "Permission Denied";
+			$response->success = 0;
+			print $this->formatOutput($response);
+			exit;
+		}
+
 		###################################################
 		### Convert Object to XML						###
 		###################################################
@@ -100,6 +132,29 @@
 			print $this->formatOutput($response);
 		}
 
+		public function log($message) {
+			if (! API_LOG) return false;
+			$log = "";
+			$module = $GLOBALS['_REQUEST_']->module;
+			$login = $GLOBALS['_SESSION_']->customer->code;
+			$method = $_REQUEST['method'];
+			$host = $GLOBALS['_REQUEST_']->client_ip;
+			$response = new \HTTP\Response();
+			if (is_object($response) && $response->success) $status = "SUCCESS";
+			else $status = "FAILED";
+			$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+
+            if (is_dir(API_LOG))
+                $log = fopen(API_LOG."/".$module.".log",'a');
+            else
+                $log = fopen(API_LOG,'a');
+
+			fwrite($log,"[".date('m/d/Y H:i:s')."] $host $module $login $method $status $elapsed\n");
+			fwrite($log,"_REQUEST: ".print_r($_REQUEST,true));
+			fwrite($log,"_RESPONSE: ".print_r($response,true));
+			fclose($log);
+		}
+
 		# Manage Module Schema
 		public function schemaVersion() {
 			if ($this->_schema->error) {
@@ -124,6 +179,12 @@
 				$this->app_error("Error upgrading schema: ".$this->_schema->error,__FILE__,__LINE__);
 			}
 			print $this->formatOutput($response);
+		}
+
+		public function _incrementCounter($reason) {
+			$counterKey = "api.".$this->_name.".".$_REQUEST["method"].".".$reason;
+			$counter = new \Site\Counter($counterKey);
+			$counter->increment();
 		}
 		public function _form() {
 			$form = '';
@@ -161,6 +222,13 @@
 					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required.'">'.$param.'</span>'.$cr;
 					if ($options['type'] == "textarea") {
 						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$param.'">'.$default.'</textarea>'.$cr;
+					}
+					elseif (is_array($options['options'])) {
+						$form .= $t.$t.$t.$t.'<select class="value input apiInput" name="'.$param.'">';
+						foreach ($options['options'] as $optname) {
+							$form .= $t.$t.$t.$t.$t.'<option value="'.$optname.'">'.$optname.'</option>'.$cr;
+						}
+						$form .= $t.$t.$t.$t.'</select>';
 					}
 					else {
 						$form .= $t.$t.$t.$t.'<input type="'.$options['type'].'" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;

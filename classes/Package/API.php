@@ -187,19 +187,6 @@
 		}
 		
 		###################################################
-		### Return Properly Formatted Error Message		###
-		###################################################
-		public function error($message) {
-			if (!isset($response)) $response = new \HTTP\Response();
-			$_REQUEST["stylesheet"] = '';
-			error_log($message);
-			$response->message = $message;
-			$response->success = 0;
-			print $this->formatOutput($response);
-			exit;
-		}
-
-		###################################################
 		### Update a Version							###
 		###################################################
 		public function updateVersion() {
@@ -207,7 +194,7 @@
 	
 			$package = new \Package\Package();
 			$package->get($_REQUEST['package_code']);
-			if ($package->error) api_error("Error getting package: ".$package->error,'error',__FILE__,__LINE__);
+			if ($package->error) $this->app_error("Error getting package: ".$package->error,'error',__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
 	
 			$version = new \Package\Version();
@@ -268,8 +255,8 @@
 			$version->get($package->id,$_REQUEST['major'],$_REQUEST['minor'],$_REQUEST['build']);
 			if ($version->error) $this->app_error("Error finding version: ".$version->error,__FILE__,__LINE__);
 			if (! $version->id) $this->error("Version not found");
-	
-			$version->download();
+			$file = $version->file();
+			$file->download();
 		}
 
 		###################################################
@@ -309,7 +296,8 @@
 			if ($version->error) $this->app_error("Error finding version: ".$version->error,__FILE__,__LINE__);
 			if (! $version->id) $this->error("Version not found");
 	
-			$version->download();
+			$file = $version->file();
+			$file->download();
 		}
 		
 		public function _methods() {

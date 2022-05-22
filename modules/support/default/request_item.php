@@ -11,7 +11,7 @@
 </style>
 <script>
 	function showForm(form) {
-		var forms = ['action','rma','shipping','comment'];
+		var forms = ['action','rma','shipping','comment','transfer'];
 		forms.forEach(function(form) {
 			document.getElementById(form+'FormDiv').style.display = 'none';
 		});
@@ -64,7 +64,7 @@
 			        <a href="/_support/request_detail/<?=$request->code?>"><?=$request->code?></a>
 		        </div>
 		        <div class="tableCell">
-			        <a href="/_register/admin_account/<?=$request->customer->code?>"><?=$request->customer->full_name()?></a>
+			        <a href="/_register/admin_account?customer_id=<?=$request->customer->id?>"><?=$request->customer->full_name()?></a>
 		        </div>
 		        <div class="tableCell">
 			        <span class="value"><?=$item->line?></span>
@@ -98,6 +98,9 @@
 		        <input type="submit" name="btn_submit" class="button" value="Update Request Item" />
 		        <input type="button" name="btn_add_action" class="button" value="Add Action" onclick="showForm('action');" />
 		        <input type="button" name="btn_add_rma" class="button secondary" value="Authorize Return" onclick="showForm('rma');" />
+		<?php	if ($asset->id) { ?>
+		        <input type="button" name="btn_transfer_item" class="button secondary" value="Transfer Device" onclick="showForm('transfer');" />
+		<?php	} ?>
 		        <input type="button" name="btn_ship_item" class="button secondary" value="Ship Product" onclick="showForm('shipping');" />
 		        <input type="button" name="btn_add_note" class="button secondary" value="Add Comment" onclick="showForm('comment');" />
         <?php	if ($item->status == 'CLOSED') { ?>
@@ -230,6 +233,32 @@
 		</form>
 	</div>
 	
+	<!-- Transfer Form -->
+	<div id="transferFormDiv" class="toggleContainer">
+		<form name="transferForm" method="post" action="/_support/request_item">
+		<input type="hidden" name="item_id" value="<?=$item->id?>" />
+		<h2>Transfer Device</h2>
+		<div class="container">
+			<span class="label">Current Owner</span>
+			<span class="value"><?=$asset->organization->name?></span>
+			<span class="label">Transfer To</span>
+			<select class="value input" name="transfer_to">
+<?php		foreach ($organizations as $organization) { ?>
+				<option value="<?=$organization->id?>" <?php if ($organization->id == $item->request->customer->organization->id) print " SELECTED"; ?>><?=$organization->name?></option>
+<?php		} ?>
+			</select>
+			<select class="value input" name="transfer_reason">
+				<option value="Sold">Sold</option>
+				<option value="Correction">Correction</option>
+			</select>
+		</div>
+		<div class="form_footer">
+			<input type="button" name="btn_cancel_transfer" value="Cancel" class="button" onclick="hideForm('transfer');" />
+			<input type="submit" name="btn_transfer_item" value="Transfer Item" class="button" />
+		</div>
+		</form>
+	</div>
+	
 	<!-- UNDO to HERE -->
 	<!-- Comment Form -->
 	<div id="commentFormDiv" class="toggleContainer">
@@ -311,7 +340,7 @@
     <br/><br/>
 </div>
 
-<?php	if (count($actions) > 0) { ?>
+<?php	if (is_array($actions) && count($actions) > 0) { ?>
 <div style="width: 756px;">
 <h2>Actions</h2>
 <?php	foreach ($actions as $action) {
@@ -428,7 +457,7 @@
 <?php		} ?>
 </div>
 <?php	} ?>
-<?php	if (count($comments) > 0) { ?>
+<?php	if (is_array($comments) && count($comments) > 0) { ?>
     <!--	Start Request Item-->
     <h3>Comments</h3>
     <?php		foreach ($comments as $comment) { ?>

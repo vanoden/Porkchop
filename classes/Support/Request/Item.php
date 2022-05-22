@@ -16,6 +16,7 @@
 		public function __construct($id = 0) {
 			if (is_numeric($id)) {
 				if ($id > 0) {
+					app_log("Load Support::Request::Item ".$id);
 					$this->id = $id;
 					$this->details();
 				}
@@ -25,7 +26,6 @@
 		}
 
 		public function add($parameters) {
-
 			if (! isset($parameters['product_id'])) {	
 				$this->_error = "product ID is required";
 				return false;
@@ -79,10 +79,10 @@
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
-			app_log("Added support item $id");
+			app_log("Added support item $this->id");
 			return $this->update($parameters);
 		}
-		
+
 		public function update($parameters) {
 		
 			// Bust Cache
@@ -248,5 +248,10 @@
 		public function internalLink() {
 			if ($GLOBALS['_config']->site->https) return "https://".$GLOBALS['_config']->site->hostname."/_support/item/".$this->id;
 			return "http://".$GLOBALS['_config']->site->hostname."/_support/item/".$this->id;
+		}
+
+		public function rmas() {
+			$rmaList = new \Support\Request\Item\RMAList();
+			return $rmaList->find(array("item_id" => $this->id));
 		}
 	}

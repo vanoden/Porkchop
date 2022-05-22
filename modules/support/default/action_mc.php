@@ -1,4 +1,5 @@
 <?php
+    global $_config;
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requireRole('support user');
@@ -15,7 +16,7 @@
 	if ($action->error()) $page->addError($action->error());
 	$item = $action->item;
 	$request = $item->request;
-	
+
 	if (isset($_REQUEST['btn_add_event'])) {
 		if ($_REQUEST['status'] != $action->status) $_REQUEST['description'] .= "<br>Status changed from ".$action->status." to ".$_REQUEST['status'];
 		$action->update(array('status' => 'ACTIVE'));
@@ -33,6 +34,20 @@
 		} else {
 			$page->addError($action->error());
 		}
+
+        // Event Occured Customer Ticket Notification        
+        $notification = new \Email\Notification (
+            array (
+                'customer'=> $request->customer,
+                'subject'=> "New Event for Request Action ".$request->code."-".$item->line."-".$action->id,
+                'templateVars' => array (
+                    'NOTIFICATION.MESSAGE' => 'An Event Action on your support request has been added.',
+                    'NOTIFICATION.DESCRIPTION' => $parameters['description'], 
+                    'NOTIFICATION.LINK'  => "https://" . $_config->site->hostname . "/_support/ticket/" . $item->ticketNumber()
+                )
+            )
+        );
+        $notification->notify();
 	}
 	if (isset($_REQUEST['btn_assign_action'])) {
 		$user = new \Register\Customer($_REQUEST['assigned_id']);

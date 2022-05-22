@@ -61,8 +61,13 @@
                 ORDER BY title ASC
 			";
 
-             // if search term, then constrain by that
-             if ($parameters['searchTerm']) {            
+			if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['searchTerm'])) {
+				$this->_error = "Invalid characters in search term";
+				return null;
+			}
+
+			// if search term, then constrain by that
+			if ($parameters['searchTerm']) {
                 $find_objects_query = "
                   SELECT	`id`
                   FROM	`engineering_projects`

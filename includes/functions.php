@@ -20,7 +20,14 @@
 	function _debug_print($message) {
 		error_log("DEBUG: ".$message);
 	}
-	function get_mysql_date($date,$range=0) {
+	function get_mysql_date($date = null,$range=0) {
+		if (empty($date)) {
+			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
+			$ident = $caller['class']."::".$caller['function']." (".$caller['file'].":".$caller['line'].")";
+			app_log("get_mysql_date() received empty date from $ident",'info');
+			return null;
+		}
+
 		# Handle Some Keywords
 		if (preg_match("/today/i",$date)) return date("Y-m-d");
 		if (preg_match("/now/i",$date)) return date("Y-m-d h:i:s");
@@ -106,7 +113,7 @@
 		# Default 0 Seconds
 		if (! preg_match('/^\d+$/',$second)) $second = 0;
 
-        # Partial Year
+		# Partial Year
         if (strlen($year) < 3) $year = $year + 2000;
 
         if (checkdate($month,$day,$year)) {
@@ -130,6 +137,60 @@
         app_log("get_mysql_date returning $date",'debug');
         return $date;
     }
+
+	function shortDate($date) {
+		if (preg_match('/^(\d\d\d\d)\-(\d\d)\-(\d\d)\s(\d\d)\:(\d\d)\:(\d\d)/',$date,$matches)) {
+			list($junk,$year,$month,$day,$hours,$minutes,$seconds) = $matches;
+			switch($month) {
+				case 1:
+					$month = 'Jan';
+					break;
+				case 2:
+					$month = 'Feb';
+					break;
+				case 3:
+					$month = 'Mar';
+					break;
+				case 4:
+					$month = 'Apr';
+					break;
+				case 5:
+					$month = 'May';
+					break;
+				case 6:
+					$month = 'Jun';
+					break;
+				case 7:
+					$month = 'Jul';
+					break;
+				case 8:
+					$month = 'Aug';
+					break;
+				case 9:
+					$month = 'Sep';
+					break;
+				case 10:
+					$month = 'Oct';
+					break;
+				case 11:
+					$month = 'Nov';
+					break;
+				case 12:
+					$month = 'Dec';
+					break;
+			}
+
+			if ($year == date('Y')) {
+					return sprintf("%s %d %02d:%02d",$month,$day,$hours,$minutes);
+			}
+			else {
+					return sprintf("%s %d %02d",$month,$day,$year);
+			}
+		}
+		else {
+			return $date;
+		}
+	}
 
 	function cache_set($key,$value,$expires=0) {
 		$cache = new \Cache\Item($GLOBALS['_CACHE_'],$key);
@@ -188,7 +249,7 @@
 	}
 	
 	function query_log_time($timeMilliseconds, $query,$params = array()) {
-		$level = 'debug';
+		$level = 'trace';
 		app_log('Query Time Audit: ' . $timeMilliseconds . 'ms '.$query."\n".print_r($params,true),$level);
 	}
 	

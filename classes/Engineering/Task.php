@@ -2,6 +2,7 @@
 	namespace Engineering;
 
 	class Task {
+	
 		private $_error;
 		public $id;
 		public $code;
@@ -14,7 +15,10 @@
 		public $date_added;
 		public $date_due;
 		public $priority;
+		public $difficulty;
+		public $duplicate_task_id;
 		public $prerequisite_id;
+		public $role_id;		
 		private $release_id;
 		private $product_id;
 		private $requested_id;
@@ -28,6 +32,7 @@
 		}
 
 		public function add($parameters = array()) {
+		
 			if (isset($parameters['code']) && strlen($parameters['code'])) {
 				if (preg_match('/^[\w\-\.\_\s]+$/',$parameters['code'])) {
 					$code = $parameters['code'];
@@ -54,6 +59,35 @@
 					return false;
 				}
 				$prerequisite_id = $parameters['prerequisite_id'];
+			}
+
+			// process duplicate_task_id that may be set
+			$duplicate_task_id = NULL;
+			if (!empty($parameters['duplicate_task_id'])) {
+				$duplicateTask = new Task($parameters['duplicate_task_id']);
+				if (! $duplicateTask->id) {
+					$this->_error = "Duplicate task not found";
+					return false;
+				}
+				$duplicate_task_id = $parameters['duplicate_task_id'];
+			}
+			
+			if (!empty($parameters['role_id'])) {
+				$role = new \Register\Role($parameters['role_id']);
+				if (! $role->id) {
+					$this->_error = "Engineering Role not found";
+					return false;
+				}
+				$role_id = $parameters['role_id'];
+			}
+
+			if (isset($parameters['difficulty'])) {
+				if ($this->_valid_difficulty($parameters['difficulty'])) {
+					$difficulty = strtoupper($parameters['difficulty']);
+				} else {
+					$this->_error = "Invalid difficulty";
+					return false;
+				}
 			}
 
 			if (isset($parameters['type'])) {
@@ -114,12 +148,12 @@
 			$add_object_query = "
 				INSERT
 				INTO	engineering_tasks
-				(		code,title,type,status,date_added,requested_id,product_id,prerequisite_id)
+				(		code,title,type,status,date_added,requested_id,product_id,prerequisite_id,duplicate_task_id,difficulty,role_id)
 				VALUES
-				(		?,?,?,?,?,?,?,?)
+				(		?,?,?,?,?,?,?,?,?,?,?)
 			";
-
-            $rs = executeSQLByParams($add_object_query,array($code,$parameters['title'],$type,$status,$date_added,$parameters['requested_id'],$product->id,$prerequisite_id));
+			
+            $rs = executeSQLByParams($add_object_query,array($code,$parameters['title'],$type,$status,$date_added,$parameters['requested_id'],$product->id,$prerequisite_id,$duplicate_task_id,$difficulty,$role_id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Engineering::Task::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
@@ -192,7 +226,30 @@
 					return false;
 				}
 			}
-
+			
+			if (isset($parameters['difficulty'])) {
+				if ($this->_valid_difficulty($parameters['difficulty'])) {
+					$update_object_query .= ",
+						difficulty = ?";
+					array_push($bind_params,$parameters['difficulty']);
+				} else {
+					$this->_error = "Invalid difficulty";
+					return false;
+				}
+			}
+			
+			if (isset($parameters['role_id'])) {
+				$role = new \Register\Role($parameters['role_id']);
+				if ($role->id) {
+                    $update_object_query .= ",
+	                    role_id = ?";
+                    array_push($bind_params,$parameters['role_id']);
+				} else {
+                    $this->_error = "Engineering Role not found";
+                    return false;
+				}
+			}
+			
 			if (isset($parameters['type'])) {
 				if ($this->_valid_type($parameters['type'])) {
 					$update_object_query .= ",
@@ -302,6 +359,19 @@
 				}
 			}
 			
+            // allow for duplicate task to be passed or else set to NULL if none passed
+			if (isset($parameters['duplicate_task_id'])) {
+				$task = new Task($parameters['duplicate_task_id']);
+				if ($task->id) {
+					$update_object_query .= ",
+						duplicate_task_id = ".$task->id;
+				}
+				else {
+                    $update_object_query .= ",
+						duplicate_task_id = NULL";
+				}
+			}
+			
 			if (isset($parameters['project_id'])) {
 				$project = new \Engineering\Project($parameters['project_id']);
 				if ($project->id) {
@@ -399,9 +469,12 @@
 			$this->requested_id = $object->requested_id;
 			$this->assigned_id = $object->assigned_id;
 			$this->priority = $object->priority;
+			$this->difficulty = $object->difficulty;
+			$this->role_id = $object->role_id;
 			$this->timestamp_added = $object->timestamp_added;
             $this->project_id = $object->project_id;
             $this->prerequisite_id = $object->prerequisite_id;
+            $this->duplicate_task_id = $object->duplicate_task_id;
 
 			if (! $this->_cached) {
 				// Cache Object
@@ -409,15 +482,23 @@
 				if ($object->id) $result = $cache->set($object);
 				app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);	
 			}
-
-			$prereq = new \Engineering\Task($object->prerequisite_id);
-			if ($prereq->id && $prereq->status != 'COMPLETE') $this->status = 'BLOCKED';
+            if (isset($object->prerequisite_id) && !empty($object->prerequisite_id)) {
+			    $prereq = new \Engineering\Task($object->prerequisite_id);
+			    if ($prereq->id && $prereq->status != 'COMPLETE') $this->status = 'BLOCKED';
+            }
 			return true;
 		}
+		
 		public function prerequisite() {
 			$task = new \Engineering\Task($this->prerequisite_id);
 			return $task;
 		}
+		
+		public function duplicate() {
+			$task = new \Engineering\Task($this->duplicate_task_id);
+			return $task;
+		}
+		
 		public function release() {
 			return new Release($this->release_id);
 		}
@@ -497,6 +578,11 @@
 
 		private function _valid_priority($string) {
 			if (preg_match('/^(normal|important|urgent|critical)$/i',$string)) return true;
+			else return false;
+		}
+		
+		private function _valid_difficulty($string) {
+			if (preg_match('/^(easy|normal|hard|project)$/i',$string)) return true;
 			else return false;
 		}
 	}

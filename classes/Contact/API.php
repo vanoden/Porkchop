@@ -37,6 +37,8 @@
         ### Find matching Events						###
         ###################################################
         function findEvents() {
+			if (! $GLOBALS['_SESSION_']->customer->can('browse contact events')) $this->deny();
+
             $eventlist = new \Contact\EventList();
             if ($eventlist->error) app_error("Error finding events: ".$eventlist->error,__FILE__,__LINE__);
             

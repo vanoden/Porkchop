@@ -17,7 +17,13 @@
 		public $user_received_id;
 		public $tableName = 'shipping_packages';
         public $fields = array('id','shipment_id','number','tracking_code','status','condition','height','width','depth','weight','shipping_cost','date_received','user_received_id','vendor_id');
-        
+
+		public function __construct($id = null) {
+			if (!empty($id)) {
+				parent::__construct($id);
+			}
+		}
+
         /**
          * add by params
          * 
@@ -134,5 +140,18 @@
 			if (empty($this->id)) return array();
 			$itemList = new \Shipping\ItemList();
 			return $itemList->find(array('package_id' => $this->id));
+		}
+
+		public function ship($params = array()) {
+			$params['status'] = 'SHIPPED';
+			return $this->update($params);
+		}
+
+		public function receive($params = array()) {
+			if (empty($params['user_received_id'])) $params['user_received_id'] = $GLOBALS['_SESSION_']->customer->id;
+			if (!get_mysql_date($params['date_received'])) $params['date_received'] = get_mysql_date('now');
+			$params['status'] = "RECEIVED";
+
+			return $this->update($params);
 		}
 	}

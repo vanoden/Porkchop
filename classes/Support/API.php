@@ -57,7 +57,7 @@
 			if ($request->error) $this->app_error ( "Error finding request: " . $request->error, 'error', __FILE__, __LINE__ );
 			if (! $request->id) $this->error ( "Request not found" );
 
-			$request->update ( $request->id, array ('name' => $_REQUEST ['name'],'type' => $_REQUEST ['type'],'status' => $_REQUEST ['status'],'description' => $_REQUEST ['description'] ) );
+			$request->update ( array ('name' => $_REQUEST ['name'],'type' => $_REQUEST ['type'],'status' => $_REQUEST ['status'],'description' => $_REQUEST ['description'] ) );
 			if ($request->error) $this->app_error ( "Error adding product: " . $request->error, 'error', __FILE__, __LINE__ );
 
 			$this->response->success = 1;

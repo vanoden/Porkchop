@@ -14,6 +14,23 @@
 
             $bind_params = array();
 
+			if (isset($parameters['name'])) {
+				$find_objects_query .= "
+				AND		name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
+
+			if (isset($parameters['module'])) {
+				$find_objects_query .= "
+				AND		module = ?";
+				array_push($bind_params,$parameters['module']);
+			}
+
+			if (isset($parameters['_sort'])) {
+				if ($parameters['_sort'] == 'module') $find_objects_query .= "ORDER BY `module`";
+			}
+			else $find_objects_query .= "ORDER BY `name`";
+
 			query_log($find_objects_query);
             $rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
             if (! $rs) {

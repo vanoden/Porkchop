@@ -84,7 +84,7 @@
 
 			# Bust Cache
 			$cache_key = "product[".$this->id."]";
-			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cacke_key);
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			$cache_item->delete();
 
 			$ok_params = array(
@@ -262,40 +262,26 @@
 			return $object;
 		}
 
-		public function inCategory($category,$product = '') {
+		public function inCategory($category_id) {
 			app_log("Product::Item::inCategory()",'trace',__FILE__,__LINE__);
-			if ($product) {
-				$_product = new Product($product);
-				$product_id = $_product->{id};
-			}
-			else
-				$product_id = $this->id;
-			if (! $product_id)
-			{
-				$this->_error = "Could not find product";
-				return 0;
-			}
 
 			# Get Parent ID
-			$_parent = new Product($category);
-			$parent_id = $_parent->id;
-			if (! $parent_id)
-			{
-				$this->_error = "Could not find category $category";
-				return 0;
+			$parent = new \Product\Item($category_id);
+			if (! $parent->id) {
+				$this->_error = "Could not find category $category_id";
+				return false;
 			}
 
 			# Prepare Query to Tie Product to Category
 			$in_category_query = "
 				SELECT	1
 				FROM	product_relations
-				WHERE	product_id = '".$product_id."'
-				AND		parent_id = '".$parent_id."'
+				WHERE	product_id = ?
+				AND		parent_id = ?
 			";
-			#error_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$in_category_query)));
-			$rs = $GLOBALS['_database']->Execute($in_category_query);
-			if (! $rs)
-			{
+			$bind_params = array($this->id,$parent->id);
+			$rs = $GLOBALS['_database']->Execute($in_category_query,$bind_params);
+			if (! $rs) {
 				$this->_error = $GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
@@ -304,27 +290,12 @@
 			return $found;
 		}
 
-		public function addToCategory($category,$product = '') {
-			if ($product)
-			{
-				$_product = new Product($product);
-				$product_id = $_product->{id};
-			}
-			else
-				$product_id = $this->id;
-			if (! $product_id)
-			{
-				$this->_error = "Could not find product";
-				return 0;
-			}
-
+		public function addToCategory($category_id) {
 			# Get Parent ID
-			$_parent = new Product($category);
-			$parent_id = $_parent->id;
-			if (! $parent_id)
-			{
-				$this->_error = "Could not find category $category";
-				return 0;
+			$category = new \Product\Item($category_id);
+			if (! $category->id) {
+				$this->_error = "Could not find category $category_id";
+				return false;
 			}
 
 			# Prepare Query to Tie Product to Category
@@ -335,18 +306,16 @@
 						parent_id
 				)
 				VALUES
-				(		'$product_id',
-						'$parent_id'
+				(		?,?
 				)
 			";
-			#error_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$to_category_query)));
-			$rs = $GLOBALS['_database']->Execute($to_category_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			$bind_params = array($this->id,$category->id);
+			$rs = $GLOBALS['_database']->Execute($to_category_query,$bind_params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = $GLOBALS['_database']->ErrorMsg();
-				return 0;
+				return false;
 			}
-			return 1;
+			return true;
 		}
 
 		public function images() {
@@ -368,7 +337,7 @@
 			while (list($image_id) = $rs->FetchRow()) {
 				$image = new \Media\Item($image_id);
 				if ($image->error) {
-					$this->_error = "Could not load Media Item class: ".$_image->error;
+					$this->_error = "Could not load Media Item class: ".$image->error;
 					return null;
 				}
 				array_push($images,$image);
@@ -488,7 +457,33 @@
 			}
 			return 1;
 		}
-		public function error() {
+		public function addPrice($parameters = array()) {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit product prices')) $this->error("Permission denied");
+
+			$price = new \Product\Price();
+			$parameters = array(
+				'product_id'	=> $this->id,
+				'amount'		=> $parameters['amount'],
+				'date_active'	=> $parameters['date_active'],
+				'status'		=> $parameters['status']
+			);
+			if ($price->add($parameters)) return true;
+			$this->error("Error adding price: ".$price->error());
+			return false;
+		}
+		public function getPrice($parameters = array()) {
+			$price = new \Product\Price();
+			if ($price->getCurrent($this->id)) return $price;
+			$this->error($price->error());
+			return null;
+		}
+        public function getPriceAmount($parameters = array()) {
+			$price = new \Product\Price();
+			return $price->getCurrent($this->id);
+        }
+
+		public function error($message = null) {
+			if (isset($message)) $this->_error = $message;
 			return $this->_error;
 		}
 	}

@@ -70,7 +70,12 @@
 					AND		date_approved < ?";
 				array_push($bind_params,get_mysql_date($parameters['date_end']));
 			}
-
+			
+			if (isset($parameters['result_start']) && isset($parameters['result_start'])) {
+			    $find_objects_query .= "
+    			    LIMIT " . $parameters['result_start']. "," . $parameters['paginate_count'];
+			}
+			
 			query_log($find_objects_query,$bind_params);
             $rs = executeSQLByParams($find_objects_query, $bind_params);
 			

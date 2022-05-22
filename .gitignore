@@ -2,7 +2,6 @@ cache
 classes/Spectros
 classes/Monitor
 classes/Action
-classes/Media
 classes/Solvay
 classes/Alert
 classes/Brand
@@ -24,3 +23,4 @@ package-lock.json
 __pycache__
 third_party/composer.sha384sum
 .DS_Store
+third_party/composer-setup.php

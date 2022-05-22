@@ -9,5 +9,5 @@
         $page->addError("File not found");
     } else {
         $file->download();
-        exit;
+		$page->addError($file->error);
     }

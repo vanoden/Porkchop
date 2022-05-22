@@ -6,6 +6,10 @@
 	$tasklist = new \Engineering\TaskList();
 	$tasklist = $tasklist->find(array('status'=>array('NEW', 'ACTIVE')));
 
+    // get roles set for engineering to apply to tasks
+	$roleList = new \Register\RoleList();
+	$engineeringRoles = $roleList->find();
+
     // create new task or get existing if the "code" is passed
 	$task = new \Engineering\Task();
 	if (isset($_REQUEST['task_id'])) {
@@ -18,44 +22,36 @@
 		$task->get($code);
 	}
 
-    // add task comment
-    if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Add Comment') {
-        $msgs = array();
-		if (isset($_REQUEST['content'])) {
-            $engineeringComment = new \Engineering\Comment();
-            $engineeringComment->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $task->code, 'content' => $_REQUEST['content']));
-            if ($engineeringComment->error()) $page->addError("Error creating comment: ".$engineeringComment->error());
-            array_push($msgs,"Comment added.");
-			$event = new \Engineering\Event();
-			$event->add(array(
-				'task_id'	=> $task->id,
-				'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
-				'date_added'	=> date('Y-m-d H:i:s'),
-				'description'	=> join('<br>',$msgs),
-			));
-			if ($event->error()) $page->addError("Error creating event: ".$event->error());
-		} else {
-			$page->addError("Comment required");
-		}
-    }
-    
-    // add task testing details
-    if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'Testing') {
-        $parameters = array();
-        $parameters['testing_details'] = $_REQUEST['testing_details'];
-        $task->update($parameters);
-        $event = new \Engineering\Event();    
-		$event->add(array(
-			'task_id'	=> $task->id,
-			'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
-			'date_added'	=> date('Y-m-d H:i:s'),
-			'description'	=> 'Testing Instructions Updated',
-		));
-		if ($event->error()) $page->addError("Error creating event: ".$event->error());
-    }
+    // get new and active tasks for the 'prerequisite' field
+	$tasklist = new \Engineering\TaskList();
+	$prerequisiteTasklist = $tasklist->find(array('status'=>array('NEW', 'ACTIVE')));
 
-    // edit task or add event
-	if (isset($_REQUEST['method']) && in_array($_REQUEST['method'],array('Submit','Add Event'))) {
+    // get roles set for engineering to apply to tasks
+	$roleList = new \Register\RoleList();
+	$engineeringRoles = $roleList->find();
+	$parameters = array();
+	$parameters['status'] = array();
+	if ($_REQUEST["duplicate_new"]) array_push($parameters['status'],'NEW');
+	if ($_REQUEST["duplicate_active"]) array_push($parameters['status'],'ACTIVE');
+	if ($_REQUEST["duplicate_complete"]) array_push($parameters['status'],'COMPLETE');
+	if ($_REQUEST["duplicate_cancelled"]) array_push($parameters['status'],'CANCELLED');
+	if ($_REQUEST["duplicate_broken"]) array_push($parameters['status'],'BROKEN');
+	if ($_REQUEST["duplicate_testing"]) array_push($parameters['status'],'TESTING');
+	if ($_REQUEST["duplicate_hold"]) array_push($parameters['status'],'HOLD');
+	if ($_REQUEST["duplicate_project_id"]) $parameters['project_id'] = $_REQUEST['duplicate_project_id'];
+	if ($_REQUEST["duplicate_product_id"]) $parameters['product_id'] = $_REQUEST['duplicate_product_id'];
+	if ($_REQUEST["duplicate_assigned_id"]) $parameters['assigned_id'] = $_REQUEST['duplicate_assigned_id'];
+
+	// populate tasks for duplicate task popup window, if no user search issued, then no need to search all tasks
+	if (empty($parameters['status']) && empty($parameters['project_id']) && empty($parameters['product_id']) && empty($parameters['assigned_id'])) {
+    	$tasks = array();
+	} else {
+        $tasks = $tasklist->find($parameters);
+	}
+	if ($tasklist->error()) $page->error = $tasklist->error();
+
+    // edit task or add event, testing info or comment
+	if (isset($_REQUEST['method']) && !empty($_REQUEST['method'])) {
 		$msgs = array();
 		$parameters = array();
 		if (isset($_REQUEST['title'])) {
@@ -84,6 +80,10 @@
 			array_push($msgs,"Priority changed from ".$task->priority." to ".$_REQUEST['priority']);
 			$parameters['priority'] = $_REQUEST['priority'];
 		}
+		if (isset($_REQUEST['difficulty']) && $task->difficulty != strtoupper($_REQUEST['difficulty'])) {
+			array_push($msgs,"difficulty changed from ".$task->difficulty." to ".$_REQUEST['difficulty']);
+			$parameters['difficulty'] = $_REQUEST['difficulty'];
+		}
 		if (isset($_REQUEST['description']) && $task->description != $_REQUEST['description']) {
 			array_push($msgs,"Description updated");
 			$parameters['description'] = $_REQUEST['description'];
@@ -92,7 +92,11 @@
 			array_push($msgs,"Prerequisite updated");
 			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_id'];
 		}
-
+		if (isset($_REQUEST['role_id']) && $task->role_id != $_REQUEST['role_id']) {
+			array_push($msgs,"Required Role updated");
+			$parameters['role_id'] = $_REQUEST['role_id'];
+		}
+		
 		# Store Old Values to Recognize Change
 		$old_id = $task->id;
 		$old_release = $task->release();
@@ -135,9 +139,10 @@
 
 		app_log("Submitted task form",'debug',__FILE__,__LINE__);
 		if ($task->id) {
-			# Task Exists, Update
+				
+			// Task Exists, Update
 			if ($task->update($parameters)) {
-				$page->success = "Updates applied";
+				$page->success .= "Updates applied<br/>";
 				$statusLogged = "";
 				if (isset($parameters['status'])) $statusLogged = $parameters['status'];
 				app_log("Task updated, status now ".$statusLogged,'debug',__FILE__,__LINE__);
@@ -155,11 +160,10 @@
 				));
 				if ($event->error()) $page->addError("Error creating event: ".$event->error());
 			}
-		}
-		else {
-			# Create New Task
+		} else {
+			// Create New Task
 			if ($task->add($parameters)) {
-				$page->success = "Task Created";
+				$page->success .= "Task Created<br/>";
 				$event = new \Engineering\Event();
 				$event->add(array(
 					'task_id'	=> $task->id,
@@ -175,7 +179,7 @@
 		}
 
 		if (is_numeric($task->id) && $task->id > 0) {
-		
+
 			/************************************/
 			/* Email Internal Notifications		*/
 			/************************************/
@@ -188,11 +192,11 @@
 			// Get Template File
 			$internal_notification = $GLOBALS['_config']->engineering->internal_notification;
 			if (! isset($GLOBALS['_config']->engineering->internal_notification)) {
-				$page->error = "Notification template not configured";
+				$page->addError("Notification template not configured");
 				app_log("config->engineering->internal_notification not set!",'error');
 			}
 			elseif (! file_exists($internal_notification->template)) {
-				$page->error = "Support Internal Email Template '".$internal_notification->template."' not found";
+				$page->addError("Support Internal Email Template '".$internal_notification->template."' not found");
 				app_log("File '".$internal_notification->template."' not found! Set in config->engineering->internal_notification setting",'error');
 			}
 			else {
@@ -201,7 +205,7 @@
 				}
 				catch (Exception $e) {
 					app_log("Email template load failed: ".$e->getMessage(),'error',__FILE__,__LINE__);
-					$page->error = "Template load failed.  Try again later";
+					$page->addError("Template load failed.  Try again later");
 					return;
 				}
 
@@ -220,6 +224,7 @@
 				$notice_template->addParam('PRODUCT.TITLE',$product_title);
 				$notice_template->addParam('PROJECT.TITLE',$project_title);
 				$notice_template->addParam('TASK.PRIORITY',$task->priority);
+                $notice_template->addParam('TASK.DIFFICULTY',$task->difficulty);
 				$notice_template->addParam('TASK.TYPE',$task->type);
 				$notice_template->addParam('TASK.DATE_DUE',$task->date_due);
 				$notice_template->addParam('TASK.REQUESTED_BY',$requestedBy->full_name());
@@ -271,7 +276,7 @@
 			}
 		}
     
-		if (strtoupper($_REQUEST['new_status']) != $task->status) {
+		if (!empty($_REQUEST['new_status']) && (strtoupper($_REQUEST['new_status']) != $task->status)) {
     		if (empty($_REQUEST['notes'])) $_REQUEST['notes'] = "";
 			$old_status = $task->status;
 			$task->update(array('status'=>$_REQUEST['new_status']));
@@ -279,29 +284,105 @@
 				$page->addError($task->error);
 			} else {
 				$_REQUEST['notes'] = "Status changed from $old_status to ".strtoupper($_REQUEST['new_status'])."<br>\n".$_REQUEST['notes'];
-				$page->success = "Updated applied successfully";
+				$page->success .= "Status Updated applied successfully<br/>";
 			}
-		} else {
-			$page->success = "Updated applied successfully";
 		}
-		$event = new \Engineering\Event();
-		$event->add(array(
-			'task_id'		=> $task->id,
-			'person_id'		=> $_REQUEST['event_person_id'],
-			'date_added'	=> $_REQUEST['date_event'],
-			'description'	=> $_REQUEST['notes'],
-			'hours_worked'	=> $_REQUEST['hours_worked']
-		));
-		if ($event->error()) $page->addError($event->error());
+		
+		if (!empty($_REQUEST['hours_worked']) && !empty($_REQUEST['hours_worked'])) {
+		    $event = new \Engineering\Event();
+		    $event->add(array(
+			    'task_id'		=> $task->id,
+			    'person_id'		=> $_REQUEST['event_person_id'],
+			    'date_added'	=> $_REQUEST['date_event'],
+			    'description'	=> $_REQUEST['notes'],
+			    'hours_worked'	=> $_REQUEST['hours_worked']
+		    ));
+		    if ($event->error()) $page->addError($event->error());
+		    $page->success .= "Event added successfully<br/>";
+        }
+		
+        // add task testing details
+	    if (isset($_REQUEST['testing_details']) && !empty($_REQUEST['testing_details'])) {
+            $parameters = array();
+            $parameters['testing_details'] = $_REQUEST['testing_details'];
+            $task->update($parameters);
+            $event = new \Engineering\Event();    
+		    $event->add(array(
+			    'task_id'	=> $task->id,
+			    'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
+			    'date_added'	=> date('Y-m-d H:i:s'),
+			    'description'	=> 'Testing Instructions Updated',
+		    ));
+		    if ($event->error()) $page->addError("Error creating testing details: ".$event->error());
+        }
+		
+        // add task comment   
+	    if (isset($_REQUEST['task_comment']) && !empty($_REQUEST['task_comment'])) {
+            $engineeringComment = new \Engineering\Comment();
+            $engineeringComment->add(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'code' => $task->code, 'content' => $_REQUEST['task_comment']));
+            if ($engineeringComment->error()) $page->addError("Error creating comment: ".$engineeringComment->error());
+		    $event = new \Engineering\Event();
+		    $event->add(array(
+			    'task_id'	=> $task->id,
+			    'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
+			    'date_added'	=> date('Y-m-d H:i:s'),
+			    'description'	=> "Comment added."
+		    ));
+		    if ($event->error()) $page->addError("Error creating comment: ".$event->error());
+	    }
+	    
+	    // update task that this one duplicates with all the information about it
+	    if (isset($_REQUEST['duplicate_task_id']) && $task->duplicate_task_id != $_REQUEST['duplicate_task_id']) {
+	    
+            $parameters = array();
+            $parameters['duplicate_task_id'] = $_REQUEST['duplicate_task_id'];
+            $task->update($parameters);
+		    $event = new \Engineering\Event();
+		    $event->add(array(
+			    'task_id'	=> $task->id,
+			    'person_id'	=> $GLOBALS['_SESSION_']->customer->id,
+			    'date_added'	=> date('Y-m-d H:i:s'),
+			    'description'	=> "Duplicate Task updated."
+		    ));
+		    if ($event->error()) $page->addError("Error creating comment: ".$event->error());
+			
+			// get all the info from the task set as duplicate to merge with this one
+			$taskDuplicating = new \Engineering\Task($_REQUEST['duplicate_task_id']);
+			$parameters = array();
+			$parameters['description'] = $task->description . " (From Duplicate Task: " . $taskDuplicating->description .")";
+			$parameters['testing_details'] = $task->testing_details . " (From Duplicate Task: " . $taskDuplicating->testing_details .")";
+            $task->update($parameters);
+			
+			// pull over all the engineering_events from the task that is duplicate of this one
+			$engineeringEvents = new \Engineering\EventList();
+			$engineeringEventsList = $engineeringEvents->find(array('task_id'=>$_REQUEST['duplicate_task_id']));
+			foreach ($engineeringEventsList as $engineeringEvent) {
+			    $newEngineeringEvent = new \Engineering\Event();
+			    $newEngineeringEvent->add(array('task_id' => $task->task_id, 'person_id' => $engineeringEvent->person_id, 'description' => $engineeringEvent->description, 'date_event' => $engineeringEvent->date_event));		
+			}
+			
+			// pull over all the engineering_task_comments from the task that is duplicate of this one
+			$engineeringCommentsList = new \Engineering\CommentList();
+			$engineeringCommentsItemsListed = $engineeringCommentsList->find(array('code'=>$taskDuplicating->code));
+			foreach ($engineeringCommentsItemsListed as $engineeringCommentItem) {
+			    $newEngineeringEvent = new \Engineering\Event();
+			    $newEngineeringEvent->add(array('date_comment' => $engineeringCommentItem->date_comment, 'content' => $engineeringCommentItem->content, 'code' => $task->code, 'user_id' => $engineeringCommentItem->user_id));
+			}
+		}
 	}
 
     // upload files if upload button is pressed
-    $configuration = new \Site\Configuration('engineering_attachments_s3');
-    $repository = $configuration->value();
-    if (isset($_REQUEST['btn_upload']) && $_REQUEST['btn_upload'] == 'Upload') {
+    $configuration = new \Site\Configuration('engineering_attachments');    
+    $repository_key = $configuration->value();
+	$repository = new \Storage\Repository();
+	if (empty($repository_key)) {
+		$page->addError("'engineering_attachments' configuration not set");
+	} elseif (! $repository->get($repository_key)) {
+		$page->addError("Repository '".$repository_key."' not found");
+	} elseif (isset($_REQUEST['btn_upload']) && $_REQUEST['btn_upload'] == 'Upload') {
 	    $file = new \Storage\File();
 	    $parameters = array();
-        $parameters['repository_name'] = $_REQUEST['repository_name'];
+        $parameters['repository_id'] = $repository->id;
         $parameters['type'] = $_REQUEST['type'];
         $parameters['ref_id'] = $task->id;
 	    $uploadResponse = $file->upload($parameters);
@@ -320,7 +401,7 @@
 
 	$role = new \Register\Role();
 	$role->get("engineering user");
-	$techs = $role->members();
+	$assigners = $techs = $role->members();
 
 	$productlist = new \Engineering\ProductList();
 	$products = $productlist->find();
@@ -349,6 +430,8 @@
 		$form['title'] = $task->title;
 		$form['estimate'] = $task->estimate;
 		$form['priority'] = $task->priority;
+		$form['difficulty'] = $task->difficulty;
+		$form['role_id'] = $task->role_id;
 		$product = $task->product();
 		$form['product_id'] = $product->id;
 		$requestor = $task->requestedBy();
@@ -366,6 +449,7 @@
 		$form['project_id'] = $project->id;
         $form['prerequisite_id'] = $task->prerequisite_id;
         $form['testing_details'] = $task->testing_details;
+		$form['duplicate_task_id'] = $task->duplicate_task_id;
 		$eventlist = new \Engineering\EventList();
 		$events = $eventlist->find(array('task_id'=> $task->id));
 		if ($eventlist->error()) $page->addError($eventlist->error());
@@ -374,6 +458,8 @@
 		$form['title'] = $_REQUEST['title'];
 		$form['estimate'] = $_REQUEST['estimate'];
 		$form['priority'] = $_REQUEST['priority'];
+		$form['difficulty'] = $_REQUEST['difficulty'];
+		$form['role_id'] = $_REQUEST['role_id'];
 		$form['product_id'] = $_REQUEST['product_id'];
 		$form['requested_id'] = $_REQUEST['requested_id'];
 		$form['assigned_id'] = $_REQUEST['assigned_id'];
@@ -385,6 +471,7 @@
 		$form['release_id'] = $_REQUEST['release_id'];
 		$form['prerequisite_id'] = $_REQUEST['prerequisite_id'];
 		$form['testing_details'] = $_REQUEST['testing_details'];
+		$form['duplicate_task_id'] = $_REQUEST['duplicate_task_id'];
 	} else {
 		$form['code'] = uniqid();
 		$form['product_id'] = '';
@@ -394,11 +481,21 @@
 		$form['type'] = '';
 		$form['status'] = '';
 		$form['priority'] = '';
+		$form['difficulty'] = '';
+		$form['role_id'] = '';
 		$form['assigned_id'] = '';
 		$form['requested_id'] = $GLOBALS['_SESSION_']->customer->id;
 		$form['description'] = '';
 		$form['project_id'] = '';
 		$form['prerequisite_id'] = '';
 		$form['release_id'] = '';
+		$form['duplicate_task_id'] = '';
 		$task->date_added = 'now';
+	}
+	
+    // get the current title of the task that this task duplicates
+	$form['duplicate_task_name'] = '(none)';	
+	if (isset($form['duplicate_task_id'])) {
+        $duplicateTask = new \Engineering\Task($form['duplicate_task_id']);
+        $form['duplicate_task_name'] = $duplicateTask->title;
 	}

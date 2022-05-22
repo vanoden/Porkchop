@@ -30,7 +30,7 @@
 				$this->_error = "SQL Error in Support::Request::nextLine(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			
+
 			list($line) = $rs->FetchRow();
 			return $line + 1;
 		}
@@ -134,15 +134,13 @@
 				return null;
 			}
 			
-			return $this->details($id);
+			return $this->details();
 		}
 
 		private function details() {
 			$cache_key = "support.request[".$this->id."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
-			if ($cache->error) {
-				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
-			}
+			if ($cache->error) app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
 
 			# Cached Object, Yay!
 			if ($object = $cache->get()) {
@@ -211,6 +209,7 @@
 			// Add Ticket (item) To Request
 			$parameters['request_id'] = $this->id;
 			$item = new \Support\Request\Item();
+			if (!isset($parameters['line'])) $parameters['line'] = $this->nextLine();
 			$item->add($parameters);
 
 			if ($item->error()) {

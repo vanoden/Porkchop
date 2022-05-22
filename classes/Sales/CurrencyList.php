@@ -2,39 +2,39 @@
 	namespace Sales;
 
 	class CurrencyList {
-		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
-		}
+		public $_count;
+		public $_error;
 
-		public function add($parameters) {
-			return $this->update($parameters);
-		}
-
-		public function update($parameters) {
-			return $this->details();
-		}
-
-		public function details() {
-			$get_details_query = "
-				SELECT	id,
-						name,
-						symbol
+		public function find($parameters = array()) {
+			$find_objects_query = "
+				SELECT	id
 				FROM	sales_currencies
-				WHERE	id = ?
+				WHERE	id = id
 			";
 
-			$rs = $GLOBALS["_database"]->Execute($get_details_query,array($this->id));
+			$bind_params = array();
+
+			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->_error = "Error getting currency: ".$GLOBALS["_database"]->ErrorMsg();
-				return false;
+				$this->error("SQL Error in Sales::CurrencyList::find(): ".$GLOBALS['_database']->ErrorMsg());
+				return null;
 			}
-			else {
-				$this->object = $rs->FetchNextObject(false);
-				$this->
+			$objects = array();
+			while (list($id) = $rs->FetchRow()) {
+				$object = new \Sales\Currency($id);
+				array_push($objects,$object);
+				$this->_count ++;
 			}
+			return $objects;
+		}
+
+		public function error($message = null) {
+			if (!empty($message)) $this->_error = $message;
+			return $this->_error;
+		}
+
+		public function count() {
+			return $this->_count;
 		}
 	}
 ?>

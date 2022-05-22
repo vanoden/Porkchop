@@ -149,14 +149,13 @@
 			
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
-				array($name)
+				array(trim($name))
 			);
 			
 			if (! $rs) {
 				$this->error = "SQL Error in Storage::Repository::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			
 			list($this->id) = $rs->FetchRow();
 			if (! $this->id) {
 				$this->error = "Repository not found";
@@ -286,6 +285,15 @@
 			}
 			list($value) = $rs->FetchRow();
 			return $value;
+		}
+
+		public function getMetadata($key) {
+			return $this->_metadata($key);
+		}
+
+		public function getFileFromPath($path) {
+			$file = new \Storage\File();
+			return $file->fromPath($this->id,$path);
 		}
 		
 		private function _valid_code($string) {

@@ -14,6 +14,7 @@
 		public $comment;
 		public $create_time;
 		public $collation;
+		public $auto_increment_id;
 		private $_error;
 
 		public function __construct($name) {
@@ -48,6 +49,7 @@
 				$this->comment = $object->TABLE_COMMENT;
 				$this->create_time = $object->CREATE_TIME;
 				$this->collation = $object->TABLE_COLLATION;
+				$this->auto_increment_id = $object->AUTO_INCREMENT;
 				$this->exists = true;
 			}
 			else {
@@ -142,6 +144,8 @@
 				$constraint->name = $object->CONSTRAINT_NAME;
 				$constraint->table = $object->TABLE_NAME;
 				$constraint->type = $object->CONSTRAINT_TYPE;
+				if ($constraint->type == 'PRIMARY KEY' && !empty($this->auto_increment_id)) $constraint->auto_increment = true;
+				else $constraint->auto_increment = false;
 				array_push($constraints,$constraint);
 			}
 			return $constraints;

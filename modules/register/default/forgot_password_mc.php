@@ -17,14 +17,31 @@
 				'content'	=> http_build_query($data),
 			),
 		);
+		
 		# Don't need to store these fields
 		unset($_REQUEST['g-recaptcha-response']);
 		unset($_REQUEST['btn_submit']);
-
-		$context = stream_context_create($options);
-		$result = file_get_contents($url,false,$context);
-		$captcha_success = json_decode($result);
-
+		 
+		// Allow to bypass the captcha if config->captcha->bypass_key set
+		if (!empty($_REQUEST['captcha_bypass_key'])) {
+			app_log("User skipping captcha",'notice');
+			$captcha_success = new stdClass();
+			if (!empty($GLOBALS['_config']->captcha->bypass_key) && $_REQUEST['captcha_bypass_key'] == $GLOBALS['_config']->captcha->bypass_key) {
+				app_log("CAPTCHA bypassed with key",'notice');
+				$captcha_success->success = true;
+			}
+			else {
+				app_log("CAPTCHA bypass key invalid",'warn');
+				$captcha_success->success = false;
+			}
+		}
+		else {
+			app_log("Solicit CAPTCHA service",'notice');
+			$context = stream_context_create($options);
+			$result = file_get_contents($url,false,$context);
+			$captcha_success = json_decode($result);
+		}
+		
 		if ($captcha_success->success == true) {
 			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
 
@@ -105,9 +122,13 @@
 
 					app_log("Sending Forgot Password Link",'debug',__FILE__,__LINE__);
 					$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
-					if (\Email\Transport::error()) {
-						$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
-						app_log("Error initializing email transport: ".\Email\Transport::error(),'error',__FILE__,__LINE__);
+					if (! $transport) {
+						$page->addError("Error sending email, please contact us at ".$GLOBALS['_config']->site->support_email);
+						return;
+					}
+					if ($transport->error()) {
+						$page->addError("Error sending email, please contact us at ".$GLOBALS['_config']->site->support_email);
+						app_log("Error initializing email transport: ".$transport->error(),'error',__FILE__,__LINE__);
 						return;
 					}
 					$transport->hostname($GLOBALS['_config']->email->hostname);
@@ -134,9 +155,7 @@
 		}
 	}
 
-	function valid_email($email)
-	{
+	function valid_email($email) {
 		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+$/",$email)) return 1;
 		else return 0;
 	}
-?>

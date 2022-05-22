@@ -4,6 +4,7 @@ const data = require('gulp-data');
 const debug = require('gulp-debug');
 const fs = require('fs');
 
+var preProcessPath = 'html.src/pre';
 var today = new Date();
 var month = today.getMonth() + 1;
 
@@ -14,37 +15,54 @@ const videoPath = configDict.videoPath;
 const docsPath = configDict.docsPath;
 const staticVersion = today.getFullYear()+"."+month+"."+today.getDate()+"."+today.getHours()+"."+today.getMinutes();
 
+//const contentBlocks = fs.readFileSync('html.src/gulp_contentBlocks.js');
+
+htmlBlocks = {
+	"header": "header.html",
+	"footer": "footer.html",
+	"footer_monitor": "footer.monitor.html",
+	"header_2022": "header_2022.html"
+};
+
+html2process = {
+	"static_version": staticVersion,
+	"video_path": videoPath,
+	"docs_path": docsPath,
+	"company_name": configDict.companyName,
+	"company": configDict.companyCode
+};
+
+for (const key in htmlBlocks) {
+	if (fs.existsSync(preProcessPath+'/'+htmlBlocks[key])) {
+		console.log(key + ' found');
+		html2process[key] = fs.readFileSync(preProcessPath+'/'+htmlBlocks[key], 'utf8');
+	}
+	else {
+		console.log(key + ' NOT found');
+	} 
+}
+
 gulp.task('hello', function() {
 	console.log('Hello, Tony');
 });
 
 gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico', 'dashboards'], () =>
 	gulp.src('html.src/**/*.html')
-		.pipe(data(() => (
-			{
-				"static_version": staticVersion,
-				"video_path": videoPath,
-				"docs_path": docsPath,
-				"company_name": configDict.companyName,
-				"company": configDict.companyCode,
-				"header": fs.readFileSync('tmp/header.html', 'utf8'),
-				"footer": fs.readFileSync('tmp/footer.html', 'utf8')
-			}
-		)))
+		.pipe(data(() => (html2process)))
 		.pipe(template())
 		.pipe(debug())
 		.pipe(gulp.dest('html'))
 );
 
 gulp.task('pre', () =>
-    gulp.src('html.src/pre/*.html')
+    gulp.src(preProcessPath+'/*.html')
         .pipe(data(() => (
             {
                 "static_version": staticVersion,
 				"video_path": videoPath,
 				"docs_path": docsPath,
-                "header": fs.readFileSync('html.src/pre/header.html', 'utf8'),
-                "footer": fs.readFileSync('html.src/pre/footer.html', 'utf8'),
+                "header": fs.readFileSync(preProcessPath+'/header.html', 'utf8'),
+                "footer": fs.readFileSync(preProcessPath+'/footer.html', 'utf8'),
 				"title": 'Interscan Corporation'
             }
         )))

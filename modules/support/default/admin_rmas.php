@@ -1,12 +1,13 @@
+<style>
+    .padding {
+        padding: 10px
+    }
+</style>
 <div class="breadcrumbs">
    <a href="/_support/requests">Support Home</a> &gt; Support RMAs
 </div>
 <h2 style="display: inline-block;"><i class="fa fa-id-badge" aria-hidden="true"></i> Customer Product Registrations </h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
-<div style="width: 100%;">
-
-</div>
-
 <form method="get">
 <div class="table">
 	<div class="tableRowHeader">
@@ -49,7 +50,8 @@
 			<input type="text" name="date_end" class="input value" value="<?=$date_end?>" />
 		</div>
 	</div>
-	<div class="tableRowFooter">
+	<div class="tableCell">
+    	<input type="hidden" name="page" value="<?=$currentPage?>" />
 		<input type="submit" name="btn_filter" class="button" />
 	</div>
 </div>
@@ -68,9 +70,11 @@
 		<div class="tableCell">Authorized</div>
 		<div class="tableCell">By</div>
 	</div>
-<?php	foreach ($rmas as $rma) {
-		$item = $rma->item();
-		$customer = $item->request()->customer;
+<?php	
+    if (count($rmas) > 0) {
+        foreach ($rmas as $rma) {
+		    $item = $rma->item();
+		    $customer = $item->request()->customer;
 ?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_support/admin_rma/<?=$rma->code?>"><?=$rma->number()?></a></div>
@@ -82,5 +86,34 @@
 		<div class="tableCell"><?=$rma->date_approved?></div>
 		<div class="tableCell"><?=$rma->approvedBy()->full_name()?></div>
 	</div>
-<?php	} ?>
+<?php	
+        } 
+?>
+	<div class="tableCell padding">
+    	<br/>
+	    <strong class="padding">Page: <?=$currentPage+1?></strong>
+        <?php	
+            if ($currentPage > 0) {
+        ?>
+    		<a href="/_support/admin_rmas?status=<?=$_REQUEST['status']?>&organization_id=<?=$_REQUEST['organization_id']?>&product_id=<?=$_REQUEST['product_id']?>&date_start=<?=$_REQUEST['date_start']?>&date_end=<?=$_REQUEST['date_end']?>&page=<?=(($currentPage - 1) > 0) ? ($currentPage - 1) : '0'?>" class="padding"><img src="/img/icons/left-pagination.png" style="max-width: 10px;"/> Previous</a>
+        <?php
+                }
+            if (count($rmas) >= $pageSize) {
+        ?>
+		    <a href="/_support/admin_rmas?status=<?=$_REQUEST['status']?>&organization_id=<?=$_REQUEST['organization_id']?>&product_id=<?=$_REQUEST['product_id']?>&date_start=<?=$_REQUEST['date_start']?>&date_end=<?=$_REQUEST['date_end']?>&page=<?=($currentPage + 1)?>" class="padding"><img src="/img/icons/right-pagination.png" style="max-width: 10px;"/> Next</a>
+        <?php
+                }
+        ?>
+	</div>
+<?php
+    } else {
+?>
+    <div class="tableCell padding">
+        <i>no items</i>
+    </div>
+<?php	
+        } 
+    
+?>
+
 </div>

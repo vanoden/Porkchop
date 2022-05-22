@@ -20,11 +20,10 @@
 	    
 	    public function __construct() {
 		    $args = func_get_args ();
-			if (func_num_args() == 1 && gettype($args[0] == "integer")) {
+			if (func_num_args() == 1 && gettype($args[0]) == "integer") {
 				$this->id = $args[0];
 				$this->details();
-			}
-		    elseif (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
+			} elseif (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
 			    $this->id = $args [0];
 			    $this->details ();
 		    } elseif (func_num_args () == 1 && gettype ( $args [0] ) == "array") {
@@ -49,6 +48,8 @@
 	    }
 	    public function requireAuth() {
 		    if (! $GLOBALS ['_SESSION_']->customer->id > 0) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 		    }
 	    }
@@ -56,9 +57,13 @@
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
 		    } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit ();
 		    } elseif (! $GLOBALS ['_SESSION_']->customer->has_role ( $role )) {
+				$counter = new \Site\Counter("permission_denied");
+				$counter->increment();
 			    header ( 'location: /_register/permission_denied' );
 			    exit ();
 		    }
@@ -99,7 +104,7 @@
 				    AND		(`index` is null or `index` = '')
 				    ";
 		    }
-		    query_log($get_object_query, $parameters, true);
+		    query_log($get_object_query, $parameters);
 		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, $parameters );
 		    if (! $rs) {
 			    $this->addError ( "SQL Error in Page::get: " . $GLOBALS ['_database']->ErrorMsg () );
@@ -117,7 +122,7 @@
 					return $this->add($module,$view,$index);
 				}
 				elseif ($GLOBALS['_SESSION_']->customer->has_role('content developer')) {
-					return $this->get("content","edit");
+					return $this->get("site","content_block");
 				}
 				else return false;
 			}
@@ -212,43 +217,28 @@
 			    }
 		    }
 
-		    // Load View Metadata
-		    $_metadata = new \Site\Page\Metadata ();
-		    $this->metadata = $_metadata->all ( $this->id );
-
-		    // Pull Key Metadata
-		    $this->template = $_metadata->get ( 'template' );
-
 		    return true;
 	    }
-	    
-	    public function load_template() {
-		    if (isset ( $this->metadata->template )) {
-			    app_log ( "Loading template '" . $this->metadata->template . "' from page metadata", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $this->metadata->template );
-		    } elseif (file_exists ( HTML . "/" . $this->module . "." . $this->view . ".html" )) {
-			    app_log ( "Loading template '" . "/" . $this->module . "." . $this->view . ".html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $this->module . "." . $this->view . ".html" );
-		    } elseif ($this->view == 'api' && file_exists ( HTML . "/_api.html" )) {
-			    app_log ( "Loading template '_api.html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/_api.html" );
-		    } elseif (file_exists ( HTML . "/" . $this->module . ".html" )) {
-			    app_log ( "Loading template '" . "/" . $this->module . ".html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/" . $this->module . ".html" );
-		    } elseif (isset ( $GLOBALS ['_config']->site->default_template )) {
-			    app_log ( "Loading template '" . $GLOBALS ['_config']->site->default_template . "'", 'debug', __FILE__, __LINE__ );
-			    if (! file_exists ( HTML . "/" . $GLOBALS ['_config']->site->default_template )) {
-				    app_log ( "Default template file not found!", 'error', __FILE__, __LINE__ );
-			    }
-			    $html = file_get_contents ( HTML . "/" . $GLOBALS ['_config']->site->default_template );
-		    } elseif (file_exists ( HTML . "/index.html" )) {
-			    app_log ( "Loading template '/index.html'", 'debug', __FILE__, __LINE__ );
-			    $html = file_get_contents ( HTML . "/index.html" );
-		    } elseif (file_exists ( HTML . "/install.html" )) $html = file_get_contents ( HTML . "/install.html" );
-		    else $html = '<r7 object="page" property="view"/>';
-		    return $this->parse ( $html );
+
+		public function template() {
+			$template = $this->getMetadata('template');
+			if (!empty($template)) return $template;
+			elseif (file_exists(HTML . "/" . $this->module . "." . $this->view . ".html")) return $this->module . "." . $this->view . ".html";
+			elseif ($this->view == 'api' && file_exists ( HTML . "/_api.html")) return "_api.html";
+			elseif (file_exists ( HTML . "/" . $this->module . ".html")) return $this->module . ".html";
+			elseif (isset ( $GLOBALS ['_config']->site->default_template)) return $GLOBALS ['_config']->site->default_template;
+			elseif (file_exists ( HTML . "/index.html")) return "index.html";
+			elseif (file_exists ( HTML . "/install.html" )) return "install.html";
+			else return null;
+		}
+
+		public function load_template() {
+			$template = $this->template();
+			if (isset ( $template ) && file_exists(HTML."/".$template)) return $this->parse(file_get_contents(HTML."/".$template));
+			elseif (isset ($template)) app_log("Template ".HTML."/".$template." not found!",'error');
+			return $this->parse('<r7 object="page" property="view"/>');
 	    }
-	    
+
 	    public function parse($message) {
 		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
 		    while ( preg_match ( $module_pattern, $message, $matched ) ) {
@@ -366,13 +356,7 @@
 			    } elseif ($property == "not_authorized") {
 				    $buffer .= "<div class=\"page_error\">Sorry, you are not authorized to see this view</div>";
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
-				    ob_start ();
-				    $be_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php';
-				    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
-				    if (file_exists ( $be_file )) include ($be_file);
-				    if (file_exists ( $fe_file )) include ($fe_file);
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "navigation") {
 			    if ($property == "menu") {
@@ -385,13 +369,7 @@
 					    app_log ( "navigation menu references without code" );
 				    }
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
-				    ob_start ();
-				    $be_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php';
-				    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
-				    if (file_exists ( $be_file )) include ($be_file);
-				    if (file_exists ( $fe_file )) include ($fe_file);
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "content") {
 			    if ($property == "index") {
@@ -421,18 +399,15 @@
 						    $buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'0px\'; } </script>';
 						    $buffer .= "<div>";
 						    $buffer .= '<div id="r7_widget[' . $origin_id . ']">' . $message->content . '</div>';
-						    $buffer .= '<a class="porkchop_edit_button" href="javascript:void(0)" onclick="editContent(\'content\',\'' . $origin_id . '\',\'' . $message->id . '\')" onmouseover="highlightContent(\'content\');" onmouseout="blurContent(\'content\');">Edit</a>';
-						    $buffer .= "</div>";
+						    #$buffer .= '<a class="porkchop_edit_button" href="javascript:void(0)" onclick="editContent(\'content\',\'' . $origin_id . '\',\'' . $message->id . '\')" onmouseover="highlightContent(\'content\');" onmouseout="blurContent(\'content\');">Edit</a>';
+						    $buffer .= '<a href="/_content/edit?id='.$message->id.'">Edit</a>';
+                            $buffer .= "</div>";
 					    } else {
 						    $buffer .= $message->content;
 					    }
 				    }
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "product") {
 			    // Load Product Class if Not Already Loaded
@@ -516,28 +491,17 @@
 					    }
 				    }
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "monitor") {
-			    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view, 'debug', __FILE__, __LINE__ );
-			    ob_start ();
-			    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-			    if (file_exists ( MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php' )) include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-			    $buffer .= ob_get_clean ();
+				$buffer = $this->loadViewFiles($buffer);
 		    } elseif ($object == "session") {
 			    if ($property == "customer_id") $buffer = $GLOBALS ['_SESSION_']->customer->id;
 			    elseif ($property == "loggedin") {
 				    if (isset ( $GLOBALS ['_SESSION_']->customer->id )) $buffer = "true";
 				    else $buffer = "false";
 			    } else {
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "register") {
 			    if (isset ( $parameter ['id'] ) and preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
@@ -555,12 +519,7 @@
 					    $buffer .= "<a class=\"register_welcomestring\" href=\"" . PATH . "/_register/login\">Log In</a>";
 				    }
 			    } else {
-				    app_log ( "Loading " . MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php' );
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
-				    app_log ( "View loaded successfully" );
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "company") {
 			    $companies = new \Company\CompanyList ();
@@ -569,10 +528,7 @@
 			    if ($property == "name") {
 				    $buffer .= $company->name;
 			    } else {
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
+                    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "news") {
 			    if ($property == "events") {
@@ -593,25 +549,57 @@
 					    }
 				    }
 			    } else {
-				    ob_start ();
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php');
-				    include (MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php');
-				    $buffer .= ob_get_clean ();
+				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "adminbar") {
 			    if (role ( 'administrator' )) $buffer = "<div class=\"adminbar\" id=\"adminbar\" style=\"height:20px; width: 100%; position: absolute; top: 0px; left: 0px;\">Admin stuff goes here</div>\n";
 		    } else {
-			    ob_start ();
-			    app_log ( "Loading view " . $this->view . " of module " . $this->module, 'debug', __FILE__, __LINE__ );
-			    $be_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '_mc.php';
-			    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
-			    if (file_exists ( $be_file )) include ($be_file);
-			    else app_log ( "Backend file '$be_file' for module " . $this->module . " not found" );
-			    if (file_exists ( $fe_file )) include ($fe_file);
-			    $buffer .= ob_get_clean ();
+                $buffer = $this->loadViewFiles($buffer);
 		    }
 		    return $buffer;
 	    }
+        public function loadViewFiles($buffer = "") {
+		    ob_start ();
+            if (isset($this->style)) {
+                if (file_exists(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php'))
+                    $be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
+                elseif (file_exists(MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php'))
+                    $be_file = MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php';
+                if (file_exists(MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php'))
+                    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
+                elseif (file_exists(MODULES . '/' . $this->module . '/default/' . $this->view . '.php'))
+                    $fe_file = MODULES . '/' . $this->module . '/default/' . $this->view . '.php';
+            }
+		    app_log ( "Loading view " . $this->view . " of module " . $this->module, 'debug', __FILE__, __LINE__ );
+		    if (file_exists ( $be_file )) {
+				// Load Backend File
+                $res = include($be_file);
+
+				// Handle possible return codes
+                if ($res == 403) {
+                    http_response_code(403);
+					$counter = new \Site\Counter("return403");
+					$counter->increment();
+                    return '<span class="label page_response_code">Permission Denied</span>';
+                }
+                elseif ($res == 500) {
+                    http_response_code(500);
+					$counter = new \Site\Counter("return500");
+					$counter->increment();
+                    return '<span class="label page_response_code">Internal Error</span>';
+                }
+				elseif ($res == 404) {
+                    http_response_code(404);
+					$counter = new \Site\Counter("return404");
+					$counter->increment();
+					return '<span class="label page_response_code">Resource not found</span>';
+				}
+            }
+		    else app_log ( "Backend file '$be_file' for module " . $this->module . " not found" );
+            if (file_exists ( $fe_file )) include ($fe_file);
+		    $buffer .= ob_get_clean ();
+            return $buffer;
+        }
 	    public function requires($role = '_customer') {
 		    if ($role == '_customer') {
 			    if ($GLOBALS ['_SESSION_']->customer->id) {
@@ -629,33 +617,28 @@
 			    exit ();
 		    }
 	    }
-	    public function metadata() {
-		    $get_data_query = "
-				    SELECT	`key`,
-						    `value`
-				    FROM	page_metadata
-				    WHERE	page_id = ?
-			    ";
-
-		    $rs = $GLOBALS ['_database']->Execute ( $get_data_query, array ($this->id ) );
-
-		    if (! $rs) {
-			    $this->error = "SQL Error in Site::Page::metadata(): " . $GLOBALS ['_database']->ErrorMsg ();
+	    public function allMetadata() {
+		    $metadataList = new \Site\Page\MetadataList();
+			$metaArray = $metadataList->find(array('page_id' => $this->id));
+		    if ($metadataList->error()) {
+				$this->error = $metadataList->error();
 			    return null;
 		    }
-		    $metadata = array ();
-		    while ( list ( $key, $value ) = $rs->FetchRow () ) {
-			    array_push ( $metadata, array ('key' => $key, 'value' => $value ) );
-		    }
-		    return $metadata;
+		    return $metaArray;
 	    }
+		public function getMetadata($key) {
+			$metadata = new \Site\Page\Metadata();
+			if ($metadata->get($this->id,$key)) {
+				return $metadata->value;
+			}
+			else {
+				return null;
+			}
+		}
+
 	    public function setMetadata($key, $value) {
 		    if (! isset ( $this->id )) {
 			    $this->addError ( "No page id" );
-			    return false;
-		    }
-		    if (! preg_match ( '/^\d+$/', $this->id )) {
-			    $this->addError ( "Invalid page id in Site::Page::setMetadata()" );
 			    return false;
 		    }
 		    if (! isset ( $key )) {
@@ -663,42 +646,20 @@
 			    return false;
 		    }
 
-		    $set_data_query = "
-                    REPLACE
-                    INTO    page_metadata
-                    (       page_id,`key`,value)
-                    VALUES
-                    (       ?,?,?)
-                ";
-		    $GLOBALS ['_database']->Execute ( $set_data_query, array ($this->id, $key, $value ) );
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->addError ( "SQL Error setting metadata in Site::Page::setMetadata(): " . $GLOBALS ['_database']->ErrorMsg () );
-			    return false;
-		    }
-		    return true;
+		    $metadata = new \Site\Page\Metadata();
+			$metadata->get($this->id,$key);
+			if (! isset($value)) {
+				$metadata->drop();
+			}
+
+		    if ($metadata->set($value)) return true;
+			else $this->addError($metadata->error());
+			return false;
 	    }
 	    public function unsetMetadata($key) {
-		    if (! preg_match ( '/^\d+$/', $this->id )) {
-			    $this->error = "Invalid page id in Site::Page::unsetMetadata(): ";
-			    return null;
-		    }
-		    if (! isset ( $key )) {
-			    $this->error = "Invalid key name in Site::Page::unsetMetadata(): ";
-			    return null;
-		    }
-
-		    $set_data_query = "
-                    DELETE
-                    FROM    page_metadata
-				    WHERE	page_id = ?
-				    AND		`key` = ?
-                ";
-		    $GLOBALS ['_database']->Execute ( $set_data_query, array ($this->id, $key ) );
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->error = "SQL Error setting metadata in Site::Page::unsetMetadata(): " . $GLOBALS ['_database']->ErrorMsg ();
-			    return null;
-		    }
-		    return true;
+			$metadata = new \Site\Page\Metadata();
+            $metadata->get($this->id,$key);
+		    return $metadata->drop();
 	    }
 	    public function addError($error) {
 		    $trace = debug_backtrace ();

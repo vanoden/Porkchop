@@ -2,6 +2,7 @@
 	namespace Content;
 
 	class Message {
+	
         public $id;
         public $name;
 		public $error;
@@ -192,24 +193,25 @@
 
             return $this->details();
         }
-		public function purge_cache($id) {
+		public function purge_cache() {
 			$this->error = NULL;
 			if (! role('content operator')) {
 				$this->error = "You do not have permission to update content";
 				app_log("Denied access in Content::purge_cache, 'content operator' required",'info',__FILE__,__LINE__);
-				return null;
+				return false;
 			}
 
-			if (! $id) {
-				$id = $this->id;
-			}
-			if (! $id) {
+			if (! $this->id) {
 				$this->error = "id parameter required to update users";
-				return null;
+				return false;
 			}
 
-            $id = preg_replace("/\D/",'',$id);
+			cache_unset("content[".$this->id."]");
+			return true;
+		}
 
-			cache_unset("content[".$id."]");
+		public function error($message = null) {
+			if (!empty($message)) $this->error = $message;
+			return $this->error;
 		}
     }

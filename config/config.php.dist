@@ -12,7 +12,9 @@
 	define ( 'APPLICATION_LOG_TYPE', 'File' );
 	define ( 'APPLICATION_LOG', '/var/log/apache2/application.log');
 	define ( 'APPLICATION_LOG_LEVEL', 'debug');
-
+	define ( 'ENVIROMENT', 'QA'); // 'DEV' / 'QA' / 'PRODUCTION'
+	define ( 'QA_CAPTCHA_BYPASS', 'GZdWHjJJk9xHJXHFPeu4gZs6YDfcEXyb');
+	
 	# Initialize config
 	$_config = new stdClass();
 

@@ -54,18 +54,33 @@
 					'from'	=> 'service@spectrosinstruments.com',
 					'subject'	=> "[SUPPORT] Action #".$action->id." assigned to you",
 					'body'		=> "The following action was assigned to you:
-Request: <a href='https://".$_config->site->hostname."/_support/request_detail/".$action->item->request->code."'>".$action->item->request->code."</a><br>
-Item: ".$action->item->line."<br>
-Type: ".$action->type."<br>
-Product: ".$action->item->product->code."<br>
-Serial: ".$action->item->serial_number."<br>
-Description: ".$action->description
+                                    Request: <a href='https://".$_config->site->hostname."/_support/request_detail/".$action->item->request->code."'>".$action->item->request->code."</a><br>
+                                    Item: ".$action->item->line."<br>
+                                    Type: ".$action->type."<br>
+                                    Product: ".$action->item->product->code."<br>
+                                    Serial: ".$action->item->serial_number."<br>
+                                    Description: ".$action->description
 				)
 			);
 			$message->html(true);
 			$assigned_to->notify($message);
 		}
+		
+        // Update Customer an action has been created
+        $notification = new \Email\Notification (
+            array (
+                'customer'=> $request->customer,
+                'subject'=> "New Action on Support Ticket# " . $item->ticketNumber(),
+                'templateVars' => array (
+                    'NOTIFICATION.MESSAGE' => 'A new action has occurered on your support ticket.',
+                    'NOTIFICATION.DESCRIPTION' => "Action Type: " . $_REQUEST['action_type'] . "<br/> Status: " . $_REQUEST['action_status'] . "<br/> Description: " .$_REQUEST['action_description'], 
+                    'NOTIFICATION.LINK'  => "https://" . $_config->site->hostname . "/_support/ticket/" . $item->ticketNumber()
+                )
+            )
+        );
+        $notification->notify();
 	}
+	
 	if ($_REQUEST['btn_add_rma']) {
 	
 		// Make Sure Notification Template is available
@@ -74,12 +89,23 @@ Description: ".$action->description
 			$page->addError("Return notification template not configured");
 			app_log("config->support->return_notification not set!",'error');
 			return false;
-		}
-		elseif (! file_exists($return_notification->template)) {
+		} elseif (! file_exists($return_notification->template)) {
 			$page->addError("Return Notification Email Template '".$return_notification->template."' not found");
 			app_log("File '".$return_notification->template."' not found! Set in config->support->return_notification setting",'error');
 			return false;
 		}
+
+        // get any known emails to ensure if they have notifications set to recieve RMA details via email
+        $requestedBy = $item->request()->customer;
+        $rmaCustomerEmails = $item->request->customer->contacts(array('type'=>'email'));
+        $hasEmailNotifications = false;
+        foreach ($rmaCustomerEmails as $customerEmail) {
+            if ($customerEmail->notify) $hasEmailNotifications = true;   
+        }
+        if (!$hasEmailNotifications){
+			$page->addError("Error: RMA Could not be processed, customer has <strong>no email address</strong> set to receive RMA notifications.");
+			return false;
+        }
 
 		// We create an RMA record.  Shipment is created by customer when they ship, or admin when received
 		$parameters = array(
@@ -92,14 +118,13 @@ Description: ".$action->description
 			$page->addError("Unable to create RMA: ".$item->error());
 			return false;
 		}
-		app_log("RMA ".$rma->code." creaed",'info');
+		app_log("RMA ".$rma->code." created",'info');
 
 		// Create Template
 		app_log("Populating notification email");
 		if ($GLOBALS['_config']->site->https) $url = "https://".$GLOBALS['_config']->site->hostname."/_support/rma_form/".$rma->code;
 		else $url = "http://".$GLOBALS['_config']->site->hostname."/_support/rma_form/".$rma->code;
 
-		$requestedBy = $item->request()->customer;
 		$notice_template = new \Content\Template\Shell();
 		$notice_template->load($return_notification->template);
 		$notice_template->addParam('CUSTOMER.FIRST_NAME',$requestedBy->first_name);
@@ -120,6 +145,59 @@ Description: ".$action->description
 		else {
 			$page->addError("Error delivering notification: ".$requestedBy->error());
 			app_log("Error delivering notification: ".$requestedBy->error());
+		}
+	}
+	if ($_REQUEST['btn_transfer_item']) {
+		$organization = new \Register\Organization($_REQUEST['transfer_to']);
+		if ($organization->id) {
+			$parameters = array(
+				'type'				=> 'Transfer Ownership',
+				'date_requested'	=> date('Y-m-d H:i:s'),
+				'requested_id'		=> $item->request->customer->id,
+				'assigned_id'		=> $GLOBALS['_SESSION_']->customer->id,
+				'status'			=> 'NEW',
+				'description'		=> 'Transfer Device'
+			);
+
+			$action = $item->addAction($parameters);
+			if ($item->error()) {
+				$page->addError($item->error());
+			} else {
+				$page->success = "Action #".$action->id." added";
+			}
+			if ($item->status == "NEW") $item->update(array('status' => 'ACTIVE'));
+			$asset = new \Monitor\Asset();
+			if ($asset->get($item->serial_number,$item->product->id)) {
+				if ($asset->transfer($organization_id,$_REQUEST['transfer_reason'])) {
+					$_REQUEST['description'] = "Device transferred to ".$organization->name." because: ".$_REQUEST['transfer_reason'];
+					$action->update(array('status' => 'ACTIVE'));
+					$parameters = array(
+						'action_id'		=> $action->id,
+						'date_event'	=> date('Y-m-d H:i:s'),
+						'user_id'		=> $GLOBALS['_SESSION_']->customer->id,
+						'description'	=> $_REQUEST['description'],
+						'hours_worked'	=> 0
+					);
+					
+					if ($action->addEvent($parameters)) {
+						$page->success = "Device Transfered to ".$organization->name;
+						if ($_REQUEST['status'] != $action->status) $action->update(array('status' => $_REQUEST['status']));
+					} else {
+						$page->addError($action->error());
+					}
+					$action->update(array('status' => 'COMPLETE'));
+					$item->update(array('status' => 'COMPLETE'));
+				}
+				else {
+					$page->addError($asset->error());
+				}
+			}
+			else {
+				$page->addError($asset->error());
+			}
+		}
+		else {
+			$page->addError("Organization not found");
 		}
 	}
 	if ($_REQUEST['btn_add_shipment']) {
@@ -173,13 +251,16 @@ Description: ".$action->description
         $parameters['ref_id'] = $item->id;
 	    $uploadResponse = $file->upload($parameters);
 	    
-	    if (!empty($file->error)) $page->addError($file->error);
+	    if (!empty($file->error())) $page->addError($file->error);
 	    if (!empty($file->success)) $page->success = $file->success;
 	}
-	
+
+	$asset = new \Monitor\Asset();
+	$asset->get($item->serial_number,$item->product->id);
+
 	$filesList = new \Storage\FileList();
 	$filesUploaded = $filesList->find(array('type' => 'support ticket', 'ref_id' => $item->id));
-	
+
 	$adminlist = new \Register\CustomerList();
 	$admins = $adminlist->find(array('role' => 'support user'));
 	$actionlist = new \Support\Request\Item\ActionList();	
@@ -198,3 +279,6 @@ Description: ".$action->description
 	$commentlist = new \Support\Request\Item\CommentList();
 	$comments = $commentlist->find(array('item_id' => $item->id));
 	if ($commentlist->error()) $page->addError($commentlist->error());
+
+	$organizationList = new \Register\OrganizationList();
+	$organizations = $organizationList->find();

@@ -129,6 +129,12 @@
 			$packageList = new \Shipping\PackageList();
 			return $packageList->find(array('shipment_id' => $this->id));
 		}
+		public function addPackage() {
+			return new \Shipping\Package(array('shipment_id' => $this->id));
+		}
+		public function package($id) {
+			return new \Shipping\Package($id);
+		}
 		public function vendor() {
 			return new \Shipping\Vendor($this->vendor_id);
 		}
@@ -151,5 +157,12 @@
 
 		public function number() {
 			return sprintf("%06d",$this->id);
+		}
+
+		public function ship($params = array()) {
+			foreach ($this->packages() as $package) {
+				$package->ship();
+			}
+			return $this->update(array('status' => 'SHIPPED','vendor_id' => $params['vendor_id']));
 		}
 	}

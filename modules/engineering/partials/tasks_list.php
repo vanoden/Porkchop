@@ -27,6 +27,7 @@
 				    <?php	foreach ($assigners as $assigner) { ?>
 				    <option value="<?=$assigner->id?>"<?php if ($assigner->id == $_REQUEST['assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
 				    <?php	} ?>
+				    <option value="Unassigned" <?php if ($_REQUEST['assigned_id'] == "Unassigned") print " selected"; ?>>Unassigned</option>
 			    </select>
 		    </div>
 		    <div class="tableCell">
@@ -53,6 +54,7 @@
 			    <input type="checkbox" name="complete" value="1"<?php if ($_REQUEST['complete']) print " checked"; ?>/>Completed
 			    <input type="checkbox" name="cancelled" value="1"<?php if ($_REQUEST['cancelled']) print " checked"; ?> />Cancelled
 			    <input type="checkbox" name="hold" value="1"<?php if ($_REQUEST['hold']) print " checked"; ?> />Hold
+			    <input type="checkbox" name="duplicate" value="1"<?php if ($_REQUEST['duplicate']) print " checked"; ?> /><i>Include Duplicates</i>
 		    </div>
 	    </div>
 	    <div class="form_footer" style="text-align: center; width: 100%">
@@ -77,24 +79,32 @@
 	    </div>
     <?php
         if (!isset($tasks)) $tasks = array();
-	    foreach ($tasks as $task) {
-		    $product = $task->product();
-		    $project = $task->project();
-		    $worker = $task->assignedTo();
-			$prerequisiteTask = $task->prerequisite();
+	    foreach ($tasks as $taskItem) {
+		    $product = $taskItem->product();
+		    $project = $taskItem->project();
+		    $worker = $taskItem->assignedTo();
+			$prerequisiteTask = $taskItem->prerequisite();
     ?>
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <a href="/_engineering/task/<?=$task->code?>"><?=$task->title?></a>
+			    <a href="/_engineering/task/<?=$taskItem->code?>"><?=$taskItem->title?></a>
+                <?php
+                    if (!empty($taskItem->duplicate_task_id)) {
+                    $taskDuplicated = new Engineering\Task($taskItem->duplicate_task_id);
+                ?>
+                    [duplicate of <a href="/_engineering/task/<?=$taskDuplicated->code?>"><?=$taskDuplicated->title?></a>]
+            	<?php
+	                }
+	            ?>
 		    </div>
 		    <div class="tableCell">
-			    <?=date('m/d/Y',$task->timestamp_added)?>
+			    <?=date('m/d/Y',$taskItem->timestamp_added)?>
 		    </div>
 		    <div class="tableCell">
 			    <?=$worker->full_name()?>
 		    </div>
 		    <div class="tableCell">
-			    <?=$task->status?>
+			    <?=$taskItem->status?>
 		    </div>
 		    <div class="tableCell">
 			    <?=$product->title?>
@@ -103,7 +113,7 @@
 			    <?=$project->title?>
 		    </div>
 		    <div class="tableCell">
-			    <?=$task->priority?>
+			    <?=$taskItem->priority?>
 		    </div>
 		    <div class="tableCell">
 	           <?php

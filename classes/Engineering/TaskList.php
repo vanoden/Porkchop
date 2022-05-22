@@ -5,6 +5,7 @@
 	 * list of engineering tasks 
 	 */
 	class TaskList {
+	
 		private $_error;
 		private $count = 0;
 
@@ -41,10 +42,34 @@
 				array_push($bind_params,$parameters['assigned_id']);
 			}
 
+            // allow for "unassigned" searches of tasks = assigned_id default '0'
+			if (isset($parameters['assigned_id']) && $parameters['assigned_id'] == 'Unassigned') {
+				$find_objects_query .= "
+				AND		assigned_id = ?";
+				array_push($bind_params, 0);
+			}
+			
+			if (isset($parameters['duplicate_task_id']) && is_numeric($parameters['duplicate_task_id'])) {
+				$find_objects_query .= "
+				AND		duplicate_task_id = ?";
+				array_push($bind_params, 0);
+			}
+			
+			if (isset($parameters['role_id']) && is_numeric($parameters['role_id'])) {
+				$find_objects_query .= "
+				AND		role_id = ?";
+				array_push($bind_params, 0);
+			}
+			
 			if (isset($parameters['release_id']) && is_numeric($parameters['release_id'])) {
 				$find_objects_query .= "
 				AND		release_id = ?";
 				array_push($bind_params,$parameters['release_id']);
+			}
+			
+			if (!isset($parameters['duplicate']) || empty($parameters['duplicate'])) {
+                $find_objects_query .= "
+				AND		duplicate_task_id IS NULL";
 			}
 
 			if (isset($parameters['status']) && !empty($parameters['status'])) {
@@ -64,21 +89,45 @@
 						}
 					}
 					$find_objects_query .= ")";
-				}
-				else {
+				} else {
 					$find_objects_query .= "
-				AND		status = ?";
-				array_push($bind_params,$parameters['status']);
+				        AND		status = ?";
+				        array_push($bind_params,$parameters['status']);
 				}
 			}
 			else {
 				$find_objects_query .= "
 				AND		status NOT IN ('CANCELLED')";
 			}
-
+			
+            if (isset($parameters['priority']) && !empty($parameters['priority'])) {
+				if (is_array($parameters['priority'])) {
+					$icount = 0;
+					$find_objects_query .= "
+				AND		priority IN (";
+					foreach ($parameters['priority'] as $priority) {
+						if (preg_match('/^[\w\-\_\.\s]+$/',$priority)) {
+							if ($icount > 0) $find_objects_query .= ",";
+							$icount ++;
+							$find_objects_query .= "'".$priority."'";
+						}
+						else {
+							$this->_error = "Invalid priority";
+							return null;
+						}
+					}
+					$find_objects_query .= ")";
+				} else {
+					$find_objects_query .= "
+				        AND		priority = ?";
+				        array_push($bind_params,$parameters['status']);
+				}
+			}			
+			
 			$find_objects_query .= "
 				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
 						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
+						FIELD(difficulty,'PROJECT','HARD','NORMAL','EASY'),
 						date_added DESC
 			";
 
@@ -149,8 +198,7 @@
 							if ($icount > 0) $find_objects_query .= ",";
 							$icount ++;
 							$find_objects_query .= "'".$status."'";
-						}
-						else {
+						} else {
 							$this->_error = "Invalid status";
 							return null;
 						}
@@ -162,15 +210,39 @@
 				AND		status = ?";
 				array_push($bind_params,$parameters['status']);
 				}
-			}
-			else {
+			} else {
 				$find_objects_query .= "
 				AND		status NOT IN ('CANCELLED')";
 			}
-
+			
+			if (isset($parameters['priority']) && !empty($parameters['priority'])) {
+				if (is_array($parameters['priority'])) {
+					$icount = 0;
+					$find_objects_query .= "
+				AND		priority IN (";
+					foreach ($parameters['priority'] as $priority) {
+						if (preg_match('/^[\w\-\_\.\s]+$/',$priority)) {
+							if ($icount > 0) $find_objects_query .= ",";
+							$icount ++;
+							$find_objects_query .= "'".$priority."'";
+						}
+						else {
+							$this->_error = "Invalid priority";
+							return null;
+						}
+					}
+					$find_objects_query .= ")";
+				} else {
+					$find_objects_query .= "
+				        AND		priority = ?";
+				        array_push($bind_params,$parameters['status']);
+				}
+			}
+			
 			$find_objects_query .= "
 				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
 						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
+						FIELD(difficulty,'PROJECT','HARD','NORMAL','EASY'),
 						date_added DESC
 			";
 

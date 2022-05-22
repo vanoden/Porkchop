@@ -4,6 +4,9 @@
 	class Privilege {
 		public $id;
 		private $_error;
+		public $description;
+		public $name;
+		public $module;
 
 		public function __construct($id = 0) {
 			if (is_numeric($id) && $id > 0) {
@@ -48,6 +51,12 @@
                 array_push($bind_params,$parameters['name']);
             }
 
+            if ($parameters['module']) {
+                $update_object_query .= ",
+                module = ?";
+                array_push($bind_params,$parameters['module']);
+            }
+
             if ($parameters['description']) {
                 $update_object_query .= ",
                 description = ?";
@@ -80,13 +89,15 @@
 				$this->_error = "SQL Error in Register::Privilege::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			list($this->id) = $rs->FetchRow();
+			list($id) = $rs->FetchRow();
+			if (! $id) return false;
+			$this->id = $id;
 			return $this->details();
 		}
 
         public function details() {
             $get_object_query = "
-                SELECT  id,name,description
+                SELECT  id,name,description,module
                 FROM    register_privileges
                 WHERE   id = ?
             ";
@@ -97,11 +108,20 @@
                 return false;
             }
 
-            list($this->id,$this->name,$this->description) = $rs->FetchRow();
+            list($this->id,$this->name,$this->description,$this->module) = $rs->FetchRow();
             return true;
         }
 
         public function delete() {
+			$delete_xref_query = "
+				DELETE
+				FROM	register_roles_privileges
+				WHERE	privilege_id = ?";
+			$GLOBALS['_database']->Execute($delete_xref_query,$this->id);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->_error = "SQL Error in Register::Privilege::delete(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
             $delete_object_query = "
                 DELETE
                 FROM    register_privileges

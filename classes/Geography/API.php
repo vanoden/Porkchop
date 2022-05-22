@@ -184,7 +184,7 @@
 			$response->success = 1;
 			$response->province = $provinces;
 	
-			print $this->formatOutput($response);
+			print $this->formatOutput($response,$_REQUEST['_format']);
 		}
 
 		public function _methods() {
