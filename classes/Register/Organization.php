@@ -30,6 +30,7 @@
 
 		public function add($parameters) {
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
+			if (empty($parameters['code'])) $parameters['code'] = uniqid();
 			$this->error = null;
 			$add_object_query = "
 				INSERT
@@ -103,7 +104,7 @@
 			return $this->details();
 		}
 		
-		public function get($code = '') {
+		public function get($code) {
 			app_log("Register::Organization::get($code)",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$get_object_query = "
@@ -172,7 +173,7 @@
 			);
 			if (! $rs) {
 				$this->error = "SQL Error in register::Organization::details: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				return false;
 			}
 			$object = $rs->FetchNextObject(false);
 			if (is_object($object)) {
@@ -186,7 +187,7 @@
 			}
 			else {
 				$this->id = null;
-				return new \stdClass();
+				return false;
 			}
 
 			// Cache Customer Object
@@ -194,7 +195,7 @@
 			if ($object->id) $result = $cache_item->set($object);
 			app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);
 
-			return $object;
+			return true;
 		}
 		public function members($type = 'all') {
 			app_log("Register::Organization::members()",'trace',__FILE__,__LINE__);
