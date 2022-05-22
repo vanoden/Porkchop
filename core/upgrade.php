@@ -165,7 +165,6 @@
 		$site->install_log("No version.txt found",'warning');
 	}
 	$site->loadModules($modules);
-	if (! $site->setShippingLocation($company)) $site->install_log("Failed to set shipping address: ".$site->error(),'warn');
 	$site->populateMenus($menus);
 
 	$site->install_log("Upgrade completed successfully",'notice');

@@ -91,57 +91,6 @@
 			}
 		}
 
-		public function setShippingLocation($company = array()) {
-			if (! is_array($company)) {
-				$this->error("setShippingLocation parameters not an array");
-				return false;
-			}
-			# Add Default Shipping Location
-			$configuration = new \Site\Configuration("module/support/rma_location_id");
-			$rma_location_id = $configuration->value();
-			if (empty($rma_location_id)) {
-				$organizationList = new \Register\OrganizationList();
-				list($organization) = $organizationList->find(array('name' => $company["name"]));
-				if (! $organization->id) {
-					$this->install_fail("Cannot find owner organization '".$company['name']."'");
-				}
-				list($location) = $organization->locations();
-				if (! $location->id) {
-					$this->install_log("Adding default location to ".$organization->name,'notice');
-					$country = new \Geography\Country();
-					$country->get('United States of America');
-					$province = new \Geography\Province();
-					$province->get($country->id,"Massachusetts");
-					$location = new \Register\Location();
-					$location->add(array(
-						'name'	=> 'Office',
-						'address_1'	=> '17D Airport Road',
-						'city'		=> 'Hopedale',
-						'zip_code'	=> '01747',
-						'province_id'	=> $province->id
-					));
-				}
-				else {
-					$this->install_log("Organization has default location",'notice');
-				}
-				$location->associateOrganization($organization->id);
-				$rma_location_id = $location->id;
-			}
-			else {
-				$location = new \Register\Location($rma_location_id);
-			}
-			$this->install_log("Office location is set to '".$location->name."' in ".$location->city.", ".$location->province()->abbreviation);
-			$configuration = new \Site\Configuration("module/support/rma_location_id");
-			if (empty($configuration->value())) {
-				$this->install_log("Setting default RMA destination location",'notice');
-				$configuration->set($rma_location_id);
-			}
-			else {
-				$this->install_log("RMA Dest already set to ".$configuration->value());
-			}
-			return true;
-		}
-
 		public function populateMenus($menus = array()) {
 			foreach ($menus as $code => $menu) {
 				$nav_menu = new \Navigation\Menu();
