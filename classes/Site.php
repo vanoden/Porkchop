@@ -1,8 +1,6 @@
 <?php
-	class Site {
-		public function __construct() {
-
-		}
+	class Site Extends BaseClass {
+		private $_log_level = 'info';
 
 		public function loadModules($modules = array()) {
 			# Process Modules
@@ -33,7 +31,7 @@
 				}
 
 				# Add Privileges
-				foreach ($module_date['privileges'] as $privilege_name) {
+				foreach ($module_data['privileges'] as $privilege_name) {
 					$privilege = new \Register\Privilege();
 					if (! $privilege->get($privilege_name)) {
 						$privilege->add(array('name' => $privilege_name));
@@ -94,6 +92,10 @@
 		}
 
 		public function setShippingLocation($company = array()) {
+			if (! is_array($company)) {
+				$this->error("setShippingLocation parameters not an array");
+				return false;
+			}
 			# Add Default Shipping Location
 			$configuration = new \Site\Configuration("module/support/rma_location_id");
 			$rma_location_id = $configuration->value();
@@ -101,7 +103,7 @@
 				$organizationList = new \Register\OrganizationList();
 				list($organization) = $organizationList->find(array('name' => $company["name"]));
 				if (! $organization->id) {
-					$this->install_fail("Cannot find owner organization");
+					$this->install_fail("Cannot find owner organization '".$company['name']."'");
 				}
 				list($location) = $organization->locations();
 				if (! $location->id) {
@@ -137,6 +139,7 @@
 			else {
 				$this->install_log("RMA Dest already set to ".$configuration->value());
 			}
+			return true;
 		}
 
 		public function populateMenus($menus = array()) {
@@ -214,7 +217,7 @@
 		}
 
 		public function install_log($message = '',$level = 'info') {
-			if (! $this->log_level($level)) return;
+			if (! $this->log_display($level)) return;
 			print date('Y/m/d H:i:s');
 			print " [$level]";
 			print ": $message<br>\n";
@@ -225,10 +228,15 @@
 			$this->install_log("Upgrade failed: $message",'error');
 			exit;
 		}
+
+		public function log_level($level = null) {
+			if (isset($level)) $this->_log_level = $level;
+			return $this->_log_level;
+		}
 	
-		public function log_level($level = 'info') {
+		public function log_display($level = 'info') {
 			if (isset($_REQUEST['log_level'])) $log_level = $_REQUEST['log_level'];
-			else $log_level = 'warning';
+			else $log_level = $this->_log_level;
 	
 			if ($log_level == 'trace') return true;
 			if ($log_level == 'debug' && $level != 'trace') return true;
