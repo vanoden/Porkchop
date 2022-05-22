@@ -11,23 +11,21 @@
 				# Update Schema
 				$class_name = "\\$module_name\\Schema";
 				$schema_path = CLASS_PATH."/$module_name/Schema.php";
-				if (! file_exists($schema_path)) {
-					$this->install_log("Module $module_name not installed");
-					continue;
-				}
-				try {
-					$class = new $class_name();
-					$class_version = $class->version();
-					if ($class->error) $this->install_fail($class->error);
-					$class->upgrade();
-					if ($class->error) $this->install_fail("Upgrade from version ".$class->version().": ".$class->error);
-					if ($class->version() != $class_version) $this->install_log("Upgraded $module_name from $class_version to ".$class->version(),'notice');
-				} catch (Exception $e) {
-					$this->install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
-				}
-				$this->install_log("$module_name::Schema: version ".$class_version);
-				if (isset($module_data['schema']) && $module_data['schema'] != $class_version) {
-					$this->install_fail($module_name." Schema version ".$class_version." doesn't match required version ".$module_data['schema']);
+				if (file_exists($schema_path)) {
+					try {
+						$class = new $class_name();
+						$class_version = $class->version();
+						if ($class->error) $this->install_fail($class->error);
+						$class->upgrade();
+						if ($class->error) $this->install_fail("Upgrade from version ".$class->version().": ".$class->error);
+						if ($class->version() != $class_version) $this->install_log("Upgraded $module_name from $class_version to ".$class->version(),'notice');
+					} catch (Exception $e) {
+						$this->install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
+					}
+					$this->install_log("$module_name::Schema: version ".$class_version);
+					if (isset($module_data['schema']) && $module_data['schema'] != $class_version) {
+						$this->install_fail($module_name." Schema version ".$class_version." doesn't match required version ".$module_data['schema']);
+					}
 				}
 
 				# Add Privileges
