@@ -75,12 +75,6 @@
 
 		public function update($parameters) {
 			app_log("Product::Item::update()",'trace',__FILE__,__LINE__);
-			if (! $GLOBALS['_SESSION_']->customer->has_role('product manager')) {
-				$this->_error = "You do not have permissions for this task.";
-				app_log($GLOBALS['_SESSION_']->customer->login." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
-				app_log(print_r($GLOBALS['_SESSION_']->customer,true),'debug',__FILE__,__LINE__);
-				return null;
-			}
 
 			# Bust Cache
 			$cache_key = "product[".$this->id."]";
@@ -100,25 +94,26 @@
 				SET		id = id
 			";
 
+			$bind_params = array();
+
 			# Loop Through Parameters
 			foreach (array_keys($parameters) as $parameter) {
 				if ($ok_params[$parameter]) {
-					$value = $GLOBALS['_database']->qstr($parameters[$parameter],get_magic_quotes_gpc());
 					$update_product_query .= ",
-					$parameter	= $value";
+					$parameter	= ?";
+					array_push($bind_params,$parameters[$parameter]);
 				}
 			}
 
 			$update_product_query .= "
 				WHERE	id = ?
 			";
-
+			array_push($bind_params,$this->id);
 			$rs = $GLOBALS['_database']->Execute(
-				$update_product_query,
-				array($this->id)
+				$update_product_query,$bind_params
 			);
             if (! $rs) {
-				$this->_error = $GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::update(): ".$GLOBALS['_database']->ErrorMsg();
 				app_log($update_product_query,'debug',__FILE__,__LINE__);
 				return null;
             }
@@ -176,7 +171,7 @@
 				)
 			);
             if (! $rs) {
-                $this->_error = "SQL Error: ".$GLOBALS['_database']->ErrorMsg();
+                $this->_error = "SQL Error in Product::Item::add(): ".$GLOBALS['_database']->ErrorMsg();
                 return null;
             }
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -312,7 +307,7 @@
 			$bind_params = array($this->id,$category->id);
 			$rs = $GLOBALS['_database']->Execute($to_category_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = $GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::addToCategory(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			return true;
@@ -328,7 +323,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_image_query,array($this->id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::getImages: ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::getImages(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 
@@ -358,7 +353,7 @@
 			";
 			$GLOBALS['_database']->Execute($add_image_query,array($this->id,$image_id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Product::addImage: ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::addImage(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			return 1;
@@ -373,7 +368,7 @@
 			";
 			$GLOBALS['_database']->Execute($drop_image_query,array($this->id,$image_id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Product::dropImage: ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::dropImage(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			return 1;
@@ -388,7 +383,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_image_query,array($this->id,$image_id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::hasImage: ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::hasImage(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($found) = $rs->FetchRow();
@@ -406,7 +401,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::getMeta: ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::getMeta(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$metadata = array();
@@ -427,7 +422,7 @@
 				array($this->id,$key)
 			);
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::getMetadata: ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::getMetadata(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($value) = $rs->FetchRow();
@@ -452,7 +447,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Product::addMeta: ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::addMeta: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return 1;
