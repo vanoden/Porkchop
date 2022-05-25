@@ -86,7 +86,7 @@
 
 			$rs = $GLOBALS["_database"]->Execute($get_details_query,array($this->id));
 			if (! $rs) {
-				$this->error("Error getting currency: ".$GLOBALS["_database"]->ErrorMsg());
+				$this->error("SQL Error in Sales::Currency::details(): ".$GLOBALS["_database"]->ErrorMsg());
 				return false;
 			}
 			else {

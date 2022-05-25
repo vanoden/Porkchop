@@ -159,7 +159,7 @@
 			$GLOBALS['_database']->Execute($end_session_query);
 			if ($GLOBALS['_database']->ErrorMsg())
 			{
-				$this->error = "SQL Error in session::Session::end: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::end(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 		}
@@ -323,7 +323,7 @@
 				array($code)
 			);
 			if (! $rs) {
-				app_log("SQL Error in Session::Session::get(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
+				app_log("SQL Error in Site::Session::get(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
 				return null;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -370,7 +370,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Session::Session::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return;
 			}
 			if ($rs->RecordCount()) {
@@ -426,7 +426,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error checking for session in Session::assign: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error Site::Session::assign(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($assigned_to) = $rs->FetchRow();
@@ -449,7 +449,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error updating session: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::assign(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			#if ($parameters["user_id"]) $this->customer = $parameters["user_id"];
@@ -470,7 +470,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Session::timestamp: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::timestamp(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			#if ($parameters["user_id"]) $this->customer = $parameters["user_id"];
@@ -517,7 +517,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Session::Session::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -573,7 +573,7 @@
 			";
 			$GLOBALS['_database']->execute($delete_hits_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in session::Session::expire_session: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::expire_session(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -586,7 +586,7 @@
 			$GLOBALS['_database']->execute($delete_session_query);
 			if ($GLOBALS['_database']->ErrorMsg())
 			{
-				$this->error = "SQL Error in session::Session::expire_session: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::expire_session(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 		}
