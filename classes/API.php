@@ -52,6 +52,10 @@
 			if (! $GLOBALS['_SESSION_']->has_role($role_name)) $this->error("Permission denied");
 		}
 
+		public function requirePrivilege($privilege_name) {
+			if (! $GLOBALS['_SESSION_']->can($privilege_name)) $this->error("Permission denied");
+		}
+
 		###################################################
 		### System Time									###
 		###################################################
