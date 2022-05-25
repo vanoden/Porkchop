@@ -95,7 +95,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::add_role(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return 1;
@@ -123,7 +123,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::drop_role(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			
@@ -147,7 +147,7 @@
 				array($login)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL error in Register::Customer::authenticate(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::authenticate(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -211,7 +211,7 @@
 				$get_user_query,$bind_params
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::LOCALauthenticate(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -234,7 +234,7 @@
             
 			$rs = $GLOBALS['_database']->Execute($get_user_query,array($login));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::LDAPauthenticate(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 
@@ -311,7 +311,7 @@
 			// Execute Query
 			$rs = $GLOBALS['_database']->Execute($get_products_query,$bind_params);
 			if ($rs->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::products(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			$products = array();
@@ -409,7 +409,7 @@
 				array($id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::have_role(): ".$GLOBALS['_database']->ErrorMsg();
 				error_log($this->error);
 				return false;
 			}
@@ -448,7 +448,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::roles(): ".$GLOBALS['_database']->ErrorMsg();
 				error_log($this->error);
 				return null;
 			}
@@ -472,7 +472,7 @@
 	
 			$rs = $GLOBALS['_database']->Execute($get_role_query,array($name));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::role_id(): ".$GLOBALS['_database']->ErrorMsg();
 				error_log($this->error);
 				return 0;
 			}

@@ -21,7 +21,7 @@
 			query_log($get_menus_query);
             $rs = $GLOBALS['_database']->Execute($get_menus_query,$bind_params);
             if (! $rs) {
-                $this->_error = $GLOBALS['_database']->ErrorMsg();
+                $this->_error = "SQL Error in Navigation::MenuList::find(): ".$GLOBALS['_database']->ErrorMsg();
                 return null;
             }
             $menus = array();

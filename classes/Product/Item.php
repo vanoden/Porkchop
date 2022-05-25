@@ -38,7 +38,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_category_query);
 			if (! $rs) {
-				$this->_error = $GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::defaultCategory(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -60,7 +60,7 @@
 				array($code)
 			);
             if (! $rs) {
-                $this->_error = $GLOBALS['_database']->ErrorMsg();
+                $this->_error = "SQL Error in Product::Item::get(): ".$GLOBALS['_database']->ErrorMsg();
                 return null;
             }
 			else {
@@ -277,7 +277,7 @@
 			$bind_params = array($this->id,$parent->id);
 			$rs = $GLOBALS['_database']->Execute($in_category_query,$bind_params);
 			if (! $rs) {
-				$this->_error = $GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::inCategory(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			list($found) = $rs->FetchRow();

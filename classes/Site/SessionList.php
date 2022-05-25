@@ -47,7 +47,7 @@
             query_log($find_objects_query);
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "Error finding session: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::SessionList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				print $this->error;
 				return null;
 			}
