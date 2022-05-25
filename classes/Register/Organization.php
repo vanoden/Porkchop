@@ -18,7 +18,7 @@
 			// Clear Error Info
 			$this->error = '';
 
-			if (isset($options['nocache']) && $option['nocache']) {
+			if (isset($options['nocache']) && $options['nocache']) {
 				$this->_nocache = true;
 			}
 
@@ -30,6 +30,7 @@
 
 		public function add($parameters) {
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
+			if (empty($parameters['code'])) $parameters['code'] = uniqid();
 			$this->error = null;
 			$add_object_query = "
 				INSERT
@@ -46,7 +47,7 @@
 				)
 			);
 			if (! $rs) {			
-				$this->error = "SQL Error in \Register\Organization::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in RegisterOrganization::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -54,10 +55,11 @@
 		}
 
 		public function update($parameters = array()) {
-		
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
 			$this->error = null;
-			
+
+			$bind_params = array();
+
 			// Bust Cache
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -68,46 +70,51 @@
 				SET		id = id
 			";
 
-			if (isset($parameters['name']))
+			if (isset($parameters['name'])) {
 				$update_object_query .= ",
-						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
-
-			if (isset($parameters['status']))
+						name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
+			if (isset($parameters['status'])) {
 				$update_object_query .= ",
-						status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
-
-			if (isset($parameters['is_reseller']) && is_numeric($parameters['is_reseller']))
+						status = ?";
+				array_push($bind_params,$parameters['status']);
+			}
+			if (isset($parameters['is_reseller']) && is_numeric($parameters['is_reseller'])) {
 				$update_object_query .= ",
-						is_reseller = ".$GLOBALS['_database']->qstr($parameters['is_reseller'],get_magic_quotes_gpc());
-
-			if (isset($parameters['assigned_reseller_id']) && is_numeric($parameters['assigned_reseller_id']))
+						is_reseller = ?";
+				array_push($bind_params,$parameters['is_reseller']);
+			}
+			if (isset($parameters['assigned_reseller_id']) && is_numeric($parameters['assigned_reseller_id'])) {
 				$update_object_query .= ",
-						assigned_reseller_id = ".$GLOBALS['_database']->qstr($parameters['assigned_reseller_id'],get_magic_quotes_gpc());
-
-			if (isset($parameters['notes']))
+						assigned_reseller_id = ?";
+				array_push($bind_params,$parameters['assigned_reseller_id']);
+			}
+			if (isset($parameters['notes'])) {
 				$update_object_query .= ",
-						notes = ".$GLOBALS['_database']->qstr($parameters['notes'],get_magic_quotes_gpc());
-
+						notes = ?";
+				array_push($bind_params,$parameters['notes']);
+			}
 			if (isset($parameters['password_expiration_days']))
 				$update_object_query .= ",
 						password_expiration_days = ".$GLOBALS['_database']->qstr($parameters['password_expiration_days'],get_magic_quotes_gpc());
-
 			$update_object_query .= "
 				WHERE	id = ?
 			";
+			array_push($bind_params,$this->id);
 			query_log($update_object_query);
 			$rs = $GLOBALS['_database']->Execute(
 				$update_object_query,
-				array($this->id)
+				$bind_params
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in \Register\Organization::update: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Organization::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return $this->details();
 		}
 		
-		public function get($code = '') {
+		public function get($code) {
 			app_log("Register::Organization::get($code)",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$get_object_query = "
@@ -120,7 +127,7 @@
 				array($code)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in RegisterOrganization::get: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Organization::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -177,8 +184,8 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in register::Organization::details: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->error = "SQL Error in Register::Organization::details(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
 			}
 			$object = $rs->FetchNextObject(false);
 			if (is_object($object)) {
@@ -192,7 +199,7 @@
 			}
 			else {
 				$this->id = null;
-				return new \stdClass();
+				return false;
 			}
 
 			// Cache Customer Object
@@ -200,7 +207,7 @@
 			if ($object->id) $result = $cache_item->set($object);
 			app_log("Cache result: ".$result,'trace',__FILE__,__LINE__);
 
-			return $object;
+			return true;
 		}
 		public function members($type = 'all') {
 			app_log("Register::Organization::members()",'trace',__FILE__,__LINE__);
@@ -241,7 +248,7 @@
 			";
 			$GLOBALS['_database']->Execute(
 				$update_org_query,
-				$this->id
+				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Register::Organization::expire(): ".$GLOBALS['_database']->ErrorMsg();
@@ -263,7 +270,7 @@
 				WHERE	organization_id = ?";
 			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->id));
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::lcations: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Organization::locations(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$locations = array();

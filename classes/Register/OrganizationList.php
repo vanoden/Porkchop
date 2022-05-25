@@ -13,13 +13,14 @@
 				SELECT	id
 				FROM	register_organizations
 			";
+			$bind_params = array();
 
 			$string = $parameters['string'];
 
 			if (! preg_match('/^[\'\w\-\.\_\s\*]+$/',$string)) {
 				app_log("Invalid search string: '$string'",'info');
 				$this->error = "Invalid search string";
-				return undef;
+				return null;
 			}
 			$string = str_replace("'","\'",$string);
 			$string = preg_replace('/\*/','%',$string);
@@ -41,7 +42,8 @@
 			}
 			elseif (isset($parameters['status'])) {
 				$get_organizations_query .= "
-				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+				AND		status = ?";
+				array_push($bind_params,$parameters['status']);
 			}
 			else
 				$get_organizations_query .= "
@@ -57,7 +59,8 @@
 			}
 			if (isset($parameters['reseller_id'])) {
 				$get_organizations_query .= "
-				AND		reseller_id = ".$GLOBALS['_database']->qstr($parameters['reseller_id'],get_magic_quotes_gpc());
+				AND		reseller_id = ?";
+				array_push($bind_params,$parameters['reseller_id']);
 			}
 
 			$get_organizations_query .= "
@@ -73,9 +76,9 @@
 					LIMIT	".$parameters['_limit'];
 			}
 			query_log($get_organizations_query);			
-			$rs = $GLOBALS['_database']->Execute($get_organizations_query);
+			$rs = $GLOBALS['_database']->Execute($get_organizations_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in register::organization::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::OrganizationList::search(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$organizations = array();
@@ -171,7 +174,7 @@
 			query_log($get_organizations_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_organizations_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in register::organization::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::OrganizationList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			

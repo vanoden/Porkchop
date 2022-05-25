@@ -13,6 +13,13 @@
 	###		Added this header for tracking			###
 	###################################################
 
+	# Our Global Variables
+	$_SESSION_ = new stdClass();
+
+	# Don't Cache this Page
+	header("Expires: 0");
+	header("Cache-Control: no-cache, must-revalidate");
+
 	error_log("Starting install script");
 	error_log("\$_REQUEST: ".print_r($_REQUEST,true));
 	$errorstr = '';
@@ -25,26 +32,38 @@
 	# We'll handle errors ourselves, thank you very much
 	ini_set('display_errors','1');
 	ini_set('display_startup_errors','1');
-	#set_error_handler("install_log_error");
 	error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 
 	###################################################
 	### Load API Objects							###
 	###################################################
+	error_log('Loading dependencies');
+	
 	# General Utilities
 	require INCLUDES.'/functions.php';
 
 	# Autoload Classes
 	spl_autoload_register('load_class');
 
+	$site = new \Site();
+	if (isset($_REQUEST['log_level'])) $site->log_level($_REQUEST['log_level']);
+
 	# Database Abstraction
 	require THIRD_PARTY.'/adodb/adodb-php/adodb-exceptions.inc.php';
 	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
 
+	# Get version.txt
+	if (file_exists(HTML."/version.txt")) {
+		$ver_contents = file_get_contents(HTML."/version.txt");
+		if (preg_match('/BUILD_ID\:\s(\d+)/',$ver_contents,$matches)) $site->install_log("Build: ".$matches[1],'notice');
+		if (preg_match('/BUILD_DATE\:\s([\w\-\:\s]+)/',$ver_contents,$matches)) $site->install_log("Date: ".$matches[1],'notice');
+	}
+	else $site->install_log("version.txt not found",'warn');
+
 	###################################################
-	### Connect to Logger							###
+	### Connect to Logger                           ###
 	###################################################
-	$logger = \Site\Logger::get_instance(array('type' => "Screen",'level' => 'info','html' => true));
+	$logger = \Site\Logger::get_instance(array('type' => "Screen",'level' => $site->log_level(),'html' => true));
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
 		print "Logger error\n";
@@ -57,12 +76,6 @@
 		exit;
 	}
 
-	# Don't Cache this Page
-	header("Expires: 0");
-	header("Cache-Control: no-cache, must-revalidate");
-
-	$_SESSION_ = new \Site\Session;
-	$_SESSION_->elevate();
 	###################################################
 	### Check Input									###
 	###################################################
@@ -82,8 +95,8 @@
 	### Ask a few questions							###
 	###################################################
 	if ((! isset($_REQUEST['submit'])) or ($errorstr))	{
-		if (! isset($_REQUEST['company_name'])) $_REQUEST['company_name'] = "";
-		if (! isset($_REQUEST['admin_login'])) $_REQUEST['admin_login'] = "admin";
+	if (! isset($_REQUEST['company_name'])) $_REQUEST['company_name'] = "";
+	if (! isset($_REQUEST['admin_login'])) $_REQUEST['admin_login'] = "admin";
 ?>
 <html>
 <head>
@@ -133,8 +146,9 @@
 	###################################################
 	### Initialize Common Objects					###
 	###################################################
-	install_log("Porkchop CMS Install Starting");
-	install_log("Connecting to database server");
+	$site->install_log("Porkchop CMS Install Starting");
+	$site->install_log("Connecting to database server");
+
 	# Connect to Database
 	$_database = NewADOConnection($GLOBALS['_config']->database->driver);
 	$_database->port = $GLOBALS['_config']->database->master->port;
@@ -144,40 +158,48 @@
 		$GLOBALS['_config']->database->master->password
 	);
 	if (! $connect_success) {
-		install_log("Connection failed",'error');
+		$site->install_log("Connection failed",'error');
 		exit;
 	}
-	install_log("Connection successful");
+	$site->install_log("Connection successful");
 
 	###################################################
 	### Connect to Memcache if so configured                ###
 	###################################################
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
-	if ($_CACHE_->error) {
-		install_log('Unable to initiate Cache client: '.$_CACHE_->error,'error');
+	if ($_CACHE_->error()) {
+		$site->install_log('Unable to initiate Cache client: '.$_CACHE_->error,'error');
 	}
-	install_log("Cache Initiated");
+	else {
+		$site->install_log("Cache Initiated");
+	}
 
 	# Check For Existing Database
-	install_log("Checking for existing schema");
+	$site->install_log("Checking for existing schema");
 	$_database->Execute("use ".$GLOBALS['_config']->database->schema);
 	if ($_database->ErrorMsg()) {
-		install_log("Schema ".$GLOBALS['_config']->database->schema." not found. Creating");
+		$site->install_log("Schema ".$GLOBALS['_config']->database->schema." not found. Creating");
 		$_database->Execute("CREATE DATABASE ".$GLOBALS['_config']->database->schema.";");
 		if ($_database->ErrorMsg()) {
-			install_log("Error creating database: ".$_database->ErrorMsg(),'error');
+			$site->install_log("Error creating database: ".$_database->ErrorMsg(),'error');
 			exit;
 		}
 		$_database->Execute("use ".$GLOBALS['_config']->database->schema);
 	}
 
-	install_log("Creating Company Schema");
+	###################################################
+	### Start Session								###
+	###################################################
+	$_SESSION_ = new \Site\Session;
+	$_SESSION_->elevate();
+
+	$site->install_log("Creating Company Schema");
 	$company_schema = new \Company\Schema();
 	if (! $company_schema->upgrade()) {
 		install_log("Error creating Company schema: ".$company_schema->error());
 		exit;
 	}
-	install_log("Creating Session Schema");
+	$site->install_log("Creating Session Schema");
 	$session_schema = new \Site\Schema();
 	if (! $session_schema->upgrade()) {
 		install_log("Error creating Site schema: ".$site_schema->error());
@@ -185,12 +207,12 @@
 	}
 	$geography_schema = new \Geography\Schema();
 	if (! $geography_schema->upgrade()) {
-		install_log("Error creating Geography schema: ".$geography_schema->error());
+		$site->install_log("Error creating Geography schema: ".$geography_schema->error());
 		exit;
 	}
 	$register_schema = new \Register\Schema();
 	if (! $register_schema->upgrade()) {
-		install_log("Error creating Register schema: ".$register_schema->error());
+		$site->install_log("Error creating Register schema: ".$register_schema->error());
 		exit;
 	}
 
@@ -199,25 +221,30 @@
 	###################################################
 	$site_config = new \Site\Configuration;
 	if ($site_config->get("_install_complete")) {
-		install_log("Installation already completed");
+		$site->install_log("Installation already completed");
 		exit;
 	}
 
-	install_log("Starting session");
+	###################################################
+	### Initialize Session							###
+	###################################################
+	$site->install_log("Starting session");
 	$_SESSION_ = new \Site\Session();
 
-	# See if Company Exists
-	install_log("Setting up company");
+	###################################################
+	### Get Company Information						###
+	###################################################
+	$site->install_log("Setting up company");
 	$company = new \Company\Company();
 	if ($company->error) {
-		install_log("Error loading company module: ".$company->error,'error');
+		$site->install_log("Error loading company module: ".$company->error,'error');
 		exit;
 	}
-	install_log("Checking for existing company");
+	$site->install_log("Checking for existing company");
 	$company->get($_REQUEST['company_name']);
 
 	if (! $company->id) {
-		install_log("Adding company");
+		$site->install_log("Adding company");
 		$company->add(
 			array(
 				"name" => $_REQUEST['company_name'],
@@ -229,16 +256,16 @@
 		}
 	}
 	else {
-		install_log("Company already present");
+		$site->install_log("Company already present");
 	}
 	$GLOBALS['_SESSION_']->company = $company->id;
 
-	install_log("Setting up domain");
+	$site->install_log("Setting up domain");
 	$domain = new \Company\Domain();
 	$domain->get($domain_name);
 
 	if (! $domain->id) {
-		install_log("Adding domain");
+		$site->install_log("Adding domain");
 		$domain->add(
 			array(
 				"active"		=> 1,
@@ -248,19 +275,19 @@
 			)
 		);
 		if ($domain->error) {
-			install_log("Cannot add domain: ".$domain->error);
+			$site->install_log("Cannot add domain: ".$domain->error);
 			exit;
 		}
 	}
 	else {
-		install_log("Domain already present");
+		$site->install_log("Domain already present");
 	}
 
-	install_log("Setting up Location");
+	$site->install_log("Setting up Location");
 	$location = new \Company\Location();
 	$location->getByHost($_SERVER['SERVER_NAME']);
 	if ($location->id) {
-		install_log("Location Located");
+		$site->install_log("Location Located");
 	}
 	else {
 		$location->add(array(
@@ -272,31 +299,44 @@
 			)
 		);
 		if ($location->error) {
-			install_log("Failed to add location: ".$location->error,'error');
+			$site->install_log("Failed to add location: ".$location->error,'error');
 			exit;
 		}
 	}
 
-	install_log("Setting up admin account");
+	$site->install_log("Adding default organization '".$_REQUEST['company_name']."'");
+	$organization = new \Register\Organization();
+	if ($organization->get($_REQUEST['company_name'])) {
+		$site->install_log("Organization already present");
+	}
+	elseif ($organization->add(array('name' => $_REQUEST['company_name']))) {
+		$site->install_log("Created Organization ".$organization->id);
+	}
+	else {
+		$site->install_fail("Error adding default organization: ".$organization->error());
+	}
+
+	$site->install_log("Setting up admin account");
 	$admin = new \Register\Customer();
 	if ($admin->error) {
-		install_log("Error initializing Admin object: ".$admin->error,'error');
+		$site->install_log("Error initializing Admin object: ".$admin->error,'error');
 		exit;
 	}
 	$admin->get($_REQUEST['admin_login']);
 	if ($admin->error) {
-		install_log("Error identifying superuser: ".$admin->error,'error');
+		$site->install_log("Error identifying superuser: ".$admin->error,'error');
 		exit;
 	}
 
 	if (! $admin->id) {
-		install_log("Adding admin account");
+		$site->install_log("Adding admin account");
 		$admin->add(
 			array(
 				"login"			=> $_REQUEST['admin_login'],
 				"password"		=> $_REQUEST['password_1'],
 				"company_id"	=> $company->id,
 				"status"		=> 'active',
+				"organization_id"	=> $organization->id
 			)
 		);
 		if ($admin->error) {
@@ -305,50 +345,39 @@
 		}
 	}
 	else {
-		install_log("Admin already exists");
+		$site->install_log("Admin already exists");
 	}
 
 	# Must Grant Privileges to set up roles
-	install_log("Elevating privileges for install");
+	$site->install_log("Elevating privileges for install");
 	$_SESSION_->elevate();
 
 	# Get Existing Roles
-	install_log("Getting available roles");
+	$site->install_log("Getting available roles");
 	$rolelist = new \Register\RoleList();
 	$roles = $rolelist->find();
 	if ($rolelist->error()) {
-		install_log("Error getting roles: ".$rolelist->error,'error');
+		$site->install_log("Error getting roles: ".$rolelist->error,'error');
 		exit;
 	}
 
-	install_log("Granting roles");
+	$site->install_log("Granting roles");
 	foreach ($roles as $role) {		
 		if ($admin->has_role($role->name)) {
-			install_log("Already has role ".$role->name);
+			$site->install_log("Already has role ".$role->name);
 			continue;
 		}
-		install_log("Granting ".$role->name."[".$role->id."]");
+		$site->install_log("Granting ".$role->name."[".$role->id."]");
 		$admin->add_role($role->id);
 		if ($admin->error) {
 			error_log("Error: ".$admin->error);
-			install_log("Error: ".$admin->error,'error');
+			$site->install_log("Error: ".$admin->error,'error');
 			exit;
 		}
 	}
 
 	$site_config->set("_install_complete",1);
 
-	install_log("Installation completed successfully");
+	$site->install_log("Installation completed successfully");
 
-	function install_log($message = '',$level = 'info') {
-		print date('Y/m/d H:i:s');
-		print " [".$GLOBALS["pid"]."]";
-		print " [$level]";
-		print ": $message<br>\n";
-		flush();
-	}
-
-	function install_log_error($errno, $errstr, $errfile, $errline) {
-		print_r("Err $errno, $errstr :: $errfile line $errline",true);
-	}
 ?>

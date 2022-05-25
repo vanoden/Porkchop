@@ -147,19 +147,19 @@
 				array($login)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL error in register::customer::authenticate: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL error in Register::Customer::authenticate(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
 			list($id,$this->auth_method,$status) = $rs->fields;			
 			if (! $id) {
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
-				return 0;
+				return false;
 			}
 			
 			if (! in_array($status,array('NEW','ACTIVE'))) {
 				app_log("Auth denied because account '$login' is '$status'",'notice',__FILE__,__LINE__);
-				return 0;
+				return false;
 			}
 
 			if (preg_match('/^ldap\/(\w+)$/',$this->auth_method,$matches))
@@ -230,10 +230,9 @@
 			$get_user_query = "
 				SELECT	id
 				FROM	register_users
-				WHERE	login = ".$GLOBALS['_database']->qstr($login,get_magic_quotes_gpc())."
-			";
+				WHERE	login = ?";
             
-			$rs = $GLOBALS['_database']->Execute($get_user_query);
+			$rs = $GLOBALS['_database']->Execute($get_user_query,array($login));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				return 0;
@@ -353,7 +352,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in RegisterCustomer::has_role: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::has_role(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			
@@ -469,9 +468,9 @@
 			$get_role_query = "
 				SELECT	id
 				FROM	register_roles
-				WHERE	name = ".$GLOBALS['_database']->qstr($name,get_magic_quotes_gpc());
+				WHERE	name = ?";
 	
-			$rs = $GLOBALS['_database']->Execute($get_role_query);
+			$rs = $GLOBALS['_database']->Execute($get_role_query,array($name));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				error_log($this->error);

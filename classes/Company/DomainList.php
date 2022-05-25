@@ -3,7 +3,7 @@
 
 	class DomainList {
 		public $error;
-		public $count = 0;
+		public $_count = 0;
 
 		public function find($parameters = array()) {
 			$find_objects_query = "
@@ -11,10 +11,12 @@
 				FROM	company_domains
 				WHERE	id = id";
 
+			$bind_params = array();
 			if ($parameters['name']) {
 				if (preg_match('/^[\w\-\.]+$/',$parameters['name'])) {
 					$find_objects_query .= "
-					AND		domain_name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
+					AND		domain_name = ?";
+					array_push($bind_params,$parameters['name']);
 				}
 				else {
 					$this->error = "Invalid domain name";
@@ -23,19 +25,19 @@
 			}
 
 			if ($parameters['location_id']) {
-				$location = new \Site\Location($parameters['location_id']);
+				$location = new \Company\Location($parameters['location_id']);
 				if (! $location->id) {
 					$this->error = "Location ID not found";
 					return false;
 				}
 				$find_objects_query .= "
-				AND		location_id = ".$GLOBALS['_database']->qstr($parameters['location_id'],get_magic_quotes_gpc());
+				AND		location_id = ?";
+				array_push($bind_params,$parameters['location_id']);
 			}
 
-
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Company::Domain::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Company::Domain::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			
@@ -43,7 +45,12 @@
 			while (list($id) = $rs->FetchRow()) {
 				$domain = new \Company\Domain($id);
 				array_push($objects,$domain);
+				$this->_count ++;
 			}
+			
 			return $objects;
+		}
+		public function count() {
+			return $this->_count;
 		}
 	}

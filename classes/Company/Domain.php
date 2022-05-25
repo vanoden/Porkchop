@@ -35,7 +35,7 @@
 			);
 			if (! $rs) {
 				$this->error = "SQL Error in Site::Domain::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
@@ -54,7 +54,7 @@
 			);
 			if (! $rs) {
 				$this->error = "SQL Error in Site::Domain::details: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				return false;
 			}
 			$object = $rs->FetchNextObject(false);
 			if (isset($object->id)) {
@@ -86,18 +86,19 @@
 		}
 
 		public function add($parameters = array()) {
+			$bind_params = array();
 			if (! isset($parameters['company_id'])) {
 				if (preg_match('/^\d+$/',$GLOBALS['_SESSION_']->company->id)) {
 					$parameters['company_id'] = $GLOBALS['_SESSION_']->company->id;
 				}
 				else {
-					$this->error = "company must be set for Site::Domain::add";
-					return undef;
+					$this->error = "company must be set for Company::Domain::add";
+					return false;
 				}
 			}
 			if (! preg_match('/\w/',$parameters['name'])) {
-				$this->error = "name parameter required in Site::Domain::add";
-				return undef;
+				$this->error = "name parameter required in Company::Domain::add";
+				return false;
 			}
 			if (! preg_match('/^(0|1)$/',$parameters['status'])) {
 				$parameters['status'] = 0;
@@ -111,16 +112,13 @@
 						status
 				)
 				VALUES
-				(		".$parameters['company_id'].",
-						".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc()).",
-						".$parameters['status']."
-				)
-			";
+				(		?,?,?)";
+			array_push($bind_params,$parameters['company_id'],$parameters['name'],$parameters['status']);
 
-			$GLOBALS['_database']->Execute($add_object_query);
+			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Site::Domain::add: ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			
@@ -130,7 +128,7 @@
 		public function update($parameters = array()) {
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error = "Valid id required for details in Site::Domain::update";
-				return undef;
+				return false;
 			}
 
 			$bind_params = array();
