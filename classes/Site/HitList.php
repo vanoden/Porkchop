@@ -28,7 +28,7 @@
 					limit ".$parameters['_limit'];
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Session::HitList::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Session::HitList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$hits = array();

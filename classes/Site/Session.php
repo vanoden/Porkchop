@@ -200,7 +200,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_company_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "Error getting domain information: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::companyremoveme(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			else {
@@ -296,7 +296,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "Error creating session: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();

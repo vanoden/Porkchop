@@ -57,7 +57,7 @@
 			query_log($get_objects_query,$bind_params,true);
 			$rs = $GLOBALS['_database']->Execute($get_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SiteMessageDeliveryList::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::SiteMessageDeliveryList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			
