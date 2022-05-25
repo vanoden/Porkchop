@@ -12,13 +12,13 @@
         // if we're not doing a task search, show the filter bar
         if (!isset($page->isSearchResults)) {
     ?>
-        <!--	START First Table -->
-	    <div class="tableBody min-tablet">
+    <!--	START First Table -->
+	<div class="tableBody min-tablet">
 	    <div class="tableRowHeader">
 		    <div class="tableCell" style="width: 14%;">Assigned To</div>
 		    <div class="tableCell" style="width: 18%;">Product</div>
 		    <div class="tableCell" style="width: 16%;">Project</div>
-		    <div class="tableCell" style="width: 52%;">Status</div>
+		    <div class="tableCell" style="width: 16%;">Role</div>
 	    </div>
 	    <div class="tableRow">
 		    <div class="tableCell">
@@ -47,20 +47,29 @@
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <input type="checkbox" name="new" value="1"<?php if ($_REQUEST['new']) print " checked"; ?> />New
-			    <input type="checkbox" name="active" value="1"<?php if ($_REQUEST['active']) print " checked"; ?> />Active
-			    <input type="checkbox" name="broken" value="1"<?php if ($_REQUEST['broken']) print " checked"; ?> />Broken
-			    <input type="checkbox" name="testing" value="1"<?php if ($_REQUEST['testing']) print " checked"; ?> />Testing
-			    <input type="checkbox" name="complete" value="1"<?php if ($_REQUEST['complete']) print " checked"; ?>/>Completed
-			    <input type="checkbox" name="cancelled" value="1"<?php if ($_REQUEST['cancelled']) print " checked"; ?> />Cancelled
-			    <input type="checkbox" name="hold" value="1"<?php if ($_REQUEST['hold']) print " checked"; ?> />Hold
-			    <input type="checkbox" name="duplicate" value="1"<?php if ($_REQUEST['duplicate']) print " checked"; ?> /><i>Include Duplicates</i>
+               <select name="role_id" class="value input" style="max-width: 250px;">
+                  <option value="">None</option>
+                  <?php	foreach($engineeringRoles as $engineeringRole) { ?>
+                    <option value="<?=$engineeringRole->id?>"<?php if ($engineeringRole->id == $_REQUEST['role_id']) print " selected"; ?>><?=$engineeringRole->name?></option>
+                  <?php	} ?>
+               </select>
 		    </div>
 	    </div>
-	    <div class="form_footer" style="text-align: center; width: 100%">
-		    <input type="submit" name="btn_submit" class="button" value="Apply Filter" />
-	    </div>
     </div>
+    <div style="padding-top:10px;">
+        <input type="checkbox" name="new" value="1"<?php if ($_REQUEST['new']) print " checked"; ?> />New
+        <input type="checkbox" name="active" value="1"<?php if ($_REQUEST['active']) print " checked"; ?> />Active
+        <input type="checkbox" name="broken" value="1"<?php if ($_REQUEST['broken']) print " checked"; ?> />Broken
+        <input type="checkbox" name="testing" value="1"<?php if ($_REQUEST['testing']) print " checked"; ?> />Testing
+        <input type="checkbox" name="complete" value="1"<?php if ($_REQUEST['complete']) print " checked"; ?>/>Completed
+        <input type="checkbox" name="cancelled" value="1"<?php if ($_REQUEST['cancelled']) print " checked"; ?> />Cancelled
+        <input type="checkbox" name="hold" value="1"<?php if ($_REQUEST['hold']) print " checked"; ?> />Hold
+        <input type="checkbox" name="duplicate" value="1"<?php if ($_REQUEST['duplicate']) print " checked"; ?> /><i>Include Duplicates</i>
+	</div>
+    <div class="form_footer" style="text-align: left; width: 100%">
+	    <input type="submit" name="btn_submit" class="button" value="Apply Filter" />
+    </div>
+    <br/>
     <!--	END First Table -->	
     <?php  
     }

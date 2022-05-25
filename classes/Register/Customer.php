@@ -512,7 +512,7 @@
 				return $contacts;
 			}
 		}
-		
+				
 		public function locations($parameters = array()) {
 			$get_locations_query = "
 				SELECT	rol.location_id

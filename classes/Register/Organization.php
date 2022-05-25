@@ -95,6 +95,9 @@
 						notes = ?";
 				array_push($bind_params,$parameters['notes']);
 			}
+			if (isset($parameters['password_expiration_days']))
+				$update_object_query .= ",
+						password_expiration_days = ".$GLOBALS['_database']->qstr($parameters['password_expiration_days'],get_magic_quotes_gpc());
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -149,6 +152,7 @@
 				if ($organization->is_reseller) $this->is_reseller = true;
 				if (isset($this->assigned_reseller_id)) $this->reseller = new Organization($this->assigned_reseller_id);
 				$this->notes = $organization->notes;
+				$this->password_expiration_days = $organization->password_expiration_days;
 				$this->_cached = $organization->_cached;
 
 				// In Case Cache Corrupted
@@ -169,7 +173,8 @@
 						status,
 						is_reseller,
 						assigned_reseller_id,
-						notes
+						notes,
+						password_expiration_days
 				FROM	register_organizations
 				WHERE	id = ?
 			";
