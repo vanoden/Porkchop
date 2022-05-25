@@ -23,7 +23,7 @@
 		}
 		function add($parameters = array()) {
 			if (! $parameters['session_id']) {
-				$this->error = "session_id required for SessionHit::add";
+				$this->error = "session_id required for Session::Hit::add";
 				return null;
 			}
 			if (isset($_SERVER['HTTPS']) and $_SERVER['HTTPS']) $secure = 1;
@@ -54,30 +54,34 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in SessionHit::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Session::Hit::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return 1;
 		}
 		function find($parameters = array()) {
-			$find_objects_query .= "
+			$bind_params = array();
+			$find_objects_query = "
 				SELECT	id
 				FROM	session_hits
 				WHERE	id = id
 			";
 
-			if ($parameters['session_id'])
+			if ($parameters['session_id']) {
 				$find_objects_query .= "
-					AND	session_id = ".$GLOBALS['_database']->qstr($parameters['session_id'],get_magic_quotes_gpc());
+					AND	session_id = ?";
+				array_push($bind_params,$parameters['session_id']);
+			}
+
 			$find_objects_query .= "
 				ORDER BY id desc
 			";
 			if (preg_match('/^\d+$/',$parameters['_limit']))
 				$find_objects_query .= "
 					limit ".$parameters['_limit'];
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in SessionHit::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Session::Hit::find: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$hits = array();
@@ -104,7 +108,7 @@
 			);
 			if (! $rs)
 			{
-				$this->error = "SQL Error in SessionHit::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Session::Hit::details: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$object = $rs->FetchNextObject(false);

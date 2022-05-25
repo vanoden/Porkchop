@@ -6,24 +6,29 @@
 		public $error;
 
 		function find($parameters = array()) {
-			$find_objects_query .= "
+			$find_objects_query = "
 				SELECT	id
 				FROM	session_hits
 				WHERE	id = id
 			";
 
-			if ($parameters['session_id'])
+			$bind_params = array();
+
+			if ($parameters['session_id']) {
 				$find_objects_query .= "
-					AND	session_id = ".$GLOBALS['_database']->qstr($parameters['session_id'],get_magic_quotes_gpc());
+					AND	session_id = ?";
+				array_push($bind_params,$parameters['session_id']);
+			}
+
 			$find_objects_query .= "
 				ORDER BY id desc
 			";
 			if (preg_match('/^\d+$/',$parameters['_limit']))
 				$find_objects_query .= "
 					limit ".$parameters['_limit'];
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in SessionHitList::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Session::HitList::find: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$hits = array();
