@@ -12,19 +12,16 @@
 	if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
 		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
 			$organization = new \Register\Organization($_REQUEST['organization_id']);
-			if ($organization->error) {
-				$page->addError("Unable to load organization: ".$organization->error);
-			}
-		}
-		elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
+			if ($organization->error) $page->addError("Unable to load organization: ".$organization->error);
+		} elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
 			$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 			$organization = new \Register\Organization();
 			$organization->get($code);
 			if (! $organization->id) $GLOBALS['_page']->error = "Customer not found";
-		}
-		else $organization = new \Register\Organization();
+		} else $organization = new \Register\Organization();
 	}
 	else $organization = $GLOBALS['_SESSION_']->customer->organization;
+
 
 	if ($_REQUEST['method']) {
 		$page->success = $_REQUEST['method'];
@@ -33,12 +30,13 @@
 		}
 		else {
 			$parameters = array(
-				"name"					=> $_REQUEST['name'],
-				"code"					=> $_REQUEST['code'],
-				"status"				=> $_REQUEST['status'],
-				'is_reseller'			=> $_REQUEST['is_reseller'],
-				"assigned_reseller_id"	=> $_REQUEST['assigned_reseller_id'],
-				"notes"					=> $_REQUEST['notes']
+				"name"					    => $_REQUEST['name'],
+				"code"					    => $_REQUEST['code'],
+				"status"				    => $_REQUEST['status'],
+				'is_reseller'			    => $_REQUEST['is_reseller'],
+				"assigned_reseller_id"	    => $_REQUEST['assigned_reseller_id'],
+				"notes"					    => $_REQUEST['notes'],
+				"password_expiration_days"	=> $_REQUEST['password_expiration_days']
 			);
 			if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
 			if ($organization->id) {

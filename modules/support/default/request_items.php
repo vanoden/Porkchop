@@ -106,9 +106,16 @@
             <span class="label"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> After Date: <?=!empty($_REQUEST['min_date']) ? '[' . $_REQUEST['min_date']. ']' : '';?></span>
             <input type="text" id="datepicker" value="<?=$minDate?>">
         </div>
-        
-	    <div style="clear: both;"></div>
-	    
+        <div style="width: 33%;">
+            <span class="label"><i class="fa fa-sitemap" aria-hidden="true"></i> Organization:</span>
+            <select id="organization_id" name="organization_id" class="value input collectionField" onchange="updateReport()">
+    	         <option value="ALL">ALL</option>
+                <?php foreach ($registerOrganizations as $organization) { ?>
+		            <option value="<?=$organization->id?>"<?php	if ($organization->id == $selectedOrganization) print " selected"; ?>><?=$organization->name?></option>
+                <?php } ?>
+	        </select>
+        </div>
+        <div style="clear: both;"></div>
 	    <span class="label"><i class="fa fa-filter" aria-hidden="true"></i> Status</span>
 	    <div class="checkbox-row">
 		    <input type="checkbox" name="status_new" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_new']) print " checked";?> />
@@ -124,7 +131,6 @@
 		    <input type="checkbox" name="status_closed" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_closed']) print " checked";?> />
 		    <span class="value">CLOSED</span>
 	    </div>
-	    
 	    <span style="float: right;"><a href="/_support/request_items" class="black"><i class="fa fa-ban" aria-hidden="true"></i> Clear Form</a></span>
 	    <br/>
 	</form>
@@ -172,6 +178,11 @@
 <?php 	} ?>
 				</span>
 	        </div>
+        </div>
+    <?php	} 
+    	if (empty($items)) { ?>
+        <div class="tableRow" style="padding:10px">
+            <br/><strong>No Results</strong><br/>
         </div>
     <?php	} ?>
 </div>

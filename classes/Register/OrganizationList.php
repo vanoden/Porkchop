@@ -178,11 +178,10 @@
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
 				if ($recursive) {
-					$organization = new Organization($id);
+					$organization = new Organization($id);									
 					$this->count ++;
 					array_push($organizations,$organization);
-				}
-				else {
+				} else {
 					array_push($organizations,$id);
 					$this->count ++;
 				}
