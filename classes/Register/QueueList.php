@@ -57,7 +57,7 @@
 
 			$rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
 			if (! $rs) {
-				$this->error = "SQL Error in Register::ContactList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::QueueList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			
