@@ -13,24 +13,28 @@
 				WHERE	m.item_id = i.id
 				AND		i.deleted = 0
 			";
+			$bind_params = array();
 			foreach ($parameters as $label => $value) {
 				if (! preg_match('/^[\w\-\.\_]+$/',$label)) {
-					$this->error = "Invalid parameter name in MediaItem::find: ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "Invalid parameter name in Media::ItemList::find()";
 					return null;
 				}
-				if ($label == "type")
+				if ($label == "type") {
 					$find_object_query .= "
-					AND	i.type = ".$GLOBALS['_database']->qstr($value,get_magic_quotes_gpc());
-				else
+					AND	i.type = ?";
+					array_push($bind_params,$value);
+				}
+				else {
 					$find_object_query .= "
-					AND (	m.label = '".$label."'
-						AND m.value = ".$GLOBALS['_database']->qstr($value,get_magic_quotes_gpc())."
-					)";
+					AND (	m.label = ?
+						AND m.value = ?";
+					array_push($bind_params,$label,$value);
+				}
 			}
-			app_log("Query: $find_object_query",'debug',__FILE__,__LINE__);
-			$rs = $GLOBALS['_database']->Execute($find_object_query);
+			query_log($find_object_query,$bind_params);
+			$rs = $GLOBALS['_database']->Execute($find_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in MediaItem::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Media::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$objects = array();

@@ -311,7 +311,7 @@
 			 $this->error("code required to add instance");
 	
 			if (isset($_REQUEST['organization'])) {
-				if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+				if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization($_REQUEST['organization_id']);
 				}
 				else {
@@ -370,7 +370,7 @@
 				$instance->getSimple($_REQUEST['code']);
 				if ($instance->error) $this->app_error("Error finding instance(s): ".$instance->error,__FILE__,__LINE__);
 			}
-			if (! $GLOBALS['_SESSION_']->customer->has_role('product manager') && $instance->organization_id != $instance->organization_id)
+			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances') && $instance->organization_id != $instance->organization_id)
 				$this->app_error("Permission Denied");
 	
 			$response = new \HTTP\Response();
@@ -408,7 +408,7 @@
 				$parameters['name'] = $_REQUEST['name'];
 		
 			if (isset($_REQUEST['organization'])) {
-				if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+				if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization();
 					$organization->get($_REQUEST['organization_code']);
 					if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
@@ -450,7 +450,7 @@
 				$parameters['product_id'] = $product->id;
 			}
 			if (isset($_REQUEST['organization_code']) && strlen($_REQUEST['organization_code'])) {
-				if ($GLOBALS['_SESSION_']->customer->has_role('monitor manager') && $GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
+				if ($GLOBALS['_SESSION_']->customer->can('manage product instances') && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization();
 					$organization->get($_REQUEST['organization_code']);
 					if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
@@ -461,7 +461,7 @@
 				 $this->error("Permission Denied");
 				}
 			}
-			elseif(! $GLOBALS['_SESSION_']->customer->has_role('monitor manager')) {
+			elseif(! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
 			}
 			else {

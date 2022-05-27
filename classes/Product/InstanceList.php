@@ -19,7 +19,7 @@
 				WHERE	pi.id = pi.id
 			";
 			$bind_params = array();
-			if ($GLOBALS['_SESSION_']->customer->has_role('monitor admin')) {
+			if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				if (isset($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
 					$find_objects_query .= "
 					AND	ma.organization_id = ?";

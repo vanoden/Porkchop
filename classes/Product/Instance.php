@@ -86,7 +86,7 @@
 			";
 			array_push($bind_params,$code);
 
-			if (! $GLOBALS['_SESSION_']->customer->has_role('monitor manager')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				$get_object_query .= " AND organization_id = ?";
 				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization->id);
 			}
@@ -116,7 +116,7 @@
 			";
 			array_push($bind_params,$code,$product_id);
 
-			if (! $GLOBALS['_SESSION_']->customer->has_role('monitor manager')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				$get_object_query .= "
 				AND	organization_id = ?";
 				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization->id);
@@ -170,7 +170,7 @@
 				array_push($bind_params,$parameters['product_id']);
 			}
 			if (isset($parameters['organization_id']) && preg_match('/^\d+$/',$parameters['organization_id'])) {
-				if ($GLOBALS['_SESSION_']->customer->has_role('monitor manager')) {
+				if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 					$update_object_query .= ",
 						organization_id = ?";
 					array_push($bind_params,$parameters['organization_id']);

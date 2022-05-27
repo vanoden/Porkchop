@@ -31,7 +31,7 @@
 				$rs = $GLOBALS['_database']->Execute($get_prices_query,$bind_params);
 
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = $GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error in Product::PriceList::find(): ".$GLOBALS['_database']->ErrorMsg();
 					return null;
 				}
 

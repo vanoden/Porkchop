@@ -38,7 +38,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_category_query);
 			if (! $rs) {
-				$this->_error = $GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::defaultCategory(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -60,7 +60,7 @@
 				array($code)
 			);
             if (! $rs) {
-                $this->_error = $GLOBALS['_database']->ErrorMsg();
+                $this->_error = "SQL Error in Product::Item::get(): ".$GLOBALS['_database']->ErrorMsg();
                 return null;
             }
 			else {
@@ -75,6 +75,12 @@
 
 		public function update($parameters) {
 			app_log("Product::Item::update()",'trace',__FILE__,__LINE__);
+			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
+				$this->_error = "You do not have permissions for this task.";
+				app_log($GLOBALS['_SESSION_']->customer->login." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
+				app_log(print_r($GLOBALS['_SESSION_'],true),'debug',__FILE__,__LINE__);
+				return false;
+			}
 
 			# Bust Cache
 			$cache_key = "product[".$this->id."]";
@@ -122,11 +128,11 @@
 
 		public function add($parameters) {
 			app_log("Product::Item::add()",'trace',__FILE__,__LINE__);
-			if (! $GLOBALS['_SESSION_']->customer->has_role('product manager')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
 				$this->_error = "You do not have permissions for this task.";
 				app_log($GLOBALS['_SESSION_']->customer->login." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
 				app_log(print_r($GLOBALS['_SESSION_'],true),'debug',__FILE__,__LINE__);
-				return null;
+				return false;
 			}
 			$this->_error = '';
 
@@ -277,7 +283,7 @@
 			$bind_params = array($this->id,$parent->id);
 			$rs = $GLOBALS['_database']->Execute($in_category_query,$bind_params);
 			if (! $rs) {
-				$this->_error = $GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::inCategory(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			list($found) = $rs->FetchRow();

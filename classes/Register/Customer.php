@@ -47,7 +47,7 @@
 			parent::update($parameters);
 
 			// roles
-			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
 				$rolelist = new RoleList();
 				$roles = $rolelist->find();
 				foreach ($roles as $role) {
@@ -67,7 +67,7 @@
 		
 			if ($GLOBALS['_SESSION_']->elevated()) {
 				app_log("Elevated Session adding role");
-			} elseif ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			} elseif ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 				app_log("Granting role '$role_id' to customer '".$this->id."'",'info',__FILE__,__LINE__);
 			} else {
 				app_log("Non admin failed to update roles",'notice',__FILE__,__LINE__);
@@ -95,7 +95,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::add_role(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return 1;
@@ -104,7 +104,7 @@
 		function drop_role($role_id) {
 		
 			// our own polymorphism
-			if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) {
 				$this->error = "Only Register Managers can update roles.";
 				return false;
 			}
@@ -123,7 +123,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::drop_role(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			
@@ -147,7 +147,7 @@
 				array($login)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL error in Register::Customer::authenticate(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::authenticate(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -214,7 +214,7 @@
 				$get_user_query,$bind_params
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::LOCALauthenticate(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -237,7 +237,7 @@
             
 			$rs = $GLOBALS['_database']->Execute($get_user_query,array($login));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::LDAPauthenticate(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 
@@ -314,7 +314,7 @@
 			// Execute Query
 			$rs = $GLOBALS['_database']->Execute($get_products_query,$bind_params);
 			if ($rs->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::products(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			$products = array();
@@ -412,7 +412,7 @@
 				array($id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::have_role(): ".$GLOBALS['_database']->ErrorMsg();
 				error_log($this->error);
 				return false;
 			}
@@ -451,7 +451,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::roles(): ".$GLOBALS['_database']->ErrorMsg();
 				error_log($this->error);
 				return null;
 			}
@@ -475,7 +475,7 @@
 	
 			$rs = $GLOBALS['_database']->Execute($get_role_query,array($name));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customer::role_id(): ".$GLOBALS['_database']->ErrorMsg();
 				error_log($this->error);
 				return 0;
 			}
