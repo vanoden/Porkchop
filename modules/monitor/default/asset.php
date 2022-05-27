@@ -75,6 +75,23 @@ if ($page->success) { ?>
 </tr>
 <?php    
 	}
+	if (empty($sensors)) {
+?>
+<tr>
+    <td colspan="6">
+        No records found
+    </td>
+</tr>   
+<?php	}
+	if (empty($messages)) {
+?>
+<tr>
+    <td colspan="5">
+        No records found
+    </td>
+</tr>   
+<?php
+	}
 ?>
 </table>
 <div class="title">Messages</div>

@@ -1,4 +1,83 @@
+<style>
+    .sortableHeader{
+        white-space: nowrap;
+    }
+</style>
+<script src="/js/sort.js"></script>
+<script>
+    // document loaded - start table sort
+    window.addEventListener('DOMContentLoaded', (event) => {     
+        <?php
+        $sortDirection = 'desc';
+        if ($_REQUEST['sort_direction'] == 'desc') $sortDirection = 'asc';
+        
+		switch ($parameters['sort_by']) { 
+            case 'title':
+                ?>
+                SortableTable.sortColumn('title-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
+                <?php
+            break;
+            case 'added':
+                ?>
+                SortableTable.sortColumn('added-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
+                <?php
+            break;
+            case 'assigned':
+                ?>
+                SortableTable.sortColumn('assigned-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
+                <?php
+            break;
+            case 'status':
+                ?>
+                SortableTable.sortColumn('status-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
+                <?php
+            break;
+            case 'product':
+                ?>
+                SortableTable.sortColumn('product-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
+                <?php
+            break;
+            case 'project':
+                ?>
+                SortableTable.sortColumn('project-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
+                <?php
+            break;
+            case 'priority':
+                ?>
+                SortableTable.sortColumn('priority-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
+                <?php
+            break;
+            case 'prerequisite':
+                ?>
+                SortableTable.sortColumn('prerequisite-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
+                <?php
+            break;
+            case 'role':
+                ?>
+                SortableTable.sortColumn('role-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
+                <?php
+            break;
+            default:
+                ?>
+                SortableTable.sortColumn('ticket-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
+                <?php
+            break;
+		}
+        ?>
+    });
+
+    // update report from UI change
+	function updateReport() {
+		var pageForm = document.getElementById('tasksListForm');	
+		pageForm.filtered.value = 1;
+		pageForm.submit();
+		return true;
+	}
+</script>
 <form id="tasksListForm">
+    <input id="sort_by" type="hidden" name="sort_by" value="" />
+	<input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />	      
+	<input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" />  
     <h2 style="display: inline-block;">Engineering Tasks [
         <?=($page->isSearchResults)? "Matched Tasks: " : "";?>
         <?=isset($tasks) ? count($tasks) : "0"?>
@@ -77,14 +156,15 @@
     <!--	START First Table -->
 	    <div class="tableBody min-tablet">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 23%;">Title</div>
-		    <div class="tableCell" style="width: 10%;">Added</div>
-		    <div class="tableCell" style="width: 15%;">Assigned To</div>
-		    <div class="tableCell" style="width: 7%;">Status</div>
-		    <div class="tableCell" style="width: 15%;">Product</div>
-		    <div class="tableCell" style="width: 20%;">Project</div>
-		    <div class="tableCell" style="width: 10%;">Priority</div>
-		    <div class="tableCell" style="width: 10%;">PreRequisite</div>
+		    <div id="title-sortable-column" class="tableCell sortableHeader" style="width: 25%;" onclick="document.getElementById('sort_by').value = 'title'; updateReport()">Title</div>
+		    <div id="added-sortable-column" class="tableCell sortableHeader" style="width: 10%;" onclick="document.getElementById('sort_by').value = 'added'; updateReport()">Added</div>
+		    <div id="assigned-sortable-column" class="tableCell sortableHeader" style="width: 15%;" onclick="document.getElementById('sort_by').value = 'assigned'; updateReport()">Assigned To</div>
+		    <div id="status-sortable-column" class="tableCell sortableHeader" style="width: 7%;" onclick="document.getElementById('sort_by').value = 'status'; updateReport()">Status</div>
+		    <div id="product-sortable-column" class="tableCell sortableHeader" style="width: 15%;" onclick="document.getElementById('sort_by').value = 'product'; updateReport()">Product</div>
+		    <div id="project-sortable-column" class="tableCell sortableHeader" style="width: 10%;" onclick="document.getElementById('sort_by').value = 'project'; updateReport()">Project</div>
+		    <div id="priority-sortable-column" class="tableCell sortableHeader" style="width: 8%;" onclick="document.getElementById('sort_by').value = 'priority'; updateReport()">Priority</div>
+		    <div id="prerequisite-sortable-column" class="tableCell sortableHeader" style="width: 20%;" onclick="document.getElementById('sort_by').value = 'prerequisite'; updateReport()">PreRequisite</div>
+		    <div id="role-sortable-column" class="tableCell sortableHeader" style="width: 20%;" onclick="document.getElementById('sort_by').value = 'role'; updateReport()">Role</div>
 	    </div>
     <?php
         if (!isset($tasks)) $tasks = array();
@@ -93,6 +173,7 @@
 		    $project = $taskItem->project();
 		    $worker = $taskItem->assignedTo();
 			$prerequisiteTask = $taskItem->prerequisite();
+			$roleRequired = $taskItem->roleRequired();
     ?>
 	    <div class="tableRow">
 		    <div class="tableCell">
@@ -133,6 +214,10 @@
                }
                ?>
 		    </div>
+		    <div class="tableCell">
+			    <?=$roleRequired->name?>
+		    </div>
+		    
 	    </div>
     <?php	} ?>
     </div>

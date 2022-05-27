@@ -494,6 +494,11 @@
 			return $task;
 		}
 		
+		public function roleRequired() {
+    		$role = new \Register\Role($this->role_id);
+			return $role;
+		}
+		
 		public function duplicate() {
 			$task = new \Engineering\Task($this->duplicate_task_id);
 			return $task;

@@ -7,10 +7,15 @@
 		$_REQUEST['active'] = 1;
 		$_REQUEST['broken'] = 1;
 	}
-
+	
 	$tasklist = new \Engineering\TaskList();
 	$parameters = array();
 	$parameters['status'] = array();
+	
+    // get items based on current search
+    $parameters['sort_by'] = 'ticket';
+    if (!empty($_REQUEST['sort_by'])) $parameters['sort_by'] = $_REQUEST['sort_by'];
+    if (!empty($_REQUEST['sort_direction'])) $parameters['sort_direction'] = $_REQUEST['sort_direction'];
 	if ($_REQUEST["new"]) array_push($parameters['status'],'NEW');
 	if ($_REQUEST["active"]) array_push($parameters['status'],'ACTIVE');
 	if ($_REQUEST["complete"]) array_push($parameters['status'],'COMPLETE');
