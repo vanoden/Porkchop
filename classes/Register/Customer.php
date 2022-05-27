@@ -131,13 +131,13 @@
 		}
 
 		// Check login and password against configured authentication mechanism
-		function authenticate ($login,$password) {
+		function authenticate ($login, $password) {
 		
 			if (! $login) return 0;
 
 			// Get Authentication Method
 			$get_user_query = "
-				SELECT	id,auth_method,status
+				SELECT	id,auth_method,status,password_age
 				FROM	register_users
 				WHERE	login = ?
 			";
@@ -161,7 +161,10 @@
 				app_log("Auth denied because account '$login' is '$status'",'notice',__FILE__,__LINE__);
 				return false;
 			}
-
+			
+			// check if they have an expired password for organzation rules
+			$this->get($login);		
+			if ($this->password_expired()) return 0;
 			if (preg_match('/^ldap\/(\w+)$/',$this->auth_method,$matches))
 				$result = $this->LDAPauthenticate($matches[1],$login,$password);
 			else

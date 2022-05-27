@@ -52,13 +52,13 @@
 			if (isset($parameters['duplicate_task_id']) && is_numeric($parameters['duplicate_task_id'])) {
 				$find_objects_query .= "
 				AND		duplicate_task_id = ?";
-				array_push($bind_params, 0);
+				array_push($bind_params, $parameters['duplicate_task_id']);
 			}
 			
 			if (isset($parameters['role_id']) && is_numeric($parameters['role_id'])) {
 				$find_objects_query .= "
 				AND		role_id = ?";
-				array_push($bind_params, 0);
+				array_push($bind_params, $parameters['role_id']);
 			}
 			
 			if (isset($parameters['release_id']) && is_numeric($parameters['release_id'])) {
@@ -124,13 +124,83 @@
 				}
 			}			
 			
-			$find_objects_query .= "
-				ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
-						FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
-						FIELD(difficulty,'PROJECT','HARD','NORMAL','EASY'),
-						date_added DESC
-			";
-
+            // adjust results for sorted by column from ui sortable table
+            $sortDirection = 'DESC';
+            if (isset($parameters['sort_direction']) && $parameters['sort_direction'] == 'asc') $sortDirection = 'ASC';
+			switch ($parameters['sort_by']) {
+ 
+                case 'title':
+			        $find_objects_query .= "
+				        ORDER BY title $sortDirection
+			        ";
+                break;
+ 
+                case 'added':
+			        $find_objects_query .= "
+				        ORDER BY date_added $sortDirection
+			        ";
+                break;
+                
+ 
+                case 'assigned':
+			        $find_objects_query .= "
+				        ORDER BY assigned_id $sortDirection
+			        ";
+                break;
+ 
+                case 'status':
+			        $find_objects_query .= "
+				        ORDER BY status $sortDirection
+			        ";
+                break;
+                
+                case 'product':
+			        $find_objects_query .= "
+				        ORDER BY product_id $sortDirection
+			        ";
+                break;
+ 
+                case 'project':
+			        $find_objects_query .= "
+				        ORDER BY project_id $sortDirection
+			        ";
+                break;
+            
+                case 'priority':
+			        $find_objects_query .= "
+				        ORDER BY priority $sortDirection
+			        ";
+                break;
+ 
+                case 'prerequisite':
+			        $find_objects_query .= "
+				        ORDER BY prerequisite_id $sortDirection
+			        ";
+                break;    
+                
+                case 'role':
+			        $find_objects_query .= "
+				        ORDER BY role_id $sortDirection
+			        ";
+                break;
+                default:
+                $find_objects_query .= "
+	                ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
+			                FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
+			                FIELD(difficulty,'PROJECT','HARD','NORMAL','EASY'),
+			                date_added DESC
+                ";
+                break;
+			}
+			if (!isset($parameters['sort_by'])) {
+                $find_objects_query .= "
+	                ORDER BY FIELD(status,'ACTIVE','BROKEN','TESTING','NEW','HOLD','CANCELLED'),
+			                FIELD(priority,'CRITICAL','URGENT','IMPORTANT','NORMAL'),
+			                FIELD(difficulty,'PROJECT','HARD','NORMAL','EASY'),
+			                date_added DESC
+                ";
+			}
+			
 			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
 				$find_objects_query .= "
 				LIMIT ".$parameters['_limit'];
