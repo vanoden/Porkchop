@@ -47,7 +47,7 @@
 			parent::update($parameters);
 
 			// roles
-			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
 				$rolelist = new RoleList();
 				$roles = $rolelist->find();
 				foreach ($roles as $role) {
@@ -67,7 +67,7 @@
 		
 			if ($GLOBALS['_SESSION_']->elevated()) {
 				app_log("Elevated Session adding role");
-			} elseif ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			} elseif ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 				app_log("Granting role '$role_id' to customer '".$this->id."'",'info',__FILE__,__LINE__);
 			} else {
 				app_log("Non admin failed to update roles",'notice',__FILE__,__LINE__);
@@ -104,7 +104,7 @@
 		function drop_role($role_id) {
 		
 			// our own polymorphism
-			if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) {
 				$this->error = "Only Register Managers can update roles.";
 				return false;
 			}
