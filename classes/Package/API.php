@@ -18,7 +18,7 @@
 		###################################################
 		public function addPackage() {
 			$response = new \HTTP\Response();
-			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) $this->error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) $this->error("Permission Denied");
 	
 			if (! isset($_REQUEST['code'])) $this->error("unique code field required for addPackage");
 
@@ -53,7 +53,7 @@
 		### Update a Package							###
 		###################################################
 		public function updatePackage() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) $this->error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) $this->error("Permission Denied");
 	
 			$package = new \Package\Package();
 			if ($package->error) error("Error adding package: ".$package->error);
@@ -109,7 +109,7 @@
 		###################################################
 		public function findPackages() {
 			$packagelist = new \Package\PackageList();
-			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) $this->error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('use package module')) $this->error("Permission Denied");
 	
 			if ($packagelist->error) app_error("Error initializing packages: ".$packagelist->error,__FILE__,__LINE__);
 	
@@ -146,7 +146,7 @@
 		###################################################
 		public function addVersion() {
 			app_log("addVersion called");
-			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) $this->error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('add package versions')) $this->error("Permission Denied");
 	
 			if ($_FILES['file']['error']) $this->error("File upload failed: ".$_FILES['file']['error']);
 	
@@ -190,7 +190,7 @@
 		### Update a Version							###
 		###################################################
 		public function updateVersion() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) $this->error("Permission Denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('upload packages')) $this->error("Permission Denied");
 	
 			$package = new \Package\Package();
 			$package->get($_REQUEST['package_code']);
@@ -244,17 +244,17 @@
 		### Download Version							###
 		###################################################
 		public function downloadVersion() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager') && ! $GLOBALS['_SESSION_']->customer->has_role('monitor asset')) $this->error("Permission Denied");
-	
 			$package = new \Package\Package();
 			$package->get($_REQUEST['package_code']);
 			if ($package->error) $this->app_error("Error finding package: ".$package->error,__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
-	
+
 			$version = new \Package\Version();
 			$version->get($package->id,$_REQUEST['major'],$_REQUEST['minor'],$_REQUEST['build']);
 			if ($version->error) $this->app_error("Error finding version: ".$version->error,__FILE__,__LINE__);
 			if (! $version->id) $this->error("Version not found");
+
+			if (! $version->permitRead($GLOBALS['_SESSION_']->customer->id)) $this->error("Permission Denied");
 			$file = $version->file();
 			$file->download();
 		}
@@ -284,12 +284,12 @@
 		### Download Version							###
 		###################################################
 		public function downloadLatestVersion() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager') && ! $GLOBALS['_SESSION_']->customer->has_role('monitor asset')) $this->error("Permission Denied");
-	
 			$package = new \Package\Package();
 			$package->get($_REQUEST['package_code']);
 			if ($package->error) $this->app_error("Error finding package: ".$package->error,__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
+
+			if (! $package->permitRead($GLOBALS['_SESSION_']->customer->id)) $this->error("Permission Denied");
 	
 			$version = new \Package\Version();
 			$version->latest($package->id);
