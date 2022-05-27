@@ -1,13 +1,13 @@
 <style>
-    input[type="button"].duplicate_button {
+    input[type="button"].prerequisite_button {
         background: #EFEFEF;
         color:black;
     }
 </style>
 <script>
-    function setTaskDuplicate(taskId, taskName) {
-        duplicate_task_id.value = taskId;
-        duplicate_task_name.value = taskName;
+    function setTaskPrerequisite(taskId, taskName) {
+        prerequisite_task_id.value = taskId;
+        prerequisite_task_name.value = taskName;
         popup.style.display = 'none';
         overlay.style.display = 'none';
     }
@@ -15,7 +15,7 @@
 <form id="tasksListForm">
     <h2 style="display: inline-block;">Engineering Tasks [
         <?=($page->isSearchResults)? "Matched Tasks: " : "";?>
-        <?=isset($duplicateTasks) ? count($duplicateTasks) : "0"?>
+        <?=isset($prerequisiteTasks) ? count($prerequisiteTasks) : "0"?>
     ]</h2>
     <?php
         // if we're not doing a task search, show the filter bar
@@ -31,42 +31,42 @@
 	    </div>
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <select name="duplicate_assigned_id" class="value input">
+			    <select name="prerequisite_assigned_id" class="value input">
 				    <option value="">Any</option>
 				    <?php	foreach ($assigners as $assigner) { ?>
-				    <option value="<?=$assigner->id?>"<?php if ($assigner->id == $_REQUEST['duplicate_assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
+				    <option value="<?=$assigner->id?>"<?php if ($assigner->id == $_REQUEST['prerequisite_assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
 				    <?php	} ?>
-				    <option value="Unassigned" <?php if ($_REQUEST['duplicate_assigned_id'] == "Unassigned") print " selected"; ?>>Unassigned</option>
+				    <option value="Unassigned" <?php if ($_REQUEST['prerequisite_assigned_id'] == "Unassigned") print " selected"; ?>>Unassigned</option>
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <select name="duplicate_product_id" class="value input">
+			    <select name="prerequisite_product_id" class="value input">
 				    <option value="">Any</option>
 				    <?php	foreach ($products as $product) { ?>
-				    <option value="<?=$product->id?>"<?php if ($product->id == $_REQUEST['duplicate_product_id']) print " selected"; ?>><?=$product->title?></option>
+				    <option value="<?=$product->id?>"<?php if ($product->id == $_REQUEST['prerequisite_product_id']) print " selected"; ?>><?=$product->title?></option>
 				    <?php	} ?>
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <select name="duplicate_project_id" class="value input">
+			    <select name="prerequisite_project_id" class="value input">
 				    <option value="">Any</option>
 				    <?php	foreach ($projects as $project) { ?>
-				    <option value="<?=$project->id?>"<?php if ($project->id == $_REQUEST['duplicate_project_id']) print " selected"; ?>><?=$project->title?></option>
+				    <option value="<?=$project->id?>"<?php if ($project->id == $_REQUEST['prerequisite_project_id']) print " selected"; ?>><?=$project->title?></option>
 				    <?php	} ?>
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <input type="checkbox" name="duplicate_new" value="1"<?php if ($_REQUEST['duplicate_new']) print " checked"; ?> />New
-			    <input type="checkbox" name="duplicate_active" value="1"<?php if ($_REQUEST['duplicate_active']) print " checked"; ?> />Active
-			    <input type="checkbox" name="duplicate_broken" value="1"<?php if ($_REQUEST['duplicate_broken']) print " checked"; ?> />Broken
-			    <input type="checkbox" name="duplicate_testing" value="1"<?php if ($_REQUEST['duplicate_testing']) print " checked"; ?> />Testing
-			    <input type="checkbox" name="duplicate_complete" value="1"<?php if ($_REQUEST['duplicate_complete']) print " checked"; ?>/>Completed
-			    <input type="checkbox" name="duplicate_cancelled" value="1"<?php if ($_REQUEST['duplicate_cancelled']) print " checked"; ?> />Cancelled
-			    <input type="checkbox" name="duplicate_hold" value="1"<?php if ($_REQUEST['duplicate_hold']) print " checked"; ?> />Hold
+			    <input type="checkbox" name="prerequisite_new" value="1"<?php if ($_REQUEST['prerequisite_new']) print " checked"; ?> />New
+			    <input type="checkbox" name="prerequisite_active" value="1"<?php if ($_REQUEST['prerequisite_active']) print " checked"; ?> />Active
+			    <input type="checkbox" name="prerequisite_broken" value="1"<?php if ($_REQUEST['prerequisite_broken']) print " checked"; ?> />Broken
+			    <input type="checkbox" name="prerequisite_testing" value="1"<?php if ($_REQUEST['prerequisite_testing']) print " checked"; ?> />Testing
+			    <input type="checkbox" name="prerequisite_complete" value="1"<?php if ($_REQUEST['prerequisite_complete']) print " checked"; ?>/>Completed
+			    <input type="checkbox" name="prerequisite_cancelled" value="1"<?php if ($_REQUEST['prerequisite_cancelled']) print " checked"; ?> />Cancelled
+			    <input type="checkbox" name="prerequisite_hold" value="1"<?php if ($_REQUEST['prerequisite_hold']) print " checked"; ?> />Hold
 		    </div>
 	    </div>
 	    <div class="form_footer" style="text-align: center; width: 100%">
-		    <input type="submit" name="duplicate_btn_submit" class="button" value="Apply Filter" />
+		    <input type="submit" name="prerequisite_btn_submit" class="button" value="Apply Filter" />
 	    </div>
     </div>
     <!--	END First Table -->	
@@ -87,8 +87,8 @@
 		    <div class="tableCell" style="width: 10%;">PreRequisite</div>
 	    </div>
     <?php
-        if (!isset($duplicateTasks)) $duplicateTasks = array();
-	    foreach ($duplicateTasks as $taskItem) {
+        if (!isset($prerequisiteTasks)) $prerequisiteTasks = array();
+	    foreach ($prerequisiteTasks as $taskItem) {
 		    $product = $taskItem->product();
 		    $project = $taskItem->project();
 		    $worker = $taskItem->assignedTo();
@@ -97,7 +97,7 @@
     ?>
 	    <div class="tableRow">
 		    <div class="tableCell">
-   			    <input type="button" name="duplicate_btn_assign" class="duplicate_button" onclick="setTaskDuplicate(<?=$taskItem->id?>, '<?=str_replace("'","", $taskItem->title)?>')" value="Set Duplicate of" />		        
+   			    <input type="button" name="prerequisite_btn_assign" class="prerequisite_button" onclick="setTaskPrerequisite(<?=$taskItem->id?>, '<?=str_replace("'","", $taskItem->title)?>')" value="Set Prerequisite of" />		        
 		    </div>
 		    <div class="tableCell">
 			    <a href="/_engineering/task/<?=$taskItem->code?>"><?=$taskItem->title?></a>

@@ -14,21 +14,25 @@
 				WHERE	`key` = `key`
 			";
 			
-			if (isset($parameters['key']))
+			if (isset($parameters['key'])) {
 				$get_object_query .= "
-					AND `key` = ".$GLOBALS['_database']->qstr($parameters['key'], get_magic_quotes_gpc());
+					AND `key` = ?";
+				array_push($bind_params,$parameters['key']);
+			}
 
-			if (isset($parameters['value']))
+			if (isset($parameters['value'])) {
 				$get_object_query .= "
-					AND `value` = ".$GLOBALS['_database']->qstr($parameters['key'], get_magic_quotes_gpc());
-					
+					AND `value` = ?";
+				array_push($bind_params,$parameters['key']);
+			}
+		
 			$get_object_query .= "
 					ORDER BY `key`
 			";
 			
-			$rs = $GLOBALS['_database']->Execute($get_object_query);
+			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in ConfigurationList::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Configuration::List::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$pages = array();

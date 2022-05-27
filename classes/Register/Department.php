@@ -29,7 +29,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_department_query);
 			if (! $rs) {
-				$this->error = "SQL Error in register::department::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Department::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			$departments = array();
@@ -60,7 +60,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Role::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$object = $rs->FetchNextObject(false);

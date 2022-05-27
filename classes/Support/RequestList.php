@@ -15,7 +15,7 @@
 			";
 			
 			// No Special Limits 
-			if ($GLOBALS['_SESSION_']->customer->has_role("support manager")) {}
+			if ($GLOBALS['_SESSION_']->customer->can("manage support requests")) {}
 			
 			// Get Requests for Organization Member
 			elseif ($GLOBALS['_SESSION_']->customer->organization->id > 0) {

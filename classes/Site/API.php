@@ -336,7 +336,7 @@
 		}
 		
 		public function deleteConfiguration() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) error("Permission denied");
 			$response = new \HTTP\Response();
 			$configuration = new \Site\Configuration($_REQUEST['key']);
 			if ($configuration->delete()) {
@@ -350,7 +350,7 @@
 		}
 		
 		public function setConfiguration() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) error("Permission denied");
 			$response = new \HTTP\Response();
 			$configuration = new \Site\Configuration($_REQUEST['key']);
 			if ($configuration->set($_REQUEST['value'])) {
@@ -365,7 +365,7 @@
 		}
 		
 		public function getConfiguration() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) error("Permission denied");
 			$response = new \HTTP\Response();
 			$configuration = new \Site\Configuration($_REQUEST['key']);
 			if ($configuration->get($_REQUEST['key'])) {

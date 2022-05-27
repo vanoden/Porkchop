@@ -16,12 +16,15 @@
 	# Our Global Variables
 	$_SESSION_ = new stdClass();
 
+	# Don't Cache this Page
+	header("Expires: 0");
+	header("Cache-Control: no-cache, must-revalidate");
+
 	error_log("Starting upgrade script");
 	error_log("\$_REQUEST: ".print_r($_REQUEST,true));
 	$errorstr = '';
 
-	# Load Config
-	require '../config/config.php';
+	$pid = getMyPid();
 
 	# Load Configs
 	require '../config/config.php';
@@ -43,10 +46,6 @@
 	# Database Abstraction
 	require THIRD_PARTY.'/adodb/adodb-php/adodb-exceptions.inc.php';
 	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
-
-	# Don't Cache this Page
-	header("Expires: 0");
-	header("Cache-Control: no-cache, must-revalidate");
 
 	# Get version.txt
 	if (file_exists(HTML."/version.txt")) {
@@ -119,7 +118,7 @@
 			$class = new $class_name();
 			$class_version = $class->version();
 			if (! $class->upgrade()) {
-				$site->install_fail($class->error());
+				$site->install_fail("Failed to upgrade $class: ".$class->error());
 			}
 			$class_version = $class->version();
 		} catch (Exception $e) {
@@ -163,8 +162,10 @@
 		$site->install_log("No version.txt found",'warning');
 	}
 
+	$site->install_log("Load Modules");
 	$site->loadModules($modules);
-	$site->setShippingLocation($company);
+
+	$site->install_log("Populate Menus");
 	$site->populateMenus($menus);
 
 	$site->install_log("Upgrade completed successfully",'notice');

@@ -7,10 +7,15 @@
 		$_REQUEST['active'] = 1;
 		$_REQUEST['broken'] = 1;
 	}
-
+	
 	$tasklist = new \Engineering\TaskList();
 	$parameters = array();
 	$parameters['status'] = array();
+	
+    // get items based on current search
+    $parameters['sort_by'] = 'ticket';
+    if (!empty($_REQUEST['sort_by'])) $parameters['sort_by'] = $_REQUEST['sort_by'];
+    if (!empty($_REQUEST['sort_direction'])) $parameters['sort_direction'] = $_REQUEST['sort_direction'];
 	if ($_REQUEST["new"]) array_push($parameters['status'],'NEW');
 	if ($_REQUEST["active"]) array_push($parameters['status'],'ACTIVE');
 	if ($_REQUEST["complete"]) array_push($parameters['status'],'COMPLETE');
@@ -22,6 +27,7 @@
 	if ($_REQUEST["project_id"]) $parameters['project_id'] = $_REQUEST['project_id'];
 	if ($_REQUEST["product_id"]) $parameters['product_id'] = $_REQUEST['product_id'];
 	if ($_REQUEST["assigned_id"]) $parameters['assigned_id'] = $_REQUEST['assigned_id'];
+	if ($_REQUEST["role_id"]) $parameters['role_id'] = $_REQUEST['role_id'];
 
 	$tasks = $tasklist->find($parameters);
 	if ($tasklist->error()) {
@@ -38,3 +44,7 @@
 
 	$productlist = new \Engineering\ProductList();
 	$products = $productlist->find();
+	
+    // get roles set for engineering to apply to tasks
+	$roleList = new \Register\RoleList();
+	$engineeringRoles = $roleList->find();

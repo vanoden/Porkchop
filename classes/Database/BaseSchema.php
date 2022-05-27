@@ -29,7 +29,7 @@
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating info table in ".$this->module."Schema::version: ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "SQL Error creating info table in ".$this->module."Schema::version(): ".$GLOBALS['_database']->ErrorMsg();
 					return null;
 				}
 			}
@@ -45,7 +45,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_version_query);
 			if (! $rs) {
-				$this->error = "SQL Error in ".$this->module."::version: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in ".$this->module."::version(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -75,7 +75,7 @@
 		public function executeSQL($sql,$parameters = array()) {
 			$GLOBALS['_database']->Execute($sql,$parameters);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in ".$this->module."::executeSQL(): ".$GLOBALS['_database']->ErrorMsg();
 				$GLOBALS['_database']->RollbackTrans();
 				return false;
 			}

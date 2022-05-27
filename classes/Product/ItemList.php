@@ -103,7 +103,7 @@
 			query_log($find_product_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Product::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 

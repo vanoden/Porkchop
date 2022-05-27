@@ -16,7 +16,7 @@
 		}
 
 		public function add ($parameters = array()) {
-			if (! $GLOBALS['_SESSION_']->customer->has_role("register manager")) {
+			if (! $GLOBALS['_SESSION_']->customer->can("manage organization comments")) {
 				$this->error = "Not enough privileges";
 				return null;
 			}

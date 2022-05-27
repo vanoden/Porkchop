@@ -75,7 +75,7 @@
 			";
 			foreach ($parameters as $label => $value) {
 				if (! preg_match('/^[\w\-\.\_]+$/',$label)) {
-					$this->error = "Invalid parameter name in MediaItem::find: ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "Invalid parameter name in MediaItem::find()";
 					return null;
 				}
 				if ($label == "type")

@@ -334,7 +334,7 @@
 		}
 
 		protected function confirm_customer() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('content reporter')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error = "You do not have permissions for this task.";
 				return 0;
 			}

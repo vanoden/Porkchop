@@ -1,18 +1,6 @@
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <link rel="stylesheet" href="/css/datepicker.min.css">
 <script src="/js/datepicker.min.js"></script> 
-<style>
-    hr {
-        border: 0;
-        height: 5px;
-        background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
-        width: 75%;
-        margin: 50px;
-        margin-left: 0px;
-        margin-bottom: 25px;
-    }
-</style>
-
 <script>
    $( function() {
         const picker = datepicker('#date_due', {
@@ -24,6 +12,20 @@
    } );
 </script>
 <style>
+    hr {
+        border: 0;
+        height: 5px;
+        background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+        width: 75%;
+        margin: 50px;
+        margin-left: 0px;
+        margin-bottom: 25px;
+    }
+    
+    section article.segment {
+        padding-bottom: 100px;
+    }
+
     .eventLogEntry {
         max-width: 200px; 
         overflow:auto; 
@@ -46,29 +48,37 @@
         min-height: 50px;
         border-radius: 10px;
     }
-
+    
+    #submit-button-container {
+        margin-top: 100px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+    }
+    
     #overlay {
         display:none;
         width: 100%;
         height: 100%;
-        z-index: 200;
+        z-index: 100;
         background-color:#00000090;
         position:fixed;
         top: 0;
         left: 0px;
     }
     
-    #duplicate_task_name {
+    #duplicate_task_name, #prerequisite_task_name {
         color: #888888;
     }
 
-    #popup {
+    #popup_duplicate, #popup_prerequisite {
         border: solid 2px #000;
         border-radius: 5px;
         display: none;
         padding: 10px;
         position: absolute;
         top: 200px;
+        left: 0px;
         background: #fff;
         width: 90%;
         height: 750px;
@@ -76,7 +86,7 @@
         overflow-y: scroll;
     }
     
-    #popupclose {
+    #popup_duplicate_close, #popup_prerequisite_close {
         float: right;
         margin: 2px;
         font-size: 15px;
@@ -85,7 +95,7 @@
     }
     
     @media only screen and (max-width: 768px) {
-        #popup {
+        #popup_duplicate, #popup_prerequisite {
             width: 100%;
         }
     }
@@ -93,16 +103,25 @@
     <?php
         if ($_REQUEST['duplicate_btn_submit']) {
     ?>
-        #popup, #overlay {
+        #popup_duplicate, #overlay {
             display:block;
         }
+        
+    <?php
+        }
+        if ($_REQUEST['prerequisite_btn_submit']) {
+    ?>
+        #popup_prerequisite, #overlay {
+            display:block;
+        }
+        
     <?php
         }
     ?>
-    
 </style>
 <script>
     $(document).ready(function () {
+    
         $( "textarea:odd" ).css( "background-color", "#eeeff7" );
         
         // disable buttons to prevent duplicate clicks
@@ -156,10 +175,10 @@
             $( "#btn_add_event" ).removeAttr('disabled');
         });
         
-         // Initialize Popup
-        var closePopup = document.getElementById("popupclose");
+        // Initialize Duplicate Popup
+        var close_duplicate_popup = document.getElementById("popup_duplicate_close");
         var overlay = document.getElementById("overlay");
-        var popup = document.getElementById("popup");
+        var popup_duplicate = document.getElementById("popup_duplicate");
         var btn_duplicate = document.getElementById("btn_duplicate");
         var duplicate_task_id = document.getElementById("duplicate_task_id");
         var duplicate_task_name = document.getElementById("duplicate_task_name");
@@ -173,15 +192,43 @@
         
         // Open Popup Event
         btn_duplicate.onclick = function() {
-            popup.style.display = 'block';
+            popup_duplicate.style.display = 'block';
             overlay.style.display = 'block';
         };
 
         // Close Popup Event
-        closePopup.onclick = function() {
-            popup.style.display = 'none';
+        close_duplicate_popup.onclick = function() {
+            popup_duplicate.style.display = 'none';
             overlay.style.display = 'none';
-        };    
+        };
+        
+        // Initialize Prerequisite Popup
+        var close_prerequisite_popup = document.getElementById("popup_prerequisite_close");
+        var overlay = document.getElementById("overlay");
+        var popup_prerequisite = document.getElementById("popup_prerequisite");
+        var btn_prerequisite = document.getElementById("btn_prerequisite");
+        var prerequisite_task_id = document.getElementById("prerequisite_task_id");
+        var prerequisite_task_name = document.getElementById("prerequisite_task_name");
+        var prerequisite_task_id_clear = document.getElementById("prerequisite_task_id_clear");
+        
+        // Clear prerequisite task ID
+        prerequisite_task_id_clear.onclick = function() {
+            prerequisite_task_id.value = '';
+            prerequisite_task_name.value = '(none)';
+        };
+        
+        // Open Popup Event
+        btn_prerequisite.onclick = function() {
+            popup_prerequisite.style.display = 'block';
+            overlay.style.display = 'block';
+        };
+
+        // Close Popup Event
+        close_prerequisite_popup.onclick = function() {
+            popup_prerequisite.style.display = 'none';
+            overlay.style.display = 'none';
+        }; 
+          
     });
 </script>
 <div>
@@ -343,58 +390,72 @@
             <div class="tableCell">
                <textarea name="description" class="wide_100per" form="task_form"><?=strip_tags($form['description'])?></textarea>
             </div>
+         </div>                      
+      </div>
+      <!-- End Fourth Row -->
+      <!-- Start Fifth Row -->
+      
+      <div id="overlay"></div>
+      
+      <div class="tableBody min-tablet">
+        <div class="tableRowHeader">
+            <div class="tableCell">Prerequisite</div>
+            <div class="tableCell">Difficulty</div>
+            <div class="tableCell">Required Role</div>
+            <div class="tableCell">Assign as Duplicate</div>
          </div>
-         <div class="tableRow">
+         <div class="tableRow">           
             <div class="tableCell">
-               <strong>Prerequisite</strong>
-               <select name="prerequisite_id" class="value input" style="max-width: 250px;">
-                  <option value="">None</option>
-                  <?php	foreach($prerequisiteTasklist as $prerequisiteTask) { ?>
-                    <option value="<?=$prerequisiteTask->id?>"<?php if ($prerequisiteTask->id == $form['prerequisite_id']) print " selected"; ?>><?=$prerequisiteTask->title?></option>
-                  <?php	} ?>
-               </select><br/>
-               <strong>Difficulty</strong>
+                <input type="hidden" id="prerequisite_task_id" name="prerequisite_task_id" value="<?=$form['prerequisite_task_id']?>" />
+                <input type="text" id="prerequisite_task_name" name="prerequisite_task_name" value="<?=$form['prerequisite_task_name']?>" readonly='readonly'/>
+                <input type="button" id="prerequisite_task_id_clear" name="prerequisite_task_id_clear" value="Clear" style="background:#999;"/>
+               <br/>
+                <input id="btn_prerequisite" type="button" name="btn_prerequisite" class="button" value="Search for Task"/>        
+                <div id="popup_prerequisite">
+                    <div class="popup_prerequisite_controls">
+                        <span id="popup_prerequisite_close">X</span>
+                    </div>
+                    <div class="popup_prerequisite_content">
+                        <h1>Find a task that is prerequisite to this one</h1>
+                        <?php include(MODULES.'/engineering/partials/prerequisite_task_finder.php'); ?>
+                    </div>
+                </div>
+            </div>
+            <div class="tableCell">
                <select name="difficulty" class="value input">
                   <option value="EASY"<?php if ($form['difficulty'] == "EASY") print " selected"; ?>>Easy</option>
                   <option value="NORMAL"<?php if ($form['difficulty'] == "NORMAL") print " selected"; ?>>Normal</option>
                   <option value="HARD"<?php if ($form['difficulty'] == "HARD") print " selected"; ?>>Hard</option>
                   <option value="PROJECT"<?php if ($form['difficulty'] == "PROJECT") print " selected"; ?>>Project</option>
                </select>
-               
-               <br/><br/>
-               <strong>Required Engineering Role</strong>
-               <br/>
+            </div>
+            <div class="tableCell">
                <select name="role_id" class="value input" style="max-width: 250px;">
                   <option value="">None</option>
                   <?php	foreach($engineeringRoles as $engineeringRole) { ?>
                     <option value="<?=$engineeringRole->id?>"<?php if ($engineeringRole->id == $form['role_id']) print " selected"; ?>><?=$engineeringRole->name?></option>
                   <?php	} ?>
                </select>
-               
-               <br/><br/>
-               <strong>Assign task as Duplicate</strong><br/>
-               Task Duplicates: 
+            </div>
+            <div class="tableCell">
                 <input type="hidden" id="duplicate_task_id" name="duplicate_task_id" value="<?=$form['duplicate_task_id']?>" />
                 <input type="text" id="duplicate_task_name" name="duplicate_task_name" value="<?=$form['duplicate_task_name']?>" readonly='readonly'/>
                 <input type="button" id="duplicate_task_id_clear" name="duplicate_task_id_clear" value="Clear" style="background:#999;"/>
                <br/>
                 <input id="btn_duplicate" type="button" name="btn_duplicate" class="button" value="Search for Task"/>        
-                <div id="overlay"></div>
-                <div id="popup">
-                    <div class="popupcontrols">
-                        <span id="popupclose">X</span>
+                <div id="popup_duplicate">
+                    <div class="popup_duplicate_controls">
+                        <span id="popup_duplicate_close">X</span>
                     </div>
-                    <div class="popupcontent">
+                    <div class="popup_duplicate_content">
                         <h1>Find a task that is duplicate to this one</h1>
                         <?php include(MODULES.'/engineering/partials/duplicate_tasks_finder.php'); ?>
                     </div>
                 </div>
-                               
             </div>
-         </div>   
+         </div>
       </div>
-      <!-- End Fourth Row -->
-      
+      <!-- End Fifth Row -->
       <!-- Start Fifth Row -->
       <?php	if ($task->id) { ?>      
                
@@ -478,7 +539,7 @@
       <!-- End event description Row -->
       
       <!-- entire page button submit -->
-      <div class="tableBody min-tablet">
+      <div id="submit-button-container" class="tableBody min-tablet">
             <div class="tableRow button-bar">
                 <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
             </div>
@@ -584,7 +645,7 @@
    </div>
    <?php	} else {
    ?>
-      <div class="tableBody min-tablet">
+      <div id="submit-button-container" class="tableBody min-tablet">
             <div class="tableRow button-bar">
                 <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit">
             </div>

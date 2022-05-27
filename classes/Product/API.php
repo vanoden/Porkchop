@@ -16,6 +16,7 @@
 		### Add an Item									###
 		###################################################
 		public function addItem() {
+			$this->requirePrivilege("manage products");
 			$product = new \Product\Item();
 	
 			$product->add(
@@ -39,6 +40,8 @@
 		### Update a Product							###
 		###################################################
 		public function updateItem() {
+			$this->requirePrivilege("manage products");
+
 			$product = new \Product\Item();
 			$product->get($_REQUEST['code']);
 			if ($product->error) $this->error("Error finding product: ".$product->error);
@@ -106,6 +109,7 @@
         ### Add a Price                                 ###
         ###################################################
         public function addPrice() {
+			$this->requirePrivilege("manage products");
             $parameters = array();
             $product = new \Product\Item();
             if (! $product->get($_REQUEST['product_code'])) $this->error("Product not found");
@@ -144,6 +148,7 @@
 		### Add a Relationship							###
 		###################################################
 		public function addRelationship() {
+			$this->requirePrivilege("manage products");
 			$_product = new \Product\Item();
 			if (defined($_REQUEST['parent_code'])) {
 				$parent = $_product->get($_REQUEST['parent_code']);
@@ -234,6 +239,7 @@
 		### Add a Group									###
 		###################################################
 		public function addGroup() {
+			$this->requirePrivilege("manage products");
 			$_REQUEST['type'] = 'group';
 			$this->addItem();
 		}
@@ -242,6 +248,7 @@
 		### Update a Group								###
 		###################################################
 		public function updateGroup() {
+			$this->requirePrivilege("manage products");
 			$this->updateItem();
 		}
 	
@@ -257,6 +264,7 @@
 		### Add Product to Group						###
 		###################################################
 		public function addGroupItem() {
+			$this->requirePrivilege("manage products");
 			if (! preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['group_code'])) $this->error("group_code required for addGroupItem method");
 			if (! preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['item_code'])) $this->error("group_code required for addGroupItem method");
 	
@@ -303,7 +311,7 @@
 			 $this->error("code required to add instance");
 	
 			if (isset($_REQUEST['organization'])) {
-				if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+				if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization($_REQUEST['organization_id']);
 				}
 				else {
@@ -362,7 +370,7 @@
 				$instance->getSimple($_REQUEST['code']);
 				if ($instance->error) $this->app_error("Error finding instance(s): ".$instance->error,__FILE__,__LINE__);
 			}
-			if (! $GLOBALS['_SESSION_']->customer->has_role('product manager') && $instance->organization_id != $instance->organization_id)
+			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances') && $instance->organization_id != $instance->organization_id)
 				$this->app_error("Permission Denied");
 	
 			$response = new \HTTP\Response();
@@ -400,7 +408,7 @@
 				$parameters['name'] = $_REQUEST['name'];
 		
 			if (isset($_REQUEST['organization'])) {
-				if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+				if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization();
 					$organization->get($_REQUEST['organization_code']);
 					if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
@@ -442,7 +450,7 @@
 				$parameters['product_id'] = $product->id;
 			}
 			if (isset($_REQUEST['organization_code']) && strlen($_REQUEST['organization_code'])) {
-				if ($GLOBALS['_SESSION_']->customer->has_role('monitor manager') && $GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
+				if ($GLOBALS['_SESSION_']->customer->can('manage product instances') && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization();
 					$organization->get($_REQUEST['organization_code']);
 					if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
@@ -453,7 +461,7 @@
 				 $this->error("Permission Denied");
 				}
 			}
-			elseif(! $GLOBALS['_SESSION_']->customer->has_role('monitor manager')) {
+			elseif(! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
 			}
 			else {
@@ -473,12 +481,11 @@
 		### Add Image to Product						###
 		###################################################
 		public function addItemImage() {
+			$this->requirePrivilege("manage products");
 			# Load Media Module
-			require_once(MODULES."/media/_classes/default.php");
-	
-			$_product = new \Product\Item();
-			$product = $_product->get($_REQUEST['product_code']);
-			if ($_product->error) app_error("Error finding product: ".$_product->error,__FILE__,__LINE__);
+			$product = new \Product\Item();
+			$product->get($_REQUEST['product_code']);
+			if ($product->error) app_error("Error finding product: ".$product->error,__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
 	
 			$_image = new \Media\Item();
@@ -487,8 +494,8 @@
 			if (! $image->id) $this->error("Image not found");
 	
 	
-			$_product->addImage($product->id,$image->id,$_REQUEST['label']);
-			if ($_product->error) app_error("Error adding image: ".$_product->error,__FILE__,__LINE__);
+			$product->addImage($product->id,$image->id,$_REQUEST['label']);
+			if ($product->error) app_error("Error adding image: ".$product->error,__FILE__,__LINE__);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 	
@@ -502,6 +509,7 @@
 		### Add Metadata to Product						###
 		###################################################
 		public function addItemMetadata() {
+			$this->requirePrivilege("manage products");
 			$_product = new \Product\Item();
 			$product = $_product->get($_REQUEST['code']);
 			if ($_product->error) app_error("Error finding product: ".$_product->error,__FILE__,__LINE__);

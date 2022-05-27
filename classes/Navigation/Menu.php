@@ -45,7 +45,7 @@
 			    ";
 		    $GLOBALS ['_database']->Execute ( $add_object_query, array ($parameters ['code'] ) );
 		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->_error = $GLOBALS ['_database']->ErrorMsg ();
+			    $this->_error = "SQL Error in Navigation::Menu::add(): ".$GLOBALS['_database']->ErrorMsg ();
 			    return false;
 		    }
 		    $this->id = $GLOBALS ['_database']->Insert_ID ();

@@ -27,7 +27,7 @@
 			query_log($get_site_messages_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SiteMessagesList::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::SiteMessagesList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			
@@ -63,7 +63,7 @@
 			query_log($get_site_messages_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SiteMessagesList::getUnreadForUserId: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::SiteMessagesList::getUnreadForUserId(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			
@@ -91,7 +91,7 @@
 			query_log($get_site_messages_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SiteMessagesList::getUnreadForUserId: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::SiteMessagesList::getUnreadForUserId(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 

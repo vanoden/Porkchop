@@ -1,8 +1,6 @@
 <?php
-	class Site {
-		public function __construct() {
-
-		}
+	class Site Extends BaseClass {
+		private $_log_level = 'info';
 
 		public function loadModules($modules = array()) {
 			# Process Modules
@@ -13,27 +11,25 @@
 				# Update Schema
 				$class_name = "\\$module_name\\Schema";
 				$schema_path = CLASS_PATH."/$module_name/Schema.php";
-				if (! file_exists($schema_path)) {
-					$this->install_log("Module $module_name not installed");
-					continue;
-				}
-				try {
-					$class = new $class_name();
-					$class_version = $class->version();
-					if ($class->error) $this->install_fail($class->error);
-					$class->upgrade();
-					if ($class->error) $this->install_fail("Upgrade from version ".$class->version().": ".$class->error);
-					if ($class->version() != $class_version) $this->install_log("Upgraded $module_name from $class_version to ".$class->version(),'notice');
-				} catch (Exception $e) {
-					$this->install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
-				}
-				$this->install_log("$module_name::Schema: version ".$class_version);
-				if (isset($module_data['schema']) && $module_data['schema'] != $class_version) {
-					$this->install_fail($module_name." Schema version ".$class_version." doesn't match required version ".$module_data['schema']);
+				if (file_exists($schema_path)) {
+					try {
+						$class = new $class_name();
+						$class_version = $class->version();
+						if ($class->error) $this->install_fail($class->error);
+						$class->upgrade();
+						if ($class->error) $this->install_fail("Upgrade from version ".$class->version().": ".$class->error);
+						if ($class->version() != $class_version) $this->install_log("Upgraded $module_name from $class_version to ".$class->version(),'notice');
+					} catch (Exception $e) {
+						$this->install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
+					}
+					$this->install_log("$module_name::Schema: version ".$class_version);
+					if (isset($module_data['schema']) && $module_data['schema'] != $class_version) {
+						$this->install_fail($module_name." Schema version ".$class_version." doesn't match required version ".$module_data['schema']);
+					}
 				}
 
 				# Add Privileges
-				foreach ($module_date['privileges'] as $privilege_name) {
+				foreach ($module_data['privileges'] as $privilege_name) {
 					$privilege = new \Register\Privilege();
 					if (! $privilege->get($privilege_name)) {
 						$privilege->add(array('name' => $privilege_name));
@@ -90,52 +86,6 @@
 						$this->install_log("Template already set correctly for $module_name::$view",'trace');
 					}
 				}
-			}
-		}
-
-		public function setShippingLocation($company = array()) {
-			# Add Default Shipping Location
-			$configuration = new \Site\Configuration("module/support/rma_location_id");
-			$rma_location_id = $configuration->value();
-			if (empty($rma_location_id)) {
-				$organizationList = new \Register\OrganizationList();
-				list($organization) = $organizationList->find(array('name' => $company["name"]));
-				if (! $organization->id) {
-					$this->install_fail("Cannot find owner organization");
-				}
-				list($location) = $organization->locations();
-				if (! $location->id) {
-					$this->install_log("Adding default location to ".$organization->name,'notice');
-					$country = new \Geography\Country();
-					$country->get('United States of America');
-					$province = new \Geography\Province();
-					$province->get($country->id,"Massachusetts");
-					$location = new \Register\Location();
-					$location->add(array(
-						'name'	=> 'Office',
-						'address_1'	=> '17D Airport Road',
-						'city'		=> 'Hopedale',
-						'zip_code'	=> '01747',
-						'province_id'	=> $province->id
-					));
-				}
-				else {
-					$this->install_log("Organization has default location",'notice');
-				}
-				$location->associateOrganization($organization->id);
-				$rma_location_id = $location->id;
-			}
-			else {
-				$location = new \Register\Location($rma_location_id);
-			}
-			$this->install_log("Office location is set to '".$location->name."' in ".$location->city.", ".$location->province()->abbreviation);
-			$configuration = new \Site\Configuration("module/support/rma_location_id");
-			if (empty($configuration->value())) {
-				$this->install_log("Setting default RMA destination location",'notice');
-				$configuration->set($rma_location_id);
-			}
-			else {
-				$this->install_log("RMA Dest already set to ".$configuration->value());
 			}
 		}
 
@@ -214,7 +164,7 @@
 		}
 
 		public function install_log($message = '',$level = 'info') {
-			if (! $this->log_level($level)) return;
+			if (! $this->log_display($level)) return;
 			print date('Y/m/d H:i:s');
 			print " [$level]";
 			print ": $message<br>\n";
@@ -225,10 +175,15 @@
 			$this->install_log("Upgrade failed: $message",'error');
 			exit;
 		}
+
+		public function log_level($level = null) {
+			if (isset($level)) $this->_log_level = $level;
+			return $this->_log_level;
+		}
 	
-		public function log_level($level = 'info') {
+		public function log_display($level = 'info') {
 			if (isset($_REQUEST['log_level'])) $log_level = $_REQUEST['log_level'];
-			else $log_level = 'warning';
+			else $log_level = $this->_log_level;
 	
 			if ($log_level == 'trace') return true;
 			if ($log_level == 'debug' && $level != 'trace') return true;

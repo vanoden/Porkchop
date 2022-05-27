@@ -41,7 +41,7 @@
 				)
 			);
             if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->error = "SQL Error in Role::add: ".$GLOBALS['_database']->ErrorMsg();
+                $this->error = "SQL Error in Register::Role::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -66,7 +66,7 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Role::update: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Role::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return $this->details();
@@ -82,7 +82,7 @@
 				array($code)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in RegisterRole::get: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Role::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -99,7 +99,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_members_query,array($this->id));
 			if (! $rs) {
-				$this->error = "SQL Error in register::role::members: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Role::members: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			$admins = array();
@@ -170,7 +170,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in RegisterRole::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Role::details: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			if ($object = $rs->FetchRow()){
@@ -273,7 +273,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_privilege_query,array($this->id,$param));
 
 			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Role::has_privilege(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
 			list($found) = $rs->FetchRow();

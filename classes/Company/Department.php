@@ -31,7 +31,7 @@
 				array($parameters['code'])
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error adding department in Company::Department::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Company::Department::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($this->id) = $GLOBALS['_database']->Insert_ID();
@@ -43,34 +43,36 @@
 				UPDATE	company_departments
 				SET		id = id
 			";
+			$bind_params = array();
 			if (isset($parameters['name'])) {
 				$update_object_query .= ",
-				name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
+				name = ?";
+				array_push($bind_params,$parameters['name']);
 			}
 			if (isset($parameters['description'])) {
 				$update_object_query .= ",
-				description = ".$GLOBALS['_database']->qstr($parameters['description'],get_magic_quotes_gpc());
+				description = ?";
+				array_push($bind_params,$parameters['description']);
 			}
 			if (isset($parameters['status'])) {
 				$update_object_query .= ",
-				status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+				status = ?";
+				array_push($bind_params,$parameters['status']);
 			}
 			if (isset($parameters['manager_id'])) {
 				$update_object_query .= ",
-				manager_id = ".$GLOBALS['_database']->qstr($parameters['manager_id'],get_magic_quotes_gpc());
+				manager_id = ?";
+				array_push($bind_params,$parameters['manager_id']);
 			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-			
-			$GLOBALS['_database']->Execute(
-				$update_object_query,
-				array($this->id)
-			);
+			array_push($bind_params,$this->id);
+			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error updating department in Company::Department::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Company::Department::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			
@@ -86,7 +88,7 @@
 			
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
-				array($parameters['code'])
+				array($code)
 			);
 			if (! $rs) {
 				$this->error = "SQL Error in Company::Department::get(): ".$GLOBALS['_database']->ErrorMsg();

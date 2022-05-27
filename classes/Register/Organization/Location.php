@@ -41,8 +41,8 @@
 				array($name)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Company::Location::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				$this->error = "SQL Error in Register::Organization::Location::get(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
@@ -60,7 +60,7 @@
 				array($hostname)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Company::Location::getByHost(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Organization::Location::getByHost(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -79,7 +79,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Company::Domain::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Organization::Location::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -105,12 +105,12 @@
 
 		public function add($parameters = array()) {
 			if (! preg_match('/^\d+$/',$parameters['company_id'])) {
-				$this->error = "company_id parameter required for Company::Domain::add";
-				return undef;
+				$this->error = "company_id parameter required for Register::Organization::Location::add()";
+				return null;
 			}
 			if (! preg_match('/\w/',$parameters['code'])) {
-				$this->error = "code parameter required in Company::Domain::add";
-				return undef;
+				$this->error = "code parameter required in Register::Organization::Location::add()";
+				return null;
 			}
 	
 			$add_object_query = "
@@ -129,8 +129,8 @@
 				array($parameters["company_id"],$parameters["code"])
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Company::Domain::add: ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				$this->error = "SQL Error in Register::Organization::Location::add(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
@@ -139,41 +139,41 @@
 
 		public function update($parameters = array()) {
 			if (! preg_match('/^\d+$/',$this->id)) {
-				$this->error = "Valid id required for details in Company::Domain::update";
-				return undef;
+				$this->error = "Valid id required for details in Register::Organization::Location::update()";
+				return null;
 			}
 
-			if ($parameters['name'])
-				$update_object_query .= ",
-						name = ".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc());
-
+			$bind_params = array();
 			// Update Object
 			$update_object_query = "
 				UPDATE	register_locations
 				SET		id = id";
 			
-			if (preg_match('/^[\w\-\.]+$/',$parameters['host']))
+			if (preg_match('/^[\w\-\.]+$/',$parameters['host'])) {
 				$update_object_query .= ",
-					host = ".$GLOBALS['_database']->qstr($parameters['host'],get_magic_quotes_gpc());
+					host = ?";
+				array_push($bind_params,$parameters['host']);
+			}
 			
-			if (preg_match('/^\d+$/',$parameters['domain_id']))
+			if (preg_match('/^\d+$/',$parameters['domain_id'])) {
 				$update_object_query .= ",
-					domain_id = ".$GLOBALS['_database']->qstr($parameters['domain_id'],get_magic_quotes_gpc());
-
+					domain_id = ?";
+				array_push($bind_params,$parameters['domain_id']);
+			}
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-
+			array_push($bind_params,$this->id);
 			$GLOBALS['_database']->Execute(
 				$update_object_query,
-				array($this->id)
+				$bind_params
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Company::Location::update: ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				$this->error = "SQL Error in Register::Organization::Location::update(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
 			}
 			
-			return $this->details($id);
+			return $this->details();
 		}
 	}

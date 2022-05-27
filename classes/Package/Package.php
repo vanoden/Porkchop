@@ -22,7 +22,7 @@
 
 		public function add($parameters = array()) {
 			# Authorization Required
-			if (! $GLOBALS['_SESSION_']->customer->has_role('package manager')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) {
 				$this->error = "Must be an authorized package manager to upload files";
 				return null;
 			}
