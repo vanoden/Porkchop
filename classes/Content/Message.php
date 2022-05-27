@@ -39,7 +39,7 @@
 			} elseif(false) {
 				# Make Sure User Has Privileges
 				app_log("No match found for message '$target', adding",'info',__FILE__,__LINE__);
-				if (! $GLOBALS['_SESSION_']->customer->has_role('content developer')) {
+				if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 					$this->error = "Sorry, insufficient privileges. Role 'content developer' required.";
 					return null;
 				}
@@ -109,7 +109,7 @@
 		public function add($parameters = array()) {
 			$this->error = NULL;
 			$_customer = new \Register\Customer();
-			if (! $GLOBALS['_SESSION_']->customer->has_role('content operator')) {
+			if (! $GLOBALS['_SESSION_']->customer->has_role('edit content messages')) {
 				$this->error = "You do not have permission to add content";
 				app_log("Denied access in Content::add, 'content operator' required to add message '".$parameters['target']."'",'notice',__FILE__,__LINE__);
 				return null;
@@ -145,7 +145,7 @@
 		}
         public function update($parameters = array()) {
 			$this->error = NULL;
-			if (! $GLOBALS['_SESSION_']->customer->has_role('content developer')) {
+			if (! $GLOBALS['_SESSION_']->customer->has_role('edit content messages')) {
 				$this->error = "You do not have permission to update content";
 				app_log("Denied access in Content::Message::update(), 'content operator' required",'notice');
 				return null;
