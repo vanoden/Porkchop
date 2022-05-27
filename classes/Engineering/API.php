@@ -357,7 +357,7 @@
 			if (! $product->id) $this->error("No product found matching '".$_REQUEST['product_code']."'");
 
 			if (isset($_REQUEST['requested_by']) && $_REQUEST['requested_by'] && $_REQUEST['requested_by'] != $GLOBALS['_SESSION_']->customer->code) {
-				if ($GLOBALS['_SESSION_']->customer->has_role('engineering manager')) {
+				if ($GLOBALS['_SESSION_']->customer->can('manage engineering tasks')) {
 					$requester = new \Register\Customer();
 					$requester->get($_REQUEST['requested_by']);
 					if ($requester->error) $this->error("Error finding requester: ".$requester->error);
@@ -483,7 +483,7 @@
 			if (! $task->id) $this->error("No task found matching '".$_REQUEST['task_code']."'");
 
 			if (isset($_REQUEST['person_code']) && $_REQUEST['person_code'] && $_REQUEST['person_code'] != $GLOBALS['_SESSION_']->customer->code) {
-				if ($GLOBALS['_SESSION_']->customer->has_role('engineering admin')) {
+				if ($GLOBALS['_SESSION_']->customer->can('manage engineering events')) {
 					$reporter = new \Register\Customer();
 					$reporter->get($_REQUEST['person_code']);
 					if ($reporter->error) $this->error("Error finding reporter: ".$reporter->error);
@@ -519,7 +519,7 @@
 		### Update Event								###
 		###################################################
 		public function updateEvent() {
-			$this->requireRole("engineering user");
+			$this->requirePrivilege("manage engineering events");
 
 			$response = new \HTTP\Response();
 			$response->success = 0;
@@ -531,7 +531,7 @@
 		### Find Events									###
 		###################################################
 		public function findEvents() {
-			$this->requireRole("engineering user");
+			$this->has_role("engineering user");
 
 			$response = new \HTTP\Response();
 			$parameters = array();
