@@ -17,7 +17,7 @@
 		### Add a Repository							###
 		###################################################
 		public function addRepository() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('storage manager')) error('storage manager role required');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
 			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->create($_REQUEST['type']);
 			if ($factory->error) $this->error("Error adding repository: ".$factory->error);
@@ -42,7 +42,7 @@
 		### Update a Repository							###
 		###################################################
 		public function updateRepository() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('storage manager')) error('storage manager role required');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
 			$repository = new \Storage\Repository();
 			if ($repository->error) $this->error("Error adding repository: ".$repository->error);
 			$repository->get($_REQUEST['code']);
@@ -98,7 +98,7 @@
 		### Set Repository Metadata						###
 		###################################################
 		public function setRepositoryMetadata() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('storage manager')) error('storage manager role required');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
 			$repositoryList = new \Storage\RepositoryList();
 			list($repository) = $repositoryList->find(array("code" => $_REQUEST['code']));
 			if ($repositoryList->error) $this->app_error("Error finding repository: ".$repository->error,__FILE__,__LINE__);
@@ -141,7 +141,7 @@
 		### Add a File									###
 		###################################################
 		public function addFile() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('storage upload')) error('storage upload role required');
+			if (! $GLOBALS['_SESSION_']->customer->can('upload storage files')) error('storage upload role required');
 
 			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->get($_REQUEST['repository_code']);
@@ -208,7 +208,7 @@
 		### Update a File								###
 		###################################################
 		public function updateFile() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('storage upload')) error('storage upload role required');
+			if (! $GLOBALS['_SESSION_']->customer->can('upload storage files')) error('storage upload role required');
 			$file = new \Storage\File();
 			if ($file->error) $this->error("Error initializing file: ".$file->error);
 			$file->get($_REQUEST['code']);
@@ -233,7 +233,7 @@
 		### Delete a File								###
 		###################################################
 		public function deleteFile() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('storage upload')) error('storage upload role required');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage storage files')) error('storage upload role required');
 			$file = new \Storage\File();
 			if ($file->error) $this->error("Error initializing file: ".$file->error);
 			$file->get($_REQUEST['code']);
@@ -288,7 +288,7 @@
 		### Set File Metadata							###
 		###################################################
 		public function setFileMetadata() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('storage upload')) error('storage upload role required');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage storage files')) error('storage upload role required');
 			$file = new \Storage\File();
 			if ($file->error) $this->app_error("Error initializing file: ".$file->error,__FILE__,__LINE__);
 
@@ -311,7 +311,7 @@
 		### Get File Metadata						    ###
 		###################################################
 		public function getFileMetadata() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('storage upload')) error('storage upload role required');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage storage files')) error('storage upload role required');
 			$file = new \Storage\File();
 			if ($file->error) $this->app_error("Error initializing file: ".$file->error,__FILE__,__LINE__);
 
