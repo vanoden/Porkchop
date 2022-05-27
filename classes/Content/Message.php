@@ -109,7 +109,7 @@
 		public function add($parameters = array()) {
 			$this->error = NULL;
 			$_customer = new \Register\Customer();
-			if (! $GLOBALS['_SESSION_']->customer->has_role('edit content messages')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error = "You do not have permission to add content";
 				app_log("Denied access in Content::add, 'content operator' required to add message '".$parameters['target']."'",'notice',__FILE__,__LINE__);
 				return null;
@@ -145,7 +145,7 @@
 		}
         public function update($parameters = array()) {
 			$this->error = NULL;
-			if (! $GLOBALS['_SESSION_']->customer->has_role('edit content messages')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error = "You do not have permission to update content";
 				app_log("Denied access in Content::Message::update(), 'content operator' required",'notice');
 				return null;
