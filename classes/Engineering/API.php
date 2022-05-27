@@ -21,7 +21,7 @@
 		### Add a Product								###
 		###################################################
 		public function addProduct() {
-			$this->requireRole("engineering user");
+			$this->can("manage engineering module");
 
 			$product = new \Engineering\Product();
 			if ($product->error()) $this->error("Error adding product: ".$product->error());
@@ -44,7 +44,7 @@
 		### Update a Product							###
 		###################################################
 		public function updateProduct() {
-			$this->requireRole("engineering user");
+			$this->can("manage engineering module");
 
 			$response = new \HTTP\Response();
 			if (isset($_REQUEST['code'])) {
@@ -84,7 +84,7 @@
 		### Get Product									###
 		###################################################
 		public function getProduct() {
-			$this->requireRole("engineering user");
+			$this->can("use engineering module");
 
 			$response = new \HTTP\Response();
 			$product = new \Engineering\Product();
@@ -108,7 +108,7 @@
 		### Find Products								###
 		###################################################
 		public function findProducts() {
-			$this->requireRole("engineering user");
+			$this->can("use engineering module");
 
 			$response = new \HTTP\Response();
 			$productList = new \Engineering\ProductList();
@@ -127,7 +127,7 @@
 		### Add a Release								###
 		###################################################
 		public function addRelease() {
-			$this->requireRole("engineering user");
+			$this->can("manage engineering module");
 
 			$release = new \Engineering\Release();
 			if ($release->error()) $this->error("Error adding Release: ".$release->error());
@@ -150,7 +150,7 @@
 		### Update a Release							###
 		###################################################
 		public function updateRelease() {
-			$this->requireRole("engineering user");
+			$this->can("use engineering module");
 
 			$response = new \HTTP\Response();
 			if (isset($_REQUEST['code'])) {
@@ -190,7 +190,7 @@
 		### Get Release									###
 		###################################################
 		public function getRelease() {
-			$this->requireRole("engineering user");
+			$this->can("use engineering module");
 
 			$response = new \HTTP\Response();
 			$release = new \Engineering\Release();
@@ -213,7 +213,7 @@
 		### Find Releases								###
 		###################################################
 		public function findReleases() {
-			$this->requireRole("engineering user");
+			$this->can("use engineering module");
 
 			$response = new \HTTP\Response();
 			$releaseList = new \Engineering\ReleaseList();
@@ -232,7 +232,7 @@
 		### Add a Project								###
 		###################################################
 		public function addProject() {
-			$this->requireRole("engineering user");
+			$this->can("manage engineering module");
 
 			if (isset($_REQUEST['owner_code'])) {
 				$owner = new \Register\Admin();
@@ -265,7 +265,7 @@
 		### Update a Project							###
 		###################################################
 		public function updateProject() {
-			$this->requireRole("engineering user");
+			$this->can("manage engineering module");
 
 			$response = new \HTTP\Response();
 			if (isset($_REQUEST['code'])) {
@@ -305,7 +305,7 @@
 		### Get Project									###
 		###################################################
 		public function getProject() {
-			$this->requireRole("engineering user");
+			$this->can("use engineering module");
 
 			$response = new \HTTP\Response();
 			$project = new \Engineering\Project();
@@ -329,7 +329,7 @@
 		### Find Projects								###
 		###################################################
 		public function findProjects() {
-			$this->requireRole("engineering user");
+			$this->can("use engineering module");
 
 			$response = new \HTTP\Response();
 			$projectList = new \Engineering\ProjectList();
@@ -348,7 +348,7 @@
 		### Add a Task									###
 		###################################################
 		public function addTask() {
-			$this->requireRole("engineering user");
+			$this->can("manage engineering tasks");
 
 			$response = new \HTTP\Response();
 			$product = new \Engineering\Product();
@@ -404,7 +404,7 @@
 		### Get a Task by Code							###
 		###################################################
 		public function getTask() {
-			$this->requireRole("engineering user");
+			$this->can("use engineering module");
 
 			$response = new \HTTP\Response();
 			$task = new \Engineering\Task();
@@ -426,7 +426,7 @@
 		### Find Tasks									###
 		###################################################
 		public function findTasks() {
-			$this->requireRole("engineering user");
+			$this->can("use engineering module");
 
 			$parameters = array();
 			if (isset($_REQUEST['assigned_to']) && !empty($_REQUEST['assigned_to'])) {
@@ -531,7 +531,7 @@
 		### Find Events									###
 		###################################################
 		public function findEvents() {
-			$this->requireRole("engineering user");
+			$this->can("use engineering module");
 
 			$response = new \HTTP\Response();
 			$parameters = array();
