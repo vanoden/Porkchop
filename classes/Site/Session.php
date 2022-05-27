@@ -484,7 +484,7 @@
 			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
 
 			# Make Sure User Has Privileges to view other sessions
-			if (! $GLOBALS['_SESSION_']->customer->has_role('manage sessions')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('manage sessions')) {
 				$this->error = "No privileges to change session";
 				return null;
 			}
