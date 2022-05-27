@@ -531,7 +531,7 @@
 		### Find Events									###
 		###################################################
 		public function findEvents() {
-			$this->has_role("engineering user");
+			$this->requireRole("engineering user");
 
 			$response = new \HTTP\Response();
 			$parameters = array();
