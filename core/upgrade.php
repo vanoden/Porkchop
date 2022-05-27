@@ -26,9 +26,6 @@
 	# Load Configs
 	require '../config/config.php';
 	include(BASE."/config/upgrade.php");
-	if (file_exists(BASE."/config/upgrade_local.php")) {
-		include(BASE."/config/upgrade_local.php");
-	}
 
 	###################################################
 	### Load API Objects							###
