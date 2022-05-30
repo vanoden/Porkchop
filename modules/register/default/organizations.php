@@ -68,7 +68,7 @@ foreach ($organizations as $organization) {
 </form>
 
 <?php		
-    if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+    if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 ?>
 <form action="<?=PATH?>/_register/organization" method="get">
 <div class="button-bar"><span style="text-align: center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span></div>

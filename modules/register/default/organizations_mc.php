@@ -17,7 +17,7 @@
 	if (isset($_REQUEST['start']) && ! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
 
 	// Security - Only Register Module Operators or Managers can see other customers
-	if ($GLOBALS['_SESSION_']->customer->has_role('register reporter') || $GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 		$organizationlist = new \Register\OrganizationList();
 
 		// Initialize Parameter Array

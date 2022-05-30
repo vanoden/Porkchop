@@ -70,7 +70,7 @@ if ($page->errorCount() < 1) {
 	if ( $rmaItem->request->customer->id == $GLOBALS['_SESSION_']->customer->id ) {
 		// Ok
 	}
-	elseif ( $GLOBALS['_SESSION_']->customer->has_role('support user') ) {
+	elseif ( $GLOBALS['_SESSION_']->customer->can('use support module') ) {
 		// Ok
 	}
 	else {
@@ -277,7 +277,7 @@ if ($page->errorCount() < 1) {
 
 	$ticketLink = "/_support/ticket/".$rmaTicketNumber;
 	$productLink = "/_monitor/asset/".$rmaSerialNumber;
-	if ($GLOBALS['_SESSION_']->customer->has_role('support manager')) {
+	if ($GLOBALS['_SESSION_']->customer->can('manage support requests')) {
 		$ticketLink = "/_support/request_item/".$rmaTicketNumber;
 		$productLink = "/_monitor/admin_details/$rmaSerialNumber/".$rmaProduct->code;
 	}

@@ -19,7 +19,11 @@
 					"description"	=> "Super User"
 				),
 			),
-			"privileges"	=> array('send admin in-site message'),
+			"privileges"	=> array(
+				'send admin in-site message',
+				'edit site pages',
+				'configure site'
+			),
 			"templates"	=> array(
 				"page"	=> $templates['admin'],
 				"pages"	=> $templates['admin'],
@@ -32,12 +36,16 @@
 				"geography manager"	=> array(),
 				"geography user"	=> array(),
 			),
+			"privileges"	=> array(
+				'manage geographical data'
+			),
 		),
 		"Content"		=> array(
 			"schema"	=> 3,
 			"privileges"	=> array(
 				"edit content messages",
-				"browse content messages"
+				"browse content messages",
+				"edit page metadata"
 			),
 			"roles"			=> array(
 				"developer"		=> array(
@@ -50,7 +58,8 @@
 			"schema"		=> 21,
 			"privileges"	=> array(
 				"manage privileges",
-				"manage organizations"
+				"manage customers",
+				"manage organization comments"
 			),
 			"roles"			=> array(
 				"register manager"	=> array(
@@ -79,6 +88,10 @@
 			"roles"			=> array(
 				"contact admin"	=> array(),
 			),
+			"privileges"	=> array(
+				"manage contacts",
+				"browse contact events"
+			}
 		),
 		"Navigation"	=> array(),
 		"Build"		=> array(

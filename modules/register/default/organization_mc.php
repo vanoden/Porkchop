@@ -9,7 +9,7 @@
 	$page->requireAuth();
 
 	# Security - Only Register Module Operators or Managers can see other customers
-	if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
 			$organization = new \Register\Organization($_REQUEST['organization_id']);
 			if ($organization->error) $page->addError("Unable to load organization: ".$organization->error);
