@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('content operator');
+	$page->requirePrivilege('manage navigation menus');
 
 	$menuList = new \Navigation\MenuList();
 	$menus = $menuList->find();

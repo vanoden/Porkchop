@@ -1,6 +1,6 @@
 <?php
     $page = new \Site\Page();
-    $page->requireRole('storage manager');
+    $page->requirePrivilege('manage storage repositories');
 
     $repositoryList = new \Storage\RepositoryList();
     $repositories = $repositoryList->find();
