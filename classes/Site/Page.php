@@ -8,7 +8,7 @@
 	    public $view = 'index';
 	    public $index = '';
 	    public $style = 'default';
-	    public $auth_required = 0;
+	    public $auth_required = false;
 	    public $ssl_required;
 	    public $error;
 	    public $uri;
@@ -196,10 +196,21 @@
 			    $this->style = $GLOBALS ['_config']->style [$this->module];
 		    }
 
+            if (isset($GLOBALS['_config']->site->private_mode) && $GLOBALS['_config']->site->private_mode) {
+                app_log("Private mode!  Customer is ".$GLOBALS['_SESSION_']->customer->id);
+                $this->auth_required = true;
+            }
+            else {
+                app_log("Not Private mode!");
+            }
+
 		    // Make Sure Authentication Requirements are Met
+            app_log("Here 0");
 		    if (($this->auth_required) and (! $GLOBALS ["_SESSION_"]->customer->id)) {
+                app_log("Here 1");
 			    if (($this->module != "register") or (! in_array ( $this->view, array ('login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you' ) ))) {
-				    // Clean Query Vars for this
+				    app_log("Gotta login!");
+                    // Clean Query Vars for this
 				    $auth_query_vars = preg_replace ( "/\/$/", "", $this->query_vars );
 
 				    if ($this->module == 'content' && $this->view == 'index' && ! $auth_query_vars) $auth_target = '';
@@ -211,11 +222,17 @@
 
 				    // Build New URL
 				    header ( "location: " . PATH . "/_register/login/" . $auth_target );
-
-				    $this->error = "Authorization Required - Requirements not Met";
-				    return null;
+                    ob_clean();
+                    exit;
 			    }
+                else {
+                    app_log("Gonna log in");
+                }
 		    }
+            elseif ($this->auth_required) {
+                app_log("Here 3: ".$GLOBALS['_SESSION_']->customer->id);
+                app_log("Here 4: ".$GLOBALS['_SESSION_']->id);
+            }
 
 		    return true;
 	    }
