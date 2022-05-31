@@ -222,7 +222,6 @@
 
 				    // Build New URL
 				    header ( "location: " . PATH . "/_register/login/" . $auth_target );
-                    ob_clean();
                     exit;
 			    }
                 else {

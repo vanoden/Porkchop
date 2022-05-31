@@ -206,7 +206,7 @@
 	}
 
 	$site->loadModules($modules);
-	$site->setShippingLocation($company);
+	#$site->setShippingLocation($company);
 	$site->populateMenus($menus);
 
 	$site->install_log("Upgrade completed successfully",'notice');
