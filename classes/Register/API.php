@@ -638,7 +638,7 @@
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organization.xsl';
 
             if (isset($_REQUEST['code']))
-                if ($GLOBALS['_SESSION_']->customer->can('manage_customers') || $GLOBALS['_SESSION_']->organization->code == $_REQUEST['code'])
+                if ($GLOBALS['_SESSION_']->customer->can('manage customers') || $GLOBALS['_SESSION_']->organization->code == $_REQUEST['code'])
                     $org_code = $_REQUEST['code'];
                 else
                     $this->deny();
