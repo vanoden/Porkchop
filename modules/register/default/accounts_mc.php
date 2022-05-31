@@ -22,11 +22,10 @@
 	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 		// Ok
 	}
-	elseif (!empty($GLOBALS['_SESSION_']->customer->organization->id) {
+	elseif (!empty($GLOBALS['_SESSION_']->customer->organization->id))
 		$find_parameters['organization_id'] = $GLOBLAS['_SESSION_']->customer->organization->id;
-	else {
+	else 
 		return 403;
-	}
 
 	$customer_list = new \Register\CustomerList();
 		
