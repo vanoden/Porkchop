@@ -1,6 +1,6 @@
 <?php
-	$page = $GLOBALS['_page'];
-	$page->requireRole('administrator');
+	$page = new \Site\Page();
+	$page->requirePrivilege('see site reports');
 	$page->instruction = "Set filters and click 'Submit'";
 
 	if (isset($_REQUEST['btn_submit'])) {

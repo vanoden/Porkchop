@@ -6,7 +6,7 @@
 	### A. Caravello 11/12/2002						###
 	###################################################
 	$page = new \Site\Page();
-	$page->requireRole('register manager');
+	$page->requirePrivilege('manage customers');
 
 
 	// Customers to display at a time

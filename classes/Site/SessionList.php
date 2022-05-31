@@ -14,14 +14,15 @@
 			if (isset($parameters['code']) and preg_match('/^\w+$/',$parameters['code'])) {
 				$find_objects_query .= "
 				AND		code = ?";
+			    array_push($bind_params,$parameters['code']);
 			}
-			array_push($bind_params,$parameters['code']);
 
 			if (!empty($parameters['expired'])) {
 				$find_objects_query .= "
 				AND		last_hit_date < sysdate() - 86400
 				";
 			}
+
 			if (isset($parameters['user_id']) && preg_match('/^\d+$/',$parameters['user_id'])) {
 				$find_objects_query .= "
 				AND		user_id = ?";
