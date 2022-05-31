@@ -65,30 +65,6 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			
-			if ($this->version() < 3) {
-				app_log("Upgrading schema to version 3",'notice',__FILE__,__LINE__);
-
-				# Start Transaction
-				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
-
-				$alter_table_query = "ALTER TABLE `register_organizations` ADD `password_expiration_days` int NULL";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-				
-				$alter_table_query = "ALTER TABLE `register_users` ADD COLUMN `password_age` DATETIME DEFAULT CURRENT_TIMESTAMP;";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_users` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-
-				$this->setVersion(3);
-				$GLOBALS['_database']->CommitTrans();
-			}
-			
 			return true;
 		}
 	}
