@@ -195,7 +195,7 @@
         }
 		public function purge_cache() {
 			$this->error = NULL;
-			if (! role('content operator')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error = "You do not have permission to update content";
 				app_log("Denied access in Content::purge_cache, 'content operator' required",'info',__FILE__,__LINE__);
 				return false;

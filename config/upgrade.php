@@ -14,11 +14,6 @@
 		),
 		"Site"			=> array(
 			"schema"	=> 8,
-			"roles"			=> array(
-				"administrator"	=> array(
-					"description"	=> "Super User"
-				),
-			),
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
@@ -47,30 +42,14 @@
 				"browse content messages",
 				"edit page metadata"
 			),
-			"roles"			=> array(
-				"developer"		=> array(
-					"description"	=> "Content Developer"
-				),
-				"operator"		=> array(),
-			),
 		),
 		"Register"		=> array(
 			"schema"		=> 21,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
-				"manage organization comments"
-			),
-			"roles"			=> array(
-				"register manager"	=> array(
-					"description"		=> "Manager Organizations and Users"
-				),
-				"register reporter"	=> array(
-					"description"		=> "View Organizations and Users"
-				),
-				"location manager"	=> array(
-					"description"		=> "Add, view or edit locations"
-				)
+				"manage organization comments",
+                "manage customer locations"
 			),
 			"templates"		=> array(
 				"organizations"		=> $templates['admin'],
@@ -85,67 +64,23 @@
 		),
 		"Contact"		=> array(
 			"schema"	=> 2,
-			"roles"			=> array(
-				"contact admin"	=> array(),
-			),
 			"privileges"	=> array(
 				"manage contacts",
 				"browse contact events"
-			}
+            )
 		),
-		"Navigation"	=> array(),
-		"Build"		=> array(
-			"roles"		=> array(
-				"build manager"		=> "Manage Build Products and Repositories",
-				"build user"		=> "Create versions and commits",
-			),
-			"templates"	=> array(
-				"products"			=> $templates['admin'],
-				"product"			=> $templates['admin'],
-				"product_new"		=> $templates['admin'],
-				"versions"			=> $templates['admin'],
-				"version"			=> $templates['admin'],
-			),
-		),
-		"Storage"		=> array(
-			"schema"	=> 5,
-			"roles"			=> array(
-				"storage manager"	=> $templates['admin'],
-				"storage upload"	=> $templates['admin'],
-			),
-			"templates"		=> array(
-				"repositories"		=> $templates['admin'],
-				"repository"		=> $templates['admin'],
-				"browse"			=> $templates['admin'],
-			),
-		),
-		"Media"			=> array(
-			"schema"	=> 3,
-			"roles"			=> array(
-				"media developer"	=> array(),
-				"media manager"		=> array(),
-				"media reporter"	=> array(),
-			),
-		),
-		"Sales"			=> array(
-			"schema"	=> 7,
-			"privileges"	=> array(
-				"browse sales orders",
-				"approve sales order",
-				"edit sales order",
-				"edit currencies"
-			),
-			"roles"			=> array(
-				"sales manager"	=> array(),
-			),
-		),
+		"Navigation"	=> array(
+            "privileges"    => array(
+                "manage navigation menus"
+            )
+        ),
 		"Product"		=> array(
 			"schema"	=> 5,
-			"privileges"	=> array("edit product prices"),
-			"roles"			=> array(
-				"product manager"	=> array(),
-				"product reporter"	=> array(),
-			),
+			"privileges"	=> array(
+                "edit product prices",
+                "manage products",
+                "manage product instances"
+            ),
 			"templates"		=> array(
 				"report"			=> $templates['admin'],
 				"edit"				=> $templates['admin'],
@@ -153,78 +88,9 @@
 		),
 		"Email"			=> array(
 			"schema"	=> 2,
-			"roles"			=> array(
-				"manager"		=> array(),
-			),
-		),
-		"Package"		=> array(
-			"schema"	=>2,
-			"roles"			=> array(
-				"package manager"	=> array(),
-			),
-			"templates"		=> array(
-				"packages"			=> $templates['admin'],
-				"package"			=> $templates['admin'],
-				"versions"			=> $templates['admin'],
-			),
-		),
-		"Shipping"		=> array(
-			"schema"	=> 3,
-			"privileges"	=> array(
-				"receive shipments"
-			),
-			"roles"			=> array(
-				"shipping manager"	=> array(),
-			),
-			"templates"		=> array(
-				"admin_shipments"			=> $templates['admin'],
-				"admin_shipment"			=> $templates['admin'],
-			),
-		),
-		"Support"		=> array(
-			"schema"	=> 8,
-			"privileges"	=> array(
-				"browse support tickets",
-			),
-			"roles"			=> array(
-				"support manager"	=> array(),
-				"support reporter"	=> array(),
-				"support user"		=> array(),
-			),
-			"templates"		=> array(
-				"request_new"			=> $templates['admin'],
-				"request_new_monitor"   => $templates['admin'],
-				"requests"			    => $templates['admin'],
-				"request_detail"	    => $templates['admin'],
-				"request_items"		    => $templates['admin'],
-				"request_item"		    => $templates['admin'],
-				"action"			    => $templates['admin'],
-				"admin_actions"		    => $templates['admin'],
-				"pending_registrations"	=> $templates['admin'],
-				"admin_rmas"			=> $templates['admin'],
-				"admin_rma"				=> $templates['admin'],
-				"summary"   			=> $templates['admin'],
-			),
-		),
-		"Engineering"	=> array(
-			"schema"	=> 14,
-			"roles"			=> array(
-				"engineering manager"	=> array(),
-				"engineering reporter"	=> array(),
-			),
-			"templates"		=> array(
-				"home"				=> $templates['admin'],
-				"tasks"				=> $templates['admin'],
-				"task"				=> $templates['admin'],
-				"releases"			=> $templates['admin'],
-				"release"			=> $templates['admin'],
-				"products"			=> $templates['admin'],
-				"product"			=> $templates['admin'],
-				"projects"			=> $templates['admin'],
-				"project"			=> $templates['admin'],
-				"event_report"		=> $templates['admin'],
-				"search"			=> $templates['admin'],
-			),
+            "privileges"    => array(
+                "can create email"
+            )
 		),
 		"Action"		=> array(
 			"schema"	=> 1,

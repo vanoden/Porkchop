@@ -928,7 +928,7 @@
         
         function expireInactiveOrganizations() {
             $response = new \HTTP\Response();
-            if (role('register manager')) {
+            if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 $expires = strtotime("-12 month", time());
                 $date = date('m/d/Y',$expires);
 

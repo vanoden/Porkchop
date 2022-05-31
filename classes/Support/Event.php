@@ -10,7 +10,7 @@
 
 		public function add($parameters = array()) {
 			if (! $parameters['status']) $parameters['status'] = 'NEW';
-			if (! role('support admin'))
+			if (! $GLOBALS['_SESSIOM_']->customer->can('manage support requests'))
 				$parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->id;
 
 			$add_object_query = "
@@ -47,7 +47,7 @@
 				FROM	support_events se
 				WHERE	se.id = se.id
 			";
-			if (role("support manager"))
+			if ($GLOBALS['_SESSION_']->customer->can("manage support requests"))
 			{
 				# No Special Limits
 			}
@@ -74,7 +74,7 @@
 			{
 				$find_requests_query .= "\tAND	status = ".$parameters['status']."\n";
 			}
-			if (role("support manager"))
+			if ($GLOBALS['_SESSION_']->customer->can("manage support requests"))
 			{
 				if (preg_match('/^\d+$/',$parameters['organization_id']))
 				{

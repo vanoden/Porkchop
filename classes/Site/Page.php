@@ -72,7 +72,7 @@
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
                 return true;
             }
-            elseif ($GLOBALS['_SESSION_']->customer->has_role('administrator')) {
+            elseif ($GLOBALS['_SESSION_']->customer->can('do everything')) {
                 return true;
             }
             elseif (! $GLOBALS ['_SESSION_']->customer->id) {
