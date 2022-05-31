@@ -11,6 +11,7 @@
 		public $reseller;
 		public $notes;
 		public $_cached;
+        public $password_expiration_days;
 		private $_nocache = false;
 
 		public function __construct($id = 0,$options = array()) {
@@ -95,9 +96,11 @@
 						notes = ?";
 				array_push($bind_params,$parameters['notes']);
 			}
-			if (isset($parameters['password_expiration_days']))
+			if (isset($parameters['password_expiration_days'])) {
 				$update_object_query .= ",
-						password_expiration_days = ".$GLOBALS['_database']->qstr($parameters['password_expiration_days'],get_magic_quotes_gpc());
+						password_expiration_days = ?";
+                array_push($bind_params,$parameters['password_expiration_days']);
+            }
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -193,6 +196,7 @@
 				$this->name = $object->name;
 				$this->code = $object->code;
 				$this->status = $object->status;
+                $this->password_expiration_days = $object->password_expiration_days;
 				if ($object->is_reseller) $this->is_reseller = true;
 				if ($object->assigned_reseller_id) $this->reseller = new Organization($object->assigned_reseller_id);
 				$this->notes = $object->notes;
