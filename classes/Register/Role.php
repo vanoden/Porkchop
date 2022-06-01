@@ -1,6 +1,6 @@
 <?php
 	namespace Register;
-	class Role {
+	class Role Extends \BaseClass {
 		public $id;
 		public $name;
 		public $description;
@@ -54,10 +54,11 @@
 				SET		id = id";
 
 			$bind_params = array();
-			if (isset($parameters['description']))
+			if (isset($parameters['description'])) {
 				$update_object_query .= ",
 						description = ?";
-			array_push($bind_params,$parameters['description']);
+				array_push($bind_params,$parameters['description']);
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?";
@@ -270,7 +271,8 @@
 				WHERE	role_id = ?
 				AND		privilege_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_privilege_query,array($this->id,$param));
+
+			$rs = $GLOBALS['_database']->Execute($get_privilege_query,array($this->id,$privilege->id));
 
 			if (! $rs) {
 				$this->error = "SQL Error in Register::Role::has_privilege(): ".$GLOBALS['_database']->ErrorMsg();
