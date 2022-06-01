@@ -133,6 +133,16 @@
 			}
 		}
 	}
+	elseif (isset($action) && $action == "get-privileges") {
+		$privilegeList = new \Register\PrivilegeList();
+		$privileges = $privilegeList->find();
+		foreach ($privileges as $privilege) {
+			$description = $privilege->description;
+			if (empty($description)) $description = "No description";
+			printf ("%-17s::%-28s: %s\n",$privilege->module,$privilege->name,$description);
+		}
+		exit;
+	}
 
 	$role = new \Register\Role();
 	if (! $role->get($roleName)) {
