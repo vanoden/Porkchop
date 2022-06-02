@@ -31,8 +31,11 @@
 				# Add Privileges
 				foreach ($module_data['privileges'] as $privilege_name) {
 					$privilege = new \Register\Privilege();
-					if (! $privilege->get($privilege_name)) {
-						$privilege->add(array('name' => $privilege_name));
+					if ($privilege->get($privilege_name)) {
+						$privilege->update(array('module' => $module_name));
+					}
+					else {
+						$privilege->add(array('name' => $privilege_name,'module' => $module_name));
 					}
 				}
 
