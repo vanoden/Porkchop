@@ -92,6 +92,18 @@
 			}
 			return $this->details();
 		}
+		public function delete() {
+			$drop_object_query = "
+				DELETE
+				FROM	register_roles
+				WHERE	id = ?";
+			$GLOBALS['_database']->Execute($drop_object_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error("SQL Error in Register::Role::delete(): ".$GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			return true;
+		}
 		public function members() {
 			$get_members_query = "
 				SELECT	user_id
