@@ -102,13 +102,6 @@
 		}
 
 		function drop_role($role_id) {
-		
-			// our own polymorphism
-			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) {
-				$this->error = "Only Register Managers can update roles.";
-				return false;
-			}
-			
 			$drop_role_query = "
 				DELETE
 				FROM	register_users_roles
@@ -377,7 +370,6 @@
 					return false;
 				}
 			}
-
 			$check_privilege_query = "
 				SELECT	1
 				FROM	register_users_roles rur,
@@ -386,12 +378,19 @@
 				AND		rrp.role_id = rur.role_id
 				AND		rrp.privilege_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($check_privilege_query,array($this->id,$privilege->id));
+			$bind_params = array(
+				$this->id,
+				$privilege->id
+			);
+
+			query_log($check_privilege_query,$bind_params,true);
+			$rs = $GLOBALS['_database']->Execute($check_privilege_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Register::Customer::has_privilege(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($found) = $rs->FetchRow();
+
 			if ($found == "1") return true;
 			else return false;
 		}
