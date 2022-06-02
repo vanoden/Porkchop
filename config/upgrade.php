@@ -44,12 +44,13 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 21,
+			"schema"		=> 22,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
 				"manage organization comments",
-                "manage customer locations"
+                "manage customer locations",
+				"see admin tools",
 			),
 			"templates"		=> array(
 				"organizations"		=> $templates['admin'],
