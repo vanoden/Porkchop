@@ -1,8 +1,7 @@
 <?php
 	###################################################
-	### manage_roles.php							###
-	### Add/Remove Specified privileges for a 		###
-	### specified role.								###
+	### manage_account.php							###
+	### Manage account information.					###
 	### A. Caravello 6/1/2022						###
 	###################################################
 	### This file and its contents belong to		###
@@ -37,7 +36,7 @@
 	);
 	$action = null;
 
-	$privileges = array();
+	$roles = array();
 	for ($argpos = 1; $argpos < count($argv); $argpos ++) {
 		if (preg_match('/^\-\-([\w\-\.\_]+)/',$argv[$argpos],$matches)) {
 			$action = $matches[1];
@@ -48,11 +47,11 @@
 		elseif ($action == "add-role" && isset($roleName)) {
 			$roleDesc = $argv[$argpos];
 		}
-		elseif (empty($roleName)) {
-			$roleName = $argv[$argpos];
+		elseif (empty($userCode)) {
+			$userCode = $argv[$argpos];
 		}
 		else {
-			array_push($privileges,$argv[$argpos]);
+			array_push($roles,$argv[$argpos]);
 		}
 	}
 
@@ -102,7 +101,15 @@
 	$GLOBALS['_SESSION_'] = new \Site\Session();
 	$GLOBALS['_SESSION_']->elevate();
 
-	if ($action == "get-roles") {
+	if (isset($userCode)) {
+		$user = new \Register\Customer();
+		if (! $user->get($userCode)) {
+			print "User $userCode not found\n";
+			exit;
+		}
+	}
+		
+	if (isset($action) && $action == "get-users") {
 		$roleList = new \Register\RoleList();
 		$roles = $roleList->find();
 		foreach ($roles as $role) {
@@ -110,110 +117,57 @@
 		}
 		exit;
 	}
-	elseif ($action == "get-role") {
-		$roleName = $argv[2];
-		$role = new \Register\Role();
-		if ($role->get($roleName)) {
-			printf ("%-30s: %s\n",$role->name,$role->description);
-			$privileges = $role->privileges();
-			print "Privileges:\n";
-			foreach ($privileges as $privilege) {
-				$description = $privilege->description;
-				if (empty($description)) $description = "No description";
-				printf ("\t%-17s::%-28s: %s\n",$privilege->module,$privilege->name,$description);
-			}
+	elseif (isset($action) && $action == "get-user") {
+		$userCode = $argv[2];
+		if ($user->id) {
+			print $user->code." ".$user->full_name()."\n";
+			$roles = $user->roles();
+			print "Roles:\n";
+			print_r($roles,false);
 		}
 		else {
-			print "Role $roleName not found\n";
+			print "User $userCode not found\n";
 		}
 		exit;
 	}
-	elseif ($action == "add-role") {
-		if (preg_match('/^\w[\w\-\.\_\s]+$/',$roleName)) {
+	elseif (isset($action) && $action == "add-user") {
+		if (preg_match('/^\w[\w\-\.\_\s]+$/',$userCode)) {
+			if ($user->id) {
+				print "Account already exists\n";
+				exit;
+			}
+			elseif ($user->add(array("login" => $userCode))) {
+				print "User ".$user->id." added\n";
+				exit;
+			}
+			else {
+				print "Error: ".$user->error()."\n";
+			}
+		}
+		exit;
+	}
+	elseif (isset($action) && $action == "get-roles") {
+		$roles = $user->roles();
+		foreach ($roles as $role) {
+			printf("\t%-30s%s\n",$role->name,$role->description);
+		}
+		exit;
+	}
+	elseif ($action == "add-roles") {
+		foreach ($roles as $roleName) {
 			$role = new \Register\Role();
-			if ($role->get($roleName)) {
-				print "Role already exists\n";
+			if (! $role->get($roleName)) {
+				print "Role $roleName not found\n";
+			}
+			if ($user->has_role($roleName)) {
+				print "User already has role $roleName\n";
+			}
+			elseif ($user->add_role($role->id)) {
+				print "Role $roleName added\n";
+			}
+			else {
+				print "Error: ".$user->error()."\n";
 				exit;
-			}
-			elseif ($role->add(array("name" => $roleName,"description" => $roleDesc))) {
-				print "Role ".$role->id." added\n";
-				exit;
-			}
-			else {
-				print "Error: ".$role->error()."\n";
-			}
-		}
-	}
-	elseif ($action == "drop-role") {
-		$roleName = $argv[2];
-		$role = new \Register\Role();
-		if ($role->get($roleName)) {
-			printf ("%-30s: %s\n",$role->name,$role->description);
-			$privileges = $role->privileges();
-			foreach ($privileges as $privilege) {
-				$role->dropPrivilege($privilege->id);
-			}
-			$members = $role->members();
-			foreach ($members as $member) {
-				$member->drop_role($role->id);
-			}
-			if ($role->delete()) {
-				print "Ok\n";
-				exit(0);
-			}
-			else {
-				print "Error: ".$role->error()."\n";
-				exit(1);
-			}
-		}
-		else {
-			print "Role $roleName not found\n";
-		}
-		exit;
-	}
-	elseif ($action == "get-privileges") {
-		$privilegeList = new \Register\PrivilegeList();
-		$privileges = $privilegeList->find();
-		foreach ($privileges as $privilege) {
-			$description = $privilege->description;
-			if (empty($description)) $description = "No description";
-			printf ("%-17s::%-28s: %s\n",$privilege->module,$privilege->name,$description);
-		}
-		exit;
-	}
-
-	$role = new \Register\Role();
-	if (! $role->get($roleName)) {
-		if ($role->error()) {
-			print "Cannot find role $roleName: ".$role->error()."\n";
-		}
-		else {
-			print "Role $roleName not found\n";
-		}
-		exit;
-	}
-
-	foreach ($privileges as $privilegeName) {
-		if ($role->has_privilege($privilegeName)) {
-			print "$roleName already has $privilegeName privilege\n";
-		}
-		elseif ($role->error()) {
-			print "Error checking privilege: ".$role->error()."\n";
-			exit;
-		}
-		else {
-			$privilege = new \Register\Privilege();
-			if ($privilege->get($privilegeName)) {
-				print "Adding privilege $privilegeName\n";
-				if ($role->addPrivilege($privilege->id)) {
-					print "$privilegeName added\n";
-				}
-				else {
-					print "Cannot add privilege: ".$role->error()."\n";
-				}
-			}
-			else {
-				print "Privilege ".$privilegeName." not found\n";
 			}
 		}
 	}
