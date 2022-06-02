@@ -164,65 +164,6 @@
 			}
 		}
 
-		# Get Company Information Based on Request Domain
-		# Remove this function after testing
-		function companyremoveme() {
-			# Get Domain Name
-			preg_match("/(\w+\.\w+)\$/",$_SERVER["HTTP_HOST"],$matches);
-			$domain_name = $matches[1];
-
-			$cache_key = "domain[".$domain_name."]";
-
-			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
-			if ($cache->error) {
-				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
-			}
-
-			# Cached Customer Object, Yay!
-			if ($domain = $cache->get()) {
-				$this->company = $domain->company_id;
-				$this->location = $domain->location_id;
-				$this->domain = $domain->domain_name;
-				$this->status = $domain->status;
-				$domain->_cached = 1;
-				return $domain;
-			}
-
-			# Domain Name
-			$get_company_query = "
-				SELECT	company_id,
-						location_id,
-						domain_name,
-						status
-				FROM	company_domains
-				WHERE	domain_name = '$domain_name'
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_company_query);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Session::companyremoveme(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			else {
-				if ($rs->RecordCount() > 0) {
-					$domain = $rs->FetchRow();
-					$domain = (object) $domain;
-
-					$this->company = $domain->company_id;
-					$this->location = $domain->location_id;
-					$this->domain = $domain->domain_name;
-					$this->status = $domain->status;
-
-					$cache->set($domain);
-					return $domain;
-				}
-				else {
-					$this->error = "Company not configured for $domain_name";
-					return null;
-				}
-			}
-		}
-
 		# Override Roles
 		function elevate() {
 			$this->elevated = 1;
