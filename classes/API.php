@@ -53,11 +53,11 @@
 		}
 
 		public function requireRole($role_name) {
-			if (! $GLOBALS['_SESSION_']->has_role($role_name)) $this->deny();
+			if (! $GLOBALS['_SESSION_']->customer->has_role($role_name)) $this->deny();
 		}
 
 		public function requirePrivilege($privilege_name) {
-			if (! $GLOBALS['_SESSION_']->can($privilege_name)) $this->deny();
+			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name)) $this->deny();
 		}
 
 		###################################################
