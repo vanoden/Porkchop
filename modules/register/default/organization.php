@@ -31,7 +31,8 @@
 		<div class="tableCell" style="width: 20%;">Name</div>
 		<div class="tableCell" style="width: 15%;">Status</div>
 		<div class="tableCell" style="width: 10%;">Can Resell</div>
-		<div class="tableCell" style="width: 25%;">Reseller</div>
+		<div class="tableCell" style="width: 15%;">Reseller</div>
+		<div class="tableCell" style="width: 15%;">Password Exp. (days)</div>
 	</div> <!-- end row header -->
 	<div class="tableRow">
 		<div class="tableCell">
@@ -59,6 +60,9 @@
 				<option value="<?=$reseller->id?>"<?php	if($organization->reseller->id == $reseller->id) print " selected";?>><?=$reseller->name?></option>
 				<?php	} ?>
 			</select>
+		</div>
+		<div class="tableCell">
+			<input name="password_expiration_days" type="number" step="1" min="1" max="365" id="password_expiration_days" class="wide_100per" value="<?=$organization->password_expiration_days?>" />
 		</div>
 	</div>
 </div>

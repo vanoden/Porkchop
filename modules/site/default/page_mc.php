@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('administrator');
+	$page->requirePrivilege('edit site pages');
 
 	$index = $_REQUEST['index'];
 	if ($index == '[null]') $index = null;

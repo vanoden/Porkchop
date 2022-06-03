@@ -30,7 +30,7 @@
 				)
 			);
 			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Content::Message::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			list($id) = $rs->FetchRow();
@@ -39,7 +39,7 @@
 			} elseif(false) {
 				# Make Sure User Has Privileges
 				app_log("No match found for message '$target', adding",'info',__FILE__,__LINE__);
-				if (! $GLOBALS['_SESSION_']->customer->has_role('content developer')) {
+				if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 					$this->error = "Sorry, insufficient privileges. Role 'content developer' required.";
 					return null;
 				}
@@ -88,7 +88,7 @@
 			);
             if (! $rs) {
 				error_log(print_r(debug_backtrace(),true));
-                $this->error = $GLOBALS['_database']->ErrorMsg()." in content->details()";
+                $this->error = "SQL Error in Content::Message::details(): ".$GLOBALS['_database']->ErrorMsg();
                 return 0;
             }
 
@@ -109,7 +109,7 @@
 		public function add($parameters = array()) {
 			$this->error = NULL;
 			$_customer = new \Register\Customer();
-			if (! $GLOBALS['_SESSION_']->customer->has_role('content operator')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error = "You do not have permission to add content";
 				app_log("Denied access in Content::add, 'content operator' required to add message '".$parameters['target']."'",'notice',__FILE__,__LINE__);
 				return null;
@@ -134,7 +134,7 @@
 				)
 			);
             if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->error = $GLOBALS['_database']->ErrorMsg();
+                $this->error = "SQL Error in Content::Message::add(): ".$GLOBALS['_database']->ErrorMsg();
 				app_log($this->error,'error',__FILE__,__LINE__);
                 return null;
             }
@@ -145,7 +145,7 @@
 		}
         public function update($parameters = array()) {
 			$this->error = NULL;
-			if (! $GLOBALS['_SESSION_']->customer->has_role('content developer')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error = "You do not have permission to update content";
 				app_log("Denied access in Content::Message::update(), 'content operator' required",'notice');
 				return null;
@@ -187,7 +187,7 @@
 				$update_content_query,$bind_params
 			);
             if (! $rs) {
-                $this->error = $GLOBALS['_database']->ErrorMsg();
+                $this->error = "SQL Error in Content::Message::update(): ".$GLOBALS['_database']->ErrorMsg();
                 return 0;
             }
 
@@ -195,7 +195,7 @@
         }
 		public function purge_cache() {
 			$this->error = NULL;
-			if (! role('content operator')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error = "You do not have permission to update content";
 				app_log("Denied access in Content::purge_cache, 'content operator' required",'info',__FILE__,__LINE__);
 				return false;

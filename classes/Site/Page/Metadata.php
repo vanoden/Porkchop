@@ -36,7 +36,7 @@ class Metadata {
 				array($page_id,$key)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error getting view metadata in Site::Page::Metadata::get: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Page::Metadata::get(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			list($id) = $rs->FetchRow();
@@ -66,7 +66,7 @@ class Metadata {
 				array($this->page_id,$this->key,$value)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error setting metadata in Site::Page::Metadata::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Page::Metadata::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			return true;
@@ -103,7 +103,7 @@ class Metadata {
 			);
 			if (! $rs)
 			{
-				$this->error = "SQL Error getting view metadata in Site::Page::Metadata::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Page::Metadata::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 			if ($object = $rs->FetchNextObject(false)) {

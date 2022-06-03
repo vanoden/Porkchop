@@ -32,7 +32,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in PageList::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in PageList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			query_log($get_object_query,$bind_params,true);

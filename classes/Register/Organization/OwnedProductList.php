@@ -11,7 +11,7 @@
                 $get_objects_query .= "
                 AND     product_id = ".$parameters['product_id'];
 
-            if (! role('register manager')) {
+            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 if (preg_match('/^\d+/',$GLOBALS['_customer']->organization->id))
                     $parameters['organization_id'] = $GLOBALS['_customer']->organization->id;
                 else

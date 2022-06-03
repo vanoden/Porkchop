@@ -31,54 +31,49 @@
 	td.value { overflow: hidden; }
 </style>
 
-</script>
-	<h2>Customers</h2>
-<?php	if ($page->error) { ?>
-	<div class="form_error"><?=$page->error?></div>
-<?php	} ?>
-<?php	if ($page->success) { ?>
-	<div class="form_success"><?=$page->success?></div>
-<?php	} ?>
-	<div id="search_container">
-		<form id="custSearch" method="get" class="float: left">
-		<input type="text" id="searchAccountInput" name="search" value="<?=$_REQUEST['search']?>" class="value input searchInput wide_md"/>
-		<a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
-		<input type="checkbox" name="hidden" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><span>Hidden</span>
-		<input type="checkbox" name="expired" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><span>Expired</span>
-		<input type="checkbox" name="deleted" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><span>Deleted</span>
-		<input type="hidden" id="start" name="start" value="0">
-		</form>
-	</div>
-	<table cellpadding="0" cellspacing="0" class="body">
-	<tr><th class="label accountsLoginLabel">Login</th>
-		<th class="label accountsFirstLabel">First Name</th>
-		<th class="label accountsLastLabel">Last Name</th>
-		<th class="label accountsOrgLabel">Organization</th>
-		<th class="label accountsStatus">Status</th>
-		<th class="label accountsLastActive">Last Active</th>
-	</tr>
-	<?php
+<section>
+	<article class="segment">
+		<h2>Customers</h2>
+        <?php	if ($page->errorCount() > 0) { ?>
+            <div class="form_error"><?=$page->errorString()?></div>
+        <?php	}
+                if ($page->success) { ?>
+	        <div class="form_success"><?=$page->success?></div>
+        <?php	} ?>
+
+<form id="custSearch" method="get" class="float: left">
+<div id="search_container">
+	<input type="text" id="searchAccountInput" name="search" value="<?=$_REQUEST['search']?>" class="value input searchInput wide_md"/>
+    <a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
+	<input type="checkbox" name="hidden" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><span>Hidden</span>
+	<input type="checkbox" name="expired" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><span>Expired</span>
+	<input type="checkbox" name="deleted" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><span>Deleted</span>
+	<input type="hidden" id="start" name="start" value="0">
+</div>
+</form>
+<hr style="visibility: hidden">
+<table cellpadding="0" cellspacing="0" class="body">
+<tr><th class="label accountsLoginLabel">Login</th>
+	<th class="label accountsFirstLabel">First Name</th>
+	<th class="label accountsLastLabel">Last Name</th>
+	<th class="label accountsOrgLabel">Organization</th>
+	<th class="label accountsStatus">Status</th>
+	<th class="label accountsLastActive">Last Active</th>
+</tr>
+<?php
 	foreach ($customers as $customer) { 
 	    if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
-	?>
-	<tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->login?></a></td>
-		<td class="value<?=$greenbar?>"><?=$customer->first_name?></td>
-		<td class="value<?=$greenbar?>"><?=$customer->last_name?></td>
-		<td class="value<?=$greenbar?>"><a href="/_register/organization?organization_id=<?=$customer->organization->id?>"><?=$customer->organization->name?></a></td>
-		<td class="value<?=$greenbar?>"><?=$customer->status?></td>
-		<td class="value<?=$greenbar?>"><?=$customer->last_active()?></td>
-	</tr>
+?>
+<tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->login?></a></td>
+	<td class="value<?=$greenbar?>"><?=$customer->first_name?></td>
+	<td class="value<?=$greenbar?>"><?=$customer->last_name?></td>
+	<td class="value<?=$greenbar?>"><a href="/_register/organization?organization_id=<?=$customer->organization->id?>"><?=$customer->organization->name?></a></td>
+	<td class="value<?=$greenbar?>"><?=$customer->status?></td>
+	<td class="value<?=$greenbar?>"><?=$customer->last_active()?></td>
+</tr>
 <?php		
 	}
 ?>
-<?php
-	if (role('register manager')) {
-?>
-	</table>
-	<form action="<?=PATH?>/_register/register" method="get">
-	<div class="button-bar"><input type="submit" name="button_submit" value="Add Account" class="input button"/></div>
-	</form>
-<?php	} ?>
 <!--    Standard Page Navigation Bar ADMIN ONLY -->
 <div class="pager_bar">
 	<div class="pager_controls">
@@ -89,4 +84,12 @@
 		<a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerLast"> Last >></a>
 	</div>
 </div>
+<?php
+	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
+?>
+</table>
+<form action="<?=PATH?>/_register/register" method="get">
+<div class="button-bar"><input type="submit" name="button_submit" value="Add Account" class="input button"/></div>
+</form>
+<?php	} ?>
 <!--    [end] Standard Page Navigation Bar ADMIN ONLY-->

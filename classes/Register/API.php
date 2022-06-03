@@ -19,8 +19,8 @@
         function me() {
             # Default StyleSheet
             if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
-            if ($GLOBALS['_SESSION_']->customer->has_role('administrator')) $GLOBALS['_SESSION_']->customer->admin = 1;
-            
+            if ($GLOBALS['_SESSION_']->customer->can('see admin tools')) $GLOBALS['_SESSION_']->customer->admin = 1;
+ 
             $siteMessageDeliveryList = new \Site\SiteMessageDeliveryList();
             $siteMessageDeliveryList->find(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'acknowledged' => false));
             $siteMessagesUnread = $siteMessageDeliveryList->count();
@@ -73,7 +73,7 @@
             # Initiate Product Object
             $customer = new \Register\Customer();
 
-            if ($GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
+            if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 # Can Get Anyone
             }
             elseif ($GLOBALS['_SESSION_']->customer->id = $customer->id) {
@@ -105,7 +105,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
-            if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+            if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 # Can Update Anyone
             }
             elseif ($GLOBALS['_SESSION_']->customer->login = $_REQUEST['code']) {
@@ -161,7 +161,7 @@
 
             # Build Query Parameters
             $parameters = array();
-            if ($GLOBALS['_SESSION_']->customer->has_role('register reporter')) {
+            if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 if ($_REQUEST["organization_code"]) {
                     app_log("Getting organization '".$_REQUEST['organization_code']."'",'debug',__FILE__,__LINE__);
                     $organization = new \Register\Organization();
@@ -225,7 +225,7 @@
         ### Find Roles									###
         ###################################################
         function findRoles() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
             $roleList = new \Register\RoleList();
             $roles = $roleList->find();
@@ -244,7 +244,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.rolemembers.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->can('manage customers'));
 
             # Initiate Role Object
             $role = new \Register\Role();
@@ -267,7 +267,7 @@
         ### Add a User Role								###
         ###################################################
         function addRole() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
             $role = new \Register\Role();
             $result = $role->add(
@@ -289,7 +289,7 @@
         ### Update an Existing Role						###
         ###################################################
         function updateRole() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
             $response = new \HTTP\Response();
 
@@ -313,7 +313,7 @@
         ### Add a User to a Role						###
         ###################################################
         function addRoleMember() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
             $role = new Role();
             $role->get($_REQUEST['name']);
@@ -338,7 +338,7 @@
         ### Assign Privilege to Role					###
         ###################################################
         function addRolePrivilege() {
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
             if ($_REQUEST['role']) {
                 $role = new \Register\Role();
@@ -607,7 +607,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
             # Initiate Object
             $organization = new \Register\Organization();
@@ -638,7 +638,7 @@
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organization.xsl';
 
             if (isset($_REQUEST['code']))
-                if ($GLOBALS['_SESSION_']->customer->has_role('register reporter') || $GLOBALS['_SESSION_']->customer->has_role('register manager') || $GLOBALS['_SESSION_']->organization->code == $_REQUEST['code'])
+                if ($GLOBALS['_SESSION_']->customer->can('manage customers') || $GLOBALS['_SESSION_']->organization->code == $_REQUEST['code'])
                     $org_code = $_REQUEST['code'];
                 else
                     $this->deny();
@@ -668,7 +668,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
             # Initiate Organization Object
             $organizationList = new \Register\OrganizationList();
@@ -703,7 +703,7 @@
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
-            if (! $GLOBALS['_SESSION_']->customer->has_role('register reporter') && ! $GLOBALS['_SESSION_']->customer->has_role('register manager')) $this->deny();
+            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
             # Initiate Organization Object
             $organizationList = new \Register\OrganizationList();
@@ -843,10 +843,10 @@
             print $this->formatOutput($response);
         }
         function findOrganizationLocations() {
-            if ($GLOBALS['_SESSION_']->customer->has_role('register manager') && isset($_REQUEST['organization_id'])) {
+            if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['organization_id'])) {
                 $organization = new \Register\Organization($_REQUEST['organization_id']);
             }
-            elseif ($GLOBALS['_SESSION_']->customer->has_role('register manager') && isset($_REQUEST['code'])) {
+            elseif ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['code'])) {
                 $organization = new \Register\Organization();
                 $organization->get($_REQUEST['code']);
             }
@@ -861,10 +861,10 @@
             print $this->formatOutput($response);
         }
         function findOrganizationMembers() {
-            if ($GLOBALS['_SESSION_']->customer->has_role('register manager') && isset($_REQUEST['organization_id'])) {
+            if ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['organization_id'])) {
                 $organization = new \Register\Organization($_REQUEST['organization_id']);
             }
-            elseif ($GLOBALS['_SESSION_']->customer->has_role('register manager') && isset($_REQUEST['code'])) {
+            elseif ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['code'])) {
                 $organization = new \Register\Organization();
                 $organization->get($_REQUEST['code']);
             }
@@ -881,10 +881,10 @@
             print $this->formatOutput($response);
         }
         function findCustomerLocations() {
-            if ($GLOBALS['_SESSION_']->customer->has_role('register manager') && isset($_REQUEST['customer_id'])) {
+            if ($GLOBALS['_SESSION_']->customer->canh('manage customers') && isset($_REQUEST['customer_id'])) {
                 $customer = new \Register\Customer($_REQUEST['customer_id']);
             }
-            elseif ($GLOBALS['_SESSION_']->customer->has_role('register manager') && isset($_REQUEST['login'])) {
+            elseif ($GLOBALS['_SESSION_']->customer->can('manage customers') && isset($_REQUEST['login'])) {
                 $customer = new \Register\Customer();
                 $customer->get($_REQUEST['login']);
             }
@@ -899,7 +899,7 @@
         }
         function expireAgingCustomers() {
             $response = new \HTTP\Response();
-            if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+            if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 $expires = strtotime("-12 month", time());
                 $date = date('m/d/Y',$expires);
         
@@ -928,7 +928,7 @@
         
         function expireInactiveOrganizations() {
             $response = new \HTTP\Response();
-            if (role('register manager')) {
+            if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 $expires = strtotime("-12 month", time());
                 $date = date('m/d/Y',$expires);
 
@@ -1012,12 +1012,12 @@
         function findLocations() {
             $response = new \HTTP\Response();
             $parameters = array();
-            if (isset($_REQUEST['organization']) && $GLOBALS['_SESSION_']->customer->has_role("location manager")) {
+            if (isset($_REQUEST['organization']) && $GLOBALS['_SESSION_']->customer->can("manage customers")) {
                 $organization = new \Register\Organization();
                 if (!$organization->get($_REQUEST['organization'])) $this->error("Organization not found");
                 $_REQUEST['organization_id'] = $organization->id;
             }
-            elseif (isset($_REQUEST['organization_id']) && $GLOBALS['_SESSION_']->customer->has_role('location manager')) {
+            elseif (isset($_REQUEST['organization_id']) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
             }
             else {
@@ -1074,6 +1074,30 @@
             return $privileges;
         }
 
+		public function findPrivilegePeers() {
+			$this->requirePrivilege('manage customers');
+			if (isset($_REQUEST['privilege_name'])) {
+				$privilege = new \Register\Privilege();
+				if (! $privilege->get($_REQUEST['privilege_name'])) error("Privilege not found");
+			}
+			elseif (isset($_REQUEST['privilege_id'])) {
+				$privilege = new \Register\Privilege($_REQUEST['privilege_id']);
+				if (! $privilege->id) error ("Privilege not found");
+			}
+			else {
+				error("privilege_id or privilege_name required");
+			}
+
+			$people = $privilege->peers();
+			if ($privilege->error()) error("Error getting peers: ".$privilege->error());
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->customer = $people;
+
+            print $this->formatOutput($response);
+		}
+
         function getLocation() {
             
         }
@@ -1106,7 +1130,11 @@
 				),
 				'findRoles'	    => array(),
 				'findRoleMembers'	=> array(
-					'code'	=> array()
+					'code'	=> array('required' => true)
+				),
+				'findPrivileges'	=> array(),
+				'findPrivilegePeers'	=> array(
+					'privilege_name'	=> array('required' => true)
 				)
 			);
 		}

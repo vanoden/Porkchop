@@ -12,7 +12,7 @@
 				$this->_error = "Country name required";
 				return false;
 			} elseif (! preg_match('/^\w[\w\.\-\_\s\,]*$/',$parameters['name'])) {
-				$this->_error = "Invalid country name";
+				$this->_error = "Invalid country name '".$parameters['name']."'";
 				return false;
 			}
 			$add_object_query = "

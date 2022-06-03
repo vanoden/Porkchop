@@ -15,7 +15,7 @@
 <form id="tasksListForm">
     <h2 style="display: inline-block;">Engineering Tasks [
         <?=($page->isSearchResults)? "Matched Tasks: " : "";?>
-        <?=isset($tasks) ? count($tasks) : "0"?>
+        <?=isset($duplicateTasks) ? count($duplicateTasks) : "0"?>
     ]</h2>
     <?php
         // if we're not doing a task search, show the filter bar
@@ -87,8 +87,8 @@
 		    <div class="tableCell" style="width: 10%;">PreRequisite</div>
 	    </div>
     <?php
-        if (!isset($tasks)) $tasks = array();
-	    foreach ($tasks as $taskItem) {
+        if (!isset($duplicateTasks)) $duplicateTasks = array();
+	    foreach ($duplicateTasks as $taskItem) {
 		    $product = $taskItem->product();
 		    $project = $taskItem->project();
 		    $worker = $taskItem->assignedTo();

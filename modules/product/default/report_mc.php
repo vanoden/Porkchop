@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('administrator');
+	$page->requirePrivilege('manage products');
 
 	$productlist = new \Product\ItemList();
 	$products = $productlist->find();

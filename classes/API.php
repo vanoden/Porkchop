@@ -48,8 +48,16 @@
 			print $this->formatOutput($response);
 		}
 
+		public function requireAuth() {
+			if (! $GLOBALS['_SESSION_']->authenticated()) $this->deny();;
+		}
+
 		public function requireRole($role_name) {
-			if (! $GLOBALS['_SESSION_']->has_role($role_name)) $this->error("Permission denied");
+			if (! $GLOBALS['_SESSION_']->customer->has_role($role_name)) $this->deny();
+		}
+
+		public function requirePrivilege($privilege_name) {
+			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name)) $this->deny();
 		}
 
 		###################################################

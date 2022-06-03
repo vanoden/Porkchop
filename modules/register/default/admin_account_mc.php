@@ -7,7 +7,7 @@
 	###################################################
 
 	$page = new \Site\Page(array("module" => 'register',"view" => 'account'));
-	$page->requireRole('register manager');
+	$page->requirePrivilege('manage customers');
 
 	if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/',$_REQUEST['customer_id'])) $customer_id = $_REQUEST['customer_id'];
 	elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {

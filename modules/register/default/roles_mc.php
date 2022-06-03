@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('register manager');
+	$page->requirePrivilege('manage customers');
 
 	$roleList = new \Register\RoleList();
 	$roles = $roleList->find();

@@ -159,67 +159,8 @@
 			$GLOBALS['_database']->Execute($end_session_query);
 			if ($GLOBALS['_database']->ErrorMsg())
 			{
-				$this->error = "SQL Error in session::Session::end: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::end(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
-			}
-		}
-
-		# Get Company Information Based on Request Domain
-		# Remove this function after testing
-		function companyremoveme() {
-			# Get Domain Name
-			preg_match("/(\w+\.\w+)\$/",$_SERVER["HTTP_HOST"],$matches);
-			$domain_name = $matches[1];
-
-			$cache_key = "domain[".$domain_name."]";
-
-			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
-			if ($cache->error) {
-				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
-			}
-
-			# Cached Customer Object, Yay!
-			if ($domain = $cache->get()) {
-				$this->company = $domain->company_id;
-				$this->location = $domain->location_id;
-				$this->domain = $domain->domain_name;
-				$this->status = $domain->status;
-				$domain->_cached = 1;
-				return $domain;
-			}
-
-			# Domain Name
-			$get_company_query = "
-				SELECT	company_id,
-						location_id,
-						domain_name,
-						status
-				FROM	company_domains
-				WHERE	domain_name = '$domain_name'
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_company_query);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "Error getting domain information: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			else {
-				if ($rs->RecordCount() > 0) {
-					$domain = $rs->FetchRow();
-					$domain = (object) $domain;
-
-					$this->company = $domain->company_id;
-					$this->location = $domain->location_id;
-					$this->domain = $domain->domain_name;
-					$this->status = $domain->status;
-
-					$cache->set($domain);
-					return $domain;
-				}
-				else {
-					$this->error = "Company not configured for $domain_name";
-					return null;
-				}
 			}
 		}
 
@@ -296,7 +237,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "Error creating session: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::add(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -323,7 +264,7 @@
 				array($code)
 			);
 			if (! $rs) {
-				app_log("SQL Error in Session::Session::get(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
+				app_log("SQL Error in Site::Session::get(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
 				return null;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -370,7 +311,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Session::Session::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return;
 			}
 			if ($rs->RecordCount()) {
@@ -426,7 +367,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error checking for session in Session::assign: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error Site::Session::assign(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			list($assigned_to) = $rs->FetchRow();
@@ -449,7 +390,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error updating session: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::assign(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			#if ($parameters["user_id"]) $this->customer = $parameters["user_id"];
@@ -470,7 +411,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Session::timestamp: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::timestamp(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			#if ($parameters["user_id"]) $this->customer = $parameters["user_id"];
@@ -484,7 +425,7 @@
 			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
 
 			# Make Sure User Has Privileges to view other sessions
-			if (! $GLOBALS['_SESSION_']->customer->has_role('session manager')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('manage sessions')) {
 				$this->error = "No privileges to change session";
 				return null;
 			}
@@ -517,7 +458,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Session::Session::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -573,7 +514,7 @@
 			";
 			$GLOBALS['_database']->execute($delete_hits_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in session::Session::expire_session: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::expire_session(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -586,13 +527,23 @@
 			$GLOBALS['_database']->execute($delete_session_query);
 			if ($GLOBALS['_database']->ErrorMsg())
 			{
-				$this->error = "SQL Error in session::Session::expire_session: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Site::Session::expire_session(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 		}
 		public function authenticated() {
 			if (isset($this->customer->id) && $this->customer->id > 0) return true;
 			else return false;
+		}
+
+		public function isUser($user_id) {
+			if (!empty($this->customer) && $this->customer->id == $user_id) return true;
+			return false;
+		}
+
+		public function isOrganization($organization_id) {
+			if (!empty($this->customer) && !empty($this->customer->organization) && $this->customer->organization->id == $organization_id) return true;
+			return false;
 		}
 
         public function isMobileBrowser($useragent) {

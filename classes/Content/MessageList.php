@@ -16,7 +16,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_contents_query);
 			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Content::MessageList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 
@@ -49,7 +49,7 @@
             
 			$rs = $GLOBALS['_database']->Execute($get_contents_query);
 			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Content::MessageList::search(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
 

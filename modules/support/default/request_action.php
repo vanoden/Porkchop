@@ -50,7 +50,7 @@
 		<select class="value input" name="requestor_id">
 			<option value="">Select</option>
 		<?php	foreach ($users as $user) {
-				if ($user->has_role('monitor asset')) continue;
+				if ($user->can('manage monitors')) continue;
 		?>
 			<option value="<?=$user->id?>"><?=$user->full_name()?></option>
 		<?php	} ?>
@@ -61,8 +61,8 @@
 		<select class="value input" name="assigned_id">
 			<option value="">Select</option>
 		<?php	foreach ($users as $user) {
-				if ($user->has_role('monitor asset')) continue;
-				if (! $user->has_role('support user')) continue;
+				if ($user->can('manage monitors')) continue;
+				if (! $user->can('manage customers')) continue;
 		?>
 			<option value="<?=$user->id?>"><?=$user->full_name()?></option>
 		<?php	} ?>

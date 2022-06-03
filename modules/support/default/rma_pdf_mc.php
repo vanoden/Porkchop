@@ -15,7 +15,7 @@ if ($rmaId) {
 }
 
 // Authorization Requirements
-if ($GLOBALS['_SESSION_']->customer->organization->id != $rma->item()->request->customer->organization->id && !$GLOBALS['_SESSION_']->customer->has_role('support manager')) {
+if ($GLOBALS['_SESSION_']->customer->organization->id != $rma->item()->request->customer->organization->id && !$GLOBALS['_SESSION_']->customer->can('manage support requests')) {
 	$page->addError("Permission Denied");
 	return;
 }

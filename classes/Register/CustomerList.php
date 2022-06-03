@@ -69,6 +69,7 @@
 				return null;
 			}
 
+			$bind_params = array();
 			$find_people_query = "
 				SELECT	u.id,
 						u.login,
@@ -77,16 +78,17 @@
 				FROM	register_users u
 				LEFT OUTER JOIN session_sessions s
 				ON		s.user_id = u.id
-				AND		s.company_id = ".$GLOBALS['_SESSION_']->company->id."
+				AND		s.company_id = ?
 				WHERE	u.status in ('ACTIVE','NEW')
 				GROUP BY u.id
-				HAVING	last_login < '$date'
-				AND		u.date_created < '$date'
+				HAVING	last_login < ?
+				AND		u.date_created < ?
 			";
+			array_push($bind_params,$GLOBALS['_SESSION_']->company->id,$date,$date);
 
-			$people = $GLOBALS['_database']->Execute($find_people_query);
+			$people = $GLOBALS['_database']->Execute($find_people_query,$bind_params);
 			if (! $people) {
-				$this->error = "SQL Error in RegisterCustomers::expire: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Customers::expire(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -101,27 +103,40 @@
 		}
 		public function find($parameters = array(),$count = false) {
 			if ($count == true) $ADODB_COUNTRECS = true;
-			
+
+			$bind_params = array();
+
 			$find_person_query = "
 				SELECT	id
 				FROM	register_users
 				WHERE	id = id";
-	
-			if (isset($parameters['_search'])) {
-				if (! preg_match('/^[\w\-\.\_\s\*]+$/',$parameters['_search'])) {
+
+			if (!empty($parameters['_search'])) $searchTerm = $parameters['_search'];
+			elseif (!empty($parameters['searchTerm'])) $searchTerm = $parameters['searchTerm'];
+
+			if (isset($searchTerm)) {
+				if (! preg_match('/^[\w\-\.\_\s\*]{3,64}$/',$searchTerm)) {
 					$this->error = "Invalid search string";
 					return null;
 				}
+				if (preg_match('/\*/',$searchTerm))
+					$string = preg_replace('/\*/','%',$searchTerm);
+				else
+					$string = '%'.$searchTerm.'%';
+
 				$find_person_query .= "
-				AND		(	login like '%".$parameters['_search']."%'
-					OR		first_name like '%".$parameters['_search']."%'
-					OR		last_name like '%".$parameters['_search']."%'
+				AND		(	login LIKE '$string'
+					OR		first_name LIKE '$string'
+					OR		last_name LIKE '$string'
+					OR		middle_name LIKE '$string'
+					OR		login_name LIKE '$string'
 				)
 				";
 			}
 			if (isset($parameters['id']) && preg_match('/^\d+$/',$parameters['id'])) {
 				$find_person_query .= "
-				AND		id = ".$parameters['id'];
+				AND		id = ?";
+				array_push($bind_params,$parameters['id']);
 			}
 			elseif (isset($parameters['id'])) {
 				$this->error = "Invalid id in Person::find";
@@ -129,7 +144,8 @@
 			}
 			if (isset($parameters['code'])) {
 				$find_person_query .= "
-				AND		login = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc());
+				AND		login = ?";
+				array_push($bind_params,$parameters['code']);
 			}
 			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
@@ -146,7 +162,8 @@
 				}
 				else {
 					$find_person_query .= "
-						AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+						AND		status = ?";
+					array_push($bind_params,$parameters['status']);
 				}
 			}
 			else {
@@ -156,26 +173,31 @@
 	
 			if (isset($parameters['first_name'])) {
 				$find_person_query .= "
-				AND		first_name = ".$GLOBALS['_database']->qstr($parameters['first_name'],get_magic_quotes_gpc());
+				AND		first_name = ?";
+				array_push($bind_params,$parameters['first_name']);
 			}
 	
 			if (isset($parameters['last_name'])) {
 				$find_person_query .= "
-				AND		last_name = ".$GLOBALS['_database']->qstr($parameters['last_name'],get_magic_quotes_gpc());
+				AND		last_name = ?";
+				array_push($bind_params,$parameters['last_name']);
 			}
 	
 			if (isset($parameters['email_address'])) {
 				$find_person_query .= "
-				AND		email_address = ".$GLOBALS['_database']->qstr($parameters['email_address'],get_magic_quotes_gpc());
+				AND		email_address = ?";
+				array_push($bind_params,$parameters['email_address']);
 			}
 
 			if (isset($parameters['department_id'])) {
 				$find_person_query .= "
-				AND		department_id = ".$GLOBALS['_database']->qstr($parameters['department_id'],get_magic_quotes_gpc());
+				AND		department_id = ?";
+				array_push($bind_params,$parameters['department_id']);
 			}
 			if (isset($parameters['organization_id'])) {
 				$find_person_query .= "
-				AND		organization_id = ".$GLOBALS['_database']->qstr($parameters['organization_id'],get_magic_quotes_gpc());
+				AND		organization_id = ?";
+				array_push($bind_params,$parameters['organization_id']);
 			}
 			if (isset($parameters['automation'])) {
 				if ($parameters['automation']) $find_person_query .= "
@@ -183,15 +205,6 @@
 				else $find_person_query .= "
 					AND		automation = 0";
 			}
-			
-			// search by term supported
-            if (isset($parameters['searchTerm'])) $find_person_query .= " AND (
-                    last_name LIKE '%" . $parameters['searchTerm'] . "%'
-                    OR middle_name LIKE '%" . $parameters['searchTerm'] . "%'
-                    OR first_name LIKE '%" . $parameters['searchTerm'] . "%'
-                    OR login LIKE '%" . $parameters['searchTerm'] . "%'
-                    OR title LIKE '%" . $parameters['searchTerm'] . "%'
-                )";
 
 			if (isset($parameters['_sort']) && preg_match('/^(login|first_name|last_name|organization_id)$/',$parameters['_sort'])) {
 				$find_person_query .= " ORDER BY ".$parameters['_sort'];
@@ -211,9 +224,9 @@
 					LIMIT	".$parameters['_limit'];
 			}
 			query_log($find_person_query);
-			$rs = $GLOBALS['_database']->Execute($find_person_query);
+			$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in RegisterPerson::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Register::Person::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -233,19 +246,21 @@
 			if (is_bool($limit) && $limit == true) $count = true;
 			else $count = false;
 
+			$bind_params = array();
+
 			app_log("Customer Search Requested",'debug',__FILE__,__LINE__);
 			$this->count = 0;
-			if (isset($search_string)) {
-				if (preg_match('/^[\w\-\.\_]+$/',$search_string)) {
-					# Great!
-				}
-				else {
-					app_log("Invalid Search String: '$search_string'",'warning',__FILE__,__LINE__);
-					$this->error = "Invalid Search String";
-					return null;
-				}
+
+			if (! preg_match('/^[\w\-\.\_\s\*]{3,64}$/',$search_string)) {
+				$this->error = "Invalid search string";
+				return null;
 			}
-			else {
+			if (preg_match('/\*/',$search_string))
+				$search_string = preg_replace('/\*/','%',$search_string);
+			else
+				$search_string = '%'.$search_string.'%';
+
+			if (empty($search_string)) {
 				$this->error = "Search string required";
 				return null;
 			}
@@ -253,9 +268,11 @@
 				SELECT	id
 				FROM	register_users
 				WHERE	id = id
-				AND		(	login like '%$search_string%'
-					OR		first_name like '%$search_string%'
-					OR		last_name like '%$search_string%'
+				AND		(	login LIKE '$search_string'
+					OR		first_name LIKE '$search_string'
+					OR		last_name LIKE '$search_string'
+					OR		middle_name LIKE '$search_string'
+					OR		login_name LIKE '$search_string'
 				)
 			";
 			if (isset($parameters['status'])) {
@@ -273,7 +290,8 @@
 				}
 				else {
 					$find_person_query .= "
-						AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
+						AND		status = ?";
+					array_push($bind_params,$parameters['status']);
 				}
 			}
 			else {
@@ -290,7 +308,7 @@
 					LIMIT	$limit";
 			}
 			app_log("Search query: ".$find_person_query,'trace',__FILE__,__LINE__);
-			$rs = $GLOBALS['_database']->Execute($find_person_query);
+			$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in \Register\Customer::search(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;

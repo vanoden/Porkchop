@@ -1,7 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->fromRequest();
-	$page->requireRole("administrator");
+	$page->requirePrivilege("configure site");
 
 	$domainList = new \Company\DomainList();
 	$domains = $domainList->find();

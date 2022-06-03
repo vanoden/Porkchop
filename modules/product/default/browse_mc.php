@@ -1,4 +1,6 @@
 <?php
+	$page = new \Site\Page();
+
 	$productList = new \Product\ItemList();
 	$parent = new \Product\Item();
 	

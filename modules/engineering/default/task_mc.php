@@ -21,14 +21,13 @@
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$task->get($code);
 	}
-
-    // get new and active tasks for the 'prerequisite' field
-	$tasklist = new \Engineering\TaskList();
-	$prerequisiteTasklist = $tasklist->find(array('status'=>array('NEW', 'ACTIVE')));
-
+	
     // get roles set for engineering to apply to tasks
 	$roleList = new \Register\RoleList();
 	$engineeringRoles = $roleList->find();
+	
+	// get duplicate task popup data if a REQUEST in progress
+	$tasklist = new \Engineering\TaskList();
 	$parameters = array();
 	$parameters['status'] = array();
 	if ($_REQUEST["duplicate_new"]) array_push($parameters['status'],'NEW');
@@ -44,11 +43,35 @@
 
 	// populate tasks for duplicate task popup window, if no user search issued, then no need to search all tasks
 	if (empty($parameters['status']) && empty($parameters['project_id']) && empty($parameters['product_id']) && empty($parameters['assigned_id'])) {
-    	$tasks = array();
+    	$duplicateTasks = array();
 	} else {
-        $tasks = $tasklist->find($parameters);
+        $duplicateTasks = $tasklist->find($parameters);
 	}
 	if ($tasklist->error()) $page->error = $tasklist->error();
+		
+	// get prerequisite task popup data if a REQUEST in progress
+	$tasklist = new \Engineering\TaskList();
+	$parameters = array();
+	$parameters['status'] = array();
+	if ($_REQUEST["prerequisite_new"]) array_push($parameters['status'],'NEW');
+	if ($_REQUEST["prerequisite_active"]) array_push($parameters['status'],'ACTIVE');
+	if ($_REQUEST["prerequisite_complete"]) array_push($parameters['status'],'COMPLETE');
+	if ($_REQUEST["prerequisite_cancelled"]) array_push($parameters['status'],'CANCELLED');
+	if ($_REQUEST["prerequisite_broken"]) array_push($parameters['status'],'BROKEN');
+	if ($_REQUEST["prerequisite_testing"]) array_push($parameters['status'],'TESTING');
+	if ($_REQUEST["prerequisite_hold"]) array_push($parameters['status'],'HOLD');
+	if ($_REQUEST["prerequisite_project_id"]) $parameters['project_id'] = $_REQUEST['prerequisite_project_id'];
+	if ($_REQUEST["prerequisite_product_id"]) $parameters['product_id'] = $_REQUEST['prerequisite_product_id'];
+	if ($_REQUEST["prerequisite_assigned_id"]) $parameters['assigned_id'] = $_REQUEST['prerequisite_assigned_id'];
+
+	// populate tasks for prerequisite task popup window, if no user search issued, then no need to search all tasks
+	if (empty($parameters['status']) && empty($parameters['project_id']) && empty($parameters['product_id']) && empty($parameters['assigned_id'])) {
+    	$prerequisiteTasks = array();
+	} else {
+        $prerequisiteTasks = $tasklist->find($parameters);
+	}
+	if ($tasklist->error()) $page->error = $tasklist->error();
+    
 
     // edit task or add event, testing info or comment
 	if (isset($_REQUEST['method']) && !empty($_REQUEST['method'])) {
@@ -498,4 +521,11 @@
 	if (isset($form['duplicate_task_id'])) {
         $duplicateTask = new \Engineering\Task($form['duplicate_task_id']);
         $form['duplicate_task_name'] = $duplicateTask->title;
+	}
+	
+    // get the current title of the task that this task prerequisites
+	$form['prerequisite_task_name'] = '(none)';	
+	if (isset($form['prerequisite_task_id'])) {
+        $prerequisiteTask = new \Engineering\Task($form['prerequisite_task_id']);
+        $form['prerequisite_task_name'] = $prerequisiteTask->title;
 	}
