@@ -1074,6 +1074,30 @@
             return $privileges;
         }
 
+		public function findPrivilegePeers() {
+			$this->requirePrivilege('manage customers');
+			if (isset($_REQUEST['privilege_name'])) {
+				$privilege = new \Register\Privilege();
+				if (! $privilege->get($_REQUEST['privilege_name'])) error("Privilege not found");
+			}
+			elseif (isset($_REQUEST['privilege_id'])) {
+				$privilege = new \Register\Privilege($_REQUEST['privilege_id']);
+				if (! $privilege->id) error ("Privilege not found");
+			}
+			else {
+				error("privilege_id or privilege_name required");
+			}
+
+			$people = $privilege->peers();
+			if ($privilege->error()) error("Error getting peers: ".$privilege->error());
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->customer = $people;
+
+            print $this->formatOutput($response);
+		}
+
         function getLocation() {
             
         }
@@ -1106,7 +1130,11 @@
 				),
 				'findRoles'	    => array(),
 				'findRoleMembers'	=> array(
-					'code'	=> array()
+					'code'	=> array('required' => true)
+				),
+				'findPrivileges'	=> array(),
+				'findPrivilegePeers'	=> array(
+					'privilege_name'	=> array('required' => true)
 				)
 			);
 		}
