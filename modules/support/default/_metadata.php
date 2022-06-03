@@ -3,7 +3,8 @@
         "schema"    => 8,
         "privileges"    => array(
             "browse support tickets",
-            "manage support requests"
+            "manage support requests",
+			"use support module"
         ),
         "templates"     => array(
             "request_new"           => $templates['admin'],
