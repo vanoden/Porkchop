@@ -18,9 +18,13 @@
 		return true;
 	}
 </script>
-<div class="secondaryHeader">
-	<h2 style="display: inline-block;"><a href="/_support/tickets">Tickets</a> > </h2><h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i> Ticket: <span><?=$item->ticketNumber()?></span></h2>
-</div>
+<h2>Support</h2>
+<nav id="breadcrumb">
+	<ul>
+		<li><a href="/_support/tickets">All Tickets</a></li>
+		<li><a href="<?=$ticketLink?>" class="value">Ticket# <?=$item->id?></a></li>
+	</ul>
+</nav>
 
 <!--	 ==================================== -->
 <!-- START Ticket Detail Section -->
@@ -79,7 +83,7 @@
 					<div class="tableRowHeader secondary"><span class="label">Insert Comment:</span></div>
 					<div class="tableRow">
 						<div style="padding: 0;">
-							<textarea class="value input" style="width: 50%; height: 70px; margin: 0;" name="content"></textarea>
+							<textarea class="value input" wrap="hard" style="width: 50%; height: 70px; margin: 0;" name="content"></textarea>
 						</div>
 					</div>
 					<div class="button-bar">
@@ -160,7 +164,7 @@
 					<div>Note</div>
 				</div>
 				<div class="tableRow">
-					<div><span class="hiddenDesktop value">Description: </span><pre class="form-comments"><?=strip_tags($action->description)?></pre></div>
+					<div><span class="hiddenDesktop value">Description: </span><pre><?=strip_tags($action->description)?></pre></div>
 				</div>
 			</div><!-- end table -->
 		
@@ -183,7 +187,7 @@
 						<div>Description</div>							
 					</div>
 					<div class="tableRow">
-						<div><span class="hiddenDesktop value">Description: </span><pre class="form-comments"><?=strip_tags($action->description)?></pre></div>
+						<div><span class="hiddenDesktop value">Description: </span><pre><?=strip_tags($action->description)?></pre></div>
 					</div>
 				</div><!-- end table -->
 		<?php	}	$actionEvents = $action->getEvents();	?>	
@@ -253,7 +257,7 @@
 			<div class="tableRow">
 				<div><span class="hiddenDesktop value">Date: </span><?=$comment->date_comment?></div>
 				<div><span class="hiddenDesktop value">Author: </span><?=$comment->author->full_name()?></div>
-				<div class="form-comments"><span class="hiddenDesktop value">Comment: </span><?=$comment->content?></div>
+				<div><span class="hiddenDesktop value">Comment: </span><?=$comment->content?></div>
 			</div>
 			<?php		} ?>
 		</div>

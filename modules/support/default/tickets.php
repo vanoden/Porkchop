@@ -87,10 +87,10 @@
 	<?php } ?>
 </div>
 
-<div class="secondaryHeader">
+<div>
 	<h2>Support Tickets</h2>
 	<button class="expanding" onclick="toggleFilters()">Filter Results</button>
-	<button href="/_support/request">New Request</button>
+	<button onclick="window.location.href='/_support/request';">New Request</button>
 </div>
 
 <!--	Insert Filter Section -->

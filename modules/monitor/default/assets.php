@@ -12,26 +12,33 @@
 		width: 280px;
 	}
 </style>
+
 <?php	 if ($page->errorCount() > 0) { ?>
-    <div class="form_error"><?=$page->errorString()?></div>
+	<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
 <?php	 } ?>
-<div class="title">Monitors [<?=count($assets)?>]</div>
-<table class="body" cellpadding="0" cellspacing="0">
-<tr><th class="label serialNumberLabel">Serial Number</th>
-	<th class="label zonesLabel">Zones</th>
-	<th class="label modelLabel">Model</th>
-	<th class="label nameLabel">Name</th>
-</tr>
-<?php	$greebar = '';
-	foreach ($assets as $asset) {
-    	if ($greenbar) $greenbar = ''; else $greenbar = "greenbar";
-?>
-<tr><td class="value <?=$greenbar?>"><a href="/_monitor/asset/<?=$asset->code?>"><?=$asset->code?></a></td>
-	<td class="value <?=$greenbar?>"><?=$asset->sensorCount()?></td>
-	<td class="value <?=$greenbar?>"><?=$asset->product->code?></td>
-	<td class="value <?=$greenbar?>"><?=$asset->name?></td>
-</tr>
-    <?php
-	} 
+
+<h2>Monitors [<?=count($assets)?>]</h2>
+
+<div class="tableBody bandedRows">
+	<div class="tableRowHeader">
+		<div class="tableCell">Serial Number</div>
+		<div class="tableCell">Zones</div>
+		<div class="tableCell">Model</div>
+		<div class="tableCell">Name</div>
+	</div> <!-- end row header -->
+	<?php	$greebar = '';
+		foreach ($assets as $asset) {
+				if ($greenbar) $greenbar = ''; else $greenbar = "greenbar";
 	?>
-</table>
+	<div class="tableRow">
+		<div class="tableCell <?=$greenbar?>"><span class="value"><a href="/_monitor/asset/<?=$asset->code?>"><?=$asset->code?></a></span></div>
+		<div class="tableCell <?=$greenbar?>"><span class="value"><?=$asset->sensorCount()?></span></div>
+		<div class="tableCell <?=$greenbar?>"><span class="value"><?=$asset->product->code?></span></div>
+		<div class="tableCell <?=$greenbar?>"><span class="value"><?=$asset->name?></span></div>
+	</div>
+	<?php	} ?>
+</div>

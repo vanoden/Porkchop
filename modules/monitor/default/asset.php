@@ -7,11 +7,25 @@
 		margin-left: 15px;
 	}
 </style>
+
+<h2>Monitors</h2>
+<nav id="breadcrumb">
+	<ul>
+		<li><a href="/_monitor/assets">Monitors</a></li>
+		<li>Asset Serial# <?=$asset->code?></li>
+	</ul>
+</nav>
+
 <form name="assetForm" method="post" action="/_monitor/asset">
 <input type="hidden" name="id" value="<?=$asset->id?>" />
+
+
+
 <?php	 if ($page->errorCount() > 0) { ?>
     <div class="form_error"><?=$page->errorString()?></div>
 <?php	 } ?>
+
+
 <?php
 if ($page->success) { ?>
 <div class="form_success"><?=$page->success?></div>

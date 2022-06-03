@@ -209,13 +209,7 @@
     });
 </script>
 
-<?php	if ($page->errorCount() > 0) { ?>
-	<div class="form_error"><?=$page->errorString()?></div>
-<?php	} else if (!empty($page->success)) {?>
-	<div class="form_success"><?=$page->success?></div>
-<?php	} ?>
-
-<h2>Return Merchandise Authorization</h2>
+<h2>Support</h2>
 <nav id="breadcrumb">
 	<ul>
 		<li><a href="/_support/tickets">All Tickets</a></li>
@@ -224,81 +218,122 @@
 	</ul>
 </nav>
 
+<?php	if ($page->errorCount() > 0) { ?>
+<section>
+<ul class="connectBorder errorText">
+	<li><?=$page->errorString()?></li>
+</ul>
+<section>
+<?php	} else if (!empty($page->success)) {?>
+<section>
+<ul class="connectBorder progressText">
+	<li><?=$page->success?></li>
+</ul>
+<section>
+<?php	} ?>
+<?php if (empty($page->success)) {?>
+<section id="form-message">
+	<ul class="connectBorder infoText">
+		<li><?=$rmaMessage?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <!-- Form Messaging -->
-<div id="support_rma">
-	<p><?=$rmaMessage?></p>
+<section id="support_rma">
 	<?php	if ($rmaReceived) { ?>
-		<span class="value">Received <?=$shippingPackage->date_received?> by <?=$shippingPackage->user_received()->full_name()?></span>
+	<ul class="form-grid three-col">
+		<li><label for="">Date</label><?=$shippingPackage->date_received?></li>
+		<li><label for="">Received by</label><?=$shippingPackage->user_received()->full_name()?></li>
+		<?php	if ($rmaSubmitted && ! $rmaReceived) { ?>
+			<li><label for="">Please include the following form with your return:</label> <a href="/_support/rma_pdf/<?=$rmaCode?>" target="_blank">Download RMA Document</a></li>
+		<?php	} else if ($rmaSubmitted) { ?>
+			<li><label for="">Reprint RMA Document:</label> <a href="/_support/rma_pdf/<?=$rmaCode?>" target="_blank">Download RMA Document</a></li>
+		<?php	} ?>
+		<?php	if ($rmaSubmitted) { ?>
+			<li><label for="">Sending From:</label> <?=$sentFromLocation->address_1?><br><?=$sentFromLocation->address_2?><br>
+			<?=$sentFromLocation->city?>, <?=$sentFromLocation->zip_code?><br><i style="font-size: .8rem;">*Notes: <?=$sentFromLocation->notes?></i>
+			<li><label for="">Shipping To:</label> <?=$sentToLocation->address_1?><br><?=$sentToLocation->address_2?><br>
+			<?=$sentToLocation->city?>, <?=$sentToLocation->zip_code?><br><i style="font-size: .8rem;">*Notes: <?=$sentToLocation->notes?></i>
+		<?php	} ?>
+	</ul>
 	<?php	} ?>
-</div>
-
-<?php	if ($rmaSubmitted && ! $rmaReceived) { ?>
-	<p>Please include the following form with your return: <a href="/_support/rma_pdf/<?=$rmaCode?>" target="_blank">Download </a></p>
-<?php	} else if ($rmaSubmitted) { ?>
-	<p>Reprint RMA Document: <a href="/_support/rma_pdf/<?=$rmaCode?>" target="_blank"> Download </a>
-<?php	} ?>
-
-<!-- Addresses -->
-<?php	if ($rmaSubmitted) { ?>
-	<p>Sending From: <?=$sentFromLocation->address_1?> <?=$sentFromLocation->address_2?> <?=$sentFromLocation->city?>, 
-	<?=$sentFromLocation->zip_code?><?=$sentFromLocation->notes?></p>
-	<p>Shipping To: <?=$sentToLocation->address_1?> <?=$sentToLocation->address_2?>
-		<?=$sentToLocation->city?>, <?=$sentToLocation->zip_code?><br /> <i><?=$sentToLocation->notes?></p>
-<?php	} ?>
+</section>
 
 <!-- Package Received -->
 <?php	if (!empty($shippingShipment->id)) { ?>
-	<h3>Current Package Info:</h3>
-	<p>Vendor: <?=$shippingShipment->vendor()->name?></p>
-  <p>Tracking #: <?=$shippingPackage->tracking_code;?></p>
+	<h3 class="eyebrow">Current Package Info:</h3>
+	<ul class="form-grid three-col">
+		<li>
+			<label for="vendor">Vendor:</label>
+			<?=$shippingShipment->vendor()->name?>
+		</li>
+		<li>
+			<label for="tracking-number">Tracking #:</label>
+			<?=$shippingPackage->tracking_code;?>
+		</li>
+	</ul>
 <?php	} ?>
 
 <!-- Receipt Info -->
 <?php	if ($GLOBALS['_SESSION_']->customer->can('receive shipments') && $rmaSubmitted && !$rmaReceived) { ?>
 	<form method="post" id="submit_package_details">
-		<input type="hidden" name="id" value="<?=$rma->id?>" />
-		<label for="dateReceived">Date Received</label>
-		<input id="rma_date_received" type="text" name="date_received" class="value input" value="<?=date('Y-m-d H:i:s')?>"/>
-		<label for="dateReceived">Condition of Package</label>
-		<select id="rma_condition_received" class="value input" style="display: flex" name="condition">
-			<option value="OK">OK</option>
-			<option value="DAMAGED">Damaged</option>
-		</select>
+		<h3 class="eyebrow">Receipt Info:</h3>
+		<input type="hidden" name="id" value="<?=$rma->id?>" /><!-- What does this do -->
+		<ul class="form-grid three-col">
+			<li>
+				<label for="dateReceived">Date Received</label>
+				<input id="rma_date_received" type="text" name="date_received" class="value input" value="<?=date('Y-m-d H:i:s')?>"/></li>
+			<li>
+				<label for="dateReceived">Condition of Package</label>
+				<select id="rma_condition_received" class="value input" style="display: flex" name="condition">
+					<option value="OK">OK</option>
+					<option value="DAMAGED">Damaged</option>
+				</select>
+			</li>
+		</ul>
 		<input type="submit" name="form_submitted" class="button" value="Receive Package" />
 	</form>
 <?php	} ?>
 
 <!-- Ticket Info -->
 <section>
-<h3 class="eyebrow">RMA Details</h3>
+<h3 class="eyebrow"><?=$rmaNumber?></h3>
 			<ul class="form-grid three-col">
 				<li><label for="">Contact</label><?=$rmaCustomerFullName?></li>
 				<li><label for="">Organization</label><?=$rmaCustomerOrganizationName?></li>
 				<li><label for="">Approved by</label><?=$rmaApprovedByName?></li>
 				<li><label for="">Date</label><?=$rmaDateApproved?></li>
 				<li><label for="">Status</label><?=$rmaStatus?></li>
-				<li><label for="">Product</label><a href="<?=$productLink?>"><?=$rmaProduct->code?> Serial#<?=$rmaSerialNumber?></a></li>
+				<li><label for="">Product</label><a href="<?=$productLink?>"><?=$rmaProduct->code?>, Serial#: <?=$rmaSerialNumber?></a></li>
 			<ul>
 </section>
 
 <!-- Package Form -->
-<?php	if ($showShippingForm) { ?>
-	<?=empty($shippingPackage->id) ? "Add" : "Update"?> your shipment info:</b></u>
+<section>
+	<?php	if ($showShippingForm) { ?>
+	<h3 class="eyebrow"><?=empty($shippingPackage->id) ? "Add" : "Update"?> your shipment info:</h3>
 	<form method="post" id="submit_package_details">
-		<div class="small-input">
-			<label for="tracking_code">Tracking Number</label> 
-			<input type="text" id="tracking_code" name="tracking_code" class="tracking_code" placeholder="1Z9999999999999999" value="<?=$shippingPackage->tracking_code;?>">
-			<label for="vendor_id">Shipping Vendor</label> 
-			<select id="vendor_id" name="vendor_id" class="tracking_code" placeholder="10">
-				<option value="">Select</option>
-				<?php		foreach ($shippingVendors as $shippingVendor) { ?>
-				<option value="<?=$shippingVendor->id?>"<?php if ($shipment->vendor_id == $shippingVendor->id) print " selected";?>><?=$shippingVendor->name?></option>
-				<?php		} ?>
-			<input type="hidden" name="form_submitted" value="package_details_submitted" />
-			<input id="add-package-details" type="submit" value="<?=empty($shippingPackage->id) ? "Add" : "Update"?> Package Details" class="btn" style="height: 35px;">
-		</div>
+		<ul class="form-grid three-col">
+			<li>
+				<label for="tracking_code">Tracking Number</label> 
+				<input type="text" id="tracking_code" name="tracking_code" class="tracking_code" placeholder="1Z9999999999999999" value="<?=$shippingPackage->tracking_code;?>">
+			</li>
+			<li>
+				<label for="vendor_id">Shipping Vendor</label> 
+				<select id="vendor_id" name="vendor_id" class="tracking_code" placeholder="10">
+					<option value="">Select</option>
+					<?php		foreach ($shippingVendors as $shippingVendor) { ?>
+					<option value="<?=$shippingVendor->id?>"<?php if ($shipment->vendor_id == $shippingVendor->id) print " selected";?>><?=$shippingVendor->name?></option>
+					<?php		} ?>
+				</select>
+			</li>
+		</ul>
+		<input type="hidden" name="form_submitted" value="package_details_submitted" />
+		<input id="add-package-details" type="submit" value="<?=empty($shippingPackage->id) ? "Add" : "Update"?> Package Details" class="btn">
 	</form>
-<?php	} ?>
+	<?php	} ?>
+</section>
 
 
 <!-- ========== SHIPPING ADDRESS ========== -->
@@ -353,7 +388,7 @@
 
 <!-- ========== BILLING ADDRESS ========== -->
 		<section class="form-group" id="billing_contact_form" style="display:none;">
-			<h3 class="eyebrow">Billing Info</h3>
+			<h3 class="eyebrow">Billing Contact</h3>
 			<a name="billing"></a>
 			<ul>
 				<li>
@@ -370,8 +405,8 @@
 		</section>
 		<section class="form-group" id="add_new_billing_contact" style="display:none;">
 			<ul class="form-grid four-col connectBorder">
-			<h4>Add New Billing Address</h4>
-			<li><label for="fname">Full Name</label><input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields"></li>
+			<h4>Add New Billing Contact</h4>
+			<li><label for="fname">First Name</label><input type="text" id="billing_firstname" name="billing_firstname" class="billing_fields"></li>
 			<li><label for="fname">Last Name</label><input type="text" id="billing_lastname" name="billing_lastname" class="billing_fields"></li>
 			<li><label for="fname">Email</label><input type="email" id="billing_email" name="billing_email" class="billing_fields" placeholder="user@email.com" pattern=".+@globex\.com" size="30"></li>
 			<li><label for="fname">Phone</label><input type="tel" id="billing_phone" name="billing_phone" class="billing_fields" placeholder="123-555-5555" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}">
@@ -419,29 +454,29 @@
 
 <!-- Event Log -->
 <?php	if ($events) { ?>
-       <div class="container">
-          <div class="label">
-             <h4>Events</h4>
-          </div>
-          <hr />
-          <div class="table">
-             <div class="tableHeading">
-                <div class="tableCell">Event Date</div>
-                <div class="tableCell">Person</div>
-                <div class="tableCell">Description</div>
-             </div>
-             <?php
-                 foreach ( $events as $event ) {
-                  ?>
-             <div class="tableRow">
-                <div class="tableCell"><?=$event->date?></div>
-                <div class="tableCell"><?=$event->person->full_name()?></div>
-                <div class="tableCell"><?=$event->description?></div>
-             </div>
-             <?php
-                }
-                ?>
-          </div>
-       </div>
+	<div class="container">
+		<div class="label">
+				<h4>Events</h4>
+		</div>
+		<hr />
+		<div class="tableBody bandedRows">
+				<div class="tableRowHeader">
+					<div class="tableCell">Event Date</div>
+					<div class="tableCell">Person</div>
+					<div class="tableCell">Description</div>
+				</div>
+				<?php
+						foreach ( $events as $event ) {
+						?>
+				<div class="tableRow">
+					<div class="tableCell"><?=$event->date?></div>
+					<div class="tableCell"><?=$event->person->full_name()?></div>
+					<div class="tableCell"><?=$event->description?></div>
+				</div>
+				<?php
+					}
+					?>
+		</div>
+	</div>
 <?php	} ?>
 </div>

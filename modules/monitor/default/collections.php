@@ -28,6 +28,14 @@
 <?php	if ($GLOBALS['_page']->success) { ?>
     <div class="form_success"><?=$GLOBALS['_page']->success?></div>
 <?php	} ?>
+
+<h2>Jobs</h2>
+<nav id="breadcrumb">
+	<ul>
+		<li>Jobs count: <?=$total_collections?></li>
+	</ul>
+</nav>
+
 <form name="collectionsForm" method="post">
     <input id="delete_collection" type="hidden" name="delete_collection" value=""/>
     <input type="hidden" id="start" name="start" value="0">
