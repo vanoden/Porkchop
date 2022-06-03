@@ -7,7 +7,7 @@
 			foreach ($modules as $module_name => $module_data) {
 				if (!isset($module_data['roles'])) $module_data['roles'] = array();
 				if (!isset($module_data['templates'])) $module_data['templates'] = array();
-
+				$this->install_log("Loading module $module_name");
 				# Update Schema
 				$class_name = "\\$module_name\\Schema";
 				$schema_path = CLASS_PATH."/$module_name/Schema.php";
@@ -30,6 +30,7 @@
 
 				# Add Privileges
 				foreach ($module_data['privileges'] as $privilege_name) {
+					$this->install_log("Adding privilege ".$privilege_name);
 					$privilege = new \Register\Privilege();
 					if ($privilege->get($privilege_name)) {
 						$privilege->update(array('module' => $module_name));
