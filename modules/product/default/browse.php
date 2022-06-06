@@ -4,7 +4,7 @@
 		<div class="productParentContent">
 			<div class="label productParentLabel"><?=$parent->name?></div>
 			<div class="value parentDescription"><?=$parent->description?></div>
-<?php		if ($GLOBALS['_SESSION_']->customer->has_role('product manager')) { ?>
+<?php		if ($GLOBALS['_SESSION_']->customer->can('manage products')) { ?>
 			<div class="productEdit"><a href="/_product/edit/<?=$parent->code?>">Edit</a></div>
 <?php		} ?>
 		</div>
@@ -34,7 +34,7 @@
 	</div>
 <?php		}
 	}
-	if ($GLOBALS['_SESSION_']->customer->has_role('product manager')) { ?>
+	if ($GLOBALS['_SESSION_']->customer->can('manage products')) { ?>
 	<div class="product">
 		<form method="post" action="/_product/add">
 		<input type="hidden" name="parent_code" value="<?=$parent->code?>"

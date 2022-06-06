@@ -1,7 +1,7 @@
 <?php
 	namespace Cache\Client;
 
-	class File {
+	class File Extends \BaseClass {
 		private $_path;
 		private $_connected;
 		public $_error;
@@ -11,7 +11,7 @@
 				$this->_error = 'Cache path not defined';
 			}
 			else if (preg_match('/^\//',$properties->path)) {
-				if (is_dir($properties->path)) {
+				if (is_dir($properties->path."/")) {
 					if (is_writable($properties->path)) {
 						$this->_path = $properties->path;
 						$this->_connected = true;
@@ -116,6 +116,16 @@
 			}
 		}
 
+		public function increment($key) {
+			$current = $this->get($key);
+			if ($this->_error) return null;
+			if (! isset($current)) $current = 0;
+			$current ++;
+			if ($this->set($key,$current)) {
+				return $this->get($key);
+			}
+		}
+
 		public function keys($object = null) {
 			$keyArray = array();
 			if ($this->_connected) {
@@ -131,6 +141,20 @@
 			}
 			return $keyArray;
 		}
+
+		public function keyNames() {
+			$keyNames = array();
+			if ($this->_connected) {
+				$keys = scandir($GLOBALS['_config']->cache->path."/");
+				foreach ($keys as $key) {
+					if (preg_match('/(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) {
+						$keyNames[$matches[1]] ++;
+					}
+				}
+			}
+			return $keyNames;
+		}
+
 		public function flush() {
 			if ($this->_connected) {
 				$keys = scandir($GLOBALS['_config']->cache->path."/");
@@ -144,10 +168,5 @@
 
 		public function stats() {
 			return array();
-		}
-
-		public function error($error = null) {
-			if (!empty($error)) $this->_error = $error;
-			return $this->_error;
 		}
 	}

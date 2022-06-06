@@ -16,19 +16,19 @@
 	# Our Global Variables
 	$_SESSION_ = new stdClass();
 
+	# Don't Cache this Page
+	header("Expires: 0");
+	header("Cache-Control: no-cache, must-revalidate");
+
 	error_log("Starting upgrade script");
 	error_log("\$_REQUEST: ".print_r($_REQUEST,true));
 	$errorstr = '';
 
-	# Load Config
-	require '../config/config.php';
+	$pid = getMyPid();
 
 	# Load Configs
 	require '../config/config.php';
 	include(BASE."/config/upgrade.php");
-	if (file_exists(BASE."/config/upgrade_local.php")) {
-		include(BASE."/config/upgrade_local.php");
-	}
 
 	###################################################
 	### Load API Objects							###
@@ -47,15 +47,11 @@
 	require THIRD_PARTY.'/adodb/adodb-php/adodb-exceptions.inc.php';
 	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
 
-	# Don't Cache this Page
-	header("Expires: 0");
-	header("Cache-Control: no-cache, must-revalidate");
-
 	# Get version.txt
 	if (file_exists(HTML."/version.txt")) {
 		$ver_contents = file_get_contents(HTML."/version.txt");
-		if (preg_match('/BUILD_ID\:\s(\d+)/',$ver_contents,$matches)) install_log("Build: ".$matches[1],'notice');
-		if (preg_match('/BUILD_DATE\:\s([\w\-\:\s]+)/',$ver_contents,$matches)) install_log("Date: ".$matches[1],'notice');
+		if (preg_match('/BUILD_ID\:\s(\d+)/',$ver_contents,$matches)) $site->install_log("Build: ".$matches[1],'notice');
+		if (preg_match('/BUILD_DATE\:\s([\w\-\:\s]+)/',$ver_contents,$matches)) $site->install_log("Date: ".$matches[1],'notice');
 	}
 	else $site->install_log("version.txt not found",'warn');
 
@@ -101,7 +97,7 @@
 	###################################################
 	$site->install_log("Connecting to ".$GLOBALS['_config']->cache->mechanism." cache");
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
-	if ($_CACHE_->error) install_fail('Unable to initiate Cache client: '.$_CACHE_->error);
+	if ($_CACHE_->error) $site->install_fail('Unable to initiate Cache client: '.$_CACHE_->error);
 	if ($_CACHE_->mechanism() == 'Memcache') {
 		foreach ($_CACHE_->stats() as $cache_service => $cache_stats) {
 			$site->install_log("Memcached host ".$cache_service." has ".$cache_stats['curr_items']." items");
@@ -122,14 +118,14 @@
 			$class = new $class_name();
 			$class_version = $class->version();
 			if (! $class->upgrade()) {
-				$site->install_fail($class->error());
+				$site->install_fail("Failed to upgrade $class: ".$class->error());
 			}
 			$class_version = $class->version();
 		} catch (Exception $e) {
 			$site->install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
 		}
 		$site->install_log("$base_class::Schema: version ".$class_version);
-		if ($class_version != $version) install_fail("Version $version Required");
+		if ($class_version != $version) $site->install_fail("Version $version Required");
 	}
 
 	###################################################
@@ -143,7 +139,7 @@
 	###################################################
 	$companylist = new \Company\CompanyList();
 	list($company) = $companylist->find();
-	if (! $company->id) install_fail("No company found.  You must run installer");
+	if (! $company->id) $site->install_fail("No company found.  You must run installer");
 	$_SESSION_->company = $company;
 
 	include(BASE."/config/upgrade.php");
@@ -166,8 +162,10 @@
 		$site->install_log("No version.txt found",'warning');
 	}
 
+	$site->install_log("Load Modules");
 	$site->loadModules($modules);
-	$site->setShippingLocation($company);
+
+	$site->install_log("Populate Menus");
 	$site->populateMenus($menus);
 
 	$site->install_log("Upgrade completed successfully",'notice');

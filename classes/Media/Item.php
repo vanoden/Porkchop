@@ -75,7 +75,7 @@
 			";
 			foreach ($parameters as $label => $value) {
 				if (! preg_match('/^[\w\-\.\_]+$/',$label)) {
-					$this->error = "Invalid parameter name in MediaItem::find: ".$GLOBALS['_database']->ErrorMsg();
+					$this->error = "Invalid parameter name in MediaItem::find()";
 					return null;
 				}
 				if ($label == "type")
@@ -206,7 +206,7 @@
 			return array($parameter,$value);
 		}
 		public function privileges($media_id,$customer_id = null, $organization_id = null) {
-			if (! role('media manager')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('manage media files')) {
 				$customer_id = $GLOBALS['_SESSION_']->customer->id;
 				$organization_id = $GLOBALS['_SESSION_']->customer->organization->id;
 			}

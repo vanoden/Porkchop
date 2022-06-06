@@ -7,7 +7,7 @@
 	###################################################
 
 	# Security - Only Register Module Operators or Managers can see other customers
-	if (role('register manager')) {
+	if ($GLOBALS['_SESSION_']->customer->can('expire customers')) {
 		$expires = strtotime("-12 month", time());
 		$date = date('m/d/Y',$expires);
 

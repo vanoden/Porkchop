@@ -15,7 +15,7 @@ class Person {
     public $_cached = 0;
     public $status;
     public $_settings = array(
-	"date_format"	=> "US"
+	    "date_format"	=> "US"
     );
 
     public function __construct($id = 0) {
@@ -52,6 +52,7 @@ class Person {
             $this->timezone = $customer->timezone;
             $this->auth_method = $customer->auth_method;
             $this->automation = $customer->automation;
+            $this->password_age = $customer->password_age;            
             $customer->_cached = 1;
 
             # In Case Cache Corrupted
@@ -76,7 +77,8 @@ class Person {
 						auth_method,
 						status,
 						timezone,
-						automation
+						automation,
+						password_age
 				FROM	register_users
 				WHERE   id = ?
 			";
@@ -112,6 +114,7 @@ class Person {
             $this->auth_method = $customer->auth_method;
             if ($customer->automation == 0) $this->automation = false;
             else $this->automation = true;
+            $this->password_age = $customer->password_age;
             $this->_cached = 0;
         }
         else {
@@ -127,6 +130,7 @@ class Person {
             $this->timezone = null;
             $this->auth_method = null;
             $this->automation = false;
+            $this->password_age = date('Y-m-d H:i:s');
             $this->_cached = 0;
         }
 
@@ -294,10 +298,16 @@ class Person {
 		array_push($bind_params,$parameters['timezone']);
 	}
         if (isset($parameters['password'])) {
+        
             app_log("Changing password", 'notice', __FILE__, __LINE__);
             $update_customer_query .= ",
                 `password` = password(?)";
             array_push($bind_params,$parameters['password']);
+            
+            // reset password age to today
+            $update_customer_query .= ",
+                password_age = ?";
+            array_push($bind_params,date('Y-m-d H:i:s'));
         }
 
         if (isset($parameters['validation_key'])) {
@@ -650,13 +660,22 @@ class Person {
 	}
 
 	public function settings($key) {
+	
 		// Only Show If metadata key is in _settings array
 		if (! isset($this->_settings[$key])) return null;
-
+		
 		// We will add a metadata search here
-
 		// If no matching metadata, return default
 		return $this->_settings[$key];
+	}
+
+	public function password_expired() {
+        if (isset($this->organization->password_expiration_days) && !empty($this->organization->password_expiration_days)) {
+            $passwordAllowedAgeSeconds = $this->organization->password_expiration_days * 86400;
+            $passwordAgeSeconds = time() - strtotime($this->password_age);
+            if ($passwordAgeSeconds > $passwordAllowedAgeSeconds) return true;
+        }
+        return false;
 	}
 
 	public function abbrev_name() {

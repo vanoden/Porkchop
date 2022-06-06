@@ -1,20 +1,9 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script src="/js/monitor.js"></script>
 <script type="text/javascript">
- // validate password and submit if ok to go
- function submitForm() {
-     if (document.register.password.value.length < 6) {
-         alert("Your password is too short.");
-         return false;
-     }
-     if (document.register.password.value != document.register.password_2.value) {
-         alert("Your passwords don't match.");
-         return false;
-     }
-     return true;
- }
-
+  
  // check reseller toggle
  $(document).ready(function() {
 
@@ -30,24 +19,30 @@
  });
 
  function checkEmptyValues() {
-    $("#btn_additem").removeAttr('disabled');
-    $("#btn_submit").removeAttr('disabled');
-    $("#completeFormMessage").hide();
+  
+    // get elements
+    var btn_additem = document.getElementById('btn_additem');
+    var btn_submit = document.getElementById('btn_submit');
+    var completeFormMessage = document.getElementById('completeFormMessage');  
+  
+    btn_additem.removeAttribute('disabled');
+    btn_submit.removeAttribute('disabled');
+    completeFormMessage.style.display = 'none';
+    
     $("form select").each(function(){
        if (!this.value || this.value == '') {
-            $("#btn_additem").attr('disabled','disabled');
-            $("#btn_submit").attr('disabled','disabled');
-            $("#completeFormMessage").show();
+            btn_additem.setAttribute('disabled', 'disabled');
+            btn_submit.setAttribute('disabled', 'disabled');
+            completeFormMessage.style.display = 'block';
        }
     });
     $("input").each(function(){
        if (this.value == '') {
-            $("#btn_additem").attr('disabled','disabled');
-            $("#btn_submit").attr('disabled','disabled');
-            $("#completeFormMessage").show();
+            btn_additem.setAttribute('disabled', 'disabled');
+            btn_submit.setAttribute('disabled', 'disabled');
+            completeFormMessage.style.display = 'block';
        }
     });
-    
  }
 
  function checkProduct(lineNumber) {
@@ -268,7 +263,7 @@
         
    }
 </script>
-<h2><i class='fa fa-phone' aria-hidden='true'></i> Request Support</h2>
+<h2>Request Support</h2>
 <?php	if ($page->errorCount()) { ?>
     <div class="form_error"><?=$page->errorString()?></div>
 <?php	}

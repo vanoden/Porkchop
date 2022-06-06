@@ -30,7 +30,7 @@
 			#query_log($get_items_query);
 			$rs = $GLOBALS['_database']->Execute($get_items_query,$bind_params);
 			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error = "SQL Error in Navigation::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$items = array();

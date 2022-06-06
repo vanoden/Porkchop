@@ -193,10 +193,10 @@
 					$message->from($GLOBALS['_config']->support->unassigned_action->from);
 					$message->subject($GLOBALS['_config']->support->unassigned_action->subject);
 					$message->body($template->content());
-					$role = new \Register\Role();
-					if ($role->get('support user')) {
+					$privilege = new \Register\Privilege();
+					if ($privilege->get('get support notifications')) {
 						app_log("Notifying Support Team");
-						$role->notify($message);
+						$privilege->notify($message);
 					}
 				}
 				else {

@@ -1,9 +1,9 @@
 <?php
 	namespace Register;
 
-	class Privilege {
+	class Privilege Extends \BaseClass {
 		public $id;
-		private $_error;
+		protected $_error;
 		public $description;
 		public $name;
 		public $module;
@@ -134,7 +134,41 @@
             return true;
         }
 
-		public function error() {
-			return $this->_error;
+		public function peers() {
+			$get_object_query = "
+				SELECT	rur.user_id
+				FROM	register_users_roles rur,
+						register_roles_privileges rrp
+				WHERE	rrp.privilege_id = ?
+				AND		rrp.role_id = rur.role_id
+			";
+            $rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
+			if (! $rs) {
+				$this->error("SQL Error in Register::Privilege::peers(): ".$GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			$people = array();
+			while (list($id) = $rs->FetchRow()) {
+				$person = new \Register\Person($id);
+				array_push($people,$person);
+			}
+			return $people;
+		}
+
+        public function notify($message) {
+            if (! $this->id) {
+                $this->error = "Privilege not found";
+                return null;
+            }
+            $members = $this->peers();
+            foreach ($members as $member) {
+                app_log("Sending notification to '".$member->code,'debug',__FILE__,__LINE__);
+                $member->notify($message);
+                if ($member->error) {
+                    app_log("Error sending notification: ".$member->error,'error',__FILE__,__LINE__);
+                    $this->error = "Failed to send notification: ".$member->error;
+                    return false;
+                }
+            }
 		}
 	}

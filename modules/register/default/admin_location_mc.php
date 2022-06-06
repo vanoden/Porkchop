@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('register manager');
+	$page->requirePrivilege('manage customer locations');
 
 	$location = new \Register\Location($_REQUEST['id']);
 

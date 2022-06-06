@@ -3,34 +3,64 @@
 
 	class Notification {
 	    
-	    public $template;
 	    public $templateVars;
+	    public $template = TEMPLATES."/support/update_notification.html";
 	    public $errors = array();
+	    public $sender = 'no-reply@spectrosinstruments.com';
+	    public $recipients = array();
 	    public $message;
 	    private $verifyTemplate;
 	    private $transport;
 
         /**
          * construct new email notification
-         * @param $parameters, required values set, 'subject', 'template', 'templateVars', 
+         * @param $parameters, required values set, 'subject', 'template', 'templateVars', 'customer'
          */
 		public function __construct($parameters = array()) {
 		
-            if (empty($parameters['subject'])) $this->addError('email subject is required');
+            if (empty($parameters['subject']) || !isset($parameters['subject'])) $this->addError('Email subject is required');
 		    $this->templateVars = !empty($parameters['templateVars']) ? $parameters['templateVars'] : array();
 
+        	// overide template if needed
+        	if (isset($parameters['template']) && !empty($parameters['template'])) $this->template = $parameters['template'];
+        	
             // get the template specified from the file system
-        	if (! file_exists($parameters['template'])) $this->addError("Template '".$parameters['template']."' not found", __FILE__,__LINE__);
+        	if (! file_exists($this->template)) $this->addError("Template '".$this->template."' not found", __FILE__,__LINE__);
             $parameters['body'] = "";
         	try {	
-        		$parameters['body'] = file_get_contents($parameters['template']);
+        		$parameters['body'] = file_get_contents($this->template);
         	} catch (Exception $e) {
             	$this->addError("Email template load failed: ".$e->getMessage(),__FILE__,__LINE__);
         	}
+        	
+        	// overide sender if needed
+        	if (isset($parameters['sender']) && !empty($parameters['sender'])) $this->sender = $parameters['sender'];
+        	
+            // get the recipients of the customer that has email contacts set to notify        	
+        	$customerHasEmailNotifications = false;
+        	if (isset($parameters['customer']) && is_a($parameters['customer'], '\Register\Customer')) {
+            	$notifyCustomerEmails = $parameters['customer']->contacts(array('type'=>'email'));
+                foreach ($notifyCustomerEmails as $customerEmail) {
+                    if ($customerEmail->notify) {
+                        $this->recipients[] = $customerEmail->value;
+                        $customerHasEmailNotifications = true;
+                    }
+                }    
+        	}
+            if (!$customerHasEmailNotifications){
+			    $this->addError("Error: Notification can not be processed, customer has <strong>no email address</strong> set to receive notifications.");
+            }
 
 		    // build the email message
             $this->message = new \Email\Message($parameters);
             $this->populateTemplateVars(); 
+		}
+		
+		/**
+		 * send out all notifications
+		 */
+		public function notify() {
+            foreach ($this->recipients as $recipient) $this->send($recipient, $this->sender);
 		}
 		
 		/**

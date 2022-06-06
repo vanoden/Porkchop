@@ -6,6 +6,35 @@
 		private $_count = 0;
 		private $_error;
 
+        public function getListByItemId($itemId) {
+                
+            app_log("Site::SiteMessageMetaDataList::getListByItemId()",'trace',__FILE__,__LINE__);
+            $this->error = null;
+            $bind_params = array();
+            
+            if (!isset($itemId) || empty($itemId) || !is_numeric($itemId)) {
+                $this->error = "SQL Error in Site::SiteMessageMetaDataList::getListByItemId: missing itemId";
+                return null;
+            }
+            
+			$get_site_messages_metadata_query = "
+				SELECT	`item_id`, `label`, `value`
+				FROM	`site_messages_metadata`
+				WHERE	`item_id` = ?
+			";
+            array_push($bind_params,$itemId);
+			query_log($get_site_messages_metadata_query,$bind_params);
+			$rs = $GLOBALS['_database']->Execute($get_site_messages_metadata_query,$bind_params);
+			if (! $rs) {
+				$this->error = "SQL Error in Site::SiteMessageMetaDataList::getListByItemId: ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			
+			$siteMessages = array();
+			while ($siteMessage = $rs->FetchRow()) array_push($siteMessages,array('item_id' => $siteMessage['item_id'], 'label' => $siteMessage['label'], 'value' => $siteMessage['value']));		
+			return $siteMessages;
+        }
+
 		public function find($parameters = array()) {
 	
 			app_log("Site::SiteMessageMetaDataList::find()",'trace',__FILE__,__LINE__);

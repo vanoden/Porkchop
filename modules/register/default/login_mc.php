@@ -69,6 +69,8 @@
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
 		$customer = new \Register\Customer();		
 		if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
+			$counter = new \Site\Counter("auth_failed");
+			$counter->increment();
 		    $customer->get($_REQUEST['login']);
 		    if ((isset($_SESSION['isRemovedAccount']) && $_SESSION['isRemovedAccount'] == 1) || $_SESSION['failedAttemptCount'] > 2 || $customer->status == 'EXPIRED' || $customer->status == 'DELETED') {
 		    
@@ -116,6 +118,8 @@
 		    
 		    // track failed attempts at login for 
 		    $_SESSION['failedAttemptCount'] = $_SESSION['failedAttemptCount'] + 1;
+			$counter = new \Site\Counter("auth_blocked");
+			$counter->increment();
 		    if ($_SESSION['failedAttemptCount'] > 3) $customer->update(array('status' => 'EXPIRED'));
 			$page->addError("Authentication failed");
 		} elseif ($customer->error) {

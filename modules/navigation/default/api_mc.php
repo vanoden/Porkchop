@@ -16,7 +16,7 @@
 		exit;
 	}
 	# Only Developers Can See The API
-	else $page->requireRole('content operator');
+	else $page->requirePrivilege('manage navigation menus');
 
 	###################################################
 	### Just See if Server Is Communicating			###

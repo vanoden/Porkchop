@@ -1,6 +1,6 @@
 <?php
     $page = new \Site\Page();
-    $page->requireRole('storage manager');
+    $page->requirePrivilege('manage storage repositories');
 
 	if (! isset($_REQUEST['path']) || strlen($_REQUEST['path']) < 1) $_REQUEST['path'] = '/';
 

@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('support user');
+	$page->requirePrivilege('manage customers');
 	
 	/**
 	 * get color codes HEX for given queued customer status

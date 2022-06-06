@@ -15,14 +15,16 @@
 	td.value { overflow: hidden; }
 	a.pager {	margin: 5px; }
 </style>
-</script>
 
 <section>
 	<article class="segment">
 		<h2>Organizations</h2>
-        <?php	 if ($page->errorCount() > 0) { ?>
+        <?php   if ($page->errorCount() > 0) { ?>
             <div class="form_error"><?=$page->errorString()?></div>
-        <?php	 } ?>
+        <?php   }
+                if ($page->success) { ?>
+	        <div class="form_success"><?=$page->success?></div>
+        <?php	} ?>
 		
 <form id="orgSearch" method="get" class="float: left">
 <div id="search_container">
@@ -68,7 +70,7 @@ foreach ($organizations as $organization) {
 </form>
 
 <?php		
-    if ($GLOBALS['_SESSION_']->customer->has_role('register manager')) {
+    if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 ?>
 <form action="<?=PATH?>/_register/organization" method="get">
 <div class="button-bar"><span style="text-align: center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span></div>

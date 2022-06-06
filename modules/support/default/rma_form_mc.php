@@ -70,7 +70,7 @@ if ($page->errorCount() < 1) {
 	if ( $rmaItem->request->customer->id == $GLOBALS['_SESSION_']->customer->id ) {
 		// Ok
 	}
-	elseif ( $GLOBALS['_SESSION_']->customer->has_role('support user') ) {
+	elseif ( $GLOBALS['_SESSION_']->customer->can('use support module') ) {
 		// Ok
 	}
 	else {
@@ -262,22 +262,22 @@ if ($page->errorCount() < 1) {
 		$shippingPackage = new \Shipping\Package ();
 		$shippingPackage->getByShippingID($shippingShipment->id);
 		if ($_REQUEST ['form_submitted'] == 'package_details_submitted') {
-			$rmaMessage = "You Package Information has been saved";
+			$page->success = "You Package Information has been saved";
 		}
 		elseif ($shippingPackage->status == "RECEIVED") {
 			$rmaReceived = true;
-			$rmaMessage = "Your return was received";
+			$page->success = "Your return was received";
 			if ($shippingPackage->condition == "DAMAGED") $rmaMessage .= ' <span class="red">DAMAGED</span>';
 		}
 		else {
 			$rmaReceived = false;
-			$rmaMessage = "Your return is processing...";
+			$page->success = "Your return is processing...";
 		}
 	}
 
 	$ticketLink = "/_support/ticket/".$rmaTicketNumber;
 	$productLink = "/_monitor/asset/".$rmaSerialNumber;
-	if ($GLOBALS['_SESSION_']->customer->has_role('support manager')) {
+	if ($GLOBALS['_SESSION_']->customer->can('manage support requests')) {
 		$ticketLink = "/_support/request_item/".$rmaTicketNumber;
 		$productLink = "/_monitor/admin_details/$rmaSerialNumber/".$rmaProduct->code;
 	}

@@ -20,7 +20,7 @@
 			$order = new \Sales\Order();
 			$parameters = array();
 
-			if ($GLOBALS['_SESSION_']->customer->has_role('salesperson')) {
+			if ($GLOBALS['_SESSION_']->customer->can('use sales module')) {
 				if (isset($_REQUEST['customer_id'])) $parameters['customer_id'] = $_REQUEST['customer_id'];
 				elseif(isset($_REQUEST['customer_code'])) {
 					$customer = new \Register\Customer();

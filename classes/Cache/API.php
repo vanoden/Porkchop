@@ -18,7 +18,7 @@
 		public function findKeys() {
 			$client = $GLOBALS['_CACHE_'];
 	
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) $this->error('Permission denied');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage cache')) $this->deny();
 	
 			$object = null;
 			if (isset($_REQUEST['object']) && preg_match('/^\w[\w\-\.\_]*$/',$_REQUEST['object']) > 0) $object = $_REQUEST['object'];
@@ -31,12 +31,31 @@
 	
 			print $this->formatOutput($response);
 		}
+
+		###################################################
+		### Get List of Cache Key Names					###
+		###################################################
+		public function keyNames() {
+			$client = $GLOBALS['_CACHE_'];
+	
+			if (! $GLOBALS['_SESSION_']->customer->can('manage cache')) $this->deny();
+	
+			$keys = $client->keyNames();
+	
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->keyName = $keys;
+	
+			print $this->formatOutput($response);
+		}
+	
+		###################################################
 	
 		###################################################
 		### Get Specific Item from Cache				###
 		###################################################
 		public function getItem() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) $this->error('Permission denied');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage cache')) $this->deny();
 			$cache_key = $_REQUEST['object']."[".$_REQUEST['id']."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			if ($cache->error) {
@@ -56,7 +75,7 @@
 		### Delete Specific Item from Cache				###
 		###################################################
 		public function deleteItem() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) $this->error('Permission denied');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage cache')) $this->deny();
 			$cache_key = $_REQUEST['object']."[".$_REQUEST['id']."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			if ($cache->error) {
@@ -82,7 +101,7 @@
 		public function stats() {
 			$client = $GLOBALS['_CACHE_'];
 	
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) $this->error('Permission denied');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage cache')) $this->deny();
 	
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -97,7 +116,7 @@
 		public function flushCache() {
 			$client = $GLOBALS['_CACHE_'];
 	
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) $this->error('Permission denied');
+			if (! $GLOBALS['_SESSION_']->customer->can('manage cache')) $this->deny();
 	
 			$client->flush();
 	
@@ -113,6 +132,7 @@
 				'findKeys'	=> array(
 					'object'	=> array(),
 				),
+				'keyNames'	=> array(),
 				'getItem'	=> array(
 					'object'	=> array('required' => true),
 					'id'		=> array('required' => true),

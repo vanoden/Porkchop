@@ -29,7 +29,7 @@
 			);
 			if (! $rs) {
 				$this->error = "SQL Error in Site::Company::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
@@ -67,7 +67,7 @@
 
 		public function add($parameters = array()) {
 			if (! preg_match('/\w/',$parameters['name'])) {
-				$this->error = "name parameter required in company::Company::add";
+				$this->error = "name parameter required in Company::Company::add";
 				return 0;
 			}
 			
@@ -76,8 +76,8 @@
 				INTO	company_companies
 				(name)
 				VALUES
-				(".$GLOBALS['_database']->qstr($parameters['name'],get_magic_quotes_gpc()).")";
-			$GLOBALS['_database']->Execute($add_object_query);
+				(?)";
+			$GLOBALS['_database']->Execute($add_object_query,array($parameters['name']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in company::Company::add: ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
@@ -90,7 +90,7 @@
 		public function update($parameters = array()){
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error = "Valid id required for details in company::Company::update";
-				return undef;
+				return false;
 			}
 
 			# Update Object
@@ -120,7 +120,7 @@
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Site::Company::update(): ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				return false;
 			}
 			
 			return true;

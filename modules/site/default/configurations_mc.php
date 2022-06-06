@@ -1,7 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->fromRequest();
-	$page->requireRole('administrator');
+	$page->requirePrivilege('configure site');
 	
     $siteConfiguration = new \Site\Configuration();
     if (!empty($_REQUEST['key'])) $siteConfiguration = new \Site\Configuration($_REQUEST['key']);

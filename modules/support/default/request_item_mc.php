@@ -54,17 +54,31 @@
 					'from'	=> 'service@spectrosinstruments.com',
 					'subject'	=> "[SUPPORT] Action #".$action->id." assigned to you",
 					'body'		=> "The following action was assigned to you:
-Request: <a href='https://".$_config->site->hostname."/_support/request_detail/".$action->item->request->code."'>".$action->item->request->code."</a><br>
-Item: ".$action->item->line."<br>
-Type: ".$action->type."<br>
-Product: ".$action->item->product->code."<br>
-Serial: ".$action->item->serial_number."<br>
-Description: ".$action->description
+                                    Request: <a href='https://".$_config->site->hostname."/_support/request_detail/".$action->item->request->code."'>".$action->item->request->code."</a><br>
+                                    Item: ".$action->item->line."<br>
+                                    Type: ".$action->type."<br>
+                                    Product: ".$action->item->product->code."<br>
+                                    Serial: ".$action->item->serial_number."<br>
+                                    Description: ".$action->description
 				)
 			);
 			$message->html(true);
 			$assigned_to->notify($message);
 		}
+		
+        // Update Customer an action has been created
+        $notification = new \Email\Notification (
+            array (
+                'customer'=> $request->customer,
+                'subject'=> "New Action on Support Ticket# " . $item->ticketNumber(),
+                'templateVars' => array (
+                    'NOTIFICATION.MESSAGE' => 'A new action has occurered on your support ticket.',
+                    'NOTIFICATION.DESCRIPTION' => "Action Type: " . $_REQUEST['action_type'] . "<br/> Status: " . $_REQUEST['action_status'] . "<br/> Description: " .$_REQUEST['action_description'], 
+                    'NOTIFICATION.LINK'  => "https://" . $_config->site->hostname . "/_support/ticket/" . $item->ticketNumber()
+                )
+            )
+        );
+        $notification->notify();
 	}
 	
 	if ($_REQUEST['btn_add_rma']) {

@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('register manager');
+	$page->requirePrivilege('manage customers');
 
 	# Identify Specified Role if possible
     if ($_REQUEST['id']) {

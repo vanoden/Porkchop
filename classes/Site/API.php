@@ -336,7 +336,7 @@
 		}
 		
 		public function deleteConfiguration() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) error("Permission denied");
 			$response = new \HTTP\Response();
 			$configuration = new \Site\Configuration($_REQUEST['key']);
 			if ($configuration->delete()) {
@@ -350,7 +350,7 @@
 		}
 		
 		public function setConfiguration() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) error("Permission denied");
 			$response = new \HTTP\Response();
 			$configuration = new \Site\Configuration($_REQUEST['key']);
 			if ($configuration->set($_REQUEST['value'])) {
@@ -365,7 +365,7 @@
 		}
 		
 		public function getConfiguration() {
-			if (! $GLOBALS['_SESSION_']->customer->has_role('administrator')) error("Permission denied");
+			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) error("Permission denied");
 			$response = new \HTTP\Response();
 			$configuration = new \Site\Configuration($_REQUEST['key']);
 			if ($configuration->get($_REQUEST['key'])) {
@@ -553,6 +553,21 @@
         	print $this->formatOutput($response);  
         }
 
+        public function getSiteMessageMetaDataListByItemId () {
+	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
+	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->getListByItemId($_REQUEST['item_id']);
+	        $response = new \HTTP\Response();
+	        
+            if (empty($siteMessageMetaDataListArray)) {
+                $response->success = 0;
+                $response->error = "Site Message MetaData List could not be found for item_id: " . $_REQUEST['item_id'];
+            } else {
+                $response->success = 1;
+                $response->message = $siteMessageMetaDataListArray;
+            }
+        	print $this->formatOutput($response);  
+        }
+
         public function addSiteMessageDelivery() {
 	        $siteMessageDelivery = new \Site\SiteMessageDelivery();
 
@@ -703,6 +718,13 @@
 			$response->count = $deliveryList->count();
 			print $this->formatOutput($response);
 		}
+
+		public function timestamp() {
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->timestamp = time();
+			print $this->formatOutput($response);
+		}
  
 		public function _methods() {
 			return array(
@@ -803,6 +825,9 @@
                     'date_viewed' => array('required' => true),
                     'date_acknowledged' => array('required' => true)
                  ), 
+				 'getSiteMessageMetaDataListByItemId'	=> array(
+					'item_id'	=> array('required' => true)
+				 ),
                  'removeSiteMessageDelivery'	=> array(
                     'id' => array('required' => true)
 			     ),
@@ -828,7 +853,8 @@
 			     ),
                  'acknowledgeSiteMessageByUserId'	=> array(
                     'user_created' => array('required' => true)
-			     )	     
+			     ),
+				'timestamp' => array()
 			);
 		}
 	}

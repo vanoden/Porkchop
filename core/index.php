@@ -147,7 +147,7 @@
 	if ($_SESSION_->message) $page_message = $_SESSION_->message;
 
 	# Access Logging in Application Log
-	$logger->write("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."'",'info',__FILE__,__LINE__);
+	$logger->write("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
 
 	# Load Page Information
 	$_page = new \Site\Page();

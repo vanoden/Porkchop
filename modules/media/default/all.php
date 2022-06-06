@@ -1,7 +1,7 @@
 <div class="body">
 <?php	foreach ($items as $item) { ?>
 	<div class="mediaItem">
-	<?php	if (role('media manager')) { ?>
+	<?php	if ($GLOBALS['_SESSION_']->customer->can('manage media files')) { ?>
 		<a class="mediaItemEdit" href="/_media/edit/<?=$item->code?>">Edit</a>
 	<?php	} ?>
 		<img class="mediaItemIcon" src="<?=$item->icon?>" />

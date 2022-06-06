@@ -11,12 +11,12 @@
                 ?>
                 SortableTable.sortColumn('date-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
                 <?php
-            break;       
+            break;
             case 'requestor':
                 ?>
                 SortableTable.sortColumn('requestor-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
                 <?php
-            break;        
+            break;
             case 'organization':
                 ?>
                 SortableTable.sortColumn('organization-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
@@ -106,9 +106,16 @@
             <span class="label"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> After Date: <?=!empty($_REQUEST['min_date']) ? '[' . $_REQUEST['min_date']. ']' : '';?></span>
             <input type="text" id="datepicker" value="<?=$minDate?>">
         </div>
-        
-	    <div style="clear: both;"></div>
-	    
+        <div style="width: 33%;">
+            <span class="label"><i class="fa fa-sitemap" aria-hidden="true"></i> Organization:</span>
+            <select id="organization_id" name="organization_id" class="value input collectionField" onchange="updateReport()">
+    	         <option value="ALL">ALL</option>
+                <?php foreach ($registerOrganizations as $organization) { ?>
+		            <option value="<?=$organization->id?>"<?php	if ($organization->id == $selectedOrganization) print " selected"; ?>><?=$organization->name?></option>
+                <?php } ?>
+	        </select>
+        </div>
+        <div style="clear: both;"></div>
 	    <span class="label"><i class="fa fa-filter" aria-hidden="true"></i> Status</span>
 	    <div class="checkbox-row">
 		    <input type="checkbox" name="status_new" value="1" onclick="updateReport()"<?php if ($_REQUEST['status_new']) print " checked";?> />
@@ -124,7 +131,6 @@
 		    <input type="checkbox" name="status_closed" value="1" onclick="updateReport()"<?php	if ($_REQUEST['status_closed']) print " checked";?> />
 		    <span class="value">CLOSED</span>
 	    </div>
-	    
 	    <span style="float: right;"><a href="/_support/request_items" class="black"><i class="fa fa-ban" aria-hidden="true"></i> Clear Form</a></span>
 	    <br/>
 	</form>
@@ -134,13 +140,15 @@
 	<div class="tableRowHeader">
 		<div id="ticket-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'ticket'; updateReport()">Ticket #</div>
 		<div id="date-sortable-column" class="tableCell sortableHeader"  style="width: 20%;" onclick="document.getElementById('sort_by').value = 'requested'; updateReport()">Date Requested</div>
+		<div id="status-sortable-column" class="tableCell sortableHeader" style="width: 9%;" onclick="document.getElementById('sort_by').value = 'status'; updateReport()">Status</div>
+		<div id="serial-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'serial'; updateReport()">Serial #</div>
+		<div id="product-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'product'; updateReport()">Product</div>
 		<div id="requestor-sortable-column" class="tableCell sortableHeader" style="width: 15%;" onclick="document.getElementById('sort_by').value = 'requestor'; updateReport()">Requestor</div>
 		<div id="organization-sortable-column" class="tableCell sortableHeader" style="width: 20%;" onclick="document.getElementById('sort_by').value = 'organization'; updateReport()">Organization</div>
-		<div id="product-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'product'; updateReport()">Product</div>
-		<div id="serial-sortable-column" class="tableCell sortableHeader" style="width: 12%;" onclick="document.getElementById('sort_by').value = 'serial'; updateReport()">Serial #</div>
-		<div id="status-sortable-column" class="tableCell sortableHeader" style="width: 9%;" onclick="document.getElementById('sort_by').value = 'status'; updateReport()">Status</div>
+		<div class="tableCell" style="width: 20%;">RMA</div>
 	</div> <!-- end row header -->
-    <?php	foreach ($items as $item) { ?>
+    <?php	foreach ($items as $item) {
+				$rmas = $item->rmas(); ?>
         <div class="tableRow">
 	        <div class="tableCell">
 		        <span class="value"><a href="/_support/request_item/<?=$item->id?>"><?=$item->ticketNumber()?></a></span>
@@ -149,20 +157,32 @@
 		        <span class="value"><?=$item->request->date_request?></span>
 	        </div>
 	        <div class="tableCell">
-		        <span class="value"><?=$item->request->customer->full_name()?></span>
-	        </div>
-	        <div class="tableCell">
-		        <span class="value"><?=$item->request->customer->organization->name?></span>
-	        </div>
-	        <div class="tableCell">
-		        <span class="value"><?=$item->product->code?></span>
-	        </div>
-	        <div class="tableCell">
-		        <span class="value"><?=$item->serial_number?></span>
-	        </div>
-	        <div class="tableCell">
 		        <span class="value"><?=ucwords(strtolower($item->status))?></span>
 	        </div>
+	        <div class="tableCell">
+		        <span class="value"><a href="/_monitor/admin_details/<?=$item->product->code?>/<?=$item->serial_number?>"><?=$item->serial_number?></a></span>
+	        </div>
+	        <div class="tableCell">
+		        <span class="value"><a href="/_product/edit/<?=$item->product->code?>"><?=$item->product->code?></a></span>
+	        </div>
+	        <div class="tableCell">
+		        <span class="value"><a href="/_register/admin_account?customer_id=<?=$item->request->customer->id?>"><?=$item->request->customer->full_name()?></a></span>
+	        </div>
+	        <div class="tableCell">
+		        <span class="value"><a href="/_register/organization?id=<?=$item->request->customer->organization->id?>"><?=$item->request->customer->organization->name?></a></span>
+	        </div>
+	        <div class="tableCell">
+		        <span class="value">
+<?php	if (count($rmas) > 0) { ?>
+					<a href="/_support/admin_rma/<?=$rmas[0]->code?>"><?=$rmas[0]->number()?></a>
+<?php 	} ?>
+				</span>
+	        </div>
+        </div>
+    <?php	} 
+    	if (empty($items)) { ?>
+        <div class="tableRow" style="padding:10px">
+            <br/><strong>No Results</strong><br/>
         </div>
     <?php	} ?>
 </div>

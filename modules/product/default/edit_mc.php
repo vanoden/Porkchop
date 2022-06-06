@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('product manager');
+	$page->requirePrivilege('manage products');
 
 	// Valid Item Types
 	$item_types = array(

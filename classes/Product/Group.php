@@ -15,7 +15,7 @@
 			query_log($find_items_query,array($this->id),true);
 			$rs = $GLOBALS['_database']->Execute($find_items_query,array($this->id));
 			if (! $rs) {
-				$this->_error = $GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Product::Item::items(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			$items = array();

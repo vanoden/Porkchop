@@ -45,7 +45,7 @@
 				if ($request->error()) $page->addError("Error adding item to request: ".$request->error());
 
 				$body .= "<br>
-	Ticket: ".$item->id."<br>
+	Ticket: <a href='http://".$GLOBALS['_config']->site->hostname."/_support/request_item/".$item->id."'>".$item->id."</a><br>
 	&nbsp;&nbsp;".$item->product->code." ".$item->serial_number.": ".$item->description;
 			}
         } else {
@@ -60,7 +60,7 @@
             if ($request->error()) $page->addError("Error adding item to request: ".$request->error());
 
             $body .= "<br>
-	Ticket: ".$item->id."<br>
+	Ticket: <a href='http://".$GLOBALS['_config']->site->hostname."/_support/request_item/".$item->id."'>".$item->id."</a><br>
 	&nbsp;&nbsp;".$item->description;
         }
 
