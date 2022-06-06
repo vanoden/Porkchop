@@ -246,41 +246,53 @@ class Person {
 				SET		id = id
 			";
 
-        $bind_params = array();
-        if (isset($parameters['first_name'])) {
-            $update_customer_query .= ",
-                first_name = ?";
-            array_push($bind_params,$parameters['first_name']);
-        }
-        if (isset($parameters['last_name'])) {
-            $update_customer_query .= ",
-                last_name = ?";
-            array_push($bind_params,$parameters['last_name']);
-        }
+	$bind_params = array();
+	if (isset($parameters['first_name'])) {
+		if (! preg_match('/^[^\w\-\.\_\s]+$/',$parameters['first_name'])) {
+			$this->error("Invalid name");
+			return false;
+		}
+		$update_customer_query .= ",
+		first_name = ?";
+		array_push($bind_params,$parameters['first_name']);
+	}
+	if (isset($parameters['last_name'])) {
+		if (! preg_match('/^[^\w\-\.\_\s]+$/',$parameters['last_name'])) {
+			$this->error("Invalid name");
+			return false;
+		}
+		$update_customer_query .= ",
+		last_name = ?";
+		array_push($bind_params,$parameters['last_name']);
+	}
         if (isset($parameters['login']) and !empty($parameters['login'])) {
 		if (!$this->validLogin($parameters['login'])) {
 			$this->error = "Invalid login";
 			return false;
 		}
-            $update_customer_query .= ",
-                login = ?";
-            array_push($bind_params,$parameters['login']);
-        }
-        if (isset($parameters['organization_id']) and ! empty($parameters['organization_id'])) {
-            $update_customer_query .= ",
-                organization_id = ?";
-            array_push($bind_params,$parameters['organization_id']);
-        }
-        if (isset($parameters['status'])) {
-            $update_customer_query .= ",
-                status = ?";
-            array_push($bind_params,$parameters['status']);
-        }
-        if (isset($parameters['timezone'])) {
-            $update_customer_query .= ",
-                timezone = ?";
-            array_push($bind_params,$parameters['timezone']);
-        }
+		$update_customer_query .= ",
+		login = ?";
+		array_push($bind_params,$parameters['login']);
+	}
+	if (isset($parameters['organization_id']) and ! empty($parameters['organization_id'])) {
+		$update_customer_query .= ",
+		organization_id = ?";
+		array_push($bind_params,$parameters['organization_id']);
+	}
+	if (isset($parameters['status'])) {
+		$update_customer_query .= ",
+		status = ?";
+		array_push($bind_params,$parameters['status']);
+	}
+	if (isset($parameters['timezone'])) {
+		if (! preg_match('/^\w[^\w\-\.\_\s\/]+$/',$parameters['timezone'])) {
+			$this->error("Invalid timezone");
+			return false;
+		}
+		$update_customer_query .= ",
+		timezone = ?";
+		array_push($bind_params,$parameters['timezone']);
+	}
         if (isset($parameters['password'])) {
             app_log("Changing password", 'notice', __FILE__, __LINE__);
             $update_customer_query .= ",
@@ -397,9 +409,9 @@ class Person {
             return null;
         }
         list($value) = $rs->FetchRow();
-	return $value;
+	return htmlspecialvars($value);
     }
-    
+ 
     public function searchMeta($key, $value = '') {
 	$bind_params = array();
         $get_results_query = "
