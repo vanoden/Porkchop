@@ -6,7 +6,7 @@
 	### A. Caravello 11/12/2002						###
 	###################################################
 	$page = new \Site\Page();
-	$page->requireAuth();
+	$page->requirePrivilege('manage customers');
 
 	# Security - Only Register Module Operators or Managers can see other customers
 	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
@@ -40,7 +40,6 @@
 			);
 			if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
 			if ($organization->id) {
-			
 				app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
 				app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
 				
