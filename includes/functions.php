@@ -20,6 +20,11 @@
 	function _debug_print($message) {
 		error_log("DEBUG: ".$message);
 	}
+	function sanitize(&$string) {
+		$string = trim($string);
+		$string = htmlspecialchars($string);
+		return $string;
+	}
 	function get_mysql_date($date = null,$range=0) {
 		if (empty($date)) {
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
