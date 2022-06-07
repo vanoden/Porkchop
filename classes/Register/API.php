@@ -123,13 +123,19 @@
             if ($customer->error) $this->app_error("Error getting customer: ".$customer->error,__FILE__,__LINE__);
             if (! $customer->id) $this->error("Customer not found");
 
-            if ($_REQUEST['organization']) {
-                $_organization = new \Register\Organization();
-                $organization = $_organization->get($_REQUEST['organization']);
-                if ($_organization->error) $this->app_error("Error getting organization: ".$_organization->error,__FILE__,__LINE__);
-                if (! $organization->id) $this->error("Organization not found");
-                $parameters['organization_id'] = $organization->id;
+            if (isset($_REQUEST['organization']) && !isset($_REQUEST['organization_code'])) {
+		$_REQUEST['organization_code'] = $_REQUEST['organization'];
             }
+            if (isset($_REQUEST['organization_code'])) {
+                $organization = new \Register\Organization();
+                if ($organization->get($_REQUEST['organization_code'])) {
+			$parameters['organization_id'] = $organization->id;
+		}
+		else $this->app_error("Error getting organization: ".$organization->error,__FILE__,__LINE__);
+            }
+	    else {
+                $this->error("Organization not found");
+	    }
             
             if (isset($_REQUEST['first_name'])) $parameters['first_name'] = $_REQUEST['first_name'];
             if (isset($_REQUEST['last_name'])) $parameters['last_name'] = $_REQUEST['last_name'];
@@ -140,10 +146,9 @@
             }
 
             # Update Customer
-            $customer->update($parameters);
+            if (!$customer->update($parameters)) error($customer->error());
 
             # Error Handling
-            if ($customer->error) $this->app_error("Error updating customer: ".$customer->error,__FILE__,__LINE__);
             $response = new \HTTP\Response();
             $response->customer = $customer;
             $response->success = 1;
@@ -1098,9 +1103,9 @@
             print $this->formatOutput($response);
 		}
 
-        function getLocation() {
-            
-        }
+		function getLocation() {
+
+		}
 		
 		public function _methods() {
 			return array(
@@ -1123,7 +1128,7 @@
 					'automation'	=> array(),
 				),
 				'findCustomers'	=> array(
-                    'organization_code' => array(),
+					'organization_code' => array(),
 					'login'     	=> array(),
 					'first_name'	=> array(),
 					'last_name'		=> array(),
@@ -1131,6 +1136,10 @@
 				'findRoles'	    => array(),
 				'findRoleMembers'	=> array(
 					'code'	=> array('required' => true)
+				),
+				'addRoleMember'	=> array(
+					'login'		=> array('required' => true),
+					'name'		=> array('required' => true)
 				),
 				'findPrivileges'	=> array(),
 				'findPrivilegePeers'	=> array(
