@@ -193,6 +193,8 @@ class Person {
         if (!isset($parameters['date_expires'])) $parameters['date_expires'] = '2038-01-01 00:00:00';
         if (!isset($parameters['validation_key'])) $parameters['validation_key'] = NULL;
 
+		sanitize($parameters['login']);
+
         # Add to Database
         $add_user_query = "
 				INSERT
