@@ -11,7 +11,7 @@
 		public $reseller;
 		public $notes;
 		public $_cached;
-        public $password_expiration_days;
+		public $password_expiration_days;
 		private $_nocache = false;
 
 		public function __construct($id = 0,$options = array()) {
