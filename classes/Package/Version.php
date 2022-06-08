@@ -20,7 +20,7 @@
 
 		public function add($parameters = array()) {
 			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) {
-				$this->error = "package manager role required";
+				$this->error = "Not permitted to manage packages";
 				return false;
 			}
 			
