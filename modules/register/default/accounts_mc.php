@@ -6,7 +6,7 @@
 	### A. Caravello 11/12/2002						###
 	###################################################
 	$page = new \Site\Page('register','accounts');
-	$page->requireAuth();
+	$page->requirePrivilege("manage customers");
 
 	// Initialize Parameter Array
 	$find_parameters = array();
