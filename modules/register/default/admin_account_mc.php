@@ -35,10 +35,9 @@
 	
 	// handle form "apply" submit
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
-	
 		app_log("Account form submitted",'debug',__FILE__,__LINE__);
 		$parameters = array();
-		
+		$parameters['login'] = $_REQUEST["login"];
 		if (isset($_REQUEST["first_name"])) 	$parameters['first_name']	= $_REQUEST["first_name"];
 		if (isset($_REQUEST["last_name"]))		$parameters['last_name']	= $_REQUEST["last_name"];
 		if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
@@ -49,9 +48,8 @@
 			else $parameters['automation'] = false;
 		}
 
-		if (isset($_REQUEST['organization_id'])) {
-			$parameters["organization_id"] = $_REQUEST["organization_id"];
-		}
+		if (isset($_REQUEST['organization_id'])) $parameters["organization_id"] = $_REQUEST["organization_id"];
+		
 		if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
 			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 				$page->addError("Passwords do not match");
@@ -64,8 +62,8 @@
 		if ($customer_id) {
 			app_log("Updating customer ".$customer_id,'debug',__FILE__,__LINE__);
 			$customer = new \Register\Customer($customer_id);
-
 			$customer->update($parameters);
+			
 			if ($customer->error) {
 				app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
                 $page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");

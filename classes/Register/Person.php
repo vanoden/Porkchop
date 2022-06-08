@@ -254,7 +254,7 @@ class Person {
 
 	$bind_params = array();
 	if (isset($parameters['first_name'])) {
-		if (! preg_match('/^[^\w\-\.\_\s]+$/',$parameters['first_name'])) {
+		if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['first_name'])) {
 			$this->error("Invalid name");
 			return false;
 		}
@@ -263,7 +263,7 @@ class Person {
 		array_push($bind_params,$parameters['first_name']);
 	}
 	if (isset($parameters['last_name'])) {
-		if (! preg_match('/^[^\w\-\.\_\s]+$/',$parameters['last_name'])) {
+		if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['last_name'])) {
 			$this->error("Invalid name");
 			return false;
 		}
@@ -291,7 +291,7 @@ class Person {
 		array_push($bind_params,$parameters['status']);
 	}
 	if (isset($parameters['timezone'])) {
-		if (! preg_match('/^\w[^\w\-\.\_\s\/]+$/',$parameters['timezone'])) {
+		if (! preg_match('/^\w[\w\-\.\_\s\/]+$/',$parameters['timezone'])) {
 			$this->error("Invalid timezone");
 			return false;
 		}

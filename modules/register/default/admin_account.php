@@ -59,6 +59,7 @@
 <form name="register" action="<?=PATH?>/_register/admin_account" method="POST">
    <input type="hidden" name="target" value="<?=$target?>"/>
    <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
+   <input type="hidden" name="login" value="<?=$customer->login?>"/>
     <?php	 if ($page->errorCount() > 0) { ?>
         <div class="form_error"><?=$page->errorString()?></div>
     <?php	 } ?>

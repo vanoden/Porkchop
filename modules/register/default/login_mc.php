@@ -58,8 +58,8 @@
 				$GLOBALS['_SESSION_']->assign($customer->id);
 
 				app_log("Customer ".$customer->id." logged in by token",'notice',__FILE__,__LINE__);
-				app_log("Redirecting to '/_register/account'",'notice',__FILE__,__LINE__);
-				header("location: /_register/account");
+				app_log("Redirecting to '/_register/reset_password'",'notice',__FILE__,__LINE__);
+				header("location: /_register/reset_password");
 				exit;
 			}
 		} else {
