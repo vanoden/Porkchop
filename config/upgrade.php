@@ -17,7 +17,8 @@
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
-				'configure site'
+				'configure site',
+				'see site api'
 			),
 			"templates"	=> array(
 				"page"	=> $templates['admin'],
@@ -32,7 +33,8 @@
 				"geography user"	=> array(),
 			),
 			"privileges"	=> array(
-				'manage geographical data'
+				'manage geographical data',
+				'see geography api'
 			),
 		),
 		"Content"		=> array(
@@ -40,7 +42,8 @@
 			"privileges"	=> array(
 				"edit content messages",
 				"browse content messages",
-				"edit page metadata"
+				"edit page metadata",
+				"see content api"
 			),
 		),
 		"Register"		=> array(
@@ -51,6 +54,7 @@
 				"manage organization comments",
                 "manage customer locations",
 				"see admin tools",
+				"see register api"
 			),
 			"templates"		=> array(
 				"organizations"		=> $templates['admin'],
@@ -67,12 +71,14 @@
 			"schema"	=> 2,
 			"privileges"	=> array(
 				"manage contacts",
-				"browse contact events"
+				"browse contact events",
+				"see contact api"
             )
 		),
 		"Navigation"	=> array(
             "privileges"    => array(
-                "manage navigation menus"
+                "manage navigation menus",
+		"see navigation api"
             )
         ),
 		"Product"		=> array(
@@ -80,7 +86,9 @@
 			"privileges"	=> array(
                 "edit product prices",
                 "manage products",
-                "manage product instances"
+                "manage product instances",
+		"add product instances",
+		"see product api"
             ),
 			"templates"		=> array(
 				"report"			=> $templates['admin'],
@@ -90,7 +98,8 @@
 		"Email"			=> array(
 			"schema"	=> 2,
             "privileges"    => array(
-                "can create email"
+                "can create email",
+		"see email api"
             )
 		),
 		"Action"		=> array(
