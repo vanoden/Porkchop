@@ -16,7 +16,7 @@
 
         // check for errors
 	    if ($_REQUEST["password"] != $_REQUEST["password_2"]) $page->error .= "Passwords do not match";
-	    if (strlen($_REQUEST["password"]) > 6) $page->error .= "Password is too short.";
+	    if ($customer->password_strength($_REQUEST["password"]) < $GLOBALS['_config']->register->minimum_password_strength) $page->error .= "Password needs more complexity.".$customer->password_strength($_REQUEST["password"]);
 	    if (empty($page->error) && $customer->id) {
 	        app_log("Updating customer ".$customer_id,'debug',__FILE__,__LINE__);
 	        $customerUpdated = $customer->update(array('password' => $_REQUEST["password"]));
