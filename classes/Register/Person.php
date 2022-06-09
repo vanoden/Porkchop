@@ -1,14 +1,13 @@
 <?php
 namespace Register;
 
-class Person {
+class Person Extends \BaseClass {
 
     public $id;
     public $first_name;
     public $last_name;
     public $location;
     public $organization;
-    public $error;
     public $code;
     public $message;
     public $department;
@@ -21,7 +20,7 @@ class Person {
     public function __construct($id = 0) {
 
         # Clear Error Info
-        $this->error = '';
+        $this->_error = '';
 
         # Find Person if id given
         if (isset($id) && is_numeric($id)) {
@@ -61,7 +60,7 @@ class Person {
                 return $customer;
             }
             else {
-                $this->error = "Customer " . $this->id . " returned unpopulated cache";
+                $this->error("Customer " . $this->id . " returned unpopulated cache");
             }
         }
 
@@ -87,7 +86,7 @@ class Person {
             $this->id
         ));
         if (!$rs) {
-            $this->error = "SQL Error in Register::Person::details(): " . $GLOBALS['_database']->ErrorMsg();
+            $this->error("SQL Error in Register::Person::details(): " . $GLOBALS['_database']->ErrorMsg());
             return null;
         }
         $customer = $rs->FetchNextObject(false);
@@ -171,18 +170,18 @@ class Person {
     
     public function add($parameters = array()) {
         if (!$this->validLogin($parameters['login'])) {
-            $this->error = "Invalid Login";
+            $this->error("Invalid Login");
             return null;
         }
         if (! isset($GLOBALS['_config']->no_password) or !($GLOBALS['_config']->no_password)) {
             $password_length = strlen($parameters['password']);
 
             if (isset($GLOBALS['_config']->register->minimum_password_strength) && $this->password_strength($parameters['password']) < $GLOBALS['_config']->register->minimum_password_strength) {
-                $this->error = "Password too weak.";
+                $this->error("Password too weak.");
                 return false;
             }
-            if ($password_length > 100) {
-                $this->error = "Password too long.";
+            if ($password_length > 64) {
+                $this->error("Password too long.");
                 return false;
             }
         }
@@ -231,7 +230,7 @@ class Person {
             $parameters['validation_key']
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Register::Person::add(): Error: " . $GLOBALS['_database']->ErrorMsg() . " Query: " . preg_replace("/[\t\r\n]/", " ", $add_user_query);
+            $this->error("SQL Error in Register::Person::add(): Error: " . $GLOBALS['_database']->ErrorMsg() . " Query: " . preg_replace("/[\t\r\n]/", " ", $add_user_query));
             return false;
         }
         $this->id = $GLOBALS['_database']->Insert_ID();
@@ -242,7 +241,7 @@ class Person {
     public function update($parameters = array()) {
     
         if (!$this->id) {
-            $this->error = "User ID Required for Update";
+            $this->error("User ID Required for Update");
             return false;
         }
 
@@ -299,18 +298,6 @@ class Person {
 		timezone = ?";
 		array_push($bind_params,$parameters['timezone']);
 	}
-        if (isset($parameters['password'])) {
-        
-            app_log("Changing password", 'notice', __FILE__, __LINE__);
-            $update_customer_query .= ",
-                `password` = password(?)";
-            array_push($bind_params,$parameters['password']);
-            
-            // reset password age to today
-            $update_customer_query .= ",
-                password_age = ?";
-            array_push($bind_params,date('Y-m-d H:i:s'));
-        }
 
         if (isset($parameters['validation_key'])) {
             $update_customer_query .= ",
@@ -333,6 +320,7 @@ class Person {
 				WHERE	id = ?
 			";
         array_push($bind_params,$this->id);
+	query_log($update_customer_query,$bind_params,true);
         $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
         if ($GLOBALS['_database']->ErrorMsg()) {
             $this->error = "SQL Error in Register::Person::update(): " . $GLOBALS['_database']->ErrorMsg();
@@ -346,6 +334,26 @@ class Person {
 
         # Get Updated Information
         return $this->details();
+    }
+
+    public function changePassword($password) {
+	app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$this->login,'info');
+	if ($this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
+		$this->error("Password needs more complexity");
+		return false;
+	}
+	$update_password_query = "
+		UPDATE	register_users
+		SET	password = ?,
+			password_age = sysdate()
+		WHERE	id = ?
+	";
+	$GLOBALS['_database']->Execute($update_password_query,array($password,$this->id));
+	if ($GLOBALS['_database']->ErrorMsg()) {
+		$this->error("SQL Error in Register::Person::changePassword(): ".$GLOBALS['_database']->ErrorMsg());
+		return false;
+	}
+	return true;
     }
     
     public function getMeta($id = 0) {
@@ -690,9 +698,5 @@ class Person {
 
 	public function icon() {
 		return new \Register\PersonIcon($this->id);
-	}
-
-	public function error() {
-		return $this->error;
 	}
 }
