@@ -344,7 +344,7 @@ class Person Extends \BaseClass {
 	}
 	$update_password_query = "
 		UPDATE	register_users
-		SET	password = ?,
+		SET	`password` = password(?),
 			password_age = sysdate()
 		WHERE	id = ?
 	";

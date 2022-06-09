@@ -23,6 +23,11 @@
            document.getElementById("delete-contact").submit();
        }
    }
+	// Redirect user to reset password page
+	function passChange() {
+		window.location.replace("/_register/reset_password");
+		return true;
+	}
 </script>
 <style type="text/css"></style>
 <h2>My Account</h2>
@@ -150,24 +155,8 @@
 	</section>
 
 	<section class="form-group">
-		<?php if ($customer->auth_method == 'local') { ?>
-		<ul class="form-grid three-col connectBorder">
-			<h4>Change Password</h4>
-			<li id="">
-				<label for="current-password">Current Password:</label>
-				<input type="password" class="value registerValue registerPasswordValue" name="password" />
-			</li>
-			<li id="accountPasswordQuestion">
-				<label for="new-password-first">New Password:</label>
-				<input type="password" class="value registerValue registerPasswordValue" name="password" />
-			</li>
-			<li id="accountPasswordConfirm">
-				<label for="new-password-second">Confirm New Password:</label>
-				<input type="password" class="value registerValue registerPasswordValue" name="password_2" />
-			</li>
-		</ul>
 		<div id="accountFormSubmit"><input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton" onclick="return submitForm();" /></div>
-		<?php } ?>
+		<div id="accountFormSubmit"><input type="button" name="method" value="Change Password" class="button submitButton registerSubmitButton" onclick="return passChange();" /></div>
 	</section>
 </form>
 

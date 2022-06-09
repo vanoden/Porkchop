@@ -32,7 +32,7 @@
 	    $_contact->delete();
 	    $page->success = 'Contact Entry ' . $_REQUEST['register-contacts-id'] . ' has been removed.';
 	}
-	
+
 	// handle form "apply" submit
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 		app_log("Account form submitted",'debug',__FILE__,__LINE__);
@@ -49,29 +49,27 @@
 		}
 
 		if (isset($_REQUEST['organization_id'])) $parameters["organization_id"] = $_REQUEST["organization_id"];
-		
+
 		if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
 			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 				$page->addError("Passwords do not match");
 				goto load;
 			}
-			else
-				$parameters["password"] = $_REQUEST["password"];
 		}
 
 		if ($customer_id) {
 			app_log("Updating customer ".$customer_id,'debug',__FILE__,__LINE__);
 			$customer = new \Register\Customer($customer_id);
 			$customer->update($parameters);
-			
 			if ($customer->error) {
 				app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
-                $page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
+				$page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
 				goto load;
 			}
+			if ($_REQUEST['password']) $customer->changePassword($_REQUEST["password"]);
 		} else {
 			app_log("New customer registration",'debug',__FILE__,__LINE__);
-			
+
 			// Default Login to Email Address
 			if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['email_address'];
 
@@ -83,11 +81,11 @@
 			###########################################
 			## Add User To Database
 			###########################################
-			
+
 			// Add Customer Record to Database
 			$customer = new \Register\Customer();
 			$customer->add($parameters);
-	
+
 			if ($customer->error) {
 				$page->addError($customer->error);
 				goto load;

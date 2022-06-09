@@ -6,6 +6,13 @@
     }
 </style>
 
+<?php	if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} else { ?>
 <section id="form-message">
 	<ul class="connectBorder infoText">
 		<li>This site is for authorized use by employees and customers of <r7 object="company" property="name"/>. No other use is permitted.</li>
@@ -18,13 +25,7 @@
 		<li><?=$page->error?></li>
 	</ul>
 </section>
-<?php }	if ($page->success) {	?>
-<section id="form-message">
-    <ul class="connectBorder progressText">
-	    <li><?=$page->success?></li>
-    </ul>
-</section>
-<?php } ?>
+<?php }	?>
 
 <section id="reg_form"class="body">
 
@@ -45,3 +46,4 @@
 		</div>
 	</form>
 </section>
+<?php } ?>
