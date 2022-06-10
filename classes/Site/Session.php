@@ -62,7 +62,7 @@
 				$this->error = "Domain '".$this->domain->id."' not found for location ".$this->location->id;
 				return null;
 			}
-			
+
 			$this->company = new \Company\Company($this->domain->company->id);
 			if ($this->company->error) {
 				$this->error = "Error finding company: ".$this->company->error;
@@ -501,35 +501,35 @@
 				)
 			);
 		}
-		public function expire_session($session_id) {
-			if (! preg_match('/^\d+$/',$session_id)) {
-				$this->error = "Invalid session id for session::Session::expire_session";
+		public function expire() {
+			if (! preg_match('/^\d+$/',$this->id)) {
+				$this->error = "Invalid session id for session::Session::expire";
 				return null;
 			}
 			# Delete Hits
 			$delete_hits_query = "
 				DELETE
 				FROM	session_hits
-				WHERE	session_id = '$session_id'
+				WHERE	session_id = ?
 			";
-			$GLOBALS['_database']->execute($delete_hits_query);
+			$GLOBALS['_database']->execute($delete_hits_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Session::expire_session(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->error = "SQL Error in Site::Session::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
 			}
 
 			# Delete Session
 			$delete_session_query = "
 				DELETE
 				FROM	session_sessions
-				WHERE	session_id = '$session_id'
+				WHERE	session_id = ?
 			";
-			$GLOBALS['_database']->execute($delete_session_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
-				$this->error = "SQL Error in Site::Session::expire_session(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+			$GLOBALS['_database']->execute($delete_session_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Site::Session::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
 			}
+			return true;
 		}
 		public function authenticated() {
 			if (isset($this->customer->id) && $this->customer->id > 0) return true;
