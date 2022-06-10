@@ -186,19 +186,21 @@
 			 * OP's MySQL Server version is 8.0.12. From MySQL Documentation, PASSWORD function has been deprecated for version > 5.7.5:
 			 *   replacement that gives the same answer in version 8: CONCAT('*', UPPER(SHA1(UNHEX(SHA1('mypass')))))
 			 */
-            if (preg_match('/^8\./', $GLOBALS['_database']->_connectionID->server_info)) {
-			    $get_user_query = "
-				    SELECT	id
-				    FROM	register_users
-				    WHERE	login = ?
-				    AND		password = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?)))));
-			    ";
-            } else {
+			$db_service = new \Database\Service();
+			if ($db_service->supports_password()) {
 			    $get_user_query = "
 				    SELECT	id
 				    FROM	register_users
 				    WHERE	login = ?
 				    AND		password = password(?)
+			    ";
+			}
+			else {
+			    $get_user_query = "
+				    SELECT	id
+				    FROM	register_users
+				    WHERE	login = ?
+				    AND		password = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?)))));
 			    ";
             }
 			$bind_params = array($login,$password);
