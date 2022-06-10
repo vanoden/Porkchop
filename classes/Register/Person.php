@@ -336,25 +336,37 @@ class Person Extends \BaseClass {
         return $this->details();
     }
 
-    public function changePassword($password) {
-	app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$this->login,'info');
-	if ($this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
-		$this->error("Password needs more complexity");
-		return false;
+	public function changePassword($password) {
+		app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$this->login,'info');
+		if ($this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
+			$this->error("Password needs more complexity");
+			return false;
+		}
+
+		$db_service = new \Database\Service();
+		if ($db_service->supports_password()) {
+			$update_password_query = "
+				UPDATE	register_users
+				SET	`password` = password(?),
+					password_age = sysdate()
+				WHERE	id = ?
+			";
+		}
+		else {
+			$update_password_query = "
+				UPDATE	register_users
+				SET		`password` = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?))))),
+						password_age = sysdate()
+				WHERE	id = ?
+			";
+		}
+		$GLOBALS['_database']->Execute($update_password_query,array($password,$this->id));
+		if ($GLOBALS['_database']->ErrorMsg()) {
+			$this->error("SQL Error in Register::Person::changePassword(): ".$GLOBALS['_database']->ErrorMsg());
+			return false;
+		}
+		return true;
 	}
-	$update_password_query = "
-		UPDATE	register_users
-		SET	`password` = password(?),
-			password_age = sysdate()
-		WHERE	id = ?
-	";
-	$GLOBALS['_database']->Execute($update_password_query,array($password,$this->id));
-	if ($GLOBALS['_database']->ErrorMsg()) {
-		$this->error("SQL Error in Register::Person::changePassword(): ".$GLOBALS['_database']->ErrorMsg());
-		return false;
-	}
-	return true;
-    }
     
     public function getMeta($id = 0) {
         if (!$id) $id = $this->id;
