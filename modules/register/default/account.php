@@ -1,6 +1,25 @@
 <!--Testing this out-->
 <script type="text/javascript">
 	function submitForm() {
+	
+        // make sure that all the notify contacts have a 'notes' value populated
+        var contactTable = document.getElementById("contact-main-table");
+        var notifyChecked = contactTable.getElementsByTagName("input");
+        for (var i = 0; i < notifyChecked.length; i++) {
+            if (notifyChecked[i].checked) {
+                var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
+                if (matches[0]) {
+                    contactNoteField = document.getElementsByName("notes[" + matches[0].replace('[','').replace(']','') + "]");
+                    contactNoteField[0].style.border = "";
+                    if (!contactNoteField[0].value) {
+                        alert("Please enter a 'Notes' value for all notify (checked) Methods of Contact");
+                        contactNoteField[0].style.border = "3px solid red";
+                        return false;
+                    }
+                }
+            }
+        }
+	
 		if (document.register.password.value.length > 0 || document.register.password_2.value.length > 0) {
 			if (document.register.password.value.length < 6) {
 				alert("Your password is too short.");
@@ -95,7 +114,7 @@
 	<!-- Contact Options -->
 	<section class="form-group">
 	<h4>Add Methods of Contact</h4>
-	<div class="tableBody=">
+	<div id="contact-main-table" class="tableBody">
 		<div class="tableRowHeader">
 			<div class="tableCell">Types</div>
 			<div class="tableCell">Description</div>
