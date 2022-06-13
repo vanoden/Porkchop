@@ -48,7 +48,7 @@
             $porkchop = new \Porkchop\Session();
             if (! $porkchop->connect('test.spectrosinstruments.com'))
                 $this->error("Could not connect: ".$porkchop->error());
-            if (! $porkchop->authenticate('acaravello','Concentr8!'))
+            if (! $porkchop->authenticate())
                 $this->error("Could not authenticate: ".$porkchop->error());
 
             $asset = new \Porkchop\Monitor\Asset($porkchop);
