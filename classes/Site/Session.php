@@ -7,7 +7,7 @@
 		public $order = 0;
 		public $customer;
 		public $company;
-		public $domain = '';
+		public $domain;
 		public $refer_url = '';
 		public $refer_domain = '';
 		public $browser = '';
@@ -111,7 +111,7 @@
 			}
 
 			# Authentication
-			if (($_SERVER['REQUEST_URI'] != '/_register/') and (! $this->customer->id)) {
+			if (isset($_REQUEST['login']) && ! preg_match('/_register/',$_SERVER['REQUEST_URI']) && (! $this->customer->id)) {
 				# Initialize Vars
 				$login = '';
 				$password = '';
