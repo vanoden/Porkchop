@@ -44,6 +44,10 @@
             # Initiate Product Object
             $customer = new \Register\Customer();
 
+			if ($customer->status == 'BLOCKED') error("Your account has been blocked");
+			if ($customer->status == 'EXPIRED') error("Your account has expired.  Please use 'forgot password' on the website to restore.");
+			if ($customer->auth_failures() >= 3) error("Too many auth failures.  Please use 'forget password' on the website to restore");
+
             $result = $customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
             if ($customer->error) $this->error($customer->error);
 
