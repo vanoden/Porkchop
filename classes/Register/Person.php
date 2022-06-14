@@ -251,59 +251,59 @@ class Person Extends \BaseClass {
 				SET		id = id
 			";
 
-	$bind_params = array();
-	if (isset($parameters['first_name'])) {
-		if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['first_name'])) {
-			$this->error("Invalid name");
-			return false;
+		$bind_params = array();
+		if (isset($parameters['first_name'])) {
+			if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['first_name'])) {
+				$this->error("Invalid name");
+				return false;
+			}
+			$update_customer_query .= ",
+			first_name = ?";
+			array_push($bind_params,$parameters['first_name']);
 		}
-		$update_customer_query .= ",
-		first_name = ?";
-		array_push($bind_params,$parameters['first_name']);
-	}
-	if (isset($parameters['last_name'])) {
-		if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['last_name'])) {
-			$this->error("Invalid name");
-			return false;
+		if (isset($parameters['last_name'])) {
+			if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['last_name'])) {
+				$this->error("Invalid name");
+				return false;
+			}
+			$update_customer_query .= ",
+			last_name = ?";
+			array_push($bind_params,$parameters['last_name']);
 		}
-		$update_customer_query .= ",
-		last_name = ?";
-		array_push($bind_params,$parameters['last_name']);
-	}
-        if (isset($parameters['login']) and !empty($parameters['login'])) {
-		if (!$this->validLogin($parameters['login'])) {
-			$this->error = "Invalid login";
-			return false;
+		if (isset($parameters['login']) and !empty($parameters['login'])) {
+			if (!$this->validLogin($parameters['login'])) {
+				$this->error = "Invalid login";
+				return false;
+			}
+			$update_customer_query .= ",
+			login = ?";
+			array_push($bind_params,$parameters['login']);
 		}
-		$update_customer_query .= ",
-		login = ?";
-		array_push($bind_params,$parameters['login']);
-	}
-	if (isset($parameters['organization_id']) and ! empty($parameters['organization_id'])) {
-		$update_customer_query .= ",
-		organization_id = ?";
-		array_push($bind_params,$parameters['organization_id']);
-	}
-	if (isset($parameters['status'])) {
-		$update_customer_query .= ",
-		status = ?";
-		array_push($bind_params,$parameters['status']);
-	}
-	if (isset($parameters['timezone'])) {
-		if (! preg_match('/^\w[\w\-\.\_\s\/]+$/',$parameters['timezone'])) {
-			$this->error("Invalid timezone");
-			return false;
+		if (isset($parameters['organization_id']) and ! empty($parameters['organization_id'])) {
+			$update_customer_query .= ",
+			organization_id = ?";
+			array_push($bind_params,$parameters['organization_id']);
 		}
-		$update_customer_query .= ",
-		timezone = ?";
-		array_push($bind_params,$parameters['timezone']);
-	}
+		if (isset($parameters['status'])) {
+			$update_customer_query .= ",
+			status = ?";
+			array_push($bind_params,$parameters['status']);
+		}
+		if (isset($parameters['timezone'])) {
+			if (! preg_match('/^\w[\w\-\.\_\s\/]+$/',$parameters['timezone'])) {
+				$this->error("Invalid timezone");
+				return false;
+			}
+			$update_customer_query .= ",
+			timezone = ?";
+			array_push($bind_params,$parameters['timezone']);
+		}
 
-        if (isset($parameters['validation_key'])) {
-            $update_customer_query .= ",
-                validation_key = ?";
-            array_push($bind_params,$parameters['validation_key']);
-        }
+		if (isset($parameters['validation_key'])) {
+			$update_customer_query .= ",
+			validation_key = ?";
+			array_push($bind_params,$parameters['validation_key']);
+		}
 
         if (isset($parameters['automation']) && is_bool($parameters['automation'])) {
             if ($parameters['automation']) {
@@ -316,11 +316,17 @@ class Person Extends \BaseClass {
             }
         }
 
-        $update_customer_query .= "
-				WHERE	id = ?
-			";
-        array_push($bind_params,$this->id);
-	query_log($update_customer_query,$bind_params,true);
+		if (isset($parameters['auth_failures']) && is_numeric($parameters['auth_failures'])) {
+			$update_customer_query .= ",
+				auth_failures = ?";
+			array_push($bind_params,$parameters['auth_failures']);
+		}
+
+		$update_customer_query .= "
+			WHERE	id = ?
+		";
+		array_push($bind_params,$this->id);
+		query_log($update_customer_query,$bind_params,true);
         $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
         if ($GLOBALS['_database']->ErrorMsg()) {
             $this->error = "SQL Error in Register::Person::update(): " . $GLOBALS['_database']->ErrorMsg();
@@ -335,38 +341,6 @@ class Person Extends \BaseClass {
         # Get Updated Information
         return $this->details();
     }
-
-	public function changePassword($password) {
-		app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$this->login,'info');
-		if ($this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
-			$this->error("Password needs more complexity");
-			return false;
-		}
-
-		$db_service = new \Database\Service();
-		if ($db_service->supports_password()) {
-			$update_password_query = "
-				UPDATE	register_users
-				SET	`password` = password(?),
-					password_age = sysdate()
-				WHERE	id = ?
-			";
-		}
-		else {
-			$update_password_query = "
-				UPDATE	register_users
-				SET		`password` = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?))))),
-						password_age = sysdate()
-				WHERE	id = ?
-			";
-		}
-		$GLOBALS['_database']->Execute($update_password_query,array($password,$this->id));
-		if ($GLOBALS['_database']->ErrorMsg()) {
-			$this->error("SQL Error in Register::Person::changePassword(): ".$GLOBALS['_database']->ErrorMsg());
-			return false;
-		}
-		return true;
-	}
     
     public function getMeta($id = 0) {
         if (!$id) $id = $this->id;
@@ -432,8 +406,8 @@ class Person Extends \BaseClass {
 				WHERE	`person_id` = ?
 				AND	`key` = ?";
 
-	array_push($bind_params,$this->id);
-	array_push($bind_params,$key);
+		array_push($bind_params,$this->id);
+		array_push($bind_params,$key);
 
         $rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
         if (!$rs) {
@@ -441,7 +415,7 @@ class Person Extends \BaseClass {
             return null;
         }
         list($value) = $rs->FetchRow();
-	return htmlspecialvars($value);
+		return htmlspecialchars($value);
     }
  
     public function searchMeta($key, $value = '') {
@@ -622,7 +596,12 @@ class Person Extends \BaseClass {
         }
         return true;
     }
-    
+
+	public function block() {
+		app_log("Blocking customer '".$this->code."'",'INFO');
+		return $this->update(array('status' => 'BLOCKED'));
+	}
+
     public function delete() {
         app_log("Changing person " . $this->id . " to status DELETED", 'debug', __FILE__, __LINE__);
 

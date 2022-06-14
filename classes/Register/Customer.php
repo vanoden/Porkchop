@@ -149,12 +149,12 @@
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
 				return false;
 			}
-			
+
 			if (! in_array($status,array('NEW','ACTIVE'))) {
 				app_log("Auth denied because account '$login' is '$status'",'notice',__FILE__,__LINE__);
 				return false;
 			}
-			
+
 			// check if they have an expired password for organzation rules
 			$this->get($login);		
 			if ($this->password_expired()) return 0;
@@ -166,10 +166,19 @@
 			// Logging
 			if ($result) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
+				$this->update(array("auth_failures" => 0));
+				return true;
 			}
-			else app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
-
-			return $result;
+			else {
+				app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
+				//print_r(debug_backtrace());
+				$this->update(array("auth_failures" => $this->auth_failures() + 1));
+				if ($this->auth_failures() >= 6) {
+					app_log("Blocking customer '".$this->login."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
+					$this->block();
+					return false;
+				}
+			}
 		}
 
 		// Authenticate using database for credentials
@@ -205,6 +214,7 @@
             }
 			$bind_params = array($login,$password);
 
+			query_log($get_user_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute(
 				$get_user_query,$bind_params
 			);
@@ -269,6 +279,53 @@
 					return 0;
 				}
 			}
+		}
+
+		public function changePassword($password) {
+			app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$this->login,'info');
+			if ($this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
+				$this->error("Password needs more complexity");
+				return false;
+			}
+	
+			$db_service = new \Database\Service();
+			if ($db_service->supports_password()) {
+				$update_password_query = "
+					UPDATE	register_users
+					SET	`password` = password(?),
+						password_age = sysdate()
+					WHERE	id = ?
+				";
+			}
+			else {
+				$update_password_query = "
+					UPDATE	register_users
+					SET		`password` = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?))))),
+							password_age = sysdate()
+					WHERE	id = ?
+				";
+			}
+			$GLOBALS['_database']->Execute($update_password_query,array($password,$this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error("SQL Error in Register::Person::changePassword(): ".$GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			return true;
+		}
+
+		// See How Many Auth Failures the account has
+		public function auth_failures() {
+			$get_failures_query = "
+				SELECT	auth_failures
+				FROM	register_users
+				WHERE	id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_failures_query,array($this->id));
+			if (! $rs) {
+				$this->error("SQL Error in Register::Customer::auth_failures(): ".$GLOBALS['_database']->ErrorMsg());
+			}
+			list($count) = $rs->FetchRow();
+			return $count;
 		}
 
 		// Personal Inventory (Online Products)
