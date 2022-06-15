@@ -9,8 +9,8 @@
 				VALUES (null,?)
 			";
 			$GLOBALS['_database']->Execute($add_notification_query,array($params['name']));
-			if ($GLOBALS['_database']->ErrorMsg() {
-				$this->error("SQL Error in Register::Notification::add(): ".$GLOBALS['_database']->ErrorMsg();
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error("SQL Error in Register::Notification::add(): ".$GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -23,7 +23,6 @@
 				SET		id = id
 			";
 			$bind_params = array();
-			if ($
 			return $this->details();
 		}
 
@@ -36,7 +35,7 @@
 			$bind_params = array($name);
 			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 			if (! $rs) {
-				$this->error("SQL Error in Register::Notification::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error("SQL Error in Register::Notification::get(): ".$GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -53,7 +52,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 			if (! $rs) {
-				$this->error("SQL Error in Register::Notification::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->error("SQL Error in Register::Notification::details(): ".$GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -71,8 +70,8 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_objects_query,array($this->id));
 			if (! $rs) {
-				$this->error("SQL Error in Register::Notification::subscribers(): ".$GLOBALS['_database']->ErrorMsg();
-				return null
+				$this->error("SQL Error in Register::Notification::subscribers(): ".$GLOBALS['_database']->ErrorMsg());
+				return null;
 			}
 			$users = array();
 			while (list($id) = $rs->FetchRow()) {

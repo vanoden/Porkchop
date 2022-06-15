@@ -219,7 +219,7 @@
          * check if password is strong enought
          */
         function checkPasswordStrength() {
-            $person = new \Register\Person();    	
+            $person = new \Register\Customer();    	
             $strength = $person->password_strength($_REQUEST["password"]);
             $minPasswordStrength = 8;
             if (isset($GLOBALS['_config']->register->minimum_password_strength)) $minPasswordStrength = $GLOBALS['_config']->register->minimum_password_strength;

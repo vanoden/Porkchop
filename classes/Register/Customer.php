@@ -10,7 +10,7 @@
 			parent::__construct($person_id);
 			if ($this->id) $this->roles();
 		}
-		
+
 		public function get($code = '') {
 			$this->error = null;
 			$get_object_query = "
@@ -31,7 +31,7 @@
 			$this->id = $id;
 			return $this->details();
 		}
-		
+
 		public function details() {
 		    parent::details();
 			if ($this->id) {
@@ -60,7 +60,22 @@
 					}
 				}
 			}
+
 			return $this->details();
+		}
+
+		public function increment_auth_failures() {
+			if (! isset($this->id)) return false;
+			$update_customer_query = "
+				UPDATE	register_users
+				SET		auth_failures = auth_failures + 1
+				WHERE	id = ?";
+			$GLOBALS['_database']->Execute($update_customer_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error("SQL Error in Register::Customer::increment_auth_failures(): ".$GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			return true;
 		}
 
 		function add_role ($role_id) {
@@ -125,7 +140,6 @@
 
 		// Check login and password against configured authentication mechanism
 		function authenticate ($login, $password) {
-		
 			if (! $login) return 0;
 
 			// Get Authentication Method
@@ -158,21 +172,20 @@
 			// check if they have an expired password for organzation rules
 			$this->get($login);		
 			if ($this->password_expired()) return 0;
-			if (preg_match('/^ldap\/(\w+)$/',$this->auth_method,$matches))
-				$result = $this->LDAPauthenticate($matches[1],$login,$password);
-			else
-				$result = $this->LOCALauthenticate($login,$password);
 
-			// Logging
-			if ($result) {
+			// Load Specified Authentication Service
+			$authenticationFactory = new \Register\AuthenticationService\Factory();
+			$authenticationService = $authenticationFactory->service($this->auth_method);
+
+			// Authenticate using service
+			if ($authenticationService->authenticate($login,$password)) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
 				$this->update(array("auth_failures" => 0));
 				return true;
 			}
 			else {
 				app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
-				//print_r(debug_backtrace());
-				$this->update(array("auth_failures" => $this->auth_failures() + 1));
+				$this->increment_auth_failures();
 				if ($this->auth_failures() >= 6) {
 					app_log("Blocking customer '".$this->login."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
@@ -181,136 +194,39 @@
 			}
 		}
 
-		// Authenticate using database for credentials
-		function LOCALauthenticate ($login,$password) {
-		
-			if (! $login) {
-				app_log("No 'login' for authentication");
-				return 0;
-			}
-
-			/**
-			 * Check User Query
-			 * @TODO
-			 * OP's MySQL Server version is 8.0.12. From MySQL Documentation, PASSWORD function has been deprecated for version > 5.7.5:
-			 *   replacement that gives the same answer in version 8: CONCAT('*', UPPER(SHA1(UNHEX(SHA1('mypass')))))
-			 */
-			$db_service = new \Database\Service();
-			if ($db_service->supports_password()) {
-			    $get_user_query = "
-				    SELECT	id
-				    FROM	register_users
-				    WHERE	login = ?
-				    AND		password = password(?)
-			    ";
-			}
-			else {
-			    $get_user_query = "
-				    SELECT	id
-				    FROM	register_users
-				    WHERE	login = ?
-				    AND		password = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?)))));
-			    ";
-            }
-			$bind_params = array($login,$password);
-
-			query_log($get_user_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute(
-				$get_user_query,$bind_params
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::LOCALauthenticate(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			list($id) = $rs->FetchRow();
-			
-            // Login Failed
-			if (! $id) return 0;
-			$this->id = $id;
-			$this->details();
-			return 1;
-		}
-
-		// Authenticate using external LDAP service
-		public function LDAPauthenticate($domain,$login,$password) {
-		
-			// Check User Query
-			$get_user_query = "
-				SELECT	id
-				FROM	register_users
-				WHERE	login = ?";
-            
-			$rs = $GLOBALS['_database']->Execute($get_user_query,array($login));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::LDAPauthenticate(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
-			}
-
-			list($id) = $rs->fields;
-			if (! $id) {
-				error_log("No account for $login");
-				$this->message = "Account not found";
-			}
-
-			$LDAPServerAddress1	= $GLOBALS['_config']->authentication->$domain->server1;
-			$LDAPServerAddress2	= $GLOBALS['_config']->authentication->$domain->server2;
-			$LDAPServerPort		= "389";
-			$LDAPServerTimeOut	= "60";
-			$LDAPContainer		= $GLOBALS['_config']->authentication->$domain->container;
-			$BIND_username		= strtoupper($domain)."\\$login";
-			$BIND_password		= $password;
-
-			if (($ds=ldap_connect($LDAPServerAddress1)) || ($ds=ldap_connect($LDAPServerAddress2))) {
-				ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);
-				ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);
-
-				if($r=ldap_bind($ds,$BIND_username,$BIND_password)) {
-					error_log("LDAP Authentication for $login successful");
-					$this->details($id);
-					return 1;
-				} else {
-					$this->message = "Auth Failed: ".ldap_error($ds);
-					$GLOBALS['_page']->error = "Auth Failed: ".ldap_error($ds);
-					if (ldap_get_option($ds, LDAP_OPT_DIAGNOSTIC_MESSAGE, $extended_error)) {
-						error_log("Error Binding to LDAP: $extended_error");
-					} else {
-						error_log("LDAP Authentication for $login failed");
-					}
-					return 0;
-				}
-			}
-		}
-
 		public function changePassword($password) {
-			app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$this->login,'info');
 			if ($this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
 				$this->error("Password needs more complexity");
 				return false;
 			}
-	
-			$db_service = new \Database\Service();
-			if ($db_service->supports_password()) {
-				$update_password_query = "
-					UPDATE	register_users
-					SET	`password` = password(?),
-						password_age = sysdate()
-					WHERE	id = ?
-				";
+
+			// Load Specified Authentication Service
+			$authenticationFactory = new \Register\AuthenticationService\Factory();
+			$authenticationService = $authenticationFactory->service($this->auth_method);
+
+			if ($authenticationService->changePassword($this->login,$password)) {
+				return true;
 			}
 			else {
-				$update_password_query = "
-					UPDATE	register_users
-					SET		`password` = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?))))),
-							password_age = sysdate()
-					WHERE	id = ?
-				";
-			}
-			$GLOBALS['_database']->Execute($update_password_query,array($password,$this->id));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error("SQL Error in Register::Person::changePassword(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->error($authenticationService->error());
 				return false;
 			}
-			return true;
+		}
+
+		public function password_strength($string) {
+			# Initial score on length alone
+			$password_strength = strlen($string);
+	
+			# Subtract 1 as any one character will match below
+			$password_strength --;
+	
+			# Add Points for Each Type of Char
+			if (preg_match('/[A-Z]/', $string)) $password_strength += 1;
+			if (preg_match('/[\@\$\_\-\.\!\&]/', $string)) $password_strength += 1;
+			if (preg_match('/\d/', $string)) $password_strength += 1;
+			if (preg_match('/[a-z]/', $string)) $password_strength += 1;
+	
+			return $password_strength;
 		}
 
 		// See How Many Auth Failures the account has

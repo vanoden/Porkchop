@@ -152,38 +152,10 @@ class Person Extends \BaseClass {
         return $full_name;
     }
     
-    public function password_strength($string) {
-		# Initial score on length alone
-		$password_strength = strlen($string);
-
-		# Subtract 1 as any one character will match below
-		$password_strength --;
-
-		# Add Points for Each Type of Char
-		if (preg_match('/[A-Z]/', $string)) $password_strength += 1;
-		if (preg_match('/[\@\$\_\-\.\!\&]/', $string)) $password_strength += 1;
-		if (preg_match('/\d/', $string)) $password_strength += 1;
-		if (preg_match('/[a-z]/', $string)) $password_strength += 1;
-
-		return $password_strength;
-    }
-    
     public function add($parameters = array()) {
         if (!$this->validLogin($parameters['login'])) {
             $this->error("Invalid Login");
             return null;
-        }
-        if (! isset($GLOBALS['_config']->no_password) or !($GLOBALS['_config']->no_password)) {
-            $password_length = strlen($parameters['password']);
-
-            if (isset($GLOBALS['_config']->register->minimum_password_strength) && $this->password_strength($parameters['password']) < $GLOBALS['_config']->register->minimum_password_strength) {
-                $this->error("Password too weak.");
-                return false;
-            }
-            if ($password_length > 64) {
-                $this->error("Password too long.");
-                return false;
-            }
         }
 
         # Defaults
@@ -204,7 +176,6 @@ class Person Extends \BaseClass {
 					date_expires,
 					status,
 					login,
-					password,
 					timezone,
 					validation_key
 				)
@@ -215,7 +186,6 @@ class Person Extends \BaseClass {
 					?,
 					?,
 					?,
-					password(?),
 					?,
 					?
 				)
@@ -225,7 +195,6 @@ class Person Extends \BaseClass {
             $parameters['date_expires'],
             $parameters['status'],
             $parameters['login'],
-            $parameters['password'],
             $parameters['timezone'],
             $parameters['validation_key']
         ));
@@ -315,12 +284,6 @@ class Person Extends \BaseClass {
 						automation = 0";
             }
         }
-
-		if (isset($parameters['auth_failures']) && is_numeric($parameters['auth_failures'])) {
-			$update_customer_query .= ",
-				auth_failures = ?";
-			array_push($bind_params,$parameters['auth_failures']);
-		}
 
 		$update_customer_query .= "
 			WHERE	id = ?
