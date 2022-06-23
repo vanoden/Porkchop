@@ -53,6 +53,13 @@
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 		    }
 	    }
+	    public function requireSuperElevation() {
+		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
+			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+		    }
+	    }
 	    public function requireRole($role) {
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
@@ -68,6 +75,7 @@
 			    exit ();
 		    }
 	    }
+	    
         public function requirePrivilege($privilege) {
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
                 return true;

@@ -474,6 +474,17 @@
 			return $session->last_hit_date;
 		}
 		
+		public function is_super_elevated() {
+			$sessionList = new \Site\SessionList();
+			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
+			if ($sessionList->error) {
+				$this->error = "Error getting session: ".$sessionList->error;
+				return false;
+			}
+			if (! $session) return false;
+			return time() < strtotime($session->super_elevation_expires);
+		}
+		
 		public function contacts($params = array()) {
 			$contactList = new \Register\ContactList();
 			$parameters = array(

@@ -271,6 +271,21 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			if ($this->version() < 10) {
+			
+				$alter_table_query = "
+                    ALTER TABLE `session_sessions` ADD COLUMN `super_elevation_expires` TIMESTAMP DEFAULT NULL;
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering session_sessions table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(10);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}
