@@ -1,14 +1,13 @@
 <?php
 namespace Register;
 
-class Person {
+class Person Extends \BaseClass {
 
     public $id;
     public $first_name;
     public $last_name;
     public $location;
     public $organization;
-    public $error;
     public $code;
     public $message;
     public $department;
@@ -21,7 +20,7 @@ class Person {
     public function __construct($id = 0) {
 
         # Clear Error Info
-        $this->error = '';
+        $this->_error = '';
 
         # Find Person if id given
         if (isset($id) && is_numeric($id)) {
@@ -61,7 +60,7 @@ class Person {
                 return $customer;
             }
             else {
-                $this->error = "Customer " . $this->id . " returned unpopulated cache";
+                $this->error("Customer " . $this->id . " returned unpopulated cache");
             }
         }
 
@@ -87,7 +86,7 @@ class Person {
             $this->id
         ));
         if (!$rs) {
-            $this->error = "SQL Error in Register::Person::details(): " . $GLOBALS['_database']->ErrorMsg();
+            $this->error("SQL Error in Register::Person::details(): " . $GLOBALS['_database']->ErrorMsg());
             return null;
         }
         $customer = $rs->FetchNextObject(false);
@@ -153,38 +152,10 @@ class Person {
         return $full_name;
     }
     
-    public function password_strength($string) {
-		# Initial score on length alone
-		$password_strength = strlen($string);
-
-		# Subtract 1 as any one character will match below
-		$password_strength --;
-
-		# Add Points for Each Type of Char
-		if (preg_match('/[A-Z]/', $string)) $password_strength += 1;
-		if (preg_match('/[\@\$\_\-\.\!\&]/', $string)) $password_strength += 1;
-		if (preg_match('/\d/', $string)) $password_strength += 1;
-		if (preg_match('/[a-z]/', $string)) $password_strength += 1;
-
-		return $password_strength;
-    }
-    
     public function add($parameters = array()) {
         if (!$this->validLogin($parameters['login'])) {
-            $this->error = "Invalid Login";
+            $this->error("Invalid Login");
             return null;
-        }
-        if (! isset($GLOBALS['_config']->no_password) or !($GLOBALS['_config']->no_password)) {
-            $password_length = strlen($parameters['password']);
-
-            if (isset($GLOBALS['_config']->register->minimum_password_strength) && $this->password_strength($parameters['password']) < $GLOBALS['_config']->register->minimum_password_strength) {
-                $this->error = "Password too weak.";
-                return false;
-            }
-            if ($password_length > 100) {
-                $this->error = "Password too long.";
-                return false;
-            }
         }
 
         # Defaults
@@ -205,7 +176,6 @@ class Person {
 					date_expires,
 					status,
 					login,
-					password,
 					timezone,
 					validation_key
 				)
@@ -216,7 +186,6 @@ class Person {
 					?,
 					?,
 					?,
-					password(?),
 					?,
 					?
 				)
@@ -226,12 +195,11 @@ class Person {
             $parameters['date_expires'],
             $parameters['status'],
             $parameters['login'],
-            $parameters['password'],
             $parameters['timezone'],
             $parameters['validation_key']
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Register::Person::add(): Error: " . $GLOBALS['_database']->ErrorMsg() . " Query: " . preg_replace("/[\t\r\n]/", " ", $add_user_query);
+            $this->error("SQL Error in Register::Person::add(): Error: " . $GLOBALS['_database']->ErrorMsg() . " Query: " . preg_replace("/[\t\r\n]/", " ", $add_user_query));
             return false;
         }
         $this->id = $GLOBALS['_database']->Insert_ID();
@@ -242,7 +210,7 @@ class Person {
     public function update($parameters = array()) {
     
         if (!$this->id) {
-            $this->error = "User ID Required for Update";
+            $this->error("User ID Required for Update");
             return false;
         }
 
@@ -252,71 +220,59 @@ class Person {
 				SET		id = id
 			";
 
-	$bind_params = array();
-	if (isset($parameters['first_name'])) {
-		if (! preg_match('/^[^\w\-\.\_\s]+$/',$parameters['first_name'])) {
-			$this->error("Invalid name");
-			return false;
+		$bind_params = array();
+		if (isset($parameters['first_name'])) {
+			if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['first_name'])) {
+				$this->error("Invalid name");
+				return false;
+			}
+			$update_customer_query .= ",
+			first_name = ?";
+			array_push($bind_params,$parameters['first_name']);
 		}
-		$update_customer_query .= ",
-		first_name = ?";
-		array_push($bind_params,$parameters['first_name']);
-	}
-	if (isset($parameters['last_name'])) {
-		if (! preg_match('/^[^\w\-\.\_\s]+$/',$parameters['last_name'])) {
-			$this->error("Invalid name");
-			return false;
+		if (isset($parameters['last_name'])) {
+			if (! preg_match('/^[\w\-\.\_\s]+$/',$parameters['last_name'])) {
+				$this->error("Invalid name");
+				return false;
+			}
+			$update_customer_query .= ",
+			last_name = ?";
+			array_push($bind_params,$parameters['last_name']);
 		}
-		$update_customer_query .= ",
-		last_name = ?";
-		array_push($bind_params,$parameters['last_name']);
-	}
-        if (isset($parameters['login']) and !empty($parameters['login'])) {
-		if (!$this->validLogin($parameters['login'])) {
-			$this->error = "Invalid login";
-			return false;
+		if (isset($parameters['login']) and !empty($parameters['login'])) {
+			if (!$this->validLogin($parameters['login'])) {
+				$this->error = "Invalid login";
+				return false;
+			}
+			$update_customer_query .= ",
+			login = ?";
+			array_push($bind_params,$parameters['login']);
 		}
-		$update_customer_query .= ",
-		login = ?";
-		array_push($bind_params,$parameters['login']);
-	}
-	if (isset($parameters['organization_id']) and ! empty($parameters['organization_id'])) {
-		$update_customer_query .= ",
-		organization_id = ?";
-		array_push($bind_params,$parameters['organization_id']);
-	}
-	if (isset($parameters['status'])) {
-		$update_customer_query .= ",
-		status = ?";
-		array_push($bind_params,$parameters['status']);
-	}
-	if (isset($parameters['timezone'])) {
-		if (! preg_match('/^\w[^\w\-\.\_\s\/]+$/',$parameters['timezone'])) {
-			$this->error("Invalid timezone");
-			return false;
+		if (isset($parameters['organization_id']) and ! empty($parameters['organization_id'])) {
+			$update_customer_query .= ",
+			organization_id = ?";
+			array_push($bind_params,$parameters['organization_id']);
 		}
-		$update_customer_query .= ",
-		timezone = ?";
-		array_push($bind_params,$parameters['timezone']);
-	}
-        if (isset($parameters['password'])) {
-        
-            app_log("Changing password", 'notice', __FILE__, __LINE__);
-            $update_customer_query .= ",
-                `password` = password(?)";
-            array_push($bind_params,$parameters['password']);
-            
-            // reset password age to today
-            $update_customer_query .= ",
-                password_age = ?";
-            array_push($bind_params,date('Y-m-d H:i:s'));
-        }
+		if (isset($parameters['status'])) {
+			$update_customer_query .= ",
+			status = ?";
+			array_push($bind_params,$parameters['status']);
+		}
+		if (isset($parameters['timezone'])) {
+			if (! preg_match('/^\w[\w\-\.\_\s\/]+$/',$parameters['timezone'])) {
+				$this->error("Invalid timezone");
+				return false;
+			}
+			$update_customer_query .= ",
+			timezone = ?";
+			array_push($bind_params,$parameters['timezone']);
+		}
 
-        if (isset($parameters['validation_key'])) {
-            $update_customer_query .= ",
-                validation_key = ?";
-            array_push($bind_params,$parameters['validation_key']);
-        }
+		if (isset($parameters['validation_key'])) {
+			$update_customer_query .= ",
+			validation_key = ?";
+			array_push($bind_params,$parameters['validation_key']);
+		}
 
         if (isset($parameters['automation']) && is_bool($parameters['automation'])) {
             if ($parameters['automation']) {
@@ -329,10 +285,11 @@ class Person {
             }
         }
 
-        $update_customer_query .= "
-				WHERE	id = ?
-			";
-        array_push($bind_params,$this->id);
+		$update_customer_query .= "
+			WHERE	id = ?
+		";
+		array_push($bind_params,$this->id);
+		query_log($update_customer_query,$bind_params,true);
         $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
         if ($GLOBALS['_database']->ErrorMsg()) {
             $this->error = "SQL Error in Register::Person::update(): " . $GLOBALS['_database']->ErrorMsg();
@@ -412,8 +369,8 @@ class Person {
 				WHERE	`person_id` = ?
 				AND	`key` = ?";
 
-	array_push($bind_params,$this->id);
-	array_push($bind_params,$key);
+		array_push($bind_params,$this->id);
+		array_push($bind_params,$key);
 
         $rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
         if (!$rs) {
@@ -421,7 +378,7 @@ class Person {
             return null;
         }
         list($value) = $rs->FetchRow();
-	return htmlspecialvars($value);
+		return htmlspecialchars($value);
     }
  
     public function searchMeta($key, $value = '') {
@@ -602,7 +559,12 @@ class Person {
         }
         return true;
     }
-    
+
+	public function block() {
+		app_log("Blocking customer '".$this->code."'",'INFO');
+		return $this->update(array('status' => 'BLOCKED'));
+	}
+
     public function delete() {
         app_log("Changing person " . $this->id . " to status DELETED", 'debug', __FILE__, __LINE__);
 
@@ -690,9 +652,5 @@ class Person {
 
 	public function icon() {
 		return new \Register\PersonIcon($this->id);
-	}
-
-	public function error() {
-		return $this->error;
 	}
 }

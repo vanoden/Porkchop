@@ -10,6 +10,25 @@
 <script type="text/javascript">
    // submit form
    function submitForm() { 
+   
+        // make sure that all the notify contacts have a 'notes' value populated
+        var contactTable = document.getElementById("contact-main-table");
+        var notifyChecked = contactTable.getElementsByTagName("input");
+        for (var i = 0; i < notifyChecked.length; i++) {
+            if (notifyChecked[i].checked) {
+                var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
+                if (matches[0]) {
+                    contactNoteField = document.getElementsByName("notes[" + matches[0].replace('[','').replace(']','') + "]");
+                    contactNoteField[0].style.border = "";
+                    if (!contactNoteField[0].value) {
+                        alert("Please enter a 'Notes' value for all notify (checked) Methods of Contact");
+                        contactNoteField[0].style.border = "3px solid red";
+                        return false;
+                    }
+                }
+            }
+        }
+        
        if (document.register.password.value.length > 0 || document.register.password_2.value.length > 0) {
            if (document.register.password.value.length < 6) {
                alert("Your password is too short.");
@@ -59,6 +78,7 @@
 <form name="register" action="<?=PATH?>/_register/admin_account" method="POST">
    <input type="hidden" name="target" value="<?=$target?>"/>
    <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
+   <input type="hidden" name="login" value="<?=$customer->login?>"/>
     <?php	 if ($page->errorCount() > 0) { ?>
         <div class="form_error"><?=$page->errorString()?></div>
     <?php	 } ?>
@@ -123,7 +143,7 @@
    <!--End LOGIN Specs -->		
    <!-- START Methods of Contact -->
    <h3>Methods of Contact</h3>
-   <div class="tableBody min-tablet">
+   <div id="contact-main-table" class="tableBody min-tablet">
       <div class="tableRowHeader">
          <div class="tableCell" style="width: 20%;">Type</div>
          <div class="tableCell" style="width: 25%;">Description</div>

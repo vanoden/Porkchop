@@ -44,6 +44,10 @@
             # Initiate Product Object
             $customer = new \Register\Customer();
 
+			if ($customer->status == 'BLOCKED') error("Your account has been blocked");
+			if ($customer->status == 'EXPIRED') error("Your account has expired.  Please use 'forgot password' on the website to restore.");
+			if ($customer->auth_failures() >= 3) error("Too many auth failures.  Please use 'forget password' on the website to restore");
+
             $result = $customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
             if ($customer->error) $this->error($customer->error);
 
@@ -215,7 +219,7 @@
          * check if password is strong enought
          */
         function checkPasswordStrength() {
-            $person = new \Register\Person();    	
+            $person = new \Register\Customer();    	
             $strength = $person->password_strength($_REQUEST["password"]);
             $minPasswordStrength = 8;
             if (isset($GLOBALS['_config']->register->minimum_password_strength)) $minPasswordStrength = $GLOBALS['_config']->register->minimum_password_strength;

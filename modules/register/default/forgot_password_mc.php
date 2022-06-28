@@ -87,7 +87,7 @@
 					app_log("Generated password token '".$token->code."'",'debug',__FILE__,__LINE__);
 					$recovery_url = "http";
 					if ($GLOBALS['_config']->site->https) $recovery_url = "https";
-					$recovery_url .= "://".$GLOBALS['_config']->site->hostname."/_register/login?token=".$token->code;
+					$recovery_url .= "://".$GLOBALS['_config']->site->hostname."/_register/reset_password?token=".$token->code;
 
 					###############################################
 					### Password Found, Generate Recovery Email	###

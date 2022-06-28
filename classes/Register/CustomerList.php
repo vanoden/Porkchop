@@ -129,7 +129,7 @@
 					OR		first_name LIKE '$string'
 					OR		last_name LIKE '$string'
 					OR		middle_name LIKE '$string'
-					OR		login_name LIKE '$string'
+					OR		last_name LIKE '$string'
 				)
 				";
 			}
@@ -223,7 +223,7 @@
 					$find_person_query .= "
 					LIMIT	".$parameters['_limit'];
 			}
-			query_log($find_person_query);
+			query_log($find_person_query,$bind_params,true);
 			$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Register::Person::find(): ".$GLOBALS['_database']->ErrorMsg();
@@ -272,7 +272,7 @@
 					OR		first_name LIKE '$search_string'
 					OR		last_name LIKE '$search_string'
 					OR		middle_name LIKE '$search_string'
-					OR		login_name LIKE '$search_string'
+					OR		last_name LIKE '$search_string'
 				)
 			";
 			if (isset($parameters['status'])) {

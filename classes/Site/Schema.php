@@ -250,6 +250,42 @@
 				$this->setVersion(8);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+			if ($this->version() < 9) {
+			
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `counters_watched` (
+  	                    `id`    int(10) NOT NULL AUTO_INCREMENT,
+						`key`	varchar(150) NOT NULL,
+						`notes` varchar(255),
+						PRIMARY KEY (`id`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating counters_watched table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(9);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			if ($this->version() < 10) {
+			
+				$alter_table_query = "
+                    ALTER TABLE `session_sessions` ADD COLUMN `super_elevation_expires` TIMESTAMP DEFAULT NULL;
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering session_sessions table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(10);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}

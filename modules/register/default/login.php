@@ -31,7 +31,7 @@
 					<label for="dateReceived">Password</label>
 					<input type="password" name="password">
 				</li>
-				<?php	if ((isset($_SESSION['isRemovedAccount']) && $_SESSION['isRemovedAccount'] == 1) || $_SESSION['failedAttemptCount'] > 2) { ?>
+				<?php	if ($CAPTCHA_GO) { ?>
 				<li class="g-recaptcha" data-sitekey="6LeTdfgSAAAAAPZ5Fb-J6R_X9GctCVy8l2MrUCuO"></li>
 				<?php	}	?>
 			</ul>

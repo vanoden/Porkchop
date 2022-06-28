@@ -53,6 +53,13 @@
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 		    }
 	    }
+	    public function requireSuperElevation() {
+		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
+			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+		    }
+	    }
 	    public function requireRole($role) {
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
@@ -68,6 +75,7 @@
 			    exit ();
 		    }
 	    }
+	    
         public function requirePrivilege($privilege) {
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
                 return true;
@@ -196,21 +204,15 @@
 			    $this->style = $GLOBALS ['_config']->style [$this->module];
 		    }
 
+			// Intranet style site, No public content
             if (isset($GLOBALS['_config']->site->private_mode) && $GLOBALS['_config']->site->private_mode) {
-                app_log("Private mode!  Customer is ".$GLOBALS['_SESSION_']->customer->id);
                 $this->auth_required = true;
-            }
-            else {
-                app_log("Not Private mode!");
             }
 
 		    // Make Sure Authentication Requirements are Met
-            app_log("Here 0");
 		    if (($this->auth_required) and (! $GLOBALS ["_SESSION_"]->customer->id)) {
-                app_log("Here 1");
 			    if (($this->module != "register") or (! in_array ( $this->view, array ('login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you' ) ))) {
-				    app_log("Gotta login!");
-                    // Clean Query Vars for this
+				    // Clean Query Vars for this
 				    $auth_query_vars = preg_replace ( "/\/$/", "", $this->query_vars );
 
 				    if ($this->module == 'content' && $this->view == 'index' && ! $auth_query_vars) $auth_target = '';
@@ -224,14 +226,7 @@
 				    header ( "location: " . PATH . "/_register/login/" . $auth_target );
                     exit;
 			    }
-                else {
-                    app_log("Gonna log in");
-                }
 		    }
-            elseif ($this->auth_required) {
-                app_log("Here 3: ".$GLOBALS['_SESSION_']->customer->id);
-                app_log("Here 4: ".$GLOBALS['_SESSION_']->id);
-            }
 
 		    return true;
 	    }
@@ -437,13 +432,14 @@
 						    exit ();
 					    }
 				    } else {
-					    $category = $_product->details ( $id );
+					    $category = $product->details ( $id );
 				    }
-				    $products = $_product->find ( array ("category" => $category->code ) );
+					$productList = new \Product\ItemList();
+				    $products = $productList->find ( array ("category" => $category->code ) );
 
 				    // Loop Through Products
-				    foreach ( $products as $product_id ) {
-					    $buffer .= "<r7_product.detail format=thumbnail id=$product_id>";
+				    foreach ( $products as $product ) {
+					    $buffer .= "<r7_product.detail format=thumbnail id=".$product->id.">";
 				    }
 			    } elseif ($property == "detail") {
 				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
@@ -557,6 +553,7 @@
 						    $this->error = "Error fetching events: " . $eventlist->error;
 					    } else if (count ( $events )) {
 						    foreach ( $events as $event ) {
+								$greenbar = '';
 							    $buffer .= "<a class=\"value " . $greenbar . "newsWidgetEventValue\" href=\"" . PATH . "/_news/event/" . $event->id . "\">" . $event->name . "</a>";
 							    if ($greenbar) $greenbar = '';
 							    else $greenbar = 'greenbar ';

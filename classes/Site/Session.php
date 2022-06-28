@@ -7,7 +7,7 @@
 		public $order = 0;
 		public $customer;
 		public $company;
-		public $domain = '';
+		public $domain;
 		public $refer_url = '';
 		public $refer_domain = '';
 		public $browser = '';
@@ -19,6 +19,7 @@
 		public $status = 0;
 		public $first_hit_date;
 		public $last_hit_date;
+		public $super_elevation_expires;
 		public $isMobile = false;
 		public $isRemovedAccount = false;
 		private $cookie_name;
@@ -62,7 +63,7 @@
 				$this->error = "Domain '".$this->domain->id."' not found for location ".$this->location->id;
 				return null;
 			}
-			
+
 			$this->company = new \Company\Company($this->domain->company->id);
 			if ($this->company->error) {
 				$this->error = "Error finding company: ".$this->company->error;
@@ -111,7 +112,7 @@
 			}
 
 			# Authentication
-			if (($_SERVER['REQUEST_URI'] != '/_register/') and (! $this->customer->id)) {
+			if (isset($_REQUEST['login']) && ! preg_match('/_register/',$_SERVER['REQUEST_URI']) && (! $this->customer->id)) {
 				# Initialize Vars
 				$login = '';
 				$password = '';
@@ -288,6 +289,7 @@
 					$this->browser = $session->browser;
 					$this->first_hit_date = $session->first_hit_date;
 					$this->last_hit_date = $session->last_hit_date;
+					$this->super_elevation_expires = $session->super_elevation_expires;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
 					$this->_cached = 1;
 					return $this->code;
@@ -324,7 +326,7 @@
 				$this->browser = $session->browser;
 				$this->first_hit_date = $session->first_hit_date;
 				$this->last_hit_date = $session->last_hit_date;
-
+				$this->super_elevation_expires = $session->super_elevation_expires;
                 require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/Mobile_Detect.php';
                 $detect = new \Mobile_Detect;
 
@@ -501,35 +503,35 @@
 				)
 			);
 		}
-		public function expire_session($session_id) {
-			if (! preg_match('/^\d+$/',$session_id)) {
-				$this->error = "Invalid session id for session::Session::expire_session";
+		public function expire() {
+			if (! preg_match('/^\d+$/',$this->id)) {
+				$this->error = "Invalid session id for session::Session::expire";
 				return null;
 			}
 			# Delete Hits
 			$delete_hits_query = "
 				DELETE
 				FROM	session_hits
-				WHERE	session_id = '$session_id'
+				WHERE	session_id = ?
 			";
-			$GLOBALS['_database']->execute($delete_hits_query);
+			$GLOBALS['_database']->execute($delete_hits_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Session::expire_session(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->error = "SQL Error in Site::Session::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
 			}
 
 			# Delete Session
 			$delete_session_query = "
 				DELETE
 				FROM	session_sessions
-				WHERE	session_id = '$session_id'
+				WHERE	session_id = ?
 			";
-			$GLOBALS['_database']->execute($delete_session_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
-				$this->error = "SQL Error in Site::Session::expire_session(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+			$GLOBALS['_database']->execute($delete_session_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error = "SQL Error in Site::Session::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
 			}
+			return true;
 		}
 		public function authenticated() {
 			if (isset($this->customer->id) && $this->customer->id > 0) return true;
