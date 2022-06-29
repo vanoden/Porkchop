@@ -19,6 +19,7 @@
 		public $status = 0;
 		public $first_hit_date;
 		public $last_hit_date;
+		public $super_elevation_expires;
 		public $isMobile = false;
 		public $isRemovedAccount = false;
 		private $cookie_name;
@@ -288,6 +289,7 @@
 					$this->browser = $session->browser;
 					$this->first_hit_date = $session->first_hit_date;
 					$this->last_hit_date = $session->last_hit_date;
+					$this->super_elevation_expires = $session->super_elevation_expires;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
 					$this->_cached = 1;
 					return $this->code;
@@ -324,7 +326,7 @@
 				$this->browser = $session->browser;
 				$this->first_hit_date = $session->first_hit_date;
 				$this->last_hit_date = $session->last_hit_date;
-
+				$this->super_elevation_expires = $session->super_elevation_expires;
                 require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/Mobile_Detect.php';
                 $detect = new \Mobile_Detect;
 

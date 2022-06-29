@@ -56,7 +56,11 @@
 			$messages = array();
 			while (list($id) = $rs->FetchRow()) {
 				$message = new \Content\Message($id);
-				unset($message->content);	
+				if (!isset($parameters['is_user_search']) || empty($parameters['is_user_search'])) {
+    				unset($message->content);
+				} else {
+    				$message->content = substr(strip_tags($message->content), 0, 150) . '...';
+				}
 				array_push($messages,$message);
 			}
 			return $messages;

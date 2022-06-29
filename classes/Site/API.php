@@ -726,6 +726,15 @@
 			print $this->formatOutput($response);
 		}
  
+		public function search() {
+			$response = new \HTTP\Response();
+			$response->success = 1;
+	        $messageList = new \Content\MessageList();
+	        $messages = $messageList->search(array('string'=>$_REQUEST['string'], 'is_user_search' => true));
+	        $response->count = count($messages);
+			print $this->formatOutput($response);
+		}
+
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
@@ -854,7 +863,10 @@
                  'acknowledgeSiteMessageByUserId'	=> array(
                     'user_created' => array('required' => true)
 			     ),
-				'timestamp' => array()
+				 'timestamp' => array(),
+                 'search'	=> array(
+                    'string' => array('required' => true)
+			     )
 			);
 		}
 	}
