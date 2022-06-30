@@ -939,6 +939,44 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+            if ($this->version() < 24) {
+				app_log("Upgrading schema to version 24",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "ALTER TABLE `register_users` ADD COLUMN `default_billing_location_id` int NULL";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering `register_users` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$alter_table_query = "ALTER TABLE `register_users` ADD COLUMN `default_shipping_location_id` int NULL;";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering `register_users` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$alter_table_query = "ALTER TABLE `register_users` ADD CONSTRAINT register_users_ibfk_2 FOREIGN KEY (default_billing_location_id) REFERENCES register_locations(id);";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering `register_users` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$alter_table_query = "ALTER TABLE `register_users` ADD CONSTRAINT register_users_ibfk_3 FOREIGN KEY (default_shipping_location_id) REFERENCES register_locations(id);";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering `register_users` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(24);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}

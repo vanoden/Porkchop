@@ -1,4 +1,5 @@
 <?php
+
 	$page = new \Site\Page();
 
 	// See if we received a parseable token
@@ -24,7 +25,9 @@
 				$page->addError("Token error");
 			}
 			else {
-				$GLOBALS['_SESSION_']->assign($customer->id);
+			
+                // assign a super elevated user session for password reset
+				$GLOBALS['_SESSION_']->assign($customer->id, true);
 				app_log("Customer ".$customer->id." logged in by token",'notice',__FILE__,__LINE__);
 			}
 		}
@@ -33,8 +36,9 @@
 		}
 	}
 	elseif (isset($_REQUEST["password"])) {
-		// Can only reset password if authenticated
-		$page->requireAuth();
+	
+		// can only reset password if authenticated
+		$page->requireSuperElevation();
 
 		app_log("Reset Password form submitted",'debug',__FILE__,__LINE__);
 		$customerUpdated = false;

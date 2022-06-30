@@ -4,6 +4,9 @@ namespace Register;
 class Person Extends \BaseClass {
 
     public $id;
+    public $title;
+    public $first_name;
+    public $middle_name;    
     public $first_name;
     public $last_name;
     public $location;
@@ -13,9 +16,11 @@ class Person Extends \BaseClass {
     public $department;
     public $_cached = 0;
     public $status;
-    public $_settings = array(
-	    "date_format"	=> "US"
-    );
+    public $automation;
+    public $password_age;
+    public $default_billing_location_id;
+    public $default_shipping_location_id;
+    public $_settings = array( "date_format" => "US" );
 
     public function __construct($id = 0) {
 
@@ -51,7 +56,9 @@ class Person Extends \BaseClass {
             $this->timezone = $customer->timezone;
             $this->auth_method = $customer->auth_method;
             $this->automation = $customer->automation;
-            $this->password_age = $customer->password_age;            
+            $this->password_age = $customer->password_age;
+            $this->default_billing_location_id = $customer->default_billing_location_id;
+            $this->default_shipping_location_id = $customer->default_shipping_location_id;
             $customer->_cached = 1;
 
             # In Case Cache Corrupted
@@ -78,6 +85,8 @@ class Person Extends \BaseClass {
 						timezone,
 						automation,
 						unix_timestamp(password_age) password_age
+						default_billing_location_id,
+						default_shipping_location_id						
 				FROM	register_users
 				WHERE   id = ?
 			";
@@ -113,7 +122,9 @@ class Person Extends \BaseClass {
             $this->auth_method = $customer->auth_method;
             if ($customer->automation == 0) $this->automation = false;
             else $this->automation = true;
-            $this->password_age = $customer->password_age;
+            $this->password_age = $customer->password_age;            
+            $this->default_billing_location_id = $customer->default_billing_location_id;
+            $this->default_shipping_location_id = $customer->default_shipping_location_id;
             $this->_cached = 0;
         }
         else {
@@ -130,6 +141,8 @@ class Person Extends \BaseClass {
             $this->auth_method = null;
             $this->automation = false;
             $this->password_age = null;
+            $this->default_billing_location_id = null;
+            $this->default_shipping_location_id = null;
             $this->_cached = 0;
         }
 
@@ -284,6 +297,18 @@ class Person Extends \BaseClass {
 						automation = 0";
             }
         }
+        
+		if (isset($parameters['default_billing_location_id'])) {
+			$update_customer_query .= ",
+			default_billing_location_id = ?";
+			array_push($bind_params,$parameters['default_billing_location_id']);
+		}
+        
+		if (isset($parameters['default_shipping_location_id'])) {
+			$update_customer_query .= ",
+			default_shipping_location_id = ?";
+			array_push($bind_params,$parameters['default_shipping_location_id']);
+		}
 
 		$update_customer_query .= "
 			WHERE	id = ?

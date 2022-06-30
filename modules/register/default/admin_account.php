@@ -11,18 +11,18 @@
    // submit form
    function submitForm() { 
    
-        // make sure that all the notify contacts have a 'notes' value populated
+        // make sure that all the notify contacts have a 'description' value populated
         var contactTable = document.getElementById("contact-main-table");
         var notifyChecked = contactTable.getElementsByTagName("input");
         for (var i = 0; i < notifyChecked.length; i++) {
             if (notifyChecked[i].checked) {
                 var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
                 if (matches[0]) {
-                    contactNoteField = document.getElementsByName("notes[" + matches[0].replace('[','').replace(']','') + "]");
-                    contactNoteField[0].style.border = "";
-                    if (!contactNoteField[0].value) {
-                        alert("Please enter a 'Notes' value for all notify (checked) Methods of Contact");
-                        contactNoteField[0].style.border = "3px solid red";
+                    contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[','').replace(']','') + "]");
+                    contactDescriptionField[0].style.border = "";
+                    if (!contactDescriptionField[0].value) {
+                        alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
+                        contactDescriptionField[0].style.border = "3px solid red";
                         return false;
                     }
                 }
