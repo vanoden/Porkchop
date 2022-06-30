@@ -631,7 +631,7 @@
 
             # Error Handling
             if ($organization->error) $this->error($organization->error);
-            
+
             $response->success = 1;
             $response->organization = $organization;
 

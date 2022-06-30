@@ -171,7 +171,10 @@
 
 			// check if they have an expired password for organzation rules
 			$this->get($login);		
-			if ($this->password_expired()) return 0;
+			if ($this->password_expired()) {
+				$this->error("Your password is expired.  Please use Recover Password to restore.");
+				return false;
+			}
 
 			// Load Specified Authentication Service
 			$authenticationFactory = new \Register\AuthenticationService\Factory();

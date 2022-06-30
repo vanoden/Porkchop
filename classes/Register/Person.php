@@ -77,7 +77,7 @@ class Person Extends \BaseClass {
 						status,
 						timezone,
 						automation,
-						password_age
+						unix_timestamp(password_age) password_age
 				FROM	register_users
 				WHERE   id = ?
 			";
@@ -129,7 +129,7 @@ class Person Extends \BaseClass {
             $this->timezone = null;
             $this->auth_method = null;
             $this->automation = false;
-            $this->password_age = date('Y-m-d H:i:s');
+            $this->password_age = null;
             $this->_cached = 0;
         }
 
@@ -634,12 +634,18 @@ class Person Extends \BaseClass {
 	}
 
 	public function password_expired() {
-        if (isset($this->organization->password_expiration_days) && !empty($this->organization->password_expiration_days)) {
-            $passwordAllowedAgeSeconds = $this->organization->password_expiration_days * 86400;
-            $passwordAgeSeconds = time() - strtotime($this->password_age);
-            if ($passwordAgeSeconds > $passwordAllowedAgeSeconds) return true;
-        }
-        return false;
+		if (isset($this->organization->password_expiration_days) && !empty($this->organization->password_expiration_days)) {
+			$passwordAllowedAgeSeconds = $this->organization->password_expiration_days * 86400;
+			$passwordAgeSeconds = time() - $this->password_age;
+			if ($passwordAgeSeconds < $passwordAllowedAgeSeconds) {
+					return false;
+			}
+			else {
+					app_log("Password expired: $passwordAgeSeconds >= $passwordAllowedAgeSeconds",'info');
+					return true;
+			}
+		}
+		return false;
 	}
 
 	public function abbrev_name() {
