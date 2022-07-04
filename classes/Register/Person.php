@@ -83,7 +83,7 @@ class Person Extends \BaseClass {
 						status,
 						timezone,
 						automation,
-						unix_timestamp(password_age) password_age
+						unix_timestamp(password_age) password_age,
 						default_billing_location_id,
 						default_shipping_location_id						
 				FROM	register_users
