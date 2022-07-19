@@ -2,8 +2,13 @@
 
 	$page = new \Site\Page();
 
+	if (is_string($GLOBALS['_SESSION_']->status) && $GLOBALS['_SESSION_']->status == 'BLOCKED') {
+		app_log('Account blocked','warn');
+		$page->addError("Your account has been blocked.  Please contact ".$GLOBALS['_config']->site->support_email." for assistance.");
+		$page->addError($GLOBALS['_SESSION_']->status);
+	}
 	// See if we received a parseable token
-	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
+	elseif (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
 		app_log('Auth By Token','debug',__FILE__,__LINE__);
 
 		// Consume Token
@@ -36,10 +41,15 @@
 		}
 	}
 	elseif (isset($_REQUEST["password"])) {
-	
-		// can only reset password if authenticated
-		$page->requireSuperElevation();
-
+		if (! $GLOBALS['_SESSION_']->superElevated()) {
+			// Check current password
+			$checkUser = new \Register\Customer();
+			if (! $checkUser->authenticate($GLOBALS['_SESSION_']->customer->login,$_REQUEST['current_password'])) {
+				app_log("SuperElevation failed: user ".$GLOBALS['_SESSION_']->customer->login." pass ".$_REQUEST['current_password'],"warn");
+				$page->addError("Current password check failed");
+				return;
+			}
+		}
 		app_log("Reset Password form submitted",'debug',__FILE__,__LINE__);
 		$customerUpdated = false;
 

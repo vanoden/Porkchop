@@ -19,19 +19,29 @@
 	</ul>
 </section>
 
-<?php if ($page->error) { ?>
+<?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->error?></li>
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
 	</ul>
 </section>
 <?php }	?>
 
 <section id="reg_form"class="body">
-
-    <h3>Create a new password</h3>
-
 	<form name="loginForm" method="post" action="<?=PATH?>/_register/reset_password">
+<?php
+	if (! $GLOBALS['_SESSION_']->superElevated()) { ?>
+	<h3>Enter current password</h3>
+		<div id="register_confirm">
+			<ul class="form-grid">
+				<li>
+					<label for="currentPass">Provide Current Password</label>
+					<input type="password" id="currentPassword" name="currentPassword"/>
+				</li>
+			</ul>
+		</div>
+<?php	} ?>
+    <h3>Create a new password</h3>
 		<div id="register_form">
 			<ul class="form-grid">
 				<li>

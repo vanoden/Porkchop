@@ -421,7 +421,13 @@
 
 			return $this->details($this->id);
 		}
-		
+
+		function superElevated() {
+			if ($site_elevation_expires < date('Y-m-d H:i:s')) return false;
+			app_log($site_elevation_expires." vs ".date('Y-m-d H:i:s'),'notice');
+			return true;
+		}
+
 		function touch() {
 			$this->timestamp();
 		}
