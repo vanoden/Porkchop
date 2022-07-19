@@ -976,6 +976,36 @@
 				$this->setVersion(24);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 25) {
+				app_log("Upgrading schema to version 21",'notice',__FILE__,__LINE__);
+
+				// Start Transaction 
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+			
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS register_auth_failures (
+						`ip_address`	INT(11) NOT NULL,
+						`login`			varchar(255) NOT NULL,
+						`date_fail`		timestamp,
+						`reason`		enum('NONEXIST','PASSFAIL','NONACTIVE') NOT NULL DEFAULT 'PASSFAIL'),
+						`endpoint`		varchar(255),
+						INDEX `idx_reg_auth_fail_ip_login` (`ip_address`,`login`),
+						INDEX `idx_reg_auth_fail_ip_last` (`ip_address`,`date_last`),
+						INDEX `idx_reg_auth_fail_login` (`login`,`date_last`)
+					)
+				";
+	
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating register_auth_failures table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+						app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(25);
+				$GLOBALS['_database']->CommitTrans();
+			}
 
 			return true;
 		}
