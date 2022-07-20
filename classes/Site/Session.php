@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class Session {
+	class Session Extends \BaseClass {
 
 		public $code = '';
 		public $id = 0;
@@ -307,7 +307,8 @@
 						timezone,
 						browser,
 						first_hit_date,
-						last_hit_date
+						last_hit_date,
+						super_elevation_expires
 				FROM	session_sessions
 				WHERE	id = ?
 			";
@@ -316,8 +317,8 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Session::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
 			}
 			if ($rs->RecordCount()) {
 				$session = $rs->FetchNextObject(false);
@@ -422,9 +423,13 @@
 			return $this->details($this->id);
 		}
 
+		function superElevate() {
+			return $this->update(array('super_elevation_expires' => date('Y-m-d H:i:s',time() + 900)));
+		}
+
 		function superElevated() {
-			if ($site_elevation_expires < date('Y-m-d H:i:s')) return false;
-			app_log($site_elevation_expires." vs ".date('Y-m-d H:i:s'),'notice');
+			if ($this->super_elevation_expires < date('Y-m-d H:i:s')) return false;
+			app_log($this->super_elevation_expires." vs ".date('Y-m-d H:i:s'),'notice');
 			return true;
 		}
 
@@ -449,7 +454,7 @@
 			}
 			return 1;
 		}
-		
+
 		function update ($parameters) {
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
@@ -458,38 +463,38 @@
 			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
 
 			# Make Sure User Has Privileges to view other sessions
-			if (! $GLOBALS['_SESSION_']->customer->can('manage sessions')) {
+			if ($GLOBALS['_SESSION_']->id != $this->id && ! $GLOBALS['_SESSION_']->customer->can('manage sessions')) {
 				$this->error = "No privileges to change session";
 				return null;
 			}
 
 			$ok_params = array(
 				"user_id"	=> "user_id",
-				"timezone"	=> "timezone"
+				"timezone"	=> "timezone",
+				"super_elevation_expires" => "super_elevation_expires"
 			);
 
 			$update_session_query = "
 				UPDATE	session_sessions
 				SET		id = id";
 
+			$bind_params = array();
 			foreach ($parameters as $parameter => $value) {
 				if ($ok_params[$parameter]) {
 					$update_session_query .= ",
-						`$parameter` = '$value'";
+						`$parameter` = ?";
+					array_push($bind_params,$value);
 				}
 			}
 
 			$update_session_query .= "
 				WHERE	id = ?
 			";
+			array_push($bind_params,$this->id);
 
-			if (isset($GLOBALS['_config']->log_queries))
-				app_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$update_session_query)),'debug',__FILE__,__LINE__);
+			query_log($update_session_query,$bind_params,true);
 
-			$rs = $GLOBALS['_database']->Execute(
-				$update_session_query,
-				array($this->id)
-			);
+			$rs = $GLOBALS['_database']->Execute($update_session_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Site::Session::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
@@ -540,8 +545,8 @@
 		
 		public function expire() {
 			if (! preg_match('/^\d+$/',$this->id)) {
-				$this->error = "Invalid session id for session::Session::expire";
-				return null;
+				$this->error("Invalid session id for session::Session::expire");
+				return false;
 			}
 			# Delete Hits
 			$delete_hits_query = "
@@ -551,7 +556,7 @@
 			";
 			$GLOBALS['_database']->execute($delete_hits_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Session::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -559,11 +564,11 @@
 			$delete_session_query = "
 				DELETE
 				FROM	session_sessions
-				WHERE	session_id = ?
+				WHERE	id = ?
 			";
 			$GLOBALS['_database']->execute($delete_session_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Session::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
