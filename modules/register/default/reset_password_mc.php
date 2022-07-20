@@ -2,13 +2,8 @@
 
 	$page = new \Site\Page();
 
-	if (is_string($GLOBALS['_SESSION_']->status) && $GLOBALS['_SESSION_']->status == 'BLOCKED') {
-		app_log('Account blocked','warn');
-		$page->addError("Your account has been blocked.  Please contact ".$GLOBALS['_config']->site->support_email." for assistance.");
-		$page->addError($GLOBALS['_SESSION_']->status);
-	}
 	// See if we received a parseable token
-	elseif (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
+	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
 		app_log('Auth By Token','debug',__FILE__,__LINE__);
 
 		// Consume Token
@@ -75,8 +70,8 @@
 					$page->addError("Error updating customer password.  Our admins have been notified.  Please try again later");
 				}
 				else {
-					$page->success = 'Your password has been updated. Log in to continue';
 					$GLOBALS['_SESSION_']->expire();
+					header("location","/_register/reset_password?status=complete");
 				}
 			}
 			else $page->addError($customer->error());

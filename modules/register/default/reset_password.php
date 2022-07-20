@@ -26,8 +26,12 @@
 	</ul>
 </section>
 <?php }	?>
-
-<section id="reg_form"class="body">
+<?php if ($_REQUEST['status'] == "complete") { ?>
+<section id="reg_complete" class="body">
+	<p>Your password has been updated.  Please <a href="/_register/login">log back in</a>.</p>
+</section>
+<?php exit; } ?>
+<section id="reg_form" class="body">
 	<form name="loginForm" method="post" action="<?=PATH?>/_register/reset_password">
 <?php
 	if (! $GLOBALS['_SESSION_']->superElevated()) { ?>
