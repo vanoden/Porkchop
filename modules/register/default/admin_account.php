@@ -244,7 +244,7 @@
    <!--	END Change Password-->
    <h3>Status</h3>
    <select class="input" name="status">
-      <?php	foreach(array('NEW','ACTIVE','EXPIRED','DELETED') as $status) {?>
+      <?php	foreach(array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED','BLOCKED') as $status) {?>
       <option value="<?=$status?>"<?php if ($status == $customer->status) print " selected"; ?>><?=$status?></option>
       <?php	}	?>
    </select>
@@ -269,6 +269,25 @@
          }
          ?>
    </table>
+   <h3>Recent Auth Failures</h3>
+   <div class="tableBody min-tablet">
+		<div class="tableRowHeader">
+			<div class="tableCell">Date</div>
+			<div class="tableCell">IP Address</div>
+			<div class="tableCell">Reason</div>
+			<div class="tableCell">Endpoint</div>
+		</div>
+<?php foreach ($authFailures as $authFailure) { ?>
+		<div class="tableRow">
+			<div class="tableCell"><?=$authFailure->date?></div>
+			<div class="tableCell"><?=$authFailure->ip_address?></div>
+			<div class="tableCell"><?=$authFailure->reason?></div>
+			<div class="tableCell"><?=$authFailure->endpoint?></div>
+		</div>
+<?php	} ?>
+	</div>
+	<span class="label">Auth Failures Since Last Success</span><span class="value"><?=$customer->auth_failures?></span>
+	<input type="submit" name="btnResetFailures" value="Reset Failures" />
 </form>
 <!-- hidden for for "delete contact" -->
 <form id="delete-contact" name="delete-contact" action="<?=PATH?>/_register/admin_account" method="post">
