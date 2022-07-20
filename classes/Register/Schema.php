@@ -984,14 +984,16 @@
 			
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS register_auth_failures (
+						`id`			INT(11) NOT NULL AUTO_INCREMENT,
 						`ip_address`	INT(11) NOT NULL,
 						`login`			varchar(255) NOT NULL,
 						`date_fail`		timestamp,
-						`reason`		enum('NONEXIST','PASSFAIL','NONACTIVE') NOT NULL DEFAULT 'PASSFAIL'),
+						`reason`		enum('NOACCOUNT','PASSEXPIRED','WRONGPASS','INACTIVE','INVALIDPASS') NOT NULL,
 						`endpoint`		varchar(255),
+						PRIMARY KEY `pk_reg_auth_fail` (`id`),
 						INDEX `idx_reg_auth_fail_ip_login` (`ip_address`,`login`),
-						INDEX `idx_reg_auth_fail_ip_last` (`ip_address`,`date_last`),
-						INDEX `idx_reg_auth_fail_login` (`login`,`date_last`)
+						INDEX `idx_reg_auth_fail_ip_last` (`ip_address`,`date_fail`),
+						INDEX `idx_reg_auth_fail_login` (`login`,`date_fail`)
 					)
 				";
 	
