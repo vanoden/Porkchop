@@ -51,17 +51,21 @@
             $result = $customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
             if ($customer->error) $this->error($customer->error);
 
-            if ($result > 0) {
+            if ($result && $customer->isActive()) {
                 app_log("Assigning session ".$GLOBALS['_SESSION_']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
                 $GLOBALS['_SESSION_']->assign($customer->id);
             }
+			elseif ($result) {
+				$this->error("This account is not active");
+			}
             else {
 				$this->_incrementCounter("incorrect");
                 app_log("Authentication failed",'notice',__FILE__,__LINE__);
             }
-            
-            $this->response->success = $result;
+
             if (! $result) $this->error("Invalid login password combination");
+
+			$this->response->success = 1;
 
             # Send Response
             print $this->formatOutput($this->response);
