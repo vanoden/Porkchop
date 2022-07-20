@@ -19,6 +19,7 @@ class Person Extends \BaseClass {
     public $password_age;
     public $default_billing_location_id;
     public $default_shipping_location_id;
+	public $auth_failures;
     public $_settings = array( "date_format" => "US" );
 
     public function __construct($id = 0) {
@@ -58,6 +59,7 @@ class Person Extends \BaseClass {
             $this->password_age = $customer->password_age;
             $this->default_billing_location_id = $customer->default_billing_location_id;
             $this->default_shipping_location_id = $customer->default_shipping_location_id;
+			$this->auth_failures = $customer->auth_failures;
             $customer->_cached = 1;
 
             # In Case Cache Corrupted
@@ -72,42 +74,43 @@ class Person Extends \BaseClass {
 
         # Get Persons Info From Database
         $get_person_query = "
-				SELECT	id,
-						login code,
-						first_name,
-						last_name,
-						date_created,
-						organization_id,
-						department_id,
-						auth_method,
-						status,
-						timezone,
-						automation,
-						unix_timestamp(password_age) password_age,
-						default_billing_location_id,
-						default_shipping_location_id						
-				FROM	register_users
-				WHERE   id = ?
-			";
+			SELECT	id,
+					login code,
+					first_name,
+					last_name,
+					date_created,
+					organization_id,
+					department_id,
+					auth_method,
+					status,
+					timezone,
+					automation,
+					unix_timestamp(password_age) password_age,
+					default_billing_location_id,
+					default_shipping_location_id,
+					auth_failures						
+			FROM	register_users
+			WHERE   id = ?
+		";
 
-        $rs = $GLOBALS['_database']->Execute($get_person_query, array(
-            $this->id
-        ));
-        if (!$rs) {
-            $this->error("SQL Error in Register::Person::details(): " . $GLOBALS['_database']->ErrorMsg());
-            return null;
-        }
-        $customer = $rs->FetchNextObject(false);
-        if (!isset($customer->id)) {
-            app_log("No customer found for " . $this->id);
-            $this->id = null;
-            return $this;
-        }
+		$rs = $GLOBALS['_database']->Execute($get_person_query, array(
+			$this->id
+		));
+		if (!$rs) {
+			$this->error("SQL Error in Register::Person::details(): " . $GLOBALS['_database']->ErrorMsg());
+			return null;
+		}
+		$customer = $rs->FetchNextObject(false);
+		if (!isset($customer->id)) {
+			app_log("No customer found for " . $this->id);
+			$this->id = null;
+			return $this;
+		}
 
-        app_log("Caching details for person '" . $this->id . "'", 'trace', __FILE__, __LINE__);
-        # Store Some Object Vars
-        if ($customer->id && $customer->id > 0) {
-            $this->id = $customer->id;
+		app_log("Caching details for person '" . $this->id . "'", 'trace', __FILE__, __LINE__);
+		# Store Some Object Vars
+		if ($customer->id && $customer->id > 0) {
+			$this->id = $customer->id;
             $this->first_name = $customer->first_name;
             $this->last_name = $customer->last_name;
             $this->code = $customer->code;
@@ -124,6 +127,7 @@ class Person Extends \BaseClass {
             $this->password_age = $customer->password_age;            
             $this->default_billing_location_id = $customer->default_billing_location_id;
             $this->default_shipping_location_id = $customer->default_shipping_location_id;
+			$this->auth_failures = $customer->auth_failures;
             $this->_cached = 0;
         }
         else {
@@ -142,6 +146,7 @@ class Person Extends \BaseClass {
             $this->password_age = null;
             $this->default_billing_location_id = null;
             $this->default_shipping_location_id = null;
+			$this->auth_failures = 0;
             $this->_cached = 0;
         }
 
@@ -152,17 +157,17 @@ class Person Extends \BaseClass {
         return $this;
     }
 
-    public function full_name() {
-        $full_name = '';
-        if (strlen($this->first_name)) $full_name .= $this->first_name;
-        if (strlen($this->last_name)) {
-            if (strlen($full_name)) $full_name .= " ";
-            $full_name .= $this->last_name;
-        }
-        if (!strlen($full_name)) $full_name = $this->code;
-        if (!strlen($full_name)) $full_name = '[empty]';
-        return $full_name;
-    }
+	public function full_name() {
+		$full_name = '';
+		if (strlen($this->first_name)) $full_name .= $this->first_name;
+		if (strlen($this->last_name)) {
+			if (strlen($full_name)) $full_name .= " ";
+			$full_name .= $this->last_name;
+		}
+		if (!strlen($full_name)) $full_name = $this->code;
+		if (!strlen($full_name)) $full_name = '[empty]';
+		return $full_name;
+	}
     
     public function add($parameters = array()) {
         if (!$this->validLogin($parameters['login'])) {
@@ -265,6 +270,11 @@ class Person Extends \BaseClass {
 			organization_id = ?";
 			array_push($bind_params,$parameters['organization_id']);
 		}
+		if (isset($parameters['auth_failures']) and is_numeric($parameters['auth_failures'])) {
+			$update_customer_query .= ",
+			auth_failures = ?";
+			array_push($bind_params,$parameters['auth_failures']);
+		}
 		if (isset($parameters['status'])) {
 			$update_customer_query .= ",
 			status = ?";
@@ -329,26 +339,24 @@ class Person Extends \BaseClass {
         return $this->details();
     }
     
-    public function getMeta($id = 0) {
-        if (!$id) $id = $this->id;
-        $get_meta_query = "
-				SELECT	`key`,value
-				FROM	register_person_metadata
-				WHERE	person_id = ?
-			";
-        $rs = $GLOBALS['_database']->Execute($get_meta_query, array(
-            $id
-        ));
-        if (!$rs) {
-            $this->error = "SQL Error in Register::Person::getMeta(): " . $GLOBALS['_database']->ErrorMsg();
-            return null;
-        }
-        $metadata = array();
-        while (list($label, $value) = $rs->FetchRow()) {
-            $metadata[$label] = $value;
-        }
-        return $metadata;
-    }
+	public function getMeta($id = 0) {
+		if (!$id) $id = $this->id;
+		$get_meta_query = "
+			SELECT	`key`,value
+			FROM	register_person_metadata
+			WHERE	person_id = ?
+		";
+		$rs = $GLOBALS['_database']->Execute($get_meta_query, array($id));
+		if (!$rs) {
+			$this->error = "SQL Error in Register::Person::getMeta(): " . $GLOBALS['_database']->ErrorMsg();
+			return null;
+		}
+		$metadata = array();
+		while (list($label, $value) = $rs->FetchRow()) {
+			$metadata[$label] = $value;
+		}
+		return $metadata;
+	}
     
     public function setMeta($arg1, $arg2, $arg3 = 0) {
         if (func_num_args() == 3) {
@@ -385,7 +393,7 @@ class Person Extends \BaseClass {
     }
     
     public function metadata($key) {
-	$bind_params = array();
+		$bind_params = array();
 
         $get_results_query = "
 				SELECT	value
@@ -406,31 +414,31 @@ class Person Extends \BaseClass {
     }
  
     public function searchMeta($key, $value = '') {
-	$bind_params = array();
-        $get_results_query = "
-				SELECT	person_id
-				FROM	register_person_metadata
-				WHERE	`key` = ?";
-	array_push($bind_params,$key);
+		$bind_params = array();
+		$get_results_query = "
+			SELECT	person_id
+			FROM	register_person_metadata
+			WHERE	`key` = ?";
+		array_push($bind_params,$key);
 
-        if ($value) {
-		$get_results_query .= "
+		if ($value) {
+			$get_results_query .= "
 				AND		value = ?";
-		array_push($bind_params,$value);
-	}
+			array_push($bind_params,$value);
+		}
 
-        $rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
-        if (!$rs) {
-            $this->error = "SQL Error in Register::Person::searchMeta(): " . $GLOBALS['_database']->ErrorMsg();
-            return null;
-        }
-        $objects = array();
-        while (list($id) = $rs->FetchRow()) {
-            $object = $this->details($id);
-            if ($object->status == 'DELETED') continue;
-            array_push($objects, $object);
-        }
-        return $objects;
+		$rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
+		if (!$rs) {
+			$this->error = "SQL Error in Register::Person::searchMeta(): " . $GLOBALS['_database']->ErrorMsg();
+			return null;
+		}
+		$objects = array();
+		while (list($id) = $rs->FetchRow()) {
+			$object = $this->details($id);
+			if ($object->status == 'DELETED') continue;
+			array_push($objects, $object);
+		}
+		return $objects;
     }
 
     # Process Email Verification Request
