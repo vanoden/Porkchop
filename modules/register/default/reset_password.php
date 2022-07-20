@@ -5,7 +5,6 @@
         margin:0;
     }
 </style>
-
 <?php	if ($page->success) { ?>
 <section id="form-message">
 	<ul class="connectBorder progressText">
@@ -30,7 +29,7 @@
 <section id="reg_complete" class="body">
 	<p>Your password has been updated.  Please <a href="/_register/login">log back in</a>.</p>
 </section>
-<?php exit; } ?>
+<?php return; } ?>
 <section id="reg_form" class="body">
 	<form name="loginForm" method="post" action="<?=PATH?>/_register/reset_password">
 <?php
