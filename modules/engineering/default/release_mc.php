@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('engineering user');
+	$page->requirePrivilege('browse engineering objects');
 
 	$release = new \Engineering\Release();
 	
@@ -13,8 +13,8 @@
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$release->get($code);
 	}
-	
-	if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Submit') {
+
+	if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Submit' && $GLOBALS['_SESSION_']->customer->can("manage engineering releases")) {
 		$parameters = array();
 		if (isset($_REQUEST['title'])) $parameters['title'] = $_REQUEST['title'];
 		else {
@@ -65,8 +65,10 @@
 		$form['date_scheduled'] = $release->date_scheduled;
 		$form['status'] = $release->status;
 		$form['description'] = $release->description;
+		app_log("Getting tasks for release ".$release->id);
 		$tasklist = new \Engineering\TaskList();
 		$tasks = $tasklist->find(array('release_id' => $release->id));
+		if ($tasklist->error()) $page->addError($tasklist->error());
 	} elseif ($page->errorCount()) {
 		$form['code'] = $_REQUEST['code'];
 		$form['title'] = $_REQUEST['title'];
@@ -79,7 +81,7 @@
     // upload files if upload button is pressed
     $configuration = new \Site\Configuration('engineering_attachments_s3');
     $repository = $configuration->value();
-    if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
+    if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload' && $GLOBALS['_SESSION_']->customer->can("manage engineering releases") && $GLOBALS['_SESSION_']->customer->can("upload files")) {
 
 	    $file = new \Storage\File();
 	    $parameters = array();
@@ -92,8 +94,13 @@
 	    if (!empty($file->success)) $page->success = $file->success;
 	}
 	
-	$filesList = new \Storage\FileList();
-	$filesUploaded = $filesList->find(array('type' => 'engineering release', 'ref_id' => $release->id));
+	if (!empty($release->id)) {
+		$filesList = new \Storage\FileList();
+		$filesUploaded = $filesList->find(array('type' => 'engineering release', 'ref_id' => $release->id));
+	}
+	else {
+		$filesUploaded = array();
+	}
 
 	$packageList = new \Package\PackageList();
 	$packages = $packageList->find();

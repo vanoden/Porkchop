@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('engineering user');
+	$page->requirePrivilege('browse engineering objects');
 
     // get new and active tasks for the 'prerequisite' field
 	$tasklist = new \Engineering\TaskList();
@@ -74,7 +74,7 @@
     
 
     // edit task or add event, testing info or comment
-	if (isset($_REQUEST['method']) && !empty($_REQUEST['method'])) {
+	if (isset($_REQUEST['method']) && !empty($_REQUEST['method']) && $GLOBALS['_SESSION_']->customer->can("manage engineering tasks")) {
 		$msgs = array();
 		$parameters = array();
 		if (isset($_REQUEST['title'])) {
