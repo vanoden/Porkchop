@@ -131,8 +131,7 @@
 		
 		// Process Contact Entries
 		app_log("Processing contact entries",'debug',__FILE__,__LINE__);
-		foreach ($_REQUEST['_type'] as $contact_id) {
-//		while (list($contact_id) = each($_REQUEST['type'])) {
+		foreach ($_REQUEST['type'] as $contact_id => $type) {
 			if (! $_REQUEST['type'][$contact_id]) continue;
 
 			if ($contact_id > 0) {
