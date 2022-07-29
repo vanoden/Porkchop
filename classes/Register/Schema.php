@@ -945,30 +945,16 @@
 				// Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-				$alter_table_query = "ALTER TABLE `register_users` ADD COLUMN `default_billing_location_id` int NULL";
+				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_billing_location_id` int NULL";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_users` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
 
-				$alter_table_query = "ALTER TABLE `register_users` ADD COLUMN `default_shipping_location_id` int NULL;";
+				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_shipping_location_id` int NULL;";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_users` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-
-				$alter_table_query = "ALTER TABLE `register_users` ADD CONSTRAINT register_users_ibfk_2 FOREIGN KEY (default_billing_location_id) REFERENCES register_locations(id);";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_users` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-
-				$alter_table_query = "ALTER TABLE `register_users` ADD CONSTRAINT register_users_ibfk_3 FOREIGN KEY (default_shipping_location_id) REFERENCES register_locations(id);";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_users` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}

@@ -58,6 +58,7 @@
 		        <div class="tableCell" style="width: 10%;">Status</div>
 		        <div class="tableCell" style="width: 20%;">Product</div>
 		        <div class="tableCell" style="width: 20%;">Serial #</div>
+		        <div class="tableCell" style="width: 20%;">&nbsp;</div>
 	        </div> <!-- end row header -->
 	        <div class="tableRow">
 		        <div class="tableCell">
@@ -81,7 +82,10 @@
 			        </select>
 		        </div>
 		        <div class="tableCell">
-			        <input type="text" class="value input" name="serial_number" value="<?=$item->serial_number?>">
+			        <input type="text" id="serial_number" class="value input" name="serial_number" value="<?=$item->serial_number?>">
+		        </div>
+		        <div class="tableCell">
+                    <a href="/_monitor/admin_details/<?=$item->serial_number?>/<?=$product->code?>" target="_blank" style="font-size: 10px; white-space:nowrap;">View Monitor</a>
 		        </div>
 	        </div>
         </div>

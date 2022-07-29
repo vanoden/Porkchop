@@ -90,6 +90,51 @@
 			return true;
 		}
 
+        public function applyDefaultBillingAndShippingAddresses($organizationId, $locationId, $isDefaultBilling=false, $isDefaultShipping=false) {
+        
+            if ($isDefaultBilling || $isDefaultShipping) {
+			    $update_record_query = "
+				    UPDATE `register_organizations` SET default_billing_location_id= NULL AND default_shipping_location_id = NULL WHERE organization_id = ?;
+			    ";
+	            $bind_params = array($organizationId);
+	            query_log($update_record_query,$bind_params,true);
+	            $GLOBALS['_database']->Execute($update_record_query,$bind_params);
+	            if ($GLOBALS['_database']->ErrorMsg()) {
+		            $this->_error = "SQL Error in Register::Location::applyDefaultBillingAndShippingAddresses(): ".$GLOBALS['_database']->ErrorMsg();
+		            return false;
+	            }
+
+	            if ($isDefaultBilling) {
+			        $update_record_query = "
+				        UPDATE `register_organizations` SET default_billing_location_id = ? WHERE organization_id = ?;
+			        ";
+	                $bind_params = array($locationId. $organizationId);
+	                query_log($update_record_query,$bind_params,true);
+	                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
+	                if ($GLOBALS['_database']->ErrorMsg()) {
+		                $this->_error = "SQL Error in Register::Location::applyDefaultBillingAndShippingAddresses(): ".$GLOBALS['_database']->ErrorMsg();
+		                return false;
+	                }
+	            }
+	            
+	            if ($isDefaultShipping) {
+			        $update_record_query = "
+				        UPDATE `register_organization_locations` SET default_shipping_location_id = ? WHERE organization_id = ?;
+			        ";
+	                $bind_params = array($locationId. $organizationId);
+	                query_log($update_record_query,$bind_params,true);
+	                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
+	                if ($GLOBALS['_database']->ErrorMsg()) {
+		                $this->_error = "SQL Error in Register::Location::applyDefaultBillingAndShippingAddresses(): ".$GLOBALS['_database']->ErrorMsg();
+		                return false;
+	                }
+	            }
+            }
+            
+            return true;
+
+        }
+        
 		public function province() {
 			return new \Geography\Province($this->province_id);
 		}

@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requirePrivilege('browse engineering objects');
+	$page->requireRole('engineering user');
 
 	$release = new \Engineering\Release();
 	
@@ -13,8 +13,8 @@
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$release->get($code);
 	}
-
-	if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Submit' && $GLOBALS['_SESSION_']->customer->can("manage engineering releases")) {
+	
+	if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Submit') {
 		$parameters = array();
 		if (isset($_REQUEST['title'])) $parameters['title'] = $_REQUEST['title'];
 		else {
@@ -25,8 +25,11 @@
 		if (isset($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
 		if (isset($_REQUEST['date_released'])) $parameters['date_released'] = $_REQUEST['date_released'];
 		if (isset($_REQUEST['date_scheduled'])) $parameters['date_scheduled'] = $_REQUEST['date_scheduled'];
-		if (isset($_REQUEST['package_version_id'])) $parameters['package_version_id'] = $_REQUEST['package_version_id'];
-
+		
+		// handle package version integer
+		$parameters['package_version_id'] = 0;
+		if (isset($_REQUEST['package_version_id']) && is_int(isset($_REQUEST['package_version_id']))) $parameters['package_version_id'] = $_REQUEST['package_version_id'];
+    
 		app_log("Submitted task form",'debug',__FILE__,__LINE__);
 		if ($release->id) {
 			if ($release->update($parameters)) {
@@ -65,10 +68,8 @@
 		$form['date_scheduled'] = $release->date_scheduled;
 		$form['status'] = $release->status;
 		$form['description'] = $release->description;
-		app_log("Getting tasks for release ".$release->id);
 		$tasklist = new \Engineering\TaskList();
 		$tasks = $tasklist->find(array('release_id' => $release->id));
-		if ($tasklist->error()) $page->addError($tasklist->error());
 	} elseif ($page->errorCount()) {
 		$form['code'] = $_REQUEST['code'];
 		$form['title'] = $_REQUEST['title'];
@@ -81,7 +82,7 @@
     // upload files if upload button is pressed
     $configuration = new \Site\Configuration('engineering_attachments_s3');
     $repository = $configuration->value();
-    if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload' && $GLOBALS['_SESSION_']->customer->can("manage engineering releases") && $GLOBALS['_SESSION_']->customer->can("upload files")) {
+    if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 
 	    $file = new \Storage\File();
 	    $parameters = array();
@@ -94,13 +95,8 @@
 	    if (!empty($file->success)) $page->success = $file->success;
 	}
 	
-	if (!empty($release->id)) {
-		$filesList = new \Storage\FileList();
-		$filesUploaded = $filesList->find(array('type' => 'engineering release', 'ref_id' => $release->id));
-	}
-	else {
-		$filesUploaded = array();
-	}
+	$filesList = new \Storage\FileList();
+	$filesUploaded = $filesList->find(array('type' => 'engineering release', 'ref_id' => $release->id));
 
 	$packageList = new \Package\PackageList();
 	$packages = $packageList->find();

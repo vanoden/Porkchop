@@ -127,7 +127,7 @@
 		    </div>
 		    <div class="tableCell">
                <select name="role_id" class="value input" style="max-width: 250px;">
-                  <option value="">None</option>
+                  <option value="">Any</option>
                   <?php	foreach($engineeringRoles as $engineeringRole) { ?>
                     <option value="<?=$engineeringRole->id?>"<?php if ($engineeringRole->id == $_REQUEST['role_id']) print " selected"; ?>><?=$engineeringRole->name?></option>
                   <?php	} ?>
