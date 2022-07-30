@@ -230,8 +230,7 @@
 			if ($authenticationService->changePassword($this->login,$password)) {
 				$this->resetAuthFailures();
 				return true;
-			}
-			else {
+			} else {
 				$this->error($authenticationService->error());
 				return false;
 			}

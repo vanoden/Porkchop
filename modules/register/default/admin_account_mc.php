@@ -49,8 +49,8 @@
 		}
 
 		if (isset($_REQUEST['organization_id'])) $parameters["organization_id"] = $_REQUEST["organization_id"];
-
-		if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
+		
+		if (isset($_REQUEST["password"]) and ($_REQUEST["password_2"])) {
 			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 				$page->addError("Passwords do not match");
 				goto load;
@@ -66,7 +66,11 @@
 				$page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
 				goto load;
 			}
-			if ($_REQUEST['password']) $customer->changePassword($_REQUEST["password"]);
+			if ($_REQUEST['password']) {
+    			if (!$customer->changePassword($_REQUEST["password"])) {
+    			  $page->addError("Password needs more complexity");
+    			}
+			}
 		} else {
 			app_log("New customer registration",'debug',__FILE__,__LINE__);
 
@@ -81,6 +85,7 @@
 			###########################################
 			## Add User To Database
 			###########################################
+			
 			// Add Customer Record to Database
 			$customer = new \Register\Customer();
 			$customer->add($parameters);
@@ -229,8 +234,7 @@
 	if (!empty($customer->login)) {
 		$authFailureList = new \Register\AuthFailureList();
 		$authFailures = $authFailureList->find(array('_limit' => 5,'login' => $customer->login));
-	}
-	else {
+	} else {
 		$authFailures = array();
 	}
 

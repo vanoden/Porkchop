@@ -7,6 +7,7 @@ class Person Extends \BaseClass {
     public $title;
     public $first_name;
     public $middle_name;    
+    public $first_name;
     public $last_name;
     public $location;
     public $organization;
@@ -670,11 +671,10 @@ class Person Extends \BaseClass {
 			$passwordAllowedAgeSeconds = $this->organization->password_expiration_days * 86400;
 			$passwordAgeSeconds = time() - $this->password_age;
 			if ($passwordAgeSeconds < $passwordAllowedAgeSeconds) {
-					return false;
-			}
-			else {
-					app_log("Password expired: $passwordAgeSeconds >= $passwordAllowedAgeSeconds",'info');
-					return true;
+				return false;
+			} else {
+				app_log("Password expired: $passwordAgeSeconds >= $passwordAllowedAgeSeconds",'info');
+				return true;
 			}
 		}
 		return false;

@@ -1,15 +1,9 @@
 <?php
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customer locations');
-
 	$location = new \Register\Location($_REQUEST['id']);
-
-	if (isset($_REQUEST['organization_id'])) {
-		$organization = new \Register\Organization($_REQUEST['organization_id']);
-	}
-	if (isset($_REQUEST['user_id'])) {
-		$user = new \Register\Person($_REQUEST['user_id']);
-	}
+	if (isset($_REQUEST['organization_id'])) $organization = new \Register\Organization($_REQUEST['organization_id']);
+	if (isset($_REQUEST['user_id'])) $user = new \Register\Person($_REQUEST['user_id']);
 
 	if (isset($_REQUEST['btn_submit'])) {
 		if (empty($_REQUEST['zip_code'])) $page->addError("Zip Code required");
@@ -26,11 +20,13 @@
 				if ($_REQUEST['zip_code'] != $location->zip_code) $parameters['zip_code'] = $_REQUEST['zip_code'];
 	
 				$location->update($parameters);
-				if ($location->error()) {
-					$page->addError("Error updating location ".$location->id.": ".$location->error());
-				}
-			}
-			else {
+				if ($location->error()) $page->addError("Error updating location ".$location->id.": ".$location->error());
+				
+				// apply any default billing or shipping set
+				if ($_REQUEST['default_billing'] || $_REQUEST['default_shipping']) 
+				    $location->applyDefaultBillingAndShippingAddresses($_REQUEST['organization_id'], $location->id, isset($_REQUEST['default_billing']), isset($_REQUEST['default_shipping']));
+				
+			} else {
 				$parameters['name'] = $_REQUEST['name'];
 				$parameters['address_1'] = $_REQUEST['address_1'];
 				$parameters['address_2'] = $_REQUEST['address_2'];
@@ -42,8 +38,7 @@
 				if (! $location->add($parameters)) {
 					if ($location->error()) {
 						$page->addError("Error adding location: ".$location->error());
-					}
-					else {
+					} else {
 						$page->addError("Unhandled error adding location");
 					}
 				}

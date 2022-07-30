@@ -416,27 +416,50 @@
 	
 	$filesList = new \Storage\FileList();
 	$filesUploaded = $filesList->find(array('type' => 'engineering task', 'ref_id' => $task->id));
-	
-	$peopleList = new \Register\CustomerList();
-	$people = $peopleList->find(array("status" => array('NEW','ACTIVE')));
-	
-	if (isset($peoplelist->error)) $page->addError($peoplelist->error);
 
+    // get CustomerList from cache or query	
+	$peopleList = new \Register\CustomerList();
+	if (isset($peoplelist->error)) $page->addError($peoplelist->error);
+	
+	$people = cache_get('\Engineering\Task\Register\CustomerList');
+	if (!$people) {
+    	$people = $peopleList->find(array("status" => array('NEW','ACTIVE'), 'automation' => 0));
+    	cache_set('\Engineering\Task\Register\CustomerList',$people);
+	}
+	
 	$role = new \Register\Role();
 	$role->get("engineering user");
 	$assigners = $techs = $role->members();
 
+    // get ProductList from cache or query	
 	$productlist = new \Engineering\ProductList();
-	$products = $productlist->find();
 	if ($productlist->error()) $page->addError($productlist->error());
+	
+    $products = cache_get('\Engineering\Task\Register\Products');
+	if (!$products) {
+    	$products = $productlist->find();
+    	cache_set('\Engineering\Task\Register\Products',$products);
+	}
 
+    // get ReleaseList from cache or query	
 	$releaselist = new \Engineering\ReleaseList();
-	$releases = $releaselist->find();
 	if ($releaselist->error()) $page->addError($releaselist->error());
 
+    $releases = cache_get('\Engineering\Task\Register\Releases');
+	if (!$releases) {
+    	$releases = $releaselist->find();
+    	cache_set('\Engineering\Task\Register\Releases',$releases);
+	}
+	
+    // get ProjectList from cache or query	
 	$projectlist = new \Engineering\ProjectList();
-	$projects = $projectlist->find();
 	if ($projectlist->error()) $page->addError($projectlist->error());
+	
+    $projects = cache_get('\Engineering\Task\Register\Projects');
+	if (!$projects) {
+    	$projects = $projectlist->find();
+    	cache_set('\Engineering\Task\Register\Projects',$projects);
+	}
 	
 	// get engineering comments 
     $engineeringComments = new \Engineering\CommentList();
