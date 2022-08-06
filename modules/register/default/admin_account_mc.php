@@ -47,9 +47,7 @@
 			if ($_REQUEST['automation']) $parameters['automation'] = true;
 			else $parameters['automation'] = false;
 		}
-
 		if (isset($_REQUEST['organization_id'])) $parameters["organization_id"] = $_REQUEST["organization_id"];
-		
 		if (isset($_REQUEST["password"]) and ($_REQUEST["password_2"])) {
 			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 				$page->addError("Passwords do not match");

@@ -1,5 +1,5 @@
 <script language="Javascript">
-	function initImageSelectWizard()
+	function initImageSelectWizard() {
 		childWindow = open("http://<?=$_SERVER['HTTP_HOST']?>/_media/image_select", "imageselect", 'resizable=no,width=500,height=500');
 		if (childWindow.opener == null) childWindow.opener = self;
 	}

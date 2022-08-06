@@ -127,7 +127,7 @@
             <input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?=htmlentities($customer->first_name)?>" />
          </div>
          <div class="tableCell">
-            <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=htmlentities($customer->last_name)?>)" />
+            <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=htmlentities($customer->last_name)?>" />
          </div>
          <div class="tableCell">
             <select id="timezone" name="timezone" class="value input collectionField">
