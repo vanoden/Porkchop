@@ -1,16 +1,13 @@
 <script language="Javascript">
 	function initImageSelectWizard()
-	{
 		childWindow = open("http://<?=$_SERVER['HTTP_HOST']?>/_media/image_select", "imageselect", 'resizable=no,width=500,height=500');
 		if (childWindow.opener == null) childWindow.opener = self;
 	}
-	function endImageSelectWizard(code)
-	{
+	function endImageSelectWizard(code) {
 		document.getElementById('new_image_code').value = code;
 		document.getElementById('newImageBox').style.backgroundImage = '/_media/api?method=downloadImageFile&code='+code;
 	}
-	function dropImage(code)
-	{
+	function dropImage(code) {
 		document.getElementById('deleteImage').value = code;
 		document.getElementById('ItemImageDiv_'+code).style.display = "none";
 	}
@@ -28,7 +25,7 @@
 <div class="body">
 	<div class="input-horiz" id="itemCode">
 		<span class="label">Code</span>
-		<input type="text" name="code" value="<?=$item->code?>" class="value input" />
+		<input type="text" name="code" value="<?=htmlspecialchars($item->code)?>" class="value input" />
 	</div>
 	<div class="input-horiz" id="itemType">
 		<span class="label">Type</span>
@@ -41,7 +38,7 @@
 	</div>
 	<div class="input-horiz" id="itemName">
 		<span class="label">Name</span>
-		<input type="text" class="value input wide_lg" name="name" id="name" value="<?=$item->metadata['name']?>" />
+		<input type="text" class="value input wide_lg" name="name" id="name" value="<?=htmlspecialchars($item->metadata['name'])?>" />
 	</div>
 	<div class="input-horiz" id="itemStatus">
 		<span class="label">Status</span>
@@ -54,31 +51,31 @@
 	</div>
 	<div class="input-horiz" id="itemShortDescription">
 		<span class="label align-top">Short Description</span>
-		<textarea class="value input wide_lg" name="short_description" id="short_description"><?=$item->metadata['short_description']?></textarea>
+		<textarea class="value input wide_lg" name="short_description" id="short_description"><?=htmlspecialchars($item->metadata['short_description'])?></textarea>
 	</div>
 	<div class="input-horiz" id="itemDescription">
 		<span class="label align-top">Description</span>
-		<textarea class="value input wide_lg" name="description" id="description"><?=$item->metadata['description']?></textarea>
+		<textarea class="value input wide_lg" name="description" id="description"><?=htmlspecialchars($item->metadata['description'])?></textarea>
 	</div>
 	<div class="input-horiz">
 		<span class="label">Model</span>
-		<input type="text" class="value input wide_md" name="model" id="model" value="<?=$item->metadata['model']?>" />
+		<input type="text" class="value input wide_md" name="model" id="model" value="<?=htmlspecialchars($item->metadata['model'])?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Empirical Formula</span>
-		<input type="text" class="value input wide_md" name="empirical_formula" id="empirical_formula" value="<?=$item->metadata['empirical_formula']?>" />
+		<input type="text" class="value input wide_md" name="empirical_formula" id="empirical_formula" value="<?=htmlspecialchars($item->metadata['empirical_formula'])?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Sensitivity</span>
-		<input type="text" class="value input wide_md" name="sensitivity" id="sensitivity" value="<?=$item->metadata['sensitivity']?>" />
+		<input type="text" class="value input wide_md" name="sensitivity" id="sensitivity" value="<?=htmlspecialchars($item->metadata['sensitivity'])?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Measure Range</span>
-		<input type="text" class="value input wide_md" name="measure_range" id="measure_range" value="<?=$item->metadata['measure_range']?>" />
+		<input type="text" class="value input wide_md" name="measure_range" id="measure_range" value="<?=htmlspecialchars($item->metadata['measure_range'])?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Accuracy</span>
-		<input type="text" class="value input wide_md" name="accuracy" id="accuracy" value="<?=$item->metadata['accuracy']?>" />
+		<input type="text" class="value input wide_md" name="accuracy" id="accuracy" value="<?=htmlspecialchars($item->metadata['accuracy'])?>" />
 	</div>
 	<div class="input-horiz">
 		<span class="label">Default Dashboard</span>

@@ -2,6 +2,7 @@
 	namespace Register;
 
 	class Privilege Extends \BaseClass {
+	
 		public $id;
 		protected $_error;
 		public $description;
