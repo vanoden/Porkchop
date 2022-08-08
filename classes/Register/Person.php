@@ -5,7 +5,6 @@ class Person Extends \BaseClass {
 
     public $id;
     public $title;
-    public $first_name;
     public $middle_name;    
     public $last_name;
     public $location;

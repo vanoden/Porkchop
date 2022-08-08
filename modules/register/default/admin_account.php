@@ -79,9 +79,7 @@
    <input type="hidden" name="target" value="<?=$target?>"/>
    <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
    <input type="hidden" name="login" value="<?=$customer->login?>"/>
-    <?php
-        print_r($page);
-    
+    <?php    
     	 if ($page->errorCount() > 0) { ?>
         <div class="form_error"><?=$page->errorString()?></div>
     <?php	 } ?>
@@ -126,10 +124,10 @@
             </select>
          </div>
          <div class="tableCell">
-            <input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?=$customer->first_name?>" />
+            <input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?=htmlentities($customer->first_name)?>" />
          </div>
          <div class="tableCell">
-            <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" />
+            <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=htmlentities($customer->last_name)?>" />
          </div>
          <div class="tableCell">
             <select id="timezone" name="timezone" class="value input collectionField">
@@ -166,13 +164,13 @@
             </select>
          </div>
          <div class="tableCell">
-            <input type="text" name="description[<?=$contact->id?>]" class="value wide_100per" value="<?=$contact->description?>" />
+            <input type="text" name="description[<?=$contact->id?>]" class="value wide_100per" value="<?=htmlentities($contact->description)?>" />
          </div>
          <div class="tableCell">
-            <input type="text" name="value[<?=$contact->id?>]" class="value wide_100per" value="<?=$contact->value?>" />
+            <input type="text" name="value[<?=$contact->id?>]" class="value wide_100per" value="<?=htmlentities($contact->value)?>" />
          </div>
          <div class="tableCell">
-            <input type="text" name="notes[<?=$contact->id?>]" class="value wide_100per" value="<?=$contact->notes?>" />
+            <input type="text" name="notes[<?=$contact->id?>]" class="value wide_100per" value="<?=htmlentities($contact->notes)?>" />
          </div>
          <div class="tableCell">
             <input type="checkbox" name="notify[<?=$contact->id?>]" value="1" <?php if ($contact->notify) print "checked"; ?> />
