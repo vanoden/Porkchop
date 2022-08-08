@@ -29,7 +29,8 @@
 		else $page->success = "File updated";
 		
 	} elseif (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
-	
+		$page->addError("Help!");
+		$page->requirePrivilege('upload storage files');
 		if (! preg_match('/^\//',$_REQUEST['path'])) $_REQUEST['path'] = '/'.$_REQUEST['path'];
 		$factory = new \Storage\RepositoryFactory();
 		$repository = $factory->load($_REQUEST['repository_id']);
