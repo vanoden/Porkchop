@@ -78,7 +78,6 @@
 	    }
 	    
         public function requirePrivilege($privilege) {
-	        return true;
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
                 return true;
             }
