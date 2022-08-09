@@ -108,7 +108,7 @@
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
 			$item->addMeta("spec_table_image",noXSS($_REQUEST["spec_table_image"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("default_dashboard_id",noXS($_REQUEST["default_dashboard_id"]));
+			$item->addMeta("default_dashboard_id",noXSS($_REQUEST["default_dashboard_id"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
 
 			$image = new \Media\Image();
