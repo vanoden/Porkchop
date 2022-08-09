@@ -234,6 +234,7 @@
 
 		public function template() {
 			$template = $this->getMetadata('template');
+			$template = preg_replace('/.*\//','',$template);
 			if (!empty($template)) return $template;
 			elseif (file_exists(HTML . "/" . $this->module . "." . $this->view . ".html")) return $this->module . "." . $this->view . ".html";
 			elseif ($this->view == 'api' && file_exists ( HTML . "/_api.html")) return "_api.html";
