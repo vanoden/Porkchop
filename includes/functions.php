@@ -348,6 +348,7 @@
 	function noXSS($string) {
 		$string = preg_replace('/\%[a-f0-9]{2}/','',$string);
 		$string = preg_replace('/(\<|\>)/','',$string);
+		return $string;
 	}
 
 	function prettyPrint( $json ) {
