@@ -88,27 +88,27 @@
 			}
 
 			# Add Company Specific Metadata (REPLACE WITH CONFIGURED LOOP OF KEYS)
-			$item->addMeta("name",$_REQUEST["name"]);
+			$item->addMeta("name",noXSS($_REQUEST["name"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("short_description",$_REQUEST["short_description"]);
+			$item->addMeta("short_description",noXSS($_REQUEST["short_description"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("description",$_REQUEST["description"]);
+			$item->addMeta("description",noXSS($_REQUEST["description"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("model",$_REQUEST["model"]);
+			$item->addMeta("model",noXSS($_REQUEST["model"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("empirical_formula",$_REQUEST["empirical_formula"]);
+			$item->addMeta("empirical_formula",noXSS($_REQUEST["empirical_formula"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("sensitivity",$_REQUEST["sensitivity"]);
+			$item->addMeta("sensitivity",noXSS($_REQUEST["sensitivity"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("measure_range",$_REQUEST["measure_range"]);
+			$item->addMeta("measure_range",noXSS($_REQUEST["measure_range"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("accuracy",$_REQUEST["accuracy"]);
+			$item->addMeta("accuracy",noXSS($_REQUEST["accuracy"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("manual_id",$_REQUEST["manual_id"]);
+			$item->addMeta("manual_id",noXSS($_REQUEST["manual_id"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("spec_table_image",$_REQUEST["spec_table_image"]);
+			$item->addMeta("spec_table_image",noXSS($_REQUEST["spec_table_image"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
-			$item->addMeta("default_dashboard_id",$_REQUEST["default_dashboard_id"]);
+			$item->addMeta("default_dashboard_id",noXS($_REQUEST["default_dashboard_id"]));
 			if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
 
 			$image = new \Media\Image();
