@@ -345,6 +345,11 @@
 		return preg_replace('/(\r\n)/','',preg_replace('/\t/',' ',$string));
 	}
 
+	function noXSS($string) {
+		$string = preg_replace('/\%[a-f0-9]{2}/','',$string);
+		$string = preg_replace('/(\<|\>)/','',$string);
+	}
+
 	function prettyPrint( $json ) {
 		$result = '';
 		$level = 0;
