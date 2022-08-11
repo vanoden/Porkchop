@@ -242,6 +242,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_failures_query,array($this->id));
 			if (! $rs) {
 				$this->error("SQL Error in Register::Customer::auth_failures(): ".$GLOBALS['_database']->ErrorMsg());
+				return null;
 			}
 			list($count) = $rs->FetchRow();
 			return $count;
