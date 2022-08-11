@@ -197,4 +197,9 @@
 			if ($log_level == 'error') return true;
 			return false;
 		}
+
+		public function url() {
+			if ($GLOBALS['_config']->site->https) return 'https://'.$GLOBALS['_config']->site->hostname;
+			else return 'http://'.$GLOBALS['_config']->site->hostname;
+		}
 	}

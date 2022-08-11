@@ -1,10 +1,7 @@
 <?php
 	namespace Register;
 
-	class PrivilegeList {
-		private $_count = 0;
-		private $_error;
-
+	class PrivilegeList Extends \BaseListClass {
 		public function find($parameters = array()) {
 			$find_objects_query = "
 				SELECT  rp.id
@@ -46,12 +43,4 @@
             }
             return $objects;
 		}
-
-        public function error() {
-            return $this->_error;
-        }
-
-        public function count() {
-            return $this->_count;
-        }
 	}

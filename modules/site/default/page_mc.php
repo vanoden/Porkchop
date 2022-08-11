@@ -7,6 +7,10 @@
 
 	$editPage = new \Site\Page();
 	if ($editPage->get($_REQUEST['module'],$_REQUEST['view'],$index)) {
+		if ($_REQUEST['key'] == "template" && !preg_match('/^[\w\-\.\_]+$/',$_REQUEST['value'])) {
+			$page->addError("Invalid template name");
+			return;
+		}
 		if (isset($_REQUEST['todo'])) {
 			if ($_REQUEST['todo'] == 'drop') {
 				if ($editPage->unsetMetadata($_REQUEST['key'])) {

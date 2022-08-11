@@ -57,7 +57,7 @@
 				}
 				else {
 					# Login New User by updating session
-					$GLOBALS['_SESSION_']->update(array("user_id" => $customer->{id}));
+					$GLOBALS['_SESSION_']->update(array("user_id" => $customer->id));
 					if ($GLOBALS['_SESSION_']->error) {
 						$page->addError("Error updating session: ".$GLOBALS['_SESSION_']->error);
 					}

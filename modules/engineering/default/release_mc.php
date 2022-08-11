@@ -25,8 +25,11 @@
 		if (isset($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
 		if (isset($_REQUEST['date_released'])) $parameters['date_released'] = $_REQUEST['date_released'];
 		if (isset($_REQUEST['date_scheduled'])) $parameters['date_scheduled'] = $_REQUEST['date_scheduled'];
-		if (isset($_REQUEST['package_version_id'])) $parameters['package_version_id'] = $_REQUEST['package_version_id'];
-
+		
+		// handle package version integer
+		$parameters['package_version_id'] = 0;
+		if (isset($_REQUEST['package_version_id']) && is_int(isset($_REQUEST['package_version_id']))) $parameters['package_version_id'] = $_REQUEST['package_version_id'];
+    
 		app_log("Submitted task form",'debug',__FILE__,__LINE__);
 		if ($release->id) {
 			if ($release->update($parameters)) {

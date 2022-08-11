@@ -47,6 +47,7 @@
     <a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
 	<input type="checkbox" name="hidden" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><span>Hidden</span>
 	<input type="checkbox" name="expired" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><span>Expired</span>
+	<input type="checkbox" name="blocked" value="1" <?php if (isset($_REQUEST['blocked'])) print "checked"; ?> /><span>Blocked</span>
 	<input type="checkbox" name="deleted" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><span>Deleted</span>
 	<input type="hidden" id="start" name="start" value="0">
 </div>
@@ -65,10 +66,10 @@
 	    if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
 ?>
 <tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->login?></a></td>
-	<td class="value<?=$greenbar?>"><?=$customer->first_name?></td>
-	<td class="value<?=$greenbar?>"><?=$customer->last_name?></td>
+	<td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->first_name)?></td>
+	<td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->last_name)?></td>
 	<td class="value<?=$greenbar?>"><a href="/_register/organization?organization_id=<?=$customer->organization->id?>"><?=$customer->organization->name?></a></td>
-	<td class="value<?=$greenbar?>"><?=$customer->status?></td>
+	<td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->status)?></td>
 	<td class="value<?=$greenbar?>"><?=$customer->last_active()?></td>
 </tr>
 <?php		

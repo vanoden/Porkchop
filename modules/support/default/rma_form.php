@@ -120,9 +120,6 @@
 				opt.innerHTML = provinces[i].name;
 				provinceDropdown.appendChild(opt);
 			}
-			//else {
-			//	document.getElementById('provinceDropdownId').append('<option value="0">' + getDropdownSelectedText(countryDropdownId) + '</option>');
-			//}
 		};
 	}
    

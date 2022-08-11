@@ -67,7 +67,9 @@
 	###################################################
 	### Connect to Logger							###
 	###################################################
-	$logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG));
+	if (! defined('APPLICATION_LOG_HOST')) define('APPLICATION_LOG_HOST','127.0.0.1');
+	if (! defined('APPLICATION_LOG_PORT')) define('APPLICATION_LOG_PORT','514');
+	$logger = \Site\Logger::get_instance(array('type' => APPLICATION_LOG_TYPE,'path' => APPLICATION_LOG,'host' => APPLICATION_LOG_HOST,'port' => APPLICATION_LOG_PORT));
 	if ($logger->error()) {
 		error_log("Error initializing logger: ".$logger->error());
 		print "Logger error\n";

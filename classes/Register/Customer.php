@@ -75,7 +75,12 @@
 				$this->error("SQL Error in Register::Customer::increment_auth_failures(): ".$GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			return true;
+
+			# Bust Cache
+			$cache_key = "customer[" . $this->id . "]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+			$cache->delete();
+			return $this->details();
 		}
 
 		function add_role ($role_id) {
@@ -138,9 +143,23 @@
 			return true;
 		}
 
+		function isActive() {
+			if (in_array($this->status,array('NEW','ACTIVE'))) return true;
+			return false;
+		}
+
+		function isBlocked() {
+			if (is_string($this->status) && $this->status == "BLOCKED") return true;
+			return false;
+		}
+
 		// Check login and password against configured authentication mechanism
 		function authenticate ($login, $password) {
-			if (! $login) return 0;
+			if (! $this->validLogin($login)) {
+				$failure = new \Register\AuthFailure();
+				$failure->add($_SERVER['REMOTE_ADDR'],$login,'INVALIDLOGIN',$_SERVER['PHP_SELF']);
+				return false;
+			}
 
 			// Get Authentication Method
 			$get_user_query = "
@@ -158,14 +177,11 @@
 				return null;
 			}
 
-			list($id,$this->auth_method,$status) = $rs->fields;			
+			list($id,$this->auth_method,$status) = $rs->fields;
 			if (! $id) {
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
-				return false;
-			}
-
-			if (! in_array($status,array('NEW','ACTIVE'))) {
-				app_log("Auth denied because account '$login' is '$status'",'notice',__FILE__,__LINE__);
+				$failure = new \Register\AuthFailure();
+				$failure->add($_SERVER['REMOTE_ADDR'],$login,'NOACCOUNT',$_SERVER['PHP_SELF']);
 				return false;
 			}
 
@@ -173,6 +189,8 @@
 			$this->get($login);		
 			if ($this->password_expired()) {
 				$this->error("Your password is expired.  Please use Recover Password to restore.");
+				$failure = new \Register\AuthFailure();
+				$failure->add($_SERVER['REMOTE_ADDR'],$login,'PASSEXPIRED',$_SERVER['PHP_SELF']);
 				return false;
 			}
 
@@ -188,6 +206,8 @@
 			}
 			else {
 				app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
+				$failure = new \Register\AuthFailure();
+				$failure->add($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']);
 				$this->increment_auth_failures();
 				if ($this->auth_failures() >= 6) {
 					app_log("Blocking customer '".$this->login."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
@@ -208,9 +228,9 @@
 			$authenticationService = $authenticationFactory->service($this->auth_method);
 
 			if ($authenticationService->changePassword($this->login,$password)) {
+				$this->resetAuthFailures();
 				return true;
-			}
-			else {
+			} else {
 				$this->error($authenticationService->error());
 				return false;
 			}
@@ -246,6 +266,10 @@
 			}
 			list($count) = $rs->FetchRow();
 			return $count;
+		}
+
+		public function resetAuthFailures() {
+			return $this->update(array("auth_failures" => 0));
 		}
 
 		// Personal Inventory (Online Products)
@@ -534,5 +558,16 @@
 	
 			if ($person->id) return true;
 			else return false;
+		}
+
+		public function randomPassword() {
+			$pass = "";
+			$chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890?|@!*&%#';
+			$num_chars = strlen($chars) -1;
+
+			while ($this->password_strength($pass) < $GLOBALS['_config']->register->minimum_password_strength) {
+				$pass .= substr($chars,rand(0,$num_chars),1);
+			}
+			return $pass; //turn the array into a string
 		}
     }

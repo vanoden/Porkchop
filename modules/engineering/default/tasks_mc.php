@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('engineering user');
+	$page->requirePrivilege('browse engineering objects');
 
 	if (! isset($_REQUEST['btn_submit'])) {
 		$_REQUEST['new'] = 1;

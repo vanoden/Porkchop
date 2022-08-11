@@ -33,6 +33,7 @@
 	if (isset($_REQUEST['deleted'])) array_push($find_parameters['status'],'DELETED');
 	if (isset($_REQUEST['expired'])) array_push($find_parameters['status'],'EXPIRED');
 	if (isset($_REQUEST['hidden'])) array_push($find_parameters['status'],'HIDDEN');
+	if (isset($_REQUEST['blocked'])) array_push($find_parameters['status'],'BLOCKED');
 	if (isset($_REQUEST['search']) && strlen($_REQUEST['search'])) $find_parameters['_search'] = $_REQUEST['search'];
 
 	// Get Count before Pagination

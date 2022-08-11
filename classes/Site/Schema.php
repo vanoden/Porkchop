@@ -274,7 +274,7 @@
 			if ($this->version() < 10) {
 			
 				$alter_table_query = "
-                    ALTER TABLE `session_sessions` ADD COLUMN `super_elevation_expires` TIMESTAMP DEFAULT NULL;
+                    ALTER TABLE `session_sessions` ADD COLUMN `super_elevation_expires` DATETIME DEFAULT NULL;
 				";
 				if (! $this->executeSQL($alter_table_query)) {
 					$this->error = "SQL Error altering session_sessions table in ".$this->module."::Schema::upgrade(): ".$this->error;

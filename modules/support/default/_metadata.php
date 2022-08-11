@@ -7,6 +7,14 @@
 			"use support module"
         ),
         "templates"     => array(
+			"api"					=> $templates['support'],
+			"home"					=> $templates['support'],
+			"register_product"		=> $templates['support'],
+			"request"				=> $templates['support'],
+			"rma_form"				=> $templates['support'],
+			"rma_pdf"				=> $templates['support'],
+			"ticket"				=> $templates['support'],
+			"tickets"				=> $templates['support'],
             "request_new"           => $templates['admin'],
             "request_new_monitor"   => $templates['admin'],
             "requests"              => $templates['admin'],

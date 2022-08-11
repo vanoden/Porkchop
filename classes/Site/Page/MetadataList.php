@@ -27,8 +27,10 @@
 			$metadatas = array();
 			while(list($id) = $rs->FetchRow()) {
 				$metadata = new \Site\Page\Metadata($id);
-				array_push($metadatas,$metadata);
-				$this->count ++;
+				if (preg_match('/^[\w\_][\w\-\_\.]*$/',$metadata->key)) {
+					array_push($metadatas,$metadata);
+					$this->count ++;
+				}
 			}
 			return $metadatas;
 		}

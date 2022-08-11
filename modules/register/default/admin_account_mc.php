@@ -38,8 +38,10 @@
 		app_log("Account form submitted",'debug',__FILE__,__LINE__);
 		$parameters = array();
 		$parameters['login'] = $_REQUEST["login"];
-		if (isset($_REQUEST["first_name"])) 	$parameters['first_name']	= $_REQUEST["first_name"];
-		if (isset($_REQUEST["last_name"]))		$parameters['last_name']	= $_REQUEST["last_name"];
+		if (isset($_REQUEST["first_name"]) && preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST["first_name"]))
+			$parameters['first_name']	= $_REQUEST["first_name"];
+		if (isset($_REQUEST["last_name"]) && preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST["last_name"]))
+			$parameters['last_name']	= $_REQUEST["last_name"];
 		if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
 		if (isset($_REQUEST["roles"]))			$parameters['roles']		= $_REQUEST["role"];
 		if (isset($_REQUEST["status"]))			$parameters['status']		= $_REQUEST["status"];
@@ -47,10 +49,8 @@
 			if ($_REQUEST['automation']) $parameters['automation'] = true;
 			else $parameters['automation'] = false;
 		}
-
 		if (isset($_REQUEST['organization_id'])) $parameters["organization_id"] = $_REQUEST["organization_id"];
-
-		if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
+		if (isset($_REQUEST["password"]) and ($_REQUEST["password_2"])) {
 			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 				$page->addError("Passwords do not match");
 				goto load;
@@ -66,7 +66,11 @@
 				$page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
 				goto load;
 			}
-			if ($_REQUEST['password']) $customer->changePassword($_REQUEST["password"]);
+			if ($_REQUEST['password']) {
+    			if (!$customer->changePassword($_REQUEST["password"])) {
+    			  $page->addError("Password needs more complexity");
+    			}
+			}
 		} else {
 			app_log("New customer registration",'debug',__FILE__,__LINE__);
 
@@ -81,7 +85,7 @@
 			###########################################
 			## Add User To Database
 			###########################################
-
+			
 			// Add Customer Record to Database
 			$customer = new \Register\Customer();
 			$customer->add($parameters);
@@ -92,22 +96,32 @@
 			}
 
 			if ($customer->id) {
-				$GLOBALS['_SESSION_']->update(array("user_id" => $customer->{id}));
+				$GLOBALS['_SESSION_']->update(array("user_id" => $customer->id));
 				if ($GLOBALS['_SESSION_']->error) {
 					$page->addError("Error updating session: ".$GLOBALS['_SESSION_']->error);
 					goto load;
 				}
 			}
 
+			if (empty($_REQUEST['password'])) {
+				$_REQUEST['password'] = $customer->randomPassword();
+			}
+			$customer->changePassword($_REQUEST['password']);
+
+			$template = new \Content\Template\Shell($GLOBALS['_config']->register->account_created->template);
+			$template->addParam('URL',$GLOBALS['_config']->site->url);
+			$template->addParam('WEBSITE',$GLOBALS['_config']->site->hostname);
+			$template->addParam('LOGIN',$_REQUEST['login']);
+			$template->addParam('PASSWORD',$_REQUEST['password']);
+
+			$message = new \Email\Message();
+			$message->from($GLOBALS['_config']->register->confirmation->from);
+			$message->subject($GLOBALS['_config']->register->confirmation->subject);
+			$message->body($template->output());
+	
 			// Registration Confirmation
-			$_contact = new \Register\Contact();
-			$_contact->notify(array(
-					"from"		=> $GLOBALS['_config']->register->confirmation->from,
-					"subject"	=> $GLOBALS['_config']->register->confirmation->subject,
-					"message"	=> "Thank you for registering",
-				)
-			);
-			if ($_contact->error) {
+			$customer->notify($message);
+			if ($customer->error) {
 				app_log("Error sending registration confirmation: ".$_contact->error,'error',__FILE__,__LINE__);
 				$page->addError("Sorry, we were unable to complete your registration");
 				goto load;
@@ -122,7 +136,7 @@
 		
 		// Process Contact Entries
 		app_log("Processing contact entries",'debug',__FILE__,__LINE__);
-		while (list($contact_id) = each($_REQUEST['type'])) {
+		foreach ($_REQUEST['type'] as $contact_id => $type) {
 			if (! $_REQUEST['type'][$contact_id]) continue;
 
 			if ($contact_id > 0) {
@@ -197,6 +211,10 @@
 		}
 		$page->success = 'Your changes have been saved';
 	}
+	if (isset($_REQUEST["btnResetFailures"])) {
+		$customer = new \Register\Customer($_REQUEST['customer_id']);
+		$customer->resetAuthFailures();
+	}
 
 	load:
 	if ($customer_id) {
@@ -212,5 +230,12 @@
 	$organizations = $organizationlist->find();
 	$_contact = new \Register\Contact();
 	$contact_types = $_contact->types;
-	
+
+	if (!empty($customer->login)) {
+		$authFailureList = new \Register\AuthFailureList();
+		$authFailures = $authFailureList->find(array('_limit' => 5,'login' => $customer->login));
+	} else {
+		$authFailures = array();
+	}
+
 	if (! isset($target)) $target = '';

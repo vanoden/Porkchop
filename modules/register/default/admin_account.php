@@ -11,18 +11,18 @@
    // submit form
    function submitForm() { 
    
-        // make sure that all the notify contacts have a 'notes' value populated
+        // make sure that all the notify contacts have a 'description' value populated
         var contactTable = document.getElementById("contact-main-table");
         var notifyChecked = contactTable.getElementsByTagName("input");
         for (var i = 0; i < notifyChecked.length; i++) {
             if (notifyChecked[i].checked) {
                 var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
                 if (matches[0]) {
-                    contactNoteField = document.getElementsByName("notes[" + matches[0].replace('[','').replace(']','') + "]");
-                    contactNoteField[0].style.border = "";
-                    if (!contactNoteField[0].value) {
-                        alert("Please enter a 'Notes' value for all notify (checked) Methods of Contact");
-                        contactNoteField[0].style.border = "3px solid red";
+                    contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[','').replace(']','') + "]");
+                    contactDescriptionField[0].style.border = "";
+                    if (!contactDescriptionField[0].value) {
+                        alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
+                        contactDescriptionField[0].style.border = "3px solid red";
                         return false;
                     }
                 }
@@ -79,7 +79,8 @@
    <input type="hidden" name="target" value="<?=$target?>"/>
    <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
    <input type="hidden" name="login" value="<?=$customer->login?>"/>
-    <?php	 if ($page->errorCount() > 0) { ?>
+    <?php    
+    	 if ($page->errorCount() > 0) { ?>
         <div class="form_error"><?=$page->errorString()?></div>
     <?php	 } ?>
    
@@ -123,10 +124,10 @@
             </select>
          </div>
          <div class="tableCell">
-            <input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?=$customer->first_name?>" />
+            <input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?=htmlentities($customer->first_name)?>" />
          </div>
          <div class="tableCell">
-            <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" />
+            <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=htmlentities($customer->last_name)?>" />
          </div>
          <div class="tableCell">
             <select id="timezone" name="timezone" class="value input collectionField">
@@ -163,13 +164,13 @@
             </select>
          </div>
          <div class="tableCell">
-            <input type="text" name="description[<?=$contact->id?>]" class="value wide_100per" value="<?=$contact->description?>" />
+            <input type="text" name="description[<?=$contact->id?>]" class="value wide_100per" value="<?=htmlentities($contact->description)?>" />
          </div>
          <div class="tableCell">
-            <input type="text" name="value[<?=$contact->id?>]" class="value wide_100per" value="<?=$contact->value?>" />
+            <input type="text" name="value[<?=$contact->id?>]" class="value wide_100per" value="<?=htmlentities($contact->value)?>" />
          </div>
          <div class="tableCell">
-            <input type="text" name="notes[<?=$contact->id?>]" class="value wide_100per" value="<?=$contact->notes?>" />
+            <input type="text" name="notes[<?=$contact->id?>]" class="value wide_100per" value="<?=htmlentities($contact->notes)?>" />
          </div>
          <div class="tableCell">
             <input type="checkbox" name="notify[<?=$contact->id?>]" value="1" <?php if ($contact->notify) print "checked"; ?> />
@@ -244,7 +245,7 @@
    <!--	END Change Password-->
    <h3>Status</h3>
    <select class="input" name="status">
-      <?php	foreach(array('NEW','ACTIVE','EXPIRED','DELETED') as $status) {?>
+      <?php	foreach(array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED','BLOCKED') as $status) {?>
       <option value="<?=$status?>"<?php if ($status == $customer->status) print " selected"; ?>><?=$status?></option>
       <?php	}	?>
    </select>
@@ -269,6 +270,25 @@
          }
          ?>
    </table>
+   <h3>Recent Auth Failures</h3>
+   <div class="tableBody min-tablet">
+		<div class="tableRowHeader">
+			<div class="tableCell">Date</div>
+			<div class="tableCell">IP Address</div>
+			<div class="tableCell">Reason</div>
+			<div class="tableCell">Endpoint</div>
+		</div>
+<?php foreach ($authFailures as $authFailure) { ?>
+		<div class="tableRow">
+			<div class="tableCell"><?=$authFailure->date?></div>
+			<div class="tableCell"><?=$authFailure->ip_address?></div>
+			<div class="tableCell"><?=$authFailure->reason?></div>
+			<div class="tableCell"><?=$authFailure->endpoint?></div>
+		</div>
+<?php	} ?>
+	</div>
+	<span class="label">Auth Failures Since Last Success</span><span class="value"><?=$customer->auth_failures?></span>
+	<input type="submit" name="btnResetFailures" value="Reset Failures" />
 </form>
 <!-- hidden for for "delete contact" -->
 <form id="delete-contact" name="delete-contact" action="<?=PATH?>/_register/admin_account" method="post">

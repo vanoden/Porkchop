@@ -71,8 +71,10 @@
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
 		$customer = new \Register\Customer();
 		if ($customer->get($_REQUEST['login'])) {
-			if ($customer->status == 'BLOCKED') {
+			if ($customer->isBlocked()) {
 				$page->addError("Your account has been blocked");
+				$failure = new \Register\AuthFailure();
+				$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$_SERVER['PHP_SELF']);
 				return;
 			}
 			if ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) {
@@ -109,7 +111,11 @@
 			}
 			elseif ($customer->message) {
 				$page->addError($customer->message);
-			} else {
+			}
+			elseif (!$customer->isActive()) {
+				$page->addError("This account is ".$customer->status);
+			}
+			else {
 				$GLOBALS['_SESSION_']->assign($customer->id);
 				$GLOBALS['_SESSION_']->touch();
 				$customer->update(array("status" => "ACTIVE", "auth_failures" => 0));
