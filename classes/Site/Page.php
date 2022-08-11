@@ -44,7 +44,7 @@
 		    return $this->get ( $GLOBALS ['_REQUEST_']->module, $GLOBALS ['_REQUEST_']->view, $GLOBALS ['_REQUEST_']->index );
 	    }
 	    public function applyStyle() {
-		    if (isset ( $GLOBALS ['_config']->style [$this->module] )) $this->style = $GLOBALS ['_config']->style [$this->module];
+		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS ['_config']->style [$this->module()];
 	    }
 	    public function requireAuth() {
 		    if (! $GLOBALS ['_SESSION_']->customer->id > 0) {
@@ -232,12 +232,20 @@
 		    return true;
 	    }
 
+		public function module() {
+			if (preg_match('/(\w[\w\_\.]*)/',$this->module,$matches)) return $matches[1];
+		}
+
+		public function view() {
+			if (preg_match('/(\w[\w\_\.]*)/',$this->view,$matches)) return $matches[1];
+		}
+
 		public function template() {
 			$template = $this->getMetadata('template');
-			if (!empty($template)) return $template;
-			elseif (file_exists(HTML . "/" . $this->module . "." . $this->view . ".html")) return $this->module . "." . $this->view . ".html";
+			if (preg_match('/(\w[\w\_\-\.]*\.html)/',$template,$matches)) return $matches[1];
+			elseif (file_exists(HTML . "/" . $this->module() . "." . $this->view() . ".html")) return $this->module() . "." . $this->view() . ".html";
 			elseif ($this->view == 'api' && file_exists ( HTML . "/_api.html")) return "_api.html";
-			elseif (file_exists ( HTML . "/" . $this->module . ".html")) return $this->module . ".html";
+			elseif (file_exists ( HTML . "/" . $this->module() . ".html")) return $this->module() . ".html";
 			elseif (isset ( $GLOBALS ['_config']->site->default_template)) return $GLOBALS ['_config']->site->default_template;
 			elseif (file_exists ( HTML . "/index.html")) return "index.html";
 			elseif (file_exists ( HTML . "/install.html" )) return "install.html";
@@ -316,7 +324,7 @@
 			    }
 		    } elseif ($object == "page") {
 			    if ($property == "view") {
-				    $buffer = "<r7 object=\"" . $this->module . "\" property=\"" . $this->view . "\"/>";
+				    $buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";
 			    } elseif ($property == "title") {
 				    if (isset ( $this->metadata->title )) $buffer = $this->metadata->title;
 			    } elseif ($property == "metadata") {
@@ -575,16 +583,16 @@
         public function loadViewFiles($buffer = "") {
 		    ob_start ();
             if (isset($this->style)) {
-                if (file_exists(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php'))
-                    $be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
-                elseif (file_exists(MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php'))
-                    $be_file = MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php';
-                if (file_exists(MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php'))
-                    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
-                elseif (file_exists(MODULES . '/' . $this->module . '/default/' . $this->view . '.php'))
-                    $fe_file = MODULES . '/' . $this->module . '/default/' . $this->view . '.php';
+                if (file_exists(MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php'))
+                    $be_file = MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php';
+                elseif (file_exists(MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php'))
+                    $be_file = MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php';
+                if (file_exists(MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php'))
+                    $fe_file = MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php';
+                elseif (file_exists(MODULES . '/' . $this->module() . '/default/' . $this->view . '.php'))
+                    $fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
             }
-		    app_log ( "Loading view " . $this->view . " of module " . $this->module, 'debug', __FILE__, __LINE__ );
+		    app_log ( "Loading view " . $this->view() . " of module " . $this->module(), 'debug', __FILE__, __LINE__ );
 		    if (file_exists ( $be_file )) {
 				// Load Backend File
                 $res = include($be_file);
@@ -609,7 +617,7 @@
 					return '<span class="label page_response_code">Resource not found</span>';
 				}
             }
-		    else app_log ( "Backend file '$be_file' for module " . $this->module . " not found" );
+		    else app_log ( "Backend file '$be_file' for module " . $this->module() . " not found" );
             if (file_exists ( $fe_file )) include ($fe_file);
 		    $buffer .= ob_get_clean ();
             return $buffer;
@@ -619,7 +627,7 @@
 			    if ($GLOBALS ['_SESSION_']->customer->id) {
 				    return true;
 			    } else {
-				    header ( "location: /_register/login?target=_" . $this->module . ":" . $this->view );
+				    header ( "location: /_register/login?target=_" . $this->module() . ":" . $this->view() );
 				    ob_flush ();
 				    exit ();
 			    }
