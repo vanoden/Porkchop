@@ -33,12 +33,13 @@
 		$displayMessage = $_GET['message'];
 	}
 
-	if (preg_match('/^(LOGIN|LOGOUT|CALLBACK)$/',$_REQUEST['method'],$matches)) {
+	if (preg_match('/(LOGIN|LOGOUT|CALLBACK)/',$GLOBALS['_REQUEST_']->uri,$matches)) {
 		$method = $matches[1];
 	}
 	else {
 		$method = '';
 	}
+	$title .= " ".$method;
 
 	if ($method == 'LOGOUT') {
 		$GLOBALS['_SESSION_']->end();
@@ -47,13 +48,13 @@
 
 	if ($method == 'LOGIN') {
 		$oAuthClient = new \League\OAuth2\Client\Provider\GenericProvider([
-			'clientId'                => $GLOBALS['_config']->OAuth2->Graph->clientId,
-			'clientSecret'            => $GLOBALS['_config']->OAuth2->Graph->clientSecret,
-			'redirectUri'             => $host.$GLOBALS['_config']->OAuth2->Graph->redirectUri,
+			'clientId'                => $GLOBALS['_config']->OAuth2->clientId,
+			'clientSecret'            => $GLOBALS['_config']->OAuth2->clientSecret,
+			'redirectUri'             => $host.'/_register/oauth/CALLBACK', //$GLOBALS['_config']->OAuth2->redirectUri,
 			'urlAuthorize'            => OAUTH_AUTHORITY . OAUTH_AUTHORIZE_ENDPOINT,
 			'urlAccessToken'          => OAUTH_AUTHORITY . OAUTH_TOKEN_ENDPOINT,
 			'urlResourceOwnerDetails' => '',
-			'scopes'                  => $GLOBALS['_config']->OAuth2->Graph->graphUserScopes
+			'scopes'                  => $GLOBALS['_config']->OAuth2->graphUserScopes
 		]);
 
 		$authUrl = $oAuthClient->getAuthorizationUrl();
@@ -66,7 +67,7 @@
 		unset($_SESSION['oauthState']);
 
 		if (!isset($_GET['state']) || !isset($_GET['code'])) {
-			header('Location: ' . $host . '/?type=error&message=No%20OAuth%20session');
+			header('Location: ' . $host . '/_register/oauth/?type=error&message=No%20OAuth%20session');
 		}
 
 		$providedState = $_GET['state'];
@@ -74,11 +75,11 @@
 		if (!isset($expectedState)) {
 		// If there is no expected state in the session,
 		// do nothing and redirect to the home page.
-		header('Location: ' . $host . '/?type=error&message=Expected%20state%20not%20available');
+		header('Location: ' . $host . '/_register/oauth/?type=error&message=Expected%20state%20not%20available');
 		}
 
 		if (!isset($providedState) || $expectedState != $providedState) {
-		header('Location: ' . $host . '/?type=error&message=State%20does%20not%20match');
+		header('Location: ' . $host . '/_register/oauth/?type=error&message=State%20does%20not%20match');
 		}
 
 		// Authorization code should be in the "code" query param
@@ -86,13 +87,13 @@
 		if (isset($authCode)) {
 			// Initialize the OAuth client
 			$oAuthClient = new \League\OAuth2\Client\Provider\GenericProvider([
-				'clientId'                => $GLOBALS['_config']->OAuth2->Graph->clientId,
-				'clientSecret'            => $GLOBALS['_config']->OAuth2->Graph->clientSecret,
-				'redirectUri'             => $host.$GLOBALS['_config']->OAuth2->Graph->redirectUri,
+				'clientId'                => $GLOBALS['_config']->OAuth2->clientId,
+				'clientSecret'            => $GLOBALS['_config']->OAuth2->clientSecret,
+				'redirectUri'             => $host."/_register/oauth/CALLBACK", //$GLOBALS['_config']->OAuth2->redirectUri,
 				'urlAuthorize'            => OAUTH_AUTHORITY . OAUTH_AUTHORIZE_ENDPOINT,
 				'urlAccessToken'          => OAUTH_AUTHORITY . OAUTH_TOKEN_ENDPOINT,
 				'urlResourceOwnerDetails' => '',
-				'scopes'                  => $GLOBALS['_config']->OAuth2->Graph->graphUserScopes
+				'scopes'                  => $GLOBALS['_config']->OAuth2->graphUserScopes
 			]);
 
 			$accessToken = null;
@@ -102,7 +103,7 @@
 				'code' => $authCode
 				]);
 			} catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
-				header('Location: ' . $host . '/?type=error&message=' . urlencode($e->getMessage()));
+				header('Location: ' . $host . '/_register/oauth/?type=error&message=' . urlencode($e->getMessage()));
 			}
 		}
 
@@ -112,10 +113,10 @@
 			$graph->setAccessToken($accessToken->getToken());
 			try {
 				$azureUser = $graph->createRequest('GET', '/me?$select=displayName,mail,userPrincipalName')
-					->setReturnType(Model\User::class)
+					->setReturnType(\Microsoft\Graph\Model\User::class)
 					->execute();
 			} catch (Exception $exception) {
-				header('Location: ' . $host . '/?type=error&message=' . urlencode('Unable to get user details: ' . $exception->getMessage()));
+				header('Location: ' . $host . '/_register/oauth/?type=error&message=' . urlencode('Unable to get user details: ' . $exception->getMessage()));
 			}
 
 			$user = [
@@ -124,7 +125,7 @@
 			];
 			$_SESSION['user'] = serialize($user);
 		}
-		header('Location: ' . $host);
+		//header('Location: ' . $host);
 	}
 ?>
 <!DOCTYPE html>
@@ -156,8 +157,8 @@
         <p>Welcome to PHP <strong><?php echo phpversion() ?></strong> on Azure App Service <strong><?php echo gethostname() ?></strong>.</p>
         <p>
             <a href="/">Home</a>
-            <a href="/_register/oauth?method=LOGIN">Login</a>
-            <a href="/_register/oauth?method=LOGOUT">Logout</a>
+            <a href="/_register/oauth/LOGIN">Login</a>
+            <a href="/_register/oauth/LOGOUT">Logout</a>
         </p>
         <?php if ('' !== $displayMessage): ?>
         <div class="<?php echo $style ?>">
