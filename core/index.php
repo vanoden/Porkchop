@@ -98,24 +98,24 @@
 	if ($_database->ErrorMsg()) {
 		print "Error connecting to database:<br>\n";
 		print $_database->ErrorMsg();
-		$logger->write("Error connecting to database: ".$_database->ErrorMsg(),'error');
+		$logger->writeln("Error connecting to database: ".$_database->ErrorMsg(),'error');
 		exit;
 	}
-	$logger->write("Database Initiated",'trace');
+	$logger->writeln("Database Initiated",'trace');
     
 	###################################################
 	### Connect to Memcache if so configured		###
 	###################################################
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
-	if ($_CACHE_->error()) $logger->write('Unable to initiate Cache client: '.$_CACHE_->error(),'error');
-	$logger->write("Cache Initiated",'trace',__FILE__,__LINE__);
+	if ($_CACHE_->error()) $logger->writeln('Unable to initiate Cache client: '.$_CACHE_->error(),'error');
+	$logger->writeln("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
 	### Initialize Session							###
 	###################################################
 	$_SESSION_ = new \Site\Session();
 	$_SESSION_->start();
-	$logger->write("Session initiated",'trace',__FILE__,__LINE__);
+	$logger->writeln("Session initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
 	### Parse Request								###
@@ -140,7 +140,7 @@
 	# Create Session
 	$_SESSION_->start();
 	if ($_SESSION_->error) {
-		$logger->write($_SESSION_->error,'error',__FILE__,__LINE__);
+		$logger->writeln($_SESSION_->error,'error',__FILE__,__LINE__);
 		exit;
 	}
 
@@ -149,14 +149,14 @@
 	if ($_SESSION_->message) $page_message = $_SESSION_->message;
 
 	# Access Logging in Application Log
-	$logger->write("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
+	$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
 
 	# Load Page Information
 	$_page = new \Site\Page();
 	$_page->get($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
 	if ($_page->error) {
 		print "Error: ".$_page->error;
-		$logger->write("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
+		$logger->writeln("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
 		exit;
 	}
 	if (! $_page->id) {

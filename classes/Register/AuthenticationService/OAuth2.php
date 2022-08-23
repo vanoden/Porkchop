@@ -11,13 +11,8 @@
 		private $token_endpoint = "/oauth2/v2.0/token";
 		public $authState;
 
-		public function authenticate($login,$password) {
-			if (! $login) {
-				app_log("No 'login' for authentication");
-				return false;
-			}
-
-			$oAuthClient = new GenericProvider([
+		public function authClient() {
+			return new \Microsoft\Model\GenericProvider([
 				'clientId'					=> $this->app_id,
 				'clientSecret'				=> $this->app_secret,
 				'redirectUri'				=> $this->redirect_uri,
@@ -26,6 +21,14 @@
 				'urlResourceOwnerDetails'	=> '',
 				'scopes'					=> $this->scopes
 			]);
+		}
+		public function authenticate($login,$password) {
+			if (! $login) {
+				app_log("No 'login' for authentication");
+				return false;
+			}
+
+			$oAuthClient = $this->authClient();
 
 			$authUrl = $oAuthClient->getAuthorizationUrl();
 			$authState = $oAuthClient->getState();
@@ -72,7 +75,7 @@
 				$accessToken = $oAuthClient->getAccessToken('authorization_code', [ 'code' => $authCode ]);
 			}
 			catch (\League\OAuth2\Client\Provider\Exception\IdentityPrividerException $e) {
-				$this->error(urlencode($e->getMessage());
+				$this->error(urlencode($e->getMessage()));
 				return false;
 			}
 
@@ -82,7 +85,7 @@
 				$graph->setAccessToken($accessToken->getToken());
 				try {
 					$azureUser = $graph->createRequest('GET','/me?$select=displayName,mail,userPrincipalName')
-						->setReturnType(Model\User::class)
+						->setReturnType(Model\User::class);
 			
 				}
 				catch (Exception $exception) {

@@ -962,8 +962,9 @@
 				$this->setVersion(24);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
 			if ($this->version() < 25) {
-				app_log("Upgrading schema to version 21",'notice',__FILE__,__LINE__);
+				app_log("Upgrading schema to version 25",'notice',__FILE__,__LINE__);
 
 				// Start Transaction 
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
@@ -995,6 +996,37 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			if ($this->version() < 26) {
+				app_log("Upgrading schema to version 26",'notice',__FILE__,__LINE__);
+
+				// Start Transaction 
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+			
+				$create_table_query = "
+                    CREATE TABLE `register_tags` (
+                      `id` int NOT NULL AUTO_INCREMENT,
+                      `type` enum('ORGANIZATION','USER','CONTACT','LOCATION') NOT NULL DEFAULT 'ORGANIZATION',
+                      `register_id` int DEFAULT NULL,
+                      `name` varchar(255) NOT NULL,
+                      PRIMARY KEY (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+				";
+	
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating register_tags table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+						app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(26);
+				$GLOBALS['_database']->CommitTrans();
+				
+				// add new calbrator role
+				$this->addRoles(array('calibrator' => 'can calibrate customer devices'));			
+			}
+			
 			return true;
 		}
 	}
