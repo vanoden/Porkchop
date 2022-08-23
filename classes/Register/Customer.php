@@ -45,6 +45,7 @@
 		public function update($parameters = array()) {
 		
 			parent::update($parameters);
+			if ($this->error()) return false;
 
 			// roles
 			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
