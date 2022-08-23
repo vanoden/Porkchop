@@ -8,7 +8,6 @@
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customers');
 
-
 	// Customers to display at a time
 	if (isset($_REQUEST['page_size']) && preg_match('/^\d+$/',$_REQUEST['page_size']))
 		$organizations_per_page = $_REQUEST['page_size'];
@@ -31,6 +30,7 @@
 		if (isset($_REQUEST['deleted'])) array_push($find_parameters['status'],'DELETED');
 		if (isset($_REQUEST['expired'])) array_push($find_parameters['status'],'EXPIRED');
 		if (isset($_REQUEST['hidden'])) array_push($find_parameters['status'],'HIDDEN');
+		if (isset($_REQUEST['searchedTag'])) $find_parameters['searchedTag'] = $_REQUEST['searchedTag'];
 
 		// Get Count before Pagination
 		$organizationlist->find($find_parameters,false);
@@ -50,6 +50,10 @@
 			$prev_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) - $organizations_per_page;
 		$next_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) + $organizations_per_page;
 		$last_offset = $total_organizations - $organizations_per_page;
+
+        // get tags for organization
+        $registerTagList = new \Register\TagList();
+        $organizationTags = $registerTagList->getDistinct();
 
 		if ($next_offset > count($organizations)) $next_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) + count($organizations);
 	} else {

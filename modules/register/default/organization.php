@@ -113,6 +113,30 @@
 <?php	} ?>
 </div>
 <!--End first row-->	
+
+<h3>Add Organization Tag</h3>
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 35%;">Tag</div>
+	</div>
+    <?php	foreach ($organizationTags as $tag) { ;?>
+	    <div class="tableRow">
+		    <div class="tableCell">
+		        <input type="hidden" name="removeTagValue" value="<?=$tag->name?>"/>
+			    <input type="submit" name="removeTag" value="Remove" class="button"/> <strong><?=$tag->name?></strong>
+		    </div>
+	    </div>
+    <?php	} ?>
+	
+	<div class="tableRow">
+		<div class="tableCell">
+			New Tag: <input type="text" class="" name="newTag" value="" />
+		</div>
+	</div>
+</div>
+<div class="tableFooter min-tablet">
+	<input type="submit" name="addTag" value="Add Tag" class="button"/>
+</div>
 		
 <h3>Add New User</h3>
 <!--	Start First Row-->

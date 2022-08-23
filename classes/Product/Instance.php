@@ -2,6 +2,7 @@
 	namespace Product;
 
 	class Instance extends Item {
+	
 		public $id;
 		public $error;
 		public $errno;
@@ -75,8 +76,8 @@
 		}
 		
 		public function getSimple($code) {
+		
 			$this->error = null;
-
 			$bind_params = array();
 
 			$get_object_query = "
@@ -85,7 +86,7 @@
 				WHERE	asset_code = ?
 			";
 			array_push($bind_params,$code);
-
+			
 			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				$get_object_query .= " AND organization_id = ?";
 				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization->id);

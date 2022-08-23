@@ -2,6 +2,7 @@
 	namespace Register;
 
 	class Organization {
+	
 		public $error;
 		public $name;
 		public $code;
@@ -12,17 +13,15 @@
 		public $notes;
 		public $_cached;
 		public $password_expiration_days;
+		public $default_billing_location_id;
+		public $default_shipping_location_id;
 		private $_nocache = false;
 
 		public function __construct($id = 0,$options = array()) {
 		
 			// Clear Error Info
 			$this->error = '';
-
-			if (isset($options['nocache']) && $options['nocache']) {
-				$this->_nocache = true;
-			}
-
+			if (isset($options['nocache']) && $options['nocache']) $this->_nocache = true;
 			if (isset($id) && is_numeric($id)) {
 				$this->id = $id;
 				$this->details();
@@ -56,9 +55,10 @@
 		}
 
 		public function update($parameters = array()) {
+		
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
 			$this->error = null;
-
+		
 			$bind_params = array();
 
 			// Bust Cache
@@ -101,6 +101,17 @@
 						password_expiration_days = ?";
                 array_push($bind_params,$parameters['password_expiration_days']);
             }
+            if (isset($parameters['default_billing_location_id'])) {
+			    $update_object_query .= ",
+			    default_billing_location_id = ?";
+			    array_push($bind_params,$parameters['default_billing_location_id']);
+    		}
+		    if (isset($parameters['default_shipping_location_id'])) {
+			    $update_object_query .= ",
+			    default_shipping_location_id = ?";
+			    array_push($bind_params,$parameters['default_shipping_location_id']);
+		    }
+            
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -156,6 +167,8 @@
 				if (isset($this->assigned_reseller_id)) $this->reseller = new Organization($this->assigned_reseller_id);
 				$this->notes = $organization->notes;
 				$this->password_expiration_days = $organization->password_expiration_days;
+				$this->default_billing_location_id = $organization->default_billing_location_id;
+				$this->default_shipping_location_id = $organization->default_shipping_location_id;
 				$this->_cached = $organization->_cached;
 
 				// In Case Cache Corrupted
@@ -177,7 +190,9 @@
 						is_reseller,
 						assigned_reseller_id,
 						notes,
-						password_expiration_days
+						password_expiration_days,
+				        default_billing_location_id,
+				        default_shipping_location_id
 				FROM	register_organizations
 				WHERE	id = ?
 			";
@@ -197,6 +212,8 @@
 				$this->code = $object->code;
 				$this->status = $object->status;
                 $this->password_expiration_days = $object->password_expiration_days;
+                $this->default_billing_location_id = $object->default_billing_location_id;
+                $this->default_shipping_location_id = $object->default_shipping_location_id;
 				if ($object->is_reseller) $this->is_reseller = true;
 				if ($object->assigned_reseller_id) $this->reseller = new Organization($object->assigned_reseller_id);
 				$this->notes = $object->notes;
