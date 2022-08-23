@@ -517,6 +517,10 @@
 			return $metadata;
 		}
 
+		public function permitRead() {
+			return true;
+		}
+
 		public function upload ($parameters) {
 		
 		    // make sure we have a file present in the request to upload it
