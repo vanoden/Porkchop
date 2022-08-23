@@ -132,18 +132,20 @@
             if (! $customer->id) $this->error("Customer not found");
 
             if (isset($_REQUEST['organization']) && !isset($_REQUEST['organization_code'])) {
-		$_REQUEST['organization_code'] = $_REQUEST['organization'];
+		        $_REQUEST['organization_code'] = $_REQUEST['organization'];
             }
             if (isset($_REQUEST['organization_code'])) {
                 $organization = new \Register\Organization();
                 if ($organization->get($_REQUEST['organization_code'])) {
-			$parameters['organization_id'] = $organization->id;
-		}
-		else $this->app_error("Error getting organization: ".$organization->error,__FILE__,__LINE__);
+			        $parameters['organization_id'] = $organization->id;
+		        }
+		        elseif(!empty($organization->error)) {
+                    $this->app_error("Error getting organization: ".$organization->error,__FILE__,__LINE__);
+                }
+	            else {
+                    $this->error("Organization not found");
+	            }
             }
-	    else {
-                $this->error("Organization not found");
-	    }
             
             if (isset($_REQUEST['first_name'])) $parameters['first_name'] = $_REQUEST['first_name'];
             if (isset($_REQUEST['last_name'])) $parameters['last_name'] = $_REQUEST['last_name'];
