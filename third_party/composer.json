@@ -10,8 +10,6 @@
 		"paragonie/random_compat": "<9.99",
 		"mobiledetect/mobiledetectlib": "^2.8",
 		"tecnickcom/tcpdf": "^6.3",
-		"picqer/php-barcode-generator": "^0.3.0",
-		"microsoft/microsoft-graph": "^1.73.0",
-		"league/oauth2-client": "^2.6.1"
+		"picqer/php-barcode-generator": "^0.3.0"
 	}
 }
