@@ -134,7 +134,7 @@
             if (isset($_REQUEST['organization']) && !isset($_REQUEST['organization_code'])) {
 		        $_REQUEST['organization_code'] = $_REQUEST['organization'];
             }
-            if (isset($_REQUEST['organization_code'])) {
+            if (isset($_REQUEST['organization_code']) && !empty($_REQUEST['organization_code'])) {
                 $organization = new \Register\Organization();
                 if ($organization->get($_REQUEST['organization_code'])) {
 			        $parameters['organization_id'] = $organization->id;
@@ -147,16 +147,23 @@
 	            }
             }
             
-            if (isset($_REQUEST['first_name'])) $parameters['first_name'] = $_REQUEST['first_name'];
-            if (isset($_REQUEST['last_name'])) $parameters['last_name'] = $_REQUEST['last_name'];
-            if (isset($_REQUEST['password'])) $parameters['password'] = $_REQUEST['password'];
+            if (!empty($_REQUEST['first_name'])) $parameters['first_name'] = noXSS($_REQUEST['first_name']);
+            if (!empty($_REQUEST['last_name'])) $parameters['last_name'] = noXSS($_REQUEST['last_name']);
+            if (!empty($_REQUEST['password'])) {
+				if (!strongPassword($_REQUEST['password'])) $this->error("Password is not complex enough");
+				$parameters['password'] = $_REQUEST['password'];
+			}
             if (isset($_REQUEST['automation'])) {
                 if ($_REQUEST['automation'] == 1) $parameters['automation'] = true;
                 else $parameters['automation'] = false;
             }
+			if (isset($_REQUEST['timezone'])) {
+				if (!in_array($_REQUEST['timezone'], \DateTimeZone::listIdentifiers())) $this->error("Invalid timezone provided");
+				$parameters['timezone'] = $_REQUEST['timezone'];
+			}
 
             # Update Customer
-            if (!$customer->update($parameters)) error($customer->error());
+            if (!$customer->update($parameters)) $this->error($customer->error());
 
             # Error Handling
             $response = new \HTTP\Response();
@@ -1136,6 +1143,7 @@
 					'last_name'		=> array(),
 					'password'  	=> array(),
 					'automation'	=> array(),
+					'timezone'		=> array()
 				),
 				'findCustomers'	=> array(
 					'organization_code' => array(),
