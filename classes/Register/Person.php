@@ -21,10 +21,10 @@ class Person Extends \BaseClass {
 
     public function __construct($id = 0) {
 
-        # Clear Error Info
+        // Clear Error Info
         $this->_error = '';
 
-        # Find Person if id given
+        // Find Person if id given
         if (isset($id) && is_numeric($id)) {
             $this->id = $id;
             $this->details();
@@ -139,10 +139,10 @@ class Person Extends \BaseClass {
             $this->_cached = 0;
         }
 
-        # Cache Customer Object
+        // Cache Customer Object
         if ($customer->id) cache_set($cache_key, $customer);
 
-        # Return Object
+        // Return Object
         return $this;
     }
 
@@ -164,7 +164,7 @@ class Person Extends \BaseClass {
             return null;
         }
 
-        # Defaults
+        // Defaults
         if (!isset($parameters['timezone'])) $parameters['timezone'] = 'America/New_York';
         if (!isset($parameters['status'])) $parameters['status'] = 'NEW';
         if (!isset($parameters['date_expires'])) $parameters['date_expires'] = '2038-01-01 00:00:00';
@@ -172,7 +172,7 @@ class Person Extends \BaseClass {
 
 		sanitize($parameters['login']);
 
-        # Add to Database
+        // Add to Database
         $add_user_query = "
 				INSERT
 				INTO	register_users
@@ -220,7 +220,7 @@ class Person Extends \BaseClass {
             return false;
         }
 
-        # Loop through and apply changes
+        // Loop through and apply changes
         $update_customer_query = "
 				UPDATE	register_users
 				SET		id = id
@@ -307,12 +307,12 @@ class Person Extends \BaseClass {
             return null;
         }
 
-        # Bust Cache
+        // Bust Cache
         $cache_key = "customer[" . $this->id . "]";
         $cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
         $cache->delete();
 
-        # Get Updated Information
+        // Get Updated Information
         return $this->details();
     }
     
