@@ -10,9 +10,9 @@ require THIRD_PARTY.'/autoload.php';
 
 class GraphHelper {
 	private static \GuzzleHttp\Client $tokenClient;
-	private static string $clientId;
-	private static string $authTenant;
-	private static string $graphUserScopes;
+	private static string $clientId = '';
+	private static string $authTenant = '';
+	private static string $graphUserScopes = '';
 	private static \Microsoft\Graph\Graph $userClient;
 	private static string $userToken;
 
@@ -20,6 +20,9 @@ class GraphHelper {
 	}
 	public static function initializeGraphForUserAuth(): void {
 		GraphHelper::$tokenClient = new \GuzzleHttp\Client();
+		GraphHelper::$clientId = $GLOBALS['_config']->Graph->clientId;
+		GraphHelper::$authTenant = $GLOBALS['_config']->Graph->authTenant;
+		GraphHelper::$graphUserScopes = $GLOBALS['_config']->Graph->graphUserScopes;
 		GraphHelper::$userClient = new \Microsoft\Graph\Graph();
 	}
 
@@ -31,14 +34,14 @@ class GraphHelper {
 		}
 
 		// https://docs.microsoft.com/azure/active-directory/develop/v2-oauth2-device-code
-		$deviceCodeRequestUrl = 'https://login.microsoftonline.com/'.$GLOBALS['_config']->OAuth2->authTenant.'/oauth2/v2.0/devicecode';
-		$tokenRequestUrl = 'https://login.microsoftonline.com/'.$GLOBALS['_config']->OAuth2->authTenant.'/oauth2/v2.0/token';
+		$deviceCodeRequestUrl = 'https://login.microsoftonline.com/'.GraphHelper::$authTenant.'/oauth2/v2.0/devicecode';
+		$tokenRequestUrl = 'https://login.microsoftonline.com/'.GraphHelper::$authTenant.'/oauth2/v2.0/token';
 
 		// First POST to /devicecode
 		$deviceCodeResponse = json_decode(GraphHelper::$tokenClient->post($deviceCodeRequestUrl, [
 			'form_params' => [
-				'client_id'	=> $GLOBALS['_config']->OAuth2->clientId,
-				'scope'		=> $GLOBALS['_config']->OAuth2->graphUserScopes
+				'client_id'	=> GraphHelper::$clientId,
+				'scope'		=> GraphHelper::$graphUserScopes
 			]
 		])->getBody()->getContents());
 

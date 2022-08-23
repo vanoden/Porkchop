@@ -29,6 +29,7 @@
 		private $cookie_path;
 		private $_cached = 0;
 		private $elevated = 0;
+		private $oauth2_state = null;
 
 		public function __construct($id = 0) {
 			if ($id > 0) {
@@ -293,6 +294,7 @@
 					$this->first_hit_date = $session->first_hit_date;
 					$this->last_hit_date = $session->last_hit_date;
 					$this->super_elevation_expires = $session->super_elevation_expires;
+					$this->oauth2_state = $session->oauth2_state;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
 					$this->_cached = 1;
 					return $this->code;
@@ -308,7 +310,8 @@
 						browser,
 						first_hit_date,
 						last_hit_date,
-						super_elevation_expires
+						super_elevation_expires,
+						oauth2_state
 				FROM	session_sessions
 				WHERE	id = ?
 			";
@@ -331,6 +334,8 @@
 				$this->first_hit_date = $session->first_hit_date;
 				$this->last_hit_date = $session->last_hit_date;
 				$this->super_elevation_expires = $session->super_elevation_expires;
+				$this->oauth2_state = $session->oauth2_state;
+
                 require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/Mobile_Detect.php';
                 $detect = new \Mobile_Detect;
 
@@ -471,7 +476,8 @@
 			$ok_params = array(
 				"user_id"	=> "user_id",
 				"timezone"	=> "timezone",
-				"super_elevation_expires" => "super_elevation_expires"
+				"super_elevation_expires" => "super_elevation_expires",
+				"oauth2_state"	=> "oauth2_state"
 			);
 
 			$update_session_query = "
@@ -496,7 +502,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($update_session_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Session::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -610,5 +616,12 @@
 				'second'		=> $datetime->format('s'),
 				'timezone'		=> $this->timezone
 			);
+		}
+
+		public function oauthState($state = null) {
+			if (isset($state)) {
+				$this->update(array('oauth2_state' => $state));
+			}
+			return $this->oauth2_state;
 		}
 	}

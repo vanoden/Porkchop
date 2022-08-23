@@ -109,29 +109,5 @@ Call the Upgrade script to apply recent updates to schema, etc:
 
 http://your.domain.name/_upgrade
 
-**Basic Database Setup [Spectros Instruments Example] http://localhost/**
-
-/** INSERT FIXTURE DATA TO START **/
-INSERT INTO `company_companies` VALUES (1,'Spectros Instruments','',1,1,0);
-INSERT INTO `company_locations` VALUES (1,1,'localhost','','','',0,0,0,'',0,0,0,0,0,0,0,0,0,'',0,0,1,'localhost');
-INSERT INTO `company_domains` VALUES (1,1,'',1,'localhost','0000-00-00','0000-00-00 00:00:00','0000-00-00',0,'',1);
-
-INSERT INTO `register_users` VALUES (1,'ACTIVE','Spectros User',NULL,'Spectros User','spectros','*A8D4C1EB4499988FAB79F9C0991FD568FBC6054E','',0,1,0,'2014-10-01 01:04:24','2020-08-22 19:52:06','0000-00-00 00:00:00','local','','d02fe6499e2e7b6edf5a1f88036d9e84',NULL,'America/New_York',0);
-INSERT INTO `register_organizations` VALUES (1, 'Spectros Instruments','12345','ACTIVE','0000-00-00 00:00:00','0','0','');
-INSERT INTO `register_roles` VALUES ('1','register manager','Manage accounts and roles'),('2','register reporter','c'),('3','content operator','Can add/edit pages'),('4','content developer','c'),('5','product manager','c'),('6','product reporter','c'),('11','media manager','c'),('12','media reporter','c'),('13','media developer','c'),('14','monitor manager','c'),('15','monitor reporter','c'),('16','monitor admin','c'),('17','support manager','c'),('18','support reporter','c'),('19','email manager','c'),('20','contact admin','c'),('87','action manager','c'),('88','action user','c'),('89','monitor asset','c'),('90','storage manager','c'),('91','storage upload','c'),('92','package manager','c'),('93','issue admin','c'),('94','engineering manager','c'),('95','engineering user','c'),('96','administrator','c'),('97','support user','See and Update Customer Support Requests'),('100','developer','c'),('101','operator','c'),('102','manager','c'),('103','engineering reporter','c'),('104','credit manager','c'),('105','build manager','b'),('106','build user','b'),('107','geography manager','geography manager'),('108','geography user','geography user'),('109','location manager','Can view and manage location entries'),('110','shipping manager','Can browse all shipments'),('111','alert manager','Can view/edit assets, sensors and collections'),('112','alert reporter','Can view assets, sensors and collections'),('113','alert admin','Full access to alert data'),('114','alert asset','Holding role for actual devices that can post data.');
-INSERT INTO `register_roles_privileges` VALUES ('3','13'),('3','14'),('3','15');
-INSERT INTO `register_users_roles` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,11),(1,12),(1,13),(1,14),(1,15),(1,16),(1,17),(1,18),(1,19),(1,20),(1,87),(1,88),(1,90),(1,91),(1,92),(1,93),(1,95),(1,96),(1,97),(1,103);
-
-INSERT INTO `monitor_sensors` VALUES (1,1,'Kevin Monitor Sensor',1,NULL,'celcius',NULL,'decimal',1,'0.00','1.00',0);
-INSERT INTO `monitor_sensors` VALUES (2,2,'Kevin Monitor Sensor Humidity',1,NULL,'mg/L',NULL,'integer',1,'0.00','1.00',0);
-INSERT INTO `monitor_sensor_models` VALUES ('1','Temperature Sensor','Temp Sensor','deg. celcius','decimal',NULL,NULL,'{type: \'linear\',offset: 0,multiplier: 1}',NULL,NULL);
-INSERT INTO `monitor_sensor_models` VALUES ('2','Humidity Sensor','Humidity Sensor','mg/L','decimal',NULL,NULL,'{type: \'linear\',offset: 0,multiplier: 1}',NULL,NULL);
-INSERT INTO `product_products` VALUES ('1','RPI-KEVIN-ZERO','Raspberry PI Zero','Small Temperature Monitor','unique','ACTIVE','0.00',NULL,'0.00',NULL,'0.00','0.00');
-INSERT INTO `monitor_assets` VALUES ('1','KEV-RPI-TEMP','1','Raspberry Pi Zero W w/DHT 11','1','1','0');
-
-INSERT INTO `monitor_collections` VALUES (1,'ABCD1234',1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'ACTIVE','2021-01-01 00:00:00','DEV-COLLECTION-SITE','America/New_York',1609502400,1893499200,NULL,'time span');
-INSERT INTO `monitor_collection_sensors` VALUES (1,1,'RPI Temp',NULL,NULL);
-INSERT INTO `monitor_collection_sensors` VALUES (1,2,'RPI Humdity',NULL,NULL)
-
 ## Use
 This package was developed and is maintained by Anthony Caravello with the help of contributors.  It is released under the MIT license.  See LICENSE.txt for more information.
