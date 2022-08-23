@@ -1,154 +1,38 @@
 <style>
-    html {
-        font-family: sans;
-    }
 
-    a {
-        text-decoration: none;
-        cursor: pointer;
-        color: blue;
-    }
+    a { text-decoration: none; cursor: pointer; color: blue; }
+    a:visited { color: blue; }
+    a:not([href]):not([tabindex]) { color:blue; }
     
-    a:visited {
-        color: blue;
-    }
+    .info-row.row { padding: 10px; }
+    .info-row.row.selected { background-color: #edfaff; }  
+    .info-row.row:hover{ background-color: #edfaff; cursor:pointer;  }
     
-    a:not([href]):not([tabindex]) {
-        color:blue;
-    }
+    .messaging-page-wrapper {  margin: 50px;     }
+    .row { display: flex; flex-direction: row; flex-wrap: wrap; width: 100%; margin: 0 0 2rem; border-bottom: 1px solid #dddddd; }
+    .full-column-row { margin: 1px; border-bottom: 0px; }
+    .column {display: flex; flex-direction: column; flex-basis: 100%; flex: 1; margin: 10px; }
     
-    .info-row.row {
-        padding: 10px;
-    }
-    
-    .info-row.row.selected {
-        background-color: #edfaff;
-    }  
-    
-    .info-row.row:hover{
-        background-color: #edfaff;
-        cursor:pointer;
-    }
-    
-    .bold {
-        font-weight: bolder;
-    }
-    
-    .messaging-page-wrapper {
-        margin: 50px;    
-    }
-    .row {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      width: 100%;
-      margin: 0 0 2rem;
-      border-bottom: 1px solid #dddddd;
-    }
-
-    .full-column-row {
-        margin: 1px;
-        border-bottom: 0px;
-    }
-
-    .column {
-      display: flex;
-      flex-direction: column;
-      flex-basis: 100%;
-      flex: 1;
-      margin: 10px;
-    }
-    
-    .message-icon {
-        padding: 10px;
-    }
-    
-    .list-column {
-        display:inline-flex    
-    }
-    
-    .full-column {
-        flex: 100%;
-    }
-    
-    .message-title {
-        white-space:nowrap;
-    }
-    
-    .message-sub-title {
-        color: blue;
-        white-space:nowrap;
-    }
-
-    .message-date {
-        padding-bottom: 5px;
-    }
-
-	.message-sender {
-		padding-bottom: 5px;
-	}
-    
-    .message-subject {
-        font-size: 20px;
-    }
-    
-    .message-links-wrapper {
-        margin-top: 10px;
-    }
-    
-    .read-more-link { 
-        margin-top: 10px;
-    }
-    
-    .visit-portal-link {
-
-    }
-    
-    .right-column {
-        flex: 3;
-        position: relative;
-    }
-    
-    .left-column {
-        flex: 1;
-        padding: 10px;
-        position: relative;    
-        border-left: 4px solid #dddddd;
-        border-right: 1px solid #dddddd;
-    }
-    
-    .message-title-chevron {
-        min-width: 20px;
-        text-align: end;
-        font-size: 30px;
-        color: #999;
-    }
-    
-    .year-column {
-        font-size: 24px;
-    }
-    
-    .message-content {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        height: 25px;
-
-    }
+    .message-icon { padding: 10px;}
+    .list-column { display:inline-flex; }
+    .full-column { flex: 100%;}
+    .message-title { white-space:nowrap;}
+    .message-sub-title { color: blue; white-space:nowrap; }
+    .message-date { padding-bottom: 5px; }
+	.message-sender { padding-bottom: 5px; }
+    .message-subject { font-size: 20px; }
+    .message-links-wrapper { margin-top: 10px; }
+    .read-more-link { margin-top: 10px; }
+    .right-column { flex: 3; position: relative; }
+    .left-column { flex: 1; padding: 10px; position: relative; border-left: 4px solid #dddddd; border-right: 1px solid #dddddd; }
+    .message-title-chevron { min-width: 20px; text-align: end;font-size: 30px; color: #999;}
+    .year-column { font-size: 24px; }
+    .message-content { overflow: hidden; text-overflow: ellipsis;  height: 25px; }
     
     @media only screen and (max-width: 900px) {
-      .row {
-        flex-direction: column;
-      }
-      .year-column {
-        background-color: black;
-        text-align: center;
-        color:white;
-        flex:unset;
-      }
-      .year-column.list-column {
-        display:unset;
-        padding: 10px;
-      }
+      .row {flex-direction: column; }
+      .year-column { background-color: black; text-align: center; color:white; flex:unset; }
+      .year-column.list-column { display:unset; padding: 10px; }
     }
 </style>
 <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
