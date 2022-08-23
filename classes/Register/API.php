@@ -489,13 +489,13 @@
             }
 
             $organization_id = 0;
-            if ($_REQUEST['organization_id']) {
+            if (!empty($_REQUEST['organization_id'])) {
                 $organization = new \Register\Organization($_REQUEST['organization_id']);
                 if ($organization->error) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
                 if (! $organization->id) $this->error("Could not find organization by id");
                 $organization_id = $organization->id;
             }
-            elseif ($_REQUEST['organization']) {
+            elseif (!empty($_REQUEST['organization'])) {
                 $organization = new \Register\Organization();
                 $organization->get($_REQUEST['organization']);
                 if ($organization->error) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
@@ -504,24 +504,32 @@
             }
 
             if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['code'];
+			if (! validLogin($_REQUEST['login'])) $this->error("Login not valid");
+
             if (isset($_REQUEST['automation'])) {
-                if ($_REQUEST['automation'] == 1) $automation = true;
+                if (preg_match('/^(yes|true|1)$/i',$_REQUEST['automation'])) $automation = true;
                 else $automation = false;
             }
 
+			$params = array(
+				'login'				=> $_REQUEST['login'],
+				'custom_1'			=> $_REQUEST['custom_1'],
+				'custom_2'			=> $_REQUEST['custom_2'],
+			);
+
+			if (!empty($_REQUEST['first_name'])) $params['first_name'] = noXSS($_REQUEST['first_name']);
+			if (!empty($_REQUEST['last_name'])) $params['last_name'] = noXSS($_REQUEST['last_name']);
+			if (!empty($_REQUEST['password'])) {
+				if (!strongPassword($_REQUEST['password'])) $this->error("Password is not complex enough");
+				$params['password'] = $_REQUEST['password'];
+			}
+			if (!empty($automation)) $params['automation'] = $automation;
+			if (!empty($organization_id)) $params['organization_id'] = $organization_id;
+			if (!empty($_REQUEST['custom_1'])) $params['custom_1'] = $_REQUEST['custom_1'];
+			if (!empty($_REQUEST['custom_2'])) $params['custom_2'] = $_REQUEST['custom_2'];
+
             # Add Event
-            $user->add(
-                array(
-                    'first_name'		=> $_REQUEST['first_name'],
-                    'last_name'		    => $_REQUEST['last_name'],
-                    'login'			    => $_REQUEST['login'],
-                    'password'		    => $_REQUEST['password'],
-                    'organization_id'	=> $organization_id,
-                    'custom_1'		    => $_REQUEST['custom_1'],
-                    'custom_2'		    => $_REQUEST['custom_2'],
-                    'automation'		=> $automation,
-                )
-            );
+            $user->add($params);
 
             # Error Handling
             if ($user->error) $this->error($user->error);
