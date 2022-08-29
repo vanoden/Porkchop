@@ -1,4 +1,5 @@
 <style>
+	.faq {padding-top: 20px;}
 	.table-group img { width: 60%; padding: 5%;	}
 	.table-group li, .table-group.utilityDownloads li { text-align: center; }
 	.table-group.faq li { text-align: left; }
@@ -52,15 +53,16 @@
 				<li>Verify that you have a valid email address and that the <span class="action-text">Notify</span> box is checked</li>
 				<li>If changes are made, click<span class="action-text">Apply</span></li>
 			</ol>
-			<button class="hiddenMobile" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenMobile" onclick="window.location.href='#step2';">Next Step</button>
 		</li>
 		<li>
 			<img src="/img/faq/support/myacct_verify-email.png">
-			<button class="hiddenDesktop" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenDesktop" onclick="window.location.href='#step2';">Next Step</button>
 		</li>
 	</ul>
 </section>
 
+<a name="step2"></a>
 <section class="faq">
 	<ul class="form-grid page_3col_wide-right">
 		<li>
@@ -69,15 +71,16 @@
 				<li>Select <span class="action-text">Monitors</span> from the top navigation</li>
 				<li>Click on a device to see it's details and tickets.</li>
 			</ol>
-			<button class="hiddenMobile" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenMobile" onclick="window.location.href='#step3';">Next Step</button>
 		</li>
 		<li>
 			<img src="/img/faq/support/monitors-list.png">
-			<button class="hiddenDesktop" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenDesktop" onclick="window.location.href='#step3';">Next Step</button>
 		</li>
 	</ul>
 </section>
 
+<a name="step3"></a>
 <section class="faq">
 	<ul class="form-grid page_3col_wide-right">
 		<li>
@@ -87,16 +90,17 @@
 				<li>In the text box that appears, describe the issue(s) you are having</li>
 				<li>Click <span class="action-text">Submit Request</span></li>
 			</ol>
-			<button class="hiddenMobile" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenMobile" onclick="window.location.href='#step4';">Next Step</button>
 		</li>
 		<li>
 			<img src="/img/faq/support/monitor-detail_start.png">
 			<img src="/img/faq/support/monitor-detail_support-exp.png">
-			<button class="hiddenDesktop" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenDesktop" onclick="window.location.href='#step4';">Next Step</button>
 		</li>
 	</ul>
 </section>
 
+<a name="step4"></a>
 <section class="faq">
 	<ul class="form-grid page_3col_wide-right">
 		<li>
@@ -107,16 +111,17 @@
 				<li>You can also click <span class="action-text">Support</span> in the menu</li>
 				<li>Then click on the Ticket ID for details</li>
 			</ol>
-			<button class="hiddenMobile" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenMobile" onclick="window.location.href='#step5';">Next Step</button>
 		</li>
 		<li>
 			<img src="/img/faq/support/monitor-detail_ticket-added.png">
 			<img src="/img/faq/support/support-list.png">
-			<button class="hiddenDesktop" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenDesktop" onclick="window.location.href='#step5';">Next Step</button>
 		</li>
 	</ul>
 </section>
 
+<a name="step5"></a>
 <section class="faq">
 	<ul class="form-grid page_3col_wide-right">
 		<li>
@@ -125,15 +130,16 @@
 				<li>The Ticket Detail page displays updates to the ticket</li>
 				<li>A link to the RMA will appear when once it has been created</li>
 			</ol>
-			<button class="hiddenMobile" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenMobile" onclick="window.location.href='#step6';">Next Step</button>
 		</li>
 		<li>
 			<img src="/img/faq/support/support-detail.png">
-			<button class="hiddenDesktop" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenDesktop" onclick="window.location.href='#step6';">Next Step</button>
 		</li>
 	</ul>
 </section>
 
+<a name="step6"></a>
 <section class="faq">
 	<ul class="form-grid page_3col_wide-right">
 		<li>
@@ -143,15 +149,16 @@
 				<li>Select a previous address or fill out a new address</li>
 				<li>Click <span class="action-text">Next</span></li>
 			</ol>
-			<button class="hiddenMobile" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenMobile" onclick="window.location.href='#step7';">Next Step</button>
 		</li>
 		<li>
 			<img src="/img/faq/support/rma_step1.png">
-			<button class="hiddenDesktop" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenDesktop" onclick="window.location.href='#step7';">Next Step</button>
 		</li>
 	</ul>
 </section>
 
+<a name="step7"></a>
 <section class="faq">
 	<ul class="form-grid page_3col_wide-right">
 		<li>
@@ -163,15 +170,16 @@
 				<li>Read and accept the terms</li>
 				<li>Click <span class="action-text">Submit Return</span></li>
 			</ol>
-			<button class="hiddenMobile" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenMobile" onclick="window.location.href='#step8';">Next Step</button>
 		</li>
 		<li>
 			<img src="/img/faq/support/rma_step2.png">
-			<button class="hiddenDesktop" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenDesktop" onclick="window.location.href='#step8';">Next Step</button>
 		</li>
 	</ul>
 </section>
 
+<a name="step8"></a>
 <section class="faq">
 	<ul class="form-grid page_3col_wide-right">
 		<li>
@@ -180,15 +188,16 @@
 				<li>A message appears, confirming that the ticket has been sent</li>
 				<li>Once a technician is assigned, you will receive an email to confirm that your maintenance has begun</li>
 			</ol>
-			<button class="hiddenMobile" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenMobile" onclick="window.location.href='#step9';">Next Step</button>
 		</li>
 		<li>
 			<img src="/img/faq/support/rma_processing.png">
-			<button class="hiddenDesktop" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenDesktop" onclick="window.location.href='#step9';">Next Step</button>
 		</li>
 	</ul>
 </section>
 
+<a name="step9"></a>
 <section class="faq">
 	<ul class="form-grid page_3col_wide-right">
 		<li>
@@ -198,14 +207,16 @@
 				<li>Click the <span class="action-text">Download RMA Document</span>link to open your RMA document, then print it</li>
 				<li>The printed RMA document must be included in the package with your device</li>
 			</ol>
-			<button class="hiddenMobile" onclick="window.location.href='#step1';">Next Step</button>
+			<button class="hiddenMobile" onclick="window.location.href='#step10';">Next Step</button>
 		</li>
 		<li>
 			<img src="/img/faq/support/rma_received.png">
+			<button class="hiddenDesktop" onclick="window.location.href='#step10';">Next Step</button>
 		</li>
 	</ul>
 </section>
 
+<a name="step10"></a>
 <section class="faq">
 	<ul class="form-grid page_3col_wide-right">
 		<li>
@@ -223,7 +234,6 @@
 				<li>Coarse Bubble wrap (5/16 in. to 1/2 in. bubbles will protect your equipment better)</li>
 				<li>Heavyweight kraft paper intended for shipping (see links to some options below)</li>
 			</ul>
-			<button class="hiddenMobile" onclick="window.location.href='#step1';">Next Step</button>
 		</li>
 		<li>
 			<img src="/img/faq/support/rma_packaging-monitors.png" style="box-shadow: none;">
@@ -246,7 +256,6 @@
 				</li>
 			</ul>
 			<p class="notice_warning">DO NOT use styrofoam peanuts or other random materials to fill up space.</p>
-			<button class="hiddenDesktop" onclick="window.location.href='#step1';">Next Step</button>
 		</li>
 	</ul>
 </section>

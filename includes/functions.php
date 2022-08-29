@@ -20,6 +20,15 @@
 	function _debug_print($message) {
 		error_log("DEBUG: ".$message);
 	}
+
+	function strongPassword($string) {
+		$customer = new \Register\Customer();
+		if (!isset($GLOBALS['_config']->register->minimum_password_strength)) return true;
+		if ($customer->password_strength($string) > $GLOBALS['_config']->register->minimum_password_strength) return true;
+		return false;
+	}
+
+	# Cleanup special chars in output to avoid XSS
 	function sanitize(&$string) {
 		$string = trim($string);
 		$string = htmlspecialchars($string);
@@ -345,6 +354,7 @@
 		return preg_replace('/(\r\n)/','',preg_replace('/\t/',' ',$string));
 	}
 
+	# Trim Hexidecimal and HTML/XML tags from input
 	function noXSS($string) {
 		$string = preg_replace('/\%[a-f0-9]{2}/','',$string);
 		$string = preg_replace('/(\<|\>)/','',$string);
