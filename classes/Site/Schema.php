@@ -300,7 +300,22 @@
 				$this->setVersion(11);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+			if ($this->version() < 12) {
+			
+				$alter_table_query = "
+                    ALTER TABLE `site_messages` ADD COLUMN `subject` text DEFAULT NULL AFTER `important`;
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering session_sessions table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
 
+				$this->setVersion(12);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			
 			return true;
 		}
 	}

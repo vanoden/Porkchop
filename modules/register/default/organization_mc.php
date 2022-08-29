@@ -125,9 +125,16 @@
 	}
 
 	if ($organization->id) {
-		$members = $organization->members();
+		
+		$members = $organization->members('human');
 		if ($organization->error) {
-			$page->addError("Error finding members: ".$organization->error);
+			$page->addError("Error finding human members: ".$organization->error);
+			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
+		}
+		
+		$automationMembers = $organization->members('automation');
+		if ($organization->error) {
+			$page->addError("Error finding automation members: ".$organization->error);
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 	}

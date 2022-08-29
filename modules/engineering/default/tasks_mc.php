@@ -27,7 +27,7 @@
 	if ($_REQUEST["project_id"]) $parameters['project_id'] = $_REQUEST['project_id'];
 	if ($_REQUEST["product_id"]) $parameters['product_id'] = $_REQUEST['product_id'];
 	if ($_REQUEST["assigned_id"]) $parameters['assigned_id'] = $_REQUEST['assigned_id'];
-	if ($_REQUEST["role_id"]) $parameters['role_id'] = $_REQUEST['role_id'];
+	if ($_REQUEST["roles"]) $parameters['roles'] = $_REQUEST['roles'];
 
 	$tasks = $tasklist->find($parameters);
 	if ($tasklist->error()) {
