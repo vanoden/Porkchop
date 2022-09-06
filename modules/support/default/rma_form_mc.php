@@ -99,7 +99,7 @@ if ($page->errorCount() < 1) {
 			//$parameters ['code'] = $rmaCode;
 			$parameters ['document_number'] = $shippingDocument;
 			$parameters ['date_entered'] = date ( "Y-m-d H:i:s" );
-			$parameters ['status'] = 'NEW';
+			$parameters ['status'] = 'SUBMITTED';
 			$parameters ['send_customer_id'] = $rmaItem->request->customer->id;
 			$parameters ['receive_customer_id'] = $rma->approvedBy ()->id;
 			$parameters ['receive_location_id'] = $receive_location_id;
