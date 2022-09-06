@@ -141,6 +141,9 @@
         <div class="column right-column">
           <div class="messages-column">
             <div id="message-subject-<?=$userMessage->id?>" class="message-subject <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=isset($siteMessageMetaDataValues['summary'][0]->value) ? $siteMessageMetaDataValues['title'][0]->value : '';?></div>
+            <div class="message-subject">
+                <div id="message-subject-<?=$userMessage->id?>" class="message-content"><?=$userMessage->subject?></div>
+            </div>
             <div class="message-text">
                 <div id="message-text-<?=$userMessage->id?>" class="message-content"><?=$userMessage->content?></div>
             </div>

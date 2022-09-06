@@ -92,7 +92,7 @@
 		<div class="tableCell value" style="width: 10%;">Status</div>
 		<div class="tableCell value" style="width: 30%;">Last Active</div>
 	</div>
-<?php	foreach ($members as $member) { ;?>
+<?php	foreach ($members as $member) {?>
 	<div class="tableRow">
 		<div class="tableCell">
 			<a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->login?></a>
@@ -113,6 +113,32 @@
 <?php	} ?>
 </div>
 <!--End first row-->	
+
+<h3>Automation Users</h3>
+<!--	Start First Row-->
+<?php	if ($organization->id) { ?>
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell value" style="width: 20%;">Username</div>
+		<div class="tableCell value" style="width: 10%;">Status</div>
+		<div class="tableCell value" style="width: 30%;">Last Active</div>
+	</div>
+<?php	foreach ($automationMembers as $member) { ?>
+	<div class="tableRow">
+		<div class="tableCell">
+			<a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->login?></a>
+		</div>
+		<div class="tableCell">
+			<?=$member->status?>
+		</div>
+		<div class="tableCell">
+			<?=$member->last_active()?>
+		</div>
+	</div>
+<?php	} ?>
+</div>
+<!--End first row-->
+<?php	} ?>
 
 <h3>Add Organization Tag</h3>
 <div class="tableBody min-tablet">

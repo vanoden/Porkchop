@@ -1,6 +1,6 @@
 <?php
 	$modules['Support'] = array(
-        "schema"    => 8,
+        "schema"    => 9,
         "privileges"    => array(
             "browse support tickets",
             "manage support requests",

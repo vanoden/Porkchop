@@ -22,7 +22,7 @@
 			<select name="status" class="value input">
 			    <option value="ALL"<?php	if ($_REQUEST['status'] == "ALL") print " selected"; ?>>ALL</option>
 				<option value="NEW"<?php	if ($_REQUEST['status'] == "NEW") print " selected"; ?>>New</option>
-				<option value="ACCEPTED"<?php	if ($_REQUEST['status'] == "ACCEPTED") print " selected"; ?>>Accepted</option>
+				<option value="SUBMITTED"<?php	if ($_REQUEST['status'] == "SUBMITTED") print " selected"; ?>>Submitted</option>
 				<option value="PRINTED"<?php	if ($_REQUEST['status'] == "PRINTED") print " selected"; ?>>Printed</option>
 				<option value="CLOSED"<?php	if ($_REQUEST['status'] == "CLOSED") print " selected"; ?>>Closed</option>
 			</select>
