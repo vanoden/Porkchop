@@ -938,30 +938,6 @@
 				$this->setVersion(23);
 				$GLOBALS['_database']->CommitTrans();
 			}
-
-            if ($this->version() < 24) {
-				app_log("Upgrading schema to version 24",'notice',__FILE__,__LINE__);
-
-				// Start Transaction
-				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
-
-				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_billing_location_id` int NULL";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-
-				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_shipping_location_id` int NULL;";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-
-				$this->setVersion(24);
-				$GLOBALS['_database']->CommitTrans();
-			}
 			
 			if ($this->version() < 25) {
 				app_log("Upgrading schema to version 25",'notice',__FILE__,__LINE__);
@@ -1003,7 +979,7 @@
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 			
 				$create_table_query = "
-                    CREATE TABLE `register_tags` (
+                    CREATE TABLE if not exists `register_tags` (
                       `id` int NOT NULL AUTO_INCREMENT,
                       `type` enum('ORGANIZATION','USER','CONTACT','LOCATION') NOT NULL DEFAULT 'ORGANIZATION',
                       `register_id` int DEFAULT NULL,
@@ -1025,6 +1001,30 @@
 				
 				// add new calbrator role
 				$this->addRoles(array('calibrator' => 'can calibrate customer devices'));			
+			}
+
+            if ($this->version() < 27) {
+				app_log("Upgrading schema to version 27",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_billing_location_id` int NULL";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_shipping_location_id` int NULL;";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(27);
+				$GLOBALS['_database']->CommitTrans();
 			}
 			
 			return true;
