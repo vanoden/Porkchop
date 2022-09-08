@@ -946,15 +946,17 @@
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_billing_location_id` int NULL";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error, 'error');
 					return false;
 				}
 
 				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_shipping_location_id` int NULL;";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
 					app_log($this->error, 'error');
 					return false;
 				}
@@ -1003,7 +1005,7 @@
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 			
 				$create_table_query = "
-                    CREATE TABLE `register_tags` (
+                    CREATE TABLE if not exists `register_tags` (
                       `id` int NOT NULL AUTO_INCREMENT,
                       `type` enum('ORGANIZATION','USER','CONTACT','LOCATION') NOT NULL DEFAULT 'ORGANIZATION',
                       `register_id` int DEFAULT NULL,
