@@ -1,7 +1,7 @@
 <?php
 	namespace Package;
 
-	class Version {
+	class Version Extends \Storage\File {
 	
 		public $error;
 		public $major;

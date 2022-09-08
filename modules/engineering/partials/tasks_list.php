@@ -2,6 +2,20 @@
     .sortableHeader{
         white-space: nowrap;
     }
+    
+    .tableCell {
+        position:relative;
+    }
+    
+    .align-top {
+        position: absolute;
+        top:0;
+    }
+    
+    .roles_required {
+        max-height: 100px;
+        overflow:scroll;
+    }
 </style>
 <script src="/js/sort.js"></script>
 <script>
@@ -101,7 +115,7 @@
 	    </div>
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <select name="assigned_id" class="value input">
+			    <select name="assigned_id" class="value input align-top">
 				    <option value="">Any</option>
 				    <?php	foreach ($assigners as $assigner) { ?>
 				    <option value="<?=$assigner->id?>"<?php if ($assigner->id == $_REQUEST['assigned_id']) print " selected"; ?>><?=$assigner->login?></option>
@@ -110,7 +124,7 @@
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <select name="product_id" class="value input">
+			    <select name="product_id" class="value input align-top">
 				    <option value="">Any</option>
 				    <?php	foreach ($products as $product) { ?>
 				    <option value="<?=$product->id?>"<?php if ($product->id == $_REQUEST['product_id']) print " selected"; ?>><?=$product->title?></option>
@@ -118,7 +132,7 @@
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <select name="project_id" class="value input">
+			    <select name="project_id" class="value input align-top">
 				    <option value="">Any</option>
 				    <?php	foreach ($projects as $project) { ?>
 				    <option value="<?=$project->id?>"<?php if ($project->id == $_REQUEST['project_id']) print " selected"; ?>><?=$project->title?></option>
@@ -126,12 +140,15 @@
 			    </select>
 		    </div>
 		    <div class="tableCell">
-               <select name="role_id" class="value input" style="max-width: 250px;">
-                  <option value="">Any</option>
-                  <?php	foreach($engineeringRoles as $engineeringRole) { ?>
-                    <option value="<?=$engineeringRole->id?>"<?php if ($engineeringRole->id == $_REQUEST['role_id']) print " selected"; ?>><?=$engineeringRole->name?></option>
-                  <?php	} ?>
-               </select>
+            <fieldset class="roles_required">
+              <legend>Filter Roles Required</legend>
+                <?php	foreach($engineeringRoles as $engineeringRole) { ?>        
+                  <div>
+                    <input type="checkbox" id="role_<?=$engineeringRole->id?>" name="roles[]" value="<?=$engineeringRole->id?>" <?=in_array($engineeringRole->id, $_REQUEST['roles']) ? "checked='checked'" : ""?>>
+                    <label for="coding"><?=$engineeringRole->name?></label>
+                  </div>
+                <?php	} ?>
+            </fieldset>
 		    </div>
 	    </div>
     </div>

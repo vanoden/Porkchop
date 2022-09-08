@@ -33,8 +33,13 @@
 	<input type="checkbox" name="hidden" class="checkbox" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><span class="status">Hidden</span>
 	<input type="checkbox" name="expired" class="checkbox" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><span class="status">Expired</span>
 	<input type="checkbox" name="deleted" class="checkbox" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><span class="status">Deleted</span>
-	
 	<input type="hidden" id="start" name="start" value="0">
+    <br/>Filter by Tag: <select name="searchedTag" id="organizationStatusValue" class="">
+        <option value=""></option>
+	    <?php		foreach ($organizationTags as $tag) { print_r($tag); ?>
+	    <option value="<?=$tag?>"<?php	if ($tag == $_REQUEST['searchedTag']) print " selected"; ?>><?=$tag?></option>
+	    <?php		} ?>
+    </select>
 </div>
 <hr style="visibility: hidden">
 <table cellpadding="0" cellspacing="0" class="body">
@@ -56,6 +61,7 @@ foreach ($organizations as $organization) {
 <?php
 	}
 ?>
+
 </table>
 <!--    Standard Page Navigation Bar ADMIN ONLY -->
 <div class="pager_bar">

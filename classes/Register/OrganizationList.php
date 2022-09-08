@@ -106,7 +106,7 @@
 				FROM	register_organizations
 				WHERE	id = id
 			";
-
+			
 			$bind_params = array();
 			if (isset($parameters['name'])) {
 				if (isset($parameters['_like']) && in_array("name",$parameters['_like'])) {
@@ -156,6 +156,12 @@
 				$get_organizations_query .= "
 				AND		reseller_id = ?";
 				array_push($bind_params,$parameters['reseller_id']);
+			}
+
+			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) {
+				$get_organizations_query .= "
+				AND		id in (SELECT id FROM register_tags where name = ?)";
+				array_push($bind_params,$parameters['searchedTag']);
 			}
 
 			$get_organizations_query .= "

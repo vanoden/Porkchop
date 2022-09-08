@@ -7,7 +7,7 @@
 	###################################################
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customers');
-
+	
 	# Security - Only Register Module Operators or Managers can see other customers
 	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
@@ -22,13 +22,12 @@
 	}
 	else $organization = $GLOBALS['_SESSION_']->customer->organization;
 
-
+    // handle form submit
 	if ($_REQUEST['method']) {
 		$page->success = $_REQUEST['method'];
 		if (! $_REQUEST['name']) {
 			$page->addError("Name required");
-		}
-		else {
+		} else {
 			$parameters = array(
 				"name"					    => $_REQUEST['name'],
 				"code"					    => $_REQUEST['code'],
@@ -48,8 +47,7 @@
 
 				if ($organization->error) {
 					$page->addError("Error updating organization");
-				}
-				else {
+				} else {
 					$page->success = "Organization Updated Successfully";
 				}
 				if ($_REQUEST['new_login']) {
@@ -79,8 +77,7 @@
 						}
 					}
 				}
-			}
-			else {
+			} else {
 				if (! $parameters['code']) $parameters['code'] = uniqid();
 				app_log("Adding organization '".$parameters['name']."'");
 				# See if code used
@@ -101,16 +98,56 @@
 			}
 		}
 	}
+	
+	// add tag to organization
+	if ($_REQUEST['addTag'] && empty($_REQUEST['removeTag'])) {
+	    if (!empty($_REQUEST['newTag'])) {
+	        $registerTag = new \Register\Tag();
+	        $registerTag->add(array('type'=>'ORGANIZATION','register_id'=>$_REQUEST['organization_id'],'name'=>$_REQUEST['newTag']));
+			if ($registerTag->error) {
+				$page->addError("Error adding organization tag");
+			} else {
+				$page->success = "Organization Tag added Successfully";
+			}
+	    } else {
+    	    $page->addError("Value for Organization Tag value is required");
+	    }
+	}
+	
+	// remove tag from organization
+	if (!empty($_REQUEST['removeTag'])) {
+        $registerTagList = new \Register\TagList();
+        $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id, "name"=> $_REQUEST['removeTagValue']));
+	    foreach ($organizationTags as $organizationTag) {
+	        print_r($organizationTag);
+    	    $organizationTag->delete();
+	    }
+	}
+
 	if ($organization->id) {
-		$members = $organization->members();
+		
+		$members = $organization->members('human');
 		if ($organization->error) {
-			$page->addError("Error finding members: ".$organization->error);
+			$page->addError("Error finding human members: ".$organization->error);
+			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
+		}
+		
+		$automationMembers = $organization->members('automation');
+		if ($organization->error) {
+			$page->addError("Error finding automation members: ".$organization->error);
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 	}
+    
+    // get resellers
 	$resellerList = new \Register\OrganizationList();
 	$resellers = $resellerList->find(array("is_reseller" => true));
 
+    // get tags for organization
+    $registerTagList = new \Register\TagList();
+    $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id));
+    
+    // get organization locations
 	$locations = $organization->locations();
 	if ($organization->error()) {
 		$page->addError($organization->error());

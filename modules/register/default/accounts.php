@@ -66,10 +66,10 @@
 	    if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
 ?>
 <tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->login?></a></td>
-	<td class="value<?=$greenbar?>"><?=$customer->first_name?></td>
-	<td class="value<?=$greenbar?>"><?=$customer->last_name?></td>
+	<td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->first_name)?></td>
+	<td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->last_name)?></td>
 	<td class="value<?=$greenbar?>"><a href="/_register/organization?organization_id=<?=$customer->organization->id?>"><?=$customer->organization->name?></a></td>
-	<td class="value<?=$greenbar?>"><?=$customer->status?></td>
+	<td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->status)?></td>
 	<td class="value<?=$greenbar?>"><?=$customer->last_active()?></td>
 </tr>
 <?php		

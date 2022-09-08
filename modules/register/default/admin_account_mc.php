@@ -38,8 +38,10 @@
 		app_log("Account form submitted",'debug',__FILE__,__LINE__);
 		$parameters = array();
 		$parameters['login'] = $_REQUEST["login"];
-		if (isset($_REQUEST["first_name"])) 	$parameters['first_name']	= $_REQUEST["first_name"];
-		if (isset($_REQUEST["last_name"]))		$parameters['last_name']	= $_REQUEST["last_name"];
+		if (isset($_REQUEST["first_name"]) && preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST["first_name"]))
+			$parameters['first_name']	= $_REQUEST["first_name"];
+		if (isset($_REQUEST["last_name"]) && preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST["last_name"]))
+			$parameters['last_name']	= $_REQUEST["last_name"];
 		if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
 		if (isset($_REQUEST["roles"]))			$parameters['roles']		= $_REQUEST["role"];
 		if (isset($_REQUEST["status"]))			$parameters['status']		= $_REQUEST["status"];

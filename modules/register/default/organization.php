@@ -62,7 +62,7 @@
 			</select>
 		</div>
 		<div class="tableCell">
-			<input name="password_expiration_days" type="number" step="1" min="1" max="365" id="password_expiration_days" class="wide_100per" value="<?=$organization->password_expiration_days?>" />
+			<input name="password_expiration_days" type="number" step="1" min="0" max="365" id="password_expiration_days" class="wide_100per" value="<?=$organization->password_expiration_days?>" />
 		</div>
 	</div>
 </div>
@@ -92,7 +92,7 @@
 		<div class="tableCell value" style="width: 10%;">Status</div>
 		<div class="tableCell value" style="width: 30%;">Last Active</div>
 	</div>
-<?php	foreach ($members as $member) { ;?>
+<?php	foreach ($members as $member) {?>
 	<div class="tableRow">
 		<div class="tableCell">
 			<a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->login?></a>
@@ -113,6 +113,56 @@
 <?php	} ?>
 </div>
 <!--End first row-->	
+
+<h3>Automation Users</h3>
+<!--	Start First Row-->
+<?php	if ($organization->id) { ?>
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell value" style="width: 20%;">Username</div>
+		<div class="tableCell value" style="width: 10%;">Status</div>
+		<div class="tableCell value" style="width: 30%;">Last Active</div>
+	</div>
+<?php	foreach ($automationMembers as $member) { ?>
+	<div class="tableRow">
+		<div class="tableCell">
+			<a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->login?></a>
+		</div>
+		<div class="tableCell">
+			<?=$member->status?>
+		</div>
+		<div class="tableCell">
+			<?=$member->last_active()?>
+		</div>
+	</div>
+<?php	} ?>
+</div>
+<!--End first row-->
+<?php	} ?>
+
+<h3>Add Organization Tag</h3>
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell" style="width: 35%;">Tag</div>
+	</div>
+    <?php	foreach ($organizationTags as $tag) { ;?>
+	    <div class="tableRow">
+		    <div class="tableCell">
+		        <input type="hidden" name="removeTagValue" value="<?=$tag->name?>"/>
+			    <input type="submit" name="removeTag" value="Remove" class="button"/> <strong><?=$tag->name?></strong>
+		    </div>
+	    </div>
+    <?php	} ?>
+	
+	<div class="tableRow">
+		<div class="tableCell">
+			New Tag: <input type="text" class="" name="newTag" value="" />
+		</div>
+	</div>
+</div>
+<div class="tableFooter min-tablet">
+	<input type="submit" name="addTag" value="Add Tag" class="button"/>
+</div>
 		
 <h3>Add New User</h3>
 <!--	Start First Row-->
