@@ -55,6 +55,6 @@
 				app_log("Object send to Site::Logger::File::writeln(): ".print_r(debug_backtrace(),true),'warning');
 				$message = print_r($message,true);
 			}
-			$this->write($message."\n",$level,$file,$line);
+			$this->write($message,$level,$file,$line);
 		}
 	}

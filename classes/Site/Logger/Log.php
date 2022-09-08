@@ -53,7 +53,7 @@
 				return "[$level] $module::$view $file:$line $session_id $customer_id $message";
 			}
 			else {
-				return "$date [$pid] [$level] $module::$view $file:$line $session_id $customer_id $message";
+				return "$date [$pid] [$level] $module::$view $file:$line $session_id $customer_id $message\n";
 			}
 		}
 
