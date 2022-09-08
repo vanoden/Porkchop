@@ -311,7 +311,7 @@
 			}
 		}
 		
-		if (!empty($_REQUEST['hours_worked']) && !empty($_REQUEST['hours_worked'])) {
+		if (!empty($_REQUEST['hours_worked']) || !empty($_REQUEST['notes'])) {
 		    $event = new \Engineering\Event();
 		    $event->add(array(
 			    'task_id'		=> $task->id,
