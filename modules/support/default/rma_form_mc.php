@@ -214,7 +214,7 @@ if ($page->errorCount() < 1) {
 						}
 						
 						// RMA status is changed to CUSTOMER_SHIP
-						$rma->update(array('shipment_id' => $shippingShipment->id,'status'=>'PRINTED'));
+						$rma->update(array('shipment_id' => $shippingShipment->id,'status'=>'SUBMITTED'));
 					}
 				}
 			}

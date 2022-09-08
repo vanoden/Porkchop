@@ -298,20 +298,18 @@
 				}
 			}
 		}
-    
-		if (!empty($_REQUEST['new_status']) && (strtoupper($_REQUEST['new_status']) != $task->status)) {
-    		if (empty($_REQUEST['notes'])) $_REQUEST['notes'] = "";
-			$old_status = $task->status;
-			$task->update(array('status'=>$_REQUEST['new_status']));
-			if (isset($task->error)) {
-				$page->addError($task->error);
-			} else {
-				$_REQUEST['notes'] = "Status changed from $old_status to ".strtoupper($_REQUEST['new_status'])."<br>\n".$_REQUEST['notes'];
-				$page->success .= "Status Updated applied successfully<br/>";
+ 
+		if (!empty($_REQUEST['hours_worked']) || !empty($_REQUEST['notes']) || strtoupper($_REQUEST['new_status']) != $task->status) {
+			if (strtoupper($_REQUEST['new_status']) != $task->status) {
+    			if (empty($_REQUEST['notes'])) $_REQUEST['notes'] = "";
+				$old_status = $task->status;
+				$task->update(array('status'=>$_REQUEST['new_status']));
+				if (isset($task->error)) {
+					$page->addError($task->error);
+				} else {
+					$_REQUEST['notes'] = "Status changed from $old_status to ".strtoupper($_REQUEST['new_status'])."<br>\n".$_REQUEST['notes'];
+				}
 			}
-		}
-		
-		if (!empty($_REQUEST['hours_worked']) && !empty($_REQUEST['hours_worked'])) {
 		    $event = new \Engineering\Event();
 		    $event->add(array(
 			    'task_id'		=> $task->id,
