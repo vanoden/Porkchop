@@ -148,7 +148,6 @@
     $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id));
     
     // get organization locations
-	$locations = $organization->locations();
-	if ($organization->error()) {
-		$page->addError($organization->error());
-	}
+    $locations = array();
+	if ($organization) $locations = $organization->locations();
+	if ($organization && $organization->error()) $page->addError($organization->error());

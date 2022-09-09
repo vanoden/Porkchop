@@ -32,7 +32,8 @@
 	# Cache Mechanism (file, memcache, xcache)
 	$_config->cache = new stdClass();
 	$_config->cache->mechanism   = "xcache";
-
+	$_config->cache->default_expire_seconds   = 360;
+	
 	# Database
 	$_config->database = new stdClass();
 	$_config->database->driver              = 'mysqli';

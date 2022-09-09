@@ -8,8 +8,8 @@
     function setTaskPrerequisite(taskId, taskName) {
         prerequisite_task_id.value = taskId;
         prerequisite_task_name.value = taskName;
-        popup.style.display = 'none';
-        overlay.style.display = 'none';
+        document.getElementById("overlay").style.display = "none";
+        document.getElementById("popup_prerequisite").style.display = "none";
     }
 </script>
 <form id="tasksListForm">
@@ -66,7 +66,8 @@
 		    </div>
 	    </div>
 	    <div class="form_footer" style="text-align: center; width: 100%">
-		    <input type="submit" name="prerequisite_btn_submit" class="button" value="Apply Filter" />
+		    <input type="submit" name="prerequisite_btn_submit" class="button" value="Search Tasks" /><br/>
+            <span style="font-size: 10px;">&gt; 1 filter required above</span>
 	    </div>
     </div>
     <!--	END First Table -->	
@@ -97,7 +98,7 @@
     ?>
 	    <div class="tableRow">
 		    <div class="tableCell">
-   			    <input type="button" name="prerequisite_btn_assign" class="prerequisite_button" onclick="setTaskPrerequisite(<?=$taskItem->id?>, '<?=str_replace("'","", $taskItem->title)?>')" value="Set Prerequisite of" />		        
+   			    <input type="button" name="prerequisite_btn_assign" class="prerequisite_button" onclick="setTaskPrerequisite(<?=$taskItem->id?>, '<?=str_replace("'","", $taskItem->title)?>');" value="Set Prerequisite of" />		        
 		    </div>
 		    <div class="tableCell">
 			    <a href="/_engineering/task/<?=$taskItem->code?>"><?=$taskItem->title?></a>

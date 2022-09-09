@@ -111,9 +111,9 @@
 			array_push($msgs,"Description updated");
 			$parameters['description'] = $_REQUEST['description'];
 		}
-		if (isset($_REQUEST['prerequisite_id']) && $task->prerequisite_id != $_REQUEST['prerequisite_id']) {
+		if (isset($_REQUEST['prerequisite_task_id']) && $task->prerequisite_id != $_REQUEST['prerequisite_task_id']) {
 			array_push($msgs,"Prerequisite updated");
-			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_id'];
+			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_task_id'];
 		}
 		if (isset($_REQUEST['role_id']) && $task->role_id != $_REQUEST['role_id']) {
 			array_push($msgs,"Required Role updated");

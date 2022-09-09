@@ -62,7 +62,7 @@
 			</select>
 		</div>
 		<div class="tableCell">
-			<input name="password_expiration_days" type="number" step="1" min="1" max="365" id="password_expiration_days" class="wide_100per" value="<?=$organization->password_expiration_days?>" />
+			<input name="password_expiration_days" type="text" id="password_expiration_days" class="wide_100per" value="<?=$organization->password_expiration_days?>" />
 		</div>
 	</div>
 </div>

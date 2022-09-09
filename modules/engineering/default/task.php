@@ -210,6 +210,7 @@
         var prerequisite_task_id = document.getElementById("prerequisite_task_id");
         var prerequisite_task_name = document.getElementById("prerequisite_task_name");
         var prerequisite_task_id_clear = document.getElementById("prerequisite_task_id_clear");
+        var popup_prerequisite_content = document.getElementById("popup_prerequisite_content");
         
         // Clear prerequisite task ID
         prerequisite_task_id_clear.onclick = function() {
