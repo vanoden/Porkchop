@@ -20,322 +20,335 @@
 
  function checkEmptyValues() {
   
-    // get elements
-    var btn_additem = document.getElementById('btn_additem');
-    var btn_submit = document.getElementById('btn_submit');
-    var completeFormMessage = document.getElementById('completeFormMessage');  
+  // get elements
+  var btn_additem = document.getElementById('btn_additem');
+  var btn_submit = document.getElementById('btn_submit');
+  var completeFormMessage = document.getElementById('completeFormMessage');  
+
+  btn_additem.removeAttribute('disabled');
+  btn_submit.removeAttribute('disabled');
+  completeFormMessage.style.display = 'none';
   
-    btn_additem.removeAttribute('disabled');
-    btn_submit.removeAttribute('disabled');
-    completeFormMessage.style.display = 'none';
-    
-    $("form select").each(function(){
-       if (!this.value || this.value == '') {
-            btn_additem.setAttribute('disabled', 'disabled');
-            btn_submit.setAttribute('disabled', 'disabled');
-            completeFormMessage.style.display = 'block';
-       }
-    });
-    $("input").each(function(){
-       if (this.value == '') {
-            btn_additem.setAttribute('disabled', 'disabled');
-            btn_submit.setAttribute('disabled', 'disabled');
-            completeFormMessage.style.display = 'block';
-       }
-    });
+  $("form select").each(function(){
+    if (!this.value || this.value == '') {
+      btn_additem.setAttribute('disabled', 'disabled');
+      btn_submit.setAttribute('disabled', 'disabled');
+      completeFormMessage.style.display = 'block';
+    }
+  });
+  $("input").each(function(){
+    if (this.value == '') {
+      btn_additem.setAttribute('disabled', 'disabled');
+      btn_submit.setAttribute('disabled', 'disabled');
+      completeFormMessage.style.display = 'block';
+    }
+  });
  }
 
  function checkProduct(lineNumber) {
-     var productElem = document.getElementById('product_id' + lineNumber);
-     var serialNumber = document.getElementById('serial_number' + lineNumber);
-     var serialMessage = document.getElementById('serial_number_message' + lineNumber);
-     serialNumber.focus();
-     serialNumber.style.border = '1px solid gray';
-     if (productElem.selectedIndex > 0) {
-         if (document.getElementById('serial_number' + lineNumber).value.length > 0) serialMessage.display = 'none';
-         return true;
-     } else {
-         serialMessage.innerHTML = 'Select a product first';
-         serialMessage.style.display = 'block';
-         productElem.focus();
-         return false;
-     }
+  var productElem = document.getElementById('product_id' + lineNumber);
+  var serialNumber = document.getElementById('serial_number' + lineNumber);
+  var serialMessage = document.getElementById('serial_number_message' + lineNumber);
+  serialNumber.focus();
+  serialNumber.style.border = '1px solid gray';
+  if (productElem.selectedIndex > 0) {
+    if (document.getElementById('serial_number' + lineNumber).value.length > 0) serialMessage.display = 'none';
+    return true;
+  } else {
+    serialMessage.innerHTML = 'Select a product first';
+    serialMessage.style.display = 'block';
+    productElem.focus();
+    return false;
+  }
  }
 
  // make sure that the user name isn't taken
  function checkUserName() {
-     var loginField = $("#login");
-     var loginMessage = $("#login-message");
-     $.get('/_register/api?method=checkLoginNotTaken&login=' + loginField.val(), function(data, status) {
-         if (data == 1) {
-             loginField.css('border', '2px solid green');
-             loginMessage.html('login is available');
-             loginMessage.css('color', 'green');
-         } else {
-             loginField.css('border', '2px solid red');
-             loginMessage.html('login is not available');
-             loginMessage.css('color', 'red');
-         }
-     });
+    var loginField = $("#login");
+    var loginMessage = $("#login-message");
+    $.get('/_register/api?method=checkLoginNotTaken&login=' + loginField.val(), function(data, status) {
+      if (data == 1) {
+        loginField.css('border', '2px solid green');
+        loginMessage.html('login is available');
+        loginMessage.css('color', 'green');
+      } else {
+        loginField.css('border', '2px solid red');
+        loginMessage.html('login is not available');
+        loginMessage.css('color', 'red');
+      }
+    });
  }
 
  // make sure the serial number is valid
  function checkSerial(lineNumber) {
 
-     var productInput = document.getElementById('product_id' + lineNumber);
-     checkProduct(lineNumber);
-     
-     var productID = productInput.options[productInput.selectedIndex].value;
-     var serialInput = document.getElementById('serial_number' + lineNumber);
-     var serialNumberMessage = document.getElementById('serial_number_message' + lineNumber);
-     var serialNumberMessageOK = document.getElementById('serial_number_message_ok' + lineNumber);
+  var productInput = document.getElementById('product_id' + lineNumber);
+  checkProduct(lineNumber);
+  
+  var productID = productInput.options[productInput.selectedIndex].value;
+  var serialInput = document.getElementById('serial_number' + lineNumber);
+  var serialNumberMessage = document.getElementById('serial_number_message' + lineNumber);
+  var serialNumberMessageOK = document.getElementById('serial_number_message_ok' + lineNumber);
 
-     if (serialInput.value.length < 1) return true;
-     var code = serialInput.value;
-     var asset = Object.create(Asset);
-     checkEmptyValues();
+  if (serialInput.value.length < 1) return true;
+  var code = serialInput.value;
+  var asset = Object.create(Asset);
+  checkEmptyValues();
      
-     if (asset.get(code)) {
-         if (asset.product.id == productID) {
-             serialInput.style.border = 'solid 2px green';
-             serialNumberMessage.style.display = 'none';
-             serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
-             serialNumberMessageOK.style.display = 'block';
-             return true;
-         } else {
-             serialInput.style.border = 'solid 2px red';
-             serialNumberMessage.innerHTML = 'Product not found with that serial number';
-             serialNumberMessage.style.display = 'block';
-             serialNumberMessageOK.style.display = 'none';
-             return false;
-         }
-     } else {
-         serialInput.style.border = 'solid 2px red';
-         serialNumberMessage.innerHTML = 'Serial number not found in our system';
-         serialNumberMessage.style.display = 'block';
-         serialNumberMessageOK.style.display = 'none';
-         return false;
-     }
+  if (asset.get(code)) {
+    if (asset.product.id == productID) {
+      serialInput.style.border = 'solid 2px green';
+      serialNumberMessage.style.display = 'none';
+      serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
+      serialNumberMessageOK.style.display = 'block';
+      return true;
+    } else {
+      serialInput.style.border = 'solid 2px red';
+      serialNumberMessage.innerHTML = 'Product not found with that serial number';
+      serialNumberMessage.style.display = 'block';
+      serialNumberMessageOK.style.display = 'none';
+      return false;
+    }
+  } else {
+    serialInput.style.border = 'solid 2px red';
+    serialNumberMessage.innerHTML = 'Serial number not found in our system';
+    serialNumberMessage.style.display = 'block';
+    serialNumberMessageOK.style.display = 'none';
+    return false;
+  }
  }  
+
+var line = 0;
+   
+function setVisibility(elementId, visibility) {
+  document.getElementById(elementId).style.display = visibility;
+}
+
+function selectedType(elem) {
+  if (document.getElementById('problem_type').value == "gas monitor") {
+    setVisibility('generic_form', 'none');
+    setVisibility('device_table', 'block');
+    setVisibility('products_footer', 'block');
+    setVisibility('issues_footer', 'none');
+    setVisibility('btn_additem', 'inline');
+  } else {
+    setVisibility('device_table', 'none');
+    setVisibility('generic_form', 'block');
+    setVisibility('products_footer', 'none');
+    setVisibility('issues_footer', 'block');
+    setVisibility('btn_additem', 'none');
+  }
+  
+  if (document.getElementById('problem_type').value == '') {
+    setVisibility('generic_form', 'none');
+    setVisibility('products_footer', 'none');	
+    setVisibility('issues_footer', 'none');    
+  }
+}
+   
+function dropRow(line) {
+    row = document.getElementById('row'+line);
+    row.parentNode.removeChild(row);
+}
+   
+function addRow() {
+   
+  line ++;
+  var row = document.createElement('div');
+  row.classList.add('tableRow');
+  row.id = 'row'+line;
+  document.getElementById('device_table').appendChild(row);
+
+  /* Add Product Pulldown to new row */
+  var productCell1 = document.createElement('div');
+  productCell1.classList.add('tableCell');
+  row.appendChild(productCell1);
+  var productSelect = document.createElement('select');
+  productSelect.name = 'product_id['+line+']';
+  productSelect.id = 'product_id'+line;
+  productCell1.appendChild(productSelect);
+  var productOpt0 = document.createElement('option');
+  productOpt0.value = '';
+  productOpt0.innerHTML = 'None';
+  productSelect.appendChild(productOpt0);
+    <?php	foreach ($products as $product) { ?>
+        var productOpt<?=$product->id?> = document.createElement('option');
+        productOpt<?=$product->id?>.value = '<?=$product->id?>';
+        productOpt<?=$product->id?>.innerHTML = '<?=$product->code?>';
+        productSelect.appendChild(productOpt<?=$product->id?>);
+    <?php	} ?>
+  productCell1.appendChild(productSelect);
+  productSelect.addEventListener("change", function() { checkEmptyValues() }, false);
+
+  /* Add Serial Input to new row */
+  var productCell2 = document.createElement('div');
+  productCell2.classList.add('tableCell');
+  row.appendChild(productCell2);
+  var serialNumber = document.createElement('input');
+  serialNumber.name = "serial_number["+line+"]";
+  serialNumber.type = "text";
+  serialNumber.id = 'serial_number'+line;
+  productCell2.appendChild(serialNumber);
+
+  /* Add Problem Input to new row */
+  var productCell3 = document.createElement('div');
+  productCell3.classList.add('tableCell');
+  row.appendChild(productCell3);
+  var problem = document.createElement('input');
+  problem.name = "line_description["+line+"]";
+  problem.type = "text";
+  problem.id = 'line_description'+line;
+  problem.addEventListener('change', checkEmptyValues);
+  productCell3.appendChild(problem);
+  
+  /* Add Delete Item to new row */
+  var productCell4 = document.createElement('div');
+  productCell4.classList.add('tableCell');
+  row.appendChild(productCell4);
+  var addBtn = document.createElement('input');
+  addBtn.type = 'button';
+  addBtn.value = '-';
+  productCell4.appendChild(addBtn);
+  var lineID = line;
+  addBtn.addEventListener("click", function(){
+    dropRow(lineID);
+  });
+
+  var serialNumberMessage = document.createElement('div');
+  serialNumberMessage.id = 'serial_number_message'+line;
+  serialNumberMessage.setAttribute('style','color:red; display:none;');
+  productCell2.appendChild(serialNumberMessage);
+
+  var serialNumberMessageOK = document.createElement('div');
+  serialNumberMessageOK.id = 'serial_number_message_ok'+line;
+  serialNumberMessageOK.setAttribute('style','color:green; display:none;');
+  productCell2.appendChild(serialNumberMessageOK);
+
+  newSerialNumber = document.getElementById('serial_number'+line);
+  newSerialNumber.addEventListener("change", function() { checkSerial(lineID); }, false);
+  newSerialNumber.addEventListener("focus", function() { checkProduct(lineID); }, false);
+  
+  $("#btn_additem").attr('disabled','disabled');
+  $("#btn_submit").attr('disabled','disabled');
+  $("#completeFormMessage").show();
+        
+}
 </script>
-<style>
-   div.table {
-       display: none;
-   }
-   div.table_header {
-       display: table-row;
-       font-weight: bold;
-   }
-   div.table_row {
-       display: table-row;
-   }
-   div.table_cell {
-       display: table-cell;
-       border-bottom: 1px solid #dedede;
-   }
-   #page-mgmt input[type="text"] {
-       min-width: 300px;
-       margin: 0px 25px 0px 25px;
-   }
-   #btn_submit:disabled {
-        background: #808080;
-        color: #cecece;
-   }
-   #completeFormMessage {
-        color: #555753;
-        font-size:10px;
-        display:none;
-   }
-</style>
-<script>
-   var line = 0;
-   
-   function setVisibility(elementId, visibility) {
-      	document.getElementById(elementId).style.display = visibility;
-   }
-   
-   function selectedType(elem) {
-       	if (document.getElementById('problem_type').value == "gas monitor") {
-      		setVisibility('generic_form', 'none');
-      		setVisibility('device_table', 'block');
-      		setVisibility('form_footer', 'block');
-      		setVisibility('btn_additem', 'inline');
-       	} else {
-      		setVisibility('device_table', 'none');
-      		setVisibility('generic_form', 'block');
-      		setVisibility('form_footer', 'block');
-      		setVisibility('btn_additem', 'none');
-       	}
-       	
-        if (document.getElementById('problem_type').value == '') {
-            setVisibility('generic_form', 'none');
-            setVisibility('form_footer', 'none');	    
-        }
-   }
-   
-   function dropRow(line) {
-        row = document.getElementById('row'+line);
-        row.parentNode.removeChild(row);
-   }
-   
-   function addRow() {
-   
-        line ++;
-        var row = document.createElement('div');
-        row.classList.add('table_row');
-        row.id = 'row'+line;
-        document.getElementById('device_table').appendChild(row);
 
-        var productCell1 = document.createElement('div');
-        productCell1.classList.add('table_cell');
-        row.appendChild(productCell1);
-        var productSelect = document.createElement('select');
-        productSelect.name = 'product_id['+line+']';
-        productSelect.id = 'product_id'+line;
-        productSelect.classList.add('value');
-        productSelect.classList.add('input');
-        productCell1.appendChild(productSelect);
-        var productOpt0 = document.createElement('option');
-        productOpt0.value = '';
-        productOpt0.innerHTML = 'None';
-        productSelect.appendChild(productOpt0);
-              <?php	foreach ($products as $product) { ?>
-                  var productOpt<?=$product->id?> = document.createElement('option');
-                  productOpt<?=$product->id?>.value = '<?=$product->id?>';
-                  productOpt<?=$product->id?>.innerHTML = '<?=$product->code?>';
-                  productSelect.appendChild(productOpt<?=$product->id?>);
-              <?php	} ?>
-        productCell1.appendChild(productSelect);
-        productSelect.addEventListener("change", function() { checkEmptyValues() }, false);
+<h2>New Support Request</h2>
+<nav id="breadcrumb">
+	<ul>
+		<li><a href="/_support/tickets">Support Tickets</a></li>
+		<li>New Support Request</li>
+	</ul>
+</nav>
 
-        var productCell2 = document.createElement('div');
-        productCell2.classList.add('table_cell');
-        row.appendChild(productCell2);
-        var serialNumber = document.createElement('input');
-        serialNumber.name = "serial_number["+line+"]";
-        serialNumber.id = 'serial_number'+line;
-        serialNumber.classList.add('value');
-        serialNumber.classList.add('input');
-        serialNumber.setAttribute('style','min-width: 300px; margin: 0px 25px 0px 25px;');
-        productCell2.appendChild(serialNumber);
-
-        var productCell3 = document.createElement('div');
-        productCell3.classList.add('table_cell');
-        row.appendChild(productCell3);
-        var problem = document.createElement('input');
-        problem.name = "line_description["+line+"]";
-        problem.id = 'line_description'+line;
-        problem.classList.add('value');
-        problem.classList.add('input');
-        problem.setAttribute('style','min-width: 300px; margin: 0px 25px 0px 25px;');
-        problem.addEventListener('change', checkEmptyValues);
-        productCell3.appendChild(problem);
-        
-        var productCell4 = document.createElement('div');
-        productCell4.classList.add('table_cell');
-        row.appendChild(productCell4);
-        var addBtn = document.createElement('input');
-        addBtn.type = 'button';
-        addBtn.value = '-';
-        productCell4.appendChild(addBtn);
-        var lineID = line;
-        addBtn.addEventListener("click", function(){
-	        dropRow(lineID);
-        });
-
-        var serialNumberMessage = document.createElement('div');
-        serialNumberMessage.id = 'serial_number_message'+line;
-        serialNumberMessage.setAttribute('style','color:red; display:none;');
-        productCell2.appendChild(serialNumberMessage);
-
-        var serialNumberMessageOK = document.createElement('div');
-        serialNumberMessageOK.id = 'serial_number_message_ok'+line;
-        serialNumberMessageOK.setAttribute('style','color:green; display:none;');
-        productCell2.appendChild(serialNumberMessageOK);
-
-        newSerialNumber = document.getElementById('serial_number'+line);
-        newSerialNumber.addEventListener("change", function() { checkSerial(lineID); }, false);
-        newSerialNumber.addEventListener("focus", function() { checkProduct(lineID); }, false);
-        
-        $("#btn_additem").attr('disabled','disabled');
-        $("#btn_submit").attr('disabled','disabled');
-        $("#completeFormMessage").show();
-        
-   }
-</script>
-<h2>Request Support</h2>
-<?php	if ($page->errorCount()) { ?>
-    <div class="form_error"><?=$page->errorString()?></div>
+<!-- SHould this have a breadcrumb and should it be linkable to Support -> add new -->
+<?php	if ($page->errorCount() > 0) { ?>
+  <section>
+    <ul class="connectBorder errorText">
+      <li><?=$page->errorString()?></li>
+    </ul>
+  <section>
 <?php	}
-    if (empty($GLOBALS['_SESSION_']->customer->organization->id)) return;
-    if ($page->success) { 
-?>
-<div class="form_success"><?=$page->success?></div>
+  if (empty($GLOBALS['_SESSION_']->customer->organization->id)) return;
+  if ($page->success) { ?>
+    <section>
+      <ul class="connectBorder progressText">
+        <li><?=$page->success?></li>
+      </ul>
+    <section>
 <?php	} else { ?>
+
 <form id="supportRequest" name="supportRequest" method="post" action="/_support/request">
-   <div class="form_instruction">
-      Select your problem type from the list.  Then clearly define your problem.  Make sure to list relevant Serial Numbers for any devices referenced.
-   </div>
-   <div class="container_narrow">
-      <div class="label">Problem Type</div>
-      <select name="type" id="problem_type" class="value input" onchange="selectedType(this);">
-         <option value="">Select</option>
-         <option value="gas monitor">Gas Monitor</option>
-         <option value="billing">Billing and Account</option>
-         <option value="web portal">Web Portal</option>
-      </select>
-   </div>
-   <div class="container" id="generic_form">
-      <div class="label">Describe Problem</div>
-      <textarea name="description" class="value input"></textarea>
-   </div>
-   <div class="container" id="equipment_form">
-      <div class="table" id="device_table">
-         <div class="table_header">
-            <div class="table_cell">
-               Product
-            </div>
-            <div class="table_cell">
-               <span class="label"><i class="fa fa-barcode" aria-hidden="true"></i> Serial #</span>
-            </div>
-            <div class="table_cell">
-               Problem
-            </div>
-            <div class="table_cell">
-               &nbsp;
-            </div>
-         </div>
-         <div class="table_row" id="row0">
-            <div class="table_cell" style="width: 100px;">
-               <select id="product_id0" name="product_id[0]" class="value input">
-                  <option value="">None</option>
-                  <?php	foreach ($products as $product) { ?>
-                  <option value="<?=$product->id?>"><?=$product->code?></option>
-                  <?php	} ?>
-               </select>
-            </div>
-            <div class="table_cell" style="width: 100px;">
-               <input id="serial_number0" type="text" name="serial_number[0]" class="value input" onfocus="checkProduct(0);" onchange="checkSerial(0)" maxlength="50"/>
-               <div id="serial_number_message0" style="color:red; display:none;">Serial number not found in our system</div>
-               <div id="serial_number_message_ok0" style="color:green; display:none;">Serial number has been found, thank you for providing!</div>
-            </div>
-            <div class="table_cell" style="width: 500px;">
-               <input type="text" name="line_description[0]" class="value input" onchange="checkEmptyValues(0)" />
-            </div>
-            <div class="table_cell" style="width: 50px;">
-               <input type="button" name="btn_drop" class="value input" value="-" onclick="dropRow(0);" />
-            </div>
-         </div>
+  <section id="form-message">
+    <ul class="connectBorder infoText">
+      <li>Select the type of request and clearly define your problem. Make sure to list relevant Serial Numbers for any devices referenced.</li>
+    </ul>
+  </section>
+
+  <section class="form-group">
+
+    <ul class="form-grid four-col">
+      <li>
+        <label for="problemType">Type of Request</label>
+        <select name="type" id="problem_type" class="value input" onchange="selectedType(this);">
+          <option value="">Select</option>
+          <option value="gas monitor">Gas Monitor</option>
+          <option value="billing">Billing and Account</option>
+          <option value="web portal">Web Portal</option>
+        </select>
+      </li>
+    </ul>
+
+    <section class="container" id="generic_form">
+      <ul>
+        <li>
+          <label for="description">Describe Problem</label>
+          <textarea name="description"></textarea>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <div class="tableBody bandedRows" id="device_table">
+        <div class="tableRowHeader">
+          <div class="tableCell">Product</div>
+          <div class="tableCell">Serial #</div>
+          <div class="tableCell">Problem</div>
+          <div class="tableCell"></div>
+        </div>
+        <div class="tableRow">
+          <div class="tableCell">
+            <select id="product_id0" name="product_id[0]" class="value input">
+              <option value="">None</option>
+              <?php	foreach ($products as $product) { ?>
+              <option value="<?=$product->id?>"><?=$product->code?></option>
+              <?php	} ?>
+            </select>
+          </div>
+          <div class="tableCell">
+            <input id="serial_number0" type="text" name="serial_number[0]" class="value" onfocus="checkProduct(0);" onchange="checkSerial(0)" maxlength="50"/>
+            <div id="serial_number_message0" style="color:red; display:none;">Serial number not found in our system</div>
+            <div id="serial_number_message_ok0" style="color:green; display:none;">Serial number has been found, thank you for providing!</div>
+          </div>
+          <div class="tableCell">
+            <input type="text" name="line_description[0]" class="value" onchange="checkEmptyValues(0)" />  
+          </div>
+          <div class="tableCell">
+            <input type="button" name="btn_drop" class="value" value="Delete" onclick="dropRow(0);" />
+          </div>
+        </div>
       </div>
-   </div>
-   <div id="form_footer" class="form_footer" colspan="2" style="text-align: center">
-      <input id="btn_additem" type="button" name="additem" class="button" value="Another Product" style="display: none" onclick="addRow();" />
-      <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit" />
-      <p id="completeFormMessage">Please fill out all the fields to add more products or submit your information.</p>
-   </div>
+    </section>
+ 
+    <section id="products_footer">
+      <ul class="connectBorder infoText">
+      <li id="completeFormMessage">Add all products you need support on. If you have it, add the serial number to expedite your service.</li>
+      </ul>
+      <ul class="button-bar">
+      <li><input id="btn_additem" type="button" name="additem" class="button" value="Add Product" style="display: none" onclick="addRow();" />
+      <input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit" /></li>
+      </ul>
+    </section>
+ 
+    <section id="issues_footer">
+      <ul class="connectBorder infoText">
+      <li id="completeFormMessage">Please enter complete details about your issue so we can resolve it quickly.</li>
+      </ul>
+      <ul class="button-bar">
+      <li><input id="btn_submit" type="submit" name="btn_submit" class="button" value="Submit" /></li>
+      </ul>
+    </section>
+
+  </section>
 </form>
+
 <script>
+   setVisibility('device_table', 'none');
    setVisibility('generic_form', 'none');
-   setVisibility('form_footer', 'none');
+   setVisibility('products_footer', 'none');
+   setVisibility('issues_footer', 'none');
 </script>
+
 <?php } ?>

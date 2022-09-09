@@ -157,7 +157,7 @@
                 if ($_REQUEST['automation'] == 1) $parameters['automation'] = true;
                 else $parameters['automation'] = false;
             }
-			if (isset($_REQUEST['timezone'])) {
+			if (!empty($_REQUEST['timezone'])) {
 				if (!in_array($_REQUEST['timezone'], \DateTimeZone::listIdentifiers())) $this->error("Invalid timezone provided");
 				$parameters['timezone'] = $_REQUEST['timezone'];
 			}

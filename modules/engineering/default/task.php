@@ -513,13 +513,13 @@
             <div class="tableCell">
                <select id="new_status" name="new_status" class="value input wide_100per" form="task_form">
                   <option value=""></option>
-                  <option value="new">New</option>
-                  <option value="hold">Hold</option>
-                  <option value="active">Active</option>
-                  <option value="broken">Broken</option>
-                  <option value="testing">Testing</option>
-                  <option value="cancelled">Cancelled</option>
-                  <option value="complete">Complete</option>
+                  <option value="new"<?php if ($form["status"] == "NEW") print " selected"; ?>>New</option>
+                  <option value="hold"<?php if ($form["status"] == "HOLD") print " selected"; ?>>Hold</option>
+                  <option value="active"<?php if ($form["status"] == "ACTIVE") print " selected"; ?>>Active</option>
+                  <option value="broken"<?php if ($form["status"] == "BROKEN") print " selected"; ?>>Broken</option>
+                  <option value="testing"<?php if ($form["status"] == "TESTING") print " selected"; ?>>Testing</option>
+                  <option value="cancelled"<?php if ($form["status"] == "CANCELLED") print " selected"; ?>>Cancelled</option>
+                  <option value="complete"<?php if ($form["status"] == "COMPLETE") print " selected"; ?>>Complete</option>
                </select>
             </div>
          </div>
