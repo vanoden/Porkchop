@@ -34,6 +34,20 @@
    	formDiv.style.display = 'none';
    	return true;
    }
+   function confirmAddEvent(form) { 
+    var actionItemsCount = <?=$actionItemsCount?>;
+    if (actionItemsCount > 1 && document.getElementById('status').value == 'COMPLETE') {
+        if (confirm("Also mark the ticket as 'closed'?") == true) {
+          document.getElementById('close_ticket_too').value = 'yes';
+        } else {
+          document.getElementById('close_ticket_too').value = 'no';
+        }
+    }
+   	var addEventForm = document.getElementById(form);
+   	addEventForm.submit();
+   	return true;
+   }
+   
 </script>
 <form name="action_form" method="post" action="/_support/action">
    <input type="hidden" name="action_id" value="<?=$action->id?>" />
@@ -135,7 +149,7 @@
        </div>
        <div class="container_narrow">
           <span class="label">New Status</span>
-          <select name="status" class="value input">
+          <select id="status" name="status" class="value input">
              <option value="ACTIVE">Active</option>
              <option value="PENDING CUSTOMER">Pending Customer</option>
              <option value="PENDING VENDOR">Pending Vendor</option>
@@ -152,7 +166,9 @@
           <textarea name="description" class="value input" style="width: 650px"></textarea>
        </div>
        <div class="form_footer">
-          <input type="submit" name="btn_add_event" class="button" value="Add Event" />
+          <input type="hidden" name="btn_add_event" class="button" value="Add Event" />
+          <input type="hidden" id="close_ticket_too" name="close_ticket_too" class="button" value="no" />
+          <input type="button" name="btn_add_event_confirm" class="button" onclick="confirmAddEvent('eventForm');" value="Add Event" />
           <input type="button" name="btn_cancel" value="Cancel" class="button" onclick="hideForm('event');" />
        </div>
     </form>
@@ -206,13 +222,13 @@
     }
     ?>
     <form name="repoUpload" action="/_support/action/<?=$action->id?>" method="post" enctype="multipart/form-data">
-    <div class="container">
-        <span class="label">Upload File</span>
-        <input type="hidden" name="repository_name" value="<?=$repository?>" />
-        <input type="hidden" name="type" value="support action" />
-        <input type="file" name="uploadFile" />
-        <input type="submit" name="btn_submit" class="button" value="Upload" />
-    </div>
+        <div class="container">
+            <span class="label">Upload File</span>
+            <input type="hidden" name="repository_name" value="<?=$repository?>" />
+            <input type="hidden" name="type" value="support action" />
+            <input type="file" name="uploadFile" />
+            <input type="submit" name="btn_submit" class="button" value="Upload" />
+        </div>
     </form>
     <br/><br/>
 </div>

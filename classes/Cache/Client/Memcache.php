@@ -42,6 +42,7 @@
 
 		public function set($key,$value,$expires = null) {
 			if (!isset($expires)) $expires = $GLOBALS['_config']->cache->default_expire_seconds;
+			
 			if ($this->_connected) {
 				if ($this->_service->set($key,$value,$expires)) return true;
 				else $this->error = "Error storing cache value for '$key': ".$this->_service->getResultCode();

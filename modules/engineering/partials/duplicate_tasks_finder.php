@@ -8,8 +8,8 @@
     function setTaskDuplicate(taskId, taskName) {
         duplicate_task_id.value = taskId;
         duplicate_task_name.value = taskName;
-        popup.style.display = 'none';
-        overlay.style.display = 'none';
+        document.getElementById("overlay").style.display = "none";
+        document.getElementById("popup_duplicate").style.display = "none";
     }
 </script>
 <form id="tasksListForm">
@@ -66,7 +66,8 @@
 		    </div>
 	    </div>
 	    <div class="form_footer" style="text-align: center; width: 100%">
-		    <input type="submit" name="duplicate_btn_submit" class="button" value="Apply Filter" />
+		    <input type="submit" name="duplicate_btn_submit" class="button" value="Search Tasks" /><br/>
+            <span style="font-size: 10px;">&gt; 1 filter required above</span>
 	    </div>
     </div>
     <!--	END First Table -->	
