@@ -299,9 +299,9 @@
 			}
 		}
  
+    	if (!isset($_REQUEST['notes'])) $_REQUEST['notes'] = "";
 		if (!empty($_REQUEST['hours_worked']) || !empty($_REQUEST['notes']) || strtoupper($_REQUEST['new_status']) != $task->status) {
 			if (strtoupper($_REQUEST['new_status']) != $task->status) {
-    			if (empty($_REQUEST['notes'])) $_REQUEST['notes'] = "";
 				$old_status = $task->status;
 				$task->update(array('status'=>$_REQUEST['new_status']));
 				if (isset($task->error)) {
@@ -323,7 +323,7 @@
         }
 		
         // add task testing details
-	    if (isset($_REQUEST['testing_details']) && !empty($_REQUEST['testing_details'])) {
+	    if (isset($_REQUEST['testing_details']) && $_REQUEST['testing_details'] != $task->testing_details) {
             $parameters = array();
             $parameters['testing_details'] = $_REQUEST['testing_details'];
             $task->update($parameters);
