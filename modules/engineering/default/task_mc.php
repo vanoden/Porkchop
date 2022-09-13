@@ -443,11 +443,11 @@
 	$releaselist = new \Engineering\ReleaseList();
 	if ($releaselist->error()) $page->addError($releaselist->error());
 
-    $releases = cache_get('\Engineering\Task\Register\Releases');
-	if (!$releases) {
+    //$releases = cache_get('\Engineering\Task\Register\Releases');
+	//if (!$releases) {
     	$releases = $releaselist->find();
-    	cache_set('\Engineering\Task\Register\Releases',$releases);
-	}
+    //	cache_set('\Engineering\Task\Register\Releases',$releases);
+	//}
 	
     // get ProjectList from cache or query	
 	$projectlist = new \Engineering\ProjectList();
