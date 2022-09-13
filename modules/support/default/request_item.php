@@ -84,9 +84,11 @@
 		        <div class="tableCell">
 			        <input type="text" id="serial_number" class="value input" name="serial_number" value="<?=$item->serial_number?>">
 		        </div>
+				<?php	if (!empty($asset->id)) { ?>
 		        <div class="tableCell">
-                    <a href="/_monitor/admin_details/<?=$item->serial_number?>/<?=$product->code?>" target="_blank" style="font-size: 10px; white-space:nowrap;">View Monitor</a>
+                    <a href="/_monitor/admin_details/<?=$asset->code?>/<?=$asset->product_code?>" style="font-size: 10px; white-space:nowrap;">View Monitor</a>
 		        </div>
+				<?php	} ?>
 	        </div>
         </div>
         <div class="tableBody min-tablet">
