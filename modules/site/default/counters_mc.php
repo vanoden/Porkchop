@@ -1,5 +1,7 @@
 <?php
 $page = new \Site\Page('site','counters');
+$page->requireRole('see site counters');
+
 $counterWatched = new \Site\CounterWatched();
 if (isset($_POST['action'])) {
     switch ($_POST['action']) {

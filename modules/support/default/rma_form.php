@@ -247,7 +247,7 @@
 	<?php	}
 			else if ($rmaSubmitted) { ?>
 		<li><label for="">Please include the following form with your return:</label> <a href="/_support/rma_pdf/<?=$rmaCode?>" target="_blank">Download RMA Document</a></li>
-	<?		} ?>
+	<?php	} ?>
 	<?php	if ($rmaSubmitted) { ?>
 		<li><label for="">Sending From:</label> <?=$sentFromLocation->address_1?><br><?=$sentFromLocation->address_2?><br>
 		<?=$sentFromLocation->city?>, <?=$sentFromLocation->zip_code?><br><i style="font-size: .8rem;">*Notes: <?=$sentFromLocation->notes?></i>

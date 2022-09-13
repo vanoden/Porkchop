@@ -64,6 +64,11 @@
 			return $newdate;
 		}
 
+		# T Dates
+		if (preg_match('/^\d\d\d\d\-\d\d\-\d\dT/',$date)) {
+			$date = preg_replace('/T/',' ',$date);
+		}
+
 		# Ignore Empty Dates
 		if (! preg_match("/^[\d\-\/\:\s]+.$/",$date)) {
 			app_log("get_mysql_date found invalid date '$date', returns 0",'notice');
