@@ -126,13 +126,16 @@
 
 	if ($organization->id) {
 		
-		$members = $organization->members('human');
+		$status = array();
+		if (isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) $status = array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED','BLOCKED');
+		
+		$members = $organization->members('human', $status);
 		if ($organization->error) {
 			$page->addError("Error finding human members: ".$organization->error);
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 		
-		$automationMembers = $organization->members('automation');
+		$automationMembers = $organization->members('automation', $status);
 		if ($organization->error) {
 			$page->addError("Error finding automation members: ".$organization->error);
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
