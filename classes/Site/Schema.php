@@ -316,6 +316,30 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			
+			if ($this->version() < 13) {
+			
+				$alter_table_query = "
+                    ALTER TABLE `site_messages` ADD COLUMN `recipient_id` int NULL AFTER `user_created`;
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering site_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+		        $alter_table_query = "
+		            ALTER TABLE `site_messages` ADD FOREIGN KEY (recipient_id) REFERENCES `register_users` (`id`)
+		        ";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering `site_messages` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(13);
+				$GLOBALS['_database']->CommitTrans();
+			}
+		
 			return true;
 		}
 	}

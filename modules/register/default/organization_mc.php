@@ -126,13 +126,16 @@
 
 	if ($organization->id) {
 		
-		$members = $organization->members('human');
+		$status = array();
+		if (isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) $status = array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED','BLOCKED');
+		
+		$members = $organization->members('human', $status);
 		if ($organization->error) {
 			$page->addError("Error finding human members: ".$organization->error);
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 		
-		$automationMembers = $organization->members('automation');
+		$automationMembers = $organization->members('automation', $status);
 		if ($organization->error) {
 			$page->addError("Error finding automation members: ".$organization->error);
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
@@ -148,7 +151,6 @@
     $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id));
     
     // get organization locations
-	$locations = $organization->locations();
-	if ($organization->error()) {
-		$page->addError($organization->error());
-	}
+    $locations = array();
+	if ($organization) $locations = $organization->locations();
+	if ($organization && $organization->error()) $page->addError($organization->error());

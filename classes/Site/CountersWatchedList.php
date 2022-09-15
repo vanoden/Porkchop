@@ -14,7 +14,7 @@
 			$get_objects_query = "
 				SELECT	*
 				FROM	counters_watched 
-				WHERE	1
+				WHERE	`key` not like '%[%]'
 			";			
 			
 			$bind_params = array();

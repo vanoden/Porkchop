@@ -17,6 +17,14 @@
 	$item = $action->item;
 	$request = $item->request;
 
+	// get number of other actions for current action
+	$actionList = new \Support\Request\Item\ActionList();
+	$actionItemsCount = 0;
+	if (isset($action->item->id) && !empty($action->item->id)) {
+    	$actionItems = $actionList->find(array('item_id' => $action->item->id));
+    	foreach ($actionItems as $actionItem) $actionItemsCount = $actionItemsCount + 1;
+	}
+	
 	if (isset($_REQUEST['btn_add_event'])) {
 		if ($_REQUEST['status'] != $action->status) $_REQUEST['description'] .= "<br>Status changed from ".$action->status." to ".$_REQUEST['status'];
 		$action->update(array('status' => 'ACTIVE'));
@@ -35,6 +43,14 @@
 			$page->addError($action->error());
 		}
 
+        // close the overall request_item here if 'yes' set to close the parent ticke (request item) as well
+        if (isset($_REQUEST['close_ticket_too']) && !empty($_REQUEST['close_ticket_too'])) {
+            if ($_REQUEST['close_ticket_too'] == 'yes') {
+                $item = new \Support\Request\Item($action->item_id);
+                $item->update(array('status' => 'COMPLETE'));
+            }
+        }
+
         // Event Occured Customer Ticket Notification        
         $notification = new \Email\Notification (
             array (
@@ -49,6 +65,7 @@
         );
         $notification->notify();
 	}
+	
 	if (isset($_REQUEST['btn_assign_action'])) {
 		$user = new \Register\Customer($_REQUEST['assigned_id']);
 		

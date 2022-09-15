@@ -111,9 +111,9 @@
 			array_push($msgs,"Description updated");
 			$parameters['description'] = $_REQUEST['description'];
 		}
-		if (isset($_REQUEST['prerequisite_id']) && $task->prerequisite_id != $_REQUEST['prerequisite_id']) {
+		if (isset($_REQUEST['prerequisite_task_id']) && $task->prerequisite_id != $_REQUEST['prerequisite_task_id']) {
 			array_push($msgs,"Prerequisite updated");
-			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_id'];
+			$parameters['prerequisite_id'] = $_REQUEST['prerequisite_task_id'];
 		}
 		if (isset($_REQUEST['role_id']) && $task->role_id != $_REQUEST['role_id']) {
 			array_push($msgs,"Required Role updated");
@@ -299,9 +299,9 @@
 			}
 		}
  
+    	if (!isset($_REQUEST['notes'])) $_REQUEST['notes'] = "";
 		if (!empty($_REQUEST['hours_worked']) || !empty($_REQUEST['notes']) || strtoupper($_REQUEST['new_status']) != $task->status) {
 			if (strtoupper($_REQUEST['new_status']) != $task->status) {
-    			if (empty($_REQUEST['notes'])) $_REQUEST['notes'] = "";
 				$old_status = $task->status;
 				$task->update(array('status'=>$_REQUEST['new_status']));
 				if (isset($task->error)) {
@@ -323,7 +323,7 @@
         }
 		
         // add task testing details
-	    if (isset($_REQUEST['testing_details']) && !empty($_REQUEST['testing_details'])) {
+	    if (isset($_REQUEST['testing_details']) && $_REQUEST['testing_details'] != $task->testing_details) {
             $parameters = array();
             $parameters['testing_details'] = $_REQUEST['testing_details'];
             $task->update($parameters);
@@ -415,50 +415,30 @@
 	$filesList = new \Storage\FileList();
 	$filesUploaded = $filesList->find(array('type' => 'engineering task', 'ref_id' => $task->id));
 
-    // get CustomerList from cache or query	
+    // get CustomerList
 	$peopleList = new \Register\CustomerList();
 	if (isset($peoplelist->error)) $page->addError($peoplelist->error);
-	
-	$people = cache_get('\Engineering\Task\Register\CustomerList');
-	if (!$people) {
-    	$people = $peopleList->find(array("status" => array('NEW','ACTIVE'), 'automation' => 0));
-    	cache_set('\Engineering\Task\Register\CustomerList',$people);
-	}
+	$people = $peopleList->find(array("status" => array('NEW','ACTIVE'), 'automation' => 0));
 	
 	$role = new \Register\Role();
 	$role->get("engineering user");
 	$assigners = $techs = $role->members();
 
-    // get ProductList from cache or query	
+    // get ProductList
 	$productlist = new \Engineering\ProductList();
 	if ($productlist->error()) $page->addError($productlist->error());
-	
-    $products = cache_get('\Engineering\Task\Register\Products');
-	if (!$products) {
-    	$products = $productlist->find();
-    	cache_set('\Engineering\Task\Register\Products',$products);
-	}
+	$products = $productlist->find();
 
-    // get ReleaseList from cache or query	
+    // get ReleaseList
 	$releaselist = new \Engineering\ReleaseList();
 	if ($releaselist->error()) $page->addError($releaselist->error());
-
-    $releases = cache_get('\Engineering\Task\Register\Releases');
-	if (!$releases) {
-    	$releases = $releaselist->find();
-    	cache_set('\Engineering\Task\Register\Releases',$releases);
-	}
-	
-    // get ProjectList from cache or query	
+    $releases = $releaselist->find();
+    
+    // get ProjectList
 	$projectlist = new \Engineering\ProjectList();
 	if ($projectlist->error()) $page->addError($projectlist->error());
-	
-    $projects = cache_get('\Engineering\Task\Register\Projects');
-	if (!$projects) {
-    	$projects = $projectlist->find();
-    	cache_set('\Engineering\Task\Register\Projects',$projects);
-	}
-	
+	$projects = $projectlist->find();
+		
 	// get engineering comments 
     $engineeringComments = new \Engineering\CommentList();
 	$commentsList = $engineeringComments->find(array('code'=>$task->code));

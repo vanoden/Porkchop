@@ -230,13 +230,14 @@
 
 			return true;
 		}
-		public function members($type = 'all') {
+		public function members($type = 'all', $status=array()) {
 			app_log("Register::Organization::members()",'trace',__FILE__,__LINE__);
 			$customerlist = new CustomerList();
+			
 			if ($type == 'automation') $automation = true;
 			elseif ($type == 'human') $automation = false;
 			else $automation = null;
-			return $customerlist->find(array('organization_id' => $this->id,'automation' => $automation));
+			return $customerlist->find(array('organization_id' => $this->id,'automation' => $automation, 'status' => $status));
 		}
 		public function product($product_id) {
 			$product = new \Product\Item($product_id);
