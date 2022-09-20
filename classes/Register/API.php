@@ -1022,7 +1022,7 @@
             foreach ($organizationsFound as $organization) {
                 $newOrganization = new \stdClass();
                 $newOrganization->id = $organization->id;
-                $newOrganization->label = $organization->name;
+                $newOrganization->label = (($organization->status == "EXPIRED") ? " * EXPIRED * " : "") . $organization->name;
                 $newOrganization->value = $organization->name;
                 $results[] = $newOrganization;
             }

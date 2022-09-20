@@ -29,5 +29,4 @@ if (isset($_POST['action'])) {
 $countersWatchedList = new \Site\CountersWatchedList();
 $countersWatchedList = $countersWatchedList->find();
 $counterList = new \Site\CounterList();
-$completeCounterList = $counterList->find();
-
+$completeCounterList = $counterList->find(array('showCacheObjects' = false));
