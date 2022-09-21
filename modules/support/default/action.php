@@ -39,7 +39,7 @@
    
    function confirmAddEvent(form) {
     var actionItemsCount = <?=$actionItemsCount?>;
-    if (actionItemsCount > 1 && document.getElementById('status').value == 'COMPLETE') {
+    if (actionItemsCount => 1 && document.getElementById('status').value == 'COMPLETE') {
         if (confirm("Also mark the ticket as 'closed'?") == true) {
           document.getElementById('close_ticket_too').value = 'yes';
         } else {

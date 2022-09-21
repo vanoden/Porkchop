@@ -46,7 +46,7 @@
         // close the overall request_item here if 'yes' set to close the parent ticke (request item) as well
         if (isset($_REQUEST['close_ticket_too']) && !empty($_REQUEST['close_ticket_too'])) {        
             if ($_REQUEST['close_ticket_too'] == 'yes') {
-                $requestItem = new \Support\Request\Item($action->id);
+                $requestItem = new \Support\Request\Item($action->item->id);
                 $requestItem->update(array('status' => 'COMPLETE'));
             }
         }
