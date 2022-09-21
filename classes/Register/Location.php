@@ -92,9 +92,9 @@
 
         public function applyDefaultBillingAndShippingAddresses($organizationId, $locationId, $isDefaultBilling=false, $isDefaultShipping=false) {
         
-            if ($isDefaultBilling || $isDefaultShipping) {
+            if (!empty($isDefaultBilling)|| !empty($isDefaultShipping)) {
 			    $update_record_query = "
-				    UPDATE `register_organizations` SET default_billing_location_id= NULL AND default_shipping_location_id = NULL WHERE organization_id = ?;
+				    UPDATE `register_organizations` SET default_billing_location_id = NULL AND default_shipping_location_id = NULL WHERE id = ?;
 			    ";
 	            $bind_params = array($organizationId);
 	            query_log($update_record_query,$bind_params,true);
@@ -104,11 +104,11 @@
 		            return false;
 	            }
 
-	            if ($isDefaultBilling) {
+	            if (!empty($isDefaultBilling)) {
 			        $update_record_query = "
-				        UPDATE `register_organizations` SET default_billing_location_id = ? WHERE organization_id = ?;
+				        UPDATE `register_organizations` SET `default_billing_location_id` = ? WHERE id = ?;
 			        ";
-	                $bind_params = array($locationId. $organizationId);
+	                $bind_params = array($locationId, $organizationId);	                
 	                query_log($update_record_query,$bind_params,true);
 	                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
 	                if ($GLOBALS['_database']->ErrorMsg()) {
@@ -117,11 +117,11 @@
 	                }
 	            }
 	            
-	            if ($isDefaultShipping) {
+	            if (!empty($isDefaultShipping)) {
 			        $update_record_query = "
-				        UPDATE `register_organization_locations` SET default_shipping_location_id = ? WHERE organization_id = ?;
+				        UPDATE `register_organizations` SET `default_shipping_location_id` = ? WHERE id = ?;
 			        ";
-	                $bind_params = array($locationId. $organizationId);
+	                $bind_params = array($locationId, $organizationId);
 	                query_log($update_record_query,$bind_params,true);
 	                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
 	                if ($GLOBALS['_database']->ErrorMsg()) {
@@ -132,7 +132,6 @@
             }
             
             return true;
-
         }
         
 		public function province() {
