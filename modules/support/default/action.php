@@ -20,6 +20,7 @@
    }
 </style>
 <script>
+
    function showForm(form) {
    	var forms = ['event','assign'];
    	forms.forEach(function(form) {
@@ -29,12 +30,14 @@
    	formDiv.style.display = 'block';
    	return true;
    }
+   
    function hideForm(form) {
    	var formDiv = document.getElementById(form+'FormDiv');
    	formDiv.style.display = 'none';
    	return true;
    }
-   function confirmAddEvent(form) { 
+   
+   function confirmAddEvent(form) {
     var actionItemsCount = <?=$actionItemsCount?>;
     if (actionItemsCount > 1 && document.getElementById('status').value == 'COMPLETE') {
         if (confirm("Also mark the ticket as 'closed'?") == true) {
@@ -131,7 +134,7 @@
       </div>
    </div>
    <div class="toggleContainer" id="eventFormDiv">
-    <form name="eventForm" method="post" action="/_support/action">
+    <form id="eventForm" name="eventForm" method="post" action="/_support/action">
        <input type="hidden" name="action_id" value="<?=$action->id?>" />
        <h2>Add Event</h2>
        <div class="container_narrow">
@@ -174,7 +177,7 @@
     </form>
 </div>
 <div class="toggleContainer" id="assignFormDiv">
-   <form name="assignForm" method="post" action="/_support/action">
+   <form id="assignForm" name="assignForm" method="post" action="/_support/action">
       <input type="hidden" name="action_id" value="<?=$action->id?>" />
       <h2>Assign Action</h2>
       <div class="container">
@@ -221,7 +224,7 @@
     <?php
     }
     ?>
-    <form name="repoUpload" action="/_support/action/<?=$action->id?>" method="post" enctype="multipart/form-data">
+    <form id="repoUpload" name="repoUpload" action="/_support/action/<?=$action->id?>" method="post" enctype="multipart/form-data">
         <div class="container">
             <span class="label">Upload File</span>
             <input type="hidden" name="repository_name" value="<?=$repository?>" />

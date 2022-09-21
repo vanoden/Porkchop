@@ -1,7 +1,7 @@
 <?php
     namespace Site;
 	class CounterList Extends \BaseClass {
-		public function find($parameters = array('showCacheObjects' = true)) {
+		public function find($parameters = array('showCacheObjects' => true)) {
 			$keys = $GLOBALS['_CACHE_']->keys();
 			$filteredKeys = array();
 			if ($parameters['showCacheObjects'] == false) {
