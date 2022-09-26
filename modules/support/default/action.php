@@ -117,6 +117,34 @@
          <div class="tableCell"></div>
       </div>
    </div>
+   <?php
+   if (!empty($contactInfo)) {
+   ?>
+   <div class="tableBody min-tablet marginTop_20">
+      <div class="tableRowHeader">
+         <div class="tableCell"><?=$action->type?> Contact</div>
+         <div class="tableCell">Value</div>
+         <div class="tableCell">Notes</div>
+         <div class="tableCell">Description</div>
+         <div class="tableCell">Use this method?</div>
+      </div>
+        <?php
+        foreach ($contactInfo as $contactEntry) {
+        ?>
+              <div class="tableRow">
+                <div class="tableCell"><?=ucfirst($contactEntry->type)?></div>
+                <div class="tableCell"><?=$contactEntry->value?></div>
+                <div class="tableCell"><?=ucfirst($contactEntry->notes)?></div>
+                <div class="tableCell"><?=ucfirst($contactEntry->description)?></div>
+                <div class="tableCell"><?=($contactEntry->notify) ? "yes" : "no"?></div>    
+              </div>
+        <?php
+        }
+        ?>
+   </div>
+   <?php
+   }
+   ?>
    <div class="tableBody min-tablet marginTop_20">
       <div class="tableRowHeader">
          <div class="tableCell">Description</div>

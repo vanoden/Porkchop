@@ -137,3 +137,9 @@
 	if ($action->assignedTo->id) $assignedTo = $action->assignedTo->full_name();
 	else $assignedTo = "Unassigned";
 	if (! $action->description) $action->description = 'None provided';
+	
+	// if the action type is 'Contact Customer' or 'Remote Evaluation', display the contact information for the ticket requestor: email address, phone number, etc.
+    $contactList = new \Register\ContactList();
+    $contactInfo = array();
+    if ($action->type == "Contact Customer" || $action->type == "Remote Evaluation") $contactInfo = $contactList->find(array('user_id'=> $request->customer->id));
+	
