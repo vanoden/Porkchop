@@ -14,17 +14,9 @@ const configDict = JSON.parse(configJSON);
 
 const videoPath = configDict.videoPath;
 const docsPath = configDict.docsPath;
-//const staticVersion = today.getFullYear()+"."+month+"."+today.getDate()+"."+today.getHours()+"."+today.getMinutes();
-const staticVersion = "20220925";
-
-//const contentBlocks = fs.readFileSync('html.src/gulp_contentBlocks.js');
-
-htmlBlocks = {
-	"header": "header.html",
-	"footer": "footer.html",
-	"footer_monitor": "footer.monitor.html",
-	"header_2022": "header_2022.html"
-};
+const siteTitle = configDict.siteTitle;
+const staticVersion = today.getFullYear()+"."+month+"."+today.getDate()+"."+today.getHours()+"."+today.getMinutes();
+const htmlBlocks = configDict.htmlBlocks;
 
 html2process = {
 	"static_version": staticVersion,
@@ -65,7 +57,7 @@ gulp.task('pre', () =>
 				"docs_path": docsPath,
 				"header": fs.readFileSync(preProcessPath+'/header.html', 'utf8'),
 				"footer": fs.readFileSync(preProcessPath+'/footer.html', 'utf8'),
-				"title": 'Interscan Corporation'
+				"title": siteTitle
 			}
 		)))
 		.pipe(template().on('error',function(e){
