@@ -1131,6 +1131,13 @@
 		function getLocation() {
 
 		}
+
+        public function findPendingRegistrations() {
+            $queue = new \Register\Queue();
+            $parameters = array();
+
+            if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+        }
 		
 		public function _methods() {
 			return array(
