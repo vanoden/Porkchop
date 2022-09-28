@@ -84,8 +84,8 @@
 	<input type="text" name="zip_code" class="value input" value="<?=$location->zip_code?>" />
 </div>
 <div class="container">
-	<input type="checkbox" name="default_shipping" value="1" <?=(true) ? print "checked" : '';?> /> Default Shipping<br/>
-	<input type="checkbox" name="default_billing" value="1" <?=(true) ? print "checked" : '';?> /> Default Billing
+	<input type="checkbox" name="default_shipping" value="1" /> Default Shipping<br/>
+	<input type="checkbox" name="default_billing" value="1" /> Default Billing
 </div>
 <div class="form_footer">
 	<input type="submit" name="btn_submit" class="button" value="Save" />

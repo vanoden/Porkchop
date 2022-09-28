@@ -1,7 +1,7 @@
 <?php
     $page = new \Site\Page();
 	$page->fromRequest();
-	$page->requireRole('support user');
+	$page->requireAuth();
 	
     $productList = new \Product\ItemList();
 	$productsAvailable = $productList->find(array('type' => 'unique','status' => 'active'));

@@ -1,5 +1,7 @@
 <?php
 $page = new \Site\Page('site','counters');
+$page->requireRole('see site counters');
+
 $counterWatched = new \Site\CounterWatched();
 if (isset($_POST['action'])) {
     switch ($_POST['action']) {
@@ -27,5 +29,4 @@ if (isset($_POST['action'])) {
 $countersWatchedList = new \Site\CountersWatchedList();
 $countersWatchedList = $countersWatchedList->find();
 $counterList = new \Site\CounterList();
-$completeCounterList = $counterList->find();
-
+$completeCounterList = $counterList->find(array('showCacheObjects' => false));

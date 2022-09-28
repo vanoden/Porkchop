@@ -21,11 +21,6 @@
 	
 				$location->update($parameters);
 				if ($location->error()) $page->addError("Error updating location ".$location->id.": ".$location->error());
-				
-				// apply any default billing or shipping set
-				if ($_REQUEST['default_billing'] || $_REQUEST['default_shipping']) 
-				    $location->applyDefaultBillingAndShippingAddresses($_REQUEST['organization_id'], $location->id, isset($_REQUEST['default_billing']), isset($_REQUEST['default_shipping']));
-				
 			} else {
 				$parameters['name'] = $_REQUEST['name'];
 				$parameters['address_1'] = $_REQUEST['address_1'];
@@ -43,6 +38,10 @@
 					}
 				}
 			}
+			
+			// apply any default billing or shipping set
+			if (isset($_REQUEST['default_billing']) || isset($_REQUEST['default_shipping'])) $location->applyDefaultBillingAndShippingAddresses($_REQUEST['organization_id'], $location->id, isset($_REQUEST['default_billing']), isset($_REQUEST['default_shipping']));
+			
 			if ($page->errorCount() < 1) {
 				if (isset($_REQUEST['organization_id']) && ! $location->associateOrganization($_REQUEST['organization_id'])) $page->addError("Error associating organization: ".$location->error());
 				if (isset($_REQUEST['user_id']) && !$location->associateUser($_REQUEST['user_id'])) $page->addError("Error associating user: ".$location->error());

@@ -298,6 +298,13 @@
 					)
 				),
 				array(
+					"title"			=> "Dashboard",
+					"target"		=> "/_spectros/outstanding_requests",
+					"view_order"	=> 50,
+					"alt"			=> "Personal Dashboard",
+					"description"	=> "Personal Dashboard"
+				),
+				array(
 					"title"			=> "Packages",
 					"target"		=> "/_package/packages",
 					"view_order"	=> 80,

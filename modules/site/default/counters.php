@@ -24,7 +24,7 @@ if ($page->success) { ?>
     </div>
     <?php	
     $count = 0;
-    foreach ($countersWatchedList as $completeCounterListItem) { 
+    foreach ($countersWatchedList as $completeCounterListItem) {
     ?>
         <div class="tableRow">
             <div class="tableCell">

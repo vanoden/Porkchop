@@ -147,7 +147,7 @@
 				AND		login = ?";
 				array_push($bind_params,$parameters['code']);
 			}
-			if (isset($parameters['status'])) {
+			if (isset($parameters['status']) && !empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					$icount = 0;
 					$find_person_query .= "

@@ -3,6 +3,17 @@
         clear:both;
         padding-top: 20px;
     }
+    
+    .user_accounts_container {
+        margin-top: 50px; 
+        border: solid 1px #9a9a9a; 
+        padding:10px 10px 50px 10px;
+    }
+    
+    .member_status_expired, .member_status_hidden, .member_status_deleted, .member_status_blocked .tableCell{
+        color:#999;
+        font-style:italic;
+    }
 </style>
 
 <h2>Organization Details</h2>
@@ -12,6 +23,13 @@
 		window.location.href = "/_register/admin_location?organization_id="+organization_id;
 		return true;
 	}
+	
+	function showHidden() {
+		var organization_id = document.forms[0].organization_id.value;
+		window.location.href = "/_register/organization?organization_id="+organization_id+"&showAllUsers=<?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? '0' : '1'?>";
+		return true;
+	}
+	
 </script>
 <form name="orgDetails" method="POST">
 <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
@@ -81,64 +99,73 @@
 </div>
 <!--End first row-->
 
-<h3>Current Users</h3>
-<!--	Start First Row-->
-<?php	if ($organization->id) { ?>
-<div class="tableBody min-tablet">
-	<div class="tableRowHeader">
-		<div class="tableCell value" style="width: 20%;">Username</div>
-		<div class="tableCell value" style="width: 20%;">First Name</div>
-		<div class="tableCell value" style="width: 20%;">Last Name</div>
-		<div class="tableCell value" style="width: 10%;">Status</div>
-		<div class="tableCell value" style="width: 30%;">Last Active</div>
-	</div>
-<?php	foreach ($members as $member) {?>
-	<div class="tableRow">
-		<div class="tableCell">
-			<a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->login?></a>
-		</div>
-		<div class="tableCell">
-			<?=$member->first_name?>
-		</div>
-		<div class="tableCell">
-			<?=$member->last_name?>
-		</div>
-		<div class="tableCell">
-			<?=$member->status?>
-		</div>
-		<div class="tableCell">
-			<?=$member->last_active()?>
-		</div>
-	</div>
-<?php	} ?>
-</div>
-<!--End first row-->	
+<div class="user_accounts_container">
+    <?php
+        if ($organization->id) {
+    ?>
+        <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : ''?>> SHOW ALL (Expired/Hidden/Deleted)
+    <?php
+        }
+    ?>
+    <h3>Current Users</h3>
+    <!--	Start First Row-->
+    <?php	if ($organization->id) { ?>
+    <div class="tableBody min-tablet">
+	    <div class="tableRowHeader">
+		    <div class="tableCell value" style="width: 20%;">Username</div>
+		    <div class="tableCell value" style="width: 20%;">First Name</div>
+		    <div class="tableCell value" style="width: 20%;">Last Name</div>
+		    <div class="tableCell value" style="width: 10%;">Status</div>
+		    <div class="tableCell value" style="width: 30%;">Last Active</div>
+	    </div>
+    <?php	foreach ($members as $member) { ?>
+	    <div class="tableRow member_status_<?=strtolower($member->status)?>">
+		    <div class="tableCell">
+			    <a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->login?></a>
+		    </div>
+		    <div class="tableCell">
+			    <?=$member->first_name?>
+		    </div>
+		    <div class="tableCell">
+			    <?=$member->last_name?>
+		    </div>
+		    <div class="tableCell">
+			    <?=$member->status?>
+		    </div>
+		    <div class="tableCell">
+			    <?=$member->last_active()?>
+		    </div>
+	    </div>
+    <?php	} ?>
+    </div>
+    <!--End first row-->	
 
-<h3>Automation Users</h3>
-<!--	Start First Row-->
-<?php	if ($organization->id) { ?>
-<div class="tableBody min-tablet">
-	<div class="tableRowHeader">
-		<div class="tableCell value" style="width: 20%;">Username</div>
-		<div class="tableCell value" style="width: 10%;">Status</div>
-		<div class="tableCell value" style="width: 30%;">Last Active</div>
-	</div>
-<?php	foreach ($automationMembers as $member) { ?>
-	<div class="tableRow">
-		<div class="tableCell">
-			<a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->login?></a>
-		</div>
-		<div class="tableCell">
-			<?=$member->status?>
-		</div>
-		<div class="tableCell">
-			<?=$member->last_active()?>
-		</div>
-	</div>
-<?php	} ?>
+    <h3>Automation Users</h3>
+    <!--	Start First Row-->
+    <?php	if ($organization->id) { ?>
+    <div class="tableBody min-tablet">
+	    <div class="tableRowHeader">
+		    <div class="tableCell value" style="width: 20%;">Username</div>
+		    <div class="tableCell value" style="width: 10%;">Status</div>
+		    <div class="tableCell value" style="width: 30%;">Last Active</div>
+	    </div>
+    <?php	foreach ($automationMembers as $member) { ?>
+	    <div class="tableRow member_status_<?=strtolower($member->status)?>">
+		    <div class="tableCell">
+			    <a href="/_register/admin_account?customer_id=<?=$member->id?>"><?=$member->login?></a>
+		    </div>
+		    <div class="tableCell">
+			    <?=$member->status?>
+		    </div>
+		    <div class="tableCell">
+			    <?=$member->last_active()?>
+		    </div>
+	    </div>
+    <?php	} ?>
+    </div>
+    <!--End first row-->
+    <?php	} ?>
 </div>
-<!--End first row-->
-<?php	} ?>
 
 <h3>Add Organization Tag</h3>
 <div class="tableBody min-tablet">

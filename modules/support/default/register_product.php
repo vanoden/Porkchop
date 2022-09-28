@@ -84,7 +84,7 @@ if (!$page->error) {
             <span class="label">Date Purchased</span>
             <input type="text" id="purchased" name="purchased" placeholder="MM/DD/YYYY" value="<?=$purchased?>">
             <i class="fa fa-truck" aria-hidden="true"></i> Distributor
-            <input type="text" id="distributor" name="distributor" placeholder="e.g. univar / airmet.com" value="<?=$distributor?>">
+            <input type="text" id="distributor" name="distributor" value="<?=$distributor?>">
          </div>
 	    <div style="padding-top: 10px;">
 	        <?php

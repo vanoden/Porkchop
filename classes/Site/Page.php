@@ -593,7 +593,7 @@
                     $fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
             }
 		    app_log ( "Loading view " . $this->view() . " of module " . $this->module(), 'debug', __FILE__, __LINE__ );
-		    if (file_exists ( $be_file )) {
+		    if (isset($be_file) && file_exists ( $be_file )) {
 				// Load Backend File
                 $res = include($be_file);
 
@@ -618,7 +618,7 @@
 				}
             }
 		    else app_log ( "Backend file '$be_file' for module " . $this->module() . " not found" );
-            if (file_exists ( $fe_file )) include ($fe_file);
+            if (isset($fe_file) && file_exists ( $fe_file )) include ($fe_file);
 		    $buffer .= ob_get_clean ();
             return $buffer;
         }
