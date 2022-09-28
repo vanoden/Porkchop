@@ -5,6 +5,7 @@ const debug = require('gulp-debug');
 const fs = require('fs');
 
 var preProcessPath = 'html.src/pre';
+var postProcessPath = 'tmp';
 var today = new Date();
 var month = today.getMonth() + 1;
 
@@ -13,7 +14,8 @@ const configDict = JSON.parse(configJSON);
 
 const videoPath = configDict.videoPath;
 const docsPath = configDict.docsPath;
-const staticVersion = today.getFullYear()+"."+month+"."+today.getDate()+"."+today.getHours()+"."+today.getMinutes();
+//const staticVersion = today.getFullYear()+"."+month+"."+today.getDate()+"."+today.getHours()+"."+today.getMinutes();
+const staticVersion = "20220925";
 
 //const contentBlocks = fs.readFileSync('html.src/gulp_contentBlocks.js');
 
@@ -33,9 +35,9 @@ html2process = {
 };
 
 for (const key in htmlBlocks) {
-	if (fs.existsSync(preProcessPath+'/'+htmlBlocks[key])) {
+	if (fs.existsSync(postProcessPath+'/'+htmlBlocks[key])) {
 		console.log(key + ' found');
-		html2process[key] = fs.readFileSync(preProcessPath+'/'+htmlBlocks[key], 'utf8');
+		html2process[key] = fs.readFileSync(postProcessPath+'/'+htmlBlocks[key], 'utf8');
 	}
 	else {
 		console.log(key + ' NOT found');
@@ -55,22 +57,22 @@ gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico', 'dashbo
 );
 
 gulp.task('pre', () =>
-    gulp.src(preProcessPath+'/*.html')
-        .pipe(data(() => (
-            {
-                "static_version": staticVersion,
+	gulp.src(preProcessPath+'/*.html')
+		.pipe(data(() => (
+			{
+				"static_version": staticVersion,
 				"video_path": videoPath,
 				"docs_path": docsPath,
-                "header": fs.readFileSync(preProcessPath+'/header.html', 'utf8'),
-                "footer": fs.readFileSync(preProcessPath+'/footer.html', 'utf8'),
+				"header": fs.readFileSync(preProcessPath+'/header.html', 'utf8'),
+				"footer": fs.readFileSync(preProcessPath+'/footer.html', 'utf8'),
 				"title": 'Interscan Corporation'
-            }
-        )))
-        .pipe(template().on('error',function(e){
+			}
+		)))
+		.pipe(template().on('error',function(e){
 		console.log(e);
 	}))
-        .pipe(debug())
-		.pipe(gulp.dest('tmp'))
+	.pipe(debug())
+	.pipe(gulp.dest(postProcessPath))
 );
 
 gulp.task('js', () =>
