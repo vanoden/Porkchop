@@ -4,6 +4,15 @@ $config = array(
     "outpath"   => "html"
 );
 
+if (! file_exists($config['inpath'])) {
+	print "No input path found: ".getcwd()."/".$config['inpath']."\n";
+	exit(1);
+}
+
+if (! file_exists($config['outpath'])) {
+	mkdir($config['outpath'],0755);
+}
+
 $cache = array(
 	"companyCode"		=> "spectros",
 	"companyName"		=> "Spectros Instruments, Inc.",
