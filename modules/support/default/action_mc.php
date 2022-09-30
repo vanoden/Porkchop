@@ -16,7 +16,8 @@
 	if ($action->error()) $page->addError($action->error());
 	$item = $action->item;
 	$request = $item->request;
-
+    $date_calibration = date('m/d/Y H:i:s');
+    
 	// get number of other actions for current action
 	$actionList = new \Support\Request\Item\ActionList();
 	$actionItemsCount = 0;
@@ -42,6 +43,54 @@
 		} else {
 			$page->addError($action->error());
 		}
+
+        if ($action->type == 'Calibrate Unit') {
+
+            // Create Verification Record
+            $verification = new \Spectros\CalibrationVerification();
+            
+            if ($verification->error) {
+                app_error("Error initializing calibration verification: ".$verification->error,__FILE__,__LINE__);
+                $page->addError("Error recording calibration verification");
+                return;
+            }
+
+
+            // @TODO!  how can you get this asset from a serial number from item???
+
+            $verification->add(array("asset_id" => $asset->id,"date_request" => $date_calibration));
+            if ($verification->error) {
+                app_error("Error adding calibration verification: ".$verification->error,__FILE__,__LINE__);
+                $page->addError("Error recording calibration verification");
+            }
+
+            // Add Metadata to Verification Record
+            $verification->setMetadata("standard_manufacturer",$_REQUEST['standard_manufacturer']);
+            if ($verification->error) {
+                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
+            }
+            $verification->setMetadata("standard_concentration",$_REQUEST['standard_concentration']);
+            if ($verification->error) {
+                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
+            }
+            $verification->setMetadata("standard_expires",$_REQUEST['standard_expires']);
+            if ($verification->error) {
+                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
+            }
+            $verification->setMetadata("monitor_reading",$_REQUEST['monitor_reading']);
+            if ($verification->error) {
+                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
+            }
+            $verification->setMetadata("cylinder_number",$_REQUEST['cylinder_number']);
+            if ($verification->error) {
+                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
+            }
+            $verification->setMetadata("detector_voltage",$_REQUEST['detector_voltage']);
+            if ($verification->error) {
+                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
+            }
+            $verification->ready(); 
+        }
 
         // close the overall request_item here if 'yes' set to close the parent ticke (request item) as well
         if (isset($_REQUEST['close_ticket_too']) && !empty($_REQUEST['close_ticket_too'])) {        
@@ -142,4 +191,8 @@
     $contactList = new \Register\ContactList();
     $contactInfo = array();
     if ($action->type == "Contact Customer" || $action->type == "Remote Evaluation") $contactInfo = $contactList->find(array('user_id'=> $request->customer->id));
+    
+    
+    print_r($action);
+    
 	

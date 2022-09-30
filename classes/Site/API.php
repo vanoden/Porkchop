@@ -737,7 +737,33 @@
 	        $response->count = count($messages);
 			print $this->formatOutput($response);
 		}
+		
+        public function getAllSiteCounters() {
+            $response = new \HTTP\Response();
+            $counters = array();
+            $existingKeys = $GLOBALS['_CACHE_']->keys();
 
+            // foreach key that doesn't contain a bracket, add to the response of what can be watched as a public site counter
+            foreach ($existingKeys as $key) {
+                if (!preg_match('/\[|\]/', $key)) $counters[] = $key;
+            }
+			$response->success = $counters;
+			print $this->formatOutput($response);
+		}
+		
+		public function setAllSiteCounters() {
+            $existingKeys = $GLOBALS['_CACHE_']->keys();
+            $siteCounterWatched = new Site\CounterWatched();
+
+            // foreach key that doesn't contain a bracket, insert to the counters watched table
+            foreach ($existingKeys as $key) {
+                if (!preg_match('/\[|\]/', $key)) $siteCounterWatched->add(array('key' => $key, 'notes' => 'added via API:setAllSiteCounters()'));
+            }
+            $response = new \HTTP\Response();
+			$response->success = $GLOBALS['_CACHE_']->keys();
+			print $this->formatOutput($response);
+		}
+		
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
@@ -869,7 +895,9 @@
 				 'timestamp' => array(),
                  'search'	=> array(
                     'string' => array('required' => true)
-			     )
-			);
+			     ),
+			     'getAllSiteCounters' => array(),
+			     'setAllSiteCounters' => array()
+			);		
 		}
 	}
