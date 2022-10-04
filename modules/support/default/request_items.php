@@ -1,12 +1,12 @@
 <script src="/js/sort.js"></script>
 <script>
     // document loaded - start table sort
-    window.addEventListener('DOMContentLoaded', (event) => {
+    window.addEventListener('DOMContentLoaded', (event) => {     
         <?php
         $sortDirection = 'desc';
         if ($_REQUEST['sort_direction'] == 'desc') $sortDirection = 'asc';
         
-		switch ($parameters['sort_by']) {
+		switch ($parameters['sort_by']) {   
             case 'requested':
                 ?>
                 SortableTable.sortColumn('date-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
@@ -160,7 +160,7 @@
 		        <span class="value"><?=ucwords(strtolower($item->status))?></span>
 	        </div>
 	        <div class="tableCell">
-		        <span class="value"><a href="/_monitor/admin_details/<?=$item->product->code?>/<?=$item->serial_number?>"><?=$item->serial_number?></a></span>
+		        <span class="value"><a href="/_monitor/admin_details/<?=$item->serial_number?>/<?=$item->product->code?>"><?=$item->serial_number?></a></span>
 	        </div>
 	        <div class="tableCell">
 		        <span class="value"><a href="/_product/edit/<?=$item->product->code?>"><?=$item->product->code?></a></span>
@@ -173,9 +173,9 @@
 	        </div>
 	        <div class="tableCell">
 		        <span class="value">
-                    <?php	if (count($rmas) > 0) { ?>
-					    <a href="/_support/admin_rma/<?=$rmas[0]->code?>"><?=$rmas[0]->number()?></a>
-                    <?php 	} ?>
+<?php	if (count($rmas) > 0) { ?>
+					<a href="/_support/admin_rma/<?=$rmas[0]->code?>"><?=$rmas[0]->number()?></a>
+<?php 	} ?>
 				</span>
 	        </div>
         </div>
