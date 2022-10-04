@@ -4,10 +4,11 @@ const data = require('gulp-data');
 const debug = require('gulp-debug');
 const fs = require('fs');
 
-var preProcessPath = 'html.src/pre';
-var postProcessPath = 'tmp';
-var today = new Date();
-var month = today.getMonth() + 1;
+const ver = "0.9.1";
+const preProcessPath = 'html.src/pre';
+const postProcessPath = 'tmp';
+const today = new Date();
+const month = today.getMonth() + 1;
 
 const configJSON = fs.readFileSync('html.src/gulp_config.json');
 const configDict = JSON.parse(configJSON);
@@ -26,21 +27,24 @@ html2process = {
 	"company": configDict.companyCode
 };
 
-for (const key in htmlBlocks) {
-	if (fs.existsSync(postProcessPath+'/'+htmlBlocks[key])) {
-		console.log(key + ' found');
-		html2process[key] = fs.readFileSync(postProcessPath+'/'+htmlBlocks[key], 'utf8');
-	}
-	else {
-		console.log(key + ' NOT found');
-	} 
-}
 
-gulp.task('hello', function() {
-	console.log('Hello, Tony');
+gulp.task('evaluate', function() {
+	console.log('Starting gulp process');
+	console.log('preProcessPath: '+preProcessPath);
+	for (const key in htmlBlocks) {
+		if (fs.existsSync(preProcessPath+'/'+htmlBlocks[key])) {
+			console.log('Loading '+preProcessPath+'/'+htmlBlocks[key]);
+			html2process[key] = fs.readFileSync(preProcessPath+'/'+htmlBlocks[key], 'utf8');
+			html2process[key] = template(html2process);
+		}
+		else {
+			console.log(key + ' NOT found');
+		} 
+	}
+	console.log(html2process);
 });
 
-gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico', 'dashboards'], () =>
+gulp.task('process', ['evaluate','js','css','jpegs','pngs','svg','gif','ico', 'dashboards'], () =>
 	gulp.src('html.src/**/*.html')
 		.pipe(data(() => (html2process)))
 		.pipe(template())
@@ -50,16 +54,7 @@ gulp.task('process', ['pre','js','css','jpegs','pngs','svg','gif','ico', 'dashbo
 
 gulp.task('pre', () =>
 	gulp.src(preProcessPath+'/*.html')
-		.pipe(data(() => (
-			{
-				"static_version": staticVersion,
-				"video_path": videoPath,
-				"docs_path": docsPath,
-				"header": fs.readFileSync(preProcessPath+'/header.html', 'utf8'),
-				"footer": fs.readFileSync(preProcessPath+'/footer.html', 'utf8'),
-				"title": siteTitle
-			}
-		)))
+		.pipe(data(() => (htmlBlocks)))
 		.pipe(template().on('error',function(e){
 		console.log(e);
 	}))
