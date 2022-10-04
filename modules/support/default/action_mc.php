@@ -191,8 +191,3 @@
     $contactList = new \Register\ContactList();
     $contactInfo = array();
     if ($action->type == "Contact Customer" || $action->type == "Remote Evaluation") $contactInfo = $contactList->find(array('user_id'=> $request->customer->id));
-    
-    
-    print_r($action);
-    
-	

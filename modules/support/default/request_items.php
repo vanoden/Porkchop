@@ -1,12 +1,12 @@
 <script src="/js/sort.js"></script>
 <script>
     // document loaded - start table sort
-    window.addEventListener('DOMContentLoaded', (event) => {     
+    window.addEventListener('DOMContentLoaded', (event) => {
         <?php
         $sortDirection = 'desc';
         if ($_REQUEST['sort_direction'] == 'desc') $sortDirection = 'asc';
         
-		switch ($parameters['sort_by']) {   
+		switch ($parameters['sort_by']) {
             case 'requested':
                 ?>
                 SortableTable.sortColumn('date-sortable-column', '<?=($_REQUEST['sort_direction'] == 'desc') ? 'up': 'down';?>');
@@ -173,9 +173,9 @@
 	        </div>
 	        <div class="tableCell">
 		        <span class="value">
-<?php	if (count($rmas) > 0) { ?>
-					<a href="/_support/admin_rma/<?=$rmas[0]->code?>"><?=$rmas[0]->number()?></a>
-<?php 	} ?>
+                    <?php	if (count($rmas) > 0) { ?>
+					    <a href="/_support/admin_rma/<?=$rmas[0]->code?>"><?=$rmas[0]->number()?></a>
+                    <?php 	} ?>
 				</span>
 	        </div>
         </div>
