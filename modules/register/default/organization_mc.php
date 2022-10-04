@@ -7,7 +7,9 @@
 	###################################################
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customers');
-	
+
+	if (!empty($_REQUEST['id']) && empty($_REQUEST['organization_id'])) $_REQUEST['organization_id'] = $_REQUEST['id'];
+
 	# Security - Only Register Module Operators or Managers can see other customers
 	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
