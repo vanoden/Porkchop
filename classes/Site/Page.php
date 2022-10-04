@@ -80,19 +80,17 @@
         public function requirePrivilege($privilege) {
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
                 return true;
-            }
-            elseif ($GLOBALS['_SESSION_']->customer->can('do everything')) {
+            } elseif ($GLOBALS['_SESSION_']->customer->can('do everything')) {
                 return true;
-            }
-            elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+            } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit ();
-		    }
-            else {
+		    } else {
 			    header ( 'location: /_register/permission_denied' );
 			    exit ();
 		    }
         }
+        
 	    public function get($module, $view, $index = null) {
 		    $parameters = array ($module, $view );
 		    if (strlen ( $index ) < 1) $index = null;

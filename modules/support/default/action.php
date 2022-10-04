@@ -117,6 +117,53 @@
          <div class="tableCell"></div>
       </div>
    </div>
+   
+   <?php
+   // if we have a calibrate unit action, then show a quick form to add data
+   if ($action->type == 'Calibrate Unit') {
+   ?>   
+    <div class="tableBody min-tablet marginTop_20">
+      <div class="tableRowHeader">
+         <div class="tableCell">Unit Calibration</div>
+         <div class="tableCell">Value</div>
+      </div>
+      <div class="tableRow">
+         <div class="tableCell">Monitor</div>
+         <div class="tableCell"> <span class="value"><?=$item->serial_number?></span></div>
+      </div>
+      <div class="tableRow">
+         <div class="tableCell">Date</div>
+         <div class="tableCell"> <span class="value"><?=$date_calibration?></span></div>
+      </div>
+      <div class="tableRow">
+         <div class="tableCell">Standard Manufacturer</div>
+         <div class="tableCell"> <input type="text" name="standard_manufacturer" class="value input" /></div>
+      </div>
+      <div class="tableRow">
+         <div class="tableCell">Standard Concentration </div>
+         <div class="tableCell"> <input type="text" name="standard_concentration" class="value input" /></div>
+      </div>
+      <div class="tableRow">
+         <div class="tableCell">Standard Expires </div>
+         <div class="tableCell"> <input type="text" name="standard_expires" class="value input" /></div>
+      </div>
+      <div class="tableRow">
+         <div class="tableCell">Cylinder Number</div>
+         <div class="tableCell"> <input type="text" name="cylinder_number" class="value input" /></div>
+      </div>
+      <div class="tableRow">
+         <div class="tableCell">Monitor Reading</div>
+         <div class="tableCell"><input type="text" name="monitor_reading" class="value input" /></div>
+      </div>
+      <div class="tableRow">
+         <div class="tableCell">Detector Voltage </div>
+         <div class="tableCell"><input type="text" name="detector_voltage" class="value input" /></div>
+      </div>
+    </div>
+  <?php
+    }
+  ?>
+   
    <?php
    if (!empty($contactInfo)) {
    ?>

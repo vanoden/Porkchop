@@ -34,8 +34,10 @@ if ($page->success) { ?>
                 <input id="removeNotesExisting-<?=$count?>" type="text" readonly='readonly' value="<?=$completeCounterListItem->notes?>"/>
             </div>
            <div class="tableCell">
+                Cached Value: 
                 <?php
-    	            $siteCounter = new \Site\Counter($completeCounterListItem->key);
+                    $siteCounter = new \Site\Counter($completeCounterListItem->key);
+    	            print $siteCounter->get();
                 ?>
             </div>
             <div class="tableCell">

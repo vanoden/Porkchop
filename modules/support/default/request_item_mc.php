@@ -30,7 +30,7 @@
 		}
 	}
 	if ($_REQUEST['btn_reopen_item']) $item->update(array('status' => 'ACTIVE'));
-	if ($_REQUEST['btn_add_action']) {
+	if ($_REQUEST['btn_add_action'] || $_REQUEST['btn_add_edit_action']) {
 		$parameters = array(
 			'type'				=> $_REQUEST['action_type'],
 			'date_requested'	=> $_REQUEST['action_date_request'],
@@ -63,7 +63,7 @@
 				)
 			);
 			$message->html(true);
-			$assigned_to->notify($message);
+			$assigned_to->notify($message);		
 		}
 		
         // Update Customer an action has been created
@@ -79,6 +79,12 @@
             )
         );
         $notification->notify();
+        
+		// if they click add AND edit, the directly redirect to action
+		if ($_REQUEST['btn_add_edit_action']) {
+	        header("Location: /_support/action/".$action->id);
+            die();				
+		}	
 	}
 	
 	if ($_REQUEST['btn_add_rma']) {
@@ -148,6 +154,7 @@
 		}
 	}
 	if ($_REQUEST['btn_transfer_item']) {
+	    $transferItemErrors = false;
 		$organization = new \Register\Organization($_REQUEST['transfer_to']);
 		if ($organization->id) {
 			$parameters = array(
@@ -162,6 +169,7 @@
 			$action = $item->addAction($parameters);
 			if ($item->error()) {
 				$page->addError($item->error());
+				$transferItemErrors = true;
 			} else {
 				$page->success = "Action #".$action->id." added";
 			}
@@ -190,22 +198,36 @@
 				}
 				else {
 					$page->addError($asset->error());
+					$transferItemErrors = true;
 				}
 			}
 			else {
 				$page->addError($asset->error());
+				$transferItemErrors = true;
 			}
 		}
 		else {
 			$page->addError("Organization not found");
+			$transferItemErrors = true;
+		}
+		
+	    // if not errors, then redirect to the new action created	
+		if (!$transferItemErrors) {
+            header("Location: /_support/action/".$action->id);
+            die();				
 		}
 	}
+	
 	if ($_REQUEST['btn_add_shipment']) {
+	
+    	$shipItemErrors = false;
 		$shipment = new \Shipping\Shipment($_REQUEST['shipment_id']);
 		if ($shipment->error()) {
 			$page->addError($shipment->error());
+			$shipItemErrors = true;
 		} elseif (! $shipment->id) {
 			$page->addError("Shipment not found");
+			$shipItemErrors = true;
 		} else {
 			$parameters = array(
 				'user_id'		=> $GLOBALS['_SESSION_']->customer->id,
@@ -214,21 +236,30 @@
 			$item->addToShipment($parameters);
 			if ($item->error()) {
 				$page->addError("Unable to associate shipment: ".$item->error());
+				$shipItemErrors = true;
 			} else {
 				$page->success = "Item ready for pickup";
 			}
 		}
+		
+		if (!$shipItemErrors) {
+            header("Location: /_shipping/admin_shipment/id=".$shipment->id);
+            die();				
+		}
 	}
 	
-	if ($_REQUEST['btn_add_comment']) {
+	if ($_REQUEST['btn_add_comment'] || $_REQUEST['btn_add_private_comment']) {
 		$parameters = array(
 			'author_id'	=> $GLOBALS['_SESSION_']->customer->id,
 			'content'	=> $_REQUEST['content'],
 			'status'	=> $_REQUEST['action_status']
 		);
+		
+		if ($_REQUEST['btn_add_private_comment']) $parameters['private'] = 1;	
 		$item->addComment($parameters);
 		if ($item->error()) $page->addError("Unable to add comment: ".$item->error());
 	}
+	
 	if (isset($_REQUEST['btn_submit'])) {
 		$item->update(
 			array(

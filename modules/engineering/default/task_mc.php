@@ -419,7 +419,7 @@
 	$peopleList = new \Register\CustomerList();
 	if (isset($peoplelist->error)) $page->addError($peoplelist->error);
 	$people = $peopleList->find(array("status" => array('NEW','ACTIVE'), 'automation' => 0));
-	
+
 	$role = new \Register\Role();
 	$role->get("engineering user");
 	$assigners = $techs = $role->members();

@@ -30,17 +30,17 @@
 		<div class="tableCell">
 			<select name="organization_id" class="value input">
 				<option value="">All</option>
-<?php	foreach ($organizations as $organization) { ?>
-				<option value="<?=$organization->id?>"<?php	if ($organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
-<?php	} ?>
+                <?php	foreach ($organizations as $organization) { ?>
+				    <option value="<?=$organization->id?>"<?php	if ($organization->id == $_REQUEST['organization_id']) print " selected"; ?>><?=$organization->name?></option>
+                <?php	} ?>
 			</select>
 		</div>
 		<div class="tableCell">
 			<select name="product_id" class="value input">
 				<option value="">All</option>
-<?php	foreach ($products as $product) { ?>
-				<option value="<?=$product->id?>"<?php	if ($product->id == $_REQUEST['product_id']) print " selected";?>><?=$product->code?></option>
-<?php	} ?>
+                <?php	foreach ($products as $product) { ?>
+				    <option value="<?=$product->id?>"<?php	if ($product->id == $_REQUEST['product_id']) print " selected";?>><?=$product->code?></option>
+                <?php	} ?>
 			</select>
 		</div>
 		<div class="tableCell">
@@ -112,8 +112,6 @@
         <i>no items</i>
     </div>
 <?php	
-        } 
-    
+        }
 ?>
-
 </div>

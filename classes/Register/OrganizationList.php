@@ -102,33 +102,43 @@
 			
 			$this->error = null;
 			$get_organizations_query = "
-				SELECT	id
-				FROM	register_organizations
-				WHERE	id = id
+				SELECT	ro.id
+				FROM	register_organizations ro
 			";
 			
 			$bind_params = array();
+
+			// add searched Tag Join
+			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) $get_organizations_query .= " INNER JOIN register_tags rt ON rt.register_id = ro.id ";
+			$get_organizations_query .= " WHERE	ro.id = ro.id ";
+			
+			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) {
+				$get_organizations_query .= " AND rt.name = ? ";
+				array_push($bind_params,$parameters['searchedTag']);
+				$get_organizations_query .= " AND rt.type = 'ORGANIZATION' ";
+			}
+			
 			if (isset($parameters['name'])) {
 				if (isset($parameters['_like']) && in_array("name",$parameters['_like'])) {
 					$get_organizations_query .= "
-					AND		name like '%".preg_replace('/[^\w\-\.\_\s]/','',$parameters['name'])."%'";
+					AND		ro.name like '%".preg_replace('/[^\w\-\.\_\s]/','',$parameters['name'])."%'";
 				} else {
 					$get_organizations_query .= "
-					AND		name = ?";
+					AND		ro.name = ?";
 					array_push($bind_params,$parameters['name']);
 				}
 			}
 
 			if (isset($parameters['code'])) {
 				$get_organizations_query .= "
-				AND		code = ?";
+				AND		ro.code = ?";
 				array_push($bind_params,$parameters['code']);
 			}
 
 			if (isset($parameters['status']) && is_array($parameters['status'])) {
 				$icount = 0;
 				$get_organizations_query .= "
-				AND	status IN (";
+				AND	ro.status IN (";
 				foreach ($parameters['status'] as $status) {
 					if ($icount > 0) $get_organizations_query .= ","; 
 					$icount ++;
@@ -138,34 +148,28 @@
 				$get_organizations_query .= ")";
 			} elseif (isset($parameters['status'])) {
 				$get_organizations_query .= "
-				AND		status = ?";
+				AND		ro.status = ?";
 				array_push($bind_params,$parameters['status']);
 			} else
 				$get_organizations_query .= "
-				AND		status IN ('NEW','ACTIVE')";
+				AND		ro.status IN ('NEW','ACTIVE')";
 
 			if (isset($parameters['is_reseller'])) {
 				if ($parameters['is_reseller'])
 					$get_organizations_query .= "
-					AND		is_reseller = 1";
+					AND		ro.is_reseller = 1";
 				else
 					$get_organizations_query .= "
-					AND		is_reseller = 0";
+					AND		ro.is_reseller = 0";
 			}
 			if (isset($parameters['reseller_id'])) {
 				$get_organizations_query .= "
-				AND		reseller_id = ?";
+				AND		ro.reseller_id = ?";
 				array_push($bind_params,$parameters['reseller_id']);
 			}
 
-			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) {
-				$get_organizations_query .= "
-				AND		id in (SELECT id FROM register_tags where name = ?)";
-				array_push($bind_params,$parameters['searchedTag']);
-			}
-
 			$get_organizations_query .= "
-				ORDER BY name
+				ORDER BY ro.name
 			";
 			
 			if (isset($parameters['_limit']) and preg_match('/^\d+$/',$parameters['_limit'])) {

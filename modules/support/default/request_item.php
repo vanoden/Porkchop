@@ -107,7 +107,7 @@
 		<?php	if ($asset->id) { ?>
 		        <input type="button" name="btn_transfer_item" class="button secondary" value="Transfer Device" onclick="showForm('transfer');" />
 		<?php	} ?>
-		        <input type="button" name="btn_ship_item" class="button secondary" value="Ship Product" onclick="showForm('shipping');" />
+		        <input type="button" name="btn_ship_item" class="button secondary" value="Ship Device" onclick="showForm('shipping');" />
 		        <input type="button" name="btn_add_note" class="button secondary" value="Add Comment" onclick="showForm('comment');" />
         <?php	if ($item->status == 'CLOSED') { ?>
 		        <input type="submit" name="btn_reopen_item" class="button" value="Reopen Item" />
@@ -200,6 +200,7 @@
 		<div class="form_footer">
 			<input type="button" name="btn_cancel_action" value="Cancel" class="button" onclick="hideForm('action');" />
 			<input type="submit" name="btn_add_action" value="Add Action" class="button" />
+			<input type="submit" name="btn_add_edit_action" value="Add &amp; Edit Action" class="button" />
 		</div>
 		</form>
 	</div>
@@ -297,6 +298,7 @@
 			<div class="button-bar">
 				<input type="button" name="btn_cancel_comment" value="Cancel" class="button" onclick="hideForm('comment');" />
 				<input type="submit" name="btn_add_comment" value="Add Comment" class="button" />
+				<input type="submit" name="btn_add_private_comment" value="Add Private Comment" class="button" />
 			</div>
 		</div><!-- END Table -->
 			
@@ -462,11 +464,16 @@
     </div>
 <?php		} ?>
 </div>
-<?php	} ?>
-<?php	if (is_array($comments) && count($comments) > 0) { ?>
+<?php	}
+
+// filter out the private comments
+$canSeePrivate = $GLOBALS['_SESSION_']->customer->can('can see private comments');
+if (is_array($comments) && count($comments) > 0) { ?>
     <!--	Start Request Item-->
     <h3>Comments</h3>
-    <?php		foreach ($comments as $comment) { ?>
+    <?php		foreach ($comments as $comment) { 
+        if (!$canSeePrivate && $comment->private) continue;
+    ?>
     <div class="tableBody min-tablet">
 	    <div class="tableRowHeader">
 		    <div class="tableCell" style="width: 60%;">Date Entered</div>
