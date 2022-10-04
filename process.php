@@ -24,7 +24,7 @@ $cache = array(
 
 $files = scandir($config['inpath']."/pre");
 foreach ($files as $file) {
-	if (preg_match('/^([\w\-\_]+)\.html/',$file,$matches)) {
+	if (preg_match('/^([\w\-\_\.]+)\.html/',$file,$matches)) {
 		$key = $matches[1];
 		$contents = file_get_contents($config['inpath']."/pre/$file");
 		$cache[$key] = $contents;
