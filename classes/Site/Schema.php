@@ -339,6 +339,26 @@
 				$this->setVersion(13);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+			if ($this->version() < 14) {
+			
+				$create_table_query = "
+                    CREATE TABLE IF NOT EXISTS `site_headers`(
+                        id  int(11) NOT NULL AUTO_INCREMENT,
+                        name    varchar(32) NOT NULL,
+                        value   varchar(256) NOT NULL,
+                        PRIMARY KEY `pk_id` (`id`),
+                        UNIQUE KEY `uk_name` (`name`)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error altering site_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(14);
+				$GLOBALS['_database']->CommitTrans();
+			}
 		
 			return true;
 		}
