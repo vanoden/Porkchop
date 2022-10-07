@@ -13,7 +13,7 @@
 			"schema"	=> 3,
 		),
 		"Site"			=> array(
-			"schema"	=> 12,
+			"schema"	=> 13,
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
@@ -47,7 +47,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 26,
+			"schema"		=> 27,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -99,7 +99,7 @@
 			"schema"	=> 2,
             "privileges"    => array(
                 "can create email",
-		"see email api"
+		        "see email api"
             )
 		),
 		"Action"		=> array(
