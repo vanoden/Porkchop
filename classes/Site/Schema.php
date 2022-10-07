@@ -349,6 +349,7 @@
                         value   varchar(256) NOT NULL,
                         PRIMARY KEY `pk_id` (`id`),
                         UNIQUE KEY `uk_name` (`name`)
+                    )
 				";
 				if (! $this->executeSQL($create_table_query)) {
 					$this->error = "SQL Error altering site_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;

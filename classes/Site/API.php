@@ -763,7 +763,50 @@
 			$response->success = $GLOBALS['_CACHE_']->keys();
 			print $this->formatOutput($response);
 		}
-		
+
+        public function addSiteHeader() {
+            $header = new \Site\Header();
+            $parameters = array(
+                "name"  => $_REQUEST['name'],
+                "value" => $_REQUEST['value']
+            );
+
+            $header->add($parameters);
+            $response = new \HTTP\Response();
+            $response->success = true;
+            $response->header = $header;
+            print $this->formatOutput($response);
+        }
+
+        public function getSiteHeader() {
+            $header = new \Site\Header();
+            if (!$header->get($_REQUEST['name'])) $this->error($header->error());
+            $response = new \HTTP\Response();
+            $response->success = 1;
+            $response->header = $header;
+            print $this->formatOutput($response);
+        }
+
+        public function updateSiteHeader() {
+            $header = new \Site\Header();
+            if (!$header->get($_REQUEST['name'])) $this->error($header->error());
+            $header->update(array("value" => $_REQUEST['value']));
+            $response = new \HTTP\Response();
+            $response->success = 1;
+            $response->header = $header;
+            print $this->formatOutput($response);
+        }
+
+        public function findSiteHeaders() {
+            $headerList = new \Site\HeaderList();
+            $headers = $headerList->find();
+            if ($headerList->error()) error($headerList->error());
+            $response = new \HTTP\Response();
+            $response->success = 1;
+            $response->header = $headers;
+            print $this->formatOutput($response);
+        }
+
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
@@ -897,7 +940,22 @@
                     'string' => array('required' => true)
 			     ),
 			     'getAllSiteCounters' => array(),
-			     'setAllSiteCounters' => array()
+			     'setAllSiteCounters' => array(),
+                 'addSiteHeader' => array(
+                    'name'  => array('required' => true),
+                    'value' => array('required' => true)
+                 ),
+                 'getSiteHeader' => array(
+                    'name'  => array('required' => true)
+                 ),
+                 'updateSiteHeader' => array(
+                    'name'  => array('required' => true),
+                    'value' => array('required' => true)
+                 ),
+                 'findSiteHeaders' => array(
+                    'name'  => array('required' => true),
+                    'value' => array('required' => true)
+                 )
 			);		
 		}
 	}

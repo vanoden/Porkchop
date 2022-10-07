@@ -19,7 +19,7 @@
             while (list($id) = $rs->FetchRow()) {
                 $this->_count ++;
                 $header = new \Site\Header($id);
-                push($array,$header);
+                array_push($array,$header);
             }
             return $array;
         }

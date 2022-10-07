@@ -2,6 +2,9 @@
 	namespace Site;
 
 	class Header Extends \BaseClass {
+        public $name;
+        public $value;
+
 		public function __construct($id = null) {
 			if (!empty($id)) {
 				$this->id = $id;
@@ -34,7 +37,7 @@
 			";
 			$GLOBALS['_database']->Execute($add_object_query,array($params['name'],$params['value']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database_']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -61,13 +64,30 @@
 			return $this->details();
 		}
 
+        public function get($name) {
+            $get_object_query = "
+                SELECT  id
+                FROM    site_headers
+                WHERE   name = ?
+            ";
+            $rs = $GLOBALS['_database']->Execute($get_object_query,array($name));
+            query_log($get_object_query,array($name),true);
+            if (! $rs) {
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
+                return false;
+            }
+            list($id) = $rs->FetchRow();
+            $this->id = $id;
+            return $this->details();
+        }
+
 		public function details() {
 			$get_object_query = "
 				SELECT	*
 				FROM	site_headers
 				WHERE	id = ?";
 			
-			$rs = $GLOBALS['_database']->Execute($get_oject_query,array($this->id));
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
