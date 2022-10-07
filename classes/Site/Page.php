@@ -251,6 +251,7 @@
 		}
 
 		public function load_template() {
+            $this->loadSiteHeaders();
 			$template = $this->template();
 			if (isset ( $template ) && file_exists(HTML."/".$template)) return $this->parse(file_get_contents(HTML."/".$template));
 			elseif (isset ($template)) app_log("Template ".HTML."/".$template." not found!",'error');
@@ -578,6 +579,13 @@
 		    }
 		    return $buffer;
 	    }
+        public function loadSiteHeaders() {
+            $headerList = new \Site\HeaderList();
+            $headers = $headerList->find();
+            foreach ($headers as $header) {
+                header($header->{name}.": ".$header->{value});
+            }
+        }
         public function loadViewFiles($buffer = "") {
 		    ob_start ();
             if (isset($this->style)) {
