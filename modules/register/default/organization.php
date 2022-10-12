@@ -66,7 +66,7 @@
 		</div>
 		<div class="tableCell">
 			<select name="status" id="organizationStatusValue" class="wide_100per">
-				<?php		foreach (array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED") as $status) { ?>
+				<?php		foreach ($statii as $status) { ?>
 				<option value="<?=$status?>"<?php	if ($status == $organization->status) print " selected"; ?>><?=$status?></option>
 				<?php		} ?>
 			</select>
