@@ -1,6 +1,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script src="/js/monitor.js"></script>
+<script src="/js/geography.js"></script>
 <script type="text/javascript">
 
 // validate email from user
@@ -134,6 +135,34 @@ function checkRegisterProduct(){
   }
 }
 
+function getProvinces() {
+	var countryElem = document.getElementById('country_id');
+	var provinceElem = document.getElementById('province_id');
+
+	var length = provinceElem.options.length;
+	for (var i = length - 1; i >= 0; i--) {
+		provinceElem.remove(i);
+	}
+
+	var country = Object.create(Country);
+	console.log("Country ID: "+countryElem.value);
+	country.id = countryElem.value;
+	if (country.id > 0) {
+		country.load();
+		var provinces = country.getProvinces();
+		for(var i = 0; i < provinces.length; i ++) {
+			var option = document.createElement('option');
+			option.value =  provinces[i].id;
+			option.innerHTML = provinces[i].name;
+			provinceElem.appendChild(option);
+		}
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 </script>
 
 <?php
@@ -227,16 +256,28 @@ function checkRegisterProduct(){
     <h3>Business Address</h3>
     <ul class="form-grid four-col connectBorder">
       <li>
+        <label for="country_id">Country</label>
+        <select id="country_id" class="long-field" name="country_id" onChange="getProvinces()">
+		<?php	foreach($countries as $country) { ?>
+			<option value="<?=$country->id?>"<?php if ($country->id == $_REQUEST['country_id']) print " selected";?>><?= $country->name?></option>
+		<?php	} ?>
+		</select>
+      </li>
+      <li>
+        <label for="state">State/Region</label>
+        <select id="province_id" name="province_id">
+		<?php	foreach($provinces as $province) { ?>
+			<option value="<?=$province->id?>"<?php if ($province->id == $_REQUEST['province_id']) print " selected";?>><?= $province->name?></option>
+		<?php	} ?>
+		</select>
+      </li>
+      <li>
         <label for="address">Address</label>
         <input type="text" id="address" class="long-field" name="address" placeholder="" value="<?=!empty($_REQUEST['address']) ? $_REQUEST['address'] : "" ?>" maxlength="50" />
       </li>
       <li>
         <label for="city">City</label>
         <input type="text" id="city" name="city" placeholder="" value="<?=!empty($_REQUEST['city']) ? $_REQUEST['city'] : "" ?>" maxlength="50" />
-      </li>
-      <li>
-        <label for="state">State/Region</label>
-        <input type="text" id="state" name="state" placeholder="" value="<?=!empty($_REQUEST['state']) ? $_REQUEST['state'] : "" ?>" maxlength="10" />
       </li>
       <li>
         <label for="zip">Zip/Postal Code</label>
