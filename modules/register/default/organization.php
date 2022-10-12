@@ -30,6 +30,11 @@
 		return true;
 	}
 	
+	function submitDefaultLocation(type, value) {
+		var organization_id = document.forms[0].organization_id.value;
+		window.location.href = "/_register/organization?organization_id="+organization_id+"&" + type + "=" + value;
+		return true;
+	}	
 </script>
 <form name="orgDetails" method="POST">
 <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
@@ -219,14 +224,21 @@
 <!--	Start First Row-->
 <div class="tableBody min-tablet">
 	<div class="tableRowHeader">
+    	<div class="tableCell value" style="width: 5%;">Default Billing</div>
+    	<div class="tableCell value" style="width: 5%;">Default Shipping</div>
 		<div class="tableCell value" style="width: 20%;">Name</div>
 		<div class="tableCell value" style="width: 20%;">Address</div>
 		<div class="tableCell value" style="width: 20%;">City</div>
-		<div class="tableCell value" style="width: 20%;">Province</div>
-		<div class="tableCell value" style="width: 20%;">Region</div>
+		<div class="tableCell value" style="width: 20%;">Province/Region</div>
 	</div>
-<?php	foreach ($locations as $location) { ;?>
+<?php	foreach ($locations as $location) { ?>
 	<div class="tableRow">
+	    <div class="tableCell">
+    	    <input type="radio" name="default_billing_location_id" <?php if ($organization->default_billing_location_id == $location->id) echo "checked='checked'"; ?> value="<?=$location->id?>" onclick="submitDefaultLocation('setDefaultBilling',<?=$location->id?>)">
+	    </div>
+	    <div class="tableCell">	    	
+    	    <input type="radio" name="default_shipping_location_id" <?php if ($organization->default_shipping_location_id == $location->id) echo "checked='checked'"; ?> value="<?=$location->id?>" onclick="submitDefaultLocation('setDefaultShipping',<?=$location->id?>)">
+	    </div>
 		<div class="tableCell">
 			<a href="/_register/admin_location?organization_id=<?=$organization->id?>&id=<?=$location->id?>"><?=$location->name?></a>
 		</div>
@@ -237,9 +249,7 @@
 			<?=$location->city?>
 		</div>
 		<div class="tableCell">
-			<?=$location->province()->name?>
-		</div>
-		<div class="tableCell">
+			<?=$location->province()->name?><br/>
 			<?=$location->province()->country()->name?>
 		</div>
 	</div>

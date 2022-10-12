@@ -1,4 +1,5 @@
 <style>
+
    .event-log-description {
         background-color: white;
         min-width: 75%; 
@@ -9,6 +10,7 @@
         border-radius: 5px; 
         height: 50px;
    }
+   
    div.container {	width: 100%; clear: both;	}
    div.toggleContainer {	width: 100%; clear: both; display: none; }
    pre {
@@ -18,6 +20,27 @@
         white-space: -o-pre-wrap;
         word-wrap: break-word;
    }
+   
+   .center {
+        margin: auto;
+        width: 50%;
+        border: 2px solid black;
+        padding: 30px;
+        position: absolute;
+        top: 295px;
+        left: 100px;
+        background: white;
+        z-index: 10;
+   }
+   
+   .modalBackground {
+        background: #00000080;
+        min-width: 100%;
+        min-height: 100%;
+        position: absolute;
+        left: -10px;
+   }
+   
 </style>
 <script>
 
@@ -37,21 +60,46 @@
    	return true;
    }
    
+   function showConfirmModal() {
+    var modalDialog = document.getElementById('modalDialog');
+    var modalBackground = document.getElementById('modalBackground');
+    modalDialog.style.display = "block";
+    modalBackground.style.display = "block";
+   }
+   
+   function hideConfirmModal() {
+    modalDialog.style.display = "none";
+    modalBackground.style.display = "none";
+   }
+   
    function confirmAddEvent(form) {
     var actionItemsCount = <?=$actionItemsCount?>;
     if (actionItemsCount == 1 && document.getElementById('status').value == 'COMPLETE') {
-        if (confirm("This Ticket has only one Action, press OK to also close this Action AND the Ticket, press Cancel to only close this action.") == true) {
-          document.getElementById('close_ticket_too').value = 'yes';
-        } else {
-          document.getElementById('close_ticket_too').value = 'no';
-        }
+        showConfirmModal();
+    } else {
+        var addEventForm = document.getElementById(form);
+        addEventForm.submit();
     }
-   	var addEventForm = document.getElementById(form);
-   	addEventForm.submit();
-   	return true;
+    return true;
    }
    
+   function closeTicketToo(form,answer) {
+    document.getElementById('close_ticket_too').value = answer;
+    var addEventForm = document.getElementById(form);
+    addEventForm.submit();
+   }
+     
 </script>
+
+<div id="modalBackground" class="modalBackground" style="display:none;"></div>
+<div id="modalDialog" class="center" style="display:none;">
+    This Ticket has only one Action, also mark <strong>Ticket</strong> as <strong>complete</strong>?<br/>
+    <br/>    
+    <button onclick="closeTicketToo('eventForm','yes');">YES</button>
+    <button onclick="closeTicketToo('eventForm','no');">NO</button> | 
+    <button onclick="hideConfirmModal();">Cancel</button>
+</div>
+
 <form name="action_form" method="post" action="/_support/action">
    <input type="hidden" name="action_id" value="<?=$action->id?>" />
    <div style="width: 756px;">
@@ -161,10 +209,7 @@
       </div>
     </div>
   <?php
-    }
-  ?>
-   
-   <?php
+   } 
    if (!empty($contactInfo)) {
    ?>
    <div class="tableBody min-tablet marginTop_20">
@@ -326,11 +371,11 @@
    </tr>
    <tr>
       <th colspan="3">Description</th>
-   <tr>
-   <td colspan="3">	    
-     <pre><?=strip_tags($event->description)?></pre>
-   </td>
-   </tr>
+       <tr>
+           <td colspan="3">	    
+             <pre><?=strip_tags($event->description)?></pre>
+           </td>
+       </tr>
    </tr>
 </table>
 <?php	}  ?>
