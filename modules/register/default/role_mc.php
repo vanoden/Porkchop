@@ -3,7 +3,7 @@
 	$page->requirePrivilege('manage customers');
 
 	# Identify Specified Role if possible
-    if ($_REQUEST['id']) {
+    if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
 		$role = new \Register\Role($_REQUEST['id']);
 		if (! $role->id) $page->addError("Role &quot;".$_REQUEST['id']."&quot; not found");
 	}
@@ -14,7 +14,7 @@
 			if (isset($_REQUEST['btn_submit'])) {
 				$role->add(array(
 					"name" => $_REQUEST['name'],
-					"description" => $_REQUEST['description']
+					"description" => noXSS(trim($_REQUEST['description']))
 				));
 			}
 			else {
