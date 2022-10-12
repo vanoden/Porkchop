@@ -21,8 +21,7 @@
 			$organization->get($code);
 			if (! $organization->id) $GLOBALS['_page']->error = "Customer not found";
 		} else $organization = new \Register\Organization();
-	}
-	else $organization = $GLOBALS['_SESSION_']->customer->organization;
+	} else $organization = $GLOBALS['_SESSION_']->customer->organization;
 
     // handle form submit
 	if ($_REQUEST['method']) {
@@ -44,7 +43,7 @@
 				app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
 				app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
 				
-				# Update Existing Organization
+				// Update Existing Organization
 				$organization->update($parameters);
 
 				if ($organization->error) {
@@ -52,6 +51,7 @@
 				} else {
 					$page->success = "Organization Updated Successfully";
 				}
+				
 				if ($_REQUEST['new_login']) {
 					$present_customer = new \Register\Customer();
 
@@ -141,6 +141,30 @@
 		if ($organization->error) {
 			$page->addError("Error finding automation members: ".$organization->error);
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
+		}
+		
+		// Update Existing Organization default billing
+		if (isset($_REQUEST['setDefaultBilling']) && !empty($_REQUEST['setDefaultBilling'])) {
+		    $updateParameters = array();
+		    $updateParameters['default_billing_location_id'] = $_REQUEST['setDefaultBilling'];
+		    $organization->update($updateParameters);
+		    if ($organization->error) {
+			    $page->addError("Error updating organization");
+		    } else {
+			    $page->success = "Organization Updated Successfully";
+		    }		
+		}
+		
+		// Update Existing Organization default shipping
+        if (isset($_REQUEST['setDefaultShipping']) && !empty($_REQUEST['setDefaultShipping'])) {
+		    $updateParameters = array();
+		    $updateParameters['default_shipping_location_id'] = $_REQUEST['setDefaultShipping'];
+		    $organization->update($updateParameters);
+		    if ($organization->error) {
+			    $page->addError("Error updating organization");
+		    } else {
+			    $page->success = "Organization Updated Successfully";
+		    }
 		}
 	}
     
