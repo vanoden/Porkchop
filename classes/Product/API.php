@@ -455,16 +455,14 @@
 					$organization->get($_REQUEST['organization_code']);
 					if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 					$parameters['organization_id'] = $organization->id;
-				}
-				else {
+				} else {
 					app_log("Unauthorized attempt to access instances from another organization",'notice',__FILE__,__LINE__);
-				 $this->error("Permission Denied");
+				    $this->error("Permission Denied");
 				}
 			}
 			elseif(! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
-			}
-			else {
+			} else {
 				# Privileges support access
 			}
 	

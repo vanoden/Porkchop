@@ -51,6 +51,7 @@
 <style type="text/css"></style>
 <h2>My Account</h2>
 <form name="register" action="<?=PATH?>/_register/account" method="POST">
+    <?=$cSRFService->insertHiddenField()?>
 	<input type="hidden" name="target" value="<?=$target?>"/>
 	<input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
 	<?php if ($page->error) { ?>
@@ -181,6 +182,7 @@
 
 <!-- hidden for for "delete contact" -->
 <form id="delete-contact" name="delete-contact" action="<?=PATH?>/_register/account" method="post">
+    <?=$cSRFService->insertHiddenField()?>
    <input type="hidden" id="submit-type" name="submit-type" value="delete-contact"/>
    <input type="hidden" id="register-contacts-id" name="register-contacts-id" value=""/>
 </form>
