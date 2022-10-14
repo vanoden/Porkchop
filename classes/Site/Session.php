@@ -296,6 +296,11 @@
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
 					if (! isset($session->csrfToken)) $session->csrfToken = $this->generateCSRFToken();
 					$this->csrfToken = $session->csrfToken;
+                    if (! isset($session->csrfToken)) {
+                        $session->csrfToken = $this->generateCSRFToken();
+	                    $this->csrfToken = $session->csrfToken;
+                        $cache->set($session,600);
+                    }
 					$this->_cached = 1;
 					return $this->code;
 				}
