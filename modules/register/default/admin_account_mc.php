@@ -9,9 +9,11 @@
 	$page = new \Site\Page(array("module" => 'register',"view" => 'account'));
 	$page->requirePrivilege('manage customers');
 	
-	// Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
-	$cSRFService = new \HTTP\CSRFService($_REQUEST, $GLOBALS['_CACHE_'], $_SERVER);
-    if(isset($_POST) && !empty($_POST) && !$cSRFService->validateRequest()) $cSRFService->redirectUnauthorized();
+    // Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
+	if (isset($_POST) && !empty($_POST) && ! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+		$page->addError("Invalid request");
+		return 403;
+	}
 
 	if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/',$_REQUEST['customer_id'])) $customer_id = $_REQUEST['customer_id'];
 	elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
