@@ -97,16 +97,13 @@
 				if ($this->id) {
 					app_log("Loaded session ".$this->id.", customer ".$this->customer->id,'debug',__FILE__,__LINE__);
 					$this->timestamp($this->id);
-				}
-				else {
+				} else {
 					app_log("Session $request_code not available or expired, deleting cookie for ".$this->domain->name,'notice',__FILE__,__LINE__);
 					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST'],false,true);
 				}
-			}
-			elseif (isset($request_code)) {
+			} elseif (isset($request_code)) {
 				app_log("Invalid session code '$request_code' sent from client",'notice',__FILE__,__LINE__);
-			}
-			else {
+			} else {
 				app_log("No session code sent from client",'debug',__FILE__,__LINE__);
 			}
 
@@ -117,6 +114,7 @@
 
 			# Authentication
 			if (isset($_REQUEST['login']) && ! preg_match('/_register/',$_SERVER['REQUEST_URI']) && (! $this->customer->id)) {
+			
 				# Initialize Vars
 				$login = '';
 				$password = '';
@@ -162,8 +160,7 @@
 				WHERE	id = ".$this->id;
 
 			$GLOBALS['_database']->Execute($end_session_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Site::Session::end(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
@@ -297,8 +294,6 @@
 					$this->super_elevation_expires = $session->super_elevation_expires;
 					$this->oauth2_state = $session->oauth2_state;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
-					if (! isset($session->csrfToken)) $session->csrfToken = $this->generateCSRFToken();
-					$this->csrfToken = $session->csrfToken;
 					$this->_cached = 1;
 					return $this->code;
 				}
@@ -338,7 +333,6 @@
 				$this->last_hit_date = $session->last_hit_date;
 				$this->super_elevation_expires = $session->super_elevation_expires;
 				$this->oauth2_state = $session->oauth2_state;
-				$this->csrfToken = $this->generateCSRFToken();
 
                 require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/Mobile_Detect.php';
                 $detect = new \Mobile_Detect;
@@ -465,6 +459,7 @@
 		}
 
 		function update ($parameters) {
+		
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
@@ -634,12 +629,15 @@
             return true;
         }
 
-		private function generateCSRFToken() {
-			$data = bin2hex(openssl_random_pseudo_bytes(32));
-			return htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
-		}
-
-		private function getCSRFToken() {
-			return $this->csrfToken();
+        public function verifyCSRFToken($csrfToken) {
+            return ($this->csrfToken == $csrfToken);
+        }
+        
+		public function getCSRFToken() {
+		    if (empty($this->csrfToken)) {
+                $data = bin2hex(openssl_random_pseudo_bytes(32));
+                $this->csrfToken = htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
+		    }
+			return $this->csrfToken;
 		}
 	}
