@@ -294,7 +294,6 @@
 					$this->super_elevation_expires = $session->super_elevation_expires;
 					$this->oauth2_state = $session->oauth2_state;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
-					if (! isset($session->csrfToken)) $session->csrfToken = $this->generateCSRFToken();
 					$this->csrfToken = $session->csrfToken;
                     if (! isset($session->csrfToken)) {
                         $session->csrfToken = $this->generateCSRFToken();
