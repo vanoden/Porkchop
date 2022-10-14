@@ -17,6 +17,10 @@
 	}
 	app_log($GLOBALS['_SESSION_']->customer->login." accessing account of customer ".$customer_id,'notice',__FILE__,__LINE__);
 
+    // Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
+    $cSRFService = new \HTTP\CSRFService($_REQUEST, $GLOBALS['_CACHE_'], $_SERVER);
+    if(isset($_POST) && !empty($_POST) && !$cSRFService->validateRequest()) $cSRFService->redirectUnauthorized();
+
 	#######################################
 	### Handle Actions					###
 	#######################################

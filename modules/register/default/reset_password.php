@@ -32,6 +32,7 @@
 <?php return; } ?>
 <section id="reg_form" class="body">
 	<form name="loginForm" method="post" action="<?=PATH?>/_register/reset_password">
+	<?=$cSRFService->insertHiddenField()?>
 <?php
 	if (! $GLOBALS['_SESSION_']->superElevated()) { ?>
 	<h3>Enter current password</h3>

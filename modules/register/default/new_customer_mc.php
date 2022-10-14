@@ -14,6 +14,10 @@
 	$page->captchaPassed = true;
 	global $_config;
 	
+    // Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
+    $cSRFService = new \HTTP\CSRFService($_REQUEST, $GLOBALS['_CACHE_'], $_SERVER);
+    if(isset($_POST) && !empty($_POST) && !$cSRFService->validateRequest()) $cSRFService->redirectUnauthorized();
+	
 	// handle form submit	
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "register") {
 	

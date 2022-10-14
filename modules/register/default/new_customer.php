@@ -155,6 +155,7 @@ function checkRegisterProduct(){
         <h3>Account could not be verified</h3>
         <h5>Please check your <strong>spam / other</strong> mail folders in case you still need to find the correct verification link.</h5>
         <form name="register" action="/_register/new_customer" method="POST">
+            <?=$cSRFService->insertHiddenField()?>
             <input type="hidden" name="method" value="resend">
             <input type="hidden" name="login" value="<?=$_REQUEST['login'];?>">
             <input type="submit" class="button" value="Resend Email" style="height: 35px; width: 190px;">
@@ -174,6 +175,9 @@ function checkRegisterProduct(){
 
 <section>
   <form name="register" action="/_register/new_customer" method="POST">
+  
+    <?=$cSRFService->insertHiddenField()?>
+    
     <input type="hidden" name="method" value="register">
     <ul class="connectBorder infoText">
       <li><r7_page.message id=100></li>
