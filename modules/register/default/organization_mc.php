@@ -8,6 +8,9 @@
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customers');
 
+	// Valid Organization Statuses
+	$statii = array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED");
+
 	if (!empty($_REQUEST['id']) && empty($_REQUEST['organization_id'])) $_REQUEST['organization_id'] = $_REQUEST['id'];
 
 	# Security - Only Register Module Operators or Managers can see other customers
@@ -28,14 +31,23 @@
 		$page->success = $_REQUEST['method'];
 		if (! $_REQUEST['name']) {
 			$page->addError("Name required");
-		} else {
+		}
+		elseif (!in_array($_REQUEST['status'],$statii)) {
+			$page->addError("Invalid status");
+		}
+		elseif (!empty($_REQUEST['code']) && !preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['code'])) {
+			$page->addError("Invalid code");
+		}
+		else {
+			if (empty($_REQUEST['code'])) $_REQUEST['code'] = null;
+			if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
 			$parameters = array(
-				"name"					    => $_REQUEST['name'],
+				"name"					    => noXSS(trim($_REQUEST['name'])),
 				"code"					    => $_REQUEST['code'],
 				"status"				    => $_REQUEST['status'],
 				'is_reseller'			    => $_REQUEST['is_reseller'],
 				"assigned_reseller_id"	    => $_REQUEST['assigned_reseller_id'],
-				"notes"					    => $_REQUEST['notes'],
+				"notes"					    => noXSS($_REQUEST['notes']),
 				"password_expiration_days"	=> $_REQUEST['password_expiration_days']
 			);
 			if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;

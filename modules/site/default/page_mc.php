@@ -6,7 +6,13 @@
 	if ($index == '[null]') $index = null;
 
 	$editPage = new \Site\Page();
-	if ($editPage->get($_REQUEST['module'],$_REQUEST['view'],$index)) {
+	if (! preg_match('/^\w[\w\-\.\_]*$/',$_REQUEST['module'])) {
+		$page->addError("Invalid module name");
+	}
+	elseif (! preg_match('/^\w[\w\-\.\_]*$/',$_REQUEST['view'])) {
+		$page->addError("Invalid view name");
+	}
+	elseif ($editPage->get($_REQUEST['module'],$_REQUEST['view'],$index)) {
 		if ($_REQUEST['key'] == "template" && !preg_match('/^[\w\-\.\_]+$/',$_REQUEST['value'])) {
 			$page->addError("Invalid template name");
 			return;

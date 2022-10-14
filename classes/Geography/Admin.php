@@ -1,7 +1,7 @@
 <?php
 	namespace Geography;
 
-	class Admin {
+	class Admin extends \BaseClass {
 		public $id;
 		public $_error;
 
@@ -98,6 +98,8 @@
 		}
 
 		public function get($country_id,$name) {
+			if (strlen($name) < 3) return $this->getByAbbreviation($country_id,$name);
+
 			$get_object_query = "
 				SELECT	id
 				FROM	geography_provinces
@@ -116,6 +118,22 @@
 				return $this->details();
 			}
 			return false;
+		}
+
+		public function getByAbbreviation($country_id,$abbrev) {
+			$get_object_query = "
+				SELECT	id
+				FROM	geography_provinces
+				WHERE	country_id = ?
+				AND		abbreviation = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($country_id,$abbrev));
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			list($this->id) = $rs->FetchRow();
+			return $this->details();
 		}
 		public function details() {
 			$get_object_query = "
@@ -145,9 +163,5 @@
 
 		public function country() {
 			return new \Geography\Country($this->country_id);
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

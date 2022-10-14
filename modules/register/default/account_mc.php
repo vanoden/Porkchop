@@ -38,8 +38,10 @@
 		app_log("Account form submitted",'debug',__FILE__,__LINE__);
 		$parameters = array();
 
-		if (isset($_REQUEST["first_name"])) 	$parameters['first_name']	= $_REQUEST["first_name"];
-		if (isset($_REQUEST["last_name"]))		$parameters['last_name']	= $_REQUEST["last_name"];
+		if (! validTimezone($_REQUEST['timezone'])) $_REQUEST['timezone'] = 'America/New_York';
+
+		if (isset($_REQUEST["first_name"])) 	$parameters['first_name']	= noXSS($_REQUEST["first_name"]);
+		if (isset($_REQUEST["last_name"]))		$parameters['last_name']	= noXSS($_REQUEST["last_name"]);
 		if (isset($_REQUEST["timezone"]))		$parameters['timezone']		= $_REQUEST["timezone"];
 		if (isset($_REQUEST["password"]) and ($_REQUEST["password"])) {
 			if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
@@ -137,7 +139,7 @@
 				$contact->update(
 					array(
 						"type"			=> $_REQUEST['type'][$contact_id],
-						"description"	=> $_REQUEST['description'][$contact_id],
+						"description"	=> noXSS($_REQUEST['description'][$contact_id]),
 						"value"			=> $_REQUEST['value'][$contact_id],
 						"notes"			=> $_REQUEST['notes'][$contact_id],
 						"notify"		=> $notify
@@ -159,7 +161,7 @@
 					array(
 						"person_id"		=> $customer_id,
 						"type"			=> $_REQUEST['type'][0],
-						"description"	=> $_REQUEST['description'][0],
+						"description"	=> noXSS($_REQUEST['description'][0]),
 						"value"			=> $_REQUEST['value'][0],
 						"notes"			=> $_REQUEST['notes'][0],
 						"notify"		=> $notify
