@@ -294,6 +294,8 @@
 					$this->super_elevation_expires = $session->super_elevation_expires;
 					$this->oauth2_state = $session->oauth2_state;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
+					if (! isset($session->csrfToken)) $session->csrfToken = $this->generateCSRFToken();
+					$this->csrfToken = $session->csrfToken;
 					$this->_cached = 1;
 					return $this->code;
 				}
@@ -632,12 +634,13 @@
         public function verifyCSRFToken($csrfToken) {
             return ($this->csrfToken == $csrfToken);
         }
+
+		private function generateCSRFToken() {
+			$data = bin2hex(openssl_random_pseudo_bytes(32));
+			return htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
+        }
         
-		public function getCSRFToken() {
-		    if (empty($this->csrfToken)) {
-                $data = bin2hex(openssl_random_pseudo_bytes(32));
-                $this->csrfToken = htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
-		    }
+		private function getCSRFToken() {
 			return $this->csrfToken;
 		}
 	}
