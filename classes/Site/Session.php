@@ -23,6 +23,7 @@
 		public $super_elevation_expires;
 		public $isMobile = false;
 		public $isRemovedAccount = false;
+		private $csrfToken;
 		private $cookie_name;
 		private $cookie_domain;
 		private $cookie_expires;
@@ -99,7 +100,7 @@
 				}
 				else {
 					app_log("Session $request_code not available or expired, deleting cookie for ".$this->domain->name,'notice',__FILE__,__LINE__);
-					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST']);
+					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST'],false,true);
 				}
 			}
 			elseif (isset($request_code)) {
@@ -247,7 +248,7 @@
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
 			# Set Session Cookie
-			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['HTTP_HOST'])) {
+			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['HTTP_HOST'],false,true)) {
 				app_log("New Session ".$this->id." created for ".$this->domain->id." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
 				app_log("Session Code ".$new_code,'debug',__FILE__,__LINE__);
 			}
@@ -296,6 +297,8 @@
 					$this->super_elevation_expires = $session->super_elevation_expires;
 					$this->oauth2_state = $session->oauth2_state;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
+					if (! isset($session->csrfToken)) $session->csrfToken = $this->generateCSRFToken();
+					$this->csrfToken = $session->csrfToken;
 					$this->_cached = 1;
 					return $this->code;
 				}
@@ -335,6 +338,7 @@
 				$this->last_hit_date = $session->last_hit_date;
 				$this->super_elevation_expires = $session->super_elevation_expires;
 				$this->oauth2_state = $session->oauth2_state;
+				$this->csrfToken = $this->generateCSRFToken();
 
                 require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/Mobile_Detect.php';
                 $detect = new \Mobile_Detect;
@@ -623,5 +627,19 @@
 				$this->update(array('oauth2_state' => $state));
 			}
 			return $this->oauth2_state;
+		}
+
+        public function unsetOAuthState() {
+            $this->update(array('oauth2_state' => ''));
+            return true;
+        }
+
+		private function generateCSRFToken() {
+			$data = bin2hex(openssl_random_pseudo_bytes(32));
+			return htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
+		}
+
+		private function getCSRFToken() {
+			return $this->csrfToken();
 		}
 	}
