@@ -1009,18 +1009,23 @@
 				// Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_billing_location_id` int NULL";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
+				$table = new \Database\Schema\Table('register_organizations');
+				if (! $table->has_column('default_billing_location_id')) {
+					$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_billing_location_id` int NULL";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
 				}
 
-				$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_shipping_location_id` int NULL;";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
+				if (! $table->has_column('default_shipping_location_id')) {
+					$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_shipping_location_id` int NULL;";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
 				}
 
 				$this->setVersion(27);
