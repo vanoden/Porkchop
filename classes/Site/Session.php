@@ -296,9 +296,9 @@
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
                     if (! isset($session->csrfToken)) {
                         $session->csrfToken = $this->generateCSRFToken();
-	                    $this->csrfToken = $session->csrfToken;
                         $cache->set($session,600);
                     }
+					$this->csrfToken = $session->csrfToken;
 					$this->_cached = 1;
 					return $this->code;
 				}
@@ -346,6 +346,9 @@
                     $this->isMobile = true;
                 else
                     $this->isMobile = false;
+
+				$session->csrfToken = $this->generateCSRFToken();
+				$this->csrfToken = $session->csrfToken;
 
 				if ($session->id) $cache->set($session,600);
 				return $session;
@@ -640,7 +643,8 @@
 
 		private function generateCSRFToken() {
 			$data = bin2hex(openssl_random_pseudo_bytes(32));
-			return htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
+			$token = htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
+			app_log("Generated token '$token'",'debug');
         }
         
 		private function getCSRFToken() {
