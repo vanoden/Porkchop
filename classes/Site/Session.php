@@ -638,7 +638,19 @@
         }
 
         public function verifyCSRFToken($csrfToken) {
-            return ($this->csrfToken == $csrfToken);
+			if (empty($csrfToken)) {
+				app_log("No csrfToken provided",'info');
+				return false;
+			}
+			if (empty($this->csrfToken)) {
+				app_log("No csrfToken exists for session",'info');
+				return false;
+			}
+			if ($this->csrfToken != $csrfToken) {
+				app_log("csrfToken provided doesn't match session",'info');
+				return false;
+			}
+			return true;
         }
 
 		private function generateCSRFToken() {
