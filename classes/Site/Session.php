@@ -647,7 +647,7 @@
 			app_log("Generated token '$token'",'debug');
         }
         
-		private function getCSRFToken() {
+		public function getCSRFToken() {
 			return $this->csrfToken;
 		}
 	}
