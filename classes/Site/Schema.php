@@ -360,6 +360,20 @@
 				$this->setVersion(14);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 15) {
+			
+				$alter_table_query = "
+                    ALTER TABLE `site_headers` modify `value` varchar(1024)
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering site_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(15);
+				$GLOBALS['_database']->CommitTrans();
+			}
 		
 			return true;
 		}
