@@ -294,7 +294,7 @@
 					$this->super_elevation_expires = $session->super_elevation_expires;
 					$this->oauth2_state = $session->oauth2_state;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
-                    if (! isset($session->csrfToken)) {
+                    if (empty($session->csrfToken)) {
                         $session->csrfToken = $this->generateCSRFToken();
                         $cache->set($session,600);
                     }
@@ -657,6 +657,7 @@
 			$data = bin2hex(openssl_random_pseudo_bytes(32));
 			$token = htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
 			app_log("Generated token '$token'",'debug');
+            return $token;
         }
         
 		public function getCSRFToken() {
