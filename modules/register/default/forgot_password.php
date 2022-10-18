@@ -27,6 +27,7 @@
 <section class="table-group">
    <form action="forgot_password" method="POST">
       <input type="hidden" name="action" value="submit">
+      <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
       <ul class="form-grid three-col copy_2">
 			  <li><label for="name">Your account email:</label><span class="value"><input id="autofocus" type="TEXT" name="email_address" SIZE="50" class="input"></span></li>
       </ul>

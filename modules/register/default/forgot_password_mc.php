@@ -45,7 +45,10 @@
 		if ($captcha_success->success == true) {
 			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
 
-			if (valid_email($_REQUEST['email_address'])) {
+            if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+                $page->addError("Invalid Request");
+            }
+			elseif (valid_email($_REQUEST['email_address'])) {
 				# Get User Info From Database
 				$contact = new \Register\Contact();
 				$contact->get('email',$_REQUEST['email_address']);
