@@ -765,6 +765,7 @@
 		}
 
         public function addSiteHeader() {
+            $this->requirePrivilege('manage site headers');
             $header = new \Site\Header();
             $parameters = array(
                 "name"  => $_REQUEST['name'],
@@ -788,6 +789,7 @@
         }
 
         public function updateSiteHeader() {
+            $this->requirePrivilege('manage site headers');
             $header = new \Site\Header();
             if (!$header->get($_REQUEST['name'])) $this->error($header->error());
             $header->update(array("value" => $_REQUEST['value']));
