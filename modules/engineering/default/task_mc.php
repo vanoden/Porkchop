@@ -518,7 +518,7 @@
 	}
 	
     // get the current title of the task that this task duplicates
-	$form['duplicate_task_name'] = '(none)';	
+	$form['duplicate_task_name'] = '(none)';
 	if (isset($form['duplicate_task_id'])) {
         $duplicateTask = new \Engineering\Task($form['duplicate_task_id']);
         $form['duplicate_task_name'] = $duplicateTask->title;
@@ -526,7 +526,7 @@
 	
     // get the current title of the task that this task prerequisites
 	$form['prerequisite_task_name'] = '(none)';	
-	if (isset($form['prerequisite_task_id'])) {
-        $prerequisiteTask = new \Engineering\Task($form['prerequisite_task_id']);
+	if (isset($form['prerequisite_id'])) {
+        $prerequisiteTask = new \Engineering\Task($form['prerequisite_id']);
         $form['prerequisite_task_name'] = $prerequisiteTask->title;
 	}

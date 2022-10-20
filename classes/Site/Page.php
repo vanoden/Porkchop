@@ -583,7 +583,7 @@
             $headerList = new \Site\HeaderList();
             $headers = $headerList->find();
             foreach ($headers as $header) {
-                header($header->{name}.": ".$header->{value});
+                header($header->name.": ".$header->value);
             }
         }
         public function loadViewFiles($buffer = "") {

@@ -1,6 +1,11 @@
 <?php
-
 	$page = new \Site\Page();
+
+    // Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
+	if (isset($_POST) && !empty($_POST) && ! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+		$page->addError("Invalid request");
+		return 403;
+	}
 
 	// See if we received a parseable token
 	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {

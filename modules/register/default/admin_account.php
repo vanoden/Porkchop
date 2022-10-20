@@ -76,6 +76,7 @@
 </script>
 <h2>Customer Account Settings</h2>
 <form name="register" action="<?=PATH?>/_register/admin_account" method="POST">
+   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
    <input type="hidden" name="target" value="<?=$target?>"/>
    <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
    <input type="hidden" name="login" value="<?=$customer->login?>"/>
@@ -292,6 +293,7 @@
 </form>
 <!-- hidden for for "delete contact" -->
 <form id="delete-contact" name="delete-contact" action="<?=PATH?>/_register/admin_account" method="post">
+   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
    <input type="hidden" id="submit-type" name="submit-type" value="delete-contact"/>
    <input type="hidden" id="register-contacts-id" name="register-contacts-id" value=""/>
 </form>

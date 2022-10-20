@@ -8,6 +8,9 @@
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customers');
 
+	// Valid Organization Statuses
+	$statii = array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED");
+
 	if (!empty($_REQUEST['id']) && empty($_REQUEST['organization_id'])) $_REQUEST['organization_id'] = $_REQUEST['id'];
 
 	# Security - Only Register Module Operators or Managers can see other customers
@@ -21,22 +24,30 @@
 			$organization->get($code);
 			if (! $organization->id) $GLOBALS['_page']->error = "Customer not found";
 		} else $organization = new \Register\Organization();
-	}
-	else $organization = $GLOBALS['_SESSION_']->customer->organization;
+	} else $organization = $GLOBALS['_SESSION_']->customer->organization;
 
     // handle form submit
 	if ($_REQUEST['method']) {
 		$page->success = $_REQUEST['method'];
 		if (! $_REQUEST['name']) {
 			$page->addError("Name required");
-		} else {
+		}
+		elseif (!in_array($_REQUEST['status'],$statii)) {
+			$page->addError("Invalid status");
+		}
+		elseif (!empty($_REQUEST['code']) && !preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['code'])) {
+			$page->addError("Invalid code");
+		}
+		else {
+			if (empty($_REQUEST['code'])) $_REQUEST['code'] = null;
+			if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
 			$parameters = array(
-				"name"					    => $_REQUEST['name'],
+				"name"					    => noXSS(trim($_REQUEST['name'])),
 				"code"					    => $_REQUEST['code'],
 				"status"				    => $_REQUEST['status'],
 				'is_reseller'			    => $_REQUEST['is_reseller'],
 				"assigned_reseller_id"	    => $_REQUEST['assigned_reseller_id'],
-				"notes"					    => $_REQUEST['notes'],
+				"notes"					    => noXSS($_REQUEST['notes']),
 				"password_expiration_days"	=> $_REQUEST['password_expiration_days']
 			);
 			if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
@@ -44,7 +55,7 @@
 				app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
 				app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
 				
-				# Update Existing Organization
+				// Update Existing Organization
 				$organization->update($parameters);
 
 				if ($organization->error) {
@@ -52,6 +63,7 @@
 				} else {
 					$page->success = "Organization Updated Successfully";
 				}
+				
 				if ($_REQUEST['new_login']) {
 					$present_customer = new \Register\Customer();
 
@@ -141,6 +153,30 @@
 		if ($organization->error) {
 			$page->addError("Error finding automation members: ".$organization->error);
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
+		}
+		
+		// Update Existing Organization default billing
+		if (isset($_REQUEST['setDefaultBilling']) && !empty($_REQUEST['setDefaultBilling'])) {
+		    $updateParameters = array();
+		    $updateParameters['default_billing_location_id'] = $_REQUEST['setDefaultBilling'];
+		    $organization->update($updateParameters);
+		    if ($organization->error) {
+			    $page->addError("Error updating organization");
+		    } else {
+			    $page->success = "Organization Updated Successfully";
+		    }		
+		}
+		
+		// Update Existing Organization default shipping
+        if (isset($_REQUEST['setDefaultShipping']) && !empty($_REQUEST['setDefaultShipping'])) {
+		    $updateParameters = array();
+		    $updateParameters['default_shipping_location_id'] = $_REQUEST['setDefaultShipping'];
+		    $organization->update($updateParameters);
+		    if ($organization->error) {
+			    $page->addError("Error updating organization");
+		    } else {
+			    $page->success = "Organization Updated Successfully";
+		    }
 		}
 	}
     

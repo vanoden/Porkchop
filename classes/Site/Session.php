@@ -23,6 +23,7 @@
 		public $super_elevation_expires;
 		public $isMobile = false;
 		public $isRemovedAccount = false;
+		private $csrfToken;
 		private $cookie_name;
 		private $cookie_domain;
 		private $cookie_expires;
@@ -96,16 +97,13 @@
 				if ($this->id) {
 					app_log("Loaded session ".$this->id.", customer ".$this->customer->id,'debug',__FILE__,__LINE__);
 					$this->timestamp($this->id);
-				}
-				else {
+				} else {
 					app_log("Session $request_code not available or expired, deleting cookie for ".$this->domain->name,'notice',__FILE__,__LINE__);
-					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST']);
+					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST'],false,true);
 				}
-			}
-			elseif (isset($request_code)) {
+			} elseif (isset($request_code)) {
 				app_log("Invalid session code '$request_code' sent from client",'notice',__FILE__,__LINE__);
-			}
-			else {
+			} else {
 				app_log("No session code sent from client",'debug',__FILE__,__LINE__);
 			}
 
@@ -116,6 +114,7 @@
 
 			# Authentication
 			if (isset($_REQUEST['login']) && ! preg_match('/_register/',$_SERVER['REQUEST_URI']) && (! $this->customer->id)) {
+			
 				# Initialize Vars
 				$login = '';
 				$password = '';
@@ -161,8 +160,7 @@
 				WHERE	id = ".$this->id;
 
 			$GLOBALS['_database']->Execute($end_session_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Site::Session::end(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
@@ -247,7 +245,7 @@
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
 			# Set Session Cookie
-			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['HTTP_HOST'])) {
+			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['HTTP_HOST'],false,true)) {
 				app_log("New Session ".$this->id." created for ".$this->domain->id." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
 				app_log("Session Code ".$new_code,'debug',__FILE__,__LINE__);
 			}
@@ -296,6 +294,11 @@
 					$this->super_elevation_expires = $session->super_elevation_expires;
 					$this->oauth2_state = $session->oauth2_state;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
+                    if (empty($session->csrfToken)) {
+                        $session->csrfToken = $this->generateCSRFToken();
+                        $cache->set($session,600);
+                    }
+					$this->csrfToken = $session->csrfToken;
 					$this->_cached = 1;
 					return $this->code;
 				}
@@ -343,6 +346,9 @@
                     $this->isMobile = true;
                 else
                     $this->isMobile = false;
+
+				$session->csrfToken = $this->generateCSRFToken();
+				$this->csrfToken = $session->csrfToken;
 
 				if ($session->id) $cache->set($session,600);
 				return $session;
@@ -461,6 +467,7 @@
 		}
 
 		function update ($parameters) {
+		
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
@@ -623,5 +630,37 @@
 				$this->update(array('oauth2_state' => $state));
 			}
 			return $this->oauth2_state;
+		}
+
+        public function unsetOAuthState() {
+            $this->update(array('oauth2_state' => ''));
+            return true;
+        }
+
+        public function verifyCSRFToken($csrfToken) {
+			if (empty($csrfToken)) {
+				app_log("No csrfToken provided",'info');
+				return false;
+			}
+			if (empty($this->csrfToken)) {
+				app_log("No csrfToken exists for session",'info');
+				return false;
+			}
+			if ($this->csrfToken != $csrfToken) {
+				app_log("csrfToken provided doesn't match session",'info');
+				return false;
+			}
+			return true;
+        }
+
+		private function generateCSRFToken() {
+			$data = bin2hex(openssl_random_pseudo_bytes(32));
+			$token = htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
+			app_log("Generated token '$token'",'debug');
+            return $token;
+        }
+        
+		public function getCSRFToken() {
+			return $this->csrfToken;
 		}
 	}

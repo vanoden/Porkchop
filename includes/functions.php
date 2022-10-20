@@ -366,6 +366,11 @@
 		return $string;
 	}
 
+	function validTimezone($string) {
+		if (in_array($string, DateTimeZone::listIdentifiers())) return true;
+		return false;
+	}
+
 	function prettyPrint( $json ) {
 		$result = '';
 		$level = 0;

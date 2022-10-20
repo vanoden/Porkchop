@@ -21,12 +21,17 @@
 			$target = $GLOBALS['_REQUEST_']->refererURI();
 			app_log("Return to ".$GLOBALS['_REQUEST_']->refererURI()." after login");
 		}
-	} elseif (isset($_POST['login_target']))
+	}
+	elseif (isset($_POST['login_target']))
 		# This is how the SHOULD come in from FORM submit
 		$target = $_POST['login_target'];
-	elseif(isset($_GET['target']))
+		if (!preg_match('/^[\/\w\-\.\_]+$/',$target)) $target = '';
+	elseif(isset($_GET['target'])) {
 		# Translate target
-		$target = urldecode($_GET["target"]);
+		$target = urldecode($_GET['target']);
+		# Validate target
+		if (!preg_match('/^[\/\w\-\.\_]+$/',$target)) $target = '';
+	}
 	elseif($GLOBALS['_config']->register->auth_target)
 		$target = $GLOBALS['_config']->register->auth_target;
 	if (! preg_match('/^\//',$target))
