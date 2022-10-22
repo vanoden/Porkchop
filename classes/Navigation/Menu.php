@@ -174,6 +174,12 @@
 		    }
 		    return $html;
 	    }
+
+        public function valid_code($code) {
+            if (preg_match('/^\w[\w\-\.\_\s]+$/',$code)) return true;
+            return false;
+        }
+
 	    public function error() {
 		    return $this->_error;
 	    }
