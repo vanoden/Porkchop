@@ -516,18 +516,21 @@ class Person Extends \BaseClass {
     }
     
     public function notify($message) {
-        # Make Sure We have identifed a person
+    
+        // Make Sure We have identifed a person
         if (!preg_match('/^\d+$/', $this->id)) {
             $this->error = "Customer not specified";
             return false;
         }
-        # Get Contact Info
+        
+        // Get Contact Info
         $contactList = new \Register\ContactList();
         $contacts = $contactList->find(array(
             "user_id" => $this->id,
             "type" => "email",
             "notify" => true
         ));
+        
         if ($contactList->error) {
             app_log("Error loading contacts: " . $contactList->error, 'error', __FILE__, __LINE__);
             $this->error = "Error loading contacts";
@@ -537,30 +540,22 @@ class Person Extends \BaseClass {
             app_log("Sending notifications to " . $contact->value, 'notice');
             $message->to($contact->value);
             $transport = \Email\Transport::Create(array(
-                'provider' => $GLOBALS['_config']
-                    ->email
-                    ->provider
+                'provider' => $GLOBALS['_config']->email->provider
             ));
             if (! isset($transport)) {
                 $this->error = "Error initializing email transport";
                 app_log("Message to " . $contact->value . " failed: " . $this->error, 'error');
                 return false;
             }
-            $transport->hostname($GLOBALS['_config']
-                ->email
-                ->hostname);
-            $transport->token($GLOBALS['_config']
-                ->email
-                ->token);
+            $transport->hostname($GLOBALS['_config']->email->hostname);
+            $transport->token($GLOBALS['_config']->email->token);
             if ($transport->deliver($message)) {
                 app_log("Message to " . $contact->value . " successful");
-            }
-            elseif ($transport->error()) {
+            } elseif ($transport->error()) {
                 $this->error = "Error sending notification: " . $transport->error();
                 app_log("Message to " . $contact->value . " failed: " . $this->error, 'error');
                 return false;
-            }
-            else {
+            } else {
                 $this->error = "Unhandled Error sending notification";
                 app_log("Message to " . $contact->value . " failed", 'error');
                 return false;
@@ -637,8 +632,7 @@ class Person Extends \BaseClass {
 		// Only Show If metadata key is in _settings array
 		if (! isset($this->_settings[$key])) return null;
 		
-		// We will add a metadata search here
-		// If no matching metadata, return default
+		// We will add a metadata search here, if no matching metadata, return default
 		return $this->_settings[$key];
 	}
 
