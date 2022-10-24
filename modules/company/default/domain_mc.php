@@ -17,27 +17,55 @@
 	$locations = $locationList->find();
 
 	if (isset($_REQUEST['btn_submit'])) {
-		$parameters = array(
-			"name"	=> $_REQUEST["domain_name"],
-			"registrar"	=> $_REQUEST["domain_registrar"],
-			"date_registered" => $_REQUEST["date_registered"],
-			"date_expires"	=> $_REQUEST["date_expires"],
-			"company_id" => $_REQUEST["company_id"],
-			"location_id" => $_REQUEST["location_id"],
-		);
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        else {
+            $company = new \Company\Company($_REQUEST['company_id']);
+            $location = new \Company\Location($_REQUEST['location_id']);
 
-		if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
-			if (! $domain->update($parameters)) {
-				$page->addError("Error updating domain");
-			}
-			$page->success = "Updated!";
-		}
-		else {
-			if(! $domain->add($parameters)) {
-				$page->addError("Error adding domain");
-			}
-			$page->success = "Added!";
-		}
+            if (empty($company->id)) {
+                $page->addError("Company not found");
+            }
+            elseif (empty($location_id)) {
+                $page->addError("Location not found");
+            }
+            elseif (! filter_var($_REQUEST["domain_name"],FILTER_VALIDATE_DOMAIN,array(FILTER_NULL_ON_FAILURE))) {
+                $page->addError("Invalid domain name");
+            }
+            elseif (! preg_match("/^\w[\w\-\.]+$/",$_REQUEST['domain_registrar'])) {
+                $page->addError("Invalid domain registrar name");
+            }
+            elseif (!empty($_REQUEST["date_registered"]) && ! get_mysql_date($_REQUEST["date_registered"])) {
+                $page->addError("Invalid date registered");
+            }
+            elseif (!empty($_REQUEST["date_expires"]) && ! get_mysql_date($_REQUEST["date_expires"])) {
+                $page->addError("Invalid date expires");
+            }
+            else {
+                $parameters = array(
+                    "name"	=> $_REQUEST["domain_name"],
+                    "registrar"	=> $_REQUEST["domain_registrar"],
+                    "date_registered" => $_REQUEST["date_registered"],
+                    "date_expires"	=> $_REQUEST["date_expires"],
+                    "company_id" => $_REQUEST["company_id"],
+                    "location_id" => $_REQUEST["location_id"],
+                );
+
+                if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
+                    if (! $domain->update($parameters)) {
+                        $page->addError("Error updating domain");
+                    }
+                    $page->success = "Updated!";
+                }
+                else {
+                    if(! $domain->add($parameters)) {
+                        $page->addError("Error adding domain");
+                    }
+                    $page->success = "Added!";
+                }
+            }
+        }
 	}
 
 	if ($domain->id) $domain_name = $domain->name;

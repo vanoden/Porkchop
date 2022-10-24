@@ -5,6 +5,7 @@
 <span class="form_success"><?=$page->success?></span>
 <?php	} ?>
 <form name="domain" method="post" action="/_company/domain">
+<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <input type="hidden" name="id" value="<?=$domain->id?>">
 <div class="label">Name</div>
 <input type="text" name="domain_name" class="value input" value="<?=$domain->name?>"/>

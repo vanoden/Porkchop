@@ -13,6 +13,7 @@
 <div class="form_error"><?=$page->errorString()?></div>
 <?php	} ?>
 <form name="menuForm" action="/_navigation/menu" method="post">
+<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <input type="hidden" name="id" value="<?=$menu->id?>" />
 <input type="hidden" name="delete" value="" />
 <div class="container">
