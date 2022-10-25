@@ -1,7 +1,7 @@
 <?php
 	namespace Product;
 
-	class Item {
+	class Item Extends \BaseClass {
 		public $id;
 		public $code;
 		public $name;
@@ -9,20 +9,9 @@
 		public $type;
 		public $status;
 		private $_flat = false;
-		public $_cached = 0;
-		private $_error;
 
 		public function __construct($id = 0,$flat = false) {
 			if ($flat) $this->_flat = true;
-			# Clear Error Info
-			$this->_error = '';
-
-			# Database Initialization
-			$schema = new Schema();
-			if ($schema->error) {
-				$this->_error = $schema->error;
-				return null;
-			}
 
 			if ($id) {
 				$this->id = $id;
@@ -38,7 +27,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_category_query);
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::defaultCategory(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -60,13 +49,13 @@
 				array($code)
 			);
             if (! $rs) {
-                $this->_error = "SQL Error in Product::Item::get(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return null;
             }
 			else {
 				list($this->id) = $rs->FetchRow();
 				if (! $this->id) {
-					$this->_error = "No Product Found";
+					$this->error("No Product Found");
 					return null;
 				}
 				return $this->details();
@@ -76,7 +65,7 @@
 		public function update($parameters) {
 			app_log("Product::Item::update()",'trace',__FILE__,__LINE__);
 			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
-				$this->_error = "You do not have permissions for this task.";
+				$this->error("You do not have permissions for this task.");
 				app_log($GLOBALS['_SESSION_']->customer->login." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
 				app_log(print_r($GLOBALS['_SESSION_'],true),'debug',__FILE__,__LINE__);
 				return false;
@@ -119,7 +108,7 @@
 				$update_product_query,$bind_params
 			);
             if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				app_log($update_product_query,'debug',__FILE__,__LINE__);
 				return null;
             }
@@ -128,30 +117,30 @@
 
 		public function add($parameters) {
 			app_log("Product::Item::add()",'trace',__FILE__,__LINE__);
+			$this->clearError();
 			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
-				$this->_error = "You do not have permissions for this task.";
+				$this->error("You do not have permissions for this task.");
 				app_log($GLOBALS['_SESSION_']->customer->login." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
 				app_log(print_r($GLOBALS['_SESSION_'],true),'debug',__FILE__,__LINE__);
 				return false;
 			}
-			$this->_error = '';
 
 			# Make Sure Minimum Parameters Sent
 			if (! $parameters['code']) {
-				$this->_error = "Code required to add product";
+				$this->error("Code required to add product");
 				return null;
 			}
 			if ($this->get($parameters['code'])) {
-				$this->_error = "Code '".$parameters['code']."' is not unique";
+				$this->error("Code '".$parameters['code']."' is not unique");
 				return null;
 			}
 			else {
 				# Hide error because no match found above
-				$this->_error = null;
+				$this->clearError();
 			}
 
 			if (! $parameters['type']) {
-				$this->_error = "Valid product type required";
+				$this->error("Valid product type required");
 				return null;
 			}
 
@@ -177,7 +166,7 @@
 				)
 			);
             if (! $rs) {
-                $this->_error = "SQL Error in Product::Item::add(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return null;
             }
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -194,7 +183,7 @@
 
 			# Cached Organization Object, Yay!
 			if (($this->id) and ($product = $cache_item->get())) {
-				$product->_cached = 1;
+				$product->_cached = true;
 				$this->id = $product->id;
 				$this->name = $product->name;
 				$this->code = $product->code;
@@ -213,11 +202,11 @@
 					return $product;
 				}
 				else {
-					$this->_error = "Product ".$this->id." returned unpopulated cache";
+					$this->error("Product ".$this->id." returned unpopulated cache");
 				}
 			}
 			else {
-				$this->_cached = 0;
+				$this->_cached = false;
 			}
 
 			# Prepare Query to Get Product Details
@@ -236,7 +225,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -269,7 +258,7 @@
 			# Get Parent ID
 			$parent = new \Product\Item($category_id);
 			if (! $parent->id) {
-				$this->_error = "Could not find category $category_id";
+				$this->error("Could not find category $category_id");
 				return false;
 			}
 
@@ -283,8 +272,8 @@
 			$bind_params = array($this->id,$parent->id);
 			$rs = $GLOBALS['_database']->Execute($in_category_query,$bind_params);
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::inCategory(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
 			}
 			list($found) = $rs->FetchRow();
 			if (! $found) $found = 0;
@@ -295,7 +284,7 @@
 			# Get Parent ID
 			$category = new \Product\Item($category_id);
 			if (! $category->id) {
-				$this->_error = "Could not find category $category_id";
+				$this->error("Could not find category $category_id");
 				return false;
 			}
 
@@ -313,7 +302,7 @@
 			$bind_params = array($this->id,$category->id);
 			$rs = $GLOBALS['_database']->Execute($to_category_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Product::Item::addToCategory(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -329,8 +318,8 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_image_query,array($this->id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::getImages(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
 			}
 
 			# Load MediaItem Class
@@ -338,7 +327,7 @@
 			while (list($image_id) = $rs->FetchRow()) {
 				$image = new \Media\Item($image_id);
 				if ($image->error) {
-					$this->_error = "Could not load Media Item class: ".$image->error;
+					$this->error("Could not load Media Item class: ".$image->error);
 					return null;
 				}
 				array_push($images,$image);
@@ -482,9 +471,4 @@
 			$price = new \Product\Price();
 			return $price->getCurrent($this->id);
         }
-
-		public function error($message = null) {
-			if (isset($message)) $this->_error = $message;
-			return $this->_error;
-		}
 	}
