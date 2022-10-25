@@ -1,6 +1,8 @@
 <?php
 	class BaseClass {
 		private $_error;
+		private $_exists = false;
+		public $_cached = false;
 
 		public function error($value = null) {
 			if (isset($value)) {
@@ -17,5 +19,14 @@
 			$classname = str_replace('\\','::',$class);
 			$method = $caller['function'];
 			return $this->error("SQL Error in ".$classname."::".$method."(): ".$message);
+		}
+
+		public function clearError() {
+			$this->_error = null;
+		}
+
+		public function exists($exists = null) {
+			if (is_bool($exists)) $this->_exists = $exists;
+			return $this->_exists();
 		}
 	}
