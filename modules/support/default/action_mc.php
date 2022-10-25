@@ -98,24 +98,36 @@
         }
 
         // close the overall request_item here if 'yes' set to close the parent ticke (request item) as well
-        if (isset($_REQUEST['close_ticket_too']) && !empty($_REQUEST['close_ticket_too'])) {        
+        if (isset($_REQUEST['close_ticket_too']) && !empty($_REQUEST['close_ticket_too'])) {
             if ($_REQUEST['close_ticket_too'] == 'yes') {
                 $requestItem = new \Support\Request\Item($action->item->id);
                 $requestItem->update(array('status' => 'COMPLETE'));
                 $supportRequest = new \Support\Request($requestItem->request_id);
 
-                // @TODO @Kevin Update Customer the ticket has been closed
-                // "[SUPPORT] A Ticket #" . $requestItem->id  . " on your request " . $supportRequest->code. " has been completed."
-
+                // Update Customer the ticket has been closed
+			    $message = new \Email\Message (
+				    array (
+					    'from'	=> 'service@spectrosinstruments.com',
+					    'subject'	=> "[SUPPORT] A Ticket #" . $requestItem->id  . " on your request " . $supportRequest->code. " has been completed.",
+					    'body'		=> "[SUPPORT] A Ticket #" . $requestItem->id  . " on your request " . $supportRequest->code. " has been completed."
+				    )
+			    );
+			    $message->html(true);
+                $request->customer->notify($message);
             }
         }
 
         // Event Occured Customer Ticket Notification
-        // @TODO @Kevin 
-        // "New Event for Request Action ".$request->code."-".$item->line."-".$action->id,
-        // 'An Event Action on your support request has been added.'
-        // $parameters['description']
-        // "https://" . $_config->site->hostname . "/_support/ticket/" . $item->ticketNumber()
+        $supportRequest = new \Support\Request($requestItem->request_id);
+	    $message = new \Email\Message (
+		    array (
+			    'from'	=> 'service@spectrosinstruments.com',
+			    'subject'	=> "[SUPPORT] An action #" . $action->item->id  . " on your request " . $supportRequest->code. " has been updated.",
+			    'body'		=> "[SUPPORT] An action #" . $action->item->id  . " on your request " . $supportRequest->code. " has been updated."
+		    )
+	    );
+	    $message->html(true);
+        $request->customer->notify($message);
 	}
 	
 	if (isset($_REQUEST['btn_assign_action'])) {

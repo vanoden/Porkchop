@@ -27,20 +27,27 @@
 		} else {
 			$item->update(array('status' => 'CLOSED'));
 			if ($item->error()) {
-                $page->addError($item->error());
-            } else {
-
-                // @TODO @Kevin
-                // Update Customer an action has been closed
+    			$page->addError($item->error());
+			} else {
+			
+		        // Update Customer an action has been closed
 		        if ($request->customer->id) {
 		            $supportRequest = new \Support\Request($item->request_id);
-                    // "[SUPPORT] A Ticket #" . $item->id  . " on your request " . $supportRequest->code. " has been completed."
-                }
 
-            }
-
+			        $message = new \Email\Message (
+				        array (
+					        'from'	=> 'service@spectrosinstruments.com',
+					        'subject'	=> "[SUPPORT] A Ticket #" . $item->id  . " on your request " . $supportRequest->code. " has been completed.",
+					        'body'		=> "[SUPPORT] A Ticket #" . $item->id  . " on your request " . $supportRequest->code. " has been completed."
+				        )
+			        );
+			        $message->html(true);
+                    $request->customer->notify($message); 
+		        }		        
+			}
 		}
 	}
+	
 	if ($_REQUEST['btn_reopen_item']) $item->update(array('status' => 'ACTIVE'));
 	if ($_REQUEST['btn_add_action'] || $_REQUEST['btn_add_edit_action']) {
 		$parameters = array(
@@ -82,23 +89,29 @@
 			$assigned_to->notify($message);		
 		}
 		
-        // Update Customer an action has been created
-        if ($request->customer->id) {
-            // @TODO @Kevin
-            // "[SUPPORT] Action #".$action->id." has been added to your Support Request."
-            /** "Request: ".$action->item->request->code."
+		// Update Customer an action has been created
+		if ($request->customer->id) {
+			$message = new \Email\Message (
+				array (
+					'from'	=> 'service@spectrosinstruments.com',
+					'subject'	=> "[SUPPORT] Action #".$action->id." has been added to your Support Request.",
+					'body'		=> "Request: ".$action->item->request->code."
                                     Item: ".$action->item->line."<br>
                                     Type: ".$action->type."<br>
                                     Product: ".$action->item->product->code."<br>
                                     Serial: ".$action->item->serial_number."<br>
-                                    Description: ".$action->description */
-        
-		    // if they click add AND edit, the directly redirect to action
-		    if ($_REQUEST['btn_add_edit_action'] && !empty($_REQUEST['btn_add_edit_action'])) {
-	            header("Location: /_support/action/".$action->id);
-                die();				
-		    }
-        }
+                                    Description: ".$action->description
+				)
+			);
+			$message->html(true);
+			$request->customer->notify($message);
+		}
+
+		// if they click add AND edit, the directly redirect to action
+		if ($_REQUEST['btn_add_edit_action'] && !empty($_REQUEST['btn_add_edit_action'])) {
+	        header("Location: /_support/action/".$action->id);
+            die();				
+		}	
 	}
 	
 	if ($_REQUEST['btn_add_rma']) {
@@ -279,12 +292,19 @@
 		);
 		if ($item->error()) $page->addError($item->error());
 
-        // @TODO @Kevin
-        // Update Customer an action has been created
-        if ($request->customer->id) {
-            // "[SUPPORT] Ticket #" . $request->code . " has been updated about your Support Request."
-            // "Serial: " . $_REQUEST['serial_number']."<br> Product ID: " . $_REQUEST['product_id']
-        }
+		// Update Customer an action has been created
+		if ($request->customer->id) {
+			$message = new \Email\Message (
+				array (
+					'from'	=> 'service@spectrosinstruments.com',
+					'subject'	=> "[SUPPORT] Ticket #" . $request->code . " has been updated about your Support Request.",
+					'body'		=> "Serial: " . $_REQUEST['serial_number']."<br>
+                                    Product ID: " . $_REQUEST['product_id']
+				)
+			);
+			$message->html(true);
+			$request->customer->notify($message);
+		}
 	}
 	
 	// upload files if upload button is pressed
