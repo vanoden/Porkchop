@@ -28,12 +28,6 @@
 		return false;
 	}
 
-	# Cleanup special chars in output to avoid XSS
-	function sanitize(&$string) {
-		$string = trim($string);
-		$string = htmlspecialchars($string);
-		return $string;
-	}
 	function get_mysql_date($date = null,$range=0) {
 		if (empty($date)) {
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
@@ -359,11 +353,24 @@
 		return preg_replace('/(\r\n)/','',preg_replace('/\t/',' ',$string));
 	}
 
+	# Cleanup special chars in output to avoid XSS
+	function sanitize(&$string) {
+		$string = trim($string);
+		$string = htmlspecialchars($string);
+		return $string;
+	}
+
 	# Trim Hexidecimal and HTML/XML tags from input
 	function noXSS($string) {
 		$string = preg_replace('/\%[a-f0-9]{2}/','',$string);
 		$string = preg_replace('/(\<|\>)/','',$string);
 		return $string;
+	}
+
+	# Check for basic token-like string
+	function safeToken($string) {
+		if (preg_match('/^[\w\-\.\_\s]{1,32}$/',$string)) return true;
+		return false;
 	}
 
 	function validTimezone($string) {
