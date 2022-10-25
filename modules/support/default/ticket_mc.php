@@ -19,7 +19,7 @@
 	}
 
 	if ($_REQUEST['btn_reopen_item']) $item->update(array('status' => 'ACTIVE'));
-	elseif ($_REQUEST['btn_close_item']) $item->update(array('status' => 'CLOSED'));
+	    elseif ($_REQUEST['btn_close_item']) $item->update(array('status' => 'CLOSED'));
 
 	if ($_REQUEST['btn_add_comment']) {
 		$parameters = array(

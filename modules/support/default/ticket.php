@@ -22,7 +22,7 @@
 <nav id="breadcrumb">
 	<ul>
 		<li><a href="/_support/tickets">All Tickets</a></li>
-		<li><a href="<?=$ticketLink?>" class="value">Ticket# <?=$item->id?></a></li>
+		<li><a href="<?=$ticketLink?>" class="value">Ticket #<?=$item->id?></a></li>
 	</ul>
 </nav>
 

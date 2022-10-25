@@ -26,7 +26,19 @@
 			$page->addError("Item has open actions!");
 		} else {
 			$item->update(array('status' => 'CLOSED'));
-			if ($item->error()) $page->addError($item->error());
+			if ($item->error()) {
+                $page->addError($item->error());
+            } else {
+
+                // @TODO @Kevin
+                // Update Customer an action has been closed
+		        if ($request->customer->id) {
+		            $supportRequest = new \Support\Request($item->request_id);
+                    // "[SUPPORT] A Ticket #" . $item->id  . " on your request " . $supportRequest->code. " has been completed."
+                }
+
+            }
+
 		}
 	}
 	if ($_REQUEST['btn_reopen_item']) $item->update(array('status' => 'ACTIVE'));
@@ -47,7 +59,11 @@
 			$page->success = "Action #".$action->id." added";
 		}
 		if ($item->status == "NEW") $item->update(array('status' => 'ACTIVE'));
+		
+		// get assigned to and requester to notify
 		$assigned_to = new \Register\Customer($_REQUEST['action_assigned_to']);
+		
+		// update the assigned to user they have a new ticket
 		if ($assigned_to->id) {
 			$message = new \Email\Message(
 				array(
@@ -67,24 +83,22 @@
 		}
 		
         // Update Customer an action has been created
-        $notification = new \Email\Notification (
-            array (
-                'customer'=> $request->customer,
-                'subject'=> "New Action on Support Ticket# " . $item->ticketNumber(),
-                'templateVars' => array (
-                    'NOTIFICATION.MESSAGE' => 'A new action has occurered on your support ticket.',
-                    'NOTIFICATION.DESCRIPTION' => "Action Type: " . $_REQUEST['action_type'] . "<br/> Status: " . $_REQUEST['action_status'] . "<br/> Description: " .$_REQUEST['action_description'], 
-                    'NOTIFICATION.LINK'  => "https://" . $_config->site->hostname . "/_support/ticket/" . $item->ticketNumber()
-                )
-            )
-        );
-        $notification->notify();
+        if ($request->customer->id) {
+            // @TODO @Kevin
+            // "[SUPPORT] Action #".$action->id." has been added to your Support Request."
+            /** "Request: ".$action->item->request->code."
+                                    Item: ".$action->item->line."<br>
+                                    Type: ".$action->type."<br>
+                                    Product: ".$action->item->product->code."<br>
+                                    Serial: ".$action->item->serial_number."<br>
+                                    Description: ".$action->description */
         
-		// if they click add AND edit, the directly redirect to action
-		if ($_REQUEST['btn_add_edit_action']) {
-	        header("Location: /_support/action/".$action->id);
-            die();				
-		}	
+		    // if they click add AND edit, the directly redirect to action
+		    if ($_REQUEST['btn_add_edit_action'] && !empty($_REQUEST['btn_add_edit_action'])) {
+	            header("Location: /_support/action/".$action->id);
+                die();				
+		    }
+        }
 	}
 	
 	if ($_REQUEST['btn_add_rma']) {
@@ -147,8 +161,7 @@
 		if ($requestedBy->notify($message)) {
 			$page->success = "Message delivered to ".$requestedBy->login;
 			app_log("Notification email delivered to ".$requestedBy->login);
-		}
-		else {
+		} else {
 			$page->addError("Error delivering notification: ".$requestedBy->error());
 			app_log("Error delivering notification: ".$requestedBy->error());
 		}
@@ -195,18 +208,15 @@
 					}
 					$action->update(array('status' => 'COMPLETE'));
 					$item->update(array('status' => 'COMPLETE'));
-				}
-				else {
+				} else {
 					$page->addError($asset->error());
 					$transferItemErrors = true;
 				}
-			}
-			else {
+			} else {
 				$page->addError($asset->error());
 				$transferItemErrors = true;
 			}
-		}
-		else {
+		} else {
 			$page->addError("Organization not found");
 			$transferItemErrors = true;
 		}
@@ -268,6 +278,13 @@
 			)
 		);
 		if ($item->error()) $page->addError($item->error());
+
+        // @TODO @Kevin
+        // Update Customer an action has been created
+        if ($request->customer->id) {
+            // "[SUPPORT] Ticket #" . $request->code . " has been updated about your Support Request."
+            // "Serial: " . $_REQUEST['serial_number']."<br> Product ID: " . $_REQUEST['product_id']
+        }
 	}
 	
 	// upload files if upload button is pressed
