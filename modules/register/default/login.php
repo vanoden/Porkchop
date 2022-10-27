@@ -22,6 +22,7 @@
 <section id="reg_form" onkeypress="return loginSubmitEnter(event)" class="body">
 	<form name="loginForm" method="post" action="<?=PATH?>/_register/login">
 		<input type="hidden" name="login_target" value="<?=$target?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<div id="register_form">
 			<ul class="form-grid">
 				<li>
@@ -32,7 +33,7 @@
 					<input type="password" name="password">
 				</li>
 				<?php	if ($CAPTCHA_GO) { ?>
-				<li class="g-recaptcha" data-sitekey="6LeTdfgSAAAAAPZ5Fb-J6R_X9GctCVy8l2MrUCuO"></li>
+				    <li class="g-recaptcha" data-sitekey="6LeTdfgSAAAAAPZ5Fb-J6R_X9GctCVy8l2MrUCuO"></li>
 				<?php	}	?>
 			</ul>
 			<button href="#" onclick="document.loginForm.submit();">Sign In</button>

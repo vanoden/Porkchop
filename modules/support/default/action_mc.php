@@ -55,8 +55,13 @@
                 return;
             }
 
-
-            // @TODO!  how can you get this asset from a serial number from item???
+            // get the current monitor asset based on code/serial and product id
+	        $asset = new \Monitor\Asset();
+	        $asset->get($item->product->code,$action->item->product->id);
+	        if (! $asset->id) {
+		        $page->addError("Asset '".$item->product->code."' not found");
+		        return;
+	        }
 
             $verification->add(array("asset_id" => $asset->id,"date_request" => $date_calibration));
             if ($verification->error) {
@@ -93,26 +98,36 @@
         }
 
         // close the overall request_item here if 'yes' set to close the parent ticke (request item) as well
-        if (isset($_REQUEST['close_ticket_too']) && !empty($_REQUEST['close_ticket_too'])) {        
+        if (isset($_REQUEST['close_ticket_too']) && !empty($_REQUEST['close_ticket_too'])) {
             if ($_REQUEST['close_ticket_too'] == 'yes') {
                 $requestItem = new \Support\Request\Item($action->item->id);
                 $requestItem->update(array('status' => 'COMPLETE'));
+                $supportRequest = new \Support\Request($requestItem->request_id);
+
+                // Update Customer the ticket has been closed
+			    $message = new \Email\Message (
+				    array (
+					    'from'	=> 'service@spectrosinstruments.com',
+					    'subject'	=> "[SUPPORT] A Ticket #" . $requestItem->id  . " on your request " . $supportRequest->code. " has been completed.",
+					    'body'		=> "[SUPPORT] A Ticket #" . $requestItem->id  . " on your request " . $supportRequest->code. " has been completed."
+				    )
+			    );
+			    $message->html(true);
+                $request->customer->notify($message);
             }
         }
 
-        // Event Occured Customer Ticket Notification        
-        $notification = new \Email\Notification (
-            array (
-                'customer'=> $request->customer,
-                'subject'=> "New Event for Request Action ".$request->code."-".$item->line."-".$action->id,
-                'templateVars' => array (
-                    'NOTIFICATION.MESSAGE' => 'An Event Action on your support request has been added.',
-                    'NOTIFICATION.DESCRIPTION' => $parameters['description'], 
-                    'NOTIFICATION.LINK'  => "https://" . $_config->site->hostname . "/_support/ticket/" . $item->ticketNumber()
-                )
-            )
-        );
-        $notification->notify();
+        // Event Occured Customer Ticket Notification
+        $supportRequest = new \Support\Request($requestItem->request_id);
+	    $message = new \Email\Message (
+		    array (
+			    'from'	=> 'service@spectrosinstruments.com',
+			    'subject'	=> "[SUPPORT] An action #" . $action->item->id  . " on your request " . $supportRequest->code. " has been updated.",
+			    'body'		=> "[SUPPORT] An action #" . $action->item->id  . " on your request " . $supportRequest->code. " has been updated."
+		    )
+	    );
+	    $message->html(true);
+        $request->customer->notify($message);
 	}
 	
 	if (isset($_REQUEST['btn_assign_action'])) {

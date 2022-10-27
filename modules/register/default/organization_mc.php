@@ -28,89 +28,90 @@
 
     // handle form submit
 	if ($_REQUEST['method']) {
-		$page->success = $_REQUEST['method'];
-		if (! $_REQUEST['name']) {
-			$page->addError("Name required");
-		}
-		elseif (!in_array($_REQUEST['status'],$statii)) {
-			$page->addError("Invalid status");
-		}
-		elseif (!empty($_REQUEST['code']) && !preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['code'])) {
-			$page->addError("Invalid code");
-		}
-		else {
-			if (empty($_REQUEST['code'])) $_REQUEST['code'] = null;
-			if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
-			$parameters = array(
-				"name"					    => noXSS(trim($_REQUEST['name'])),
-				"code"					    => $_REQUEST['code'],
-				"status"				    => $_REQUEST['status'],
-				'is_reseller'			    => $_REQUEST['is_reseller'],
-				"assigned_reseller_id"	    => $_REQUEST['assigned_reseller_id'],
-				"notes"					    => noXSS($_REQUEST['notes']),
-				"password_expiration_days"	=> $_REQUEST['password_expiration_days']
-			);
-			if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
-			if ($organization->id) {
-				app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
-				app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
-				
-				// Update Existing Organization
-				$organization->update($parameters);
+	    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+	        $page->addError("Invalid Request");
+	    } else {
+            $page->success = $_REQUEST['method'];
+		    if (! $_REQUEST['name']) {
+			    $page->addError("Name required");
+		    } elseif (!in_array($_REQUEST['status'],$statii)) {
+			    $page->addError("Invalid status");
+		    } elseif (!empty($_REQUEST['code']) && !preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['code'])) {
+			    $page->addError("Invalid code");
+		    } else {
+			    if (empty($_REQUEST['code'])) $_REQUEST['code'] = null;
+			    if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
+			    $parameters = array(
+				    "name"					    => noXSS(trim($_REQUEST['name'])),
+				    "code"					    => $_REQUEST['code'],
+				    "status"				    => $_REQUEST['status'],
+				    'is_reseller'			    => $_REQUEST['is_reseller'],
+				    "assigned_reseller_id"	    => $_REQUEST['assigned_reseller_id'],
+				    "notes"					    => noXSS($_REQUEST['notes']),
+				    "password_expiration_days"	=> $_REQUEST['password_expiration_days']
+			    );
+			    if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
+			    if ($organization->id) {
+				    app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
+				    app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
+				    
+				    // Update Existing Organization
+				    $organization->update($parameters);
 
-				if ($organization->error) {
-					$page->addError("Error updating organization");
-				} else {
-					$page->success = "Organization Updated Successfully";
-				}
-				
-				if ($_REQUEST['new_login']) {
-					$present_customer = new \Register\Customer();
+				    if ($organization->error) {
+					    $page->addError("Error updating organization");
+				    } else {
+					    $page->success = "Organization Updated Successfully";
+				    }
+				    
+				    if ($_REQUEST['new_login']) {
+					    $present_customer = new \Register\Customer();
 
-					# Make Sure Login is unique
-					$present_customer->get($_REQUEST['new_login']);
-					if ($present_customer->id) {
-						$page->addError("Login already exists");
-					}
-					else {
-						$customer = new \Register\Customer();
-						$customer->add(
-							array(
-								"login"			=> $_REQUEST['new_login'],
-								"first_name"	=> $_REQUEST['new_first_name'],
-								"last_name"		=> $_REQUEST['new_last_name'],
-								"organization_id"	=> $organization->id,
-								"password"			=> uniqid()
-							)
-						);
-						if ($customer->error) {
-							$page->addError("Error adding customer to organization: ".$customer->error);
-						}
-						else {
-							$page->success = "Customer added to organization";
-						}
-					}
-				}
-			} else {
-				if (! $parameters['code']) $parameters['code'] = uniqid();
-				app_log("Adding organization '".$parameters['name']."'");
-				# See if code used
-				$present_org = new \Register\Organization();
-				$present_org->get($parameters['code']);
-				if ($present_org->id) {
-					$page->addError("Organization code already used");
-				} else {
-					# Add Existing Organization
-					$organization = new \Register\Organization();
-					$organization->add($parameters);
-					if ($organization->error) {
-						$page->addError("Error updating organization: ".$organization->error);
-					} else {
-						$page->success = "Organization ".$organization->id." Created Successfully";
-					}
-				}
-			}
-		}
+					    # Make Sure Login is unique
+					    $present_customer->get($_REQUEST['new_login']);
+					    if ($present_customer->id) {
+						    $page->addError("Login already exists");
+					    }
+					    else {
+						    $customer = new \Register\Customer();
+						    $customer->add(
+							    array(
+								    "login"			=> $_REQUEST['new_login'],
+								    "first_name"	=> $_REQUEST['new_first_name'],
+								    "last_name"		=> $_REQUEST['new_last_name'],
+								    "organization_id"	=> $organization->id,
+								    "password"			=> uniqid()
+							    )
+						    );
+						    if ($customer->error) {
+							    $page->addError("Error adding customer to organization: ".$customer->error);
+						    }
+						    else {
+							    $page->success = "Customer added to organization";
+						    }
+					    }
+				    }
+			    } else {
+				    if (! $parameters['code']) $parameters['code'] = uniqid();
+				    app_log("Adding organization '".$parameters['name']."'");
+				    # See if code used
+				    $present_org = new \Register\Organization();
+				    $present_org->get($parameters['code']);
+				    if ($present_org->id) {
+					    $page->addError("Organization code already used");
+				    } else {
+					    # Add Existing Organization
+					    $organization = new \Register\Organization();
+					    $organization->add($parameters);
+					    if ($organization->error) {
+						    $page->addError("Error updating organization: ".$organization->error);
+					    } else {
+						    $page->success = "Organization ".$organization->id." Created Successfully";
+					    }
+				    }
+			    }
+		    }
+	    }		
 	}
 	
 	// add tag to organization

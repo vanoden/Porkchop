@@ -13,7 +13,8 @@
 	###########################
 	
 	if ($_REQUEST['method'] == "Apply") {
-		# Initialize Admin Object
+	
+		// Initialize Admin Object
 		$_customer = new \Register\Admin();
 		
 		$passwordStrength = 8;
@@ -22,22 +23,22 @@
 			$page->addError("Password not strong enough");
 		} elseif ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 			$page->addError("Passwords do not match");
-			
-		}
-		else {
-			# Default Login to Email Address
+		} elseif (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+			$page->addError("Invalid Request");
+		} else {
+		
+			// Default Login to Email Address
 			if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['email_address'];
 
-			# Generate Validation Key
+			// Generate Validation Key
 			$validation_key = md5(microtime());
 
-			# Make Sure Login is unique
+			// Make Sure Login is unique
 			$already_exists = $_customer->get($_REQUEST['login']);
 			if ($already_exists->id) {
 				$page->addError("Sorry, login already taken");
 				$_REQUEST['login'] = '';
-			}
-			else {
+			} else {
 				###########################################
 				### Add User To Database				###
 				###########################################
@@ -56,13 +57,13 @@
 					$page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:support@spectrosinstruments.com'>support@spectrosinstruments.com</a> if you have any futher questions.");
 				}
 				else {
-					# Login New User by updating session
+					// Login New User by updating session
 					$GLOBALS['_SESSION_']->update(array("user_id" => $customer->id));
 					if ($GLOBALS['_SESSION_']->error) {
 						$page->addError("Error updating session: ".$GLOBALS['_SESSION_']->error);
 					}
 
-					# Create Contact Record
+					// Create Contact Record
 					if ($_REQUEST['work_email']) {
 						$_customer->addContact(
 							array(
@@ -74,8 +75,9 @@
 						);
 						if ($_customer->error) app_log("Error adding Work Email '".$_REQUEST['work_email']."': ".$_customer->error,'error',__FILE__,__LINE__);
 					}
+					
 					if ($_REQUEST['home_email']) {
-						# Create Contact Record
+						// Create Contact Record
 						$_customer->addContact(
 							array(
 								"person_id"		=> $customer_id,
@@ -87,7 +89,7 @@
 						if ($_customer->error) app_log("Error adding Home Email '".$_REQUEST['home_email']."': ".$_customer->error,'error',__FILE__,__LINE__);
 					}
 	
-					# Generate Email Confirmation
+					// Generate Email Confirmation
 					$message = "<html>\n";
 					$message .= "<span class=\"email_header\">".$GLOBALS['_config']->register->confirmation->header."</span><br><br>\n";
 					$message .= "<span class=\"email_label\">Your login is: </span><span class=\"email_value\">".$_REQUEST['login']."</span><br>\n";
@@ -98,7 +100,8 @@
 					###################################################
 					### Send Confirmation Email						###
 					###################################################
-					# Build Message For Delivery
+					
+					// Build Message For Delivery
 					$emessage = new \Email\Message();
 					$emessage->html(true);
 					$emessage->from($GLOBALS['_config']->register->confirmation->from);
