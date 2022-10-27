@@ -14,6 +14,7 @@
 <h1>Registration</h1>
 <span class="form_instruction">Fill out all required information to apply. You will receive and email once your account has been created.</span>
 <form name="register" action="/_register/register" method="POST">
+	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 	<input type="hidden" name="target" value="<?=$target?>">
 	<div class="instruction"><r7_page.message id=100></div>
     <?php	 if ($page->errorCount() > 0) { ?>

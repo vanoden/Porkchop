@@ -2,7 +2,7 @@
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customers');
 
-	# Identify Specified Role if possible
+	// Identify Specified Role if possible
     if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
 		$role = new \Register\Role($_REQUEST['id']);
 		if (! $role->id) $page->addError("Role &quot;".$_REQUEST['id']."&quot; not found");
@@ -12,12 +12,15 @@
     	$role->get($_REQUEST['name']);
 		if (! $role->id) {
 			if (isset($_REQUEST['btn_submit'])) {
-				$role->add(array(
-					"name" => $_REQUEST['name'],
-					"description" => noXSS(trim($_REQUEST['description']))
-				));
-			}
-			else {
+                if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+                    $page->addError("Invalid Request")
+                } else {
+                    $role->add(array(
+	                    "name" => $_REQUEST['name'],
+	                    "description" => noXSS(trim($_REQUEST['description']))
+                    ));
+                }
+			} else {
 				$page->addError("Role &quot;".$_REQUEST['name']."&quot; not found");
 			}
 		}
@@ -30,32 +33,37 @@
     }
 
     if ($role->id && isset($_REQUEST['btn_submit'])) {
-		if ($role->update(
-			array(
-				'description'	=> $_REQUEST['description']
-			)
-		)) {
-			$page->success = "Role Updated";
-		} else {
-			$page->addError("Role update failed: ".$role->error);
-		}
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+            $page->addError("Invalid Request")
+        } else {
+		    if ($role->update( array( 'description'	=> $_REQUEST['description'] ) )) {
+			    $page->success = "Role Updated";
+		    } else {
+			    $page->addError("Role update failed: ".$role->error);
+		    }
+        }
 	}
 
 	if ($role->id) {
 		$privilegeList = new \Register\PrivilegeList();
 	    $privileges = $privilegeList->find(array('_sort' => 'module'));
 		if (isset($_REQUEST['btn_submit'])) {
-		    foreach ($privileges as $privilege) {
-		        if ($_REQUEST['privilege'][$privilege->id] == 1) {
-		            if (! $role->has_privilege($privilege->id) && $role->addPrivilege($privilege->id)) {
-		                $page->success .= "Added privilege '".$privilege->name."'";
+		    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+                $page->addError("Invalid Request")
+            } else {
+            
+		        foreach ($privileges as $privilege) {
+		            if ($_REQUEST['privilege'][$privilege->id] == 1) {
+		                if (! $role->has_privilege($privilege->id) && $role->addPrivilege($privilege->id)) {
+		                    $page->success .= "Added privilege '".$privilege->name."'";
+		                }
 		            }
-		        }
-		        else {
-		            if ($role->has_privilege($privilege->id) && $role->dropPrivilege($privilege->id)) {
-		                $page->success .= "Removed privilege '".$privilege->name."'";
+		            else {
+		                if ($role->has_privilege($privilege->id) && $role->dropPrivilege($privilege->id)) {
+		                    $page->success .= "Removed privilege '".$privilege->name."'";
+		                }
 		            }
-		        }
-			}
+			    }
+            }
 	    }
 	}
