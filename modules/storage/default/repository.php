@@ -27,6 +27,7 @@
 <div class="form_success"><?=$page->success?></div>
 <?php	 } ?>
 <form name="repositoryForm" action="/_storage/repository" method="post">
+	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="id" value="<?=$repository->id?>" />
     <div class="container">
         <span class="label">Name</span>

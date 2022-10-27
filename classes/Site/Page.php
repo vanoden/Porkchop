@@ -322,9 +322,29 @@
 				    $buffer .= $_SERVER ['HTTP_HOST'];
 			    }
 		    } elseif ($object == "page") {
+				error_log("FOUND page property ".$property);
 			    if ($property == "view") {
 				    $buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";
-			    } elseif ($property == "title") {
+				} elseif ($property == "errorblock") {
+					error_log("FOUND errorblock");
+					if ($this->errorCount() > 0) {
+						$buffer = '<section id="form-message">
+						<ul class="connectBorder errorText">
+							<li>';
+						$buffer .= $page->errorString();
+						$buffer .= '</li>
+						</ul>
+						</section>';
+					} elseif ($page->success) {
+						$buffer = '<section id="form-message">
+						<ul class="connectBorder progressText">
+							<li>';
+						$buffer .= $page->success;
+						$buffer .= '</li>
+						</ul>
+						</section>';
+					}
+				} elseif ($property == "title") {
 				    if (isset ( $this->metadata->title )) $buffer = $this->metadata->title;
 			    } elseif ($property == "metadata") {
 				    if (isset ( $this->metadata->$parameter ["field"] )) $buffer = $this->metadata->$parameter ["field"];

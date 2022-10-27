@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class File {
+	class File Extends Repository {
 	
 		private $_repository_id;
 		public $code;
@@ -608,5 +608,14 @@
 				    }
 			    }
 		    }
+		}
+
+		public function validPath ($path) {
+			# No Uplevel paths
+			if (preg_matcn(' /\.\./',$path)) return false;
+
+			# No funky chars
+			if (preg_match('/^\w[\/\w\_\.]*$/',$path)) return true;
+			else return false;
 		}
 	}

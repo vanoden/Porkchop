@@ -55,11 +55,12 @@ class Person Extends \BaseClass {
             $this->automation = $customer->automation;
             $this->password_age = $customer->password_age;
 			$this->auth_failures = $customer->auth_failures;
-            $customer->_cached = 1;
+            $this->cached(true);
 
             # In Case Cache Corrupted
             if ($customer->id) {
                 app_log("Customer " . $this->login . " [" . $this->id . "] found in cache", 'trace', __FILE__, __LINE__);
+				$this->exists(true);
                 return $customer;
             }
             else {
@@ -119,7 +120,8 @@ class Person Extends \BaseClass {
             else $this->automation = true;
             $this->password_age = $customer->password_age;            
 			$this->auth_failures = $customer->auth_failures;
-            $this->_cached = 0;
+            $this->cached(true);
+			$this->exists(true);
         }
         else {
             $this->id = null;

@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class Repository {
+	class Repository Extends \BaseClass {
 	
 		public $error;
 		public $name;
@@ -296,19 +296,19 @@
 			return $file->fromPath($this->id,$path);
 		}
 		
-		private function _valid_code($string) {
+		public function validCode($string) {
 			if (preg_match('/^\w[\w\-\_\.]*$/',$string)) return true;
 			return false;
 		}
-		private function _valid_name($string) {
+		public function validName($string) {
 			if (preg_match('/^\w[\w\-\_\.\s]*$/',$string)) return true;
 			return false;
 		}
-		private function _valid_status($string) {
+		public function validStatus($string) {
 			if (preg_match('/^(NEW|ACTIVE|DISABLED)$/i',$string)) return true;
 			return false;
 		}
-		private function _valid_type($string) {
+		public function validType($string) {
 			if (preg_match('/^(Local|S3)$/',$string)) return true;
 			return false;
 		}

@@ -28,7 +28,6 @@
 		private $cookie_domain;
 		private $cookie_expires;
 		private $cookie_path;
-		private $_cached = 0;
 		private $elevated = 0;
 		private $oauth2_state = null;
 
@@ -37,10 +36,6 @@
 				$this->id = $id;
 				$this->details();
 			}
-		}
-
-		public function cached() {
-			return $this->_cached;
 		}
 
 		public function start() {

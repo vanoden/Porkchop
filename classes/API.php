@@ -200,6 +200,8 @@
 
 			$cr = "\n";
 			$t = "\t";
+
+			$token = $GLOBALS['_SESSION_']->getCSRFToken();
 			foreach ($methods as $name => $params) {
 				// See if method has file inputs
 				$has_file_inputs = false;
@@ -215,6 +217,7 @@
 				else {
 					$form .= $t.'<form method="post" action="/_'.$this->_name.'/api" name="'.$name.'">'.$cr;
 				}
+				$form .= $t.$t.'<input type="hidden" name="csrfToken" value="'.$token.'">'.$cr;
 				$form .= $t.$t.'<input type="hidden" name="method" value="'.$name.'" />'.$cr;
 				$form .= $t.$t.'<div class="apiMethod">'.$cr;
 				$form .= $t.$t.'<div class="h3 apiMethodTitle">'.$name.'</div>'.$cr;

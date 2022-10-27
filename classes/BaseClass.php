@@ -1,8 +1,8 @@
 <?php
 	class BaseClass {
-		private $_error;
-		private $_exists = false;
-		public $_cached = false;
+		protected $_error;
+		protected $_exists = false;
+		protected $_cached = false;
 
 		public function error($value = null) {
 			if (isset($value)) {
@@ -12,7 +12,8 @@
 			return $this->_error;
 		}
 
-		public function SQLError($message) {
+		public function SQLError($message = '') {
+			if (empty($message)) $message = $GLOBALS['_database']->ErrorMsg();
 			$trace = debug_backtrace();
 			$caller = $trace[1];
 			$class = $caller['class'];
@@ -27,6 +28,11 @@
 
 		public function exists($exists = null) {
 			if (is_bool($exists)) $this->_exists = $exists;
-			return $this->_exists();
+			return $this->_exists;
+		}
+
+		public function cached($cached = null) {
+			if (is_bool($cached)) $this->_cached = $cached;
+			return $this->_cached;
 		}
 	}

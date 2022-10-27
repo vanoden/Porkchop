@@ -23,24 +23,31 @@
         else {
             $company = new \Company\Company($_REQUEST['company_id']);
             $location = new \Company\Location($_REQUEST['location_id']);
+			if ($location->error()) $page->addError($location->error());
 
             if (empty($company->id)) {
                 $page->addError("Company not found");
+				$_REQUEST['company_id'] = null;
             }
-            elseif (empty($location_id)) {
+            elseif (empty($location->id)) {
                 $page->addError("Location not found");
+				$_REQUEST['location_id'] = null;
             }
             elseif (! filter_var($_REQUEST["domain_name"],FILTER_VALIDATE_DOMAIN,array(FILTER_NULL_ON_FAILURE))) {
                 $page->addError("Invalid domain name");
+				$_REQUEST['domain_name'] = null;
             }
-            elseif (! preg_match("/^\w[\w\-\.]+$/",$_REQUEST['domain_registrar'])) {
+            elseif (! empty($_REQUEST['domain_registrar']) && ! preg_match("/^\w[\w\-\.]+$/",$_REQUEST['domain_registrar'])) {
                 $page->addError("Invalid domain registrar name");
+				$_REQUEST['domain_registrar'] = null;
             }
             elseif (!empty($_REQUEST["date_registered"]) && ! get_mysql_date($_REQUEST["date_registered"])) {
                 $page->addError("Invalid date registered");
+				$_REQUEST['date_registered'] = null;
             }
             elseif (!empty($_REQUEST["date_expires"]) && ! get_mysql_date($_REQUEST["date_expires"])) {
                 $page->addError("Invalid date expires");
+				$_REQUEST['date_expires'] = null;
             }
             else {
                 $parameters = array(

@@ -24,8 +24,8 @@
 				array($code)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Customer::get: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
@@ -174,7 +174,7 @@
 				array($login)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::authenticate(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -390,7 +390,7 @@
 			query_log($check_privilege_query,$bind_params,true);
 			$rs = $GLOBALS['_database']->Execute($check_privilege_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Customer::has_privilege(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($found) = $rs->FetchRow();
@@ -415,8 +415,7 @@
 				array($id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::have_role(): ".$GLOBALS['_database']->ErrorMsg();
-				error_log($this->error);
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -454,8 +453,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::roles(): ".$GLOBALS['_database']->ErrorMsg();
-				error_log($this->error);
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -478,8 +476,7 @@
 	
 			$rs = $GLOBALS['_database']->Execute($get_role_query,array($name));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::role_id(): ".$GLOBALS['_database']->ErrorMsg();
-				error_log($this->error);
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 
@@ -496,7 +493,7 @@
 			$sessionList = new \Site\SessionList();
 			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
 			if ($sessionList->error) {
-				$this->error = "Error getting session: ".$sessionList->error;
+				$this->error("Error getting session: ".$sessionList->error);
 				return null;
 			}
 			if (! $session) return null;
@@ -507,7 +504,7 @@
 			$sessionList = new \Site\SessionList();
 			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
 			if ($sessionList->error) {
-				$this->error = "Error getting session: ".$sessionList->error;
+				$this->error("Error getting session: ".$sessionList->error);
 				return false;
 			}
 			if (! $session) return false;
@@ -522,7 +519,7 @@
 			if (isset($params['type'])) $parameters['type'] = $params['type'];
 			$contacts = $contactList->find($parameters);
 			if ($contactList->error()) {
-				$this->error = $contactList->error();
+				$this->error($contactList->error());
 				return null;
 			}
 			else {
@@ -543,7 +540,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->organization->id,$this->id));
 			
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Customer::locations(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$locations = array();
@@ -552,13 +549,6 @@
 				array_push($locations,$location);
 			}
 			return $locations;
-		}
-
-		public function exists($login) {
-			list($person) = $this->get($login);
-	
-			if ($person->id) return true;
-			else return false;
 		}
 
 		public function randomPassword() {
