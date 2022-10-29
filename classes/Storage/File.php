@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class File Extends Repository {
+	class File Extends \BaseClass {
 	
 		private $_repository_id;
 		public $code;
@@ -15,8 +15,10 @@
 		public $size;
 		public $timestamp;
 		public $name;
+		private $user_id;
 		private $path;
 		private $original_name;
+		private $access_privilege_json;
 
 		public function __construct($id = 0) {
 			if ($id > 0) {
@@ -27,7 +29,7 @@
 
 		public function add($parameters = array()) {
 	
-            app_log('Storage::File::add(): '.print_r($parameters,true));
+            app_log('Storage::File::add(): '.print_r($parameters,false));
             
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
 			
@@ -104,7 +106,13 @@
 						path = ?";
 				array_push($bind_params,$parameters['path']);
 			}
-			
+
+			if (isset($parameters['access_privileges'])) {
+				$update_object_query .= ",
+						access_privileges = ?";
+				array_push($bind_params,$parameters['access_privileges']);
+			}
+
 			query_log($update_object_query);
 			$update_object_query .= "
 				WHERE	id = ?
@@ -170,6 +178,7 @@
 				$this->mime_type = $object->mime_type;
 				$this->size = $object->size;
 				$this->user = new \Register\Customer($object->user_id);
+				$this->user_id = $object->user_id;
 				$this->date_created = $object->date_created;
 				$this->timestamp = strtotime($this->timestamp);
 				$this->_repository_id = $object->repository_id;
@@ -179,6 +188,7 @@
 				else $this->endpoint = 'N/A';
 				$this->read_protect = $object->read_protect;
 				$this->write_protect = $object->write_protect;
+				$this->access_privilege_json = $object->access_privileges;
 			} else {
 				$this->id = null;
 				$this->code = null;
@@ -488,10 +498,6 @@
             return $this->error;
         }
 
-        public function error() {
-            return $this->error;
-        }
-
         public function success() {
             return $this->success;
         }
@@ -500,7 +506,7 @@
 			return '/_storage/file/'.$this->code.'/download';
 		}
 
-		public function exists() {
+		public function inodeExists() {
 			if ($this->id && file_exists($this->path())) return true;
 			return false;
 		}
@@ -515,10 +521,6 @@
 			$metadata = new \Storage\FileMetadata($this->id);
 			$metadata->get($this->id,$key);
 			return $metadata;
-		}
-
-		public function permitRead() {
-			return true;
 		}
 
 		public function upload ($parameters) {
@@ -610,12 +612,125 @@
 		    }
 		}
 
-		public function validPath ($path) {
-			# No Uplevel paths
-			if (preg_matcn(' /\.\./',$path)) return false;
+		public function writePermitted($user_id = null) {
+			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+			$user = new \Register\Person($user_id);
 
-			# No funky chars
-			if (preg_match('/^\w[\/\w\_\.]*$/',$path)) return true;
+			$privileges = array();
+			if (!empty($this->access_privilege_json)) {
+				$privileges = json_decode($this->access_privilege_json,true);
+			}
+			if (!isset($this->repository)) return false;
+			$default_privileges = $this->repository->default_privileges();
+			$override_privileges = $this->repository->override_privileges();
+
+			app_log($this->user_id." vs ".$user_id,'info');
+			if ($this->user_id == $user_id) return true;
+			app_log(print_r($override_privileges['o'][$user->organization->id],false),'info');
+			if (in_array('-w',$override_privileges['o'][$user->organization->id])) return false;
+			app_log("Here 4",'info');
+			if (in_array('-w',$override_privileges['u'][$user->id])) return false;
+			app_log("Here 5",'info');
+			if (in_array('w',$privileges['o'][$user->organization->id])) return true;
+			app_log("Here 6",'info');
+			if (in_array('w',$privileges['u'][$user->id])) return true;
+			app_log("Here 7",'info');
+			if (in_array('w',$default_privileges['o'][$user->organization->id])) return true;
+			app_log("Here 8",'info');
+			if (in_array('w',$default_privileges['u'][$user->id])) return true;
+			app_log("Here 9",'info');
+			return false;
+		}
+
+		public function readPermitted($user_id = null) {
+			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+			$user = new \Register\Person($user_id);
+
+			$privileges = array();
+			if (!empty($this->access_privilege_json)) {
+				$privileges = json_decode($this->access_privilege_json,true);
+			}
+			if (!isset($this->repository)) return false;
+			$default_privileges = $this->repository->default_privileges();
+			$override_privileges = $this->repository->override_privileges();
+
+			app_log($this->user_id." vs ".$user_id,'info');
+			if ($this->user_id == $user_id) return true;
+			app_log(print_r($override_privileges['o'][$user->organization->id],false),'info');
+			if (in_array('-r',$override_privileges['o'][$user->organization->id])) return false;
+			app_log("Here 4",'info');
+			if (in_array('-r',$override_privileges['u'][$user->id])) return false;
+			app_log("Here 5",'info');
+			if (in_array('r',$privileges['o'][$user->organization->id])) return true;
+			app_log("Here 6",'info');
+			if (in_array('r',$privileges['u'][$user->id])) return true;
+			app_log("Here 7",'info');
+			if (in_array('r',$default_privileges['o'][$user->organization->id])) return true;
+			app_log("Here 8",'info');
+			if (in_array('r',$default_privileges['u'][$user->id])) return true;
+			app_log("Here 9",'info');
+			return false;
+		}
+
+		public function getPrivileges() {
+			app_log("File: ".$this->name,'info');
+			app_log("Privilege JSON: ".$this->access_privilege_json,'info');
+			if (empty($this->access_privilege_json)) {
+				return new \stdClass();
+			}
+			else {
+				return json_decode($this->access_privilege_json);
+			}
+		}
+
+		public function updatePrivileges($object_type, $object_id, $mask) {
+			app_log("Updating privileges on ".$this->code,'info');
+			$privileges = new \stdClass();
+			if (!empty($this->access_privilege_json)) {
+				$privileges = json_decode($this->access_privilege_json);
+			}
+			if (preg_match('/^a/i',$object_type)) $object_type = 'a'; // All/Everyone
+			elseif (preg_match('/^o/i',$object_type)) $object_type = 'o'; // Organization
+			elseif (preg_match('/^r/i',$object_type)) $object_type = 'r'; // Role
+			elseif (preg_match('/^u/i',$object_type)) $object_type = 'u'; // User/Customer
+			else {
+				$this->error("Invalid permision object type");
+				return false;
+			}
+
+			if (!is_object($privileges->$object_type)) $privileges->$object_type = new \stdClass();
+			if (!is_array($privileges->$object_type->$object_id)) $privileges->$object_type->$object_id = array();
+			foreach (array('w','r','g') as $priv) {
+				app_log($priv,'info');
+				if (in_array('+'.$priv,$mask) && !in_array($priv,$privileges->$object_type->$object_id)) {
+					app_log("Adding $priv to ".$this->name,'info');
+					array_push($privileges->$object_type->$object_id,$priv);
+				}
+				elseif (in_array('-'.$priv,$mask)) {
+					$idx = array_search($priv,$privileges->$object_type->$object_id,true);
+					if (is_numeric($idx)) {
+						app_log("IDX = $idx",'info');
+						app_log("Dropping $priv from ".$this->name,'info');
+						unset($privileges->$object_type->$object_id[$idx]);
+						\array_values($privileges->$object_type->$object_id);
+					}
+				}
+				elseif (in_array('-'.$priv,$mask)) {
+					app_log(" => ".print_r($privileges->$object_type->$object_id,false),'info');
+					app_log("Nothing for $priv");
+				}
+			}
+			app_log("Writing ".json_encode($privileges)." to ".$this->name,'info');
+			return $this->update(array('access_privileges' => json_encode($privileges)));
+		}
+
+		public function accessPrivilege() {
+
+		}
+
+		public function validPath($string) {
+			// Only a virtual path!
+			if (preg_match('/^\/[\w\-\.\_\/]*$/',$string)) return true;
 			else return false;
 		}
 	}

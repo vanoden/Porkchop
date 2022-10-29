@@ -16,12 +16,10 @@
 		private $_connected = false;
 	    
 		public function __construct($id = null) {
-
-			if ($id > 0) {
-				$this->id = $id;
-				if ($this->details()) {
-					$this->connect();
-				}
+			$this->type = 's3';
+			$this->_init($id);
+			if ($this->id) {
+				$this->connect();
 			}
 		}
 
@@ -157,5 +155,37 @@
 			else {
 				app_log("Failed to download file",'error');
 			}
+		}
+
+		public function validAccessKey($string) {
+			if (preg_match('/^\w{16,128}$/',$string)) return true;
+			else return false;
+		}
+
+		public function validSecretKey($string) {
+			if (preg_match('/^[\w\/\+]{20,}$/',$string)) return true;
+			else return false;
+		}
+
+		public function validBucket($string) {
+			// Bucket naming rules from AWS:
+			// https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+
+			// Bucket names cannot have 2 adjacent periods
+			if (preg_match('/\.\./',$string)) return false;
+
+			// Bucket names cannot be formated as an ip address
+			if (preg_match('/^\d+\.\d+\.\d+\.\d+$')) return false;
+
+			// Bucket names cannot start with xn--
+			if (preg_match('/^xn\-\-',$string)) return false;
+
+			// Bucket names cannot end with -s3alias
+			if (preg_match('/\-s3alias$/',$string)) return false;
+
+			// Bucket names must start and end with a letter or number, and must be 3-63 letters, numbers, dots or hyphens
+			if (preg_match('/^\w[\w\.\-]{1,61}+\w$/',$string)) return true;
+
+			else return false;
 		}
 	}

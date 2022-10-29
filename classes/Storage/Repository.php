@@ -8,8 +8,14 @@
 		public $type;
 		public $id;
 		public $code;
+		protected $default_privileges;
+		protected $override_privileges;
 
 		public function __construct($id = 0) {
+			$this->_init($id);
+		}
+		protected function _init($id = 0) {
+			app_log("Loading repository $id",'info');
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
@@ -74,7 +80,7 @@
 			$bind_params = array();
 
 			if (isset($parameters['name'])) {
-				if ($this->_valid_name($parameters['name'])) {
+				if ($this->validName($parameters['name'])) {
 					$update_object_query .= ",
 					name = ?";
 					array_push($bind_params,$parameters['name']);
@@ -85,7 +91,7 @@
 			}
 			
 			if (isset($parameters['status'])) {
-				if ($this->_valid_status($parameters['status'])) {
+				if ($this->validStatus($parameters['status'])) {
 					$update_object_query .= ",
 					status = ?";
 					array_push($bind_params,$parameters['status']);
@@ -182,12 +188,16 @@
 				$this->error = "SQL Error in Storage::Repository::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			
+
 			$object = $rs->FetchNextObject(false);
 			$this->name = $object->name;
 			$this->type = $object->type;
 			$this->code = $object->code;
 			$this->status = $object->status;
+			$default_privileges_json = $object->default_privileges;
+			$this->default_privileges = json_decode($default_privileges_json,true);
+			$override_privileges_json = $object->override_privileges;
+			$this->override_privileges = json_decode($override_privileges_json,true);
 			
 			$get_object_query = "
 				SELECT	*
@@ -295,6 +305,14 @@
 			$file = new \Storage\File();
 			return $file->fromPath($this->id,$path);
 		}
+
+		public function default_privileges() {
+			return json_decode($this->default_privileges_json,true);
+		}
+
+		public function override_privileges() {
+			return json_decode($this->override_privileges_json,true);
+		}
 		
 		public function validCode($string) {
 			if (preg_match('/^\w[\w\-\_\.]*$/',$string)) return true;
@@ -311,5 +329,30 @@
 		public function validType($string) {
 			if (preg_match('/^(Local|S3)$/',$string)) return true;
 			return false;
+		}
+		public function validPath($string) {
+			// Only certain instances require path
+			if (empty($string)) return true;
+			else return false;
+		}
+		public function validAccessKey($string) {
+			// Only certain instances require accessKey
+			if (empty($string)) return true;
+			else return false;
+		}
+		public function validSecretKey($string) {
+			// Only certain instances require accessKey
+			if (empty($string)) return true;
+			else return false;
+		}
+		public function validBucket($string) {
+			// Only certain instances require bucket
+			if (empty($string)) return true;
+			else return false;
+		}
+		public function validRegion($string) {
+			// Only certain instances require bucket
+			if (empty($string)) return true;
+			else return false;
 		}
 	}

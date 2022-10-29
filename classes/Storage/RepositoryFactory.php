@@ -63,8 +63,9 @@
 			
 			$repository = new Repository($id);
 			if (! $repository->id) {
+				app_log("Repository $id not found",'warning');
 				$this->error = "Repository not found";
-				return false;
+				return null;
 			}
 			
 			if ($repository->type == "Local") {
@@ -72,8 +73,9 @@
 			} else if ($repository->type == "s3") {
 				return new Repository\S3($repository->id);
 			} else {
+				app_log("Unsupported Repository Type: ".$repository->type,'warning');
 				$this->error = "Unsupported Repository Type";
-				return false;
+				return null;
 			}
 		}
 		

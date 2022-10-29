@@ -4,11 +4,8 @@
 	class Local extends \Storage\Repository {
 	
 		public function __construct($id = null) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
 			$this->type = 'Local';
+			parent::_init($id);
 		}
 
 		public function add($parameters = array()) {
@@ -105,7 +102,11 @@
 		}
 
 		public function retrieveFile($file) {
-		
+			if (!$this->validPath($this->_path())) {
+				$this->error("Invalid path for repository");
+				return false;
+			}
+
 			if (! file_exists($this->_path()."/".$file->code)) {
 				$this->error = "File not found";
 				return false;
@@ -144,5 +145,26 @@
             }
             
 			return true;
+		}
+
+		public function validPath ($path) {
+			# No Uplevel paths
+			if (preg_match('/\.\./',$path)) return false;
+
+			# No funky chars
+			if (preg_match('/^\/?\w[\/\w\_\.]*$/',$path)) return true;
+			else return false;
+		}
+
+		public function validEndpoint ($endpoint) {
+			# Not Required
+			if (empty($endpoint)) return true;
+
+			# No Uplevel paths
+			if (preg_match('/\.\./',$endpoint)) return false;
+
+			# No funky chars
+			if (preg_match('/^https?\:\/\/\w[\/\w\_\.]*$/',$endpoint)) return true;
+			else return false;
 		}
 	}

@@ -256,6 +256,180 @@
 		}
 
 		###################################################
+		### Is User Permitted to Read File			###
+		###################################################
+		public function readPermitted() {
+			$file = new \Storage\File();
+			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			$file->get($_REQUEST['file_code']);
+			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
+			if (! $file->id) $this->error("File not found");
+
+			$user_id = null;
+			if (! empty($_REQUEST['user_code'])) {
+				$user = new \Register\Customer();
+				if ($user->get($_REQUEST['user_code'])) {
+					$user_id = $user->id;
+				}
+				else {
+					$this->error("User not found");
+				}
+			}
+			if ($file->readPermitted($user_id)) {
+				$this->response->permitted = 1;
+			}
+			else {
+				$this->response->permitted = 0;
+			}
+			$this->response->success = 1;
+
+			api_log($this->response);
+			print $this->formatOutput($this->response);
+		}
+
+		###################################################
+		### Is User Permitted to Update File			###
+		###################################################
+		public function writePermitted() {
+			$file = new \Storage\File();
+			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			$file->get($_REQUEST['file_code']);
+			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
+			if (! $file->id) $this->error("File not found");
+
+			$user_id = null;
+			if (! empty($_REQUEST['user_code'])) {
+				$user = new \Register\Customer();
+				if ($user->get($_REQUEST['user_code'])) {
+					$user_id = $user->id;
+				}
+				else {
+					$this->error("User not found");
+				}
+			}
+			if ($file->writePermitted($user_id)) {
+				$this->response->permitted = 1;
+			}
+			else {
+				$this->response->permitted = 0;
+			}
+			$this->response->success = 1;
+
+			api_log($this->response);
+			print $this->formatOutput($this->response);
+		}
+
+		###################################################
+		### Get Privileges for a File					###
+		###################################################
+		public function getFilePrivileges() {
+			$file = new \Storage\File();
+			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			$file->get($_REQUEST['code']);
+			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
+			if (! $file->id) $this->error("File not found");
+			if ($file->user->id != $GLOBALS['_SESSION_']->customer->id && ! $GLOBALS['_SESSION_']->customer->can('update storage file permissions')) error('permission denied');
+
+			$privileges = $file->getPrivileges();
+			$document = array();
+			foreach ($privileges as $object => $privilege) {
+				if ($object == "u") {
+					foreach ($privilege as $id => $perms) {
+						//print "User => $id: ";
+						$user = new \Register\Person($id);
+						$document["user"][$user->code]['can'] = $perms;
+					}
+				}
+				if ($object == "o") {
+					foreach ($privilege as $id => $perms) {
+						//print "User => $id: ";
+						$organization = new \Register\Organization($id);
+						$document["organization"][$organization->code]['can'] = $perms;
+					}
+				}
+			}
+			$this->response->privilege = $document;
+			$this->response->success = 1;
+
+			api_log($this->response);
+			print $this->formatOutput($this->response);
+		}
+
+		###################################################
+		### Update Privileges for a File				###
+		###################################################
+		public function updateFilePrivileges() {
+			$file = new \Storage\File();
+			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			$file->get($_REQUEST['file_code']);
+			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
+			if (! $file->id) $this->error("File not found");
+			if ($file->user->id != $GLOBALS['_SESSION_']->customer->id && ! $GLOBALS['_SESSION_']->customer->can('update storage file permissions')) error('permission denied');
+
+			if (empty($_REQUEST['entity_type']) || !preg_match('/^[uora]/i',$_REQUEST['entity_type'])) $this->error("entity_type must be 'user','organization', 'role' or 'all'");
+			if (empty($_REQUEST['mask']) || !preg_match('/^[\-\+wrgf]+/i',$_REQUEST['mask'])) $this->error("mask must be some combination of signs (+/-) and letters 'wrgf'");
+
+			$mask = array();
+			if ($_REQUEST['mask'] == '+f') $mask = array('+w','+r','+g');
+			elseif ($_REQUEST['mask'] == '-f') $mask = array('-w','-r','-g');
+			else {
+				$neg = '+';
+				while (strlen($_REQUEST['mask']) > 0) {
+					if (preg_match('/^[\-\+]/',$_REQUEST['mask'])) $neg = substr($_REQUEST['mask'],0,1);
+					else {
+						array_push($mask,$neg.substr($_REQUEST['mask'],0,1));
+						$neg = '+';
+					}
+					$_REQUEST['mask'] = substr($_REQUEST['mask'],1);
+				}
+			}
+			if (preg_match('/^u/i',$_REQUEST['entity_type'])) {
+				if (isset($_REQUEST['entity_id'])) {
+					$user = new \Register\Person($_REQUEST['entity_id']);
+				}
+				elseif(isset($_REQUEST['entity_code'])) {
+					$user = new \Register\Person();
+					if (! $user->get($_REQUEST['entity_code'])) $this->error("User not found");
+				}
+				else $this->error("Must identify user");
+				if (! $user->id) $this->error("User not found");
+				if (! $file->updatePrivileges("u",$user->id,$mask)) $this->error("Error updating privileges: ".$file->error);
+			}
+			elseif (preg_match('/^o/i',$_REQUEST['entity_type'])) {
+				if (isset($_REQUEST['entity_id'])) {
+					$organization = new \Register\Organization($_REQUEST['entity_id']);
+				}
+				elseif(isset($_REQUEST['entity_code'])) {
+					$organization = new \Register\Organization();
+					if (! $organization->get($_REQUEST['entity_code'])) $this->error("Organization not found");
+				}
+				else $this->error("Must identify organization");
+				if (! $organization->id) $this->error("Organization not found");
+				if (! $file->updatePrivileges("o",$organization->id,$mask)) $this->error("Error updating privileges: ".$file->error);
+			}
+			elseif (preg_match('/^r/i',$_REQUEST['entity_type'])) {
+				if (isset($_REQUEST['entity_id'])) {
+					$role = new \Register\Role($_REQUEST['entity_id']);
+				}
+				elseif($isset($_REQUEST['entity_code'])) {
+					$role = new \Register\Role();
+					if (! $role->get($_REQUEST['entity_code'])) $this->error("Role not found");
+				}
+				else $this->error("Must identify role");
+				if (! $role->id) $this->error("Role not found");
+				if (! $file->updatePrivileges("r",$role->id,$_REQUEST['mask'])) $this->error("Error updating privileges: ".$file->error);
+			}
+			elseif (preg_match('/^a/i',$_REQUEST['entity_type'])) {
+				if (! $file->updatePrivileges("a",null,$mask)) $this->error("Error updating privileges: ".$file->error);
+			}
+
+			$this->response->success = 1;
+
+			api_log($this->response);
+			print $this->formatOutput($this->response);
+		}
+
+		###################################################
 		### Find matching file							###
 		###################################################
 		public function findFiles() {
@@ -404,6 +578,23 @@
 					'code'		=> array('required' => true),
 					'name'		=> array(),
 					'status'	=> array()
+				),
+				'getFilePrivileges' => array(
+					'code'			=> array('required' => true)
+				),
+				'readPermitted' => array(
+					'user_code'	=> array(),
+					'file_code'	=> array('required' => true)
+				),
+				'writePermitted' => array(
+					'user_code'	=> array(),
+					'file_code'	=> array('required' => true)
+				),
+				'updateFilePrivileges' => array(
+					'file_code'			=> array('required' => true),
+					'entity_type'		=> array('required' => true,'options' => array('organization','user','role','all')),
+					'entity_id'		=> array(),
+					'mask'			=> array('required' => true)
 				),
 				'deleteFile' => array(
 					'code'		=> array('required' => true),
