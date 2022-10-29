@@ -13,43 +13,44 @@
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
             $page->addError("Invalid Token");
         }
-		elseif (!$repostory->validName($_REQUEST['name'])) {
+		if (!$repository->validName($_REQUEST['name'])) {
 			$page->addError("Invalid name");
 			$_REQUEST['name'] = htmlspecialchars($_REQUEST['name']);
 		}
-		elseif (!$repository->validType($_REQUEST['type'])) {
-			$page->addError("Invalid type");
+		if (empty($repository->id) && !$repository->validType($_REQUEST['type'])) {
+			$page->addError("Invalid type '".$_REQUEST['type']."'");
 			$_REQUEST['type'] = htmlspecialchars($_REQUEST['type']);
 		}
-		elseif (!$repository->validStatus($_REQUEST['status'])) {
+		if (!$repository->validStatus($_REQUEST['status'])) {
 			$page->addError("Invalid status");
 			$_REQUEST['status'] = htmlspecialchars($_REQUEST['status']);
 		}
-		elseif (!empty($_REQUEST['path']) && !$repository->validPath($_REQUEST['path'])) {
+		if (!$repository->validPath($_REQUEST['path'])) {
 			$page->addError("Invalid path");
 			$_REQUEST['path'] = htmlspecialchars($_REQUEST['path']);
 		}
-		elseif (!empty($_REQUEST['endpoint']) && !$repository->validEndpoint($_REQUEST['endpoint'])) {
+		if (!$repository->validEndpoint($_REQUEST['endpoint'])) {
 			$page->addError("Invalid endpoint");
 			$_REQUEST['endpoint'] = htmlspecialchars($_REQUEST['endpoint']);
 		}
-		elseif (!empty($_REQUEST['accessKey']) && !$repository->validAccessKey($_REQUEST['endpoint'])) {
+		if (!$repository->validAccessKey($_REQUEST['endpoint'])) {
 			$page->addError("Invalid endpoint");
 			$_REQUEST['endpoint'] = htmlspecialchars($_REQUEST['endpoint']);
 		}
-		elseif (!empty($_REQUEST['secretKey']) && !$repository->validSecretKey($_REQUEST['secretKey'])) {
+		if (!$repository->validSecretKey($_REQUEST['secretKey'])) {
 			$page->addError("Invalid secretKey");
 			$_REQUEST['secretKey'] = htmlspecialchars($_REQUEST['secretKey']);
 		}
-		elseif (!empty($_REQUEST['bucket']) && !$repository->validBucket($_REQUEST['bucket'])) {
+		if (!$repository->validBucket($_REQUEST['bucket'])) {
 			$page->addError("Invalid bucket");
 			$_REQUEST['bucket'] = htmlspecialchars($_REQUEST['bucket']);
 		}
-		elseif (!empty($_REQUEST['region']) && !$repository->validRegion($_REQUEST['region'])) {
+		if (!$repository->validRegion($_REQUEST['region'])) {
 			$page->addError("Invalid region");
 			$_REQUEST['region'] = htmlspecialchars($_REQUEST['region']);
 		}
-		else {
+
+		if ($page->errorCount() < 1) {
 			$parameters = array();
 			$parameters['name'] = $_REQUEST['name'];
 			$parameters['type'] = $_REQUEST['type'];
@@ -107,6 +108,18 @@
 					if (isset($repository->bucket)) $form['bucket'] = $repository->bucket;
 				}
 			}
+		}
+		else {
+			$form['code'] = $_REQUEST['code'];
+			$form['name'] = $_REQUEST['name'];
+			$form['type'] = $_REQUEST['type'];
+			$form['status'] = $_REQUEST['status'];
+			$form['path'] = $_REQUEST['path'];
+			$form['endpoint'] = $_REQUEST['endpoint'];
+			$form['accessKey'] = $_REQUEST['accessKey'];
+			$form['secretKey'] = $_REQUEST['secretKey'];
+			$form['region'] = $_REQUEST['region'];
+			$form['bucket'] = $_REQUEST['bucket'];
 		}
 	} elseif (! $page->errorCount()) {
 	

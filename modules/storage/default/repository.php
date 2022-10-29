@@ -90,6 +90,7 @@
 <form name="repoUpload" action="/_storage/file" method="post" enctype="multipart/form-data">
     <div class="container">
 	    <span class="label">Upload File</span>
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 	    <input type="hidden" name="repository_id" value="<?=$repository->id?>" />
 	    <input type="file" name="uploadFile" />
 	    <input type="submit" name="btn_submit" class="button" value="Upload" />
