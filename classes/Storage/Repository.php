@@ -8,8 +8,8 @@
 		public $type;
 		public $id;
 		public $code;
-		protected $default_privileges;
-		protected $override_privileges;
+		public $default_privileges;
+		public $override_privileges;
 
 		public function __construct($id = 0) {
 			$this->_init($id);
