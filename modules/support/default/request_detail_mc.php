@@ -1,7 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->fromRequest();
-	$page->requireRole('support user');
+	$page->requirePrivilege('browse support tickets');
 
 	if ($_REQUEST['code']) {
 		$request = new \Support\Request();
