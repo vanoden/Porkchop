@@ -61,7 +61,6 @@
 		    }
 	    }
 	    public function requireRole($role) {
-	        return true;
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
 		    } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
@@ -75,17 +74,23 @@
 			    header ( 'location: /_register/permission_denied' );
 			    exit ();
 		    }
+			else {
+			    header ( 'location: /_register/permission_denied' );
+				exit();
+			}
 	    }
-	    
+
         public function requirePrivilege($privilege) {
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
-                return true;
-            } elseif ($GLOBALS['_SESSION_']->customer->can('do everything')) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
                 return true;
             } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+				$counter = new \Site\Counter("auth_redirect");
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit ();
 		    } else {
+				$counter = new \Site\Counter("permission_denied");
 			    header ( 'location: /_register/permission_denied' );
 			    exit ();
 		    }
@@ -322,7 +327,6 @@
 				    $buffer .= $_SERVER ['HTTP_HOST'];
 			    }
 		    } elseif ($object == "page") {
-				error_log("FOUND page property ".$property);
 			    if ($property == "view") {
 				    $buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";
 				} elseif ($property == "errorblock") {
