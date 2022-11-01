@@ -76,19 +76,28 @@
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
 		$customer = new \Register\Customer();
 		if ($customer->get($_REQUEST['login'])) {
-		    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+		    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
         		$page->addError("Invalid Request");
+				$failure = new \Register\AuthFailure();
+				$failure->add($_SERVER['REMOTE_ADDR'],$login,'CSRFTOKEN',$_SERVER['PHP_SELF']);
 		    } else {
 			    if ($customer->isBlocked()) {
 				    $page->addError("Your account has been blocked");
+				    $counter = new \Site\Counter("auth_failed");
+				    $counter->increment();
 				    $failure = new \Register\AuthFailure();
 				    $failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$_SERVER['PHP_SELF']);
 				    return;
 			    }
-			    if ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) {
+				elseif (!empty($GLOBALS['_config']->captcha->bypass_key) && !empty($_REQUEST['captcha_bypass_key']) && $GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key']) {
+					//Don't require catcha
+				}
+			    elseif ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) {
 				    $CAPTCHA_GO = true;
 				    if (!isset($_REQUEST['g-recaptcha-response'])) {
 					    // CAPTCHA Required but not done
+				    	$counter = new \Site\Counter("captcha_block");
+						$counter->increment();
 					    app_log("Customer ".$customer->id. " " . $customer->status . " login ATTEMPTED",'notice',__FILE__,__LINE__);
 					    app_log("login_target = $target",'debug',__FILE__,__LINE__);
 					    $page->addError("CAPTCHA Required");
@@ -105,6 +114,7 @@
 					    }
 				    }
 			    }
+
 			    if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
         			app_log("Customer ".$customer->id." login failed",'notice',__FILE__,__LINE__);
 				    app_log("login_target = $target",'debug',__FILE__,__LINE__);
