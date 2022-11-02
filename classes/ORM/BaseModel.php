@@ -1,14 +1,13 @@
 <?php
 	namespace ORM;
 	
-	class BaseModel {
+	class BaseModel Extends \BaseClass {
 
 	    protected $fields = array();
 	    public $values = array();	
 	    protected $tableName;
 	    private $_updateQuery;
 	    private $_addQuery;
-	    protected $_error;
 		protected $ukColumn = 'code';
 	
         /**
@@ -157,12 +156,5 @@
 				return false;
 			}
             return $rs;
-		}
-	   
-        /**
-         * get the error that may have happened on the DB level
-         */
-		public function error() {
-			return $this->_error;
 		}
 	}
