@@ -63,7 +63,7 @@
 				$country = new \Geography\Country($_REQUEST['id']);
 			}
 			else {
-				error("Not enough parameters");
+				$this->error("Not enough parameters");
 			}
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -149,7 +149,7 @@
 				if (! $province->id) $this->error("Province not found");
 			}
 			else {
-				error("Not enough parameters");
+				$this->error("Not enough parameters");
 			}
 	
 			$response = new \HTTP\Response();
