@@ -13,7 +13,7 @@
 		if (! $role->id) {
 			if (isset($_REQUEST['btn_submit'])) {
                 if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-                    $page->addError("Invalid Request")
+                    $page->addError("Invalid Request");
                 } else {
                     $role->add(array(
 	                    "name" => $_REQUEST['name'],
@@ -34,7 +34,7 @@
 
     if ($role->id && isset($_REQUEST['btn_submit'])) {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-            $page->addError("Invalid Request")
+            $page->addError("Invalid Request");
         } else {
 		    if ($role->update( array( 'description'	=> $_REQUEST['description'] ) )) {
 			    $page->success = "Role Updated";
@@ -49,7 +49,7 @@
 	    $privileges = $privilegeList->find(array('_sort' => 'module'));
 		if (isset($_REQUEST['btn_submit'])) {
 		    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-                $page->addError("Invalid Request")
+                $page->addError("Invalid Request");
             } else {
             
 		        foreach ($privileges as $privilege) {
