@@ -24,6 +24,7 @@
     
     // page load apply button status, setup up autocomplete
     $(function() {
+    
         // autocomplete textbox
         $(".organization").autocomplete({
             source: "/_register/api?method=searchOrganizationsByName",
@@ -167,6 +168,7 @@
         <div class="form_success"><?=$page->success?></div>
    <?php } ?>
    <form action="/_register/pending_customers" method="post" autocomplete="off">
+      <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 	  <table>
 		 <tr>
 			<th><span class="label"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> Start Date</th>
@@ -228,6 +230,7 @@
 <?php	if ($queuedCustomer->is_reseller) { ?>&nbsp;[Reseller]<?php	} ?>
 		<br>
 		<form method="POST" id="customer_add_form_<?=$queuedCustomer->id?>" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+		    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<?php
 			  switch ($queuedCustomer->status) {
 				  case 'PENDING':
@@ -278,6 +281,7 @@
 	  <div class="tableCell">
 		 <div id="customer_status_form_<?=$queuedCustomer->id?>" class="hidden customer_status_form">
 			<form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+     		  <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 			   Update Status:<br/>
 			   <select name="status">
 				  <?php foreach ($queuedCustomers->possibleStatus as $possibleStatus) { ?>
@@ -328,6 +332,7 @@
 	  <div class="tableCell">
 		 <div id="customer_notes_form_<?=$queuedCustomer->id?>" class="hidden customer_notes_form">
 			<form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+   			   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 			   <input type="text" name="notes" value="<?=$queuedCustomer->notes?>"/><br/>
 			   <input type="hidden" name="action" value="updateNotes"/>
 			   <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>

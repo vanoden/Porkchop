@@ -22,7 +22,8 @@
 <?php  if ($page->errorCount() > 0) { ?>
 <div class="form_error"><?=$page->errorString()?></div>
 <?php  } ?>
-<form name="versionListForm" method="GET" action="/_package/versions">
+<form name="versionListForm" method="POST" action="/_package/versions">
+   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
    <input type="hidden" name="version_id" value="" />
    <input type="hidden" name="dothis" value="" />
    <input type="hidden" name="code" value="" />

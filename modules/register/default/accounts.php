@@ -30,7 +30,6 @@
 	th.accountsLastActive {	width: 18%; }
 	td.value { overflow: hidden; }
 </style>
-
 <section>
 	<article class="segment">
 		<h2>Customers</h2>
