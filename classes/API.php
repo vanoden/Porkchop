@@ -47,6 +47,17 @@
 	
 			print $this->formatOutput($response);
 		}
+		public function csrfToken() {
+			$response = new \HTTP\Response();
+			$response->token = $GLOBALS['_SESSION_']->getCSRFToken();
+			$response->success = 1;
+
+			$comm = new \Monitor\Communication();
+			$comm->update(json_encode($response));
+			api_log($response);
+	
+			print $this->formatOutput($response);
+		}
 
 		public function requireAuth() {
 			if (! $GLOBALS['_SESSION_']->authenticated()) $this->deny();;
@@ -58,6 +69,20 @@
 
 		public function requirePrivilege($privilege_name) {
 			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name)) $this->deny();
+		}
+
+		public function validCSRFToken() {
+			// Machines don't send CSRF Token
+			if (preg_match('/^portal_sync/',$_SERVER['HTTP_USER_AGENT'])) return true;
+
+			// Not valid if token not even sent
+			if (empty($_REQUEST['csrfToken'])) return false;
+
+			// Check provided token against session
+			if ($GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) return true;
+
+			// All else fails, check failed
+			return false;
 		}
 
 		###################################################
