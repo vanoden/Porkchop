@@ -1,3 +1,4 @@
+<div class="title">Files</div>
 <?php	if ($page->errorCount() > 0) { ?>
     <div class="form_error">
         <?=$page->errorString()?>

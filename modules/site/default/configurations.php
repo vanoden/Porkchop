@@ -1,5 +1,4 @@
 <script language="Javascript">
-
 	function updateConfig(idx) {
 		document.forms[0].key.value = document.getElementById('key_'+idx).value;
 		document.forms[0].value.value = document.getElementById('value_'+idx).value;
@@ -22,20 +21,22 @@
 </script>
 <div class="title">Edit Site Configuration</div>
 <?php	
-if ($page->errorCount()) {
+    if ($page->errorCount()) {
 ?>
     <div class="form_error"><?=$page->errorString()?></div>
 <?php
-}
-if ($page->success) { ?>
+    }
+    if ($page->success) { 
+?>
     <div class="form_success"><?=$page->success?></div>
 <?php
-}
+    }
 ?>
 <form method="post" action="/_site/configurations">
     <input type="hidden" name="key" value="" />
     <input type="hidden" name="value" value="" />
     <input type="hidden" name="todo" value="" />
+    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <div class="subheading">Manage Site Configurations</div>
     <div class="table">
 	    <div class="tableRowHeader">

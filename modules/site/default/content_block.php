@@ -26,24 +26,38 @@
         toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | code'
 	});
 </script>
+<div class="title">Edit Site Content Block</div>
+<?php	
+    if ($page->errorCount()) {
+?>
+    <div class="form_error"><?=$page->errorString()?></div>
+<?php
+    }
+    if ($page->success) {
+?>
+    <div class="form_success"><?=$page->success?></div>
+<?php
+    }
+?>
 <form method="post" action="/_site/content_block">
-<input type="hidden" name="id" value="<?=$message->id?>"/>
-<div class="columns">
-    <span class="lefty">Name</span>
-    <input class="value input lefty" type="text" name="name" id="name" value="<?=$message->name?>"/><br>
-    <span class="lefty">Target</span>
-    <input class="value input lefty" type="text" name="target" id="target" value="<?=$message->target?>"/>
-</div>
-<div class="columns">
-<?php	if ($show_add_page) { ?>
-	<span>Add As A Page? </span><input type="checkbox" name="addPage" value="1" />
-<?php	} else { ?>
-	<a href="/_content/<?=$message->target?>">Go To Page</a><br>
-	<a href="/_site/page?module=content&view=index&index=<?=$message->target?>">Edit Page Metadata</a><br>
-<?php	} ?>
-</div>
-<div id="contentArea">
-	<textarea id="content" name="content"><?=$message->content?></textarea>
-	<input type="submit" name="Submit" value="Submit"/>
-</div>
+    <input type="hidden" name="id" value="<?=$message->id?>"/>
+    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+    <div class="columns">
+        <span class="lefty">Name</span>
+        <input class="value input lefty" type="text" name="name" id="name" value="<?=$message->name?>"/><br>
+        <span class="lefty">Target</span>
+        <input class="value input lefty" type="text" name="target" id="target" value="<?=$message->target?>"/>
+    </div>
+    <div class="columns">
+    <?php	if ($show_add_page) { ?>
+	    <span>Add As A Page? </span><input type="checkbox" name="addPage" value="1" />
+    <?php	} else { ?>
+	    <a href="/_content/<?=$message->target?>">Go To Page</a><br>
+	    <a href="/_site/page?module=content&view=index&index=<?=$message->target?>">Edit Page Metadata</a><br>
+    <?php	} ?>
+    </div>
+    <div id="contentArea">
+	    <textarea id="content" name="content"><?=$message->content?></textarea>
+	    <input type="submit" name="Submit" value="Submit"/>
+    </div>
 </form>

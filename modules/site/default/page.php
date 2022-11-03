@@ -19,10 +19,10 @@
 </script>
 <div class="title">Edit Page Parameters</div>
 <?php	if ($page->errorCount()) { ?>
-<div class="form_error"><?=$page->errorString()?></div>
+    <div class="form_error"><?=$page->errorString()?></div>
 <?php	}
 	if ($page->success) { ?>
-<div class="form_success"><?=$page->success?></div>
+    <div class="form_success"><?=$page->success?></div>
 <?php	} ?>
 <div class="container_narrow">
 	<span class="label">Module</span><span class="label"><?=$module?></span>
@@ -34,6 +34,7 @@
 	<span class="label">Index</span><span class="label"><?=$index?></span>
 </div>
 <form method="post" action="/_site/page">
+    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="module" value="<?=$module?>" />
     <input type="hidden" name="view" value="<?=$view?>" />
     <input type="hidden" name="index" value="<?=$index?>" />

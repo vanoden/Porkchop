@@ -1,5 +1,4 @@
 <style>
-
     * {
       box-sizing: border-box;
     }
@@ -37,23 +36,37 @@
     }
 </style>
 
+<div class="title">Site Search</div>
+<?php
+    if ($page->errorCount()) {
+?>
+    <div class="form_error"><?=$page->errorString()?></div>
+<?php
+    }
+    if ($page->success) { 
+?>
+    <div class="form_success"><?=$page->success?></div>
+<?php
+    }
+?>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <form class="form" method="POST" action="/_site/search">
   <input type="text" placeholder="Enter Search..." name="string" value="<?=$_REQUEST['string']?>">
+  <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
   <button type="submit"><i class="fa fa-search"></i></button>
 </form>
 
 <?php
     if (!empty($messages)) {
-?>       
+?>
     <br/><u>Search Results</u>
-<?php    
+<?php
     }
-    
-foreach ($messages as $message) {
+    foreach ($messages as $message) {
     ?>
-    <h3><a href="/<?=$message->target?>" target="_blank"><?=empty(($message->name)) ? 'Spectros Instruments' : ucfirst($message->name)?></a></h3>
-    <p><?=$message->content?></p>
+        <h3><a href="/<?=$message->target?>" target="_blank"><?=empty(($message->name)) ? 'Spectros Instruments' : ucfirst($message->name)?></a></h3>
+        <p><?=$message->content?></p>
     <?php
     }
 ?>
