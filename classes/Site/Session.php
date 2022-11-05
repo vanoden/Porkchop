@@ -191,6 +191,7 @@
 				# Make Sure Session Code Not Already Used
 				if ($this->code_in_use($new_code)) $new_code = "";
 			}
+			app_log("Generated session code '$new_code'");
 
 			if (! is_object($this->customer)) {
 				$this->customer = new \Register\Customer();
@@ -634,15 +635,15 @@
 
         public function verifyCSRFToken($csrfToken) {
 			if (empty($csrfToken)) {
-				app_log("No csrfToken provided",'info');
+				app_log("No csrfToken provided",'debug');
 				return false;
 			}
 			if (empty($this->csrfToken)) {
-				app_log("No csrfToken exists for session",'info');
+				app_log("No csrfToken exists for session",'debug');
 				return false;
 			}
 			if ($this->csrfToken != $csrfToken) {
-				app_log("csrfToken provided doesn't match session",'info');
+				app_log("csrfToken provided doesn't match session",'debug');
 				return false;
 			}
 			return true;
