@@ -22,18 +22,24 @@
 			app_log("Return to ".$GLOBALS['_REQUEST_']->refererURI()." after login");
 		}
 	}
-	elseif (isset($_POST['login_target']))
+	elseif (isset($_POST['login_target'])) {
 		# This is how the SHOULD come in from FORM submit
 		$target = $_POST['login_target'];
 		if (!preg_match('/^[\/\w\-\.\_]+$/',$target)) $target = '';
+		app_log("login_target = ".$GLOBALS['_config']->register->auth_target);
+	}
 	elseif(isset($_GET['target'])) {
 		# Translate target
 		$target = urldecode($_GET['target']);
 		# Validate target
 		if (!preg_match('/^[\/\w\-\.\_]+$/',$target)) $target = '';
+		app_log("target = ".$GLOBALS['_config']->register->auth_target);
 	}
-	elseif($GLOBALS['_config']->register->auth_target)
+	elseif($GLOBALS['_config']->register->auth_target) {
 		$target = $GLOBALS['_config']->register->auth_target;
+		app_log("auth_target = ".$GLOBALS['_config']->register->auth_target);
+	}
+
 	if (! preg_match('/^\//',$target))
 		$target = '/'.$target;
 
