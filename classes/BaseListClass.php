@@ -5,4 +5,8 @@
         public function count() {
             return $this->_count;
         }
+
+		public function incrementCount() {
+			$this->_count ++;
+		}
 	}
