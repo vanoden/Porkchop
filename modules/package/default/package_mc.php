@@ -1,6 +1,6 @@
 <?php
     $page = new \Site\Page();
-    $page->requireRole('package manager');
+    $page->requirePrivilege('manage packages');
 
     if (isset($_REQUEST['package_code']) && strlen($_REQUEST['package_code'])) {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {

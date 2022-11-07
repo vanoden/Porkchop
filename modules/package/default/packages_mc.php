@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-    $page->requireRole('package manager');
+    $page->requirePrivileges('manage packages');
 	$packagelist = new \Package\PackageList();
 
 	$parameters = array();

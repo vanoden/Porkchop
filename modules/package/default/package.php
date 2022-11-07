@@ -3,9 +3,22 @@
 <?php } else { ?>
     <div class="title">New Package</div>
 <?php } ?>
+
 <?php if ($page->errorCount() > 0) { ?>
-    <div class="form_error"><?=$page->errorString()?></div>
-<?php } ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <form name="packageForm" method="POST" action="/_package/package">
     <input type="hidden" name="package_id" value="<?=$package->id?>" />
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">

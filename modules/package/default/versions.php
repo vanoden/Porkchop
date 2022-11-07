@@ -19,9 +19,20 @@
        document.forms[0].submit();
    }
 </script>
-<?php  if ($page->errorCount() > 0) { ?>
-<div class="form_error"><?=$page->errorString()?></div>
-<?php  } ?>
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
 <form name="versionListForm" method="POST" action="/_package/versions">
    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
    <input type="hidden" name="version_id" value="" />
