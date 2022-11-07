@@ -9,7 +9,11 @@
     
         if (isset($_REQUEST['code'])) {
             $package = new \Package\Package();
-            if (! $package->get($_REQUEST['code'])) $page->addError("Package not found");
+            if (! $package->validCode($_REQUEST['code'])) {
+                $page->addError("Invalid package code");
+                $_REQUEST['code'] = null;
+            }
+            elseif (! $package->get($_REQUEST['code'])) $page->addError("Package not found");
         }
 
         if ($_REQUEST['dothis'] == 'publish') {
@@ -18,14 +22,12 @@
             $version->publish();
             if ($version->error) $page->addError($version->error);
         }
-
-        if ($_REQUEST['dothis'] == 'hide') {
+        elseif ($_REQUEST['dothis'] == 'hide') {
             $version = new \Package\Version($_REQUEST['version_id']);
             app_log("Hiding version ".$version->version()." of ".$version->package->name,'notice');
             $version->hide();
         }
-
-        if ($_REQUEST['dothis'] == 'download') {
+        elseif ($_REQUEST['dothis'] == 'download') {
             $version = new \Package\Version($_REQUEST['version_id']);
 		    $file = $version->file();
             $file->download();
@@ -35,14 +37,17 @@
                 exit;
             }
         }
+        else {
+            $_REQUEST['dothis'] = null;
+        }
+
     } else {
         $page->addError("Invalid Request");
     }
-    
+
 	$parameters = array();
 	$parameters['package_id'] = $package->id;
 	$parameters['_sort'] = 'version';
 	$parameters['_sort_desc'] = true; 
     $versionList = new \Package\VersionList();
     $versions = $versionList->find($parameters);
-
