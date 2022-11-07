@@ -35,4 +35,14 @@
 			if (is_bool($cached)) $this->_cached = $cached;
 			return $this->_cached;
 		}
+
+		public function validCode($string) {
+			if (preg_match('/^\w[\w\-\.\_\s]+$/',$string)) return true;
+			else return false;
+		}
+
+		public function validName($string) {
+			if (preg_match('/\w[\w\-\.\_\s\,\!\?\(\)]*$/',$string)) return true;
+			else return false;
+		}
 	}
