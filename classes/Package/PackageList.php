@@ -1,9 +1,7 @@
 <?php
 	namespace Package;
 
-	class PackageList {
-		public $error;
-		public $count = 0;
+	class PackageList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
 			$find_objects_query = "
@@ -38,7 +36,7 @@
 			while (list($id) = $rs->FetchRow()) {
 				$package = new Package($id);
 				array_push($objects,$package);
-				$this->count ++;
+				$this->_count ++;
 			}
 			return $objects;
 		}
