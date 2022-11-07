@@ -51,6 +51,22 @@
 		Support Home
 	</div>
 </div>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <h2 style="display: inline-block;"><i class='fa fa-list-ol' aria-hidden='true'></i> Support Requests <?=!empty($_REQUEST['btn_all']) ? '[ALL]' : '[Open]';?></h2>
 <?php include(MODULES.'/support/partials/search_bar.php'); ?>
 <form id="pageForm" method='get'>
