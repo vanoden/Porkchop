@@ -471,4 +471,16 @@
 			$price = new \Product\Price();
 			return $price->getCurrent($this->id);
         }
+        public function validCode($string) {
+            if (preg_match('/^\w[\w\-\.\_\s]*$/',$string)) return true;
+            else return false;
+        }
+        public function validType($string) {
+            if (in_array($string,array('group','kit','inventory','unique'))) return true;
+            else return false;
+        }
+        public function validStatus($string) {
+            if (in_array($string,array('ACTIVE','HIDDEN','DELETED'))) return true;
+            else return false;
+        }
 	}

@@ -1,9 +1,7 @@
 <?php
 	namespace Product;
 
-	class ItemList {
-		public $count;
-		public $error;
+	class ItemList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
 			$this->error = '';
@@ -74,9 +72,8 @@
 				$_parent = new \Product\Item($parameters["category"]);
 				$category_id = $_parent->id;
 
-				if (! $category_id)
-				{
-					$this->error = "Invalid Category";
+				if (! $category_id) {
+					$this->error("Invalid Category");
 					return null;
 				}
 				$find_product_query .= "
@@ -103,19 +100,16 @@
 			query_log($find_product_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Product::ItemList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
 			$items = array();
 			while (list($id) = $rs->FetchRow()) {
 				$item = new Item($id);
+                $this->_count ++;
 				array_push($items,$item);
 			}
 			return $items;
-		}
-
-		public function error() {
-			return $this->error;
 		}
 	}
