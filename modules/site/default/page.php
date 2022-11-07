@@ -17,13 +17,23 @@
 		document.forms[0].submit();
 	}
 </script>
-<div class="title">Edit Page Parameters</div>
-<?php	if ($page->errorCount()) { ?>
-    <div class="form_error"><?=$page->errorString()?></div>
-<?php	}
-	if ($page->success) { ?>
-    <div class="form_success"><?=$page->success?></div>
+<span class="title">Edit Page Parameters</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
 <?php	} ?>
+
 <div class="container_narrow">
 	<span class="label">Module</span><span class="label"><?=$module?></span>
 </div>

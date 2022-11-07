@@ -15,7 +15,7 @@
 			query_log($find_items_query,array($this->id),true);
 			$rs = $GLOBALS['_database']->Execute($find_items_query,array($this->id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::items(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$items = array();
@@ -32,7 +32,7 @@
 			}
 			$relationship = new \Product\Relationship();
 			if ($relationship->add(array('parent_id' => $this->id,'child_id' => $item->id))) return true;
-			$this->_error = $relationship->error();
+			$this->error($relationship->error());
 			return false;
 		}
 	}

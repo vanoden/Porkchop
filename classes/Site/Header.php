@@ -17,7 +17,7 @@
 				$this->error("name required for header");
 				return false;
 			}
-			if (! preg_match('/^\w[\w\-]*$/',$params['name'])) {
+			if (! validName($params['name'])) {
 				$this->error("Invalid header name");
 				return false;
 			}
@@ -104,6 +104,11 @@
 				$this->value = null;
 			}
 			return true;
+		}
+
+		public function validName($string) {
+			if (preg_match('/^\w[\w\-]*$/',$string)) return true;
+			else return false;
 		}
 	}
 ?>

@@ -86,7 +86,7 @@
 			if (isset($_COOKIE[$this->cookie_name])) $request_code = $_COOKIE[$this->cookie_name];
 
 			# Was a 'Valid looking' Session Given
-			if (isset($request_code) && $this->valid_code($request_code)) {
+			if (isset($request_code) && $this->validCode($request_code)) {
 				# Get Existing Session Information
 				$this->get($request_code);
 				if ($this->id) {
@@ -171,7 +171,7 @@
 		}
 
 		# See if a Given Session code looks valid
-		function valid_code ($request_code) {
+		function validCode($request_code) {
 			# Test to See Session Code is 32 character hexadecimal
 			if (preg_match("/^[0-9a-f]{64}$/i",$request_code)) return true;
 			#error_log("Invalid session code: $request_code");
@@ -511,7 +511,7 @@
 
 			return $this->details();
 		}
-		
+
 		function hits($id = 0) {
 			if ($id < 1) $id = $this->id;
 			$hitlist = new HitList();
@@ -526,7 +526,7 @@
 			}
 			return $hits;
 		}
-		
+
 		function hit() {
 			$hit = new Hit();
 			$hit->add(

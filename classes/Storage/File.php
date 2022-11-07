@@ -164,7 +164,7 @@
 			);
 			
 			if (! $rs) {
-				$this->error = "SQL Error in Storage::File::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -198,7 +198,6 @@
 		}
 
 		public function delete() {
-		
 			if (! $this->id) {
 				$this->error = "Must select file first";
 				return false;
@@ -216,7 +215,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::File::delete(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;

@@ -14,7 +14,7 @@
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
             $page->addError("Invalid Token");
         }
-        elseif(!$menu->valid_code($_REQUEST['code'])) {
+        elseif(!$menu->validCode($_REQUEST['code'])) {
             $page->addError("Invalid code");
         }
         else {

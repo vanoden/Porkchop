@@ -1,9 +1,7 @@
 <?php
 	namespace Site;
 	
-	class ConfigurationList {
-	
-		public $error;
+	class ConfigurationList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
 		
@@ -32,13 +30,14 @@
 			
 			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Configuration::List::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$pages = array();
 			
 			while(list($id) = $rs->FetchRow()) {
 				$page = new \Site\Configuration($id);
+				$this->incrementCount();
 				array_push($pages,$page);
 			}
 			return $pages;

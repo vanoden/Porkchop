@@ -9,18 +9,26 @@
 	if (isset($_REQUEST['todo']) && !empty($_REQUEST['todo'])) {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
             $page->addError("Invalid Request");
-        } else {
-	        if (! preg_match('/^\w[\w\-\.\_]*$/',$_REQUEST['module'])) {
+        }
+		else {
+	        if (! $page->validModule($_REQUEST['module'])) {
 		        $page->addError("Invalid module name");
-	        } elseif (! preg_match('/^\w[\w\-\.\_]*$/',$_REQUEST['view'])) {
+				$_REQUEST['index'] = null;
+	        }
+			elseif (! $page->validView($_REQUEST['view'])) {
 		        $page->addError("Invalid view name");
-	        } elseif ($editPage->get($_REQUEST['module'],$_REQUEST['view'],$index)) {
-	        
-		        if ($_REQUEST['key'] == "template" && !preg_match('/^[\w\-\.\_]+$/',$_REQUEST['value'])) {
+				$_REQUEST['index'] = null;
+			}
+			elseif (! $page->validIndex($index)) {
+				$page->addError("Invalid index");
+				$_REQUEST['index'] = null;
+			}
+			elseif ($editPage->get($_REQUEST['module'],$_REQUEST['view'],$index)) {
+		        if ($_REQUEST['key'] == "template" && !$page->validTemplate($_REQUEST['value'])) {
 			        $page->addError("Invalid template name");
 			        return;
 		        }
-		        
+
 		        if (isset($_REQUEST['todo'])) {
 			        if ($_REQUEST['todo'] == 'drop') {
 				        if ($editPage->unsetMetadata($_REQUEST['key'])) {
@@ -43,7 +51,8 @@
 		        $index = $editPage->index;
 		        if (! strlen($index)) $index = '[null]';
 		        $metadata = $editPage->allMetadata();
-	        } else {
+	        }
+			else {
 		        $page->addError("Page ".$_REQUEST['module']."/".$_REQUEST['view']." index ".$_REQUEST['index']." not found");
 	        }
         }

@@ -747,4 +747,42 @@
 		    if (! empty ( $this->error )) array_push ( $this->errors, $this->error );
 		    return count ( $this->_errors );
 	    }
+
+		public function validModule($string) {
+			if (preg_match('/^\w[\w]*$/',$string)) return true;
+			else return false();
+		}
+
+		public function validView($string) {
+			if (preg_match('/^\w[\w]*$/',$string)) return true;
+			else return false();
+		}
+
+		public function validIndex($string) {
+			if (preg_match('/^\w[\w]*$/',$string)) return true;
+			else return false();
+		}
+
+		public function validStyle($string) {
+			if (preg_match('/^\w[\w]*$/',$string)) return true;
+			else return false();
+		}
+
+		public function validURI($string) {
+			if (preg_match('/\.\./', $string)) return false;
+			if (preg_match('/^[\w\-\.\_\/]+$/',$string)) return true;
+			else return false();
+		}
+
+		public function validTitle($string) {
+			if (empty(trim($string))) return false;
+			if (preg_match('/[\<\>]/',urldecode($string))) return false;
+			return true;
+		}
+
+		public function validTemplate($string) {
+			if (preg_match('/\.\./', $string)) return false;
+			if (preg_match('/^\w[\w\-\.\_]*\.html?$/',$string)) return true;
+			else return false();
+		}
     }

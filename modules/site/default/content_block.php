@@ -26,19 +26,23 @@
         toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | code'
 	});
 </script>
-<div class="title">Edit Site Content Block</div>
-<?php	
-    if ($page->errorCount()) {
-?>
-    <div class="form_error"><?=$page->errorString()?></div>
-<?php
-    }
-    if ($page->success) {
-?>
-    <div class="form_success"><?=$page->success?></div>
-<?php
-    }
-?>
+<span class="title">Edit Site Content Block</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <form method="post" action="/_site/content_block">
     <input type="hidden" name="id" value="<?=$message->id?>"/>
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">

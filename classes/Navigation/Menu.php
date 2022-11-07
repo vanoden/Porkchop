@@ -175,7 +175,7 @@
 		    return $html;
 	    }
 
-        public function valid_code($code) {
+        public function validCode($code) {
             if (preg_match('/^\w[\w\-\.\_\s]+$/',$code)) return true;
             return false;
         }
