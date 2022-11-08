@@ -4,7 +4,6 @@
 		public $id;
 		public $name;
 		public $description;
-		public $error;
 
 		public function __construct($id = 0) {
 			if (isset($id)) {
@@ -14,14 +13,14 @@
 		}
 
         public function add($parameters = array()) {
-            if (! preg_match('/^[\w\-\_\s]+$/',$parameters['name'])) {
-                $this->error = "Failed to add role, invalid name";
+            if (!$this->validName($parameters['name'])) {
+                $this->error("Failed to add role, invalid name");
                 return null;
             }
 			$current_role = new Role();
 			$current_role->get($parameters['name']);
 			if ($current_role->id) {
-				$this->error = "Role already exists";
+				$this->error("Role already exists");
 				return false;
 			}
 
@@ -41,7 +40,7 @@
 				)
 			);
             if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->error = "SQL Error in Register::Role::add(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -67,7 +66,7 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Role::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			return $this->details();
@@ -83,7 +82,7 @@
 				array($code)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Role::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -99,7 +98,7 @@
 				WHERE	id = ?";
 			$GLOBALS['_database']->Execute($drop_object_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error("SQL Error in Register::Role::delete(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -112,8 +111,8 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_members_query,array($this->id));
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Role::members: ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
 			}
 			$admins = array();
 			while (list($admin_id) = $rs->FetchRow()) {
@@ -137,7 +136,7 @@
 				)
 			);
 			if (! $GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Role::hasMember(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($found) = $rs->FetchRow();
@@ -165,7 +164,7 @@
 				)
 			);
 			if (! $GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Role::addMember(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -183,22 +182,22 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Role::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			if ($object = $rs->FetchRow()){
 				$this->name = $object['name'];
 				$this->description = $object['description'];
-				return 1;
+				return true;
 			}
 			else {
-				return 0;
+				return false;
 			}
 		}
 
 		public function notify($message) {
 			if (! $this->id) {
-				$this->error = "Role not found";
+				$this->error("Role not found");
 				return null;
 			}
 			$members = $this->members();
@@ -206,9 +205,9 @@
 				$member = new \Register\Person($member->id);
 				app_log("Sending notification to '".$member->code."' about contact form",'debug',__FILE__,__LINE__);
 				$member->notify($message);
-				if ($member->error) {
+				if ($member->error()) {
 					app_log("Error sending notification: ".$member->error,'error',__FILE__,__LINE__);
-					$this->error = "Failed to send notification: ".$member->error;
+					$this->error("Failed to send notification: ".$member->error());
 					return false;
 				}
 			}
@@ -219,7 +218,7 @@
             else {
     			$privilege = new \Register\Privilege();
 			    if (! $privilege->get(array('privilege' => $new_privilege))) {
-                    $this->error = "Can't get privilege $new_privilege";
+                    $this->error("Can't get privilege $new_privilege");
                     return false;
                 }
             }
@@ -229,7 +228,7 @@
 			";
 			$GLOBALS['_database']->Execute($add_privilege_query,array($this->id,$privilege->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Role::addPrivilege(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			else return true;
@@ -244,7 +243,7 @@
             ";
             $GLOBALS['_database']->Execute($drop_privilege_query,array($this->id,$privilege_id));
             if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->error = "SQL Error in Register::Role::dropPrivilege(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return false;
             }
             return true;
@@ -258,6 +257,10 @@
 			";
 			query_log($get_privileges_query,array($this->id));
 			$rs = $GLOBALS['_database']->Execute($get_privileges_query,array($this->id));
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
 			app_log($rs->recordCount()." rows returned");
 			$privileges = array();
 			while(list($id) = $rs->FetchRow()) {
@@ -287,7 +290,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_privilege_query,array($this->id,$privilege->id));
 
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Role::has_privilege(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($found) = $rs->FetchRow();
@@ -297,5 +300,10 @@
 			else {
 				return false;
 			}
+		}
+
+		public function validName($string) {
+			if (preg_match('/^\w[\w\-\_\s]*$/',$string)) return true;
+			else return false;
 		}
 	}

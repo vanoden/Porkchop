@@ -290,7 +290,7 @@
 				$role = new \Register\Role();
 				$role->get('register manager');
 				$role->notify($message);
-				if ($role->error) app_log("Error sending admin confirm new customer reminder: ".$role->error);
+				if ($role->error()) app_log("Error sending admin confirm new customer reminder: ".$role->error());
 
 				$page->isVerifedAccount = true;				
 			} else {

@@ -8,10 +8,23 @@
 	if (isset($_REQUEST['btn_submit'])) {
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
         	$page->addError("Invalid Request");
-        } else {
-            if (empty($_REQUEST['zip_code'])) $page->addError("Zip Code required");
+        }
+		else {
 		    $province = new \Geography\Province($_REQUEST['province_id']);
-		    if (! $province->id) $page->addError("Province '".$_REQUEST['province_id']."' not found");
+            if (empty($_REQUEST['zip_code']))
+				$page->addError("Zip Code required");
+			elseif (!preg_match('^/[\w-\]+$/',$_REQUEST['zip_code']))
+				$page->addError("Invalid Zip Code");
+			elseif (! $province->id)
+				$page->addError("Province '".$_REQUEST['province_id']."' not found");
+			elseif (! $location->validName($_REQUEST['name']))
+				$page->addError("Invalid name");
+			elseif (! $location->validAddress($_REQUEST['address_1']))
+				$page->addError("Invalid address");
+			elseif (! $location->validAddress($_REQUEST['address_2']))
+				$page->addError("Invalid address");
+			elseif (! $location->validCity($_REQUEST['city']))
+				$page->addError("Invalid city");
 		    else {
 			    $parameters = array();
 			    if ($location->id > 0) {
@@ -24,7 +37,8 @@
 	    
 				    $location->update($parameters);
 				    if ($location->error()) $page->addError("Error updating location ".$location->id.": ".$location->error());
-			    } else {
+			    }
+				else {
 				    $parameters['name'] = $_REQUEST['name'];
 				    $parameters['address_1'] = $_REQUEST['address_1'];
 				    $parameters['address_2'] = $_REQUEST['address_2'];

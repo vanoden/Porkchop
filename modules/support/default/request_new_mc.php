@@ -78,7 +78,7 @@
                     $role = new \Register\Role();
                     $role->get('support user');
                     $role->notify($message);
-                    if ($role->error) app_log("Error sending request notification: ".$role->error);
+                    if ($role->error()) app_log("Error sending request notification: ".$role->error());
                     
 	    			$member = new \Register\Person($member->id);
     				app_log("Sending notification to '".$member->code."' about contact form",'debug',__FILE__,__LINE__);

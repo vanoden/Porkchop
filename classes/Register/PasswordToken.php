@@ -1,8 +1,7 @@
 <?php
 	namespace Register;
 
-	class PasswordToken {
-		public $error;
+	class PasswordToken Extends \BaseClass {
 		public $person_id;
 		public $expiration;
 		public $code;
@@ -29,7 +28,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in RegisterPasswordToken::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$this->code = $code;
@@ -51,7 +50,7 @@
 			);
 
 			if (! $rs) {
-				$this->error = "SQL Error in RegisterRecovery::consume: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -67,8 +66,16 @@
 					$delete_record_query,
 					array($person_id)
 				);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				}
 				return $person_id;
 			}
 			else return null;
+		}
+
+		public function validCode($string) {
+			if (preg_match('/^[a-f0-9]{64}$/',$string)) return true;
+			else return false;
 		}
 	}

@@ -1,12 +1,20 @@
-<?php	
-    if ($page->errorCount()) { ?>
-    <div class="form_error"><?=$page->errorString()?></div>
-<?php	
-    }
-	if ($page->success) { ?>
-        <div class="form_success"><?=$page->success?></div>
-<?php	
-    } ?>
+<span class="title">Role</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <form method="post" action="/_register/role">
     <input type="hidden" name="name" value="<?=$role->name?>" />
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">

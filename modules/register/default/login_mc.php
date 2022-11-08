@@ -16,8 +16,17 @@
 	if (isset($_REQUEST['return']) && $_REQUEST['return'] == 'true') {
 		# This Is How They SHOULD Come In from Redirect
 		if (isset($_REQUEST['module']) && isset($_REQUEST['view'])) {
-			$target = "/_".$_REQUEST['module']."/".$_REQUEST['view'];
-		} else {
+			if (!$page->validModule()) {
+				$page->addError("Invalid target requested");
+			}
+			elseif(!$page->validView($_REQUEST['view'])) {
+				$page->addError("Invalid target requested");
+			}
+			else {
+				$target = "/_".$_REQUEST['module']."/".$_REQUEST['view'];
+			}
+		}
+		else {
 			$target = $GLOBALS['_REQUEST_']->refererURI();
 			app_log("Return to ".$GLOBALS['_REQUEST_']->refererURI()." after login");
 		}
@@ -50,23 +59,26 @@
 	}
 
 	# Handle Input
-	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
+	$token = new \Register\PasswordToken();
+	if (isset($_REQUEST['token']) && $token->validCode($_REQUEST['token'])) {
 		app_log('Auth By Token','debug',__FILE__,__LINE__);
 		# Consume Token
-		$token = new \Register\PasswordToken();
 		$customer_id = $token->consume($_REQUEST['token']);
-		if ($token->error) {
-			app_log("Error in password recovery: ".$token->error,'error',__FILE__,__LINE__);
+		if ($token->error()) {
+			app_log("Error in password recovery: ".$token->error(),'error',__FILE__,__LINE__);
 			$page->addError("Error in password recovery.  Admins have been notified.  Please try again later.");
-		} elseif ($customer_id > 0) {
+		}
+		elseif ($customer_id > 0) {
 			$customer = new \Register\Customer($customer_id);
-			if ($customer->error) {
-				app_log("Error getting customer: ".$customer->error,'error',__FILE__,__LINE__);
+			if ($customer->error()) {
+				app_log("Error getting customer: ".$customer->error(),'error',__FILE__,__LINE__);
 				$page->addError("Token error");
-			} elseif(! $customer->id) {
+			}
+			elseif(! $customer->id) {
 				app_log("Customer not found!",'notice',__FILE__,__LINE__);
 				$page->addError("Token error");
-			} else {
+			}
+			else {
 				$GLOBALS['_SESSION_']->assign($customer->id);
 
 				app_log("Customer ".$customer->id." logged in by token",'notice',__FILE__,__LINE__);
@@ -81,79 +93,87 @@
 	elseif (isset($_REQUEST['login'])) {
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
 		$customer = new \Register\Customer();
-		if ($customer->get($_REQUEST['login'])) {
-		    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
-        		$page->addError("Invalid Request");
-				$failure = new \Register\AuthFailure();
-				$failure->add($_SERVER['REMOTE_ADDR'],$login,'CSRFTOKEN',$_SERVER['PHP_SELF']);
-		    } else {
-			    if ($customer->isBlocked()) {
-				    $page->addError("Your account has been blocked");
-				    $counter = new \Site\Counter("auth_failed");
-				    $counter->increment();
-				    $failure = new \Register\AuthFailure();
-				    $failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$_SERVER['PHP_SELF']);
-				    return;
-			    }
-				elseif (!empty($GLOBALS['_config']->captcha->bypass_key) && !empty($_REQUEST['captcha_bypass_key']) && $GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key']) {
-					//Don't require catcha
+		if ($customer->validLogin($_REQUEST['login'])) {
+			if ($customer->get($_REQUEST['login'])) {
+				if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+					$page->addError("Invalid Request");
+					$failure = new \Register\AuthFailure();
+					$failure->add($_SERVER['REMOTE_ADDR'],$login,'CSRFTOKEN',$_SERVER['PHP_SELF']);
 				}
-			    elseif ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) {
-				    $CAPTCHA_GO = true;
-				    if (!isset($_REQUEST['g-recaptcha-response'])) {
-					    // CAPTCHA Required but not done
-				    	$counter = new \Site\Counter("captcha_block");
+				else {
+					if ($customer->isBlocked()) {
+						$page->addError("Your account has been blocked");
+						$counter = new \Site\Counter("auth_failed");
 						$counter->increment();
-					    app_log("Customer ".$customer->id. " " . $customer->status . " login ATTEMPTED",'notice',__FILE__,__LINE__);
-					    app_log("login_target = $target",'debug',__FILE__,__LINE__);
-					    $page->addError("CAPTCHA Required");
-					    return;
-				    }
-				    else {
-					    // CAPTCHA Required and Provided
-					    $reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
-					    if ($reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
-						    // CAPTCHA Confirmed, Go ahead to sign in
-					    }
-					    else {
-						    $page->addError("CAPTCHA Failed: ".$reCAPTCHA->error());
-					    }
-				    }
-			    }
+						$failure = new \Register\AuthFailure();
+						$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$_SERVER['PHP_SELF']);
+						return;
+					}
+					elseif (!empty($GLOBALS['_config']->captcha->bypass_key) && !empty($_REQUEST['captcha_bypass_key']) && $GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key']) {
+						//Don't require catcha
+					}
+					elseif ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) {
+						$CAPTCHA_GO = true;
+						if (!isset($_REQUEST['g-recaptcha-response'])) {
+							// CAPTCHA Required but not done
+							$counter = new \Site\Counter("captcha_block");
+							$counter->increment();
+							app_log("Customer ".$customer->id. " " . $customer->status . " login ATTEMPTED",'notice',__FILE__,__LINE__);
+							app_log("login_target = $target",'debug',__FILE__,__LINE__);
+							$page->addError("CAPTCHA Required");
+							return;
+						}
+						else {
+							// CAPTCHA Required and Provided
+							$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
+							if ($reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
+								// CAPTCHA Confirmed, Go ahead to sign in
+							}
+							else {
+								$page->addError("CAPTCHA Failed: ".$reCAPTCHA->error());
+							}
+						}
+					}
 
-			    if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
-        			app_log("Customer ".$customer->id." login failed",'notice',__FILE__,__LINE__);
-				    app_log("login_target = $target",'debug',__FILE__,__LINE__);
-				    $counter = new \Site\Counter("auth_failed");
-				    $counter->increment();
-				    $page->addError("Authentication Failed");
-				    if ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) $CAPTCHA_GO = true;
-			    }
-			    elseif ($customer->error) {
-				    app_log("Error in authentication: ".$customer->error,'error',__FILE__,__LINE__);
-				    $page->addError("Application Error");
-			    }
-			    elseif ($customer->message) {
-				    $page->addError($customer->message);
-			    }
-			    elseif (!$customer->isActive()) {
-				    $page->addError("This account is ".$customer->status);
-			    }
-			    else {
-				    $GLOBALS['_SESSION_']->assign($customer->id);
-				    $GLOBALS['_SESSION_']->touch();
-				    $customer->update(array("status" => "ACTIVE", "auth_failures" => 0));
+					if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
+						app_log("Customer ".$customer->id." login failed",'notice',__FILE__,__LINE__);
+						app_log("login_target = $target",'debug',__FILE__,__LINE__);
+						$counter = new \Site\Counter("auth_failed");
+						$counter->increment();
+						$page->addError("Authentication Failed");
+						if ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) $CAPTCHA_GO = true;
+					}
+					elseif ($customer->error) {
+						app_log("Error in authentication: ".$customer->error,'error',__FILE__,__LINE__);
+						$page->addError("Application Error");
+					}
+					elseif ($customer->message) {
+						$page->addError($customer->message);
+					}
+					elseif (!$customer->isActive()) {
+						$page->addError("This account is ".$customer->status);
+					}
+					else {
+						$GLOBALS['_SESSION_']->assign($customer->id);
+						$GLOBALS['_SESSION_']->touch();
+						$customer->update(array("status" => "ACTIVE", "auth_failures" => 0));
 
-				    app_log("Customer ".$customer->id." logged in",'debug',__FILE__,__LINE__);
-				    app_log("login_target = $target",'debug',__FILE__,__LINE__);
-				    app_log("Redirecting to ".PATH.$target,'debug',__FILE__,__LINE__);
-				    header("location: ".PATH.$target);
-				    exit;
-			    }
-		    }
-		} else {
-			$page->addError("Login failed.");
+						app_log("Customer ".$customer->id." logged in",'debug',__FILE__,__LINE__);
+						app_log("login_target = $target",'debug',__FILE__,__LINE__);
+						app_log("Redirecting to ".PATH.$target,'debug',__FILE__,__LINE__);
+						header("location: ".PATH.$target);
+						exit;
+					}
+				}
+			}
+			else {
+				$page->addError("Login failed.");
+			}
 		}
-	} else {
+		else {
+			$page->addError("Invalid Login");
+		}
+	}
+	else {
 		app_log("No authentication information sent",'debug',__FILE__,__LINE__);
 	}

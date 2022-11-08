@@ -74,6 +74,8 @@
 		}
 		
 		public function addPage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('edit site pages')) error("Permission Denied");
 	
 			if (! $_REQUEST['module']) error("Module required");
@@ -97,6 +99,8 @@
 		### Get Details regarding Specified Product		###
 		###################################################
 		public function addMessage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) error("Permission Denied");
 	
 			# Default StyleSheet
@@ -133,6 +137,8 @@
 		### Update Specified Message					###
 		###################################################
 		public function updateMessage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) error("Permission Denied");
 	
 			# Default StyleSheet
@@ -168,6 +174,8 @@
 		### Purge Cache of Specified Message			###
 		###################################################
 		public function purgeMessage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) error("Permission Denied");
 	
 			# Default StyleSheet
@@ -251,6 +259,8 @@
 		}
 
 		public function setPageMetadata() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('edit site pages')) $this->error("Permission Denied");
 	
 			$response = new \HTTP\Response();
@@ -336,6 +346,8 @@
 		}
 		
 		public function deleteConfiguration() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) error("Permission denied");
 			$response = new \HTTP\Response();
 			$configuration = new \Site\Configuration($_REQUEST['key']);
@@ -350,6 +362,8 @@
 		}
 		
 		public function setConfiguration() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) error("Permission denied");
 			$response = new \HTTP\Response();
 			$configuration = new \Site\Configuration($_REQUEST['key']);
@@ -381,6 +395,8 @@
 		}
 		
         public function addSiteMessage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 	        $siteMessage = new \Site\SiteMessage();
 	        $response = new \HTTP\Response();
 
@@ -412,6 +428,8 @@
 	    }
 	    
         public function editSiteMessage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 	        $siteMessage = new \Site\SiteMessage($_REQUEST['id']);
 	        $response = new \HTTP\Response();
             $success = $siteMessage->update(
@@ -436,6 +454,8 @@
         }
         
         public function removeSiteMessage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $siteMessage = new \Site\SiteMessage($_REQUEST['id']);
 	        $response = new \HTTP\Response();
             $success = $siteMessage->delete();
@@ -450,6 +470,8 @@
         }
         
         public function acknowledgeSiteMessageByUserId() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $siteMessages = new \Site\SiteMessagesList();
             $siteMessagesList = $siteMessages->find(array('user_created' => $_REQUEST['user_created']));
             foreach ($siteMessagesList as $siteMessage) {
@@ -469,6 +491,8 @@
 	    }
 
         public function acknowledgeSiteMessage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $siteMessageDelivery = new \Site\SiteMessageDelivery();
             if (! $siteMessageDelivery->get($_REQUEST['message_id'],$GLOBALS['_SESSION_']->customer->id)) $this->error("Message not found");
             if (! $siteMessageDelivery->acknowledge()) $this->error($siteMessageDelivery->error());
@@ -492,6 +516,8 @@
 		}
         
         public function addSiteMessageMetaData() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 	        $siteMessageMetaData = new \Site\SiteMessageMetaData();
 	        $response = new \HTTP\Response();
             $success = $siteMessageMetaData->add(
@@ -513,6 +539,8 @@
 	    }
 	            
         public function editSiteMessageMetaData() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
 	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->find(array('item_id' => $_REQUEST['item_id'], 'label' => $_REQUEST['label']));
 	        $response = new \HTTP\Response();
@@ -538,6 +566,8 @@
         }
         
         public function removeSiteMessageMetaData() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
 	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->find(array('item_id' => $_REQUEST['item_id'], 'label' => $_REQUEST['label']));
 	        $response = new \HTTP\Response();
@@ -572,6 +602,8 @@
         }
 
         public function addSiteMessageDelivery() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 	        $siteMessageDelivery = new \Site\SiteMessageDelivery();
 
 			$params = array();
@@ -623,6 +655,8 @@
 	    }
 	    
         public function editSiteMessageDelivery() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $siteMessageDelivery = new \Site\SiteMessageDelivery($_REQUEST['id']);            
 	        $response = new \HTTP\Response();
             $success = $siteMessageDelivery->update(
@@ -645,6 +679,8 @@
         }
         
         public function removeSiteMessageDelivery() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $siteMessageDelivery = new \Site\SiteMessageDelivery($_REQUEST['id']);  
 	        $response = new \HTTP\Response();
             $success = $siteMessageDelivery->delete();
@@ -765,6 +801,8 @@
 		}
 
         public function addSiteHeader() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $this->requirePrivilege('manage site headers');
             $header = new \Site\Header();
             $parameters = array(
@@ -789,6 +827,8 @@
         }
 
         public function updateSiteHeader() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $this->requirePrivilege('manage site headers');
             $header = new \Site\Header();
             if (!$header->get($_REQUEST['name'])) $this->error($header->error());

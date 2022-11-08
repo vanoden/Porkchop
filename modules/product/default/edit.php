@@ -12,13 +12,26 @@
 		document.getElementById('ItemImageDiv_'+code).style.display = "none";
 	}
 </script>
-<h2><?php
+<span class="title"><?php
 	if (isset($item->id)) print "Edit Product '".$item->code."'";
 	else print "Add product"; ?>
-</h2>
+</span>
+
 <?php if ($page->errorCount() > 0) { ?>
-    <div class="form_error"><?=$page->errorString()?></div>
-<?php } ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <form name="productEdit" method="post" action="/_product/edit">
     <input type="hidden" name="id" id="id" value="<?=$item->id?>" />
     <input type="hidden" name="deleteImage" id="deleteImage" value="" />

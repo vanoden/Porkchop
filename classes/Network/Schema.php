@@ -112,18 +112,5 @@
                                 $this->setVersion(1);
                                 $GLOBALS['_database']->CommitTrans();
 			}
-
-			# Add Roles
-			foreach ($this->roles as $name => $description) {
-				$role = new \Register\Role();
-				if (! $role->get($name)) {
-					app_log("Adding role '$name'");
-					$role->add(array('name' => $name,'description' => $description));
-				}
-				if ($role->error) {
-					$this->_error = "Error adding role '$name': ".$role->error;
-					return false;
-				}
-			}
 		}
 	}

@@ -8,11 +8,11 @@
 	}
 
 	// See if we received a parseable token
-	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
+	$token = new \Register\PasswordToken();
+	if (isset($_REQUEST['token']) && $token->validCode($_REQUEST['token'])) {
 		app_log('Auth By Token','debug',__FILE__,__LINE__);
 
 		// Consume Token
-		$token = new \Register\PasswordToken();
 		$customer_id = $token->consume($_REQUEST['token']);
 		if ($token->error) {
 			app_log("Error in password recovery: ".$token->error,'error',__FILE__,__LINE__);

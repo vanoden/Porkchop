@@ -28,6 +28,11 @@
 		return false;
 	}
 
+	function valid_email($email) {
+		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+$/",$email)) return 1;
+		else return 0;
+	}
+
 	function get_mysql_date($date = null,$range=0) {
 		if (empty($date)) {
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];

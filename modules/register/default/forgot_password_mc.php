@@ -2,7 +2,7 @@
 	$page = new \Site\Page();
 
 	# Handle Actions
-	if ($_REQUEST['email_address']) {
+	if (isset($_REQUEST['email_address'])) {
 		# Check reCAPTCHA
 		$url = "https://www.google.com/recaptcha/api/siteverify";
 		$data = array(
@@ -17,11 +17,11 @@
 				'content'	=> http_build_query($data),
 			),
 		);
-		
+
 		# Don't need to store these fields
 		unset($_REQUEST['g-recaptcha-response']);
 		unset($_REQUEST['btn_submit']);
-		 
+
 		// Allow to bypass the captcha if config->captcha->bypass_key set
 		if (!empty($_REQUEST['captcha_bypass_key'])) {
 			app_log("User skipping captcha",'notice');
@@ -156,9 +156,4 @@
 		else {
 			$page->addError("Sorry, CAPTCHA Invalid.  Please Try Again");
 		}
-	}
-
-	function valid_email($email) {
-		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+$/",$email)) return 1;
-		else return 0;
 	}

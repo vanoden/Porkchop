@@ -45,6 +45,8 @@
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'company.xsl';
 
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->can('configure site')) $this->deny();
 	
 			# Initiate Company Object

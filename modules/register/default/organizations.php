@@ -15,15 +15,23 @@
 	td.value { overflow: hidden; }
 	a.pager { margin: 5px; }
 </style>
-<section>
-	<article class="segment">
-		<h2>Organizations</h2>
-        <?php   if ($page->errorCount() > 0) { ?>
-            <div class="form_error"><?=$page->errorString()?></div>
-        <?php   }
-                if ($page->success) { ?>
-	        <div class="form_success"><?=$page->success?></div>
-        <?php	} ?>
+<span class="title">Organizations</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
     <form id="orgSearch" method="get" class="float: left">
         <div id="search_container">
 	        <input type="text" id="searchOrganizationInput" name="name" placeholder="organization name" value="<?=isset($_REQUEST['name']) ? $_REQUEST['name']: ''?>" class="value input searchInput wide_md"/>

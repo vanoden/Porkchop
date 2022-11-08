@@ -17,6 +17,8 @@
 		### Add a Repository							###
 		###################################################
 		public function addRepository() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
 			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->create($_REQUEST['type']);
@@ -42,6 +44,8 @@
 		### Update a Repository							###
 		###################################################
 		public function updateRepository() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
 			$repository = new \Storage\Repository();
 			if ($repository->error) $this->error("Error adding repository: ".$repository->error);
@@ -98,6 +102,8 @@
 		### Set Repository Metadata						###
 		###################################################
 		public function setRepositoryMetadata() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
 			$repositoryList = new \Storage\RepositoryList();
 			list($repository) = $repositoryList->find(array("code" => $_REQUEST['code']));
@@ -141,6 +147,8 @@
 		### Add a File									###
 		###################################################
 		public function addFile() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('upload storage files')) error('storage upload role required');
 
 			$factory = new \Storage\RepositoryFactory();
@@ -208,6 +216,8 @@
 		### Update a File								###
 		###################################################
 		public function updateFile() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('upload storage files')) error('storage upload role required');
 			$file = new \Storage\File();
 			if ($file->error) $this->error("Error initializing file: ".$file->error);
@@ -233,6 +243,8 @@
 		### Delete a File								###
 		###################################################
 		public function deleteFile() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage files')) error('storage upload role required');
 			$file = new \Storage\File();
 			if ($file->error) $this->error("Error initializing file: ".$file->error);
@@ -359,6 +371,8 @@
 		### Update Privileges for a File				###
 		###################################################
 		public function updateFilePrivileges() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$file = new \Storage\File();
 			if ($file->error) $this->error("Error initializing file: ".$file->error);
 			$file->get($_REQUEST['file_code']);
@@ -462,6 +476,8 @@
 		### Set File Metadata							###
 		###################################################
 		public function setFileMetadata() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage files')) error('storage upload role required');
 			$file = new \Storage\File();
 			if ($file->error) $this->app_error("Error initializing file: ".$file->error,__FILE__,__LINE__);

@@ -9,17 +9,27 @@
 	$new_item = false;
 	if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
 		$item = new \Product\Item($_REQUEST['id']);
-	} elseif (isset($_REQUEST['code']) && $_REQUEST['code']) {
+	}
+	elseif (!empty($_REQUEST['code'])) {
 		$item = new \Product\Item();
-		$item->get($_REQUEST['code']);
-		if ($item->id) $new_item = false;
-		else $new_item = true;
-	} elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+		if ($item->validCode($_REQUEST['code'])) {
+			$item->get($_REQUEST['code']);
+			if ($item->id) $new_item = false;
+			else $new_item = true;
+		}
+		else $page->addError("Invalid product code");
+	}
+	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$item = new \Product\Item();
-		$item->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
-		if ($item->id) $new_item = false;
-		else $new_item = true;
-	} else {
+		if ($item->validCode($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+			$item->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
+			if ($item->id) $new_item = false;
+			else $new_item = true;
+		}
+		else $page->addError("Invalid product code");
+	}
+	else {
+		$item = new \Product\Item();
 		$new_item = true;
 	}
 
@@ -27,18 +37,22 @@
     	
 	// Handle Actions
 	elseif (isset($_REQUEST['submit'])) {
-
 	    // CSRF Token Check
 	    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) $page->addError("Invalid Request");
 	    if (!$page->errorCount()) {
-
-		    if (! isset($_REQUEST['code'])) {
+		    if (empty($_REQUEST['code']))
 			    $page->addError("Code required");
-		    } elseif (! isset($_REQUEST['status'])) {
+			elseif (! $item->validCode($_REQUEST['code']))
+				$page->addError("Invalid code");
+			elseif (empty($_REQUEST['status']))
 			    $page->addError("Status required");
-		    } elseif (! isset($_REQUEST['type'])) {
+			elseif (! $item->validStatus($_REQUEST['status']))
+				$page->addError("Invalid status");
+			elseif (empty($_REQUEST['type']))
 			    $page->addError("Type required");
-		    } else {
+			elseif (! $item->validType($_REQUEST['type']))
+				$page->addError("Invalid type");
+		    else {
 			    if ($new_item) {
 				    app_log("Admin ".$GLOBALS['_SESSION_']->customer->first_name." editing product ".$_REQUEST['code'],'notice',__FILE__,__LINE__);
 				    $item->add(array(
@@ -61,20 +75,22 @@
 			    }
 
 			    # Associate with a Parent if one selected or new product
-			    if ($_REQUEST['parent_code']) {
+			    if (!empty($_REQUEST['parent_code'])) {
 				    $parent = new \Product\Item();
 				    $parent->get($_REQUEST['parent_code']);
 				    if ($parent->error) {
 					    app_log("Error finding item ".$_REQUEST['parent_code'],'error',__FILE__,__LINE__);
 					    $page->addError("Error finding parent");
-				    } elseif ($parent->id) {
+				    }
+					elseif ($parent->id) {
 					    $relationship = new \Product\Relationship();
 					    $relationship->add(array(
 						    "parent_id"	=> $parent->id,
 						    "child_id" => $item->id
 					    ));
 				    }
-			    } elseif ($new_item) {
+			    }
+				elseif ($new_item) {
 				    $relationship = new \Product\Relationship();
 				    $relationship->add(array(
 					    "parent_id"	=> 0,

@@ -3,6 +3,7 @@
 		protected $_error;
 		protected $_exists = false;
 		protected $_cached = false;
+		protected $_statii = array();
 
 		public function error($value = null) {
 			if (isset($value)) {
@@ -20,6 +21,10 @@
 			$classname = str_replace('\\','::',$class);
 			$method = $caller['function'];
 			return $this->error("SQL Error in ".$classname."::".$method."(): ".$message);
+		}
+
+		public function _addStatus($param) {
+			array_push($_statii,$param);
 		}
 
 		public function clearError() {
@@ -43,6 +48,11 @@
 
 		public function validName($string) {
 			if (preg_match('/\w[\w\-\.\_\s\,\!\?\(\)]*$/',$string)) return true;
+			else return false;
+		}
+
+		public function validStatus($string) {
+			if (is_array($string,$_statii)) return true;
 			else return false;
 		}
 	}

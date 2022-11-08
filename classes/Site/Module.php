@@ -82,4 +82,8 @@
 			if (isset($this->_metadata->description)) return $this->_metadata->description;
 			return null;
 		}
+
+		public function validName($string) {
+			return $this->validCode();
+		}
 	}

@@ -96,7 +96,7 @@
 				$message->html(true);
 				$request->customer->notify($message);
 				
-				if ($role->error) app_log("Error sending request notification: ".$role->error);
+				if ($role->error()) app_log("Error sending request notification: ".$role->error());
 				$page->success = 'Support request '.$request->code.' submitted.  A representative will follow up shortly';
 			}
 		}

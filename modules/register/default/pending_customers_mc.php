@@ -33,22 +33,27 @@
 	if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'updateNotes') {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
         	$page->addError("Invalid Request");
-        } else {
+        }
+		else {
             $queuedCustomer = new Register\Queue($_REQUEST['id']);
-            $queuedCustomer->update(array('notes' => $_REQUEST['notes']));
+            $queuedCustomer->update(array('notes' => noXSS(trim($_REQUEST['notes']))));
             $page->success = true;
         }
 	}
 
     // update customer status from UI request
     app_log("updateStatus");
+    $queuedCustomer = new Register\Queue($_REQUEST['id']);	
 	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updateStatus') {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
         	$page->addError("Invalid Request");
-        } else {
-            $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
+        }
+		elseif (!$queuedCustomer->validStatus($_REQUEST['status'])) {
+			$page->addError("Invalid Status");
+		}
+		else {    
             $queuedCustomer->update(array('status' => $_REQUEST['status']));
-            if ($_REQUEST['status'] == 'APPROVED')$queuedCustomer->syncLiveAccount();
+            if ($_REQUEST['status'] == 'APPROVED') $queuedCustomer->syncLiveAccount();
             $page->success = true;
         }
 	}

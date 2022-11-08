@@ -389,8 +389,8 @@
 				install_log("Adding role '$role_name'");
 				if (! isset($role_data['description'])) $role_data['description'] = $role_name;
 				$role->add(array('name' => $role_name,'description' => $role_data['description']));
-				if ($role->error) {
-					install_fail("Error adding role '$role_name': ".$role->error);
+				if ($role->error()) {
+					install_fail("Error adding role '$role_name': ".$role->error());
 				}
 				elseif (isset($role_data['privileges'])) {
 					foreach ($role_data['privileges'] as $privilege_name) {

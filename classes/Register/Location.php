@@ -2,7 +2,6 @@
 	namespace Register;
 
 	class Location extends \ORM\BaseModel {
-	
 		public $id;
 		public $name;
 		public $address_1;
@@ -48,7 +47,7 @@
                     return true;
                 }
             }
-            $this->_error = "ERROR: no records found for these values.";
+            $this->error("No records found for these values.");
             return false;
         }
 
@@ -65,7 +64,7 @@
 			query_log($add_record_query,$bind_params,true);
 			$GLOBALS['_database']->Execute($add_record_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Register::Location::associateUser(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -84,14 +83,13 @@
 			query_log($add_record_query,$bind_params,true);
 			$GLOBALS['_database']->Execute($add_record_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Register::Location::associateOrganization(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
 		}
 
         public function applyDefaultBillingAndShippingAddresses($organizationId, $locationId, $isDefaultBilling=false, $isDefaultShipping=false) {
-        
             if (!empty($isDefaultBilling)|| !empty($isDefaultShipping)) {
 			    $update_record_query = "
 				    UPDATE `register_organizations` SET default_billing_location_id = NULL AND default_shipping_location_id = NULL WHERE id = ?;
@@ -100,7 +98,7 @@
 	            query_log($update_record_query,$bind_params,true);
 	            $GLOBALS['_database']->Execute($update_record_query,$bind_params);
 	            if ($GLOBALS['_database']->ErrorMsg()) {
-		            $this->_error = "SQL Error in Register::Location::applyDefaultBillingAndShippingAddresses(): ".$GLOBALS['_database']->ErrorMsg();
+		            $this->SQLError($GLOBALS['_database']->ErrorMsg());
 		            return false;
 	            }
 
@@ -112,7 +110,7 @@
 	                query_log($update_record_query,$bind_params,true);
 	                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
 	                if ($GLOBALS['_database']->ErrorMsg()) {
-		                $this->_error = "SQL Error in Register::Location::applyDefaultBillingAndShippingAddresses(): ".$GLOBALS['_database']->ErrorMsg();
+		                $this->SQLError($GLOBALS['_database']->ErrorMsg());
 		                return false;
 	                }
 	            }
@@ -125,7 +123,7 @@
 	                query_log($update_record_query,$bind_params,true);
 	                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
 	                if ($GLOBALS['_database']->ErrorMsg()) {
-		                $this->_error = "SQL Error in Register::Location::applyDefaultBillingAndShippingAddresses(): ".$GLOBALS['_database']->ErrorMsg();
+		                $this->SQLError($GLOBALS['_database']->ErrorMsg());
 		                return false;
 	                }
 	            }
@@ -146,10 +144,21 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_org_query,array($this->id));
 			if (! $rs) {
-				$this->error("SQL Error in Register::Location::organization(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($org_id) = $rs->FetchRow();
 			return new \Register\Organization($org_id);
+		}
+
+		public function validAddress($string) {
+			if (empty($string)) return true;
+			if (preg_match('/^([\w\u0080-\u024F]+(?:\. |-| |\'))*[\w\u0080-\u024F]*$/',urldecode($string))) return true;
+			else return false;
+		}
+
+		public function validCity($string) {
+			if (preg_match('/^([\w\u0080-\u024F]+(?:\. |-| |\'))*[\w\u0080-\u024F]*$/',urldecode($string))) return true;
+			else return false;
 		}
 	}

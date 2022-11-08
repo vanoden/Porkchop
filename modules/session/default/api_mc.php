@@ -1,4 +1,7 @@
 <?php
+// I don't believe this is used anymore
+exit;
+
     ###############################################
     ### Handle API Request for Product Info and	###
     ### Management								###

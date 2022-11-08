@@ -15,7 +15,6 @@
         font-style:italic;
     }
 </style>
-<h2>Organization Details</h2>
 <script language="JavaScript">
 	function addLocation() {
 		var organization_id = document.forms[0].organization_id.value;
@@ -35,21 +34,28 @@
 		return true;
 	}	
 </script>
+<span class="title">Organization Details</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <form name="orgDetails" method="POST">
 
     <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     
-    <?php
-        if ($page->errorCount() > 0) { ?>
-            <div class="form_error"><?=$page->errorString()?></div>
-    <?php	 
-        } elseif ($page->success) {
-    ?>
-        <div class="form_success"><?=$page->success?></div>
-    <?php
-        } ?>
-        
     <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
 
     <!--	Start First Row-->

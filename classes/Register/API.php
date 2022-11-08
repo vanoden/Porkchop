@@ -38,6 +38,8 @@
         ### Authenticate Session						###
         ###################################################
         function authenticateSession() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Default StyleSheet
             if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
@@ -110,6 +112,8 @@
         ### Update Specified Customer					###
         ###################################################
         function updateCustomer() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
@@ -276,7 +280,7 @@
             $admins = $role->members();
 
             # Error Handling
-            if ($role->error) $this->error($role->error);
+            if ($role->error()) $this->error($role->error());
 
             $this->response->success = 1;
             $this->response->admin = $admins;
@@ -289,6 +293,8 @@
         ### Add a User Role								###
         ###################################################
         function addRole() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
             $role = new \Register\Role();
@@ -298,7 +304,7 @@
                     'description'	=> $_REQUEST['description']
                 )
             );
-            if ($role->error) $this->error($role->error);
+            if ($role->error()) $this->error($role->error());
 
             $response = new \HTTP\Response();
             $response->success = 1;
@@ -311,13 +317,15 @@
         ### Update an Existing Role						###
         ###################################################
         function updateRole() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
             $response = new \HTTP\Response();
 
             $role = new \Register\Role();
             $role->get($_REQUEST['name']);
-            if ($role->error) $this->error($role->error);
+            if ($role->error()) $this->error($role->error());
             if (! $role->id) $this->error("Role not found");
             $parameters = array();
             if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
@@ -326,7 +334,7 @@
             }
             else {
                 $response->success = 0;
-                $response->error = $role->error;
+                $response->error = $role->error();
             }
             print $this->formatOutput($response);
         }
@@ -335,11 +343,13 @@
         ### Add a User to a Role						###
         ###################################################
         function addRoleMember() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
             $role = new Role();
             $role->get($_REQUEST['name']);
-            if ($role->error) $this->app_error("Error getting role: ".$role->error,'error',__FILE__,__LINE__);
+            if ($role->error()) $this->app_error("Error getting role: ".$role->error(),'error',__FILE__,__LINE__);
             if (! $role->id) $this->error("Role not found");
             
             $person = new \Register\Customer();
@@ -348,7 +358,7 @@
             if (! $person->id) $this->error("Person not found");
 
             $result = $role->addMember($person->id);
-            if ($role->error) $this->error($role->error);
+            if ($role->error()) $this->error($role->error());
 
             $response = new \HTTP\Response();
             $response->success = 1;
@@ -360,12 +370,14 @@
         ### Assign Privilege to Role					###
         ###################################################
         function addRolePrivilege() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
             if ($_REQUEST['role']) {
                 $role = new \Register\Role();
                 $role->get($_REQUEST['role']);
-                if ($role->error) $this->error($role->error);
+                if ($role->error()) $this->error($role->error());
                 if (! $role->id) $this->error("Role not found");
             }
             else {
@@ -377,7 +389,7 @@
                 $response->success = 1;
             }
             else {
-                $this->error($role->error);
+                $this->error($role->error());
             }
 
             # Send Response
@@ -391,7 +403,7 @@
             if ($_REQUEST['role']) {
                 $role = new \Register\Role();
                 $role->get($_REQUEST['role']);
-                if ($role->error) $this->error ($role->error);
+                if ($role->error()) $this->error ($role->error());
                 if (! $role->id) $this->error ("Role not found");
             }
             else {
@@ -435,6 +447,8 @@
         ### Create Customer Image						###
         ###################################################
         function addImage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Authenticated Customer Required
             #confirm_customer();
 
@@ -474,6 +488,8 @@
         ### Add a New Customer via Registration			###
         ###################################################
         function addCustomer() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Initiate Response
             $this->response->header->session = $GLOBALS['_SESSION_']->code;
             $this->response->header->method = $_REQUEST["method"];
@@ -629,6 +645,8 @@
         ### Add a New Organization						###
         ###################################################
         function addOrganization() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Initiate Response
             $response = new \HTTP\Response();
             $response->header->session = $GLOBALS['_SESSION_']->code;
@@ -837,6 +855,8 @@
         ### Add Organization Owned Product				###
         ###################################################
         function addOrganizationOwnedProduct() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
@@ -928,6 +948,8 @@
             print $this->formatOutput($response);
         }
         function expireAgingCustomers() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $response = new \HTTP\Response();
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 $expires = strtotime("-12 month", time());
@@ -957,6 +979,8 @@
         }
         
         function expireInactiveOrganizations() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $response = new \HTTP\Response();
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 $expires = strtotime("-12 month", time());
@@ -986,6 +1010,8 @@
         }
         
         function flagActiveCustomers() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $list = new \Register\CustomerList();
             $counter = $list->flagActive();
             $response = new \HTTP\Response();
@@ -1065,6 +1091,8 @@
         }
 
         function addLocation() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $response = new \HTTP\Response();
             $parameters = new \stdClass;
             $parameters->name = $_REQUEST['name'];

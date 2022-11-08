@@ -8,46 +8,58 @@
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customers');
 
-	// Valid Organization Statuses
-	$statii = array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED");
-
 	if (!empty($_REQUEST['id']) && empty($_REQUEST['organization_id'])) $_REQUEST['organization_id'] = $_REQUEST['id'];
 
 	# Security - Only Register Module Operators or Managers can see other customers
 	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
 			$organization = new \Register\Organization($_REQUEST['organization_id']);
-			if ($organization->error) $page->addError("Unable to load organization: ".$organization->error);
-		} elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
+			if ($organization->error()) $page->addError("Unable to load organization: ".$organization->error());
+		}
+		elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
 			$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 			$organization = new \Register\Organization();
-			$organization->get($code);
-			if (! $organization->id) $GLOBALS['_page']->error = "Customer not found";
-		} else $organization = new \Register\Organization();
-	} else $organization = $GLOBALS['_SESSION_']->customer->organization;
+			if ($organization->validCode($code)) {
+				$organization->get($code);
+				if (! $organization->id) $page->addError("Organization not found");
+			}
+			else {
+				$page->addError("Invalid organization code");
+			}
+		}
+		else $organization = new \Register\Organization();
+	}
+	else $organization = $GLOBALS['_SESSION_']->customer->organization;
 
     // handle form submit
 	if ($_REQUEST['method']) {
 	    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 	        $page->addError("Invalid Request");
-	    } else {
+	    }
+		else {
             $page->success = $_REQUEST['method'];
 		    if (! $_REQUEST['name']) {
 			    $page->addError("Name required");
-		    } elseif (!in_array($_REQUEST['status'],$statii)) {
+		    }
+			elseif (!$organization->validName($_REQUEST['name'])) {
+				$page->addError("Invalid name");
+			}
+			elseif (!$organization->validStatus($_REQUEST['status'])) {
 			    $page->addError("Invalid status");
-		    } elseif (!empty($_REQUEST['code']) && !preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['code'])) {
+		    }
+			elseif (isset($_REQUEST['code']) && !$organization->validCode($_REQUEST['code'])) {
 			    $page->addError("Invalid code");
-		    } else {
+		    }
+			else {
 			    if (empty($_REQUEST['code'])) $_REQUEST['code'] = null;
 			    if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
 			    $parameters = array(
-				    "name"					    => noXSS(trim($_REQUEST['name'])),
+				    "name"					    => $_REQUEST['name'],
 				    "code"					    => $_REQUEST['code'],
 				    "status"				    => $_REQUEST['status'],
 				    'is_reseller'			    => $_REQUEST['is_reseller'],
 				    "assigned_reseller_id"	    => $_REQUEST['assigned_reseller_id'],
-				    "notes"					    => noXSS($_REQUEST['notes']),
+				    "notes"					    => noXSS(trim($_REQUEST['notes'])),
 				    "password_expiration_days"	=> $_REQUEST['password_expiration_days']
 			    );
 			    if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
@@ -60,7 +72,8 @@
 
 				    if ($organization->error) {
 					    $page->addError("Error updating organization");
-				    } else {
+				    }
+					else {
 					    $page->success = "Organization Updated Successfully";
 				    }
 				    
@@ -72,13 +85,16 @@
 					    if ($present_customer->id) {
 						    $page->addError("Login already exists");
 					    }
+						elseif(!$present_customer->validLogin($_REQUEST['new_login'])) {
+							$page->addError("Invalid login");
+						}
 					    else {
-						    $customer = new \Register\Customer();
-						    $customer->add(
+							$customer = new \Register\Customer();
+							$customer->add(
 							    array(
 								    "login"			=> $_REQUEST['new_login'],
-								    "first_name"	=> $_REQUEST['new_first_name'],
-								    "last_name"		=> $_REQUEST['new_last_name'],
+								    "first_name"	=> noXSS(trim($_REQUEST['new_first_name'])),
+								    "last_name"		=> noXSS(trim($_REQUEST['new_last_name'])),
 								    "organization_id"	=> $organization->id,
 								    "password"			=> uniqid()
 							    )
@@ -91,24 +107,26 @@
 						    }
 					    }
 				    }
-			    } else {
+			    }
+				else {
 				    if (! $parameters['code']) $parameters['code'] = uniqid();
 				    app_log("Adding organization '".$parameters['name']."'");
 				    # See if code used
 				    $present_org = new \Register\Organization();
-				    $present_org->get($parameters['code']);
-				    if ($present_org->id) {
-					    $page->addError("Organization code already used");
-				    } else {
-					    # Add Existing Organization
-					    $organization = new \Register\Organization();
-					    $organization->add($parameters);
-					    if ($organization->error) {
-						    $page->addError("Error updating organization: ".$organization->error);
-					    } else {
-						    $page->success = "Organization ".$organization->id." Created Successfully";
-					    }
-				    }
+					if (!$present_org->validCode($parameters['code'])) {
+						$page->addError("Invalid organization code");
+					}
+				    elseif ($present_org->get($parameters['code'])) {
+						# Add Existing Organization
+						$organization = new \Register\Organization();
+						$organization->add($parameters);
+						if ($organization->error) {
+							$page->addError("Error updating organization: ".$organization->error);
+						}
+						else {
+							$page->success = "Organization ".$organization->id." Created Successfully";
+						}
+					}
 			    }
 		    }
 	    }		
@@ -116,15 +134,17 @@
 	
 	// add tag to organization
 	if ($_REQUEST['addTag'] && empty($_REQUEST['removeTag'])) {
-	    if (!empty($_REQUEST['newTag'])) {
-	        $registerTag = new \Register\Tag();
+	    $registerTag = new \Register\Tag();
+	    if (!empty($_REQUEST['newTag']) && $registerTag->validName($_REQUEST['newTag'])) {
 	        $registerTag->add(array('type'=>'ORGANIZATION','register_id'=>$_REQUEST['organization_id'],'name'=>$_REQUEST['newTag']));
 			if ($registerTag->error) {
 				$page->addError("Error adding organization tag");
-			} else {
+			}
+			else {
 				$page->success = "Organization Tag added Successfully";
 			}
-	    } else {
+	    }
+		else {
     	    $page->addError("Value for Organization Tag value is required");
 	    }
 	}
@@ -140,7 +160,6 @@
 	}
 
 	if ($organization->id) {
-		
 		$status = array();
 		if (isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) $status = array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED','BLOCKED');
 		
@@ -157,7 +176,7 @@
 		}
 		
 		// Update Existing Organization default billing
-		if (isset($_REQUEST['setDefaultBilling']) && !empty($_REQUEST['setDefaultBilling'])) {
+		if (!empty($_REQUEST['setDefaultBilling']) && is_numeric($_REQUEST['setDefaultBilling'])) {
 		    $updateParameters = array();
 		    $updateParameters['default_billing_location_id'] = $_REQUEST['setDefaultBilling'];
 		    $organization->update($updateParameters);
@@ -169,7 +188,7 @@
 		}
 		
 		// Update Existing Organization default shipping
-        if (isset($_REQUEST['setDefaultShipping']) && !empty($_REQUEST['setDefaultShipping'])) {
+        if (!empty($_REQUEST['setDefaultShipping']) && is_numeric($_REQUEST['setDefaultShipping'])) {
 		    $updateParameters = array();
 		    $updateParameters['default_shipping_location_id'] = $_REQUEST['setDefaultShipping'];
 		    $organization->update($updateParameters);
@@ -180,7 +199,7 @@
 		    }
 		}
 	}
-    
+
     // get resellers
 	$resellerList = new \Register\OrganizationList();
 	$resellers = $resellerList->find(array("is_reseller" => true));
@@ -188,7 +207,7 @@
     // get tags for organization
     $registerTagList = new \Register\TagList();
     $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id));
-    
+
     // get organization locations
     $locations = array();
 	if ($organization) $locations = $organization->locations();
