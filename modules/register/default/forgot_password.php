@@ -31,7 +31,7 @@
       <ul class="form-grid three-col copy_2">
 			  <li><label for="name">Your account email:</label><span class="value"><input id="autofocus" type="TEXT" name="email_address" SIZE="50" class="input"></span></li>
       </ul>
-      <div class="g-recaptcha" data-sitekey="6LeTdfgSAAAAAPZ5Fb-J6R_X9GctCVy8l2MrUCuO" style="margin-top: 30px;"></div>
+      <div class="g-recaptcha" data-sitekey="<?=$GLOBALS['_config']->captcha->public_key?>" style="margin-top: 30px;"></div>
       <input type="hidden" name="captcha_auth" value="<?=$_GET['captcha_auth']?>">
       <div><input type="submit" name="btn_submit" value="Get Password" class="button"></div>
    </form>
