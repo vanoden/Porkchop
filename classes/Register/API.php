@@ -38,8 +38,6 @@
         ### Authenticate Session						###
         ###################################################
         function authenticateSession() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
             # Default StyleSheet
             if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
@@ -1129,7 +1127,12 @@
         public function findPrivileges() {
             $privilegeList = new \Register\PrivilegeList();
             $privileges = $privilegeList->find();
-            return $privileges;
+			if ($privilegeList->error()) $this->error($privilegeList->error());
+
+			$response->success = 1;
+			$response->privilege = $privileges;
+
+            print $this->formatOutput($response);
         }
 
 		public function findPrivilegePeers() {

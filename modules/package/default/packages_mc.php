@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-    $page->requirePrivileges('manage packages');
+    $page->requirePrivilege('manage packages');
 	$packagelist = new \Package\PackageList();
 
 	$parameters = array();

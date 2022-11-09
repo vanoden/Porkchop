@@ -4,6 +4,7 @@
 	class Package Extends \BaseClass {
 
 		public function __construct($id = 0) {
+			$this->_addStatus(array('TEST','ACTIVE','HIDDEN'));
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
@@ -92,7 +93,7 @@
 				SET		id = id
 			";
 
-			if (isset($parameters['status']) && validStatus($parameters['status'])) {
+			if (isset($parameters['status']) && $this->validStatus($parameters['status'])) {
 				$parameters['status'] = strtoupper($parameters['status']);
 				if ($this->validStatus($parameters['status'])) {
 					$update_object_query .= ",
@@ -231,19 +232,9 @@
 			return new \Package\Version($this->package_version_id);
 		}
 
-        public function validCode($string) {
-            if (preg_match('/^\w[\w\-\.\_\s]*$/',$string)) return true;
-            else return false;
-        }
-
         public function validName($string) {
             if (preg_match('/\.\./',$string)) return false;
             if (preg_match('/^[\w\.\-\_\s]+$/',$string)) return true;
             else return false;
-        }
-
-        public function validStatus($string) {
-            if (in_array($string,array('NEW','PUBLISHED','HIDDEN'))) return true;
-            return false;
         }
 	}
