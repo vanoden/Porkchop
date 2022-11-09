@@ -1,10 +1,7 @@
 <?php
 	namespace Company;
 
-	class DomainList {
-		public $error;
-		public $_count = 0;
-
+	class DomainList Extends \BaseListClass {
 		public function find($parameters = array()) {
 			$find_objects_query = "
 				SELECT	id
@@ -19,7 +16,7 @@
 					array_push($bind_params,$parameters['name']);
 				}
 				else {
-					$this->error = "Invalid domain name";
+					$this->error("Invalid domain name");
 					return false;
 				}
 			}
@@ -37,7 +34,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Company::Domain::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -45,12 +42,9 @@
 			while (list($id) = $rs->FetchRow()) {
 				$domain = new \Company\Domain($id);
 				array_push($objects,$domain);
-				$this->_count ++;
+				$this->incrementCount();
 			}
 			
 			return $objects;
-		}
-		public function count() {
-			return $this->_count;
 		}
 	}

@@ -84,6 +84,6 @@
 		}
 
 		public function validName($string) {
-			return $this->validCode();
+			return $this->validCode($string);
 		}
 	}

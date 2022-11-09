@@ -24,7 +24,7 @@
 		}
 
 		public function _addStatus($param) {
-			array_push($_statii,$param);
+			array_push($this->_statii,$param);
 		}
 
 		public function clearError() {

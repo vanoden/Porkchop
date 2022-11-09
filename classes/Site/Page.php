@@ -63,20 +63,21 @@
 	    public function requireRole($role) {
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
-		    } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+		    }
+			elseif (! $GLOBALS ['_SESSION_']->customer->id) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit ();
-		    } elseif (! $GLOBALS ['_SESSION_']->customer->has_role ( $role )) {
+		    }
+			elseif (! $GLOBALS ['_SESSION_']->customer->has_role($role)) {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
 			    header ( 'location: /_register/permission_denied' );
 			    exit ();
 		    }
 			else {
-			    header ( 'location: /_register/permission_denied' );
-				exit();
+				return true;
 			}
 	    }
 

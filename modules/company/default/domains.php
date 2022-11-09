@@ -1,4 +1,20 @@
 <span class="title">Domains</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <table class="body">
 <tr><th>Name</th>
 	<th>Created</th>
@@ -15,4 +31,5 @@
 </tr>
 <?php } ?>
 </table>
+<br>
 <a href="/_company/domain">Add a domain</a>

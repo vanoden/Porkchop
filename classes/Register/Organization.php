@@ -261,10 +261,6 @@
 			return count($customers);
 		}
 
-		public function exists() {
-			if (isset($this->id) && is_numeric($this->id) && $this->id > 0) return true;
-			return false;
-		}
 		public function expire() {
 			$update_org_query = "
 				UPDATE	register_organizations

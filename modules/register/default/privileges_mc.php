@@ -26,7 +26,7 @@
             $privilege = new \Register\Privilege($_REQUEST['privilege_id']);
             if ($privilege->id) {
 				$module = new \Site\Module();
-				if (!$privilege->validCode($_REQUEST['name'][$privilege_id])) $page->addError("Invalid name");
+				if (!$privilege->validCode($_REQUEST['name'][$privilege->id])) $page->addError("Invalid name '".$_REQUEST['name'][$privilege->id]."'");
 				elseif (!$module->validName($_REQUEST['module'][$privilege->id])) $page->addError("Invalid module");
 				else {
 					$params = array(
