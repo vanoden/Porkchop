@@ -1,14 +1,11 @@
 <?php
 	namespace Register;
 
-	class OrganizationList {
-	
-		public $count = 0;
-		public $error;
+	class OrganizationList Extends \BaseListClass {
 
 		public function search($parameters = array()) {
 			app_log("Register::OrganizationList::search()",'trace',__FILE__,__LINE__);
-			$this->error = null;
+			$this->clearError();
 			$get_organizations_query = "
 				SELECT	id
 				FROM	register_organizations
@@ -19,7 +16,7 @@
 
 			if (! preg_match('/^[\'\w\-\.\_\s\*]+$/',$string)) {
 				app_log("Invalid search string: '$string'",'info');
-				$this->error = "Invalid search string";
+				$this->error("Invalid search string");
 				return null;
 			}
 			$string = str_replace("'","\'",$string);
@@ -78,7 +75,7 @@
 			query_log($get_organizations_query);			
 			$rs = $GLOBALS['_database']->Execute($get_organizations_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::OrganizationList::search(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$organizations = array();
@@ -184,7 +181,7 @@
 			query_log($get_organizations_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_organizations_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::OrganizationList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			
@@ -192,7 +189,7 @@
 			while (list($id) = $rs->FetchRow()) {
 				if ($recursive) {
 					$organization = new Organization($id);									
-					$this->count ++;
+					$this->incrementCount();
 					array_push($organizations,$organization);
 				} else {
 					array_push($organizations,$id);
@@ -222,7 +219,7 @@
 		public function expire($threshold = 365) {
 		
 			if (! is_numeric($threshold)) {
-				$this->error = "threshold must be numeric";
+				$this->error("threshold must be numeric");
 				return null;
 			}
 
@@ -235,7 +232,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($find_organizations_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::OrganizationList::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$counter = 0;
