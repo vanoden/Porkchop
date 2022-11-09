@@ -75,3 +75,5 @@
 
     $repositorylist = new \Storage\RepositoryList();
     $repositories = $repositorylist->find();
+
+	$statii = $package->statii();

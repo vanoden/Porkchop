@@ -71,9 +71,9 @@
     <div class="container">
         <span class="label">Status</span>
         <select name="status" class="value input wide_xl">
-            <option value="NEW"<?php	if ($package->status == "NEW") print " selected"; ?>>NEW</option>
-            <option value="ACTIVE"<?php	if ($package->status == "ACTIVE") print " selected"; ?>>ACTIVE</option>
-            <option value="HIDDEN"<?php	if ($package->status == "HIDDEN") print " selected"; ?>>HIDDEN</option>
+	<?php	foreach ($statii as $status) { ?>
+			<option value="<?=$status?>"<?php if ($package->status == $status) print " selected";?>><?=$status?></option>
+	<?php	} ?>
         </select>
     </div>
     <div class="form_footer">
