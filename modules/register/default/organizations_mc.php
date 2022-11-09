@@ -17,6 +17,7 @@
 
 	// Security - Only Register Module Operators or Managers can see other customers
 	$organizationlist = new \Register\OrganizationList();
+	$organization = new \Register\Organization();
 
 	// Initialize Parameter Array
 	$find_parameters = array();

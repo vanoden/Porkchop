@@ -160,8 +160,9 @@
 	}
 
 	if ($organization->id) {
+		$user = new \Register\Person();
 		$status = array();
-		if (isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) $status = array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED','BLOCKED');
+		if (isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) $status = $user->statii();
 		
 		$members = $organization->members('human', $status);
 		if ($organization->error) {
@@ -212,3 +213,5 @@
     $locations = array();
 	if ($organization) $locations = $organization->locations();
 	if ($organization && $organization->error()) $page->addError($organization->error());
+
+	$statii = $organization->statii();
