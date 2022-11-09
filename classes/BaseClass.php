@@ -28,6 +28,10 @@
 			else array_push($this->_statii,$param);
 		}
 
+		public function statii() {
+			return $this->_statii;
+		}
+
 		public function clearError() {
 			$this->_error = null;
 		}
