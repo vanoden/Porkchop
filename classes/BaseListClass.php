@@ -9,4 +9,8 @@
 		public function incrementCount() {
 			$this->_count ++;
 		}
+
+		public function resetCount() {
+			$this->_count = 0;
+		}
 	}
