@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 
-	class Contact Extends \BaseModel {
+	class Contact Extends \BaseClass {
 		public $id;
 		public $person;
 		public $types = array(

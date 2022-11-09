@@ -16,4 +16,4 @@
 
 	$siteMessageDeliveryList = new \Site\SiteMessageDeliveryList();
 	$siteMessageDeliveries = $siteMessageDeliveryList->find($params);
-	if ($siteMessageDeliveries->error()) $page->addError($siteMessageDeliveries->error());
+	if ($siteMessageDeliveryList->error()) $page->addError($siteMessageDeliveryList->error());
