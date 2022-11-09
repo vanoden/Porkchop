@@ -233,7 +233,7 @@
 		public function validValue($type,$string) {
 			if ($type == 'phone') {
 				preg_replace('/ext(ension)\.?\s?/i','ext. ',$string);
-				if (preg_match('/^\+?\d(\d\.\-\s\#\(\))$/',$string)) return true;
+				if (preg_match('/^\+?\d[\d\.\-\s\#\(\)]+$/',$string)) return true;
 				else return false;
 			}
 			elseif ($type == 'email') {

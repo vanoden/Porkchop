@@ -20,9 +20,10 @@ class Person Extends \BaseClass {
     public $_settings = array( "date_format" => "US" );
 
     public function __construct($id = 0) {
-
         // Clear Error Info
         $this->_error = '';
+
+		$this->_addStatus(array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED","BLOCKED"));
 
         // Find Person if id given
         if (isset($id) && is_numeric($id)) {

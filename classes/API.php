@@ -214,6 +214,7 @@
 			print $this->formatOutput($response);
 		}
 
+		// Increments Site Counter, not to be confused with BaseListClass::incrementCounter()
 		public function _incrementCounter($reason) {
 			$counterKey = "api.".$this->_name.".".$_REQUEST["method"].".".$reason;
 			$counter = new \Site\Counter($counterKey);

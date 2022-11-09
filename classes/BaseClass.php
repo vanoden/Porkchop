@@ -24,7 +24,8 @@
 		}
 
 		public function _addStatus($param) {
-			array_push($this->_statii,$param);
+			if (is_array($param)) $this->_statii = array_merge($this->_statii,$param);
+			else array_push($this->_statii,$param);
 		}
 
 		public function clearError() {
@@ -52,7 +53,7 @@
 		}
 
 		public function validStatus($string) {
-			if (is_array($string,$_statii)) return true;
+			if (in_array($string,$this->_statii)) return true;
 			else return false;
 		}
 	}
