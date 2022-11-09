@@ -1,11 +1,13 @@
 <?php
 	$page = new \Site\Page();
 
+	// This page requires either an emailed token or super-elevation (prev password)
+	// So no extra Anti-CSRF measures required
     // Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
-	if (isset($_POST) && !empty($_POST) && ! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-		$page->addError("Invalid request");
-		return 403;
-	}
+	//if (!empty($_POST) && ! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+	//	$page->addError("Invalid request");
+		#return 403;
+	//}
 
 	// See if we received a parseable token
 	$token = new \Register\PasswordToken();
