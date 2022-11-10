@@ -137,7 +137,7 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-
+			query_log($update_object_query,$bind_params,true);
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
@@ -210,5 +210,11 @@
 			else {
 				return false;
 			}
+		}
+
+		public function children() {
+			$itemList = new \Navigation\ItemList();
+			$items = $itemList->find(array('parent_id' => $this->id));
+			return $items;
 		}
 	}

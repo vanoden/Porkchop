@@ -38,6 +38,7 @@
 
 		public function exists($exists = null) {
 			if (is_bool($exists)) $this->_exists = $exists;
+			if (is_numeric($this->id) && $this->id > 0) return true;
 			return $this->_exists;
 		}
 

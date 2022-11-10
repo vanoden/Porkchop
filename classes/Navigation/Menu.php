@@ -9,7 +9,7 @@
 	    public function __construct($id = 0) {
 		    if (is_numeric ( $id ) && $id > 0) {
 			    $this->id = $id;
-			    $this->details ();
+			    $this->details();
 		    }
 	    }
 	    public function get($code) {
@@ -84,7 +84,7 @@
 	    }
 	    public function details() {
 		    $get_default_query = "
-				    SELECT  id,code,title
+				    SELECT  *
 				    FROM    navigation_menus
 				    WHERE   id = ?
 			    ";
@@ -94,12 +94,12 @@
 			    return false;
 		    }
 		    $object = $rs->FetchNextObject ( false );
-
 		    if ($object->id) {
 			    $this->id = $object->id;
 			    $this->code = $object->code;
 			    $this->title = $object->title;
-		    } else {
+		    }
+			else {
 			    $this->id = null;
 			    $this->code = null;
 			    $this->title = null;

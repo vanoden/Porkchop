@@ -17,7 +17,7 @@
 		document.forms[0].submit();
 	}
 </script>
-<span class="title">Edit Page Parameters</span>
+<div class="title">Edit Page Parameters</div>
 
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">
