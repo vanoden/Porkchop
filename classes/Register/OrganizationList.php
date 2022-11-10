@@ -6,6 +6,8 @@
 		public function search($parameters = array()) {
 			app_log("Register::OrganizationList::search()",'trace',__FILE__,__LINE__);
 			$this->clearError();
+			$this->resetCount();
+
 			$get_organizations_query = "
 				SELECT	id
 				FROM	register_organizations
@@ -82,19 +84,20 @@
 			while (list($id) = $rs->FetchRow()) {
 				if (1) {
 					$organization = new Organization($id,array('nocache' => true));
-					$this->count ++;
+					$this->incrementCount();
 					array_push($organizations,$organization);
 				}
 				else {
 					array_push($organizations,$id);
-					$this->count ++;
+					$this->incrementCount();
 				}
 			}
 			return $organizations;
 		}
 
 		public function find($parameters = array(),$recursive = true) {
-		
+			$this->clearError();
+			$this->resetCount();
 			app_log("Register::OrganizationList::find()",'trace',__FILE__,__LINE__);
 			
 			$this->error = null;
@@ -188,12 +191,12 @@
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
 				if ($recursive) {
-					$organization = new Organization($id);									
+					$organization = new Organization($id);
 					$this->incrementCount();
 					array_push($organizations,$organization);
 				} else {
 					array_push($organizations,$id);
-					$this->count ++;
+					$this->incrementCount();
 				}
 			}
 			
@@ -201,7 +204,8 @@
 		}
 		
 		public function findArray($parameters = array()) {
-		
+			$this->clearError();
+			$this->resetCount();
 			app_log("Register::OrganizationList::findArray()",'trace',__FILE__,__LINE__);
 			$this->error = null;
 			$objects = $this->find($parameters);
@@ -211,6 +215,7 @@
 				$organization = array();
 				$organization['id'] = $object->id;
 				$organization['name'] = $object->name;
+				$this->incrementCount();
 				array_push($organizations,$organization);
 			}
 			return $organizations;

@@ -12,7 +12,7 @@
 		elseif (!empty($_REQUEST['key']) && ! $siteConfiguration->validKey($_REQUEST['key'])) {
 			$page->addError("Invalid key");
 		}
-		elseif (!empty($_REQUEST['value']) && ! $siteConfiguraiton->validValue($_REQUEST['value'])) {
+		elseif (!empty($_REQUEST['value']) && ! $siteConfiguration->validValue($_REQUEST['value'])) {
 			$page->addError("Invalid value");
 		}
 		else {

@@ -12,7 +12,7 @@
 	if (isset($_REQUEST['page_size']) && preg_match('/^\d+$/',$_REQUEST['page_size']))
 		$organizations_per_page = $_REQUEST['page_size'];
 	else
-		$organizations_per_page = 18;
+		$organizations_per_page = 10;
 	if (isset($_REQUEST['start']) && ! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
 
 	// Security - Only Register Module Operators or Managers can see other customers
@@ -27,10 +27,10 @@
 	}
 
 	$find_parameters['status'] = array('NEW','ACTIVE');
-	if (isset($_REQUEST['deleted'])) array_push($find_parameters['status'],'DELETED');
-	if (isset($_REQUEST['expired'])) array_push($find_parameters['status'],'EXPIRED');
-	if (isset($_REQUEST['hidden'])) array_push($find_parameters['status'],'HIDDEN');
-	if (isset($_REQUEST['searchedTag'])) $find_parameters['searchedTag'] = $_REQUEST['searchedTag'];
+	if (!empty($_REQUEST['deleted'])) array_push($find_parameters['status'],'DELETED');
+	if (!empty($_REQUEST['expired'])) array_push($find_parameters['status'],'EXPIRED');
+	if (!empty($_REQUEST['hidden'])) array_push($find_parameters['status'],'HIDDEN');
+	if (!empty($_REQUEST['searchedTag'])) $find_parameters['searchedTag'] = $_REQUEST['searchedTag'];
 
 	// Get Count before Pagination
 	$organizationlist->find($find_parameters,false);
@@ -45,12 +45,14 @@
 	$organizations = $organizationlist->find($find_parameters);
 	if ($organizationlist->error()) $page->addError("Error finding organizations: ".$organizationlist->error());
 
-	if (isset($_REQUEST['start']) && $_REQUEST['start'] < $organizations_per_page)
-		$prev_offset = 0;
-	else
-		$prev_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) - $organizations_per_page;
-	$next_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) + $organizations_per_page;
-	$last_offset = $total_organizations - $organizations_per_page;
+	if (!empty($_REQUEST['start'])) {
+		if ($_REQUEST['start'] < $organizations_per_page) $prev_offset = 0;
+		else $prev_offset = $_REQUEST['start'] - $organizations_per_page;
+	}
+	$next_offset = $_REQUEST['start'] + $organizations_per_page + 1;
+	if ($next_offset > $total_organizations - $organizations_per_page) $next_offset = $total_organizations - $organizations_per_page;
+	if ($total_organizations >= $organization_per_page) $last_offset = $total_organizations - $organizations_per_page;
+	else $last_offset = 0;
 
     // get tags for organization
     $registerTagList = new \Register\TagList();

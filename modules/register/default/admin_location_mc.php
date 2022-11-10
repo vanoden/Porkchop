@@ -13,7 +13,7 @@
 		    $province = new \Geography\Province($_REQUEST['province_id']);
             if (empty($_REQUEST['zip_code']))
 				$page->addError("Zip Code required");
-			elseif (!preg_match('^/[\w-\]+$/',$_REQUEST['zip_code']))
+			elseif (!preg_match('/^[\w\-\.]+$/',$_REQUEST['zip_code']))
 				$page->addError("Invalid Zip Code");
 			elseif (! $province->id)
 				$page->addError("Province '".$_REQUEST['province_id']."' not found");

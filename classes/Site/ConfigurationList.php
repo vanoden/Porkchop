@@ -4,7 +4,12 @@
 	class ConfigurationList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
-		
+            $this->clearError();
+            $this->resetCount();
+
+            // Initialize Parameter Array
+            $bind_params = array();
+
 			// Prepare Query
 			$get_object_query = "
 				SELECT	`key`

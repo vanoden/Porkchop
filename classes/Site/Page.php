@@ -760,8 +760,9 @@
 		}
 
 		public function validIndex($string) {
-			if (preg_match('/^\w[\w]*$/',$string)) return true;
-			else return false();
+            if (empty($string)) return true;
+			if (preg_match('/^\w[\w\.\_\-]*$/',$string)) return true;
+			else return false;
 		}
 
 		public function validStyle($string) {

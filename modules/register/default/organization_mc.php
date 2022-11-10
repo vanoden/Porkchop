@@ -47,7 +47,7 @@
 			elseif (!$organization->validStatus($_REQUEST['status'])) {
 			    $page->addError("Invalid status");
 		    }
-			elseif (isset($_REQUEST['code']) && !$organization->validCode($_REQUEST['code'])) {
+			elseif (!empty($_REQUEST['code']) && !$organization->validCode($_REQUEST['code'])) {
 			    $page->addError("Invalid code");
 		    }
 			else {
@@ -109,7 +109,7 @@
 				    }
 			    }
 				else {
-				    if (! $parameters['code']) $parameters['code'] = uniqid();
+				    if (empty($parameters['code'])) $parameters['code'] = uniqid();
 				    app_log("Adding organization '".$parameters['name']."'");
 				    # See if code used
 				    $present_org = new \Register\Organization();
@@ -117,6 +117,9 @@
 						$page->addError("Invalid organization code");
 					}
 				    elseif ($present_org->get($parameters['code'])) {
+						$page->addError("Organization exists with code '".$parameters['code']."'");
+					}
+					else {
 						# Add Existing Organization
 						$organization = new \Register\Organization();
 						$organization->add($parameters);
@@ -154,7 +157,6 @@
         $registerTagList = new \Register\TagList();
         $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id, "name"=> $_REQUEST['removeTagValue']));
 	    foreach ($organizationTags as $organizationTag) {
-	        print_r($organizationTag);
     	    $organizationTag->delete();
 	    }
 	}

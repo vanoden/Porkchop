@@ -46,7 +46,7 @@
     <?php } ?>
     <div class="container">
 	    <span class="label">Vendor</span>
-	    <?=$shippingVendor?>
+	    <?=$shippingVendor->name?>
     </div>
     <?php	foreach ($packages as $package) { ?>
         <div class="table">

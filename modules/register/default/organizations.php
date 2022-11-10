@@ -35,9 +35,9 @@
     <form id="orgSearch" method="get" class="float: left">
         <div id="search_container">
 	        <input type="text" id="searchOrganizationInput" name="name" placeholder="organization name" value="<?=isset($_REQUEST['name']) ? $_REQUEST['name']: ''?>" class="value input searchInput wide_md"/>
-	        <input type="checkbox" name="hidden" class="checkbox" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><span class="status">Hidden</span>
-	        <input type="checkbox" name="expired" class="checkbox" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><span class="status">Expired</span>
-	        <input type="checkbox" name="deleted" class="checkbox" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><span class="status">Deleted</span>
+	        <input type="checkbox" name="hidden" class="checkbox" value="1" <?php if (!empty($_REQUEST['hidden'])) print "checked"; ?> /><span class="status">Hidden</span>
+	        <input type="checkbox" name="expired" class="checkbox" value="1" <?php if (!empty($_REQUEST['expired'])) print "checked"; ?> /><span class="status">Expired</span>
+	        <input type="checkbox" name="deleted" class="checkbox" value="1" <?php if (!empty($_REQUEST['deleted'])) print "checked"; ?> /><span class="status">Deleted</span>
 	        <input type="hidden" id="start" name="start" value="0">
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Filter by Tag: <select name="searchedTag" id="organizationStatusValue" class="">
                 <option value=""></option>
@@ -77,11 +77,11 @@
         <!--    Standard Page Navigation Bar ADMIN ONLY -->
         <div class="pager_bar">
 	        <div class="pager_controls">
-		        <a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerFirst"><< First </a>
-		        <a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerPrevious"><</a>
-		        &nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$customers_per_page+1?> of <?=$total_customers?>&nbsp;
-		        <a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerNext">></a>
-		        <a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerLast"> Last >></a>
+		        <a href="/_register/organizations?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerFirst"><< First </a>
+		        <a href="/_register/organizations?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerPrevious"><</a>
+		        &nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$organizations_per_page?> of <?=$total_organizations?>&nbsp;
+		        <a href="/_register/organizations?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerNext">></a>
+		        <a href="/_register/organizations?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerLast"> Last >></a>
             </div>
         </div>
     </form>
@@ -90,5 +90,5 @@
 ?>
 <form action="<?=PATH?>/_register/organization" method="get">
     <div class="button-bar"><span style="text-align: center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span></div>
-    <?php	} ?>
 </form>
+<?php	} ?>
