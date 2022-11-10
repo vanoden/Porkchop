@@ -1,29 +1,28 @@
 <?php
 	namespace Cache;
 	
-	class Item {
+	class Item Extends \BaseClass {
 		private $_client;
 		private $_key;
-		public $error;
 
 		public function __construct($client,$key) {
 			$this->_client = $client;
 			$this->_key = $key;
-			if (! $this->_client->connected()) $this->error = "Client not connected";
-			elseif (! $this->_key) $this->error = "Key required";
+			if (! $this->_client->connected()) $this->error("Client not connected");
+			elseif (! $this->_key) $this->error("Key required");
 		}
 
 		public function set($value) {
 		
 			if (! $this->_key) {
-				$this->error = "Key required";
+				$this->error("Key required");
 				return null;
 			}
 			
 			if ($this->_client->set($this->_key,$value)) {
 				return true;
 			} else {
-				$this->error = $this->_client->error;
+				$this->error($this->_client->error());
 				return false;
 			}
 		}
@@ -32,7 +31,7 @@
 			return $this->_client->get($this->_key);
 		}
 
-		public function exists() {
+		public function exists($nothing = null) {
 			$object = $this->_client->get($this->_key);
 			if (! empty($object)) return true;
 			else return false;

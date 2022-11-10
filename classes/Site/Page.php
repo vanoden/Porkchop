@@ -355,23 +355,22 @@
 				    if (isset ( $this->metadata->$parameter ["field"] )) $buffer = $this->metadata->$parameter ["field"];
 			    } elseif ($property == "navigation") {
 				    $menuList = new \Navigation\ItemList();
-				    if ($menuList->error) {
+				    if ($menuList->error()) {
 					    $this->error = "Error initializing navigation module: " . $menuList->error;
 					    return '';
 				    }
-
-				    $menus = $menuList->find ( array ("name" => $parameter ["name"] ) );
-				    if ($menuList->error) {
-					    app_log ( "Error displaying menus: " . $menuList->error, 'error', __FILE__, __LINE__ );
-					    $this->error = $menuList->error;
+				    $menus = $menuList->find(array("name" => $parameter["name"]));
+				    if ($menuList->error()) {
+					    app_log("Error displaying menus: " . $menuList->error(), 'error', __FILE__, __LINE__ );
+					    $this->error($menuList->error());
 					    return '';
 				    }
+				    $menu = $menus[0];
+					$items = $menu->items();
 
-				    $menu = $menus [0];
-
-				    if (count ( $menu->item )) {
-					    foreach ( $menu->item as $item ) {
-						    if (isset ( $parameter ['class'] )) $button_class = $parameter ['class'];
+				    if (count($items)) {
+					    foreach ($items as $item) {
+						    if (isset( $parameter ['class'] )) $button_class = $parameter ['class'];
 						    else {
 							    $button_class = "button_" . preg_replace ( "/\W/", "_", $menu->name );
 						    }

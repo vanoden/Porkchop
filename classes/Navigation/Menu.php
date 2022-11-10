@@ -107,12 +107,12 @@
 		    return true;
 	    }
 	    public function items($parent_id = 0) {
-		    if (! preg_match ( "/^\d+$/", $parent_id )) $parent_id = 0;
+		    if (! preg_match("/^\d+$/", $parent_id )) $parent_id = 0;
 
-		    $itemlist = new \Navigation\ItemList ();
-		    $items = $itemlist->find ( array ('menu_id' => $this->id, 'parent_id' => $parent_id ) );
-		    if ($itemlist->error ()) {
-			    $this->_error = $itemlist->error ();
+		    $itemlist = new \Navigation\ItemList();
+		    $items = $itemlist->find(array('menu_id' => $this->id, 'parent_id' => $parent_id));
+		    if ($itemlist->error()) {
+			    $this->_error = $itemlist->error();
 			    return null;
 		    }
 		    return $items;
@@ -175,4 +175,8 @@
 		    }
 		    return $html;
 	    }
+		public function validTitle($string) {
+			if (! preg_match('/\<\>/',urldecode($string))) return true;
+			else return false;
+		}
     }

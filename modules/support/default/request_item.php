@@ -37,7 +37,6 @@
 <form name="request_form" method="post" action="/_support/request_item">
 <input type="hidden" name="request_id" value="<?=$request->id?>" />
 <div><!-- START Main Div -->
-
     <!--	 ==================================== -->
 	<!-- START Request Form -->
 	<form name="requestForm" method="post">
@@ -173,13 +172,9 @@
 				</div>
 				<div class="tableCell">
 					<select name="action_status" class="value input">
-						<option value="NEW">New</option>
-						<option value="ASSIGNED">Assigned</option>
-						<option value="ACTIVE">Active</option>
-						<option value="PENDING CUSTOMER">Pending Customer</option>
-						<option value="PENDING VENDOR">Pending Vendor</option>
-						<option value="CANCELLED">Cancelled</option>
-						<option value="COMPLETE">Complete</option>
+				<?php	foreach ($action_statii as $status) { ?>
+						<option value="<?=$status?>"><?=ucwords($status)?></option>
+				<?php	} ?>
 					</select>
 				</div>
 			</div>

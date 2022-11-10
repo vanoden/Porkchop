@@ -10,7 +10,7 @@
 			";
 			$bind_params = array();
 
-			if ($parameters["menu_id"]) {
+			if (!empty($parameters["menu_id"])) {
 				$get_items_query .= "
 				AND     menu_id = ?";
 				array_push($bind_params,$parameters["menu_id"]);
@@ -19,6 +19,11 @@
 				$get_items_query .= "
 				AND		parent_id = ?";
 				array_push($bind_params,$parameters['parent_id']);
+			}
+			if (!empty($parameters['target'])) {
+				$get_items_query .= "
+				AND		target = ?";
+				array_push($bind_params,$parameters['target']);
 			}
 
 			$get_items_query .= "

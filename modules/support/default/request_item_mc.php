@@ -79,8 +79,9 @@
 
 			$action = $item->addAction($parameters);
 			if ($item->error()) {
-				$page->addError($item->error());
-			} else {
+				$page->addError("Error adding action: ".$item->error());
+			}
+			else {
 				$page->success = "Action #".$action->id." added";
 			}
 			if ($item->status == "NEW") $item->update(array('status' => 'ACTIVE'));
@@ -383,3 +384,8 @@
 
 	$organizationList = new \Register\OrganizationList();
 	$organizations = $organizationList->find();
+
+	$statii = $item->statii();
+
+	$action = new \Support\Request\Item\Action();
+	$action_statii = $action->statii();

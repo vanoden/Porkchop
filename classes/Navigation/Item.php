@@ -217,4 +217,14 @@
 			$items = $itemList->find(array('parent_id' => $this->id));
 			return $items;
 		}
+
+		public function validTitle($string) {
+			return $this->validName($string);
+		}
+
+		public function validTarget($string) {
+			if (preg_match('/\.\./',$string)) return false;
+			if (preg_match('/\<\>/',$string)) return false;
+			return true;
+		}
 	}
