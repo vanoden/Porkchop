@@ -64,7 +64,7 @@
 			        <a href="/_support/request_detail/<?=$request->code?>"><?=$request->code?></a>
 		        </div>
 		        <div class="tableCell">
-			        <a href="/_register/admin_account?customer_id=<?=$request->customer->id?>"><?=$request->customer->full_name()?></a>
+			        <a href="/_register/admin_account?customer_id=<?=$request->customer()->id?>"><?=$request->customer()->full_name()?></a>
 		        </div>
 		        <div class="tableCell">
 			        <span class="value"><?=$item->line?></span>
@@ -246,7 +246,7 @@
 			<span class="label">Transfer To</span>
 			<select class="value input" name="transfer_to">
 <?php		foreach ($organizations as $organization) { ?>
-				<option value="<?=$organization->id?>" <?php if ($organization->id == $item->request->customer->organization->id) print " SELECTED"; ?>><?=$organization->name?></option>
+				<option value="<?=$organization->id?>" <?php if ($organization->id == $item->request()->customer()->organization->id) print " SELECTED"; ?>><?=$organization->name?></option>
 <?php		} ?>
 			</select>
 			<select class="value input" name="transfer_reason">

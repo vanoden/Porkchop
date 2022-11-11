@@ -15,7 +15,7 @@
 	
 	if ($action->error()) $page->addError($action->error());
 	$item = $action->item;
-	$request = $item->request;
+	$request = $item->request();
     $date_calibration = date('m/d/Y H:i:s');
     
 	// get number of other actions for current action

@@ -57,10 +57,10 @@
 		        <div>Requestor</div><div>Status</div><div>Product</div><div>Date</div><div>Serial #</div>
 	        </div> <!-- end row header -->
 	        <div class="tableRow">
-		        <div><span class="hiddenDesktop value">Requestor: </span><?=$request->customer->full_name()?></div>
-		        <div><span class="hiddenDesktop value">Status: </span><?=$item->request->date_request?></div>
+		        <div><span class="hiddenDesktop value">Requestor: </span><?=$request->customer()->full_name()?></div>
+		        <div><span class="hiddenDesktop value">Status: </span><?=$request->date_request?></div>
 		        <div><span class="hiddenDesktop value">Product: </span><span class="value"><?=$item->status?></span></div>
-		        <div><span class="hiddenDesktop value">Date: </span><span class="value"><?=$item->product->code?></span></div>
+		        <div><span class="hiddenDesktop value">Date: </span><span class="value"><?=$request->date_request?></span></div>
 		        <div><span class="hiddenDesktop value">Serial #: </span><span class="value"><a href="/_monitor/asset/<?=$item->serial_number?>"><?=$item->serial_number?></a></span></div>
 	        </div>
         </div>

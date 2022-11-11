@@ -58,7 +58,7 @@
 	    $products = $productlist->find(array('type' => array('inventory','kit','unique')));
 
 	    $item = new \Support\Request\Item();
-	    $statuses = $item->statuses();
+	    $statuses = $item->statii();
 
 	    $adminlist = new \Register\CustomerList();
 	    $admins = $adminlist->find(array('role' => 'support user','_sort' => 'full_name'));

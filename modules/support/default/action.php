@@ -130,8 +130,8 @@
       <div class="tableRow">
          <div class="tableCell"><a href="/_support/request_detail/<?=$request->code?>"><?=$request->code?></a></div>
          <div class="tableCell"><?=$request->date_request?></div>
-         <div class="tableCell"><?=$request->customer->organization->name?></div>
-         <div class="tableCell"><?=$request->customer->full_name()?></div>
+         <div class="tableCell"><?=$request->customer()->organization->name?></div>
+         <div class="tableCell"><?=$request->customer()->full_name()?></div>
          <div class="tableCell"><?=$request->status?></div>
       </div>
       <div class="tableRowHeader">

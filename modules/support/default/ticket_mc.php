@@ -13,7 +13,7 @@
 		$item = new \Support\Request\Item($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
 
-	$request = $item->request;
+	$request = $item->request();
     if (! $item->id) {
         return 404;
     }

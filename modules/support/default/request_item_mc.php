@@ -11,7 +11,7 @@
 	} elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$item = new \Support\Request\Item($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
-	$request = $item->request;
+	$request = $item->request();
 
 	if ($_REQUEST['btn_complete']) {
 		if ($item->organization->id != $GLOBALS['_SESSION_']->customer->organization_id && ! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {

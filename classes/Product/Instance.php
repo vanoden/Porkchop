@@ -104,7 +104,7 @@
 		# Get Specific Hub
 		public function get($code,$product_id) {
 			$this->clearError();
-		
+
 			$bind_params = array();
 
 			$get_object_query = "
@@ -243,7 +243,8 @@
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
-			} else {
+			}
+			else {
 				$object = $rs->FetchNextObject(false);
 				if (isset($object)) {
 					$this->id = $object->id;
@@ -256,9 +257,15 @@
 						$this->organization = new \Register\Organization($object->organization_id);
 						$this->product = new \Product\Item($object->product_id);
 					}
-
-					return $object;
 				}
+				else {
+					$this->id = null;
+					$this->code = null;
+					$this->name = null;
+					$this->organization_id = null;
+					$this->product_id = null;
+				}
+				return true;
 			}
 		}
 		

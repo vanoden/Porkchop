@@ -63,19 +63,18 @@
 				$item = $request->addItem($parameters);
 				if ($request->error()) $page->addError("Error adding item to request: ".$request->error());
 
-					// internal user get the URL, external just the description
-					$supportUserBody .= "<br>
-						Ticket: <a href='http://".$GLOBALS['_config']->site->hostname."/_support/request_item/".$item->id."'>".$item->id."</a><br>
-						&nbsp;&nbsp;".$item->description;
-						
-					$requestorBody .= "&nbsp;&nbsp;".$item->description;;                  
-						
+				// internal user get the URL, external just the description
+				$supportUserBody .= "<br>
+					Ticket: <a href='http://".$GLOBALS['_config']->site->hostname."/_support/request_item/".$item->id."'>".$item->id."</a><br>
+					&nbsp;&nbsp;".$item->description;
+					
+				$requestorBody .= "&nbsp;&nbsp;".$item->description;
 			}
 
 				$message = new \Email\Message(
 					array(
 						'from'	=> 'service@spectrosinstruments.com',
-						'subject'	=> "[SUPPORT] New Request #".$request->code." from ".$request->customer->full_name(),
+						'subject'	=> "[SUPPORT] New Request #".$request->code." from ".$request->customer()->full_name(),
 						'body'		=> $supportUserBody
 					)
 				);
@@ -89,12 +88,12 @@
 				$message = new \Email\Message(
 					array(
 						'from'	=> 'service@spectrosinstruments.com',
-						'subject'	=> "[SUPPORT] New Request #".$request->code." from ".$request->customer->full_name(),
+						'subject'	=> "[SUPPORT] New Request #".$request->code." from ".$request->customer()->full_name(),
 						'body'		=> $requestorBody
 					)
 				);
 				$message->html(true);
-				$request->customer->notify($message);
+				$request->customer()->notify($message);
 				
 				if ($role->error()) app_log("Error sending request notification: ".$role->error());
 				$page->success = 'Support request '.$request->code.' submitted.  A representative will follow up shortly';
