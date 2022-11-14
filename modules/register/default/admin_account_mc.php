@@ -161,58 +161,68 @@
 				if ($contact_id > 0) {
 					app_log("Updating contact record",'debug',__FILE__,__LINE__);
 					$contact = new \Register\Contact($contact_id);
+                    if ($contact->error()) {
+                        $page->addError($contact->error());
+                    }
+                    else {
+                        if ($_REQUEST['notify'][$contact_id]) $notify = true;
+                        else $notify = false;
 
-					if ($_REQUEST['notify'][$contact_id]) $notify = true;
-					else $notify = false;
-					
-					if (! $contact->validType($_REQUEST['type'][$contact_id]))
-						$page->addError("Invalid contact type");
-					elseif (! $contact->validValue($_REQUEST['type'][$contact_id],$_REQUEST['value'][$contact->id]))
-						$page->addError("Invalid value for contact type ".$_REQUEST['type'][$contact_id]);
-					else {
-						// Update Existing Contact Record
-						$contact->update(
-							array(
-								"type"			=> $_REQUEST['type'][$contact_id],
-								"description"	=> noXSS(trim($_REQUEST['description'][$contact_id])),
-								"value"			=> $_REQUEST['value'][$contact_id],
-								"notes"			=> noXSS(trim($_REQUEST['notes'][$contact_id])),
-								"notify"		=> $notify
-							)
-						);
-						if ($contact->error()) {
-							$page->addError("Error updating contact: ".$customer->error());
-							goto load;
-						}
-					}
+                        if (! $contact->validType($_REQUEST['type'][$contact_id]))
+                            $page->addError("Invalid contact type");
+                        elseif (! $contact->validValue($_REQUEST['type'][$contact_id],$_REQUEST['value'][$contact->id]))
+                            $page->addError("Invalid value for contact type ".$_REQUEST['type'][$contact_id]);
+                        else {
+                            // Update Existing Contact Record
+                            $contact->update(
+                                array(
+                                    "type"			=> $_REQUEST['type'][$contact_id],
+                                    "description"	=> noXSS(trim($_REQUEST['description'][$contact_id])),
+                                    "value"			=> $_REQUEST['value'][$contact_id],
+                                    "notes"			=> noXSS(trim($_REQUEST['notes'][$contact_id])),
+                                    "notify"		=> $notify
+                                )
+                            );
+                            if ($contact->error()) {
+                                $page->addError("Error updating contact: ".$customer->error());
+                                goto load;
+                            }
+                        }
+                    }
 				}
 				else {
 					app_log("Adding contact record",'debug',__FILE__,__LINE__);
 					if ($_REQUEST['notify'][0]) $notify = true;
 					else $notify = false;
-					
-					// Create Contact Record
-					if (! $contact->validType($_REQUEST['type'][0]))
-						$page->addError("Invalid contact type");
-					elseif (! $contact->validValue($_REQUEST['type'][0],$_REQUEST['value'][0]))
-						$page->addError("Invalid value for contact type");
-					else {
-						$customer->addContact(
-							array(
-								"person_id"		=> $customer_id,
-								"type"			=> $_REQUEST['type'][0],
-								"description"	=> noXSS(trim($_REQUEST['description'][0])),
-								"value"			=> $_REQUEST['value'][0],
-								"notes"			=> noXSS(trim($_REQUEST['notes'][0])),
-								"notify"		=> $notify
-							)
-						);
 
-						if ($customer->error()) {
-							$page->addError("Error adding contact: ".$customer->error());
-							goto load;
-						}
-					}
+					$contact = new \Register\Contact($contact_id);
+                    if ($contact->error()) {
+                        $page->addError($contact->error());
+                    }
+                    else {
+                        // Create Contact Record
+                        if (! $contact->validType($_REQUEST['type'][0]))
+                            $page->addError("Invalid contact type");
+                        elseif (! $contact->validValue($_REQUEST['type'][0],$_REQUEST['value'][0]))
+                            $page->addError("Invalid value for contact type");
+                        else {
+                            $customer->addContact(
+                                array(
+                                    "person_id"		=> $customer_id,
+                                    "type"			=> $_REQUEST['type'][0],
+                                    "description"	=> noXSS(trim($_REQUEST['description'][0])),
+                                    "value"			=> $_REQUEST['value'][0],
+                                    "notes"			=> noXSS(trim($_REQUEST['notes'][0])),
+                                    "notify"		=> $notify
+                                )
+                            );
+
+                            if ($customer->error()) {
+                                $page->addError("Error adding contact: ".$customer->error());
+                                goto load;
+                            }
+                        }
+                    }
 				}
 			}
 

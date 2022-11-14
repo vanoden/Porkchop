@@ -52,7 +52,8 @@
 	Ticket: <a href='http://".$GLOBALS['_config']->site->hostname."/_support/request_item/".$item->id."'>".$item->id."</a><br>
 	&nbsp;&nbsp;".$item->product->code." ".$item->serial_number.": ".$item->description;
 				}
-			} else {
+			}
+			else {
 				$parameters = array(
 					'line'			=> 0,
 					'product_id'	=> 0,

@@ -144,15 +144,16 @@
 				$page->addError("Return notification template not configured");
 				app_log("config->support->return_notification not set!",'error');
 				return false;
-			} elseif (! file_exists($return_notification->template)) {
+			}
+            elseif (! file_exists($return_notification->template)) {
 				$page->addError("Return Notification Email Template '".$return_notification->template."' not found");
 				app_log("File '".$return_notification->template."' not found! Set in config->support->return_notification setting",'error');
 				return false;
 			}
 
 			// get any known emails to ensure if they have notifications set to recieve RMA details via email
-			$requestedBy = $item->request()->customer;
-			$rmaCustomerEmails = $item->request->customer->contacts(array('type'=>'email'));
+			$requestedBy = $item->request()->customer();
+			$rmaCustomerEmails = $item->request()->customer()->contacts(array('type'=>'email'));
 			$hasEmailNotifications = false;
 			foreach ($rmaCustomerEmails as $customerEmail) {
 				if ($customerEmail->notify) $hasEmailNotifications = true;   
