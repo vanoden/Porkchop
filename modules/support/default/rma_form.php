@@ -276,7 +276,8 @@
 <?php	if ($GLOBALS['_SESSION_']->customer->can('receive shipments') && $rmaSubmitted && !$rmaReceived) { ?>
 	<form method="post" id="submit_package_details">
 		<h3 class="eyebrow">Receipt Info:</h3>
-		<input type="hidden" name="id" value="<?=$rma->id?>" /><!-- What does this do -->
+		<input type="hidden" name="id" value="<?=$rma->id?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<ul class="form-grid three-col">
 			<li>
 				<label for="dateReceived">Date Received</label>
@@ -311,6 +312,8 @@
 	<?php	if ($showShippingForm) { ?>
 	<h3 class="eyebrow"><?=empty($shippingPackage->id) ? "Add" : "Update"?> your shipment info:</h3>
 	<form method="post" id="submit_package_details">
+		<input type="hidden" name="id" value="<?=$rma->id?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<ul class="form-grid three-col">
 			<li>
 				<label for="tracking_code">Tracking Number</label> 
@@ -336,6 +339,8 @@
 <!-- ========== SHIPPING ADDRESS ========== -->
 <?php	if (! $rmaSubmitted) { ?>
 	<form method="post" id="submit_rma_form">
+		<input type="hidden" name="id" value="<?=$rma->id?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<section class="form-group" id="shipping_address_form">
 			<h3 class="eyebrow">Shipping Info</h3>
 			<ul>

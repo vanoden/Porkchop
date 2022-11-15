@@ -30,17 +30,16 @@
          * @param array $parameters, name value pairs to add and populate new object by
          */
         public function add($parameters = array()) {
-
             // shipment_id is required            
             if (empty($parameters['shipment_id'])) {
-				$this->_error = "Shipment ID Required";
+				$this->error("Shipment ID Required");
 				return false;
             }
 
             // check shipment exists
         	$shipment = new \Shipping\Shipment($parameters['shipment_id']);
 			if (! $shipment->id) {
-				$this->_error = "Shipment Not Found";
+				$this->error("Shipment Not Found");
 				return false;
 			}
 
@@ -74,7 +73,7 @@
 			if (isset($parameters['user_received']) && is_numeric($parameters['user_received'])) {
 				$customer = new \Register\Customer($parameters['user_received']);
 				if (! $customer->id) {
-					$this->_error = "Customer not found";
+					$this->error("Customer not found");
 					return false;
 				}
 			}
@@ -112,7 +111,7 @@
 		public function add_item($parameters = array()) {
 			$product = new \Product\Item($parameters['product_id']);
 			if (! $product->id) {
-				$this->_error = "Product '".$parameters['product_id']."' not found";
+				$this->error("Product '".$parameters['product_id']."' not found");
 				return false;
 			}
 			if (empty($parameters['description'])) {
@@ -131,7 +130,7 @@
 				'description'	=> $parameters['description']
 			))) return $item;
 			else {
-				$this->_error = "Error adding item to package: ".$item->error();
+				$this->error("Error adding item to package: ".$item->error());
 				return null;
 			}
 		}

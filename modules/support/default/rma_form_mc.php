@@ -49,13 +49,14 @@ if ($rma->exists ()) {
 
 // get any values for UI, check if they exist
 if ($page->errorCount() < 1) {
-
 	$rmaNumber = $rma->number () ? $rma->number () : "";
 	$rmaItem = $rma->item();
+	$rmaRequest = $rmaItem->request();
+	$rmaRequestCustomer = $rmaRequest->customer();
 	$rmaItemId = $rmaItem ? $rmaItem->id : "";
 	$rmaTicketNumber = $rmaItem->ticketNumber () ? $rmaItem->ticketNumber () : "";
-	$rmaCustomerFullName = $rmaItem->request->customer ? $rmaItem->request->customer->full_name () : "";
-	$rmaCustomerOrganizationName = $rmaItem->request->customer->organization->name ? $rmaItem->request->customer->organization->name : "";
+	$rmaCustomerFullName = $rmaRequestCustomer ? $rmaRequestCustomer->full_name () : "";
+	$rmaCustomerOrganizationName = $rmaRequestCustomer->organization->name ? $rmaRequestCustomer->organization->name : "";
 	$rmaApprovedByName = $rma->approvedBy () ? $rma->approvedBy ()->full_name () : "";
 	$rmaDateApproved = date ( "m/d/Y", strtotime ( $rma->date_approved ) );
 	$rmaStatus = $rma->status;
@@ -63,7 +64,7 @@ if ($page->errorCount() < 1) {
 	app_log("RMA Product: ".$rmaItem->product->id,'notice');
 
 	$rmaSerialNumber = $rmaItem ? $rmaItem->serial_number : "";
-	$organization = $rmaItem->request->customer->organization;
+	$organization = $rmaItem->request()->customer()->organization;
 
 	// make sure customer belongs to the RMA, or we're an admin user wishing to view it
 	$authorized = true;
@@ -97,19 +98,20 @@ if ($page->errorCount() < 1) {
 		if (! $shippingShipment->id) {
 
 			//$parameters ['code'] = $rmaCode;
-			$parameters ['document_number'] = $shippingDocument;
-			$parameters ['date_entered'] = date ( "Y-m-d H:i:s" );
-			$parameters ['status'] = 'SUBMITTED';
-			$parameters ['send_customer_id'] = $rmaItem->request->customer->id;
-			$parameters ['receive_customer_id'] = $rma->approvedBy ()->id;
-			$parameters ['receive_location_id'] = $receive_location_id;
+			$parameters['document_number'] = $shippingDocument;
+			$parameters['date_entered'] = date ( "Y-m-d H:i:s" );
+			$parameters['status'] = 'SHIPPED';
+			$parameters['send_customer_id'] = $rmaRequestCustomer->id;
+			$parameters['receive_customer_id'] = $rma->approvedBy ()->id;
+			$parameters['receive_location_id'] = $receive_location_id;
 
 			if (!empty($_REQUEST ['shipping_address_picker'])) {
 				$registerLocationShipping = new \Register\Location($_REQUEST['shipping_address_picker']);
 				if (! $registerLocationShipping->id) {
 					$page->addError("Error finding location: ".$registerLocationShipping->error());
 				}
-			} else {
+			}
+			else {
 				$registerLocationShipping = new \Register\Location ();
 				$registerLocationShipping->add(array(
 					'name'			=> $_REQUEST ['shipping_location_name'],
@@ -133,7 +135,8 @@ if ($page->errorCount() < 1) {
 			}
 			if (! $registerLocationShipping->id) {
 				$page->addError("No location identified for return shipping");
-			} else {
+			}
+			else {
 				$parameters['send_location_id'] = $registerLocationShipping->id;
 	
 				// RMA request has a new billing contact to be added
@@ -169,26 +172,29 @@ if ($page->errorCount() < 1) {
 				$rma->update(array('billing_contact_id' => $_REQUEST['billing_contact_picker']));
 				if ($rma->error()) $page->addError('Unable to store billing contact: '.$rma->error());
 			
-				$parameters ['instructions'] = (isset ( $_REQUEST ['delivery_instructions'] )) ? $_REQUEST ['delivery_instructions'] : '';
-	
+				$parameters['instructions'] = (isset ( $_REQUEST ['delivery_instructions'] )) ? $_REQUEST ['delivery_instructions'] : '';
+
 				// add shipment with package and items entries
-				if (! $shippingShipment->add ( $parameters )) {
+				if (! $shippingShipment->add($parameters)) {
 					$page->addError("Error creating shipment: ".$shippingShipment->error());
-				} else {
+				}
+				else {
 					// add a default "1st" package to the shipment, there should be at least that
 					$packageDetails = array ();
-					$packageDetails ['shipment_id'] = $shippingShipment->id;
-					$packageDetails ['number'] = 1;
-					$packageDetails ['tracking_code'] = (isset ( $_REQUEST ['tracking_number'] )) ? $_REQUEST ['tracking_number'] : '';
-					$packageDetails ['status'] = 'READY';
-					$packageDetails ['condition'] = 'OK';
+					$packageDetails['shipment_id'] = $shippingShipment->id;
+					$packageDetails['number'] = 1;
+					$packageDetails['tracking_code'] = (isset ( $_REQUEST ['tracking_number'] )) ? $_REQUEST ['tracking_number'] : '';
+					$packageDetails['status'] = 'READY';
+					$packageDetails['condition'] = 'OK';
 					$shippingPackage = $shippingShipment->add_package($packageDetails);
+
 					if ($shippingShipment->error()) {
 						$page->addError("Error adding package to shipment: ".$shippingShipment->error());
-					} else {
+					}
+					else {
 						// each item from the form including accessories is added to the shipment as a shipping_item record
 						$shippingPackage->add_item(array(
-							'product_id'	=> $rmaItem->product->id,
+							'product_id'	=> $rmaItem->product()->id,
 							'serial_number'	=> $rmaSerialNumber,
 							'condition'		=> 'OK',
 							'quantity'		=> 1,
