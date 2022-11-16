@@ -17,7 +17,7 @@
     if (! $item->id) {
         return 404;
     }
-	if ($request->customer->organization->id != $GLOBALS['_SESSION_']->customer->organization->id && !$GLOBALS['_SESSION_']->customer->can('browse support tickets')) {
+	if ($request->customer()->organization->id != $GLOBALS['_SESSION_']->customer->organization->id && !$GLOBALS['_SESSION_']->customer->can('browse support tickets')) {
         return 403;
 	}
 

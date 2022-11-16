@@ -68,7 +68,7 @@ if ($page->errorCount() < 1) {
 
 	// make sure customer belongs to the RMA, or we're an admin user wishing to view it
 	$authorized = true;
-	if ( $rmaItem->request->customer->id == $GLOBALS['_SESSION_']->customer->id ) {
+	if ( $rmaRequestCustomer->id == $GLOBALS['_SESSION_']->customer->id ) {
 		// Ok
 	}
 	elseif ( $GLOBALS['_SESSION_']->customer->can('use support module') ) {
