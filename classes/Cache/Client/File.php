@@ -4,7 +4,6 @@
 	class File Extends \BaseClass {
 		private $_path;
 		private $_connected;
-		public $_error;
 
 		public function __construct($properties) {
 			if (empty($properties->path)) {
@@ -17,21 +16,21 @@
 						$this->_connected = true;
 					}
 					else {
-						$this->_error = "Cache path not writable";
+						$this->error("Cache path not writable");
 					}
 				}
 				else if (file_exists($properties->path)) {
-					$this->_error = "Cache path '".$properties->path."' does not exist";
+					$this->error("Cache path '".$properties->path."' does not exist");
 				}
 				else if (empty(filetype($properties->path))) {
 					#$this->_error = "Unknown file type for '".$properties->path."'";
 				}
 				else {
-					$this->_error = "Cache path '".$properties->path."' is a ".filetype($properties->path);
+					$this->error($properties->path."' is a ".filetype($properties->path));
 				}
 			}
 			else {
-				$this->_error = "Cache path not valid";
+				$this->error("Cache path not valid");
 			}
 		}
 
@@ -41,16 +40,16 @@
 
 		public function connect() {
 			if (empty($this->_path)) {
-				$this->_error = "Cache path not configured";
+				$this->error("Cache path not configured");
 				return false;
 			}
 			elseif (!is_dir($this->_path)) {
-				$this->_error = "Cache path ".$this->_path." not found";
+				$this->error("Cache path ".$this->_path." not found");
 				app_log("Cache directory ".$this->_path." not found",'_error');
 				return false;
 			}
 			elseif (!is_writable($this->_path)) {
-				$this->_error = "Cache path not writable";
+				$this->error("Cache path not writable");
 				app_log("Cache directory ".$this->_path." no writable",'_error');
 				return false;
 			}

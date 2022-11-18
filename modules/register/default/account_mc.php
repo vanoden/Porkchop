@@ -11,7 +11,8 @@
 	if (isset($GLOBALS['_SESSION_']->customer->id)) {
 		$customer_id = $GLOBALS['_SESSION_']->customer->id;
 		$customer = new \Register\Customer($customer_id);
-	} else {
+	}
+	else {
 		header("location: /_register/login?target=_register/account");
 		exit;
 	}
@@ -26,8 +27,8 @@
 			$page->addError("Invalid Request");
 		}
 		else {
-		    $_contact = new \Register\Contact($_REQUEST['register-contacts-id']);
-		    $_contact->delete();
+		    $contact = new \Register\Contact($_REQUEST['register-contacts-id']);
+		    $contact->delete();
 		    $page->success = 'Contact Entry ' . $_REQUEST['register-contacts-id'] . ' has been removed.';
 		}
 	}
@@ -71,7 +72,8 @@
 					goto load;
 				}
 				
-			} else {
+			}
+			else {
 			
 				### THIS NEVER HAPPENS ###
 				app_log("New customer registration",'debug',__FILE__,__LINE__);
@@ -138,19 +140,25 @@
 					if ($_REQUEST['notify'][$contact_id]) $notify = true;
 					else $notify = false;
 
-					# Update Existing Contact Record
-					$contact->update(
-						array(
-							"type"			=> $_REQUEST['type'][$contact_id],
-							"description"	=> noXSS($_REQUEST['description'][$contact_id]),
-							"value"			=> $_REQUEST['value'][$contact_id],
-							"notes"			=> $_REQUEST['notes'][$contact_id],
-							"notify"		=> $notify
-						)
-					);
-					if ($contact->error) {
-						$page->addError("Error updating contact: ".$customer->error);
-						goto load;
+					if (! $contact->validType($_REQUEST['type'][$contact_id]))
+						$page->addError("Invalid contact type");
+					elseif (! $contact->validValue($_REQUEST['type'][$contact_id],$_REQUEST['value']['contact_id']))
+						$page->addError("Invalid value for contact type");
+					else {
+						# Update Existing Contact Record
+						$contact->update(
+							array(
+								"type"			=> $_REQUEST['type'][$contact_id],
+								"description"	=> noXSS(trim($_REQUEST['description'][$contact_id])),
+								"value"			=> $_REQUEST['value'][$contact_id],
+								"notes"			=> noXSS(trim($_REQUEST['notes'][$contact_id])),
+								"notify"		=> $notify
+							)
+						);
+						if ($contact->error) {
+							$page->addError("Error updating contact: ".$customer->error);
+							goto load;
+						}
 					}
 				}
 				else {

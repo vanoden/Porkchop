@@ -206,9 +206,6 @@ function getProvinces() {
   <form name="register" action="/_register/new_customer" method="POST">
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="method" value="register">
-    <ul class="connectBorder infoText">
-      <li><r7_page.message id=100></li>
-    </ul>
 
     <?php	if ($page->errorCount()) { ?>
       <section id="form-message">
@@ -226,11 +223,11 @@ function getProvinces() {
 
     <h3>Register your Product</h3>
     <section>
-      <ul id="serial_number_message" class="connectBorder errorText"><li>Serial number not found in our system</li></ul>
+      <ul id="serial_number_message" class="connectBorder errorText" style="display: none"><li>Serial number not found in our system</li></ul>
     </section>
 
     <section>
-      <ul id="serial_number_message_ok" class="connectBorder progressText"><li>Serial number has been found</li></ul>
+      <ul id="serial_number_message_ok" class="connectBorder progressText" style="display: none"><li>Serial number has been found</li></ul>
     </section>
 
     <ul class="form-grid four-col connectBorder">
@@ -242,10 +239,7 @@ function getProvinces() {
         <select id="product_id" name="product_id" class="value input collectionField" style="display: block" onchange="document.getElementById('serial_number_message').style.display = 'none';">
           <option value="" <?php	if (isset($selectedProduct) && $product==$selectedProduct) print " selected"; ?>>---</option>
           <?php	foreach ($productsAvailable as $product) { ?>
-            <option value="<?=$product->id?>" <?php	if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>>
-            <?=$product->code?> -
-            <?=$product->description?>
-            </option>
+            <option value="<?=$product->id?>"<?php	if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=$product->description?></option>
           <?php	} ?>
         </select>
       </li>
@@ -328,14 +322,6 @@ function getProvinces() {
         <input type="password" name="password_2" required/>
       </li>
     </ul>
-
-    <?php	if (isset($page->loginTaken)) { ?>
-      <section>
-        <ul id="login-message" class="connectBorder errorText">
-          <li><?=$page->error;?></li>
-        </ul>
-      <section>
-    <?php	} ?>
 
     <div id="registerSubmit" class="registerQuestion">
       <?php

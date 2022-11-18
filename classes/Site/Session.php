@@ -86,7 +86,7 @@
 			if (isset($_COOKIE[$this->cookie_name])) $request_code = $_COOKIE[$this->cookie_name];
 
 			# Was a 'Valid looking' Session Given
-			if (isset($request_code) && $this->valid_code($request_code)) {
+			if (isset($request_code) && $this->validCode($request_code)) {
 				# Get Existing Session Information
 				$this->get($request_code);
 				if ($this->id) {
@@ -171,7 +171,7 @@
 		}
 
 		# See if a Given Session code looks valid
-		function valid_code ($request_code) {
+		function validCode($request_code) {
 			# Test to See Session Code is 32 character hexadecimal
 			if (preg_match("/^[0-9a-f]{64}$/i",$request_code)) return true;
 			#error_log("Invalid session code: $request_code");
@@ -191,6 +191,7 @@
 				# Make Sure Session Code Not Already Used
 				if ($this->code_in_use($new_code)) $new_code = "";
 			}
+			app_log("Generated session code '$new_code'");
 
 			if (! is_object($this->customer)) {
 				$this->customer = new \Register\Customer();
@@ -510,7 +511,7 @@
 
 			return $this->details();
 		}
-		
+
 		function hits($id = 0) {
 			if ($id < 1) $id = $this->id;
 			$hitlist = new HitList();
@@ -525,7 +526,7 @@
 			}
 			return $hits;
 		}
-		
+
 		function hit() {
 			$hit = new Hit();
 			$hit->add(
@@ -634,15 +635,15 @@
 
         public function verifyCSRFToken($csrfToken) {
 			if (empty($csrfToken)) {
-				app_log("No csrfToken provided",'info');
+				app_log("No csrfToken provided",'debug');
 				return false;
 			}
 			if (empty($this->csrfToken)) {
-				app_log("No csrfToken exists for session",'info');
+				app_log("No csrfToken exists for session",'debug');
 				return false;
 			}
 			if ($this->csrfToken != $csrfToken) {
-				app_log("csrfToken provided doesn't match session",'info');
+				app_log("csrfToken provided doesn't match session",'debug');
 				return false;
 			}
 			return true;

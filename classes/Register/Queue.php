@@ -1,10 +1,8 @@
 <?php
 	namespace Register;
 
-	class Queue {
-	
+	class Queue Extends \BaseClass {
 		public $id;
-		public $error;
 		public $code;
 		public $status;
 		public $is_reseller;
@@ -20,21 +18,29 @@
 		public $zip;
 		public $phone;
 		public $cell;
-		public $possibleStatus = array('VERIFYING','PENDING','APPROVED','DENIED');
-		public $possibleOrganizationStatus = array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED');
+		private $possibleOrganizationStatus = array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED');
 
 		public function __construct($id = 0) {
-
-			// Clear Error Info
-			$this->error = '';
-
-			// Database Initialization
-			$schema = new Schema();
-			if ($schema->error) {
-				$this->error = "Failed to initialize schema: ".$schema->error;
-			} elseif (!empty($id)) {
+			$this->_addStatus(array('VERIFYING','PENDING','APPROVED','DENIED'));
+			if (!empty($id)) {
 				$this->id = $id;
 				$this->details();
+			}
+		}
+
+		public function get($login) {
+			$user = new \Register\Customer();
+			if (! $user->validLogin($login)) {
+				$this->error("Invalid login");
+				return false;
+			}
+			if ($user->get($login)) {
+				$this->id = $user->id;
+				return $this->details();
+			}
+			else {
+				$this->error("User not found");
+				return false;
 			}
 		}
 
@@ -49,7 +55,7 @@
 	                
                 $rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
                 if (! $rs) {
-	                $this->error = "SQL Error in Register::Queue::getByQueuedLogin(): ".$GLOBALS['_database']->ErrorMsg();
+	                $this->SQLError($GLOBALS['_database']->ErrorMsg());
 	                return null;
                 }
                 list($id) = $rs->FetchRow();
@@ -79,9 +85,9 @@
 			}
 
 			if (isset($parameters['status'])) {
-                if (!in_array($parameters['status'], $this->possibleStatus)) {
-				    $this->error = "Invalid Status for RegisterQueue entry";
-				    return 0;
+                if (! $this->validStatus($parameters['status'])) {
+				    $this->error("Invalid Status for RegisterQueue entry");
+				    return false;
                 }
 				$update_contact_query .= ",
 						status = ?";
@@ -95,7 +101,7 @@
 			$GLOBALS['_database']->Execute($update_contact_query,$bind_params);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in RegisterQueue::update: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 						
@@ -132,7 +138,7 @@
 					)
 				);
 				if ($organization->error()) {
-					$this->error = "Error adding organization: ".$organization->error();
+					$this->SQLError($organization->error());
 					return false;
 				}
             }
@@ -157,7 +163,7 @@
 				    )
 			    );
 				if ($supportRequest->error()) {
-					$this->error = "Error adding support request: ".$supportRequest->error();
+					$this->error("Error adding support request: ".$supportRequest->error());
 					return false;
 				}
 			    
@@ -216,7 +222,7 @@
 			}
 			else {
 				app_log("Activation notice failed: ".$customer->error(),'error');
-				$this->error = "Error notifying customer: ".$customer->error();
+				$this->error("Error notifying customer: ".$customer->error());
 			}
 		}
 
@@ -229,8 +235,8 @@
 	                WHERE	id = " . $this->id;
                 $rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
                 if (! $rs) {
-	                $this->error = "SQL Error in Register::Queue::details(): ".$GLOBALS['_database']->ErrorMsg();
-	                return null;
+	                $this->SQLError($GLOBALS['_database']->ErrorMsg());
+	                return false;
                 }
                 while ($row = $rs->FetchRow()) {
                     foreach ($row as $rowValueKey => $rowValue){
@@ -241,13 +247,18 @@
 		    }
 		}
 
+		public function getVerificationURL() {
+			$customer = new \Register\Customer($this->id);
+			return "/_register/validate?login=".$customer->login."&validation_key=".$customer->validationKey();
+		}
+
         /**
          * add new potential customer
          * @param array $parameters
          */
 		public function add($parameters) {		
 			app_log("Register::Queue::add()",'trace',__FILE__,__LINE__);
-			$this->error = null;
+			$this->clearError();
 			$add_object_query = "
 				INSERT
 				INTO	register_queue
@@ -279,7 +290,7 @@
 				)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in \Register\Queue::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();

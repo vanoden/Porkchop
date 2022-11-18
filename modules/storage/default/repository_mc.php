@@ -108,6 +108,11 @@
 					if (isset($repository->bucket)) $form['bucket'] = $repository->bucket;
 				}
 			}
+
+			// Update Privileges
+			if (!empty($_REQUEST['d_privilege_type'][0])) {
+				
+			}
 		}
 		else {
 			$form['code'] = $_REQUEST['code'];
@@ -139,5 +144,7 @@
     	    $form['secretKey'] = $repository->_metadata('secretKey');
     	    $form['region'] = $repository->_metadata('region');
     	    $form['bucket'] = $repository->_metadata('bucket');
+			$default_privileges = $repository->default_privileges;
+			$override_privileges = $repository->override_privileges;
 		}
     }

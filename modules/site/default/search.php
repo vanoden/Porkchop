@@ -35,20 +35,23 @@
       display: table;
     }
 </style>
+<span class="title">Site Search</span>
 
-<div class="title">Site Search</div>
-<?php
-    if ($page->errorCount()) {
-?>
-    <div class="form_error"><?=$page->errorString()?></div>
-<?php
-    }
-    if ($page->success) { 
-?>
-    <div class="form_success"><?=$page->success?></div>
-<?php
-    }
-?>
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <form class="form" method="POST" action="/_site/search">

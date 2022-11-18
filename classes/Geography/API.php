@@ -15,6 +15,8 @@
 		### Add a Country								###
 		###################################################
 		public function addCountry() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$country = new \Geography\Country();
 	
 			$parameters = array();
@@ -33,6 +35,8 @@
 		### Update a Country							###
 		###################################################
 		public function updateCountry() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$country = new \Geography\Country();
 			$country->get($_REQUEST['code']);
 			if ($country->error) $this->error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
@@ -94,6 +98,8 @@
 		### Add a Province or State						###
 		###################################################
 		public function addProvince() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$country = new \Geography\Country($_REQUEST['country_id']);
 			if (! $country->id) $this->error("Country not found");
 	
@@ -116,6 +122,8 @@
 		### Update a Province							###
 		###################################################
 		public function updateProvince() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$country = new \Geography\Country();
 			$country->get($_REQUEST['code']);
 			if ($country->error) $this->error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);

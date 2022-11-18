@@ -1,6 +1,6 @@
 <?php
 $page = new \Site\Page('site','counters');
-$page->requirePrivilege('see site counters');
+$page->requirePrivilege('see site reports');
 
 $counterWatched = new \Site\CounterWatched();
 if (isset($_POST['action'])) {
@@ -9,7 +9,8 @@ if (isset($_POST['action'])) {
             if (!empty($_POST['key'])) {
                 $counterWatched->add(array('key'=> $_POST['key'], 'notes'=> $_POST['notes']));
                 $page->success = 'Key (' . $_POST['key'] . ') has been added to watch';
-            } else $page->addError('Please Specify the Cache Key by name to watch');
+            }
+			else $page->addError('Please Specify the Cache Key by name to watch');
             break;
     
         case 'remove':

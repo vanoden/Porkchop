@@ -1,7 +1,7 @@
 <?php
 	namespace Sales;
 
-	class Currency {
+	class Currency Extends \BaseClass {
 		public $id;
 		public $name;
 		public $symbol;

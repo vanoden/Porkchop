@@ -17,6 +17,8 @@
 		### Add a Sales Order							###
 		###################################################
 		public function addOrder() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$order = new \Sales\Order();
 			$parameters = array();
 
@@ -67,6 +69,8 @@
 		### Update a Sales Order						###
 		###################################################
 		public function updateOrder() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$order = new \Sales\Order();
 			if (! $order->get($_REQUEST['code'])) {
 				error("Error finding order: ".$order->error());
@@ -101,6 +105,8 @@
 		### Update a Sales Order						###
 		###################################################
 		public function approveOrder() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$order = new \Sales\Order();
 			if (! $order->get($_REQUEST['code'])) {
 				$this->error("Error finding order: ".$order->error());
@@ -131,6 +137,8 @@
 		### Update a Sales Order						###
 		###################################################
 		public function cancelOrder() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$order = new \Sales\Order();
 			if ($GLOBALS['_SESSION_']->customer->can('edit sales order') || $GLOBALS['_SESSION_']->customer->id == $order->customer_id) {
 				# OK To Update
@@ -209,6 +217,8 @@
 		### Add an Item to an Order						###
 		###################################################
 		public function addOrderItem() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$order = new \Sales\Order();
 			if (isset($_REQUEST['order_code'])) {
 				if (! $order->get($_REQUEST['order_code'])) {
@@ -252,6 +262,8 @@
 		### Update an Order Item						###
 		###################################################
 		public function updateOrderItem() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$order = new \Sales\Order();
 			if ($order->get($_REQUEST['order_code'])) {
 				error("Error finding order: ".$order->error());
@@ -279,6 +291,8 @@
 		### Drop an Item								###
 		###################################################
 		public function dropOrderItem() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$order = new \Sales\Order();
 			if (! $order->get($_REQUEST['order_code'])) {
 				error("Error finding order: ".$order->error());
@@ -318,6 +332,8 @@
 		### Add A Currency								###
 		###################################################
 		public function addCurrency() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('edit currencies')) $this->error("Permission Denied");
 
 			if (empty($_REQUEST['name'])) $this->error("Currency name required");
@@ -340,6 +356,8 @@
 		### Update A Currency							###
 		###################################################
 		public function updateCurrency() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('edit currencies')) $this->error("Permission Denied");
 
 			if (empty($_REQUEST['name'])) $this->error("Currency name required");

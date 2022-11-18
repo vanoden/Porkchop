@@ -1,4 +1,6 @@
 <?php
+// This Page Is No Longer Used - Table Doesn't Exist!
+exit;
 	$page = new \Site\Page();
 	$page->requireAuth();
 

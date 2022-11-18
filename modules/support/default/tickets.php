@@ -78,20 +78,27 @@
 	}
 
 </script>
-<div>
-	<?php if ($page->errorCount()) { ?>
-	    <div class="form_error"><?=$page->errorString()?></div>
-	<?php } ?>
-	<?php if ($page->success) { ?>
-	    <div class="form_success"><?=$page->success?></div>
-	<?php } ?>
-</div>
 
 <div>
 	<h2>Support Tickets</h2>
 	<button class="expanding" onclick="toggleFilters()">Filter Results</button>
 	<button onclick="window.location.href='/_support/request';">New Request</button>
 </div>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
 
 <!--	Insert Filter Section -->
 <div>
@@ -149,12 +156,15 @@
 		<div id="serial-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'serial'; updateReport()">Serial #</div>
 		<div id="status-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_by').value = 'status'; updateReport()">Status</div>
 	</div> <!-- end row header -->
-	<?php	foreach ($items as $item) { ?>
+	<?php	foreach ($items as $item) { 
+		$customer = $item->customer();
+		$assigned = $item->assigned();
+	?>
 	<div class="tableRow">
 		<div class="tableCell"><span class="hiddenDesktop value">Ticket #</span><span class="value"><a href="/_support/ticket/<?=$item->id?>"><?=$item->ticketNumber()?></a></span></div>
-		<div class="tableCell"><span class="hiddenDesktop value">Requested: </span><span class="value"><?=shortDate($item->request->date_request)?></span></div>
-		<div class="tableCell"><span class="hiddenDesktop value">Requested by: </span><span class="value avatar"><?=$item->request->customer->initials()?></span><span class="value"><?=$item->request->customer->full_name()?></span></div>
-		<div class="tableCell"><span class="hiddenDesktop value">Product Name: </span><span class="value"><?=$item->product->code?></span></div>
+		<div class="tableCell"><span class="hiddenDesktop value">Requested: </span><span class="value"><?=shortDate($item->request()->date_request)?></span></div>
+		<div class="tableCell"><span class="hiddenDesktop value">Requested by: </span><span class="value avatar"><?=isset($customer) ? $customer->initials() : "[None]"?></span><span class="value"><?=isset($customer) ? $customer->full_name() : "[None]"?></span></div>
+		<div class="tableCell"><span class="hiddenDesktop value">Product Name: </span><span class="value"><?=$item->product()->code?></span></div>
 		<div class="tableCell"><span class="hiddenDesktop value">Serial #: </span><span class="value"><?=$item->serial_number?></span></div>
 		<div class="tableCell"><span class="hiddenDesktop value">Status: </span><span class="value"><?=ucwords(strtolower($item->status))?></span></div>
 	</div>

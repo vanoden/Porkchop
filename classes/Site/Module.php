@@ -1,8 +1,7 @@
 <?php
 	namespace Site;
 
-	class Module {
-		private $_error;
+	class Module Extends \BaseClass {
 		private $_name;
 		private $_path;
 		private $_metadata;
@@ -17,17 +16,14 @@
 			# Loop through Roles
 			print_r($metadata);
 		}
-		public function error() {
-			return $this->_error;
-		}
 
 		public function get($name) {
 			if (! preg_match('/^\w[\w\-\_]*$/',$name)) {
-				$this->_error = "Invalid module name";
+				$this->error("Invalid module name");
 				return false;
 			}
 			if (! is_dir(MODULES."/".$name)) {
-				$this->_error = "Module not found";
+				$this->error("Module not found");
 				return false;
 			}
 			$this->_name = $name;
@@ -42,11 +38,11 @@
 		}
 		public function views() {
 			if (! $this->_name) {
-				$this->_error = "Module not identified";
+				$this->error("Module not identified");
 				return null;
 			}
 			if (! is_dir($this->_path)) {
-				$this->_error = "Module style not found"; 
+				$this->error("Module style not found"); 
 				return null;
 			}
 			if ($handle = opendir($this->_path)) {
@@ -85,5 +81,9 @@
 		public function description() {
 			if (isset($this->_metadata->description)) return $this->_metadata->description;
 			return null;
+		}
+
+		public function validName($string) {
+			return $this->validCode($string);
 		}
 	}

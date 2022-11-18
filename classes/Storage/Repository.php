@@ -27,19 +27,19 @@
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
 			if (isset($parameters['type'])) $this->type = $parameters['type'];
 			
-			if (! $this->_valid_code($parameters['code'])) {
+			if (! $this->validCode($parameters['code'])) {
 				$this->error = "Invalid code";
 				return false;
 			}
 			
 			if (! isset($parameters['status']) || ! strlen($parameters['status'])) {
 				$parameters['status'] = 'NEW';
-			} else if (! $this->_valid_status($parameters['status'])) {
+			} else if (! $this->validStatus($parameters['status'])) {
 				$this->error = "Invalid status";
 				return false;
 			}
 			
-			if (! $this->_valid_name($parameters['name'])) {
+			if (! $this->validName($parameters['name'])) {
 				$this->error = "Invalid name";
 				return false;
 			}
@@ -314,10 +314,6 @@
 			return json_decode($this->override_privileges_json,true);
 		}
 		
-		public function validCode($string) {
-			if (preg_match('/^\w[\w\-\_\.]*$/',$string)) return true;
-			return false;
-		}
 		public function validName($string) {
 			if (preg_match('/^\w[\w\-\_\.\s]*$/',$string)) return true;
 			return false;

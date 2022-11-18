@@ -261,6 +261,7 @@ function addRow() {
 <?php	} else { ?>
 
 <form id="supportRequest" name="supportRequest" method="post" action="/_support/request">
+<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
   <section id="form-message">
     <ul class="connectBorder infoText">
       <li>Select the type of request and clearly define your problem. Make sure to list relevant Serial Numbers for any devices referenced.</li>

@@ -3,18 +3,23 @@
         cursor: pointer;
     }
 </style>
-<h4>Currently Watched Site Counters</h4>
-<?php	
-if ($page->errorCount()) {
-?>
-    <div class="form_error"><?=$page->errorString()?></div>
-<?php
-}
-if ($page->success) { ?>
-    <div class="form_success"><?=$page->success?></div>
-<?php
-}
-?>
+<span class="title">Currently Watched Site Counters</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <div class="tableBody min-tablet">
     <div class="tableRowHeader">
         <div class="tableCell" style="width: 12%;">Key</div>

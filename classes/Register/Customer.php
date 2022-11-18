@@ -561,4 +561,21 @@
 			}
 			return $pass; //turn the array into a string
 		}
+
+		public function validationKey() {
+			$database = new \Database\Service();
+			$get_key_query = "
+				SELECT	validation_key
+				FROM	register_users
+				WHERE	id = ?
+			";
+			$database->AddParam($this->id);
+			$rs = $database->Execute($get_key_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+			list($key) = $rs->FetchRow();
+			return $key;
+		}
     }

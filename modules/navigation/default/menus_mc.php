@@ -4,3 +4,4 @@
 
 	$menuList = new \Navigation\MenuList();
 	$menus = $menuList->find();
+	if ($menuList->error()) $page->addError($menuList->error());

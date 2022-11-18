@@ -6,9 +6,14 @@
 
 	# Call Requested Event
 	if ($_REQUEST["method"]) {
-		# Call the Specified Method
-		$function_name = $_REQUEST["method"];
-		$api->$function_name();
+        if ($api->can($_REQUEST['method'])) {
+    		# Call the Specified Method
+    		$function_name = $_REQUEST["method"];
+	    	$api->$function_name();
+        }
+        else {
+            $api->error("Method not supported");
+        }
 		exit;
 	} else {
 		$page->requireRole($api->admin_role());

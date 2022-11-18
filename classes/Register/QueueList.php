@@ -1,14 +1,13 @@
 <?php
 	namespace Register;
 	
-	class QueueList {
-	
-		public $error;
-		public $count;
-		public $possibleStatus = array('VERIFYING','PENDING','APPROVED','DENIED');
-		
+	class QueueList Extends \BaseListClass {
 		public function find($parameters = array()) {
-		
+			$this->clearError();
+			$this->resetCount();
+
+			$bind_params = array();
+
 			$get_queued_contacts_query = "
 				SELECT	id
 				FROM	register_queue
@@ -43,10 +42,17 @@
                 $get_queued_contacts_query .= " AND	" . $this->columnExact($parameters['serial_number'], array('serial_number'));
 
             if (!empty($parameters['status'])) {
-                $get_queued_contacts_query .= "AND (";
-                foreach ($parameters['status'] as $status) $get_queued_contacts_query .= " OR " . $this->columnExact($status, array('status'));         
-                $get_queued_contacts_query .= ")";
-                $get_queued_contacts_query  = str_replace ( "( OR (" , "((" , $get_queued_contacts_query); // @TODO, this isn't the best really to produce the OR statements
+				if (is_array($parameters['status'])) {
+	                $get_queued_contacts_query .= "AND (";
+	                foreach ($parameters['status'] as $status) $get_queued_contacts_query .= " OR " . $this->columnExact($status, array('status'));         
+	                $get_queued_contacts_query .= ")";
+	                $get_queued_contacts_query  = str_replace ( "( OR (" , "((" , $get_queued_contacts_query); // @TODO, this isn't the best really to produce the OR statements
+				}
+				else {
+					$get_queued_contacts_query .= "
+					AND	status = ?";
+					array_push($bind_params,$parameters['status']);
+				}
             }
 
             if (!empty($parameters['dateStart'])) 
@@ -55,16 +61,18 @@
             if (!empty($parameters['dateEnd'])) 
                 $get_queued_contacts_query .= " AND	`date_created` < '" . date("Y-m-d H:i:s", strtotime($parameters['dateEnd'])) . "'";
 
-			$rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
+			query_log($get_queued_contacts_query,array(),true);
+
+			$rs = $GLOBALS['_database']->Execute($get_queued_contacts_query, $bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::QueueList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
-			
 			// get list of contacts for UI
 			$queuedContacts = array();
 			while (list($id) = $rs->FetchRow()) {
 				$contact = new \Register\Queue($id);
+				$this->incrementCount();
 				array_push($queuedContacts,$contact);
 			}
 			return $queuedContacts;

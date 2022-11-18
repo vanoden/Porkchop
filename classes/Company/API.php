@@ -20,7 +20,7 @@
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'company.xsl';
 
-			if (! $GLOBALS['_SESSION_']->can('configure site')) $this->deny();
+			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) $this->deny();
 			# Initiate Company List
 			$companylist = new \Company\CompanyList();
 			
@@ -45,7 +45,9 @@
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'company.xsl';
 
-			if (! $GLOBALS['_SESSION_']->can('configure site')) $this->deny();
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
+			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) $this->deny();
 	
 			# Initiate Company Object
 			$companylist = new \Company\CompanyList();

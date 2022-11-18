@@ -2,6 +2,39 @@
 	namespace Database;
 
 	class Service Extends \BaseClass {
+		private $_connection;
+		private $_params = array();
+
+		public function __construct() {
+			$this->_connection = $GLOBALS['_database'];
+		}
+
+		public function AddParam($value) {
+			array_push($this->_params,$value);
+		}
+
+		public function Execute($query,$bind_params = null) {
+			if (is_array($bind_params)) $this->_params = array_merge($this->_params,$bind_params);
+			query_log($query,$this->_params,true);
+			return $this->_connection->Execute($query,$this->_params);
+		}
+
+		public function ErrorMsg() {
+			return $this->_connection->ErrorMsg();
+		}
+
+		public function FetchRow() {
+			return $this->_connection->FetchRow();
+		}
+
+		public function FetchNextObject($option_1 = false) {
+			return $this->_connection->FetchNextObject($option_1);
+		}
+
+		public function Insert_ID() {
+			return $this->_connection->Insert_ID();
+		}
+
 		public function version() {
 			// Put Query to Get Version Here
 			return $GLOBALS['_database']->_connectionID->server_info;

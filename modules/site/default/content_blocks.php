@@ -19,6 +19,22 @@
 </style>
 <span class="title">Content Blocks</span>
 <a href="/_site/content_block?method=new">New Block</a>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <div class="table">
 	<div class="tableHead">
 		<div class="tableCell">Target</div>

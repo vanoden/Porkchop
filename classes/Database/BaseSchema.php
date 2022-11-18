@@ -90,8 +90,8 @@
 					app_log("Adding role '$name'");
 					$role->add(array('name' => $name,'description' => $description));
 				}
-				if ($role->error) {
-					$this->_error = "Error adding role '$name': ".$role->error;
+				if ($role->error()) {
+					$this->_error = "Error adding role '$name': ".$role->error();
 					return false;
 				}
 			}

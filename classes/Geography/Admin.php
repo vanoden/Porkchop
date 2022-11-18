@@ -7,7 +7,6 @@
 
 		public function __construct($id = null) {
 			if (isset($id) && is_numeric($id)) {
-				app_log("Loading admin $id",'notice');
 				$this->id = $id;
 				$this->details();
 			}

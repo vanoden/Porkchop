@@ -3,9 +3,22 @@
 <?php } else { ?>
     <div class="title">New Package</div>
 <?php } ?>
+
 <?php if ($page->errorCount() > 0) { ?>
-    <div class="form_error"><?=$page->errorString()?></div>
-<?php } ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <form name="packageForm" method="POST" action="/_package/package">
     <input type="hidden" name="package_id" value="<?=$package->id?>" />
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
@@ -58,9 +71,9 @@
     <div class="container">
         <span class="label">Status</span>
         <select name="status" class="value input wide_xl">
-            <option value="NEW"<?php	if ($package->status == "NEW") print " selected"; ?>>NEW</option>
-            <option value="ACTIVE"<?php	if ($package->status == "ACTIVE") print " selected"; ?>>ACTIVE</option>
-            <option value="HIDDEN"<?php	if ($package->status == "HIDDEN") print " selected"; ?>>HIDDEN</option>
+	<?php	foreach ($statii as $status) { ?>
+			<option value="<?=$status?>"<?php if ($package->status == $status) print " selected";?>><?=$status?></option>
+	<?php	} ?>
         </select>
     </div>
     <div class="form_footer">

@@ -1,9 +1,7 @@
 <?php
 	namespace Navigation;
 
-	class Item {
-	
-		private $_error;
+	class Item Extends \BaseClass {
 		public $id;
 		private $menu_id;
 		public $title;
@@ -30,7 +28,7 @@
 			";
 			$GLOBALS['_database']->Execute($drop_object_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Navigation::Item::drop(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -40,7 +38,7 @@
 			if ($parameters['menu_id']) {
 				$menu = new Menu($parameters['menu_id']);
 				if (! $menu->id) {
-					$this->_error = "Menu not found";
+					$this->error("Menu not found");
 					return false;
 				}
 			}
@@ -57,7 +55,7 @@
 			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Navigation::Item::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -85,14 +83,15 @@
 			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 
 			if (! $rs) {
-				$this->_error = "SQL Error in Navigation::Item::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
 			if ($id) {
 				$this->id = $id;
 				return $this->details();
-			} else {
+			}
+			else {
 				return false;
 			}
 		}
@@ -138,10 +137,10 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-
+			query_log($update_object_query,$bind_params,true);
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Navigation::Item::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return $this->details();
@@ -155,7 +154,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Navigation::Item::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -173,7 +172,8 @@
 				else $this->external = false;
 				if ($object->ssl) $this->ssl = true;
 				else $this->ssl = false;
-			} else {
+			}
+			else {
 				$this->id = null;
 				$this->menu = new Menu(null);
 				$this->title = null;
@@ -200,18 +200,31 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_children_query,array($this->id));
 			if (! $rs) {
-				$this->error = "SQL Error in Navigation::Item::hasChildren(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($count) = $rs->FetchRow();
 			if ($count > 0) {
 				return true;
-			} else {
+			}
+			else {
 				return false;
 			}
 		}
-		
-		public function error() {
-			return $this->_error;
+
+		public function children() {
+			$itemList = new \Navigation\ItemList();
+			$items = $itemList->find(array('parent_id' => $this->id));
+			return $items;
+		}
+
+		public function validTitle($string) {
+			return $this->validName($string);
+		}
+
+		public function validTarget($string) {
+			if (preg_match('/\.\./',$string)) return false;
+			if (preg_match('/\<\>/',$string)) return false;
+			return true;
 		}
 	}

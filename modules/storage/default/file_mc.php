@@ -23,14 +23,27 @@
                 if (preg_match('/^download$/i',$GLOBALS['_REQUEST_']->query_vars_array[1])) $_REQUEST['btn_submit'] = 'Download';
 		        
 		        if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Download') {
-			        $file->download();
-		        } elseif ($_REQUEST['btn_submit'] == 'Update') {
+			        if ($file->readPermitted()) {
+						$file->download();
+					}
+					else {
+						$page->addError("Permission Denied");
+						return 403;
+					}
+				}
+				elseif ($_REQUEST['btn_submit'] == 'Update') {
 			        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 				        $page->addError("Invalid Token");
 			        }
 			        else {
 				        if (! preg_match('/^\//',$_REQUEST['path'])) $_REQUEST['path'] = '/'.$_REQUEST['path'];
-				        if (! $file->validPath($_REQUEST['path'])) {
+				        $_REQUEST['display_name'] = htmlspecialchars($_REQUEST['display_name']);
+
+						if (! $file->writePermitted()) {
+							$page->addError("Permission Denied");
+							return 403;
+						}
+				        elseif (! $file->validPath($_REQUEST['path'])) {
 					        $page->addError("Invalid Path");
 					        $_REQUEST['path'] = htmlspecialchars($_REQUEST['path']);
 				        }
@@ -38,15 +51,16 @@
 					        $page->addError("Invalid Name");
 					        $_REQUEST['name'] = htmlspecialchars($_REQUEST['name']);
 				        }
-				        $_REQUEST['display_name'] = htmlspecialchars($_REQUEST['display_name']);
-				        $parameters = array(
-					        'display_name'	=> $_REQUEST['display_name'],
-					        'name'			=> $_REQUEST['name'],
-					        'path'			=> $_REQUEST['path']
-				        );
-				        $file->update($parameters);
-				        if ($file->error()) $page->addError("Update error: ".$file->error());
-				        else $page->success = "File updated";
+						else {
+					        $parameters = array(
+						        'display_name'	=> $_REQUEST['display_name'],
+						        'name'			=> $_REQUEST['name'],
+						        'path'			=> $_REQUEST['path']
+					        );
+					        $file->update($parameters);
+					        if ($file->error()) $page->addError("Update error: ".$file->error());
+					        else $page->success = "File updated";
+						}
 			        }
 		        } elseif (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 			        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {

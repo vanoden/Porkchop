@@ -19,19 +19,23 @@
 		document.forms[0].submit();
 	}
 </script>
-<div class="title">Edit Site Configuration</div>
-<?php	
-    if ($page->errorCount()) {
-?>
-    <div class="form_error"><?=$page->errorString()?></div>
-<?php
-    }
-    if ($page->success) { 
-?>
-    <div class="form_success"><?=$page->success?></div>
-<?php
-    }
-?>
+<span class="title">Edit Site Configuration</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <form method="post" action="/_site/configurations">
     <input type="hidden" name="key" value="" />
     <input type="hidden" name="value" value="" />

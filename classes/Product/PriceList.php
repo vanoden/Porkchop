@@ -1,7 +1,7 @@
 <?php
 		namespace Product;
 
-		class PriceList {
+		class PriceList Extends \BaseListClass {
 			public function find($parameters = null) {
 				$bind_params = array();
 
@@ -31,13 +31,14 @@
 				$rs = $GLOBALS['_database']->Execute($get_prices_query,$bind_params);
 
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Product::PriceList::find(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
 					return null;
 				}
 
 				$prices = array();
 				while (list($id) = $rs->FetchRow()) {
 					$price = new Price($id);
+					$this->incrementCount();
 					array_push($prices,$price);
 				}
 

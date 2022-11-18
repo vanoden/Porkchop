@@ -80,6 +80,22 @@
     }
 </script>
 <body>
+<span class="title">In-Site Messages</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
 
 <div class="row full-column-row">
     <form method="post" id="filterForm">

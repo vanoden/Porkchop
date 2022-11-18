@@ -3,15 +3,18 @@
 	$page->requirePrivilege('edit content messages');
 	if (isset($_REQUEST['id'])) {
 		$message = new \Content\Message($_REQUEST['id']);
-	} elseif ($_REQUEST['method'] == 'new') {
+	}
+	elseif ($_REQUEST['method'] == 'new') {
 		// New Page, Load Nothing
-	} elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+	}
+	elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$message = new \Content\Message();
 		if (! $message->get($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 			$message->name = $GLOBALS['_REQUEST_']->query_vars_array[0];
 			$message->target = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		}
-	} else {
+	}
+	else {
 		// Home Page
 		$message = new \Content\Message();
 		$message->get('');
@@ -22,7 +25,17 @@
 	if (isset($_REQUEST['Submit'])) {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
             $page->addError("Invalid Request");
-	    } else {
+	    }
+		elseif (!empty($_REQUEST['name']) && ! $message->validName($_REQUEST['name'])) {
+			$page->addError("Invalid name");
+		}
+		elseif (!empty($_REQUEST['target']) && ! $message->validTarget($_REQUEST['target'])) {
+			$page->addError("Invalid target");
+		}
+		elseif (!empty($_REQUEST['content']) && ! $message->validContent($_REQUEST['content'])) {
+			$page->addError("Invalid content");
+		}
+		else {
 		    if ($message->id) {
 			    app_log("Updating content_message '".$message->target."'",'info');
 			    if (! $message->update(array('name' => $_REQUEST['name'], 'content' => $_REQUEST['content']))) {
@@ -30,7 +43,8 @@
 			    } else {
     			    $page->success = 'Updated Content Message';
 			    }
-		    } else {
+		    }
+			else {
 			    app_log("Adding content_message '".$_REQUEST['target']."'",'info');
 			    if (! $message->add(array('target' => $_REQUEST['target'],'name' => $_REQUEST['name'], 'content' => $_REQUEST['content']))) {
     			    $page->addError("Cannot add block: ".$message->error());

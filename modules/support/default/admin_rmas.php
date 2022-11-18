@@ -74,7 +74,7 @@
     if (count($rmas) > 0) {
         foreach ($rmas as $rma) {
 		    $item = $rma->item();
-		    $customer = $item->request()->customer;
+		    $customer = $item->request()->customer();
 ?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_support/admin_rma/<?=$rma->code?>"><?=$rma->number()?></a></div>

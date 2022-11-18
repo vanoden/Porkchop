@@ -28,6 +28,14 @@
 		return false;
 	}
 
+	function valid_email($email) {
+		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+\.[a-z]{2,}$/",strtolower($email))) return true;
+		else {
+			app_log("Invalid email address: '$email'",'info');
+			return false;
+		}
+	}
+
 	function get_mysql_date($date = null,$range=0) {
 		if (empty($date)) {
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];

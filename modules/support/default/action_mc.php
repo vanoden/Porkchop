@@ -14,120 +14,125 @@
 	}
 	
 	if ($action->error()) $page->addError($action->error());
-	$item = $action->item;
-	$request = $item->request;
+	$item = $action->item();
+	$request = $item->request();
     $date_calibration = date('m/d/Y H:i:s');
     
 	// get number of other actions for current action
 	$actionList = new \Support\Request\Item\ActionList();
 	$actionItemsCount = 0;
-	if (isset($action->item->id) && !empty($action->item->id)) {
-    	$actionItems = $actionList->find(array('item_id' => $action->item->id));
+	if (isset($item->id) && !empty($item->id)) {
+    	$actionItems = $actionList->find(array('item_id' => $item->id));
     	foreach ($actionItems as $actionItem) $actionItemsCount = $actionItemsCount + 1;
 	}
 	
 	if (isset($_REQUEST['btn_add_event'])) {
-		if ($_REQUEST['status'] != $action->status) $_REQUEST['description'] .= "<br>Status changed from ".$action->status." to ".$_REQUEST['status'];
-		$action->update(array('status' => 'ACTIVE'));
-		$parameters = array(
-			'action_id'		=> $action->id,
-			'date_event'	=> $_REQUEST['date_event'],
-			'user_id'		=> $_REQUEST['user_id'],
-			'description'	=> $_REQUEST['description'],
-			'hours_worked'	=> $_REQUEST['hours_worked']
-		);
-		
-		if ($action->addEvent($parameters)) {
-			$page->success = "Event created";
-			if ($_REQUEST['status'] != $action->status) $action->update(array('status' => $_REQUEST['status']));
-		} else {
-			$page->addError($action->error());
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        else {
+			if ($_REQUEST['status'] != $action->status) $_REQUEST['description'] .= "<br>Status changed from ".$action->status." to ".$_REQUEST['status'];
+			$action->update(array('status' => 'ACTIVE'));
+			$parameters = array(
+				'action_id'		=> $action->id,
+				'date_event'	=> $_REQUEST['date_event'],
+				'user_id'		=> $_REQUEST['user_id'],
+				'description'	=> $_REQUEST['description'],
+				'hours_worked'	=> $_REQUEST['hours_worked']
+			);
+			
+			if ($action->addEvent($parameters)) {
+				$page->success = "Event created";
+				if ($_REQUEST['status'] != $action->status) $action->update(array('status' => $_REQUEST['status']));
+			} else {
+				$page->addError($action->error());
+			}
+
+			if ($action->type == 'Calibrate Unit') {
+
+				// Create Verification Record
+				$verification = new \Spectros\CalibrationVerification();
+				
+				if ($verification->error) {
+					app_error("Error initializing calibration verification: ".$verification->error,__FILE__,__LINE__);
+					$page->addError("Error recording calibration verification");
+					return;
+				}
+
+				// get the current monitor asset based on code/serial and product id
+				$asset = new \Monitor\Asset();
+				$asset->get($item->product()->code, $item->product()->id);
+				if (! $asset->id) {
+					$page->addError("Asset '".$item->product()->code."' not found");
+					return;
+				}
+
+				$verification->add(array("asset_id" => $asset->id,"date_request" => $date_calibration));
+				if ($verification->error) {
+					app_error("Error adding calibration verification: ".$verification->error,__FILE__,__LINE__);
+					$page->addError("Error recording calibration verification");
+				}
+
+				// Add Metadata to Verification Record
+				$verification->setMetadata("standard_manufacturer",$_REQUEST['standard_manufacturer']);
+				if ($verification->error) {
+					$page->addError("Error setting metadata for calibration verification: ".$verification->error);
+				}
+				$verification->setMetadata("standard_concentration",$_REQUEST['standard_concentration']);
+				if ($verification->error) {
+					$page->addError("Error setting metadata for calibration verification: ".$verification->error);
+				}
+				$verification->setMetadata("standard_expires",$_REQUEST['standard_expires']);
+				if ($verification->error) {
+					$page->addError("Error setting metadata for calibration verification: ".$verification->error);
+				}
+				$verification->setMetadata("monitor_reading",$_REQUEST['monitor_reading']);
+				if ($verification->error) {
+					$page->addError("Error setting metadata for calibration verification: ".$verification->error);
+				}
+				$verification->setMetadata("cylinder_number",$_REQUEST['cylinder_number']);
+				if ($verification->error) {
+					$page->addError("Error setting metadata for calibration verification: ".$verification->error);
+				}
+				$verification->setMetadata("detector_voltage",$_REQUEST['detector_voltage']);
+				if ($verification->error) {
+					$page->addError("Error setting metadata for calibration verification: ".$verification->error);
+				}
+				$verification->ready(); 
+			}
+
+			// close the overall request_item here if 'yes' set to close the parent ticke (request item) as well
+			if (isset($_REQUEST['close_ticket_too']) && !empty($_REQUEST['close_ticket_too'])) {
+				if ($_REQUEST['close_ticket_too'] == 'yes') {
+					$requestItem = new \Support\Request\Item($item->id);
+					$requestItem->update(array('status' => 'COMPLETE'));
+					$supportRequest = new \Support\Request($requestItem->request_id);
+
+					// Update Customer the ticket has been closed
+					$message = new \Email\Message (
+						array (
+							'from'	=> 'service@spectrosinstruments.com',
+							'subject'	=> "[SUPPORT] A Ticket #" . $requestItem->id  . " on your request " . $supportRequest->code. " has been completed.",
+							'body'		=> "[SUPPORT] A Ticket #" . $requestItem->id  . " on your request " . $supportRequest->code. " has been completed."
+						)
+					);
+					$message->html(true);
+					$request->customer()->notify($message);
+				}
+			}
+
+			// Event Occured Customer Ticket Notification
+			$supportRequest = new \Support\Request($requestItem->request_id);
+			$message = new \Email\Message (
+				array (
+					'from'	=> 'service@spectrosinstruments.com',
+					'subject'	=> "[SUPPORT] An action #" . $action->item->id  . " on your request " . $supportRequest->code. " has been updated.",
+					'body'		=> "[SUPPORT] An action #" . $action->item->id  . " on your request " . $supportRequest->code. " has been updated."
+				)
+			);
+			$message->html(true);
+			$request->customer()->notify($message);
 		}
-
-        if ($action->type == 'Calibrate Unit') {
-
-            // Create Verification Record
-            $verification = new \Spectros\CalibrationVerification();
-            
-            if ($verification->error) {
-                app_error("Error initializing calibration verification: ".$verification->error,__FILE__,__LINE__);
-                $page->addError("Error recording calibration verification");
-                return;
-            }
-
-            // get the current monitor asset based on code/serial and product id
-	        $asset = new \Monitor\Asset();
-	        $asset->get($item->product->code,$action->item->product->id);
-	        if (! $asset->id) {
-		        $page->addError("Asset '".$item->product->code."' not found");
-		        return;
-	        }
-
-            $verification->add(array("asset_id" => $asset->id,"date_request" => $date_calibration));
-            if ($verification->error) {
-                app_error("Error adding calibration verification: ".$verification->error,__FILE__,__LINE__);
-                $page->addError("Error recording calibration verification");
-            }
-
-            // Add Metadata to Verification Record
-            $verification->setMetadata("standard_manufacturer",$_REQUEST['standard_manufacturer']);
-            if ($verification->error) {
-                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
-            }
-            $verification->setMetadata("standard_concentration",$_REQUEST['standard_concentration']);
-            if ($verification->error) {
-                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
-            }
-            $verification->setMetadata("standard_expires",$_REQUEST['standard_expires']);
-            if ($verification->error) {
-                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
-            }
-            $verification->setMetadata("monitor_reading",$_REQUEST['monitor_reading']);
-            if ($verification->error) {
-                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
-            }
-            $verification->setMetadata("cylinder_number",$_REQUEST['cylinder_number']);
-            if ($verification->error) {
-                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
-            }
-            $verification->setMetadata("detector_voltage",$_REQUEST['detector_voltage']);
-            if ($verification->error) {
-                $page->addError("Error setting metadata for calibration verification: ".$verification->error);
-            }
-            $verification->ready(); 
-        }
-
-        // close the overall request_item here if 'yes' set to close the parent ticke (request item) as well
-        if (isset($_REQUEST['close_ticket_too']) && !empty($_REQUEST['close_ticket_too'])) {
-            if ($_REQUEST['close_ticket_too'] == 'yes') {
-                $requestItem = new \Support\Request\Item($action->item->id);
-                $requestItem->update(array('status' => 'COMPLETE'));
-                $supportRequest = new \Support\Request($requestItem->request_id);
-
-                // Update Customer the ticket has been closed
-			    $message = new \Email\Message (
-				    array (
-					    'from'	=> 'service@spectrosinstruments.com',
-					    'subject'	=> "[SUPPORT] A Ticket #" . $requestItem->id  . " on your request " . $supportRequest->code. " has been completed.",
-					    'body'		=> "[SUPPORT] A Ticket #" . $requestItem->id  . " on your request " . $supportRequest->code. " has been completed."
-				    )
-			    );
-			    $message->html(true);
-                $request->customer->notify($message);
-            }
-        }
-
-        // Event Occured Customer Ticket Notification
-        $supportRequest = new \Support\Request($requestItem->request_id);
-	    $message = new \Email\Message (
-		    array (
-			    'from'	=> 'service@spectrosinstruments.com',
-			    'subject'	=> "[SUPPORT] An action #" . $action->item->id  . " on your request " . $supportRequest->code. " has been updated.",
-			    'body'		=> "[SUPPORT] An action #" . $action->item->id  . " on your request " . $supportRequest->code. " has been updated."
-		    )
-	    );
-	    $message->html(true);
-        $request->customer->notify($message);
 	}
 	
 	if (isset($_REQUEST['btn_assign_action'])) {

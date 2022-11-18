@@ -18,36 +18,49 @@
 		return true;
 	}
 </script>
-<h2>Support</h2>
+<span class="title">Support</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
+<?php	} ?>
+
 <nav id="breadcrumb">
 	<ul>
 		<li><a href="/_support/tickets">All Tickets</a></li>
-		<li><a href="<?=$ticketLink?>" class="value">Ticket #<?=$item->id?></a></li>
+		<li><a href="/_support/ticket/<?=$item->id?>" class="value">Ticket #<?=$item->id?></a></li>
 	</ul>
 </nav>
 
 <!--	 ==================================== -->
-<!-- START Ticket Detail Section -->
-<form name="request_form" method="post" action="/_support/ticket">
-	<input type="hidden" name="request_id" value="<?=$request->id?>" />
-		<!--	 ==================================== -->
-		<!-- START Request Form -->
-		<form name="requestForm" method="post">
-			<input type="hidden" name="item_id" value="<?=$item->id?>" />
-			<?php	if ($page->errorCount()) { ?><div class="form_error"><?=$page->errorString()?></div><?php	} ?>
-			<?php	if ($page->success) { ?><div class="form_success"><?=$page->success?></div><?php	} ?>
+<!-- START Request Form -->
+<form name="requestForm" method="post">
+	<input type="hidden" name="item_id" value="<?=$item->id?>" />
+	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+	<?php	if ($page->errorCount()) { ?><div class="form_error"><?=$page->errorString()?></div><?php	} ?>
+	<?php	if ($page->success) { ?><div class="form_success"><?=$page->success?></div><?php	} ?>
 		        
-	    <!--	Start First Row-->
-			<div id="ticketForm" class="connectBorder">
+    <!--	Start First Row-->
+	<div id="ticketForm" class="connectBorder">
         <div class="tableBody">
 	        <div class="tableRowHeader">
 		        <div>Requestor</div><div>Status</div><div>Product</div><div>Date</div><div>Serial #</div>
 	        </div> <!-- end row header -->
 	        <div class="tableRow">
-		        <div><span class="hiddenDesktop value">Requestor: </span><?=$request->customer->full_name()?></div>
-		        <div><span class="hiddenDesktop value">Status: </span><?=$item->request->date_request?></div>
+		        <div><span class="hiddenDesktop value">Requestor: </span><?=$request->customer()->full_name()?></div>
+		        <div><span class="hiddenDesktop value">Status: </span><?=$request->date_request?></div>
 		        <div><span class="hiddenDesktop value">Product: </span><span class="value"><?=$item->status?></span></div>
-		        <div><span class="hiddenDesktop value">Date: </span><span class="value"><?=$item->product->code?></span></div>
+		        <div><span class="hiddenDesktop value">Date: </span><span class="value"><?=$request->date_request?></span></div>
 		        <div><span class="hiddenDesktop value">Serial #: </span><span class="value"><a href="/_monitor/asset/<?=$item->serial_number?>"><?=$item->serial_number?></a></span></div>
 	        </div>
         </div>
@@ -68,35 +81,33 @@
         		<?php	} ?>
 	        </div>
         </div>
-			</div><!-- end ticketForm -->
-			<!--End first row-->
-		</form>
-		<!-- END Request Form -->
-		<!--	 ==================================== -->
-	
-		<!--	 ==================================== -->
-		<!-- START Add Comment Form -->
-		<div id="commentFormDiv" class="toggleContainer">
-			<form id="commentForm" name="commentForm" method="post" action="/_support/ticket">
-				<input type="hidden" name="item_id" value="<?=$item->id?>" />
-				<div class="tableBody">
-					<div class="tableRowHeader secondary"><span class="label">Insert Comment:</span></div>
-					<div class="tableRow">
-						<div style="padding: 0;">
-							<textarea class="value input" wrap="hard" style="width: 50%; height: 70px; margin: 0;" name="content"></textarea>
-						</div>
-					</div>
-					<div class="button-bar">
-						<input type="button" name="btn_cancel_comment" value="Cancel" class="button" onclick="hideForm('comment');" />
-						<input type="submit" name="btn_add_comment" value="Add Comment" class="button" />
-					</div>
-				</div><!-- END Table -->
-			</form>
-		</div>
-		<!-- END Add Comment Form -->
-		<!--	 ==================================== -->
+	</div><!-- end ticketForm -->
+	<!--End first row-->
 </form>
-<!-- END Add Ticket Detail Section -->
+<!-- END Request Form -->
+<!--	 ==================================== -->
+	
+<!--	 ==================================== -->
+<!-- START Add Comment Form -->
+<div id="commentFormDiv" class="toggleContainer">
+	<form id="commentForm" name="commentForm" method="post" action="/_support/ticket">
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+		<input type="hidden" name="item_id" value="<?=$item->id?>" />
+		<div class="tableBody">
+			<div class="tableRowHeader secondary"><span class="label">Insert Comment:</span></div>
+			<div class="tableRow">
+				<div style="padding: 0;">
+					<textarea class="value input" wrap="hard" style="width: 50%; height: 70px; margin: 0;" name="content"></textarea>
+				</div>
+			</div>
+			<div class="button-bar">
+				<input type="button" name="btn_cancel_comment" value="Cancel" class="button" onclick="hideForm('comment');" />
+				<input type="submit" name="btn_add_comment" value="Add Comment" class="button" />
+			</div>
+		</div><!-- END Table -->
+	</form>
+</div>
+<!-- END Add Comment Form -->
 <!--	 ==================================== -->
 
 <!--	 ==================================== -->
@@ -217,6 +228,7 @@
 			</div><!-- end actionsForm -->
 		<?php	}	?>
 	</div><!-- END Connect border -->
+<?php } ?>
 <!-- END Actions Section -->
 <!--	 ==================================== -->
 
@@ -262,5 +274,3 @@
 			<?php		} ?>
 		</div>
 	<?php	} ?>
-
-<?php	} ?>

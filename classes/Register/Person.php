@@ -20,9 +20,10 @@ class Person Extends \BaseClass {
     public $_settings = array( "date_format" => "US" );
 
     public function __construct($id = 0) {
-
         // Clear Error Info
         $this->_error = '';
+
+		$this->_addStatus(array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED","BLOCKED"));
 
         // Find Person if id given
         if (isset($id) && is_numeric($id)) {
@@ -91,7 +92,7 @@ class Person Extends \BaseClass {
 			$this->id
 		));
 		if (!$rs) {
-			$this->error("SQL Error in Register::Person::details(): " . $GLOBALS['_database']->ErrorMsg());
+			$this->SQLError($GLOBALS['_database']->ErrorMsg());
 			return null;
 		}
 		$customer = $rs->FetchNextObject(false);
@@ -207,7 +208,7 @@ class Person Extends \BaseClass {
             $parameters['validation_key']
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error("SQL Error in Register::Person::add(): Error: " . $GLOBALS['_database']->ErrorMsg() . " Query: " . preg_replace("/[\t\r\n]/", " ", $add_user_query));
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return false;
         }
         $this->id = $GLOBALS['_database']->Insert_ID();
@@ -305,7 +306,7 @@ class Person Extends \BaseClass {
 		query_log($update_customer_query,$bind_params,true);
         $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Register::Person::update(): " . $GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return null;
         }
 
@@ -365,7 +366,7 @@ class Person Extends \BaseClass {
             $value
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Register::Person::setMeta(): " . $GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return null;
         }
         return 1;
@@ -385,7 +386,7 @@ class Person Extends \BaseClass {
 
         $rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
         if (!$rs) {
-            $this->error = "SQL Error in Register::Person::metadata(): " . $GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return null;
         }
         list($value) = $rs->FetchRow();
@@ -408,7 +409,7 @@ class Person Extends \BaseClass {
 
 		$rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
 		if (!$rs) {
-			$this->error = "SQL Error in Register::Person::searchMeta(): " . $GLOBALS['_database']->ErrorMsg();
+			$this->SQLError($GLOBALS['_database']->ErrorMsg());
 			return null;
 		}
 		$objects = array();
@@ -435,23 +436,23 @@ class Person Extends \BaseClass {
             $this->id
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Register::Person::verify_email(): ".$GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return false;
         }
         list($id, $unverified_key) = $rs->fields;
         if (!$id) {
             app_log("Key doesn't match");
-            $this->error = "Invalid Login or Validation Key";
+            $this->error("Invalid Login or Validation Key");
             return false;
         }
         if (!$unverified_key) {
             app_log("No key in system to match");
-            $this->error = "Email Address already verified for this account";
+            $this->error("Email Address already verified for this account");
             return false;
         }
         if ($unverified_key != $validation_key) {
             app_log($unverified_key . " != " . $validation_key);
-            $this->error = "Invalid Login or Validation Key";
+            $this->error("Invalid Login or Validation Key");
             return false;
         }
         $validate_email_query = "
@@ -463,7 +464,7 @@ class Person Extends \BaseClass {
             $this->id
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Register::Person::verify_email(): ".$GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return false;
         }
         $this->id = $id;
@@ -474,8 +475,8 @@ class Person Extends \BaseClass {
         $parameters['person_id'] = $this->id;
         $contact = new Contact();
         $contact->add($parameters);
-        if ($contact->error) {
-            $this->error = "Error adding contact: " . $contact->error;
+        if ($contact->error()) {
+            $this->error("Error adding contact: " . $contact->error());
             return null;
         }
         return $contact;
@@ -518,7 +519,6 @@ class Person Extends \BaseClass {
     }
     
     public function notify($message) {
-    
         // Make Sure We have identifed a person
         if (!preg_match('/^\d+$/', $this->id)) {
             $this->error = "Customer not specified";
@@ -603,7 +603,7 @@ class Person Extends \BaseClass {
             $this->id
         ));
         if (!$rs) {
-            $this->error = "SQL Error in Register::Person::locations: " . $GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return null;
         }
         $locations = array();

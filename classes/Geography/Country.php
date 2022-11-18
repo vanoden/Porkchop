@@ -106,8 +106,4 @@
 			$provinceList = new \Geography\ProvinceList();
 			return $provinceList->find(array('country_id' => $this->id));
 		}
-
-		public function error() {
-			return $this->_error;
-		}
 	}

@@ -1,7 +1,7 @@
 <?php
 	namespace Product;
 
-	class Price {
+	class Price Extends \BaseClass {
 		public $id;
 		public $product_id;
 		public $amount;
@@ -96,7 +96,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error("SQL Error in Product::Price::add(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -117,7 +117,7 @@
 			query_log($get_price_query,array($product_id),true);
 			$rs = $GLOBALS['_database']->Execute($get_price_query,array($product_id));
 			if (! $rs) {
-				$this->error("SQL Error in Product::Price::getCurrent(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -139,6 +139,11 @@
 				WHERE	id = ?
 			";
 			$rs = $GLOBALS['_database']->Execute($get_detail_query,array($this->id));
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
 			$object = $rs->FetchNextObject(false);
 			if (isset($object->amount)) {
 				$this->currency_id = $object->currency_id;
@@ -157,10 +162,6 @@
 				$this->status = null;
 				return false;
 			}
-		}
-		public function error($message = null) {
-			if (isset($message)) $this->_error = $message;
-			return $this->_error;
 		}
 	}
 ?>

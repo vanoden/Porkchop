@@ -148,28 +148,32 @@
 		<div class="tableCell" style="width: 20%;">RMA</div>
 	</div> <!-- end row header -->
     <?php	foreach ($items as $item) {
-				$rmas = $item->rmas(); ?>
+				$rmas = $item->rmas(); 
+				$request = $item->request();
+				$customer = $request->customer();
+				$product = $item->product();
+	?>
         <div class="tableRow">
 	        <div class="tableCell">
 		        <span class="value"><a href="/_support/request_item/<?=$item->id?>"><?=$item->ticketNumber()?></a></span>
 	        </div>
 	        <div class="tableCell">
-		        <span class="value"><?=$item->request->date_request?></span>
+		        <span class="value"><?=$request->date_request?></span>
 	        </div>
 	        <div class="tableCell">
 		        <span class="value"><?=ucwords(strtolower($item->status))?></span>
 	        </div>
 	        <div class="tableCell">
-		        <span class="value"><a href="/_monitor/admin_details/<?=$item->serial_number?>/<?=$item->product->code?>"><?=$item->serial_number?></a></span>
+		        <span class="value"><a href="/_monitor/admin_details/<?=$item->serial_number?>/<?=$product->code?>"><?=$item->serial_number?></a></span>
 	        </div>
 	        <div class="tableCell">
-		        <span class="value"><a href="/_product/edit/<?=$item->product->code?>"><?=$item->product->code?></a></span>
+		        <span class="value"><a href="/_product/edit/<?=$product->code?>"><?=$product->code?></a></span>
 	        </div>
 	        <div class="tableCell">
-		        <span class="value"><a href="/_register/admin_account?customer_id=<?=$item->request->customer->id?>"><?=$item->request->customer->full_name()?></a></span>
+		        <span class="value"><a href="/_register/admin_account?customer_id=<?=$customer->id?>"><?=$customer->full_name()?></a></span>
 	        </div>
 	        <div class="tableCell">
-		        <span class="value"><a href="/_register/organization?id=<?=$item->request->customer->organization->id?>"><?=$item->request->customer->organization->name?></a></span>
+		        <span class="value"><a href="/_register/organization?id=<?=$customer->organization->id?>"><?=$customer->organization->name?></a></span>
 	        </div>
 	        <div class="tableCell">
 		        <span class="value">

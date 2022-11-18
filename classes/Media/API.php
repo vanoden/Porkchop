@@ -17,6 +17,8 @@
 		### Add Media Item								###
 		###################################################
 		public function addMediaItem() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			# Make Sure Upload was Successful
 			$this->check_upload($_FILES['file']);
 

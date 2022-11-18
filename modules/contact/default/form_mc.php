@@ -59,9 +59,9 @@
 					);
 					$role = new \Register\Role();
 					$role->notify("contact admin",$message);
-					if ($role->error) {
+					if ($role->error()) {
 						$page->addError("Sorry, I was unable to contact representatives.  Please call.");
-						app_log("Error notifying role members: ".$role->error,'error',__FILE__,__LINE__);
+						app_log("Error notifying role members: ".$role->error(),'error',__FILE__,__LINE__);
 					} else {
 						# Display Confirmation Page
 						header("location: /_contact/thankyou");

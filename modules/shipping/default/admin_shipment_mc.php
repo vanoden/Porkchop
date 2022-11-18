@@ -5,14 +5,23 @@
 	
     if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 	    $page->addError("Invalid Request");
-    } else {
+    }
+	else {
  	    if (!empty($_REQUEST['btn_shipped'])) {
-		    $shipment->ship(array('vendor_id' => $_REQUEST['vendor_id']));
-		    $page->success = 'Shipment Shipped';
-	    } elseif (!empty($_REQUEST['btn_lost'])) {
+			$vendor = new \Shipping\Vendor($_REQUEST['vendor_id']);
+			if ($vendor->exists()) {
+			    $shipment->ship(array('vendor_id' => $_REQUEST['vendor_id']));
+			    $page->success = 'Shipment Shipped';
+			}
+			else {
+				$page->addError("Shipping vendor not found");
+			}
+	    }
+		elseif (!empty($_REQUEST['btn_lost'])) {
 		    $shipment->update(array('status' => 'LOST'));
 		    $page->success = 'Shipment Status = LOST';
-	    } elseif (!empty($_REQUEST['btn_received'])) {
+	    }
+		elseif (!empty($_REQUEST['btn_received'])) {
 		    $received = true;
 		    foreach ($shipment->packages() as $package) {
 			    if ($package->status != 'RECEIVED') {

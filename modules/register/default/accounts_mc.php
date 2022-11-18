@@ -16,7 +16,7 @@
 		$customers_per_page = $_REQUEST['page_size'];
 	else
 		$customers_per_page = 15;
-		
+
 	if (isset($_REQUEST['start']) && ! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
 
 	// Security - Only Register Module Operators or Managers can see other customers

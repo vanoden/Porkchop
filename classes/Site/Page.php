@@ -63,20 +63,21 @@
 	    public function requireRole($role) {
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
-		    } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+		    }
+			elseif (! $GLOBALS ['_SESSION_']->customer->id) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit ();
-		    } elseif (! $GLOBALS ['_SESSION_']->customer->has_role ( $role )) {
+		    }
+			elseif (! $GLOBALS ['_SESSION_']->customer->has_role($role)) {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
 			    header ( 'location: /_register/permission_denied' );
 			    exit ();
 		    }
 			else {
-			    header ( 'location: /_register/permission_denied' );
-				exit();
+				return true;
 			}
 	    }
 
@@ -358,23 +359,22 @@
 				    if (isset ( $this->metadata->$parameter ["field"] )) $buffer = $this->metadata->$parameter ["field"];
 			    } elseif ($property == "navigation") {
 				    $menuList = new \Navigation\ItemList();
-				    if ($menuList->error) {
+				    if ($menuList->error()) {
 					    $this->error = "Error initializing navigation module: " . $menuList->error;
 					    return '';
 				    }
-
-				    $menus = $menuList->find ( array ("name" => $parameter ["name"] ) );
-				    if ($menuList->error) {
-					    app_log ( "Error displaying menus: " . $menuList->error, 'error', __FILE__, __LINE__ );
-					    $this->error = $menuList->error;
+				    $menus = $menuList->find(array("name" => $parameter["name"]));
+				    if ($menuList->error()) {
+					    app_log("Error displaying menus: " . $menuList->error(), 'error', __FILE__, __LINE__ );
+					    $this->error($menuList->error());
 					    return '';
 				    }
+				    $menu = $menus[0];
+					$items = $menu->items();
 
-				    $menu = $menus [0];
-
-				    if (count ( $menu->item )) {
-					    foreach ( $menu->item as $item ) {
-						    if (isset ( $parameter ['class'] )) $button_class = $parameter ['class'];
+				    if (count($items)) {
+					    foreach ($items as $item) {
+						    if (isset( $parameter ['class'] )) $button_class = $parameter ['class'];
 						    else {
 							    $button_class = "button_" . preg_replace ( "/\W/", "_", $menu->name );
 						    }
@@ -751,4 +751,43 @@
 		    if (! empty ( $this->error )) array_push ( $this->errors, $this->error );
 		    return count ( $this->_errors );
 	    }
+
+		public function validModule($string) {
+			if (preg_match('/^\w[\w]*$/',$string)) return true;
+			else return false();
+		}
+
+		public function validView($string) {
+			if (preg_match('/^\w[\w]*$/',$string)) return true;
+			else return false();
+		}
+
+		public function validIndex($string) {
+            if (empty($string)) return true;
+			if (preg_match('/^\w[\w\.\_\-]*$/',$string)) return true;
+			else return false;
+		}
+
+		public function validStyle($string) {
+			if (preg_match('/^\w[\w]*$/',$string)) return true;
+			else return false();
+		}
+
+		public function validURI($string) {
+			if (preg_match('/\.\./', $string)) return false;
+			if (preg_match('/^[\w\-\.\_\/]+$/',$string)) return true;
+			else return false();
+		}
+
+		public function validTitle($string) {
+			if (empty(trim($string))) return false;
+			if (preg_match('/[\<\>]/',urldecode($string))) return false;
+			return true;
+		}
+
+		public function validTemplate($string) {
+			if (preg_match('/\.\./', $string)) return false;
+			if (preg_match('/^\w[\w\-\.\_]*\.html?$/',$string)) return true;
+			else return false();
+		}
     }

@@ -187,7 +187,7 @@
 	if (! $role->get('administrator')) {
 		$site->install_log("Adding 'administrator' role");
 		$role->add(array('name' => 'administrator','description' => "Access to admin tools"));
-		if ($role->error) install_fail("Error adding role: ".$role->error);
+		if ($role->error()) install_fail("Error adding role: ".$role->error());
 	}
 
 	if ($_REQUEST['log_level']) $site->log_level = $_REQUEST['log_level'];

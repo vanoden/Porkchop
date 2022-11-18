@@ -4,31 +4,50 @@
 
 	if ($_REQUEST['item_id']) {
 		$item = new \Support\Request\Item($_REQUEST['item_id']);
-	} elseif ($_REQUEST['request_id'] && $_REQUEST['line']) {
+	}
+	elseif ($_REQUEST['request_id'] && $_REQUEST['line']) {
 		$item = new \Support\Request\Item();
 		$item->get($_REQUEST['request_id'],$_REQUEST['line']);
-	} elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+	}
+	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$item = new \Support\Request\Item($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
-	$request = $item->request;
+
+	$request = $item->request();
     if (! $item->id) {
         return 404;
     }
-	if ($request->customer->organization->id != $GLOBALS['_SESSION_']->customer->organization->id && !$GLOBALS['_SESSION_']->customer->can('browse support tickets')) {
+	if ($request->customer()->organization->id != $GLOBALS['_SESSION_']->customer->organization->id && !$GLOBALS['_SESSION_']->customer->can('browse support tickets')) {
         return 403;
 	}
 
-	if ($_REQUEST['btn_reopen_item']) $item->update(array('status' => 'ACTIVE'));
-	    elseif ($_REQUEST['btn_close_item']) $item->update(array('status' => 'CLOSED'));
+	if ($_REQUEST['btn_reopen_item']) {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+			$page->addError("Invalid Token");
+		}
+		else $item->update(array('status' => 'ACTIVE'));
+	}
+    elseif ($_REQUEST['btn_close_item']) {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+			$page->addError("Invalid Token");
+		}
+		else $item->update(array('status' => 'CLOSED'));
+	}
 
 	if ($_REQUEST['btn_add_comment']) {
-		$parameters = array(
-			'author_id'	=> $GLOBALS['_SESSION_']->customer->id,
-			'content'	=> $_REQUEST['content'],
-			'status'	=> $_REQUEST['action_status']
-		);
-		$item->addComment($parameters);
-		if ($item->error()) $page->addError("Unable to add comment: ".$item->error());
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+			$page->addError("Invalid Token");
+		}
+		else {
+			$parameters = array(
+				'author_id'	=> $GLOBALS['_SESSION_']->customer->id,
+				'content'	=> $_REQUEST['content'],
+				'status'	=> $_REQUEST['action_status']
+			);
+			$item->addComment($parameters);
+			if ($item->error()) $page->addError("Unable to add comment: ".$item->error());
+			$page->success = "Added comment";
+		}
 	}
 
 	$rmalist = new \Support\Request\Item\RMAList();
@@ -45,4 +64,3 @@
 
 	$filesList = new \Storage\FileList();
 	$filesUploaded = $filesList->find(array('type' => 'support ticket', 'ref_id' => $item->id));
-

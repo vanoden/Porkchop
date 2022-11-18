@@ -37,11 +37,11 @@
 <form name="request_form" method="post" action="/_support/request_item">
 <input type="hidden" name="request_id" value="<?=$request->id?>" />
 <div><!-- START Main Div -->
-
     <!--	 ==================================== -->
 	<!-- START Request Form -->
 	<form name="requestForm" method="post">
         <input type="hidden" name="item_id" value="<?=$item->id?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
         <?php	if ($page->errorCount()) { ?>
         <div class="form_error"><?=$page->errorString()?></div>
         <?php	} ?>
@@ -65,7 +65,7 @@
 			        <a href="/_support/request_detail/<?=$request->code?>"><?=$request->code?></a>
 		        </div>
 		        <div class="tableCell">
-			        <a href="/_register/admin_account?customer_id=<?=$request->customer->id?>"><?=$request->customer->full_name()?></a>
+			        <a href="/_register/admin_account?customer_id=<?=$request->customer()->id?>"><?=$request->customer()->full_name()?></a>
 		        </div>
 		        <div class="tableCell">
 			        <span class="value"><?=$item->line?></span>
@@ -126,6 +126,7 @@
 	<div id="actionFormDiv" class="toggleContainer">
 		<form name="actionForm" method="post" action="/_support/request_item">
 		<input type="hidden" name="item_id" value="<?=$item->id?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<h3>Add Action</h3>
 			
 		<div class="tableBody min-tablet marginTop_20">
@@ -173,13 +174,9 @@
 				</div>
 				<div class="tableCell">
 					<select name="action_status" class="value input">
-						<option value="NEW">New</option>
-						<option value="ASSIGNED">Assigned</option>
-						<option value="ACTIVE">Active</option>
-						<option value="PENDING CUSTOMER">Pending Customer</option>
-						<option value="PENDING VENDOR">Pending Vendor</option>
-						<option value="CANCELLED">Cancelled</option>
-						<option value="COMPLETE">Complete</option>
+				<?php	foreach ($action_statii as $status) { ?>
+						<option value="<?=$status?>"><?=ucwords($status)?></option>
+				<?php	} ?>
 					</select>
 				</div>
 			</div>
@@ -211,6 +208,7 @@
 	<div id="rmaFormDiv" class="toggleContainer">
 		<form name="rmaForm" method="post" action="/_support/request_item">
 		<input type="hidden" name="item_id" value="<?=$item->id?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<h2>Authorize Return</h2>
 		<div class="container">
 			<span class="label">Create RMA for this item?</span>
@@ -226,6 +224,7 @@
 	<div id="shippingFormDiv" class="toggleContainer">
 		<form name="shippingForm" method="post" action="/_support/request_item">
 		<input type="hidden" name="item_id" value="<?=$item->id?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<h2>Ship Item</h2>
 		<div class="container">
 			<span class="label">Shipment</span>
@@ -244,6 +243,7 @@
 	<div id="transferFormDiv" class="toggleContainer">
 		<form name="transferForm" method="post" action="/_support/request_item">
 		<input type="hidden" name="item_id" value="<?=$item->id?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<h2>Transfer Device</h2>
 		<div class="container">
 			<span class="label">Current Owner</span>
@@ -251,7 +251,7 @@
 			<span class="label">Transfer To</span>
 			<select class="value input" name="transfer_to">
 <?php		foreach ($organizations as $organization) { ?>
-				<option value="<?=$organization->id?>" <?php if ($organization->id == $item->request->customer->organization->id) print " SELECTED"; ?>><?=$organization->name?></option>
+				<option value="<?=$organization->id?>" <?php if ($organization->id == $item->request()->customer()->organization->id) print " SELECTED"; ?>><?=$organization->name?></option>
 <?php		} ?>
 			</select>
 			<select class="value input" name="transfer_reason">
@@ -271,6 +271,7 @@
 	<div id="commentFormDiv" class="toggleContainer">
 		<form name="commentForm" method="post" action="/_support/request_item">
 		<input type="hidden" name="item_id" value="<?=$item->id?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<h2>Add Comment</h2>
 		<div class="tableBody min-tablet">
 			<div class="tableRowHeader">
@@ -339,6 +340,7 @@
     <form name="repoUpload" action="/_support/request_item/<?=$item->id?>" method="post" enctype="multipart/form-data">
     <div class="container">
 	    <span class="label">Upload File</span>
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
         <input type="hidden" name="repository_name" value="<?=$repository?>" />
 	    <input type="hidden" name="type" value="support ticket" />
 	    <input type="file" name="uploadFile" />
@@ -455,11 +457,13 @@
 			<div class="tableCell">Number</div>
 	        <div class="tableCell">Date Approved</div>
 	        <div class="tableCell">Approved By</div>
+			<div class="tableCell">Status</div>
         </div>
         <div class="tableRow">
 			<div class="tableCell"><a href="/_support/admin_rma/<?=$rma->code?>"><?=$rma->number()?></a></div>
 	        <div class="tableCell"><?=$rma->date_approved?></div>
 	        <div class="tableCell"><?=$rma->approvedBy()->full_name()?></div>
+			<div class="tableCell"><?=$rma->status?></div>
         </div>
     </div>
 <?php		} ?>

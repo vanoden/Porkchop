@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requirePrivilege('browser support tickets');
+	$page->requirePrivilege('browse support tickets');
 
 	$parameters = array('status' => array('NEW','OPEN'));
 	if (isset($_REQUEST['btn_all'])) $parameters = array();
