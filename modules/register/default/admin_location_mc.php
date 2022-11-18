@@ -11,8 +11,9 @@
         } else {
             if (empty($_REQUEST['zip_code'])) $page->addError("Zip Code required");
 		    $province = new \Geography\Province($_REQUEST['province_id']);
-		    if (! $province->id) $page->addError("Province '".$_REQUEST['province_id']."' not found");
-		    else {
+		    if (! $province->id) {
+		        $page->addError("Province '".$_REQUEST['province_id']."' not found"); 
+		    } else {
 			    $parameters = array();
 			    if ($location->id > 0) {
 				    if ($_REQUEST['name'] != $location->name) $parameters['name'] = $_REQUEST['name'];
@@ -51,7 +52,7 @@
 				    if (! $page->errorCount()) $page->success = "Changes saved";
 			    }
 		    }
-        }	
+        }
 	}
 
 	$world = new \Geography\World();

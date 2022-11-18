@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('support user');
+	$page->requirePrivilege('manage request RMAs');
 
 	if ($_REQUEST['rma_code']) {
 		$rma = new \Support\Request\Item\RMA();

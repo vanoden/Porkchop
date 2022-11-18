@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('engineering user');    
+	$page->requirePrivilege('see engineering reports');  
 
 	$tasklist = new \Engineering\TaskList();	
 	$unassigned_tasks = $tasklist->find(array("assigned_id" => '0', "status" => array('NEW','HOLD','ACTIVE','TESTING'), "_limit" => 50));

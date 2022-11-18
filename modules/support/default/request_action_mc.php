@@ -1,7 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->fromRequest();
-	$page->requireRole('support user');
+	$page->requirePrivilege('manage request actions');
 	$request = new \Support\Request($_REQUEST['request_id']);
 
 	if (isset($_REQUEST['btn_submit'])) {

@@ -91,8 +91,14 @@
 		}
 
         public function applyDefaultBillingAndShippingAddresses($organizationId, $locationId, $isDefaultBilling=false, $isDefaultShipping=false) {
-        
+                
             if (!empty($isDefaultBilling)|| !empty($isDefaultShipping)) {
+            
+			    // bust register_organizations cache
+			    $cache_key = "organization[".$organizationId."]";
+			    $cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			    $cache_item->delete();
+            
 			    $update_record_query = "
 				    UPDATE `register_organizations` SET default_billing_location_id = NULL AND default_shipping_location_id = NULL WHERE id = ?;
 			    ";

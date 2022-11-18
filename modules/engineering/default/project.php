@@ -2,7 +2,7 @@
  <a href="/_engineering/home">Engineering</a>
  <a href="/_engineering/projects">Projects</a> > Project Details
 </div>
-<?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
+<?php include(MODULES.'/engineering/default/partials/search_bar.php'); ?>
 <div style="width: 756px;">
    <form name="project_form" action="/_engineering/project" method="post">
       <input type="hidden" name="project_id" value="<?=$project->id?>" />

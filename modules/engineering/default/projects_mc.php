@@ -1,5 +1,5 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('engineering user');
+	$page->requirePrivilege('see engineering projects');
 	$projectlist = new \Engineering\ProjectList();
 	$projects = $projectlist->find();

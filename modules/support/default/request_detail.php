@@ -63,7 +63,7 @@
 </div>
 
 <h2 style="display: inline-block;">Request: <span><?=$request->code?></span></h2>
-<?php include(MODULES.'/support/partials/search_bar.php'); ?>
+<?php include(MODULES.'/support/default/partials/search_bar.php'); ?>
 <div style="width: 756px;">
 	<?php	if ($page->errorCount()) { ?>
 	    <div class="form_error"><?=$page->errorString()?></div>

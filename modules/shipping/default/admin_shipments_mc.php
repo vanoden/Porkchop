@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('shipping manager');
+	$page->requirePrivilege('see shipments');
 
 	$shipmentList = new \Shipping\ShipmentList();
 	$shipments = $shipmentList->find();

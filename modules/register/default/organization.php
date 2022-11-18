@@ -239,6 +239,7 @@
 		    <div class="tableCell value" style="width: 20%;">City</div>
 		    <div class="tableCell value" style="width: 20%;">Province/Region</div>
 	    </div>
+	    	    
     <?php	foreach ($locations as $location) { ?>
 	    <div class="tableRow">
 	        <div class="tableCell">

@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('shipping manager');
+	$page->requirePrivilege('manage shipments');
 	$shipment = new \Shipping\Shipment($_REQUEST['id']);
 	
     if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {

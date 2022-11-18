@@ -23,7 +23,8 @@
 			"templates"	=> array(
 				"page"	=> $templates['admin'],
 				"pages"	=> $templates['admin'],
-				"configurations"	=> $templates['admin']
+				"configurations"	=> $templates['admin'],
+				"counters"	=> $templates['admin']
 			),
 		),
 		"Geography"		=> array(

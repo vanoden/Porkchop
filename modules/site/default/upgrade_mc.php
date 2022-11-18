@@ -337,7 +337,14 @@
 							"view_order"	=> 20,
 							"alt"			=> "Session Report",
 							"description"	=> "Session Report"
-						)
+						),
+						array (
+							"title"	=> "Site Counters",
+							"target"	=> "/_site/counters",
+							"view_order"	=> 20,
+							"alt"			=> "Site Counters",
+							"description"	=> "Site Counters"
+						)						
 					)
 				)
 			)
@@ -419,8 +426,7 @@
 					continue;
 				};
 			}
-			//install_log(print_r($page,true));
-			//install_log($page->metadata->template." vs $template");
+
 			if ($page->metadata->template != $template) {
 				install_log("Add template '$template' to $module_name::$view");
 				$page->setMetadata("template",$template);

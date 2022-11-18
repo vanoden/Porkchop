@@ -1,7 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->fromRequest();
-	$page->requireRole('support user');
+	$page->requirePrivilege('manage monitors');
 
 	$product = new \Product\Item($_REQUEST['product_id']);
 	$asset = new \Monitor\Asset();

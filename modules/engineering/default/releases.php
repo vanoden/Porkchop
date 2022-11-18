@@ -1,7 +1,7 @@
 <div class="breadcrumbs">
 <a href="/_engineering/home">Engineering</a> > Releases
 </div>
-<?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
+<?php include(MODULES.'/engineering/default/partials/search_bar.php'); ?>
 <h2 style="display: inline-block;">Releases</h2>
 <a class="button more" href="/_engineering/release">New Release</a>
 <?php	if ($page->errorCount()) { ?>

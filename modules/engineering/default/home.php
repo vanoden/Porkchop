@@ -10,7 +10,7 @@
 <div class="breadcrumbs">
    <a href="/_engineering/home">Engineering</a>
 </div>
-<?php include(MODULES.'/engineering/partials/search_bar.php'); ?>
+<?php include(MODULES.'/engineering/default/partials/search_bar.php'); ?>
 <?php	 if ($page->errorCount() > 0) { ?>
     <div class="form_error"><?=$page->errorString()?></div>
 <?php	 } ?>

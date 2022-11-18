@@ -24,7 +24,7 @@
 	</div>
 </div>
 <h2 style="display: inline-block;"><i class='fa fa-check-square-o' aria-hidden='true'></i> Action Report</h2>
-<?php include(MODULES.'/support/partials/search_bar.php'); ?>
+<?php include(MODULES.'/support/default/partials/search_bar.php'); ?>
 <div>
 	<?php	if ($page->errorCount()) { ?>
     	<div class="form_error"><?=$page->errorString()?></div>

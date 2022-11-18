@@ -1,6 +1,7 @@
 <?php
     $page = new \Site\Page();
     $page->requireRole('package manager');
+    $page->requirePrivilege('manage engineering packages');
     
     // @TODO for PHP7 warnings, fix object inheritance Package\Version::get, Storage\File::get    
     error_reporting(E_ERROR | E_PARSE);

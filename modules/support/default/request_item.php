@@ -33,7 +33,7 @@
 	</div>
 </div>
 <h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i> Ticket: <span><?=$item->ticketNumber()?></span></h2>
-<?php include(MODULES.'/support/partials/search_bar.php'); ?>
+<?php include(MODULES.'/support/default/partials/search_bar.php'); ?>
 <form name="request_form" method="post" action="/_support/request_item">
 <input type="hidden" name="request_id" value="<?=$request->id?>" />
 <div><!-- START Main Div -->

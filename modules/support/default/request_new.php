@@ -76,7 +76,7 @@
 </div>
 
 <h2 style="display: inline-block;"><i class='fa fa-plus' aria-hidden='true'></i> Request [Tickets]</h2>
-<?php include(MODULES.'/support/partials/search_bar.php'); ?>
+<?php include(MODULES.'/support/default/partials/search_bar.php'); ?>
 
 <!-- Error Messaging -->
 <?php	if ($page->errorCount()) { ?>
