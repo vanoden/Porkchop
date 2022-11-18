@@ -2,7 +2,6 @@
 	namespace Register;
 
 	class Queue Extends \BaseClass {
-	
 		public $id;
 		public $code;
 		public $status;
@@ -19,13 +18,29 @@
 		public $zip;
 		public $phone;
 		public $cell;
-		public $possibleStatus = array('VERIFYING','PENDING','APPROVED','DENIED');
-		public $possibleOrganizationStatus = array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED');
+		private $possibleOrganizationStatus = array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED');
 
 		public function __construct($id = 0) {
+			$this->_addStatus(array('VERIFYING','PENDING','APPROVED','DENIED'));
 			if (!empty($id)) {
 				$this->id = $id;
 				$this->details();
+			}
+		}
+
+		public function get($login) {
+			$user = new \Register\Customer();
+			if (! $user->validLogin($login)) {
+				$this->error("Invalid login");
+				return false;
+			}
+			if ($user->get($login)) {
+				$this->id = $user->id;
+				return $this->details();
+			}
+			else {
+				$this->error("User not found");
+				return false;
 			}
 		}
 
@@ -70,9 +85,9 @@
 			}
 
 			if (isset($parameters['status'])) {
-                if (!in_array($parameters['status'], $this->possibleStatus)) {
-				    $this->error = "Invalid Status for RegisterQueue entry";
-				    return 0;
+                if (! $this->validStatus($parameters['status'])) {
+				    $this->error("Invalid Status for RegisterQueue entry");
+				    return false;
                 }
 				$update_contact_query .= ",
 						status = ?";
@@ -221,7 +236,7 @@
                 $rs = $GLOBALS['_database']->Execute( $get_queued_contacts_query );
                 if (! $rs) {
 	                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-	                return null;
+	                return false;
                 }
                 while ($row = $rs->FetchRow()) {
                     foreach ($row as $rowValueKey => $rowValue){
@@ -230,6 +245,11 @@
                 }
 				return true;
 		    }
+		}
+
+		public function getVerificationURL() {
+			$customer = new \Register\Customer($this->id);
+			return "/_register/validate?login=".$customer->login."&validation_key=".$customer->validationKey();
 		}
 
         /**
@@ -279,10 +299,5 @@
 
 		public function customer() {
 			return new \Register\Customer($this->register_user_id);
-		}
-
-		public function validStatus($string) {
-			if (in_array($string,$this->possibleStatus)) return true;
-			else return false;
 		}
     }

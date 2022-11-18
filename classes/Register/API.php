@@ -1164,13 +1164,61 @@
 		}
 
         public function findPendingRegistrations() {
+			$this->requirePrivilege("manage customers");
             $queue = new \Register\Queue();
             $parameters = array();
 
-            if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+            if (!empty($_REQUEST['status'])) {
+				if (! $queue->validStatus($_REQUEST['status'])) $this->error("Invalid status");
+				else $parameters['status'] = $_REQUEST['status'];
+			}
+
+			$queueList = new \Register\QueueList();
+			$pendingCustomers = $queueList->find($parameters);
+			if ($queueList->error()) $this->error($queueList->error());
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->registration = $pendingCustomers;
+
+            print $this->formatOutput($response);
+        }
+
+        public function getPendingRegistration() {
+			$this->requirePrivilege("manage customers");
+            $queue = new \Register\Queue();
+            $parameters = array();
+
+            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (! $queue->validCode($_REQUEST['login'])) $this->error("invalid login");
+			if (! $queue->get($_REQUEST['login'])) $this->error("Registration not found");
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->registration = $queue;
+
+            print $this->formatOutput($response);
+        }
+
+        public function getRegistrationVerificationURL() {
+			$this->requirePrivilege("manage customers");
+            $person = new \Register\Customer();
+            $parameters = array();
+
+            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (! $person->validCode($_REQUEST['login'])) $this->error("invalid login");
+			if (! $person->get($_REQUEST['login'])) $this->error("Registration not found");
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->url = "/_register/validate?login=".$person->login."&validation_key=".$person->validationKey();
+			if ($person->error()) $this->error($person->error());
+
+            print $this->formatOutput($response);
         }
 		
 		public function _methods() {
+			$queue = new \Register\Queue();
 			return array(
 				'ping'	=> array(),
 				'me'	=> array(
@@ -1208,6 +1256,14 @@
 				'findPrivileges'	=> array(),
 				'findPrivilegePeers'	=> array(
 					'privilege_name'	=> array('required' => true)
+				),
+				'findPendingRegistrations' => array(
+					'status'	=> array(
+						'options' => $queue->statii()
+					)
+				),
+				'getPendingRegistration' => array(
+					'login'	=> array('required' => true)
 				)
 			);
 		}

@@ -14,7 +14,10 @@
 	$request = $item->request();
 
 	if ($_REQUEST['btn_complete']) {
-		if ($item->organization->id != $GLOBALS['_SESSION_']->customer->organization_id && ! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        elseif ($item->organization->id != $GLOBALS['_SESSION_']->customer->organization_id && ! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
 			$page->addError("Permission denied");
 		}
 		else {
@@ -27,12 +30,16 @@
 		}
 	}
 	elseif ($_REQUEST['btn_close_item']) {
-		if ($item->organization->id != $GLOBALS['_SESSION_']->customer->organization_id && ! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        elseif ($item->organization->id != $GLOBALS['_SESSION_']->customer->organization_id && ! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
 			$page->addError("Permission denied");
 		}
 		elseif ($item->openActions() > 0) {
 			$page->addError("Item has open actions!");
-		} else {
+		}
+		else {
 			$item->update(array('status' => 'CLOSED'));
 			if ($item->error()) {
     			$page->addError($item->error());
@@ -56,7 +63,10 @@
 		}
 	}
 	elseif ($_REQUEST['btn_reopen_item']) {
-		if ($item->organization->id != $GLOBALS['_SESSION_']->customer->organization_id && ! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        elseif ($item->organization->id != $GLOBALS['_SESSION_']->customer->organization_id && ! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
 			$page->addError("Permission denied");
 		}
 		else {
@@ -64,7 +74,10 @@
 		}
 	}
 	elseif ($_REQUEST['btn_add_action'] || $_REQUEST['btn_add_edit_action']) {
-		if ($item->organization->id != $GLOBALS['_SESSION_']->customer->organization_id && ! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        elseif ($item->organization->id != $GLOBALS['_SESSION_']->customer->organization_id && ! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
 			$page->addError("Permission denied");
 		}
 		else {
@@ -134,7 +147,10 @@
 		}
 	}
 	elseif ($_REQUEST['btn_add_rma']) {
-		if (! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        elseif (! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
 			$page->addError("Permission denied");
 		}
 		else {
@@ -204,7 +220,10 @@
 		}
 	}
 	elseif ($_REQUEST['btn_transfer_item']) {
-		if (! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        elseif (! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
 			$page->addError("Permission denied");
 		}
 		else {
@@ -270,7 +289,10 @@
 		}
 	}
 	elseif ($_REQUEST['btn_add_shipment']) {
-		if (! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        elseif (! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
 			$page->addError("Permission denied");
 		}
 		else {
@@ -303,18 +325,26 @@
 		}
 	}
 	elseif ($_REQUEST['btn_add_comment'] || $_REQUEST['btn_add_private_comment']) {
-		$parameters = array(
-			'author_id'	=> $GLOBALS['_SESSION_']->customer->id,
-			'content'	=> $_REQUEST['content'],
-			'status'	=> $_REQUEST['action_status']
-		);
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        else {
+			$parameters = array(
+				'author_id'	=> $GLOBALS['_SESSION_']->customer->id,
+				'content'	=> $_REQUEST['content'],
+				'status'	=> $_REQUEST['action_status']
+			);
 		
-		if ($_REQUEST['btn_add_private_comment']) $parameters['private'] = 1;	
-		$item->addComment($parameters);
-		if ($item->error()) $page->addError("Unable to add comment: ".$item->error());
+			if ($_REQUEST['btn_add_private_comment']) $parameters['private'] = 1;	
+			$item->addComment($parameters);
+			if ($item->error()) $page->addError("Unable to add comment: ".$item->error());
+		}
 	}
 	elseif (isset($_REQUEST['btn_submit'])) {
-		if (! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        elseif (! $GLOBALS['_SESSION_']->customer->can("manage support requests")) {
 			$page->addError("Permission denied");
 		}
 		else {

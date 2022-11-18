@@ -20,13 +20,16 @@ if ($GLOBALS['_SESSION_']->customer->organization->id != $rma->item()->request->
 	return;
 }
 // get any values for UI, check if they exist
-$rmaNumber = $rma->number () ? $rma->number () : "";
-$rmaTicketNumber = $rma->item ()->ticketNumber () ? $rma->item ()->ticketNumber () : "";
-$rmaCustomerFullName = $rma->item ()->request->customer ? $rma->item ()->request->customer->full_name () : "";
+$rmaNumber = $rma->number();
+$rmaTicket = $rma->item();
+$rmaTicketNumber = $rmaTicket->ticketNumber();
+$rmaRequest = $rmaTicket->request();
+$rmaCustomer = $rmaRequest->customer();
+$rmaCustomerFullName = $rmaCustomer->full_name();
 
 // get any known emails and phone numbers for PDF output
-$rmaCustomerEmails = $rma->item ()->request->customer->contacts(array('type'=>'email'));
-$rmaCustomerPhoneNumbers = $rma->item ()->request->customer->contacts(array('type'=>'phone'));
+$rmaCustomerEmails = $rmaCustomer->contacts(array('type'=>'email'));
+$rmaCustomerPhoneNumbers = $rmaCustomer->contacts(array('type'=>'phone'));
 $rmaCustomerEmailsOutput = "";
 foreach ($rmaCustomerEmails as $customerEmail) $rmaCustomerEmailsOutput .= $customerEmail->description . " : " . $customerEmail->value . "<br/>";
 $rmaCustomerPhoneNumberOutput = "";
@@ -35,7 +38,7 @@ foreach ($rmaCustomerPhoneNumbers as $customerPhone) $rmaCustomerPhoneNumberOutp
 $rmaCustomerOrganizationName = $rma->item ()->request->customer->organization->name ? $rma->item ()->request->customer->organization->name : "";
 $rmaApprovedByName = $rma->approvedBy () ? $rma->approvedBy ()->full_name () : "";
 $rmaDateApproved = date ( "m/d/Y", strtotime ( $rma->date_approved ) );
-$rmaProductCode = $rma->item ()->product ? $rma->item ()->product->code : "";
+$rmaProductCode = $rmaTicket->product ? $rmaTicket->product->code : "";
 
 
 // get the shipment in question if it exists
@@ -129,7 +132,7 @@ $html = <<<EOD
     </td>
   </tr>
 </table>
-<br/><br/><br/>
+<br/><br/><br/><br/>
 <table style="width:90%">
   <tr>
     <th style="background-color:grey; color:white; border: solid 1px #000;"><strong>RMA #</strong></th>

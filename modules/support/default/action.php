@@ -102,6 +102,7 @@
 
 <form name="action_form" method="post" action="/_support/action">
    <input type="hidden" name="action_id" value="<?=$action->id?>" />
+   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
    <div style="width: 756px;">
       <div class="breadcrumbs">
          <a href="/_support/requests">Support Home</a>
@@ -143,9 +144,9 @@
       </div>
       <div class="tableRow">
          <div class="tableCell"><a href="/_support/request_item/<?=$item->id?>"><?=$item->ticketNumber()?></a></div>
-         <div class="tableCell"><?=$action->requestedBy->full_name()?></div>
+         <div class="tableCell"><?=$action->requestedBy()->full_name()?></div>
          <div class="tableCell"><?=$action->type?></div>
-         <div class="tableCell"><?=$assignedTo?></div>
+         <div class="tableCell"><?=$action->assignedTo()->full_name()?></div>
          <div class="tableCell"><?=$action->status?></div>
       </div>
       <div class="tableRowHeader">
@@ -156,11 +157,11 @@
          <div class="tableCell"></div>
       </div>
       <div class="tableRow">
-         <div class="tableCell"><?=$item->product->code?></div>
+         <div class="tableCell"><?=$item->product()->code?></div>
          <div class="tableCell">
             <pre><?=strip_tags($item->product->description)?></pre>
          </div>
-         <div class="tableCell"><a href="/_monitor/admin_details/<?=$item->serial_number?>/<?=$item->product->code?>"><?=$item->serial_number?></a></div>
+         <div class="tableCell"><a href="/_monitor/admin_details/<?=$item->serial_number?>/<?=$item->product()->code?>"><?=$item->serial_number?></a></div>
          <div class="tableCell"></div>
          <div class="tableCell"></div>
       </div>
@@ -256,6 +257,7 @@
    <div class="toggleContainer" id="eventFormDiv">
     <form id="eventForm" name="eventForm" method="post" action="/_support/action">
        <input type="hidden" name="action_id" value="<?=$action->id?>" />
+	   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
        <h2>Add Event</h2>
        <div class="container_narrow">
           <span class="label">Event Date</span>
@@ -299,6 +301,7 @@
 <div class="toggleContainer" id="assignFormDiv">
    <form id="assignForm" name="assignForm" method="post" action="/_support/action">
       <input type="hidden" name="action_id" value="<?=$action->id?>" />
+	  <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
       <h2>Assign Action</h2>
       <div class="container">
          <span class="label">User</span>

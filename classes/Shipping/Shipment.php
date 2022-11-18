@@ -18,7 +18,7 @@
         public $fields = array('id','code','document_number','date_entered','date_shipped','status','send_contact_id','send_location_id','rec_contact_id','rec_location_id','vendor_id', 'instructions');
 
 		public function __construct($id = 0) {
-			$this->_addStatus(array('READY','SHIPPED','RECEIVED','RETURNED'));
+			$this->_addStatus(array('NEW','SHIPPED','LOST','RECEIVED','RETURNED'));
 			parent::__construct($id);
 		}
 
@@ -35,7 +35,7 @@
 			if (! isset($parameters['date_entered'])) $parameters['date_entered'] = date('Y-m-d H:i:s');
 
 			if (! $this->validStatus($parameters['status'])) {
-				$this->error("Invalid Status");
+				$this->error("Invalid Status '".$parameters['status']."'");
 				return false;
 			}
 			if (isset($parameters['send_customer_id'])) {

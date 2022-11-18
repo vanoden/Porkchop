@@ -15,6 +15,7 @@
 	<?php	} ?>
 	<form name="noteForm" method="post">
 	<input type="hidden" name="request_id" value="<?=$request->id?>" />
+	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 	<h1>Request Action for <?=$request->code?></h1>
 	<div class="container_narrow">
 		<div class="label">Status</div>

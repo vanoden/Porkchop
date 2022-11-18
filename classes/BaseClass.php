@@ -13,13 +13,14 @@
 			return $this->_error;
 		}
 
-		public function SQLError($message = '') {
+		public function SQLError($message = '', $query = null, $bind_params = null) {
 			if (empty($message)) $message = $GLOBALS['_database']->ErrorMsg();
 			$trace = debug_backtrace();
 			$caller = $trace[1];
 			$class = $caller['class'];
 			$classname = str_replace('\\','::',$class);
 			$method = $caller['function'];
+			if (!empty($query)) query_log($query,$bind_params,true);
 			return $this->error("SQL Error in ".$classname."::".$method."(): ".$message);
 		}
 

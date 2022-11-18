@@ -29,8 +29,11 @@
 	}
 
 	function valid_email($email) {
-		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+$/",$email)) return 1;
-		else return 0;
+		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+\.[a-z]{2,}$/",strtolower($email))) return true;
+		else {
+			app_log("Invalid email address: '$email'",'info');
+			return false;
+		}
 	}
 
 	function get_mysql_date($date = null,$range=0) {

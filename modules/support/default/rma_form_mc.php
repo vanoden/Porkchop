@@ -88,139 +88,147 @@ if ($page->errorCount() < 1) {
 
 	// process the form submission for the return request
 	if (isset($_REQUEST['form_submitted']) && $_REQUEST ['form_submitted'] == 'submit') {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        elseif ($rmaStatus == 'NEW') {
+			$rma->update(array('status' => 'SUBMITTED', 'date_submitted' => date('Y-m-d H:i:s'), 'submitted_by' => $GLOBALS['_SESSION_']->customer->id));
+			if ($rma->error()) {
+				$page->addError($rma->error());
+			}
 
-		// A shipping record is created status NEW.
-		// Each item from the form including accessories is added to the shipment as a shipping_item record
-		$parameters = array ();
-		//$parameters ['code'] = $rmaCode;
-
-		// upsert shipment info, use the location recently provided
-		if (! $shippingShipment->id) {
-
+			// A shipping record is created status NEW.
+			// Each item from the form including accessories is added to the shipment as a shipping_item record
+			$shipment_parameters = array ();
 			//$parameters ['code'] = $rmaCode;
-			$parameters['document_number'] = $shippingDocument;
-			$parameters['date_entered'] = date ( "Y-m-d H:i:s" );
-			$parameters['status'] = 'SHIPPED';
-			$parameters['send_customer_id'] = $rmaRequestCustomer->id;
-			$parameters['receive_customer_id'] = $rma->approvedBy ()->id;
-			$parameters['receive_location_id'] = $receive_location_id;
 
-			if (!empty($_REQUEST ['shipping_address_picker'])) {
-				$registerLocationShipping = new \Register\Location($_REQUEST['shipping_address_picker']);
-				if (! $registerLocationShipping->id) {
-					$page->addError("Error finding location: ".$registerLocationShipping->error());
-				}
-			}
-			else {
-				$registerLocationShipping = new \Register\Location ();
-				$registerLocationShipping->add(array(
-					'name'			=> $_REQUEST ['shipping_location_name'],
-					'address_1'		=> $_REQUEST ['shipping_address'],
-					'address_2'		=> $_REQUEST ['shipping_address2'],
-					'city'			=> $_REQUEST ['shipping_city'],
-					'zip_code'		=> $_REQUEST ['shipping_zip'],
-					'province_id'	=> $_REQUEST ['shipping_province'],
-					'notes'			=> 'address added during RMA process'
-				));
-				if ($registerLocationShipping->error()) {
-					$page->addError("Failed to add location: ".$registerLocationShipping->error());
-				} else {
-					// add user address(es) if they don't exist yet with the register location mapping relationships included
-					if ($_REQUEST ['shipping_address_type'] == 'business') {
-						$registerLocationShipping->associateOrganization($organization->id, $_REQUEST['shipping_location_name']);
-					} else {
-						$registerLocationShipping->associateUser($customerId);
+			// upsert shipment info, use the location recently provided
+			if (! $shippingShipment->id) {
+				//$parameters ['code'] = $rmaCode;
+				$shipment_parameters['document_number'] = $shippingDocument;
+				$shipment_parameters['date_entered'] = date ( "Y-m-d H:i:s" );
+				$shipment_parameters['status'] = 'NEW';
+				$shipment_parameters['send_customer_id'] = $rmaRequestCustomer->id;
+				$shipment_parameters['receive_customer_id'] = $rma->approvedBy ()->id;
+				$shipment_parameters['receive_location_id'] = $receive_location_id;
+
+				if (!empty($_REQUEST ['shipping_address_picker'])) {
+					$registerLocationShipping = new \Register\Location($_REQUEST['shipping_address_picker']);
+					if (! $registerLocationShipping->id) {
+						$page->addError("Error finding location: ".$registerLocationShipping->error());
 					}
-				}
-			}
-			if (! $registerLocationShipping->id) {
-				$page->addError("No location identified for return shipping");
-			}
-			else {
-				$parameters['send_location_id'] = $registerLocationShipping->id;
-	
-				// RMA request has a new billing contact to be added
-				if (empty($_REQUEST['billing_contact_picker'])) {
-					$newUser = new Register\Person();
-					$newUser->add(array(
-						'login' => preg_replace('/\s+/', '', strtolower($_REQUEST['billing_firstname']))  . '-' . preg_replace('/\s+/', '', strtolower($_REQUEST['billing_lastname'])) . rand (1, 10000),
-						'password' => uniqid(),
-						'first_name' => $_REQUEST['billing_firstname'],
-						'last_name' => $_REQUEST['billing_lastname'],
-						'timezone' => 'America/New_York',        
-						'organization_id' => $organization->id
-					));
-					$registerContact = new Register\Contact();
-					$registerContact->add(array(
-						'person_id' => $newUser->id,
-						'description' =>  'Billing Email',
-						'type' => 'email',
-						'value' => $_REQUEST['billing_email'],
-						'notes' => 'email added during RMA return request'
-						)
-					);
-					$registerContact->add(array(
-						'person_id' => $newUser->id,
-						'description' =>  'Billing Phone',
-						'type' => 'phone',
-						'value' => $_REQUEST['billing_phone'],
-						'notes' => 'phone number added during RMA return request'
-						)
-					);
-					$_REQUEST['billing_contact_picker'] = $newUser->id;
-				}
-				$rma->update(array('billing_contact_id' => $_REQUEST['billing_contact_picker']));
-				if ($rma->error()) $page->addError('Unable to store billing contact: '.$rma->error());
-			
-				$parameters['instructions'] = (isset ( $_REQUEST ['delivery_instructions'] )) ? $_REQUEST ['delivery_instructions'] : '';
-
-				// add shipment with package and items entries
-				if (! $shippingShipment->add($parameters)) {
-					$page->addError("Error creating shipment: ".$shippingShipment->error());
 				}
 				else {
-					// add a default "1st" package to the shipment, there should be at least that
-					$packageDetails = array ();
-					$packageDetails['shipment_id'] = $shippingShipment->id;
-					$packageDetails['number'] = 1;
-					$packageDetails['tracking_code'] = (isset ( $_REQUEST ['tracking_number'] )) ? $_REQUEST ['tracking_number'] : '';
-					$packageDetails['status'] = 'READY';
-					$packageDetails['condition'] = 'OK';
-					$shippingPackage = $shippingShipment->add_package($packageDetails);
+					$registerLocationShipping = new \Register\Location ();
+					$registerLocationShipping->add(array(
+						'name'			=> $_REQUEST ['shipping_location_name'],
+						'address_1'		=> $_REQUEST ['shipping_address'],
+						'address_2'		=> $_REQUEST ['shipping_address2'],
+						'city'			=> $_REQUEST ['shipping_city'],
+						'zip_code'		=> $_REQUEST ['shipping_zip'],
+						'province_id'	=> $_REQUEST ['shipping_province'],
+						'notes'			=> 'address added during RMA process'
+					));
+					if ($registerLocationShipping->error()) {
+						$page->addError("Failed to add location: ".$registerLocationShipping->error());
+					} else {
+						// add user address(es) if they don't exist yet with the register location mapping relationships included
+						if ($_REQUEST ['shipping_address_type'] == 'business') {
+							$registerLocationShipping->associateOrganization($organization->id, $_REQUEST['shipping_location_name']);
+						} else {
+							$registerLocationShipping->associateUser($customerId);
+						}
+					}
+				}
+				if (! $registerLocationShipping->id) {
+					$page->addError("No location identified for return shipping");
+				}
+				else {
+					$shipment_parameters['send_location_id'] = $registerLocationShipping->id;
+		
+					// RMA request has a new billing contact to be added
+					if (empty($_REQUEST['billing_contact_picker'])) {
+						$newUser = new Register\Person();
+						$newUser->add(array(
+							'login' => preg_replace('/\s+/', '', strtolower($_REQUEST['billing_firstname']))  . '-' . preg_replace('/\s+/', '', strtolower($_REQUEST['billing_lastname'])) . rand (1, 10000),
+							'password' => uniqid(),
+							'first_name' => $_REQUEST['billing_firstname'],
+							'last_name' => $_REQUEST['billing_lastname'],
+							'timezone' => 'America/New_York',        
+							'organization_id' => $organization->id
+						));
+						$registerContact = new Register\Contact();
+						$registerContact->add(array(
+							'person_id' => $newUser->id,
+							'description' =>  'Billing Email',
+							'type' => 'email',
+							'value' => $_REQUEST['billing_email'],
+							'notes' => 'email added during RMA return request'
+							)
+						);
+						$registerContact->add(array(
+							'person_id' => $newUser->id,
+							'description' =>  'Billing Phone',
+							'type' => 'phone',
+							'value' => $_REQUEST['billing_phone'],
+							'notes' => 'phone number added during RMA return request'
+							)
+						);
+						$_REQUEST['billing_contact_picker'] = $newUser->id;
+					}
+					$rma->update(array('billing_contact_id' => $_REQUEST['billing_contact_picker']));
+					if ($rma->error()) $page->addError('Unable to store billing contact: '.$rma->error());
+				
+					$shipment_parameters['instructions'] = (isset ( $_REQUEST ['delivery_instructions'] )) ? $_REQUEST ['delivery_instructions'] : '';
 
-					if ($shippingShipment->error()) {
-						$page->addError("Error adding package to shipment: ".$shippingShipment->error());
+					// add shipment with package and items entries
+					if (! $shippingShipment->add($shipment_parameters)) {
+						$page->addError("Error creating shipment: ".$shippingShipment->error());
 					}
 					else {
-						// each item from the form including accessories is added to the shipment as a shipping_item record
-						$shippingPackage->add_item(array(
-							'product_id'	=> $rmaItem->product()->id,
-							'serial_number'	=> $rmaSerialNumber,
-							'condition'		=> 'OK',
-							'quantity'		=> 1,
-							'description'	=> $rmaProduct->description
-						));
-						if ($shippingPackage->error()) {
-							$page->addError("Error adding item to shipment: ".$shippingPackage->error());
-							$shippingShipment->delete();
-							$shippingShipment = null;
-						} else {
-							foreach ($optional_contents as $code => $name) {
-								if (! empty ( $_REQUEST[$code] )) {
-									$shippingPackage->add_item(array(
-										'product_id'	=> $misc_inventory_item->id,
-										'serial_number'	=> '',
-										'condition'		=> 'OK',
-										'quantity'		=> 1,
-										'description'	=> $name
-									));
-									if ($shippingPackage->error()) $page->addError("Error adding item to shipment: ".$shippingPackage->error());
+						// add a default "1st" package to the shipment, there should be at least that
+						$packageDetails = array ();
+						$packageDetails['shipment_id'] = $shippingShipment->id;
+						$packageDetails['number'] = 1;
+						$packageDetails['tracking_code'] = (isset ( $_REQUEST ['tracking_number'] )) ? $_REQUEST ['tracking_number'] : '';
+						$packageDetails['status'] = 'READY';
+						$packageDetails['condition'] = 'OK';
+						$shippingPackage = $shippingShipment->add_package($packageDetails);
+
+						if ($shippingShipment->error()) {
+							$page->addError("Error adding package to shipment: ".$shippingShipment->error());
+						}
+						else {
+							// each item from the form including accessories is added to the shipment as a shipping_item record
+							$shippingPackage->add_item(array(
+								'product_id'	=> $rmaItem->product()->id,
+								'serial_number'	=> $rmaSerialNumber,
+								'condition'		=> 'OK',
+								'quantity'		=> 1,
+								'description'	=> $rmaProduct->description
+							));
+							if ($shippingPackage->error()) {
+								$page->addError("Error adding item to shipment: ".$shippingPackage->error());
+								$shippingShipment->delete();
+								$shippingShipment = null;
+							} else {
+								foreach ($optional_contents as $code => $name) {
+									if (! empty ( $_REQUEST[$code] )) {
+										$shippingPackage->add_item(array(
+											'product_id'	=> $misc_inventory_item->id,
+											'serial_number'	=> '',
+											'condition'		=> 'OK',
+											'quantity'		=> 1,
+											'description'	=> $name
+										));
+										if ($shippingPackage->error()) $page->addError("Error adding item to shipment: ".$shippingPackage->error());
+									}
 								}
 							}
+							
+							// RMA status is changed to CUSTOMER_SHIP
+							$rma->update(array('shipment_id' => $shippingShipment->id,'status'=>'SUBMITTED'));
 						}
-						
-						// RMA status is changed to CUSTOMER_SHIP
-						$rma->update(array('shipment_id' => $shippingShipment->id,'status'=>'SUBMITTED'));
 					}
 				}
 			}
@@ -229,16 +237,21 @@ if ($page->errorCount() < 1) {
 	
 	// process the form submission for the adding package and tracking details
 	if ($_REQUEST ['form_submitted'] == 'package_details_submitted') {
-		$shippingPackage = new \Shipping\Package ();
-		$shippingPackage->getByShippingID($shippingShipment->id);
-		$packageDetails = array ();
-		$packageDetails ['shipment_id'] = $shippingShipment->id;
-		$packageDetails ['tracking_code'] = (isset ( $_REQUEST ['tracking_code'] )) ? $_REQUEST ['tracking_code'] : '';
-		$shippingShipment->update(array('vendor_id' => $_REQUEST ['vendor_id']));	
-		if (!empty($shippingPackage->id)) {
-			if (!$shippingPackage->update ( $packageDetails )) $page->addError("Error submitting shipping details: ".$shippingPackage->error());
-		} else {
-			if (!$shippingPackage->add ( $packageDetails )) $page->addError("Error submitting shipping details: ".$shippingPackage->error());
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        else {
+			$shippingPackage = new \Shipping\Package ();
+			$shippingPackage->getByShippingID($shippingShipment->id);
+			$packageDetails = array ();
+			$packageDetails ['shipment_id'] = $shippingShipment->id;
+			$packageDetails ['tracking_code'] = (isset ( $_REQUEST ['tracking_code'] )) ? $_REQUEST ['tracking_code'] : '';
+			$shippingShipment->update(array('vendor_id' => $_REQUEST ['vendor_id']));	
+			if (!empty($shippingPackage->id)) {
+				if (!$shippingPackage->update ( $packageDetails )) $page->addError("Error submitting shipping details: ".$shippingPackage->error());
+			} else {
+				if (!$shippingPackage->add ( $packageDetails )) $page->addError("Error submitting shipping details: ".$shippingPackage->error());
+			}
 		}
 	}
 
@@ -248,7 +261,10 @@ if ($page->errorCount() < 1) {
 			"date_received" => $_REQUEST['date_received'],
 			"condition" => $_REQUEST['condition']
 		);
-		if (!$shippingPackage->receive($params)) {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        elseif (!$shippingPackage->receive($params)) {
 			$page->addError($shippingPackage->error());
 		}
 		else {
