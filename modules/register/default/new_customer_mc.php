@@ -268,7 +268,7 @@
 	
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "verify") {
 		app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
-		
+
 		// Initialize Customer Object
 		$page->isVerifedAccount = false;
 		$customer = new \Register\Customer();

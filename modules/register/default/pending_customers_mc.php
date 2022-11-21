@@ -31,7 +31,7 @@
     // update customer notes from UI request
     app_log("updateNotes");
 	if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'updateNotes') {
-        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
         	$page->addError("Invalid Request");
         }
 		else {
@@ -45,7 +45,7 @@
     app_log("updateStatus");
     $queuedCustomer = new Register\Queue($_REQUEST['id']);	
 	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updateStatus') {
-        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
         	$page->addError("Invalid Request");
         }
 		elseif (!$queuedCustomer->validStatus($_REQUEST['status'])) {
@@ -61,7 +61,7 @@
     // assign customer and/or generate new organization if needed
     app_log("denyCustomer");
 	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'denyCustomer') {
-        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
         	$page->addError("Invalid Request");
         } else {
             $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
@@ -73,13 +73,20 @@
     // assign customer and/or generate new organization if needed
     app_log("assignCustomer");
 	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'assignCustomer') {
-        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
         	$page->addError("Invalid Request");
-        } else {
-            $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
-            $queuedCustomer->update(array('status' => 'APPROVED'));
-            $queuedCustomer->syncLiveAccount();
-            $page->success = true;
+        }
+		else {
+            $queuedCustomer = new Register\Queue($_REQUEST['id']);
+			$customer = new \Register\Customer($queuedCustomer->customer()->id);
+			if (! $customer->exists()) {
+				$page->addError("Customer not found");
+			}
+			else {
+	            $queuedCustomer->update(array('status' => 'APPROVED'));
+	            $queuedCustomer->syncLiveAccount();
+	            $page->success = "Registration complete for ".$customer->login;
+			}
         }
 	}	
 
@@ -117,7 +124,7 @@
 
     // handle send another verification email
     if (isset($_GET['verifyAgain']) && !empty($_GET['verifyAgain'])) {
-        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
         	$page->addError("Invalid Request");
         } else {
         
@@ -152,4 +159,6 @@
                 }
             }
         }
-     }
+    }
+
+	$possibleStatii = $queuedCustomer->statii();

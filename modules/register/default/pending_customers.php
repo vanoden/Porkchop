@@ -179,7 +179,7 @@
 			<td><input type="text" id="dateStart" name="dateStart" class="value input" value="<?=isset($_REQUEST['fromDate']) ? $_REQUEST['fromDate'] : ''?>" /></td>
 			<td><input type="text" id="dateEnd" name="dateEnd" class="value input" value="<?=isset($_REQUEST['toDate']) ? $_REQUEST['toDate'] : ''?>" /></td>
 			<td style="width: 50%;">
-			   <?php foreach ($queuedCustomers->possibleStatus as $possibleStatus) { ?>
+			   <?php foreach ($possibleStatii as $possibleStatus) { ?>
 			   <input type="checkbox" name="<?=$possibleStatus?>" value="<?=$possibleStatus?>"
 				  <?php
 					 if (isset($_REQUEST[$possibleStatus]) && $_REQUEST[$possibleStatus] == $possibleStatus) print " checked"; 
