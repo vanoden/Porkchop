@@ -35,8 +35,7 @@
 				return false;
 			}
 			if ($user->get($login)) {
-				$this->id = $user->id;
-				return $this->details();
+				return $this->getByQueuedLogin($user->id);
 			}
 			else {
 				$this->error("User not found");
@@ -238,13 +237,66 @@
 	                $this->SQLError($GLOBALS['_database']->ErrorMsg());
 	                return false;
                 }
-                while ($row = $rs->FetchRow()) {
-                    foreach ($row as $rowValueKey => $rowValue){
-                        if (!is_numeric($rowValueKey)) $this->$rowValueKey = $rowValue;
-                    }
-                }
+				$object = $rs->FetchNextObject(false);
+				if (!empty($object->id)) {
+					$this->id = $object->id;
+					$this->name = $object->name;
+					$this->address = $object->address;
+					$this->city = $object->city;
+					$this->state = $object->state;
+					$this->zip = $object->zip;
+					$this->phone = $object->phone;
+					$this->cell = $object->cell;
+					$this->code = $object->code;
+					$this->status = $object->status;
+					$this->date_created = $object->date_created;
+					$this->is_reseller = $object->reseller;
+					$this->assigned_reseller_id = $object->reseller_id;
+					$this->notes = $object->notes;
+					$this->product_id = $object->product_id;
+					$this->serial_number = $object->serial_number;
+					$this->register_user_id = $object->register_user_id;
+					app_log("Found registration ".$this->id);
+				}
+				else {
+					$this->name = null;
+					$this->address = null;
+					$this->city = null;
+					$this->state = null;
+					$this->zip = null;
+					$this->phone = null;
+					$this->cell = null;
+					$this->code = null;
+					$this->status = null;
+					$this->date_created = null;
+					$this->is_reseller = null;
+					$this->assigned_reseller_id = null;
+					$this->notes = null;
+					$this->product_id = null;
+					$this->serial_number = null;
+					$this->register_user_id = null;
+					app_log("No registration for ".$this->id);
+					$this->id = null;
+				}
 				return true;
 		    }
+		}
+
+		public function asset() {
+			$asset = new \Product\Instance();
+			if ($asset->get($this->product_id,$this->serial_number)) return $asset;
+			else {
+				$this->error("Asset not found");
+				return null;
+			}
+		}
+
+		public function product() {
+			return new \Product\Item($this->product_id);
+		}
+
+		public function customer() {
+			return new \Register\Customer($this->register_user_id);
 		}
 
 		public function getVerificationURL() {
@@ -295,9 +347,5 @@
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->id;
-		}
-
-		public function customer() {
-			return new \Register\Customer($this->register_user_id);
 		}
     }
