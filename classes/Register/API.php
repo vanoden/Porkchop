@@ -1211,6 +1211,23 @@
 
 			$response = new \HTTP\Response();
 			$response->success = 1;
+			$response->url = "/_register/new_customer?method=verify&login=".$person->login."&access=".$person->validationKey();
+			if ($person->error()) $this->error($person->error());
+
+            print $this->formatOutput($response);
+        }
+
+        public function getPasswordResetURL() {
+			$this->requirePrivilege("manage customers");
+            $person = new \Register\Customer();
+            $parameters = array();
+
+            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (! $person->validCode($_REQUEST['login'])) $this->error("invalid login");
+			if (! $person->get($_REQUEST['login'])) $this->error("Registration not found");
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
 			$response->url = "/_register/validate?login=".$person->login."&validation_key=".$person->validationKey();
 			if ($person->error()) $this->error($person->error());
 
