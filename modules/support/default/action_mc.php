@@ -2,7 +2,7 @@
     global $_config;
 	$page = new \Site\Page();
 	$page->fromRequest();
-	$page->requireRole('support user');
+	$page->requirePrivilege('manage request actions');
 
 	if (isset($_REQUEST['action_id'])) {
 		$action = new \Support\Request\Item\Action($_REQUEST['action_id']);

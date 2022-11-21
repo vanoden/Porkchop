@@ -237,7 +237,7 @@
      <a class="breadcrumb" href="/_engineering/home">Engineering</a>
      <a class="breadcrumb" href="/_engineering/tasks">Tasks</a> > Task Detail
   </div>
-   <?php include(MODULES.'/engineering/partials/search_bar.php'); ?> 
+   <?php include(MODULES.'/engineering/default/partials/search_bar.php'); ?> 
    <form id="task_form" name="task_form" action="/_engineering/task" method="post">
       <input type="hidden" name="task_id" value="<?=$task->id?>" />
 	  <input type="hidden" name="method" id="method" value="" />
@@ -418,7 +418,7 @@
                     </div>
                     <div class="popup_prerequisite_content">
                         <h1>Find a task that is prerequisite to this one</h1>
-                        <?php include(MODULES.'/engineering/partials/prerequisite_task_finder.php'); ?>
+                        <?php include(MODULES.'/engineering/default/partials/prerequisite_task_finder.php'); ?>
                     </div>
                 </div>
             </div>
@@ -450,7 +450,7 @@
                     </div>
                     <div class="popup_duplicate_content">
                         <h1>Find a task that is duplicate to this one</h1>
-                        <?php include(MODULES.'/engineering/partials/duplicate_tasks_finder.php'); ?>
+                        <?php include(MODULES.'/engineering/default/partials/duplicate_tasks_finder.php'); ?>
                     </div>
                 </div>
             </div>

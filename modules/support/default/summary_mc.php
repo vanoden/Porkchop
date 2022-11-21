@@ -1,7 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->fromRequest();
-	$page->requireRole('support user');
+	$page->requirePrivilege('see support requests');
     $parameters = array();
     
     $firstSearch = (empty($_REQUEST)) ? true : false;

@@ -37,7 +37,7 @@
 	</div>
 </div>
 <h2 style="display: inline-block;"><i class='fa fa-list-ol' aria-hidden='true'></i> Support Requests [Summary Report]</h2>
-<?php include(MODULES.'/support/partials/search_bar.php'); ?>
+<?php include(MODULES.'/support/default/partials/search_bar.php'); ?>
 <form action="/_support/summary" method="post" autocomplete="off">
   <input id="min_date" type="hidden" name="min_date" readonly />
   <input id="max_date" type="hidden" name="min_date" readonly />

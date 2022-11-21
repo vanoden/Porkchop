@@ -23,8 +23,8 @@
 <div class="tableBody min-tablet">
     <div class="tableRowHeader">
         <div class="tableCell" style="width: 12%;">Key</div>
-        <div class="tableCell" style="width: 12%;">Notes</div>        
         <div class="tableCell" style="width: 12%;">Value</div>
+        <div class="tableCell" style="width: 12%;">Notes</div>                
         <div class="tableCell" style="width: 12%;">Action</div>
     </div>
     <?php	
@@ -32,18 +32,18 @@
     foreach ($countersWatchedList as $completeCounterListItem) {
     ?>
         <div class="tableRow">
-            <div class="tableCell">
+           <div class="tableCell">
                 <input id="removeKeyExisting-<?=$count?>" type="text" readonly='readonly' value="<?=$completeCounterListItem->key?>"/>
+           </div>
+           <div class="tableCell">
+                <pre>Cached Value:  <?php
+                    $siteCounter = new \Site\Counter($completeCounterListItem->key);
+    	            var_dump($siteCounter->value);
+                ?>
+                </pre>
             </div>
             <div class="tableCell">
                 <input id="removeNotesExisting-<?=$count?>" type="text" readonly='readonly' value="<?=$completeCounterListItem->notes?>"/>
-            </div>
-           <div class="tableCell">
-                Cached Value: 
-                <?php
-                    $siteCounter = new \Site\Counter($completeCounterListItem->key);
-    	            print $siteCounter->get();
-                ?>
             </div>
             <div class="tableCell">
                 <input type="button" onclick="populateFormSubmit('remove','removeKeyExisting-<?=$count?>', 'removeNotesExisting-<?=$count?>')" value="Remove"/>

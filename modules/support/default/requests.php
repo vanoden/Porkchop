@@ -68,7 +68,7 @@
 <?php	} ?>
 
 <h2 style="display: inline-block;"><i class='fa fa-list-ol' aria-hidden='true'></i> Support Requests <?=!empty($_REQUEST['btn_all']) ? '[ALL]' : '[Open]';?></h2>
-<?php include(MODULES.'/support/partials/search_bar.php'); ?>
+<?php include(MODULES.'/support/default/partials/search_bar.php'); ?>
 <form id="pageForm" method='get'>
     <input id="sort_by" type="hidden" name="sort_by" value="" />
     <input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" />

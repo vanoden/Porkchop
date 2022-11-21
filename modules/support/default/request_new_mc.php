@@ -1,7 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->fromRequest();
-	$page->requireRole('support user');
+	$page->requirePrivilege('manage support requests');
 
 	if ($_REQUEST['organization_id']) {
 		$organization = new \Register\Organization($_REQUEST['organization_id']);

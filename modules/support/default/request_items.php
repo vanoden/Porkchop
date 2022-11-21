@@ -79,7 +79,7 @@
 	<?php } ?>
 </div>
 <h2 style="display: inline-block;"><i class='fa fa-check-square' aria-hidden='true'></i> Request [Tickets]</h2>
-<?php include(MODULES.'/support/partials/search_bar.php'); ?>
+<?php include(MODULES.'/support/default/partials/search_bar.php'); ?>
 
 <div style="width: 756px;">
 	<form id="pageForm" name="filterForm" method="get" action="/_support/request_items"  autocomplete="off">

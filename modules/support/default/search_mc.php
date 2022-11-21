@@ -2,7 +2,7 @@
     $page = new \Site\Page();
     $page->isSearchResults = true;
 	$page->fromRequest();
-	$page->requireRole('support user');
+    $page->requirePrivilege('see support requests');
 
     // clean user input and search away
     $searchTerm = preg_replace("/[^A-Za-z0-9\- ]/", '', $_REQUEST['search']);    

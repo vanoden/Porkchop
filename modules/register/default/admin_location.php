@@ -81,7 +81,8 @@
 	    <select name="province_id" class="value input">
     <?php	if (isset($country->id) && $country->id > 0 && is_array($provinces)) {
 			    foreach ($provinces as $province) {
-    ?>		<option value="<?=$province->id?>"<?php	if ($province->id == $selected_province->id) print " selected"; ?>><?=$province->name?></option>
+    ?>		
+            <option value="<?=$province->id?>"<?php	if ($province->id == $selected_province->id) print " selected"; ?>><?=$province->name?></option>
     <?php			}
 		    } else { ?>
 		    <option value="">Choose Country First</option>
@@ -92,10 +93,15 @@
 	    <span class="label">Zip Code</span>
 	    <input type="text" name="zip_code" class="value input" value="<?=$location->zip_code?>" />
     </div>
-    <div class="container">
-	    <input type="checkbox" name="default_shipping" value="1" /> Default Shipping <i>(overrides any existing)</i><br/>
-	    <input type="checkbox" name="default_billing" value="1" /> Default Billing <i>(overrides any existing)</i>
-    </div>
+    <?php
+    if (isset($_REQUEST['organization_id'])) { ?>
+        <div class="container">
+	        <input type="checkbox" name="default_shipping" value="1" /> Default Shipping <i>(overrides any existing)</i><br/>
+	        <input type="checkbox" name="default_billing" value="1" /> Default Billing <i>(overrides any existing)</i>
+        </div>
+    <?php	
+        }
+    ?>    
     <div class="form_footer">
 	    <input type="submit" name="btn_submit" class="button" value="Save" />
     </div>

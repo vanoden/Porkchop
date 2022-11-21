@@ -265,6 +265,10 @@
 	    }
 
 	    public function parse($message) {
+	    
+	    
+	        // @todo, filter out the SQL bind params here
+	    
 		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
 		    while ( preg_match ( $module_pattern, $message, $matched ) ) {
 			    $search = $matched [0];

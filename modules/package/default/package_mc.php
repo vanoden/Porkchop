@@ -1,6 +1,6 @@
 <?php
     $page = new \Site\Page();
-    $page->requirePrivilege('manage packages');
+    $page->requirePrivilege('manage engineering packages');
 
     $package = new \Package\Package();
     if (isset($_REQUEST['package_code']) && $package->validCode($_REQUEST['package_code'])) {

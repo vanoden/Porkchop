@@ -160,7 +160,7 @@
    <a href="/_support/requests">Support Home</a> &gt; Customer Requests
 </div>
 <h2 style="display: inline-block;"><i class='fa fa-users' aria-hidden='true'></i> Customer Registrations </h2>
-<?php include(MODULES.'/register/partials/search_bar.php'); ?>
+<?php include(MODULES.'/register/default/partials/search_bar.php'); ?>
 <div style="width: 100%;">
    <?php	if ($page->errorCount()) { ?>
        <div class="form_error"><?=$page->errorString()?></div>

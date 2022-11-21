@@ -1,6 +1,6 @@
 <?php
     $page = new \Site\Page();
-	$page->requireRole('engineering user');
+	$page->requirePrivilege('see engineering reports');
     $page->isSearchResults = true;
 
     // clean user input and search away

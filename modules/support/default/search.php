@@ -3,7 +3,7 @@
 	<a href="/_support/requests">Search</a>
 </div>
 <h2 style="display: inline-block;">Search Support Requests</h2>
-<?php include(MODULES.'/support/partials/search_bar.php'); ?>
+<?php include(MODULES.'/support/default/partials/search_bar.php'); ?>
 Searched for: <strong><?=$searchTerm?></strong>
 <h3>Request Items</h3>
 <!--	Start First Row-->

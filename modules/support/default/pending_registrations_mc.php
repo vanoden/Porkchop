@@ -1,7 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->fromRequest();
-	$page->requireRole('support user');
+	$page->requirePrivilege('manage registrations');
 
     // get current registrations
 	$registrationQueueList = new \Support\RegistrationQueueList();

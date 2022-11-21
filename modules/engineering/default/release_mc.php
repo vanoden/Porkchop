@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('engineering user');
+	$page->requireRole('manage engineering releases');
 
 	$release = new \Engineering\Release();
 	

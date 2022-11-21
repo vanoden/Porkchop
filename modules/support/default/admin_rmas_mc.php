@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole("support user");
+	$page->requirePrivilege('see request RMAs');
 
 	$parameters = array();
 	$pageSize = 20;

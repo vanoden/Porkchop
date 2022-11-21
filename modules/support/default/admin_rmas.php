@@ -7,7 +7,7 @@
    <a href="/_support/requests">Support Home</a> &gt; Support RMAs
 </div>
 <h2 style="display: inline-block;"><i class="fa fa-id-badge" aria-hidden="true"></i> Customer Product Registrations </h2>
-<?php include(MODULES.'/support/partials/search_bar.php'); ?>
+<?php include(MODULES.'/support/default/partials/search_bar.php'); ?>
 <form method="get">
 <div class="table">
 	<div class="tableRowHeader">

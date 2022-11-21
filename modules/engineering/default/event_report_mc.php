@@ -1,7 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->fromRequest();
-	$page->requireRole('support user');
+	$page->requirePrivilege('see engineering events');
 	if (! isset($_REQUEST['btn_submit'])) $_REQUEST['date_start'] = date('m/d/Y',time() - 604800);
 
 	$parameters = array();

@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('engineering user');
+	$page->requirePrivilege('manage engineering products');
 
 	$product = new \Engineering\Product();
 	
