@@ -71,6 +71,7 @@
 			}
 			return $this->details();
 		}
+		
 		public function get($code) {
 			$get_object_query = "
 				SELECT	id
@@ -91,6 +92,7 @@
 			}
 			return $this->details();
 		}
+		
 		public function delete() {
 			$drop_object_query = "
 				DELETE
@@ -103,6 +105,7 @@
 			}
 			return true;
 		}
+		
 		public function members() {
 			$get_members_query = "
 				SELECT	user_id
@@ -121,6 +124,7 @@
 			}
 			return $admins;
 		}
+		
 		public function hasMember($person_id) {
 			$get_member_query = "
 				SELECT	1
@@ -143,6 +147,7 @@
 			if ($found == 1) return true;
 			else return false;
 		}
+		
 		public function addMember($person_id) {
 			if ($this->hasMember($person_id)) {
 				$this->error = "Person already has role";
@@ -169,6 +174,7 @@
 			}
 			return true;
 		}
+		
 		public function details() {
 			$get_object_query = "
 				SELECT	id,
@@ -212,6 +218,7 @@
 				}
 			}
 		}
+		
 		public function addPrivilege($new_privilege) {
             if (is_numeric($new_privilege))
                 $privilege = new \Register\Privilege($new_privilege);
@@ -270,6 +277,7 @@
 			}
 			return $privileges;
 		}
+		
 		public function has_privilege($param) {
             if (is_numeric($param)) {
                 $privilege = new \Register\Privilege($param);
@@ -302,8 +310,48 @@
 			}
 		}
 
+        /**
+         * check if a user is in a role by name
+         *
+         * @param $user_id
+         * @param $role_name
+         */
+        public function checkIfUserInRole($user_id, $role_name) {
+            $checkIfUserInRole = "
+            SELECT * FROM `register_roles` rr
+                INNER JOIN register_users_roles rur ON rr.id = rur.role_id
+                WHERE rur.user_id = ? AND rr.name = ?;
+
+			";
+            $rs = $GLOBALS['_database']->Execute($checkIfUserInRole,array($user_id, $role_name));
+			list($id) = $rs->FetchRow();
+			if (!empty($id)) {
+				return true;
+			} else {
+				return false;
+			}
+        }
+
+        /**
+         * get roles that a group of users are in by user_id
+         *
+         * @param array $userIds, array of user ids to check
+         */
+        public function getRolesforUsers($userIds = array()) {
+            $getRolesforUsersQuery = "
+                SELECT DISTINCT(name) FROM `register_users_roles` rur
+                INNER JOIN `register_roles` rr on rur.role_id = rr.id
+                WHERE user_id IN (?);
+			";
+            $rs = $GLOBALS['_database']->Execute($getRolesforUsersQuery,array(implode(",", $userIds)));
+            $rolesList = array();        
+			while(list($name) = $rs->FetchRow()) array_push($rolesList,$name);     
+            return $rolesList;
+        }
+
 		public function validName($string) {
 			if (preg_match('/^\w[\w\-\_\s]*$/',$string)) return true;
 			else return false;
 		}
 	}
+	

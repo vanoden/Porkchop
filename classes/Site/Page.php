@@ -265,10 +265,6 @@
 	    }
 
 	    public function parse($message) {
-	    
-	    
-	        // @todo, filter out the SQL bind params here
-	    
 		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
 		    while ( preg_match ( $module_pattern, $message, $matched ) ) {
 			    $search = $matched [0];
@@ -284,6 +280,7 @@
 	    }
 	    
 	    private function parse_element($string) {
+	    
 		    // Initialize Array to hold Parameters
 		    $parameters = array ();
 
@@ -457,6 +454,7 @@
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "product") {
+		    
 			    // Load Product Class if Not Already Loaded
 			    if ($property == "thumbnail") {
 				    $id = $this->query_vars;
@@ -607,6 +605,7 @@
 		    }
 		    return $buffer;
 	    }
+	    
         public function loadSiteHeaders() {
             $headerList = new \Site\HeaderList();
             $headers = $headerList->find();
@@ -614,6 +613,7 @@
                 header($header->name.": ".$header->value);
             }
         }
+        
         public function loadViewFiles($buffer = "") {
 		    ob_start ();
             if (isset($this->style)) {
@@ -654,8 +654,16 @@
 		    else app_log ( "Backend file '$be_file' for module " . $this->module() . " not found" );
             if (isset($fe_file) && file_exists ( $fe_file )) include ($fe_file);
 		    $buffer .= ob_get_clean ();
+            
+            // if match "query: " then must be an ADODB error happening
+            //      scrub out any non HTML characters BEFORE the first HTML tag to remove the standard output ADODB errors that end up getting printed on the page
+            if (strpos($buffer, " query: ") !== false) {
+                preg_match('/^[^<]*/', $buffer, $matches);
+                if (!empty($matches[0])) $buffer = str_replace($matches[0], "",$buffer);
+            }
             return $buffer;
         }
+        
 	    public function requires($role = '_customer') {
 		    if ($role == '_customer') {
 			    if ($GLOBALS ['_SESSION_']->customer->id) {
@@ -673,6 +681,7 @@
 			    exit ();
 		    }
 	    }
+	    
 	    public function allMetadata() {
 		    $metadataList = new \Site\Page\MetadataList();
 			$metaArray = $metadataList->find(array('page_id' => $this->id));
@@ -682,6 +691,7 @@
 		    }
 		    return $metaArray;
 	    }
+	    
 		public function getMetadata($key) {
 			$metadata = new \Site\Page\Metadata();
 			if ($metadata->get($this->id,$key)) {
@@ -712,11 +722,13 @@
 			else $this->addError($metadata->error());
 			return false;
 	    }
+	    
 	    public function unsetMetadata($key) {
 			$metadata = new \Site\Page\Metadata();
             $metadata->get($this->id,$key);
 		    return $metadata->drop();
 	    }
+	    
 	    public function addError($error) {
 		    $trace = debug_backtrace ();
 		    $caller = $trace [0];
@@ -725,16 +737,15 @@
 		    app_log ( $error, 'error', $file, $line );
 		    array_push ( $this->_errors, $error );
 	    }
+	    
 	    public function errorString($delimiter = "<br>\n") {
-		    if (isset ( $this->error )) {
-			    array_push ( $this->_errors, $this->error );
-		    }
+		    if (isset ( $this->error )) array_push ( $this->_errors, $this->error );
 		    $error_string = '';
 		    foreach ( $this->_errors as $error ) {
 			    if (strlen ( $error_string )) $error_string .= $delimiter;
 			    
 			    // SQL errors in the error log, then output to page is standard "site error message"
-			    if (preg_match ( '/SQL\sError/', $error )) {				    
+			    if (preg_match ( '/SQL\sError/', $error ) || preg_match ( '/ query\:/', $error )) {
 				    app_log ( $error, 'error' );
 				    $error_string .= "Internal site error";
 			    } else {
@@ -743,9 +754,11 @@
 		    }
 		    return $error_string;
 	    }
+	    
 	    public function errors() {
 		    return $this->_errors;
 	    }
+	    
 	    public function errorCount() {
 		    if (empty ( $this->errors )) $this->errors = array ();
 		    if (! empty ( $this->error )) array_push ( $this->errors, $this->error );

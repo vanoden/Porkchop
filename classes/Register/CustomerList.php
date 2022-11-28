@@ -38,6 +38,7 @@
 			app_log("Activated ".$counter." customers",'info',__FILE__,__LINE__);
 			return $counter;
 		}
+		
 		public function expireInactive($age = 14) {
 			if (! is_numeric($age)) {
 				$this->error = "Age must be a number";
@@ -61,6 +62,7 @@
 			}
 			return true;
 		}
+		
 		public function expire($date_threshold) {
 			if (get_mysql_date($date_threshold))
 				$date = get_mysql_date($date_threshold);
@@ -101,7 +103,8 @@
 			}
 			return $count;
 		}
-		public function find($parameters = array(),$count = false) {
+		
+		public function find($parameters = array(), $count = false) {
 			if ($count == true) $ADODB_COUNTRECS = true;
 
 			$bind_params = array();
@@ -242,6 +245,7 @@
 			if ($count) return $this->count;
 			return $people;
 		}
+		
 		public function search($search_string,$limit = 0,$offset = 0) {
 			if (is_bool($limit) && $limit == true) $count = true;
 			else $count = false;

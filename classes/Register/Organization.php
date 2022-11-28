@@ -2,6 +2,7 @@
 	namespace Register;
 
 	class Organization Extends \BaseClass {
+	
 		public $name;
 		public $code;
 		public $status;

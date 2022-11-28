@@ -79,7 +79,6 @@
         });
     }
 </script>
-<body>
 <span class="title">In-Site Messages</span>
 
 <?php if ($page->errorCount() > 0) { ?>

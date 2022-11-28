@@ -2,13 +2,15 @@
 	namespace Register;
 
 	class Contact Extends \BaseClass {
+	
 		public $id;
 		public $person;
 		public $types = array(
 			'phone'		=> "Phone Number",
 			'email'		=> "Email Address",
 			'sms'		=> "SMS-Text",
-			'facebook'	=> "FaceBook Account"
+			'facebook'	=> "FaceBook Account",
+			'insite'	=> "Website Message"			
 		);
 
 		public function __construct($id = 0) {
