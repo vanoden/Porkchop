@@ -48,7 +48,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 27,
+			"schema"		=> 28,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",

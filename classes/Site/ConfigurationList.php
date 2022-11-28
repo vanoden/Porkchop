@@ -1,6 +1,6 @@
 <?php
 	namespace Site;
-	
+		
 	class ConfigurationList Extends \BaseListClass {
 
 		public function find($parameters = array()) {

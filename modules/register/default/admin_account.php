@@ -6,10 +6,27 @@
        width: 400px; 
        height: 35px;
    }
+   
+    #btn_submit {
+        min-width: 175px;
+        min-height: 50px;
+        border-radius: 10px;
+    }
+    
+    #submit-button-container {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+    }   
+    
+    #auth-failures-table {
+        margin-bottom: 100px;
+    }
 </style>
 <script type="text/javascript">
+
    // submit form
-   function submitForm() { 
+   function submitForm() {
    
         // make sure that all the notify contacts have a 'description' value populated
         var contactTable = document.getElementById("contact-main-table");
@@ -75,7 +92,7 @@
    }
 </script>
 <h2>Customer Account Settings</h2>
-<form name="register" action="<?=PATH?>/_register/admin_account" method="POST">
+<form id="admin-account-form" name="register" action="<?=PATH?>/_register/admin_account" method="POST">
    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
    <input type="hidden" name="target" value="<?=$target?>"/>
    <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
@@ -240,9 +257,6 @@
    </div>
    <?php  } ?>
    <hr/>
-   <div id="accountFormSubmit" style="text-align:center;">
-      <input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton largeButton" onclick="return submitForm();"/>
-   </div>
    <!--	END Change Password-->
    <h3>Status</h3>
    <select class="input" name="status">
@@ -272,6 +286,7 @@
          ?>
    </table>
    <h3>Recent Auth Failures</h3>
+   <div id="auth-failures-table">
    <div class="tableBody min-tablet">
 		<div class="tableRowHeader">
 			<div class="tableCell">Date</div>
@@ -288,9 +303,18 @@
 		</div>
 <?php	} ?>
 	</div>
-	<span class="label">Auth Failures Since Last Success</span><span class="value"><?=$customer->auth_failures?></span>
+	<span class="label" style="display:inline;">Auth Failures Since Last Success: </span><span class="value"><?=$customer->auth_failures?></span>
+	<br/>
 	<input type="submit" name="btnResetFailures" value="Reset Failures" />
+	</div>
+    <!-- entire page button submit -->
+    <div id="submit-button-container" class="tableBody min-tablet">
+        <div class="tableRow button-bar">
+            <input id="btn_submit" type="submit" name="method" class="button" value="Apply" onclick="return submitForm();"/>
+        </div>
+    </div>		
 </form>
+
 <!-- hidden for for "delete contact" -->
 <form id="delete-contact" name="delete-contact" action="<?=PATH?>/_register/admin_account" method="post">
    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
