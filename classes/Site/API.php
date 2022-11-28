@@ -76,25 +76,46 @@
 		public function addPage() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-			if (! $GLOBALS['_SESSION_']->customer->can('edit site pages')) error("Permission Denied");
+			$this->requirePrivilege('edit site pages');
 	
 			if (! $_REQUEST['module']) error("Module required");
 			if (! $_REQUEST['view']) error("View required");
 			if (! $_REQUEST['index']) $_REQUEST['index'] = '';
-			if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['module'])) error("Invalid module name");
-			if (! preg_match('/^[\w\-\.\_]+$/',$_REQUEST['view'])) error("Invalid view name");
 	
 			$page = new \Site\Page();
+			if (! $page->validModule($_REQUEST['module'])) error("Invalid module name");
+			if (! $page->validView($_REQUEST['view'])) error("Invalid view name");
 			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) error("Page already exists");
 			$page->add($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index']);
-			if ($page->error) error("Error adding page: ".$page->error);
+			if ($page->errorCount()) error("Error adding page: ".$page->errorString());
 	
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->page = $page;
 			print $this->formatOutput($response);
 		}
-		
+
+		public function deletePage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
+			$this->requirePrivilege('edit site pages');
+	
+			if (! $_REQUEST['module']) error("Module required");
+			if (! $_REQUEST['view']) error("View required");
+			if (! $_REQUEST['index']) $_REQUEST['index'] = '';
+	
+			$page = new \Site\Page();
+			if (! $page->validModule($_REQUEST['module'])) error("Invalid module name");
+			if (! $page->validView($_REQUEST['view'])) error("Invalid view name");
+			if (! $page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) error("Page not found");
+
+			if (! $page->delete()) error($page->error);
+	
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			print $this->formatOutput($response);
+		}
+
 		###################################################
 		### Get Details regarding Specified Product		###
 		###################################################
@@ -176,7 +197,7 @@
 		public function purgeMessage() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) error("Permission Denied");
+			$this->requirePrivilege('edit content messages');
 	
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
@@ -261,7 +282,7 @@
 		public function setPageMetadata() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-			if (! $GLOBALS['_SESSION_']->customer->can('edit site pages')) $this->error("Permission Denied");
+			$this->requirePrivilege('edit content messages');
 	
 			$response = new \HTTP\Response();
 	
@@ -286,7 +307,37 @@
 			}
 			print $this->formatOutput($response);
 		}
-		
+
+		public function purgeMetadata() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
+			$this->requirePrivilege('edit content messages');
+			$response = new \HTTP\Response();
+	
+			$page = new \Site\Page();
+			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+				if ($metadata = $page->getMetadata($_REQUEST['key'])) {
+					$response->metadata = $metadata;
+					$response->success = 1;
+				}
+				else {
+					$this->app_error("Cannot get metadata: ".$page->error);
+				}
+			}
+			else {
+				app_error("Page not found");
+			}
+
+			if (!$page->purgeMetadata()) error($page->errorString());
+
+			$response =  new \HTTP\Response();
+			$response->success = 1;
+
+			# Send Response
+			api_log('content',$_REQUEST,$response);
+			print $this->formatOutput($response);
+		}
+
 		###################################################
 		### Get List of Site Navigation Menus			###
 		###################################################
@@ -789,7 +840,7 @@
 		
 		public function setAllSiteCounters() {
             $existingKeys = $GLOBALS['_CACHE_']->keys();
-            $siteCounterWatched = new Site\CounterWatched();
+            $siteCounterWatched = new \Site\CounterWatched();
 
             // foreach key that doesn't contain a bracket, insert to the counters watched table
             foreach ($existingKeys as $key) {
@@ -867,6 +918,11 @@
 					'module'	=> array('required' => true),
 					'view'		=> array('required' => true),
 					'index'		=> array(),
+				),
+				'deletePage'	=> array(
+					'module'	=> array('required' => true),
+					'view'		=> array('required' => true),
+					'index'		=> array('required' => true),
 				),
 				'addMessage'	=> array(
 					'name'		=> array('required' => true),

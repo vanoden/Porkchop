@@ -1,7 +1,7 @@
 <?php
     namespace Site;
     
-    class Page {
+    class Page Extends \BaseClass {
     
 	    public $id;
 	    public $module = 'content';
@@ -120,7 +120,7 @@
 		    query_log($get_object_query, $parameters);
 		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, $parameters );
 		    if (! $rs) {
-			    $this->addError ( "SQL Error in Page::get: " . $GLOBALS ['_database']->ErrorMsg () );
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return null;
 		    }
 		    list ( $id ) = $rs->FetchRow ();
@@ -175,7 +175,7 @@
 			    ";
 		    $GLOBALS ['_database']->Execute ( $add_object_query, array ($this->module, $this->view, $this->index ) );
 		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->error = "SQL Error in Site::Page::add(): " . $GLOBALS ['_database']->ErrorMsg ();
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 				app_log($this->error,'error');
 			    return false;
 		    }
@@ -183,6 +183,33 @@
 		    app_log ( "Added page id " . $this->id );
 		    return $this->details();
 	    }
+
+		public function delete() {
+			// Delete Content Block for Page
+			if (!empty($this->index)) {
+				$block = new \Content\Message();
+				if ($block->get($this->index)) {
+					$block->drop();
+				}
+			}
+			// Delete Metadata Records for Page
+			$this->purgeMetadata();
+
+			// Delete Page
+			$database = new \Database\Service();
+			$delete_object_query = "
+				DELETE
+				FROM	page_pages
+				WHERE	id = ?
+			";
+			$database->addParam($this->id);
+			$database->Execute($delete_object_query);
+			if ($database->ErrorMsg()) {
+				$this->addError($database->ErrorMsg());
+				return false;
+			}
+			return true;
+		}
 	    public function details() {
 		    $get_details_query = "
 				    SELECT	id,
@@ -194,7 +221,7 @@
 			    ";
 		    $rs = $GLOBALS ['_database']->Execute ( $get_details_query, array ($this->id ) );
 		    if (! $rs) {
-			    $this->error = "SQL Error in Site::Page::details(): " . $GLOBALS ['_database']->ErrorMsg ();
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return null;
 		    }
 		    $object = $rs->FetchNextObject ( false );
@@ -331,33 +358,38 @@
 			    } elseif ($property == "host") {
 				    $buffer .= $_SERVER ['HTTP_HOST'];
 			    }
-		    } elseif ($object == "page") {
+		    }
+			elseif ($object == "page") {
 			    if ($property == "view") {
 				    $buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";
-				} elseif ($property == "errorblock") {
+				}
+				elseif ($property == "errorblock") {
 					error_log("FOUND errorblock");
 					if ($this->errorCount() > 0) {
 						$buffer = '<section id="form-message">
 						<ul class="connectBorder errorText">
 							<li>';
-						$buffer .= $page->errorString();
+						$buffer .= $this->errorString();
 						$buffer .= '</li>
 						</ul>
 						</section>';
-					} elseif ($page->success) {
+					} elseif ($this->success) {
 						$buffer = '<section id="form-message">
 						<ul class="connectBorder progressText">
 							<li>';
-						$buffer .= $page->success;
+						$buffer .= $this->success;
 						$buffer .= '</li>
 						</ul>
 						</section>';
 					}
-				} elseif ($property == "title") {
+				}
+				elseif ($property == "title") {
 				    if (isset ( $this->metadata->title )) $buffer = $this->metadata->title;
-			    } elseif ($property == "metadata") {
+			    }
+				elseif ($property == "metadata") {
 				    if (isset ( $this->metadata->$parameter ["field"] )) $buffer = $this->metadata->$parameter ["field"];
-			    } elseif ($property == "navigation") {
+			    }
+				elseif ($property == "navigation") {
 				    $menuList = new \Navigation\ItemList();
 				    if ($menuList->error()) {
 					    $this->error = "Error initializing navigation module: " . $menuList->error;
@@ -717,6 +749,14 @@
             $metadata->get($this->id,$key);
 		    return $metadata->drop();
 	    }
+
+		public function purgeMetadata() {
+			$metadataList = new \Site\Page\MetadataList();
+			$metadata = $metadataList->find('page_id',$this->id);
+			foreach ($metadata as $record) {
+				$record->drop();
+			}
+		}
 	    public function addError($error) {
 		    $trace = debug_backtrace ();
 		    $caller = $trace [0];
@@ -754,12 +794,12 @@
 
 		public function validModule($string) {
 			if (preg_match('/^\w[\w]*$/',$string)) return true;
-			else return false();
+			else return false;
 		}
 
 		public function validView($string) {
 			if (preg_match('/^\w[\w]*$/',$string)) return true;
-			else return false();
+			else return false;
 		}
 
 		public function validIndex($string) {
@@ -770,13 +810,13 @@
 
 		public function validStyle($string) {
 			if (preg_match('/^\w[\w]*$/',$string)) return true;
-			else return false();
+			else return false;
 		}
 
 		public function validURI($string) {
 			if (preg_match('/\.\./', $string)) return false;
 			if (preg_match('/^[\w\-\.\_\/]+$/',$string)) return true;
-			else return false();
+			else return false;
 		}
 
 		public function validTitle($string) {
@@ -788,6 +828,6 @@
 		public function validTemplate($string) {
 			if (preg_match('/\.\./', $string)) return false;
 			if (preg_match('/^\w[\w\-\.\_]*\.html?$/',$string)) return true;
-			else return false();
+			else return false;
 		}
     }
