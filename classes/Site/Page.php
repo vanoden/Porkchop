@@ -1,7 +1,7 @@
 <?php
     namespace Site;
     
-    class Page {
+    class Page Extends \BaseClass {
     
 	    public $id;
 	    public $module = 'content';
@@ -120,7 +120,7 @@
 		    query_log($get_object_query, $parameters);
 		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, $parameters );
 		    if (! $rs) {
-			    $this->addError ( "SQL Error in Page::get: " . $GLOBALS ['_database']->ErrorMsg () );
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return null;
 		    }
 		    list ( $id ) = $rs->FetchRow ();
@@ -175,7 +175,7 @@
 			    ";
 		    $GLOBALS ['_database']->Execute ( $add_object_query, array ($this->module, $this->view, $this->index ) );
 		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->error = "SQL Error in Site::Page::add(): " . $GLOBALS ['_database']->ErrorMsg ();
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 				app_log($this->error,'error');
 			    return false;
 		    }
@@ -183,6 +183,33 @@
 		    app_log ( "Added page id " . $this->id );
 		    return $this->details();
 	    }
+
+		public function delete() {
+			// Delete Content Block for Page
+			if (!empty($this->index)) {
+				$block = new \Content\Message();
+				if ($block->get($this->index)) {
+					$block->drop();
+				}
+			}
+			// Delete Metadata Records for Page
+			$this->purgeMetadata();
+
+			// Delete Page
+			$database = new \Database\Service();
+			$delete_object_query = "
+				DELETE
+				FROM	page_pages
+				WHERE	id = ?
+			";
+			$database->addParam($this->id);
+			$database->Execute($delete_object_query);
+			if ($database->ErrorMsg()) {
+				$this->addError($database->ErrorMsg());
+				return false;
+			}
+			return true;
+		}
 	    public function details() {
 		    $get_details_query = "
 				    SELECT	id,
@@ -194,7 +221,7 @@
 			    ";
 		    $rs = $GLOBALS ['_database']->Execute ( $get_details_query, array ($this->id ) );
 		    if (! $rs) {
-			    $this->error = "SQL Error in Site::Page::details(): " . $GLOBALS ['_database']->ErrorMsg ();
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return null;
 		    }
 		    $object = $rs->FetchNextObject ( false );
@@ -265,10 +292,6 @@
 	    }
 
 	    public function parse($message) {
-	    
-	    
-	        // @todo, filter out the SQL bind params here
-	    
 		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
 		    while ( preg_match ( $module_pattern, $message, $matched ) ) {
 			    $search = $matched [0];
@@ -284,6 +307,7 @@
 	    }
 	    
 	    private function parse_element($string) {
+	    
 		    // Initialize Array to hold Parameters
 		    $parameters = array ();
 
@@ -331,33 +355,38 @@
 			    } elseif ($property == "host") {
 				    $buffer .= $_SERVER ['HTTP_HOST'];
 			    }
-		    } elseif ($object == "page") {
+		    }
+			elseif ($object == "page") {
 			    if ($property == "view") {
 				    $buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";
-				} elseif ($property == "errorblock") {
+				}
+				elseif ($property == "errorblock") {
 					error_log("FOUND errorblock");
 					if ($this->errorCount() > 0) {
 						$buffer = '<section id="form-message">
 						<ul class="connectBorder errorText">
 							<li>';
-						$buffer .= $page->errorString();
+						$buffer .= $this->errorString();
 						$buffer .= '</li>
 						</ul>
 						</section>';
-					} elseif ($page->success) {
+					} elseif ($this->success) {
 						$buffer = '<section id="form-message">
 						<ul class="connectBorder progressText">
 							<li>';
-						$buffer .= $page->success;
+						$buffer .= $this->success;
 						$buffer .= '</li>
 						</ul>
 						</section>';
 					}
-				} elseif ($property == "title") {
+				}
+				elseif ($property == "title") {
 				    if (isset ( $this->metadata->title )) $buffer = $this->metadata->title;
-			    } elseif ($property == "metadata") {
+			    }
+				elseif ($property == "metadata") {
 				    if (isset ( $this->metadata->$parameter ["field"] )) $buffer = $this->metadata->$parameter ["field"];
-			    } elseif ($property == "navigation") {
+			    }
+				elseif ($property == "navigation") {
 				    $menuList = new \Navigation\ItemList();
 				    if ($menuList->error()) {
 					    $this->error = "Error initializing navigation module: " . $menuList->error;
@@ -457,6 +486,7 @@
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "product") {
+		    
 			    // Load Product Class if Not Already Loaded
 			    if ($property == "thumbnail") {
 				    $id = $this->query_vars;
@@ -607,6 +637,7 @@
 		    }
 		    return $buffer;
 	    }
+	    
         public function loadSiteHeaders() {
             $headerList = new \Site\HeaderList();
             $headers = $headerList->find();
@@ -614,6 +645,7 @@
                 header($header->name.": ".$header->value);
             }
         }
+        
         public function loadViewFiles($buffer = "") {
 		    ob_start ();
             if (isset($this->style)) {
@@ -654,8 +686,16 @@
 		    else app_log ( "Backend file '$be_file' for module " . $this->module() . " not found" );
             if (isset($fe_file) && file_exists ( $fe_file )) include ($fe_file);
 		    $buffer .= ob_get_clean ();
+            
+            // if match "query: " then must be an ADODB error happening
+            //      scrub out any non HTML characters BEFORE the first HTML tag to remove the standard output ADODB errors that end up getting printed on the page
+            if (strpos($buffer, " query: ") !== false) {
+                preg_match('/^[^<]*/', $buffer, $matches);
+                if (!empty($matches[0])) $buffer = str_replace($matches[0], "",$buffer);
+            }
             return $buffer;
         }
+        
 	    public function requires($role = '_customer') {
 		    if ($role == '_customer') {
 			    if ($GLOBALS ['_SESSION_']->customer->id) {
@@ -673,6 +713,7 @@
 			    exit ();
 		    }
 	    }
+	    
 	    public function allMetadata() {
 		    $metadataList = new \Site\Page\MetadataList();
 			$metaArray = $metadataList->find(array('page_id' => $this->id));
@@ -682,6 +723,7 @@
 		    }
 		    return $metaArray;
 	    }
+	    
 		public function getMetadata($key) {
 			$metadata = new \Site\Page\Metadata();
 			if ($metadata->get($this->id,$key)) {
@@ -712,11 +754,21 @@
 			else $this->addError($metadata->error());
 			return false;
 	    }
+	    
 	    public function unsetMetadata($key) {
 			$metadata = new \Site\Page\Metadata();
             $metadata->get($this->id,$key);
 		    return $metadata->drop();
 	    }
+
+		public function purgeMetadata() {
+			$metadataList = new \Site\Page\MetadataList();
+			$metadata = $metadataList->find('page_id',$this->id);
+			foreach ($metadata as $record) {
+				$record->drop();
+			}
+		}
+
 	    public function addError($error) {
 		    $trace = debug_backtrace ();
 		    $caller = $trace [0];
@@ -725,16 +777,15 @@
 		    app_log ( $error, 'error', $file, $line );
 		    array_push ( $this->_errors, $error );
 	    }
+	    
 	    public function errorString($delimiter = "<br>\n") {
-		    if (isset ( $this->error )) {
-			    array_push ( $this->_errors, $this->error );
-		    }
+		    if (isset ( $this->error )) array_push ( $this->_errors, $this->error );
 		    $error_string = '';
 		    foreach ( $this->_errors as $error ) {
 			    if (strlen ( $error_string )) $error_string .= $delimiter;
 			    
 			    // SQL errors in the error log, then output to page is standard "site error message"
-			    if (preg_match ( '/SQL\sError/', $error )) {				    
+			    if (preg_match ( '/SQL\sError/', $error ) || preg_match ( '/ query\:/', $error )) {
 				    app_log ( $error, 'error' );
 				    $error_string .= "Internal site error";
 			    } else {
@@ -743,9 +794,11 @@
 		    }
 		    return $error_string;
 	    }
+	    
 	    public function errors() {
 		    return $this->_errors;
 	    }
+	    
 	    public function errorCount() {
 		    if (empty ( $this->errors )) $this->errors = array ();
 		    if (! empty ( $this->error )) array_push ( $this->errors, $this->error );
@@ -754,12 +807,12 @@
 
 		public function validModule($string) {
 			if (preg_match('/^\w[\w]*$/',$string)) return true;
-			else return false();
+			else return false;
 		}
 
 		public function validView($string) {
 			if (preg_match('/^\w[\w]*$/',$string)) return true;
-			else return false();
+			else return false;
 		}
 
 		public function validIndex($string) {
@@ -770,13 +823,13 @@
 
 		public function validStyle($string) {
 			if (preg_match('/^\w[\w]*$/',$string)) return true;
-			else return false();
+			else return false;
 		}
 
 		public function validURI($string) {
 			if (preg_match('/\.\./', $string)) return false;
 			if (preg_match('/^[\w\-\.\_\/]+$/',$string)) return true;
-			else return false();
+			else return false;
 		}
 
 		public function validTitle($string) {
@@ -788,6 +841,6 @@
 		public function validTemplate($string) {
 			if (preg_match('/\.\./', $string)) return false;
 			if (preg_match('/^\w[\w\-\.\_]*\.html?$/',$string)) return true;
-			else return false();
+			else return false;
 		}
     }

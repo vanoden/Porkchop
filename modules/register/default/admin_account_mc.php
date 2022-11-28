@@ -42,12 +42,13 @@
 	}
 
 	// handle form "apply" submit
-	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {	    // Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
+	
+    	// Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 			$page->addError("Invalid request");
 			return 403;
-		}
-		else {
+		} else {
 			app_log("Account form submitted",'debug',__FILE__,__LINE__);
 			$parameters = array();
 			if (! $customer->validLogin($_REQUEST['login']))

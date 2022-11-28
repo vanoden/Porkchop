@@ -191,6 +191,23 @@
 
             return $this->details();
         }
+
+		public function drop() {
+			$database = new \Database\Service();
+			$delete_object_query = "
+				DELETE
+				FROM	content_messages
+				WHERE	target = ?";
+			$database->addParam($this->id);
+			$database->Execute($delete_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
 		public function purge_cache() {
 			$this->error = NULL;
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
@@ -214,8 +231,9 @@
 		}
 
 		public function validName($string) {
-			if (! preg_match('/[\<\>\%]/',urldecode($string))) return false;
-			else return true;
+			if (empty(urldecode($string))) return false;
+			if (! preg_match('/[\<\>\%]/',urldecode($string))) return true;
+			else return false;
 		}
 
 		public function validContent($string) {

@@ -20,6 +20,7 @@ class Person Extends \BaseClass {
     public $_settings = array( "date_format" => "US" );
 
     public function __construct($id = 0) {
+    
         // Clear Error Info
         $this->_error = '';
 

@@ -58,7 +58,7 @@
          * @param array $parameters, name value pairs to add and populate new object by
          */
 		public function add($parameters = array()) {
-		
+	
     		$this->_addQuery = "INSERT INTO `$this->tableName` ";
 			$bindParams = array();
 			$bindFields = array();		
@@ -73,7 +73,6 @@
             $this->_addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindParams)) ,',') . ")";
 			query_log($this->_addQuery,$bindParams);
             $this->execute($this->_addQuery, $bindParams);
-
 			if ($this->_error) return false;
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
