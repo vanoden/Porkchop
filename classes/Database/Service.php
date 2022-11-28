@@ -16,19 +16,11 @@
 		public function Execute($query,$bind_params = null) {
 			if (is_array($bind_params)) $this->_params = array_merge($this->_params,$bind_params);
 			query_log($query,$this->_params,true);
-			return $this->_connection->Execute($query,$this->_params);
+			return new \Database\RecordSet($this->_connection->Execute($query,$this->_params));
 		}
 
 		public function ErrorMsg() {
 			return $this->_connection->ErrorMsg();
-		}
-
-		public function FetchRow() {
-			return $this->_connection->FetchRow();
-		}
-
-		public function FetchNextObject($option_1 = false) {
-			return $this->_connection->FetchNextObject($option_1);
 		}
 
 		public function Insert_ID() {
