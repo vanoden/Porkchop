@@ -4,7 +4,8 @@
 	$page->requirePrivilege('configure site');
 	
     $siteConfiguration = new \Site\Configuration();
-    if (!empty($_REQUEST['key']) && $siteConfiguration->validKey($_REQUEST['key'])) $siteConfiguration = new \Site\Configuration($_REQUEST['key']);
+    if (!empty($_REQUEST['key']) && $siteConfiguration->validKey($_REQUEST['key']))
+		$siteConfiguration = new \Site\Configuration($_REQUEST['key']);
     if (isset($_REQUEST['todo']) && !empty($_REQUEST['todo'])) {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
             $page->addError("Invalid Request");
@@ -39,3 +40,4 @@
 	$siteConfigurations = new \Site\ConfigurationList();
 	$configuration = $siteConfigurations->find();
 	if ($siteConfigurations->error()) $page->addError($siteConfigurations->error());
+	else $rows = $siteConfigurations->count();

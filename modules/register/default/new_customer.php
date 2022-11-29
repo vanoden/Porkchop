@@ -181,7 +181,10 @@ function getProvinces() {
       <?php        
     } else {
       ?>
-        <h3>Account could not be verified</h3>
+        <section id="form-message">
+			<ul class="connectBorder errorText"><?=$page->errorString()?></ul>
+		</section>
+		<h3>Your account could not be verified</h3>
         <h5>Please check your <strong>spam / other</strong> mail folders in case you still need to find the correct verification link.</h5>
         <form name="register" action="/_register/new_customer" method="POST">
             <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">

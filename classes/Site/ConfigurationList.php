@@ -7,8 +7,8 @@
             $this->clearError();
             $this->resetCount();
 
-            // Initialize Parameter Array
-            $bind_params = array();
+			$database = new \Database\Service();
+			$database->debug = 'log';
 
 			// Prepare Query
 			$get_object_query = "
@@ -17,29 +17,28 @@
 				WHERE	`key` = `key`
 			";
 			
-			if (isset($parameters['key'])) {
+			if (!empty($parameters['key'])) {
 				$get_object_query .= "
 					AND `key` = ?";
-				array_push($bind_params,$parameters['key']);
+				$database->addParam($parameters['key']);
 			}
 
-			if (isset($parameters['value'])) {
+			if (!empty($parameters['value'])) {
 				$get_object_query .= "
 					AND `value` = ?";
-				array_push($bind_params,$parameters['key']);
+				$database->addParam($parameters['value']);
 			}
 		
 			$get_object_query .= "
 					ORDER BY `key`
 			";
 			
-			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			$pages = array();
-			
 			while(list($id) = $rs->FetchRow()) {
 				$page = new \Site\Configuration($id);
 				$this->incrementCount();

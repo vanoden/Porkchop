@@ -15,6 +15,7 @@
 		public $default_billing_location_id;
 		public $default_shipping_location_id;
 		private $_nocache = false;
+		private $database;
 
 		public function __construct($id = 0,$options = array()) {
 			// Clear Error Info
@@ -35,6 +36,8 @@
 
 		public function add($parameters) {
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
+			$database = new \Database\Service;
+
 			if (empty($parameters['code'])) $parameters['code'] = uniqid();
 			$this->error = null;
 			$add_object_query = "
@@ -44,18 +47,16 @@
 				VALUES
 				(		null,?,?,sysdate())
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$parameters['code'],
-					$parameters['name']
-				)
-			);
+
+			$database->addParam($parameters['code']);
+			$database->addParam($parameters['name']);
+
+			$rs = $database->Execute($add_object_query);
 			if (! $rs) {			
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			$this->id = $database->Insert_ID();
 			return $this->update($parameters);
 		}
 
@@ -155,6 +156,7 @@
 		
 		public function details() {
 			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
+			$database = new \Database\Service();
 			$this->clearError();
 
 			$cache_key = "organization[".$this->id."]";
@@ -201,12 +203,12 @@
 				WHERE	id = ?
 			";
 			query_log($get_details_query);
-			$rs = $GLOBALS['_database']->Execute(
+			$rs = $database->Execute(
 				$get_details_query,
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
