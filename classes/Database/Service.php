@@ -4,6 +4,7 @@
 	class Service Extends \BaseClass {
 		private $_connection;
 		private $_params = array();
+		public $debug = 'log';
 
 		public function __construct() {
 			$this->_connection = $GLOBALS['_database'];
@@ -15,8 +16,14 @@
 
 		public function Execute($query,$bind_params = null) {
 			if (is_array($bind_params)) $this->_params = array_merge($this->_params,$bind_params);
-			query_log($query,$this->_params,true);
-			return new \Database\RecordSet($this->_connection->Execute($query,$this->_params));
+			if ($this->debug == 'log') query_log($query,$this->_params,true);
+			elseif ($this->debug = 'screen') print "<pre>$query</pre>";
+			$recordSet = new \Database\RecordSet($this->_connection->Execute($query,$this->_params));
+			if ($this->_connection->ErrorMsg()) {
+				print_r($this->_connection->ErrorMsg());
+				return null;
+			}
+			return $recordSet;
 		}
 
 		public function ErrorMsg() {
