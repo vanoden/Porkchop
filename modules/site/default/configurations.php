@@ -42,6 +42,7 @@
     <input type="hidden" name="todo" value="" />
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <div class="subheading">Manage Site Configurations</div>
+	<div class="value"><?=$rows?> records found</div>
     <div class="table">
 	    <div class="tableRowHeader">
 		    <div class="tableCell">Key</div>
