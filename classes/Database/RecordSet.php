@@ -8,10 +8,12 @@
 		}
 
 		public function FetchRow() {
+			if (!isset($this->_handle)) return null;
 			return $this->_handle->FetchRow();
 		}
 
 		public function FetchNextObject($option_1 = false) {
+			if (!isset($this->_handle)) return null;
 			return $this->_handle->FetchNextObject($option_1);
 		}
 	}
