@@ -199,7 +199,7 @@ class Person Extends \BaseClass {
 					?,
 					?
 				)
-			";
+		";
 
         $GLOBALS['_database']->Execute($add_user_query, array(
             $parameters['date_expires'],
@@ -218,7 +218,6 @@ class Person Extends \BaseClass {
     }
 
     public function update($parameters = array()) {
-    
         if (!$this->id) {
             $this->error("User ID Required for Update");
             return false;

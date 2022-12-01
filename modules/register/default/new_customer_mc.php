@@ -7,25 +7,22 @@
 	  */      
 	$page = new \Site\Page();
 	$HTTPRequest = new \HTTP\Request();
-	$resellerList = new \Register\OrganizationList();
-	$productList = new \Product\ItemList();
-	$productsAvailable = $productList->find(array('type' => 'unique','status' => 'active'));
-	$resellers = $resellerList->find(array("is_reseller" => true));
 	$page->captchaPassed = true;
 	global $_config;
-	
-	// handle form submit	
+
+	// New Registration Submitted
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "register") {
 	    // Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 			$page->addError("Invalid request");
 		}
+		// CAPTCHA Bypass Key for Automated Testing
 		elseif (!empty($GLOBALS['_config']->captcha->bypass_key) && !empty($_REQUEST['captcha_bypass_key']) && $GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key']) {
 			//Don't require catcha
 			$captcha_success->success = true;
 		}
+		// Check reCAPTCHA 2.0
 		else {
-			// Check reCAPTCHA 2.0
 			$url = "https://www.google.com/recaptcha/api/siteverify";
 			$data = array(
 				'secret'	=> $GLOBALS['_config']->captcha->private_key,
@@ -123,8 +120,8 @@
 						$page->loginTaken = true;
 					}
 				}
+				// Store Contact Info and Deliver Address Verification Email
 				else {
-					// Create Contact Record
 					if ($_REQUEST['email_address']) {
 						$customer->addContact(
 							array(
@@ -176,7 +173,7 @@
 					$queuedCustomerData['serial_number'] = $_REQUEST['serial_number'];
 					$queuedCustomerData['register_user_id'] = $customer->id;
 					$queuedCustomer->add($queuedCustomerData);
-						
+
 					if ($queuedCustomer->error()) {
 						app_log("Error adding queued organization: ".$queuedCustomer->error(),'error',__FILE__,__LINE__);
 						$page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:".$GLOBALS['_config']->site->support_email."'>".$GLOBALS['_config']->site->support_email."</a> if you have any futher issues.");
@@ -198,7 +195,8 @@
 					if ($template->error()) {
 						app_log($template->error(),'error');
 						$page->addError("Error generating verification email, please contact us at ".$_config->site->support_email." to complete your registration, thank you!");
-					} else {
+					}
+					else {
 						$message = new \Email\Message($_config->register->verify_email);
 						$message->html(true);
 						$message->body($template->output());
@@ -219,13 +217,14 @@
 		}
 	}
 
+	// Resend Email Verification Email
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "resend") {
 	    // Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 			$page->addError("Invalid request");
 		}
 		else {
-            // Generate Validation Key
+            // Generate New Validation Key
 		    $validation_key = md5(microtime());
             $customer = new \Register\Customer();
             $verifiedCustomer = $customer->get($_REQUEST['login']);
@@ -248,7 +247,8 @@
                 if ($template->error()) {
 	                app_log($template->error(),'error');
 	                $page->addError("Error generating verification email, please contact us at ".$_config->site->support_email." to complete your registration, thank you!");
-                } else {
+                }
+				else {
 	                $message = new \Email\Message($_config->register->verify_email);
 	                $message->html(true);
 	                $message->body($template->output());
@@ -260,12 +260,14 @@
 		                header("Location: /_register/thank_you");
 	                }
                 }
-            } else {
+            }
+			else {
                 $page->addError("Account not found.");
             }
 		}
 	}
-	
+
+	// Email Verification Form Submitted
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "verify") {
 		app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
 
@@ -321,6 +323,13 @@
 			$page->addError("Invalid key");
 		}
 	}
+
+	// Load Data to Populate Form Inputs
+	$resellerList = new \Register\OrganizationList();
+	$resellers = $resellerList->find(array("is_reseller" => true));
+
+	$productList = new \Product\ItemList();
+	$productsAvailable = $productList->find(array('type' => 'unique','status' => 'active'));
 
 	$countryList = new \Geography\CountryList();
 	$countries = $countryList->find(array("default" => "United States of America"));

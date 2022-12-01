@@ -11,6 +11,13 @@
 			if ($this->id) $this->roles();
 		}
 
+		public function add($parameters = array()) {
+			if (parent::add($parameters)) {
+				$this->changePassword($parameters['password']);
+				return true;
+			}
+			else return false;
+		}
 		public function get($code = '') {
 			$this->error = null;
 			$get_object_query = "
@@ -37,7 +44,8 @@
 			if ($this->id) {
 				$this->roles();
 				return true;
-			} else {
+			}
+			else {
 				return false;
 			}
 		}
@@ -231,7 +239,8 @@
 			if ($authenticationService->changePassword($this->login,$password)) {
 				$this->resetAuthFailures();
 				return true;
-			} else {
+			}
+			else {
 				$this->error($authenticationService->error());
 				return false;
 			}
