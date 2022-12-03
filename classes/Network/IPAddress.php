@@ -29,7 +29,7 @@
 				$prefix = $matches[2];
 				$type = 'ipv6';
 			}
-			elseif(preg_match('/^[a-f0-9\:]+/$',$address)) {
+			elseif(preg_match('/^[a-f0-9\:]+$/',$address)) {
 				$type = 'ipv6';
 			}
 			elseif(preg_match('/^(\d+\.\d+\.\d+\.\d+)$/',$address)) {

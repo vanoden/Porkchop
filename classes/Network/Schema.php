@@ -39,7 +39,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating network_hosts table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
@@ -73,13 +73,13 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating network_adapters table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
 
 				$create_table_query = "
-					CREATE TABLE IF NOT EXISTS `network_subnets` (
+					CREATE TABLE IF NOT EXISTS `network_adapters` (
 						`id`			int(11) NOT NULL AUTO_INCREMENT,
 						`address`		bigint(8) NOT NULL,
 						`size`			bigint(8) NOT NULL,
@@ -87,7 +87,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating network_adapters table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
@@ -104,7 +104,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating network_addresses table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
@@ -115,17 +115,16 @@
 			if ($this->version() < 2) {
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `network_acls` (
-						`id`		int(11) NOT NULL AUTO_INCREMENT,
+						`id`		int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 						`subnet_id`	int(11) NOT NULL,
-						`priorty`	int(11) NOT NULL DEFAULT 0,
+						`priority`	int(11) NOT NULL DEFAULT 0,
 						`content`	TEXT,
 						`status`	enum('INACTVE','LOG','ACTIVE') NOT NULL DEFAULT 'LOG',
-						PRIMARY KEY `pk_network_acls` (`id`),
 						INDEX `idx_priority` (`priority`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating network_acls table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
