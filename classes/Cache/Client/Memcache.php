@@ -26,8 +26,14 @@
 		public function flush() {
 			return $this->_service->flush();
 		}
+
 		public function stats() {
-			return $this->_service->getStats();
+			$stats = $this->_service->getStats();
+			$hosts = array_keys($stats);
+			$host = $hosts[0];
+			$stats[$host]["type"] = $this->mechanism();
+			$stats[$host]["host"] = $host;
+			return $stats[$host];
 		}
 
 		public function mechanism () {
