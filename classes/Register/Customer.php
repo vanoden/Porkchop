@@ -10,7 +10,14 @@
 			parent::__construct($person_id);
 			if ($this->id) $this->roles();
 		}
-		
+
+		public function add($parameters = array()) {
+			if (parent::add($parameters)) {
+				$this->changePassword($parameters['password']);
+				return true;
+			}
+			else return false;
+		}
 		public function get($code = '') {
 			$this->error = null;
 			$get_object_query = "
@@ -24,20 +31,21 @@
 				array($code)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Customer::get: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
 			return $this->details();
 		}
-		
+
 		public function details() {
 		    parent::details();
 			if ($this->id) {
 				$this->roles();
 				return true;
-			} else {
+			}
+			else {
 				return false;
 			}
 		}
@@ -45,6 +53,7 @@
 		public function update($parameters = array()) {
 		
 			parent::update($parameters);
+			if ($this->error()) return false;
 
 			// roles
 			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
@@ -60,6 +69,26 @@
 					}
 				}
 			}
+
+			return $this->details();
+		}
+
+		public function increment_auth_failures() {
+			if (! isset($this->id)) return false;
+			$update_customer_query = "
+				UPDATE	register_users
+				SET		auth_failures = auth_failures + 1
+				WHERE	id = ?";
+			$GLOBALS['_database']->Execute($update_customer_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->error("SQL Error in Register::Customer::increment_auth_failures(): ".$GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			# Bust Cache
+			$cache_key = "customer[" . $this->id . "]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+			$cache->delete();
 			return $this->details();
 		}
 
@@ -123,10 +152,23 @@
 			return true;
 		}
 
+		function isActive() {
+			if (in_array($this->status,array('NEW','ACTIVE'))) return true;
+			return false;
+		}
+
+		function isBlocked() {
+			if (is_string($this->status) && $this->status == "BLOCKED") return true;
+			return false;
+		}
+
 		// Check login and password against configured authentication mechanism
 		function authenticate ($login, $password) {
-		
-			if (! $login) return 0;
+			if (! $this->validLogin($login)) {
+				$failure = new \Register\AuthFailure();
+				$failure->add($_SERVER['REMOTE_ADDR'],$login,'INVALIDLOGIN',$_SERVER['PHP_SELF']);
+				return false;
+			}
 
 			// Get Authentication Method
 			$get_user_query = "
@@ -140,133 +182,104 @@
 				array($login)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::authenticate(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
-			list($id,$this->auth_method,$status) = $rs->fields;			
+			list($id,$this->auth_method,$status) = $rs->fields;
 			if (! $id) {
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
+				$failure = new \Register\AuthFailure();
+				$failure->add($_SERVER['REMOTE_ADDR'],$login,'NOACCOUNT',$_SERVER['PHP_SELF']);
 				return false;
 			}
-			
-			if (! in_array($status,array('NEW','ACTIVE'))) {
-				app_log("Auth denied because account '$login' is '$status'",'notice',__FILE__,__LINE__);
-				return false;
-			}
-			
+
 			// check if they have an expired password for organzation rules
 			$this->get($login);		
-			if ($this->password_expired()) return 0;
-			if (preg_match('/^ldap\/(\w+)$/',$this->auth_method,$matches))
-				$result = $this->LDAPauthenticate($matches[1],$login,$password);
-			else
-				$result = $this->LOCALauthenticate($login,$password);
+			if ($this->password_expired()) {
+				$this->error("Your password is expired.  Please use Recover Password to restore.");
+				$failure = new \Register\AuthFailure();
+				$failure->add($_SERVER['REMOTE_ADDR'],$login,'PASSEXPIRED',$_SERVER['PHP_SELF']);
+				return false;
+			}
 
-			// Logging
-			if ($result) {
+			// Load Specified Authentication Service
+			$authenticationFactory = new \Register\AuthenticationService\Factory();
+			$authenticationService = $authenticationFactory->service($this->auth_method);
+
+			// Authenticate using service
+			if ($authenticationService->authenticate($login,$password)) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
+				$this->update(array("auth_failures" => 0));
+				return true;
 			}
-			else app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
-
-			return $result;
-		}
-
-		// Authenticate using database for credentials
-		function LOCALauthenticate ($login,$password) {
-		
-			if (! $login) {
-				app_log("No 'login' for authentication");
-				return 0;
-			}
-
-			/**
-			 * Check User Query
-			 * @TODO
-			 * OP's MySQL Server version is 8.0.12. From MySQL Documentation, PASSWORD function has been deprecated for version > 5.7.5:
-			 *   replacement that gives the same answer in version 8: CONCAT('*', UPPER(SHA1(UNHEX(SHA1('mypass')))))
-			 */
-            if (preg_match('/^8\./', $GLOBALS['_database']->_connectionID->server_info)) {
-			    $get_user_query = "
-				    SELECT	id
-				    FROM	register_users
-				    WHERE	login = ?
-				    AND		password = CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?)))));
-			    ";
-            } else {
-			    $get_user_query = "
-				    SELECT	id
-				    FROM	register_users
-				    WHERE	login = ?
-				    AND		password = password(?)
-			    ";
-            }
-			$bind_params = array($login,$password);
-
-			$rs = $GLOBALS['_database']->Execute(
-				$get_user_query,$bind_params
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::LOCALauthenticate(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			list($id) = $rs->FetchRow();
-			
-            // Login Failed
-			if (! $id) return 0;
-			$this->id = $id;
-			$this->details();
-			return 1;
-		}
-
-		// Authenticate using external LDAP service
-		public function LDAPauthenticate($domain,$login,$password) {
-		
-			// Check User Query
-			$get_user_query = "
-				SELECT	id
-				FROM	register_users
-				WHERE	login = ?";
-            
-			$rs = $GLOBALS['_database']->Execute($get_user_query,array($login));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::LDAPauthenticate(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
-			}
-
-			list($id) = $rs->fields;
-			if (! $id) {
-				error_log("No account for $login");
-				$this->message = "Account not found";
-			}
-
-			$LDAPServerAddress1	= $GLOBALS['_config']->authentication->$domain->server1;
-			$LDAPServerAddress2	= $GLOBALS['_config']->authentication->$domain->server2;
-			$LDAPServerPort		= "389";
-			$LDAPServerTimeOut	= "60";
-			$LDAPContainer		= $GLOBALS['_config']->authentication->$domain->container;
-			$BIND_username		= strtoupper($domain)."\\$login";
-			$BIND_password		= $password;
-
-			if (($ds=ldap_connect($LDAPServerAddress1)) || ($ds=ldap_connect($LDAPServerAddress2))) {
-				ldap_set_option($ds, LDAP_OPT_REFERRALS, 0);
-				ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);
-
-				if($r=ldap_bind($ds,$BIND_username,$BIND_password)) {
-					error_log("LDAP Authentication for $login successful");
-					$this->details($id);
-					return 1;
-				} else {
-					$this->message = "Auth Failed: ".ldap_error($ds);
-					$GLOBALS['_page']->error = "Auth Failed: ".ldap_error($ds);
-					if (ldap_get_option($ds, LDAP_OPT_DIAGNOSTIC_MESSAGE, $extended_error)) {
-						error_log("Error Binding to LDAP: $extended_error");
-					} else {
-						error_log("LDAP Authentication for $login failed");
-					}
-					return 0;
+			else {
+				app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
+				$failure = new \Register\AuthFailure();
+				$failure->add($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']);
+				$this->increment_auth_failures();
+				if ($this->auth_failures() >= 6) {
+					app_log("Blocking customer '".$this->login."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
+					$this->block();
+					return false;
 				}
 			}
+		}
+
+		public function changePassword($password) {
+			if ($this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
+				$this->error("Password needs more complexity");
+				return false;
+			}
+
+			// Load Specified Authentication Service
+			$authenticationFactory = new \Register\AuthenticationService\Factory();
+			$authenticationService = $authenticationFactory->service($this->auth_method);
+
+			if ($authenticationService->changePassword($this->login,$password)) {
+				$this->resetAuthFailures();
+				return true;
+			}
+			else {
+				$this->error($authenticationService->error());
+				return false;
+			}
+		}
+
+		public function password_strength($string) {
+			# Initial score on length alone
+			$password_strength = strlen($string);
+	
+			# Subtract 1 as any one character will match below
+			$password_strength --;
+	
+			# Add Points for Each Type of Char
+			if (preg_match('/[A-Z]/', $string)) $password_strength += 1;
+			if (preg_match('/[\@\$\_\-\.\!\&]/', $string)) $password_strength += 1;
+			if (preg_match('/\d/', $string)) $password_strength += 1;
+			if (preg_match('/[a-z]/', $string)) $password_strength += 1;
+	
+			return $password_strength;
+		}
+
+		// See How Many Auth Failures the account has
+		public function auth_failures() {
+			$get_failures_query = "
+				SELECT	auth_failures
+				FROM	register_users
+				WHERE	id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_failures_query,array($this->id));
+			if (! $rs) {
+				$this->error("SQL Error in Register::Customer::auth_failures(): ".$GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			list($count) = $rs->FetchRow();
+			return $count;
+		}
+
+		public function resetAuthFailures() {
+			return $this->update(array("auth_failures" => 0));
 		}
 
 		// Personal Inventory (Online Products)
@@ -386,7 +399,7 @@
 			query_log($check_privilege_query,$bind_params,true);
 			$rs = $GLOBALS['_database']->Execute($check_privilege_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Customer::has_privilege(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($found) = $rs->FetchRow();
@@ -411,8 +424,7 @@
 				array($id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::have_role(): ".$GLOBALS['_database']->ErrorMsg();
-				error_log($this->error);
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -450,8 +462,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::roles(): ".$GLOBALS['_database']->ErrorMsg();
-				error_log($this->error);
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -474,8 +485,7 @@
 	
 			$rs = $GLOBALS['_database']->Execute($get_role_query,array($name));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::role_id(): ".$GLOBALS['_database']->ErrorMsg();
-				error_log($this->error);
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 
@@ -492,11 +502,22 @@
 			$sessionList = new \Site\SessionList();
 			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
 			if ($sessionList->error) {
-				$this->error = "Error getting session: ".$sessionList->error;
+				$this->error("Error getting session: ".$sessionList->error);
 				return null;
 			}
 			if (! $session) return null;
 			return $session->last_hit_date;
+		}
+		
+		public function is_super_elevated() {
+			$sessionList = new \Site\SessionList();
+			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
+			if ($sessionList->error) {
+				$this->error("Error getting session: ".$sessionList->error);
+				return false;
+			}
+			if (! $session) return false;
+			return time() < strtotime($session->super_elevation_expires);
 		}
 		
 		public function contacts($params = array()) {
@@ -507,7 +528,7 @@
 			if (isset($params['type'])) $parameters['type'] = $params['type'];
 			$contacts = $contactList->find($parameters);
 			if ($contactList->error()) {
-				$this->error = $contactList->error();
+				$this->error($contactList->error());
 				return null;
 			}
 			else {
@@ -528,7 +549,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->organization->id,$this->id));
 			
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Customer::locations(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$locations = array();
@@ -539,14 +560,31 @@
 			return $locations;
 		}
 
-		public function exists($login) {
-			list($person) = $this->get($login);
-	
-			if ($person->id) return true;
-			else return false;
+		public function randomPassword() {
+			$pass = "";
+			$chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890?|@!*&%#';
+			$num_chars = strlen($chars) -1;
+
+			while ($this->password_strength($pass) < $GLOBALS['_config']->register->minimum_password_strength) {
+				$pass .= substr($chars,rand(0,$num_chars),1);
+			}
+			return $pass; //turn the array into a string
 		}
 
-		public function error() {
-			return $this->error;
+		public function validationKey() {
+			$database = new \Database\Service();
+			$get_key_query = "
+				SELECT	validation_key
+				FROM	register_users
+				WHERE	id = ?
+			";
+			$database->AddParam($this->id);
+			$rs = $database->Execute($get_key_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+			list($key) = $rs->FetchRow();
+			return $key;
 		}
     }

@@ -1,8 +1,8 @@
 <?php
 	namespace Register;
 
-	class Organization {
-		public $error;
+	class Organization Extends \BaseClass {
+	
 		public $name;
 		public $code;
 		public $status;
@@ -12,17 +12,22 @@
 		public $notes;
 		public $_cached;
 		public $password_expiration_days;
+		public $default_billing_location_id;
+		public $default_shipping_location_id;
 		private $_nocache = false;
+		private $database;
 
 		public function __construct($id = 0,$options = array()) {
-		
 			// Clear Error Info
-			$this->error = '';
+			$this->clearError();
 
-			if (isset($options['nocache']) && $options['nocache']) {
-				$this->_nocache = true;
-			}
+			// Set Valid Statuses
+			$this->_addStatus(array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED'));
 
+			// Disable cache if requested
+			if (isset($options['nocache']) && $options['nocache']) $this->_nocache = true;
+
+			// Load ID'd Record
 			if (isset($id) && is_numeric($id)) {
 				$this->id = $id;
 				$this->details();
@@ -31,6 +36,8 @@
 
 		public function add($parameters) {
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
+			$database = new \Database\Service;
+
 			if (empty($parameters['code'])) $parameters['code'] = uniqid();
 			$this->error = null;
 			$add_object_query = "
@@ -40,25 +47,23 @@
 				VALUES
 				(		null,?,?,sysdate())
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$parameters['code'],
-					$parameters['name']
-				)
-			);
+
+			$database->addParam($parameters['code']);
+			$database->addParam($parameters['name']);
+
+			$rs = $database->Execute($add_object_query);
 			if (! $rs) {			
-				$this->error = "SQL Error in RegisterOrganization::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			$this->id = $database->Insert_ID();
 			return $this->update($parameters);
 		}
 
 		public function update($parameters = array()) {
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
 			$this->error = null;
-
+		
 			$bind_params = array();
 
 			// Bust Cache
@@ -101,6 +106,17 @@
 						password_expiration_days = ?";
                 array_push($bind_params,$parameters['password_expiration_days']);
             }
+            if (isset($parameters['default_billing_location_id'])) {
+			    $update_object_query .= ",
+			    default_billing_location_id = ?";
+			    array_push($bind_params,$parameters['default_billing_location_id']);
+    		}
+		    if (isset($parameters['default_shipping_location_id'])) {
+			    $update_object_query .= ",
+			    default_shipping_location_id = ?";
+			    array_push($bind_params,$parameters['default_shipping_location_id']);
+		    }
+            
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -111,7 +127,7 @@
 				$bind_params
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			return $this->details();
@@ -130,7 +146,7 @@
 				array($code)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -140,7 +156,8 @@
 		
 		public function details() {
 			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
-			$this->error = null;
+			$database = new \Database\Service();
+			$this->clearError();
 
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -156,6 +173,8 @@
 				if (isset($this->assigned_reseller_id)) $this->reseller = new Organization($this->assigned_reseller_id);
 				$this->notes = $organization->notes;
 				$this->password_expiration_days = $organization->password_expiration_days;
+				$this->default_billing_location_id = $organization->default_billing_location_id;
+				$this->default_shipping_location_id = $organization->default_shipping_location_id;
 				$this->_cached = $organization->_cached;
 
 				// In Case Cache Corrupted
@@ -164,7 +183,7 @@
 					return $organization;
 				}
 				else {
-					$this->error = "Organization ".$this->id." returned unpopulated cache";
+					$this->error("Organization ".$this->id." returned unpopulated cache");
 				}
 			}
 
@@ -177,17 +196,19 @@
 						is_reseller,
 						assigned_reseller_id,
 						notes,
-						password_expiration_days
+						password_expiration_days,
+				        default_billing_location_id,
+				        default_shipping_location_id
 				FROM	register_organizations
 				WHERE	id = ?
 			";
 			query_log($get_details_query);
-			$rs = $GLOBALS['_database']->Execute(
+			$rs = $database->Execute(
 				$get_details_query,
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -197,6 +218,8 @@
 				$this->code = $object->code;
 				$this->status = $object->status;
                 $this->password_expiration_days = $object->password_expiration_days;
+                $this->default_billing_location_id = $object->default_billing_location_id;
+                $this->default_shipping_location_id = $object->default_shipping_location_id;
 				if ($object->is_reseller) $this->is_reseller = true;
 				if ($object->assigned_reseller_id) $this->reseller = new Organization($object->assigned_reseller_id);
 				$this->notes = $object->notes;
@@ -213,13 +236,14 @@
 
 			return true;
 		}
-		public function members($type = 'all') {
+		public function members($type = 'all', $status=array()) {
 			app_log("Register::Organization::members()",'trace',__FILE__,__LINE__);
 			$customerlist = new CustomerList();
+			
 			if ($type == 'automation') $automation = true;
 			elseif ($type == 'human') $automation = false;
 			else $automation = null;
-			return $customerlist->find(array('organization_id' => $this->id,'automation' => $automation));
+			return $customerlist->find(array('organization_id' => $this->id,'automation' => $automation, 'status' => $status));
 		}
 		public function product($product_id) {
 			$product = new \Product\Item($product_id);
@@ -228,7 +252,7 @@
 				return null;
 			}
 			if (! $product->id) {
-				$this->error = "Product not found";
+				$this->error("Product not found");
 				return null;
 			}
 			return new \Register\Organization\OwnedProduct($this->id,$product->id);
@@ -240,10 +264,6 @@
 			return count($customers);
 		}
 
-		public function exists() {
-			if (isset($this->id) && is_numeric($this->id) && $this->id > 0) return true;
-			return false;
-		}
 		public function expire() {
 			$update_org_query = "
 				UPDATE	register_organizations
@@ -255,7 +275,7 @@
 				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Organization::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -274,7 +294,7 @@
 				WHERE	organization_id = ?";
 			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->id));
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::locations(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$locations = array();
@@ -283,8 +303,5 @@
 				array_push($locations,$location);
 			}
 			return $locations;
-		}
-		public function error() {
-			return $this->error;
 		}
     }

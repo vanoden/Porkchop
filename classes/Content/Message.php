@@ -1,11 +1,9 @@
 <?php
 	namespace Content;
 
-	class Message {
-	
+	class Message Extends \BaseClass {
         public $id;
         public $name;
-		public $error;
 		public $cached = 0;
 
         public function __construct($id = 0) {
@@ -16,7 +14,7 @@
         }
 
 		public function get($target = '') {
-			$this->error = NULL;
+			$this->clearError();
 
 			$get_contents_query = "
 				SELECT	id
@@ -30,8 +28,8 @@
 				)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Content::Message::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			if ($id) {
@@ -134,7 +132,7 @@
 				)
 			);
             if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->error = "SQL Error in Content::Message::add(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
 				app_log($this->error,'error',__FILE__,__LINE__);
                 return null;
             }
@@ -146,13 +144,13 @@
         public function update($parameters = array()) {
 			$this->error = NULL;
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
-				$this->error = "You do not have permission to update content";
+				$this->error("You do not have permission to update content");
 				app_log("Denied access in Content::Message::update(), 'content operator' required",'notice');
 				return null;
 			}
 
 			if (! $this->id) {
-				$this->error = "id parameter required to update content";
+				$this->error("id parameter required to update content");
 				return null;
 			}
 
@@ -193,6 +191,23 @@
 
             return $this->details();
         }
+
+		public function drop() {
+			$database = new \Database\Service();
+			$delete_object_query = "
+				DELETE
+				FROM	content_messages
+				WHERE	target = ?";
+			$database->addParam($this->id);
+			$database->Execute($delete_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
 		public function purge_cache() {
 			$this->error = NULL;
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
@@ -210,8 +225,19 @@
 			return true;
 		}
 
-		public function error($message = null) {
-			if (!empty($message)) $this->error = $message;
-			return $this->error;
+		public function validTarget($string) {
+			if (preg_match('/^\w[\w\-\.\_]{0,31}$/',$string)) return true;
+			else return false;
+		}
+
+		public function validName($string) {
+			if (empty(urldecode($string))) return false;
+			if (! preg_match('/[\<\>\%]/',urldecode($string))) return true;
+			else return false;
+		}
+
+		public function validContent($string) {
+			if (preg_match('/\<script/',urldecode($string))) return false;
+			else return true;
 		}
     }

@@ -2,8 +2,8 @@
 	namespace Product;
 
 	class Instance extends Item {
+	
 		public $id;
-		public $error;
 		public $errno;
 		public $code;
 		public $name;
@@ -22,13 +22,13 @@
 		}
 		
 		public function add($parameters) {
-			$this->error = null;
+			$this->clearError();
 
 			# See If Existing Unit Present
 			$exists = $this->get($parameters["code"],$parameters['product_id']);
-			if ($this->error) return null;
+			if ($this->error()) return null;
 			if ($exists->id) {
-				$this->error = "Asset with code ".$parameters['code']." already exists";
+				$this->error("Asset with code ".$parameters['code']." already exists");
 				return null;
 			}
 
@@ -54,7 +54,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error adding asset: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -75,8 +75,7 @@
 		}
 		
 		public function getSimple($code) {
-			$this->error = null;
-
+			$this->clearError();
 			$bind_params = array();
 
 			$get_object_query = "
@@ -85,7 +84,7 @@
 				WHERE	asset_code = ?
 			";
 			array_push($bind_params,$code);
-
+			
 			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				$get_object_query .= " AND organization_id = ?";
 				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization->id);
@@ -93,7 +92,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Monitor::Asset::getSimple():" .$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -104,8 +103,8 @@
 		
 		# Get Specific Hub
 		public function get($code,$product_id) {
-			$this->error = null;
-		
+			$this->clearError();
+
 			$bind_params = array();
 
 			$get_object_query = "
@@ -124,7 +123,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Product::Instance::get():" .$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -135,7 +134,7 @@
 		public function update($parameters = array()) {
 			$this->error = null;
 			if (! preg_match('/^\d+$/',$this->id)) {
-				$this->error = "Valid asset id required for update";
+				$this->error("Valid asset id required for update");
 				return null;
 			}
 
@@ -144,7 +143,7 @@
 			# Get Current Details
 			$current_object = $this->details();
 			if (! $current_object->id) {
-				$this->error = "No matching asset to update";
+				$this->error("No matching asset to update");
 				return null;
 			}
 
@@ -175,7 +174,7 @@
 						organization_id = ?";
 					array_push($bind_params,$parameters['organization_id']);
 				} else {
-					$this->error = "Insufficient privileges for update";
+					$this->error("Insufficient privileges for update");
 					return null;
 				}
 			}
@@ -187,9 +186,10 @@
 
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Product::Instance::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
-			} else {
+			}
+			else {
 				# Get Some Event Info
 				if (isset($parameters['product_id'])) $product = new \Product\Item($parameters['product_id']);
 				else $product = new \Product\Item();
@@ -241,9 +241,10 @@
 				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Product::Instance::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
-			} else {
+			}
+			else {
 				$object = $rs->FetchNextObject(false);
 				if (isset($object)) {
 					$this->id = $object->id;
@@ -256,9 +257,15 @@
 						$this->organization = new \Register\Organization($object->organization_id);
 						$this->product = new \Product\Item($object->product_id);
 					}
-
-					return $object;
 				}
+				else {
+					$this->id = null;
+					$this->code = null;
+					$this->name = null;
+					$this->organization_id = null;
+					$this->product_id = null;
+				}
+				return true;
 			}
 		}
 		
@@ -281,7 +288,7 @@
 				array($this->id,$key,$value,$value)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Product::Instance::setMetadata: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			return 1;
@@ -299,7 +306,7 @@
 				array($this->id,$key)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Product::Instance::deleteMetadata: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 			    var_dump($this->error);
 				return null;
 			}
@@ -318,7 +325,7 @@
 				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Product::Instance::getMetadata: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$array = array();
@@ -340,7 +347,7 @@
 				array($this->id,$key)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Product::Instance::metadata(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($value) = $rs->FetchRow();
@@ -359,9 +366,5 @@
 			$parameters['product_code']	= $this->product->code;
 			$parameters['serial_number'] = $this->code;
 			return $ticketList->last($parameters);
-		}
-		
-		public function error() {
-			return $this->error;
 		}
 	}

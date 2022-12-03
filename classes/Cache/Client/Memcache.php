@@ -1,11 +1,10 @@
 <?php
 	namespace Cache\Client;
 
-	class Memcache {
+	class Memcache Extends \BaseClass {
 		private $_host = '127.0.0.1';
 		private $_port = 11211;
 		private $_connected = false;
-		public $error;
 		private $_service;
 
 		public function __construct($properties = null) {
@@ -16,7 +15,7 @@
 
 			$this->_service = new \Memcached();
 			if (! $this->_service->addServer($this->_host,$this->_port)) {
-				$this->error = "Cannot connect to cache service";
+				$this->error("Cannot connect to cache service");
 				$this->_connected = false;
 			}
 			else {
@@ -42,12 +41,13 @@
 
 		public function set($key,$value,$expires = null) {
 			if (!isset($expires)) $expires = $GLOBALS['_config']->cache->default_expire_seconds;
+			
 			if ($this->_connected) {
 				if ($this->_service->set($key,$value,$expires)) return true;
-				else $this->error = "Error storing cache value for '$key': ".$this->_service->getResultCode();
+				else $this->error("Error storing cache value for '$key': ".$this->_service->getResultCode());
 			}
 			else {
-				$this->error = "Cache client not connected";
+				$this->error("Cache client not connected");
 				return false;
 			}
 		}
@@ -56,12 +56,12 @@
 			if ($this->_connected) {
 				if ($this->_service->delete($key)) return true;
 				else {
-					$this->error = "Unable to delete value from cache: ".$this->_service->getResultCode();
+					$this->error("Unable to delete value from cache: ".$this->_service->getResultCode());
 					return false;
 				}
 			}
 			else {
-				$this->error = "Cache client not connected";
+				$this->error("Cache client not connected");
 				return false;
 			}
 		}
@@ -73,7 +73,7 @@
 				else return null;
 			}
 			else {
-				$this->error = "Cache client not connected";
+				$this->error("Cache client not connected");
 			}
 		}
 
@@ -81,12 +81,12 @@
 			if ($this->_connected) {
 				if ($this->_service->increment($key)) return $this->get($key);
 				else {
-					$this->_error = "Error incrementing key: ".$this->_service->getResultCode();
+					$this->error("Error incrementing key: ".$this->_service->getResultCode());
 					return null;
 				}
 			}
 			else {
-				$this->error = "Cache client not connected";
+				$this->error("Cache client not connected");
 			}
 		}
 
@@ -110,9 +110,5 @@
 				if (preg_match('/^(\w[\w\-\.\_]*)\[(\d+)\]$/',$key,$matches)) $keyNames[$matches[1]] ++;
 			}
 			return $keyNames;
-		}
-
-		public function error() {
-			return $this->error;
 		}
 	}

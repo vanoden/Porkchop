@@ -1,6 +1,6 @@
 <?php
 	$page = new \Site\Page();
-	$page->requireRole('build user');
+	$page->requirePrivilege('manage product builds');
 
 	$product = new \Build\Product($_REQUEST['id']);
 

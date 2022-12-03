@@ -47,8 +47,8 @@
 						$this->install_log("Adding role '$role_name'");
 						if (! isset($role_data['description'])) $role_data['description'] = $role_name;
 						$role->add(array('name' => $role_name,'description' => $role_data['description']));
-						if ($role->error) {
-							$this->install_fail("Error adding role '$role_name': ".$role->error);
+						if ($role->error()) {
+							$this->install_fail("Error adding role '$role_name': ".$role->error());
 						}
 						elseif (isset($role_data['privileges'])) {
 							foreach ($role_data['privileges'] as $privilege_name) {
@@ -196,5 +196,10 @@
 			if ($log_level == 'notice' && $level != 'trace' && $level != 'debug' && $level != 'info' && $level != 'warning') return true;
 			if ($log_level == 'error') return true;
 			return false;
+		}
+
+		public function url() {
+			if ($GLOBALS['_config']->site->https) return 'https://'.$GLOBALS['_config']->site->hostname;
+			else return 'http://'.$GLOBALS['_config']->site->hostname;
 		}
 	}

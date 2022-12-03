@@ -75,6 +75,7 @@
 		### Delete Specific Item from Cache				###
 		###################################################
 		public function deleteItem() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 			if (! $GLOBALS['_SESSION_']->customer->can('manage cache')) $this->deny();
 			$cache_key = $_REQUEST['object']."[".$_REQUEST['id']."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);

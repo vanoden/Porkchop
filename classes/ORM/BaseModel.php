@@ -1,14 +1,13 @@
 <?php
 	namespace ORM;
 	
-	class BaseModel {
+	class BaseModel Extends \BaseClass {
 
 	    protected $fields = array();
 	    public $values = array();	
 	    protected $tableName;
 	    private $_updateQuery;
 	    private $_addQuery;
-	    protected $_error;
 		protected $ukColumn = 'code';
 	
         /**
@@ -59,7 +58,7 @@
          * @param array $parameters, name value pairs to add and populate new object by
          */
 		public function add($parameters = array()) {
-		
+	
     		$this->_addQuery = "INSERT INTO `$this->tableName` ";
 			$bindParams = array();
 			$bindFields = array();		
@@ -74,7 +73,6 @@
             $this->_addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindParams)) ,',') . ")";
 			query_log($this->_addQuery,$bindParams);
             $this->execute($this->_addQuery, $bindParams);
-
 			if ($this->_error) return false;
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -157,12 +155,5 @@
 				return false;
 			}
             return $rs;
-		}
-	   
-        /**
-         * get the error that may have happened on the DB level
-         */
-		public function error() {
-			return $this->_error;
 		}
 	}

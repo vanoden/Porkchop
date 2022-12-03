@@ -5,6 +5,7 @@
 		private $host;
 
 		public function __construct($parameters) {
+			$this->syslog = true;
 		}
 
 		public function connect() {
@@ -16,6 +17,8 @@
 
 		public function write($message,$level = 'debug',$file = null,$line = null) {
 			if (! $this->compares($level)) return 1;
+
+			$message = preg_replace('/\t/',' ',$message);
 
 			list($file,$line) = $this->caller($file,$line);
 

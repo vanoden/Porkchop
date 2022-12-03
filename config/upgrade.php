@@ -13,7 +13,7 @@
 			"schema"	=> 3,
 		),
 		"Site"			=> array(
-			"schema"	=> 8,
+			"schema"	=> 15,
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
@@ -23,7 +23,8 @@
 			"templates"	=> array(
 				"page"	=> $templates['admin'],
 				"pages"	=> $templates['admin'],
-				"configurations"	=> $templates['admin']
+				"configurations"	=> $templates['admin'],
+				"counters"	=> $templates['admin']
 			),
 		),
 		"Geography"		=> array(
@@ -47,7 +48,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 22,
+			"schema"		=> 28,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -99,7 +100,7 @@
 			"schema"	=> 2,
             "privileges"    => array(
                 "create email",
-		"see email api"
+				"see email api"
             )
 		),
 		"Action"		=> array(

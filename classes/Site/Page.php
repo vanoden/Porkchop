@@ -1,7 +1,7 @@
 <?php
     namespace Site;
     
-    class Page {
+    class Page Extends \BaseClass {
     
 	    public $id;
 	    public $module = 'content';
@@ -44,7 +44,7 @@
 		    return $this->get ( $GLOBALS ['_REQUEST_']->module, $GLOBALS ['_REQUEST_']->view, $GLOBALS ['_REQUEST_']->index );
 	    }
 	    public function applyStyle() {
-		    if (isset ( $GLOBALS ['_config']->style [$this->module] )) $this->style = $GLOBALS ['_config']->style [$this->module];
+		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS ['_config']->style [$this->module()];
 	    }
 	    public function requireAuth() {
 		    if (! $GLOBALS ['_SESSION_']->customer->id > 0) {
@@ -53,37 +53,50 @@
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 		    }
 	    }
+	    public function requireSuperElevation() {
+		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
+			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+		    }
+	    }
 	    public function requireRole($role) {
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
-		    } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+		    }
+			elseif (! $GLOBALS ['_SESSION_']->customer->id) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit ();
-		    } elseif (! $GLOBALS ['_SESSION_']->customer->has_role ( $role )) {
+		    }
+			elseif (! $GLOBALS ['_SESSION_']->customer->has_role($role)) {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
 			    header ( 'location: /_register/permission_denied' );
 			    exit ();
 		    }
+			else {
+				return true;
+			}
 	    }
+
         public function requirePrivilege($privilege) {
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
                 return true;
-            }
-            elseif ($GLOBALS['_SESSION_']->customer->can('do everything')) {
-                return true;
-            }
-            elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+            } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+				$counter = new \Site\Counter("auth_redirect");
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit ();
-		    }
-            else {
+		    } else {
+				$counter = new \Site\Counter("permission_denied");
 			    header ( 'location: /_register/permission_denied' );
 			    exit ();
 		    }
         }
+        
 	    public function get($module, $view, $index = null) {
 		    $parameters = array ($module, $view );
 		    if (strlen ( $index ) < 1) $index = null;
@@ -107,7 +120,7 @@
 		    query_log($get_object_query, $parameters);
 		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, $parameters );
 		    if (! $rs) {
-			    $this->addError ( "SQL Error in Page::get: " . $GLOBALS ['_database']->ErrorMsg () );
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return null;
 		    }
 		    list ( $id ) = $rs->FetchRow ();
@@ -162,7 +175,7 @@
 			    ";
 		    $GLOBALS ['_database']->Execute ( $add_object_query, array ($this->module, $this->view, $this->index ) );
 		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->error = "SQL Error in Site::Page::add(): " . $GLOBALS ['_database']->ErrorMsg ();
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 				app_log($this->error,'error');
 			    return false;
 		    }
@@ -170,6 +183,33 @@
 		    app_log ( "Added page id " . $this->id );
 		    return $this->details();
 	    }
+
+		public function delete() {
+			// Delete Content Block for Page
+			if (!empty($this->index)) {
+				$block = new \Content\Message();
+				if ($block->get($this->index)) {
+					$block->drop();
+				}
+			}
+			// Delete Metadata Records for Page
+			$this->purgeMetadata();
+
+			// Delete Page
+			$database = new \Database\Service();
+			$delete_object_query = "
+				DELETE
+				FROM	page_pages
+				WHERE	id = ?
+			";
+			$database->addParam($this->id);
+			$database->Execute($delete_object_query);
+			if ($database->ErrorMsg()) {
+				$this->addError($database->ErrorMsg());
+				return false;
+			}
+			return true;
+		}
 	    public function details() {
 		    $get_details_query = "
 				    SELECT	id,
@@ -181,7 +221,7 @@
 			    ";
 		    $rs = $GLOBALS ['_database']->Execute ( $get_details_query, array ($this->id ) );
 		    if (! $rs) {
-			    $this->error = "SQL Error in Site::Page::details(): " . $GLOBALS ['_database']->ErrorMsg ();
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return null;
 		    }
 		    $object = $rs->FetchNextObject ( false );
@@ -196,21 +236,15 @@
 			    $this->style = $GLOBALS ['_config']->style [$this->module];
 		    }
 
+			// Intranet style site, No public content
             if (isset($GLOBALS['_config']->site->private_mode) && $GLOBALS['_config']->site->private_mode) {
-                app_log("Private mode!  Customer is ".$GLOBALS['_SESSION_']->customer->id);
                 $this->auth_required = true;
-            }
-            else {
-                app_log("Not Private mode!");
             }
 
 		    // Make Sure Authentication Requirements are Met
-            app_log("Here 0");
 		    if (($this->auth_required) and (! $GLOBALS ["_SESSION_"]->customer->id)) {
-                app_log("Here 1");
 			    if (($this->module != "register") or (! in_array ( $this->view, array ('login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you' ) ))) {
-				    app_log("Gotta login!");
-                    // Clean Query Vars for this
+				    // Clean Query Vars for this
 				    $auth_query_vars = preg_replace ( "/\/$/", "", $this->query_vars );
 
 				    if ($this->module == 'content' && $this->view == 'index' && ! $auth_query_vars) $auth_target = '';
@@ -224,24 +258,25 @@
 				    header ( "location: " . PATH . "/_register/login/" . $auth_target );
                     exit;
 			    }
-                else {
-                    app_log("Gonna log in");
-                }
 		    }
-            elseif ($this->auth_required) {
-                app_log("Here 3: ".$GLOBALS['_SESSION_']->customer->id);
-                app_log("Here 4: ".$GLOBALS['_SESSION_']->id);
-            }
 
 		    return true;
 	    }
 
+		public function module() {
+			if (preg_match('/(\w[\w\_\.]*)/',$this->module,$matches)) return $matches[1];
+		}
+
+		public function view() {
+			if (preg_match('/(\w[\w\_\.]*)/',$this->view,$matches)) return $matches[1];
+		}
+
 		public function template() {
 			$template = $this->getMetadata('template');
-			if (!empty($template)) return $template;
-			elseif (file_exists(HTML . "/" . $this->module . "." . $this->view . ".html")) return $this->module . "." . $this->view . ".html";
+			if (preg_match('/(\w[\w\_\-\.]*\.html)/',$template,$matches)) return $matches[1];
+			elseif (file_exists(HTML . "/" . $this->module() . "." . $this->view() . ".html")) return $this->module() . "." . $this->view() . ".html";
 			elseif ($this->view == 'api' && file_exists ( HTML . "/_api.html")) return "_api.html";
-			elseif (file_exists ( HTML . "/" . $this->module . ".html")) return $this->module . ".html";
+			elseif (file_exists ( HTML . "/" . $this->module() . ".html")) return $this->module() . ".html";
 			elseif (isset ( $GLOBALS ['_config']->site->default_template)) return $GLOBALS ['_config']->site->default_template;
 			elseif (file_exists ( HTML . "/index.html")) return "index.html";
 			elseif (file_exists ( HTML . "/install.html" )) return "install.html";
@@ -249,6 +284,7 @@
 		}
 
 		public function load_template() {
+            $this->loadSiteHeaders();
 			$template = $this->template();
 			if (isset ( $template ) && file_exists(HTML."/".$template)) return $this->parse(file_get_contents(HTML."/".$template));
 			elseif (isset ($template)) app_log("Template ".HTML."/".$template." not found!",'error');
@@ -271,6 +307,7 @@
 	    }
 	    
 	    private function parse_element($string) {
+	    
 		    // Initialize Array to hold Parameters
 		    $parameters = array ();
 
@@ -318,32 +355,55 @@
 			    } elseif ($property == "host") {
 				    $buffer .= $_SERVER ['HTTP_HOST'];
 			    }
-		    } elseif ($object == "page") {
+		    }
+			elseif ($object == "page") {
 			    if ($property == "view") {
-				    $buffer = "<r7 object=\"" . $this->module . "\" property=\"" . $this->view . "\"/>";
-			    } elseif ($property == "title") {
+				    $buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";
+				}
+				elseif ($property == "errorblock") {
+					error_log("FOUND errorblock");
+					if ($this->errorCount() > 0) {
+						$buffer = '<section id="form-message">
+						<ul class="connectBorder errorText">
+							<li>';
+						$buffer .= $this->errorString();
+						$buffer .= '</li>
+						</ul>
+						</section>';
+					} elseif ($this->success) {
+						$buffer = '<section id="form-message">
+						<ul class="connectBorder progressText">
+							<li>';
+						$buffer .= $this->success;
+						$buffer .= '</li>
+						</ul>
+						</section>';
+					}
+				}
+				elseif ($property == "title") {
 				    if (isset ( $this->metadata->title )) $buffer = $this->metadata->title;
-			    } elseif ($property == "metadata") {
+			    }
+				elseif ($property == "metadata") {
 				    if (isset ( $this->metadata->$parameter ["field"] )) $buffer = $this->metadata->$parameter ["field"];
-			    } elseif ($property == "navigation") {
+			    }
+				elseif ($property == "navigation") {
 				    $menuList = new \Navigation\ItemList();
-				    if ($menuList->error) {
+				    if ($menuList->error()) {
 					    $this->error = "Error initializing navigation module: " . $menuList->error;
 					    return '';
 				    }
-
-				    $menus = $menuList->find ( array ("name" => $parameter ["name"] ) );
-				    if ($menuList->error) {
-					    app_log ( "Error displaying menus: " . $menuList->error, 'error', __FILE__, __LINE__ );
-					    $this->error = $menuList->error;
+				    $menus = $menuList->find(array("name" => $parameter["name"]));
+				    if ($menuList->error()) {
+					    app_log("Error displaying menus: " . $menuList->error(), 'error', __FILE__, __LINE__ );
+					    $this->error($menuList->error());
 					    return '';
 				    }
+				    $menu = $menus[0];
+					$items = $menu->items();
 
-				    $menu = $menus [0];
-
-				    if (count ( $menu->item )) {
-					    foreach ( $menu->item as $item ) {
-						    if (isset ( $parameter ['class'] )) $button_class = $parameter ['class'];
+				    if (count($items)) {
+					    foreach ($items as $item) {
+						    if (isset( $parameter ['class'] )) $button_class = $parameter ['class'];
 						    else {
 							    $button_class = "button_" . preg_replace ( "/\W/", "_", $menu->name );
 						    }
@@ -426,6 +486,7 @@
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    } elseif ($object == "product") {
+		    
 			    // Load Product Class if Not Already Loaded
 			    if ($property == "thumbnail") {
 				    $id = $this->query_vars;
@@ -437,13 +498,14 @@
 						    exit ();
 					    }
 				    } else {
-					    $category = $_product->details ( $id );
+					    $category = $product->details ( $id );
 				    }
-				    $products = $_product->find ( array ("category" => $category->code ) );
+					$productList = new \Product\ItemList();
+				    $products = $productList->find ( array ("category" => $category->code ) );
 
 				    // Loop Through Products
-				    foreach ( $products as $product_id ) {
-					    $buffer .= "<r7_product.detail format=thumbnail id=$product_id>";
+				    foreach ( $products as $product ) {
+					    $buffer .= "<r7_product.detail format=thumbnail id=".$product->id.">";
 				    }
 			    } elseif ($property == "detail") {
 				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
@@ -557,6 +619,7 @@
 						    $this->error = "Error fetching events: " . $eventlist->error;
 					    } else if (count ( $events )) {
 						    foreach ( $events as $event ) {
+								$greenbar = '';
 							    $buffer .= "<a class=\"value " . $greenbar . "newsWidgetEventValue\" href=\"" . PATH . "/_news/event/" . $event->id . "\">" . $event->name . "</a>";
 							    if ($greenbar) $greenbar = '';
 							    else $greenbar = 'greenbar ';
@@ -574,20 +637,29 @@
 		    }
 		    return $buffer;
 	    }
+	    
+        public function loadSiteHeaders() {
+            $headerList = new \Site\HeaderList();
+            $headers = $headerList->find();
+            foreach ($headers as $header) {
+                header($header->name.": ".$header->value);
+            }
+        }
+        
         public function loadViewFiles($buffer = "") {
 		    ob_start ();
             if (isset($this->style)) {
-                if (file_exists(MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php'))
-                    $be_file = MODULES.'/'.$this->module.'/'.$this->style.'/'.$this->view.'_mc.php';
-                elseif (file_exists(MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php'))
-                    $be_file = MODULES.'/'.$this->module.'/default/'.$this->view.'_mc.php';
-                if (file_exists(MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php'))
-                    $fe_file = MODULES . '/' . $this->module . '/' . $this->style . '/' . $this->view . '.php';
-                elseif (file_exists(MODULES . '/' . $this->module . '/default/' . $this->view . '.php'))
-                    $fe_file = MODULES . '/' . $this->module . '/default/' . $this->view . '.php';
+                if (file_exists(MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php'))
+                    $be_file = MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php';
+                elseif (file_exists(MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php'))
+                    $be_file = MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php';
+                if (file_exists(MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php'))
+                    $fe_file = MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php';
+                elseif (file_exists(MODULES . '/' . $this->module() . '/default/' . $this->view . '.php'))
+                    $fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
             }
-		    app_log ( "Loading view " . $this->view . " of module " . $this->module, 'debug', __FILE__, __LINE__ );
-		    if (file_exists ( $be_file )) {
+		    app_log ( "Loading view " . $this->view() . " of module " . $this->module(), 'debug', __FILE__, __LINE__ );
+		    if (isset($be_file) && file_exists ( $be_file )) {
 				// Load Backend File
                 $res = include($be_file);
 
@@ -611,17 +683,25 @@
 					return '<span class="label page_response_code">Resource not found</span>';
 				}
             }
-		    else app_log ( "Backend file '$be_file' for module " . $this->module . " not found" );
-            if (file_exists ( $fe_file )) include ($fe_file);
+		    else app_log ( "Backend file '$be_file' for module " . $this->module() . " not found" );
+            if (isset($fe_file) && file_exists ( $fe_file )) include ($fe_file);
 		    $buffer .= ob_get_clean ();
+            
+            // if match "query: " then must be an ADODB error happening
+            //      scrub out any non HTML characters BEFORE the first HTML tag to remove the standard output ADODB errors that end up getting printed on the page
+            if (strpos($buffer, " query: ") !== false) {
+                preg_match('/^[^<]*/', $buffer, $matches);
+                if (!empty($matches[0])) $buffer = str_replace($matches[0], "",$buffer);
+            }
             return $buffer;
         }
+        
 	    public function requires($role = '_customer') {
 		    if ($role == '_customer') {
 			    if ($GLOBALS ['_SESSION_']->customer->id) {
 				    return true;
 			    } else {
-				    header ( "location: /_register/login?target=_" . $this->module . ":" . $this->view );
+				    header ( "location: /_register/login?target=_" . $this->module() . ":" . $this->view() );
 				    ob_flush ();
 				    exit ();
 			    }
@@ -633,6 +713,7 @@
 			    exit ();
 		    }
 	    }
+	    
 	    public function allMetadata() {
 		    $metadataList = new \Site\Page\MetadataList();
 			$metaArray = $metadataList->find(array('page_id' => $this->id));
@@ -642,6 +723,7 @@
 		    }
 		    return $metaArray;
 	    }
+	    
 		public function getMetadata($key) {
 			$metadata = new \Site\Page\Metadata();
 			if ($metadata->get($this->id,$key)) {
@@ -672,11 +754,21 @@
 			else $this->addError($metadata->error());
 			return false;
 	    }
+	    
 	    public function unsetMetadata($key) {
 			$metadata = new \Site\Page\Metadata();
             $metadata->get($this->id,$key);
 		    return $metadata->drop();
 	    }
+
+		public function purgeMetadata() {
+			$metadataList = new \Site\Page\MetadataList();
+			$metadata = $metadataList->find('page_id',$this->id);
+			foreach ($metadata as $record) {
+				$record->drop();
+			}
+		}
+
 	    public function addError($error) {
 		    $trace = debug_backtrace ();
 		    $caller = $trace [0];
@@ -685,17 +777,15 @@
 		    app_log ( $error, 'error', $file, $line );
 		    array_push ( $this->_errors, $error );
 	    }
+	    
 	    public function errorString($delimiter = "<br>\n") {
-		    if (isset ( $this->error )) {
-			    array_push ( $this->_errors, $this->error );
-		    }
+		    if (isset ( $this->error )) array_push ( $this->_errors, $this->error );
 		    $error_string = '';
 		    foreach ( $this->_errors as $error ) {
-			    if (strlen ( $error_string )) {
-				    $error_string .= $delimiter;
-			    }
-			    if (preg_match ( '/SQL\sError/', $error )) {
-				    // SQL errors in the error log, then output to page is standard "site error message"
+			    if (strlen ( $error_string )) $error_string .= $delimiter;
+			    
+			    // SQL errors in the error log, then output to page is standard "site error message"
+			    if (preg_match ( '/SQL\sError/', $error ) || preg_match ( '/ query\:/', $error )) {
 				    app_log ( $error, 'error' );
 				    $error_string .= "Internal site error";
 			    } else {
@@ -704,12 +794,53 @@
 		    }
 		    return $error_string;
 	    }
+	    
 	    public function errors() {
 		    return $this->_errors;
 	    }
+	    
 	    public function errorCount() {
 		    if (empty ( $this->errors )) $this->errors = array ();
 		    if (! empty ( $this->error )) array_push ( $this->errors, $this->error );
 		    return count ( $this->_errors );
 	    }
+
+		public function validModule($string) {
+			if (preg_match('/^\w[\w]*$/',$string)) return true;
+			else return false;
+		}
+
+		public function validView($string) {
+			if (preg_match('/^\w[\w]*$/',$string)) return true;
+			else return false;
+		}
+
+		public function validIndex($string) {
+            if (empty($string)) return true;
+			if (preg_match('/^\w[\w\.\_\-]*$/',$string)) return true;
+			else return false;
+		}
+
+		public function validStyle($string) {
+			if (preg_match('/^\w[\w]*$/',$string)) return true;
+			else return false;
+		}
+
+		public function validURI($string) {
+			if (preg_match('/\.\./', $string)) return false;
+			if (preg_match('/^[\w\-\.\_\/]+$/',$string)) return true;
+			else return false;
+		}
+
+		public function validTitle($string) {
+			if (empty(trim($string))) return false;
+			if (preg_match('/[\<\>]/',urldecode($string))) return false;
+			return true;
+		}
+
+		public function validTemplate($string) {
+			if (preg_match('/\.\./', $string)) return false;
+			if (preg_match('/^\w[\w\-\.\_]*\.html?$/',$string)) return true;
+			else return false;
+		}
     }

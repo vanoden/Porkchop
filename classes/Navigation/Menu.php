@@ -2,14 +2,14 @@
 
     namespace Navigation;
 
-    class Menu {
+    class Menu Extends \BaseClass {
 	    public $id;
 	    public $name;
-	    public $error;
+
 	    public function __construct($id = 0) {
 		    if (is_numeric ( $id ) && $id > 0) {
 			    $this->id = $id;
-			    $this->details ();
+			    $this->details();
 		    }
 	    }
 	    public function get($code) {
@@ -20,20 +20,21 @@
 			    ";
 		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, array ($code ) );
 		    if (! $rs) {
-			    $this->_error = "SQL Error in Navigation::Menu::get(): " . $GLOBALS ['_database']->ErrorMsg ();
+			    $this->SQLError($GLOBALS['_database']->ErrorMsg());
 			    return false;
 		    }
-		    list ( $id ) = $rs->FetchRow ();
-		    if (isset ( $id )) {
+		    list ($id) = $rs->FetchRow();
+		    if (isset($id)) {
 			    $this->id = $id;
-			    return $this->details ();
-		    } else {
+			    return $this->details();
+		    }
+			else {
 			    return false;
 		    }
 	    }
 	    public function add($parameters = array ()) {
-		    if (! isset ( $parameters ['code'] )) {
-			    $this->_error = "code required";
+		    if (! isset($parameters ['code'])) {
+			    $this->error("code required");
 			    return false;
 		    }
 		    $add_object_query = "
@@ -43,13 +44,13 @@
 				    VALUES
 				    (?)
 			    ";
-		    $GLOBALS ['_database']->Execute ( $add_object_query, array ($parameters ['code'] ) );
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->_error = "SQL Error in Navigation::Menu::add(): ".$GLOBALS['_database']->ErrorMsg ();
+		    $GLOBALS ['_database']->Execute($add_object_query, array ($parameters ['code']));
+		    if ($GLOBALS['_database']->ErrorMsg()) {
+			    $this->SQLError($GLOBALS['_database']->ErrorMsg());
 			    return false;
 		    }
-		    $this->id = $GLOBALS ['_database']->Insert_ID ();
-		    return $this->update ( $parameters );
+		    $this->id = $GLOBALS['_database']->Insert_ID();
+		    return $this->update($parameters);
 	    }
 	    public function update($parameters = array ()) {
 		    $update_object_query = "
@@ -70,35 +71,35 @@
 		    }
 		    $update_object_query .= "
 				    WHERE	id = ?
-			    ";
-		    array_push ( $bind_params, $this->id );
-		    query_log ( $update_object_query );
-		    $GLOBALS ['_database']->Execute ( $update_object_query, $bind_params );
+			";
+		    array_push($bind_params,$this->id );
+		    query_log($update_object_query,$bind_params);
+		    $GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->_error = "SQL Error in Navigation::Menu::update(): " . $GLOBALS ['_database']->ErrorMsg ();
+		    if ($GLOBALS['_database']->ErrorMsg()) {
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return false;
 		    }
 		    return $this->details ();
 	    }
 	    public function details() {
 		    $get_default_query = "
-				    SELECT  id,code,title
+				    SELECT  *
 				    FROM    navigation_menus
 				    WHERE   id = ?
 			    ";
-		    $rs = $GLOBALS ['_database']->Execute ( $get_default_query, array ($this->id ) );
+		    $rs = $GLOBALS['_database']->Execute($get_default_query, array($this->id ) );
 		    if (! $rs) {
-			    $this->error = "SQL Error in Navigation::Menu::details(): " . $GLOBALS ['_database']->ErrorMsg ();
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return false;
 		    }
 		    $object = $rs->FetchNextObject ( false );
-
 		    if ($object->id) {
 			    $this->id = $object->id;
 			    $this->code = $object->code;
 			    $this->title = $object->title;
-		    } else {
+		    }
+			else {
 			    $this->id = null;
 			    $this->code = null;
 			    $this->title = null;
@@ -106,12 +107,12 @@
 		    return true;
 	    }
 	    public function items($parent_id = 0) {
-		    if (! preg_match ( "/^\d+$/", $parent_id )) $parent_id = 0;
+		    if (! preg_match("/^\d+$/", $parent_id )) $parent_id = 0;
 
-		    $itemlist = new \Navigation\ItemList ();
-		    $items = $itemlist->find ( array ('menu_id' => $this->id, 'parent_id' => $parent_id ) );
-		    if ($itemlist->error ()) {
-			    $this->_error = $itemlist->error ();
+		    $itemlist = new \Navigation\ItemList();
+		    $items = $itemlist->find(array('menu_id' => $this->id, 'parent_id' => $parent_id));
+		    if ($itemlist->error()) {
+			    $this->_error = $itemlist->error();
 			    return null;
 		    }
 		    return $items;
@@ -174,7 +175,8 @@
 		    }
 		    return $html;
 	    }
-	    public function error() {
-		    return $this->_error;
-	    }
+		public function validTitle($string) {
+			if (! preg_match('/\<\>/',urldecode($string))) return true;
+			else return false;
+		}
     }

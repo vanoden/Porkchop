@@ -1,13 +1,22 @@
-<?php	if ($page->errorCount() > 0) { ?>
-    <div class="form_error">
-        <?=$page->errorString()?>
-    </div>
-<?php	} elseif ($page->success) { ?>
-    <div class="form_success">
-        <?=$page->success?>
-    </div>
+<span class="title">File</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
 <?php	} ?>
+
 <form name="fileForm" action="/_storage/file" method="post">
+	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="id" value="<?=$file->id?>">
     <div class="title">File Details</div>
     <div class="container fileDetailContainer">

@@ -1,10 +1,12 @@
 <?php
 	namespace Content;
 	
-	class MessageList {
+	class MessageList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
-			$this->error = NULL;
+            $this->clearError();
+            $this->resetCount();
+
 			$get_contents_query = "
 				SELECT	id
 				FROM	content_messages
@@ -16,20 +18,23 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_contents_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Content::MessageList::find(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
 			}
 
 			$messages = array();
 			while (list($id) = $rs->FetchRow()) {
 				$message = new \Content\Message($id);
+                $this->incrementCount();
 				array_push($messages,$message);
 			}
 			return $messages;
 		}
 		
 		public function search($parameters = array()) {
-		
+            $this->clearError();
+            $this->resetCount();
+
 			$this->error = NULL;
 			$get_contents_query = "
 				SELECT	id
@@ -49,14 +54,19 @@
             
 			$rs = $GLOBALS['_database']->Execute($get_contents_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Content::MessageList::search(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 
 			$messages = array();
 			while (list($id) = $rs->FetchRow()) {
 				$message = new \Content\Message($id);
-				unset($message->content);	
+				if (!isset($parameters['is_user_search']) || empty($parameters['is_user_search'])) {
+    				unset($message->content);
+				} else {
+    				$message->content = substr(strip_tags($message->content), 0, 150) . '...';
+				}
+                $this->incrementCount();
 				array_push($messages,$message);
 			}
 			return $messages;

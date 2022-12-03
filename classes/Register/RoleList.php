@@ -1,10 +1,7 @@
 <?php
 	namespace Register;
 
-	class RoleList {
-		public $count;
-		public $_error;
-
+	class RoleList Extends \BaseListClass {
 		public function find($parameters = array()) {
 			$get_objects_query = "
 				SELECT	id
@@ -13,18 +10,15 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_objects_query);
 			if (! $rs) {
-				$this->_error = "SQL Error in RegisterRole::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$roles = array();
 			while (list($id) = $rs->FetchRow()) {
 				$role = new Role($id);
-				$this->count ++;
+				$this->incrementCount();
 				array_push($roles,$role);
 			}
 			return $roles;
-		}
-		public function error() {
-			return $this->_error;
 		}
 	}

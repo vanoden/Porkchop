@@ -22,6 +22,9 @@
     "gulp-template": "^5.0.0"
   },
   "dependencies": {
-    "gulp-cli": "^2.3.0"
+    "gulp-cli": "^2.3.0",
+    "graceful-fs": {
+      "version": "4.2.2"
+    }
   }
 }

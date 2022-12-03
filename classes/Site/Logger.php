@@ -14,6 +14,7 @@
 
 			if (strtolower($parameters['type']) == "syslog") {
 				if (! isset($parameters['host'])) $parameters['host'] = '127.0.0.1';
+				if (! isset($parameters['port'])) $parameters['port'] = 514;
 				return new \Site\Logger\Syslog($parameters);
 			} elseif (strtolower($parameters['type']) == "screen") {
 				return new \Site\Logger\Screen($parameters);

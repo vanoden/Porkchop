@@ -1,11 +1,9 @@
 <?php
 	namespace Site;
 	
-	class Configuration {
-	
+	class Configuration Extends \BaseClass {
 		public $key;
 		public $value;
-		private $_error;
 
 		public function __construct($key = null) {
 			if (isset($key)) {
@@ -102,7 +100,12 @@
 			return $this->key;
 		}
 
-		public function error() {
-			return $this->_error;
+		public function validKey($string) {
+			if (preg_match('/^\w[\w\.\-\_\s]*$/',$string)) return true;
+			else return false;
+		}
+
+		public function validValue($string) {
+			return true;
 		}
 	}

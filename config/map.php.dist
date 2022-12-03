@@ -13,6 +13,7 @@
 			),
 			"templates"		=> array(
 				"configurations"		=> "admin.html",
+				"counters"		=> "admin.html",
 			),
 		),
 		"Content"		=> array(
@@ -97,7 +98,7 @@
 			),
 		),
         "Support"		=> array(
-			"schema_version" => 7,
+			"schema_version" => 10,
 			"roles"			=> array(
 			),
 			"templates"		=> array(

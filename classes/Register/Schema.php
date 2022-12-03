@@ -893,13 +893,21 @@
 				# Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-				$alter_table_query = "ALTER TABLE `register_organizations` ADD `password_expiration_days` int NULL";
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				$table = new \Database\Schema\Table('register_organizations');
+				if (! $table->disable_keys()) {
+					$this->error = $table->error();
 					return false;
 				}
-				
+
+				if (! $table->has_column('password_expiration_days')) {
+					$alter_table_query = "ALTER TABLE `register_organizations` ADD `password_expiration_days` int NULL";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+				}
+
 				$alter_table_query = "ALTER TABLE `register_users` ADD COLUMN `password_age` DATETIME DEFAULT CURRENT_TIMESTAMP;";
 				if (! $this->executeSQL($alter_table_query)) {
 					$this->error = "SQL Error altering `register_users` table in ".$this->module."::Schema::upgrade(): ".$this->error;
@@ -910,7 +918,143 @@
 				$this->setVersion(22);
 				$GLOBALS['_database']->CommitTrans();
 			}
+            if ($this->version() < 23) {
+				app_log("Upgrading schema to version 23",'notice',__FILE__,__LINE__);
 
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `register_users`
+						MODIFY COLUMN `status` enum('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED','BLOCKED') NOT NULL DEFAULT 'ACTIVE',
+						ADD COLUMN `auth_failures` INT(2) DEFAULT 0
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(23);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			
+			if ($this->version() < 25) {
+				app_log("Upgrading schema to version 25",'notice',__FILE__,__LINE__);
+
+				// Start Transaction 
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+			
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS register_auth_failures (
+						`id`			INT(11) NOT NULL AUTO_INCREMENT,
+						`ip_address`	INT(11) NOT NULL,
+						`login`			varchar(255) NOT NULL,
+						`date_fail`		timestamp,
+						`reason`		enum('NOACCOUNT','PASSEXPIRED','WRONGPASS','INACTIVE','INVALIDPASS') NOT NULL,
+						`endpoint`		varchar(255),
+						PRIMARY KEY `pk_reg_auth_fail` (`id`),
+						INDEX `idx_reg_auth_fail_ip_login` (`ip_address`,`login`),
+						INDEX `idx_reg_auth_fail_ip_last` (`ip_address`,`date_fail`),
+						INDEX `idx_reg_auth_fail_login` (`login`,`date_fail`)
+					)
+				";
+	
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating register_auth_failures table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+						app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(25);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			if ($this->version() < 26) {
+				app_log("Upgrading schema to version 26",'notice',__FILE__,__LINE__);
+
+				// Start Transaction 
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+			
+				$create_table_query = "
+                    CREATE TABLE if not exists `register_tags` (
+                      `id` int NOT NULL AUTO_INCREMENT,
+                      `type` enum('ORGANIZATION','USER','CONTACT','LOCATION') NOT NULL DEFAULT 'ORGANIZATION',
+                      `register_id` int DEFAULT NULL,
+                      `name` varchar(255) NOT NULL,
+                      PRIMARY KEY (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+				";
+	
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating register_tags table in Register::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
+						app_log($this->error,'error',__FILE__,__LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(26);
+				$GLOBALS['_database']->CommitTrans();
+				
+				// add new calbrator role
+				$this->addRoles(array('calibrator' => 'can calibrate customer devices'));			
+			}
+
+            if ($this->version() < 27) {
+				app_log("Upgrading schema to version 27",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$table = new \Database\Schema\Table('register_organizations');
+				if (! $table->has_column('default_billing_location_id')) {
+					$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_billing_location_id` int NULL";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+				}
+
+				if (! $table->has_column('default_shipping_location_id')) {
+					$alter_table_query = "ALTER TABLE `register_organizations` ADD COLUMN `default_shipping_location_id` int NULL;";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering `register_organizations` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+				}
+
+				$this->setVersion(27);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			
+            if ($this->version() < 28) {
+				app_log("Upgrading schema to version 28", 'notice', __FILE__, __LINE__);
+				
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				
+				$alter_table_query = "
+						ALTER TABLE `register_contacts` MODIFY `type` enum('phone','email','sms','facebook', 'insite')
+					";
+
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_contacts table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(28);
+				$GLOBALS['_database']->CommitTrans();			
+			}
+			
 			return true;
 		}
 	}

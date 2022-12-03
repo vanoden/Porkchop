@@ -6,6 +6,7 @@
 		public $level = 'debug';
 		public $connected = false;
 		public $html = false;
+		public $syslog = false;
 
 		public function caller($file,$line) {
 			if (isset($file)) return array($file,$line);
@@ -30,9 +31,9 @@
 			$pid = getMyPid();
 
 			if ((array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'module'))) $module = $GLOBALS['_page']->module;
-			else $module = '-';
+			else $module = 'core';
 			if ((array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'view'))) $view = $GLOBALS['_page']->view;
-			else $view = '-';
+			else $view = 'index';
 			if (array_key_exists('_SESSION_',$GLOBALS)) {
 				if (property_exists($GLOBALS['_SESSION_'],'id')) $session_id = $GLOBALS['_SESSION_']->id;
 				else $session_id = '-';
@@ -47,6 +48,9 @@
 			# Build String
 			if ($this->html) {
 				return "$date [$pid] [$level] $module::$view $file:$line $session_id $customer_id $message<br>\n";
+			}
+			elseif ($this->syslog) {
+				return "[$level] $module::$view $file:$line $session_id $customer_id $message";
 			}
 			else {
 				return "$date [$pid] [$level] $module::$view $file:$line $session_id $customer_id $message\n";

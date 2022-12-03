@@ -31,35 +31,63 @@
     // update customer notes from UI request
     app_log("updateNotes");
 	if ( isset($_REQUEST['action']) && $_REQUEST['action'] == 'updateNotes') {
-	    $queuedCustomer = new Register\Queue($_REQUEST['id']);
-	    $queuedCustomer->update(array('notes' => $_REQUEST['notes']));
-        $page->success = true;
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+        	$page->addError("Invalid Request");
+        }
+		else {
+            $queuedCustomer = new Register\Queue($_REQUEST['id']);
+            $queuedCustomer->update(array('notes' => noXSS(trim($_REQUEST['notes']))));
+            $page->success = true;
+        }
 	}
 
     // update customer status from UI request
     app_log("updateStatus");
+    $queuedCustomer = new Register\Queue($_REQUEST['id']);	
 	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updateStatus') {
-	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
-	    $queuedCustomer->update(array('status' => $_REQUEST['status']));
-	    if ($_REQUEST['status'] == 'APPROVED')$queuedCustomer->syncLiveAccount();
-        $page->success = true;
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+        	$page->addError("Invalid Request");
+        }
+		elseif (!$queuedCustomer->validStatus($_REQUEST['status'])) {
+			$page->addError("Invalid Status");
+		}
+		else {    
+            $queuedCustomer->update(array('status' => $_REQUEST['status']));
+            if ($_REQUEST['status'] == 'APPROVED') $queuedCustomer->syncLiveAccount();
+            $page->success = true;
+        }
 	}
 
     // assign customer and/or generate new organization if needed
     app_log("denyCustomer");
 	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'denyCustomer') {
-	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
-	    $queuedCustomer->update(array('status' => 'DENIED'));
-        $page->success = true;
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+        	$page->addError("Invalid Request");
+        } else {
+            $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
+            $queuedCustomer->update(array('status' => 'DENIED'));
+            $page->success = true;
+        }
 	}
 
     // assign customer and/or generate new organization if needed
     app_log("assignCustomer");
 	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'assignCustomer') {
-	    $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
-	    $queuedCustomer->update(array('status' => 'APPROVED'));
-	    $queuedCustomer->syncLiveAccount();
-        $page->success = true;
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+        	$page->addError("Invalid Request");
+        }
+		else {
+            $queuedCustomer = new Register\Queue($_REQUEST['id']);
+			$customer = new \Register\Customer($queuedCustomer->customer()->id);
+			if (! $customer->exists()) {
+				$page->addError("Customer not found");
+			}
+			else {
+	            $queuedCustomer->update(array('status' => 'APPROVED'));
+	            $queuedCustomer->syncLiveAccount();
+	            $page->success = "Registration complete for ".$customer->login;
+			}
+        }
 	}	
 
     // get queued customers based on search
@@ -96,35 +124,41 @@
 
     // handle send another verification email
     if (isset($_GET['verifyAgain']) && !empty($_GET['verifyAgain'])) {
-
-        $customer = new \Register\Customer($_GET['verifyAgain']);
-        $validation_key = md5(microtime());
-        $customer->update(array('validation_key'=>$validation_key));
-    
-        // create the verify account email
-        $verify_url = $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->login;
-        if ($_config->site->https) $verify_url = "https://$verify_url";
-        else $verify_url = "http://$verify_url";
-        $template = new \Content\Template\Shell(
-        array(
-	        'path'	=> $_config->register->verify_email->template,
-	        'parameters'	=> array(
-		        'VERIFYING.URL' => $verify_url
-	        )
-        )
-        );
-        if ($template->error()) {
-            app_log($template->error(),'error');
-            $page->addError("Error: generating verification email");
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+        	$page->addError("Invalid Request");
         } else {
-            $message = new \Email\Message($_config->register->verify_email);
-            $message->html(true);
-            $message->body($template->output());
-            if (! $customer->notify($message)) {
-	            $page->addError("Error: Confirmation email could not be sent");
-	            app_log("Error: sending confirmation email: ".$customer->error(),'error');
+        
+            $customer = new \Register\Customer($_GET['verifyAgain']);
+            $validation_key = md5(microtime());
+            $customer->update(array('validation_key'=>$validation_key));
+        
+            // create the verify account email
+            $verify_url = $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->login;
+            if ($_config->site->https) $verify_url = "https://$verify_url";
+            else $verify_url = "http://$verify_url";
+            $template = new \Content\Template\Shell (
+                array(
+                    'path'	=> $_config->register->verify_email->template,
+                    'parameters'	=> array(
+	                    'VERIFYING.URL' => $verify_url
+                    )
+                )
+            );
+            if ($template->error()) {
+                app_log($template->error(),'error');
+                $page->addError("Error: generating verification email");
             } else {
-                $page->success = "User was issued another verification email.";
+                $message = new \Email\Message($_config->register->verify_email);
+                $message->html(true);
+                $message->body($template->output());
+                if (! $customer->notify($message)) {
+                    $page->addError("Error: Confirmation email could not be sent");
+                    app_log("Error: sending confirmation email: ".$customer->error(),'error');
+                } else {
+                    $page->success = "User was issued another verification email.";
+                }
             }
         }
-     }
+    }
+
+	$possibleStatii = $queuedCustomer->statii();

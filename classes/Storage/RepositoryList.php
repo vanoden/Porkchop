@@ -13,16 +13,22 @@
 				FROM	storage_repositories
 				WHERE	id = id
 			";
+
+			$bind_params = array();
+			if (!empty($parameters['name'])) {
+				$get_objects_query .= "
+				AND		name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
 			if (isset($parameters['code']) && strlen($parameters['code'])) {
 				$get_objects_query .= "
-				AND		code = ".$GLOBALS['_database']->qstr($parameters['code'],get_magic_quotes_gpc());
+				AND		code = ?";
+				array_push($bind_params,$parameters['code']);
 			}
 			$get_objects_query .= "
 				AND		status != 'DISABLED'";
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_objects_query
-			);
+			$rs = $GLOBALS['_database']->Execute($get_objects_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Storage::RepositoryList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;

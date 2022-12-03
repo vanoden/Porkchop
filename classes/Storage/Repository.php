@@ -1,15 +1,21 @@
 <?php
 	namespace Storage;
 
-	class Repository {
+	class Repository Extends \BaseClass {
 	
 		public $error;
 		public $name;
 		public $type;
 		public $id;
 		public $code;
+		public $default_privileges;
+		public $override_privileges;
 
 		public function __construct($id = 0) {
+			$this->_init($id);
+		}
+		protected function _init($id = 0) {
+			app_log("Loading repository $id",'info');
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
@@ -21,19 +27,19 @@
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
 			if (isset($parameters['type'])) $this->type = $parameters['type'];
 			
-			if (! $this->_valid_code($parameters['code'])) {
+			if (! $this->validCode($parameters['code'])) {
 				$this->error = "Invalid code";
 				return false;
 			}
 			
 			if (! isset($parameters['status']) || ! strlen($parameters['status'])) {
 				$parameters['status'] = 'NEW';
-			} else if (! $this->_valid_status($parameters['status'])) {
+			} else if (! $this->validStatus($parameters['status'])) {
 				$this->error = "Invalid status";
 				return false;
 			}
 			
-			if (! $this->_valid_name($parameters['name'])) {
+			if (! $this->validName($parameters['name'])) {
 				$this->error = "Invalid name";
 				return false;
 			}
@@ -74,7 +80,7 @@
 			$bind_params = array();
 
 			if (isset($parameters['name'])) {
-				if ($this->_valid_name($parameters['name'])) {
+				if ($this->validName($parameters['name'])) {
 					$update_object_query .= ",
 					name = ?";
 					array_push($bind_params,$parameters['name']);
@@ -85,7 +91,7 @@
 			}
 			
 			if (isset($parameters['status'])) {
-				if ($this->_valid_status($parameters['status'])) {
+				if ($this->validStatus($parameters['status'])) {
 					$update_object_query .= ",
 					status = ?";
 					array_push($bind_params,$parameters['status']);
@@ -182,12 +188,16 @@
 				$this->error = "SQL Error in Storage::Repository::details(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
-			
+
 			$object = $rs->FetchNextObject(false);
 			$this->name = $object->name;
 			$this->type = $object->type;
 			$this->code = $object->code;
 			$this->status = $object->status;
+			$default_privileges_json = $object->default_privileges;
+			$this->default_privileges = json_decode($default_privileges_json,true);
+			$override_privileges_json = $object->override_privileges;
+			$this->override_privileges = json_decode($override_privileges_json,true);
 			
 			$get_object_query = "
 				SELECT	*
@@ -295,21 +305,50 @@
 			$file = new \Storage\File();
 			return $file->fromPath($this->id,$path);
 		}
-		
-		private function _valid_code($string) {
-			if (preg_match('/^\w[\w\-\_\.]*$/',$string)) return true;
-			return false;
+
+		public function default_privileges() {
+			return json_decode($this->default_privileges_json,true);
 		}
-		private function _valid_name($string) {
+
+		public function override_privileges() {
+			return json_decode($this->override_privileges_json,true);
+		}
+		
+		public function validName($string) {
 			if (preg_match('/^\w[\w\-\_\.\s]*$/',$string)) return true;
 			return false;
 		}
-		private function _valid_status($string) {
+		public function validStatus($string) {
 			if (preg_match('/^(NEW|ACTIVE|DISABLED)$/i',$string)) return true;
 			return false;
 		}
-		private function _valid_type($string) {
+		public function validType($string) {
 			if (preg_match('/^(Local|S3)$/',$string)) return true;
 			return false;
+		}
+		public function validPath($string) {
+			// Only certain instances require path
+			if (empty($string)) return true;
+			else return false;
+		}
+		public function validAccessKey($string) {
+			// Only certain instances require accessKey
+			if (empty($string)) return true;
+			else return false;
+		}
+		public function validSecretKey($string) {
+			// Only certain instances require accessKey
+			if (empty($string)) return true;
+			else return false;
+		}
+		public function validBucket($string) {
+			// Only certain instances require bucket
+			if (empty($string)) return true;
+			else return false;
+		}
+		public function validRegion($string) {
+			// Only certain instances require bucket
+			if (empty($string)) return true;
+			else return false;
 		}
 	}

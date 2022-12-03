@@ -17,6 +17,8 @@
         ### Add an Event								###
         ###################################################
         public function addEvent() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $event = new \Contact\Event();
             if ($event->error) app_error("Error initializing ContactEvent: ".$event->error);
             

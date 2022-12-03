@@ -38,6 +38,7 @@
 			app_log("Activated ".$counter." customers",'info',__FILE__,__LINE__);
 			return $counter;
 		}
+		
 		public function expireInactive($age = 14) {
 			if (! is_numeric($age)) {
 				$this->error = "Age must be a number";
@@ -61,6 +62,7 @@
 			}
 			return true;
 		}
+		
 		public function expire($date_threshold) {
 			if (get_mysql_date($date_threshold))
 				$date = get_mysql_date($date_threshold);
@@ -101,7 +103,8 @@
 			}
 			return $count;
 		}
-		public function find($parameters = array(),$count = false) {
+		
+		public function find($parameters = array(), $count = false) {
 			if ($count == true) $ADODB_COUNTRECS = true;
 
 			$bind_params = array();
@@ -129,7 +132,7 @@
 					OR		first_name LIKE '$string'
 					OR		last_name LIKE '$string'
 					OR		middle_name LIKE '$string'
-					OR		login_name LIKE '$string'
+					OR		last_name LIKE '$string'
 				)
 				";
 			}
@@ -147,7 +150,7 @@
 				AND		login = ?";
 				array_push($bind_params,$parameters['code']);
 			}
-			if (isset($parameters['status'])) {
+			if (isset($parameters['status']) && !empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					$icount = 0;
 					$find_person_query .= "
@@ -223,7 +226,7 @@
 					$find_person_query .= "
 					LIMIT	".$parameters['_limit'];
 			}
-			query_log($find_person_query);
+			query_log($find_person_query,$bind_params,true);
 			$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Register::Person::find(): ".$GLOBALS['_database']->ErrorMsg();
@@ -242,6 +245,7 @@
 			if ($count) return $this->count;
 			return $people;
 		}
+		
 		public function search($search_string,$limit = 0,$offset = 0) {
 			if (is_bool($limit) && $limit == true) $count = true;
 			else $count = false;
@@ -272,7 +276,7 @@
 					OR		first_name LIKE '$search_string'
 					OR		last_name LIKE '$search_string'
 					OR		middle_name LIKE '$search_string'
-					OR		login_name LIKE '$search_string'
+					OR		last_name LIKE '$search_string'
 				)
 			";
 			if (isset($parameters['status'])) {

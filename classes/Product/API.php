@@ -16,6 +16,8 @@
 		### Add an Item									###
 		###################################################
 		public function addItem() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$this->requirePrivilege("manage products");
 			$product = new \Product\Item();
 	
@@ -40,6 +42,8 @@
 		### Update a Product							###
 		###################################################
 		public function updateItem() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$this->requirePrivilege("manage products");
 
 			$product = new \Product\Item();
@@ -109,6 +113,8 @@
         ### Add a Price                                 ###
         ###################################################
         public function addPrice() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$this->requirePrivilege("manage products");
             $parameters = array();
             $product = new \Product\Item();
@@ -148,6 +154,8 @@
 		### Add a Relationship							###
 		###################################################
 		public function addRelationship() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$this->requirePrivilege("manage products");
 			$_product = new \Product\Item();
 			if (defined($_REQUEST['parent_code'])) {
@@ -239,6 +247,8 @@
 		### Add a Group									###
 		###################################################
 		public function addGroup() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$this->requirePrivilege("manage products");
 			$_REQUEST['type'] = 'group';
 			$this->addItem();
@@ -248,6 +258,8 @@
 		### Update a Group								###
 		###################################################
 		public function updateGroup() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$this->requirePrivilege("manage products");
 			$this->updateItem();
 		}
@@ -264,6 +276,8 @@
 		### Add Product to Group						###
 		###################################################
 		public function addGroupItem() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$this->requirePrivilege("manage products");
 			if (! preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['group_code'])) $this->error("group_code required for addGroupItem method");
 			if (! preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['item_code'])) $this->error("group_code required for addGroupItem method");
@@ -307,6 +321,8 @@
 		### Add a Product Intance						###
 		###################################################
 		public function addInstance() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! preg_match('/^[\w\-\_\.\:\(\)]+$/',$_REQUEST['code']))
 			 $this->error("code required to add instance");
 	
@@ -390,6 +406,8 @@
 		### Update an Instance							###
 		###################################################
 		public function updateInstance() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$instance = new \Product\Instance();
 			if ($instance->error) $this->app_error("Error initializing asset: ".$instance->error,__FILE__,__LINE__);
 			if (isset($_REQUEST['product_code']) && strlen($_REQUEST['product_code'])) {
@@ -455,16 +473,14 @@
 					$organization->get($_REQUEST['organization_code']);
 					if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
 					$parameters['organization_id'] = $organization->id;
-				}
-				else {
+				} else {
 					app_log("Unauthorized attempt to access instances from another organization",'notice',__FILE__,__LINE__);
-				 $this->error("Permission Denied");
+				    $this->error("Permission Denied");
 				}
 			}
 			elseif(! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
-			}
-			else {
+			} else {
 				# Privileges support access
 			}
 	
@@ -481,6 +497,8 @@
 		### Add Image to Product						###
 		###################################################
 		public function addItemImage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$this->requirePrivilege("manage products");
 			# Load Media Module
 			$product = new \Product\Item();
@@ -509,6 +527,8 @@
 		### Add Metadata to Product						###
 		###################################################
 		public function addItemMetadata() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$this->requirePrivilege("manage products");
 			$_product = new \Product\Item();
 			$product = $_product->get($_REQUEST['code']);

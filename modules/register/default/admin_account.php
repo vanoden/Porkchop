@@ -6,10 +6,46 @@
        width: 400px; 
        height: 35px;
    }
+   
+    #btn_submit {
+        min-width: 175px;
+        min-height: 50px;
+        border-radius: 10px;
+    }
+    
+    #submit-button-container {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+    }   
+    
+    #auth-failures-table {
+        margin-bottom: 100px;
+    }
 </style>
 <script type="text/javascript">
+
    // submit form
-   function submitForm() { 
+   function submitForm() {
+   
+        // make sure that all the notify contacts have a 'description' value populated
+        var contactTable = document.getElementById("contact-main-table");
+        var notifyChecked = contactTable.getElementsByTagName("input");
+        for (var i = 0; i < notifyChecked.length; i++) {
+            if (notifyChecked[i].checked) {
+                var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
+                if (matches[0]) {
+                    contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[','').replace(']','') + "]");
+                    contactDescriptionField[0].style.border = "";
+                    if (!contactDescriptionField[0].value) {
+                        alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
+                        contactDescriptionField[0].style.border = "3px solid red";
+                        return false;
+                    }
+                }
+            }
+        }
+        
        if (document.register.password.value.length > 0 || document.register.password_2.value.length > 0) {
            if (document.register.password.value.length < 6) {
                alert("Your password is too short.");
@@ -56,10 +92,13 @@
    }
 </script>
 <h2>Customer Account Settings</h2>
-<form name="register" action="<?=PATH?>/_register/admin_account" method="POST">
+<form id="admin-account-form" name="register" action="<?=PATH?>/_register/admin_account" method="POST">
+   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
    <input type="hidden" name="target" value="<?=$target?>"/>
    <input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
-    <?php	 if ($page->errorCount() > 0) { ?>
+   <input type="hidden" name="login" value="<?=$customer->login?>"/>
+    <?php    
+    	 if ($page->errorCount() > 0) { ?>
         <div class="form_error"><?=$page->errorString()?></div>
     <?php	 } ?>
    
@@ -103,10 +142,10 @@
             </select>
          </div>
          <div class="tableCell">
-            <input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?=$customer->first_name?>" />
+            <input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?=htmlentities($customer->first_name)?>" />
          </div>
          <div class="tableCell">
-            <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" />
+            <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=htmlentities($customer->last_name)?>" />
          </div>
          <div class="tableCell">
             <select id="timezone" name="timezone" class="value input collectionField">
@@ -123,7 +162,7 @@
    <!--End LOGIN Specs -->		
    <!-- START Methods of Contact -->
    <h3>Methods of Contact</h3>
-   <div class="tableBody min-tablet">
+   <div id="contact-main-table" class="tableBody min-tablet">
       <div class="tableRowHeader">
          <div class="tableCell" style="width: 20%;">Type</div>
          <div class="tableCell" style="width: 25%;">Description</div>
@@ -143,13 +182,13 @@
             </select>
          </div>
          <div class="tableCell">
-            <input type="text" name="description[<?=$contact->id?>]" class="value wide_100per" value="<?=$contact->description?>" />
+            <input type="text" name="description[<?=$contact->id?>]" class="value wide_100per" value="<?=htmlentities($contact->description)?>" />
          </div>
          <div class="tableCell">
-            <input type="text" name="value[<?=$contact->id?>]" class="value wide_100per" value="<?=$contact->value?>" />
+            <input type="text" name="value[<?=$contact->id?>]" class="value wide_100per" value="<?=htmlentities($contact->value)?>" />
          </div>
          <div class="tableCell">
-            <input type="text" name="notes[<?=$contact->id?>]" class="value wide_100per" value="<?=$contact->notes?>" />
+            <input type="text" name="notes[<?=$contact->id?>]" class="value wide_100per" value="<?=htmlentities($contact->notes)?>" />
          </div>
          <div class="tableCell">
             <input type="checkbox" name="notify[<?=$contact->id?>]" value="1" <?php if ($contact->notify) print "checked"; ?> />
@@ -218,13 +257,10 @@
    </div>
    <?php  } ?>
    <hr/>
-   <div id="accountFormSubmit" style="text-align:center;">
-      <input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton largeButton" onclick="return submitForm();"/>
-   </div>
    <!--	END Change Password-->
    <h3>Status</h3>
    <select class="input" name="status">
-      <?php	foreach(array('NEW','ACTIVE','EXPIRED','DELETED') as $status) {?>
+      <?php	foreach(array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED','BLOCKED') as $status) {?>
       <option value="<?=$status?>"<?php if ($status == $customer->status) print " selected"; ?>><?=$status?></option>
       <?php	}	?>
    </select>
@@ -249,9 +285,39 @@
          }
          ?>
    </table>
+   <h3>Recent Auth Failures</h3>
+   <div id="auth-failures-table">
+   <div class="tableBody min-tablet">
+		<div class="tableRowHeader">
+			<div class="tableCell">Date</div>
+			<div class="tableCell">IP Address</div>
+			<div class="tableCell">Reason</div>
+			<div class="tableCell">Endpoint</div>
+		</div>
+<?php foreach ($authFailures as $authFailure) { ?>
+		<div class="tableRow">
+			<div class="tableCell"><?=$authFailure->date?></div>
+			<div class="tableCell"><?=$authFailure->ip_address?></div>
+			<div class="tableCell"><?=$authFailure->reason?></div>
+			<div class="tableCell"><?=$authFailure->endpoint?></div>
+		</div>
+<?php	} ?>
+	</div>
+	<span class="label" style="display:inline;">Auth Failures Since Last Success: </span><span class="value"><?=$customer->auth_failures?></span>
+	<br/>
+	<input type="submit" name="btnResetFailures" value="Reset Failures" />
+	</div>
+    <!-- entire page button submit -->
+    <div id="submit-button-container" class="tableBody min-tablet">
+        <div class="tableRow button-bar">
+            <input id="btn_submit" type="submit" name="method" class="button" value="Apply" onclick="return submitForm();"/>
+        </div>
+    </div>		
 </form>
+
 <!-- hidden for for "delete contact" -->
 <form id="delete-contact" name="delete-contact" action="<?=PATH?>/_register/admin_account" method="post">
+   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
    <input type="hidden" id="submit-type" name="submit-type" value="delete-contact"/>
    <input type="hidden" id="register-contacts-id" name="register-contacts-id" value=""/>
 </form>

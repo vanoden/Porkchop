@@ -2,7 +2,7 @@
 	$page = new \Site\Page();
 
 	# Handle Actions
-	if ($_REQUEST['email_address']) {
+	if (isset($_REQUEST['email_address'])) {
 		# Check reCAPTCHA
 		$url = "https://www.google.com/recaptcha/api/siteverify";
 		$data = array(
@@ -17,11 +17,11 @@
 				'content'	=> http_build_query($data),
 			),
 		);
-		
+
 		# Don't need to store these fields
 		unset($_REQUEST['g-recaptcha-response']);
 		unset($_REQUEST['btn_submit']);
-		 
+
 		// Allow to bypass the captcha if config->captcha->bypass_key set
 		if (!empty($_REQUEST['captcha_bypass_key'])) {
 			app_log("User skipping captcha",'notice');
@@ -45,7 +45,10 @@
 		if ($captcha_success->success == true) {
 			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
 
-			if (valid_email($_REQUEST['email_address'])) {
+            if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+                $page->addError("Invalid Request");
+            }
+			elseif (valid_email($_REQUEST['email_address'])) {
 				# Get User Info From Database
 				$contact = new \Register\Contact();
 				$contact->get('email',$_REQUEST['email_address']);
@@ -87,7 +90,7 @@
 					app_log("Generated password token '".$token->code."'",'debug',__FILE__,__LINE__);
 					$recovery_url = "http";
 					if ($GLOBALS['_config']->site->https) $recovery_url = "https";
-					$recovery_url .= "://".$GLOBALS['_config']->site->hostname."/_register/login?token=".$token->code;
+					$recovery_url .= "://".$GLOBALS['_config']->site->hostname."/_register/reset_password?token=".$token->code;
 
 					###############################################
 					### Password Found, Generate Recovery Email	###
@@ -153,9 +156,4 @@
 		else {
 			$page->addError("Sorry, CAPTCHA Invalid.  Please Try Again");
 		}
-	}
-
-	function valid_email($email) {
-		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+$/",$email)) return 1;
-		else return 0;
 	}

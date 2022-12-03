@@ -1,6 +1,25 @@
 <!--Testing this out-->
 <script type="text/javascript">
 	function submitForm() {
+	
+        // make sure that all the notify contacts have a 'description' value populated
+        var contactTable = document.getElementById("contact-main-table");
+        var notifyChecked = contactTable.getElementsByTagName("input");
+        for (var i = 0; i < notifyChecked.length; i++) {
+            if (notifyChecked[i].checked) {
+                var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
+                if (matches[0]) {
+                    contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[','').replace(']','') + "]");
+                    contactDescriptionField[0].style.border = "";
+                    if (!contactDescriptionField[0].value) {
+                        alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
+                        contactDescriptionField[0].style.border = "3px solid red";
+                        return false;
+                    }
+                }
+            }
+        }
+	
 		if (document.register.password.value.length > 0 || document.register.password_2.value.length > 0) {
 			if (document.register.password.value.length < 6) {
 				alert("Your password is too short.");
@@ -23,10 +42,16 @@
            document.getElementById("delete-contact").submit();
        }
    }
+	// Redirect user to reset password page
+	function passChange() {
+		window.location.replace("/_register/reset_password");
+		return true;
+	}
 </script>
 <style type="text/css"></style>
 <h2>My Account</h2>
 <form name="register" action="<?=PATH?>/_register/account" method="POST">
+    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 	<input type="hidden" name="target" value="<?=$target?>"/>
 	<input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
 	<?php if ($page->error) { ?>
@@ -90,7 +115,7 @@
 	<!-- Contact Options -->
 	<section class="form-group">
 	<h4>Add Methods of Contact</h4>
-	<div class="tableBody=">
+	<div id="contact-main-table" class="tableBody">
 		<div class="tableRowHeader">
 			<div class="tableCell">Types</div>
 			<div class="tableCell">Description</div>
@@ -150,29 +175,14 @@
 	</section>
 
 	<section class="form-group">
-		<?php if ($customer->auth_method == 'local') { ?>
-		<ul class="form-grid three-col connectBorder">
-			<h4>Change Password</h4>
-			<li id="">
-				<label for="current-password">Current Password:</label>
-				<input type="password" class="value registerValue registerPasswordValue" name="password" />
-			</li>
-			<li id="accountPasswordQuestion">
-				<label for="new-password-first">New Password:</label>
-				<input type="password" class="value registerValue registerPasswordValue" name="password" />
-			</li>
-			<li id="accountPasswordConfirm">
-				<label for="new-password-second">Confirm New Password:</label>
-				<input type="password" class="value registerValue registerPasswordValue" name="password_2" />
-			</li>
-		</ul>
 		<div id="accountFormSubmit"><input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton" onclick="return submitForm();" /></div>
-		<?php } ?>
+		<div id="accountFormSubmit"><input type="button" name="method" value="Change Password" class="button submitButton registerSubmitButton" onclick="return passChange();" /></div>
 	</section>
 </form>
 
 <!-- hidden for for "delete contact" -->
 <form id="delete-contact" name="delete-contact" action="<?=PATH?>/_register/account" method="post">
-   <input type="hidden" id="submit-type" name="submit-type" value="delete-contact"/>
-   <input type="hidden" id="register-contacts-id" name="register-contacts-id" value=""/>
+	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+	<input type="hidden" id="submit-type" name="submit-type" value="delete-contact"/>
+	<input type="hidden" id="register-contacts-id" name="register-contacts-id" value=""/>
 </form>

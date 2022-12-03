@@ -29,7 +29,7 @@
 <?php	foreach ($pages as $page) {
 		$metadata = $page->allMetadata(); ?>
 	<div class="tableRow">
-		<div class="tableCell"><a href="/_site/page?module=<?=$page->module?>&view=<?=$page->view?>&index=<?=$page->index?>"><?=$page->module?></a></div>
+		<div class="tableCell"><a href="/_site/page?module=<?=$page->module()?>&view=<?=$page->view()?>&index=<?=$page->index?>"><?=$page->module()?></a></div>
 		<div class="tableCell"><?=$page->view?></div>
 <?php		if (!empty($page->index) && ($GLOBALS['_SESSION_']->customer->has_privilege('edit content messages'))) { ?>
 		<div class="tableCell"><a href="/_site/content_block/<?=$page->index?>"><?=$page->index?></a></div>

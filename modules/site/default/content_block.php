@@ -26,24 +26,42 @@
         toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | code'
 	});
 </script>
-<form method="post" action="/_site/content_block">
-<input type="hidden" name="id" value="<?=$message->id?>"/>
-<div class="columns">
-    <span class="lefty">Name</span>
-    <input class="value input lefty" type="text" name="name" id="name" value="<?=$message->name?>"/><br>
-    <span class="lefty">Target</span>
-    <input class="value input lefty" type="text" name="target" id="target" value="<?=$message->target?>"/>
-</div>
-<div class="columns">
-<?php	if ($show_add_page) { ?>
-	<span>Add As A Page? </span><input type="checkbox" name="addPage" value="1" />
-<?php	} else { ?>
-	<a href="/_content/<?=$message->target?>">Go To Page</a><br>
-	<a href="/_site/page?module=content&view=index&index=<?=$message->target?>">Edit Page Metadata</a><br>
+<span class="title">Edit Site Content Block</span>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<li><?=$page->errorString()?></li>
+	</ul>
+</section>
+
+<?php	} else if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?=$page->success?></li>
+	</ul>
+</section>
 <?php	} ?>
-</div>
-<div id="contentArea">
-	<textarea id="content" name="content"><?=$message->content?></textarea>
-	<input type="submit" name="Submit" value="Submit"/>
-</div>
+
+<form method="post" action="/_site/content_block">
+    <input type="hidden" name="id" value="<?=$message->id?>"/>
+    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+    <div class="columns">
+        <span class="lefty">Name</span>
+        <input class="value input lefty" type="text" name="name" id="name" value="<?=$message->name?>"/><br>
+        <span class="lefty">Target</span>
+        <input class="value input lefty" type="text" name="target" id="target" value="<?=$message->target?>"/>
+    </div>
+    <div class="columns">
+    <?php	if ($show_add_page) { ?>
+	    <span>Add As A Page? </span><input type="checkbox" name="addPage" value="1" />
+    <?php	} else { ?>
+	    <a href="/_content/<?=$message->target?>">Go To Page</a><br>
+	    <a href="/_site/page?module=content&view=index&index=<?=$message->target?>">Edit Page Metadata</a><br>
+    <?php	} ?>
+    </div>
+    <div id="contentArea">
+	    <textarea id="content" name="content"><?=$message->content?></textarea>
+	    <input type="submit" name="Submit" value="Submit"/>
+    </div>
 </form>

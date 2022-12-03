@@ -20,11 +20,22 @@
 	function _debug_print($message) {
 		error_log("DEBUG: ".$message);
 	}
-	function sanitize(&$string) {
-		$string = trim($string);
-		$string = htmlspecialchars($string);
-		return $string;
+
+	function strongPassword($string) {
+		$customer = new \Register\Customer();
+		if (!isset($GLOBALS['_config']->register->minimum_password_strength)) return true;
+		if ($customer->password_strength($string) > $GLOBALS['_config']->register->minimum_password_strength) return true;
+		return false;
 	}
+
+	function valid_email($email) {
+		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+\.[a-z]{2,}$/",strtolower($email))) return true;
+		else {
+			app_log("Invalid email address: '$email'",'info');
+			return false;
+		}
+	}
+
 	function get_mysql_date($date = null,$range=0) {
 		if (empty($date)) {
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
@@ -53,6 +64,11 @@
 			$newdate = date("Y-m-d h:i:s",time() + $adjust);
 			app_log("get_mysql_date received $date, returns $newdate",'debug');
 			return $newdate;
+		}
+
+		# T Dates
+		if (preg_match('/^\d\d\d\d\-\d\d\-\d\dT/',$date)) {
+			$date = preg_replace('/T/',' ',$date);
 		}
 
 		# Ignore Empty Dates
@@ -343,6 +359,31 @@
 	###################################################
 	function format_query($string) {
 		return preg_replace('/(\r\n)/','',preg_replace('/\t/',' ',$string));
+	}
+
+	# Cleanup special chars in output to avoid XSS
+	function sanitize(&$string) {
+		$string = trim($string);
+		$string = htmlspecialchars($string);
+		return $string;
+	}
+
+	# Trim Hexidecimal and HTML/XML tags from input
+	function noXSS($string) {
+		$string = preg_replace('/\%[a-f0-9]{2}/','',$string);
+		$string = preg_replace('/(\<|\>)/','',$string);
+		return $string;
+	}
+
+	# Check for basic token-like string
+	function safeToken($string) {
+		if (preg_match('/^[\w\-\.\_\s]{1,32}$/',$string)) return true;
+		return false;
+	}
+
+	function validTimezone($string) {
+		if (in_array($string, DateTimeZone::listIdentifiers())) return true;
+		return false;
 	}
 
 	function prettyPrint( $json ) {

@@ -19,6 +19,8 @@
 <h2>Contact Information</h2>
 <?php	if ($page->errorCount() > 0) { ?>
 <span class="form_error"><?=$page->errorString()?></span>
+<?php	} else if ($page->success) { ?>
+<span class="form_success"><?=$page->success?></span>
 <?php	} ?>
 <form method="POST" action="/_contact/form">
 <table class="body">

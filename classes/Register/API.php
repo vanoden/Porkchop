@@ -19,7 +19,7 @@
         function me() {
             # Default StyleSheet
             if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
-            if ($GLOBALS['_SESSION_']->customer->can('see admin tools')) $GLOBALS['_SESSION_']->customer->admin = 1;
+            if (!empty($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('see admin tools')) $GLOBALS['_SESSION_']->customer->admin = 1;
  
             $siteMessageDeliveryList = new \Site\SiteMessageDeliveryList();
             $siteMessageDeliveryList->find(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'acknowledged' => false));
@@ -44,20 +44,28 @@
             # Initiate Product Object
             $customer = new \Register\Customer();
 
+			if ($customer->status == 'BLOCKED') error("Your account has been blocked");
+			if ($customer->status == 'EXPIRED') error("Your account has expired.  Please use 'forgot password' on the website to restore.");
+			if ($customer->auth_failures() >= 3) error("Too many auth failures.  Please use 'forget password' on the website to restore");
+
             $result = $customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
             if ($customer->error) $this->error($customer->error);
 
-            if ($result > 0) {
+            if ($result && $customer->isActive()) {
                 app_log("Assigning session ".$GLOBALS['_SESSION_']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
                 $GLOBALS['_SESSION_']->assign($customer->id);
             }
+			elseif ($result) {
+				$this->error("This account is not active");
+			}
             else {
 				$this->_incrementCounter("incorrect");
                 app_log("Authentication failed",'notice',__FILE__,__LINE__);
             }
-            
-            $this->response->success = $result;
+
             if (! $result) $this->error("Invalid login password combination");
+
+			$this->response->success = 1;
 
             # Send Response
             print $this->formatOutput($this->response);
@@ -102,6 +110,8 @@
         ### Update Specified Customer					###
         ###################################################
         function updateCustomer() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
@@ -124,29 +134,38 @@
             if (! $customer->id) $this->error("Customer not found");
 
             if (isset($_REQUEST['organization']) && !isset($_REQUEST['organization_code'])) {
-		$_REQUEST['organization_code'] = $_REQUEST['organization'];
+		        $_REQUEST['organization_code'] = $_REQUEST['organization'];
             }
-            if (isset($_REQUEST['organization_code'])) {
+            if (isset($_REQUEST['organization_code']) && !empty($_REQUEST['organization_code'])) {
                 $organization = new \Register\Organization();
                 if ($organization->get($_REQUEST['organization_code'])) {
-			$parameters['organization_id'] = $organization->id;
-		}
-		else $this->app_error("Error getting organization: ".$organization->error,__FILE__,__LINE__);
+			        $parameters['organization_id'] = $organization->id;
+		        }
+		        elseif(!empty($organization->error)) {
+                    $this->app_error("Error getting organization: ".$organization->error,__FILE__,__LINE__);
+                }
+	            else {
+                    $this->error("Organization not found");
+	            }
             }
-	    else {
-                $this->error("Organization not found");
-	    }
             
-            if (isset($_REQUEST['first_name'])) $parameters['first_name'] = $_REQUEST['first_name'];
-            if (isset($_REQUEST['last_name'])) $parameters['last_name'] = $_REQUEST['last_name'];
-            if (isset($_REQUEST['password'])) $parameters['password'] = $_REQUEST['password'];
+            if (!empty($_REQUEST['first_name'])) $parameters['first_name'] = noXSS($_REQUEST['first_name']);
+            if (!empty($_REQUEST['last_name'])) $parameters['last_name'] = noXSS($_REQUEST['last_name']);
+            if (!empty($_REQUEST['password'])) {
+				if (!strongPassword($_REQUEST['password'])) $this->error("Password is not complex enough");
+				$parameters['password'] = $_REQUEST['password'];
+			}
             if (isset($_REQUEST['automation'])) {
                 if ($_REQUEST['automation'] == 1) $parameters['automation'] = true;
                 else $parameters['automation'] = false;
             }
+			if (!empty($_REQUEST['timezone'])) {
+				if (!in_array($_REQUEST['timezone'], \DateTimeZone::listIdentifiers())) $this->error("Invalid timezone provided");
+				$parameters['timezone'] = $_REQUEST['timezone'];
+			}
 
             # Update Customer
-            if (!$customer->update($parameters)) error($customer->error());
+            if (!$customer->update($parameters)) $this->error($customer->error());
 
             # Error Handling
             $response = new \HTTP\Response();
@@ -215,7 +234,7 @@
          * check if password is strong enought
          */
         function checkPasswordStrength() {
-            $person = new \Register\Person();    	
+            $person = new \Register\Customer();    	
             $strength = $person->password_strength($_REQUEST["password"]);
             $minPasswordStrength = 8;
             if (isset($GLOBALS['_config']->register->minimum_password_strength)) $minPasswordStrength = $GLOBALS['_config']->register->minimum_password_strength;
@@ -259,7 +278,7 @@
             $admins = $role->members();
 
             # Error Handling
-            if ($role->error) $this->error($role->error);
+            if ($role->error()) $this->error($role->error());
 
             $this->response->success = 1;
             $this->response->admin = $admins;
@@ -272,6 +291,8 @@
         ### Add a User Role								###
         ###################################################
         function addRole() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
             $role = new \Register\Role();
@@ -281,7 +302,7 @@
                     'description'	=> $_REQUEST['description']
                 )
             );
-            if ($role->error) $this->error($role->error);
+            if ($role->error()) $this->error($role->error());
 
             $response = new \HTTP\Response();
             $response->success = 1;
@@ -294,13 +315,15 @@
         ### Update an Existing Role						###
         ###################################################
         function updateRole() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
             $response = new \HTTP\Response();
 
             $role = new \Register\Role();
             $role->get($_REQUEST['name']);
-            if ($role->error) $this->error($role->error);
+            if ($role->error()) $this->error($role->error());
             if (! $role->id) $this->error("Role not found");
             $parameters = array();
             if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
@@ -309,7 +332,7 @@
             }
             else {
                 $response->success = 0;
-                $response->error = $role->error;
+                $response->error = $role->error();
             }
             print $this->formatOutput($response);
         }
@@ -318,11 +341,13 @@
         ### Add a User to a Role						###
         ###################################################
         function addRoleMember() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
             $role = new Role();
             $role->get($_REQUEST['name']);
-            if ($role->error) $this->app_error("Error getting role: ".$role->error,'error',__FILE__,__LINE__);
+            if ($role->error()) $this->app_error("Error getting role: ".$role->error(),'error',__FILE__,__LINE__);
             if (! $role->id) $this->error("Role not found");
             
             $person = new \Register\Customer();
@@ -331,7 +356,7 @@
             if (! $person->id) $this->error("Person not found");
 
             $result = $role->addMember($person->id);
-            if ($role->error) $this->error($role->error);
+            if ($role->error()) $this->error($role->error());
 
             $response = new \HTTP\Response();
             $response->success = 1;
@@ -343,12 +368,14 @@
         ### Assign Privilege to Role					###
         ###################################################
         function addRolePrivilege() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
             if ($_REQUEST['role']) {
                 $role = new \Register\Role();
                 $role->get($_REQUEST['role']);
-                if ($role->error) $this->error($role->error);
+                if ($role->error()) $this->error($role->error());
                 if (! $role->id) $this->error("Role not found");
             }
             else {
@@ -360,7 +387,7 @@
                 $response->success = 1;
             }
             else {
-                $this->error($role->error);
+                $this->error($role->error());
             }
 
             # Send Response
@@ -374,7 +401,7 @@
             if ($_REQUEST['role']) {
                 $role = new \Register\Role();
                 $role->get($_REQUEST['role']);
-                if ($role->error) $this->error ($role->error);
+                if ($role->error()) $this->error ($role->error());
                 if (! $role->id) $this->error ("Role not found");
             }
             else {
@@ -418,6 +445,8 @@
         ### Create Customer Image						###
         ###################################################
         function addImage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Authenticated Customer Required
             #confirm_customer();
 
@@ -457,6 +486,8 @@
         ### Add a New Customer via Registration			###
         ###################################################
         function addCustomer() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Initiate Response
             $this->response->header->session = $GLOBALS['_SESSION_']->code;
             $this->response->header->method = $_REQUEST["method"];
@@ -472,13 +503,13 @@
             }
 
             $organization_id = 0;
-            if ($_REQUEST['organization_id']) {
+            if (!empty($_REQUEST['organization_id'])) {
                 $organization = new \Register\Organization($_REQUEST['organization_id']);
                 if ($organization->error) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
                 if (! $organization->id) $this->error("Could not find organization by id");
                 $organization_id = $organization->id;
             }
-            elseif ($_REQUEST['organization']) {
+            elseif (!empty($_REQUEST['organization'])) {
                 $organization = new \Register\Organization();
                 $organization->get($_REQUEST['organization']);
                 if ($organization->error) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
@@ -487,24 +518,32 @@
             }
 
             if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['code'];
+			if (! validLogin($_REQUEST['login'])) $this->error("Login not valid");
+
             if (isset($_REQUEST['automation'])) {
-                if ($_REQUEST['automation'] == 1) $automation = true;
+                if (preg_match('/^(yes|true|1)$/i',$_REQUEST['automation'])) $automation = true;
                 else $automation = false;
             }
 
+			$params = array(
+				'login'				=> $_REQUEST['login'],
+				'custom_1'			=> $_REQUEST['custom_1'],
+				'custom_2'			=> $_REQUEST['custom_2'],
+			);
+
+			if (!empty($_REQUEST['first_name'])) $params['first_name'] = noXSS($_REQUEST['first_name']);
+			if (!empty($_REQUEST['last_name'])) $params['last_name'] = noXSS($_REQUEST['last_name']);
+			if (!empty($_REQUEST['password'])) {
+				if (!strongPassword($_REQUEST['password'])) $this->error("Password is not complex enough");
+				$params['password'] = $_REQUEST['password'];
+			}
+			if (!empty($automation)) $params['automation'] = $automation;
+			if (!empty($organization_id)) $params['organization_id'] = $organization_id;
+			if (!empty($_REQUEST['custom_1'])) $params['custom_1'] = $_REQUEST['custom_1'];
+			if (!empty($_REQUEST['custom_2'])) $params['custom_2'] = $_REQUEST['custom_2'];
+
             # Add Event
-            $user->add(
-                array(
-                    'first_name'		=> $_REQUEST['first_name'],
-                    'last_name'		    => $_REQUEST['last_name'],
-                    'login'			    => $_REQUEST['login'],
-                    'password'		    => $_REQUEST['password'],
-                    'organization_id'	=> $organization_id,
-                    'custom_1'		    => $_REQUEST['custom_1'],
-                    'custom_2'		    => $_REQUEST['custom_2'],
-                    'automation'		=> $automation,
-                )
-            );
+            $user->add($params);
 
             # Error Handling
             if ($user->error) $this->error($user->error);
@@ -604,6 +643,8 @@
         ### Add a New Organization						###
         ###################################################
         function addOrganization() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Initiate Response
             $response = new \HTTP\Response();
             $response->header->session = $GLOBALS['_SESSION_']->code;
@@ -627,7 +668,7 @@
 
             # Error Handling
             if ($organization->error) $this->error($organization->error);
-            
+
             $response->success = 1;
             $response->organization = $organization;
 
@@ -812,6 +853,8 @@
         ### Add Organization Owned Product				###
         ###################################################
         function addOrganizationOwnedProduct() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
@@ -903,6 +946,8 @@
             print $this->formatOutput($response);
         }
         function expireAgingCustomers() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $response = new \HTTP\Response();
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 $expires = strtotime("-12 month", time());
@@ -932,6 +977,8 @@
         }
         
         function expireInactiveOrganizations() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $response = new \HTTP\Response();
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 $expires = strtotime("-12 month", time());
@@ -961,6 +1008,8 @@
         }
         
         function flagActiveCustomers() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $list = new \Register\CustomerList();
             $counter = $list->flagActive();
             $response = new \HTTP\Response();
@@ -997,7 +1046,7 @@
             foreach ($organizationsFound as $organization) {
                 $newOrganization = new \stdClass();
                 $newOrganization->id = $organization->id;
-                $newOrganization->label = $organization->name;
+                $newOrganization->label = (($organization->status == "EXPIRED") ? " * EXPIRED * " : "") . $organization->name;
                 $newOrganization->value = $organization->name;
                 $results[] = $newOrganization;
             }
@@ -1040,6 +1089,8 @@
         }
 
         function addLocation() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
             $response = new \HTTP\Response();
             $parameters = new \stdClass;
             $parameters->name = $_REQUEST['name'];
@@ -1076,7 +1127,12 @@
         public function findPrivileges() {
             $privilegeList = new \Register\PrivilegeList();
             $privileges = $privilegeList->find();
-            return $privileges;
+			if ($privilegeList->error()) $this->error($privilegeList->error());
+
+			$response->success = 1;
+			$response->privilege = $privileges;
+
+            print $this->formatOutput($response);
         }
 
 		public function findPrivilegePeers() {
@@ -1106,8 +1162,80 @@
 		function getLocation() {
 
 		}
+
+        public function findPendingRegistrations() {
+			$this->requirePrivilege("manage customers");
+            $queue = new \Register\Queue();
+            $parameters = array();
+
+            if (!empty($_REQUEST['status'])) {
+				if (! $queue->validStatus($_REQUEST['status'])) $this->error("Invalid status");
+				else $parameters['status'] = $_REQUEST['status'];
+			}
+
+			$queueList = new \Register\QueueList();
+			$pendingCustomers = $queueList->find($parameters);
+			if ($queueList->error()) $this->error($queueList->error());
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->registration = $pendingCustomers;
+
+            print $this->formatOutput($response);
+        }
+
+        public function getPendingRegistration() {
+			$this->requirePrivilege("manage customers");
+            $queue = new \Register\Queue();
+            $parameters = array();
+
+            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (! $queue->validCode($_REQUEST['login'])) $this->error("invalid login");
+			if (! $queue->get($_REQUEST['login'])) $this->error("Registration not found");
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->registration = $queue;
+
+            print $this->formatOutput($response);
+        }
+
+        public function getRegistrationVerificationURL() {
+			$this->requirePrivilege("manage customers");
+            $person = new \Register\Customer();
+            $parameters = array();
+
+            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (! $person->validCode($_REQUEST['login'])) $this->error("invalid login");
+			if (! $person->get($_REQUEST['login'])) $this->error("Registration not found");
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->url = "/_register/new_customer?method=verify&login=".$person->login."&access=".$person->validationKey();
+			if ($person->error()) $this->error($person->error());
+
+            print $this->formatOutput($response);
+        }
+
+        public function getPasswordResetURL() {
+			$this->requirePrivilege("manage customers");
+            $person = new \Register\Customer();
+            $parameters = array();
+
+            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (! $person->validCode($_REQUEST['login'])) $this->error("invalid login");
+			if (! $person->get($_REQUEST['login'])) $this->error("Registration not found");
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->url = "/_register/validate?login=".$person->login."&validation_key=".$person->validationKey();
+			if ($person->error()) $this->error($person->error());
+
+            print $this->formatOutput($response);
+        }
 		
 		public function _methods() {
+			$queue = new \Register\Queue();
 			return array(
 				'ping'	=> array(),
 				'me'	=> array(
@@ -1126,6 +1254,7 @@
 					'last_name'		=> array(),
 					'password'  	=> array(),
 					'automation'	=> array(),
+					'timezone'		=> array()
 				),
 				'findCustomers'	=> array(
 					'organization_code' => array(),
@@ -1144,6 +1273,14 @@
 				'findPrivileges'	=> array(),
 				'findPrivilegePeers'	=> array(
 					'privilege_name'	=> array('required' => true)
+				),
+				'findPendingRegistrations' => array(
+					'status'	=> array(
+						'options' => $queue->statii()
+					)
+				),
+				'getPendingRegistration' => array(
+					'login'	=> array('required' => true)
 				)
 			);
 		}

@@ -1,24 +1,25 @@
 <?php
 	namespace Register;
 
-	class Contact {
-		public $error;
+	class Contact Extends \BaseClass {
+	
 		public $id;
 		public $person;
 		public $types = array(
 			'phone'		=> "Phone Number",
 			'email'		=> "Email Address",
 			'sms'		=> "SMS-Text",
-			'facebook'	=> "FaceBook Account"
+			'facebook'	=> "FaceBook Account",
+			'insite'	=> "Website Message"			
 		);
-		
+
 		public function __construct($id = 0) {
 			if (is_numeric($id)) {
 				$this->id = $id;
 				$this->details();
 			}
 		}
-		
+
 		public function get($type,$value) {
 			$get_object_query = "
 				SELECT	id
@@ -34,7 +35,7 @@
 				)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Contact::get: ".$GLOBALS['_database_']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database_']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -43,23 +44,20 @@
 		}
 		
 		public function add($parameters = array()) {
-		
 			if (! preg_match('/^\d+$/',$parameters['person_id'])) {
-				$this->error = "Valid person_id required for addContact method";
+				$this->error("Valid person_id required for addContact method");
 				return null;
 			}
-			if (! array_key_exists($parameters['type'],$this->types)) {
-				$this->error = "Valid type required for addContact method";
+			if (! $this->validType($parameters['type'])) {
+				$this->error("Valid type required for addContact method");
 				return null;
 			}
 
 			if (! isset($parameters['notify'])) $parameters['notify'] = 0;
 			$add_contact_query = "
 				INSERT
-				INTO	
-				    register_contacts
-				(		
-				        person_id,
+				INTO	register_contacts
+				(		person_id,
 				        description,
 						type,
 						value,
@@ -85,7 +83,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Contact::add(): ".$GLOBALS['_database']->ErrorMSg();
+				$this->SQLError($GLOBALS['_database']->ErrorMSg());
 				return null;
 			}
 					
@@ -93,25 +91,24 @@
 		}
 		
 		public function update($parameters = array(), $id = null) {
-		
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
-				$this->error = "ID Required for update method.";
-				return 0;
+				$this->error("ID Required for update method.");
+				return false;
 			}
 			
 			$bind_params = array();
 			$update_contact_query = " UPDATE register_contacts SET id = id";
 				
 			if ($parameters['type']) {
-				if (! array_key_exists($parameters['type'],$this->types)) {
-					$this->error = "Invalid contact type";
-					return null;
+				if (! $this->validType($parameters['type'])) {
+					$this->error("Invalid contact type");
+					return false;
 				}
 				$update_contact_query .= ",
 						type = ?";
 				array_push($bind_params,$parameters['type']);
 			}
-			if ($parameters['description']) {
+			if (isset($parameters['description'])) {
 				$update_contact_query .= ",
 						description = ?";
 				array_push($bind_params,$parameters['description']);
@@ -122,9 +119,15 @@
 				else array_push($bind_params,0);
 			}
 			if (isset($parameters['value'])) {
-				$update_contact_query .= ",
-						value = ?";
-				array_push($bind_params,$parameters['value']);
+				if ($this->validValue($parameters['type'],$parameters['value'])) {
+					$update_contact_query .= ",
+							value = ?";
+					array_push($bind_params,$parameters['value']);
+				}
+				else {
+					$this->error("Invalid contact value");
+					return false;
+				}
 			}
 			if (isset($parameters['notes']))
 				$update_contact_query .= ",
@@ -139,7 +142,7 @@
 			query_log($update_contact_query);
 			$GLOBALS['_database']->Execute($update_contact_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in RegisterContact::update: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			return $this->details();
@@ -156,21 +159,15 @@
 				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in RegisterContact::update: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
-			return 1;
+			return true;
 		}
 		
 		public function detailsByUserByTypeByDesc($person_id, $type='email', $desc='Work Email') {
             $get_object_query = "
-				SELECT	id,
-						type,
-						value,
-						notes,
-						description,
-						notify,
-						person_id
+				SELECT	id
 				FROM	register_contacts
 				WHERE 	person_id = ?
 				AND		type = ?
@@ -181,24 +178,11 @@
 				array($person_id, $type, $desc)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in regiser::person::contactDetails: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
-			$contact = $rs->FetchNextObject(false);
-			if (isset($contact->id)) {
-				$this->id = $contact->id;
-				$this->type = $contact->type;
-				$this->value = $contact->value;
-				$this->notes = $contact->notes;
-				$this->description = $contact->description;
-				if ($contact->notify == 1) $this->notify = true;
-				else $this->notify = false;
-				$this->person = new \Register\Person($contact->person_id);
-			}
-			else {
-				$this->id = null;
-			}
-			return $contact;
+			list($this->id) = $rs->FetchRow();
+			return $this->details();
 		}
 		
 		public function details() {
@@ -234,7 +218,37 @@
 			}
 			else {
 				$this->id = null;
+				$this->type = null;
+				$this->value = null;
+				$this->notes = null;
+				$this->description = null;
+				$this->person = null;
 			}
-			return $contact;
+			return $true;
+		}
+
+		public function validType($string) {
+			if (array_key_exists($string,$this->types)) return true;
+			else return false;
+		}
+
+		public function validValue($type,$string) {
+			if ($type == 'phone') {
+				preg_replace('/ext(ension)\.?\s?/i','ext. ',$string);
+				if (preg_match('/^\+?\d[\d\.\-\s\#\(\)]+$/',$string)) return true;
+				else return false;
+			}
+			elseif ($type == 'email') {
+				if (valid_email($string)) return true;
+				else return false;
+			}
+			elseif ($type == 'sms-text') {
+				if (preg_match('/^[\d\-\.\(\)\#]+$/',$string)) return true;
+				else return false;
+			}
+			elseif ($type == 'facebook') {
+				if (preg_match('/^\w[\w\.]{4,}$/',$value)) return true;
+				else return false;
+			}
 		}
 	}

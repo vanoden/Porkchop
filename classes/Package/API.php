@@ -17,6 +17,8 @@
 		### Add a Package								###
 		###################################################
 		public function addPackage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$response = new \HTTP\Response();
 			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) $this->error("Permission Denied");
 	
@@ -53,6 +55,8 @@
 		### Update a Package							###
 		###################################################
 		public function updatePackage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) $this->error("Permission Denied");
 	
 			$package = new \Package\Package();
@@ -145,6 +149,8 @@
 		### Add a Version								###
 		###################################################
 		public function addVersion() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			app_log("addVersion called");
 			if (! $GLOBALS['_SESSION_']->customer->can('add package versions')) $this->error("Permission Denied");
 	
@@ -190,6 +196,8 @@
 		### Update a Version							###
 		###################################################
 		public function updateVersion() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('upload packages')) $this->error("Permission Denied");
 	
 			$package = new \Package\Package();

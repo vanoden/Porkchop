@@ -24,6 +24,7 @@
     
     // page load apply button status, setup up autocomplete
     $(function() {
+    
         // autocomplete textbox
         $(".organization").autocomplete({
             source: "/_register/api?method=searchOrganizationsByName",
@@ -159,7 +160,7 @@
    <a href="/_support/requests">Support Home</a> &gt; Customer Requests
 </div>
 <h2 style="display: inline-block;"><i class='fa fa-users' aria-hidden='true'></i> Customer Registrations </h2>
-<?php include(MODULES.'/register/partials/search_bar.php'); ?>
+<?php include(MODULES.'/register/default/partials/search_bar.php'); ?>
 <div style="width: 100%;">
    <?php	if ($page->errorCount()) { ?>
        <div class="form_error"><?=$page->errorString()?></div>
@@ -167,6 +168,7 @@
         <div class="form_success"><?=$page->success?></div>
    <?php } ?>
    <form action="/_register/pending_customers" method="post" autocomplete="off">
+      <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 	  <table>
 		 <tr>
 			<th><span class="label"><i class="fa fa-calendar-check-o" aria-hidden="true"></i> Start Date</th>
@@ -177,7 +179,7 @@
 			<td><input type="text" id="dateStart" name="dateStart" class="value input" value="<?=isset($_REQUEST['fromDate']) ? $_REQUEST['fromDate'] : ''?>" /></td>
 			<td><input type="text" id="dateEnd" name="dateEnd" class="value input" value="<?=isset($_REQUEST['toDate']) ? $_REQUEST['toDate'] : ''?>" /></td>
 			<td style="width: 50%;">
-			   <?php foreach ($queuedCustomers->possibleStatus as $possibleStatus) { ?>
+			   <?php foreach ($possibleStatii as $possibleStatus) { ?>
 			   <input type="checkbox" name="<?=$possibleStatus?>" value="<?=$possibleStatus?>"
 				  <?php
 					 if (isset($_REQUEST[$possibleStatus]) && $_REQUEST[$possibleStatus] == $possibleStatus) print " checked"; 
@@ -228,6 +230,7 @@
 <?php	if ($queuedCustomer->is_reseller) { ?>&nbsp;[Reseller]<?php	} ?>
 		<br>
 		<form method="POST" id="customer_add_form_<?=$queuedCustomer->id?>" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+		    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 		<?php
 			  switch ($queuedCustomer->status) {
 				  case 'PENDING':
@@ -278,6 +281,7 @@
 	  <div class="tableCell">
 		 <div id="customer_status_form_<?=$queuedCustomer->id?>" class="hidden customer_status_form">
 			<form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+     		  <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 			   Update Status:<br/>
 			   <select name="status">
 				  <?php foreach ($queuedCustomers->possibleStatus as $possibleStatus) { ?>
@@ -328,6 +332,7 @@
 	  <div class="tableCell">
 		 <div id="customer_notes_form_<?=$queuedCustomer->id?>" class="hidden customer_notes_form">
 			<form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
+   			   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 			   <input type="text" name="notes" value="<?=$queuedCustomer->notes?>"/><br/>
 			   <input type="hidden" name="action" value="updateNotes"/>
 			   <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>

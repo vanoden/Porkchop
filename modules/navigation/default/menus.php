@@ -18,7 +18,7 @@
 	</div>
 	<div class="form_footer">
 		<input type="submit" name="btn_submit" value="Update" class="button" />
-		<input type="button" name="btn_menu" value="Items" class="button" onclick="goTo('/_navigation/menu/<?=$menu->code?>')" />
+		<input type="button" name="btn_menu" value="Items" class="button" onclick="goTo('/_navigation/items/<?=$menu->code?>')" />
 	</div>
 </div>
 </form>

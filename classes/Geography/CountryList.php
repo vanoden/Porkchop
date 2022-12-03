@@ -23,7 +23,8 @@
 			$countries = array();
 			while(list($id) = $rs->FetchRow()) {
 				$country = new Country($id);
-				array_push($countries,$country);
+				if (!empty($parameters['default']) && $country->name == $parameters['default']) array_unshift($countries,$country);
+				else array_push($countries,$country);
 				$this->_count ++;
 			}
 			return $countries;

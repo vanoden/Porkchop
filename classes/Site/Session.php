@@ -1,13 +1,14 @@
 <?php
 	namespace Site;
 
-	class Session {
+	class Session Extends \BaseClass {
+
 		public $code = '';
 		public $id = 0;
 		public $order = 0;
 		public $customer;
 		public $company;
-		public $domain = '';
+		public $domain;
 		public $refer_url = '';
 		public $refer_domain = '';
 		public $browser = '';
@@ -19,14 +20,16 @@
 		public $status = 0;
 		public $first_hit_date;
 		public $last_hit_date;
+		public $super_elevation_expires;
 		public $isMobile = false;
 		public $isRemovedAccount = false;
+		private $csrfToken;
 		private $cookie_name;
 		private $cookie_domain;
 		private $cookie_expires;
 		private $cookie_path;
-		private $_cached = 0;
 		private $elevated = 0;
+		private $oauth2_state = null;
 
 		public function __construct($id = 0) {
 			if ($id > 0) {
@@ -35,11 +38,8 @@
 			}
 		}
 
-		public function cached() {
-			return $this->_cached;
-		}
-
 		public function start() {
+		
 			# Fetch Company Information
 			$this->location = new \Company\Location();
 			$this->location->getByHost($_SERVER['SERVER_NAME']);
@@ -62,7 +62,7 @@
 				$this->error = "Domain '".$this->domain->id."' not found for location ".$this->location->id;
 				return null;
 			}
-			
+
 			$this->company = new \Company\Company($this->domain->company->id);
 			if ($this->company->error) {
 				$this->error = "Error finding company: ".$this->company->error;
@@ -86,22 +86,19 @@
 			if (isset($_COOKIE[$this->cookie_name])) $request_code = $_COOKIE[$this->cookie_name];
 
 			# Was a 'Valid looking' Session Given
-			if (isset($request_code) && $this->valid_code($request_code)) {
+			if (isset($request_code) && $this->validCode($request_code)) {
 				# Get Existing Session Information
 				$this->get($request_code);
 				if ($this->id) {
 					app_log("Loaded session ".$this->id.", customer ".$this->customer->id,'debug',__FILE__,__LINE__);
 					$this->timestamp($this->id);
-				}
-				else {
+				} else {
 					app_log("Session $request_code not available or expired, deleting cookie for ".$this->domain->name,'notice',__FILE__,__LINE__);
-					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST']);
+					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST'],false,true);
 				}
-			}
-			elseif (isset($request_code)) {
+			} elseif (isset($request_code)) {
 				app_log("Invalid session code '$request_code' sent from client",'notice',__FILE__,__LINE__);
-			}
-			else {
+			} else {
 				app_log("No session code sent from client",'debug',__FILE__,__LINE__);
 			}
 
@@ -111,7 +108,8 @@
 			}
 
 			# Authentication
-			if (($_SERVER['REQUEST_URI'] != '/_register/') and (! $this->customer->id)) {
+			if (isset($_REQUEST['login']) && ! preg_match('/_register/',$_SERVER['REQUEST_URI']) && (! $this->customer->id)) {
+			
 				# Initialize Vars
 				$login = '';
 				$password = '';
@@ -157,8 +155,7 @@
 				WHERE	id = ".$this->id;
 
 			$GLOBALS['_database']->Execute($end_session_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Site::Session::end(): ".$GLOBALS['_database']->ErrorMsg();
 				return 0;
 			}
@@ -174,7 +171,7 @@
 		}
 
 		# See if a Given Session code looks valid
-		function valid_code ($request_code) {
+		function validCode($request_code) {
 			# Test to See Session Code is 32 character hexadecimal
 			if (preg_match("/^[0-9a-f]{64}$/i",$request_code)) return true;
 			#error_log("Invalid session code: $request_code");
@@ -194,6 +191,7 @@
 				# Make Sure Session Code Not Already Used
 				if ($this->code_in_use($new_code)) $new_code = "";
 			}
+			app_log("Generated session code '$new_code'");
 
 			if (! is_object($this->customer)) {
 				$this->customer = new \Register\Customer();
@@ -243,7 +241,7 @@
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
 			# Set Session Cookie
-			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['HTTP_HOST'])) {
+			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['HTTP_HOST'],false,true)) {
 				app_log("New Session ".$this->id." created for ".$this->domain->id." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
 				app_log("Session Code ".$new_code,'debug',__FILE__,__LINE__);
 			}
@@ -270,15 +268,16 @@
 			list($this->id) = $rs->FetchRow();
 			return $this->details();
 		}
+		
 		function details() {
+		
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
 
 			# Cached Customer Object, Yay!
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
-			if ($cache->error) {
-				app_log("Cache error in Site::Session::get(): ".$cache->error,'error',__FILE__,__LINE__);
-			}
+			if ($cache->error) app_log("Cache error in Site::Session::get(): ".$cache->error,'error',__FILE__,__LINE__);
+			
 			elseif (($this->id) and ($session = $cache->get())) {
 				if ($session->code) {
 					$this->code = $session->code;
@@ -288,7 +287,14 @@
 					$this->browser = $session->browser;
 					$this->first_hit_date = $session->first_hit_date;
 					$this->last_hit_date = $session->last_hit_date;
+					$this->super_elevation_expires = $session->super_elevation_expires;
+					$this->oauth2_state = $session->oauth2_state;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
+                    if (empty($session->csrfToken)) {
+                        $session->csrfToken = $this->generateCSRFToken();
+                        $cache->set($session,600);
+                    }
+					$this->csrfToken = $session->csrfToken;
 					$this->_cached = 1;
 					return $this->code;
 				}
@@ -302,7 +308,9 @@
 						timezone,
 						browser,
 						first_hit_date,
-						last_hit_date
+						last_hit_date,
+						super_elevation_expires,
+						oauth2_state
 				FROM	session_sessions
 				WHERE	id = ?
 			";
@@ -311,8 +319,8 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Session::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
 			}
 			if ($rs->RecordCount()) {
 				$session = $rs->FetchNextObject(false);
@@ -324,6 +332,8 @@
 				$this->browser = $session->browser;
 				$this->first_hit_date = $session->first_hit_date;
 				$this->last_hit_date = $session->last_hit_date;
+				$this->super_elevation_expires = $session->super_elevation_expires;
+				$this->oauth2_state = $session->oauth2_state;
 
                 require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/Mobile_Detect.php';
                 $detect = new \Mobile_Detect;
@@ -332,6 +342,9 @@
                     $this->isMobile = true;
                 else
                     $this->isMobile = false;
+
+				$session->csrfToken = $this->generateCSRFToken();
+				$this->csrfToken = $session->csrfToken;
 
 				if ($session->id) $cache->set($session,600);
 				return $session;
@@ -345,13 +358,11 @@
 			return 0;
 		}
 		
-		function assign ($customer_id) {
+		function assign ($customer_id, $isElevated = false) {
 			app_log("Assigning session ".$this->id." to customer ".$customer_id,'debug',__FILE__,__LINE__);
 
 			$customer = new \Register\Customer($customer_id);
-			if (! $customer->id) {
-				$this->error = "Customer not found";
-			}
+			if (! $customer->id) $this->error = "Customer not found";
 
 			$cache_key = "session[".$this->id."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -375,6 +386,7 @@
 				$this->error = "Cannot register when already logged in.  Please <a href=\"/_register/logout\">log out</a> to continue.";
 				return null;
 			}
+			
 			$update_session_query = "
 				UPDATE  session_sessions
 				SET     user_id = ?,
@@ -389,16 +401,49 @@
 					  $this->id
 				)
 			);
+
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in Site::Session::assign(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			#if ($parameters["user_id"]) $this->customer = $parameters["user_id"];
+			
+			if ($isElevated) {
+			    $update_session_query = "
+				    UPDATE  session_sessions
+				    SET     super_elevation_expires = ?,
+				    WHERE   id = ?
+			    ";
+			    $GLOBALS['_database']->Execute(
+				    $update_session_query,
+				    array(
+					      $newTime = date("Y-m-d H:i:s",strtotime(date("Y-m-d H:i:s")." +5 minutes")),
+					      $this->id
+				    )
+			    );
+
+			    if ($GLOBALS['_database']->ErrorMsg()) {
+				    $this->error .= "SQL Error in Site::Session::assign(): ".$GLOBALS['_database']->ErrorMsg();
+				    return null;
+			    }
+			}
+
 			return $this->details($this->id);
 		}
+
+		function superElevate() {
+			return $this->update(array('super_elevation_expires' => date('Y-m-d H:i:s',time() + 900)));
+		}
+
+		function superElevated() {
+			if ($this->super_elevation_expires < date('Y-m-d H:i:s')) return false;
+			app_log($this->super_elevation_expires." vs ".date('Y-m-d H:i:s'),'notice');
+			return true;
+		}
+
 		function touch() {
 			$this->timestamp();
 		}
+		
 		function timestamp() {
 			$update_session_query = "
 				UPDATE	session_sessions
@@ -414,10 +459,11 @@
 				$this->error = "SQL Error in Site::Session::timestamp(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			#if ($parameters["user_id"]) $this->customer = $parameters["user_id"];
 			return 1;
 		}
+
 		function update ($parameters) {
+		
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
@@ -425,45 +471,47 @@
 			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
 
 			# Make Sure User Has Privileges to view other sessions
-			if (! $GLOBALS['_SESSION_']->customer->can('manage sessions')) {
+			if ($GLOBALS['_SESSION_']->id != $this->id && ! $GLOBALS['_SESSION_']->customer->can('manage sessions')) {
 				$this->error = "No privileges to change session";
 				return null;
 			}
 
 			$ok_params = array(
 				"user_id"	=> "user_id",
-				"timezone"	=> "timezone"
+				"timezone"	=> "timezone",
+				"super_elevation_expires" => "super_elevation_expires",
+				"oauth2_state"	=> "oauth2_state"
 			);
 
 			$update_session_query = "
 				UPDATE	session_sessions
 				SET		id = id";
 
+			$bind_params = array();
 			foreach ($parameters as $parameter => $value) {
 				if ($ok_params[$parameter]) {
 					$update_session_query .= ",
-						`$parameter` = '$value'";
+						`$parameter` = ?";
+					array_push($bind_params,$value);
 				}
 			}
 
 			$update_session_query .= "
 				WHERE	id = ?
 			";
+			array_push($bind_params,$this->id);
 
-			if (isset($GLOBALS['_config']->log_queries))
-				app_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$update_session_query)),'debug',__FILE__,__LINE__);
+			query_log($update_session_query,$bind_params,true);
 
-			$rs = $GLOBALS['_database']->Execute(
-				$update_session_query,
-				array($this->id)
-			);
+			$rs = $GLOBALS['_database']->Execute($update_session_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Session::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
 			return $this->details();
 		}
+
 		function hits($id = 0) {
 			if ($id < 1) $id = $this->id;
 			$hitlist = new HitList();
@@ -478,6 +526,7 @@
 			}
 			return $hits;
 		}
+
 		function hit() {
 			$hit = new Hit();
 			$hit->add(
@@ -491,6 +540,7 @@
 			}
 			return 1;
 		}
+		
 		function last_hit($session_id) {
 			$_hit = new Hit();
 			return $_hit->find(
@@ -501,36 +551,38 @@
 				)
 			);
 		}
-		public function expire_session($session_id) {
-			if (! preg_match('/^\d+$/',$session_id)) {
-				$this->error = "Invalid session id for session::Session::expire_session";
-				return null;
+		
+		public function expire() {
+			if (! preg_match('/^\d+$/',$this->id)) {
+				$this->error("Invalid session id for session::Session::expire");
+				return false;
 			}
 			# Delete Hits
 			$delete_hits_query = "
 				DELETE
 				FROM	session_hits
-				WHERE	session_id = '$session_id'
+				WHERE	session_id = ?
 			";
-			$GLOBALS['_database']->execute($delete_hits_query);
+			$GLOBALS['_database']->execute($delete_hits_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Session::expire_session(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 
 			# Delete Session
 			$delete_session_query = "
 				DELETE
 				FROM	session_sessions
-				WHERE	session_id = '$session_id'
+				WHERE	id = ?
 			";
-			$GLOBALS['_database']->execute($delete_session_query);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
-				$this->error = "SQL Error in Site::Session::expire_session(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+			$GLOBALS['_database']->execute($delete_session_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
+			return true;
 		}
+		
 		public function authenticated() {
 			if (isset($this->customer->id) && $this->customer->id > 0) return true;
 			else return false;
@@ -567,5 +619,44 @@
 				'second'		=> $datetime->format('s'),
 				'timezone'		=> $this->timezone
 			);
+		}
+
+		public function oauthState($state = null) {
+			if (isset($state)) {
+				$this->update(array('oauth2_state' => $state));
+			}
+			return $this->oauth2_state;
+		}
+
+        public function unsetOAuthState() {
+            $this->update(array('oauth2_state' => ''));
+            return true;
+        }
+
+        public function verifyCSRFToken($csrfToken) {
+			if (empty($csrfToken)) {
+				app_log("No csrfToken provided",'debug');
+				return false;
+			}
+			if (empty($this->csrfToken)) {
+				app_log("No csrfToken exists for session",'debug');
+				return false;
+			}
+			if ($this->csrfToken != $csrfToken) {
+				app_log("csrfToken provided doesn't match session",'debug');
+				return false;
+			}
+			return true;
+        }
+
+		private function generateCSRFToken() {
+			$data = bin2hex(openssl_random_pseudo_bytes(32));
+			$token = htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
+			app_log("Generated token '$token'",'debug');
+            return $token;
+        }
+        
+		public function getCSRFToken() {
+			return $this->csrfToken;
 		}
 	}

@@ -1,8 +1,7 @@
 <?php
 	namespace Site;
 
-	class Date {
-		public $error;
+	class Date Extends \BaseClass {
 		public $timezone;
 		
 		public function __construct() {

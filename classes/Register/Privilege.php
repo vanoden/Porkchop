@@ -3,7 +3,6 @@
 
 	class Privilege Extends \BaseClass {
 		public $id;
-		protected $_error;
 		public $description;
 		public $name;
 		public $module;
@@ -30,7 +29,7 @@
             );
 
             if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->_error = "SQL Error in Register::Privilege::add(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return false;
             }
 
@@ -71,7 +70,7 @@
             $GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
             if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->_error = "SQL Error in Register::Privilege::update(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return false;
             }
 
@@ -86,7 +85,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($name));
 			if (! $rs) {
-				$this->_error = "SQL Error in Register::Privilege::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -104,7 +103,7 @@
 
             $rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
             if (! $rs) {
-                $this->_error = "SQL Error in Register::Privilege::details(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return false;
             }
 
@@ -119,7 +118,7 @@
 				WHERE	privilege_id = ?";
 			$GLOBALS['_database']->Execute($delete_xref_query,$this->id);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Register::Privilege::delete(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
             $delete_object_query = "
@@ -128,7 +127,7 @@
                 WHERE   id = ?";
             $GLOBALS['_database']->Execute($delete_object_query,$this->id);
             if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->_error = "SQL Error in Register::Privilege::delete(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return false;
             }
             return true;
@@ -144,7 +143,7 @@
 			";
             $rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 			if (! $rs) {
-				$this->error("SQL Error in Register::Privilege::peers(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$people = array();
