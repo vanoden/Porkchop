@@ -1,8 +1,7 @@
 <?php
 	namespace Network;
 
-	class Adapter {
-		private $_error;
+	class Adapter Extends \BaseClass {
 		public $id;
 		public $name;
 		public $mac_address;
@@ -39,7 +38,7 @@
 				$rs = $GLOBALS['_database']->Execute($get_object_query,array($host_id,$name));
 			}
 			if (! $rs) {
-				$this->_error = "SQL Error in Network::Adapter::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -49,7 +48,7 @@
 
 		public function add($parameters = array()) {
 			if (! isset($parameters['name'])) {
-				$this->_error = "name required for new adapter";
+				$this->error("name required for new adapter");
 			}
 			$add_object_query = "
 				INSERT
@@ -74,7 +73,7 @@
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Network::Adapter::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -98,7 +97,7 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Network::Adapter::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -115,7 +114,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 
 			if (! $rs) {
-				$this->_error = "SQL Error in Network::NIC::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -135,7 +134,7 @@
 
 			$addresses = $addressList->find(array('adapter_id' => $this->id));
 			if ($addressList->error()) {
-				$this->_error = $addressList->error();
+				$this->error($addressList->error());
 				return null;
 			}
 

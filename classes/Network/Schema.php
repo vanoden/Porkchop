@@ -109,21 +109,29 @@
 					return false;
 				}
 
-                                $this->setVersion(1);
-                                $GLOBALS['_database']->CommitTrans();
+				$this->setVersion(1);
+				$GLOBALS['_database']->CommitTrans();
 			}
-
-			# Add Roles
-			foreach ($this->roles as $name => $description) {
-				$role = new \Register\Role();
-				if (! $role->get($name)) {
-					app_log("Adding role '$name'");
-					$role->add(array('name' => $name,'description' => $description));
-				}
-				if ($role->error) {
-					$this->_error = "Error adding role '$name': ".$role->error;
+			if ($this->version() < 2) {
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `network_acls` (
+						`id`		int(11) NOT NULL AUTO_INCREMENT,
+						`subnet_id`	int(11) NOT NULL,
+						`priorty`	int(11) NOT NULL DEFAULT 0,
+						`content`	TEXT,
+						`status`	enum('INACTVE','LOG','ACTIVE') NOT NULL DEFAULT 'LOG',
+						PRIMARY KEY `pk_network_acls` (`id`),
+						INDEX `idx_priority` (`priority`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
 					return false;
 				}
+
+				$this->setVersion(2);
+				$GLOBALS['_database']->CommitTrans();
 			}
 		}
 	}

@@ -1,8 +1,7 @@
 <?php
 	namespace Network;
 
-	class Host {
-		private $_error;
+	class Host Extends \BaseClass {
 		public $id;
 		public $name;
 		public $domain;
@@ -39,12 +38,24 @@
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Network::Host::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
+		}
+
+		public function getByIPAddress($ip_address) {
+			$address = new \Network\IPAddress();
+			if ($address->get($ip_address)) {
+				$adapter = $address->adapter();
+				$this->id = $adapter->host_id;
+				return $this->details();
+			}
+			else {
+				return false;
+			}
 		}
 
 		public function get($domain_id,$name) {
@@ -56,7 +67,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($domain_id,$name));
 			if (! $rs) {
-				$this->_error = "SQL Error in Network::Host::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -100,7 +111,7 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Network::Host::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -117,7 +128,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 
 			if (! $rs) {
-				$this->_error = "SQL Error in Network::Host::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -137,7 +148,7 @@
 
 			$adapters = $adapterList->find(array('host_id' => $this->id));
 			if ($adapterList->error()) {
-				$this->_error = $adapterList->error();
+				$this->error($adapterList->error());
 				return null;
 			}
 
@@ -148,9 +159,5 @@
 			$fqdn = $this->name;
 			if (isset($this->domain)) $fqdn .= ".".$this->domain;
 			return $fqdn;
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

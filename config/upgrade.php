@@ -78,7 +78,7 @@
 		"Navigation"	=> array(
             "privileges"    => array(
                 "manage navigation menus",
-		"see navigation api"
+				"see navigation api"
             )
         ),
 		"Product"		=> array(
@@ -87,8 +87,8 @@
                 "edit product prices",
                 "manage products",
                 "manage product instances",
-		"add product instances",
-		"see product api"
+				"add product instances",
+				"see product api"
             ),
 			"templates"		=> array(
 				"report"			=> $templates['admin'],
@@ -98,7 +98,7 @@
 		"Email"			=> array(
 			"schema"	=> 2,
             "privileges"    => array(
-                "can create email",
+                "create email",
 		"see email api"
             )
 		),
@@ -108,6 +108,14 @@
 				"action manager"	=> array(),
 				"action user"		=> array(),
 			),
+		),
+		"Network"		=> array(
+			"schema"	=> 2,
+			"privileges"	=> array(
+				"manage subnets",
+				"manage hosts",
+				"manage acls"
+			)
 		)
 	);
 
