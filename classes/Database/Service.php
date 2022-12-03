@@ -10,6 +10,20 @@
 			$this->_connection = $GLOBALS['_database'];
 		}
 
+		public function global($key) {
+			if (!preg_match('/^\w[\w\_]+\w$/',$key)) {
+				$this->error("Invalid global key");
+				return null;
+			}
+			$rs = $this->Execute("SHOW GLOBAL STATUS LIKE '".$key."'");
+			list($label,$value) = $rs->FetchRow();
+			if (! preg_match('/^[\w\.]+$/',$value)) {
+				$this->error("Invalid global value");
+				return null;
+			}
+			return $value;
+		}
+
 		public function AddParam($value) {
 			array_push($this->_params,$value);
 		}
@@ -21,6 +35,8 @@
 			$recordSet = new \Database\RecordSet($this->_connection->Execute($query,$this->_params));
 			if ($this->_connection->ErrorMsg()) {
 				print_r($this->_connection->ErrorMsg());
+				$sql_error_counter = new \Site\Counter("sql.errors");
+				$sql_error_counter->increment();
 				return null;
 			}
 			return $recordSet;
