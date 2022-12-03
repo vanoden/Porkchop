@@ -900,6 +900,38 @@
             print $this->formatOutput($response);
         }
 
+		public function getSiteStatus() {
+			$this->requirePrivilege("monitor site status");
+
+			$cache = $GLOBALS['_CACHE_'];
+			$database = new \Database\Service();
+
+			$connection_counter = new \Site\Counter("site.connections");
+			$sql_error_counter = new \Site\Counter("sql.errors");
+			$denied_counter = new \Site\Counter("permission_denied");
+			$counter_404 = new \Site\Counter("return404");
+			$counter_403 = new \Site\Counter("return403");
+			$auth_failed_counter = new \Site\Counter("auth_failed");
+			$auth_blocked_counter = new \Site\Counter("auth_blocked");
+
+			$this->response->success = 1;
+			$this->response->counter->connections = $connection_counter->get();
+			$this->response->counter->sql_errors = $sql_error_counter->get();
+			$this->response->counter->permission_denied = $denied_counter->get();
+			$this->response->counter->code_404 = $counter_404->get();
+			$this->response->counter->code_403 = $counter_403->get();
+			$this->response->counter->auth_failed = $auth_failed_counter->get();
+			$this->response->counter->auth_blocked = $auth_blocked_counter->get();
+			$this->response->cache = $cache->stats();
+			$this->response->database->version = $database->version();
+			$this->response->database->uptime = $database->global('uptime');
+			$this->response->database->queries = $database->global('queries');
+			$this->response->database->slow_queries = $database->global('slow_queries');
+			$this->response->apache->version = apache_get_version();
+
+            print $this->formatOutput($this->response);
+		}
+
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
