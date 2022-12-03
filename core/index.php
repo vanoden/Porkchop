@@ -167,4 +167,9 @@
 			$_page->applyStyle();
 		}
 	}
+
+	// Site Counter
+	$counter = new \Site\Counter("site.connections");
+	$counter->increment();
+
 	print $_page->load_template();
