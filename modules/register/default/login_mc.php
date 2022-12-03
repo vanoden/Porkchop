@@ -8,10 +8,19 @@
 	### the customer id if login successful.				###
 	### A. Caravello 8/25/2002								###
 	###########################################################
-	session_start();	
 	if (!isset($_SESSION['failedAttemptCount'])) $_SESSION['failedAttemptCount'] = 0;
 	$page = new \Site\Page();
-    $target = "";
+
+	$captcha_required = false;
+	$remote_host = new \Network\Host();
+	if ($remote_host->getByIPAddress($_SERVER['REMOTE_ADDR'])) {
+		if ($remote_host->CAPTCHARequired()) {
+			$captcha_required = true;
+		}
+	}
+
+	// Choose Target URL
+	$target = "";
 	if (isset($_REQUEST['return']) && $_REQUEST['return'] == 'true') {
 		# This Is How They SHOULD Come In from Redirect
 		if (isset($_REQUEST['module']) && isset($_REQUEST['view'])) {
@@ -20,7 +29,8 @@
 			$target = $GLOBALS['_REQUEST_']->refererURI();
 			app_log("Return to ".$GLOBALS['_REQUEST_']->refererURI()." after login");
 		}
-	} elseif (isset($_POST['login_target']))
+	}
+	elseif (isset($_POST['login_target']))
 		# This is how the SHOULD come in from FORM submit
 		$target = $_POST['login_target'];
 	elseif(isset($_GET['target']))
@@ -37,7 +47,7 @@
 		exit;
 	}
 	
-	# Handle Input
+	// Attempt to Authenticate with Temporary Token
 	if (isset($_REQUEST['token']) and (preg_match('/^[a-f0-9]{64}$/',$_REQUEST['token']))) {
 		app_log('Auth By Token','debug',__FILE__,__LINE__);
 		# Consume Token
@@ -46,7 +56,8 @@
 		if ($token->error) {
 			app_log("Error in password recovery: ".$token->error,'error',__FILE__,__LINE__);
 			$page->addError("Error in password recovery.  Admins have been notified.  Please try again later.");
-		} elseif ($customer_id > 0) {
+		}
+		elseif ($customer_id > 0) {
 			$customer = new \Register\Customer($customer_id);
 			if ($customer->error) {
 				app_log("Error getting customer: ".$customer->error,'error',__FILE__,__LINE__);
@@ -62,72 +73,68 @@
 				header("location: /_register/account");
 				exit;
 			}
-		} else {
+		}
+		else {
 			$page->addError("Sorry, your recovery token was not recognized or has expired");
 		}
-	} elseif (isset($_REQUEST['login'])) {
+	}
+	// Attempt to Authenticate with Login and Password
+	elseif (!empty($_REQUEST['login'])) {
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
-		$customer = new \Register\Customer();		
+
+		# Check reCAPTCHA
+		$captcha_service = new \Google\ReCAPTCHA();
+		if ($captcha_service->verify($_REQUEST['g-recaptcha-response']);
+
+		$context = stream_context_create($options);
+		$result = file_get_contents($url,false,$context);
+		$captcha_success = json_decode($result);
+
+print_r($catcha_success);
+
+		$customer = new \Register\Customer();
 		if (! $customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
 			$counter = new \Site\Counter("auth_failed");
 			$counter->increment();
-		    $customer->get($_REQUEST['login']);
-		    if ((isset($_SESSION['isRemovedAccount']) && $_SESSION['isRemovedAccount'] == 1) || $_SESSION['failedAttemptCount'] > 2 || $customer->status == 'EXPIRED' || $customer->status == 'DELETED') {
-		    
-                # Check reCAPTCHA
-		        $url = "https://www.google.com/recaptcha/api/siteverify";
-		        $data = array(
-			        'secret'	=> $GLOBALS['_config']->captcha->private_key,
-			        'response'	=> $_REQUEST['g-recaptcha-response'],
-			        'remoteip'	=> $_SERVER['REMOTE_ADDR'],
-		        );
-	        
-		        $options = array(
-			        'http'	=> array(
-				        'method'	=> 'POST',
-				        'content'	=> http_build_query($data),
-			        ),
-		        );
-		        
-		        # Don't need to store these fields
-		        unset($_REQUEST['g-recaptcha-response']);
-		        unset($_REQUEST['btn_submit']);
+			$customer->get($_REQUEST['login']);
+			if ((isset($_SESSION['isRemovedAccount']) && $_SESSION['isRemovedAccount'] == 1) || $_SESSION['failedAttemptCount'] > 2 || $customer->status == 'EXPIRED' || $customer->status == 'DELETED') {
 
-		        $context = stream_context_create($options);
-		        $result = file_get_contents($url,false,$context);
-		        $captcha_success = json_decode($result);
-
-		        if ($captcha_success->success == true) {
-			        app_log("ReCAPTCHA presented and SOLVED for " . $customer->status . " Customer (must be a human attempting)" , 'notice' , __FILE__ , __LINE__);
-			        $_SESSION['failedAttemptCount'] = 0;
-			        $customer->update(array('status' => 'ACTIVE'));
-		        } else {
-			        $page->addError("Sorry, CAPTCHA Invalid.  Please Try Again");
-			        app_log("ReCAPTCHA presented and FAILED for " . $customer->status . " Customer" , 'notice' , __FILE__ , __LINE__);
+				if ($captcha_success->success == true) {
+					app_log("ReCAPTCHA presented and SOLVED for " . $customer->status . " Customer (must be a human attempting)" , 'notice' , __FILE__ , __LINE__);
+				$_SESSION['failedAttemptCount'] = 0;
+				$customer->update(array('status' => 'ACTIVE'));
 		        }
-		    
-		        // if a old or deleted account login, then we'll force over to the login page with a captcha
-    		    $_SESSION['isRemovedAccount'] = 1;
-			    app_log("Customer ".$customer->id. " " . $customer->status . " login ATTEMPTED",'notice',__FILE__,__LINE__);
-			    app_log("login_target = $target",'debug',__FILE__,__LINE__);	
-			    header("location: ".PATH.'/_register/login');	
-		    } else {
+			else {
+				$page->addError("Sorry, CAPTCHA Invalid.  Please Try Again");
+				app_log("ReCAPTCHA presented and FAILED for " . $customer->status . " Customer" , 'notice' , __FILE__ , __LINE__);
+			}
+
+			// if a old or deleted account login, then we'll force over to the login page with a captcha
+			$_SESSION['isRemovedAccount'] = 1;
+			app_log("Customer ".$customer->id. " " . $customer->status . " login ATTEMPTED",'notice',__FILE__,__LINE__);
+			app_log("login_target = $target",'debug',__FILE__,__LINE__);	
+			header("location: ".PATH.'/_register/login');	
+		}
+		else {
     			app_log("Customer ".$customer->id." login failed",'notice',__FILE__,__LINE__);
-			    app_log("login_target = $target",'debug',__FILE__,__LINE__);
-		    }
-		    
-		    // track failed attempts at login for 
-		    $_SESSION['failedAttemptCount'] = $_SESSION['failedAttemptCount'] + 1;
-			$counter = new \Site\Counter("auth_blocked");
-			$counter->increment();
-		    if ($_SESSION['failedAttemptCount'] > 3) $customer->update(array('status' => 'EXPIRED'));
+			app_log("login_target = $target",'debug',__FILE__,__LINE__);
+		}
+
+		// track failed attempts at login for 
+		$_SESSION['failedAttemptCount'] = $_SESSION['failedAttemptCount'] + 1;
+		$counter = new \Site\Counter("auth_blocked");
+		$counter->increment();
+		if ($_SESSION['failedAttemptCount'] > 3) $customer->update(array('status' => 'EXPIRED'));
 			$page->addError("Authentication failed");
-		} elseif ($customer->error) {
+		}
+		elseif ($customer->error) {
 			app_log("Error in authentication: ".$customer->error,'error',__FILE__,__LINE__);
 			$page->addError("Application Error");
-		} elseif ($customer->message) {
+		}
+		elseif ($customer->message) {
 			$page->addError($customer->message);
-		} else {
+		}
+		else {
 			$customer->get($_REQUEST['login']);
 			$GLOBALS['_SESSION_']->assign($customer->id);
 			$GLOBALS['_SESSION_']->touch();
@@ -138,6 +145,7 @@
 			header("location: ".PATH.$target);
 			exit;
 		}
-	} else {
+	}
+	else {
 		app_log("No authentication information sent",'debug',__FILE__,__LINE__);
 	}
