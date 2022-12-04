@@ -79,7 +79,7 @@
 				}
 
 				$create_table_query = "
-					CREATE TABLE IF NOT EXISTS `network_adapters` (
+					CREATE TABLE IF NOT EXISTS `network_subnets` (
 						`id`			int(11) NOT NULL AUTO_INCREMENT,
 						`address`		bigint(8) NOT NULL,
 						`size`			bigint(8) NOT NULL,
@@ -87,7 +87,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_adapters table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating network_subnets table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
