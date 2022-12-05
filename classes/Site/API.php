@@ -837,7 +837,17 @@
 			$response->success = $counters;
 			print $this->formatOutput($response);
 		}
-		
+
+		public function getSiteCounter() {
+			if (! preg_match('/^\w[\w\-\.\_]*$/',$_REQUEST['name'])) error("Invalid counter name");
+
+			$counter = new \Site\Counter($_REQUEST['name']);
+			$this->response->success = 1;
+			$this->response->counter = new \stdClass();
+			$this->response->counter->name = $_REQUEST['name'];
+			$this->response->counter->value = $counter->get();
+			print $this->formatOutput($this->response);
+		}
 		public function setAllSiteCounters() {
             $existingKeys = $GLOBALS['_CACHE_']->keys();
             $siteCounterWatched = new \Site\CounterWatched();
@@ -1071,6 +1081,9 @@
 			     ),
 			     'getAllSiteCounters' => array(),
 			     'setAllSiteCounters' => array(),
+				 'getSiteCounter' => array(
+					'name'	=> array('required' => true)
+				 ),
                  'addSiteHeader' => array(
                     'name'  => array('required' => true),
                     'value' => array('required' => true)
@@ -1085,7 +1098,8 @@
                  'findSiteHeaders' => array(
                     'name'  => array('required' => true),
                     'value' => array('required' => true)
-                 )
+				 ),
+				 'getSiteStatus' => array()
 			);		
 		}
 	}
