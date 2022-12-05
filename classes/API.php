@@ -12,9 +12,11 @@
 		protected $_release;
 
 		public function __construct() {
-			$counterKey = "api.".$this->_name.".".$_REQUEST["method"];
-			$counter = new \Site\Counter($counterKey);
-			$counter->increment();
+			if (!empty($_REQUEST["method"])) {
+				$counterKey = "api.".$this->_name.".".$_REQUEST["method"];
+				$counter = new \Site\Counter($counterKey);
+				$counter->increment();
+			}
 			$this->response = new \HTTP\Response();
 		}
 
