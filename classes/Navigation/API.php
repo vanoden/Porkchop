@@ -4,12 +4,12 @@
 	class API Extends \API {
 
 		public function __construct() {
-			parent::__construct();
 			$this->_name = 'navigation';
 			$this->_version = '0.2.1';
 			$this->_release = '2022-11-10';
 			$this->_schema = new Schema();
 			$this->_admin_role = 'navigation manager';
+			parent::__construct();
 		}
 
 		###################################################
