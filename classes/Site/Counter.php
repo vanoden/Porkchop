@@ -8,19 +8,10 @@
 		public function __construct($key) {
 			if (!$this->validKey($key)) {
 				$this->error("Invalid code for counter");
-			} else {
-			
+			}
+			else {
     			$this->_key = $key;
-    			
-			    // add to watched counters if not already added, checked by existing values cached array
-			    $existingWatchedKeys = $this->getWatched();			    
-			    if (!in_array($key, $existingWatchedKeys)) {
-    			    $existingWatchedKeys[] = $key;
-    			    $this->setWatched($existingWatchedKeys);
-    			    $counterWatched = new \Site\CounterWatched();
-                    $counterWatched->add(array('key'=> $key));
-			    }
-			    
+
 			    $this->value = $this->get();   
 			}
 		}
@@ -53,6 +44,10 @@
 
 		public function increment() {
 			return $GLOBALS['_CACHE_']->increment("counter.".$this->_key);
+		}
+
+		public function value() {
+			return $this->value;
 		}
 
 		public function validKey($key) {

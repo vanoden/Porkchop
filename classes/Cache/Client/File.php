@@ -158,7 +158,7 @@
 			$keyArray = array();
 			$keys = scandir($GLOBALS['_config']->cache->path."/");
 			foreach ($keys as $key) {
-				if (! preg_match('/^counter\.([\w\.\_\-]+)/',$key,$matches)) continue;
+				if (! preg_match('/^counter\.(\w[\w\.\_\-]*)/',$key,$matches)) continue;
 				array_push($keyArray,$matches[1]);
 			}
 			return $keyArray;
