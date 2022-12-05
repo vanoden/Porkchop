@@ -828,13 +828,15 @@
         public function getAllSiteCounters() {
             $response = new \HTTP\Response();
             $counters = array();
-            $existingKeys = $GLOBALS['_CACHE_']->keys();
+            $existingKeys = $GLOBALS['_CACHE_']->counters();
 
             // foreach key that doesn't contain a bracket, add to the response of what can be watched as a public site counter
             foreach ($existingKeys as $key) {
-                if (!preg_match('/\[|\]/', $key)) $counters[] = $key;
+                //if (preg_match('/^counter/', $key))
+				array_push($counters,$key);
             }
-			$response->success = $counters;
+			$response->success = 1;
+			$response->counter = $counters;
 			print $this->formatOutput($response);
 		}
 
