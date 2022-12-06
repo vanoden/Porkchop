@@ -1217,7 +1217,7 @@
             print $this->formatOutput($response);
         }
 
-        public function getPasswordResetURL() {
+        public function getEmailValidationURL() {
 			$this->requirePrivilege("manage customers");
             $person = new \Register\Customer();
             $parameters = array();
@@ -1229,6 +1229,26 @@
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->url = "/_register/validate?login=".$person->login."&validation_key=".$person->validationKey();
+			if ($person->error()) $this->error($person->error());
+
+            print $this->formatOutput($response);
+        }
+
+        public function getPasswordResetURL() {
+			$this->requirePrivilege("manage customers");
+            $person = new \Register\Customer();
+            $parameters = array();
+
+            if (empty($_REQUEST['login'])) $this->error("login required");
+			if (! $person->validCode($_REQUEST['login'])) $this->error("invalid login");
+			if (! $person->get($_REQUEST['login'])) $this->error("Registration not found");
+			$key = $person->resetKey();
+			if ($person->error()) $this->error($person->error());
+			if (empty($key)) $this->error("No key found");
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->url = "/_register/reset_password?token=$key";
 			if ($person->error()) $this->error($person->error());
 
             print $this->formatOutput($response);
