@@ -6,7 +6,7 @@
 		public $auth_method;
 		public $elevated = 0;
 
-		public function __construct($person_id = 0) {
+		public function __construct($person_id = null) {
 			parent::__construct($person_id);
 			if ($this->id) $this->roles();
 		}
@@ -585,6 +585,16 @@
 				return null;
 			}
 			list($key) = $rs->FetchRow();
+			return $key;
+		}
+
+		public function resetKey() {
+			$token = new \Register\PasswordToken();
+			$key = $token->get($this->id);
+			if ($token->error()) {
+				$this->error($token->error());
+				return null;
+			}
 			return $key;
 		}
     }
