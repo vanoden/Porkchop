@@ -23,7 +23,7 @@
 
 		if (preg_match('/(\d+)\-(\d+)\-(\d+)\s(\d+)\:(\d+)\:(\d+)/',$session->last_hit_date,$matches)) {
 			$cmp_date = strtotime($matches[0]);
-			if (time() - $cmp_date > $age_threshold) {
+			if ($cmp_date < $age_threshold) {
 				print "Deleting session: ".$session->id." from ".$session->last_hit_date."<br>\n";
 				$client->delete($key);
 				$max_deletes --;
