@@ -5,7 +5,7 @@
 	$client = $GLOBALS['_CACHE_'];
 
 	$max_deletes = 1000;
-	if (is_numeric($_REQUEST['max'])) $max_deletes = $_REQUEST['max_deletes'];
+	if (is_numeric($_REQUEST['max_deletes'])) $max_deletes = $_REQUEST['max_deletes'];
 
 	if (is_numeric($_REQUEST['age_days'])) $_REQUEST['age_hours'] = $_REQUEST['age_days'] * 24;
 	if (is_numeric($_REQUEST['age_hours'])) $hours = $_REQUEST['age_hours'];
@@ -14,6 +14,7 @@
 
 	$deleted = 0;
 
+	print "Deleting up to $max_deletes records older than ".date('Y-m-d H:i:s',$age_threshold);
 	$session_keys = $client->keys('session');
 	foreach ($session_keys as $key) {
 		//print_r($key);
