@@ -74,6 +74,25 @@
 			else return null;
 		}
 
+		public function get($person_id) {
+			$database = new \Database\Service();
+			$get_object_query = "
+				SELECT	code
+				FROM	register_password_tokens
+				WHERE	person_id = ?
+				AND		date_expires > sysdate()
+			";
+			$database->addParam($person_id);
+			$rs = $database->Execute($get_object_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+			list($code) = $rs->FetchRow();
+			app_log("ResetKey: $code");
+			return $code;
+		}
+
 		public function validCode($string) {
 			if (preg_match('/^[a-f0-9]{64}$/',$string)) return true;
 			else return false;
