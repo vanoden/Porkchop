@@ -1,7 +1,7 @@
 <script src="https://www.google.com/recaptcha/api.js"></script>
 
 
-<h2>Forgot Password</h2>
+<span class="title">Forgot Password</span>
 
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">

@@ -44,7 +44,11 @@
 		}
 	}
 	elseif (isset($_REQUEST["password"])) {
-		if (! $GLOBALS['_SESSION_']->superElevated()) {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+			$page->addError("Invalid Request");
+			return;
+		}
+		elseif (! $GLOBALS['_SESSION_']->superElevated()) {
 			// Check current password
 			$checkUser = new \Register\Customer();
 			if (! $checkUser->authenticate($GLOBALS['_SESSION_']->customer->login,$_REQUEST['currentPassword'])) {
@@ -53,42 +57,43 @@
 				return;
 			}
 		}
-		app_log("Reset Password form submitted",'debug',__FILE__,__LINE__);
-		$customerUpdated = false;
+		else {
+			app_log("Reset Password form submitted",'debug',__FILE__,__LINE__);
+			$customerUpdated = false;
 
-		// Get Customer Record
-		$customer_id = $GLOBALS['_SESSION_']->customer->id;
-		$customer = new \Register\Customer($customer_id);
+			// Get Customer Record
+			$customer_id = $GLOBALS['_SESSION_']->customer->id;
+			$customer = new \Register\Customer($customer_id);
 
-		// check for errors
-		if ($_REQUEST["password"] != $_REQUEST["password_2"]) $page->addError("Passwords do not match");
+			// check for errors
+			if ($_REQUEST["password"] != $_REQUEST["password_2"]) $page->addError("Passwords do not match");
 
-		// Check Password Complexity
-		if ($customer->password_strength($_REQUEST["password"]) < $GLOBALS['_config']->register->minimum_password_strength) $page->addError("Password needs more complexity.");
+			// Check Password Complexity
+			if ($customer->password_strength($_REQUEST["password"]) < $GLOBALS['_config']->register->minimum_password_strength) $page->addError("Password needs more complexity.");
 
-		// If no errors and customer found, go ahead and update
-		if ($page->errorCount() < 1 && $customer->id) {
-			app_log("Updating customer ".$customer_id,'debug',__FILE__,__LINE__);
-			if ($customer->changePassword($_REQUEST["password"])) {
-	        	// set the user to active if they're expired, this will ensure then can continue to login
-				if (in_array($customer->status,array('EXPIRED','BLOCKED'))) $customer->update(array('status' => 'ACTIVE'));
-				$customer->resetAuthFailures();
+			// If no errors and customer found, go ahead and update
+			if ($page->errorCount() < 1 && $customer->id) {
+				app_log("Updating customer ".$customer_id,'debug',__FILE__,__LINE__);
+				if ($customer->changePassword($_REQUEST["password"])) {
+					// set the user to active if they're expired, this will ensure then can continue to login
+					if (in_array($customer->status,array('EXPIRED','BLOCKED'))) $customer->update(array('status' => 'ACTIVE'));
 
-				if ($customer->error()) {
-					app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
-					$page->addError("Error updating customer password.  Our admins have been notified.  Please try again later");
-				}
-				else {
-					app_log("Expiring session and showing logged out page","info");
-					if ($GLOBALS['_SESSION_']->expire()) {
-						header("Location: /_register/reset_password?status=complete");
-						exit;
+					if ($customer->error()) {
+						app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
+						$page->addError("Error updating customer password.  Our admins have been notified.  Please try again later");
 					}
 					else {
-						$page->addError($GLOBALS['_SESSION_']->error());
+						app_log("Expiring session and showing logged out page","info");
+						if ($GLOBALS['_SESSION_']->expire()) {
+							header("Location: /_register/reset_password?status=complete");
+							exit;
+						}
+						else {
+							$page->addError($GLOBALS['_SESSION_']->error());
+						}
 					}
 				}
+				else $page->addError($customer->error());
 			}
-			else $page->addError($customer->error());
 		}
 	}

@@ -4,45 +4,8 @@
 	# Handle Actions
 	if (isset($_REQUEST['email_address'])) {
 		# Check reCAPTCHA
-		$url = "https://www.google.com/recaptcha/api/siteverify";
-		$data = array(
-			'secret'	=> $GLOBALS['_config']->captcha->private_key,
-			'response'	=> $_REQUEST['g-recaptcha-response'],
-			'remoteip'	=> $_SERVER['REMOTE_ADDR'],
-		);
-	
-		$options = array(
-			'http'	=> array(
-				'method'	=> 'POST',
-				'content'	=> http_build_query($data),
-			),
-		);
-
-		# Don't need to store these fields
-		unset($_REQUEST['g-recaptcha-response']);
-		unset($_REQUEST['btn_submit']);
-
-		// Allow to bypass the captcha if config->captcha->bypass_key set
-		if (!empty($_REQUEST['captcha_bypass_key'])) {
-			app_log("User skipping captcha",'notice');
-			$captcha_success = new stdClass();
-			if (!empty($GLOBALS['_config']->captcha->bypass_key) && $_REQUEST['captcha_bypass_key'] == $GLOBALS['_config']->captcha->bypass_key) {
-				app_log("CAPTCHA bypassed with key",'notice');
-				$captcha_success->success = true;
-			}
-			else {
-				app_log("CAPTCHA bypass key invalid",'warn');
-				$captcha_success->success = false;
-			}
-		}
-		else {
-			app_log("Solicit CAPTCHA service",'notice');
-			$context = stream_context_create($options);
-			$result = file_get_contents($url,false,$context);
-			$captcha_success = json_decode($result);
-		}
-		
-		if ($captcha_success->success == true) {
+		$captcha = new \Google\ReCAPTCHA();
+		if ($captcha->verify($_REQUEST['g-recaptcha-response'])) {
 			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
 
             if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
@@ -136,8 +99,22 @@
 					}
 					$transport->hostname($GLOBALS['_config']->email->hostname);
 					$transport->token($GLOBALS['_config']->email->token);
-					$transport->deliver($message);
-					if ($transport->error) {
+					if ($transport->deliver($message)) {
+						app_log("Delivered message");
+
+						// Terminate Session
+						$GLOBALS['_SESSION_']->end();
+
+						// Display Confirmation Page
+						header("location: /_register/password_token_sent");
+						exit;
+					}
+					elseif ($transport->error()) {
+						$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
+						app_log("Error sending forgot password link: ".$transport->error,'error',__FILE__,__LINE__);
+						return;
+					}
+					else {
 						$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
 						app_log("Error sending forgot password link: ".$transport->error,'error',__FILE__,__LINE__);
 						return;
@@ -146,8 +123,6 @@
 				else {
 					app_log("Customer not found matching '".$_REQUEST['email_address']."', no email sent",'notice',__FILE__,__LINE__);
 				}
-				# Display Confirmation Page
-				header("location: /_register/password_token_sent");
 			}
 			else {
 				$page->addError("Sorry, but the email address you gave was not valid!");

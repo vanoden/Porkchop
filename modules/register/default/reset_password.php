@@ -5,6 +5,7 @@
         margin:0;
     }
 </style>
+<span class="title">Password Reset</span>
 <?php	if ($page->success) { ?>
 <section id="form-message">
 	<ul class="connectBorder progressText">
@@ -32,6 +33,7 @@
 <?php return; } ?>
 <section id="reg_form" class="body">
 	<form name="loginForm" method="post" action="<?=PATH?>/_register/reset_password">
+	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <?php
 	if (! $GLOBALS['_SESSION_']->superElevated()) { ?>
 	<h3>Enter current password</h3>
