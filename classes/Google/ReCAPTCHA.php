@@ -5,6 +5,10 @@
 		private $url = "https://www.google.com/recaptcha/api/siteverify";
 
 		public function verify($response) {
+			if (!empty($GLOBALS['_config']->captcha->bypass_key) && !empty($_REQUEST['captcha_bypass_key']) && ($GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key'])) {
+				return true;
+			}
+
 			$data = array(
 				'secret'	=> $GLOBALS['_config']->captcha->private_key,
 				'response'	=> $_REQUEST['g-recaptcha-response'],
