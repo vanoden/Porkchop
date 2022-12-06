@@ -116,11 +116,11 @@
 				}
 				else {
 					
-					$this->_error = "Cannot open cache file '$filename'";
+					$this->error("Cannot open cache file '$filename'");
 				}
 			}
 			else {
-				$this->_error = "Cache client not connected";
+				$this->error("Cache client not connected");
 			}
 		}
 
