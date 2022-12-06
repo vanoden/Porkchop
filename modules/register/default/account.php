@@ -79,7 +79,7 @@
 
 	<section class="form-group">
 	<ul class="form-grid three-col">
-		<h4>Contact Information</h4>
+		<h4>Account Information</h4>
 		<li id="accountLoginQuestion">
 			<label for="user_name">Login:</label>
 			<span class="value"><?=$customer->login?></span>
@@ -125,10 +125,10 @@
 			<div class="tableCell">Drop</div>
 		</div>
 		<?php foreach ($contacts as $contact) { ?>
-		<div class="tableRow">
+		<div class="contact_method_row tableRow">
 			<div class="tableCell">
 				<span class="hiddenDesktop value">Types: </span>
-				<select class="value input" name="type[<?=$contact->id?>]">
+				<select class="contact_type_value value input" name="type[<?=$contact->id?>]">
 					<?php	foreach (array_keys($contact_types) as $contact_type) { ?>
 						<option value="<?=$contact_type?>"<?php if ($contact_type == $contact->type) print " selected";?>><?=$contact_types[$contact_type]?></option>
 					<?php	} ?>
@@ -148,11 +148,11 @@
 			</div>
 			<div class="tableCell">	
 				<span class="hiddenDesktop value">Notify: </span>
-				<input type="checkbox" name="notify[<?=$contact->id?>]" value="1" <?php if ($contact->notify) print "checked"; ?> />
+				<input type="checkbox" class="contact_notify" name="notify[<?=$contact->id?>]" value="1" <?php if ($contact->notify) print "checked"; ?> />
 			</div>
-				<div class="tableCell">
-					<span class="hiddenDesktop value">Drop: </span>
-					<input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X"  onclick="submitDelete(<?=$contact->id?>)" />
+			<div class="tableCell">
+				<span class="hiddenDesktop value">Drop: </span>
+				<input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X"  onclick="submitDelete(<?=$contact->id?>)" />
 			</div>
 		</div>
 		<?php } ?>
