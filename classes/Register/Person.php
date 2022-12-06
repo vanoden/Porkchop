@@ -19,7 +19,7 @@ class Person Extends \BaseClass {
 	public $auth_failures;
     public $_settings = array( "date_format" => "US" );
 
-    public function __construct($id = 0) {
+    public function __construct($id = null) {
     
         // Clear Error Info
         $this->_error = '';
@@ -99,6 +99,7 @@ class Person Extends \BaseClass {
 		$customer = $rs->FetchNextObject(false);
 		if (!isset($customer->id)) {
 			app_log("No customer found for " . $this->id);
+			debug_print_backtrace();
 			$this->id = null;
 			return $this;
 		}
