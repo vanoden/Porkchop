@@ -149,16 +149,24 @@
 
 		# End a Session
 		public function end() {
+			$database = new \Database\Service();
 			$end_session_query = "
 				UPDATE	session_sessions
 				SET		code = 'logout'
-				WHERE	id = ".$this->id;
+				WHERE	id = ?
+			";
+			$database->addParam($this->id);
 
-			$GLOBALS['_database']->Execute($end_session_query);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Session::end(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+			$database->Execute($end_session_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
+
+			# Delete Cookie
+			setcookie("session_code", $GLOBALS['_SESSION_']->session_code, time() - 604800, '/', $GLOBALS['_SESSION_']->domain);
+
+			return true;
 		}
 
 		# Override Roles
