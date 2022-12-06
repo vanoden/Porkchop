@@ -297,7 +297,7 @@
 			    $search = $matched [0];
 			    $parse_message = "Replaced $search";
 			    $replace_start = microtime ( true );
-			    $replace = $this->replace ( $matched [0] );
+			    $replace = $this->replace ($matched[0]);
 			    // app_log($parse_message." with $replace in ".sprintf("%0.4f",(microtime(true) - $replace_start))." seconds",'debug',__FILE__,__LINE__);
 			    $message = str_replace ( $search, $replace, $message );
 		    }
