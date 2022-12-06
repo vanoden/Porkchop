@@ -85,6 +85,13 @@
 
 		public function increment($key) {
 			if ($this->_connected) {
+                if (! $this->_service->get($key)) {
+                    if ($this->set($key,1)) $this->get($key);
+                    else {
+                            $this->error("Error incrementing key: ".$this->_service->getResultCode());
+                            return null;
+                    }
+                }
 				if ($this->_service->increment($key)) return $this->get($key);
 				else {
 					$this->error("Error incrementing key: ".$this->_service->getResultCode());

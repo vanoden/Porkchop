@@ -43,7 +43,9 @@
 		}
 
 		public function increment() {
-			return $GLOBALS['_CACHE_']->increment("counter.".$this->_key);
+			$result = $GLOBALS['_CACHE_']->increment("counter.".$this->_key);
+            $this->error($GLOBALS['_CACHE_']->error());
+            return $result;
 		}
 
 		public function value() {
