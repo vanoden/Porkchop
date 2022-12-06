@@ -862,6 +862,21 @@
 			$response->success = $GLOBALS['_CACHE_']->keys();
 			print $this->formatOutput($response);
 		}
+        public function incrementSiteCounter() {
+			if (! preg_match('/^\w[\w\-\.\_]*$/',$_REQUEST['name'])) error("Invalid counter name");
+
+			$counter = new \Site\Counter($_REQUEST['name']);
+            if ($counter->increment()) {
+                $this->response->success = 1;
+                $this->response->counter->name = $counter->code();
+                $this->response->counter->value = $counter->value();
+            }
+            else {
+                $this->error($counter->error());
+            }
+
+			print $this->formatOutput($this->response);
+        }
 
         public function addSiteHeader() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
@@ -1031,7 +1046,7 @@
                  ), 
                  'removeSiteMessage'	=> array(
                     'id' => array('required' => true)
-			     ),
+			    ),
 				'getSiteMessage'	=> array(
 					'id'	=> array('required' => true)
 				),
@@ -1040,20 +1055,20 @@
                     'user_id' => array('required' => true),
                     'date_viewed' => array('required' => true),
                     'date_acknowledged' => array('required' => true)
-                 ),   
+                ),   
 				'editSiteMessageDelivery'	=> array(
                     'id' => array('required' => true),
                     'message_id' => array('required' => true),
                     'user_id' => array('required' => true),
                     'date_viewed' => array('required' => true),
                     'date_acknowledged' => array('required' => true)
-                 ), 
-				 'getSiteMessageMetaDataListByItemId'	=> array(
+                ), 
+				'getSiteMessageMetaDataListByItemId'	=> array(
 					'item_id'	=> array('required' => true)
-				 ),
-                 'removeSiteMessageDelivery'	=> array(
+				),
+                'removeSiteMessageDelivery'	=> array(
                     'id' => array('required' => true)
-			     ),
+			    ),
 				'findSiteMessageDeliveries'	=> array(
 					'user_created'	=> array(),
 					'user_delivered'	=> array(),
@@ -1061,47 +1076,50 @@
 					'acknowledged'		=> array(),
 				),
 				'mySiteMessageCount' => array(),
-				 'addSiteMessageMetaData'	=> array(
+				'addSiteMessageMetaData'	=> array(
                     'item_id' => array('required' => true),
                     'label' => array('required' => true),
                     'value' => array('required' => true),
-                 ), 
-				 'editSiteMessageMetaData'	=> array(
+                ), 
+				'editSiteMessageMetaData'	=> array(
                     'item_id' => array('required' => true),
                     'label' => array('required' => true),
                     'value' => array('required' => true),
-                 ), 
-                 'removeSiteMessageMetaData'	=> array(
+                ), 
+                'removeSiteMessageMetaData'	=> array(
                     'item_id' => array('required' => true)
-			     ),
-                 'acknowledgeSiteMessageByUserId'	=> array(
+			    ),
+                'acknowledgeSiteMessageByUserId'	=> array(
                     'user_created' => array('required' => true)
-			     ),
-				 'timestamp' => array(),
-                 'search'	=> array(
+			    ),
+				'timestamp' => array(),
+                'search'	=> array(
                     'string' => array('required' => true)
-			     ),
-			     'getAllSiteCounters' => array(),
-			     'setAllSiteCounters' => array(),
-				 'getSiteCounter' => array(
+			    ),
+			    'getAllSiteCounters' => array(),
+			    'setAllSiteCounters' => array(),
+                'incrementSiteCounter' => array(
+                    'name'  => array('required' => true),
+                ),
+				'getSiteCounter' => array(
 					'name'	=> array('required' => true)
-				 ),
-                 'addSiteHeader' => array(
+				),
+                'addSiteHeader' => array(
                     'name'  => array('required' => true),
                     'value' => array('required' => true)
-                 ),
-                 'getSiteHeader' => array(
+                ),
+                'getSiteHeader' => array(
                     'name'  => array('required' => true)
-                 ),
-                 'updateSiteHeader' => array(
+                ),
+                'updateSiteHeader' => array(
                     'name'  => array('required' => true),
                     'value' => array('required' => true)
-                 ),
-                 'findSiteHeaders' => array(
+                ),
+                'findSiteHeaders' => array(
                     'name'  => array('required' => true),
                     'value' => array('required' => true)
-				 ),
-				 'getSiteStatus' => array()
+				),
+				'getSiteStatus' => array()
 			);		
 		}
 	}

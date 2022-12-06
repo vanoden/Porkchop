@@ -126,7 +126,7 @@
 
 		public function increment($key) {
 			$current = $this->get($key);
-			if ($this->_error) return null;
+			if ($this->error()) return null;
 			if (! isset($current)) {
 				if (! preg_match('/^_/',$key)) $this->incrementStat("incr_misses");
 				$current = 0;
@@ -136,6 +136,9 @@
 			if ($this->set($key,$current)) {
 				return $this->get($key);
 			}
+            else {
+                return false;
+            }
 		}
 
 		public function keys($object = null) {
