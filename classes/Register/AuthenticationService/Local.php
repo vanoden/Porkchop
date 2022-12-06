@@ -60,18 +60,21 @@
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			
             // Login Failed
-			if (! $id) return false;
+			if (! $id) {
+				$this->error("Login Failed");
+				return false;
+			}
 			$this->account = new \Register\Customer($id);
 			return true;
 		}
 
 		public function changePassword($login,$password) {
-			app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$this->login,'info');
+			app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$login,'info');
 	
 			$customer = new \Register\Customer();
 			if (! $customer->get($login)) {
