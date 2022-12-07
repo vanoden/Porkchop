@@ -99,7 +99,6 @@ class Person Extends \BaseClass {
 		$customer = $rs->FetchNextObject(false);
 		if (!isset($customer->id)) {
 			app_log("No customer found for " . $this->id);
-			debug_print_backtrace();
 			$this->id = null;
 			return $this;
 		}
