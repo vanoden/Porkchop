@@ -83,7 +83,8 @@
 						`id`			int(11) NOT NULL AUTO_INCREMENT,
 						`address`		bigint(8) NOT NULL,
 						`size`			bigint(8) NOT NULL,
-						`type`			enum('ipv4','ipv6') NOT NULL DEFAULT 'ipv4'
+						`type`			enum('ipv4','ipv6') NOT NULL DEFAULT 'ipv4',
+						PRIMARY KEY `pk_network_subnet_id` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
