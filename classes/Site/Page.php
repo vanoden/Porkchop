@@ -88,14 +88,25 @@
                 return true;
             } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
 				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit ();
 		    } else {
 				$counter = new \Site\Counter("permission_denied");
+				$counter->increment();
 			    header ( 'location: /_register/permission_denied' );
 			    exit ();
 		    }
         }
+
+		public function requireOrganization() {
+			if (empty($GLOBALS['_SESSION_']->customer->organization->id)) {
+				$counter = new \Site\Counter("organization_required");
+				$counter->increment();
+			    header ('location: /_register/organization_required');
+			    exit ();
+			}
+		}
         
 	    public function get($module, $view, $index = null) {
 		    $parameters = array ($module, $view );
