@@ -16,7 +16,8 @@
 	    public $metadata;
 	    public $template;
 	    public $success;
-	    private $_errors = array ();
+		private $_breadcrumbs = array();
+	    private $_errors = array();
 	    
 	    public function __construct() {
 		    $args = func_get_args ();
@@ -351,7 +352,7 @@
 		    $buffer = '';
 
 		    // Parse Token
-		    $parameter = $this->parse_element ( $string );
+		    $parameter = $this->parse_element($string);
 
 		    if (array_key_exists ( 'module', $parameter )) $module = $parameter ['module'];
 		    if (array_key_exists ( 'object', $parameter )) $object = $parameter ['object'];
@@ -381,7 +382,8 @@
 						$buffer .= '</li>
 						</ul>
 						</section>';
-					} elseif ($this->success) {
+					}
+					elseif ($this->success) {
 						$buffer = '<section id="form-message">
 						<ul class="connectBorder progressText">
 							<li>';
@@ -395,48 +397,29 @@
 				    if (isset ( $this->metadata->title )) $buffer = $this->metadata->title;
 			    }
 				elseif ($property == "metadata") {
-				    if (isset ( $this->metadata->$parameter ["field"] )) $buffer = $this->metadata->$parameter ["field"];
+				    if ($this->getMetadata($parameter["field"])) $buffer = $this->getMetadata($parameter["field"]);
 			    }
 				elseif ($property == "navigation") {
-				    $menuList = new \Navigation\ItemList();
+					$menu = new \Navigation\Menu();
+					if ($menu->get($parameter["name"])) {
+						$buffer .= $menu->html();
+					}
+					else {
+						$this->error($menu->error());
+						return '';
+					}
+			    }
+				elseif ($property == "navigation_new") {
+					$menu = new \Navigation\Menu();
+					if ($menu->get($parameter["name"])) {
+						$buffer .= $menu->html();
+					}
 				    if ($menuList->error()) {
 					    $this->error = "Error initializing navigation module: " . $menuList->error;
 					    return '';
 				    }
-				    $menus = $menuList->find(array("name" => $parameter["name"]));
-				    if ($menuList->error()) {
-					    app_log("Error displaying menus: " . $menuList->error(), 'error', __FILE__, __LINE__ );
-					    $this->error($menuList->error());
-					    return '';
-				    }
-				    $menu = $menus[0];
-					$items = $menu->items();
-
-				    if (count($items)) {
-					    foreach ($items as $item) {
-						    if (isset( $parameter ['class'] )) $button_class = $parameter ['class'];
-						    else {
-							    $button_class = "button_" . preg_replace ( "/\W/", "_", $menu->name );
-						    }
-						    $button_id = "button[" . $item->id . "]";
-						    if (count ( $item->children )) {
-							    $child_container_class = "child_container_" . preg_replace ( "/\W/", "_", $menu->name );
-							    $child_container_id = "child_container[" . $item->id . "]";
-							    $child_button_class = "child_button_" . preg_replace ( "/\W/", "_", $menu->name );
-
-							    $buffer .= "<div" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . " id=\"$button_id\"" . " class=\"$button_class\"" . ">" . $item->title . "</div>\n";
-
-							    $buffer .= "\t<div class=\"$child_container_class\" id=\"$child_container_id\">\n";
-							    foreach ( $item->children as $child ) {
-								    $buffer .= "\t\t" . "<a" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . ' href="' . $child->target . '"' . ' class="' . $child_button_class . '">' . $child->title . "</a>\n";
-							    }
-							    $buffer .= "\t</div>";
-						    } else {
-							    $buffer .= "<a" . " href=\"" . $item->target . "\"" . " class=\"$button_class\"" . ">" . $item->title . "</a>\n";
-						    }
-					    }
-				    }
-			    } elseif ($property == "message") {
+			    }
+				elseif ($property == "message") {
 				    $buffer .= "<div class=\"page_message\">" . $GLOBALS ['page_message'] . "</div>";
 			    } elseif ($property == "error") {
 				    $buffer .= "<div class=\"page_error\">" . $GLOBALS ['page_error'] . "</div>";
@@ -816,6 +799,24 @@
 		    return count ( $this->_errors );
 	    }
 
+		/************************************/
+		/* Breadcrumb Methods				*/
+		/************************************/
+		public function addBreadcrumb($name,$target = '') {
+			$breadcrumb = array("name" => $name, "target" => $target);
+			array_push($this->_breadcrumbs,$breadcrumb);
+		}
+
+		public function showBreadcrumbs() {
+			foreach ($this->_breadcrumbs as $breadcrumb) {
+				if ($breadcrumb['target']) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
+				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
+			}
+			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+		}
+		/************************************/
+		/* Validation Methods				*/
+		/************************************/
 		public function validModule($string) {
 			if (preg_match('/^\w[\w]*$/',$string)) return true;
 			else return false;
