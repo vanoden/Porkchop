@@ -428,7 +428,8 @@
 			    } else {
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
-		    } elseif ($object == "navigation") {
+		    }
+			elseif ($object == "navigation") {
 			    if ($property == "menu") {
 				    if ($parameter ['code']) {
 					    $menu = new \Navigation\Menu ();
@@ -441,7 +442,8 @@
 			    } else {
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
-		    } elseif ($object == "content") {
+		    }
+			elseif ($object == "content") {
 			    if ($property == "index") {
 				    app_log ( "content::index", 'trace', __FILE__, __LINE__ );
 				    if (isset ( $parameters ['id'] ) && preg_match ( "/^\d+$/", $parameter ["id"] )) $target = $parameter ["id"];
