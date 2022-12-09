@@ -80,7 +80,12 @@
             "privileges"    => array(
                 "manage navigation menus",
 				"see navigation api"
-            )
+			),
+			"templates" => array(
+				"menus"		=> $templates['admin'],
+				"items"		=> $templates['admin'],
+				"item"		=> $templates['admin']
+			)
         ),
 		"Product"		=> array(
 			"schema"	=> 5,
