@@ -17,6 +17,7 @@
 	$parent = new \Navigation\Item($_REQUEST['parent_id']);
 
 	if (isset($_REQUEST['btn_submit'])) {
+		if (!isset($item)) $item = new \Navigation\Item();
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
             $page->addError("Invalid Token");
         }
@@ -53,5 +54,22 @@
         }
     }
 	elseif (isset($_REQUEST['btn_delete'])) {
-		$item->delete();
+        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+            $page->addError("Invalid Token");
+        }
+        else {
+			$item->delete();
+		}
 	}
+
+	$page->addBreadcrumb("Menus", "/_navigation/menus");
+	if (isset($parent)) {
+		$page->addBreadcrumb($menu->title,"/_navigation/items/".$menu->code);
+		if ($parent->parent_id) {
+			$grandparent = new \Navigation\Item($parent->parent_id);
+			$page->addBreadcrumb($grandparent->title, "/_navigation/items?parent_id=".$grandparent->id);
+		}
+		$page->addBreadcrumb($parent->title,"/_navigation/items?parent_id=".$parent->id);
+	}
+	if ($item->id) $page->addBreadcrumb($item->title);
+	else $page->addBreadcrumb('New Menu Item');

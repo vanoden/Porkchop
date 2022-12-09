@@ -4,6 +4,8 @@
 		return true;
 	}
 </script>
+<div class="title">Navigation Menus</div>
+
 <?php	foreach ($menus as $menu) { ?>
 <form name="menuForm" action="/_navigation/menus" method="post">
 <input type="hidden" name="id" value="<?=$menu->id?>" />
@@ -23,3 +25,19 @@
 </div>
 </form>
 <?php  } ?>
+<form name="menuForm" action="/_navigation/menus" method="post">
+<input type="hidden" name="id" value="0" />
+<div class="container">
+	<div class="container">
+		<span class="label">Code</span>
+		<input type="text" name="code" value="" />
+	</div>
+	<div class="container">
+		<span class="label">Title</span>
+		<input type="text" name="title" value="" />
+	</div>
+	<div class="form_footer">
+		<input type="submit" name="btn_submit" value="Add" class="button" />
+	</div>
+</div>
+</form>

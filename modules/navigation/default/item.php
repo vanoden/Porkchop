@@ -1,4 +1,5 @@
 <div class="title">Menu Item</div>
+<div class="breadcrumb"><?=$page->showBreadcrumbs()?></div>
 
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">

@@ -175,6 +175,64 @@
 		    }
 		    return $html;
 	    }
+
+		public function asHTMLOld() {
+			$items = $menu->items();
+
+			if (count($items)) {
+				foreach ($items as $item) {
+					if (isset( $parameter ['class'] )) $button_class = $parameter ['class'];
+					else {
+						$button_class = "button_" . preg_replace ( "/\W/", "_", $menu->name );
+					}
+					$button_id = "button[" . $item->id . "]";
+					if (count ( $item->children )) {
+						$child_container_class = "child_container_" . preg_replace ( "/\W/", "_", $menu->name );
+						$child_container_id = "child_container[" . $item->id . "]";
+						$child_button_class = "child_button_" . preg_replace ( "/\W/", "_", $menu->name );
+
+						$buffer .= "<div" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . " id=\"$button_id\"" . " class=\"$button_class\"" . ">" . $item->title . "</div>\n";
+
+						$buffer .= "\t<div class=\"$child_container_class\" id=\"$child_container_id\">\n";
+						foreach ( $item->children as $child ) {
+							$buffer .= "\t\t" . "<a" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . ' href="' . $child->target . '"' . ' class="' . $child_button_class . '">' . $child->title . "</a>\n";
+						}
+						$buffer .= "\t</div>";
+					} else {
+						$buffer .= "<a" . " href=\"" . $item->target . "\"" . " class=\"$button_class\"" . ">" . $item->title . "</a>\n";
+					}
+				}
+			}
+			return $buffer;
+		}
+
+		public function asHTMLNew() {
+			$items = $menu->items();
+			$buffer = '';
+
+			if (count($items)) {
+				$buffer = <<<END
+<ul>
+	<input type="checkbox" id="collapse" aria-haspopup="true" />
+	<label for="collapse"></label>
+END;
+				foreach ($items as $item) {
+					$buffer .= "\t<li><a href=\"".$item->target."\">".$item->title."</a></li>\n";
+					if (count ( $item->children )) {
+						$buffer .= "\t<ul>\n";
+						foreach ( $item->children as $child ) {
+							$buffer .= "\t\t<li><a href=\"".$child->target."\">".$child->title."</a></li>\n";
+						}
+						$buffer .= "\t</ul>\n";
+					} else {
+						$buffer .= "\t<li><a" . " href=\"" . $item->target . "\"" . " class=\"$button_class\"" . ">" . $item->title . "</a></li>\n";
+					}
+				}
+				$buffer .= "</ul>\n";
+			}
+			return $buffer;
+		}
+
 		public function validTitle($string) {
 			if (! preg_match('/\<\>/',urldecode($string))) return true;
 			else return false;
