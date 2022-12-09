@@ -407,16 +407,31 @@
 					else {
 						$this->error($menu->error());
 						return '';
-					}
-			    }
-				elseif ($property == "navigation_new") {
-					$menu = new \Navigation\Menu();
-					if ($menu->get($parameter["name"])) {
-						$buffer .= $menu->html();
-					}
-				    if ($menuList->error()) {
-					    $this->error = "Error initializing navigation module: " . $menuList->error;
-					    return '';
+					}					$items = $menu->items();
+
+				    if (count($items)) {
+					    foreach ($items as $item) {
+						    if (isset( $parameter ['class'] )) $button_class = $parameter ['class'];
+						    else {
+							    $button_class = "button_" . preg_replace ( "/\W/", "_", $menu->name );
+						    }
+						    $button_id = "button[" . $item->id . "]";
+						    if (count ( $item->children )) {
+							    $child_container_class = "child_container_" . preg_replace ( "/\W/", "_", $menu->name );
+							    $child_container_id = "child_container[" . $item->id . "]";
+							    $child_button_class = "child_button_" . preg_replace ( "/\W/", "_", $menu->name );
+
+							    $buffer .= "<div" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . " id=\"$button_id\"" . " class=\"$button_class\"" . ">" . $item->title . "</div>\n";
+
+							    $buffer .= "\t<div class=\"$child_container_class\" id=\"$child_container_id\">\n";
+							    foreach ( $item->children as $child ) {
+								    $buffer .= "\t\t" . "<a" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . ' href="' . $child->target . '"' . ' class="' . $child_button_class . '">' . $child->title . "</a>\n";
+							    }
+							    $buffer .= "\t</div>";
+						    } else {
+							    $buffer .= "<a" . " href=\"" . $item->target . "\"" . " class=\"$button_class\"" . ">" . $item->title . "</a>\n";
+						    }
+					    }
 				    }
 			    }
 				elseif ($property == "message") {
@@ -431,15 +446,22 @@
 		    }
 			elseif ($object == "navigation") {
 			    if ($property == "menu") {
-				    if ($parameter ['code']) {
+				    if ($parameter['code']) {
 					    $menu = new \Navigation\Menu ();
-					    if ($menu->get ( $parameter ['code'] )) {
-						    $buffer .= $menu->asHTML ( $parameter );
+					    if ($menu->get($parameter['code'])) {
+							if (!empty($parameter['version']) && $parameter['version'] == 'v2') {
+								$buffer .= $menu->asHTMLV2($parameter);
+							}
+							else {
+							    $buffer .= $menu->asHTML($parameter);
+							}
 					    }
-				    } else {
-					    app_log ( "navigation menu references without code" );
 				    }
-			    } else {
+					else {
+					    app_log("navigation menu references without code");
+				    }
+			    }
+				else {
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    }
