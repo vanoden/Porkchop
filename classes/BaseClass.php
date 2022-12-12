@@ -5,10 +5,17 @@
 		protected $_cached = false;
 		protected $_statii = array();
 
-		public function error($value = null) {
+		public function error($value = null,$caller = null) {
 			if (isset($value)) {
-				$this->_error = $value;
-				app_log($value,'error');
+				if (!isset($caller)) {
+					$trace = debug_backtrace();
+					$caller = $trace[1];
+				}
+				$class = $caller['class'];
+				$classname = str_replace('\\','::',$class);
+				$method = $caller['function'];
+				$this->_error = $classname."::".$method."(): ".$value;
+				app_log($this->_error,'error');
 			}
 			return $this->_error;
 		}
@@ -21,7 +28,7 @@
 			$classname = str_replace('\\','::',$class);
 			$method = $caller['function'];
 			if (!empty($query)) query_log($query,$bind_params,true);
-			return $this->error("SQL Error in ".$classname."::".$method."(): ".$message);
+			return $this->error("SQL Error in ".$classname."::".$method."(): ".$message,$caller);
 		}
 
 		public function _addStatus($param) {
