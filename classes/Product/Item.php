@@ -63,6 +63,9 @@
 		}
 
 		public function update($parameters) {
+			$this->clearError();
+			$database = new \Database\Service();
+
 			app_log("Product::Item::update()",'trace',__FILE__,__LINE__);
 			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
 				$this->error("You do not have permissions for this task.");
@@ -96,27 +99,25 @@
 				if ($ok_params[$parameter]) {
 					$update_product_query .= ",
 					$parameter	= ?";
-					array_push($bind_params,$parameters[$parameter]);
+					$database->addParam($parameters[$parameter]);
 				}
 			}
 
 			$update_product_query .= "
 				WHERE	id = ?
 			";
-			array_push($bind_params,$this->id);
-			$rs = $GLOBALS['_database']->Execute(
-				$update_product_query,$bind_params
-			);
+			$database->addParam($this->id);
+			$rs = $database->Execute($update_product_query);
             if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				app_log($update_product_query,'debug',__FILE__,__LINE__);
+				$this->SQLError($database->ErrorMsg());
+				app_log($update_product_query,'debug');
 				return null;
             }
 			return $this->details();
 		}
 
 		public function add($parameters) {
-			app_log("Product::Item::add()",'trace',__FILE__,__LINE__);
+			app_log("Product::Item::add()",'trace');
 			$this->clearError();
 			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
 				$this->error("You do not have permissions for this task.");
@@ -177,6 +178,9 @@
 
 		public function details() {
 			app_log("Product::Item::details()",'trace');
+			$this->clearError();
+			$database = new \Database\Service();
+			$database->trace(1);
 
 			$cache_key = "product[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -220,12 +224,10 @@
 				FROM	product_products
 				WHERE	id = ?";
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_details_query,
-				array($this->id)
-			);
+			$database->addParam($this->id);
+			$rs = $database->Execute($get_details_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 
