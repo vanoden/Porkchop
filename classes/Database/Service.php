@@ -5,6 +5,7 @@
 		private $_connection;
 		private $_params = array();
 		public $debug = 'log';
+		private $_trace_level = 0;
 
 		public function __construct() {
 			$this->_connection = $GLOBALS['_database'];
@@ -30,8 +31,8 @@
 
 		public function Execute($query,$bind_params = null) {
 			if (is_array($bind_params)) $this->_params = array_merge($this->_params,$bind_params);
-			if ($this->debug == 'log') query_log($query,$this->_params,true);
-			elseif ($this->debug = 'screen') print "<pre>$query</pre>";
+			if ($this->debug == 'log' && $this->_trace_level > 0) query_log($query,$this->_params,true);
+			elseif ($this->debug == 'screen' && $this->_trace_level > 0) print "<pre>$query</pre>";
 			$recordSet = new \Database\RecordSet($this->_connection->Execute($query,$this->_params));
 			if ($this->_connection->ErrorMsg()) {
 				print_r($this->_connection->ErrorMsg());
@@ -40,6 +41,11 @@
 				return null;
 			}
 			return $recordSet;
+		}
+
+		public function trace($level = null) {
+			if (isset($level)) $this->_trace_level = $level;
+			return $this->_trace_level;
 		}
 
 		public function ErrorMsg() {
