@@ -126,7 +126,9 @@
 		}
 
 		public function update($parameters = array()) {
-			$this->error = null;
+			$this->clearError();
+			$database = new \Database\Service();
+
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid asset id required for update");
 				return null;
@@ -135,8 +137,7 @@
 			$bind_params = array();
 
 			# Get Current Details
-			$current_object = $this->details();
-			if (! $current_object->id) {
+			if (! $this->id) {
 				$this->error("No matching asset to update");
 				return null;
 			}
@@ -150,23 +151,23 @@
 			if (isset($parameters['code']) && preg_match('/^[\w\-\.\_]+$/',$parameters['code'])) {
 				$update_object_query .= ",
 						asset_code = ?";
-				array_push($bind_params,$parameters['code']);
+				$database->addParam($parameters['code']);
 			}
 			if (isset($parameters['name'])) {
 				$update_object_query .= ",
 						asset_name = ?";
-				array_push($bind_params,$parameters['name']);
+				$database->addParam($parameters['name']);
 			}
 			if (isset($parameters['product_id']) && preg_match('/^\d+$/',$parameters['product_id'])) {
 				$update_object_query .= ",
 						product_id = ?";
-				array_push($bind_params,$parameters['product_id']);
+				$database->addParam($parameters['product_id']);
 			}
 			if (isset($parameters['organization_id']) && preg_match('/^\d+$/',$parameters['organization_id'])) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 					$update_object_query .= ",
 						organization_id = ?";
-					array_push($bind_params,$parameters['organization_id']);
+					$database->addParam($parameters['organization_id']);
 				} else {
 					$this->error("Insufficient privileges for update");
 					return null;
@@ -176,12 +177,12 @@
 			$update_object_query .= "
 				WHERE	asset_id = ?
 			";
-			array_push($bind_params,$this->id);
+			$database->addParam($this->id);
 
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return 0;
+			$database->Execute($update_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
 			else {
 				# Get Some Event Info
