@@ -430,7 +430,7 @@
 		}
 		
 		public function getConfiguration() {
-			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) error("Permission denied");
+			$this->requirePrivilege('configure site');
 			$response = new \HTTP\Response();
 			$configuration = new \Site\Configuration($_REQUEST['key']);
 			if ($configuration->get($_REQUEST['key'])) {
