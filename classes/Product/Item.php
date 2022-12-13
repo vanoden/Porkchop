@@ -34,7 +34,7 @@
 			return $this->details($this->id);
 		}
 
-		public function get($code = '') {
+		public function get($code) {
 			app_log("Product::Item::get()",'trace',__FILE__,__LINE__);
 			# Prepare Query to Get Product
 			$get_object_query = "
