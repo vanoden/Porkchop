@@ -18,7 +18,7 @@
 	    public $success;
 		private $_breadcrumbs = array();
 	    private $_errors = array();
-	    
+
 	    public function __construct() {
 		    $args = func_get_args ();
 			if (func_num_args() == 1 && gettype($args[0]) == "integer") {
