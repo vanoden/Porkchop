@@ -73,8 +73,12 @@
 			if ($event->error) app_log("Failed to add change to history: ".$event->error,'error',__FILE__,__LINE__);
 			return $this->update($parameters);
 		}
-		
+
 		public function getSimple($code) {
+			return $this->get($code);
+		}
+
+		public function get($code) {
 			$this->clearError();
 			$bind_params = array();
 
@@ -102,7 +106,7 @@
 		}
 		
 		# Get Specific Hub
-		public function get($code,$product_id) {
+		public function getWithProduct($code,$product_id) {
 			$this->clearError();
 
 			$bind_params = array();
@@ -309,7 +313,7 @@
 		}
 		
 		
-		public function getMetadata() {
+		public function allMetadata() {
 			$get_object_query = "
 				SELECT	`key`,value
 				FROM	monitor_asset_metadata
@@ -330,7 +334,7 @@
 			return $array;
 		}
 		
-		public function metadata($key) {
+		public function getMetadata($key) {
 			$get_value_query = "
 				SELECT	value
 				FROM	monitor_asset_metadata
@@ -353,6 +357,7 @@
 			$ticketList = new \Support\Request\ItemList();
 			$parameters['product_code']	= $this->product->code;
 			$parameters['serial_number'] = $this->code;
+			if ($GLOBALS[_SESSION_]->customer->can(""))
 			return $ticketList->find($parameters);
 		}
 

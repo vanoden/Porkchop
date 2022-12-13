@@ -284,7 +284,7 @@
 
 		public function asset() {
 			$asset = new \Product\Instance();
-			if ($asset->get($this->product_id,$this->serial_number)) return $asset;
+			if ($asset->getWithProduct($this->product_id,$this->serial_number)) return $asset;
 			else {
 				$this->error("Asset not found");
 				return null;
