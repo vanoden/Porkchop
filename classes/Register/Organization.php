@@ -18,6 +18,7 @@
 		private $database;
 
 		public function __construct($id = 0,$options = array()) {
+		
 			// Clear Error Info
 			$this->clearError();
 

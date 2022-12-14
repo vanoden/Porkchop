@@ -2,6 +2,7 @@
 	namespace Register;
 
 	class Location extends \ORM\BaseModel {
+	
 		public $id;
 		public $name;
 		public $address_1;
