@@ -3,11 +3,11 @@
 	$page->requirePrivilege('manage shipments');
 	$shipment = new \Shipping\Shipment($_REQUEST['id']);
 	
-    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-	    $page->addError("Invalid Request");
-    }
-	else {
- 	    if (!empty($_REQUEST['btn_shipped'])) {
+    if (!empty($_REQUEST['btn_shipped'])) {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+			$page->addError("Invalid Request");
+		}
+		else {
 			$vendor = new \Shipping\Vendor($_REQUEST['vendor_id']);
 			if ($vendor->exists()) {
 			    $shipment->ship(array('vendor_id' => $_REQUEST['vendor_id']));
@@ -17,11 +17,21 @@
 				$page->addError("Shipping vendor not found");
 			}
 	    }
-		elseif (!empty($_REQUEST['btn_lost'])) {
+	}
+	elseif (!empty($_REQUEST['btn_lost'])) {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+			$page->addError("Invalid Request");
+		}
+		else {
 		    $shipment->update(array('status' => 'LOST'));
 		    $page->success = 'Shipment Status = LOST';
 	    }
-		elseif (!empty($_REQUEST['btn_received'])) {
+	}
+	elseif (!empty($_REQUEST['btn_received'])) {
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+			$page->addError("Invalid Request");
+		}
+		else {
 		    $received = true;
 		    foreach ($shipment->packages() as $package) {
 			    if ($package->status != 'RECEIVED') {
