@@ -190,18 +190,15 @@
 END;
 				foreach ($items as $item) {
 					if (empty($item->target)) $buffer .= "\t<li hi=\"1\">".$item->title."</li>\n";
-					else $buffer .= "\t<li hi=\"1.5\"><a href=\"".$item->target."\">".$item->title."</a></li>\n";
+					else $buffer .= "\t<li><a href=\"".$item->target."\">".$item->title."</a></li>\n";
 					$children = $item->children();
 					if (count($children)) {
 						$buffer .= "\t<ul>\n";
 						foreach ( $children as $child ) {
-							$buffer .= "\t\t<li hi=\"2\"><a href=\"".$child->target."\">".$child->title."</a></li>\n";
+							$buffer .= "\t\t<li><a href=\"".$child->target."\">".$child->title."</a></li>\n";
 						}
 						$buffer .= "\t</ul>\n";
 					}
-					//else {
-					//	$buffer .= "\t<li hi=\"3\"><a href=\"".$item->target."\">".$item->title."</a></li>\n";
-					//}
 				}
 				$buffer .= "</ul>\n";
 			}
