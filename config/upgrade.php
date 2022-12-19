@@ -24,7 +24,8 @@
 				"page"	=> $templates['admin'],
 				"pages"	=> $templates['admin'],
 				"configurations"	=> $templates['admin'],
-				"counters"	=> $templates['admin']
+				"counters"	=> $templates['admin'],
+				"content_block"	=> $templates['admin']
 			),
 		),
 		"Geography"		=> array(
