@@ -2,11 +2,13 @@
 	namespace Shipping;
 	
 	class Vendor extends \ORM\BaseModel {
+	
 		public $id;
 		public $name;
 		public $account_number;
 		public $tableName = 'shipping_vendors';
         public $fields = array('id', 'name', 'account_number');
+        protected $ukColumn = 'name';
         
         /**
          * add by params

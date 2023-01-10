@@ -36,6 +36,7 @@
 		}
 
 		public function add($parameters) {
+		
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
 			$database = new \Database\Service;
 

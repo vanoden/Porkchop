@@ -32,7 +32,15 @@
 		var organization_id = document.forms[0].organization_id.value;
 		window.location.href = "/_register/organization?organization_id="+organization_id+"&" + type + "=" + value;
 		return true;
-	}	
+	}
+	
+	// remove an organization tag by id
+	function removeTagById(id) {
+	    var orgDetailsForm = document.getElementById('orgDetails');
+	    var removeTagId = document.getElementById('removeTagId');
+	    removeTagId.value = id;
+	    orgDetailsForm.submit();
+	}
 </script>
 <div class="title">Organization Details</div>
 
@@ -51,10 +59,11 @@
 </section>
 <?php	} ?>
 
-<form name="orgDetails" method="POST">
+<form id="orgDetails" name="orgDetails" method="POST">
 
     <input type="hidden" name="organization_id" value="<?=$organization->id?>"/>
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+    <input type="hidden" id="removeTagId" name="removeTagId" value=""/>
     
     <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
 
@@ -123,14 +132,17 @@
 	    <div class="tableRowHeader">
 		    <div class="tableCell" style="width: 35%;">Tag</div>
 	    </div>
-        <?php	foreach ($organizationTags as $tag) { ;?>
+        <?php	
+            foreach ($organizationTags as $tag) {
+        ?>
 	        <div class="tableRow">
 		        <div class="tableCell">
-		            <input type="hidden" name="removeTagValue" value="<?=$tag->name?>"/>
-			        <input type="submit" name="removeTag" value="Remove" class="button"/> <strong><?=$tag->name?></strong>
+			        <input type="button" onclick="removeTagById('<?=$tag->id?>')" name="removeTag" value="Remove" class="button"/> <strong><?=$tag->name?></strong>
 		        </div>
 	        </div>
-        <?php	} ?>
+        <?php	
+            } 
+        ?>
 	    
 	    <div class="tableRow">
 		    <div class="tableCell">
@@ -141,7 +153,6 @@
     <div class="tableFooter min-tablet">
 	    <input type="submit" name="addTag" value="Add Tag" class="button"/>
     </div>
-
     <div class="user_accounts_container">
         <input type="checkbox" id="showAllUsers" name="showAllUsers" value="showAllUsers" onclick="showHidden()" <?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? 'checked' : ''?>> SHOW ALL (Expired/Hidden/Deleted)
         <h3>Current Users</h3>
