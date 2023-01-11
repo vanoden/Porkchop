@@ -10,4 +10,7 @@
         "roles"         => array(
             "sales manager" => array(),
         ),
+		"templates"		=> array(
+			"cart"		=> $templates['admin'],
+		),        
     );

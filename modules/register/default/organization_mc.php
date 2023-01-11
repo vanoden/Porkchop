@@ -7,7 +7,7 @@
 	###################################################
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customers');
-
+	
 	if (!empty($_REQUEST['id']) && empty($_REQUEST['organization_id'])) $_REQUEST['organization_id'] = $_REQUEST['id'];
 
 	# Security - Only Register Module Operators or Managers can see other customers
@@ -153,12 +153,10 @@
 	}
 	
 	// remove tag from organization
-	if (!empty($_REQUEST['removeTag'])) {
+	if (!empty($_REQUEST['removeTagId'])) {
         $registerTagList = new \Register\TagList();
-        $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id, "name"=> $_REQUEST['removeTagValue']));
-	    foreach ($organizationTags as $organizationTag) {
-    	    $organizationTag->delete();
-	    }
+        $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id, "id"=> $_REQUEST['removeTagId']));
+	    foreach ($organizationTags as $organizationTag) $organizationTag->delete();
 	}
 
 	if ($organization->id) {

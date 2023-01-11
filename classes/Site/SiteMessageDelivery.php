@@ -29,6 +29,7 @@
                 $this->error("SQL Error in Site::SiteMessageDelivery::get(): ".$GLOBALS['_database']->ErrorMsg());
                 return false;
             }
+            
             list($this->id) = $rs->FetchRow();
             return $this->details();
         }

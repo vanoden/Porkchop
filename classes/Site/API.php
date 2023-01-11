@@ -543,7 +543,6 @@
 
         public function acknowledgeSiteMessage() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
             $siteMessageDelivery = new \Site\SiteMessageDelivery();
             if (! $siteMessageDelivery->get($_REQUEST['message_id'],$GLOBALS['_SESSION_']->customer->id)) $this->error("Message not found");
             if (! $siteMessageDelivery->acknowledge()) $this->error($siteMessageDelivery->error());

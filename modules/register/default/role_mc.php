@@ -3,10 +3,12 @@
 	$page->requirePrivilege('manage customers');
 
 	// Identify Specified Role if possible
+	$role = new \Register\Role();
     if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
 		$role = new \Register\Role($_REQUEST['id']);
 		if (! $role->id) $page->addError("Role &quot;".$_REQUEST['id']."&quot; not found");
 	}
+	
 	if (! $role->id && isset($_REQUEST['name']) && $role->validName($_REQUEST['name'])) {
     	$role = new \Register\Role();
     	$role->get($_REQUEST['name']);
@@ -27,6 +29,7 @@
 			}
 		}
 	}
+
 	if (! $role->id && isset($GLOBALS['_REQUEST_']->query_vars_array[0]) && strlen($GLOBALS['_REQUEST_']->query_vars_array[0])) {
     	$role_name = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		$role = new \Register\Role();
@@ -46,6 +49,7 @@
         }
 	}
 
+	$privileges = array();
 	if ($role->id) {
 		$privilegeList = new \Register\PrivilegeList();
 	    $privileges = $privilegeList->find(array('_sort' => 'module'));

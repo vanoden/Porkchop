@@ -25,6 +25,7 @@
             // create new message
             $siteMessage = new \Site\SiteMessage();
             $siteMessageDetails = array('user_created' => $GLOBALS['_SESSION_']->customer->id, 'subject' => $_REQUEST['subject'], 'content' => $_REQUEST['content']);
+            $siteMessageDelivery = new \Site\SiteMessageDelivery();
 
             // apply important flag or not
             $siteMessageDetails['important'] = 0;
@@ -37,7 +38,8 @@
                     $inRole = $registerRole->checkIfUserInRole($customer->id, $_REQUEST['role']);
                     if ($inRole) {
                         $siteMessageDetails['recipient_id'] = $customer->id;
-                        $siteMessage->add($siteMessageDetails);                
+                        $siteMessageDetails = $siteMessage->add($siteMessageDetails);
+                        $siteMessageDelivery->add(array('message_id' => $siteMessageDetails->id,'user_id' => $siteMessageDetails['recipient_id']));
                     }
                 }
             }
@@ -46,8 +48,10 @@
             if (isset($_REQUEST['selectSendTo']) && $_REQUEST['selectSendTo'] == 'customer') {
                 $siteMessageDetails['recipient_id'] = $_REQUEST['customer'];
                 $siteMessage->add($siteMessageDetails);
+                $siteMessageDelivery->add(array('message_id' => $siteMessage->id,'user_id' => $_REQUEST['customer']));
             }
             
             $page->success = 'Message sent to specfied users';
         }
     }
+    

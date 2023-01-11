@@ -18,6 +18,7 @@
 		private $database;
 
 		public function __construct($id = 0,$options = array()) {
+		
 			// Clear Error Info
 			$this->clearError();
 
@@ -35,6 +36,7 @@
 		}
 
 		public function add($parameters) {
+		
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
 			$database = new \Database\Service;
 

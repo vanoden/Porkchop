@@ -74,6 +74,7 @@
 		}
 
 		public function validCSRFToken() {
+		
 			// Machines don't send CSRF Token
 			if (preg_match('/^portal_sync/',$_SERVER['HTTP_USER_AGENT'])) return true;
 

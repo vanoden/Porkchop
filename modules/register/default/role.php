@@ -1,5 +1,9 @@
 <span class="title">Role</span>
-
+<style>
+	ul {
+		list-style-type: none;
+	}
+</style>
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">
 	<ul class="connectBorder errorText">

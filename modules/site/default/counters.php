@@ -3,7 +3,7 @@
         cursor: pointer;
     }
 </style>
-<span class="title">Site Counters</span>
+<h1 class="title">Site Counters</h1>
 
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">

@@ -213,6 +213,6 @@
 
 exit;
 
-//function app_log($message,$level='debug') {
-//	$GLOBALS['site']->install_log($message);
-//}
+function app_log($message,$level='debug') {
+	$GLOBALS['site']->install_log($message);
+}

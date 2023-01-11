@@ -4,6 +4,7 @@
 	class TagList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
+		
 			app_log("Register::TagList::find()",'trace',__FILE__,__LINE__);
 			$this->resetCount();
 			$this->clearError();
@@ -30,8 +31,13 @@
 				$get_tags_query .= "
 				AND     name = ?";
 				array_push($bind_params,$parameters['name']);
+			}			
+			if (isset($parameters['id']) && !empty($parameters['id'])) {
+				$get_tags_query .= "
+				AND     id = ?";
+				array_push($bind_params,$parameters['id']);
 			}
-			
+
 			query_log($get_tags_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_tags_query,$bind_params);
 			if (! $rs) {

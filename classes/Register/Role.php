@@ -106,6 +106,20 @@
 			return true;
 		}
 		
+		public function removeMembers() {
+			$remove_members_query = "
+				DELETE
+				FROM	register_users_roles
+				WHERE	role_id = ?
+			";
+			$GLOBALS['_database']->Execute($remove_members_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			return true;
+		}
+
 		public function members() {
 			$get_members_query = "
 				SELECT	user_id
