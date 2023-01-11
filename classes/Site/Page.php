@@ -468,7 +468,8 @@
 			elseif ($object == "content") {
 			    if ($property == "index") {
 				    app_log ( "content::index", 'trace', __FILE__, __LINE__ );
-				    if (isset ( $parameters ['id'] ) && preg_match ( "/^\d+$/", $parameter ["id"] )) $target = $parameter ["id"];
+				    if (isset ( $parameter ['id'] ) && preg_match ( "/^\d+$/", $parameter ["id"] )) $target = $parameter ["id"];
+				    else if (isset ( $parameter ['target'] ) && preg_match ( "/^\w[\w\-\_]*$/", $parameter ["target"] )) $target = $parameter ["target"];
 				    else $target = $GLOBALS ['_REQUEST_']->query_vars_array [0];
 
 				    $message = new \Content\Message ();
@@ -490,12 +491,9 @@
 					    // Make Sure User Has Privileges
 					    if (is_object ( $GLOBALS ['_SESSION_']->customer ) && $GLOBALS ['_SESSION_']->customer->id && $GLOBALS ['_SESSION_']->customer->can ( 'edit content messages' )) {
 						    $origin_id = uniqid ();
-						    $buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'0px\'; } </script>';
-						    $buffer .= "<div>";
-						    $buffer .= '<div id="r7_widget[' . $origin_id . ']">' . $message->content . '</div>';
-						    #$buffer .= '<a class="porkchop_edit_button" href="javascript:void(0)" onclick="editContent(\'content\',\'' . $origin_id . '\',\'' . $message->id . '\')" onmouseover="highlightContent(\'content\');" onmouseout="blurContent(\'content\');">Edit</a>';
-						    $buffer .= '<a href="/_content/edit?id='.$message->id.'">Edit</a>';
-                            $buffer .= "</div>";
+						    #$buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'0px\'; } </script>';
+						    $buffer .= '<contentblock id="'.$origin_id.'">' . $message->content . '</contentblock>';
+						    $buffer .= '<a href="javascript:void(0)" onclick="editBlock('.$message->id.')">Edit</a>';
 					    } else {
 						    $buffer .= $message->content;
 					    }
