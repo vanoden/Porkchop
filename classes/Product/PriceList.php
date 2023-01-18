@@ -26,6 +26,10 @@
 					";
 					array_push($bind_params,$parameters['status']);
 				}
+
+				$get_prices_query .= "
+					ORDER BY date_active DESC, status";
+
 				query_log($get_prices_query);
 
 				$rs = $GLOBALS['_database']->Execute($get_prices_query,$bind_params);
