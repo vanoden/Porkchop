@@ -1,14 +1,14 @@
 <?php
 	namespace HTTP;
 
-	class Request {
-	
+	class Request Extends \BaseClass {
 		public $module;
 		public $view;
 		public $index;
 		public $query_vars_array = array();
 		public $client_ip;
 		public $user_agent;
+		public $timer;
 		private $_protocol;
 		private $_method = 'GET';
 		private $_host;
@@ -17,11 +17,11 @@
 		private $_uri = '/';
 		private $_query_string = '';
 		private $_content_type;
-		private $_error;
 		private $_parameters = array();
 		private $_headers = array();
 
 		public function __construct($parameters = array()) {
+			$this->timer = microtime();
 			if (isset($parameters['host'])) $this->host($parameters['host']);
 			if (isset($parameters['method'])) $this->method($parameters['method']);
 			if (isset($parameters['body'])) $this->body($parameters['body']);
@@ -79,7 +79,7 @@
 					$this->_query_string = null;
 				}
 				else {
-					$this->_error = "Invalid url '".$url."'";
+					$this->error("Invalid url '".$url."'");
 				}
 			}
 			$url = $this->_protocol."://".$this->_host;
@@ -89,7 +89,7 @@
 			return $url;
 		}
 		public function serialize($parameters = array()) {
-			$this->_error = null;
+			$this->clearError();
 
 			if (isset($parameters['host'])) $this->_host = $parameters['host'];
 			if (isset($parameters['method'])) $this->_method = $parameters['method'];
@@ -103,11 +103,11 @@
 			}
 
 			if (!isset($this->_host)) {
-				$this->_error = "Host not defined";
+				$this->error("Host not defined");
 				return null;
 			}
 			if (!isset($this->_uri)) {
-				$this->_error = "Path not defined";
+				$this->error("Path not defined");
 				return null;
 			}
 
@@ -116,7 +116,7 @@
 				# We're All Good
 			}
 			elseif(isset($this->_method)) {
-				$this->_error = "Invalid HTTP method '".$this->_method."'";
+				$this->error("Invalid HTTP method '".$this->_method."'");
 				return null;
 			}
 			else if (strlen($this->_body)) {
@@ -225,7 +225,7 @@
 					$this->_method = $method;
 				}
 				else {
-					$this->_error = "Invalid method";
+					$this->error("Invalid method");
 					return null;
 				}
 			}
@@ -277,12 +277,12 @@
                     app_log("WAF RULE: extension",'trace2');
                     $risk_level += 100;
                 }
-                elseif (preg_match('/^vendor\/phpunit')) {
+                elseif (preg_match('/^vendor\/phpunit/',$uri)) {
                     # No php unit test here
                     app_log("WAF RULE: phpunit",'trace2');
                     $risk_level += 100;
                 }
-                elseif (preg_match('/^\./')) {
+                elseif (preg_match('/^\./',$uri)) {
                     # Hidden files or backref
                     app_log("WAF RULE: hidden file",'trace2');
                     $risk_level += 100;
@@ -333,8 +333,4 @@
             }
             return $risk_level;
         }
-		
-		public function error() {
-			return $this->_error;
-		}
 	}
