@@ -2,7 +2,6 @@
 	namespace Site;
 
 	class Session Extends \BaseClass {
-
 		public $code = '';
 		public $id = 0;
 		public $order = 0;
@@ -15,7 +14,6 @@
 		public $prev_session = 0;
 		public $email_id = 0;
 		public $admin = 0;
-		public $error = '';
 		public $message = '';
 		public $status = 0;
 		public $first_hit_date;
@@ -45,31 +43,31 @@
 			$this->location->getByHost($_SERVER['SERVER_NAME']);
 			
 			if (! $this->location->id) {
-				$this->error = "Location ".$_SERVER['SERVER_NAME']." not configured";
+				$this->error("Location ".$_SERVER['SERVER_NAME']." not configured");
 				return null;
 			}
 			if (! $this->location->domain->id) {
-				$this->error = "No domain assigned to location '".$this->location->id."'";
+				$this->error("No domain assigned to location '".$this->location->id."'");
 				return null;
 			}
 
 			$this->domain = new \Company\Domain($this->location->domain->id);
-			if ($this->domain->error) {
-				$this->error = "Error finding domain: ".$this->domain->error;
+			if ($this->domain->error()) {
+				$this->error("Error finding domain: ".$this->domain->error());
 				return null;
 			}
 			if (! $this->domain->id) {
-				$this->error = "Domain '".$this->domain->id."' not found for location ".$this->location->id;
+				$this->error("Domain '".$this->domain->id."' not found for location ".$this->location->id);
 				return null;
 			}
 
 			$this->company = new \Company\Company($this->domain->company->id);
-			if ($this->company->error) {
-				$this->error = "Error finding company: ".$this->company->error;
+			if ($this->company->error()) {
+				$this->error("Error finding company: ".$this->company->error());
 				return null;
 			}
 			if (! $this->company->id) {
-				$this->error = "Company '".$this->domain->company->id."' not found";
+				$this->error("Company '".$this->domain->company->id."' not found");
 				return null;
 			}
 
@@ -121,9 +119,8 @@
 					$customer = new \Register\Customer();
 					$customer->authenticate($login,$password);
 					
-					if ($customer->error) {
-						$this->error = "Error authenticating customer: ".$customer->error;
-						error_log("Failed: ".$this->error);
+					if ($customer->error()) {
+						$this->error("Error authenticating customer: ".$customer->error());
 						return 0;
 					}
 					if ($customer->message) {
@@ -243,7 +240,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Session::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -270,7 +267,7 @@
 				array($code)
 			);
 			if (! $rs) {
-				app_log("SQL Error in Site::Session::get(): ".$GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
+				$this->SQLError($GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
 				return null;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -284,7 +281,7 @@
 
 			# Cached Customer Object, Yay!
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
-			if ($cache->error) app_log("Cache error in Site::Session::get(): ".$cache->error,'error',__FILE__,__LINE__);
+			if ($cache->error()) app_log("Cache error in Site::Session::get(): ".$cache->error(),'error',__FILE__,__LINE__);
 			
 			elseif (($this->id) and ($session = $cache->get())) {
 				if ($session->code) {
@@ -370,7 +367,7 @@
 			app_log("Assigning session ".$this->id." to customer ".$customer_id,'debug',__FILE__,__LINE__);
 
 			$customer = new \Register\Customer($customer_id);
-			if (! $customer->id) $this->error = "Customer not found";
+			if (! $customer->id) $this->error("Customer not found");
 
 			$cache_key = "session[".$this->id."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -386,12 +383,12 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error Site::Session::assign(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($assigned_to) = $rs->FetchRow();
 			if ($assigned_to > 0) {
-				$this->error = "Cannot register when already logged in.  Please <a href=\"/_register/logout\">log out</a> to continue.";
+				$this->error("Cannot register when already logged in.  Please <a href=\"/_register/logout\">log out</a> to continue.");
 				return null;
 			}
 			
@@ -411,7 +408,7 @@
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Session::assign(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			
@@ -430,7 +427,7 @@
 			    );
 
 			    if ($GLOBALS['_database']->ErrorMsg()) {
-				    $this->error .= "SQL Error in Site::Session::assign(): ".$GLOBALS['_database']->ErrorMsg();
+				    $this->SQLError($GLOBALS['_database']->ErrorMsg());
 				    return null;
 			    }
 			}
@@ -464,7 +461,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Session::timestamp(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			return 1;
@@ -480,7 +477,7 @@
 
 			# Make Sure User Has Privileges to view other sessions
 			if ($GLOBALS['_SESSION_']->id != $this->id && ! $GLOBALS['_SESSION_']->customer->can('manage sessions')) {
-				$this->error = "No privileges to change session";
+				$this->error("No privileges to change session");
 				return null;
 			}
 
@@ -529,7 +526,7 @@
 				)
 			);
 			if ($hitlist->error) {
-				$this->error = $hitlist->error;
+				$this->error($hitlist->error());
 				return null;
 			}
 			return $hits;
@@ -542,8 +539,8 @@
 					"session_id" => $this->id
 				)
 			);
-			if ($hit->error) {
-				$this->error = $hit->error;
+			if ($hit->error()) {
+				$this->error($hit->error());
 				return null;
 			}
 			return 1;

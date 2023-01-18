@@ -461,6 +461,7 @@
 				return $prices;
 			}
 		}
+
 		public function addPrice($parameters = array()) {
 			if (! $GLOBALS['_SESSION_']->customer->can('edit product prices')) $this->error("Permission denied");
 
