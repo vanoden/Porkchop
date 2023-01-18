@@ -6,6 +6,7 @@
 		private $_count = 0;
 
 		public function find($parameters = array()) {
+		
 			$find_objects_query = "
 				SELECT	id
 				FROM	shipping_vendors
@@ -33,6 +34,29 @@
 			}
 			return $vendors;
 		}
+		
+		public function findUnique() {
+			$find_objects_query = "
+				SELECT	name
+				FROM	shipping_vendors
+				WHERE	id = id
+				GROUP BY name";
+
+			$bind_params = array();
+			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+			if (! $rs) {
+				$this->_error = "SQL Error in Shipping::VendorList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+
+			$names = array();
+			while (list($name) = $rs->FetchRow()) {
+				array_push($names,$name);
+				$this->_count ++;
+			}
+			return $names;
+		}
+		
 
 		public function error() {
 			return $this->_error;

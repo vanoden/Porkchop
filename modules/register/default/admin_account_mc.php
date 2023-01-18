@@ -172,7 +172,7 @@
                         if (! $contact->validType($_REQUEST['type'][$contact_id]))
                             $page->addError("Invalid contact type");
                         elseif (! $contact->validValue($_REQUEST['type'][$contact_id],$_REQUEST['value'][$contact->id]))
-                            $page->addError("Invalid value for contact type ".$_REQUEST['type'][$contact_id]);
+                            $page->addError("Invalid value for added contact type: ". $_REQUEST['type'][$contact_id]);
                         else {
                             // Update Existing Contact Record
                             $contact->update(

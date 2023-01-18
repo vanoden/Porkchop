@@ -1,5 +1,6 @@
 <!--Testing this out-->
 <script type="text/javascript">
+
 	function submitForm() {
 	
         // make sure that all the notify contacts have a 'description' value populated
@@ -47,17 +48,21 @@
 		window.location.replace("/_register/reset_password");
 		return true;
 	}
+
 </script>
+
 <style type="text/css"></style>
 <h2>My Account</h2>
+
 <form name="register" action="<?=PATH?>/_register/account" method="POST">
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 	<input type="hidden" name="target" value="<?=$target?>"/>
 	<input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
-	<?php if ($page->error) { ?>
+	
+	<?php if ($page->errorCount() > 0) { ?>
 	<section id="form-message">
 		<ul class="connectBorder progressText">
-			<li><?=$page->error?></li>
+			<li style="color:red;"><?=$page->errorString()?></li>
 		</ul>
 	</section>
 	</div>
@@ -78,39 +83,38 @@
 	<div class="form_instruction"></div>
 
 	<section class="form-group">
-	<ul class="form-grid three-col">
-		<h4>Account Information</h4>
-		<li id="accountLoginQuestion">
-			<label for="user_name">Login:</label>
-			<span class="value"><?=$customer->login?></span>
-		</li>
-		<li id="accountFirstNameQuestion">
-			<label for="first_name">*First Name:</label>
-			<input type="text" name="first_name" value="<?=$customer->first_name?>" />
-		</li>
-		<li id="accountLastNameQuestion">
-			<label for="last_name">*Last Name:</label>
-			<input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" />
-		<li id="accountOrganizationQuestion">
-			<label for="">*Organization:</label>
-			<span class="value registerValue"><?=$customer->organization->name?></span>
-		</li>
-		<li id="accountTimeZoneQuestion">
-			<label for="">*Time Zone:</label>
-			<select id="timezone" name="timezone" class="value input collectionField">
-				<?php foreach (timezone_identifiers_list() as $timezone) {
-						if (isset($customer->timezone)) $selected_timezone = $customer->timezone;
-						else $selected_timezone = 'UTC';
-				?>
-				<option value="<?=$timezone?>"<?php if ($timezone == $selected_timezone) print " selected"; ?>><?=$timezone?></option>
-				<?php } ?>
-			</select>
-		</li>
-		<li>			
-		</li>
-	</ul>
+	    <ul class="form-grid three-col">
+		    <h4>Account Information</h4>
+		    <li id="accountLoginQuestion">
+			    <label for="user_name">Login:</label>
+			    <span class="value"><?=$customer->login?></span>
+		    </li>
+		    <li id="accountFirstNameQuestion">
+			    <label for="first_name">*First Name:</label>
+			    <input type="text" name="first_name" value="<?=$customer->first_name?>" />
+		    </li>
+		    <li id="accountLastNameQuestion">
+			    <label for="last_name">*Last Name:</label>
+			    <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" />
+		    <li id="accountOrganizationQuestion">
+			    <label for="">*Organization:</label>
+			    <span class="value registerValue"><?=$customer->organization->name?></span>
+		    </li>
+		    <li id="accountTimeZoneQuestion">
+			    <label for="">*Time Zone:</label>
+			    <select id="timezone" name="timezone" class="value input collectionField">
+				    <?php foreach (timezone_identifiers_list() as $timezone) {
+						    if (isset($customer->timezone)) $selected_timezone = $customer->timezone;
+						    else $selected_timezone = 'UTC';
+				    ?>
+				    <option value="<?=$timezone?>"<?php if ($timezone == $selected_timezone) print " selected"; ?>><?=$timezone?></option>
+				    <?php } ?>
+			    </select>
+		    </li>
+		    <li>			
+		    </li>
+	    </ul>
 	</section>
-
 
 	<!-- Contact Options -->
 	<section class="form-group">
