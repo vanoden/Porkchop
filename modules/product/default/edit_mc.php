@@ -40,7 +40,6 @@
 	    // CSRF Token Check
 	    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) $page->addError("Invalid Request");
 	    if (!$page->errorCount()) {
-			$page->success .= "Doin stuff!";
 		    if (empty($_REQUEST['code']))
 			    $page->addError("Code required");
 			elseif (! $item->validCode($_REQUEST['code']))
@@ -133,7 +132,7 @@
 				    $item->dropImage($image->id);
 			    }
 		    }
-			$page->success .= "Yep!";
+
 			if (is_numeric($_REQUEST['new_price_amount']) && $_REQUEST['new_price_amount'] > 0) {
 				$price = new \Product\Price();
 				if (! $price->validStatus($_REQUEST['new_price_status'])) {
@@ -143,8 +142,8 @@
 					$page->addError("Invalid price active date: '".$_REQUEST['new_price_date']."'");
 				}
 				else {
-					$page->success .= "Adding a price!";
 					$item->addPrice(array('date_active' => $_REQUEST['new_price_date'], 'status' => $_REQUEST['new_price_status'], 'amount' => $_REQUEST['new_price_amount']));
+					$page->success .= "Price Added";
 				}
 			}
 		}
