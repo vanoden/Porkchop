@@ -164,7 +164,7 @@
 			}
 
 			# Delete Cookie
-			setcookie("session_code", $GLOBALS['_SESSION_']->session_code, time() - 604800, '/', $GLOBALS['_SESSION_']->domain);
+			setcookie("session_code", $GLOBALS['_SESSION_']->session_code, time() - 604800, '/', $GLOBALS['_SESSION_']->domain->name);
 
 			return true;
 		}
@@ -418,7 +418,7 @@
 			if ($isElevated) {
 			    $update_session_query = "
 				    UPDATE  session_sessions
-				    SET     super_elevation_expires = ?,
+				    SET     super_elevation_expires = ?
 				    WHERE   id = ?
 			    ";
 			    $GLOBALS['_database']->Execute(
