@@ -1,13 +1,11 @@
 <?php
 	namespace Media;
 
-	class DocumentList {
-		public $error;
-		public $count;
+	class DocumentList extends \BaseListClass {
 
 		public function find($parameters = array()) {
 			$parameters['type'] = 'document';
 			$itemlist = new ItemList();
-			return itemlist::find($parameters);
+			return $itemlist->find($parameters);
 		}
 	}
