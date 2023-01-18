@@ -236,19 +236,13 @@
 			if ($type == 'phone') {
 				preg_replace('/ext(ension)\.?\s?/i','ext. ',$string);
 				if (preg_match('/^\+?\d[\d\.\-\s\#\(\)]+$/',$string)) return true;
-				else return false;
-			}
-			elseif ($type == 'email') {
+			} elseif ($type == 'email') {
 				if (valid_email($string)) return true;
-				else return false;
-			}
-			elseif ($type == 'sms-text') {
+			} elseif ($type == 'sms-text') {
 				if (preg_match('/^[\d\-\.\(\)\#]+$/',$string)) return true;
-				else return false;
+			} else {
+    			if (!empty($string)) return true;
 			}
-			elseif ($type == 'facebook') {
-				if (preg_match('/^\w[\w\.]{4,}$/',$value)) return true;
-				else return false;
-			}
+			return false;
 		}
 	}

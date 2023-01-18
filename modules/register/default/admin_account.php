@@ -88,7 +88,7 @@
        document.getElementById('new-notes').style.display = "block";
        document.getElementById('new-notify').style.display = "block";    
        var newContactSelect = document.getElementById("new-contact-select");
-       newContactSelect.remove(4);
+       newContactSelect.remove(5);
    }
 </script>
 <h2>Customer Account Settings</h2>
