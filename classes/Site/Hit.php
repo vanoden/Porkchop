@@ -29,6 +29,8 @@
 			if (isset($_SERVER['HTTPS']) and $_SERVER['HTTPS']) $secure = 1;
 			else $secure = 0;
 
+			if (empty($parameters['module_id'])) $parameters['module_id'] = 0;
+
 			$insert_hit_query = "
 				INSERT
 				INTO	session_hits
@@ -37,10 +39,11 @@
 						remote_ip,
 						secure,
 						script,
-						query_string
+						query_string,
+						module_id
 				)
 				VALUES
-				(		?,sysdate(),?,?,?,?
+				(		?,sysdate(),?,?,?,?,?
 				)
 			";
 			$GLOBALS['_database']->Execute(
@@ -50,7 +53,8 @@
 					$_SERVER['REMOTE_ADDR'],
 					$secure,
 					$_SERVER['SCRIPT_NAME'],
-					$_SERVER['REQUEST_URI']
+					$_SERVER['REQUEST_URI'],
+					$parameters['module_id']
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
