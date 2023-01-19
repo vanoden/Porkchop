@@ -124,7 +124,8 @@
 				    AND		`index` = ?
 				    ";
 			    array_push ( $parameters, $index );
-		    } else {
+		    }
+			else {
 			    $get_object_query .= "
 				    AND		(`index` is null or `index` = '')
 				    ";
@@ -241,7 +242,8 @@
 			    $this->module = $object->module;
 			    $this->view = $object->view;
 			    $this->index = $object->idx;
-		    } else {
+		    }
+			else {
 			    // Just Let The Defaults Go
 		    }
 		    if (isset ( $GLOBALS ['_config']->style [$this->module] )) {
@@ -328,7 +330,7 @@
 		    $string = $matches [1];
 
 		    // Tokenize Parameters
-		    while ( strlen ( $string ) > 0 ) {
+		    while (strlen ( $string ) > 0 ) {
 		    
 			    // Trim Leading Space
 			    $string = ltrim ( $string );
@@ -347,7 +349,6 @@
 	    }
 	    
 	    public function replace($string) {
-	    
 		    // Initialize Replacement Buffer
 		    $buffer = '';
 
@@ -370,7 +371,7 @@
 		    }
 			elseif ($object == "page") {
 			    if ($property == "view") {
-				    $buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";
+					$buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";
 				}
 				elseif ($property == "errorblock") {
 					error_log("FOUND errorblock");
@@ -467,16 +468,16 @@
 		    }
 			elseif ($object == "content") {
 			    if ($property == "index") {
-				    app_log ( "content::index", 'trace', __FILE__, __LINE__ );
-				    if (isset ( $parameter ['id'] ) && preg_match ( "/^\d+$/", $parameter ["id"] )) $target = $parameter ["id"];
-				    else if (isset ( $parameter ['target'] ) && preg_match ( "/^\w[\w\-\_]*$/", $parameter ["target"] )) $target = $parameter ["target"];
-				    else $target = $GLOBALS ['_REQUEST_']->query_vars_array [0];
+				    app_log( "content::index", 'trace', __FILE__, __LINE__ );
+				    if (isset($parameter['id']) && is_numeric($parameter["id"])) $target = $parameter["id"];
+				    else if (isset( $parameter['target']) && preg_match("/^\w[\w\-\_]*$/", $parameter["target"])) $target = $parameter["target"];
+				    else $target = $GLOBALS['_REQUEST_']->query_vars_array[0];
 
-				    $message = new \Content\Message ();
-				    $message->get ( $target );
-				    if ($message->error) $buffer = "Error: " . $message->error;
+				    $message = new \Content\Message();
+				    $message->get($target);
+				    if ($message->error()) $buffer = "Error: " . $message->error;
 				    elseif (! $message->id) {
-					    app_log ( "Message not found matching '$target', adding", 'info', __FILE__, __LINE__ );
+					    app_log("Message not found matching '$target', adding", 'info', __FILE__, __LINE__ );
 					    if (role ( 'content operator' )) {
 						    $message->add ( array ("target" => $target ) );
 					    } else {
@@ -484,8 +485,12 @@
 						    app_log ( "Page not found: $target", 'error', __FILE__, __LINE__ );
 					    }
 				    }
+					else {
+						app_log("Found message ".$message->id);
+					}
 				    if ($message->cached) {
-					    header ( "X-Object-Cached: true" );
+						app_log("Loading from cache");
+					    header("X-Object-Cached: true" );
 				    }
 				    if ($message->id) {
 					    // Make Sure User Has Privileges
@@ -493,14 +498,17 @@
 						    #$buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'0px\'; } </script>';
 						    $buffer .= '<contentblock id="'.$message->id.'">' . $message->content . '</contentblock>';
 						    $buffer .= '<a href="javascript:void(0)" onclick="editBlock('.$message->id.')">Edit</a>';
-					    } else {
+					    }
+						else {
 						    $buffer .= $message->content;
 					    }
 				    }
-			    } else {
+			    }
+				else {
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
-		    } elseif ($object == "product") {
+		    }
+			elseif ($object == "product") {
 		    
 			    // Load Product Class if Not Already Loaded
 			    if ($property == "thumbnail") {
@@ -586,9 +594,11 @@
 			    } else {
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
-		    } elseif ($object == "monitor") {
+		    }
+			elseif ($object == "monitor") {
 				$buffer = $this->loadViewFiles($buffer);
-		    } elseif ($object == "session") {
+		    }
+			elseif ($object == "session") {
 			    if ($property == "customer_id") $buffer = $GLOBALS ['_SESSION_']->customer->id;
 			    elseif ($property == "loggedin") {
 				    if (isset ( $GLOBALS ['_SESSION_']->customer->id )) $buffer = "true";
@@ -596,7 +606,8 @@
 			    } else {
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
-		    } elseif ($object == "register") {
+		    }
+			elseif ($object == "register") {
 			    if (isset ( $parameter ['id'] ) and preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
 			    elseif (isset ( $this->query_vars )) $id = $this->query_vars;
 
@@ -614,7 +625,8 @@
 			    } else {
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
-		    } elseif ($object == "company") {
+		    }
+			elseif ($object == "company") {
 			    $companies = new \Company\CompanyList ();
 			    list ( $company ) = $companies->find ();
 
@@ -623,7 +635,8 @@
 			    } else {
                     $buffer = $this->loadViewFiles($buffer);
 			    }
-		    } elseif ($object == "news") {
+		    }
+			elseif ($object == "news") {
 			    if ($property == "events") {
 				    $eventlist = new \News\EventList ();
 				    if ($eventlist->error) {
@@ -645,9 +658,11 @@
 			    } else {
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
-		    } elseif ($object == "adminbar") {
+		    }
+			elseif ($object == "adminbar") {
 			    if (role ( 'administrator' )) $buffer = "<div class=\"adminbar\" id=\"adminbar\" style=\"height:20px; width: 100%; position: absolute; top: 0px; left: 0px;\">Admin stuff goes here</div>\n";
-		    } else {
+		    }
+			else {
                 $buffer = $this->loadViewFiles($buffer);
 		    }
 		    return $buffer;
