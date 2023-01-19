@@ -229,14 +229,16 @@
 	# API Logging (With actual parameters)
 	function api_log($response = 'N/A') {
 		$log = "";
-		$module = $GLOBALS['_REQUEST_']->module;
 		$login = $GLOBALS['_SESSION_']->customer->code;
 		$method = $_REQUEST['method'];
-		$host = $GLOBALS['_REQUEST_']->client_ip;
 
 		if (is_object($response) && $response->success) $status = "SUCCESS";
 		else $status = "FAILED";
-		$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+
+		$module = $GLOBALS['_REQUEST_']->module;
+		$host = $GLOBALS['_REQUEST_']->client_ip;
+		if (is_numeric($GLOBALS['_REQUEST_']->timer)) $elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+		else $elapsed = 0;
 
 		if (API_LOG) {
 			if (is_dir(API_LOG))

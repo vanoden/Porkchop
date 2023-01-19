@@ -449,6 +449,19 @@
 			}
 			return 1;
 		}
+
+		public function prices() {
+			$priceList = new \Product\PriceList();
+			$prices = $priceList->find(array('product_id' => $this->id));
+			if ($priceList->error()) {
+				$this->error($priceList->error());
+				return null;
+			}
+			else {
+				return $prices;
+			}
+		}
+
 		public function addPrice($parameters = array()) {
 			if (! $GLOBALS['_SESSION_']->customer->can('edit product prices')) $this->error("Permission denied");
 

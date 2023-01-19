@@ -1,9 +1,8 @@
 <?php
 	namespace Company;
 
-	class Company {
+	class Company Extends \BaseClass {
 		private $schema_version = 1;
-		public	$error;
 		public	$id;
 		public $login;
 		public $primary_domain;
@@ -28,7 +27,7 @@
 				array($name)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Company::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -47,7 +46,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Company::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -67,7 +66,7 @@
 
 		public function add($parameters = array()) {
 			if (! preg_match('/\w/',$parameters['name'])) {
-				$this->error = "name parameter required in Company::Company::add";
+				$this->error("name parameter required in Company::Company::add");
 				return 0;
 			}
 			
@@ -79,7 +78,7 @@
 				(?)";
 			$GLOBALS['_database']->Execute($add_object_query,array($parameters['name']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in company::Company::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -89,7 +88,7 @@
 
 		public function update($parameters = array()){
 			if (! preg_match('/^\d+$/',$this->id)) {
-				$this->error = "Valid id required for details in company::Company::update";
+				$this->error("Valid id required for details in company::Company::update");
 				return false;
 			}
 
@@ -119,7 +118,7 @@
 				$update_object_query,$bind_params
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Company::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			

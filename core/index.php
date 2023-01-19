@@ -128,7 +128,6 @@
 	else $_REQUEST_->client_ip = $_SERVER['REMOTE_ADDR'];
 
 	$_REQUEST_->user_agent = $_SERVER['HTTP_USER_AGENT'];
-	$_REQUEST_->timer = microtime();
 
 	###################################################
 	### Build Dynamic Page							###
@@ -139,7 +138,7 @@
 
 	# Create Session
 	$_SESSION_->start();
-	if ($_SESSION_->error) {
+	if ($_SESSION_->error()) {
 		$logger->writeln($_SESSION_->error,'error',__FILE__,__LINE__);
 		exit;
 	}

@@ -100,27 +100,27 @@
 
 			    // Add Company Specific Metadata (REPLACE WITH CONFIGURED LOOP OF KEYS)
 			    $item->addMeta("name",noXSS($_REQUEST["name"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 			    $item->addMeta("short_description",noXSS($_REQUEST["short_description"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 			    $item->addMeta("description",noXSS($_REQUEST["description"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 			    $item->addMeta("model",noXSS($_REQUEST["model"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 			    $item->addMeta("empirical_formula",noXSS($_REQUEST["empirical_formula"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 			    $item->addMeta("sensitivity",noXSS($_REQUEST["sensitivity"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 			    $item->addMeta("measure_range",noXSS($_REQUEST["measure_range"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 			    $item->addMeta("accuracy",noXSS($_REQUEST["accuracy"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 			    $item->addMeta("manual_id",noXSS($_REQUEST["manual_id"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 			    $item->addMeta("spec_table_image",noXSS($_REQUEST["spec_table_image"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 			    $item->addMeta("default_dashboard_id",noXSS($_REQUEST["default_dashboard_id"]));
-			    if ($item->error) app_log("Error setting metadata: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
 
 			    $image = new \Media\Image();
 			    if ($_REQUEST['new_image_code']) {
@@ -132,6 +132,20 @@
 				    $item->dropImage($image->id);
 			    }
 		    }
+
+			if (is_numeric($_REQUEST['new_price_amount']) && $_REQUEST['new_price_amount'] > 0) {
+				$price = new \Product\Price();
+				if (! $price->validStatus($_REQUEST['new_price_status'])) {
+					$page->addError("Invalid price status");
+				}
+				elseif (!get_mysql_date($_REQUEST['new_price_date'])) {
+					$page->addError("Invalid price active date: '".$_REQUEST['new_price_date']."'");
+				}
+				else {
+					$item->addPrice(array('date_active' => $_REQUEST['new_price_date'], 'status' => $_REQUEST['new_price_status'], 'amount' => $_REQUEST['new_price_amount']));
+					$page->success .= "Price Added";
+				}
+			}
 		}
 	}
 
@@ -146,3 +160,4 @@
 	$tables = $imagelist->find();
 	$dashboardlist = new \Monitor\DashboardList();
 	$dashboards = $dashboardlist->find();
+	$prices = $item->prices();

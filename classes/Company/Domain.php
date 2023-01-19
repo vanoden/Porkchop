@@ -1,9 +1,8 @@
 <?php
 	namespace Company;
 
-	class Domain {
+	class Domain Extends \BaseClass {
 		private $schema_version = 1;
-		public $error;
 		public $id;
 		public $status;
 		public $comments;
@@ -34,7 +33,7 @@
 				array($name)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Domain::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -53,7 +52,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Domain::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -92,12 +91,12 @@
 					$parameters['company_id'] = $GLOBALS['_SESSION_']->company->id;
 				}
 				else {
-					$this->error = "company must be set for Company::Domain::add";
+					$this->error("company must be set");
 					return false;
 				}
 			}
 			if (! preg_match('/\w/',$parameters['name'])) {
-				$this->error = "name parameter required in Company::Domain::add";
+				$this->error("name parameter required");
 				return false;
 			}
 			if (! preg_match('/^(0|1)$/',$parameters['status'])) {
@@ -117,7 +116,7 @@
 
 			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Domain::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -127,7 +126,7 @@
 
 		public function update($parameters = array()) {
 			if (! preg_match('/^\d+$/',$this->id)) {
-				$this->error = "Valid id required for details in Site::Domain::update";
+				$this->error("Valid id required for details in Company::Domain::update");
 				return false;
 			}
 
@@ -177,7 +176,7 @@
 			if (isset($parameters['location_id']) && strlen($parameters['location_id'])) {
 				$location = new \Company\Location($parameters['location_id']);
 				if (! $location->id) {
-					$this->error = "Location ID not found";
+					$this->error("Location ID not found");
 					return false;
 				}
 				$update_object_query .= ",
@@ -192,7 +191,7 @@
 
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Domain::update: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			

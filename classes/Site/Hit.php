@@ -1,8 +1,7 @@
 <?php
 	namespace Site;
 
-	class Hit {
-		public $error;
+	class Hit Extends \BaseClass {
 		public $id;
 		public $hit_date;
 		public $remote_ip;
@@ -11,11 +10,7 @@
 		public $query_string;
 		
 		function __construct($id = 0) {
-			$this->error = '';
-			$schema = new Schema();
-			if ($schema->error) {
-				$this->error = "Failed to initialize schema: ".$schema->error;
-			}
+			$this->clearError();
 
 			if ($id > 0) {
 				$this->details($id);
@@ -23,11 +18,13 @@
 		}
 		function add($parameters = array()) {
 			if (! $parameters['session_id']) {
-				$this->error = "session_id required for Session::Hit::add";
+				$this->error("session_id required");
 				return null;
 			}
 			if (isset($_SERVER['HTTPS']) and $_SERVER['HTTPS']) $secure = 1;
 			else $secure = 0;
+
+			if (empty($parameters['module_id'])) $parameters['module_id'] = 0;
 
 			$insert_hit_query = "
 				INSERT
@@ -37,10 +34,11 @@
 						remote_ip,
 						secure,
 						script,
-						query_string
+						query_string,
+						module_id
 				)
 				VALUES
-				(		?,sysdate(),?,?,?,?
+				(		?,sysdate(),?,?,?,?,?
 				)
 			";
 			$GLOBALS['_database']->Execute(
@@ -50,11 +48,12 @@
 					$_SERVER['REMOTE_ADDR'],
 					$secure,
 					$_SERVER['SCRIPT_NAME'],
-					$_SERVER['REQUEST_URI']
+					$_SERVER['REQUEST_URI'],
+					$parameters['module_id']
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Session::Hit::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			return 1;
@@ -81,7 +80,7 @@
 					limit ".$parameters['_limit'];
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Session::Hit::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$hits = array();
@@ -108,7 +107,7 @@
 			);
 			if (! $rs)
 			{
-				$this->error = "SQL Error in Session::Hit::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$object = $rs->FetchNextObject(false);

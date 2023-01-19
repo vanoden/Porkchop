@@ -16,9 +16,10 @@
 					array_push($bind_params,$parameters['product_id']);
 				}
 				if (isset($parameters["date_price"])) {
+					$date = get_mysql_date($parameters['date_price']);
 					$get_prices_query .= "
 					AND		date_active <= ?";
-					array_push($bind_params,$parameters['date_price']);
+					array_push($bind_params,$date);
 				}
 				if (isset($parameters["status"])) {
 					$get_prices_query .= "
@@ -26,6 +27,10 @@
 					";
 					array_push($bind_params,$parameters['status']);
 				}
+
+				$get_prices_query .= "
+					ORDER BY date_active DESC, status";
+
 				query_log($get_prices_query);
 
 				$rs = $GLOBALS['_database']->Execute($get_prices_query,$bind_params);

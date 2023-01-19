@@ -150,7 +150,7 @@
 			}
 			$document = new \Document($format);
 			$document->prepare($object);
-			if ($GLOBALS['_config']->site->force_content_length) {
+			if (isset($GLOBALS['_config']->site->force_content_length) && $GLOBALS['_config']->site->force_content_length == true) {
 				$content = $document->content();
 				header('Content-Length: '.strlen($content));
 				return $content;

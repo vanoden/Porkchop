@@ -1,13 +1,11 @@
 <?php
 	namespace Register;
 	
-	class ContactList {
-	
-		public $error;
-		public $count;
-		
+	class ContactList Extends \BastListClass {
 		public function find($parameters = array()) {
-	
+			$this->clearError();
+			$this->resetCount();
+
 			$get_contacts_query = "
 				SELECT	id
 				FROM	register_contacts
@@ -21,8 +19,8 @@
 					AND	`type` = ?";
 					array_push($bind_params,$parameters['type']);
 				} else {
-					$this->error = "Invalid contact type";
-					return undef;
+					$this->error("Invalid contact type");
+					return null;
 				}
 			}
 			
@@ -32,7 +30,7 @@
 						AND	person_id = ?";
 					array_push($bind_params,$parameters['user_id']);
 				} else {
-					$this->error = "Invalid user id";
+					$this->error("Invalid user id");
 					return undef;
 				}
 			} elseif (isset($parameters['person_id'])) {
@@ -41,7 +39,7 @@
 						AND	person_id = ?";
 					array_push($bind_params,$parameters['person_id']);
 				} else {
-					$this->error = "Invalid user id";
+					$this->error("Invalid user id");
 					return undef;
 				}
 			}
@@ -54,7 +52,7 @@
 					$get_contacts_query .= "
 						AND	notify = 0";
 				} else {
-					$this->error = "Invalid value for notify";
+					$this->error("Invalid value for notify");
 					return undef;
 				}
 			}
@@ -67,18 +65,15 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_contacts_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::ContactList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$contacts = array();
 			while (list($id) = $rs->FetchRow()) {
 				$contact = new \Register\Contact($id);
 				array_push($contacts,$contact);
+				$this->incrementCount();
 			}
 			return $contacts;
-		}
-		
-		public function error() {
-			return $this->error;
 		}
 	}

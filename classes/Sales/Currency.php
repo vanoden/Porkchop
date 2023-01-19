@@ -97,9 +97,5 @@
 				return true;
 			}
 		}
-		public function error($message = null) {
-			if (isset($message)) $this->_error = $message;
-			return $this->_error;
-		}
 	}
 ?>

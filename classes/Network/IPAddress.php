@@ -43,8 +43,7 @@
 			$get_object_query = "
 				SELECT	id
 				FROM	network_addresses
-				WHERE	type = ?
-				AND		address = ?
+				WHERE	address = ?
 			";
 
 			$rs = $GLOBALS['_database']->Execute(

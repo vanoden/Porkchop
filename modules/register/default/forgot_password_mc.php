@@ -3,9 +3,10 @@
 
 	# Handle Actions
 	if (isset($_REQUEST['email_address'])) {
-		# Check reCAPTCHA
-		$captcha = new \Google\ReCAPTCHA();
-		if ($captcha->verify($_REQUEST['g-recaptcha-response'])) {
+		$customer = new \Register\Customer();
+		// CAPTCHA Required and Provided
+		$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
+		if ($reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
 			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
 
             if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
@@ -87,7 +88,8 @@
 					$message->body($notice_template->output());
 
 					app_log("Sending Forgot Password Link",'debug',__FILE__,__LINE__);
-					$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
+					$transportFactory = new \Email\Transport();
+					$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
 					if (! $transport) {
 						$page->addError("Error sending email, please contact us at ".$GLOBALS['_config']->site->support_email);
 						return;

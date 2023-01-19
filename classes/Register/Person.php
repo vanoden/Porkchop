@@ -20,9 +20,8 @@ class Person Extends \BaseClass {
     public $_settings = array( "date_format" => "US" );
 
     public function __construct($id = null) {
-    
         // Clear Error Info
-        $this->_error = '';
+        $this->clearError();
 
 		$this->_addStatus(array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED","BLOCKED"));
 
@@ -328,7 +327,7 @@ class Person Extends \BaseClass {
 		";
 		$rs = $GLOBALS['_database']->Execute($get_meta_query, array($id));
 		if (!$rs) {
-			$this->error = "SQL Error in Register::Person::getMeta(): " . $GLOBALS['_database']->ErrorMsg();
+			$this->SQLError($GLOBALS['_database']->ErrorMsg());
 			return null;
 		}
 		$metadata = array();
@@ -350,7 +349,7 @@ class Person Extends \BaseClass {
             $value = $arg2;
         }
         if (!$id) {
-            $this->error = "No person_id for metadata";
+            $this->error("No person_id for metadata");
             return null;
         }
         $add_meta_query = "
@@ -521,7 +520,7 @@ class Person Extends \BaseClass {
     public function notify($message) {
         // Make Sure We have identifed a person
         if (!preg_match('/^\d+$/', $this->id)) {
-            $this->error = "Customer not specified";
+            $this->error("Customer not specified");
             return false;
         }
         
@@ -533,9 +532,9 @@ class Person Extends \BaseClass {
             "notify" => true
         ));
         
-        if ($contactList->error) {
-            app_log("Error loading contacts: " . $contactList->error, 'error', __FILE__, __LINE__);
-            $this->error = "Error loading contacts";
+        if ($contactList->error()) {
+            app_log("Error loading contacts: " . $contactList->error(), 'error', __FILE__, __LINE__);
+            $this->error("Error loading contacts");
             return false;
         }
         foreach ($contacts as $contact) {
@@ -545,8 +544,8 @@ class Person Extends \BaseClass {
                 'provider' => $GLOBALS['_config']->email->provider
             ));
             if (! isset($transport)) {
-                $this->error = "Error initializing email transport";
-                app_log("Message to " . $contact->value . " failed: " . $this->error, 'error');
+                $this->error("Error initializing email transport");
+                app_log("Message to " . $contact->value . " failed: " . $this->error(), 'error');
                 return false;
             }
             $transport->hostname($GLOBALS['_config']->email->hostname);
@@ -554,11 +553,11 @@ class Person Extends \BaseClass {
             if ($transport->deliver($message)) {
                 app_log("Message to " . $contact->value . " successful");
             } elseif ($transport->error()) {
-                $this->error = "Error sending notification: " . $transport->error();
-                app_log("Message to " . $contact->value . " failed: " . $this->error, 'error');
+                $this->error("Error sending notification: " . $transport->error());
+                app_log("Message to " . $contact->value . " failed: " . $this->error(), 'error');
                 return false;
             } else {
-                $this->error = "Unhandled Error sending notification";
+                $this->error("Unhandled Error sending notification");
                 app_log("Message to " . $contact->value . " failed", 'error');
                 return false;
             }

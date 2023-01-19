@@ -8,6 +8,7 @@
 		public $status;
 		public $currency_id;
 		public $date_active;
+		public $_statii = array('ACTIVE','INACTIVE');
 
 		public function __construct($id = 0) {
 			if ($id > 0) {

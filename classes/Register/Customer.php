@@ -19,7 +19,7 @@
 			else return false;
 		}
 		public function get($code = '') {
-			$this->error = null;
+			$this->clearError();
 			$get_object_query = "
 				SELECT	id
 				FROM	register_users
@@ -96,11 +96,13 @@
 		
 			if ($GLOBALS['_SESSION_']->elevated()) {
 				app_log("Elevated Session adding role");
-			} elseif ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 				app_log("Granting role '$role_id' to customer '".$this->id."'",'info',__FILE__,__LINE__);
-			} else {
+			}
+			else {
 				app_log("Non admin failed to update roles",'notice',__FILE__,__LINE__);
-				$this->error = "Only Register Managers can update roles.";
+				$this->error("Insufficient Privileges");
 				return 0;
 			}
 			
@@ -124,7 +126,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::add_role(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			return 1;
@@ -145,7 +147,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::drop_role(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -320,7 +322,7 @@
 			// Execute Query
 			$rs = $GLOBALS['_database']->Execute($get_products_query,$bind_params);
 			if ($rs->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::products(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 			$products = array();
@@ -361,7 +363,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::has_role(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
