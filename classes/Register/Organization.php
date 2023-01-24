@@ -266,6 +266,18 @@
 			return count($customers);
 		}
 
+		public function activeHumans() {
+			$customerlist = new CustomerList();
+			$customers = $customerlist->find(array("organization_id" => $this->id,'automation' => false, "status" => array('NEW','ACTIVE')));
+			return count($customers);
+		}
+
+		public function activeDevices() {
+			$customerlist = new CustomerList();
+			$customers = $customerlist->find(array("organization_id" => $this->id,'automation' => true, "status" => array('NEW','ACTIVE')));
+			return count($customers);
+		}
+
 		public function expire() {
 			$update_org_query = "
 				UPDATE	register_organizations

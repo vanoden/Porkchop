@@ -12,7 +12,7 @@
 	if (isset($_REQUEST['page_size']) && preg_match('/^\d+$/',$_REQUEST['page_size']))
 		$organizations_per_page = $_REQUEST['page_size'];
 	else
-		$organizations_per_page = 10;
+		$organizations_per_page = 20;
 	if (isset($_REQUEST['start']) && ! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
 
 	// Security - Only Register Module Operators or Managers can see other customers
@@ -21,9 +21,15 @@
 
 	// Initialize Parameter Array
 	$find_parameters = array();
-	if (isset($_REQUEST['name']) && $organization->validName($_REQUEST['name'])) {
-		$find_parameters['name'] = $_REQUEST['name'];
-		$find_parameters['_like'] = array('name');
+	if (isset($_REQUEST['name'])) {
+		if ($organizationlist->validSearchString($_REQUEST['name'])) {
+			$find_parameters['string'] = $_REQUEST['name'];
+			$find_parameters['_like'] = array('name');
+		}
+		else {
+			$page->addError("Invalid search string");
+			$_REQUEST['name'] = noXSS($_REQUEST['name']);
+		}
 	}
 
 	$find_parameters['status'] = array('NEW','ACTIVE');
@@ -33,7 +39,7 @@
 	if (!empty($_REQUEST['searchedTag'])) $find_parameters['searchedTag'] = $_REQUEST['searchedTag'];
 
 	// Get Count before Pagination
-	$organizationlist->find($find_parameters,false);
+	$organizationlist->search($find_parameters,true);
 	$total_organizations = $organizationlist->count();
 	if ($organizationlist->error()) $page->addError($organizationlist->error());
 
@@ -42,7 +48,7 @@
 	$find_parameters["_offset"] = isset($_REQUEST['start']) ? $_REQUEST['start']: 0;
 
 	// Get Records
-	$organizations = $organizationlist->find($find_parameters);
+	$organizations = $organizationlist->search($find_parameters,true);
 	if ($organizationlist->error()) $page->addError("Error finding organizations: ".$organizationlist->error());
 
 	if (!empty($_REQUEST['start'])) {
@@ -59,4 +65,4 @@
     $organizationTags = $registerTagList->getDistinct();
 	if ($registerTagList->error()) $page->addError($registerTagList->error());
 
-	if ($next_offset > count($organizations)) $next_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) + count($organizations);
+	if (is_array($organizations) && $next_offset > count($organizations)) $next_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) + count($organizations);

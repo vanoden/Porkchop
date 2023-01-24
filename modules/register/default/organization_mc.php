@@ -175,7 +175,7 @@
 			$page->addError("Error finding automation members: ".$organization->error);
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
-		
+
 		// Update Existing Organization default billing
 		if (!empty($_REQUEST['setDefaultBilling']) && is_numeric($_REQUEST['setDefaultBilling'])) {
 		    $updateParameters = array();
