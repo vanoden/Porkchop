@@ -1,10 +1,10 @@
 <?php
 	class BaseClass {
-		protected $_tableName;
 		protected $_error;
 		protected $_exists = false;
 		protected $_cached = false;
 		protected $_statii = array();
+		protected $_tableName;
 		protected $_cacheKeyPrefix;
 
 		public function error($value = null,$caller = null) {

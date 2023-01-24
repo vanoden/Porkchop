@@ -7,10 +7,10 @@
 		/********************************************/
 		public function __constructor(int $id = null) {
 			// Set Table Name
-			$this->_table_name = 'site_terms_of_use';
+			$this->_tableName = 'table name here';
 
 			// Set cache key name - MUST Be Unique to Class
-			$this->_cache_key_prefix = $this->_table_name;
+			$this->_cacheKeyPrefix = $this->_tableName;
 
 			// Load Record for Specified ID if given
 			if (isset($id) && is_numeric($id)) {
@@ -32,7 +32,7 @@
 			// Prepare Query
 			$get_object_query = "
 				SELECT	id
-				FROM	<table_name>
+				FROM	`".$this->_tableName."`
 				WHERE	code = ?";
 
 			// Bind Code to Query
@@ -76,7 +76,7 @@
 			// Prepare Query
 			$add_object_query = "
 				INSERT
-				INTO	<table_name>
+				INTO	`".$this->_tableName."`
 				VALUES	()
 			";
 
@@ -112,7 +112,7 @@
 
 			// Prepare Query
 			$update_object_query = "
-				UPDATE	<table_name>
+				UPDATE	`".$this->_tableName."`
 				SET		id = id";
 
 			// Add Any Parameters
@@ -177,7 +177,7 @@
 			// Initialize Query
 			$get_object_query = "
 				SELECT	*
-				FROM	<table_name>
+				FROM	`".$this->_tableName."`
 				WHERE	id = ?";
 
 			// Bind Params
