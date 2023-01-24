@@ -263,7 +263,7 @@
 					if ($options['type'] == "textarea") {
 						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$param.'">'.$default.'</textarea>'.$cr;
 					}
-					elseif (is_array($options['options'])) {
+					elseif (isset($options['options']) && is_array($options['options'])) {
 						$form .= $t.$t.$t.$t.'<select class="value input apiInput" name="'.$param.'">';
 						foreach ($options['options'] as $optname) {
 							$form .= $t.$t.$t.$t.$t.'<option value="'.$optname.'">'.$optname.'</option>'.$cr;
