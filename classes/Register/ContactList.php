@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 	
-	class ContactList Extends \BastListClass {
+	class ContactList Extends \BaseListClass {
 		public function find($parameters = array()) {
 			$this->clearError();
 			$this->resetCount();
