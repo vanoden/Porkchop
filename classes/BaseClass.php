@@ -1,9 +1,11 @@
 <?php
 	class BaseClass {
+		protected $_tableName;
 		protected $_error;
 		protected $_exists = false;
 		protected $_cached = false;
 		protected $_statii = array();
+		protected $_cacheKeyPrefix;
 
 		public function error($value = null,$caller = null) {
 			if (isset($value)) {
@@ -48,6 +50,15 @@
 			if (is_bool($exists)) $this->_exists = $exists;
 			if (is_numeric($this->id) && $this->id > 0) return true;
 			return $this->_exists;
+		}
+
+		public function cache() {
+			if (!empty($this->_cacheKeyPrefix) && !empty($this->id)) {
+		        // Bust Cache
+		        $cache_key = $this->_cacheKeyPrefix."[" . $this->id . "]";
+		        return new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+			}
+			return null;
 		}
 
 		public function cached($cached = null) {

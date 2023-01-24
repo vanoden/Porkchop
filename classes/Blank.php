@@ -1,13 +1,16 @@
 <?php
-	class Blank Extends \BaseClassList {
+	class Blank Extends \BaseClass {
 		public int $id;
 
 		/********************************************/
 		/* Instance Constructor						*/
 		/********************************************/
 		public function __constructor(int $id = null) {
+			// Set Table Name
+			$this->_table_name = 'site_terms_of_use';
+
 			// Set cache key name - MUST Be Unique to Class
-			$this->_cache_key_name = 'site_terms_of_use';
+			$this->_cache_key_prefix = $this->_table_name;
 
 			// Load Record for Specified ID if given
 			if (isset($id) && is_numeric($id)) {
