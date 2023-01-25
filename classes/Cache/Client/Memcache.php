@@ -1,7 +1,7 @@
 <?php
 	namespace Cache\Client;
 
-	class Memcache Extends \BaseClass {
+	class Memcache Extends Base {
 		private $_host = '127.0.0.1';
 		private $_port = 11211;
 		private $_connected = false;

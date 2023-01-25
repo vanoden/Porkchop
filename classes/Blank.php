@@ -5,55 +5,23 @@
 		/********************************************/
 		/* Instance Constructor						*/
 		/********************************************/
-		public function __constructor(int $id = null) {
+		public function __construct(int $id = null) {
 			// Set Table Name
 			$this->_tableName = 'table name here';
 
 			// Set cache key name - MUST Be Unique to Class
 			$this->_cacheKeyPrefix = $this->_tableName;
 
+			// Add Status(es) for Validation with validStatus()
+			$this->_addStatus(array());
+
+			// Add Type(s) for Validation with validType()
+			$this->_addType(array());
+
 			// Load Record for Specified ID if given
 			if (isset($id) && is_numeric($id)) {
 				$this->id = $id;
 				$this->details();
-			}
-		}
-
-		/********************************************/
-		/* Get Object Record Using Unique Code		*/
-		/********************************************/
-		public function get(string $code): bool {
-			// Clear Errors
-			$this->clearError();
-
-			// Initialize Services
-			$database = new \Database\Service();
-
-			// Prepare Query
-			$get_object_query = "
-				SELECT	id
-				FROM	`".$this->_tableName."`
-				WHERE	code = ?";
-
-			// Bind Code to Query
-			$database->AddParam($code);
-
-			// Execute Query
-			$rs = $database->Execute($get_object_code);
-			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
-				return false;
-			}
-
-			// Fetch Results
-			list($id) = $rs->FetchRow();
-			if (is_numeric($id) && $id > 0) {
-				$this->id = $id;
-				return $this->details();
-			}
-			else {
-				$this->error("Record not found");
-				return false;
 			}
 		}
 
@@ -72,6 +40,11 @@
 
 			// Default New Object Code If Not Provided
 			if (empty($params['code'])) $params['code'] = $porkchop->uuid();
+
+			if ($this->ukExists($params['code'])) {
+				$this->error("Code already used");
+				return false;
+			}
 
 			// Prepare Query
 			$add_object_query = "
@@ -98,7 +71,8 @@
 		}
 
 		/********************************************/
-		/* Update Existing Record					*/
+		/* Update Existing Record.  Should not		*/
+		/* allow update of unique key or id			*/
 		/********************************************/
 		public function update(array $params): bool {
 			// Clear Any Existing Errors
@@ -109,6 +83,7 @@
 
 			// Initialize Services
 			$database = new \Database\Service();
+			$cache = $this->cache();
 
 			// Prepare Query
 			$update_object_query = "
@@ -140,7 +115,7 @@
 			}
 
 			// Bust Cache for Updated Object
-			$this->clearCache();
+			$cache->delete();
 
 			// Load Updated Details from Database
 			return $this->details();

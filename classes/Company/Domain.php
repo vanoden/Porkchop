@@ -16,29 +16,13 @@
 		public $company;
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'company_domains';
+			$this->_tableUKColumn = 'domain_name';
+
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
-		}
-
-		public function get($name) {
-			$get_object_query = "
-				SELECT	id
-				FROM	company_domains
-				WHERE	domain_name = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($name)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			list($id) = $rs->FetchRow();
-			$this->id = $id;
-			return $this->details();
 		}
 
 		public function details() {

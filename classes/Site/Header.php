@@ -6,6 +6,9 @@
         public $value;
 
 		public function __construct($id = null) {
+			$this->_tableName = "site_headers";
+			$this->_tableUKColumn = "name";
+
 			if (!empty($id)) {
 				$this->id = $id;
 				$this->details();
@@ -63,23 +66,6 @@
 
 			return $this->details();
 		}
-
-        public function get($name) {
-            $get_object_query = "
-                SELECT  id
-                FROM    site_headers
-                WHERE   name = ?
-            ";
-            $rs = $GLOBALS['_database']->Execute($get_object_query,array($name));
-            query_log($get_object_query,array($name),true);
-            if (! $rs) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return false;
-            }
-            list($id) = $rs->FetchRow();
-            $this->id = $id;
-            return $this->details();
-        }
 
 		public function details() {
 			$get_object_query = "

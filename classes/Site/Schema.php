@@ -366,12 +366,97 @@
                     ALTER TABLE `site_headers` modify `value` varchar(1024)
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering site_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error altering site_headers table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
 
 				$this->setVersion(15);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 16) {
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `site_terms_of_use` (
+						id				int(11) NOT NULL AUTO_INCREMENT,
+						code			char(16) NOT NULL,
+						name			varchar(128) NOT NULL,
+						description		varchar(256),
+						PRIMARY KEY `pk_tou_id` (`id`),
+						UNIQUE KEY `uk_tou_code` (`code`),
+						UNIQUE KEY `uk_tou_name` (`name`),
+						INDEX `idx_tou_status` (`status`,`name`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error altering site_terms_of_use table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `site_terms_of_use_versions` (
+						id				int(11) NOT NULL AUTO_INCREMENT,
+						tou_id			varchar(128) NOT NULL,
+						status			enum('NEW','PUBLISHED','RETRACTED') NOT NULL DEFAULT 'NEW',
+						content			text,
+						PRIMARY KEY `pk_tou_id` (`id`),
+						UNIQUE KEY `uk_tou_name` (`name`),
+						INDEX `idx_tou_status` (`status`,`name`),
+						FOREIGN KEY `fk_tou_id` (`tou_id`) REFERENCES `site_terms_of_use` (`id`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error altering site_terms_of_use_versions table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `site_terms_of_use_events` (
+						version_id	int(11) NOT NULL,
+						user_id		int(11) NOT NULL,
+						date_event	datetime,
+						type		enum('CREATION','ACTIVATION','RETRACTION') NOT NULL DEFAULT 'CREATION',
+						INDEX `idx_tou_evt_user_date` (`user_id`,`date_event`,`type`),
+						INDEX `idx_tou_evt_date_user` (`date_event`,`user_id`,`type`),
+						FOREIGN KEY `fk_tou_event_version` (`version_id`) REFERENCES `site_terms_of_use_versions` (`id`),
+						FOREIGN KEY `fk_tou_event_user` (`user_id`) REFERENCES `register_users` (`id`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error altering site_terms_of_use_events table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `site_terms_of_use_actions` (
+						version_id	int(11) NOT NULL,
+						user_id		int(11) NOT NULL,
+						date_action	datetime,
+						type		enum('VIEWED','DECLINED','ACCEPTED') NOT NULL DEFAULT 'VIEWED',
+						INDEX `idx_tou_act_user_date` (`user_id`,`date_action`,`type`),
+						INDEX `idx_tou_act_date_user` (`date_action`,`user_id`,`type`),
+						FOREIGN KEY `fk_tou_action_version` (`version_id`) REFERENCES `site_terms_of_use_versions` (`id`),
+						FOREIGN KEY `fk_tou_action_user` (`user_id`) REFERENCES `register_users` (`id`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error altering site_terms_of_use_events table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$alter_table_query = "
+                    ALTER TABLE `page_pages` add `tou_id` int(11)
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering page_pages table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(16);
 				$GLOBALS['_database']->CommitTrans();
 			}
 		

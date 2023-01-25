@@ -13,25 +13,13 @@
 		public $external = false;
 		public $ssl = false;
 
-		public function __construct($id = 0) {
+		public function __construct(int $id = null) {
+			$this->_tableName = 'navigation_menu_items';
+
 			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
-		}
-
-		public function delete() {
-			$drop_object_query = "
-				DELETE
-				FROM	navigation_menu_items
-				WHERE	id = ?
-			";
-			$GLOBALS['_database']->Execute($drop_object_query,array($this->id));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			return true;
 		}
 
 		public function add($parameters) {
@@ -64,7 +52,7 @@
 			return $this->update($parameters);
 		}
 
-		public function get($menu_id,$code,$parent = null) {
+		public function getItem($menu_id,$code,$parent = null): bool {
 			$get_object_query = "
 				SELECT	id
 				FROM	navigation_menu_items

@@ -7,31 +7,14 @@
 	    public $name;
 
 	    public function __construct($id = 0) {
+			$this->_tableName = 'navigation_menus';
+
 		    if (is_numeric ( $id ) && $id > 0) {
 			    $this->id = $id;
 			    $this->details();
 		    }
 	    }
-	    public function get($code) {
-		    $get_object_query = "
-				    SELECT	id
-				    FROM	navigation_menus
-				    WHERE	code = ?
-			    ";
-		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, array ($code ) );
-		    if (! $rs) {
-			    $this->SQLError($GLOBALS['_database']->ErrorMsg());
-			    return false;
-		    }
-		    list ($id) = $rs->FetchRow();
-		    if (isset($id)) {
-			    $this->id = $id;
-			    return $this->details();
-		    }
-			else {
-			    return false;
-		    }
-	    }
+
 	    public function add($parameters = array ()) {
 		    if (! isset($parameters ['code'])) {
 			    $this->error("code required");

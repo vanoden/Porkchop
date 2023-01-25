@@ -1,7 +1,7 @@
 <?php
 	namespace Cache\Client;
 
-	class File Extends \BaseClass {
+	class File Extends Base {
 		private $_path;
 		private $_connected;
 

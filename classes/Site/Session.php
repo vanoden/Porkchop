@@ -30,6 +30,8 @@
 		private $oauth2_state = null;
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'session_sessions';
+
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
@@ -37,7 +39,6 @@
 		}
 
 		public function start() {
-		
 			# Fetch Company Information
 			$this->location = new \Company\Location();
 			$this->location->getByHost($_SERVER['SERVER_NAME']);
@@ -102,12 +103,11 @@
 
 			if (! $this->id) {
 				# Create New Session
-				$this->add();
+				$this->create();
 			}
 
 			# Authentication
 			if (isset($_REQUEST['login']) && ! preg_match('/_register/',$_SERVER['REQUEST_URI']) && (! $this->customer->id)) {
-			
 				# Initialize Vars
 				$login = '';
 				$password = '';
@@ -184,7 +184,7 @@
 		}
 
 		# Create a New Session Record and return Cookie
-		function add() {
+		function create() {
 			$new_code = '';
 			while (! $new_code) {
 				# Get Large Random value
@@ -255,24 +255,6 @@
 			}
 			return $this->get($new_code);
 		}
-
-		function get($code) {
-			$get_object_query = "
-				SELECT	id
-				FROM	session_sessions
-				WHERE	code = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg(),'error',__FILE__,__LINE__);
-				return null;
-			}
-			list($this->id) = $rs->FetchRow();
-			return $this->details();
-		}
 		
 		function details() {
 		
@@ -301,7 +283,7 @@
                     }
 					$this->csrfToken = $session->csrfToken;
 					$this->_cached = 1;
-					return $this->code;
+					return true;
 				}
 			}
 
@@ -325,7 +307,7 @@
 			);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
 			if ($rs->RecordCount()) {
 				$session = $rs->FetchNextObject(false);
@@ -352,11 +334,11 @@
 				$this->csrfToken = $session->csrfToken;
 
 				if ($session->id) $cache->set($session,600);
-				return $session;
+				return true;
 			}
 		}
 
-		function code_in_use ($request_code) {
+		function code_in_use($request_code) {
 			$session = new \Site\Session();
 			$session->get($request_code);
 			if ($session->code) return 1;

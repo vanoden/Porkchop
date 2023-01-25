@@ -5,7 +5,9 @@
 		public $name;
 		public $description;
 
-		public function __construct($id = 0) {
+		public function __construct(int $id = null) {
+			$this->_tableName = "register_roles";
+
 			if (isset($id)) {
 				$this->id = $id;
 				$this->details();
@@ -70,40 +72,6 @@
 				return null;
 			}
 			return $this->details();
-		}
-		
-		public function get($code) {
-			$get_object_query = "
-				SELECT	id
-				FROM	register_roles
-				WHERE	name = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			list($this->id) = $rs->FetchRow();
-			if ($this->id < 1) {
-				return false;
-			}
-			return $this->details();
-		}
-		
-		public function delete() {
-			$drop_object_query = "
-				DELETE
-				FROM	register_roles
-				WHERE	id = ?";
-			$GLOBALS['_database']->Execute($drop_object_query,array($this->id));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			return true;
 		}
 		
 		public function removeMembers() {

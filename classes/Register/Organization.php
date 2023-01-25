@@ -135,27 +135,6 @@
 			return $this->details();
 		}
 		
-		public function get($code) {
-			app_log("Register::Organization::get($code)",'trace',__FILE__,__LINE__);
-			$this->error = null;
-			$get_object_query = "
-				SELECT	id
-				FROM	register_organizations
-				WHERE	code = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($id) = $rs->FetchRow();
-			$this->id = $id;
-			return $this->details();
-		}
-		
 		public function details() {
 			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
 			$database = new \Database\Service();

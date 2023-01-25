@@ -20,6 +20,9 @@ class Person Extends \BaseClass {
     public $_settings = array( "date_format" => "US" );
 
     public function __construct($id = null) {
+		$this->_tableName = 'register_users';
+		$this->_tableUKColumn = 'login';
+
         // Clear Error Info
         $this->clearError();
 
@@ -570,7 +573,7 @@ class Person Extends \BaseClass {
 		return $this->update(array('status' => 'BLOCKED'));
 	}
 
-    public function delete() {
+    public function delete(): bool {
         app_log("Changing person " . $this->id . " to status DELETED", 'debug', __FILE__, __LINE__);
 
         # Bust Cache
@@ -581,6 +584,7 @@ class Person Extends \BaseClass {
         $this->update($this->id, array(
             'status' => "DELETED"
         ));
+		return true;
     }
     
     public function parents() {

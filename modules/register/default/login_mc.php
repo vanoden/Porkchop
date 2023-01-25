@@ -11,11 +11,11 @@
 	$page = new \Site\Page();
 
     // Check Risk Level from Host
-	$captcha_required = false;
+	$CAPTCHA_GO = false;
 	$remote_host = new \Network\Host();
 	if ($remote_host->getByIPAddress($_SERVER['REMOTE_ADDR'])) {
 		if ($remote_host->CAPTCHARequired()) {
-			$captcha_required = true;
+			$CAPTCHA_GO = true;
 		}
 	}
 

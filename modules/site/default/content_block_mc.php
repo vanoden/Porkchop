@@ -62,7 +62,7 @@
 		    }
 		    if ($message->id) {
 			    $parent_page = new \Site\Page();
-			    if (! $parent_page->get('content','index',$message->target)) $show_add_page = true;
+			    if (! $parent_page->getPage('content','index',$message->target)) $show_add_page = true;
 		    }
 	    }
 	}

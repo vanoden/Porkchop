@@ -20,6 +20,8 @@
 	    private $_errors = array();
 
 	    public function __construct() {
+			$this->_tableName = "page_pages";
+
 		    $args = func_get_args ();
 			if (func_num_args() == 1 && gettype($args[0]) == "integer") {
 				$this->id = $args[0];
@@ -42,7 +44,7 @@
 		    }
 	    }
 	    public function fromRequest() {
-		    return $this->get ( $GLOBALS ['_REQUEST_']->module, $GLOBALS ['_REQUEST_']->view, $GLOBALS ['_REQUEST_']->index );
+		    return $this->getPage($GLOBALS['_REQUEST_']->module, $GLOBALS['_REQUEST_']->view, $GLOBALS['_REQUEST_']->index );
 	    }
 	    public function applyStyle() {
 		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS ['_config']->style [$this->module()];
@@ -109,7 +111,7 @@
 			}
 		}
         
-	    public function get($module, $view, $index = null) {
+	    public function getPage($module, $view, $index = null) {
 		    $parameters = array ($module, $view );
 		    if (strlen ( $index ) < 1) $index = null;
 		    // Prepare Query
@@ -148,7 +150,7 @@
 					return $this->add($module,$view,$index);
 				}
 				elseif ($GLOBALS['_SESSION_']->customer->can('edit content messages')) {
-					return $this->get("site","content_block");
+					return $this->getPage("site","content_block");
 				}
 				else return false;
 			}
@@ -197,7 +199,7 @@
 		    return $this->details();
 	    }
 
-		public function delete() {
+		public function delete(): bool {
 			// Delete Content Block for Page
 			if (!empty($this->index)) {
 				$block = new \Content\Message();

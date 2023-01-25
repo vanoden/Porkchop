@@ -1,9 +1,10 @@
 <?php
 	namespace Site;
 
-	class Counter Extends \BaseClass {
+	class Counter {
 		private $_key;
 		public $value;
+		private $_error;
 
 		public function __construct($key) {
 			if (!$this->validKey($key)) {
@@ -55,5 +56,10 @@
 		public function validKey($key) {
 			if (preg_match('/^\w[\w\-\.\_]+$/',$key)) return true;
 			else return false;
+		}
+
+		public function error($value = null) {
+			if (isset($value)) $_error = $value;
+			return $_error;
 		}
 	}
