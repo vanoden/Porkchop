@@ -6,13 +6,18 @@ use Aws\Emr\Enum\InstanceRoleType;
 class Order extends \ORM\BaseModel {
 	
 		public $id;
+		public $code;
 		public $customer_id;
 		public $salesperson_id;
 		public $status;
 		public $customer_order_number;
+		public $organization_id;
+		public $billing_location_id;
+		public $shipping_location_id;
 		private $lastID;
 
 		public function add($parameters = array()) {
+		
 			$customer = new \Register\Customer($parameters['customer_id']);
 			if (! $customer->id) {
 				$this->_error = "Customer not found";
@@ -50,6 +55,7 @@ class Order extends \ORM\BaseModel {
 		}
 
 		public function update($parameters = array()) {
+		
 			$update_object_query = "
 				UPDATE	sales_orders
 				SET		id = id";
@@ -62,6 +68,31 @@ class Order extends \ORM\BaseModel {
 			if (isset($parameters['customer_order_number'])) {
 				$update_object_query .= ", customer_order_number = ?";
 				array_push($bind_params,$parameters['customer_order_number']);
+			}
+
+			if (isset($parameters['organization_id'])) {
+				$update_object_query .= ", organization_id = ?";
+				array_push($bind_params,$parameters['organization_id']);
+			}
+
+			if (isset($parameters['customer_id'])) {
+				$update_object_query .= ", customer_id = ?";
+				array_push($bind_params,$parameters['customer_id']);
+			}		
+		
+			if (isset($parameters['salesperson_id'])) {
+				$update_object_query .= ", salesperson_id = ?";
+				array_push($bind_params,$parameters['salesperson_id']);
+			}
+			
+			if (isset($parameters['billing_location_id'])) {
+				$update_object_query .= ", billing_location_id = ?";
+				array_push($bind_params,$parameters['billing_location_id']);
+			}
+			
+			if (isset($parameters['shipping_location_id'])) {
+				$update_object_query .= ", shipping_location_id = ?";
+				array_push($bind_params,$parameters['shipping_location_id']);
 			}
 
 			$update_object_query .= "
@@ -78,6 +109,7 @@ class Order extends \ORM\BaseModel {
 		}
 
 		public function get($code) {
+
 			$get_object_query = "
 				SELECT	id
 				FROM	sales_orders
@@ -127,13 +159,18 @@ class Order extends \ORM\BaseModel {
 			}
 			$object = $rs->FetchNextObject(false);
 			if ($this->id) {
+			
 				$this->id = $object->id;
 				$this->code = $object->code;
 				$this->salesperson_id = $object->salesperson_id;
 				$this->status = $object->status;
 				$this->customer_id = $object->customer_id;
 				$this->customer_order_number = $object->customer_order_number;
+				$this->organization_id = $object->organization_id;
+                $this->billing_location_id = $object->billing_location_id;
+                $this->shipping_location_id = $object->shipping_location_id;
 				return true;
+				
 			} else {
 				return false;
 			}
@@ -281,11 +318,6 @@ class Order extends \ORM\BaseModel {
 				$this->error($event->error());
 				return false;
 			}
-		}
-
-		public function error($error = null) {
-            if (isset($error)) $this->_error = $error;
-			return $this->_error;
 		}
 
 		public function lastItemID() {

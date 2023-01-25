@@ -2,11 +2,21 @@
 	namespace Sales\Order;
 
 	class Item extends \ORM\BaseModel {
+	
 		public $id;
-		public $name;
-		public $abbreviation;
-
-		public function add($parameters) {
+        public $order_id;
+        public $line_number;
+        public $product_id;
+        public $serial_number;
+        public $description;
+        public $quantity;
+        public $unit_price;
+        public $status;
+        public $cost;
+		public $tableName = 'sales_order_items';
+        public $fields = array('id','order_id','line_number','product_id','serial_number','description','quantity','unit_price','status','cost');
+		
+		public function add($parameters = []) {
 			$product = new \Product\Product($parameters['product_id']);
 			if (! $product->id) {
 				$this->_error = "Product not found";
@@ -54,18 +64,18 @@
 				array_push($bind_params,$parameters['serial_number']);
 			}
 			if (isset($parameters['description'])) {
-				$update_object_query .= ", description ?";
+				$update_object_query .= ", description = ?";
 				array_push($bind_params,$parameters['description']);
 			}
 			if (isset($parameters['unit_price'])) {
 				$update_object_query .= ", unit_price = ?";
-				array_push($bind_params,$paramters['unit_price']);
+				array_push($bind_params,$parameters['unit_price']);
 			}
 
 			$update_object_query .= "
 				WHERE	id = ?";
 			array_push($bind_params,$this->id);
-
+			
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->_error = "SQL Error in Sales::Item::update(): ".$GLOBALS['_database']->ErrorMsg();
@@ -74,7 +84,29 @@
 			return $this->details();
 		}
 
-		public function get($order_id,$line_number) {
+		public function getByProductIdOrderId($product_id, $order_id) {
+			$get_object_query = "
+				SELECT	id
+				FROM	sales_order_items
+				WHERE	product_id = ? AND order_id = ?
+			";
+
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($product_id, $order_id));
+			if (! $rs) {
+				$this->_error = "SQL Error in Sales::Item::get(): ".$GLOBALS['_database']->ErrorMsg();
+				return false;
+			}
+			list($this->id) = $rs->FetchRow();
+			if ($this->id) {
+				app_log("Found item ".$this->id);
+				return $this->details();
+			}
+			else {
+				return false;
+			}
+		}
+
+		public function getByOrderLineNumber($order_id,$line_number) {
 			$get_object_query = "
 				SELECT	id
 				FROM	sales_order_items
@@ -89,7 +121,7 @@
 			}
 			list($this->id) = $rs->FetchRow();
 			if ($this->id) {
-				app_log("Found country ".$this->id);
+				app_log("Found item ".$this->id);
 				return $this->details();
 			}
 			else {
@@ -127,9 +159,5 @@
 
 		public function product() {
 			return new \Product\Product($this->product_id);
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

@@ -96,8 +96,6 @@
 					LIMIT	".$parameters['_limit'];
 			}
 
-			//$database->trace(9);
-			//$database->debug = 'screen';
 			$rs = $database->Execute($get_organizations_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());

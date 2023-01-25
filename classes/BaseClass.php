@@ -1,5 +1,6 @@
 <?php
 	class BaseClass {
+	
 		// Error Message
 		private $_error;
 
