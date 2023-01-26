@@ -48,6 +48,7 @@
 				$this->date_created = $object->date_created;
 				$this->date_expires = $object->date_expires;
 				$this->registration_period = $object->registration_period;
+				$this->location_id = $object->location_id;
 				$this->register = $object->register;
 				$this->registrar = $object->register;
 				$this->company = new Company($object->company_id);
@@ -180,5 +181,9 @@
 			}
 			
 			return $this->details();
+		}
+
+		public function location(): Location {
+			return new Location($this->location_id);
 		}
 	}

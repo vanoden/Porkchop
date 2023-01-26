@@ -15,11 +15,17 @@
 
 		public function __construct(int $id = null) {
 			$this->_tableName = 'navigation_menu_items';
+			$this->_tableUKColumn = null;
 
 			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
+		}
+
+		public function __call($name, $arguments) {
+			if ($name == "get") return $this->getItem($arguments);
+			else $this->error("Method '$name' not found");
 		}
 
 		public function add($parameters) {

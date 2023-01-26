@@ -4,7 +4,7 @@
 	if (isset($_REQUEST['id'])) {
 		$message = new \Content\Message($_REQUEST['id']);
 	}
-	elseif ($_REQUEST['method'] == 'new') {
+	elseif (!empty($_REQUEST['method']) && $_REQUEST['method'] == 'new') {
 		// New Page, Load Nothing
 	}
 	elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {

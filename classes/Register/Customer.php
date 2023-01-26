@@ -5,8 +5,8 @@
 		public $auth_method;
 		public $elevated = 0;
 
-		public function __construct($person_id = null) {
-			parent::__construct($person_id);
+		public function __construct(int $id = 0) {
+			parent::__construct($id);
 			if ($this->id) $this->roles();
 		}
 
@@ -316,7 +316,8 @@
 			return $products;
 		}
 
-		public function can($privilege_name) {
+		public function can($privilege_name): bool {
+			if ($GLOBALS['_SESSION_']->elevated()) return true;
 			return $this->has_privilege($privilege_name);
 		}
 
@@ -567,6 +568,10 @@
 			}
 			list($key) = $rs->FetchRow();
 			return $key;
+		}
+
+		public function login() {
+			return $this->code;
 		}
 
 		public function resetKey() {

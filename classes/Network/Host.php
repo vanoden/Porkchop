@@ -8,7 +8,10 @@
 		public $os_name;
 		public $os_version;
 
-		public function __construct($id = 0) {
+		public function __construct(int $id = 0) {
+			$this->_tableName = 'network_hosts';
+			$this->_tableUKColumn = null;
+
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
@@ -133,7 +136,7 @@
 			}
 
 			$object = $rs->FetchNextObject(false);
-			if ($object->id) {
+			if (isset($object->id)) {
 				$this->id = $object->id;
 				$this->name = $object->name;
 				$this->domain = new Domain($object->domain_id);
@@ -159,5 +162,9 @@
 			$fqdn = $this->name;
 			if (isset($this->domain)) $fqdn .= ".".$this->domain;
 			return $fqdn;
+		}
+
+		public function CAPTCHARequired(): bool {
+			return false;
 		}
 	}

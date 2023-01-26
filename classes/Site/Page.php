@@ -21,28 +21,35 @@
 
 	    public function __construct() {
 			$this->_tableName = "page_pages";
+			$this->_tableUKColumn = null;
 
-		    $args = func_get_args ();
+		    $args = func_get_args();
 			if (func_num_args() == 1 && gettype($args[0]) == "integer") {
 				$this->id = $args[0];
 				$this->details();
-			} elseif (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
+			} elseif (func_num_args() == 1 && gettype( $args [0] ) == "string") {
 			    $this->id = $args [0];
-			    $this->details ();
-		    } elseif (func_num_args () == 1 && gettype ( $args [0] ) == "array") {
-			    if (isset($args [0] ['method'])) {
-				    $this->method = $args [0] ['method'];
-				    $this->view = $args [0] ['view'];
-				    if ($args [0] ['index']) $this->index = $args [0] ['index'];
+			    $this->details();
+		    } elseif (func_num_args() == 1 && gettype($args [0] ) == "array") {
+			    if (isset($args[0]['method'])) {
+				    $this->method = $args[0]['method'];
+				    $this->view = $args[0]['view'];
+				    if ($args[0]['index']) $this->index = $args[0]['index'];
 			    }
-		    } elseif (func_num_args () == 2 && gettype ( $args [0] ) == "string" && gettype ( $args [1] ) == "string" && isset ( $args[2])) {
-			    $this->get ( $args [0], $args [1], $args [2] );
-		    } elseif (func_num_args () == 2 && gettype ( $args [0] ) == "string" && gettype ( $args [1] ) == "string") {
-			    $this->get ( $args [0], $args [1] );
+		    } elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string" && isset( $args[2])) {
+			    $this->getPage( $args[0], $args[1], $args[2] );
+		    } elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string") {
+			    $this->getPage( $args[0], $args[1] );
 		    } else {
 			    $this->fromRequest ();
 		    }
 	    }
+
+		public function __call($name, $arguments) {
+			if ($name == "get") return $this->getPage($arguments);
+			else $this->error("Method '$name' not found");
+		}
+
 	    public function fromRequest() {
 		    return $this->getPage($GLOBALS['_REQUEST_']->module, $GLOBALS['_REQUEST_']->view, $GLOBALS['_REQUEST_']->index );
 	    }
@@ -309,13 +316,13 @@
 
 	    public function parse($message) {
 		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
-		    while ( preg_match ( $module_pattern, $message, $matched ) ) {
-			    $search = $matched [0];
+		    while ( preg_match( $module_pattern, $message, $matched ) ) {
+			    $search = $matched[0];
 			    $parse_message = "Replaced $search";
-			    $replace_start = microtime ( true );
-			    $replace = $this->replace ($matched[0]);
+			    $replace_start = microtime( true );
+			    $replace = $this->replace($matched[0]);
 			    // app_log($parse_message." with $replace in ".sprintf("%0.4f",(microtime(true) - $replace_start))." seconds",'debug',__FILE__,__LINE__);
-			    $message = str_replace ( $search, $replace, $message );
+			    $message = str_replace( $search, $replace, $message );
 		    }
 
 		    // Return Messsage
@@ -691,7 +698,7 @@
                     $fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
             }
 		    app_log ( "Loading view " . $this->view() . " of module " . $this->module(), 'debug', __FILE__, __LINE__ );
-		    if (isset($be_file) && file_exists ( $be_file )) {
+		    if (isset($be_file) && file_exists($be_file)) {
 				// Load Backend File
                 $res = include($be_file);
 

@@ -941,6 +941,7 @@
 			$auth_blocked_counter = new \Site\Counter("auth_blocked");
 
 			$this->response->success = 1;
+			$this->response->counter = new \stdClass();
 			$this->response->counter->connections = $connection_counter->get();
 			$this->response->counter->sql_errors = $sql_error_counter->get();
 			$this->response->counter->permission_denied = $denied_counter->get();
@@ -949,10 +950,12 @@
 			$this->response->counter->auth_failed = $auth_failed_counter->get();
 			$this->response->counter->auth_blocked = $auth_blocked_counter->get();
 			$this->response->cache = $cache->stats();
+			$this->response->database = new \stdClass();
 			$this->response->database->version = $database->version();
 			$this->response->database->uptime = $database->global('uptime');
 			$this->response->database->queries = $database->global('queries');
 			$this->response->database->slow_queries = $database->global('slow_queries');
+			$this->response->apache = new \stdClass();
 			$this->response->apache->version = apache_get_version();
 
             print $this->formatOutput($this->response);

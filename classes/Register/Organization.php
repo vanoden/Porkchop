@@ -2,7 +2,6 @@
 	namespace Register;
 
 	class Organization Extends \BaseClass {
-	
 		public $name;
 		public $code;
 		public $status;
@@ -17,10 +16,8 @@
 		private $_nocache = false;
 		private $database;
 
-		public function __construct($id = 0,$options = array()) {
-		
-			// Clear Error Info
-			$this->clearError();
+		public function __construct(int $id = 0,$options = array()) {
+			$this->_tableName = "register_organizations";
 
 			// Set Valid Statuses
 			$this->_addStatus(array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED'));

@@ -26,7 +26,7 @@
 		private $cookie_domain;
 		private $cookie_expires;
 		private $cookie_path;
-		private $elevated = 0;
+		private $elevated = false;
 		private $oauth2_state = null;
 
 		public function __construct($id = 0) {
@@ -161,17 +161,17 @@
 			}
 
 			# Delete Cookie
-			setcookie("session_code", $GLOBALS['_SESSION_']->session_code, time() - 604800, '/', $GLOBALS['_SESSION_']->domain->name);
+			setcookie("session_code", $GLOBALS['_SESSION_']->code, time() - 604800, '/', $GLOBALS['_SESSION_']->domain->name);
 
 			return true;
 		}
 
 		# Override Roles
 		function elevate() {
-			$this->elevated = 1;
+			$this->elevated = true;
 		}
 
-		function elevated() {
+		function elevated(): bool {
 			return $this->elevated;
 		}
 
@@ -311,6 +311,7 @@
 			}
 			if ($rs->RecordCount()) {
 				$session = $rs->FetchNextObject(false);
+				if (empty($session->customer_id)) $session->customer_id = 0;
 
 				$this->code = $session->code;
 				$this->company = new \Company\Company($session->company_id);

@@ -66,6 +66,12 @@
 			// Clear Errors
 			$this->clearError();
 
+			if (gettype($this->_tableUKColumn) == 'NULL') {
+				$trace = debug_backtrace()[1];
+				$this->error("No surrogate key defined for ".get_class($this)." called from ".$trace['class']."::".$trace['function']." in ".$trace['file']." line ".$trace['line']);
+				error_log($this->error());
+				return false;
+			}
 			// Initialize Services
 			$database = new \Database\Service();
 
@@ -92,7 +98,9 @@
 				return $this->details();
 			}
 			else {
-				$this->error("Record not found");
+				$cls = get_called_class();
+				$parts = explode("\\",$cls);
+				$this->error($parts[1]." not found");
 				return false;
 			}
 		}
@@ -133,8 +141,8 @@
 				$class = $caller['class'];
 				$classname = str_replace('\\','::',$class);
 				$method = $caller['function'];
-				$this->_error = $classname."::".$method."(): ".$value;
-				app_log($this->_error,'error');
+				$this->_error = $value;
+				app_log(get_called_class()."::".$method."(): ".$this->_error,'error');
 			}
 			return $this->_error;
 		}

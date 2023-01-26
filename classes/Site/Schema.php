@@ -383,8 +383,7 @@
 						description		varchar(256),
 						PRIMARY KEY `pk_tou_id` (`id`),
 						UNIQUE KEY `uk_tou_code` (`code`),
-						UNIQUE KEY `uk_tou_name` (`name`),
-						INDEX `idx_tou_status` (`status`,`name`)
+						UNIQUE KEY `uk_tou_name` (`name`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
@@ -396,12 +395,11 @@
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `site_terms_of_use_versions` (
 						id				int(11) NOT NULL AUTO_INCREMENT,
-						tou_id			varchar(128) NOT NULL,
+						tou_id			int(11) NOT NULL,
 						status			enum('NEW','PUBLISHED','RETRACTED') NOT NULL DEFAULT 'NEW',
 						content			text,
 						PRIMARY KEY `pk_tou_id` (`id`),
-						UNIQUE KEY `uk_tou_name` (`name`),
-						INDEX `idx_tou_status` (`status`,`name`),
+						INDEX `idx_tou_status` (`status`),
 						FOREIGN KEY `fk_tou_id` (`tou_id`) REFERENCES `site_terms_of_use` (`id`)
 					)
 				";

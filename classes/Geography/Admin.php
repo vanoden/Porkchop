@@ -5,8 +5,10 @@
 		public $id;
 		public $_error;
 
-		public function __construct($id = null) {
-			if (isset($id) && is_numeric($id)) {
+		public function __construct(int $id = 0) {
+			$this->_tableName = 'geography_provinces';
+
+			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
@@ -96,9 +98,15 @@
 			return $this->details();
 		}
 
-		public function get($country_id,$name) {
-			if (strlen($name) < 3) return $this->getByAbbreviation($country_id,$name);
+		public function __call($name, $arguments) {
+app_log("__call $name",'notice');
+			if ($name == "get") return $this->getProvince($arguments[0],$arguments[1]);
+			else $this->error("Method '$name' not found");
+		}
 
+		public function getProvince($country_id,$name): bool {
+app_log("Country $country_id Name $name");
+			if (strlen($name) < 3) return $this->getByAbbreviation($country_id,$name);
 			$get_object_query = "
 				SELECT	id
 				FROM	geography_provinces
@@ -108,7 +116,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($country_id,$name));
 			if (! $rs) {
-				$this->_error = "SQL Error in Geography::Admin::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();

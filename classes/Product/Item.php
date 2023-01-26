@@ -10,10 +10,12 @@
 		public $status;
 		private $_flat = false;
 
-		public function __construct($id = 0,$flat = false) {
+		public function __construct(int $id = 0,$flat = false) {
+			$this->_tableName = 'product_products';
+
 			if ($flat) $this->_flat = true;
 
-			if ($id) {
+			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
@@ -32,34 +34,6 @@
 			}
 			list($this->id) = $rs->FetchRow();
 			return $this->details($this->id);
-		}
-
-		public function get($code) {
-			app_log("Product::Item::get()",'trace',__FILE__,__LINE__);
-			# Prepare Query to Get Product
-			$get_object_query = "
-				SELECT	id
-				FROM	product_products
-				WHERE	code = ?
-			";
-
-			# Return new product
-            $rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-            if (! $rs) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return null;
-            }
-			else {
-				list($this->id) = $rs->FetchRow();
-				if (! $this->id) {
-					$this->error("No Product Found");
-					return null;
-				}
-				return $this->details();
-			}
 		}
 
 		public function update($parameters) {
@@ -203,7 +177,7 @@
 				# In Case Cache Corrupted
 				if ($product->id) {
 					app_log("Product '".$this->name."' [".$this->id."] found in cache",'trace');
-					return $product;
+					return true;
 				}
 				else {
 					$this->error("Product ".$this->id." returned unpopulated cache");
@@ -228,7 +202,7 @@
 			$rs = $database->Execute($get_details_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return false;
 			}
 
 			$object = $rs->FetchNextObject(false);
@@ -251,7 +225,7 @@
 			$this->metadata = $this->getMeta();
 			$this->images = $this->images();
 
-			return $object;
+			return true;
 		}
 
 		public function inCategory($category_id) {

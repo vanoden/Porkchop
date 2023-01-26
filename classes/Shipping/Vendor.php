@@ -25,7 +25,7 @@
 			return parent::add($parameters);
 		}
 
-		public function get($name) {
+		public function get($name): bool {
 			app_log("Getting vendor $name");
 			return parent::get($name,'name');
 		}

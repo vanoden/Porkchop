@@ -222,8 +222,8 @@
 	  foreach ($queuedCustomersList as $queuedCustomer) {      
 			$registerCustomer = $queuedCustomer->customer();  
 			$productItem = new \Product\Item($queuedCustomer->product_id);
-			list($phone) = $registerCustomer->contacts(array('type' => 'phone'));
-			list($email) = $registerCustomer->contacts(array('type' => 'email'));
+			$phone = $registerCustomer->contacts(array('type' => 'phone'))[0];
+			$email = $registerCustomer->contacts(array('type' => 'email'))[0];
 	  ?>
 	<div class="tableRow">
 		<div class="tableCell"><?=$queuedCustomer->name?>
@@ -284,7 +284,7 @@
      		  <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 			   Update Status:<br/>
 			   <select name="status">
-				  <?php foreach ($queuedCustomers->possibleStatus as $possibleStatus) { ?>
+				  <?php foreach ($possibleStatii as $possibleStatus) { ?>
 				  <option value="<?=$possibleStatus?>" <?=($queuedCustomer->status == $possibleStatus) ? 'selected="selected"' : ""?>><?=$possibleStatus?></option>
 				  <?php } ?>
 			   </select>

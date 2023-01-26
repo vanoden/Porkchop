@@ -145,12 +145,13 @@
 		### Get Specified Province						###
 		###################################################
 		public function getProvince() {
-			if (isset($_REQUEST['country_id'])) {
+			if (!empty($_REQUEST['country_id'])) {
+				$_REQUEST['country_id'] = (int) $_REQUEST['country_id'];
 				$country = new \Geography\Country($_REQUEST['country_id']);
 				if (! $country->id) $this->error("Country not found");
 	
 				$province = new \Geography\Province();
-				if (! $province->get($country->id,$_REQUEST['name'])) $this->error("Province not found");
+				if (! $province->getProvince($country->id,$_REQUEST['name'])) $this->error("Province not found");
 			}
 			elseif (isset($_REQUEST['id'])) {
 				$province = new \Geography\Province($_REQUEST['id']);

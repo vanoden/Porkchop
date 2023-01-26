@@ -28,14 +28,14 @@
 			}
 		}
 
-		public function get($login) {
+		public function get($login): bool {
 			$user = new \Register\Customer();
 			if (! $user->validLogin($login)) {
 				$this->error("Invalid login");
 				return false;
 			}
 			if ($user->get($login)) {
-				return $this->getByQueuedLogin($user->id);
+				return true;
 			}
 			else {
 				$this->error("User not found");
@@ -113,7 +113,7 @@
          */
 		public function syncLiveAccount () {
 		    // if they've found an existing organization
-		    if($_REQUEST['organization']) $this->name = $_REQUEST['organization'];
+		    if(!empty($_REQUEST['organization'])) $this->name = $_REQUEST['organization'];
 
             // process the new or existing queued customer to the chosen status
             global $_config;
@@ -250,12 +250,12 @@
 					$this->code = $object->code;
 					$this->status = $object->status;
 					$this->date_created = $object->date_created;
-					$this->is_reseller = $object->reseller;
-					$this->assigned_reseller_id = $object->reseller_id;
 					$this->notes = $object->notes;
 					$this->product_id = $object->product_id;
 					$this->serial_number = $object->serial_number;
 					$this->register_user_id = $object->register_user_id;
+					$this->is_reseller = $object->is_reseller;
+					$this->reseller_id = $object->assigned_reseller_id;
 					app_log("Found registration ".$this->id);
 				}
 				else {

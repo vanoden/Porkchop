@@ -107,7 +107,7 @@
 				}
 				foreach ($menu["items"] as $item) {
 					$nav_item = new \Navigation\Item();
-					if ($nav_item->get($nav_menu->id,$item["title"])) {
+					if ($nav_item->getItem($nav_menu->id,$item["title"])) {
 						$nav_item->update(
 							array(
 								"view_order"	=> $item["view_order"],
@@ -135,7 +135,7 @@
 					}
 					foreach ($item['items'] as $subitem) {
 						$subnav_item = new \Navigation\Item();
-						if ($subnav_item->get($nav_menu->id,$subitem["title"],$nav_item)) {
+						if ($subnav_item->getItem($nav_menu->id,$subitem["title"],$nav_item)) {
 							$subnav_item->update(
 								array(
 									"view_order"	=> $subitem["view_order"],

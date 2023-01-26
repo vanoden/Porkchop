@@ -8,7 +8,7 @@ class Person Extends \BaseClass {
     public $middle_name;    
     public $last_name;
     public $location;
-    public $organization;
+    public $organization_id;
     public $code;
     public $message;
     public $department;
@@ -19,7 +19,7 @@ class Person Extends \BaseClass {
 	public $auth_failures;
     public $_settings = array( "date_format" => "US" );
 
-    public function __construct($id = null) {
+    public function __construct(int $id = null) {
 		$this->_tableName = 'register_users';
 		$this->_tableUKColumn = 'login';
 
@@ -40,7 +40,6 @@ class Person Extends \BaseClass {
     }
     
     public function details() {
-    
         $cache_key = "customer[" . $this->id . "]";
 
         # Cached Customer Object, Yay!
@@ -52,7 +51,7 @@ class Person Extends \BaseClass {
             $this->login = $customer->code;
             $this->department_id = $customer->department_id;
             if (isset($customer->department)) $this->department = $customer->department;
-            $this->organization = new Organization($customer->organization_id);
+            $this->organization_id = $customer->organization_id;
             $this->status = $customer->status;
             $this->timezone = $customer->timezone;
             $this->auth_method = $customer->auth_method;
@@ -165,9 +164,11 @@ class Person Extends \BaseClass {
 	}
     
     public function add($parameters = array()) {
+		$this->clearError();
+
         if (!$this->validLogin($parameters['login'])) {
             $this->error("Invalid Login");
-            return null;
+            return false;
         }
 
         // Defaults
@@ -319,6 +320,10 @@ class Person Extends \BaseClass {
 
         // Get Updated Information
         return $this->details();
+    }
+
+    public function organization() {
+        return new \Register\Organization($this->organzation_id);
     }
     
 	public function getMeta($id = 0) {
@@ -543,7 +548,8 @@ class Person Extends \BaseClass {
         foreach ($contacts as $contact) {
             app_log("Sending notifications to " . $contact->value, 'notice');
             $message->to($contact->value);
-            $transport = \Email\Transport::Create(array(
+			$transportFactory = new \Email\Transport();
+            $transport = $transportFactory->Create(array(
                 'provider' => $GLOBALS['_config']->email->provider
             ));
             if (! isset($transport)) {

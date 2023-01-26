@@ -139,7 +139,7 @@
 	# Create Session
 	$_SESSION_->start();
 	if ($_SESSION_->error()) {
-		$logger->writeln($_SESSION_->error,'error',__FILE__,__LINE__);
+		$logger->writeln($_SESSION_->error(),'error',__FILE__,__LINE__);
 		exit;
 	}
 

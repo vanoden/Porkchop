@@ -10,43 +10,34 @@
 	$page->captchaPassed = true;
 	global $_config;
 
+	$captcha_ok = false;
+
 	// New Registration Submitted
 	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "register") {
+		$customer = new \Register\Customer();
 	    // Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
-		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+		if (!isset($_POST['csrfToken']) || ! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 			$page->addError("Invalid request");
 		}
 		// CAPTCHA Bypass Key for Automated Testing
 		elseif (!empty($GLOBALS['_config']->captcha->bypass_key) && !empty($_REQUEST['captcha_bypass_key']) && $GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key']) {
 			//Don't require catcha
-			$captcha_success->success = true;
+			$captcha_ok = true;
 		}
 		// Check reCAPTCHA 2.0
 		else {
-			$url = "https://www.google.com/recaptcha/api/siteverify";
-			$data = array(
-				'secret'	=> $GLOBALS['_config']->captcha->private_key,
-				'response'	=> $_REQUEST['g-recaptcha-response'],
-				'remoteip'	=> $_SERVER['REMOTE_ADDR'],
-			);
-		
-			$options = array(
-				'http'	=> array(
-					'method'	=> 'POST',
-					'content'	=> http_build_query($data),
-				),
-			);
-
-			// Don't need to store these fields
-			unset($_REQUEST['g-recaptcha-response']);
-			unset($_REQUEST['btn_submit']);
-
-			$context = stream_context_create($options);
-			$result = file_get_contents($url, false, $context);
-			$captcha_success = json_decode($result);
+			// CAPTCHA Required and Provided
+			$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
+			if ($reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
+				app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
+				$captcha_ok = true;
+			}
+			else {
+				$captcha_ok = false;
+			}
 		}
 
-		if ($captcha_success->success == true && ! $page->errorCount()) {
+		if ($captcha_ok && ! $page->errorCount()) {
 			// Country is US.  NEEDS TO BE FIXED!!!
 
 			// Clean Up Input
@@ -77,7 +68,7 @@
 				$page->addError("Sorry, login already taken");
 				$_REQUEST['login'] = '';
 			}
-			elseif ($customer->error()) {
+			elseif ($customer->error() != "Customer not found") {
 				$page->addError("Error checking login: ".$customer->error());
 			}
 			elseif (!empty($_REQUEST['phone_number']) && ! $contact->validValue('phone',$_REQUEST['phone_number'])) {
@@ -136,7 +127,7 @@
 					}
 					else app_log("No email address provided",'warning');
 
-					if ($_REQUEST['phone_number']) {
+					if (isset($_REQUEST['phone_number'])) {
 						// Create Contact Record
 						$customer->addContact(
 							array(
@@ -337,3 +328,5 @@
 	if (empty($_REQUEST['country_id'])) $_REQUEST['country_id'] = $countries[0]->id;
 	$provinceList = new \Geography\ProvinceList();
 	$provinces = $provinceList->find(array("country_id" => $_REQUEST['country_id']));
+
+	if (!isset($_REQUEST['province_id'])) $_REQUEST['province_id'] = 0;

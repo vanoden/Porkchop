@@ -2,7 +2,6 @@
 	namespace Product;
 
 	class Instance extends Item {
-	
 		public $id;
 		public $errno;
 		public $code;
@@ -13,14 +12,22 @@
 		public $organization_id;
 		private $_flat = false;
 
-		public function __construct($id = 0,$flat = false) {
+		public function __construct(int $id = 0,$flat = false) {
+			$this->_tableName = "monitor_assets";
+			$this->_tableUKColumn = null;
+
 			$this->_flat = $flat;
-			if (is_numeric($id) && $id > 0) {
+			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
 		}
-		
+
+		public function __call($name,$parameters) {
+			if ($name == 'get' && count($parameters) == 2) return $this->getWithProduct($parameters);
+			elseif ($name == 'get') return $this->get($parameters);
+		}
+
 		public function add($parameters) {
 			$this->clearError();
 
@@ -78,7 +85,7 @@
 			return $this->get($code);
 		}
 
-		public function get($code) {
+		public function get($code): bool {
 			$this->clearError();
 			$bind_params = array();
 

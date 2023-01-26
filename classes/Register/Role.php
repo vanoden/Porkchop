@@ -7,6 +7,7 @@
 
 		public function __construct(int $id = null) {
 			$this->_tableName = "register_roles";
+			$this->_tableUKColumn = 'name';
 
 			if (isset($id)) {
 				$this->id = $id;

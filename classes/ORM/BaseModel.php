@@ -106,7 +106,7 @@
          * @param string $code
          * @param string $columnName, which column we search for the code value by
          */
-		public function get($code) {
+		public function get($code): bool {
 			$getObjectQuery = "SELECT id FROM `$this->tableName` WHERE `$this->ukColumn` = ?";
 			$rs = $this->execute($getObjectQuery, array($code));
             if ($rs) {
@@ -120,7 +120,7 @@
             return false;
 		}
 
-		public function delete() {
+		public function delete(): bool {
 			$deleteObjectQuery = "DELETE FROM `$this->tableName` WHERE `id` = ?";
 			$this->execute($deleteObjectQuery,array($this->id));
 			if ($this->_error) return false;

@@ -1054,7 +1054,30 @@
 				$this->setVersion(28);
 				$GLOBALS['_database']->CommitTrans();			
 			}
-			
+
+			if ($this->version() < 29) {
+				app_log("Upgrading schema to version 29", 'notice', __FILE__, __LINE__);
+				
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				
+				$alter_table_query = "
+					ALTER TABLE register_auth_failures
+					MODIFY `reason` enum('NOACCOUNT','PASSEXPIRED','WRONGPASS','INACTIVE','INVALIDPASS','CSRFTOKEN','UNKNOWN') NOT NULL DEFAULT 'UNKNOWN'
+				";
+
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_auth_failures table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(29);
+				$GLOBALS['_database']->CommitTrans();	
+			}
 			return true;
 		}
 	}
