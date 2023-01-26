@@ -17,7 +17,7 @@
 			print_r($metadata);
 		}
 
-		public function get($name) {
+		public function get($name): bool {
 			if (! preg_match('/^\w[\w\-\_]*$/',$name)) {
 				$this->error("Invalid module name");
 				return false;

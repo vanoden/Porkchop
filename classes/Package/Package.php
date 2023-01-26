@@ -4,8 +4,10 @@
 	class Package Extends \BaseClass {
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'package_packages';
+
 			$this->_addStatus(array('TEST','ACTIVE','HIDDEN'));
-			if ($id > 0) {
+			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
@@ -146,25 +148,6 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			return $this->details();
-		}
-
-		public function get($code) {
-			$get_object_query = "
-				SELECT	id
-				FROM	package_packages
-				WHERE	code = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($code));
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			list($this->id) = $rs->FetchRow();
-			if (! $this->id) {
-				$this->error("Package not found");
 				return false;
 			}
 			return $this->details();

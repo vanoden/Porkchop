@@ -24,7 +24,7 @@
 			$bind_params = array();
 			
 			// if we're looking for a specific type of file upload with a reference id
-            if (isset($parameters['type']) && strlen($parameters['type']) && isset($parameters['ref_id']) && strlen($parameters['ref_id'])) {
+            if (isset($parameters['type']) && strlen($parameters['type']) && !empty($parameters['ref_id'])) {
                 $get_objects_query .= "
 					                AND sfm.key = ? AND sfm.value = ?";
 				array_push($bind_params, $parameters['type']);

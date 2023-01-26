@@ -23,7 +23,7 @@
 				$page->addError("Invalid index");
 				$_REQUEST['index'] = null;
 			}
-			elseif ($editPage->get($_REQUEST['module'],$_REQUEST['view'],$index)) {
+			elseif ($editPage->getPage($_REQUEST['module'],$_REQUEST['view'],$index)) {
 		        if ($_REQUEST['key'] == "template" && !$page->validTemplate($_REQUEST['value'])) {
 			        $page->addError("Invalid template name");
 			        return;
@@ -57,10 +57,15 @@
 	        }
         }
 	}
-	elseif ($editPage->get($_REQUEST['module'],$_REQUEST['view'],$index)) {
+	elseif ($editPage->getPage($_REQUEST['module'],$_REQUEST['view'],$index)) {
 		$module = $editPage->module;
 		$view = $editPage->view;
 		$index = $editPage->index;
 		if (! strlen($index)) $index = '[null]';
 		$metadata = $editPage->allMetadata();
+	}
+
+	$page->addBreadcrumb("Site Pages", "/_site/pages");
+	if (isset($editPage->view)) {
+		$page->addBreadcrumb($editPage->module."::".$editPage->view);
 	}
