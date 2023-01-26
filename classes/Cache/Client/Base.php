@@ -2,7 +2,7 @@
 	namespace Cache\Client;
 
 	class Base {
-		private string $_error = '';
+		protected $_error = '';
 
 		public function error(string $value = null): string {
 			if (isset($value)) $this->_error = $value;

@@ -16,6 +16,7 @@
 	    public $metadata;
 	    public $template;
 	    public $success;
+		public $instructions;
 		private $_breadcrumbs = array();
 	    private $_errors = array();
 
@@ -292,6 +293,15 @@
 
 		public function view() {
 			if (preg_match('/(\w[\w\_\.]*)/',$this->view,$matches)) return $matches[1];
+		}
+
+		public function title() {
+			if (!empty($this->title))
+				return $this->title;
+			if (!empty($this->getMetadata("title")))
+				return $this->getMetadata("title");
+			if (!empty($this->view))
+				return preg_replace('/^[\-\.\_]+/'," ",ucwords($this->view()));
 		}
 
 		public function template() {
@@ -641,7 +651,11 @@
 
 			    if ($property == "name") {
 				    $buffer .= $company->name;
-			    } else {
+			    }
+				elseif ($property == "copyright") {
+					$buffer = '&copy;'.date('Y')." ".$company->name;
+				}
+				else {
                     $buffer = $this->loadViewFiles($buffer);
 			    }
 		    }
@@ -853,12 +867,59 @@
 		}
 
 		public function showBreadcrumbs() {
+			if (count($this->_breadcrumbs) < 1) return "";
 			foreach ($this->_breadcrumbs as $breadcrumb) {
-				if ($breadcrumb['target']) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
+				if (!empty($breadcrumb['target'])) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
 			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
 		}
+
+		public function showMessages() {
+			$buffer = "";
+			if ($this->errorCount() > 0) {
+				$buffer .= "
+<section id=\"form-message\">
+	<ul class=\"connectBorder errorText\">
+		<li>".$this->errorString()."</li>
+	</ul>
+</section>
+			";
+			}
+			elseif (!empty($this->success)) {
+				$buffer .= "
+<section id=\"form-message\">
+	<ul class=\"connectBorder progressText\">
+		<li>".$this->success."</li>
+	</ul>
+</section>
+			";
+			}
+			if (!empty($this->instructions)) {
+				$buffer .= "
+<section id=\"form-message\">
+	<ul class=\"connectBorder infoText\">
+		<li>".$this->instructions."</li>
+	</ul>
+</section>
+			";
+			}
+			elseif (!empty($this->getMetadata("instructions"))) {
+				$buffer .= "
+<section id=\"form-message\">
+	<ul class=\"connectBorder infoText\">
+		<li>".$this->getMetadata("instructions")."</li>
+	</ul>
+</section>
+			";
+			}
+			return $buffer;
+		}
+
+		public function showTitle() {
+			return "<h1>".$this->title()."</h1>";
+		}
+
 		/************************************/
 		/* Validation Methods				*/
 		/************************************/

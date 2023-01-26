@@ -17,7 +17,13 @@
 		border: 1px solid #999999;
 	}
 </style>
-<span class="title">Site Pages</span>
+
+<!-- Page Header -->
+<?=$page->showBreadcrumbs()?>
+<?=$page->showTitle()?>
+<?=$page->showMessages()?>
+<!-- End Page Header -->
+
 <div class="table">
 	<div class="tableHead">
 		<div class="tableCell">Module</div>

@@ -3,7 +3,8 @@
 
 	class Relationship Extends \BaseClass {
 		public function __construct() {
-
+			$this->_tableName = "product_relations";
+			$this->_tableUKColumn = null;
 		}
 
 		public function add($parameters = array()) {
@@ -38,7 +39,10 @@
 			}
 			return $this->get($parameters['parent_id'],$parameters['child_id']);
 		}
-		public function get($parent_id,$child_id) {
+		public function __call($name,$parameters) {
+			if ($name == "get") return $this->getRelationShip($parameters);
+		}
+		public function getRelationship($parent_id,$child_id) {
 			$parent = new \Product\Group($parameters['parent_id']);
 			if (!$parent->exists()) {
 				$this->error("Parent group not found");

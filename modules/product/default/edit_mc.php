@@ -19,7 +19,7 @@
 		}
 		else $page->addError("Invalid product code");
 	}
-	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+	elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$item = new \Product\Item();
 		if ($item->validCode($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 			$item->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
@@ -151,8 +151,8 @@
 
 	// Get Product
 	if (isset($_REQUEST['code'])) $item->get($_REQUEST['code']);
-	if (isset($item->error)) $page->addError("Error loading item '".$_REQUEST['code']."': ".$item->error);
-	
+	if ($item->error()) $page->addError("Error loading item '".$_REQUEST['code']."': ".$item->error());
+
 	// Get Manuals
 	$documentlist = new \Media\DocumentList();
 	$manuals = $documentlist->find();
@@ -161,3 +161,9 @@
 	$dashboardlist = new \Monitor\DashboardList();
 	$dashboards = $dashboardlist->find();
 	$prices = $item->prices();
+	$images = $item->images();
+
+	$page->addBreadcrumb("Products", "/_product/report");
+	if (isset($item->id)) {
+		$page->addBreadcrumb($item->code);
+	}

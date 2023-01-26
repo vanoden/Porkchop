@@ -2,7 +2,7 @@
 	namespace Cache;
 	
 	class Item {
-		private string $_error = '';
+		private $_error = '';
 		private $_client;
 		private $_key;
 

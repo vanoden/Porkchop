@@ -66,3 +66,6 @@
 	if ($registerTagList->error()) $page->addError($registerTagList->error());
 
 	if (is_array($organizations) && $next_offset > count($organizations)) $next_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) + count($organizations);
+
+	$page->title = "Organizations";
+	$page->instructions = "Fill in the search field.  Use * for a wildcard.  Or click an organization code to see details.";

@@ -1,4 +1,3 @@
-<span class="title">Role</span>
 <style>
 	ul {
 		list-style-type: none;
@@ -19,11 +18,12 @@
 </section>
 <?php	} ?>
 
+<?=$page->showBreadcrumbs()?>
 <form method="post" action="/_register/role">
     <input type="hidden" name="name" value="<?=$role->name?>" />
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-    <div class="title">Role <?=$role->name?></div>
-    <span class="label">Name</span>
+    <div class="title">Role Editor</div>
+    <span class="label">Role Name</span>
     <?php if ($role->id) { ?>
 	    <span class="value"><?=$role->name?></span>
     <?php } else { ?>

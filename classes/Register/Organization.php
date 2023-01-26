@@ -16,7 +16,7 @@
 		private $_nocache = false;
 		private $database;
 
-		public function __construct(int $id = 0,$options = array()) {
+		public function __construct($id = null,$options = array()) {
 			$this->_tableName = "register_organizations";
 
 			// Set Valid Statuses
@@ -26,14 +26,13 @@
 			if (isset($options['nocache']) && $options['nocache']) $this->_nocache = true;
 
 			// Load ID'd Record
-			if (isset($id) && is_numeric($id)) {
+			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
 		}
 
 		public function add($parameters) {
-		
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
 			$database = new \Database\Service;
 

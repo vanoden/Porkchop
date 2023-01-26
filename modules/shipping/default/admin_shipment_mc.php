@@ -49,3 +49,8 @@
 	$packages = $shipment->packages();
 	if (empty($shipment->vendor_id)) $shippingVendor = 'Not provided';
 	else $shippingVendor = $shipment->vendor();
+
+	$page->addBreadcrumb("Shipments", "/_shipping/admin_shipments");
+	if (isset($shipment->id)) {
+		$page->addBreadcrumb($shipment->document_number);
+	}

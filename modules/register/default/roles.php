@@ -1,4 +1,4 @@
-<h1 class="title">Roles</h1>
+<div class="title">Roles</div>
 <style>
 	ul {
 		list-style-type: none;

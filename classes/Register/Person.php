@@ -113,7 +113,7 @@ class Person Extends \BaseClass {
             $this->code = $customer->code;
             $this->login = $customer->code;
             $customer->login = $customer->code;
-            $this->organization = new Organization($customer->organization_id);
+            $this->organization_id = $customer->organization_id;
             $this->department_id = $customer->department_id;
             if (isset($customer->department)) $this->department = $customer->department;
             $this->status = $customer->status;
@@ -323,7 +323,7 @@ class Person Extends \BaseClass {
     }
 
     public function organization() {
-        return new \Register\Organization($this->organzation_id);
+        return new \Register\Organization($this->organization_id);
     }
     
 	public function getMeta($id = 0) {

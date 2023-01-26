@@ -11,12 +11,12 @@
 		public $status;
 		private $_flat = false;
 
-		public function __construct(int $id = 0,$flat = false) {
+		public function __construct($id = 0,$flat = false) {
 			$this->_tableName = 'product_products';
 
 			if ($flat) $this->_flat = true;
 
-			if ($id > 0) {
+			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
 			}

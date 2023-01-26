@@ -73,3 +73,8 @@
             }
 	    }
 	}
+
+	$page->addBreadcrumb("Roles", "/_register/roles");
+	if (isset($role->id)) {
+		$page->addBreadcrumb($role->name);
+	}

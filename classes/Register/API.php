@@ -27,6 +27,7 @@
             $GLOBALS['_SESSION_']->customer->unreadMessages = $siteMessagesUnread;
             $response = new \HTTP\Response();
             $response->customer = $GLOBALS['_SESSION_']->customer;
+			$response->customer->organization = $GLOBALS['_SESSION_']->customer->organization();
             $response->success = 1;
 
             # Send Response
