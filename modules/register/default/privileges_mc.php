@@ -60,3 +60,6 @@
     $privilegeList = new \Register\PrivilegeList();
     $privileges = $privilegeList->find(array('_sort' => 'module'));
 	if ($privilegeList->error()) $page->addError($privilegeList->error());
+
+	$page->addBreadcrumb("Roles", "/_register/roles");
+	$page->addBreadcrumb("Privileges");

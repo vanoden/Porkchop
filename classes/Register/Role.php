@@ -76,15 +76,12 @@
 		}
 		
 		public function removeMembers() {
-			$remove_members_query = "
-				DELETE
-				FROM	register_users_roles
-				WHERE	role_id = ?
-			";
-			$GLOBALS['_database']->Execute($remove_members_query,array($this->id));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
+			$members = $this->members();
+			foreach ($members as $member) {
+				if (!$member->drop_role($this->id)) {
+					$this->error($member->error());
+					return false;
+				}
 			}
 			return true;
 		}
