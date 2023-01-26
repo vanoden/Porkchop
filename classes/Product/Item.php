@@ -2,6 +2,7 @@
 	namespace Product;
 
 	class Item Extends \BaseClass {
+	
 		public $id;
 		public $code;
 		public $name;
@@ -424,21 +425,30 @@
 			return 1;
 		}
 
+		public function currentPrice() {
+			$priceList = new \Product\PriceList();
+			$prices = $priceList->find(array('product_id' => $this->id, 'status' => 'ACTIVE'));
+			if ($priceList->error()) {
+				$this->error($priceList->error());
+				return null;
+			} else {
+    			return array_pop($prices);
+			}
+		}
+
 		public function prices() {
 			$priceList = new \Product\PriceList();
 			$prices = $priceList->find(array('product_id' => $this->id));
 			if ($priceList->error()) {
 				$this->error($priceList->error());
 				return null;
-			}
-			else {
+			} else {
 				return $prices;
 			}
 		}
 
 		public function addPrice($parameters = array()) {
 			if (! $GLOBALS['_SESSION_']->customer->can('edit product prices')) $this->error("Permission denied");
-
 			$price = new \Product\Price();
 			$parameters = array(
 				'product_id'	=> $this->id,
@@ -447,7 +457,7 @@
 				'status'		=> $parameters['status']
 			);
 			if ($price->add($parameters)) return true;
-			$this->error("Error adding price: ".$price->error());
+			$this->error("Error adding price: ".$price->error());			
 			return false;
 		}
 		public function getPrice($parameters = array()) {
