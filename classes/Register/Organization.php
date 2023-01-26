@@ -2,7 +2,6 @@
 	namespace Register;
 
 	class Organization Extends \BaseClass {
-	
 		public $name;
 		public $code;
 		public $status;
@@ -17,10 +16,8 @@
 		private $_nocache = false;
 		private $database;
 
-		public function __construct($id = 0,$options = array()) {
-		
-			// Clear Error Info
-			$this->clearError();
+		public function __construct($id = null,$options = array()) {
+			$this->_tableName = "register_organizations";
 
 			// Set Valid Statuses
 			$this->_addStatus(array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED'));
@@ -29,14 +26,13 @@
 			if (isset($options['nocache']) && $options['nocache']) $this->_nocache = true;
 
 			// Load ID'd Record
-			if (isset($id) && is_numeric($id)) {
+			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
 		}
 
 		public function add($parameters) {
-		
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
 			$database = new \Database\Service;
 
@@ -132,27 +128,6 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
-			return $this->details();
-		}
-		
-		public function get($code) {
-			app_log("Register::Organization::get($code)",'trace',__FILE__,__LINE__);
-			$this->error = null;
-			$get_object_query = "
-				SELECT	id
-				FROM	register_organizations
-				WHERE	code = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($id) = $rs->FetchRow();
-			$this->id = $id;
 			return $this->details();
 		}
 		
@@ -263,6 +238,18 @@
 		public function activeCount() {
 			$customerlist = new CustomerList();
 			$customers = $customerlist->find(array("organization_id" => $this->id,"status" => array('NEW','ACTIVE')));
+			return count($customers);
+		}
+
+		public function activeHumans() {
+			$customerlist = new CustomerList();
+			$customers = $customerlist->find(array("organization_id" => $this->id,'automation' => false, "status" => array('NEW','ACTIVE')));
+			return count($customers);
+		}
+
+		public function activeDevices() {
+			$customerlist = new CustomerList();
+			$customers = $customerlist->find(array("organization_id" => $this->id,'automation' => true, "status" => array('NEW','ACTIVE')));
 			return count($customers);
 		}
 

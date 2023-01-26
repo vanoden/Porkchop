@@ -1,12 +1,20 @@
 <?php
 	namespace Geography;
 
-	class Country extends \ORM\BaseModel {
-	
+	class Country extends \BaseClass {
 		public $id;
 		public $name;
 		public $abbreviation;
 
+		public function __construct(int $id = 0) {
+			$this->_tableName = "geography_countries";
+			$this->_tableUKColumn = "name";
+
+			if ($id > 0) {
+				$this->id = $id;
+				$this->details();
+			}
+		}
 		public function add($parameters=array()) {
 			if (! isset($parameters['name'])) {
 				$this->_error = "Country name required";
@@ -56,27 +64,6 @@
 				return false;
 			}
 			return $this->details();
-		}
-
-		public function get($name, $columnName = 'code') {
-			$get_object_query = "
-				SELECT	id
-				FROM	geography_countries
-				WHERE	name = ?
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($name));
-			if (! $rs) {
-				$this->_error = "SQL Error in Geography::Country::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			list($this->id) = $rs->FetchRow();
-			if ($this->id) {
-				app_log("Found country ".$this->id);
-				return $this->details();
-			} else {
-				return false;
-			}
 		}
 
 		public function details() {

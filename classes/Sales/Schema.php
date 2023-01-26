@@ -249,6 +249,50 @@
 				$this->setVersion(7);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+            if ($this->version() < 8) {
+
+				app_log("Upgrading schema to version 8",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$table = new \Database\Schema\Table('sales_orders');
+				
+				if (! $table->has_column('billing_location_id')) {
+					$alter_table_query = "ALTER TABLE `sales_orders` ADD COLUMN `billing_location_id` int NULL";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+					
+					$alter_table_query = "ALTER TABLE `sales_orders` ADD CONSTRAINT `sales_orders_ibfk_3` FOREIGN KEY (`billing_location_id`) REFERENCES `register_locations` (`id`);";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+				}
+
+				if (! $table->has_column('shipping_location_id')) {
+					$alter_table_query = "ALTER TABLE `sales_orders` ADD COLUMN `shipping_location_id` int NULL;";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+					$alter_table_query = "ALTER TABLE `sales_orders` ADD CONSTRAINT `sales_orders_ibfk_4` FOREIGN KEY (`shipping_location_id`) REFERENCES `register_locations` (`id`);";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->error = "SQL Error altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+						app_log($this->error, 'error');
+						return false;
+					}
+				}
+				
+				$this->setVersion(27);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}

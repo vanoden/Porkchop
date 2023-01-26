@@ -93,7 +93,7 @@
 			if (isset($params['description'])) {
 				$update_object_query .= ",
 					description = ?";
-				$database->addParam(noXSS(trim($params['description']));
+				$database->addParam(noXSS(trim($params['description'])));
 			}
 
 			$database->Execute($update_object_query);

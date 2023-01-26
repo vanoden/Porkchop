@@ -2,12 +2,11 @@
 	namespace Register;
 
     class Customer extends Person {
-    
 		public $auth_method;
 		public $elevated = 0;
 
-		public function __construct($person_id = null) {
-			parent::__construct($person_id);
+		public function __construct(int $id = 0) {
+			parent::__construct($id);
 			if ($this->id) $this->roles();
 		}
 
@@ -17,26 +16,6 @@
 				return true;
 			}
 			else return false;
-		}
-		public function get($code = '') {
-			$this->clearError();
-			$get_object_query = "
-				SELECT	id
-				FROM	register_users
-				WHERE	login = ?
-			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			list($id) = $rs->FetchRow();
-			$this->id = $id;
-			return $this->details();
 		}
 
 		public function details() {
@@ -337,7 +316,8 @@
 			return $products;
 		}
 
-		public function can($privilege_name) {
+		public function can($privilege_name): bool {
+			if ($GLOBALS['_SESSION_']->elevated()) return true;
 			return $this->has_privilege($privilege_name);
 		}
 
@@ -590,9 +570,13 @@
 			return $key;
 		}
 
+		public function login() {
+			return $this->code;
+		}
+
 		public function resetKey() {
 			$token = new \Register\PasswordToken();
-			$key = $token->get($this->id);
+			$key = $token->getKey($this->id);
 			if ($token->error()) {
 				$this->error($token->error());
 				return null;

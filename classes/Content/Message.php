@@ -5,15 +5,19 @@
         public $id;
         public $name;
 		public $cached = 0;
+		public $content;
 
         public function __construct($id = 0) {
+			$this->_tableName = 'content_messages';
+			$this->_tableUKColumn = 'target';
+
 			if ($id > 0) {
 				$this->id = $id;
 	            $this->details();
 			}
         }
 
-		public function get($target = '') {
+		public function get($target = ''): bool {
 			$this->clearError();
 
 			$get_contents_query = "
@@ -52,11 +56,10 @@
 		}
 
         public function details() {
-			$this->error = NULL;
+			$this->clearError();
 			
 			if (! isset($this->id)) {
 				$this->error = "ID Required for Content Details";
-				debug_print_backtrace();
 				return null;
 			}
 
@@ -142,7 +145,7 @@
 			return $this->update($parameters);
 		}
         public function update($parameters = array()) {
-			$this->error = NULL;
+			$this->clearCache();
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error("You do not have permission to update content");
 				app_log("Denied access in Content::Message::update(), 'content operator' required",'notice');

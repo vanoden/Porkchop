@@ -52,8 +52,8 @@
 	
 			# Initiate Page Object
 			$page = new \Site\Page();
-			if (isset($_REQUEST['module'])) $page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index']);
-			elseif (isset($_REQUEST['target'])) $page->get('content','index',$_REQUEST['target']);
+			if (isset($_REQUEST['module'])) $page->getPage($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index']);
+			elseif (isset($_REQUEST['target'])) $page->getPage('content','index',$_REQUEST['target']);
 	
 			# Error Handling
 			if ($page->error) error($page->error);
@@ -85,7 +85,7 @@
 			$page = new \Site\Page();
 			if (! $page->validModule($_REQUEST['module'])) error("Invalid module name");
 			if (! $page->validView($_REQUEST['view'])) error("Invalid view name");
-			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) error("Page already exists");
+			if ($page->getPage($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) error("Page already exists");
 			$page->add($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index']);
 			if ($page->errorCount()) error("Error adding page: ".$page->errorString());
 	
@@ -107,7 +107,7 @@
 			$page = new \Site\Page();
 			if (! $page->validModule($_REQUEST['module'])) error("Invalid module name");
 			if (! $page->validView($_REQUEST['view'])) error("Invalid view name");
-			if (! $page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) error("Page not found");
+			if (! $page->getPage($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) error("Page not found");
 
 			if (! $page->delete()) error($page->error);
 	
@@ -236,7 +236,7 @@
 			$response = new \HTTP\Response();
 	
 			$page = new \Site\Page();
-			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+			if ($page->getPage($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
 				if ($metadata = $page->getMetadata($_REQUEST['key'])) {
 					$response->metadata = $metadata;
 					$response->success = 1;
@@ -263,7 +263,7 @@
 			$response = new \HTTP\Response();
 	
 			$page = new \Site\Page();
-			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+			if ($page->getPage($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
 				# Initiate Metadata Object
 				$metadata = $page->allMetadata();
 
@@ -287,7 +287,7 @@
 			$response = new \HTTP\Response();
 	
 			$page = new \Site\Page();
-			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+			if ($page->getPage($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
 				if ($page->setMetadata($_REQUEST['key'],$_REQUEST['value'])) {
 					$response->success = 1;
 					$response->metadata = array('key' => $_REQUEST['key'],'value' => $_REQUEST['value']);
@@ -315,7 +315,7 @@
 			$response = new \HTTP\Response();
 	
 			$page = new \Site\Page();
-			if ($page->get($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
+			if ($page->getPage($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) {
 				if ($metadata = $page->getMetadata($_REQUEST['key'])) {
 					$response->metadata = $metadata;
 					$response->success = 1;
@@ -941,6 +941,7 @@
 			$auth_blocked_counter = new \Site\Counter("auth_blocked");
 
 			$this->response->success = 1;
+			$this->response->counter = new \stdClass();
 			$this->response->counter->connections = $connection_counter->get();
 			$this->response->counter->sql_errors = $sql_error_counter->get();
 			$this->response->counter->permission_denied = $denied_counter->get();
@@ -949,13 +950,20 @@
 			$this->response->counter->auth_failed = $auth_failed_counter->get();
 			$this->response->counter->auth_blocked = $auth_blocked_counter->get();
 			$this->response->cache = $cache->stats();
+			$this->response->database = new \stdClass();
 			$this->response->database->version = $database->version();
 			$this->response->database->uptime = $database->global('uptime');
 			$this->response->database->queries = $database->global('queries');
 			$this->response->database->slow_queries = $database->global('slow_queries');
+			$this->response->apache = new \stdClass();
 			$this->response->apache->version = apache_get_version();
 
             print $this->formatOutput($this->response);
+		}
+
+		public function getUUID() {
+			$porkchop = new \Porkchop();
+			print $porkchop->uuid();
 		}
 
 		public function _methods() {
@@ -1091,6 +1099,27 @@
                 'acknowledgeSiteMessageByUserId'	=> array(
                     'user_created' => array('required' => true)
 			    ),
+				'addTermsOfUse' => array(
+					'code'	=> array(),
+					'name'	=> array('required' => true),
+					'description' => array()
+				),
+				'addTermsOfUseVersion' => array(
+					'tou_code'	=> array('required' => true),
+					'status'	=> array(
+										'required' => true,
+										'options'	=> array (
+											'NEW','CACNELLED','PUBLISHED'
+										)
+									),
+					'content'	=> array(),
+				),
+				'activateTermsOfUseVersion' => array(
+					'version_id'	=> array('required')
+				),
+				'cancelTermsOfUseVersion' => array(
+					'version_id'	=> array('required')
+				),
 				'timestamp' => array(),
                 'search'	=> array(
                     'string' => array('required' => true)

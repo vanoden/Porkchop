@@ -3,29 +3,50 @@
 
 	class OrganizationList Extends \BaseListClass {
 
-		public function search($parameters = array()) {
+		public function search($parameters = array(), $wildcards = false) {
 			app_log("Register::OrganizationList::search()",'trace',__FILE__,__LINE__);
 			$this->clearError();
 			$this->resetCount();
 
+			$database = new \Database\Service();
+	
 			$get_organizations_query = "
-				SELECT	id
-				FROM	register_organizations
+				SELECT	ro.id
+				FROM	register_organizations ro
 			";
-			$bind_params = array();
+
+			// add searched Tag Join
+			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) $get_organizations_query .= " INNER JOIN register_tags rt ON rt.register_id = ro.id ";
 
 			$string = $parameters['string'];
-
-			if (! preg_match('/^[\'\w\-\.\_\s\*]+$/',$string)) {
-				app_log("Invalid search string: '$string'",'info');
-				$this->error("Invalid search string");
-				return null;
+			if (! empty($string)) {
+				if (!$this->validSearchString($string)) {
+					app_log("Invalid search string: '$string'",'info');
+					$this->error("Invalid search string '".$string."'");
+					return null;
+				}
+				else {
+					$string = str_replace("'","\'",$string);
+				}
+				if ($wildcards) {
+					$string = preg_replace('/\*/','%',$string);
+				}
+				else {
+					$string = '%'.$string.'%';
+				}
+				$get_organizations_query .= "
+					WHERE ro.name like '$string'";
 			}
-			$string = str_replace("'","\'",$string);
-			$string = preg_replace('/\*/','%',$string);
+			else {
+				$get_organizations_query .= "
+					WHERE	ro.id = ro.id";
+			}
 
-			$get_organizations_query .= "
-				WHERE name like '%$string%'";
+			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) {
+				$get_organizations_query .= " AND rt.name = ? ";
+				$database->AddParam($parameters['searchedTag']);
+				$get_organizations_query .= " AND rt.type = 'ORGANIZATION' ";
+			}
 
 			if (isset($parameters['status']) && is_array($parameters['status'])) {
 				$icount = 0;
@@ -41,29 +62,29 @@
 			}
 			elseif (isset($parameters['status'])) {
 				$get_organizations_query .= "
-				AND		status = ?";
-				array_push($bind_params,$parameters['status']);
+				AND		ro.status = ?";
+				$database->AddParam($parameters['status']);
 			}
 			else
 				$get_organizations_query .= "
-				AND		status IN ('NEW','ACTIVE','EXPIRED')";
+				AND		ro.status IN ('NEW','ACTIVE','EXPIRED')";
 
 			if (isset($parameters['is_reseller'])) {
 				if ($parameters['is_reseller'])
 					$get_organizations_query .= "
-					AND		is_reseller = 1";
+					AND		ro.is_reseller = 1";
 				else
 					$get_organizations_query .= "
-					AND		is_reseller = 0";
+					AND		ro.is_reseller = 0";
 			}
 			if (isset($parameters['reseller_id'])) {
 				$get_organizations_query .= "
-				AND		reseller_id = ?";
-				array_push($bind_params,$parameters['reseller_id']);
+				AND		ro.reseller_id = ?";
+				$database->AddParam(parameters['reseller_id']);
 			}
 
 			$get_organizations_query .= "
-				ORDER BY name
+				ORDER BY ro.name
 			";
 
 			if (isset($parameters['_limit']) and preg_match('/^\d+$/',$parameters['_limit'])) {
@@ -74,10 +95,10 @@
 					$get_organizations_query .= "
 					LIMIT	".$parameters['_limit'];
 			}
-			query_log($get_organizations_query);			
-			$rs = $GLOBALS['_database']->Execute($get_organizations_query,$bind_params);
+
+			$rs = $database->Execute($get_organizations_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			$organizations = array();

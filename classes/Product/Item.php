@@ -2,6 +2,7 @@
 	namespace Product;
 
 	class Item Extends \BaseClass {
+	
 		public $id;
 		public $code;
 		public $name;
@@ -11,9 +12,11 @@
 		private $_flat = false;
 
 		public function __construct($id = 0,$flat = false) {
+			$this->_tableName = 'product_products';
+
 			if ($flat) $this->_flat = true;
 
-			if ($id) {
+			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
@@ -32,34 +35,6 @@
 			}
 			list($this->id) = $rs->FetchRow();
 			return $this->details($this->id);
-		}
-
-		public function get($code) {
-			app_log("Product::Item::get()",'trace',__FILE__,__LINE__);
-			# Prepare Query to Get Product
-			$get_object_query = "
-				SELECT	id
-				FROM	product_products
-				WHERE	code = ?
-			";
-
-			# Return new product
-            $rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-            if (! $rs) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return null;
-            }
-			else {
-				list($this->id) = $rs->FetchRow();
-				if (! $this->id) {
-					$this->error("No Product Found");
-					return null;
-				}
-				return $this->details();
-			}
 		}
 
 		public function update($parameters) {
@@ -203,7 +178,7 @@
 				# In Case Cache Corrupted
 				if ($product->id) {
 					app_log("Product '".$this->name."' [".$this->id."] found in cache",'trace');
-					return $product;
+					return true;
 				}
 				else {
 					$this->error("Product ".$this->id." returned unpopulated cache");
@@ -228,7 +203,7 @@
 			$rs = $database->Execute($get_details_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return false;
 			}
 
 			$object = $rs->FetchNextObject(false);
@@ -251,7 +226,7 @@
 			$this->metadata = $this->getMeta();
 			$this->images = $this->images();
 
-			return $object;
+			return true;
 		}
 
 		public function inCategory($category_id) {
@@ -450,21 +425,30 @@
 			return 1;
 		}
 
+		public function currentPrice() {
+			$priceList = new \Product\PriceList();
+			$prices = $priceList->find(array('product_id' => $this->id, 'status' => 'ACTIVE'));
+			if ($priceList->error()) {
+				$this->error($priceList->error());
+				return null;
+			} else {
+    			return array_pop($prices);
+			}
+		}
+
 		public function prices() {
 			$priceList = new \Product\PriceList();
 			$prices = $priceList->find(array('product_id' => $this->id));
 			if ($priceList->error()) {
 				$this->error($priceList->error());
 				return null;
-			}
-			else {
+			} else {
 				return $prices;
 			}
 		}
 
 		public function addPrice($parameters = array()) {
 			if (! $GLOBALS['_SESSION_']->customer->can('edit product prices')) $this->error("Permission denied");
-
 			$price = new \Product\Price();
 			$parameters = array(
 				'product_id'	=> $this->id,
@@ -473,7 +457,7 @@
 				'status'		=> $parameters['status']
 			);
 			if ($price->add($parameters)) return true;
-			$this->error("Error adding price: ".$price->error());
+			$this->error("Error adding price: ".$price->error());			
 			return false;
 		}
 		public function getPrice($parameters = array()) {

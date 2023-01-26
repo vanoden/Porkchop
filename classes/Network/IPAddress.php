@@ -1,23 +1,30 @@
 <?php
 	namespace Network;
 
-	class IPAddress {
-		private $_error;
+	class IPAddress Extends \BaseClass {
 		public $id;
 		public $address;
 		public $prefix;
 		public $gateway;
 
-		public function __construct($id = 0) {
+		public function __construct(int $id = 0) {
+			$this->_tableName = "network_addresses";
+			$this->_tableUKColumn = null;
+
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
 		}
-		public function get($address) {
+
+		public function get($address): bool {
+			$this->clearError();
+
+			$database = new \Database\Service;
+
 			if (! isset($address)) {
-				$this->_error = "address required";
-				return null;
+				$this->error("address required");
+				return false;
 			}
 			if (preg_match('/^(\d+\.\d+\.\d+\.\d+)\/(\d+)$/',$address,$matches)) {
 				$address = $matches[1];
@@ -37,23 +44,25 @@
 			}
 			else {
 				$this->_error = 'Invalid ip address';
-				return null;
+				return false;
 			}
 
 			$get_object_query = "
-				SELECT	id
-				FROM	network_addresses
-				WHERE	address = ?
+				SELECT	na.id
+				FROM	network_addresses na,
+						network_subnets ns
+				WHERE	na.address = ?
+				AND		na.subnet_id = ns.id
+				AND		ns.type = ?
 			";
+			$database->AddParam($address);
+			$database->AddParam($type);
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($type,$address)
-			);
+			$rs = $database->Execute($get_object_query);
 
 			if (! $rs) {
-				$this->_error = "SQL Error in Network::IPAddress::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 
 			list($id) = $rs->FetchRow();
@@ -126,22 +135,23 @@
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 
 			if (! $rs) {
-				$this->_error = "SQL Error in Network::Address::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
 			$object = $rs->FetchNextObject(false);
-			if ($object->id) {
+			if (isset($object->id)) {
 				$this->address = $object->address;
 				$this->prefix = $object->prefix;
 				$this->adapter = new Adapter($object->adapter_id);
 			}
+			return true;
+		}
+
+		public function adapter() {
+			return new \Network\Adapter();
 		}
 
 		public function cidr() {
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

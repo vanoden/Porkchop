@@ -23,29 +23,12 @@
 		public $host;
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'company_locations';
+
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
-		}
-
-		public function get($name) {
-			$get_object_query = "
-				SELECT	id
-				FROM	company_locations
-				WHERE	code = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($name)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($id) = $rs->FetchRow();
-			$this->id = $id;
-			return $this->details();
 		}
 
 		public function getByHost($hostname) {

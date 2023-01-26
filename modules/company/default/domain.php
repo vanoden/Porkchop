@@ -35,7 +35,7 @@
 <div class="label">Location</div>
 <select name="location_id" class="value input">
 <?php	foreach ($locations as $location) { ?>
-	<option value="<?=$location->id?>"<?php if ($location->id == $domain->location->id) print " selected";?>><?=$location->name?></option>
+	<option value="<?=$location->id?>"<?php if ($location->id == $domain->location()->id) print " selected";?>><?=$location->name?></option>
 <?php	} ?>
 </select>
 <hr>

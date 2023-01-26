@@ -35,7 +35,7 @@
 			elseif ($this->debug == 'screen' && $this->_trace_level > 0) print "<pre>$query</pre>";
 			$recordSet = new \Database\RecordSet($this->_connection->Execute($query,$this->_params));
 			if ($this->_connection->ErrorMsg()) {
-				print_r($this->_connection->ErrorMsg());
+				error_log($this->_connection->ErrorMsg());
 				$sql_error_counter = new \Site\Counter("sql.errors");
 				$sql_error_counter->increment();
 				return null;

@@ -5,7 +5,7 @@
 		public $person_id;
 		public $expiration;
 		public $code;
-		
+
 		public function add($person_id) {
 			# Get Large Random value
 			$randval = mt_rand();		
@@ -74,7 +74,7 @@
 			else return null;
 		}
 
-		public function get($person_id) {
+		public function getKey($person_id) {
 			$database = new \Database\Service();
 			$get_object_query = "
 				SELECT	code

@@ -13,4 +13,9 @@
 		public function resetCount() {
 			$this->_count = 0;
 		}
+
+		public function validSearchString($string) {
+			if (preg_match('/^[\w\-\.\_\s\*]*$/',$string)) return true;
+			else return false;
+		}
 	}

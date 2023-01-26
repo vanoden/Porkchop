@@ -8,6 +8,9 @@
 		public $module;
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'register_privileges';
+			$this->_tableUKColumn = 'name';
+
 			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
@@ -77,23 +80,6 @@
             return $this->details();
         }
 
-		public function get($name) {
-			$get_object_query = "
-				SELECT	id
-				FROM	register_privileges
-				WHERE	name = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($name));
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			list($id) = $rs->FetchRow();
-			if (! $id) return false;
-			$this->id = $id;
-			return $this->details();
-		}
-
         public function details() {
             $get_object_query = "
                 SELECT  id,name,description,module
@@ -111,7 +97,7 @@
             return true;
         }
 
-        public function delete() {
+        public function delete(): bool {
 			$delete_xref_query = "
 				DELETE
 				FROM	register_roles_privileges

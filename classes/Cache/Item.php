@@ -1,7 +1,8 @@
 <?php
 	namespace Cache;
 	
-	class Item Extends \BaseClass {
+	class Item {
+		private $_error = '';
 		private $_client;
 		private $_key;
 
@@ -44,5 +45,10 @@
 		public function delete() {
 			if ($this->_client->delete($this->_key)) return true;
 			else return false;
+		}
+
+		public function error(string $string = null) {
+			if (isset($string)) $this->_error = $string;
+			return $this->_error;
 		}
 	}

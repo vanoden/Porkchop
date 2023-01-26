@@ -10,12 +10,13 @@
 	###########################################################
 	$page = new \Site\Page();
 
+	if (empty($_REQUEST['csrfToken'])) $_REQUEST['csrfToken'] = null;
     // Check Risk Level from Host
-	$captcha_required = false;
+	$CAPTCHA_GO = false;
 	$remote_host = new \Network\Host();
 	if ($remote_host->getByIPAddress($_SERVER['REMOTE_ADDR'])) {
 		if ($remote_host->CAPTCHARequired()) {
-			$captcha_required = true;
+			$CAPTCHA_GO = true;
 		}
 	}
 
@@ -99,7 +100,7 @@
 			$page->addError("Sorry, your recovery token was not recognized or has expired");
 		}
 	}
-	elseif (isset($_REQUEST['login'])) {
+	elseif (!empty($_REQUEST['login'])) {
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
 		$customer = new \Register\Customer();
 		if ($customer->validLogin($_REQUEST['login'])) {
@@ -107,7 +108,7 @@
 				if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 					$page->addError("Invalid Request");
 					$failure = new \Register\AuthFailure();
-					$failure->add($_SERVER['REMOTE_ADDR'],$login,'CSRFTOKEN',$_SERVER['PHP_SELF']);
+					$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'CSRFTOKEN',$_SERVER['PHP_SELF']);
 				}
 				else {
 					if ($customer->isBlocked()) {
@@ -152,8 +153,8 @@
 						$page->addError("Authentication Failed");
 						if ($customer->status == 'EXPIRED' || $customer->auth_failures() >= 3) $CAPTCHA_GO = true;
 					}
-					elseif ($customer->error) {
-						app_log("Error in authentication: ".$customer->error,'error',__FILE__,__LINE__);
+					elseif ($customer->error()) {
+						app_log("Error in authentication: ".$customer->error(),'error',__FILE__,__LINE__);
 						$page->addError("Application Error");
 					}
 					elseif ($customer->message) {

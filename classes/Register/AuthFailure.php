@@ -23,6 +23,10 @@
 				VALUES	(null,?,?,sysdate(),?,?)
 			";
 
+			if (! $this->validReason($reason)) {
+				app_log("Invalid auth failure reason '".$reason."'",'warn');
+				$reason = 'UNKNOWN';
+			}
 			$bind_params = array(ip2long($ip_address),$login,$reason,$endpoint);
 
 			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
@@ -50,7 +54,7 @@
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
-			if ($object->id) {
+			if (isset($object->id)) {
 				$this->id = $object->id;
 				$this->ip_address = long2ip($object->ip_address);
 				$this->login = $object->login;
@@ -67,6 +71,14 @@
 				$this->endpoint = null;
 			}
 			return true;
+		}
+
+		public function validReason($string) {
+			if (in_array($string,array('NOACCOUNT','PASSEXPIRED','WRONGPASS','INACTIVE','INVALIDPASS','CSRFTOKEN','UNKNOWN'))) return true;
+			else {
+				$this->error("Invalid Failure reason: '".$string."'");
+				error_log($this->error());
+			}
 		}
 	}
 

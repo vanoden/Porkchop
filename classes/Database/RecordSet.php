@@ -8,7 +8,7 @@
 		}
 
 		public function FetchRow() {
-			if (!isset($this->_handle)) return null;
+			if (!isset($this->_handle) || gettype($this->_handle) != 'object') return null;
 			return $this->_handle->FetchRow();
 		}
 

@@ -12,25 +12,12 @@
 		document.getElementById('ItemImageDiv_'+code).style.display = "none";
 	}
 </script>
-<span class="title"><?php
-	if (isset($item->id)) print "Edit Product '".$item->code."'";
-	else print "Add product"; ?>
-</span>
 
-<?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
-
-<?php	} else if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
-<?php	} ?>
+<!-- Page Header -->
+<?=$page->showBreadcrumbs()?>
+<?=$page->showTitle()?>
+<?=$page->showMessages()?>
+<!-- End Page Header -->
 
 <form name="productEdit" method="post" action="/_product/edit">
     <input type="hidden" name="id" id="id" value="<?=$item->id?>" />
@@ -119,7 +106,7 @@
 	    </div>
 	    <div class="input-horiz" id="itemImages">
 		    <span class="label align-top">Images</span>
-            <?php foreach($item->image as $image) { ?>
+            <?php foreach($images as $image) { ?>
 		        <div class="editItemImage" id="ItemImageDiv_<?=$image->code?>">
 			        <input type="button" name="btn_drop" class="editItemThumbnail" onclick="dropImage('<?=$image->code?>')" value="X" />
 			        <img class="editItemThumbnail" src="/_media/api?method=downloadMediaFile&code=<?=$image->files[0]->code?>">

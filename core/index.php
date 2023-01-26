@@ -139,7 +139,7 @@
 	# Create Session
 	$_SESSION_->start();
 	if ($_SESSION_->error()) {
-		$logger->writeln($_SESSION_->error,'error',__FILE__,__LINE__);
+		$logger->writeln($_SESSION_->error(),'error',__FILE__,__LINE__);
 		exit;
 	}
 
@@ -152,14 +152,14 @@
 
 	# Load Page Information
 	$_page = new \Site\Page();
-	$_page->get($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
+	$_page->getPage($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
 	if ($_page->error) {
 		print "Error: ".$_page->error;
 		$logger->writeln("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
 		exit;
 	}
 	if (! $_page->id) {
-		if (! $_page->get('server','404')) {
+		if (! $_page->getPage('server','404')) {
 			$_page->module = $_REQUEST_->module;
 			$_page->view = $_REQUEST_->view;
 			$_page->index = $_REQUEST_->index;

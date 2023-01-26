@@ -2,7 +2,6 @@
 	namespace Register;
 
 	class Contact Extends \BaseClass {
-	
 		public $id;
 		public $person;
 		public $types = array(
@@ -13,14 +12,24 @@
 			'insite'	=> "Website Message"			
 		);
 
-		public function __construct($id = 0) {
-			if (is_numeric($id)) {
+		public function __construct(int $id = 0) {
+			$this->_tableName = 'register_contacts';
+			$this->_tableUKColumn = null;
+
+			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
 		}
 
-		public function get($type,$value) {
+		public function __call($name, $parameters) {
+			if ($name == "get") return $this->getContact($parameters);
+			else {
+				error_log("Method $name not found for ".get_class($this));
+			}
+		}
+
+		public function getContact($type,$value): bool {
 			$get_object_query = "
 				SELECT	id
 				FROM	register_contacts
@@ -58,15 +67,13 @@
 				INSERT
 				INTO	register_contacts
 				(		person_id,
-				        description,
 						type,
 						value,
-						notify,
-						notes
+						notify
 				)
 				VALUES
 				(		
-				    ?,?,?,?,?,?
+				    ?,?,?,?
 				)
 			";
 			
@@ -74,11 +81,9 @@
 				$add_contact_query,
 				array(
 					$parameters['person_id'],
-					$parameters['description'],
 					$parameters['type'],
 					$parameters['value'],
-					$parameters['notify'],
-					$parameters['notes']
+					$parameters['notify']
 				)
 			);
 			
@@ -87,10 +92,11 @@
 				return null;
 			}
 					
-			return $GLOBALS['_database']->Insert_ID();
+			$this->id = $GLOBALS['_database']->Insert_ID();
+			return $this->update($parameters);
 		}
 		
-		public function update($parameters = array(), $id = null) {
+		public function update($parameters = array()) {
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
 				$this->error("ID Required for update method.");
 				return false;
@@ -148,23 +154,6 @@
 			return $this->details();
 		}
 		
-		public function delete() {
-			$delete_contact_query = "
-				DELETE
-				FROM	register_contacts
-				WHERE	id = ?";
-
-			$GLOBALS['_database']->Execute(
-				$delete_contact_query,
-				array($this->id)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			return true;
-		}
-		
 		public function detailsByUserByTypeByDesc($person_id, $type='email', $desc='Work Email') {
             $get_object_query = "
 				SELECT	id
@@ -202,8 +191,8 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in regiser::person::contactDetails: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			$contact = $rs->FetchNextObject(false);
 			if (isset($contact->id)) {
@@ -224,7 +213,7 @@
 				$this->description = null;
 				$this->person = null;
 			}
-			return $true;
+			return true;
 		}
 
 		public function validType($string) {

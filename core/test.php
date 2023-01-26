@@ -165,7 +165,7 @@
 	}
 	# Load Page Information
 	$page = new \Site\Page();
-	$page->get('register','api');
+	$page->getPage('register','api');
 	if ($page->error) {
 		test_fail("Error initializing page: ".$page->error,'error');
 	}

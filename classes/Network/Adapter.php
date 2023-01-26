@@ -6,15 +6,24 @@
 		public $name;
 		public $mac_address;
 		public $type;
-		public $host;
+		public $host_id;
 
-		public function __construct($id = 0) {
+		public function __construct(int $id = 0) {
+			$this->_tableName = 'network_adapters';
+			$this->_tableUKColumn = null;
+
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
 		}
-		public function get($param_1,$param_2) {
+
+		public function __call($name,$parameters) {
+			if ($name == "get") return $this->getAdapter($parameters);
+			else $this->error("No method $name");
+		}
+
+		public function getAdapter($param_1,$param_2) {
 			if (preg_match('/^\w\w\:\w\w\:\w\w\:\w\w\:\w\w\:\w\w$/',$param_1)) {
 				$mac_address = $param_1;
 
@@ -124,9 +133,13 @@
 				$this->name = $object->name;
 				$this->mac_address = $object->mac_address;
 				$this->type = $object->type;
-				$this->host = new Host($object->host_id);
+				$this->host_id = $object->host_id;
 			}
 			return true;
+		}
+
+		public function host() {
+			return new \Network\Host($this->host_id);
 		}
 
 		public function ip_addresses() {
@@ -139,9 +152,5 @@
 			}
 
 			return $addresses;
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

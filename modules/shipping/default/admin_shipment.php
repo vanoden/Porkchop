@@ -1,5 +1,5 @@
-<span class="title">Admin Shipment</span>
-
+<?=$page->showBreadcrumbs()?>
+<div class="title">Shipment Detail</div>
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">
 	<ul class="connectBorder errorText">

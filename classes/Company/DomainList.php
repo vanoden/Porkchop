@@ -9,7 +9,7 @@
 				WHERE	id = id";
 
 			$bind_params = array();
-			if ($parameters['name']) {
+			if (!empty($parameters['name'])) {
 				if (preg_match('/^[\w\-\.]+$/',$parameters['name'])) {
 					$find_objects_query .= "
 					AND		domain_name = ?";
@@ -21,7 +21,7 @@
 				}
 			}
 
-			if ($parameters['location_id']) {
+			if (!empty($parameters['location_id'])) {
 				$location = new \Company\Location($parameters['location_id']);
 				if (! $location->id) {
 					$this->error = "Location ID not found";

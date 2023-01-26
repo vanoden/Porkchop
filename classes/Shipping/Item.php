@@ -2,6 +2,7 @@
 	namespace Shipping;
 	
 	class Item extends \ORM\BaseModel {
+	
 		public $id;
 		public $package_id;
 		public $product_id;

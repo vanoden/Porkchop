@@ -42,9 +42,9 @@
 	}
 
     // update customer status from UI request
-    app_log("updateStatus");
-    $queuedCustomer = new Register\Queue($_REQUEST['id']);	
+    app_log("updateStatus");	
 	if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updateStatus') {
+    	$queuedCustomer = new Register\Queue($_REQUEST['id']);
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
         	$page->addError("Invalid Request");
         }
@@ -161,4 +161,7 @@
         }
     }
 
-	$possibleStatii = $queuedCustomer->statii();
+	$customerObj = new \Register\Customer();
+	$possibleStatii = $customerObj->statii();
+
+	if (empty($_REQUEST['search'])) $_REQUEST['search'] = '';

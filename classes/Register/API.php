@@ -27,6 +27,7 @@
             $GLOBALS['_SESSION_']->customer->unreadMessages = $siteMessagesUnread;
             $response = new \HTTP\Response();
             $response->customer = $GLOBALS['_SESSION_']->customer;
+			$response->customer->organization = $GLOBALS['_SESSION_']->customer->organization();
             $response->success = 1;
 
             # Send Response
@@ -49,7 +50,7 @@
 			if ($customer->auth_failures() >= 3) error("Too many auth failures.  Please use 'forget password' on the website to restore");
 
             $result = $customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
-            if ($customer->error) $this->error($customer->error);
+            if ($customer->error()) $this->error($customer->error());
 
             if ($result && $customer->isActive()) {
                 app_log("Assigning session ".$GLOBALS['_SESSION_']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
@@ -1301,6 +1302,14 @@
 				),
 				'getPendingRegistration' => array(
 					'login'	=> array('required' => true)
+				),
+				'acceptTermsOfUse'	=> array(
+					'tou_code'	=> array('required' => true),
+					'tou_version'	=> array('required' => true),
+				),
+				'declineTermsOfUse'	=> array(
+					'tou_code'	=> array('required' => true),
+					'tou_version'	=> array('required' => true),
 				)
 			);
 		}

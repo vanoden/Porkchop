@@ -86,8 +86,4 @@
 				return false;
 			}
 		}
-
-		public function error() {
-			return $this->_error;
-		}
 	}

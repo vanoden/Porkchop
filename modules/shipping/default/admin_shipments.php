@@ -1,5 +1,4 @@
-<span class="title">Shipments</span>
-
+<div class="title">Shipments</div>
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">
 	<ul class="connectBorder errorText">

@@ -16,33 +16,43 @@
 	    public $metadata;
 	    public $template;
 	    public $success;
+		public $instructions;
 		private $_breadcrumbs = array();
 	    private $_errors = array();
 
 	    public function __construct() {
-		    $args = func_get_args ();
+			$this->_tableName = "page_pages";
+			$this->_tableUKColumn = null;
+
+		    $args = func_get_args();
 			if (func_num_args() == 1 && gettype($args[0]) == "integer") {
 				$this->id = $args[0];
 				$this->details();
-			} elseif (func_num_args () == 1 && gettype ( $args [0] ) == "string") {
+			} elseif (func_num_args() == 1 && gettype( $args [0] ) == "string") {
 			    $this->id = $args [0];
-			    $this->details ();
-		    } elseif (func_num_args () == 1 && gettype ( $args [0] ) == "array") {
-			    if (isset($args [0] ['method'])) {
-				    $this->method = $args [0] ['method'];
-				    $this->view = $args [0] ['view'];
-				    if ($args [0] ['index']) $this->index = $args [0] ['index'];
+			    $this->details();
+		    } elseif (func_num_args() == 1 && gettype($args [0] ) == "array") {
+			    if (isset($args[0]['method'])) {
+				    $this->method = $args[0]['method'];
+				    $this->view = $args[0]['view'];
+				    if ($args[0]['index']) $this->index = $args[0]['index'];
 			    }
-		    } elseif (func_num_args () == 2 && gettype ( $args [0] ) == "string" && gettype ( $args [1] ) == "string" && isset ( $args[2])) {
-			    $this->get ( $args [0], $args [1], $args [2] );
-		    } elseif (func_num_args () == 2 && gettype ( $args [0] ) == "string" && gettype ( $args [1] ) == "string") {
-			    $this->get ( $args [0], $args [1] );
+		    } elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string" && isset( $args[2])) {
+			    $this->getPage( $args[0], $args[1], $args[2] );
+		    } elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string") {
+			    $this->getPage( $args[0], $args[1] );
 		    } else {
 			    $this->fromRequest ();
 		    }
 	    }
+
+		public function __call($name, $arguments) {
+			if ($name == "get") return $this->getPage($arguments);
+			else $this->error("Method '$name' not found");
+		}
+
 	    public function fromRequest() {
-		    return $this->get ( $GLOBALS ['_REQUEST_']->module, $GLOBALS ['_REQUEST_']->view, $GLOBALS ['_REQUEST_']->index );
+		    return $this->getPage($GLOBALS['_REQUEST_']->module, $GLOBALS['_REQUEST_']->view, $GLOBALS['_REQUEST_']->index );
 	    }
 	    public function applyStyle() {
 		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS ['_config']->style [$this->module()];
@@ -109,7 +119,7 @@
 			}
 		}
         
-	    public function get($module, $view, $index = null) {
+	    public function getPage($module, $view, $index = null) {
 		    $parameters = array ($module, $view );
 		    if (strlen ( $index ) < 1) $index = null;
 		    // Prepare Query
@@ -148,7 +158,7 @@
 					return $this->add($module,$view,$index);
 				}
 				elseif ($GLOBALS['_SESSION_']->customer->can('edit content messages')) {
-					return $this->get("site","content_block");
+					return $this->getPage("site","content_block");
 				}
 				else return false;
 			}
@@ -197,7 +207,7 @@
 		    return $this->details();
 	    }
 
-		public function delete() {
+		public function delete(): bool {
 			// Delete Content Block for Page
 			if (!empty($this->index)) {
 				$block = new \Content\Message();
@@ -285,6 +295,15 @@
 			if (preg_match('/(\w[\w\_\.]*)/',$this->view,$matches)) return $matches[1];
 		}
 
+		public function title() {
+			if (!empty($this->title))
+				return $this->title;
+			if (!empty($this->getMetadata("title")))
+				return $this->getMetadata("title");
+			if (!empty($this->view))
+				return preg_replace('/^[\-\.\_]+/'," ",ucwords($this->view()));
+		}
+
 		public function template() {
 			$template = $this->getMetadata('template');
 			if (preg_match('/(\w[\w\_\-\.]*\.html)/',$template,$matches)) return $matches[1];
@@ -307,13 +326,13 @@
 
 	    public function parse($message) {
 		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
-		    while ( preg_match ( $module_pattern, $message, $matched ) ) {
-			    $search = $matched [0];
+		    while ( preg_match( $module_pattern, $message, $matched ) ) {
+			    $search = $matched[0];
 			    $parse_message = "Replaced $search";
-			    $replace_start = microtime ( true );
-			    $replace = $this->replace ($matched[0]);
+			    $replace_start = microtime( true );
+			    $replace = $this->replace($matched[0]);
 			    // app_log($parse_message." with $replace in ".sprintf("%0.4f",(microtime(true) - $replace_start))." seconds",'debug',__FILE__,__LINE__);
-			    $message = str_replace ( $search, $replace, $message );
+			    $message = str_replace( $search, $replace, $message );
 		    }
 
 		    // Return Messsage
@@ -632,7 +651,11 @@
 
 			    if ($property == "name") {
 				    $buffer .= $company->name;
-			    } else {
+			    }
+				elseif ($property == "copyright") {
+					$buffer = '&copy;'.date('Y')." ".$company->name;
+				}
+				else {
                     $buffer = $this->loadViewFiles($buffer);
 			    }
 		    }
@@ -689,7 +712,7 @@
                     $fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
             }
 		    app_log ( "Loading view " . $this->view() . " of module " . $this->module(), 'debug', __FILE__, __LINE__ );
-		    if (isset($be_file) && file_exists ( $be_file )) {
+		    if (isset($be_file) && file_exists($be_file)) {
 				// Load Backend File
                 $res = include($be_file);
 
@@ -844,12 +867,59 @@
 		}
 
 		public function showBreadcrumbs() {
+			if (count($this->_breadcrumbs) < 1) return "";
 			foreach ($this->_breadcrumbs as $breadcrumb) {
-				if ($breadcrumb['target']) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
+				if (!empty($breadcrumb['target'])) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
 			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
 		}
+
+		public function showMessages() {
+			$buffer = "";
+			if ($this->errorCount() > 0) {
+				$buffer .= "
+<section id=\"form-message\">
+	<ul class=\"connectBorder errorText\">
+		<li>".$this->errorString()."</li>
+	</ul>
+</section>
+			";
+			}
+			elseif (!empty($this->success)) {
+				$buffer .= "
+<section id=\"form-message\">
+	<ul class=\"connectBorder progressText\">
+		<li>".$this->success."</li>
+	</ul>
+</section>
+			";
+			}
+			if (!empty($this->instructions)) {
+				$buffer .= "
+<section id=\"form-message\">
+	<ul class=\"connectBorder infoText\">
+		<li>".$this->instructions."</li>
+	</ul>
+</section>
+			";
+			}
+			elseif (!empty($this->getMetadata("instructions"))) {
+				$buffer .= "
+<section id=\"form-message\">
+	<ul class=\"connectBorder infoText\">
+		<li>".$this->getMetadata("instructions")."</li>
+	</ul>
+</section>
+			";
+			}
+			return $buffer;
+		}
+
+		public function showTitle() {
+			return "<h1>".$this->title()."</h1>";
+		}
+
 		/************************************/
 		/* Validation Methods				*/
 		/************************************/

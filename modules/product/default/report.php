@@ -11,7 +11,8 @@
 	.descValue { width: 30%; }
 </style>
 <div class="body">
-	<h2>Products</h2><a href="/_product/edit">New Product</a>
+	<div class="title">Products</div>
+	<a href="/_product/edit">New Product</a>
 	<table class="body">
 	<tr><th class="label codeValue">Code</th>
 		<th class="label smallValue">Type</th>

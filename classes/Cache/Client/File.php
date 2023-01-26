@@ -1,7 +1,7 @@
 <?php
 	namespace Cache\Client;
 
-	class File Extends \BaseClass {
+	class File Extends Base {
 		private $_path;
 		private $_connected;
 
@@ -88,15 +88,17 @@
 		public function delete($key) {
 			if ($this->_connected) {
 				$filename = $GLOBALS['_config']->cache->path."/".$key;
-				if (unlink($filename)) {
-					if (! preg_match('/^_/',$key)) $this->incrementStat("delete_hits");
-					return true;
-				}
-				else {
-					$this->_error = "Unable to unset cache";
-					return false;
+				if (file_exists($filename)) {
+					if (unlink($filename)) {
+						if (! preg_match('/^_/',$key)) $this->incrementStat("delete_hits");
+					}
+					else {
+						$this->_error = "Unable to unset cache";
+						return false;
+					}
 				}
 			}
+			return true;
 		}
 
 		public function get($key) {
