@@ -5,7 +5,7 @@
 		public $auth_method;
 		public $elevated = 0;
 
-		public function __construct(int $id = 0) {
+		public function __construct($id = 0) {
 			parent::__construct($id);
 			if ($this->id) $this->roles();
 		}
