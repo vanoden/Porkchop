@@ -497,7 +497,7 @@
 					    if (is_object ( $GLOBALS ['_SESSION_']->customer ) && $GLOBALS ['_SESSION_']->customer->id && $GLOBALS ['_SESSION_']->customer->can ( 'edit content messages' )) {
 						    #$buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'0px\'; } </script>';
 						    $buffer .= '<contentblock id="'.$message->id.'">' . $message->content . '</contentblock>';
-						    $buffer .= '<a href="javascript:void(0)" onclick="goToEditPage('.$message->target.')">Edit</a>';
+						    $buffer .= '<a href="javascript:void(0)" class="btn_editContent" onclick="goToEditPage('.$message->target.')">Edit</a>';
 					    }
 						else {
 						    $buffer .= $message->content;
