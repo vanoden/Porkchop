@@ -3,26 +3,16 @@
 		list-style-type: none;
 	}
 </style>
-<?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
 
-<?php	} else if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
-<?php	} ?>
-
+<!-- Page Header -->
 <?=$page->showBreadcrumbs()?>
+<?=$page->showTitle()?>
+<?=$page->showMessages()?>
+<!-- End Page Header -->
+
 <form method="post" action="/_register/role">
     <input type="hidden" name="name" value="<?=$role->name?>" />
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-    <div class="title">Role Editor</div>
     <span class="label">Role Name</span>
     <?php if ($role->id) { ?>
 	    <span class="value"><?=$role->name?></span>

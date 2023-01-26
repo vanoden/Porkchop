@@ -290,7 +290,7 @@
 					}
 				}
 				
-				$this->setVersion(27);
+				$this->setVersion(8);
 				$GLOBALS['_database']->CommitTrans();
 			}
 			return true;

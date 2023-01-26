@@ -42,8 +42,9 @@
             $page->addError("Invalid Request");
         } else {
 		    if ($role->update( array( 'description'	=> noXSS(trim($_REQUEST['description'] ))))) {
-			    $page->success = "Role Updated";
-		    } else {
+			    $page->appendSuccess("Role Updated");
+		    }
+			else {
 			    $page->addError("Role update failed: ".$role->error());
 		    }
         }
@@ -61,12 +62,12 @@
 		        foreach ($privileges as $privilege) {
 		            if ($_REQUEST['privilege'][$privilege->id] == 1) {
 		                if (! $role->has_privilege($privilege->id) && $role->addPrivilege($privilege->id)) {
-		                    $page->success .= "Added privilege '".$privilege->name."'";
+		                    $page->appendSuccess("Added privilege '".$privilege->name."'");
 		                }
 		            }
 		            else {
 		                if ($role->has_privilege($privilege->id) && $role->dropPrivilege($privilege->id)) {
-		                    $page->success .= "Removed privilege '".$privilege->name."'";
+		                    $page->appendSuccess("Removed privilege '".$privilege->name."'");
 		                }
 		            }
 			    }
@@ -74,6 +75,7 @@
 	    }
 	}
 
+	$page->title = "Role Editor";
 	$page->addBreadcrumb("Roles", "/_register/roles");
 	if (isset($role->id)) {
 		$page->addBreadcrumb($role->name);

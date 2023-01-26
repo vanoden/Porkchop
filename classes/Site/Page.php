@@ -295,13 +295,15 @@
 			if (preg_match('/(\w[\w\_\.]*)/',$this->view,$matches)) return $matches[1];
 		}
 
-		public function title() {
+		public function title($string = null) {
+			if (isset($string)) $this->title = $string;
+
 			if (!empty($this->title))
 				return $this->title;
 			if (!empty($this->getMetadata("title")))
 				return $this->getMetadata("title");
 			if (!empty($this->view))
-				return preg_replace('/^[\-\.\_]+/'," ",ucwords($this->view()));
+				return ucwords(preg_replace('/[\-\.\_]+/'," ",$this->view()));
 		}
 
 		public function template() {
@@ -857,6 +859,11 @@
 		    if (! empty ( $this->error )) array_push ( $this->errors, $this->error );
 		    return count ( $this->_errors );
 	    }
+
+		public function appendSuccess($string) {
+			if (!empty($this->success)) $this->success .= "<br>\n";
+			$this->success .= $string;
+		}
 
 		/************************************/
 		/* Breadcrumb Methods				*/

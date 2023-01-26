@@ -12,8 +12,9 @@
 		}
 		else {
             if ($privilege->add(array('name' => $_REQUEST['newPrivilege']))) {
-                $page->success = "Privilege Added";
-            } else {
+                $page->appendSuccess("Privilege Added");
+            }
+			else {
                 $page->addError("Error adding privilege: ".$privilege->error());
             }
         }
@@ -33,7 +34,12 @@
 						'name' => $_REQUEST['name'][$privilege->id],
 						'module' => $_REQUEST['module'][$privilege->id]
 					);
-			        if (!$privilege->update($params)) $page->addError("Error updating privilege: ".$privilege->error());
+			        if ($privilege->update($params)) {
+						$page->appendSuccess("Updated privilege '".$privilege->name."'");
+					}
+					else {
+						$page->addError("Error updating privilege: ".$privilege->error());
+					}
 				}
 	        }
         }
@@ -46,7 +52,7 @@
             $privilege = new \Register\Privilege($_REQUEST['privilege_id']);
             if ($privilege->id) {
                 if ($privilege->delete()) {
-                    $page->success = "Privilege '".$privilege->name."' deleted";
+                    $page->appendSuccess("Privilege '".$privilege->name."' deleted");
                 }
 				else {
                     $page->addError("Failed to delete privilege: ".$privilege->error());
