@@ -17,7 +17,12 @@
 				$this->details();
 			}
 		}
-        public function get($message_id,$user_id) {
+
+		public function __call($name,$parameters) {
+			if ($name == "get") return $this->getDelivery($parameters);
+		}
+
+        public function getDelivery($message_id,$user_id) {
             $get_object_query = "
                 SELECT  id
                 FROM    site_message_deliveries
