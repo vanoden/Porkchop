@@ -6,31 +6,11 @@
 		public $value;
 
 		public function __construct($key = null) {
+			$this->_tableName = 'site_configurations';
+			$this->_tableUKColumn = 'key';
 			if (isset($key)) {
 				$this->key = $key;
 				$this->get($key);
-			}
-		}
-
-		public function delete() {
-			$this->clearError();
-			$database = new \Database\Service();
-
-			$unset_config_query = "
-				DELETE
-				FROM	site_configurations
-				WHERE	`key` = ?
-			";
-			$database->addParam($this->key);
-			$database->Execute($unset_config_query);
-			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMsg());
-				return false;
-			}
-			else {
-				$this->value = $value;
-				app_log("Set ".$this->key." to $value");
-				return true;
 			}
 		}
 
@@ -61,7 +41,7 @@
 			}
 		}
 		
-		public function get($key) {
+		public function get($key): bool {
 			$this->clearError();
 			$database = new \Database\Service();
 

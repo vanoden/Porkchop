@@ -21,6 +21,7 @@
 		private $access_privilege_json;
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'storage_files';
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
@@ -128,28 +129,6 @@
 			return $this->details();
 		}
 
-		public function get($code) {
-		
-			$get_object_query = "
-				SELECT	id
-				FROM	storage_files
-				WHERE	code = ?
-			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			
-			if (! $rs) {
-				$this->error = "SQL Error in Storage::File::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			
-			list($this->id) = $rs->FetchRow();
-			return $this->details();
-		}
-
 		public function details() {
 		
 			$get_object_query = "
@@ -194,30 +173,6 @@
 				$this->code = null;
 			}
 			
-			return true;
-		}
-
-		public function delete() {
-			if (! $this->id) {
-				$this->error = "Must select file first";
-				return false;
-			}
-			
-			$delete_object_query = "
-				DELETE
-				FROM	storage_files
-				WHERE	id = ?
-			";
-			
-			$GLOBALS['_database']->Execute(
-				$delete_object_query,
-				array($this->id)
-			);
-			
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
 			return true;
 		}
 

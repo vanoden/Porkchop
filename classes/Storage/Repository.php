@@ -12,6 +12,7 @@
 		public $override_privileges;
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'storage_repositories';
 			$this->_init($id);
 		}
 		protected function _init($id = 0) {
@@ -115,33 +116,6 @@
 			}
 			if (isset($parameters['path'])) $this->_setMetadata('path',$parameters['path']);
 			app_log("Repo ".$this->id." updated, getting details");
-			return $this->details();
-		}
-	
-		public function get($code) {
-		
-			$get_object_query = "
-				SELECT	id
-				FROM	storage_repositories
-				WHERE	code = ?
-			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			
-			if (! $rs) {
-				$this->error = "SQL Error in Storage::Repository::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			
-			list($this->id) = $rs->FetchRow();
-			if (! $this->id) {
-				$this->error = "Repository not found";
-				return false;
-			}
-			
 			return $this->details();
 		}
 		
