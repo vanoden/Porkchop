@@ -1,6 +1,6 @@
 <?php
 	$modules['Sales'] = array(
-        "schema"    => 7,
+        "schema"    => 8,
         "privileges"    => array(
             "browse sales orders",
             "approve sales order",
