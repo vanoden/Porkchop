@@ -91,7 +91,13 @@
        newContactSelect.remove(5);
    }
 </script>
-<h2>Customer Account Settings</h2>
+
+<!-- Page Header -->
+<?=$page->showBreadcrumbs()?>
+<?=$page->showTitle()?>
+<?=$page->showMessages()?>
+<!-- End Page Header -->
+
 <form id="admin-account-form" name="register" action="<?=PATH?>/_register/admin_account" method="POST">
    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
    <input type="hidden" name="target" value="<?=$target?>"/>
@@ -137,7 +143,7 @@
             <select class="value input registerValue" name="organization_id">
                <option value="">Select</option>
                <?php	foreach ($organizations as $organization) {	?>
-               <option value="<?=$organization->id?>"<?php if ($organization->id == $customer->organization->id) print " selected"; ?>><?=$organization->name?></option>
+               <option value="<?=$organization->id?>"<?php if ($organization->id == $customer->organization()->id) print " selected"; ?>><?=$organization->name?></option>
                <?php	} ?>
             </select>
          </div>

@@ -23,8 +23,8 @@
 	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 		// Ok
 	}
-	elseif (!empty($GLOBALS['_SESSION_']->customer->organization->id))
-		$find_parameters['organization_id'] = $GLOBLAS['_SESSION_']->customer->organization->id;
+	elseif (!empty($GLOBALS['_SESSION_']->customer->organization()->id))
+		$find_parameters['organization_id'] = $GLOBLAS['_SESSION_']->customer->organization()->id;
 	else 
 		return 403;
 
@@ -59,3 +59,5 @@
 	$next_offset = $_REQUEST['start'] + $customers_per_page;
 	app_log("$total_customers - $customers_per_page",'trace',__FILE__,__LINE__);
 	$last_offset = $total_customers - $customers_per_page;
+
+	$page->title = "Accounts";

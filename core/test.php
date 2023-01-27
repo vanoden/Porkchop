@@ -145,7 +145,7 @@
 			$customer = new \Register\Customer($_SESSION_->customer->id);
 			test_log("Customer already signed in");
 			if ($customer->_cached) test_log("Customer already cached");
-			if ($customer->organization->_cached) test_log("Organization already cached");
+			if ($customer->organization()->_cached) test_log("Organization already cached");
 		}
 		elseif ($customer->authenticate($_REQUEST['login'],$_REQUEST['password'])) {
 			test_log("Customer ".$customer->code." authenticated");
@@ -157,7 +157,7 @@
 				test_log("Session assigned to customer");
 			}
 			if ($customer->_cached) test_log("Customer already cached");
-			if ($customer->organization->_cached) test_log("Organization already cached");
+			if ($customer->organization()->_cached) test_log("Organization already cached");
 		}
 		else {
 			test_fail("Customer authentication failed");

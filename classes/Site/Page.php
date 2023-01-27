@@ -111,7 +111,7 @@
         }
 
 		public function requireOrganization() {
-			if (empty($GLOBALS['_SESSION_']->customer->organization->id)) {
+			if (empty($GLOBALS['_SESSION_']->customer->organization()->id)) {
 				$counter = new \Site\Counter("organization_required");
 				$counter->increment();
 			    header ('location: /_register/organization_required');

@@ -75,7 +75,7 @@
 	    }
 	}
 
-	$page->title = "Role Editor";
+	$page->title = "Role Details";
 	$page->addBreadcrumb("Roles", "/_register/roles");
 	if (isset($role->id)) {
 		$page->addBreadcrumb($role->name);

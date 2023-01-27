@@ -208,10 +208,10 @@
 		public function privileges($media_id,$customer_id = null, $organization_id = null) {
 			if (! $GLOBALS['_SESSION_']->customer->can('manage media files')) {
 				$customer_id = $GLOBALS['_SESSION_']->customer->id;
-				$organization_id = $GLOBALS['_SESSION_']->customer->organization->id;
+				$organization_id = $GLOBALS['_SESSION_']->customer->organization()->id;
 			}
 			if (! preg_match('/^\d+$/',$customer_id)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
-			if (! preg_match('/^\d+$/',$organization_id)) $organization_id = $GLOBALS['_SESSION_']->customer->organization->id;
+			if (! preg_match('/^\d+$/',$organization_id)) $organization_id = $GLOBALS['_SESSION_']->customer->organization()->id;
 			if (! preg_match('/^\d+$/',$customer_id)) $customer_id = 0;
 			if (! preg_match('/^\d+$/',$organization_id)) $organization_id = 0;
 
