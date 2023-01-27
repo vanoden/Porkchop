@@ -142,7 +142,7 @@
     }
     
     // remove item from order
-    if ($_REQUEST['btn_remove'] && !empty($_REQUEST['btn_remove'])) {
+    if (isset($_REQUEST['btn_remove']) && !empty($_REQUEST['btn_remove'])) {
     
         $itemToRemove = new \Product\Item();
         $itemToRemove->get($_REQUEST['btn_remove']);
@@ -154,7 +154,7 @@
         if (($key = array_search($_REQUEST['btn_remove'], $itemsInOrder)) !== false) unset($itemsInOrder[$key]);
     }
 
-    // get existing ACTIVE items, but only the ones not added to the cart yet
+    // get existing ACTIVE items for the add products dropdown, but ONLY the ones not added to the cart yet
     $itemsForOrder = array();
     $itemList = new \Product\ItemList();
     $itemsForSale = $itemList->find(array('type' => array('unique', 'inventory')));
@@ -170,4 +170,3 @@
         
         // @TODO do the finalized thing here with creating the tickets
     }
-    
