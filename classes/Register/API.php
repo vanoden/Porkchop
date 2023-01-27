@@ -900,7 +900,7 @@
                 $organization->get($_REQUEST['code']);
             }
             else {
-                $organization = $GLOBALS['_SESSION_']->customer->organization;
+                $organization = $GLOBALS['_SESSION_']->customer->organization();
             }
             if (! $organization->id) $this->error("Organization required");
             $response = new \HTTP\Response();
@@ -918,7 +918,7 @@
                 $organization->get($_REQUEST['code']);
             }
             else {
-                $organization = $GLOBALS['_SESSION_']->customer->organization;
+                $organization = $GLOBALS['_SESSION_']->customer->organization();
             }
             if (! $organization->id) $this->error("Organization required");
 

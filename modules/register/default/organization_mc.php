@@ -29,7 +29,7 @@
 		}
 		else $organization = new \Register\Organization();
 	}
-	else $organization = $GLOBALS['_SESSION_']->customer->organization;
+	else $organization = $GLOBALS['_SESSION_']->customer->organization();
 
     // handle form submit
 	if ($_REQUEST['method']) {

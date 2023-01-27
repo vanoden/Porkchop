@@ -14,6 +14,7 @@
 
 		public function __construct(int $id = 0,$flat = false) {
 			$this->_tableName = "monitor_assets";
+			$this->_tableIDColumn = "asset_id";
 			$this->_tableUKColumn = null;
 
 			$this->_flat = $flat;

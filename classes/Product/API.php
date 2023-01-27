@@ -335,7 +335,7 @@
 				}
 			}
 			else {
-				$organization = $GLOBALS['_SESSION_']->customer->organization;
+				$organization = $GLOBALS['_SESSION_']->customer->organization();
 			}
 	
 			$product = new \Product\Item();
