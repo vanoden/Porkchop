@@ -114,7 +114,12 @@
             // get current set price for product, else default to 0
             $price = 0;
             $currentPrice = $itemInCart->currentPrice();
-            if (!empty($currentPrice)) $price = $currentPrice->amount;
+            if (!empty($currentPrice)) {
+                $price = $currentPrice->amount;
+            } else {
+                $page->addError("Product " . $itemCode . " doesn't have an ACTIVE price set. [<a href='/_product/report'>Find Product</a>]");
+            }
+            
             $salesOrder->addItem (
                 array (
                     "product_id" => $itemInCart->id,
@@ -165,8 +170,4 @@
     
     // if we're quoting or approving the order update as such
     if (isset($_REQUEST['btn_quote'])) $salesOrder->update(array('status' => 'QUOTE')); 
-    if (isset($_REQUEST['btn_create'])) {
-        $salesOrder->update(array('status' => 'APPROVED')); 
-        
-        // @TODO do the finalized thing here with creating the tickets
-    }
+    if (isset($_REQUEST['btn_create'])) $salesOrder->approve();

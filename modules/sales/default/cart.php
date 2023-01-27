@@ -18,6 +18,10 @@
         width: 200px;
         height: 40px;   
     }
+    .small-font {
+        font-size:10px;
+        display:inline;
+    }
 </style>
 
 <script>
@@ -50,8 +54,10 @@ function updateTotal(product) {
     quoteTotal.value = quoteTotalPrice;
 }
 </script>
+<br/>
 
 <h3>Sales Quote</h3>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<div class="small-font">[<a href="/_sales/orders">Return to Orders</a>]</div>
 <hr/><br/>
 
 <?php
