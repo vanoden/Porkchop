@@ -582,7 +582,7 @@
 		}
 
 		public function isOrganization($organization_id) {
-			if (!empty($this->customer) && !empty($this->customer->organization) && $this->customer->organization->id == $organization_id) return true;
+			if (!empty($this->customer) && !empty($this->customer->organization) && $this->customer->organization()->id == $organization_id) return true;
 			return false;
 		}
 

@@ -4,7 +4,7 @@
 	
 	// customer list in organization
 	$customerList = new \Register\CustomerList();
-	$customersInOrg = $customerList->find(array('organization_id' => $GLOBALS['_SESSION_']->customer->organization->id, 'automation' => 0));
+	$customersInOrg = $customerList->find(array('organization_id' => $GLOBALS['_SESSION_']->customer->organization()->id, 'automation' => 0));
 	
     // roles list in organization
 	$customersInRoles = array();

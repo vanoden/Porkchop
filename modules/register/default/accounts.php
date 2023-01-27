@@ -30,15 +30,13 @@
 	th.accountsLastActive {	width: 18%; }
 	td.value { overflow: hidden; }
 </style>
-<section>
-	<article class="segment">
-		<h2>Customers</h2>
-        <?php	if ($page->errorCount() > 0) { ?>
-            <div class="form_error"><?=$page->errorString()?></div>
-        <?php	}
-                if ($page->success) { ?>
-	        <div class="form_success"><?=$page->success?></div>
-        <?php	} ?>
+
+<!-- Page Header -->
+<?=$page->showBreadcrumbs()?>
+<?=$page->showTitle()?>
+<?=$page->showMessages()?>
+<!-- End Page Header -->
+
 <form id="custSearch" method="get" class="float: left">
     <div id="search_container">
 	    <input type="text" id="searchAccountInput" name="search" value="<?=$_REQUEST['search']?>" class="value input searchInput wide_md"/>
@@ -66,7 +64,7 @@
     <tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->login?></a></td>
 	    <td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->first_name)?></td>
 	    <td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->last_name)?></td>
-	    <td class="value<?=$greenbar?>"><a href="/_register/organization?organization_id=<?=$customer->organization->id?>"><?=$customer->organization->name?></a></td>
+	    <td class="value<?=$greenbar?>"><a href="/_register/organization?organization_id=<?=$customer->organization()->id?>"><?=$customer->organization()->name?></a></td>
 	    <td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->status)?></td>
 	    <td class="value<?=$greenbar?>"><?=$customer->last_active()?></td>
     </tr>

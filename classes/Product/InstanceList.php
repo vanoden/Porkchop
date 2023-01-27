@@ -26,10 +26,10 @@
 					array_push($bind_params,$parameters['organization_id']);
 				}
 			}
-			elseif (is_numeric($GLOBALS['_SESSION_']->customer->organization->id)) {
+			elseif (is_numeric($GLOBALS['_SESSION_']->customer->organization()->id)) {
 				$find_objects_query .= "
 					AND	ma.organization_id = ?";
-				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization->id);
+				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization()->id);
 			}
 			else {
 				$this->error = "Customer must belong to an organization";

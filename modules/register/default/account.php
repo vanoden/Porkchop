@@ -98,7 +98,7 @@
 			    <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" />
 		    <li id="accountOrganizationQuestion">
 			    <label for="">*Organization:</label>
-			    <span class="value registerValue"><?=$customer->organization->name?></span>
+			    <span class="value registerValue"><?=$customer->organization()->name?></span>
 		    </li>
 		    <li id="accountTimeZoneQuestion">
 			    <label for="">*Time Zone:</label>

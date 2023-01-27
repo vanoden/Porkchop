@@ -479,7 +479,7 @@
 				}
 			}
 			elseif(! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
-				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
 			} else {
 				# Privileges support access
 			}

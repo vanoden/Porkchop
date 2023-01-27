@@ -191,7 +191,7 @@ class Order extends \ORM\BaseModel {
                 $service_request = new \Support\Request();
                 if ($service_request->add(array(
                     'customer_id' => $customer->id,
-                    'organization_id' => $customer->organization->id,
+                    'organization_id' => $customer->organization()->id,
                     'type'          => 'ORDER',
                     'code'          => 'SO_'.$this->id
                 ))) {

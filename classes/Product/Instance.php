@@ -98,7 +98,7 @@
 			
 			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				$get_object_query .= " AND organization_id = ?";
-				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization->id);
+				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization()->id);
 			}
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);

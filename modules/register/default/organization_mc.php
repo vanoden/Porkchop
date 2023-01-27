@@ -37,7 +37,7 @@
 	        $page->addError("Invalid Request");
 	    }
 		else {
-            $page->success = $_REQUEST['method'];
+            $page->appendSuccess($_REQUEST['method']);
 		    if (! $_REQUEST['name']) {
 			    $page->addError("Name required");
 		    }
@@ -74,7 +74,7 @@
 					    $page->addError("Error updating organization");
 				    }
 					else {
-					    $page->success = "Organization Updated Successfully";
+					    $page->appendSuccess("Organization Updated Successfully");
 				    }
 				    
 				    if ($_REQUEST['new_login']) {
@@ -103,7 +103,7 @@
 							    $page->addError("Error adding customer to organization: ".$customer->error);
 						    }
 						    else {
-							    $page->success = "Customer added to organization";
+							    $page->appendSuccess("Customer added to organization");
 						    }
 					    }
 				    }
@@ -127,7 +127,7 @@
 							$page->addError("Error updating organization: ".$organization->error);
 						}
 						else {
-							$page->success = "Organization ".$organization->id." Created Successfully";
+							$page->appendSuccess("Organization ".$organization->id." Created Successfully");
 						}
 					}
 			    }
@@ -144,7 +144,7 @@
 				$page->addError("Error adding organization tag");
 			}
 			else {
-				$page->success = "Organization Tag added Successfully";
+				$page->appendSuccess("Organization Tag added Successfully");
 			}
 	    }
 		else {
@@ -184,7 +184,7 @@
 		    if ($organization->error) {
 			    $page->addError("Error updating organization");
 		    } else {
-			    $page->success = "Organization Updated Successfully";
+			    $page->appendSuccess("Organization Updated Successfully");
 		    }		
 		}
 		
@@ -196,7 +196,7 @@
 		    if ($organization->error) {
 			    $page->addError("Error updating organization");
 		    } else {
-			    $page->success = "Organization Updated Successfully";
+			    $page->appendSuccess("Organization Updated Successfully");
 		    }
 		}
 	}
@@ -215,3 +215,9 @@
 	if ($organization && $organization->error()) $page->addError($organization->error());
 
 	$statii = $organization->statii();
+
+	$page->title = "Organization Details";
+	$page->addBreadcrumb("Organizations", "/_register/organizations");
+	if (isset($organization->id)) {
+		$page->addBreadcrumb($organization->name);
+	}

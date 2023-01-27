@@ -28,7 +28,7 @@
 					$customer = new \Register\Customer();
 					if ($customer->get($_REQUEST['customer_code'])) {
     					$parameters['customer_id'] = $customer->id;
-                        $parameters['organization_id'] = $customer->organization->id;
+                        $parameters['organization_id'] = $customer->organization()->id;
                     }
                     else {
                         $this->error("Customer '".$_REQUEST['customer_code']."' not found");
@@ -36,7 +36,7 @@
                 }
 				else {
                     $parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->id;
-                    $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+                    $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
                 }
 
 				if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
@@ -183,7 +183,7 @@
             if (! $GLOBALS['_SESSION_']->customer->id) $this->error("Permission Denied");
 			elseif (! $GLOBALS['_SESSION_']->customer->can('browse sales orders')) {
                 $parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->id;
-                $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+                $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
             }
             elseif (isset($_REQUEST['customer_code'])) {
                 $customer = new \Register\Customer();

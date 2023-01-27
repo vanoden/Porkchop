@@ -196,8 +196,8 @@
                     $parameters['organization_id'] = $organization->id;
                 }
             }
-            elseif (isset($GLOBALS['_SESSION_']->customer->organization->id)) {
-                $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+            elseif (isset($GLOBALS['_SESSION_']->customer->organization()->id)) {
+                $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
             }
             else {
                 $this->deny();
@@ -689,7 +689,7 @@
                     $org_code = $_REQUEST['code'];
                 else
                     $this->deny();
-            else $org_code = $GLOBALS['_SESSION_']->customer->organization->code;
+            else $org_code = $GLOBALS['_SESSION_']->customer->organization()->code;
 
             # Initiate Organization Object
             $organization = new \Register\Organization();
@@ -1073,7 +1073,7 @@
                 $_REQUEST['organization_id'] = $organization->id;
             }
             elseif (isset($_REQUEST['organization_id']) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
-                $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+                $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
             }
             else {
                 $parameters['organization_id'] = $_REQUEST['organization_id'];
