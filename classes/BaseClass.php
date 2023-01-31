@@ -196,7 +196,10 @@
 		}
 
 		public function cached($cached = null) {
-			if (is_bool($cached)) $this->_cached = $cached;
+			if (is_bool($cached)) {
+				if ($cached) $this->_cached = 1;
+				else $this->_cached = 0;
+			}
 			return $this->_cached;
 		}
 

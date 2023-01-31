@@ -21,4 +21,9 @@
 			if (!isset($this->_handle)) return 0;
 			return $this->_handle->numRows();
 		}
+
+		public function Fields() {
+			if (!isset($this->_handle)) return 0;
+			return $this->_handle->fields;
+		}
 	}

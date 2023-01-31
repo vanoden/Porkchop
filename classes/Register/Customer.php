@@ -323,7 +323,10 @@
 
 		// See If a User has been granted a Role
 		public function has_role($role_name) {
-		
+			$this->clearError();
+
+			$database = new \Database\Service();
+
 			// Check Role Query
 			$check_role_query = "
 				SELECT	r.id
@@ -333,29 +336,31 @@
 				WHERE	rur.user_id = ?
 				AND		r.name = ?
 			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$check_role_query,
-				array(
-					$this->id,
-					$role_name
-				)
-			);
-			
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+			$database->AddParam($this->id);
+			$database->AddParam($role_name);
+
+			$rs = $database->Execute($check_role_query);
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			
-			list($has_it) = $rs->fields;
+
+			list($has_it) = $rs->Fields();
 			if ($has_it) {
 				return $has_it;
-			} else {
+			}
+			else {
 				return false;
 			}
 		}
 
 		public function has_privilege($privilege_name) {
+			$this->clearError();
+
+			$database = new \Database\Service();
+
 			$privilege = new \Register\Privilege();
 			if (! $privilege->get($privilege_name)) {
 				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
@@ -373,15 +378,12 @@
 				AND		rrp.role_id = rur.role_id
 				AND		rrp.privilege_id = ?
 			";
-			$bind_params = array(
-				$this->id,
-				$privilege->id
-			);
+			$database->AddParam($this->id);
+			$database->AddParam($privilege->id);
 
-			query_log($check_privilege_query,$bind_params,true);
-			$rs = $GLOBALS['_database']->Execute($check_privilege_query,$bind_params);
+			$rs = $database->Execute($check_privilege_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			list($found) = $rs->FetchRow();

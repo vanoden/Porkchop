@@ -100,6 +100,7 @@
             else{
                 $response = new \HTTP\Response();
                 $response->customer = $customer;
+				if ($customer->cached) $response->customer->_cached = 1;
                 $response->success = 1;
             }
 
