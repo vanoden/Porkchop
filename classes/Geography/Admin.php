@@ -99,13 +99,13 @@
 		}
 
 		public function __call($name, $arguments) {
-app_log("__call $name",'notice');
+            app_log("__call $name",'notice');
 			if ($name == "get") return $this->getProvince($arguments[0],$arguments[1]);
 			else $this->error("Method '$name' not found");
 		}
 
 		public function getProvince($country_id,$name): bool {
-app_log("Country $country_id Name $name");
+            app_log("Country $country_id Name $name");
 			if (strlen($name) < 3) return $this->getByAbbreviation($country_id,$name);
 			$get_object_query = "
 				SELECT	id

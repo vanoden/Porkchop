@@ -293,6 +293,24 @@
 				$this->setVersion(8);
 				$GLOBALS['_database']->CommitTrans();
 			}
+
+            if ($this->version() < 9) {
+
+				app_log("Upgrading schema to version 9",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+			    $table = new \Database\Schema\Table('sales_orders');				    
+                $alter_table_query = "ALTER TABLE `sales_orders` MODIFY COLUMN `status` ENUM('NEW','QUOTE','CANCELLED','APPROVED','ACCEPTED','COMPLETE');";
+                if (! $this->executeSQL($alter_table_query)) {
+                    $this->error = "SQL Error altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error;
+                    app_log($this->error, 'error');
+                    return false;
+                }
+				$this->setVersion(9);
+				$GLOBALS['_database']->CommitTrans();
+
+			}
 			return true;
 		}
 	}

@@ -108,7 +108,7 @@ class Order extends \ORM\BaseModel {
 			return $this->details();
 		}
 
-		public function get($code) {
+		public function get($code) : bool {
 
 			$get_object_query = "
 				SELECT	id
