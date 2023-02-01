@@ -14,6 +14,13 @@
 			$message->target = $GLOBALS['_REQUEST_']->query_vars_array[0];
 		}
 	}
+	elseif(!empty($GLOBALS['_REQUEST_']->index)) {
+		$message = new \Content\Message();
+		if (! $message->get($GLOBALS['_REQUEST_']->index)) {
+			$message->name = $GLOBALS['_REQUEST_']->index;
+			$message->target = $GLOBALS['_REQUEST_']->index;
+		}
+	}
 	else {
 		// Home Page
 		$message = new \Content\Message();

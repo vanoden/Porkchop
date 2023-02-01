@@ -120,7 +120,7 @@
 				$counter = new \Site\Counter("organization_required");
 				$counter->increment();
 			    header ('location: /_register/organization_required');
-			    exit ();
+			    exit();
 			}
 		}
         
@@ -347,8 +347,8 @@
 		    }
 
 		    // Return Messsage
-		    return "<!-- ".$this->module()." ".$this->view()." ".$this->index()." -->\n".$message;
-		    //return $message;
+		    //return "<!-- ".$this->module()." ".$this->view()." ".$this->index()." -->\n".$message;
+		    return $message;
 	    }
 	    
 	    private function parse_element($string) {
@@ -515,13 +515,13 @@
 				    $message->get($target);
 				    if ($message->error()) $buffer = "Error: " . $message->error;
 				    elseif (! $message->id) {
-					    app_log("Message not found matching '$target', adding", 'info', __FILE__, __LINE__ );
-					    if (role ( 'content operator' )) {
-						    $message->add ( array ("target" => $target ) );
-					    }
+						app_log("Message not found matching '$target', adding", 'info', __FILE__, __LINE__ );
+						if ($GLOBALS['_SESSION_']->customer->can('edit content messages')) {
+							$message->add(array("target" => $target));
+						}
 						else {
-						    $buffer = "Sorry, the page you requested was not found";
-						    app_log ( "Page not found: $target", 'error', __FILE__, __LINE__ );
+							$buffer = "Sorry, the page you requested was not found";
+							app_log("Page not found: $target", 'error', __FILE__, __LINE__ );
 					    }
 				    }
 					else {
@@ -533,7 +533,7 @@
 				    }
 				    if ($message->id) {
 					    // Make Sure User Has Privileges
-					    if (is_object ( $GLOBALS ['_SESSION_']->customer ) && $GLOBALS ['_SESSION_']->customer->id && $GLOBALS ['_SESSION_']->customer->can ( 'edit content messages' )) {
+					    if (is_object($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->id && $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 						    #$buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'0px\'; } </script>';
 						    $buffer .= '<contentblock id="'.$message->id.'">' . $message->content . '</contentblock>';
 						    $buffer .= '<a href="javascript:void(0)" onclick="goToEditPage('.$message->target.')">Edit</a>';
@@ -547,8 +547,7 @@
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    }
-			elseif ($object == "product") {
-		    
+			elseif ($object == "product") {  
 			    // Load Product Class if Not Already Loaded
 			    if ($property == "thumbnail") {
 				    $id = $this->query_vars;
