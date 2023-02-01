@@ -151,11 +151,11 @@
 			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return null;
 		    }
-		    list ( $id ) = $rs->FetchRow ();
+		    list($id) = $rs->FetchRow();
 
-		    if (is_numeric ( $id )) {
+		    if (is_numeric($id)) {
 			    $this->id = $id;
-			    return $this->details ();
+			    return $this->details();
 		    }
 			elseif ($module == "content" && $view == "index") {
 				$message = new \Content\Message();
@@ -300,6 +300,10 @@
 			if (preg_match('/(\w[\w\_\.]*)/',$this->view,$matches)) return $matches[1];
 		}
 
+		public function index() {
+			if (preg_match('/([\w\_\-]*)/',$this->index,$matches)) return $matches[1];
+		}
+
 		public function title($string = null) {
 			if (isset($string)) $this->title = $string;
 
@@ -344,6 +348,7 @@
 
 		    // Return Messsage
 		    return "<!-- ".$this->module()." ".$this->view()." ".$this->index()." -->\n".$message;
+		    //return $message;
 	    }
 	    
 	    private function parse_element($string) {
@@ -501,8 +506,9 @@
 			elseif ($object == "content") {
 			    if ($property == "index") {
 				    app_log( "content::index", 'trace', __FILE__, __LINE__ );
-				    if (isset($parameter['id']) && is_numeric($parameter["id"])) $target = $parameter["id"];
-				    else if (isset( $parameter['target']) && preg_match("/^\w[\w\-\_]*$/", $parameter["target"])) $target = $parameter["target"];
+					if (isset($this->index)) $target = $this->index();
+				    elseif (isset($parameter['id']) && is_numeric($parameter["id"])) $target = $parameter["id"];
+				    elseif (isset( $parameter['target']) && preg_match("/^\w[\w\-\_]*$/", $parameter["target"])) $target = $parameter["target"];
 				    else $target = $GLOBALS['_REQUEST_']->query_vars_array[0];
 
 				    $message = new \Content\Message();
@@ -512,7 +518,8 @@
 					    app_log("Message not found matching '$target', adding", 'info', __FILE__, __LINE__ );
 					    if (role ( 'content operator' )) {
 						    $message->add ( array ("target" => $target ) );
-					    } else {
+					    }
+						else {
 						    $buffer = "Sorry, the page you requested was not found";
 						    app_log ( "Page not found: $target", 'error', __FILE__, __LINE__ );
 					    }
