@@ -114,7 +114,12 @@
             // get current set price for product, else default to 0
             $price = 0;
             $currentPrice = $itemInCart->currentPrice();
-            if (!empty($currentPrice)) $price = $currentPrice->amount;
+            if (!empty($currentPrice)) {
+                $price = $currentPrice->amount;
+            } else {
+                $page->addError("Product " . $itemCode . " doesn't have an ACTIVE price set. [<a href='/_product/report'>Find Product</a>]");
+            }
+            
             $salesOrder->addItem (
                 array (
                     "product_id" => $itemInCart->id,
@@ -142,7 +147,7 @@
     }
     
     // remove item from order
-    if ($_REQUEST['btn_remove'] && !empty($_REQUEST['btn_remove'])) {
+    if (isset($_REQUEST['btn_remove']) && !empty($_REQUEST['btn_remove'])) {
     
         $itemToRemove = new \Product\Item();
         $itemToRemove->get($_REQUEST['btn_remove']);
@@ -154,7 +159,7 @@
         if (($key = array_search($_REQUEST['btn_remove'], $itemsInOrder)) !== false) unset($itemsInOrder[$key]);
     }
 
-    // get existing ACTIVE items, but only the ones not added to the cart yet
+    // get existing ACTIVE items for the add products dropdown, but ONLY the ones not added to the cart yet
     $itemsForOrder = array();
     $itemList = new \Product\ItemList();
     $itemsForSale = $itemList->find(array('type' => array('unique', 'inventory')));
@@ -165,9 +170,4 @@
     
     // if we're quoting or approving the order update as such
     if (isset($_REQUEST['btn_quote'])) $salesOrder->update(array('status' => 'QUOTE')); 
-    if (isset($_REQUEST['btn_create'])) {
-        $salesOrder->update(array('status' => 'APPROVED')); 
-        
-        // @TODO do the finalized thing here with creating the tickets
-    }
-    
+    if (isset($_REQUEST['btn_create'])) $salesOrder->approve();

@@ -230,7 +230,8 @@
 	function api_log($response = 'N/A') {
 		$log = "";
 		$login = $GLOBALS['_SESSION_']->customer->code;
-		$method = $_REQUEST['method'];
+		if (!empty($_REQUEST['method'])) $method = $_REQUEST['method'];
+		else $method = "[none]";
 
 		if (is_object($response) && $response->success) $status = "SUCCESS";
 		else $status = "FAILED";

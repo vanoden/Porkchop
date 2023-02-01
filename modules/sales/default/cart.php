@@ -18,6 +18,10 @@
         width: 200px;
         height: 40px;   
     }
+    .small-font {
+        font-size:10px;
+        display:inline;
+    }
 </style>
 
 <script>
@@ -50,8 +54,10 @@ function updateTotal(product) {
     quoteTotal.value = quoteTotalPrice;
 }
 </script>
+<br/>
 
 <h3>Sales Quote</h3>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<div class="small-font">[<a href="/_sales/orders">Return to Orders</a>]</div>
 <hr/><br/>
 
 <?php
@@ -263,7 +269,7 @@ if (!isset($_REQUEST['btn_save']) && !isset($_REQUEST['btn_quote']) && !isset($_
             if ($isReadyToQuote) {
             ?>
                 <br/><br/><br/><br/>
-                <input type="submit" class="continue_button" name="btn_save" value="&ldca; Save For Later"/>
+                <input type="button" class="continue_button" name="btn_save" onclick="window.location.replace('/_sales/orders')" value="&ldca; Save For Later"/>
                 <input type="submit" class="continue_button" name="btn_quote" value="&check; Create a Quote"/>
                 <input type="submit" class="continue_button" name="btn_create" value="&plus; Create an Order"/>
             <?php

@@ -58,8 +58,8 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage cache')) $this->deny();
 			$cache_key = $_REQUEST['object']."[".$_REQUEST['id']."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
-			if ($cache->error) {
-				app_log("Error in cache mechanism: ".$cache->error,'error',__FILE__,__LINE__);
+			if ($cache->error()) {
+				app_log("Error in cache mechanism: ".$cache->error(),'error',__FILE__,__LINE__);
 			}
 	
 			$object = $cache->get();

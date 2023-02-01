@@ -22,6 +22,7 @@ class Person Extends \BaseClass {
     public function __construct(int $id = null) {
 		$this->_tableName = 'register_users';
 		$this->_tableUKColumn = 'login';
+		$this->_cacheKeyPrefix = 'customer';
 
         // Clear Error Info
         $this->clearError();
@@ -34,17 +35,20 @@ class Person Extends \BaseClass {
             $this->details();
         }
     }
-    
+
     public function setId($id=0) {
         $this->id = $id;
     }
-    
+
     public function details() {
-        $cache_key = "customer[" . $this->id . "]";
+		$this->clearError();
+
+		$database = new \Database\Service();
+		$cache = $this->cache();
 
         # Cached Customer Object, Yay!
-        $cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
-        if (($this->id) and ($customer = $cache->get())) {
+        if ($this->id && isset($cache) && ($customer = $cache->get())) {
+			app_log("Loaded customer from cache");
             $this->first_name = $customer->first_name;
             $this->last_name = $customer->last_name;
             $this->code = $customer->code;
@@ -58,18 +62,12 @@ class Person Extends \BaseClass {
             $this->automation = $customer->automation;
             $this->password_age = $customer->password_age;
 			$this->auth_failures = $customer->auth_failures;
-            $this->cached(true);
-
-            # In Case Cache Corrupted
-            if ($customer->id) {
-                app_log("Customer " . $this->login . " [" . $this->id . "] found in cache", 'trace', __FILE__, __LINE__);
-				$this->exists(true);
-                return $customer;
-            }
-            else {
-                $this->error("Customer " . $this->id . " returned unpopulated cache");
-            }
+            $this->_cached = 1;
+			return true;
         }
+		else {
+			app_log("No record found in cache");
+		}
 
         # Get Persons Info From Database
         $get_person_query = "
@@ -125,6 +123,7 @@ class Person Extends \BaseClass {
 			$this->auth_failures = $customer->auth_failures;
             $this->cached(true);
 			$this->exists(true);
+			if (isset($cache) && isset($customer->id)) $cache->set($customer);
         }
         else {
             $this->id = null;
@@ -143,9 +142,6 @@ class Person Extends \BaseClass {
 			$this->auth_failures = 0;
             $this->_cached = 0;
         }
-
-        // Cache Customer Object
-        if ($customer->id) cache_set($cache_key, $customer);
 
         // Return Object
         return $this;

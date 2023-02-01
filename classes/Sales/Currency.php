@@ -57,7 +57,7 @@
 			return $this->details();
 		}
 
-		public function get($name) {
+		public function get($name): bool {
 			$get_object_query = "
 				SELECT	id
 				FROM	sales_currencies

@@ -22,6 +22,9 @@
 		// Name for Unique Surrogate Key Column (for get)
 		protected $_tableUKColumn = 'code';
 
+		// Name for Auto-Increment ID Column
+		protected $_tableIDColumn = 'id';
+
 		// Name for Cache Key - id appended in square brackets
 		protected $_cacheKeyPrefix;
 
@@ -37,7 +40,7 @@
 
 			// Prepare Query
 			$get_object_query = "
-				SELECT	id
+				SELECT	`".$this->_tableIDColumn."`
 				FROM	`".$this->_tableName."`
 				WHERE	`".$this->_tableUKName."` = ?";
 
@@ -78,7 +81,7 @@
 
 			// Prepare Query
 			$get_object_query = "
-				SELECT	id
+				SELECT	`".$this->_tableIDColumn."`
 				FROM	`".$this->_tableName."`
 				WHERE	`".$this->_tableUKColumn."` = ?";
 
@@ -120,7 +123,7 @@
 			$delete_object_query = "
 				DELETE
 				FROM	`".$this->_tableName."`
-				WHERE	id = ?";
+				WHERE	`".$this->_tableIDColumn."` = ?";
 
 			// Bind ID to Query
 			$database->AddParam($this->id);
@@ -193,7 +196,10 @@
 		}
 
 		public function cached($cached = null) {
-			if (is_bool($cached)) $this->_cached = $cached;
+			if (is_bool($cached)) {
+				if ($cached) $this->_cached = 1;
+				else $this->_cached = 0;
+			}
 			return $this->_cached;
 		}
 

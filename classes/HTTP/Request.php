@@ -150,13 +150,25 @@
 			$this->uri = urldecode($this->uri);
 
 			# Parse Query String
-			if (preg_match("/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/",$this->uri,$matches)) {
+			if (preg_match('/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/',$this->uri,$matches)) {
 				$this->module = $matches[1];
+			}
+			elseif (preg_match('/^\/([\w\_]*)$/',$this->uri,$matches)) {
+				// To handle URI's with only the content target
+				if (empty($matches[1]) || ! file_exists(HTML."/".$matches[1])) {
+					app_log("Nope, use CMS to load ".$matches[1],'info');
+					$this->module = "content";
+					$this->view = $matches[1];
+				}
 			}
 
 			# Identify module, view and index
 			if ($this->module == "content") {
-				if ($matches[2] == 'api') {
+				if (isset($this->view)) {
+					// Already know the content target
+					// Nothing More To Do
+				}
+				elseif ($matches[2] == 'api') {
 					$this->view = 'api';
 					$this->query_vars = $matches[3];
 				}

@@ -34,12 +34,17 @@
 			if ($this->debug == 'log' && $this->_trace_level > 0) query_log($query,$this->_params,true);
 			elseif ($this->debug == 'screen' && $this->_trace_level > 0) print "<pre>$query</pre>";
 			$recordSet = new \Database\RecordSet($this->_connection->Execute($query,$this->_params));
+
+			$execCounter = new \Site\Counter("database.sql_execute");
+			$execCounter->increment();
+
 			if ($this->_connection->ErrorMsg()) {
 				error_log($this->_connection->ErrorMsg());
-				$sql_error_counter = new \Site\Counter("sql.errors");
+				$sql_error_counter = new \Site\Counter("database.sql_errors");
 				$sql_error_counter->increment();
 				return null;
 			}
+
 			return $recordSet;
 		}
 

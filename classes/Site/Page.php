@@ -28,20 +28,25 @@
 			if (func_num_args() == 1 && gettype($args[0]) == "integer") {
 				$this->id = $args[0];
 				$this->details();
-			} elseif (func_num_args() == 1 && gettype( $args [0] ) == "string") {
+			}
+			elseif (func_num_args() == 1 && gettype( $args [0] ) == "string") {
 			    $this->id = $args [0];
 			    $this->details();
-		    } elseif (func_num_args() == 1 && gettype($args [0] ) == "array") {
+		    }
+			elseif (func_num_args() == 1 && gettype($args [0] ) == "array") {
 			    if (isset($args[0]['method'])) {
 				    $this->method = $args[0]['method'];
 				    $this->view = $args[0]['view'];
 				    if ($args[0]['index']) $this->index = $args[0]['index'];
 			    }
-		    } elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string" && isset( $args[2])) {
+		    }
+			elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string" && isset( $args[2])) {
 			    $this->getPage( $args[0], $args[1], $args[2] );
-		    } elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string") {
+		    }
+			elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string") {
 			    $this->getPage( $args[0], $args[1] );
-		    } else {
+		    }
+			else {
 			    $this->fromRequest ();
 		    }
 	    }
@@ -384,9 +389,11 @@
 		    if ($object == "constant") {
 			    if ($property == "path") {
 				    $buffer .= PATH;
-			    } elseif ($property == "date") {
+			    }
+				elseif ($property == "date") {
 				    $buffer .= date ( 'm/d/Y h:i:s' );
-			    } elseif ($property == "host") {
+			    }
+				elseif ($property == "host") {
 				    $buffer .= $_SERVER ['HTTP_HOST'];
 			    }
 		    }
@@ -450,7 +457,8 @@
 								    $buffer .= "\t\t" . "<a" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . ' href="' . $child->target . '"' . ' class="' . $child_button_class . '">' . $child->title . "</a>\n";
 							    }
 							    $buffer .= "\t</div>";
-						    } else {
+						    }
+							else {
 							    $buffer .= "<a" . " href=\"" . $item->target . "\"" . " class=\"$button_class\"" . ">" . $item->title . "</a>\n";
 						    }
 					    }
@@ -458,11 +466,14 @@
 			    }
 				elseif ($property == "message") {
 				    $buffer .= "<div class=\"page_message\">" . $GLOBALS ['page_message'] . "</div>";
-			    } elseif ($property == "error") {
+			    }
+				elseif ($property == "error") {
 				    $buffer .= "<div class=\"page_error\">" . $GLOBALS ['page_error'] . "</div>";
-			    } elseif ($property == "not_authorized") {
+			    }
+				elseif ($property == "not_authorized") {
 				    $buffer .= "<div class=\"page_error\">Sorry, you are not authorized to see this view</div>";
-			    } else {
+			    }
+				else {
 				    $buffer = $this->loadViewFiles($buffer);
 			    }
 		    }
@@ -551,7 +562,8 @@
 				    foreach ( $products as $product ) {
 					    $buffer .= "<r7_product.detail format=thumbnail id=".$product->id.">";
 				    }
-			    } elseif ($property == "detail") {
+			    }
+				elseif ($property == "detail") {
 				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
 				    elseif ($this->query_vars) $id = $this->query_vars;
 
@@ -564,7 +576,8 @@
 						    $buffer .= "\t<div class=\"product_thumbnail_retail\">" . $product->retail . "</div>\n";
 						    if ($product->images ["0"]->files->thumbnail->path) $buffer .= "\t\t<img src=\"" . $product->images ["0"]->files->thumbnail->path . "\" class=\"product_thumbnail_image\"/>\n";
 						    $buffer .= "</div>\n";
-					    } else {
+					    }
+						else {
 						    $buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
 						    $buffer .= "\t<a href=\"/_product/detail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
 						    $buffer .= "\t<div class=\"product_thumbnail_description\">" . $product->description . "</div>\n";
@@ -572,7 +585,8 @@
 						    if ($product->images ["0"]->files->thumbnail->path) $buffer .= "\t<div class=\"product_thumbnail_image\"><img src=\"" . $product->images ["0"]->files->thumbnail->path . "\" class=\"product_thumbnail_image\"/></div>\n";
 						    $buffer .= "</div>\n";
 					    }
-				    } else {
+				    }
+					else {
 					    $buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
 					    $buffer .= "<a href=\"/_product/detail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
 					    $buffer .= "<div class=\"product_detail_description\">" . $product->description . "</div>\n";
@@ -580,7 +594,8 @@
 					    if ($product->images ["0"]->files->large->path) $buffer .= "<img src=\"" . $product->images ["0"]->files->large->path . "\" class=\"product_thumbnail_image\"/>\n";
 					    $buffer .= "</div>\n";
 				    }
-			    } elseif ($property == "navigation") {
+			    }
+				elseif ($property == "navigation") {
 				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
 				    elseif ($this->query_vars) $id = $this->query_vars;
 

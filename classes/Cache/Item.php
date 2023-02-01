@@ -14,7 +14,6 @@
 		}
 
 		public function set($value) {
-		
 			if (! $this->_key) {
 				$this->error("Key required");
 				return null;

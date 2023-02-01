@@ -158,14 +158,14 @@
 			return new \Register\Organization($org_id);
 		}
 
-		public function validAddress($string) {
+		public function validAddress($string) {	    	
 			if (empty($string)) return true;
-			if (preg_match('/^([\w\u0080-\u024F]+(?:\. |-| |\'))*[\w\u0080-\u024F]*$/',urldecode($string))) return true;
+			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
 			else return false;
 		}
 
 		public function validCity($string) {
-			if (preg_match('/^([\w\u0080-\u024F]+(?:\. |-| |\'))*[\w\u0080-\u024F]*$/',urldecode($string))) return true;
+			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
 			else return false;
 		}
 	}

@@ -100,6 +100,7 @@
             else{
                 $response = new \HTTP\Response();
                 $response->customer = $customer;
+				if ($customer->cached) $response->customer->_cached = 1;
                 $response->success = 1;
             }
 
@@ -900,7 +901,7 @@
                 $organization->get($_REQUEST['code']);
             }
             else {
-                $organization = $GLOBALS['_SESSION_']->customer->organization;
+                $organization = $GLOBALS['_SESSION_']->customer->organization();
             }
             if (! $organization->id) $this->error("Organization required");
             $response = new \HTTP\Response();
@@ -918,7 +919,7 @@
                 $organization->get($_REQUEST['code']);
             }
             else {
-                $organization = $GLOBALS['_SESSION_']->customer->organization;
+                $organization = $GLOBALS['_SESSION_']->customer->organization();
             }
             if (! $organization->id) $this->error("Organization required");
 

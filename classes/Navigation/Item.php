@@ -13,7 +13,7 @@
 		public $external = false;
 		public $ssl = false;
 
-		public function __construct(int $id = null) {
+		public function __construct($id = null) {
 			$this->_tableName = 'navigation_menu_items';
 			$this->_tableUKColumn = null;
 
