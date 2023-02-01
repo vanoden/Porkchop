@@ -343,7 +343,7 @@
 		    }
 
 		    // Return Messsage
-		    return $message;
+		    return "<!-- ".$this->module()." ".$this->view()." ".$this->index()." -->\n".$message;
 	    }
 	    
 	    private function parse_element($string) {
