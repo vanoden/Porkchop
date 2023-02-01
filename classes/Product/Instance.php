@@ -232,7 +232,8 @@
 		}
 		
 		public function details() {
-			$this->error = null;
+			$this->clearError();
+
 			$get_object_query = "
 				SELECT	asset_id id,
 						asset_code code,
@@ -275,7 +276,11 @@
 				return true;
 			}
 		}
-		
+
+		public function organization() {
+			return new \Register\Organization($this->organization_id);
+		}
+
 		public function track() {
 			$this->error = null;
 		}
