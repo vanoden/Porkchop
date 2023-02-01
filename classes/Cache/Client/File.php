@@ -105,7 +105,6 @@
 			if ($this->_connected) {
 				if (! preg_match('/^_/',$key)) $this->incrementStat("cmd_get");
 				$filename = $this->_path."/".$key;
-app_log("Checking $filename for $key");
 				if (! file_exists($filename)) {
 					if (! preg_match('/^_/',$key)) $this->incrementStat("get_misses");
 					return null;
