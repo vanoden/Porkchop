@@ -47,7 +47,7 @@ class Person Extends \BaseClass {
 		$cache = $this->cache();
 
         # Cached Customer Object, Yay!
-        if ($this->id && ($customer = $cache->get())) {
+        if ($this->id && isset($cache) && ($customer = $cache->get())) {
 			app_log("Loaded customer from cache");
             $this->first_name = $customer->first_name;
             $this->last_name = $customer->last_name;
@@ -123,7 +123,7 @@ class Person Extends \BaseClass {
 			$this->auth_failures = $customer->auth_failures;
             $this->cached(true);
 			$this->exists(true);
-			if ($customer->id) $cache->set($customer);
+			if (isset($cache) && isset($customer->id)) $cache->set($customer);
         }
         else {
             $this->id = null;
