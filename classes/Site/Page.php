@@ -506,9 +506,9 @@
 			elseif ($object == "content") {
 			    if ($property == "index") {
 				    app_log( "content::index", 'trace', __FILE__, __LINE__ );
-					if (isset($this->index)) $target = $this->index();
-				    elseif (isset($parameter['id']) && is_numeric($parameter["id"])) $target = $parameter["id"];
+				    if (isset($parameter['id']) && is_numeric($parameter["id"])) $target = $parameter["id"];
 				    elseif (isset( $parameter['target']) && preg_match("/^\w[\w\-\_]*$/", $parameter["target"])) $target = $parameter["target"];
+					elseif (isset($this->index)) $target = $this->index();
 				    else $target = $GLOBALS['_REQUEST_']->query_vars_array[0];
 
 				    $message = new \Content\Message();
