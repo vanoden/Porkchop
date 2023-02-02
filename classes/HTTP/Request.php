@@ -150,18 +150,20 @@
 			$this->uri = urldecode($this->uri);
 
 			# Parse Query String
-			app_log("---URI: ".$this->uri,'info');
+			if ($this->uri == "/") {
+				$this->module = "content";
+				$this->view = "index";
+				$this->index = $GLOBALS['_config']->site->default_index;
+			}
 			if (preg_match('/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/',$this->uri,$matches)) {
 				$this->module = $matches[1];
 			}
 			elseif (preg_match('/^\/([\w\_]*)$/',$this->uri,$matches)) {
-				app_log("-------------------Does ".HTML."/".$matches[1]." exist?",'info');
 				if (empty($matches[1])) {
 					$this->module = "content";
 					$this->view = "index";
 				}
 				elseif (! file_exists(HTML."/".$matches[1])) {
-					app_log("Nope, use CMS to load ".$matches[1],'info');
 					$this->module = "content";
 					$this->view = "index";
 					$this->index = $matches[1];
