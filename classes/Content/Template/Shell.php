@@ -5,7 +5,8 @@
 		private $_error;
 		private $_content;
 		private $_params = array();
-		
+		private $_groups = array();
+
 		public function __construct($argument = null) {
 			if (gettype($argument) == 'array') {
 				if ($argument['path']) {
@@ -42,8 +43,27 @@
 		}
 
 		public function content($content = null) {
-			if (isset($content)) $this->_content = $content;
+			if (isset($content)) {
+				while (preg_match('/\@\{(\w+)\}(.*)\@\{\-\w+\}/s',$content,$matches)) {
+					$this->_group[$matches[1]] = $this->_newGroup($matches[2]);
+
+					$content = preg_replace('/\@\{\w+\}.*\@\{\-\w+\}/s','@{-'.$matches[1].'-}',$content,1);
+				}
+			}
+			$this->_content = $content;
 			return $this->_content;
+		}
+
+		protected function _newGroup($content) {
+			$group = new \Content\Template\Shell\Group();
+			$group->content($content);
+			return $group;
+		}
+
+		public function group($name) {
+			if (!isset($this->_groups[$name]))
+				$this->_groups[$name] = new \Content\Template\Shell\Group();
+			return $this->_groups[$name];
 		}
 
 		public function addParam($key,$value) {
@@ -58,28 +78,62 @@
 			}
 		}
 
-		private function _process($message) {
-			$module_pattern = '/\$\{([\w\-\.\_\-]+)\}/is';
+		private function _process() {
+			$module_pattern = '/\$\{(\w[\w\-\.\_\-]+)\}/is';
 
-			while (preg_match($module_pattern,$message,$matched)) {
+			$output = $this->_content;
+
+			// Replace Entire Lines
+			foreach ($this->_groups as $name => $group) {
+				$group_content = '';
+				if (preg_match('/\@\{\-('.$name.')\-\}/',$output,$matches)) {
+					$lines = $group->lines();
+					foreach ($lines as $line) {
+						$group_content .= $line->render();
+					}
+					$output = str_replace($matches[0],$block_content,$output);
+				}
+			}
+
+			// Replace Individual Fields
+			while (preg_match($module_pattern,$output,$matched)) {
 				$search = $matched[0];
 				$parse_message = "Replaced $search";
 				$replace_start = microtime(true);
 				$replace = $this->_replace($matched[1]);
-				app_log($parse_message." with $replace in ".sprintf("%0.4f",(microtime(true) - $replace_start))." seconds",'trace',__FILE__,__LINE__);
-				$message = str_replace($search,$replace,$message);
+				app_log($parse_message." with $replace in ".sprintf("%0.4f",(microtime(true) - $replace_start))." seconds",'info',__FILE__,__LINE__);
+				$output = str_replace($search,$replace,$output);
 			}
 
 			# Return Messsage
-			return $message;
+			return $output;
 		}
 
 		private function _replace($string) {
-			return $this->_params[$string];
+			if (isset($this->_params[$string])) return $this->_params[$string];
+			else return null;
 		}
 
-		public function output() {
-			return $this->_process($this->_content);
+		public function newLine($subject) {
+			array_push($this->_lines,$this->_getLineTemplate($subject));
+			return end($this->_lines);
+		}
+
+		public function _getLineTemplate($subject) {
+			foreach ($this->_line_templates as $line) {
+				if ($line[0] == $subject) return $line[1];
+			}
+		}
+
+		public function fields() {
+			preg_match_all('/\$\{(\w+\.\w+)\}/',$this->_content,$matches);
+			array_shift($matches[1]);
+			return $matches[1];
+		}
+
+		// Deprecated Function - Use render() instead
+		public function render() {
+			return $this->_process();
 		}
 		
 		public function error() {
