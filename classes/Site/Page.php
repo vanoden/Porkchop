@@ -506,15 +506,21 @@
 			elseif ($object == "content") {
 			    if ($property == "index") {
 				    app_log( "content::index", 'trace', __FILE__, __LINE__ );
+					// Content Block identified by passed id
 				    if (isset($parameter['id']) && is_numeric($parameter["id"])) $target = $parameter["id"];
-				    elseif (isset( $parameter['target']) && preg_match("/^\w[\w\-\_]*$/", $parameter["target"])) $target = $parameter["target"];
+					// Content Block identified by passed target
+					elseif (isset( $parameter['target']) && preg_match("/^\w[\w\-\_]*$/", $parameter["target"])) $target = $parameter["target"];
+					// Content Block identified by Site::Page::index(), probably /target uri
 					elseif (isset($this->index)) $target = $this->index();
+					// Content Block identified by third part of uri path
 				    else $target = $GLOBALS['_REQUEST_']->query_vars_array[0];
 
+					// Load Specified Content Block
 				    $message = new \Content\Message();
 				    $message->get($target);
 				    if ($message->error()) $buffer = "Error: " . $message->error;
 				    elseif (! $message->id) {
+						// Create Block if not found and privileges allotted
 						app_log("Message not found matching '$target', adding", 'info', __FILE__, __LINE__ );
 						if ($GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 							$message->add(array("target" => $target));
