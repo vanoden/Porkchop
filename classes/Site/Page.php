@@ -125,8 +125,13 @@
 		}
         
 	    public function getPage($module, $view, $index = null) {
-		    $parameters = array ($module, $view );
+			$this->clearError();
+
+			$database = new \Database\Service();
+
+			$parameters = array ($module, $view );
 		    if (strlen ( $index ) < 1) $index = null;
+
 		    // Prepare Query
 		    $get_object_query = "
 				    SELECT	id
@@ -134,22 +139,25 @@
 				    WHERE	module = ?
 				    AND		view = ?
 			    ";
+			$database->AddParam($module);
+			$database->AddParam($view);
+
 		    if (isset ( $index )) {
 			    $get_object_query .= "
 				    AND		`index` = ?
 				    ";
-			    array_push ( $parameters, $index );
+				$database->AddParam($index);
 		    }
 			else {
 			    $get_object_query .= "
 				    AND		(`index` is null or `index` = '')
 				    ";
 		    }
-		    query_log($get_object_query, $parameters);
-		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, $parameters );
+
+		    $rs = $database->Execute($get_object_query);
 		    if (! $rs) {
 			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
-			    return null;
+			    return ;
 		    }
 		    list($id) = $rs->FetchRow();
 
@@ -506,24 +514,35 @@
 			elseif ($object == "content") {
 			    if ($property == "index") {
 				    app_log( "content::index", 'trace', __FILE__, __LINE__ );
-					// Content Block identified by passed id
-				    if (isset($parameter['id']) && is_numeric($parameter["id"])) $target = $parameter["id"];
-					// Content Block identified by passed target
-					elseif (isset( $parameter['target']) && preg_match("/^\w[\w\-\_]*$/", $parameter["target"])) $target = $parameter["target"];
-					// Content Block identified by Site::Page::index(), probably /target uri
-					elseif (isset($this->index)) $target = $this->index();
-					// Content Block identified by third part of uri path
-				    else $target = $GLOBALS['_REQUEST_']->query_vars_array[0];
 
-					// Load Specified Content Block
-				    $message = new \Content\Message();
-				    $message->get($target);
-				    if ($message->error()) $buffer = "Error: " . $message->error;
-				    elseif (! $message->id) {
-						// Create Block if not found and privileges allotted
+					// Load Content Block with specified id
+					if (isset($parameter['id']) && is_numeric($parameter["id"])) {
+						$target = $parameter["id"];
+						app_log("Load block id '$target' from parameter 'id'",'trace');
+					}
+					// Load Content Block with specified target
+					elseif (isset( $parameter['target']) && preg_match("/^\w[\w\-\_]*$/", $parameter["target"])) {
+						$target = $parameter["target"];
+						app_log("Load block id '$target' from parameter 'target'",'trace');
+					}
+					// Load Content Block with URI path as target
+					elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+						$target = $GLOBALS['_REQUEST_']->query_vars_array[0];
+						app_log("Load block target '$target' from URI",'trace');
+					}
+					// Load Content Block with Page Index as target
+					else {
+						$target = $this->index;
+						app_log("Load block target '$target' from request 'index'",'trace');
+					}
+
+				    $block = new \Content\Block();
+				    $block->get($target);
+				    if ($block->error()) $buffer = "Error: " . $block->error();
+				    elseif (! $block->id) {
 						app_log("Message not found matching '$target', adding", 'info', __FILE__, __LINE__ );
 						if ($GLOBALS['_SESSION_']->customer->can('edit content messages')) {
-							$message->add(array("target" => $target));
+							$block->add(array("target" => $target));
 						}
 						else {
 							$buffer = "Sorry, the page you requested was not found";
@@ -531,21 +550,21 @@
 					    }
 				    }
 					else {
-						app_log("Found message ".$message->id);
+						app_log("Found message ".$block->id);
 					}
-				    if ($message->cached) {
+				    if ($block->cached) {
 						app_log("Loading from cache");
 					    header("X-Object-Cached: true" );
 				    }
-				    if ($message->id) {
+				    if ($block->id) {
 					    // Make Sure User Has Privileges
 					    if (is_object($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->id && $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 						    #$buffer .= '<script language="Javascript">function editContent(object,origin,id) { var textEditor=window.open("/_admin/text_editor?object="+object+"&origin="+origin+"&id="+id,"","width=800,height=600,left=20,top=20,status=0,toolbar=0"); }; function highlightContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'1px solid red\'; }; function blurContent(contentElem) { document.getElementById(\'contentElem\').style.border = \'0px\'; } </script>';
-						    $buffer .= '<contentblock id="'.$message->id.'">' . $message->content . '</contentblock>';
-						    $buffer .= '<a href="javascript:void(0)" onclick="goToEditPage('.$message->target.')">Edit</a>';
+						    $buffer .= '<contentblock id="'.$block->id.'">' . $block->content . '</contentblock>';
+						    $buffer .= '<a href="javascript:void(0)" class="btn_editContent" onclick="goToEditPage('.$block->target.')">Edit</a>';
 					    }
 						else {
-						    $buffer .= $message->content;
+						    $buffer .= $block->content;
 					    }
 				    }
 			    }
