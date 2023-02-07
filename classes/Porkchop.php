@@ -140,4 +140,12 @@
 			$rnd = dechex(mt_rand(0,mt_getrandmax()));
 			return strtoupper("$pid-$sec-$rnd");
 		}
+
+		function validEmail($email) {
+			if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+\.[a-z]{2,}$/",strtolower($email))) return true;
+			else {
+				app_log("Invalid email address: '$email'",'info');
+				return false;
+			}
+		}
 	}
