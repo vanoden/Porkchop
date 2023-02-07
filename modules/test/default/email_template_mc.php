@@ -30,7 +30,8 @@
                 }
             }
 
-            // Load Identified Group from Content (Identified here with ${-LINE-})
+            // Load Identified Group from Content (Identified here with ${GROUP} and ${-GROUP} tags)
+            // Fields within the group will be prepended with a '-' in the template
 			$line_group = $template->group('GROUP');
 
             // Add a Line to the group
