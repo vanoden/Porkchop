@@ -15,15 +15,15 @@
         }
         else {
             $template->content(file_get_contents($template_config->template));
-
-            $line = $template->newLine('LINE');
+			$line_group = $template->group('LINE');
+            $line = $line_group->addLine();
 
             $line->addParam("TICKET.LINE",1);
             $line->addParam("TICKET.PRODUCT_CODE","SF400-XX");
             $line->addParam("TICKET.SERIAL_NUMBER","SN12345");
             $line->addParam("TICKET.DESCRIPTION","This is just broken");
 
-            $line = $template->newLine('LINE');
+            $line = $line_group->addLine();
 
             $line->addParam("TICKET.LINE",2);
             $line->addParam("TICKET.PRODUCT_CODE","MB400-XX");
@@ -36,6 +36,7 @@
                     $template->addParam($key,$value);
                 }
             }
+
             print "Email contents: <pre>\n";
             print $template->render();
             print "</pre>\n";
@@ -46,7 +47,10 @@
 
         $template_name = $_REQUEST['template'];
         $template_config = $GLOBALS['_config']->support->$template_name;
-        if (! file_exists($template_config->template)) {
+		if (empty($template_config)) {
+			$page->addError("Configuration support->".$template_name." not found");
+		}
+        elseif (! file_exists($template_config->template)) {
             $page->addError("Template file '".$template_config->template."' not found");
         }
         else {

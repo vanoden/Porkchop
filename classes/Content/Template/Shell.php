@@ -45,7 +45,7 @@
 		public function content($content = null) {
 			if (isset($content)) {
 				while (preg_match('/\@\{(\w+)\}(.*)\@\{\-\w+\}/s',$content,$matches)) {
-					$this->_group[$matches[1]] = $this->_newGroup($matches[2]);
+					$this->_groups[$matches[1]] = $this->_newGroup($matches[2]);
 
 					$content = preg_replace('/\@\{\w+\}.*\@\{\-\w+\}/s','@{-'.$matches[1].'-}',$content,1);
 				}
@@ -61,8 +61,9 @@
 		}
 
 		public function group($name) {
-			if (!isset($this->_groups[$name]))
+			if (!isset($this->_groups[$name])) {
 				$this->_groups[$name] = new \Content\Template\Shell\Group();
+			}
 			return $this->_groups[$name];
 		}
 
@@ -85,13 +86,17 @@
 
 			// Replace Entire Lines
 			foreach ($this->_groups as $name => $group) {
+
 				$group_content = '';
+
 				if (preg_match('/\@\{\-('.$name.')\-\}/',$output,$matches)) {
+
 					$lines = $group->lines();
+
 					foreach ($lines as $line) {
 						$group_content .= $line->render();
 					}
-					$output = str_replace($matches[0],$block_content,$output);
+					$output = str_replace($matches[0],$group_content,$output);
 				}
 			}
 
