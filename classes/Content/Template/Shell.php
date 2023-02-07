@@ -1,8 +1,7 @@
 <?php
 	namespace Content\Template;
 	
-	class Shell {
-		private $_error;
+	class Shell Extends \BaseClass {
 		private $_content;
 		private $_params = array();
 		private $_groups = array();
@@ -79,6 +78,8 @@
 			}
 		}
 
+		// Replace Template Tags with Suppied Parameters
+		// Return text to calling method
 		private function _process() {
 			$module_pattern = '/\$\{(\w[\w\-\.\_\-]+)\}/is';
 
@@ -119,17 +120,7 @@
 			else return null;
 		}
 
-		public function newLine($subject) {
-			array_push($this->_lines,$this->_getLineTemplate($subject));
-			return end($this->_lines);
-		}
-
-		public function _getLineTemplate($subject) {
-			foreach ($this->_line_templates as $line) {
-				if ($line[0] == $subject) return $line[1];
-			}
-		}
-
+		// Return array of non-group fields
 		public function fields() {
 			preg_match_all('/\$\{(\w+\.\w+)\}/',$this->_content,$matches);
 			array_shift($matches[1]);
@@ -137,11 +128,12 @@
 		}
 
 		// Deprecated Function - Use render() instead
-		public function render() {
+		public function output() {
 			return $this->_process();
 		}
-		
-		public function error() {
-			return $this->_error;
+
+		// Pass through to private method _process
+		public function render() {
+			return $this->_process();
 		}
 	}
