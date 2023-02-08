@@ -36,14 +36,13 @@
     <ul class="form-grid three-col">
 			<li><label for="name">Name</label><span class="value"><input class="value" type="text" name="name" id="name" value="<?=$message->name?>"/></span></li>
 			<li><label for="name">Target</label><span class="value"><input class="value input lefty" type="text" name="target" id="target" value="<?=$message->target?>"/></span></li>
-      <li><li>
 		</ul>
     <div class="columns">
     <?php	if ($show_add_page) { ?>
       <span>Add As A Page? </span><input type="checkbox" name="addPage" value="1" />
     <?php	} else { ?>
-      <button href="/_content/<?=$message->target?>">Go To Page</button>
-      <button href="/_site/page?module=content&view=index&index=<?=$message->target?>">Edit Page Metadata</button>
+      <a class="button" href="/<?=$message->target?>">Go To Page</a>
+      <a class="button" href="/_site/page?module=content&view=index&index=<?=$message->target?>">Edit Page Metadata</a>
     <?php	} ?>
     </div>
     <div id="contentArea">
