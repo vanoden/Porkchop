@@ -6,7 +6,7 @@
 		public $errno;
 		public $code;
 		public $name;
-		public $product;
+		public $product_id;
 		public $serial_number;
 		public $organization;
 		public $organization_id;
@@ -25,7 +25,7 @@
 		}
 
 		public function __call($name,$parameters) {
-			if ($name == 'get' && count($parameters) == 2) return $this->getWithProduct($parameters);
+			if ($name == 'get' && count($parameters) == 2) return $this->getWithProduct($parameters[0],$parameters[1]);
 			elseif ($name == 'get') return $this->get($parameters);
 		}
 
@@ -33,9 +33,8 @@
 			$this->clearError();
 
 			# See If Existing Unit Present
-			$exists = $this->get($parameters["code"],$parameters['product_id']);
-			if ($this->error()) return null;
-			if ($exists->id) {
+			$exists = new \Product\Instance();
+			if ($exists->get($parameters["code"],$parameters['product_id'])) {
 				$this->error("Asset with code ".$parameters['code']." already exists");
 				return null;
 			}
@@ -78,7 +77,7 @@
 				]
 			);
 			
-			if ($event->error) app_log("Failed to add change to history: ".$event->error,'error',__FILE__,__LINE__);
+			if ($event->error()) app_log("Failed to add change to history: ".$event->error(),'error',__FILE__,__LINE__);
 			return $this->update($parameters);
 		}
 
@@ -217,7 +216,7 @@
 							"organization"	=> $organization->code,
 						]
 					);
-					if ($event->error) app_log("Failed to add change to history: ".$event->error,'error',__FILE__,__LINE__);
+					if ($event->error()) app_log("Failed to add change to history: ".$event->error(),'error',__FILE__,__LINE__);
 				}
 				return $this->details();
 			}
@@ -260,11 +259,6 @@
 					$this->name = $object->name;
 					$this->organization_id = $object->organization_id;
 					$this->product_id = $object->product_id;
-
-					if (! $this->_flat) {
-						$this->organization = new \Register\Organization($object->organization_id);
-						$this->product = new \Product\Item($object->product_id);
-					}
 				}
 				else {
 					$this->id = null;
@@ -282,7 +276,7 @@
 		}
 
 		public function track() {
-			$this->error = null;
+			$this->clearError();
 		}
 	
 		public function setMetadata($key,$value) {    
@@ -319,7 +313,6 @@
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-			    var_dump($this->error);
 				return null;
 			}
 			return 1;
@@ -368,15 +361,14 @@
 
 		public function getTickets($parameters = array()) {
 			$ticketList = new \Support\Request\ItemList();
-			$parameters['product_code']	= $this->product->code;
+			$parameters['product_code']	= $this->product()->code;
 			$parameters['serial_number'] = $this->code;
-			if ($GLOBALS[_SESSION_]->customer->can(""))
 			return $ticketList->find($parameters);
 		}
 
 		public function lastTicket($parameters = array()) {
 			$ticketList = new \Support\Request\ItemList();
-			$parameters['product_code']	= $this->product->code;
+			$parameters['product_code']	= $this->product()->code;
 			$parameters['serial_number'] = $this->code;
 			return $ticketList->last($parameters);
 		}

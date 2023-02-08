@@ -25,7 +25,7 @@
 	if (isset($_REQUEST['return']) && $_REQUEST['return'] == 'true') {
 		# This Is How They SHOULD Come In from Redirect
 		if (isset($_REQUEST['module']) && isset($_REQUEST['view'])) {
-			if (!$page->validModule()) {
+			if (!$page->validModule($_REQUEST['module'])) {
 				$page->addError("Invalid target requested");
 			}
 			elseif(!$page->validView($_REQUEST['view'])) {
@@ -61,9 +61,9 @@
 	if (! preg_match('/^\//',$target))
 		$target = '/'.$target;
 
-	if (($GLOBALS['_SESSION_']->customer->id) and ($target != '/'))	{
+	if (($GLOBALS['_SESSION_']->customer_id) and ($target != '/'))	{
 		app_log("Redirecting ".$GLOBALS['_SESSION_']->customer->code." to ".PATH.$target,'notice',__FILE__,__LINE__);
-		header("location: ".PATH.$target);
+		header("Location: ".PATH.$target);
 		exit;
 	}
 
@@ -117,6 +117,7 @@
 						$counter->increment();
 						$failure = new \Register\AuthFailure();
 						$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'INACTIVE',$_SERVER['PHP_SELF']);
+						app_log("EXIT 1",'notice');
 						return;
 					}
 					elseif (!empty($GLOBALS['_config']->captcha->bypass_key) && !empty($_REQUEST['captcha_bypass_key']) && $GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key']) {
@@ -131,6 +132,7 @@
 							app_log("Customer ".$customer->id. " " . $customer->status . " login ATTEMPTED",'notice',__FILE__,__LINE__);
 							app_log("login_target = $target",'debug',__FILE__,__LINE__);
 							$page->addError("CAPTCHA Required");
+							app_log("EXIT 2",'notice');
 							return;
 						}
 						else {
@@ -171,7 +173,7 @@
 						app_log("Customer ".$customer->id." logged in",'debug',__FILE__,__LINE__);
 						app_log("login_target = $target",'debug',__FILE__,__LINE__);
 						app_log("Redirecting to ".PATH.$target,'debug',__FILE__,__LINE__);
-						header("location: ".PATH.$target);
+						header("Location: ".PATH.$target);
 						exit;
 					}
 				}

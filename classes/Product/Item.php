@@ -169,11 +169,7 @@
 				$this->status = $product->status;
 				$this->type = $product->type;
 				$this->description = $product->description;
-				$this->_cached = $product->_cached;
-				if (! $this->_flat) {
-					$this->metadata = $this->getMeta();
-					$this->images = $this->images();
-				}
+				$this->cached($product->_cached);
 
 				# In Case Cache Corrupted
 				if ($product->id) {
@@ -185,7 +181,7 @@
 				}
 			}
 			else {
-				$this->_cached = false;
+				$this->cached(false);
 			}
 
 			# Prepare Query to Get Product Details
@@ -221,10 +217,7 @@
 				if ($cache_item->set($object))
 					app_log("Cache result: success");
 				else
-					app_log("Cache result: failed: ".$cache_item->error);
-
-			$this->metadata = $this->getMeta();
-			$this->images = $this->images();
+					app_log("Cache result: failed: ".$cache_item->error());
 
 			return true;
 		}
@@ -325,7 +318,7 @@
 			";
 			$GLOBALS['_database']->Execute($add_image_query,array($this->id,$image_id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Product::Item::addImage(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 			return 1;
@@ -340,7 +333,7 @@
 			";
 			$GLOBALS['_database']->Execute($drop_image_query,array($this->id,$image_id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Product::Item::dropImage(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 			return 1;
@@ -355,7 +348,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_image_query,array($this->id,$image_id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::hasImage(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($found) = $rs->FetchRow();
@@ -373,7 +366,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::getMeta(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$metadata = array();
@@ -394,7 +387,7 @@
 				array($this->id,$key)
 			);
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::getMetadata(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($value) = $rs->FetchRow();
@@ -419,7 +412,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Product::Item::addMeta: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			return 1;

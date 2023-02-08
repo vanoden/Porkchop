@@ -19,7 +19,7 @@
 		}
 
 		public function __call($name,$parameters) {
-			if ($name == "get") return $this->getDelivery($parameters);
+			if ($name == "get") return $this->getDelivery($parameters[0],$parameters[1]);
 		}
 
         public function getDelivery($message_id,$user_id) {

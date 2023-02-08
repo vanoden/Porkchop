@@ -9,7 +9,7 @@
 			$this->_tableName = "register_roles";
 			$this->_tableUKColumn = 'name';
 
-			if (isset($id)) {
+			if (isset($id) && is_numeric($id)) {
 				$this->id = $id;
 				$this->details();
 			}
@@ -130,7 +130,7 @@
 		
 		public function addMember($person_id) {
 			if ($this->hasMember($person_id)) {
-				$this->error = "Person already has role";
+				$this->error("Person already has role");
 				return true;
 			}
 
@@ -192,7 +192,7 @@
 				app_log("Sending notification to '".$member->code."' about contact form",'debug',__FILE__,__LINE__);
 				$member->notify($message);
 				if ($member->error()) {
-					app_log("Error sending notification: ".$member->error,'error',__FILE__,__LINE__);
+					app_log("Error sending notification: ".$member->error(),'error',__FILE__,__LINE__);
 					$this->error("Failed to send notification: ".$member->error());
 					return false;
 				}
@@ -204,7 +204,7 @@
                 $privilege = new \Register\Privilege($new_privilege);
             else {
     			$privilege = new \Register\Privilege();
-			    if (! $privilege->get(array('privilege' => $new_privilege))) {
+			    if (! $privilege->get($new_privilege)) {
                     $this->error("Can't get privilege $new_privilege");
                     return false;
                 }

@@ -28,6 +28,8 @@
 		// Name for Cache Key - id appended in square brackets
 		protected $_cacheKeyPrefix;
 
+		protected $id = 0;
+
 		/********************************************/
 		/* Get Object Record Using Unique Code		*/
 		/********************************************/
@@ -42,13 +44,13 @@
 			$get_object_query = "
 				SELECT	`".$this->_tableIDColumn."`
 				FROM	`".$this->_tableName."`
-				WHERE	`".$this->_tableUKName."` = ?";
+				WHERE	`".$this->_tableUKColumn."` = ?";
 
 			// Bind Code to Query
 			$database->AddParam($code);
 
 			// Execute Query
-			$rs = $database->Execute($get_object_code);
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
@@ -117,7 +119,7 @@
 			$database = new \Database\Service();
 			$cache = $this->cache();
 
-			$cache->delete();
+			if (isset($cache)) $cache->delete();
 	
 			// Prepare Query
 			$delete_object_query = "
@@ -134,6 +136,7 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+			return true;
 		}
 	
 		public function error($value = null,$caller = null) {
@@ -200,6 +203,9 @@
 				if ($cached) $this->_cached = 1;
 				else $this->_cached = 0;
 			}
+			elseif(is_numeric($cached)) {
+				$this->_cached = $cached;
+			}
 			return $this->_cached;
 		}
 
@@ -221,5 +227,9 @@
 		public function validType($string) {
 			if (in_array($string,$this->_types)) return true;
 			else return false;
+		}
+
+		public function details() {
+			return true;
 		}
 	}

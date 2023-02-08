@@ -4,11 +4,12 @@
 use Aws\Iam\Exception\DeleteConflictException;
 use Elasticsearch\Endpoints\Indices\Alias\Delete;
 
-class Metadata {
+class Metadata Extends \BaseClass {
 		public $id;
 		public $template;
 		public $page_id;
 		public $key;
+		public $value;
 
 		public function __construct($id = null) {
 			if (!empty($id)) {
@@ -20,7 +21,11 @@ class Metadata {
 		###################################################
 		### Get Page Metadata							###
 		###################################################
-		public function get($page_id,$key) {
+		public function __call($name,$parameters) {
+			if ($name == "get") $this->getMeta($parameters[0],$parameters[1]);
+		}
+
+		public function getMeta($page_id,$key) {
 			$this->page_id = $page_id;
 			$this->key = $key;
 
@@ -36,8 +41,8 @@ class Metadata {
 				array($page_id,$key)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Page::Metadata::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
@@ -46,12 +51,12 @@ class Metadata {
 
 		public function set($value) {
 			if (! $this->page_id) {
-				$this->error = "Invalid page id in Site::Page::Metadata::set";
-				return null;
+				$this->error("Invalid page id");
+				return false;
 			}
 			if (! isset($this->key)) {
-				$this->error = "Invalid key name in Site::Page::Metadata::set";
-				return null;
+				$this->error("Invalid key name");
+				return false;
 			}
 
 			$set_data_query = "
@@ -66,8 +71,8 @@ class Metadata {
 				array($this->page_id,$this->key,$value)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Page::Metadata::add(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			return true;
 		}
@@ -80,7 +85,7 @@ class Metadata {
 			";
 			$GLOBALS['_database']->Execute($update_metadata_query,array($value,$this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Page::Metadata::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return $this->details();
@@ -103,8 +108,8 @@ class Metadata {
 			);
 			if (! $rs)
 			{
-				$this->error = "SQL Error in Site::Page::Metadata::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			if ($object = $rs->FetchNextObject(false)) {
 				$this->page_id = $object->page_id;
@@ -117,7 +122,7 @@ class Metadata {
 
 		public function drop() {
 			if (empty($this->id)) {
-				$this->error = "Metadata id not set";
+				$this->error("Metadata id not set");
 				return false;
 			}
 			$drop_key_query = "
@@ -128,13 +133,9 @@ class Metadata {
 			query_log($drop_key_query,array($this->id),true);
 			$GLOBALS['_database']->Execute($drop_key_query,array($this->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Page::Metadata::drop(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
-		}
-
-		public function error() {
-			return $this->error;
 		}
 	}

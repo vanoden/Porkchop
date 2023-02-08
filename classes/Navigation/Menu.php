@@ -4,7 +4,8 @@
 
     class Menu Extends \BaseClass {
 	    public $id;
-	    public $name;
+		public $code;
+		public $title;
 
 	    public function __construct($id = 0) {
 			$this->_tableName = 'navigation_menus';
@@ -95,7 +96,7 @@
 		    $itemlist = new \Navigation\ItemList();
 		    $items = $itemlist->find(array('menu_id' => $this->id, 'parent_id' => $parent_id));
 		    if ($itemlist->error()) {
-			    $this->_error = $itemlist->error();
+			    $this->error($itemlist->error());
 			    return null;
 		    }
 		    return $items;

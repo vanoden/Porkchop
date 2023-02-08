@@ -4,6 +4,10 @@
 	class Admin extends \BaseClass {
 		public $id;
 		public $_error;
+		public $country_id;
+		public $name;
+		public $abbreviation;
+		public $code;
 
 		public function __construct(int $id = 0) {
 			$this->_tableName = 'geography_provinces';
@@ -99,7 +103,6 @@
 		}
 
 		public function __call($name, $arguments) {
-            app_log("__call $name",'notice');
 			if ($name == "get") return $this->getProvince($arguments[0],$arguments[1]);
 			else $this->error("Method '$name' not found");
 		}

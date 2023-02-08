@@ -79,8 +79,8 @@
 					app_log("Updating customer ".$customer_id,'debug',__FILE__,__LINE__);
 					$customer = new \Register\Customer($customer_id);
 					$customer->update($parameters);
-					if ($customer->error) {
-						app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
+					if ($customer->error()) {
+						app_log("Error updating customer: ".$customer->error(),'error',__FILE__,__LINE__);
 						$page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
 						goto load;
 					}
@@ -109,8 +109,8 @@
 					$customer = new \Register\Customer();
 					$customer->add($parameters);
 
-					if ($customer->error) {
-						$page->addError($customer->error);
+					if ($customer->error()) {
+						$page->addError($customer->error());
 						goto load;
 					}
 
@@ -140,8 +140,8 @@
 			
 					// Registration Confirmation
 					$customer->notify($message);
-					if ($customer->error) {
-						app_log("Error sending registration confirmation: ".$_contact->error,'error',__FILE__,__LINE__);
+					if ($customer->error()) {
+						app_log("Error sending registration confirmation: ".$_contact->error(),'error',__FILE__,__LINE__);
 						$page->addError("Sorry, we were unable to complete your registration");
 						goto load;
 					}
@@ -171,7 +171,7 @@
 
                         if (! $contact->validType($_REQUEST['type'][$contact_id]))
                             $page->addError("Invalid contact type");
-                        elseif (! $contact->validValue($_REQUEST['type'][$contact_id],$_REQUEST['value'][$contact->id]))
+                        elseif (! $contact->validValue($_REQUEST['type'][$contact_id],$_REQUEST['value'][$contact_id]))
                             $page->addError("Invalid value for added contact type: ". $_REQUEST['type'][$contact_id]);
                         else {
                             // Update Existing Contact Record
@@ -239,14 +239,14 @@
 				if (isset($_REQUEST['role'][$role->id]) && $_REQUEST['role'][$role->id]) {
 					app_log("Role is selected",'trace',__FILE__,__LINE__);
 					if (! $customer->has_role($role->name)) {
-						app_log("Adding role ".$role->name." for ".$customer->login,'debug',__FILE__,__LINE__);
+						app_log("Adding role ".$role->name." for ".$customer->code,'debug',__FILE__,__LINE__);
 						$customer->add_role($role->id);
 					}
 				}
 				else {
 					app_log("Role is not selected",'trace',__FILE__,__LINE__);
 					if ($customer->has_role($role->name)){
-						app_log("Role ".$role->name." being revoked from ".$customer->login,'debug',__FILE__,__LINE__);
+						app_log("Role ".$role->name." being revoked from ".$customer->code,'debug',__FILE__,__LINE__);
 						$customer->drop_role($role->id);
 					}
 				}
@@ -282,9 +282,9 @@
 	$_contact = new \Register\Contact();
 	$contact_types = $_contact->types;
 
-	if (!empty($customer->login)) {
+	if (!empty($customer->code)) {
 		$authFailureList = new \Register\AuthFailureList();
-		$authFailures = $authFailureList->find(array('_limit' => 5,'login' => $customer->login));
+		$authFailures = $authFailureList->find(array('_limit' => 5,'login' => $customer->code));
 	} else {
 		$authFailures = array();
 	}

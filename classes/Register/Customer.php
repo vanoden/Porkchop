@@ -200,7 +200,7 @@
 				$failure->add($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']);
 				$this->increment_auth_failures();
 				if ($this->auth_failures() >= 6) {
-					app_log("Blocking customer '".$this->login."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
+					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
 					return false;
 				}
@@ -217,7 +217,7 @@
 			$authenticationFactory = new \Register\AuthenticationService\Factory();
 			$authenticationService = $authenticationFactory->service($this->auth_method);
 
-			if ($authenticationService->changePassword($this->login,$password)) {
+			if ($authenticationService->changePassword($this->code,$password)) {
 				$this->resetAuthFailures();
 				return true;
 			}
@@ -307,10 +307,10 @@
 			$products = array();
 			while ($record = $rs->FetchRow()) {
 				$product = new \Product\Item($product['id']);
-				$product->expire_date = $record['expire_date'];
-				$product->quantity = $record['quantity'];
-				$product->expired = $record['expired'];
-				$product->group_flag = $record['group_flag'];
+				//$product->expire_date = $record['expire_date'];
+				//$product->quantity = $record['quantity'];
+				//$product->expired = $record['expired'];
+				//$product->group_flag = $record['group_flag'];
 				array_push($products,$product);
 			}
 			return $products;
@@ -485,8 +485,8 @@
 		public function last_active() {
 			$sessionList = new \Site\SessionList();
 			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
-			if ($sessionList->error) {
-				$this->error("Error getting session: ".$sessionList->error);
+			if ($sessionList->error()) {
+				$this->error("Error getting session: ".$sessionList->error());
 				return null;
 			}
 			if (! $session) return null;
@@ -496,8 +496,8 @@
 		public function is_super_elevated() {
 			$sessionList = new \Site\SessionList();
 			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
-			if ($sessionList->error) {
-				$this->error("Error getting session: ".$sessionList->error);
+			if ($sessionList->error()) {
+				$this->error("Error getting session: ".$sessionList->error());
 				return false;
 			}
 			if (! $session) return false;
@@ -530,7 +530,7 @@
 				FROM	register_user_locations rul
 				WHERE	rul.user_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->organization->id,$this->id));
+			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->organization()->id,$this->id));
 			
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());

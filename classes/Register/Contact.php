@@ -2,8 +2,13 @@
 	namespace Register;
 
 	class Contact Extends \BaseClass {
-		public $id;
 		public $person;
+		public $type;
+		public $value;
+		public $notes;
+		public $description;
+		public $notify;
+
 		public $types = array(
 			'phone'		=> "Phone Number",
 			'email'		=> "Email Address",
@@ -23,7 +28,7 @@
 		}
 
 		public function __call($name, $parameters) {
-			if ($name == "get") return $this->getContact($parameters);
+			if ($name == "get") return $this->getContact($parameters[0],$parameters[1]);
 			else {
 				error_log("Method $name not found for ".get_class($this));
 			}

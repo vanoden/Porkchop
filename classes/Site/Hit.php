@@ -89,7 +89,7 @@
 			}
 			return $hits;
 		}
-		function details($id) {
+		function details() {
 			$get_object_query = "
 				SELECT	h.id,
 						h.hit_date,
@@ -103,7 +103,7 @@
 
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,
-				array($id)
+				array($this->id)
 			);
 			if (! $rs)
 			{

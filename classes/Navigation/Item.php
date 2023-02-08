@@ -24,7 +24,7 @@
 		}
 
 		public function __call($name, $arguments) {
-			if ($name == "get") return $this->getItem($arguments);
+			if ($name == "get") return $this->getItem($arguments[0],$arguments[1],$arguments[2]);
 			else $this->error("Method '$name' not found");
 		}
 
@@ -169,7 +169,7 @@
 			}
 			else {
 				$this->id = null;
-				$this->menu = new Menu(null);
+				$this->menu_id = null;
 				$this->title = null;
 				$this->target = null;
 				$this->view_order = null;

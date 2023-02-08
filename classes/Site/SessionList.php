@@ -1,8 +1,11 @@
 <?php
 	namespace Site;
 
-	class SessionList {
+	class SessionList Extends \BaseListClass{
 		public function find($parameters = array()) {
+			$this->clearError();
+			$this->resetCount();
+
 			$bind_params = array();
 
 			$find_objects_query = "
@@ -48,14 +51,14 @@
             query_log($find_objects_query);
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SessionList::find(): ".$GLOBALS['_database']->ErrorMsg();
-				print $this->error;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
 				$object = new \Site\Session($id);
 				array_push($objects,$object);
+				$this->incrementCount();
 			}
 			return $objects;
 		}

@@ -3,7 +3,6 @@
 
 	class Location Extends \BaseClass {
 		private $schema_version = 1;
-		public $error;
 		public $id;
 		public $company_id;
 		public $code;
@@ -42,7 +41,7 @@
 				array($hostname)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Company::Location::getByHost(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -61,14 +60,14 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Company::Domain::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
 			$object = $rs->FetchNextObject(false);
 			if ($object) {
 				$this->id = $object->id;
-				$this->company = new \Company\Company($object->company_id);
+				$this->company_id = $object->company_id;
 				$this->code = $object->code;
 				$this->address_1 = $object->address_1;
 				$this->address_2 = $object->address_2;
@@ -82,15 +81,14 @@
 				$this->name = $object->name;
 				$this->service_contact = $object->service_contact;
 				$this->sales_contact = $object->sales_contact;
-				$this->domain = new \Company\Domain($object->domain_id);
+				$this->domain_id = $object->domain_id;
 				$this->host = $object->host;
 				$this->cached(true);
 				$this->exists(true);
-				return true;
 			}
 			else {
 				$this->id = null;
-				$this->company = null;
+				$this->company_id = null;
 				$this->code = null;
 				$this->address_1 = null;
 				$this->address_2 = null;
@@ -104,10 +102,10 @@
 				$this->name = null;
 				$this->service_contact = null;
 				$this->sales_contact = null;
-				$this->domain = null;
+				$this->domain_id = null;
 				$this->host = null;
-				return false;
 			}
+			return true;
 		}
 
 		public function add($parameters = array()) {
@@ -137,7 +135,7 @@
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return undef;
+				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
@@ -184,5 +182,9 @@
 				return false;
 			}
 			return $this->details();
+		}
+
+		public function domain() {
+			return new \Company\Domain($this->domain_id);
 		}
 	}

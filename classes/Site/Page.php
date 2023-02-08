@@ -53,7 +53,7 @@
 	    }
 
 		public function __call($name, $arguments) {
-			if ($name == "get") return $this->getPage($arguments);
+			if ($name == "get") return $this->getPage($arguments[0],$arguments[1],$arguments[2]);
 			else $this->error("Method '$name' not found");
 		}
 
@@ -283,7 +283,7 @@
 		    if (($this->auth_required) and (! $GLOBALS ["_SESSION_"]->customer->id)) {
 			    if (($this->module != "register") or (! in_array ( $this->view, array ('login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you' ) ))) {
 				    // Clean Query Vars for this
-				    $auth_query_vars = preg_replace ( "/\/$/", "", $this->query_vars );
+				    $auth_query_vars = preg_replace ( "/\/$/", "", $GLOBALS['_REQUEST_']->query_vars );
 
 				    if ($this->module == 'content' && $this->view == 'index' && ! $auth_query_vars) $auth_target = '';
 				    else {
@@ -445,7 +445,7 @@
 				elseif ($property == "navigation") {
 					$menu = new \Navigation\Menu();
 					if ($menu->get($parameter["name"])) {
-						$buffer .= $menu->html();
+						$buffer .= $menu->asHTML($parameter['name']);
 					}
 					else {
 						$this->error($menu->error());
@@ -456,13 +456,13 @@
 					    foreach ($items as $item) {
 						    if (isset( $parameter ['class'] )) $button_class = $parameter ['class'];
 						    else {
-							    $button_class = "button_" . preg_replace ( "/\W/", "_", $menu->name );
+							    $button_class = "button_" . preg_replace ( "/\W/", "_", $menu->title );
 						    }
 						    $button_id = "button[" . $item->id . "]";
 						    if (count ( $item->children )) {
-							    $child_container_class = "child_container_" . preg_replace ( "/\W/", "_", $menu->name );
+							    $child_container_class = "child_container_" . preg_replace ( "/\W/", "_", $menu->title );
 							    $child_container_id = "child_container[" . $item->id . "]";
-							    $child_button_class = "child_button_" . preg_replace ( "/\W/", "_", $menu->name );
+							    $child_button_class = "child_button_" . preg_replace ( "/\W/", "_", $menu->title );
 
 							    $buffer .= "<div" . " onMouseOver=\"expandMenu('$child_container_id')\"" . " onMouseOut=\"collapseMenu('$child_container_id')\"" . " id=\"$button_id\"" . " class=\"$button_class\"" . ">" . $item->title . "</div>\n";
 
@@ -561,7 +561,7 @@
 					    // Make Sure User Has Privileges
 					    if (is_object($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->id && $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 						    $buffer .= '<contentblock id="'.$block->id.'">' . $block->content . '</contentblock>';
-						    $buffer .= '<a href="javascript:void(0)" class="btn_editContent" onclick="goToEditPage(\''.$block->target.'\')">Edit</a>';
+						    $buffer .= '<a href="javascript:void(0)" class="btn_editContent" onclick="goToEditPage(\''.$block->name.'\')">Edit</a>';
 					    }
 						else {
 						    $buffer .= $block->content;
@@ -575,17 +575,19 @@
 			elseif ($object == "product") {  
 			    // Load Product Class if Not Already Loaded
 			    if ($property == "thumbnail") {
-				    $id = $this->query_vars;
-				    $product = new \Product\Item ( $id );
+				    $id = $GLOBALS['_REQUEST_']->query_vars;
+				    $product = new \Product\Item($id);
 				    if (! $id) {
-					    $category = $product->defaultCategory ();
+					    $category_id = $product->defaultCategory();
 					    if ($product->error()) {
 						    print $product->error();
-						    exit ();
+						    exit();
 					    }
-				    } else {
-					    $category = $product->details ( $id );
 				    }
+					else {
+					    $category_id = $product->id;
+				    }
+					$category = new \Product\Item($category_id);
 					$productList = new \Product\ItemList();
 				    $products = $productList->find ( array ("category" => $category->code ) );
 
@@ -596,7 +598,7 @@
 			    }
 				elseif ($property == "detail") {
 				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
-				    elseif ($this->query_vars) $id = $this->query_vars;
+				    elseif ($GLOBALS['_REQUEST_']->query_vars) $id = $GLOBALS['_REQUEST_']->query_vars;
 
 				    $product = new \Product\Item( $id );
 				    if ($parameter ["format"] == "thumbnail") {
@@ -604,16 +606,16 @@
 						    $buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
 						    $buffer .= "\t<a href=\"/_product/thumbnail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
 						    $buffer .= "\t<div class=\"product_thumbnail_description\">" . $product->description . "</div>\n";
-						    $buffer .= "\t<div class=\"product_thumbnail_retail\">" . $product->retail . "</div>\n";
-						    if ($product->images ["0"]->files->thumbnail->path) $buffer .= "\t\t<img src=\"" . $product->images ["0"]->files->thumbnail->path . "\" class=\"product_thumbnail_image\"/>\n";
+						    $buffer .= "\t<div class=\"product_thumbnail_retail\">" . $product->currentPrice() . "</div>\n";
+						    if ($product->images()[0]->files->thumbnail->path) $buffer .= "\t\t<img src=\"" . $product->images()["0"]->files->thumbnail->path . "\" class=\"product_thumbnail_image\"/>\n";
 						    $buffer .= "</div>\n";
 					    }
 						else {
 						    $buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
 						    $buffer .= "\t<a href=\"/_product/detail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
 						    $buffer .= "\t<div class=\"product_thumbnail_description\">" . $product->description . "</div>\n";
-						    $buffer .= "\t<div class=\"product_thumbnail_retail\">" . $product->retail . "</div>\n";
-						    if ($product->images ["0"]->files->thumbnail->path) $buffer .= "\t<div class=\"product_thumbnail_image\"><img src=\"" . $product->images ["0"]->files->thumbnail->path . "\" class=\"product_thumbnail_image\"/></div>\n";
+						    $buffer .= "\t<div class=\"product_thumbnail_retail\">" . $product->currentPrice(). "</div>\n";
+						    if ($product->images()["0"]->files->thumbnail->path) $buffer .= "\t<div class=\"product_thumbnail_image\"><img src=\"" . $product->images()["0"]->files->thumbnail->path . "\" class=\"product_thumbnail_image\"/></div>\n";
 						    $buffer .= "</div>\n";
 					    }
 				    }
@@ -621,31 +623,32 @@
 					    $buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
 					    $buffer .= "<a href=\"/_product/detail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
 					    $buffer .= "<div class=\"product_detail_description\">" . $product->description . "</div>\n";
-					    $buffer .= "<div class=\"product_detail_retail\">" . $product->retail . "</div>\n";
-					    if ($product->images ["0"]->files->large->path) $buffer .= "<img src=\"" . $product->images ["0"]->files->large->path . "\" class=\"product_thumbnail_image\"/>\n";
+					    $buffer .= "<div class=\"product_detail_retail\">" . $product->currentPrice(). "</div>\n";
+					    if ($product->images()["0"]->files->large->path) $buffer .= "<img src=\"" . $product->images()["0"]->files->large->path . "\" class=\"product_thumbnail_image\"/>\n";
 					    $buffer .= "</div>\n";
 				    }
 			    }
 				elseif ($property == "navigation") {
 				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
-				    elseif ($this->query_vars) $id = $this->query_vars;
+				    elseif ($GLOBALS['_REQUEST_']->query_vars) $id = $GLOBALS['_REQUEST_']->query_vars;
 
-				    $_product = new \Product\Item();
+				    $_product = new \Product\Item($id);
 				    if (! $id) {
-					    $category = $_product->defaultCategory ();
-					    if ($_product->error) {
-						    print $_product->error;
-						    exit ();
+					    $category_id = $_product->defaultCategory();
+					    if ($_product->error()) {
+						    print $_product->error();
+						    exit();
 					    }
-				    } else {
-					    $category = $_product->details ( $id );
 				    }
+					else {
+					    $category_id = $_product->id;
+				    }
+					$category = new \Product\Item($category_id);
                     $productList = new \Product\ItemList();
 				    $products = $productList->find( array ("category" => $category->code ) );
 
 				    // Loop Through Products
-				    foreach ( $products as $product_id ) {
-					    $product = $_product->details ( $product_id );
+				    foreach ($products as $product) {
 					    if ($product->type->group) {
 						    $buffer .= "<div id=\"product_navigation[" . $parameter ["id"] . "]\" class=\"product_navigation\">\n";
 						    $buffer .= "<a href=\"/_product/thumbnail/" . $product->id . "\" class=\"product_navigation_name\">" . $product->name . "</a>\n";
@@ -676,7 +679,7 @@
 		    }
 			elseif ($object == "register") {
 			    if (isset ( $parameter ['id'] ) and preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
-			    elseif (isset ( $this->query_vars )) $id = $this->query_vars;
+			    elseif (isset ( $GLOBALS['_REQUEST_']->query_vars )) $id = $GLOBALS['_REQUEST_']->query_vars;
 
 			    if ($property == "user") {
 				    if ($parameter ['field'] == "name") {
@@ -709,13 +712,13 @@
 		    }
 			elseif ($object == "news") {
 			    if ($property == "events") {
-				    $eventlist = new \News\EventList ();
-				    if ($eventlist->error) {
-					    $this->error = "Error fetching events: " . $eventlist->error;
+				    $eventlist = new \News\EventList();
+				    if ($eventlist->error()) {
+					    $this->error = "Error fetching events: " . $eventlist->error();
 				    } else {
 					    $events = $eventlist->find ( array ('feed_id' => $parameter ['id'] ) );
-					    if ($eventlist->error) {
-						    $this->error = "Error fetching events: " . $eventlist->error;
+					    if ($eventlist->error()) {
+						    $this->error = "Error fetching events: " . $eventlist->error();
 					    } else if (count ( $events )) {
 						    foreach ( $events as $event ) {
 								$greenbar = '';
@@ -827,7 +830,7 @@
 	    
 		public function getMetadata($key) {
 			$metadata = new \Site\Page\Metadata();
-			if ($metadata->get($this->id,$key)) {
+			if ($metadata->getMeta($this->id,$key)) {
 				return $metadata->value;
 			}
 			else {
@@ -846,7 +849,7 @@
 		    }
 
 		    $metadata = new \Site\Page\Metadata();
-			$metadata->get($this->id,$key);
+			$metadata->getMeta($this->id,$key);
 			if (! isset($value)) {
 				$metadata->drop();
 			}

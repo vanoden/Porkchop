@@ -40,15 +40,15 @@
 			return $this->get($parameters['parent_id'],$parameters['child_id']);
 		}
 		public function __call($name,$parameters) {
-			if ($name == "get") return $this->getRelationShip($parameters);
+			if ($name == "get") return $this->getRelationShip($parameters[0],$parameters[1]);
 		}
 		public function getRelationship($parent_id,$child_id) {
-			$parent = new \Product\Group($parameters['parent_id']);
+			$parent = new \Product\Group($parent_id);
 			if (!$parent->exists()) {
 				$this->error("Parent group not found");
 				return null;
 			}
-			$child = new \Product\Item($parameters['child_id']);
+			$child = new \Product\Item($child_id);
 			if (!$child->exists()) {
 				$this->error("Child item not found");
 				return null;

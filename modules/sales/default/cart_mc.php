@@ -13,7 +13,7 @@
         	$_REQUEST['order_code'] = $salesOrder->code;
     	}
 	}
-	
+
 	// clean user input
 	$organization_id = 0;
 	if (isset($_REQUEST['organization_id'])) $organization_id = intval($_REQUEST['organization_id']);

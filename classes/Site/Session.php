@@ -7,7 +7,7 @@
 		public $order = 0;
 		public $customer;
 		public $company;
-		public $domain;
+		public $domain_id;
 		public $refer_url = '';
 		public $refer_domain = '';
 		public $browser = '';
@@ -21,6 +21,9 @@
 		public $super_elevation_expires;
 		public $isMobile = false;
 		public $isRemovedAccount = false;
+		public $timezone;
+		public $location_id;
+		public $customer_id;
 		private $csrfToken;
 		private $cookie_name;
 		private $cookie_domain;
@@ -40,41 +43,43 @@
 
 		public function start() {
 			# Fetch Company Information
-			$this->location = new \Company\Location();
-			$this->location->getByHost($_SERVER['SERVER_NAME']);
-			
-			if (! $this->location->id) {
+			$location = new \Company\Location();
+			$location->getByHost($_SERVER['SERVER_NAME']);
+			$this->location_id = $location->id;
+
+			if (! $location->id) {
 				$this->error("Location ".$_SERVER['SERVER_NAME']." not configured");
 				return null;
 			}
-			if (! $this->location->domain->id) {
-				$this->error("No domain assigned to location '".$this->location->id."'");
+			if (! $location->domain()->id) {
+				$this->error("No domain assigned to location '".$location->id."'");
 				return null;
 			}
 
-			$this->domain = new \Company\Domain($this->location->domain->id);
-			if ($this->domain->error()) {
-				$this->error("Error finding domain: ".$this->domain->error());
+			$domain = new \Company\Domain($location->domain()->id);
+			if ($domain->error()) {
+				$this->error("Error finding domain: ".$domain->error());
 				return null;
 			}
-			if (! $this->domain->id) {
-				$this->error("Domain '".$this->domain->id."' not found for location ".$this->location->id);
+			if (! $domain->id) {
+				$this->error("Domain '".$domain->id."' not found for location ".$this->location()->id);
 				return null;
 			}
+			$this->domain_id = $domain->id;
 
-			$this->company = new \Company\Company($this->domain->company->id);
+			$this->company = new \Company\Company($domain->company->id);
 			if ($this->company->error()) {
 				$this->error("Error finding company: ".$this->company->error());
 				return null;
 			}
 			if (! $this->company->id) {
-				$this->error("Company '".$this->domain->company->id."' not found");
+				$this->error("Company '".$domain->company->id."' not found");
 				return null;
 			}
 
 			# Cookie Parameters
 			if (isset($GLOBALS['_config']->session->domain)) $this->cookie_domain = $GLOBALS['_config']->session->domain;
-			else $this->cookie_domain = $this->domain;
+			else $this->cookie_domain = $domain;
 			if (isset($GLOBALS['_config']->session->cookie) && is_string($GLOBALS['_config']->session->cookie)) $this->cookie_name = $GLOBALS['_config']->session->cookie;
 			else $this->cookie_name = "session_code";
 			if (isset($GLOBALS['_config']->session->expires)) $this->cookie_expires = time() + $GLOBALS['_config']->session->expires;
@@ -91,15 +96,19 @@
 				if ($this->id) {
 					app_log("Loaded session ".$this->id.", customer ".$this->customer->id,'debug',__FILE__,__LINE__);
 					$this->timestamp($this->id);
-				} else {
-					app_log("Session $request_code not available or expired, deleting cookie for ".$this->domain->name,'notice',__FILE__,__LINE__);
+				}
+				else {
+					app_log("Session $request_code not available or expired, deleting cookie for ".$domain->name,'notice',__FILE__,__LINE__);
 					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST'],false,true);
 				}
-			} elseif (isset($request_code)) {
+			}
+			elseif (isset($request_code)) {
 				app_log("Invalid session code '$request_code' sent from client",'notice',__FILE__,__LINE__);
-			} else {
+			}
+			else {
 				app_log("No session code sent from client",'debug',__FILE__,__LINE__);
 			}
+			$this->clearError();
 
 			if (! $this->id) {
 				# Create New Session
@@ -161,7 +170,9 @@
 			}
 
 			# Delete Cookie
-			setcookie("session_code", $GLOBALS['_SESSION_']->code, time() - 604800, '/', $GLOBALS['_SESSION_']->domain->name);
+			app_log("Deleting session_code cookie '".$GLOBALS['_SESSION_']->code."' for ".$GLOBALS['_SESSION_']->domain()->name,'notice');
+			//setcookie("session_code", $GLOBALS['_SESSION_']->code, time() - 604800, '/', $GLOBALS['_SESSION_']->domain->name);
+			setcookie("session_code","",time() - 3600);
 
 			return true;
 		}
@@ -247,7 +258,7 @@
 
 			# Set Session Cookie
 			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['HTTP_HOST'],false,true)) {
-				app_log("New Session ".$this->id." created for ".$this->domain->id." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
+				app_log("New Session ".$this->id." created for ".$this->domain()->id." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
 				app_log("Session Code ".$new_code,'debug',__FILE__,__LINE__);
 			}
 			else{
@@ -282,7 +293,7 @@
                         $cache->set($session,600);
                     }
 					$this->csrfToken = $session->csrfToken;
-					$this->_cached = 1;
+					$this->cached(true);
 					return true;
 				}
 			}
@@ -508,7 +519,7 @@
 					"session_id" => $id
 				)
 			);
-			if ($hitlist->error) {
+			if ($hitlist->error()) {
 				$this->error($hitlist->error());
 				return null;
 			}
@@ -646,5 +657,13 @@
         
 		public function getCSRFToken() {
 			return $this->csrfToken;
+		}
+
+		public function location() {
+			return new \Company\Location($this->location_id);
+		}
+
+		public function domain() {
+			return new \Company\Domain($this->domain_id);
 		}
 	}

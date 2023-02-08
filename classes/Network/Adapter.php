@@ -19,7 +19,7 @@
 		}
 
 		public function __call($name,$parameters) {
-			if ($name == "get") return $this->getAdapter($parameters);
+			if ($name == "get") return $this->getAdapter($parameters[0],$parameters[1]);
 			else $this->error("No method $name");
 		}
 
@@ -143,7 +143,7 @@
 		}
 
 		public function ip_addresses() {
-			$addressList = new AddressList();
+			$addressList = new IPAddressList();
 
 			$addresses = $addressList->find(array('adapter_id' => $this->id));
 			if ($addressList->error()) {

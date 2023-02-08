@@ -10,6 +10,7 @@ class Person Extends \BaseClass {
     public $last_name;
     public $location;
     public $organization_id;
+    public $department_id;
     public $code;
     public $message;
     public $department;
@@ -18,6 +19,8 @@ class Person Extends \BaseClass {
     public $automation;
     public $password_age;
 	public $auth_failures;
+    public $timezone;
+    public $auth_method;
     public $_settings = array( "date_format" => "US" );
 
     public function __construct(int $id = null) {
@@ -53,7 +56,6 @@ class Person Extends \BaseClass {
             $this->first_name = $customer->first_name;
             $this->last_name = $customer->last_name;
             $this->code = $customer->code;
-            $this->login = $customer->code;
             $this->department_id = $customer->department_id;
             if (isset($customer->department)) $this->department = $customer->department;
             $this->organization_id = $customer->organization_id;
@@ -110,7 +112,6 @@ class Person Extends \BaseClass {
             $this->first_name = $customer->first_name;
             $this->last_name = $customer->last_name;
             $this->code = $customer->code;
-            $this->login = $customer->code;
             $customer->login = $customer->code;
             $this->organization_id = $customer->organization_id;
             $this->department_id = $customer->department_id;
@@ -131,9 +132,8 @@ class Person Extends \BaseClass {
             $this->first_name = null;
             $this->last_name = null;
             $this->code = null;
-            $this->login = null;
             $customer->login = null;
-            $this->organization = new Organization();
+            $this->organization_id = null;
             $this->department_id = null;
             $this->status = null;
             $this->timezone = null;
@@ -250,7 +250,7 @@ class Person Extends \BaseClass {
 		}
 		if (isset($parameters['login']) and !empty($parameters['login'])) {
 			if (!$this->validLogin($parameters['login'])) {
-				$this->error = "Invalid login";
+				$this->error("Invalid login");
 				return false;
 			}
 			$update_customer_query .= ",
@@ -303,7 +303,6 @@ class Person Extends \BaseClass {
 			WHERE	id = ?
 		";
 		array_push($bind_params,$this->id);
-		query_log($update_customer_query,$bind_params,true);
         $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
         if ($GLOBALS['_database']->ErrorMsg()) {
             $this->SQLError($GLOBALS['_database']->ErrorMsg());
@@ -645,8 +644,8 @@ class Person Extends \BaseClass {
 	}
 
 	public function password_expired() {
-		if (isset($this->organization->password_expiration_days) && !empty($this->organization->password_expiration_days)) {
-			$passwordAllowedAgeSeconds = $this->organization->password_expiration_days * 86400;
+		if (isset($this->organization()->password_expiration_days) && !empty($this->organization()->password_expiration_days)) {
+			$passwordAllowedAgeSeconds = $this->organization()->password_expiration_days * 86400;
 			$passwordAgeSeconds = time() - $this->password_age;
 			if ($passwordAgeSeconds < $passwordAllowedAgeSeconds) {
 				return false;
