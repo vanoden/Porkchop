@@ -5,6 +5,7 @@ class Person Extends \BaseClass {
 
     public $id;
     public $title;
+    public $first_name;
     public $middle_name;    
     public $last_name;
     public $location;
@@ -60,8 +61,8 @@ class Person Extends \BaseClass {
             $this->timezone = $customer->timezone;
             $this->auth_method = $customer->auth_method;
             $this->automation = $customer->automation;
-            $this->password_age = $customer->password_age;
-			$this->auth_failures = $customer->auth_failures;
+            if (isset($customer->password_age)) $this->password_age = $customer->password_age;
+			if (isset($customer->auth_failures)) $this->auth_failures = $customer->auth_failures;
             $this->_cached = 1;
 			return true;
         }

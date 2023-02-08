@@ -1,11 +1,11 @@
 <?php
 	namespace Content\Template;
 	
-	class Shell {
-		private $_error;
+	class Shell Extends \BaseClass {
 		private $_content;
 		private $_params = array();
-		
+		private $_groups = array();
+
 		public function __construct($argument = null) {
 			if (gettype($argument) == 'array') {
 				if ($argument['path']) {
@@ -31,19 +31,48 @@
 		}
 
 		public function load($path) {
+			if (empty($path)) {
+				$this->error("Template path not configured");
+			}
 			if (file_exists($path)) {
-				if ($this->_content = file_get_contents($path)) {
-					return true;
+				try {
+					$this->_content = @file_get_contents($path);
 				}
-				else {
+				catch (Exception $e) {
+					$this->error($e->getMessage());
 					return false;
 				}
+				return true;
+			}
+			else {
+				$this->error("Template file not found");
+				return false;
 			}
 		}
 
 		public function content($content = null) {
-			if (isset($content)) $this->_content = $content;
+			if (isset($content)) {
+				while (preg_match('/\@\{(\w+)\}(.*)\@\{\-\w+\}/s',$content,$matches)) {
+					$this->_groups[$matches[1]] = $this->_newGroup($matches[2]);
+
+					$content = preg_replace('/\@\{\w+\}.*\@\{\-\w+\}/s','@{-'.$matches[1].'-}',$content,1);
+				}
+			}
+			$this->_content = $content;
 			return $this->_content;
+		}
+
+		protected function _newGroup($content) {
+			$group = new \Content\Template\Shell\Group();
+			$group->content($content);
+			return $group;
+		}
+
+		public function group($name) {
+			if (!isset($this->_groups[$name])) {
+				$this->_groups[$name] = new \Content\Template\Shell\Group();
+			}
+			return $this->_groups[$name];
 		}
 
 		public function addParam($key,$value) {
@@ -58,31 +87,62 @@
 			}
 		}
 
-		private function _process($message) {
-			$module_pattern = '/\$\{([\w\-\.\_\-]+)\}/is';
+		// Replace Template Tags with Suppied Parameters
+		// Return text to calling method
+		private function _process() {
+			$module_pattern = '/\$\{(\w[\w\-\.\_\-]+)\}/is';
 
-			while (preg_match($module_pattern,$message,$matched)) {
+			$output = $this->_content;
+
+			// Replace Entire Lines
+			foreach ($this->_groups as $name => $group) {
+
+				$group_content = '';
+
+				if (preg_match('/\@\{\-('.$name.')\-\}/',$output,$matches)) {
+
+					$lines = $group->lines();
+
+					foreach ($lines as $line) {
+						$group_content .= $line->render();
+					}
+					$output = str_replace($matches[0],$group_content,$output);
+				}
+			}
+
+			// Replace Individual Fields
+			while (preg_match($module_pattern,$output,$matched)) {
 				$search = $matched[0];
 				$parse_message = "Replaced $search";
 				$replace_start = microtime(true);
 				$replace = $this->_replace($matched[1]);
-				app_log($parse_message." with $replace in ".sprintf("%0.4f",(microtime(true) - $replace_start))." seconds",'trace',__FILE__,__LINE__);
-				$message = str_replace($search,$replace,$message);
+				app_log($parse_message." with $replace in ".sprintf("%0.4f",(microtime(true) - $replace_start))." seconds",'info',__FILE__,__LINE__);
+				$output = str_replace($search,$replace,$output);
 			}
 
 			# Return Messsage
-			return $message;
+			return $output;
 		}
 
 		private function _replace($string) {
-			return $this->_params[$string];
+			if (isset($this->_params[$string])) return $this->_params[$string];
+			else return null;
 		}
 
-		public function output() {
-			return $this->_process($this->_content);
+		// Return array of non-group fields
+		public function fields() {
+			preg_match_all('/\$\{(\w+\.\w+)\}/',$this->_content,$matches);
+			array_shift($matches[1]);
+			return $matches[1];
 		}
-		
-		public function error() {
-			return $this->_error;
+
+		// Deprecated Function - Use render() instead
+		public function output() {
+			return $this->_process();
+		}
+
+		// Pass through to private method _process
+		public function render() {
+			return $this->_process();
 		}
 	}
