@@ -105,14 +105,15 @@
          */
 		public function add_item($parameters) {
 			if (! $this->id) {
-				$this->_error = "Shipping id not set";
+				$this->error("Shipping id not set");
 				return null;
 			}
 			$parameters['shipment_id'] = $this->id;
 			$item = new \Shipping\Item();
 			if ($item->add($parameters)) {
 				return $item;
-			} else {
+			}
+			else {
 				$this->error("Error adding item: ".$item->error());
 				return null;
 			}
