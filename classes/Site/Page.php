@@ -10,6 +10,7 @@
 	    public $style = 'default';
 	    public $auth_required = false;
 	    public $ssl_required;
+		public $method;
 	    public $error;
 	    public $uri;
 	    public $title;
@@ -578,8 +579,8 @@
 				    $product = new \Product\Item ( $id );
 				    if (! $id) {
 					    $category = $product->defaultCategory ();
-					    if ($product->error) {
-						    print $product->error;
+					    if ($product->error()) {
+						    print $product->error();
 						    exit ();
 					    }
 				    } else {
@@ -900,8 +901,8 @@
 	    }
 	    
 	    public function errorCount() {
-		    if (empty ( $this->errors )) $this->errors = array ();
-		    if (! empty ( $this->error )) array_push ( $this->errors, $this->error );
+		    if (empty ( $this->_errors )) $this->_errors = array();
+		    if (! empty ( $this->error )) array_push ($this->_errors, $this->error);
 		    return count ( $this->_errors );
 	    }
 
@@ -920,6 +921,7 @@
 
 		public function showBreadcrumbs() {
 			if (count($this->_breadcrumbs) < 1) return "";
+			$html = '';
 			foreach ($this->_breadcrumbs as $breadcrumb) {
 				if (!empty($breadcrumb['target'])) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
