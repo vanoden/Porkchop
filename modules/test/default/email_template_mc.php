@@ -84,18 +84,12 @@
         $template = new \Content\Template\Shell();
         $template_name = $_REQUEST['template'];
         $template_config = $GLOBALS['_config']->support->$template_name;
-		if (empty($template_config)) {
-			$page->addError("Configuration support->".$template_name." not found");
-		}
-        elseif (! file_exists($template_config->template)) {
-            $page->addError("Template file '".$template_config->template."' not found");
-        }
-        else {
-            // Load Template Content
-            $template->content(file_get_contents($template_config->template));
-
+        if ($template->load($template_config->template)) {
             // Identify Fields to be Populated - Doesn't support Groups, yet
             $fields = $template->fields();
+        }
+        else {
+            $page->addError($template->error());
         }
     }
 

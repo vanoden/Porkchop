@@ -31,13 +31,22 @@
 		}
 
 		public function load($path) {
+			if (empty($path)) {
+				$this->error("Template path not configured");
+			}
 			if (file_exists($path)) {
-				if ($this->_content = file_get_contents($path)) {
-					return true;
+				try {
+					$this->_content = @file_get_contents($path);
 				}
-				else {
+				catch (Exception $e) {
+					$this->error($e->getMessage());
 					return false;
 				}
+				return true;
+			}
+			else {
+				$this->error("Template file not found");
+				return false;
 			}
 		}
 
