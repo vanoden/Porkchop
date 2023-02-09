@@ -1,13 +1,11 @@
 <?php
 	namespace Product;
 
-	class Instance extends Item {
+	class Instance extends \BaseClass {
 		public $id;
-		public $errno;
 		public $code;
 		public $name;
 		public $product_id;
-		public $serial_number;
 		public $organization;
 		public $organization_id;
 		private $_flat = false;
@@ -87,21 +85,22 @@
 
 		public function get($code): bool {
 			$this->clearError();
-			$bind_params = array();
+
+			$database = new \Database\Service();
 
 			$get_object_query = "
 				SELECT	asset_id
 				FROM	monitor_assets
 				WHERE	asset_code = ?
 			";
-			array_push($bind_params,$code);
+			$database->AddParam($code);
 			
 			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				$get_object_query .= " AND organization_id = ?";
-				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization()->id);
+				$database->AddParam($GLOBALS['_SESSION_']->customer->organization()->id);
 			}
 
-			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
@@ -224,7 +223,7 @@
 
 		public function transfer($org_id,$reason) {
 			if ($this->update(array('organization_id' => $org_id))) {
-				app_log("Transfered ".$this->serial_number." to $org_id",'notice');
+				app_log("Transfered ".$this->code." to $org_id",'notice');
 				return true;
 			}
 			else return false;
@@ -232,6 +231,8 @@
 		
 		public function details() {
 			$this->clearError();
+
+			$database = new \Database\Service();
 
 			$get_object_query = "
 				SELECT	asset_id id,
@@ -243,11 +244,9 @@
 				WHERE	asset_id = ?
 			";
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
+			$database->AddParam($this->id);
+			$rs = $database->Execute($get_object_query);
+			if ($database->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
@@ -371,5 +370,9 @@
 			$parameters['product_code']	= $this->product()->code;
 			$parameters['serial_number'] = $this->code;
 			return $ticketList->last($parameters);
+		}
+
+		public function product() {
+			return new \Product\Item($this->product_id);
 		}
 	}

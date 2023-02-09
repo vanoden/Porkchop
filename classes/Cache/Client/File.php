@@ -186,8 +186,8 @@
 			if ($this->_connected) {
 				$keys = scandir($GLOBALS['_config']->cache->path."/");
 				foreach ($keys as $key) {
-					if (preg_match('/^[\w\-\.\_]+\[\d+\]$/')) {
-						delete($GLOBALS['_config']->cache->path."/".$key);
+					if (preg_match('/^[\w\-\.\_]+\[\d+\]$/',$key)) {
+						unlink($GLOBALS['_config']->cache->path."/".$key);
 					}
 				}
 			}

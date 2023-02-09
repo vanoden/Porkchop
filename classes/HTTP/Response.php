@@ -5,6 +5,7 @@
 		public $message;
 		public $success;
 		public $header;
+		public $error;	// For response content
 		private $_error;
 		private $_code;
 		private $_status;
@@ -72,7 +73,8 @@
 			return $this->_cookies;
 		}
 
-		public function error() {
+		public function error($string = null) {
+			if (isset($string)) $this->_error = $string;
 			return $this->_error;
 		}
 	}

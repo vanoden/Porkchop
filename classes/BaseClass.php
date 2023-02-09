@@ -28,7 +28,7 @@
 		// Name for Cache Key - id appended in square brackets
 		protected $_cacheKeyPrefix;
 
-		protected $id = 0;
+		public $id = 0;
 
 		/********************************************/
 		/* Get Object Record Using Unique Code		*/
@@ -210,7 +210,7 @@
 		}
 
 		public function validCode($string) {
-			if (preg_match('/^\w[\w\-\.\_\s]+$/',$string)) return true;
+			if (preg_match('/^\w[\w\-\.\_\s]*$/',$string)) return true;
 			else return false;
 		}
 
