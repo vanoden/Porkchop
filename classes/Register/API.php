@@ -1131,7 +1131,8 @@
             $privileges = $privilegeList->find();
 			if ($privilegeList->error()) $this->error($privilegeList->error());
 
-			$response->success = 1;
+			$response = new \APIResponse();
+			$response->success(true);
 			$response->privilege = $privileges;
 
             print $this->formatOutput($response);
@@ -1195,8 +1196,8 @@
 			if (! $queue->validCode($_REQUEST['login'])) $this->error("invalid login");
 			if (! $queue->get($_REQUEST['login'])) $this->error("Registration not found");
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
+			$response = new \APIResponse();
+			$response->success(true);
 			$response->registration = $queue;
 
             print $this->formatOutput($response);

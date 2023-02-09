@@ -31,7 +31,7 @@
 					array_push($bind_params,$parameters['user_id']);
 				} else {
 					$this->error("Invalid user id");
-					return undef;
+					return null;
 				}
 			} elseif (isset($parameters['person_id'])) {
 				if (preg_match('/^\d+$/',$parameters['person_id'])) {
@@ -40,7 +40,7 @@
 					array_push($bind_params,$parameters['person_id']);
 				} else {
 					$this->error("Invalid user id");
-					return undef;
+					return null;
 				}
 			}
 			
@@ -48,12 +48,13 @@
 				if ($parameters['notify'] == 1 || $parameters['notify'] == true) {
 					$get_contacts_query .= "
 						AND	notify = 1";
-				} elseif ($parameters['notify'] == 0 || $parameters['notify'] == false) {
+				}
+				elseif ($parameters['notify'] == 0 || $parameters['notify'] == false) {
 					$get_contacts_query .= "
 						AND	notify = 0";
 				} else {
 					$this->error("Invalid value for notify");
-					return undef;
+					return null;
 				}
 			}
 

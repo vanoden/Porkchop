@@ -7,7 +7,6 @@
 	  */      
 	$page = new \Site\Page();
 	$HTTPRequest = new \HTTP\Request();
-	$page->captchaPassed = true;
 	global $_config;
 
 	$captcha_ok = false;
@@ -90,7 +89,7 @@
 				// Generate Validation Key
 				$validation_key = md5(microtime());
 
-				$page->loginTaken = false;
+				$loginTaken = false;
 
 				// Add Customer Record to Database
 				$customer->add(
@@ -108,7 +107,7 @@
 					$page->addError("Sorry, there was an error adding your account. Our admins have been notified. <br/>&nbsp;&nbsp;&nbsp;&nbsp;Please contact <a href='mailto:".$GLOBALS['_config']->site->support_email."'>".$GLOBALS['_config']->site->support_email."</a> if you have any futher issues.",'error');
 					if (strpos($customer->error(), 'Duplicate entry') !== false) {
 						$page->addError("Error: <strong>" . $_REQUEST['login'] . "</strong> has already been taken for a user name");
-						$page->loginTaken = true;
+						$loginTaken = true;
 					}
 				}
 				// Store Contact Info and Deliver Address Verification Email
@@ -137,7 +136,7 @@
 							)
 						);
 
-						if ($customer->error) app_log("Error adding Phone Number '".$_REQUEST['phone_number']."': ".$customer->error(),'error',__FILE__,__LINE__);
+						if ($customer->error()) app_log("Error adding Phone Number '".$_REQUEST['phone_number']."': ".$customer->error(),'error',__FILE__,__LINE__);
 						else app_log("Added phone '".$_REQUEST['phone_number']."' for customer ".$customer->login,'info');
 					}
 					else app_log("No phone number provided",'warning');
@@ -203,7 +202,7 @@
 			}
 		}
 		elseif (! $page->errorCount()) {
-		   $page->captchaPassed = false;
+		   $captcha_ok = false;
 		   $page->addError("Please confirm your humanity, solve captcha below.");
 		}
 	}
@@ -263,7 +262,7 @@
 		app_log("Verifying customer ".$_REQUEST['login']." with key ".$_REQUEST['access'],'notice');
 
 		// Initialize Customer Object
-		$page->isVerifedAccount = false;
+		$isVerifedAccount = false;
 		$customer = new \Register\Customer();
 		if ($customer->get($_REQUEST['login'])) {
 			app_log("Found customer ".$customer->id);
@@ -284,10 +283,10 @@
 
 				$template = new \Content\Template\Shell($_config->register->registration_notification->template);
 				$template->addParams(array(
-						'ORGANIZATION.NAME'		=> $queuedCustomer->organization,
+						'ORGANIZATION.NAME'		=> $queuedCustomer->organization()->name,
 						'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
 						'CUSTOMER.LAST_NAME'	=> $customer->last_name,
-						'EMAIL'					=> $queuedCustomer->email_address,
+						'EMAIL'					=> $customer->notify_email(),
 						'CUSTOMER.LOGIN'		=> $customer->login,
 						'SITE.LINK'				=> 'http://'.$_config->site->hostname.'/_register/pending_customers'
 					)
@@ -302,7 +301,7 @@
 				$role->notify($message);
 				if ($role->error()) app_log("Error sending admin confirm new customer reminder: ".$role->error());
 
-				$page->isVerifedAccount = true;				
+				$isVerifedAccount = true;				
 			}
 			else {
 				app_log("Key not matched",'notice');

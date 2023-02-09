@@ -9,6 +9,10 @@
 		public $assigned_reseller_id;
 		public $notes;
 		public $register_user_id;
+		public $product_id;
+		public $serial_number;
+		public $date_created;
+		public $organization_id;
 		
 		// business contact fields
 		public $name;		
@@ -29,22 +33,33 @@
 		}
 
 		public function get($login): bool {
-			$user = new \Register\Customer();
-			if (! $user->validLogin($login)) {
-				$this->error("Invalid login");
+			$this->clearError();
+
+			$customer = new \Register\Customer();
+			if (!$customer->get($login)) {
+				$this->error("Customer not found");
 				return false;
 			}
-			if ($user->get($login)) {
-				return true;
-			}
-			else {
-				$this->error("User not found");
+
+			$database = new \Database\Service();
+
+			$get_object_query = "
+				SELECT	id
+				FROM	register_queue
+				WHERE	register_user_id = ?
+			";
+			$database->AddParam($customer->id);
+			$rs = $database->Execute($get_object_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+			list($id) = $rs->FetchRow();
+			$this->id = $id;
+			return $this->details();
 		}
 
 		public function getByQueuedLogin($queuedUserId = 0) {
-		
 		    if (!empty($queuedUserId)) {
 
                 $get_queued_contacts_query = "
@@ -68,10 +83,9 @@
          * @param array $parameters
          */
 		public function update ($parameters) {
-		
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
-				$this->error = "ID Required for update method.";
-				return 0;
+				$this->error("ID Required for update method.");
+				return false;
 			}
 
 			$bind_params = array();
@@ -132,7 +146,7 @@
 						'code' => $this->code,
 						'status' => 'NEW',
 						'is_reseller' => $this->is_reseller,
-						'assigned_reseller_id' => $this->reseller,
+						'assigned_reseller_id' => $this->assigned_reseller_id,
 						'notes' => $this->notes
 					)
 				);
@@ -141,6 +155,7 @@
 					return false;
 				}
             }
+			$this->organization_id = $organization->id;
 
             // update to have the queued login match the 'approved' organization
             $customer = new \Register\Customer($this->register_user_id);
@@ -255,7 +270,7 @@
 					$this->serial_number = $object->serial_number;
 					$this->register_user_id = $object->register_user_id;
 					$this->is_reseller = $object->is_reseller;
-					$this->reseller_id = $object->assigned_reseller_id;
+					$this->assigned_reseller_id = $object->assigned_reseller_id;
 					app_log("Found registration ".$this->id);
 				}
 				else {
@@ -347,5 +362,9 @@
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->id;
+		}
+
+		public function organization() {
+			return new \Register\Organization($this->organization_id);
 		}
     }

@@ -521,6 +521,17 @@
 				return $contacts;
 			}
 		}
+
+		public function notify_email() {
+			$contactList = new \Register\ContactList();
+			$parameters = array(
+				'person_id'	=> $this->id,
+				'type'		=> 'email',
+				'notify'	=> true,
+			);
+			list($contact) = $contactList->find($parameters);
+			return $contact->value;
+		}
 				
 		public function locations($parameters = array()) {
 			$get_locations_query = "

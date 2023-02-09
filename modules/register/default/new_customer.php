@@ -166,8 +166,8 @@ function getProvinces() {
 </script>
 
 <?php
-  if (isset($page->isVerifedAccount)) {
-    if ($page->isVerifedAccount) {
+  if (isset($isVerifedAccount)) {
+    if ($isVerifedAccount) {
       ?>
         <section>
           <ul class="connectBorder progressText">
@@ -313,7 +313,7 @@ function getProvinces() {
       </li>
       <li>
         <label for="username">Username:</span>
-        <input type="text" id="login" style="<?=isset($page->loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onchange="checkUserName()" maxlength="50" required/>
+        <input type="text" id="login" style="<?=isset($loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onchange="checkUserName()" maxlength="50" required/>
       </li>
       <li>
         <label for="password">Create Password:</span>
@@ -328,10 +328,10 @@ function getProvinces() {
 
     <div id="registerSubmit" class="registerQuestion">
       <?php
-      if (!$page->captchaPassed) {
+      if (!$captcha_ok) {
       ?>
         <div style="color:red; font-size: 12px; padding-top:15px;">
-          <?=$page->error;?>
+          <?=$page->errorString()?>
         </div>
       <?php    
       }

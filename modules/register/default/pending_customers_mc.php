@@ -161,7 +161,7 @@
         }
     }
 
-	$customerObj = new \Register\Customer();
-	$possibleStatii = $customerObj->statii();
+	$queueObj = new \Register\Queue();
+	$possibleStatii = $queueObj->statii();
 
 	if (empty($_REQUEST['search'])) $_REQUEST['search'] = '';
