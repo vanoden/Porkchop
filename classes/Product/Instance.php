@@ -32,9 +32,9 @@
 
 			# See If Existing Unit Present
 			$exists = new \Product\Instance();
-			if ($exists->get($parameters["code"],$parameters['product_id'])) {
-				$this->error("Asset with code ".$parameters['code']." already exists");
-				return null;
+			if ($exists->getWithProduct($parameters["code"],$parameters['product_id'])) {
+				$this->error("Product with code ".$parameters['code']." already exists");
+				return false;
 			}
 
 			# Prepare Query to Add Device
@@ -60,7 +60,7 @@
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
@@ -128,9 +128,13 @@
 			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
 			list($id) = $rs->FetchRow();
+			if (! $id) {
+				$this->error("Product not found");
+				return false;
+			}
 			$this->id = $id;
 			return $this->details();
 		}
