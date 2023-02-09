@@ -2,7 +2,18 @@
 	ul {
 		list-style-type: none;
 	}
+	a {
+	    cursor:pointer;
+	}
 </style>
+
+<script>
+// check or uncheck all boxes for ease of manage privileges
+function checkUncheck(isChecked) {
+    document.querySelectorAll('input[type=checkbox]').forEach(el => el.checked = isChecked);
+}
+</script>
+
 
 <!-- Page Header -->
 <?=$page->showBreadcrumbs()?>
@@ -24,6 +35,10 @@
     <div id="rolePrivilegesContainer">
         <span style="display: inline-block" class="label">Privileges</span>
         <a href="/_register/privileges">Manage</a>
+        <div>
+            <a onclick="checkUncheck(true)">&#10003; Check All</a> / <a onclick="checkUncheck(false)">&#10006; Uncheck All</a>
+            <br/><br/>
+        </div>
         <?php	foreach ($privileges as $privilege) { ?>
 	        <div class="rolePrivilegeContainer">
 		        <span class="value" style="display: inline-block; width: 75px;"><?=$privilege->module?></span>
