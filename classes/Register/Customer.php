@@ -3,6 +3,7 @@
 
     class Customer extends Person {
 		public $auth_method;
+		public $login;
 		public $elevated = 0;
 
 		public function __construct($id = 0) {
@@ -22,6 +23,7 @@
 		    parent::details();
 			if ($this->id) {
 				$this->roles();
+				$this->login = $this->code;
 				return true;
 			}
 			else {
