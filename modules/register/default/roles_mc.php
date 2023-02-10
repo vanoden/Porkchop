@@ -7,19 +7,15 @@
 		$role = new \Register\Role($_REQUEST['remove_id']);
 		if (! $role->id) {
 			$page->addError("Role &quot;".$_REQUEST['id']."&quot; not found");
-		}
-		else {
+		} else {
 			// remove any privileges associated with this role
 			$privilegeList = $role->privileges();
 			if (!empty($privilegeList) && is_array($privilegeList)) {
-				foreach ($privilegeList as $privilege) {
-					if (!$role->dropPrivilege($privilege->id)) $page->addError("Role privilege drop failed: ".$role->error());
-				}
+				foreach ($privilegeList as $privilege) if (!$role->dropPrivilege($privilege->id)) $page->addError("Role privilege drop failed: ".$role->error());
 			}
 
 			if (!$role->removeMembers()) $page->addError("Role members delete failed: ".$role->error());
 			if (!$role->delete()) $page->addError("Role delete failed: ".$role->error());
-			//if ($page->errorCount() == 0) $page->success = "Role removed";
 		}
 	}
 	

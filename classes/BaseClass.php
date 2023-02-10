@@ -131,9 +131,9 @@
 			// Initialize Services
 			$database = new \Database\Service();
 			$cache = $this->cache();
-
+			
 			if (isset($cache)) $cache->delete();
-	
+
 			// Prepare Query
 			$delete_object_query = "
 				DELETE
