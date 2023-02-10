@@ -4,7 +4,6 @@
 use Aws\Emr\Enum\InstanceRoleType;
 
 class Order extends \ORM\BaseModel {
-	
 		public $id;
 		public $code;
 		public $customer_id;
@@ -17,16 +16,15 @@ class Order extends \ORM\BaseModel {
 		private $lastID;
 
 		public function add($parameters = array()) {
-		
 			$customer = new \Register\Customer($parameters['customer_id']);
 			if (! $customer->id) {
-				$this->_error = "Customer not found";
+				$this->error("Customer not found");
 				return false;
 			}
             if (isset($parameters['salesperson_id'])) {
     			$salesperson = new \Register\Admin($parameters['salesperson_id']);
 	    		if (! $salesperson->id) {
-		    		$this->_error = "Salesperson not found";
+		    		$this->error("Salesperson not found");
 			    	return false;
 			    }
             }
@@ -46,7 +44,7 @@ class Order extends \ORM\BaseModel {
             query_log($add_object_query,$bind_params);
 			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Sales::Order::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -101,7 +99,7 @@ class Order extends \ORM\BaseModel {
 
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Sales::Order::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->addEvent(array('new_status' => $parameters['status'],'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "UPDATE"));
@@ -118,7 +116,7 @@ class Order extends \ORM\BaseModel {
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($code));
 			if (! $rs) {
-				$this->_error = "SQL Error in Sales::Order::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -138,7 +136,7 @@ class Order extends \ORM\BaseModel {
 			";
 			$rs = $GLOBALS['_database']->Execute($get_order_query,array($customer_id,$number));
 			if (! $rs) {
-				$this->error("SQL Error in Sales::Order::getByCustomerOrderNumber(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -154,7 +152,7 @@ class Order extends \ORM\BaseModel {
 			";
 			$rs = $GLOBALS['_database']->Execute($get_details_query,array($this->id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Sales::Order::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -207,7 +205,7 @@ class Order extends \ORM\BaseModel {
                             'description'   => $item->description,
 							'line'			=> $line
                         ))) {
-							app_log("Added ticket ".$ticket->code);
+							app_log("Added item ".$item->product_id);
 						}
 						else {
 							$this->error($service_request->error());
@@ -281,7 +279,7 @@ class Order extends \ORM\BaseModel {
 			query_log($insert_item_query,$bind_params,true);
 			$GLOBALS['_database']->Execute($insert_item_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error("SQL Error in Sales::Order::addItem(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				app_log("Error: ".$this->error(),'error');
 				return false;
 			}

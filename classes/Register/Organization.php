@@ -8,6 +8,7 @@
 		public $id;
 		public $is_reseller;
 		public $reseller;
+		public $assigned_reseller_id;
 		public $notes;
 		public $_cached;
 		public $password_expiration_days;
@@ -37,7 +38,7 @@
 			$database = new \Database\Service;
 
 			if (empty($parameters['code'])) $parameters['code'] = uniqid();
-			$this->error = null;
+			$this->clearError();
 			$add_object_query = "
 				INSERT
 				INTO	register_organizations
@@ -60,7 +61,7 @@
 
 		public function update($parameters = array()) {
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
-			$this->error = null;
+			$this->clearError();
 		
 			$bind_params = array();
 
@@ -225,7 +226,7 @@
 		public function product($product_id) {
 			$product = new \Product\Item($product_id);
 			if ($product->error()) {
-				$this->error = $product->error();
+				$this->error($product->error());
 				return null;
 			}
 			if (! $product->id) {

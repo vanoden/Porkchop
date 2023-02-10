@@ -14,11 +14,12 @@
 		public $rec_contact_id;
 		public $rec_location_id;
 		public $vendor_id;
-		public $tableName = 'shipping_shipments';
-        public $fields = array('id','code','document_number','date_entered','date_shipped','status','send_contact_id','send_location_id','rec_contact_id','rec_location_id','vendor_id', 'instructions');
+		public $instructions;
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'shipping_shipments';
 			$this->_addStatus(array('NEW','SHIPPED','LOST','RECEIVED','RETURNED'));
+			$this->_addFields(array('id','code','document_number','date_entered','date_shipped','status','send_contact_id','send_location_id','rec_contact_id','rec_location_id','vendor_id', 'instructions'));
 			parent::__construct($id);
 		}
 

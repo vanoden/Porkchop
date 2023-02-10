@@ -25,10 +25,23 @@
 		// Name for Auto-Increment ID Column
 		protected $_tableIDColumn = 'id';
 
+	    protected $_fields = array();
+
 		// Name for Cache Key - id appended in square brackets
 		protected $_cacheKeyPrefix;
 
 		public $id = 0;
+
+		/********************************************/
+		/* Track Fields Updateable in Table			*/
+		/********************************************/
+		public function _addFields($fields) {
+			if (is_array($fields)) {
+				foreach ($fields as $field) {
+					array_push($this->_fields,$field);
+				}
+			}
+		}
 
 		/********************************************/
 		/* Get Object Record Using Unique Code		*/

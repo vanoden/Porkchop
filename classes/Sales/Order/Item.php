@@ -2,8 +2,6 @@
 	namespace Sales\Order;
 
 	class Item extends \ORM\BaseModel {
-	
-		public $id;
         public $order_id;
         public $line_number;
         public $product_id;
@@ -13,16 +11,19 @@
         public $unit_price;
         public $status;
         public $cost;
-		public $tableName = 'sales_order_items';
-        public $fields = array('id','order_id','line_number','product_id','serial_number','description','quantity','unit_price','status','cost');
 		
+		public function __construct($id = 0) {
+			$this->_tableName = 'sales_order_items';
+			$this->_addFields(array('id','order_id','line_number','product_id','serial_number','description','quantity','unit_price','status','cost'));
+			parent::__construct();
+		}
 		public function add($parameters = []) {
-			$product = new \Product\Product($parameters['product_id']);
+			$product = new \Product\Item($parameters['product_id']);
 			if (! $product->id) {
-				$this->_error = "Product not found";
+				$this->error("Product not found");
 				return false;
 			}
-			$line_number = $this->_next_line();
+			$line_number = $this->maxColumnValue('line_number');
 
 			$add_object_query = "
 				INSERT
@@ -33,7 +34,7 @@
 			";
 			$GLOBALS['_database']->Execute($add_object_query,array($line_number,$product->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Sales::Item::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -47,9 +48,9 @@
 
 			$bind_params = array();
 			if (isset($parameters['product_id'])) {
-				$product = new \Product\Product($parameters['product_id']);
+				$product = new \Product\Item($parameters['product_id']);
 				if (! $product->id) {
-					$this->_error = "Product not found";
+					$this->error("Product not found");
 					return false;
 				}
 				$update_object_query .= ", product_id = ?";
@@ -78,7 +79,7 @@
 			
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Sales::Item::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return $this->details();
@@ -93,7 +94,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($product_id, $order_id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Sales::Item::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -116,7 +117,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($order_id,$line_number));
 			if (! $rs) {
-				$this->_error = "SQL Error in Sales::Item::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -137,7 +138,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_details_query,array($this->id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Sales::Item::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -158,6 +159,6 @@
 		}
 
 		public function product() {
-			return new \Product\Product($this->product_id);
+			return new \Product\Item($this->product_id);
 		}
 	}
