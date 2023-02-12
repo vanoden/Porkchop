@@ -3,7 +3,6 @@
 
 	class Location extends \ORM\BaseModel {
 	
-		public $id;
 		public $name;
 		public $address_1;
 		public $address_2;
@@ -11,10 +10,12 @@
 		public $province_id;
 		public $zip_code;
 		public $notes;
-		public $tableName = 'register_locations';
-        public $fields = array('id','name','address_1','address_2','city','province_id','zip_code', 'notes','country_id');
+		public $province;
+		public $country;
 
 		public function __construct($id = 0,$parameters = array()) {
+			$this->_tableName = 'register_locations';
+			$this->_addFields(array('id','name','address_1','address_2','city','province_id','zip_code', 'notes','country_id'));
 			parent::__construct($id);
 			if (isset($parameters['recursive']) && $parameters['recursive']) {
 				$this->province = new \Geography\Province($this->province_id);
@@ -34,7 +35,7 @@
          * @param array, $parameters
          */
         public function findExistingByAddress($parameters = array()) {
-            $getObjectQuery = "SELECT id FROM `$this->tableName` WHERE
+            $getObjectQuery = "SELECT id FROM `$this->_tableName` WHERE
                 LOWER(`address_1`) LIKE '%".strtolower($parameters['address_1'])."%'
                 AND LOWER(`address_2`) LIKE '%".strtolower($parameters['address_2'])."%'
                 AND LOWER(`city`) LIKE '%".strtolower($parameters['city'])."%'

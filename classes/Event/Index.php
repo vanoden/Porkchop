@@ -29,7 +29,7 @@
 				)
 			];
 			$fields = array();
-			while (list($key,$value) = each($params)) {
+			foreach ($params as $key => $value) {
 				array_push($fields,array("match" => array($key => $value)));
 			}
 			$idxParams["body"]["query"]["bool"]["must"] = $fields;

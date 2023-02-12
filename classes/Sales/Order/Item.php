@@ -15,7 +15,7 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'sales_order_items';
 			$this->_addFields(array('id','order_id','line_number','product_id','serial_number','description','quantity','unit_price','status','cost'));
-			parent::__construct();
+			parent::__construct($id);
 		}
 		public function add($parameters = []) {
 			$product = new \Product\Item($parameters['product_id']);

@@ -39,14 +39,14 @@
 			}
 			return true;
 		}
-        
+
         /**
          * update by params
          * 
          * @param array $parameters, name value pairs to update object by
          */
         public function update($parameters = array()) {
-    
+
             $updateQuery = "UPDATE `$this->_tableName` SET `$this->_tableIDColumn` = `$this->_tableIDColumn` ";
             $this->values = $parameters;
 		    $bindParams = array();

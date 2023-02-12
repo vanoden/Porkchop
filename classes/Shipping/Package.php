@@ -2,8 +2,8 @@
 	namespace Shipping;
 	class Package extends \ORM\BaseModel {
 	
-		public $id;
 		public $shipment;
+		public $shipment_id;
 		public $number;
 		public $tracking_code;
 		public $status;
@@ -15,13 +15,12 @@
 		public $shipping_cost;
 		public $date_received;
 		public $user_received_id;
-		public $tableName = 'shipping_packages';
-        public $fields = array('id','shipment_id','number','tracking_code','status','condition','height','width','depth','weight','shipping_cost','date_received','user_received_id','vendor_id');
 
 		public function __construct($id = null) {
-			if (!empty($id)) {
-				parent::__construct($id);
-			}
+			$this->_tableName = 'shipping_packages';
+			$this->_addFields(array('id','shipment_id','number','tracking_code','status','condition','height','width','depth','weight','shipping_cost','date_received','user_received_id','vendor_id'));
+
+			parent::__construct($id);
 		}
 
         /**
@@ -56,11 +55,11 @@
          * get object in question
          */
 		public function getByShippingID($id=0) {
-			$getObjectQuery = "SELECT * FROM $this->tableName WHERE	shipment_id = ?";
+			$getObjectQuery = "SELECT * FROM $this->_tableName WHERE	shipment_id = ?";
 			$rs = $this->execute($getObjectQuery, array($id));
             $object = $rs->FetchNextObject(false);
 			if (is_numeric($object->id)) {
-    			foreach ($this->fields as $field) $this->$field = $object->$field;
+    			foreach ($this->_fields as $field) $this->$field = $object->$field;
 			}
 		}
 

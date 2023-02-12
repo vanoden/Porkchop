@@ -3,13 +3,16 @@
 	
 	class Vendor extends \ORM\BaseModel {
 	
-		public $id;
 		public $name;
 		public $account_number;
-		public $tableName = 'shipping_vendors';
-        public $fields = array('id', 'name', 'account_number');
-        protected $ukColumn = 'name';
-        
+
+		public function __construct($id = 0) {
+			$this->_tableName = 'shipping_vendors';
+			$this->_addFields(array('id', 'name', 'account_number'));
+			$this->_tableUKColumn = 'name';
+			parent::__construct($id);
+		}
+
         /**
          * add by params
          * 
@@ -18,7 +21,7 @@
 		public function add($parameters = array()) {
 			
 			if (! isset($parameters['name'])) {
-				$this->_error = "Name required";
+				$this->error("Name required");
 				return false;
 			}
 			

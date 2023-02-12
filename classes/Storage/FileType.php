@@ -7,8 +7,6 @@
 		public $code;
 		public $type;
 		public $ref_id;
-		public $tableName = 'storage_files_types';
-        public $fields = array('id','code', 'type', 'ref_id');
         public $referenceTypes = array('support request','support ticket','support action','support rma','support warranty','engineering task','engineering release','engineering project','engineering product');
         
         /**
@@ -18,6 +16,8 @@
          * @param array $parameters, name value pairs to add and populate new object by
          */
 		public function __construct($id = 0,$parameters = array()) {
+			$this->_tableName = 'storage_files_types';
+			$this->_addFields(array('id','code', 'type', 'ref_id'));
 			parent::__construct($id);
 		}
 
