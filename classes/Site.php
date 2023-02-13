@@ -202,4 +202,8 @@
 			if ($GLOBALS['_config']->site->https) return 'https://'.$GLOBALS['_config']->site->hostname;
 			else return 'http://'.$GLOBALS['_config']->site->hostname;
 		}
+
+		public function page($module = null, $view = null, $index = null) {
+			return new \Site\Page($module,$view,$index);
+		}
 	}

@@ -18,14 +18,17 @@
 				'send admin in-site message',
 				'edit site pages',
 				'configure site',
-				'see site api'
+				'see site api',
+				'manage terms of use'
 			),
 			"templates"	=> array(
 				"page"	=> $templates['admin'],
 				"pages"	=> $templates['admin'],
 				"configurations"	=> $templates['admin'],
 				"counters"	=> $templates['admin'],
-				"content_block"	=> $templates['admin']
+				"content_block"	=> $templates['admin'],
+				"terms_of_use"	=> $templates['admin'],
+				"term_of_use"	=> $templates['admin']
 			),
 		),
 		"Geography"		=> array(

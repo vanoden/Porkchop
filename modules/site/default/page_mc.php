@@ -1,5 +1,6 @@
 <?php
-	$page = new \Site\Page();
+	$site = new \Site();
+	$page = $site->page();
 	$page->requirePrivilege('edit site pages');
 
 	$index = $_REQUEST['index'];
@@ -38,11 +39,13 @@
 					        $page->addError("Error dropping metadata: ".$editPage->errorString());
 				        }
 			        }
-			        elseif ($editPage->setMetadata($_REQUEST['key'],$_REQUEST['value'])) {
-				        $page->success = "Metadata set";
-			        }
 			        else {
-				        $page->addError("Error setting metadata: ".$editPage->errorString());
+						if ($editPage->setMetadata($_REQUEST['key'],$_REQUEST['value'])) {
+				        	$page->success = "Metadata set";
+						}
+				        else {
+				        	$page->addError("Error setting metadata: ".$editPage->errorString());
+						}
 			        }
 		        }
 

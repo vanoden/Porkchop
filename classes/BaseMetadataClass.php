@@ -1,50 +1,125 @@
 <?php
     class BaseMetadataClass Extends \BaseClass {
+		protected $_tableMetaFKColumn;
         protected $_tableMetaKeyColumn = 'key';
         protected $_tableMetaValueColumn = 'value';
+		public $fk_id;
         public $key;
         public $value;
 
-        public function __construct($id = 0, $key = null) {
-            if (is_numeric($id) && $id > 0) {
-                $this->id = $id;
-                if (!empty($key)) {
-                    $this->key = $key;
-                    $this->details();
-                }
-            }
-        }
+		public function __call($name,$params) {
+			$this->clearError();
 
-        public function getMeta($key) {
+			if ($name == 'get' && count($params) == 2) return $this->getWithKeys($params[0],$params[1]);
+			elseif ($name == 'get' && count($params) == 1) return $this->getWithKey($params[0]);
+			elseif ($name == 'get') return $this->getSimple();
+			else {
+				$this->error("Unrecognized method");
+				return false;
+			}
+		}
+
+		// Called with Relative ID AND Key
+        public function getWithKeys($fk_id,$key): bool {
+			$this->fk_id = $fk_id;
+			$this->key = $key;
+			return $this->getSimple();
+		}
+
+		// Called with Just Key
+		public function getWithKey($key): bool {
+			$this->key = $key;
+			return $this->getSimple();
+		}
+
+		// Relative ID and Key Already Set
+		public function getSimple(): bool {
             $this->clearError();
 
             $database = new \Database\Service();
 
             $get_meta_query = "
-                SELECT  `$this->_tableIDColumn`,`$this->_tableMetaKeyColumn`
+                SELECT  `$this->_tableIDColumn`,
+						`$this->_tableMetaFKColumn`,
+						`$this->_tableMetaKeyColumn`,
+						`$this->_tableMetaValueColumn`
                 FROM    `$this->_tableName`
-                WHERE   `$this->_tableIDColumn` = ?
+                WHERE   `$this->_tableMetaFKColumn` = ?
                 AND     `$this->_tableMetaKeyColumn` = ?
             ";
-            $database->AddParam($this->id);
-            $database->AddParam($key);
+            $database->AddParam($this->fk_id);
+            $database->AddParam($this->key);
 
             $rs = $database->Execute($get_meta_query);
             if (! $rs) {
                 $this->SQLError($database->ErrorMsg());
                 return false;
             }
-            list($id,$key) = $rs->FetchRow();
+            list($id,$fk,$key,$value) = $rs->FetchRow();
             if ($id > 0 && !empty($key)) {
                 $this->id = $id;
+				$this->fk_id = $fk;
                 $this->key = $key;
-                return $this->details();
+                $this->value = $value;
             }
             else {
                 $this->error("Data not found");
                 return false;
             }
+			return true;
         }
+
+		public function set($value) {
+			$this->clearError();
+
+			if (! isset($this->fk_id)) {
+				$this->error("Invalid relative id");
+				return false;
+			}
+			elseif (! isset($this->key)) {
+				$this->error("Invalid key name");
+				return false;
+			}
+
+			$database =  new \Database\Service();
+
+			$set_data_query = "
+				REPLACE
+				INTO	`$this->_tableName`
+				(		`$this->_tableMetaFKColumn`,`$this->_tableMetaKeyColumn`,`$this->_tableMetaValueColumn`)
+				VALUES
+				(		?,?,?)
+			";
+			$database->AddParam($this->fk_id);
+			$database->AddParam($this->key);
+			$database->AddParam($value);
+			$database->Execute($set_data_query);
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			return true;
+		}
+
+		public function drop() {
+			if (empty($this->id)) {
+				$this->error("Metadata id not set");
+				return false;
+			}
+			$drop_key_query = "
+				DELETE
+				FROM	`$this->_tableName`
+				WHERE	`$this->_tableIDColumn` = ?
+			";
+			query_log($drop_key_query,array($this->id),true);
+			$GLOBALS['_database']->Execute($drop_key_query,array($this->id));
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			return true;
+		}
 
         public function getForId($id) {
             $this->clearError();
@@ -55,10 +130,12 @@
                 SELECT  `$this->_tableMetaKeyColumn` `key`,
                         `$this->_tableMetaValueColumn` `value`
                 FROM    `$this->_tableName`
+				WHERE	`$this->_tableMetaFKColumn` = ?
                 ORDER BY `$this->_tableMetaKeyColumn`
             ";
+			$database->AddParam($this->fk_id);
 
-            $rs = $database->Execute($get_meta_query);
+			$rs = $database->Execute($get_meta_query);
             if (! $rs) {
                 $this->SQLError($database->ErrorMsg());
                 return false;
@@ -81,22 +158,28 @@
                 SELECT  *
                 FROM    `$this->_tableName`
                 WHERE   `$this->_tableIDColumn` = ?
-                AND     `$this->_tableMetaKeyColumn` = ?
             ";
 
             $database->AddParam($this->id);
-            $database->AddParam($this->key);
 
             $rs = $database->Execute($get_key_query);
             if (! $rs) {
                 $this->SQLError($database->ErrorMsg());
                 return false;
             }
+
+			// Dereference column names to avoid error
+			$idColumn = $this->_tableIDColumn;
+			$fkColumn = $this->_tableMetaFKColumn;
+			$keyColumn = $this->_tableMetaKeyColumn;
+			$valueColumn = $this->_tableMetaValueColumn;
+
             $object = $rs->FetchNextObject(false);
             if ($object->id) {
-                $this->id = $object->$this->_tableIDColumn;
-                $this->key = $object->$this->_tableMetaKeyColumn;
-                $this->value = $object->$this->_tableMetaValueColumn;
+                $this->id = $object->$idColumn;
+				$this->fk_id = $object->$fkColumn;
+                $this->key = $object->$keyColumn;
+                $this->value = $object->$valueColumn;
             }
             else {
                 $this->value = null;

@@ -85,6 +85,11 @@
 			}
 		}
 
+		// Polymorphism for Fun and Profit
+		public function __call($name,$parameters) {
+			if ($name == 'get') return $this->getObject($parameters[0]);
+		}
+
 		/********************************************/
 		/* Placeholder update function				*/
 		/********************************************/
@@ -95,7 +100,7 @@
 		/********************************************/
 		/* Get Object Record Using Unique Code		*/
 		/********************************************/
-		public function get(string $code): bool {
+		public function getObject(string $code): bool {
 			// Clear Errors
 			$this->clearError();
 
@@ -136,6 +141,10 @@
 				$this->error($parts[1]." not found");
 				return false;
 			}
+		}
+
+		public function advancedGet() {
+			return false;
 		}
 
 		// Load Object Attributes from Cache or Database

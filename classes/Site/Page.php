@@ -829,8 +829,8 @@
 	    }
 	    
 		public function getMetadata($key) {
-			$metadata = new \Site\Page\Metadata();
-			if ($metadata->getMeta($this->id,$key)) {
+			$metadata = new \Site\Page\Metadata($this->id,$key);
+			if ($metadata->get()) {
 				return $metadata->value;
 			}
 			else {
@@ -840,23 +840,20 @@
 
 	    public function setMetadata($key, $value) {
 		    if (! isset ( $this->id )) {
-			    $this->addError ( "No page id" );
+			    $this->addError("No page id");
 			    return false;
 		    }
 		    if (! isset ( $key )) {
-			    $this->addError ( "Invalid key name in Site::Page::setMetadata()" );
+			    $this->addError("Invalid key name in Site::Page::setMetadata()");
 			    return false;
 		    }
 
-		    $metadata = new \Site\Page\Metadata();
-			$metadata->getMeta($this->id,$key);
-			if (! isset($value)) {
-				$metadata->drop();
-			}
-
+		    $metadata = new \Site\Page\Metadata($this->id,$key);
 		    if ($metadata->set($value)) return true;
-			else $this->addError($metadata->error());
-			return false;
+			else {
+				$this->addError($metadata->error());
+				return false;
+			}
 	    }
 	    
 	    public function unsetMetadata($key) {
