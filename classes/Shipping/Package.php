@@ -4,6 +4,7 @@
 	
 		public $shipment;
 		public $shipment_id;
+		public $vendor_id;
 		public $number;
 		public $tracking_code;
 		public $status;

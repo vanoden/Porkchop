@@ -7,6 +7,7 @@
 		public $type;
 		public $code;
 		public $status;
+		public $endpoint;
 		public $default_privileges_json;
 		public $override_privileges_json;
 

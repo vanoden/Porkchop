@@ -1,7 +1,11 @@
 <?php
 	namespace Register\Organization;
-	class OwnedProductList {
+
+	class OwnedProductList Extends \BaseListClass {
         public function find($parameters = array()) {
+			$this->clearError();
+			$this->resetCount();
+
             $get_objects_query = "
                 SELECT  organization_id,product_id
                 FROM    register_organization_products
@@ -23,7 +27,7 @@
 
             $rs = $GLOBALS['_database']->Execute($get_objects_query);
             if (! $rs) {
-                $this->error = "SQL Error in Register::Organization::Products::::find(): ".$GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return null;
             }
 
@@ -32,8 +36,8 @@
             while (list($organization_id,$product_id) = $rs->FetchRow()) {
                 $orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
                 $object = $orgProduct;
-                if ($this->error) {
-                    $this->error = "Error getting details for OrganizationOwnedProduct: ".$this->error;
+                if ($this->error()) {
+                    $this->error("Error getting details for OrganizationOwnedProduct: ".$this->error());
                     return null;
                 }
                 array_push($objects,$object);

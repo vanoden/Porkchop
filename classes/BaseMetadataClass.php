@@ -72,7 +72,7 @@
             return $records;
         }
 
-        public function details() {
+        public function details(): bool {
             $this->clearError();
 
             $database = new \Database\Service();

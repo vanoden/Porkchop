@@ -13,14 +13,14 @@
 	    public $bucket;
 	    public $configuration;
 	    public $region;
+		protected $credentials;
+		private $s3Client;
+		private $secretKey;
 		private $_connected = false;
 	    
 		public function __construct($id = null) {
 			$this->type = 's3';
-			$this->_init($id);
-			if ($this->id) {
-				$this->connect();
-			}
+			parent::__construct($id);
 		}
 
 		public function connect() {
@@ -41,7 +41,7 @@
 			$this->_connected = true;
 		}
 
-        public function update($parameters = array()) {
+        public function update($parameters = array()): bool {
 
             // create the repo, then continue to add the custom values needed for S3 only
             parent::update($parameters);
@@ -50,6 +50,7 @@
 		    $this->_updateMetadata('secretKey', $parameters['secretKey']);
 		    $this->_updateMetadata('bucket', $parameters['bucket']);
 		    $this->_updateMetadata('region', $parameters['region']);
+			return true;
 		}
 		
 		private function _path($path = null) {
@@ -81,7 +82,7 @@
 		public function addFile($file, $path) {
 			if (!$this->_connected) {
 				if (!$this->connect()) {
-					$this->error = "Failed to connect to S3 service";
+					$this->error("Failed to connect to S3 service");
 					return null;
 				}
 			}
@@ -108,7 +109,6 @@
 		    unset($this->client);
 		    unset($this->configuration);
 		    unset($this->secretKey);
-		    unset($this->Array);
 		    unset($this->credentials);
 		    unset($this->s3Client);
 	    }
@@ -119,7 +119,7 @@
 		public function retrieveFile($file) {
 			if (!$this->_connected) {
 				if (!$this->connect()) {
-					$this->error = "Failed to connect to S3 service";
+					$this->error("Failed to connect to S3 service");
 					return null;
 				}
 			}
@@ -134,7 +134,7 @@
 					'SaveAs'	=> $tmpFile
 				));
 			} catch (\exception $e) {
-				$this->error = "Failed to get file: ".$e->getMessage();
+				$this->error("Failed to get file: ".$e->getMessage());
 				return;
 			}
 			if (file_exists($tmpFile)) {
@@ -175,7 +175,7 @@
 			if (preg_match('/\.\./',$string)) return false;
 
 			// Bucket names cannot be formated as an ip address
-			if (preg_match('/^\d+\.\d+\.\d+\.\d+$')) return false;
+			if (preg_match('/^\d+\.\d+\.\d+\.\d+$',$string)) return false;
 
 			// Bucket names cannot start with xn--
 			if (preg_match('/^xn\-\-',$string)) return false;

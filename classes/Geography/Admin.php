@@ -11,10 +11,7 @@
 		public function __construct(int $id = 0) {
 			$this->_tableName = 'geography_provinces';
 
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+			parent::__construct($id);
 		}
 
 		public function add($parameters) {

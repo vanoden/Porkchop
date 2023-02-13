@@ -40,11 +40,13 @@
 	            }
 	        }
             $updateQuery .= " WHERE	`$this->_tableIDColumn` = ?";
-            array_push($bindParams, $this->id);
-            $this->execute($updateQuery, $bindParams);
+            $database->AddParam($this->id);
+            $database->execute($updateQuery);
 
-			if ($this->error()) return false;
-            
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
             return $this->details();
 		}
 

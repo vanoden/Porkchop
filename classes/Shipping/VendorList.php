@@ -1,12 +1,11 @@
 <?php
 	namespace Shipping;
 
-	class VendorList {
-		private $_error;
-		private $_count = 0;
-
+	class VendorList Extends \BaseListClass {
 		public function find($parameters = array()) {
-		
+			$this->clearError();
+			$this->resetCount();
+
 			$find_objects_query = "
 				SELECT	id
 				FROM	shipping_vendors
@@ -14,7 +13,7 @@
 
 			$bind_params = array();
 
-			if ($parameters['shipment_id']) {
+			if (isset($parameters['shipment_id'])) {
 				$find_objects_query .= "
 				AND		shipment_id = ?";
 				array_push($bind_params,$parameters['shipment_id']);
@@ -22,7 +21,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->_error = "SQL Error in Shipping::VendorList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -30,12 +29,15 @@
 			while (list($id) = $rs->FetchRow()) {
 				$vendor = new \Shipping\Vendor($id);
 				array_push($vendors,$vendor);
-				$this->_count ++;
+				$this->incrementCount();
 			}
 			return $vendors;
 		}
 		
 		public function findUnique() {
+			$this->clearError();
+			$this->resetCount();
+
 			$find_objects_query = "
 				SELECT	name
 				FROM	shipping_vendors
@@ -45,24 +47,15 @@
 			$bind_params = array();
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->_error = "SQL Error in Shipping::VendorList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
 			$names = array();
 			while (list($name) = $rs->FetchRow()) {
 				array_push($names,$name);
-				$this->_count ++;
+				$this->incrementCount();
 			}
 			return $names;
-		}
-		
-
-		public function error() {
-			return $this->_error;
-		}
-
-		public function count() {
-			return $this->_count;
 		}
 	}
