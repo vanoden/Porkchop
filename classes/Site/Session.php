@@ -187,7 +187,7 @@
 		}
 
 		# See if a Given Session code looks valid
-		function validCode($request_code) {
+		function validCode($request_code): bool {
 			# Test to See Session Code is 32 character hexadecimal
 			if (preg_match("/^[0-9a-f]{64}$/i",$request_code)) return true;
 			#error_log("Invalid session code: $request_code");
@@ -267,7 +267,7 @@
 			return $this->get($new_code);
 		}
 		
-		function details() {
+		function details(): bool {
 		
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
@@ -461,7 +461,7 @@
 			return 1;
 		}
 
-		function update ($parameters) {
+		function update ($parameters): bool {
 		
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";

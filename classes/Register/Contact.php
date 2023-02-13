@@ -2,6 +2,7 @@
 	namespace Register;
 
 	class Contact Extends \BaseClass {
+
 		public $person;
 		public $type;
 		public $value;
@@ -101,7 +102,7 @@
 			return $this->update($parameters);
 		}
 		
-		public function update($parameters = array()) {
+		public function update($parameters = array()) : bool {
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
 				$this->error("ID Required for update method.");
 				return false;
@@ -179,7 +180,7 @@
 			return $this->details();
 		}
 		
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	id,
 						type,
@@ -221,7 +222,7 @@
 			return true;
 		}
 
-		public function validType($string) {
+		public function validType($string): bool {
 			if (array_key_exists($string,$this->types)) return true;
 			else return false;
 		}

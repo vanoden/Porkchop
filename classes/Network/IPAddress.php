@@ -2,10 +2,11 @@
 	namespace Network;
 
 	class IPAddress Extends \BaseClass {
-		public $id;
+
 		public $address;
 		public $prefix;
 		public $gateway;
+		public $adapter_id;
 
 		public function __construct(int $id = 0) {
 			$this->_tableName = "network_addresses";
@@ -43,7 +44,7 @@
 				$type = 'ipv4';
 			}
 			else {
-				$this->_error = 'Invalid ip address';
+				$this->error('Invalid ip address');
 				return false;
 			}
 
@@ -71,7 +72,8 @@
 		}
 		public function add($parameters = array()) {
 			if (! isset($parameters['address'])) {
-				$this->_error = "address required for new address";
+				$this->error("address required for new address");
+				return false;
 			}
 			$add_object_query = "
 				INSERT
@@ -94,7 +96,7 @@
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Network::Address::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -102,7 +104,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			$bind_params = array();
 
 			$update_object_query = "
@@ -118,14 +120,14 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Network::Address::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	 *
 				FROM	network_addresses
@@ -143,13 +145,13 @@
 			if (isset($object->id)) {
 				$this->address = $object->address;
 				$this->prefix = $object->prefix;
-				$this->adapter = new Adapter($object->adapter_id);
+				$this->adapter_id = $object->adapter_id;
 			}
 			return true;
 		}
 
 		public function adapter() {
-			return new \Network\Adapter();
+			return new \Network\Adapter($this->adapter_id);
 		}
 
 		public function cidr() {

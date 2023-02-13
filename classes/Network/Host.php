@@ -2,7 +2,7 @@
 	namespace Network;
 
 	class Host Extends \BaseClass {
-		public $id;
+
 		public $name;
 		public $domain;
 		public $os_name;
@@ -20,7 +20,7 @@
 
 		public function add($parameters = array()) {
 			if (! isset($parameters['name'])) {
-				$this->_error = "name required for new host";
+				$this->error("name required for new host");
 			}
 			$add_object_query = "
 				INSERT
@@ -78,7 +78,7 @@
 			return $this->details();
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			$bind_params = array();
 
 			$update_object_query = "
@@ -119,31 +119,6 @@
 			}
 
 			return $this->details();
-		}
-
-		public function details() {
-			$get_object_query = "
-				SELECT	 *
-				FROM	network_hosts
-				WHERE	id = ?
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
-
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-
-			$object = $rs->FetchNextObject(false);
-			if (isset($object->id)) {
-				$this->id = $object->id;
-				$this->name = $object->name;
-				$this->domain = new Domain($object->domain_id);
-				$this->os_version = $object->os_version;
-				$this->os_name = $object->os_name;
-			}
-			return true;
 		}
 
 		public function adapters() {

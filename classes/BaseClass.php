@@ -32,10 +32,17 @@
 
 		public $id = 0;
 
+		public function __construct($id = 0) {
+			if (is_numeric($id) && $id > 0) {
+				$this->id = $id;
+				$this->details();
+			}
+		}
+
 		/********************************************/
 		/* Track Fields Updateable in Table			*/
 		/********************************************/
-		public function _addFields($fields) {
+		protected function _addFields($fields) {
 			if (is_array($fields)) {
 				foreach ($fields as $field) {
 					array_push($this->_fields,$field);
@@ -46,7 +53,7 @@
 		/********************************************/
 		/* Get Object Record Using Unique Code		*/
 		/********************************************/
-		public function ukExists(string $code): bool {
+		protected function _ukExists(string $code): bool {
 			// Clear Errors
 			$this->clearError();
 
@@ -76,6 +83,13 @@
 				$this->error("unique key conflict");
 				return false;
 			}
+		}
+
+		/********************************************/
+		/* Placeholder update function				*/
+		/********************************************/
+		public function update($parameters): bool {
+			return $this->details();
 		}
 
 		/********************************************/
@@ -124,14 +138,71 @@
 			}
 		}
 
+		// Load Object Attributes from Cache or Database
+		public function details(): bool {
+			$this->clearError();
+
+			$database = new \Database\Service();
+			$cache = $this->cache();
+			if (!empty($this->_cacheKeyPrefix)) {
+				$fromCache = $cache->get();
+				if (isset($fromCache)) {
+					foreach ($fromCache as $key => $value) {
+						if (property_exists($this,$key)) $this->$key = $value;
+					}
+					$this->cached(true);
+					$this->exists(true);
+					return true;
+				}
+			}
+
+			$get_object_query = "
+				SELECT	*
+				FROM	`$this->_tableName`
+				WHERE	`$this->_tableIDColumn` = ?
+			";
+			$database->AddParam($this->id);
+			$rs = $database->Execute($get_object_query);
+			if (!$rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			$object = $rs->FetchNextObject(false);
+			$column = $this->_tableIDColumn;
+			if (is_object($object) && $object->$column > 0) {
+				// Collect all attributes from response record
+				foreach ($object as $key => $value) {
+					if (property_exists($this,$key)) $this->$key = $value;
+				}
+				$this->exists(true);
+				$this->cached(false);
+				if (!empty($this->_cacheKeyPrefix)) $cache->set($object);
+			}
+			else {
+				// Clear all attributes
+				foreach ($this as $key => $value) {
+					$this->$key = null;
+				}
+				$this->exists(false);
+				$this->cached(false);
+			}
+			return true;
+		}
+
+		// Delete a record from the database using current ID
 		public function delete(): bool {
 			// Clear Errors
 			$this->clearError();
 
+			if (! $this->id) {
+				$this->error("No current instance of this object");
+				return false;
+			}
+
 			// Initialize Services
 			$database = new \Database\Service();
 			$cache = $this->cache();
-			
+
 			if (isset($cache)) $cache->delete();
 
 			// Prepare Query
@@ -151,7 +222,10 @@
 			}
 			return true;
 		}
-	
+
+		/********************************************/
+		/* Reusable Error Handling Routines			*/
+		/********************************************/
 		public function error($value = null,$caller = null) {
 			if (isset($value)) {
 				if (!isset($caller)) {
@@ -167,6 +241,10 @@
 			return $this->_error;
 		}
 
+		/********************************************/
+		/* SQL Errors - Identified and Formatted	*/
+		/* for filtering and reporting				*/
+		/********************************************/
 		public function SQLError($message = '', $query = null, $bind_params = null) {
 			if (empty($message)) $message = $GLOBALS['_database']->ErrorMsg();
 			$trace = debug_backtrace();
@@ -178,6 +256,10 @@
 			return $this->error("SQL Error in ".$classname."::".$method."(): ".$message,$caller);
 		}
 
+		public function clearError() {
+			$this->_error = null;
+		}
+
 		public function _addStatus($param) {
 			if (is_array($param)) $this->_statii = array_merge($this->_statii,$param);
 			else array_push($this->_statii,$param);
@@ -187,16 +269,16 @@
 			return $this->_statii;
 		}
 
-		public function clearError() {
-			$this->_error = null;
-		}
-
 		public function exists($exists = null) {
 			if (is_bool($exists)) $this->_exists = $exists;
 			if (is_numeric($this->id) && $this->id > 0) return true;
 			return $this->_exists;
 		}
 
+		/****************************************/
+		/* Reusable Cache Methods				*/
+		/****************************************/
+		// Get Cache Object using _cacheKeyPrefix and current ID
 		public function cache() {
 			if (!empty($this->_cacheKeyPrefix) && !empty($this->id)) {
 		        // Bust Cache
@@ -206,11 +288,13 @@
 			return null;
 		}
 
+		// Clear Object from Cache
 		public function clearCache() {
 			$cache = $this->cache();
 			if ($cache) $cache->delete();
 		}
 
+		// Don't check cache, just see if data came from cache!
 		public function cached($cached = null) {
 			if (is_bool($cached)) {
 				if ($cached) $this->_cached = 1;
@@ -222,27 +306,31 @@
 			return $this->_cached;
 		}
 
-		public function validCode($string) {
+		/********************************************/
+		/* Reusable Validation Routines				*/
+		/********************************************/
+		// Standard 'code' field validation
+		public function validCode($string): bool {
 			if (preg_match('/^\w[\w\-\.\_\s]*$/',$string)) return true;
 			else return false;
 		}
 
-		public function validName($string) {
+		// Standard 'name' field validation
+		public function validName($string): bool {
 			if (preg_match('/\w[\w\-\.\_\s\,\!\?\(\)]*$/',$string)) return true;
 			else return false;
 		}
 
-		public function validStatus($string) {
+		// Standard 'status' field validation
+		public function validStatus($string): bool {
 			if (in_array($string,$this->_statii)) return true;
 			else return false;
 		}
 
-		public function validType($string) {
+		// Standard 'type' field validation
+		public function validType($string): bool {
 			if (in_array($string,$this->_types)) return true;
 			else return false;
 		}
-
-		public function details() {
-			return true;
-		}
 	}
+?>

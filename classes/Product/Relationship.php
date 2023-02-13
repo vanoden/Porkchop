@@ -2,6 +2,7 @@
 	namespace Product;
 
 	class Relationship Extends \BaseClass {
+
 		public function __construct() {
 			$this->_tableName = "product_relations";
 			$this->_tableUKColumn = null;

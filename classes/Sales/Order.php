@@ -4,7 +4,7 @@
 use Aws\Emr\Enum\InstanceRoleType;
 
 class Order extends \ORM\BaseModel {
-		public $id;
+
 		public $code;
 		public $customer_id;
 		public $salesperson_id;
@@ -14,6 +14,12 @@ class Order extends \ORM\BaseModel {
 		public $billing_location_id;
 		public $shipping_location_id;
 		private $lastID;
+
+		public function __construct($id = 0) {
+			$this->_tableName = "sales_orders";
+
+			parent::__construct($id);
+		}
 
 		public function add($parameters = array()) {
 			$customer = new \Register\Customer($parameters['customer_id']);
@@ -52,7 +58,7 @@ class Order extends \ORM\BaseModel {
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 		
 			$update_object_query = "
 				UPDATE	sales_orders
@@ -142,36 +148,6 @@ class Order extends \ORM\BaseModel {
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
 			return $this->details();
-		}
-
-		public function details() {
-			$get_details_query = "
-				SELECT	*
-				FROM	sales_orders
-				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($get_details_query,array($this->id));
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			$object = $rs->FetchNextObject(false);
-			if ($this->id) {
-			
-				$this->id = $object->id;
-				$this->code = $object->code;
-				$this->salesperson_id = $object->salesperson_id;
-				$this->status = $object->status;
-				$this->customer_id = $object->customer_id;
-				$this->customer_order_number = $object->customer_order_number;
-				$this->organization_id = $object->organization_id;
-                $this->billing_location_id = $object->billing_location_id;
-                $this->shipping_location_id = $object->shipping_location_id;
-				return true;
-				
-			} else {
-				return false;
-			}
 		}
 
 		public function salesperson() {

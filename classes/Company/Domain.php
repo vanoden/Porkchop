@@ -6,13 +6,13 @@
 		public $id;
 		public $status;
 		public $comments;
-		public $location;
+		public $location_id;
 		public $name;
 		public $date_registered;
 		public $date_created;
 		public $date_expires;
 		public $registration_period;
-		public $register;
+		public $registrar;
 		public $company;
 
 		public function __construct($id = 0) {
@@ -25,7 +25,7 @@
 			}
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
 				FROM	company_domains
@@ -49,13 +49,11 @@
 				$this->date_expires = $object->date_expires;
 				$this->registration_period = $object->registration_period;
 				$this->location_id = $object->location_id;
-				$this->register = $object->register;
 				$this->registrar = $object->register;
 				$this->company = new Company($object->company_id);
 				return true;
 			}
 			else {
-				$this->object = null;
 				$this->status = null;
 				$this->comments = null;
 				$this->name = null;
@@ -63,7 +61,7 @@
 				$this->date_created = null;
 				$this->date_expires = null;
 				$this->registration_period = null;
-				$this->register = null;
+				$this->registrar = null;
 				$this->company = new Company();
 				return false;
 			}
@@ -109,7 +107,7 @@
 			return $this->update($this->id,$parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid id required for details in Company::Domain::update");
 				return false;

@@ -139,7 +139,7 @@
 			return $this->details();
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			$this->clearError();
 			$database = new \Database\Service();
 
@@ -233,7 +233,7 @@
 			else return false;
 		}
 		
-		public function details() {
+		public function details(): bool {
 			$this->clearError();
 
 			$database = new \Database\Service();

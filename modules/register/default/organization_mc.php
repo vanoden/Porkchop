@@ -32,7 +32,7 @@
 	else $organization = $GLOBALS['_SESSION_']->customer->organization();
 
     // handle form submit
-	if ($_REQUEST['method']) {
+	if (!empty($_REQUEST['method'])) {
 	    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 	        $page->addError("Invalid Request");
 	    }
@@ -70,7 +70,7 @@
 				    // Update Existing Organization
 				    $organization->update($parameters);
 
-				    if ($organization->error) {
+				    if ($organization->error()) {
 					    $page->addError("Error updating organization");
 				    }
 					else {
@@ -99,8 +99,8 @@
 								    "password"			=> uniqid()
 							    )
 						    );
-						    if ($customer->error) {
-							    $page->addError("Error adding customer to organization: ".$customer->error);
+						    if ($customer->error()) {
+							    $page->addError("Error adding customer to organization: ".$customer->error());
 						    }
 						    else {
 							    $page->appendSuccess("Customer added to organization");
@@ -123,8 +123,8 @@
 						# Add Existing Organization
 						$organization = new \Register\Organization();
 						$organization->add($parameters);
-						if ($organization->error) {
-							$page->addError("Error updating organization: ".$organization->error);
+						if ($organization->error()) {
+							$page->addError("Error updating organization: ".$organization->error());
 						}
 						else {
 							$page->appendSuccess("Organization ".$organization->id." Created Successfully");
@@ -136,12 +136,12 @@
 	}
 	
 	// add tag to organization
-	if ($_REQUEST['addTag'] && empty($_REQUEST['removeTag'])) {
+	if (!empty($_REQUEST['addTag']) && empty($_REQUEST['removeTag'])) {
 	    $registerTag = new \Register\Tag();
 	    if (!empty($_REQUEST['newTag']) && $registerTag->validName($_REQUEST['newTag'])) {
 	        $registerTag->add(array('type'=>'ORGANIZATION','register_id'=>$_REQUEST['organization_id'],'name'=>$_REQUEST['newTag']));
-			if ($registerTag->error) {
-				$page->addError("Error adding organization tag");
+			if ($registerTag->error()) {
+				$page->addError("Error adding organization tag: ".$registerTag->error());
 			}
 			else {
 				$page->appendSuccess("Organization Tag added Successfully");
@@ -165,14 +165,14 @@
 		if (isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) $status = $user->statii();
 		
 		$members = $organization->members('human', $status);
-		if ($organization->error) {
-			$page->addError("Error finding human members: ".$organization->error);
+		if ($organization->error()) {
+			$page->addError("Error finding human members: ".$organization->error());
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 		
 		$automationMembers = $organization->members('automation', $status);
-		if ($organization->error) {
-			$page->addError("Error finding automation members: ".$organization->error);
+		if ($organization->error()) {
+			$page->addError("Error finding automation members: ".$organization->error());
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 

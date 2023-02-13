@@ -12,6 +12,8 @@ class Metadata Extends \BaseClass {
 		public $value;
 
 		public function __construct($id = null) {
+			$this->_tableName = 'page_metadata';
+
 			if (!empty($id)) {
 				$this->id = $id;
 				$this->details();
@@ -77,7 +79,7 @@ class Metadata Extends \BaseClass {
 			return true;
 		}
 
-		public function update($value) {
+		public function update($value): bool {
 			$update_metadata_query = "
 				UPDATE	page_metadata
 				SET		value = ?
@@ -89,35 +91,6 @@ class Metadata Extends \BaseClass {
 				return false;
 			}
 			return $this->details();
-		}
-
-		###################################################
-		### Get Details for Metadata					###
-		###################################################
-		public function details() {
-			$get_object_query = "
-				SELECT	page_id,
-						`key`,
-						value
-				FROM	page_metadata
-				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-			if (! $rs)
-			{
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			if ($object = $rs->FetchNextObject(false)) {
-				$this->page_id = $object->page_id;
-				$this->key = $object->key;
-				$this->value = $object->value;
-				return true;
-			}
-            return false;
 		}
 
 		public function drop() {

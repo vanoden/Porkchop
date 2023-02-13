@@ -2,6 +2,7 @@
 	namespace Site;
 	
 	class Configuration Extends \BaseClass {
+
 		public $key;
 		public $value;
 
@@ -31,7 +32,7 @@
 			$database->addParam($value);
 			$database->Execute($set_config_query);
 			if ($database->ErrorMsg()) {
-				$this->_SQLError($database->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			else {

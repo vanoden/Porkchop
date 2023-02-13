@@ -2,15 +2,17 @@
 	namespace Product;
 
 	class Price Extends \BaseClass {
-		public $id;
+
 		public $product_id;
 		public $amount;
 		public $status;
 		public $currency_id;
 		public $date_active;
-		public $_statii = array('ACTIVE','INACTIVE');
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'product_prices';
+			$this->_addStatus(array('ACTIVE','INACTIVE'));
+
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
@@ -130,7 +132,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_detail_query = "
 				SELECT	amount,
 						currency_id,
@@ -152,7 +154,6 @@
 				$this->currency_id = $object->currency_id;
 				$this->date_active = $object->date_active;
 				$this->status = $object->status;
-				return true;
 			}
 			else {
 				$this->id = null;
@@ -161,8 +162,8 @@
 				$this->product_id = null;
 				$this->date_active = null;
 				$this->status = null;
-				return false;
 			}
+			return true;
 		}
 	}
 ?>

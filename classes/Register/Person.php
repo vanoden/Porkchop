@@ -44,7 +44,7 @@ class Person Extends \BaseClass {
         $this->id = $id;
     }
 
-    public function details() {
+    public function details(): bool {
 		$this->clearError();
 
 		$database = new \Database\Service();
@@ -96,13 +96,13 @@ class Person Extends \BaseClass {
 		));
 		if (!$rs) {
 			$this->SQLError($GLOBALS['_database']->ErrorMsg());
-			return null;
+			return false;
 		}
 		$customer = $rs->FetchNextObject(false);
 		if (!isset($customer->id)) {
 			app_log("No customer found for " . $this->id);
 			$this->id = null;
-			return $this;
+			return true;
 		}
 
 		app_log("Caching details for person '" . $this->id . "'", 'trace', __FILE__, __LINE__);
@@ -145,7 +145,7 @@ class Person Extends \BaseClass {
         }
 
         // Return Object
-        return $this;
+        return true;
     }
 
 	public function full_name() {
@@ -217,7 +217,7 @@ class Person Extends \BaseClass {
         return $this->update($parameters);
     }
 
-    public function update($parameters = array()) {
+    public function update($parameters = array()): bool {
         if (!$this->id) {
             $this->error("User ID Required for Update");
             return false;
@@ -417,9 +417,9 @@ class Person Extends \BaseClass {
 		}
 		$objects = array();
 		while (list($id) = $rs->FetchRow()) {
-			$object = $this->details($id);
-			if ($object->status == 'DELETED') continue;
-			array_push($objects, $object);
+            $person = new Person($id);
+			if ($person->status == 'DELETED') continue;
+			array_push($objects, $person);
 		}
 		return $objects;
     }

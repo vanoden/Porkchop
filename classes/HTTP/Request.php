@@ -9,6 +9,8 @@
 		public $client_ip;
 		public $user_agent;
 		public $timer;
+		public $url;
+		public $query_vars;
 		private $_protocol;
 		private $_method = 'GET';
 		private $_host;
@@ -144,21 +146,21 @@
 
 		public function deconstruct() {
 			# Strip Path from URI
-			$this->uri = preg_replace('@^'.PATH.'@','',$_SERVER['REQUEST_URI']);
+			$this->_uri = preg_replace('@^'.PATH.'@','',$_SERVER['REQUEST_URI']);
 
 			# Decode URI
-			$this->uri = urldecode($this->uri);
+			$this->_uri = urldecode($this->_uri);
 
 			# Parse Query String
-			if ($this->uri == "/") {
+			if ($this->_uri == "/") {
 				$this->module = "content";
 				$this->view = "index";
 				$this->index = $GLOBALS['_config']->site->default_index;
 			}
-			if (preg_match('/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/',$this->uri,$matches)) {
+			if (preg_match('/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/',$this->_uri,$matches)) {
 				$this->module = $matches[1];
 			}
-			elseif (preg_match('/^\/([\w\_]*)$/',$this->uri,$matches)) {
+			elseif (preg_match('/^\/([\w\_]*)$/',$this->_uri,$matches)) {
 				if (empty($matches[1])) {
 					$this->module = "content";
 					$this->view = "index";
@@ -194,7 +196,7 @@
 			elseif (! $this->module) {
 				$this->module = 'content';
 				$this->view = 'index';
-				$this->query_vars = $this->uri;
+				$this->query_vars = $this->_uri;
 				$this->index = '';
 			}
 			else {
@@ -218,7 +220,7 @@
 						if (preg_match("/=/",$element)) {
 							list($label,$value) = preg_split("/=/",$element);
 							$this->query_vars_array[$label] = $value;
-							$this->parameters[$label] = $value;
+							$this->_parameters[$label] = $value;
 						}
 					}
 				}
@@ -226,15 +228,15 @@
 				if (preg_match("/=/",$element)) {
 					list($label,$value) = preg_split("/=/",$element);
 					$this->query_vars_array[$label] = $value;
-					$this->parameters[$label] = $value;
+					$this->_parameters[$label] = $value;
 				}
 				$qv_counter ++;
 			}
-			$this->body = file_get_contents('php://input');
+			$this->_body = file_get_contents('php://input');
 		}
 		
 		public function body() {
-			return $this->body;
+			return $this->_body;
 		}
 		
 		public function method($method = null) {
@@ -252,17 +254,17 @@
 			return $this->_method;
 		}
 		public function parameters() {
-			foreach ($_POST as $label => $value) $this->parameters[$label] = $value;
-			return $this->parameters;
+			foreach ($_POST as $label => $value) $this->_parameters[$label] = $value;
+			return $this->_parameters;
 		}
 
 		public function parameter($key) {
-			return $this->parameters[$key];
+			return $this->_parameters[$key];
 		}
 
         public function riskLevel() {
             $risk_level = 0;
-            $uri = $this->uri;
+            $uri = $this->_uri;
             if (preg_match('/^([\/\w\-\_\.]+)\?(.*)$/',$uri,$matches)) {
                 $uri = $matches[1];
                 $query_string = $matches[2];
@@ -310,7 +312,7 @@
 
             $contents = array(
                 preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$query_string),
-                preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$this->body)
+                preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$this->_body)
             );
 
             foreach ($contents as $content) {

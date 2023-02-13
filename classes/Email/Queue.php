@@ -2,7 +2,10 @@
 	namespace Email;
 
 	class Queue Extends \ORM\BaseModel {
-		public $_error;
+		public function __construct($id = 0) {
+			$this->_tableName = 'email_messages';
+			parent::__construct($id);
+		}
 
 		public function addMessage($email) {
 			if ($email->html()) $html = 1;
@@ -26,7 +29,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$self->_error = "SQL Error in Email::Transport::Queue::deliver(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			else {
@@ -47,7 +50,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query);
 			if (! $rs) {
-				$this->_error = "SQL Error in Email::Queue::takeNextUnsent(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -58,7 +61,7 @@
 					return $message;
 				}
 				else {
-					$this->_error = "Could not lock message for delivery";
+					$this->SQLError("Could not lock message for delivery");
 					return null;
 				}
 			}
@@ -96,7 +99,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_objects_query,$bind_params);
 
 			if (! $rs) {
-				$this->_error = "SQL Error in Email::Queue::message(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 

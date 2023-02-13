@@ -19,7 +19,7 @@
 			else return false;
 		}
 
-		public function details() {
+		public function details(): bool {
 		    parent::details();
 			if ($this->id) {
 				$this->roles();
@@ -31,7 +31,7 @@
 			}
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 		
 			parent::update($parameters);
 			if ($this->error()) return false;

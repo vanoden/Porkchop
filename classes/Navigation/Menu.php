@@ -3,7 +3,7 @@
     namespace Navigation;
 
     class Menu Extends \BaseClass {
-	    public $id;
+
 		public $code;
 		public $title;
 
@@ -36,7 +36,7 @@
 		    $this->id = $GLOBALS['_database']->Insert_ID();
 		    return $this->update($parameters);
 	    }
-	    public function update($parameters = array ()) {
+	    public function update($parameters = array ()): bool {
 		    $update_object_query = "
 				    UPDATE	navigation_menus
 				    SET		id = id
@@ -66,7 +66,7 @@
 		    }
 		    return $this->details ();
 	    }
-	    public function details() {
+	    public function details(): bool {
 		    $get_default_query = "
 				    SELECT  *
 				    FROM    navigation_menus

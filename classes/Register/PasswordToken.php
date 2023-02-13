@@ -93,7 +93,7 @@
 			return $code;
 		}
 
-		public function validCode($string) {
+		public function validCode($string): bool {
 			if (preg_match('/^[a-f0-9]{64}$/',$string)) return true;
 			else return false;
 		}

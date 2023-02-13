@@ -2,25 +2,17 @@
 	namespace Storage;
 
 	class Repository Extends \BaseClass {
-	
-		public $error;
+
 		public $name;
 		public $type;
-		public $id;
 		public $code;
-		public $default_privileges;
-		public $override_privileges;
+		public $status;
+		public $default_privileges_json;
+		public $override_privileges_json;
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'storage_repositories';
-			$this->_init($id);
-		}
-		protected function _init($id = 0) {
-			app_log("Loading repository $id",'info');
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+			parent::__construct($id);
 		}
 
 		public function add($parameters = array()) {
@@ -29,19 +21,19 @@
 			if (isset($parameters['type'])) $this->type = $parameters['type'];
 			
 			if (! $this->validCode($parameters['code'])) {
-				$this->error = "Invalid code";
+				$this->error("Invalid code");
 				return false;
 			}
 			
 			if (! isset($parameters['status']) || ! strlen($parameters['status'])) {
 				$parameters['status'] = 'NEW';
 			} else if (! $this->validStatus($parameters['status'])) {
-				$this->error = "Invalid status";
+				$this->error("Invalid status");
 				return false;
 			}
 			
 			if (! $this->validName($parameters['name'])) {
-				$this->error = "Invalid name";
+				$this->error("Invalid name");
 				return false;
 			}
 	
@@ -63,7 +55,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::Repository::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -72,7 +64,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 		
 			$update_object_query = "
 				UPDATE	storage_repositories
@@ -86,7 +78,7 @@
 					name = ?";
 					array_push($bind_params,$parameters['name']);
 				} else {
-					$this->error = "Invalid name '".$parameters['name']."'";
+					$this->error("Invalid name '".$parameters['name']."'");
 					return false;
 				}
 			}
@@ -97,7 +89,7 @@
 					status = ?";
 					array_push($bind_params,$parameters['status']);
 				} else {
-					$this->error = "Invalid status";
+					$this->error("Invalid status");
 					return false;
 				}
 			}
@@ -111,41 +103,15 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::Repository::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			if (isset($parameters['path'])) $this->_setMetadata('path',$parameters['path']);
 			app_log("Repo ".$this->id." updated, getting details");
 			return $this->details();
 		}
-		
-		public function find($name) {
-		
-			$get_object_query = "
-				SELECT	id
-				FROM	storage_repositories
-				WHERE	name = ?
-			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array(trim($name))
-			);
-			
-			if (! $rs) {
-				$this->error = "SQL Error in Storage::Repository::find(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			list($this->id) = $rs->FetchRow();
-			if (! $this->id) {
-				$this->error = "Repository not found";
-				return false;
-			}
-			
-			return $this->details();
-		}
 
-		public function details() {
+		public function details(): bool {
 		
 			$get_object_query = "
 				SELECT	*
@@ -159,7 +125,7 @@
 			);
 			
 			if (! $rs) {
-				$this->error = "SQL Error in Storage::Repository::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -168,10 +134,8 @@
 			$this->type = $object->type;
 			$this->code = $object->code;
 			$this->status = $object->status;
-			$default_privileges_json = $object->default_privileges;
-			$this->default_privileges = json_decode($default_privileges_json,true);
-			$override_privileges_json = $object->override_privileges;
-			$this->override_privileges = json_decode($override_privileges_json,true);
+			$this->default_privileges_json = $object->default_privileges;
+			$this->override_privileges_json = $object->override_privileges;;
 			
 			$get_object_query = "
 				SELECT	*
@@ -185,7 +149,7 @@
 			);
 			
 			if (! $rs) {
-				$this->error = "SQL Error in Storage::Repository::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -223,7 +187,7 @@
 			query_log($update_object_query);
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::Repository::_updateMetadata(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
             return true;
@@ -246,7 +210,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::Repository::setMetadata: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -264,7 +228,7 @@
 				array($this->id,$key)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Storage::Repository::metadata(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($value) = $rs->FetchRow();
@@ -288,15 +252,15 @@
 			return json_decode($this->override_privileges_json,true);
 		}
 		
-		public function validName($string) {
+		public function validName($string): bool {
 			if (preg_match('/^\w[\w\-\_\.\s]*$/',$string)) return true;
 			return false;
 		}
-		public function validStatus($string) {
+		public function validStatus($string): bool {
 			if (preg_match('/^(NEW|ACTIVE|DISABLED)$/i',$string)) return true;
 			return false;
 		}
-		public function validType($string) {
+		public function validType($string): bool {
 			if (preg_match('/^(Local|S3)$/',$string)) return true;
 			return false;
 		}

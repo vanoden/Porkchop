@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 	class Role Extends \BaseClass {
-		public $id;
+
 		public $name;
 		public $description;
 
@@ -50,7 +50,7 @@
 			return $this->update($parameters);
         }
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			$update_object_query = "
 				UPDATE	register_roles
 				SET		id = id";
@@ -153,32 +153,6 @@
 				return false;
 			}
 			return true;
-		}
-		
-		public function details() {
-			$get_object_query = "
-				SELECT	id,
-						name,
-						description
-				FROM	register_roles
-				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			if ($object = $rs->FetchRow()){
-				$this->name = $object['name'];
-				$this->description = $object['description'];
-				return true;
-			}
-			else {
-				return false;
-			}
 		}
 
 		public function notify($message) {
@@ -329,9 +303,8 @@
             return $rolesList;
         }
 
-		public function validName($string) {
+		public function validName($string): bool {
 			if (preg_match('/^\w[\w\-\_\s]*$/',$string)) return true;
 			else return false;
 		}
 	}
-	

@@ -59,7 +59,7 @@
 		}
 
 		public function error($value = null) {
-			if (isset($value)) $_error = $value;
-			return $_error;
+			if (isset($value)) $this->_error = $value;
+			return $this->_error;
 		}
 	}

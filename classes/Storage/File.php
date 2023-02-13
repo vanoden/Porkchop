@@ -5,8 +5,6 @@
 	
 		private $_repository_id;
 		public $code;
-		public $id;
-		public $error;
 		public $success;
 		public $uri;
 		public $read_protect;
@@ -35,15 +33,13 @@
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
 			
 			if (! preg_match('/^[\w\-\.\_]+$/',$parameters['code'])) {
-				$this->error = "Invalid code '".$parameters['code']."'";
-				app_log($this->error,'notice');
+				$this->error("Invalid code '".$parameters['code']."'");
 				return false;
 			}
 			
 			$this->code = $parameters['code'];
 			if (! $this->_valid_type($parameters['mime_type'])) {
-				$this->error = "Invalid mime_type '".$parameters['mime_type']."'";
-				app_log($this->error,'notice');
+				$this->error("Invalid mime_type '".$parameters['mime_type']."'");
 				return false;
 			}
 
@@ -72,8 +68,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::File::add(): ".$GLOBALS['_database']->ErrorMsg();
-				app_log($this->error,'notice');
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -82,7 +77,7 @@
 			return $this->update($parameters);
 		}
 		
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 		
 			$update_object_query = "
 				UPDATE	storage_files
@@ -123,13 +118,13 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::File::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 		
 			$get_object_query = "
 				SELECT	*
@@ -168,7 +163,8 @@
 				$this->read_protect = $object->read_protect;
 				$this->write_protect = $object->write_protect;
 				$this->access_privilege_json = $object->access_privileges;
-			} else {
+			}
+			else {
 				$this->id = null;
 				$this->code = null;
 			}
@@ -179,7 +175,7 @@
 		public function name($name = '') {
 			if (strlen($name)) {
 				if (! preg_match('/^[\w\-\.\_\s]+$/',$name)) {
-					$this->error = "Invalid File Name";
+					$this->error("Invalid File Name");
 					return false;
 				} else {
 					$this->name = $name;
@@ -285,18 +281,19 @@
 						);
 						
 						if ($GLOBALS['_database']->ErrorMsg()) {
-							$this->error = "SQL Error in Storage::File::grant(): ".$GLOBALS['_database']->ErrorMsg();
+							$this->SQLError($GLOBALS['_database']->ErrorMsg());
 							return false;
 						}
 					} else {
-						$this->error = "Role not found";
+						$this->error("Role not found");
 						return false;
 					}
 				}
 		
 				return false;
 				
-			} else if ($type == 'write') {
+			}
+			else if ($type == 'write') {
 			
 				if ($this->write_protect == 'NONE') return true;
 				else if ($this->write_protect == 'AUTH') return true;
@@ -319,11 +316,11 @@
 							array($this->id,$role->id)
 						);
 						if ($GLOBALS['_database']->ErrorMsg()) {
-							$this->error = "SQL Error in Storage::File::grant(): ".$GLOBALS['_database']->ErrorMsg();
+							$this->SQLError($GLOBALS['_database']->ErrorMsg());
 							return false;
 						}
 					} else {
-						$this->error = "Role not found";
+						$this->error("Role not found");
 						return false;
 					}
 				}
@@ -336,12 +333,14 @@
 			if ($type == 'read') {
 			
 				if ($this->read_protect == 'NONE') {
-					$this->error = "File is globally readable";
+					$this->error("File is globally readable");
 					return false;
-				} else if ($this->read_protect == 'AUTH') {
-					$this->error = "File is readable by all authenticated users";
+				}
+				else if ($this->read_protect == 'AUTH') {
+					$this->error("File is readable by all authenticated users");
 					return false;
-				} else if ($this->read_protect == 'ROLE') {
+				}
+				else if ($this->read_protect == 'ROLE') {
 					$role = new \Register\Role($id);
 					if ($role->id) {
 						$update_privilege_query = "
@@ -355,11 +354,11 @@
 							array($this->id,$role->id)
 						);
 						if ($GLOBALS['_database']->ErrorMsg()) {
-							$this->error = "SQL Error in Storage::File::revoke(): ".$GLOBALS['_database']->ErrorMsg();
+							$this->SQLError($GLOBALS['_database']->ErrorMsg());
 							return false;
 						}
 					} else {
-						$this->error = "Role not found";
+						$this->error("Role not found");
 						return false;
 					}
 				}				
@@ -367,12 +366,14 @@
 
 			} else if ($type == 'write') {
 				if ($this->write_protect == 'NONE') {
-					$this->error = "File is globally writable";
+					$this->error("File is globally writable");
 					return false;
-				} else if ($this->write_protect == 'AUTH') {
-					$this->error = "File is writable by all authenticated users";
+				}
+				else if ($this->write_protect == 'AUTH') {
+					$this->error("File is writable by all authenticated users");
 					return false;
-				} else if ($this->write_protect == 'ROLE') {
+				}
+				else if ($this->write_protect == 'ROLE') {
 				
 					$role = new \Register\Role($id);
 					if ($role->id) {
@@ -387,11 +388,11 @@
 							array($this->id,$role->id)
 						);
 						if ($GLOBALS['_database']->ErrorMsg()) {
-							$this->error = "SQL Error in Storage::File::revoke(): ".$GLOBALS['_database']->ErrorMsg();
+							$this->SQLError($GLOBALS['_database']->ErrorMsg());
 							return false;
 						}
 					} else {
-						$this->error = "Role not found";
+						$this->error("Role not found");
 						return false;
 					}
 				}
@@ -405,7 +406,7 @@
 			if ($this->read_protect == 'NONE') return true;
 
 			// Owner Can Always Access 
-			if ($this->user->id == $GLOBALS['_SESSION_']->customer->id) return true;
+			if ($this->user_id == $GLOBALS['_SESSION_']->customer->id) return true;
 
 			// Any Authenticated Visitor 
 			if ($this->read_protect == 'AUTH' && $GLOBALS['_SESSION_']->customer->id > 0) return true;
@@ -427,7 +428,7 @@
 				);
 				
 				if (! $rs) {
-					$this->error = "SQL Error in Storage::File::readable(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
 					return false;
 				};
 				
@@ -438,8 +439,8 @@
 		}
 
 		public function download() {
-			$result = $this->repository->retrieveFile($this);
-			$this->error = $this->repository->error;
+			$result = $this->repository()->retrieveFile($this);
+			$this->error($this->repository()->error());
 			return $result;
 		}
 		
@@ -448,8 +449,8 @@
         }
 
         public function addError($errorMessage = '') {
-            $this->error = $errorMessage;        
-            return $this->error;
+            $this->error($errorMessage);
+            return $this->error();
         }
 
         public function success() {
@@ -541,11 +542,11 @@
 					    // Upload File Into Repository 
 					    $destinationPath = $parameters['type'] . "/" . $parameters['ref_id']  . "/";
 				        try {
-					        if ($this->error) { 
-					            $this->addError("Error adding file: " . $this->error);
+					        if ($this->error()) { 
+					            $this->addError("Error adding file: " . $this->error());
 					        } else if (! $repository->addFile($this, $_FILES['uploadFile']['tmp_name'], $destinationPath)) {
 						        $this->delete();
-						        $this->addError('Unable to add file to repository: '.$repository->error);
+						        $this->addError('Unable to add file to repository: '.$repository->error());
 					        } else {
 						        app_log("Stored file ".$this->id." at ".$repository->path."/".$this->code);
 						        $this->success = "File uploaded";

@@ -2,19 +2,15 @@
 	namespace Product;
 
 	class Item Extends \BaseClass {
-	
-		public $id;
+
 		public $code;
 		public $name;
 		public $description;
 		public $type;
 		public $status;
-		private $_flat = false;
 
-		public function __construct($id = 0,$flat = false) {
+		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
-
-			if ($flat) $this->_flat = true;
 
 			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
@@ -37,7 +33,7 @@
 			return $this->details($this->id);
 		}
 
-		public function update($parameters) {
+		public function update($parameters): bool {
 			$this->clearError();
 			$database = new \Database\Service();
 
@@ -151,7 +147,7 @@
 			return $this->update($parameters);
 		}
 
-		public function details() {
+		public function details(): bool {
 			app_log("Product::Item::details()",'trace');
 			$this->clearError();
 			$database = new \Database\Service();
@@ -463,15 +459,15 @@
 			$price = new \Product\Price();
 			return $price->getCurrent($this->id);
         }
-        public function validCode($string) {
+        public function validCode($string): bool {
             if (preg_match('/^\w[\w\-\.\_\s]*$/',$string)) return true;
             else return false;
         }
-        public function validType($string) {
+        public function validType($string): bool {
             if (in_array($string,array('group','kit','inventory','unique'))) return true;
             else return false;
         }
-        public function validStatus($string) {
+        public function validStatus($string): bool {
             if (in_array($string,array('ACTIVE','HIDDEN','DELETED'))) return true;
             else return false;
         }

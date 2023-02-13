@@ -2,10 +2,10 @@
 	namespace Register;
 
 	class Organization Extends \BaseClass {
+
 		public $name;
 		public $code;
 		public $status;
-		public $id;
 		public $is_reseller;
 		public $reseller;
 		public $assigned_reseller_id;
@@ -59,7 +59,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = []): bool {
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
 			$this->clearError();
 		
@@ -127,12 +127,12 @@
 			);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
 			return $this->details();
 		}
 		
-		public function details() {
+		public function details(): bool {
 			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
 			$database = new \Database\Service();
 			$this->clearError();
@@ -153,12 +153,13 @@
 				$this->password_expiration_days = $organization->password_expiration_days;
 				$this->default_billing_location_id = $organization->default_billing_location_id;
 				$this->default_shipping_location_id = $organization->default_shipping_location_id;
-				$this->_cached = $organization->_cached;
+				$this->cached(true);
+				$this->exists(true);
 
 				// In Case Cache Corrupted
 				if ($organization->id) {
 					app_log("Organization '".$this->name."' [".$this->id."] found in cache",'trace',__FILE__,__LINE__);
-					return $organization;
+					return true;
 				}
 				else {
 					$this->error("Organization ".$this->id." returned unpopulated cache");

@@ -20,7 +20,7 @@
 				$this->error("name required for header");
 				return false;
 			}
-			if (! validName($params['name'])) {
+			if (! $this->validName($params['name'])) {
 				$this->error("Invalid header name");
 				return false;
 			}
@@ -47,7 +47,7 @@
 			return $this->update($params);
 		}
 
-		public function update($params) {
+		public function update($params): bool {
 			$update_object_query = "
 				UPDATE	site_headers
 				SET		id = id";
@@ -67,7 +67,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	*
 				FROM	site_headers
@@ -92,7 +92,7 @@
 			return true;
 		}
 
-		public function validName($string) {
+		public function validName($string): bool {
 			if (preg_match('/^\w[\w\-]*$/',$string)) return true;
 			else return false;
 		}

@@ -16,7 +16,7 @@
 		public $date_received;
 		public $user_received_id;
 
-		public function __construct($id = null) {
+		public function __construct($id = 0) {
 			$this->_tableName = 'shipping_packages';
 			$this->_addFields(array('id','shipment_id','number','tracking_code','status','condition','height','width','depth','weight','shipping_cost','date_received','user_received_id','vendor_id'));
 
@@ -68,7 +68,7 @@
          * 
          * @param array $parameters, name value pairs to update object by
          */
-        public function update($parameters = array()) {
+        public function update($parameters = array()): bool {
 			if (isset($parameters['user_received']) && is_numeric($parameters['user_received'])) {
 				$customer = new \Register\Customer($parameters['user_received']);
 				if (! $customer->id) {

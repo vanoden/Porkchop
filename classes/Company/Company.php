@@ -2,9 +2,9 @@
 	namespace Company;
 
 	class Company Extends \BaseClass {
-		private $schema_version = 1;
-		public	$id;
+
 		public $login;
+		public $name;
 		public $primary_domain;
 		public $status;
 		public $deleted;
@@ -12,39 +12,11 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'company_companies';
 			$this->_tableUKColumn = 'name';
+			$this->_cacheKeyPrefix = 'company.domain';
 
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();
-			}
-		}
-
-		public function details() {
-			$get_details_query = "
-				SELECT	*
-				FROM	company_companies
-				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_details_query,
-				array($this->id)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			$object = $rs->FetchNextObject(false);
-			if (is_object($object)) {
-				$this->name = $object->name;
-				$this->login = $object->login;
-				$this->primary_domain = $object->primary_domain;
-				$this->status = $object->status;
-				$this->deleted = $object->deleted;
-				return $object;
-			}
-			else {
-				app_log("No company found for id '".$this->id."'",'debug');
-				return new \stdClass();
 			}
 		}
 
@@ -70,7 +42,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()){
+		public function update($parameters = array()): bool {
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid id required for details in company::Company::update");
 				return false;
@@ -105,7 +77,7 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			
-			return true;
+
+			return $this->details();
 		}
 	}

@@ -2,7 +2,7 @@
 	namespace Register;
 
 	class Queue Extends \BaseClass {
-		public $id;
+
 		public $code;
 		public $status;
 		public $is_reseller;
@@ -25,6 +25,7 @@
 		private $possibleOrganizationStatus = array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED');
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'register_queue';
 			$this->_addStatus(array('VERIFYING','PENDING','APPROVED','DENIED'));
 			if (!empty($id)) {
 				$this->id = $id;
@@ -82,7 +83,7 @@
          * update potential customer
          * @param array $parameters
          */
-		public function update ($parameters) {
+		public function update ($parameters): bool {
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
 				$this->error("ID Required for update method.");
 				return false;
@@ -241,7 +242,7 @@
 		}
 
 		// hydrate known details about this queue object from known id if set
-		public function details() {
+		public function details(): bool {
 		    if (!empty($this->id)) {
                 $get_queued_contacts_query = "
 	                SELECT	*

@@ -2,7 +2,7 @@
 	namespace Navigation;
 
 	class Item Extends \BaseClass {
-		public $id;
+
 		private $menu_id;
 		public $title;
 		public $target;
@@ -90,7 +90,7 @@
 			}
 		}
 
-		public function update($parameters) {
+		public function update($parameters): bool {
 			$update_object_query = "
 				UPDATE	navigation_menu_items
 				SET		id = id";
@@ -140,7 +140,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	*
 				FROM	navigation_menu_items

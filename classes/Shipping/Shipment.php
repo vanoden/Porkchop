@@ -2,8 +2,7 @@
 	namespace Shipping;
 	
 	class Shipment extends \ORM\BaseModel {
-	
-		public $id;
+
 		public $code;
 		public $document_number;
 		public $date_entered;
@@ -77,7 +76,7 @@
          * 
          * @param array $parameters, name value pairs to update object by
          */
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			if (isset($parameters['type']) && isset($parameters['number'])) $parameters['document_number'] = sprintf("%s-%06d",$parameters['type'],$parameters['number']);
             return parent::update($parameters);
 		}

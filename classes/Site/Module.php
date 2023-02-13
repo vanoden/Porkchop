@@ -2,6 +2,7 @@
 	namespace Site;
 
 	class Module Extends \BaseClass {
+
 		private $_name;
 		private $_path;
 		private $_metadata;
@@ -55,7 +56,7 @@
 				return $views;
 			}
 			else {
-				$this->_error = "Cannot view view data";
+				$this->error("Cannot view view data");
 				return null;
 			}
 		}
@@ -68,7 +69,7 @@
 					XML_SERIALIZER_OPTION_RETURN_RESULT => true,
 					XML_SERIALIZER_OPTION_MODE          => 'simplexml',
 				);
-				$xml = new XML_Unserializer($options);
+				$xml = new \XML_Unserializer($options);
 				if ($xml->unserialize($path,true,$options)) {
 					$this->_metadata = (object) $xml->getUnserializedData();
 				}
@@ -83,7 +84,7 @@
 			return null;
 		}
 
-		public function validName($string) {
+		public function validName($string): bool {
 			return $this->validCode($string);
 		}
 	}

@@ -247,7 +247,7 @@
 			}
 			return true;
 		}
-	    public function details() {
+	    public function details(): bool {
 		    $get_details_query = "
 				    SELECT	id,
 						    module,
@@ -259,7 +259,7 @@
 		    $rs = $GLOBALS ['_database']->Execute ( $get_details_query, array ($this->id ) );
 		    if (! $rs) {
 			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
-			    return null;
+			    return false;
 		    }
 		    $object = $rs->FetchNextObject ( false );
 		    if (gettype ( $object ) == 'object') {

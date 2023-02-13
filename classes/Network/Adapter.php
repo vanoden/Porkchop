@@ -2,17 +2,17 @@
 	namespace Network;
 
 	class Adapter Extends \BaseClass {
-		public $id;
+
 		public $name;
 		public $mac_address;
 		public $type;
 		public $host_id;
 
-		public function __construct(int $id = 0) {
+		public function __construct($id = 0) {
 			$this->_tableName = 'network_adapters';
 			$this->_tableUKColumn = null;
 
-			if ($id > 0) {
+			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
@@ -90,7 +90,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			$bind_params = array();
 
 			$update_object_query = "
@@ -113,7 +113,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	 *
 				FROM	network_adapters

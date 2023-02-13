@@ -2,7 +2,7 @@
 	namespace Content;
 
 	class Block Extends \BaseClass {
-        public $id;
+
         public $name;
 		public $cached = 0;
 		public $content;
@@ -12,6 +12,7 @@
         public function __construct($id = 0) {
 			$this->_tableName = 'content_messages';
 			$this->_tableUKColumn = 'target';
+			$this->_cacheKeyPrefix = 'content';
 
 			if ($id > 0) {
 				$this->id = $id;
@@ -57,58 +58,6 @@
 			return $this->details();
 		}
 
-        public function details() {
-			$this->clearError();
-			
-			if (! isset($this->id)) {
-				$this->error("ID Required for Content Details");
-				return null;
-			}
-
-			# Cached Content Object, Yay!	
-			if ($result = cache_get("content[".$this->id."]")) {
-				$this->name		= $result->name;
-				$this->target	= $result->target;
-				$this->title	= $result->title;
-				$this->content	= $result->content;
-				$this->cached	= 1;
-				return 1;
-			}
-
-            $get_content_query = "
-                SELECT  p.id,
-						p.name,
-                        p.target,
-                        p.title,
-                        p.content
-                FROM    content_messages p
-                WHERE   p.company_id = '".$GLOBALS['_SESSION_']->company->id."'
-                AND     p.id = ?
-            ";
-            $rs = $GLOBALS['_database']->Execute(
-				$get_content_query,
-				array($this->id)
-			);
-            if (! $rs) {
-				error_log(print_r(debug_backtrace(),true));
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return 0;
-            }
-
-            $result = $rs->FetchNextObject(false);
-			if (! isset($result->id)) {
-				return false;
-			}
-			$this->id = $result->id;
-            $this->name		= $result->name;
-            $this->target	= $result->target;
-            $this->title	= $result->title;
-			$this->content	= $result->content;
-
-			cache_set("content[".$this->id."]",$result);
-			return true;
-		}
-
 		public function add($parameters = array()) {
 			$this->clearError();
 			$_customer = new \Register\Customer();
@@ -146,7 +95,7 @@
 			$this->id = $id;
 			return $this->update($parameters);
 		}
-        public function update($parameters = array()) {
+        public function update($parameters = array()): bool {
 			$this->clearCache();
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error("You do not have permission to update content");
@@ -235,7 +184,7 @@
 			else return false;
 		}
 
-		public function validName($string) {
+		public function validName($string): bool {
 			if (empty(urldecode($string))) return false;
 			if (! preg_match('/[\<\>\%]/',urldecode($string))) return true;
 			else return false;

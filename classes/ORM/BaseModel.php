@@ -20,7 +20,7 @@
          * 
          * @param array $parameters, name value pairs to update object by
          */
-        public function update($parameters = array()) {
+        public function update($parameters = array()): bool {
         
             $updateQuery = "UPDATE `$this->_tableName` SET `$this->_tableIDColumn` = `$this->_tableIDColumn` ";
             $this->values = $parameters;
@@ -73,26 +73,6 @@
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
-		}
-	
-        /**
-         * get object in question
-         */
-		public function details() {
-			$getObjectQuery = "SELECT * FROM $this->_tableName WHERE	id = ?";
-			$rs = $this->execute($getObjectQuery, array($this->id));
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			$object = $rs->FetchNextObject(false);
-			if (is_numeric($object->id)) {
-    			foreach ($this->_fields as $field) $this->$field = $object->$field;
-			}
-			else {
-				foreach ($this->_fields as $field) $this->$field = null;
-			}
-			return true;
 		}
 
         /**

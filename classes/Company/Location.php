@@ -49,7 +49,7 @@
 			$this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
 				FROM	company_locations
@@ -142,7 +142,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid id required for details in Company::Domain::update");
 				return null;

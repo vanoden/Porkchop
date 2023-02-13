@@ -29,7 +29,7 @@
             ";
             $rs = $GLOBALS['_database']->Execute($get_object_query,array($message_id,$user_id));
             if (! $rs) {
-                $this->error("SQL Error in Site::SiteMessageDelivery::get(): ".$GLOBALS['_database']->ErrorMsg());
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return false;
             }
             

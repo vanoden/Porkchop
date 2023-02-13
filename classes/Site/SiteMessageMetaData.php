@@ -24,7 +24,7 @@
         /**
          * get object in question
          */
-		public function details() {
+		public function details(): bool {
 			$getObjectQuery = "SELECT * FROM $this->_tableName WHERE	`$this->_tableIDColumn` = ? AND label = ?";
 			$rs = $this->execute($getObjectQuery, array($this->item_id, $this->label));
 			if (! $rs) {
@@ -45,7 +45,7 @@
          * 
          * @param array $parameters, name value pairs to update object by
          */
-        public function update($parameters = array()) {
+        public function update($parameters = array()): bool {
 
             $updateQuery = "UPDATE `$this->_tableName` SET `$this->_tableIDColumn` = `$this->_tableIDColumn` ";
             $this->values = $parameters;

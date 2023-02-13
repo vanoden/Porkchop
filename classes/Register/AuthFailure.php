@@ -2,7 +2,7 @@
 	namespace Register;
 
 	class AuthFailure Extends \BaseClass {
-		public $id;
+
 		public $ip_address;
 		public $login;
 		public $reason;
@@ -10,6 +10,8 @@
 		public $date;
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'register_auth_failures';
+
 			if (is_numeric($id)) {
 				$this->id = $id;
 				$this->details();
@@ -41,7 +43,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
 				FROM	register_auth_failures
@@ -73,7 +75,7 @@
 			return true;
 		}
 
-		public function validReason($string) {
+		public function validReason($string): bool {
 			if (in_array($string,array('NOACCOUNT','PASSEXPIRED','WRONGPASS','INACTIVE','INVALIDPASS','CSRFTOKEN','UNKNOWN'))) return true;
 			else {
 				$this->error("Invalid Failure reason: '".$string."'");

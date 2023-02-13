@@ -2,7 +2,7 @@
 	namespace Register;
 
 	class Privilege Extends \BaseClass {
-		public $id;
+
 		public $description;
 		public $name;
 		public $module;
@@ -40,7 +40,7 @@
             return $this->update($parameters);
 		}
 
-        public function update($parameters = array()) {
+        public function update($parameters = array()): bool {
             $update_object_query = "
                 UPDATE      register_privileges
                 SET         id = id
@@ -78,23 +78,6 @@
             }
 
             return $this->details();
-        }
-
-        public function details() {
-            $get_object_query = "
-                SELECT  id,name,description,module
-                FROM    register_privileges
-                WHERE   id = ?
-            ";
-
-            $rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
-            if (! $rs) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return false;
-            }
-
-            list($this->id,$this->name,$this->description,$this->module) = $rs->FetchRow();
-            return true;
         }
 
         public function delete(): bool {
@@ -142,16 +125,16 @@
 
         public function notify($message) {
             if (! $this->id) {
-                $this->error = "Privilege not found";
+                $this->error("Privilege not found");
                 return null;
             }
             $members = $this->peers();
             foreach ($members as $member) {
                 app_log("Sending notification to '".$member->code,'debug',__FILE__,__LINE__);
                 $member->notify($message);
-                if ($member->error) {
-                    app_log("Error sending notification: ".$member->error,'error',__FILE__,__LINE__);
-                    $this->error = "Failed to send notification: ".$member->error;
+                if ($member->error()) {
+                    app_log("Error sending notification: ".$member->error(),'error',__FILE__,__LINE__);
+                    $this->error("Failed to send notification: ".$member->error());
                     return false;
                 }
             }
