@@ -80,8 +80,7 @@
 			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 		    }
 	    }
-	    public function requireRole($role) {	
-	    return true;    
+	    public function requireRole($role) {	 
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
 		    }
@@ -103,9 +102,6 @@
 	    }
 
         public function requirePrivilege($privilege) {
-        
-            return true;
-        
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
