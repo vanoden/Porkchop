@@ -103,7 +103,7 @@
 			return $object;
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! preg_match('/^\d+$/',$parameters['company_id'])) {
 				$this->error = "company_id parameter required for Register::Organization::Location::add()";
 				return null;

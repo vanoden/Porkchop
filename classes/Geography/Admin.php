@@ -10,11 +10,10 @@
 
 		public function __construct(int $id = 0) {
 			$this->_tableName = 'geography_provinces';
-
 			parent::__construct($id);
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			if (isset($parameters['country_id'])) {
 				$country = new Country($parameters['country_id']);
 				if (!$country->id) {
@@ -64,7 +63,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			if (! isset($this->id)) {
 				$this->error("id required for update");
 				return false;

@@ -19,13 +19,10 @@
 		);
 
 		public function __construct(int $id = 0) {
+			$this->_database = new \Database\Service();		
 			$this->_tableName = 'register_contacts';
 			$this->_tableUKColumn = null;
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function __call($name, $parameters) {
@@ -102,7 +99,7 @@
 			return $this->update($parameters);
 		}
 		
-		public function update($parameters = array()) : bool {
+		public function update($parameters = []): bool {
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
 				$this->error("ID Required for update method.");
 				return false;

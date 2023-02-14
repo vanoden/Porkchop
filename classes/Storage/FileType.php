@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class FileType extends \ORM\BaseModel {
+	class FileType extends \BaseClass {
 
 		public $id;
 		public $code;
@@ -26,7 +26,7 @@
          * 
          * @param array $parameters, name value pairs to add and populate new object by
          */
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 		    if (isset($parameters['code']) && isset($parameters['type']) && isset($parameters['ref_id'])) parent::add($parameters);
 		    return false;
 		}

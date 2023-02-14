@@ -16,7 +16,7 @@
 			}
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! isset($parameters['name'])) {
 				$this->_error = "name required for new interface";
 			}

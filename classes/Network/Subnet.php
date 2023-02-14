@@ -8,13 +8,6 @@
 		public $type;
 		public $description;
 
-		public function __construct($id = null) {
-			if (is_numeric($id)) {
-				$this->id = $id;
-				$this->details();
-			}
-		}
-
 		public function add($params = array()) {
 			$database = new \Database\Service();
 			if ($params['type'] == 'ipv4') {
@@ -67,7 +60,7 @@
 			return $this->details();
 		}
 
-		public function update($params = array()) {
+		public function update($params = []): bool {
 			$database = new \Database\Service();
 			$update_object_query = "
 				UPDATE	network_subnets

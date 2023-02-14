@@ -12,7 +12,7 @@
 				$this->error = $schema->error;
 			}
 		}
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			# Some Things Required
 			if (! $parameters['type']) {
 				$this->error = "type required for new MediaItem";

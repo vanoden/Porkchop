@@ -12,14 +12,10 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_prices';
 			$this->_addStatus(array('ACTIVE','INACTIVE'));
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			$product = new \Product\Item($parameters['product_id']);
 			if (!$product->id) {
 				$this->error("Product not found");

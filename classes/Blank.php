@@ -1,11 +1,13 @@
 <?php
 	class Blank Extends \BaseClass {
+	
 		public int $id;
 
 		/********************************************/
 		/* Instance Constructor						*/
 		/********************************************/
 		public function __construct(int $id = null) {
+		    
 			// Set Table Name
 			$this->_tableName = 'table name here';
 
@@ -19,10 +21,7 @@
 			$this->_addType(array());
 
 			// Load Record for Specified ID if given
-			if (isset($id) && is_numeric($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		/********************************************/
@@ -74,7 +73,7 @@
 		/* Update Existing Record.  Should not		*/
 		/* allow update of unique key or id			*/
 		/********************************************/
-		public function update(array $params): bool {
+		public function update($params = []): bool {
 			// Clear Any Existing Errors
 			$this->clearError();
 

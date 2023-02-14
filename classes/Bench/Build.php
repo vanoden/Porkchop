@@ -12,7 +12,7 @@
 			}
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			if (isset($parameters['product_code'])) {
 				$product = new \Bench\Product();
 				if ($product->get($parameters['product_code'])) {

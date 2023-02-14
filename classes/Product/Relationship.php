@@ -6,9 +6,10 @@
 		public function __construct() {
 			$this->_tableName = "product_relations";
 			$this->_tableUKColumn = null;
+    		parent::__construct();			
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			$parent = new \Product\Group($parameters['parent_id']);
 			if (!$parent->exists()) {
 				$this->error("Parent group not found");

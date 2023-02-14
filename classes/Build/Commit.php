@@ -12,7 +12,7 @@
 			}
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			if ($parameters['repository_id']) {
 				$repository = new Repository($parameters['repository_id']);
 				if (! $repository->id) {

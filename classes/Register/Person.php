@@ -24,6 +24,7 @@ class Person Extends \BaseClass {
     public $_settings = array( "date_format" => "US" );
 
     public function __construct(int $id = null) {
+    	$this->_database = new \Database\Service();
 		$this->_tableName = 'register_users';
 		$this->_tableUKColumn = 'login';
 		$this->_cacheKeyPrefix = 'customer';
@@ -34,10 +35,7 @@ class Person Extends \BaseClass {
 		$this->_addStatus(array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED","BLOCKED"));
 
         // Find Person if id given
-        if (isset($id) && is_numeric($id)) {
-            $this->id = $id;
-            $this->details();
-        }
+		parent::__construct($id);
     }
 
     public function setId($id=0) {
@@ -160,7 +158,7 @@ class Person Extends \BaseClass {
 		return $full_name;
 	}
     
-    public function add($parameters = array()) {
+    public function add($parameters = []) {
 		$this->clearError();
 
         if (!$this->validLogin($parameters['login'])) {
@@ -217,7 +215,7 @@ class Person Extends \BaseClass {
         return $this->update($parameters);
     }
 
-    public function update($parameters = array()): bool {
+    public function update($parameters = []): bool {
         if (!$this->id) {
             $this->error("User ID Required for Update");
             return false;

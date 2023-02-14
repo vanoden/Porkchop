@@ -28,6 +28,7 @@
 			if (isset($parameters['method'])) $this->method($parameters['method']);
 			if (isset($parameters['body'])) $this->body($parameters['body']);
 			if (isset($parameters['uri'])) $this->uri($parameters['uri']);
+			parent::__construct();
 		}
 
 		public function refererURI() {

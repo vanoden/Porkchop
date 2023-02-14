@@ -16,7 +16,7 @@
 			parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 		
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
 			if (isset($parameters['type'])) $this->type = $parameters['type'];
@@ -65,7 +65,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 		
 			$update_object_query = "
 				UPDATE	storage_repositories

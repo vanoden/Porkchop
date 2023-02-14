@@ -16,11 +16,7 @@
 		public function __construct($id = null) {
 			$this->_tableName = 'navigation_menu_items';
 			$this->_tableUKColumn = null;
-
-			if (is_numeric($id) && $id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function __call($name, $arguments) {
@@ -28,7 +24,7 @@
 			else $this->error("Method '$name' not found");
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			if ($parameters['menu_id']) {
 				$menu = new Menu($parameters['menu_id']);
 				if (! $menu->id) {
@@ -90,7 +86,7 @@
 			}
 		}
 
-		public function update($parameters): bool {
+		public function update($parameters = []): bool {
 			$update_object_query = "
 				UPDATE	navigation_menu_items
 				SET		id = id";

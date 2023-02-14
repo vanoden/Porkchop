@@ -11,6 +11,7 @@
 			$this->_tableName = 'register_organization_products';
 			$this->organization_id = $org_id;
 			$this->product_id = $product_id;
+    		parent::__construct();			
 		}
 	
         public function add($quantity,$parameters=array()) {

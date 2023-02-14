@@ -11,11 +11,7 @@
 		public function __construct(int $id = 0) {
 			$this->_tableName = "network_addresses";
 			$this->_tableUKColumn = null;
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+		    parent::__construct($id);
 		}
 
 		public function get($address): bool {
@@ -70,7 +66,7 @@
 			$this->id = $id;
 			return $this->details();
 		}
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! isset($parameters['address'])) {
 				$this->error("address required for new address");
 				return false;
@@ -104,7 +100,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			$bind_params = array();
 
 			$update_object_query = "

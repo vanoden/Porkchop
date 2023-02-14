@@ -6,6 +6,7 @@
 		
 		public function __construct() {
 			$this->timezone = $GLOBALS['_SESSION_']->timezone;
+			parent::__construct();
 		}
 
 		public function Local($time) {

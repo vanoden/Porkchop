@@ -1,7 +1,8 @@
 <?php
 	namespace Email;
 
-	class Queue Extends \ORM\BaseModel {
+	class Queue extends \BaseClass {
+	
 		public function __construct($id = 0) {
 			$this->_tableName = 'email_messages';
 			parent::__construct($id);

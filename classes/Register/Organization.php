@@ -27,13 +27,10 @@
 			if (isset($options['nocache']) && $options['nocache']) $this->_nocache = true;
 
 			// Load ID'd Record
-			if (is_numeric($id) && $id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
 			$database = new \Database\Service;
 

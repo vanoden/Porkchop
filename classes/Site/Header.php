@@ -8,11 +8,7 @@
 		public function __construct($id = null) {
 			$this->_tableName = "site_headers";
 			$this->_tableUKColumn = "name";
-
-			if (!empty($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function add($params = array()) {

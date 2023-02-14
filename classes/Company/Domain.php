@@ -18,11 +18,7 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'company_domains';
 			$this->_tableUKColumn = 'domain_name';
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function details(): bool {
@@ -67,7 +63,7 @@
 			}
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			$bind_params = array();
 			if (! isset($parameters['company_id'])) {
 				if (preg_match('/^\d+$/',$GLOBALS['_SESSION_']->company->id)) {
@@ -107,7 +103,7 @@
 			return $this->update($this->id,$parameters);
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid id required for details in Company::Domain::update");
 				return false;

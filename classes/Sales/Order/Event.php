@@ -1,17 +1,10 @@
 <?php
 	namespace Sales\Order;
 
-	class Event extends \ORM\BaseModel {
+	class Event extends \BaseClass {
 		public $id;
 
-		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
-		}
-
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			$add_object_query = "
 				INSERT
 				INTO	sales_order_events

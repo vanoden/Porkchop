@@ -18,7 +18,7 @@
 			}
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) {
 				$this->error = "Not permitted to manage packages";
 				return false;

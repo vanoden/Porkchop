@@ -1,7 +1,7 @@
 <?php
 	namespace Shipping;
 	
-	class Shipment extends \ORM\BaseModel {
+	class Shipment extends \BaseClass {
 
 		public $code;
 		public $document_number;
@@ -16,6 +16,7 @@
 		public $instructions;
 
 		public function __construct($id = 0) {
+			$this->_database = new \Database\Service();		
 			$this->_tableName = 'shipping_shipments';
 			$this->_addStatus(array('NEW','SHIPPED','LOST','RECEIVED','RETURNED'));
 			$this->_addFields(array('id','code','document_number','date_entered','date_shipped','status','send_contact_id','send_location_id','rec_contact_id','rec_location_id','vendor_id', 'instructions'));
@@ -27,7 +28,7 @@
          * 
          * @param array $parameters, name value pairs to add and populate new object by
          */
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			$this->clearError();
 
 			if (! isset($parameters['code'])) $parameters['code'] = uniqid();
@@ -76,7 +77,7 @@
          * 
          * @param array $parameters, name value pairs to update object by
          */
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			if (isset($parameters['type']) && isset($parameters['number'])) $parameters['document_number'] = sprintf("%s-%06d",$parameters['type'],$parameters['number']);
             return parent::update($parameters);
 		}

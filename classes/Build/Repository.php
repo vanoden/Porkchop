@@ -12,7 +12,7 @@
 			}
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			if (! isset($parameters['url']) || ! strlen($parameters['url'])) {
 				$this->_error = "url required";
 				return false;

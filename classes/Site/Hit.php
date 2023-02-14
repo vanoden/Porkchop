@@ -11,13 +11,9 @@
 		
 		function __construct($id = 0) {
 			$this->_tableName = "session_hits";
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
-		function add($parameters = array()) {
+		function add($parameters = []) {
 			if (! $parameters['session_id']) {
 				$this->error("session_id required");
 				return null;

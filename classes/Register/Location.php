@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 
-	class Location extends \ORM\BaseModel {
+	class Location extends \BaseClass {
 	
 		public $name;
 		public $address_1;
@@ -13,7 +13,7 @@
 		public $province;
 		public $country;
 
-		public function __construct($id = 0,$parameters = array()) {
+		public function __construct($id = 0,$parameters = array()) {		
 			$this->_tableName = 'register_locations';
 			$this->_addFields(array('id','name','address_1','address_2','city','province_id','zip_code', 'notes','country_id'));
 			parent::__construct($id);

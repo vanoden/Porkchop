@@ -1,6 +1,7 @@
 <?php
 	namespace Shipping;
-	class Package extends \ORM\BaseModel {
+	
+	class Package extends \BaseClass {
 	
 		public $shipment;
 		public $shipment_id;
@@ -17,10 +18,9 @@
 		public $date_received;
 		public $user_received_id;
 
-		public function __construct($id = 0) {
+		public function __construct($id = 0) {		
 			$this->_tableName = 'shipping_packages';
 			$this->_addFields(array('id','shipment_id','number','tracking_code','status','condition','height','width','depth','weight','shipping_cost','date_received','user_received_id','vendor_id'));
-
 			parent::__construct($id);
 		}
 
@@ -29,7 +29,7 @@
          * 
          * @param array $parameters, name value pairs to add and populate new object by
          */
-        public function add($parameters = array()) {
+        public function add($parameters = []) {
             // shipment_id is required            
             if (empty($parameters['shipment_id'])) {
 				$this->error("Shipment ID Required");
@@ -69,7 +69,7 @@
          * 
          * @param array $parameters, name value pairs to update object by
          */
-        public function update($parameters = array()): bool {
+        public function update($parameters = []): bool {
 			if (isset($parameters['user_received']) && is_numeric($parameters['user_received'])) {
 				$customer = new \Register\Customer($parameters['user_received']);
 				if (! $customer->id) {

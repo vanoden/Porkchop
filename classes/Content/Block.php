@@ -13,11 +13,7 @@
 			$this->_tableName = 'content_messages';
 			$this->_tableUKColumn = 'target';
 			$this->_cacheKeyPrefix = 'content';
-
-			if ($id > 0) {
-				$this->id = $id;
-	            $this->details();
-			}
+			parent::__construct($id);
         }
 
 		public function get($target = ''): bool {
@@ -58,7 +54,7 @@
 			return $this->details();
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			$this->clearError();
 			$_customer = new \Register\Customer();
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
@@ -95,7 +91,7 @@
 			$this->id = $id;
 			return $this->update($parameters);
 		}
-        public function update($parameters = array()): bool {
+        public function update($parameters = []): bool {
 			$this->clearCache();
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error("You do not have permission to update content");

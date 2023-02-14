@@ -6,7 +6,7 @@
 		public $expiration;
 		public $code;
 
-		public function add($person_id) {
+		public function add($person_id = []) {
 			# Get Large Random value
 			$randval = mt_rand();		
 

@@ -13,6 +13,7 @@
 				$this->key = $key;
 				$this->get($key);
 			}
+    		parent::__construct();			
 		}
 
 		public function set($value='') {

@@ -11,7 +11,7 @@
 			if ($this->id) $this->roles();
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (parent::add($parameters)) {
 				$this->changePassword($parameters['password']);
 				return true;
@@ -31,7 +31,7 @@
 			}
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 		
 			parent::update($parameters);
 			if ($this->error()) return false;
@@ -149,7 +149,7 @@
 		function authenticate ($login, $password) {
 			if (! $this->validLogin($login)) {
 				$failure = new \Register\AuthFailure();
-				$failure->add($_SERVER['REMOTE_ADDR'],$login,'INVALIDLOGIN',$_SERVER['PHP_SELF']);
+				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'INVALIDLOGIN',$_SERVER['PHP_SELF']));
 				return false;
 			}
 
@@ -173,7 +173,7 @@
 			if (! $id) {
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
 				$failure = new \Register\AuthFailure();
-				$failure->add($_SERVER['REMOTE_ADDR'],$login,'NOACCOUNT',$_SERVER['PHP_SELF']);
+				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'NOACCOUNT',$_SERVER['PHP_SELF']));
 				return false;
 			}
 
@@ -182,7 +182,7 @@
 			if ($this->password_expired()) {
 				$this->error("Your password is expired.  Please use Recover Password to restore.");
 				$failure = new \Register\AuthFailure();
-				$failure->add($_SERVER['REMOTE_ADDR'],$login,'PASSEXPIRED',$_SERVER['PHP_SELF']);
+				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'PASSEXPIRED',$_SERVER['PHP_SELF']));
 				return false;
 			}
 
@@ -199,7 +199,7 @@
 			else {
 				app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
 				$failure = new \Register\AuthFailure();
-				$failure->add($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']);
+				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']));
 				$this->increment_auth_failures();
 				if ($this->auth_failures() >= 6) {
 					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
@@ -309,10 +309,6 @@
 			$products = array();
 			while ($record = $rs->FetchRow()) {
 				$product = new \Product\Item($product['id']);
-				//$product->expire_date = $record['expire_date'];
-				//$product->quantity = $record['quantity'];
-				//$product->expired = $record['expired'];
-				//$product->group_flag = $record['group_flag'];
 				array_push($products,$product);
 			}
 			return $products;
@@ -360,10 +356,9 @@
 
 		public function has_privilege($privilege_name) {
 			$this->clearError();
-
 			$database = new \Database\Service();
-
 			$privilege = new \Register\Privilege();
+			
 			if (! $privilege->get($privilege_name)) {
 				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
 					$privilege->add(array('name' => $privilege_name));

@@ -10,14 +10,10 @@
 			$this->_tableName = 'sales_currencies';
 			$this->_cacheKeyPrefix = 'sales.currency';
 			$this->_tableUKColumn = 'name';
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			$this->clearError();
 			if (empty($parameters['name'])) {
 				$this->error("Currency name required");
@@ -39,7 +35,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters): bool {
+		public function update($parameters = []): bool {
 			$update_object_query = "
 				UPDATE	sales_currencies
 				SET		id = id

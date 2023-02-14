@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class CounterWatched extends \ORM\BaseModel {
+	class CounterWatched extends \BaseClass {
         public $key;
         public $notes;
 
@@ -9,6 +9,7 @@
 			$this->_tableName = 'counters_watched';
 			$this->_tableUKColumn = 'key';
 			$this->_addFields(array('key','notes'));
+    		parent::__construct($id);			
 		}
 
 		public function validKey($key) {

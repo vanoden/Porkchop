@@ -9,6 +9,7 @@
 
 		public function __construct() {
 			$this->_metadata = new \stdClass();
+    		parent::__construct();			
 		}
 
 		public function import_metadata($module) {

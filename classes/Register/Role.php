@@ -6,16 +6,13 @@
 		public $description;
 
 		public function __construct(int $id = null) {
+			$this->_database = new \Database\Service();		
 			$this->_tableName = "register_roles";
 			$this->_tableUKColumn = 'name';
-
-			if (isset($id) && is_numeric($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
-        public function add($parameters = array()) {
+        public function add($parameters = []) {
             if (!$this->validName($parameters['name'])) {
                 $this->error("Failed to add role, invalid name");
                 return null;
@@ -50,7 +47,7 @@
 			return $this->update($parameters);
         }
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			$update_object_query = "
 				UPDATE	register_roles
 				SET		id = id";

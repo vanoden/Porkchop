@@ -1,13 +1,14 @@
 <?php
 	namespace Site;
 
-	class SiteMessageMetaData extends \ORM\BaseModel {
+	class SiteMessageMetaData extends \BaseClass {
+	
         public $item_id;
         public $label;
         public $value;
         
         /**
-         * construct ORM
+         * construct site_messages_metadata
          */
 		public function __construct($item_id = 0, $label = 'title') {
 			$this->_tableName = 'site_messages_metadata';
@@ -19,6 +20,7 @@
 				$this->label = $label;
 				$this->details();
 			}
+			parent::__construct($item_id);
 		}
         
         /**
@@ -45,7 +47,7 @@
          * 
          * @param array $parameters, name value pairs to update object by
          */
-        public function update($parameters = array()): bool {
+        public function update($parameters = []): bool {
 
             $updateQuery = "UPDATE `$this->_tableName` SET `$this->_tableIDColumn` = `$this->_tableIDColumn` ";
             $this->values = $parameters;

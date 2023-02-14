@@ -9,11 +9,7 @@
 
 	    public function __construct($id = 0) {
 			$this->_tableName = 'navigation_menus';
-
-		    if (is_numeric ( $id ) && $id > 0) {
-			    $this->id = $id;
-			    $this->details();
-		    }
+    		parent::__construct($id);
 	    }
 
 	    public function add($parameters = array ()) {
@@ -36,7 +32,7 @@
 		    $this->id = $GLOBALS['_database']->Insert_ID();
 		    return $this->update($parameters);
 	    }
-	    public function update($parameters = array ()): bool {
+	    public function update($parameters = []): bool {
 		    $update_object_query = "
 				    UPDATE	navigation_menus
 				    SET		id = id

@@ -27,10 +27,7 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'register_queue';
 			$this->_addStatus(array('VERIFYING','PENDING','APPROVED','DENIED'));
-			if (!empty($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function get($login): bool {
@@ -83,7 +80,7 @@
          * update potential customer
          * @param array $parameters
          */
-		public function update ($parameters): bool {
+		public function update ($parameters = []): bool {
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
 				$this->error("ID Required for update method.");
 				return false;
@@ -324,7 +321,7 @@
          * add new potential customer
          * @param array $parameters
          */
-		public function add($parameters) {		
+		public function add($parameters = []) {		
 			app_log("Register::Queue::add()",'trace',__FILE__,__LINE__);
 			$this->clearError();
 			$add_object_query = "

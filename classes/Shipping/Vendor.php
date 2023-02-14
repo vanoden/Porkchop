@@ -1,12 +1,13 @@
 <?php
 	namespace Shipping;
 	
-	class Vendor extends \ORM\BaseModel {
+	class Vendor extends \BaseClass {
 	
 		public $name;
 		public $account_number;
 
 		public function __construct($id = 0) {
+			$this->_database = new \Database\Service();		
 			$this->_tableName = 'shipping_vendors';
 			$this->_addFields(array('id', 'name', 'account_number'));
 			$this->_tableUKColumn = 'name';
@@ -18,7 +19,7 @@
          * 
          * @param array $parameters, name value pairs to add and populate new object by
          */
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			
 			if (! isset($parameters['name'])) {
 				$this->error("Name required");

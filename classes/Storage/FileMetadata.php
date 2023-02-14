@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class FileMetadata extends \ORM\BaseModel {
+	class FileMetadata extends \BaseClass {
 
         public $key;
         public $value;
@@ -9,7 +9,8 @@
 		public function __construct($id = 0,$key = null) {
             $this->_tableName = 'storage_file_metadata';
             $this->_addFields(array('file_id','key','value'));
-            parent::__construct($id,$key);
+            $this->key = $key;
+            parent::__construct($id);
 		}
 
         /**

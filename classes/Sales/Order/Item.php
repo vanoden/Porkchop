@@ -1,7 +1,8 @@
 <?php
 	namespace Sales\Order;
 
-	class Item extends \ORM\BaseModel {
+	class Item extends \BaseClass {
+	
         public $order_id;
         public $line_number;
         public $product_id;
@@ -17,6 +18,7 @@
 			$this->_addFields(array('id','order_id','line_number','product_id','serial_number','description','quantity','unit_price','status','cost'));
 			parent::__construct($id);
 		}
+		
 		public function add($parameters = []) {
 			$product = new \Product\Item($parameters['product_id']);
 			if (! $product->id) {

@@ -14,12 +14,8 @@
 			$this->_tableName = "monitor_assets";
 			$this->_tableIDColumn = "asset_id";
 			$this->_tableUKColumn = null;
-
 			$this->_flat = $flat;
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function __call($name,$parameters) {
@@ -27,7 +23,7 @@
 			elseif ($name == 'get') return $this->get($parameters);
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			$this->clearError();
 
 			# See If Existing Unit Present
@@ -139,7 +135,7 @@
 			return $this->details();
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			$this->clearError();
 			$database = new \Database\Service();
 

@@ -1,5 +1,6 @@
 <?php
     class BaseMetadataClass Extends \BaseClass {
+    
 		protected $_tableMetaFKColumn;
         protected $_tableMetaKeyColumn = 'key';
         protected $_tableMetaValueColumn = 'value';

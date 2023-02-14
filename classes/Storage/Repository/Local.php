@@ -9,7 +9,7 @@
 			parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			app_log("Creating local repository ".$parameters['name'],'notice');
 			if (! isset($parameters['path'])) {
 				$this->error("Path required");

@@ -11,11 +11,7 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
-
-			if (is_numeric($id) && $id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function defaultCategory() {
@@ -33,7 +29,7 @@
 			return $this->details($this->id);
 		}
 
-		public function update($parameters): bool {
+		public function update($parameters = []): bool {
 			$this->clearError();
 			$database = new \Database\Service();
 
@@ -87,7 +83,7 @@
 			return $this->details();
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			app_log("Product::Item::add()",'trace');
 			$this->clearError();
 			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
@@ -445,7 +441,7 @@
 				'date_active'	=> $parameters['date_active'],
 				'status'		=> $parameters['status']
 			);
-			if ($price->add($parameters)) return true;
+			if ($price->add($parameters = [])) return true;
 			$this->error("Error adding price: ".$price->error());			
 			return false;
 		}

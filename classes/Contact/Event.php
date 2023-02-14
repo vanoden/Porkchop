@@ -9,7 +9,7 @@
 			parent::__construct($id);
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			$add_object_query = "
 				INSERT
 				INTO	contact_events
@@ -29,7 +29,7 @@
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
 		}
-		public function update($parameters): bool {
+		public function update($parameters = []): bool {
 			$update_object_query = "
 				UPDATE	contact_events
 				SET		id = id";

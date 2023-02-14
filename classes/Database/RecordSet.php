@@ -2,6 +2,7 @@
 	namespace Database;
 
 	class RecordSet Extends \BaseClass {
+	
 		private $_handle;
 		public function __construct($handle) {
 			$this->_handle= $handle;
@@ -13,7 +14,7 @@
 		}
 
 		public function FetchNextObject($option_1 = false) {
-			if (!isset($this->_handle)) return null;
+			if (!isset($this->_handle) || empty($this->_handle)) return null;
 			return $this->_handle->FetchNextObject($option_1);
 		}
 

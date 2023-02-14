@@ -28,6 +28,7 @@
 					}
 				}
 			}
+			parent::__construct();
 		}
 
 		public function load($path) {

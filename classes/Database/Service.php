@@ -2,6 +2,7 @@
 	namespace Database;
 
 	class Service Extends \BaseClass {
+	
 		private $_connection;
 		private $_params = array();
 		public $debug = 'log';
@@ -30,6 +31,7 @@
 		}
 
 		public function Execute($query,$bind_params = null) {
+		
 			if (is_array($bind_params)) $this->_params = array_merge($this->_params,$bind_params);
 			if ($this->debug == 'log' && $this->_trace_level > 0) query_log($query,$this->_params,true);
 			elseif ($this->debug == 'screen' && $this->_trace_level > 0) print "<pre>$query</pre>";

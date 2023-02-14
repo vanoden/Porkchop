@@ -11,11 +11,7 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'network_adapters';
 			$this->_tableUKColumn = null;
-
-			if (is_numeric($id) && $id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+		    parent::__construct($id);
 		}
 
 		public function __call($name,$parameters) {
@@ -55,7 +51,7 @@
 			return $this->details();
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! isset($parameters['name'])) {
 				$this->error("name required for new adapter");
 			}
@@ -90,7 +86,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			$bind_params = array();
 
 			$update_object_query = "

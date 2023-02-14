@@ -8,16 +8,13 @@
 		public $module;
 
 		public function __construct($id = 0) {
+			$this->_database = new \Database\Service();
 			$this->_tableName = 'register_privileges';
 			$this->_tableUKColumn = 'name';
-
-			if (is_numeric($id) && $id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+		    parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
             $add_object_query = "
                 INSERT
                 INTO    register_privileges
@@ -40,7 +37,7 @@
             return $this->update($parameters);
 		}
 
-        public function update($parameters = array()): bool {
+        public function update($parameters = []): bool {
             $update_object_query = "
                 UPDATE      register_privileges
                 SET         id = id

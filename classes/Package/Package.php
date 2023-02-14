@@ -5,15 +5,11 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'package_packages';
-
 			$this->_addStatus(array('TEST','ACTIVE','HIDDEN'));
-			if (is_numeric($id) && $id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			# Authorization Required
 			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) {
 				$this->error("Must be an authorized package manager to upload files");
@@ -83,7 +79,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = []): bool {
 			if (! $this->id) {
 				$this->error("Must identify package first");
 				return false;
@@ -153,7 +149,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	*,
 						unix_timestamp(date_created) `timestamp`
@@ -215,7 +211,7 @@
 			return new \Package\Version($this->package_version_id);
 		}
 
-        public function validName($string) {
+        public function validName($string): bool {
             if (preg_match('/\.\./',$string)) return false;
             if (preg_match('/^[\w\.\-\_\s]+$/',$string)) return true;
             else return false;

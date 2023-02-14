@@ -10,11 +10,7 @@
 			$this->_tableName = "geography_countries";
 			$this->_tableUKColumn = "name";
 			$this->_cacheKeyPrefix = "geography.country";
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 		public function add($parameters=array()) {
 			if (! isset($parameters['name'])) {
@@ -41,7 +37,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			$update_object_query = "
 				UPDATE	geography_countries
 				SET		id = id";

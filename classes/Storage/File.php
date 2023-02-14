@@ -20,13 +20,10 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'storage_files';
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+            parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 	
             app_log('Storage::File::add(): '.print_r($parameters,false));
             
@@ -77,7 +74,7 @@
 			return $this->update($parameters);
 		}
 		
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 		
 			$update_object_query = "
 				UPDATE	storage_files

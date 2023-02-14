@@ -13,14 +13,10 @@
 			$this->_tableName = 'company_companies';
 			$this->_tableUKColumn = 'name';
 			$this->_cacheKeyPrefix = 'company.domain';
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! preg_match('/\w/',$parameters['name'])) {
 				$this->error("name parameter required in Company::Company::add");
 				return 0;
@@ -42,7 +38,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid id required for details in company::Company::update");
 				return false;

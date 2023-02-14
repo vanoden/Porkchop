@@ -3,7 +3,7 @@
 
 use Aws\Emr\Enum\InstanceRoleType;
 
-class Order extends \ORM\BaseModel {
+class Order extends \BaseClass {
 
 		public $code;
 		public $customer_id;
@@ -17,11 +17,10 @@ class Order extends \ORM\BaseModel {
 
 		public function __construct($id = 0) {
 			$this->_tableName = "sales_orders";
-
 			parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			$customer = new \Register\Customer($parameters['customer_id']);
 			if (! $customer->id) {
 				$this->error("Customer not found");
@@ -58,7 +57,7 @@ class Order extends \ORM\BaseModel {
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 		
 			$update_object_query = "
 				UPDATE	sales_orders

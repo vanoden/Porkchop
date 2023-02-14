@@ -11,14 +11,10 @@
 		public function __construct($id = 0) {
 			$this->_tableName = "sales_discounts";
 			$this->_cacheKeyPrefix = "sales.discounts";
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			return $this->update($parameters);
 		}
 	}

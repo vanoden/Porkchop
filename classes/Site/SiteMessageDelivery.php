@@ -1,7 +1,8 @@
 <?php
 	namespace Site;
 
-	class SiteMessageDelivery extends \ORM\BaseModel {
+	class SiteMessageDelivery extends \BaseClass {
+	
         public $message_id;
         public $user_id;
         public $date_viewed;
@@ -10,10 +11,7 @@
 		public function __construct($id = null) {
 			$this->_tableName = "site_message_deliveries";
 			$this->_addFields(array('id','message_id','user_id','date_viewed','date_acknowledged'));
-			if (isset($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function __call($name,$parameters) {

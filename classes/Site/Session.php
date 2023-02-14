@@ -2,6 +2,7 @@
 	namespace Site;
 
 	class Session Extends \BaseClass {
+	
 		public $code = '';
 		public $id = 0;
 		public $order = 0;
@@ -33,12 +34,9 @@
 		private $oauth2_state = null;
 
 		public function __construct($id = 0) {
+    		$this->_database = new \Database\Service();
 			$this->_tableName = 'session_sessions';
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function start() {
@@ -461,7 +459,7 @@
 			return 1;
 		}
 
-		function update ($parameters): bool {
+		function update ($parameters = []): bool {
 		
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";

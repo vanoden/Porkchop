@@ -11,14 +11,10 @@
 		public function __construct(int $id = 0) {
 			$this->_tableName = 'network_hosts';
 			$this->_tableUKColumn = null;
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! isset($parameters['name'])) {
 				$this->error("name required for new host");
 			}
@@ -78,7 +74,7 @@
 			return $this->details();
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			$bind_params = array();
 
 			$update_object_query = "

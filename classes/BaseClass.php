@@ -25,14 +25,19 @@
 		// Name for Auto-Increment ID Column
 		protected $_tableIDColumn = 'id';
 
+        // field names for columns in database tables
 	    protected $_fields = array();
 
 		// Name for Cache Key - id appended in square brackets
 		protected $_cacheKeyPrefix;
+		
+		// \Database\Service
+		protected $_database;
 
 		public $id = 0;
 
 		public function __construct($id = 0) {
+		    $this->_database = new \Database\Service();
 			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
@@ -44,9 +49,7 @@
 		/********************************************/
 		protected function _addFields($fields) {
 			if (is_array($fields)) {
-				foreach ($fields as $field) {
-					array_push($this->_fields,$field);
-				}
+				foreach ($fields as $field) array_push($this->_fields,$field);
 			}
 		}
 
@@ -54,25 +57,23 @@
 		/* Get Object Record Using Unique Code		*/
 		/********************************************/
 		protected function _ukExists(string $code): bool {
+			
 			// Clear Errors
 			$this->clearError();
 
-			// Initialize Services
-			$database = new \Database\Service();
-
 			// Prepare Query
 			$get_object_query = "
-				SELECT	`".$this->_tableIDColumn."`
-				FROM	`".$this->_tableName."`
-				WHERE	`".$this->_tableUKColumn."` = ?";
+				SELECT	`$this->_tableIDColumn`
+				FROM	`$this->_tableName`
+				WHERE	`$this->_tableUKColumn` = ?";
 
 			// Bind Code to Query
-			$database->AddParam($code);
+			$this->_database->AddParam($code);
 
 			// Execute Query
-			$rs = $database->Execute($get_object_query);
+			$rs = $this->_database->Execute($get_object_query);
 			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
+				$this->SQLError($this->_database->ErrorMsg());
 				return false;
 			}
 
@@ -91,41 +92,32 @@
 		}
 
 		/********************************************/
-		/* Placeholder update function				*/
-		/********************************************/
-		public function update($parameters): bool {
-			return $this->details();
-		}
-
-		/********************************************/
 		/* Get Object Record Using Unique Code		*/
 		/********************************************/
 		public function _getObject(string $code): bool {
+
 			// Clear Errors
 			$this->clearError();
-
 			if (gettype($this->_tableUKColumn) == 'NULL') {
 				$trace = debug_backtrace()[1];
 				$this->error("No surrogate key defined for ".get_class($this)." called from ".$trace['class']."::".$trace['function']." in ".$trace['file']." line ".$trace['line']);
 				error_log($this->error());
 				return false;
 			}
-			// Initialize Services
-			$database = new \Database\Service();
 
 			// Prepare Query
 			$get_object_query = "
-				SELECT	`".$this->_tableIDColumn."`
-				FROM	`".$this->_tableName."`
-				WHERE	`".$this->_tableUKColumn."` = ?";
-
+				SELECT	`$this->_tableIDColumn`
+				FROM	`$this->_tableName`
+				WHERE	`$this->_tableUKColumn` = ?";
+				
 			// Bind Code to Query
-			$database->AddParam($code);
+			$this->_database->AddParam($code);
 
 			// Execute Query
-			$rs = $database->Execute($get_object_query);
+			$rs = $this->_database->Execute($get_object_query);
 			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
+				$this->SQLError($this->_database->ErrorMsg());
 				return false;
 			}
 
@@ -149,13 +141,12 @@
 
 		// Load Object Attributes from Cache or Database
 		public function details(): bool {
+		
 			$this->clearError();
-
-			$database = new \Database\Service();
 			$cache = $this->cache();
 			if (!empty($this->_cacheKeyPrefix)) {
 				$fromCache = $cache->get();
-				if (isset($fromCache)) {
+				if (isset($fromCache) && !empty($fromCache)) {
 					foreach ($fromCache as $key => $value) {
 						if (property_exists($this,$key)) $this->$key = $value;
 					}
@@ -170,15 +161,17 @@
 				FROM	`$this->_tableName`
 				WHERE	`$this->_tableIDColumn` = ?
 			";
-			$database->AddParam($this->id);
-			$rs = $database->Execute($get_object_query);
+			$this->_database->AddParam($this->id);
+			$rs = $this->_database->Execute($get_object_query);
+			
 			if (!$rs) {
-				$this->SQLError($database->ErrorMsg());
+				$this->SQLError($this->_database->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
 			$column = $this->_tableIDColumn;
 			if (is_object($object) && $object->$column > 0) {
+			
 				// Collect all attributes from response record
 				foreach ($object as $key => $value) {
 					if (property_exists($this,$key)) $this->$key = $value;
@@ -188,10 +181,9 @@
 				if (!empty($this->_cacheKeyPrefix)) $cache->set($object);
 			}
 			else {
+			
 				// Clear all attributes
-				foreach ($this as $key => $value) {
-					$this->$key = null;
-				}
+				foreach ($this as $key => $value) $this->$key = null;
 				$this->exists(false);
 				$this->cached(false);
 			}
@@ -209,24 +201,22 @@
 			}
 
 			// Initialize Services
-			$database = new \Database\Service();
 			$cache = $this->cache();
-
 			if (isset($cache)) $cache->delete();
 
 			// Prepare Query
 			$delete_object_query = "
 				DELETE
-				FROM	`".$this->_tableName."`
-				WHERE	`".$this->_tableIDColumn."` = ?";
+				FROM	`$this->_tableName`
+				WHERE	`$this->_tableIDColumn` = ?";
 
 			// Bind ID to Query
-			$database->AddParam($this->id);
+			$this->_database->AddParam($this->id);
 
 			// Execute Query
-			$rs = $database->Execute($delete_object_query);
+			$rs = $this->_database->Execute($delete_object_query);
 			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
+				$this->SQLError($this->_database->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -314,6 +304,131 @@
 			}
 			return $this->_cached;
 		}
+		
+        /**
+         * update by params
+         * 
+         * @param array $parameters, name value pairs to update object by
+         */
+        public function update($parameters = []): bool {
+        
+            $updateQuery = "UPDATE `$this->_tableName` SET `$this->_tableIDColumn` = `$this->_tableIDColumn` ";
+		    
+    	    // unique id is required to perform an updat
+    	    if (!$this->id) {
+        	    $this->error('ERROR: id is required for object update.');
+        	    return false;
+    	    }
+
+	        foreach ($parameters as $fieldKey => $fieldValue) {
+	            if (in_array($fieldKey, $this->_fields)) {
+	               $updateQuery .= ", `$fieldKey` = ?";
+	               $this->_database->AddParam($fieldValue);
+	            }
+	        }
+	        
+            $updateQuery .= " WHERE	`$this->_tableIDColumn` = ?";
+            $this->_database->AddParam($this->id);
+            $this->_database->Execute($updateQuery);
+
+			if ($this->_database->ErrorMsg()) {
+				$this->SQLError($this->_database->ErrorMsg());
+				return false;
+			}
+            return $this->details();
+		}
+		
+        /**
+         * add by params
+         * 
+         * @param array $parameters, name value pairs to add and populate new object by
+         */
+		public function add($parameters = []) {
+	
+    		$addQuery = "INSERT INTO `$this->_tableName` ";
+			$bindParams = $bindFields = array();
+	        foreach ($parameters as $fieldKey => $fieldValue) {
+	            if (in_array($fieldKey, $this->_fields)) {
+    	            array_push($bindFields, $fieldKey);
+    	            array_push($bindParams, $fieldValue);
+	            }
+	        }
+	        $addQuery .= '(`'.implode('`,`',$bindFields).'`';
+            $addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindParams)) ,',') . ")";
+            
+            // Execute DB Query
+            $this->_database->Execute($addQuery);
+			if ($this->_database->ErrorMsg()) {
+				$this->SQLError($this->_database->ErrorMsg());
+				return false;
+			}
+			
+			// get recent added row id to return update() and details()
+			$this->$_tableIDColumn = $this->_database->Insert_ID();
+			return $this->update($parameters);
+		}
+		
+		public function deleteByKey($keyName) {
+		
+            // Clear Errors
+			$this->clearError();
+
+			if (! $this->id) {
+				$this->error("No current instance of this object");
+				return false;
+			}
+
+			// Initialize Services
+			$cache = $this->cache();
+			if (isset($cache)) $cache->delete();
+
+			// Prepare Query
+			$delete_object_query = "DELETE FROM `$this->_tableName` WHERE `$this->_tableUKColumn` = ?";
+
+			// Bind ID to Query
+			$this->_database->AddParam($keyName);
+
+			// Execute Query
+			$rs = $this->_database->Execute($delete_object_query);
+			if (! $rs) {
+				$this->SQLError($this->_database->ErrorMsg());
+				return false;
+			}
+			return true;
+		}		
+		
+        /**
+         * get max value from a column in the current DB table
+         */
+		public function maxColumnValue($column='id') {
+		
+		    $this->clearError();
+			$get_object_query = "SELECT MAX(`$column`) FROM `$this->_tableName`";
+
+			$rs = $this->_database->Execute($get_object_query);
+			if (!$rs) {
+				$this->SQLError($this->_database->ErrorMsg());
+				return false;
+			}
+			return list($value) = $rs->FetchRow();
+		}
+		
+        /**
+         * @TODO REMOVE -> move to the recordset Service->Execute()
+         *
+         * get the error that may have happened on the DB level
+         *
+         * @params string $query, prepared statement query
+         * @params array $params, values to populated prepared statement query
+         */		
+		protected function execute($query, $params) {
+			$rs = $GLOBALS["_database"]->Execute($query,$params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+            return $rs;
+		}
 
 		/********************************************/
 		/* Reusable Validation Routines				*/
@@ -342,4 +457,3 @@
 			else return false;
 		}
 	}
-?>

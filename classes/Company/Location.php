@@ -23,11 +23,7 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'company_locations';
-
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function getByHost($hostname) {
@@ -108,7 +104,7 @@
 			return true;
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! preg_match('/^\d+$/',$parameters['company_id'])) {
 				$this->error("company_id parameter required");
 				return false;
@@ -142,7 +138,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()): bool {
+		public function update($parameters = []): bool {
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid id required for details in Company::Domain::update");
 				return null;

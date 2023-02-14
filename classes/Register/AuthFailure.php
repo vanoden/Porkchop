@@ -10,15 +10,20 @@
 		public $date;
 
 		public function __construct($id = 0) {
+			$this->_database = new \Database\Service();		
 			$this->_tableName = 'register_auth_failures';
-
-			if (is_numeric($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
-		public function add($ip_address, $login, $reason, $endpoint) {
+		public function add($parameters = []) {
+
+		    list ($ip_address, $login, $reason, $endpoint) = $parameters;
+		    
+		    if (empty($ip_address)) $ip_address = '';
+		    if (empty($login)) $login = '';
+		    if (empty($reason)) $reason = '';
+		    if (empty($endpoint)) $endpoint = '';
+		    
 			$add_object_query = "
 				INSERT
 				INTO	register_auth_failures
@@ -80,6 +85,7 @@
 			else {
 				$this->error("Invalid Failure reason: '".$string."'");
 				error_log($this->error());
+				return false;
 			}
 		}
 	}
