@@ -87,7 +87,7 @@
 
 		// Polymorphism for Fun and Profit
 		public function __call($name,$parameters) {
-			if ($name == 'get') return $this->getObject($parameters[0]);
+			if ($name == 'get') return $this->_getObject($parameters[0]);
 		}
 
 		/********************************************/
@@ -100,7 +100,7 @@
 		/********************************************/
 		/* Get Object Record Using Unique Code		*/
 		/********************************************/
-		public function getObject(string $code): bool {
+		public function _getObject(string $code): bool {
 			// Clear Errors
 			$this->clearError();
 

@@ -134,11 +134,31 @@
 			return $date;
 		}
 
+		// 16 Character UUID
 		public function uuid() {
-			$pid = dechex(getmypid());
+			$pid = substr($this->intToUUID(getmypid()),-3);
 			$sec = uniqid();
-			$rnd = dechex(mt_rand(0,mt_getrandmax()));
+			return strtoupper("$pid$sec");
+		}
+
+		public function biguuid() {
+			$pid = $this->intToUUID(getmypid());
+			$sec = uniqid();
+			$rnd = $this->intToUUID(mt_rand(0,mt_getrandmax()));
 			return strtoupper("$pid-$sec-$rnd");
+		}
+
+		public function intToUUID($int) {
+			$string = '';
+			while ($int / 36 >= 1) {
+				$char = $int % 36;
+				$int = sprintf("%0d",$int/36);
+
+				if ($char < 11) $char = chr($char + 48);
+				else $char = chr($char + 55);
+				$string = $char . $string;
+			}
+			return $string;
 		}
 
 		function validEmail($email) {

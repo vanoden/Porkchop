@@ -18,6 +18,7 @@
 	    public $template;
 	    public $success;
 		public $instructions;
+		public $tou_id;
 		private $_breadcrumbs = array();
 	    private $_errors = array();
 
@@ -48,8 +49,9 @@
 			    $this->getPage( $args[0], $args[1] );
 		    }
 			else {
-			    $this->fromRequest ();
+			    $this->fromRequest();
 		    }
+			$this->_addFields('tou_id');
 	    }
 
 		public function __call($name, $arguments) {
@@ -221,6 +223,32 @@
 		    return $this->details();
 	    }
 
+		public function update($parameters): bool {
+			$this->clearError();
+			$database = new \Database\Service();
+
+			$update_object_query = "
+				UPDATE	`$this->_tableName`
+				SET		`$this->_tableIDColumn` = `$this->_tableIDColumn`
+			";
+			if (isset($parameters['tou_id'])) {
+				if ($parameters['tou_id'] < 1) $parameters['tou_id'] = '0';
+				$update_object_query .= ",
+						tou_id = ?";
+				$database->AddParam($parameters['tou_id']);
+			}
+			$update_object_query .= "
+				WHERE	`$this->_tableIDColumn` = ?";
+			$database->AddParam($this->id);
+			$this->clearCache();
+			$database->Execute($update_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			else return $this->details();
+		}
+
 		public function delete(): bool {
 			// Delete Content Block for Page
 			if (!empty($this->index)) {
@@ -252,6 +280,7 @@
 				    SELECT	id,
 						    module,
 						    view,
+							tou_id,
 						    `index` idx
 				    FROM	page_pages
 				    WHERE	id = ?
@@ -262,9 +291,10 @@
 			    return false;
 		    }
 		    $object = $rs->FetchNextObject ( false );
-		    if (gettype ( $object ) == 'object') {
+		    if (gettype($object) == 'object') {
 			    $this->module = $object->module;
 			    $this->view = $object->view;
+				$this->tou_id = $object->tou_id;
 			    $this->index = $object->idx;
 		    }
 			else {

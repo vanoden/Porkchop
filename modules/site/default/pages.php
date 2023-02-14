@@ -24,6 +24,8 @@
 <?=$page->showMessages()?>
 <!-- End Page Header -->
 
+<form method="post" action="/_site/pages">
+<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>"/>
 <div class="table">
 	<div class="tableHead">
 		<div class="tableCell">Module</div>
@@ -31,6 +33,7 @@
 		<div class="tableCell">Index</div>
 		<div class="tableCell">Template</div>
 		<div class="tableCell">Metadata</div>
+		<div class="tableCell">Terms of Use Required</div>
 	</div>
 <?php	foreach ($pages as $page) {
 		$metadata = $page->allMetadata(); ?>
@@ -57,7 +60,17 @@
 <?php	} ?>
 			</span>
 		</div>
-		</a>
+		<div class="tableCell">
+			<select name="tou_id[<?=$page->id?>]" class="value input">
+				<option value="">None</option>
+<?php	foreach ($terms_of_use as $tou) { ?>
+				<option value="<?=$tou->id?>"<?php if ($page->tou_id == $tou->id) print " selected"; ?>><?=$tou->name?></option>
+<?php	} ?>
+			</select>
+		</div>
 	</div>
+
 <?php	} ?>
 </div>
+<input type="submit" name="btn_submit" value="Submit"/>
+</form>
