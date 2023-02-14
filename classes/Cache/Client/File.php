@@ -109,7 +109,7 @@
 					if (! preg_match('/^_/',$key)) $this->incrementStat("get_misses");
 					return null;
 				}
-				if ($fh = fopen($filename,'r')) {
+				if (filesize($filename) > 0 && $fh = fopen($filename,'r')) {
 					$content = fread($fh,filesize($filename));
 					$value = unserialize($content);
 					fclose($fh);
@@ -117,7 +117,6 @@
 					return $value;
 				}
 				else {
-					
 					$this->error("Cannot open cache file '$filename'");
 				}
 			}

@@ -21,7 +21,7 @@
 		<th class="label descValue">Description</th>
 		<th class="label smallValue">Object</th>
 	</tr>
-<?php	
+<?php
 foreach ($products as $product) { 
     if (isset($greenbar) && $greenbar) $greenbar = ''; else $greenbar = ' greenbar';
 ?>
