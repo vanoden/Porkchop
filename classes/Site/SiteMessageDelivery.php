@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class SiteMessageDelivery extends \BaseClass {
+	class SiteMessageDelivery extends \BaseModel {
 	
         public $message_id;
         public $user_id;

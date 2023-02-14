@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 
-	class Location extends \BaseClass {
+	class Location extends \BaseModel {
 	
 		public $name;
 		public $address_1;

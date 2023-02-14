@@ -1,6 +1,6 @@
 <?php
 	namespace Register;
-	class Role Extends \BaseClass {
+	class Role Extends \BaseModel {
 
 		public $name;
 		public $description;

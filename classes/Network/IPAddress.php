@@ -1,7 +1,7 @@
 <?php
 	namespace Network;
 
-	class IPAddress Extends \BaseClass {
+	class IPAddress Extends \BaseModel {
 
 		public $address;
 		public $prefix;

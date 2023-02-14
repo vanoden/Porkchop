@@ -1,7 +1,7 @@
 <?php
 	namespace Product;
 
-	class Item Extends \BaseClass {
+	class Item Extends \BaseModel {
 
 		public $code;
 		public $name;

@@ -1,7 +1,7 @@
 <?php
 	namespace Company;
 
-	class Domain Extends \BaseClass {
+	class Domain Extends \BaseModel {
 		private $schema_version = 1;
 		public $id;
 		public $status;

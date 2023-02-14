@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class Session Extends \BaseClass {
+	class Session Extends \BaseModel {
 	
 		public $code = '';
 		public $id = 0;

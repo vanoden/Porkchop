@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class Directory Extends \BaseClass {
+	class Directory Extends \BaseModel {
 
 		public $path;
 		public $repository_id;

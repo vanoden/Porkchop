@@ -1,7 +1,7 @@
 <?php
 	namespace Company;
 
-	class Location Extends \BaseClass {
+	class Location Extends \BaseModel {
 		private $schema_version = 1;
 		public $id;
 		public $company_id;

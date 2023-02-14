@@ -1,13 +1,12 @@
 <?php
 	namespace Product;
 
-	class InstanceList {
-		public $error;
-		public $count = 0;
-
+	class InstanceList Extends \BaseListClass {
 		# Return a list of hubs
 		public function find($parameters = '',$recursive = true) {
-			$this->error = null;
+			$this->clearError();
+			$this->resetCount();
+
 			$find_objects_query = "
 				SELECT	ma.asset_id
 				FROM	monitor_assets AS ma
@@ -32,7 +31,7 @@
 				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization()->id);
 			}
 			else {
-				$this->error = "Customer must belong to an organization";
+				$this->error("Customer must belong to an organization");
 				return null;
 			}
 
@@ -96,7 +95,7 @@
 			query_log($find_objects_query);
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Product::InstantList::find:" .$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				app_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$find_objects_query)),'debug',__FILE__,__LINE__);
 				return null;
 			}
@@ -110,8 +109,8 @@
 					else {
 						$object = new Instance($id);
 					}
-					if ($object->error) {
-						$this->error = "Error loading asset: ".$object->error;
+					if ($object->error()) {
+						$this->error("Error loading asset: ".$object->error());
 						return null;
 					}
 					array_push($objects,$object);
@@ -119,7 +118,7 @@
 				else {
 					array_push($objects,$id);
 				}
-				$this->count ++;
+				$this->incrementCou8nt();
 			}
 			return $objects;
 		}

@@ -1,7 +1,7 @@
 <?php
 	namespace Package;
 
-	class Package Extends \BaseClass {
+	class Package Extends \BaseModel {
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'package_packages';

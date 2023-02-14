@@ -1,7 +1,7 @@
 <?php
 	namespace Geography;
 
-	class Country extends \BaseClass {
+	class Country extends \BaseModel {
 
 		public $name;
 		public $abbreviation;

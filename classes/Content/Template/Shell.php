@@ -1,7 +1,7 @@
 <?php
 	namespace Content\Template;
 	
-	class Shell Extends \BaseClass {
+	class Shell Extends \BaseModel {
 		private $_content;
 		private $_params = array();
 		private $_groups = array();

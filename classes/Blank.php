@@ -1,5 +1,5 @@
 <?php
-	class Blank Extends \BaseClass {
+	class Blank Extends \BaseModel {
 	
 		public int $id;
 

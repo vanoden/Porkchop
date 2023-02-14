@@ -1,7 +1,7 @@
 <?php
 	namespace Product;
 
-	class Relationship Extends \BaseClass {
+	class Relationship Extends \BaseModel {
 
 		public function __construct() {
 			$this->_tableName = "product_relations";

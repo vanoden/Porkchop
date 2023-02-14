@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 
-	class Queue Extends \BaseClass {
+	class Queue Extends \BaseModel {
 
 		public $code;
 		public $status;

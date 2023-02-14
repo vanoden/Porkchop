@@ -1,7 +1,7 @@
 <?php
 	namespace Sales\Order;
 
-	class Item extends \BaseClass {
+	class Item extends \BaseModel {
 	
         public $order_id;
         public $line_number;

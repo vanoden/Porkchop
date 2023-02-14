@@ -1,7 +1,7 @@
 <?php
 	namespace HTTP;
 
-	class Request Extends \BaseClass {
+	class Request Extends \BaseModel {
 		public $module;
 		public $view;
 		public $index;

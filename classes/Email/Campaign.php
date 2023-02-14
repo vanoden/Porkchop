@@ -1,6 +1,6 @@
 <?php
 	namespace Email;
 
-	class Campaign Extends \BaseClass {
+	class Campaign Extends \BaseModel {
 		
 	}

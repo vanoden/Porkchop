@@ -1,7 +1,7 @@
 <?php
 	namespace Shipping;
 	
-	class Item extends \BaseClass {
+	class Item extends \BaseModel {
 	
 		public $package_id;
 		public $product_id;

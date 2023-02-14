@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class Module Extends \BaseClass {
+	class Module Extends \BaseModel {
 
 		private $_name;
 		private $_path;

@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 
-	class Privilege Extends \BaseClass {
+	class Privilege Extends \BaseModel {
 
 		public $description;
 		public $name;

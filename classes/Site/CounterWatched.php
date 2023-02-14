@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class CounterWatched extends \BaseClass {
+	class CounterWatched extends \BaseModel {
         public $key;
         public $notes;
 

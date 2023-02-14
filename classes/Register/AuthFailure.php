@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 
-	class AuthFailure Extends \BaseClass {
+	class AuthFailure Extends \BaseModel {
 
 		public $ip_address;
 		public $login;

@@ -1,7 +1,7 @@
 <?php
     namespace Site;
     
-    class Page Extends \BaseClass {
+    class Page Extends \BaseModel {
     
 	    public $id;
 	    public $module = 'content';
@@ -386,6 +386,11 @@
 			    $message = str_replace( $search, $replace, $message );
 		    }
 
+			if (preg_match('/Input\sarray\shas\s\d+\sparams\,\sdoes\snot\smatch\squery\:/',$message)) {
+				app_log("Database Input Array count missmatch at ".$this->module()."/".$this->view(),'error');
+				app_log($message,'notice');
+				$message = "Application Error";
+			}
 		    // Return Messsage
 		    //return "<!-- ".$this->module()." ".$this->view()." ".$this->index()." -->\n".$message;
 		    return $message;

@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class FileMetadata extends \BaseClass {
+	class FileMetadata extends \BaseModel {
 
         public $key;
         public $value;

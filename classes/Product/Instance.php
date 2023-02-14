@@ -1,7 +1,7 @@
 <?php
 	namespace Product;
 
-	class Instance extends \BaseClass {
+	class Instance extends \BaseModel {
 		public $id;
 		public $code;
 		public $name;

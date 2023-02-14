@@ -1,21 +1,16 @@
 <?php
 	namespace Media;
 
-	class Item {
-		public $id;
-		public $error;
-
-		public function __construct() {
-			# Database Initialization
-			$schema = new Schema();
-			if ($schema->error) {
-				$this->error = $schema->error;
-			}
+	class Item Extends \BaseModel {
+		public function __construct($id = 0) {
+			$this->_tableName = 'media_items';
+			parent::__construct($id);
 		}
+
 		public function add($parameters = []) {
 			# Some Things Required
 			if (! $parameters['type']) {
-				$this->error = "type required for new MediaItem";
+				$this->error("type required for new MediaItem");
 				return null;
 			}
 			# Generate 'unique' code if none provided
@@ -43,16 +38,17 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in MediaItem::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($this->id,$parameters);
 		}
-		public function update($id,$parameters = array()) {
+
+		public function update($parameters = array()): bool {
 			foreach($parameters as $label => $value) {
 				app_log("Setting meta '$label' = '$value'",'debug',__FILE__,__LINE__);
-				$this->setMeta($id,$label,$value);
+				$this->setMeta($this->id,$label,$value);
 			}
 			$update_object_query = "
 				UPDATE	media_items
@@ -61,9 +57,9 @@
 			";
 			$GLOBALS['_database']->Execute(
 				$update_object_query,
-				array($id)
+				array($this->id)
 			);
-			return $this->details($id);
+			return $this->details();
 		}
 		public function find($parameters = array()) {
 			$find_object_query = "
@@ -75,7 +71,7 @@
 			";
 			foreach ($parameters as $label => $value) {
 				if (! preg_match('/^[\w\-\.\_]+$/',$label)) {
-					$this->error = "Invalid parameter name in MediaItem::find()";
+					$this->error("Invalid parameter name in MediaItem::find()");
 					return null;
 				}
 				if ($label == "type")
@@ -90,19 +86,21 @@
 			app_log("Query: $find_object_query",'debug',__FILE__,__LINE__);
 			$rs = $GLOBALS['_database']->Execute($find_object_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in MediaItem::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				$object = $this->details($id);
-				$privileges = $this->privileges($id);
-				if ($privileges['read']) {
-					app_log("Adding ".$object->id." to array",'debug',__FILE__,__LINE__);
-					array_push($objects,$object);
-				}
-				else {
-					app_log("Hiding ".$object->id." lacking privileges",'debug',__FILE__,__LINE__);
+				$object = $this->details();
+				if (is_object($object)) {
+					$privileges = $this->privileges($id);
+					if ($privileges['read']) {
+						app_log("Adding ".$object->id." to array",'debug',__FILE__,__LINE__);
+						array_push($objects,$object);
+					}
+					else {
+						app_log("Hiding ".$object->id." lacking privileges",'debug',__FILE__,__LINE__);
+					}
 				}
 			}
 			return $objects;
@@ -119,14 +117,14 @@
 			);
 			if ($GLOBALS['_database']->ErrorMsg())
 			{
-				$this->error = "SQL Error in MediaItem::get: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
 			return $this->details();
 		}
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	id,
 						type,
@@ -142,18 +140,18 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in MediaItem::details: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			$array = $rs->FetchRow();
 			if (! $array['id']) return (object) $array;
-			$metadata = $this->getMeta($id);
+			$metadata = $this->getMeta($this->id);
 			$array = array_merge($array,$metadata);
 
 			$filelist = new FileList();
-			$images = $filelist->find(array("item_id" => $id));
+			$images = $filelist->find(array("item_id" => $this->id));
 			$array['files']= $images;
-			return (object) $array;
+			return true;
 		}
 		public function getMeta($id) {
 			# Get Metadata
@@ -168,7 +166,7 @@
 				array($id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in MediaItem::getMeta: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$array = array();
@@ -200,7 +198,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in MediaItem::setMeta: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			return array($parameter,$value);
@@ -264,7 +262,7 @@
 				)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in MediaItem::privileges: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($read,$write) = $rs->FetchRow();

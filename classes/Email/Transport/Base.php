@@ -1,7 +1,7 @@
 <?php
 	namespace Email\Transport;
 
-	class Base Extends \BaseClass {
+	class Base Extends \BaseModel {
 		public function hostname() {
 			return $this->hostname;
 		}

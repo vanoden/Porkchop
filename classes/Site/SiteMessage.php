@@ -1,7 +1,7 @@
 <?php
 namespace Site;
 
-class SiteMessage extends \BaseClass {
+class SiteMessage extends \BaseModel {
 
     public $user_created;
     public $recipient_id;

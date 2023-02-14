@@ -1,7 +1,7 @@
 <?php
 	namespace Email;
 
-	class Queue extends \BaseClass {
+	class Queue extends \BaseModel {
 	
 		public function __construct($id = 0) {
 			$this->_tableName = 'email_messages';

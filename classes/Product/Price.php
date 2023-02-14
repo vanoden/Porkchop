@@ -1,7 +1,7 @@
 <?php
 	namespace Product;
 
-	class Price Extends \BaseClass {
+	class Price Extends \BaseModel {
 
 		public $product_id;
 		public $amount;

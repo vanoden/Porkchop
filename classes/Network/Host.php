@@ -1,7 +1,7 @@
 <?php
 	namespace Network;
 
-	class Host Extends \BaseClass {
+	class Host Extends \BaseModel {
 
 		public $name;
 		public $domain;

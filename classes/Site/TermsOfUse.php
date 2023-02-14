@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class TermsOfUse Extends \BaseClass {
+	class TermsOfUse Extends \BaseModel {
 		public $code = '';
 		public $name = '';
 		public $description = '';
@@ -13,7 +13,7 @@
 			parent::__construct($id);
 		}
 
-		public function add(array $params): bool {
+		public function add($params = []): bool {
 			$this->clearError();
 
 			$termsList = new \Site\TermsOfUseList();

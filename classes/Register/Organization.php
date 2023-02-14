@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 
-	class Organization Extends \BaseClass {
+	class Organization Extends \BaseModel {
 
 		public $name;
 		public $code;

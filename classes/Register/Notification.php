@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 
-	class Notification Extends \BaseClass {
+	class Notification Extends \BaseModel {
 	
 		public function add($params = array()) {
 			$add_notification_query = "

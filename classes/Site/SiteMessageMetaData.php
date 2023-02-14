@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class SiteMessageMetaData extends \BaseClass {
+	class SiteMessageMetaData extends \BaseModel {
 	
         public $item_id;
         public $label;

@@ -1,7 +1,7 @@
 <?php
 	namespace Shipping;
 	
-	class Vendor extends \BaseClass {
+	class Vendor extends \BaseModel {
 	
 		public $name;
 		public $account_number;

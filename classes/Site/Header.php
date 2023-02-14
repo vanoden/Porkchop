@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class Header Extends \BaseClass {
+	class Header Extends \BaseModel {
         public $name;
         public $value;
 
@@ -43,7 +43,7 @@
 			return $this->update($params);
 		}
 
-		public function update($params): bool {
+		public function update($params = []): bool {
 			$update_object_query = "
 				UPDATE	site_headers
 				SET		id = id";

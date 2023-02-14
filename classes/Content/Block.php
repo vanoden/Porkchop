@@ -1,7 +1,7 @@
 <?php
 	namespace Content;
 
-	class Block Extends \BaseClass {
+	class Block Extends \BaseModel {
 
         public $name;
 		public $cached = 0;

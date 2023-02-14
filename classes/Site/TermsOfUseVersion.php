@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class TermsOfUseVersion Extends \BaseClass {
+	class TermsOfUseVersion Extends \BaseModel {
 		public $status;
 
 		/********************************************/
@@ -29,7 +29,7 @@
 		/* Must include non-nullable fields.		*/
 		/* Others should be handled in update().	*/
 		/********************************************/
-		public function add(array $params): bool {
+		public function add($params = []): bool {
 			// Clear Any Existing Errors
 			$this->clearError();
 

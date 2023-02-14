@@ -1,5 +1,5 @@
 <?php
-	class System Extends \BaseClass {
+	class System Extends \BaseModel {
 		private $_version = "0.9.1";
 
 		public function operatingSystem() {

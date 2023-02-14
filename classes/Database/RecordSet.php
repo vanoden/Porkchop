@@ -1,7 +1,7 @@
 <?php
 	namespace Database;
 
-	class RecordSet Extends \BaseClass {
+	class RecordSet Extends \BaseModel {
 	
 		private $_handle;
 		public function __construct($handle) {

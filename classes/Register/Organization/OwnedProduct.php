@@ -1,8 +1,8 @@
 <?php
 	namespace Register\Organization;
 
-	class OwnedProduct Extends \BaseClass {
-        public $error;
+	class OwnedProduct Extends \BaseModel {
+
 		private $organization_id;
 		private $product_id;
 		private $quantity;
@@ -14,7 +14,13 @@
     		parent::__construct();			
 		}
 	
-        public function add($quantity,$parameters=array()) {
+        public function add($parameters = []) {
+			$this->clearError();
+
+app_log(print_r($parameters,false),'notice');
+
+			$database = new \Database\Service();
+
             $add_product_query = "
                 INSERT
                 INTO    register_organization_products
@@ -31,15 +37,13 @@
                 UPDATE
                         quantity = quantity + ?
             ";
-			app_log("Adding $quantity of product ".$this->product_id." for organization ".$this->organization_id,'notice',__FILE__,__LINE__);
-            $GLOBALS['_database']->Execute(
-				$add_product_query,
-				array($this->organization_id,
-					  $this->product_id,
-					  $quantity,
-					  $quantity
-				)
-			);
+			app_log("Adding ".$parameters["quantity"]." of product ".$this->product_id." for organization ".$this->organization_id,'notice',__FILE__,__LINE__);
+			$database->AddParam($this->organization_id);
+			$database->AddParam($this->product_id);
+			$database->AddParam($parameters['quantity']);
+			$database->AddParam($parameters['quantity']);
+
+            $database->Execute($add_product_query);
             if ($GLOBALS['_database']->ErrorMsg()) {
                 $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return null;

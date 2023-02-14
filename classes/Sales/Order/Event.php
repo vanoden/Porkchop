@@ -1,7 +1,7 @@
 <?php
 	namespace Sales\Order;
 
-	class Event extends \BaseClass {
+	class Event extends \BaseModel {
 		public $id;
 
 		public function add($parameters = []) {

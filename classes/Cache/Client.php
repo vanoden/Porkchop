@@ -1,7 +1,7 @@
 <?php
 	namespace Cache;
 
-	class Client Extends \BaseClass {
+	class Client Extends \BaseModel {
 		public static function connect($mechanism,$properties = array()) {
 			if (preg_match('/^files?$/i',$mechanism)) return new \Cache\Client\File($properties);
 			elseif (preg_match('/^aws\-memcached?$/i',$mechanism)) return new \Cache\Client\AWSMemcache($properties);

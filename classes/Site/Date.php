@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class Date Extends \BaseClass {
+	class Date Extends \BaseModel {
 		public $timezone;
 		
 		public function __construct() {

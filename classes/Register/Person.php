@@ -1,7 +1,7 @@
 <?php
 namespace Register;
 
-class Person Extends \BaseClass {
+class Person Extends \BaseModel {
 
     public $id;
     public $title;

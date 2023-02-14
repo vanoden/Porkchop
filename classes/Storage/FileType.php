@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class FileType extends \BaseClass {
+	class FileType extends \BaseModel {
 
 		public $id;
 		public $code;

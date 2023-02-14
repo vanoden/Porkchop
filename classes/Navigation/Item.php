@@ -1,7 +1,7 @@
 <?php
 	namespace Navigation;
 
-	class Item Extends \BaseClass {
+	class Item Extends \BaseModel {
 
 		private $menu_id;
 		public $title;

@@ -1,14 +1,14 @@
 <?php
 	namespace Geography;
 
-	class Admin extends \BaseClass {
+	class Admin extends \BaseModel {
 
 		public $country_id;
 		public $name;
 		public $abbreviation;
 		public $code;
 
-		public function __construct(int $id = 0) {
+		public function __construct($id = 0) {
 			$this->_tableName = 'geography_provinces';
 			parent::__construct($id);
 		}

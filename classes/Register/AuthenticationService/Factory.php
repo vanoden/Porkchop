@@ -1,7 +1,7 @@
 <?php
 	namespace Register\AuthenticationService;
 
-	class Factory Extends \BaseClass {
+	class Factory Extends \BaseModel {
 		public function service($auth_method,$options = array()) {
 			if (preg_match('/^ldap\/(\w+)$/',$auth_method,$matches)) {
 				$options['domain'] = $matches[1];

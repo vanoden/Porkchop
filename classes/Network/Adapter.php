@@ -1,7 +1,7 @@
 <?php
 	namespace Network;
 
-	class Adapter Extends \BaseClass {
+	class Adapter Extends \BaseModel {
 
 		public $name;
 		public $mac_address;

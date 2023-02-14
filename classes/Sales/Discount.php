@@ -1,7 +1,7 @@
 <?php
 	namespace Sales;
 
-	class Discount Extends \BaseClass {
+	class Discount Extends \BaseModel {
 
 		public $type;
 		public $amount;

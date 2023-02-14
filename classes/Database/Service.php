@@ -1,7 +1,7 @@
 <?php
 	namespace Database;
 
-	class Service Extends \BaseClass {
+	class Service Extends \BaseModel {
 	
 		private $_connection;
 		private $_params = array();

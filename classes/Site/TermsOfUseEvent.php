@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class TermsOfUseEvent Extends \BaseClassList {
+	class TermsOfUseEvent Extends \BaseModelList {
 		public int $id;
 
 		/********************************************/

@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class Hit Extends \BaseClass {
+	class Hit Extends \BaseModel {
 
 		public $hit_date;
 		public $remote_ip;

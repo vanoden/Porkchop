@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 
-	class TermsOfUseAction Extends \BaseClassList {
+	class TermsOfUseAction Extends \BaseModelList {
 		public int $id;
 
 		/********************************************/

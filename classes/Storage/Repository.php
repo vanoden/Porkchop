@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class Repository Extends \BaseClass {
+	class Repository Extends \BaseModel {
 
 		public $name;
 		public $type;

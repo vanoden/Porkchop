@@ -1,7 +1,7 @@
 <?php
 	namespace Site;
 	
-	class Configuration Extends \BaseClass {
+	class Configuration Extends \BaseModel {
 
 		public $key;
 		public $value;

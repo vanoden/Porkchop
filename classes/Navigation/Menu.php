@@ -2,7 +2,7 @@
 
     namespace Navigation;
 
-    class Menu Extends \BaseClass {
+    class Menu Extends \BaseModel {
 
 		public $code;
 		public $title;

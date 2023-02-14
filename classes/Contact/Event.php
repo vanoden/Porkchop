@@ -1,7 +1,7 @@
 <?php
 	namespace Contact;
 
-	class Event Extends \BaseClass {
+	class Event Extends \BaseModel {
 
 		public function __construct($id = 0) {
 			app_log("Initializing Contact Module",'debug',__FILE__,__LINE__);

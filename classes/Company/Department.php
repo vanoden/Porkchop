@@ -1,7 +1,7 @@
 <?php
 	namespace Company;
 
-	class Department Extends \BaseClass {
+	class Department Extends \BaseModel {
 
 		public $name;
 		public $description;

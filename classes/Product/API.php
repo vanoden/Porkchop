@@ -30,7 +30,7 @@
 					'type'			=> $_REQUEST['type']
 				)
 			);
-			if ($product->error) $this->error("Error adding product: ".$product->error);
+			if ($product->error()) $this->error("Error adding product: ".$product->error());
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->item = $product;
@@ -48,7 +48,7 @@
 
 			$product = new \Product\Item();
 			$product->get($_REQUEST['code']);
-			if ($product->error) $this->error("Error finding product: ".$product->error);
+			if ($product->error()) $this->error("Error finding product: ".$product->error());
 			if (! $product->id) $this->error("Product not found");
 	        $productStatus = $_REQUEST['status'];
 	        if (empty($productStatus)) $productStatus = 'ACTIVE';
@@ -63,7 +63,7 @@
 					'description'	=> $productDescription,
 				)
 			);
-			if ($product->error) $this->error("Error updating product: ".$product->error);
+			if ($product->error()) $this->error("Error updating product: ".$product->error());
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->item = $product;
@@ -83,7 +83,7 @@
 				$product->get($_REQUEST['code']);
 			}
 	
-			if ($product->error) $this->error("Error getting product: ".$product->error);
+			if ($product->error()) $this->error("Error getting product: ".$product->error());
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->item = $product;
@@ -102,7 +102,7 @@
 			if (isset($_REQUEST['status'])) $parameters["status"] = $_REQUEST['status'];
 			if (isset($_REQUEST['type']) && !empty($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 			$products = $productlist->find($parameters);
-			if ($productlist->error) $this->error("Error finding products: ".$productlist->error);
+			if ($productlist->error()) $this->error("Error finding products: ".$productlist->error());
 			$this->response->success = 1;
 			$this->response->product = $products;
 	
@@ -178,7 +178,7 @@
 					'child_id'	=> $_REQUEST['child_id'],
 				)
 			);
-			if ($relationship->error) $this->error("Error adding relationship: ".$relationship->error);
+			if ($relationship->error()) $this->error("Error adding relationship: ".$relationship->error());
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->relationship = $relationship;
@@ -206,7 +206,7 @@
 			$relationship = new \Product\Relationship();
 			$relationship->get($_REQUEST['parent_id'],$_REQUEST['child_id']);
 	
-			if ($relationship->error) $this->error("Error getting relationship: ".$relationship->error);
+			if ($relationship->error()) $this->error("Error getting relationship: ".$relationship->error());
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->relationship = $relationship;
@@ -235,7 +235,7 @@
 			$_relationship = new \Product\Relationship();
 			$relationships = $_relationship->find($parameters);
 	
-			if ($_relationship->error) $this->error("Error finding relationships: ".$_relationship->error);
+			if ($_relationship->error()) $this->error("Error finding relationships: ".$_relationship->error());
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->relationship = $relationships;
@@ -283,15 +283,15 @@
 			if (! preg_match('/^[\w\-\.\_\s]+$/',$_REQUEST['item_code'])) $this->error("group_code required for addGroupItem method");
 	
 			$group = new \Product\Group();
-			if (!$group->get($_REQUEST['group_code'])) $this->error("Error finding group: ".$group->error);
+			if (!$group->get($_REQUEST['group_code'])) $this->error("Error finding group: ".$group->error());
 			if (! $group->id) $this->error("Group not found");
 	
 			$item = new \Product\Item();
-			if (!$item->get($_REQUEST['item_code'])) $this->error("Error finding item: ".$item->error);
+			if (!$item->get($_REQUEST['item_code'])) $this->error("Error finding item: ".$item->error());
 			if (!$item->id) $this->error("Item not found");
 	
 			$group->addItem($item);
-			if ($group->error) $this->error("Error adding item to group: ".$group->error);
+			if ($group->error()) $this->error("Error adding item to group: ".$group->error());
 			$response = new \HTTP\Response();
 			$response->success = 1;
 	
@@ -340,17 +340,17 @@
 	
 			$product = new \Product\Item();
 			$product->get($_REQUEST['product_code']);
-			if ($product->error) {
-				$this->app_error("Error finding product: ".$product->error,__FILE__,__LINE__);
+			if ($product->error()) {
+				$this->app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
 			 $this->error("No product found matching '".$_REQUEST['product_code']."'");
 			}
 	
 			$organization = new \Register\Organization($_REQUEST['organization_id']);
-			if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
+			if ($organization->error()) $this->app_error("Error finding organization: ".$organization->error(),__FILE__,__LINE__);
 			if (! $organization->id) $this->error("No organization found matching '".$_REQUEST['organization']);
 	
 			$instance = new \Product\Instance();
-			if ($instance->error) $this->app_error("Error initializing instance: ".$instance->error,__FILE__,__LINE__);
+			if ($instance->error()) $this->app_error("Error initializing instance: ".$instance->error(),__FILE__,__LINE__);
 			$instance->add(
 				array(
 					'code'				=> $_REQUEST['code'],
@@ -359,7 +359,7 @@
 					'name'				=> $_REQUEST['code']
 				)
 			);
-			if ($instance->error) $this->error("Error adding instance: ".$instance->error);
+			if ($instance->error()) $this->error("Error adding instance: ".$instance->error());
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->instance = $instance;
@@ -376,15 +376,15 @@
 			}
 			elseif (isset($_REQUEST['product_id'])) {
 				$instance = new \Product\Instance();
-				if ($instance->error) $this->app_error("Error initializing instance: ".$instance->error,__FILE__,__LINE__);
+				if ($instance->error()) $this->app_error("Error initializing instance: ".$instance->error(),__FILE__,__LINE__);
 				$instance->get($_REQUEST['code'],$_REQUEST['product_id']);
 			}
 			else {
 				$instance = new \Product\Instance();
-				if ($instance->error) $this->app_error("Error initializing instance: ".$instance->error,__FILE__,__LINE__);
+				if ($instance->error()) $this->app_error("Error initializing instance: ".$instance->error(),__FILE__,__LINE__);
 	
 				$instance->getSimple($_REQUEST['code']);
-				if ($instance->error) $this->app_error("Error finding instance(s): ".$instance->error,__FILE__,__LINE__);
+				if ($instance->error()) $this->app_error("Error finding instance(s): ".$instance->error(),__FILE__,__LINE__);
 			}
 			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances') && $instance->organization_id != $instance->organization_id)
 				$this->app_error("Permission Denied");
@@ -409,7 +409,7 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			$instance = new \Product\Instance();
-			if ($instance->error) $this->app_error("Error initializing asset: ".$instance->error,__FILE__,__LINE__);
+			if ($instance->error()) $this->app_error("Error initializing asset: ".$instance->error(),__FILE__,__LINE__);
 			if (isset($_REQUEST['product_code']) && strlen($_REQUEST['product_code'])) {
 				$product = new \Product\Item();
 				$product->get($_REQUEST['product_code']);
@@ -418,7 +418,7 @@
 			else {
 				$instance->getSimple($_REQUEST['code']);
 			}
-			if ($instance->error) $this->app_error("Error finding instance: ".$instance->error,__FILE__,__LINE__);
+			if ($instance->error()) $this->app_error("Error finding instance: ".$instance->error(),__FILE__,__LINE__);
 			if (! $instance->id) $this->error("Instance not found");
 	
 			$parameters = array();
@@ -429,7 +429,7 @@
 				if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization();
 					$organization->get($_REQUEST['organization_code']);
-					if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
+					if ($organization->error()) $this->app_error("Error finding organization: ".$organization->error(),__FILE__,__LINE__);
 					$parameters['organization_id'] = $organization->id;
 				}
 				else {
@@ -438,7 +438,7 @@
 			}
 
 			$instance->update($parameters);
-			if ($instance->error) $this->app_error("Error updating instance: ".$instance->error,__FILE__,__LINE__);
+			if ($instance->error()) $this->app_error("Error updating instance: ".$instance->error(),__FILE__,__LINE__);
 
 			$this->response->success = 1;
 			$this->response->instance = $instance;
@@ -451,7 +451,7 @@
 		###################################################
 		public function findInstances() {
 			$instancelist = new \Product\InstanceList();
-			if ($instancelist->error) $this->app_error("Error initializing instance list: ".$instancelist->error,__FILE__,__LINE__);
+			if ($instancelist->error()) $this->app_error("Error initializing instance list: ".$instancelist->error(),__FILE__,__LINE__);
 	
 			$parameters = array();
 			if (isset($_REQUEST['code']))
@@ -463,7 +463,7 @@
 			if (isset($_REQUEST['product_code']) && strlen($_REQUEST['product_code'])) {
 				$product = new \Product\Item();
 				$product->get($_REQUEST['product_code']);
-				if ($product->error) $this->app_error("Error finding product: ".$product->error,__FILE__,__LINE__);
+				if ($product->error()) $this->app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
 				if (! $product->id) $this->error("Product not found");
 				$parameters['product_id'] = $product->id;
 			}
@@ -471,7 +471,7 @@
 				if ($GLOBALS['_SESSION_']->customer->can('manage product instances') && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization();
 					$organization->get($_REQUEST['organization_code']);
-					if ($organization->error) $this->app_error("Error finding organization: ".$organization->error,__FILE__,__LINE__);
+					if ($organization->error()) $this->app_error("Error finding organization: ".$organization->error(),__FILE__,__LINE__);
 					$parameters['organization_id'] = $organization->id;
 				} else {
 					app_log("Unauthorized attempt to access instances from another organization",'notice',__FILE__,__LINE__);
@@ -485,7 +485,7 @@
 			}
 	
 			$instances = $instancelist->find($parameters);
-			if ($instancelist->error) $this->app_error("Error initializing instance(s): ".$instancelist->error,__FILE__,__LINE__);
+			if ($instancelist->error()) $this->app_error("Error initializing instance(s): ".$instancelist->error(),__FILE__,__LINE__);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->instance = $instances;
@@ -503,17 +503,17 @@
 			# Load Media Module
 			$product = new \Product\Item();
 			$product->get($_REQUEST['product_code']);
-			if ($product->error) app_error("Error finding product: ".$product->error,__FILE__,__LINE__);
+			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
 	
-			$_image = new \Media\Item();
-			$image = $_image->get($_REQUEST['image_code']);
-			if ($_image->error) app_error("Error finding image: ".$_image->error,__FILE__,__LINE__);
+			$image = new \Media\Item();
+			$image->get($_REQUEST['image_code']);
+			if ($image->error()) app_error("Error finding image: ".$image->error(),__FILE__,__LINE__);
 			if (! $image->id) $this->error("Image not found");
 	
 	
 			$product->addImage($product->id,$image->id,$_REQUEST['label']);
-			if ($product->error) app_error("Error adding image: ".$product->error,__FILE__,__LINE__);
+			if ($product->error()) app_error("Error adding image: ".$product->error(),__FILE__,__LINE__);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 	
@@ -530,13 +530,13 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			$this->requirePrivilege("manage products");
-			$_product = new \Product\Item();
-			$product = $_product->get($_REQUEST['code']);
-			if ($_product->error) app_error("Error finding product: ".$_product->error,__FILE__,__LINE__);
+			$product = new \Product\Item();
+			$product->get($_REQUEST['code']);
+			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
 	
-			$_product->addMeta($product->id,$_REQUEST['key'],$_REQUEST['value']);
-			if ($_product->error) app_error("Error adding metadata: ".$_product->error,__FILE__,__LINE__);
+			$product->addMeta($product->id,$_REQUEST['key'],$_REQUEST['value']);
+			if ($product->error()) app_error("Error adding metadata: ".$product->error(),__FILE__,__LINE__);
 			$response = new \HTTP\Response();
 			$response->success = 1;
 	

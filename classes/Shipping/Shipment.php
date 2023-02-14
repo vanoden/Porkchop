@@ -1,7 +1,7 @@
 <?php
 	namespace Shipping;
 	
-	class Shipment extends \BaseClass {
+	class Shipment extends \BaseModel {
 
 		public $code;
 		public $document_number;

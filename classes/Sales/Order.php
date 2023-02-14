@@ -3,7 +3,7 @@
 
 use Aws\Emr\Enum\InstanceRoleType;
 
-class Order extends \BaseClass {
+class Order extends \BaseModel {
 
 		public $code;
 		public $customer_id;

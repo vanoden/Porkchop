@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 
-	class PasswordToken Extends \BaseClass {
+	class PasswordToken Extends \BaseModel {
 		public $person_id;
 		public $expiration;
 		public $code;

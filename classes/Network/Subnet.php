@@ -1,7 +1,7 @@
 <?php
 	namespace Network;
 
-	class Subnet Extends \BaseClass {
+	class Subnet Extends \BaseModel {
 		public $id;
 		public $address;
 		public $size;

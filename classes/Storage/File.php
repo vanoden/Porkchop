@@ -1,7 +1,7 @@
 <?php
 	namespace Storage;
 
-	class File Extends \BaseClass {
+	class File Extends \BaseModel {
 	
 		private $_repository_id;
 		public $code;

@@ -1,7 +1,7 @@
 <?php
 	namespace Register;
 
-	class Tag extends \BaseClass {
+	class Tag extends \BaseModel {
 
 		public $type;
         public $register_id;
