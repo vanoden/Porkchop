@@ -5,6 +5,9 @@
 	
 		private $_repository_id;
 		public $code;
+		public $display_name;
+		public $description;
+		public $date_created;
 		public $success;
 		public $uri;
 		public $read_protect;
@@ -148,15 +151,11 @@
 				$this->description = $object->description;
 				$this->mime_type = $object->mime_type;
 				$this->size = $object->size;
-				$this->user = new \Register\Customer($object->user_id);
 				$this->user_id = $object->user_id;
 				$this->date_created = $object->date_created;
 				$this->timestamp = strtotime($this->timestamp);
 				$this->_repository_id = $object->repository_id;
 				$factory = new RepositoryFactory();
-				$this->repository = $factory->load($object->repository_id);
-				if ($this->repository->endpoint) $this->uri = $this->repository->endpoint."/".$this->name;
-				else $this->endpoint = 'N/A';
 				$this->read_protect = $object->read_protect;
 				$this->write_protect = $object->write_protect;
 				$this->access_privilege_json = $object->access_privileges;
@@ -180,7 +179,11 @@
 			}
 			return $this->name;
 		}
-		
+
+		public function uri() {
+			return $this->repository()->endpoint."/".$this->name;
+		}
+
 		public function path() {
 			return $this->path;
 		}
@@ -214,7 +217,7 @@
 			query_log($get_file_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_file_query,$bind_params);
 			if (! $rs) {
-				$this->error("SQL Error in Storage::File::fromPath(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($file_id) = $rs->FetchRow();
@@ -233,7 +236,7 @@
 				// Get Repository 
 				$repository = new Repository($id);
 				if (! $repository->id) {
-					$this->error = "Repository not found";
+					$this->error("Repository not found");
 					return false;
 				} else {
 					$this->_repository_id = $id;
@@ -525,7 +528,7 @@
 				    } else {
 				    
 					    // Add File to Library
-					    if ($this->error) $this->addError("Error initializing file: " . $this->error);
+					    if ($this->error()) $this->addError("Error initializing file: " . $this->error());
 					    $this->add(
 						    array(
 							    'repository_id'     => $repository->id,
@@ -556,7 +559,7 @@
 					        }
                         } catch (\Exception $e) {
 					        $this->delete();
-					        $this->addError('System Exception has occured, unable to add file to repository: '.$repository->error);
+					        $this->addError('System Exception has occured, unable to add file to repository: '.$repository->error());
     						app_log("repository->addFile(): Exception" . $e->getMessage(),'notice');
                         }
 				    }
@@ -572,22 +575,22 @@
 			if (!empty($this->access_privilege_json)) {
 				$privileges = json_decode($this->access_privilege_json,true);
 			}
-			if (!isset($this->repository)) return false;
-			$default_privileges = $this->repository->default_privileges();
-			$override_privileges = $this->repository->override_privileges();
+			if (empty($this->repository())) return false;
+			$default_privileges = $this->repository()->default_privileges();
+			$override_privileges = $this->repository()->override_privileges();
 
 			app_log($this->user_id." vs ".$user_id,'info');
 			if ($this->user_id == $user_id) return true;
-			app_log(print_r($override_privileges['o'][$user->organization->id],false),'info');
-			if (in_array('-w',$override_privileges['o'][$user->organization->id])) return false;
+			app_log(print_r($override_privileges['o'][$user->organization()->id],false),'info');
+			if (in_array('-w',$override_privileges['o'][$user->organization()->id])) return false;
 			app_log("Here 4",'info');
 			if (in_array('-w',$override_privileges['u'][$user->id])) return false;
 			app_log("Here 5",'info');
-			if (in_array('w',$privileges['o'][$user->organization->id])) return true;
+			if (in_array('w',$privileges['o'][$user->organization()->id])) return true;
 			app_log("Here 6",'info');
 			if (in_array('w',$privileges['u'][$user->id])) return true;
 			app_log("Here 7",'info');
-			if (in_array('w',$default_privileges['o'][$user->organization->id])) return true;
+			if (in_array('w',$default_privileges['o'][$user->organization()->id])) return true;
 			app_log("Here 8",'info');
 			if (in_array('w',$default_privileges['u'][$user->id])) return true;
 			app_log("Here 9",'info');
@@ -602,22 +605,22 @@
 			if (!empty($this->access_privilege_json)) {
 				$privileges = json_decode($this->access_privilege_json,true);
 			}
-			if (!isset($this->repository)) return false;
-			$default_privileges = $this->repository->default_privileges();
-			$override_privileges = $this->repository->override_privileges();
+			if (empty($this->repository())) return false;
+			$default_privileges = $this->repository()->default_privileges();
+			$override_privileges = $this->repository()->override_privileges();
 
 			app_log($this->user_id." vs ".$user_id,'info');
 			if ($this->user_id == $user_id) return true;
-			app_log(print_r($override_privileges['o'][$user->organization->id],false),'info');
-			if (in_array('-r',$override_privileges['o'][$user->organization->id])) return false;
+			app_log(print_r($override_privileges['o'][$user->organization()->id],false),'info');
+			if (in_array('-r',$override_privileges['o'][$user->organization()->id])) return false;
 			app_log("Here 4",'info');
 			if (in_array('-r',$override_privileges['u'][$user->id])) return false;
 			app_log("Here 5",'info');
-			if (in_array('r',$privileges['o'][$user->organization->id])) return true;
+			if (in_array('r',$privileges['o'][$user->organization()->id])) return true;
 			app_log("Here 6",'info');
 			if (in_array('r',$privileges['u'][$user->id])) return true;
 			app_log("Here 7",'info');
-			if (in_array('r',$default_privileges['o'][$user->organization->id])) return true;
+			if (in_array('r',$default_privileges['o'][$user->organization()->id])) return true;
 			app_log("Here 8",'info');
 			if (in_array('r',$default_privileges['u'][$user->id])) return true;
 			app_log("Here 9",'info');

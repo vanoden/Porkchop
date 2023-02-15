@@ -3,11 +3,12 @@
 
 	class TermsOfUseVersion Extends \BaseModel {
 		public $status;
+		public $content;
 
 		/********************************************/
 		/* Instance Constructor						*/
 		/********************************************/
-		public function __construct($id = null) {
+		public function __construct($id = 0) {
 			// Set Table Name
 			$this->_tableName = 'site_terms_of_use_versions';
 
@@ -18,10 +19,7 @@
 			$this->_addStatus(array('NEW','PUBLISHED','RETRACTED'));
 
 			// Load Record for Specified ID if given
-			if (isset($id) && is_numeric($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+			parent::__construct($id);
 		}
 
 		/********************************************/

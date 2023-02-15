@@ -4,6 +4,7 @@
 	class TermsOfUseEventList Extends \BaseListClass {
 		public function __construct() {
 			$this->_tableName = 'site_terms_of_use_events';
+			$this->_tableFKColumn = 'tou_id';
 		}
 
 		public function find($parameters = array()) {

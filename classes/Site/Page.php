@@ -962,6 +962,8 @@
 				if (!empty($breadcrumb['target'])) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
+			if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
+				$html .= "&nbsp;&nbsp;<a href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\">Manage</a>";
 			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
 		}
 

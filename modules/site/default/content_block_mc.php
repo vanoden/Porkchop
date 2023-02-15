@@ -73,3 +73,5 @@
 		    }
 	    }
 	}
+
+	$page->title = "Edit Site Content Block";

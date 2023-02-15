@@ -2,6 +2,12 @@
 	namespace Site;
 
 	class TermsOfUseVersionList Extends \BaseListClass {
+		public function __construct() {
+			$this->_tableName = 'site_terms_of_use_versions';
+			$this->_tableFKColumn = 'tou_id';
+			$this->_tableNumberColumn = 'number';
+		}
+
 		public function find(array $params = array()): array {
 			$this->clearError();
 			$this->resetCount();
@@ -57,7 +63,7 @@
 		public function latestPublished(): TermsOfUseVersion {
 			$this->clearError();
 
-			$eventList = new TermsOfUseversionList();
+			$eventList = new TermsOfUseEventList();
 			$last = $eventList->last(array('type' => 'PUBLISH'));
 			if (!isset($last)) $last = new TermsOfUseVersion;
 			return $last;

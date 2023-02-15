@@ -1,5 +1,6 @@
 <?php
-	$page = new \Site\Page();
+	$site = new \Site();
+	$page = $site->page();;
 	$page->requirePrivilege('content message browsing');
 
 	$messageList = new \Content\MessageList();

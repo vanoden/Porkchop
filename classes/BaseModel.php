@@ -36,7 +36,7 @@
 		public function __call($name,$parameters) {
 			if ($name == 'get') return $this->_getObject($parameters[0]);
 		}
-		
+
         /**
          * update by params
          * 
@@ -101,6 +101,13 @@
 			// get recent added row id to return update() and details()
 			$this->_tableIDColumn = $database->Insert_ID();
 			return $this->update($parameters);
+		}
+
+		// Get Object by ID
+		public function load($id): bool {
+			$this->clearError();
+			$this->id = $id;
+			return $this->details();
 		}
 
 		/********************************************/

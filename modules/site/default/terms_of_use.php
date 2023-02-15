@@ -2,6 +2,25 @@
 	$page->showBreadCrumbs();
 	$page->showMessages();
 ?>
+<style>
+	.table {
+		display: table;
+		width: 756px;
+	}
+	.tableHead {
+		display: table-row;
+		font-weight: bold;
+		text-align: center;
+	}
+	.tableRow {
+		display: table-row;
+	}
+	.tableCell {
+		display: table-cell;
+		padding: 3px 10px;
+		border: 1px solid #999999;
+	}
+</style>
 <div class="table">
 	<div class="tableHead">
 		<div class="tableCell">Name</div>

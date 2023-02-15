@@ -12,22 +12,9 @@
         toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | code'
 	});
 </script>
-<h1>Edit Site Content Block</h1>
-
-<?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
-
-<?php	} else if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
-<?php	} ?>
+<?=$page->showBreadCrumbs()?>
+<?=$page->showTitle()?>
+<?=$page->showMessages()?>
 
 <section class="table-group">
   <form method="post" action="/_site/content_block">
