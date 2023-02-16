@@ -597,7 +597,7 @@
 					    // Make Sure User Has Privileges
 					    if (is_object($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->id && $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 						    $buffer .= '<contentblock id="'.$block->id.'">' . $block->content . '</contentblock>';
-						    $buffer .= '<a href="javascript:void(0)" class="btn_editContent" onclick="goToEditPage(\''.$block->name.'\')">Edit</a>';
+						    $buffer .= '<a href="javascript:void(0)" class="btn_editContent" onclick="goToEditPage(\''.$block->target.'\')">Edit</a>';
 					    }
 						else {
 						    $buffer .= $block->content;
