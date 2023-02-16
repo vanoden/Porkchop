@@ -6,7 +6,7 @@
 		public $name = '';
 		public $description = '';
 	
-		public function __construct(int $id = null) {
+		public function __construct($id = null) {
 			$this->_tableName = 'site_terms_of_use';
 			$this->_cacheKeyPrefix = $this->_tableName;
 
@@ -104,14 +104,14 @@
 			return $this->details();
 		}
 
-		public function addVersion($params): int {
+		public function addVersion($params) {
 			$version = new TermsOfUseVersion();
 			if ($version->add(array('tou_id' => $this->id, 'version' => $params['version'], 'content' => $params['content']))) {
 				return $version->id;
 			}
 			else {
 				$this->error($version->error());
-				return 0;
+				return new \stdClass();
 			}
 		}
 

@@ -1,8 +1,7 @@
 <?php
 	namespace Site;
 
-	class TermsOfUseEvent Extends \BaseModelList {
-		public int $id;
+	class TermsOfUseEvent Extends \BaseModel {
 
 		/********************************************/
 		/* Instance Constructor						*/
@@ -30,7 +29,7 @@
 		/* Must include non-nullable fields.		*/
 		/* Others should be handled in update().	*/
 		/********************************************/
-		public function add(array $params): bool {
+		public function add($params = []): bool {
 			// Clear Any Existing Errors
 			$this->clearError();
 
@@ -76,7 +75,7 @@
 		/* Load Object Details						*/
 		/* from Cache or Database					*/
 		/********************************************/
-		public function details() {
+		public function details(): bool {
 			// Clear Errors
 			$this->clearError();
 

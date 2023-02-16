@@ -19,6 +19,7 @@
 <section class="table-group">
   <form method="post" action="/_site/tou_version">
     <input type="hidden" name="id" value="<?=$message->id?>"/>
+	<input type="hidden" name="tou_id" value="<?=$tou->id?>"/>
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <ul class="form-grid three-col">
 			<li><label for="name">Terms of Use Record</label><span class="value"><?=$tou->name?></span></li>
@@ -27,7 +28,7 @@
 		</ul>
     <div id="contentArea">
       <textarea id="content" name="content"><?=$version->content?></textarea>
-      <input type="submit" name="Submit" value="Submit"/>
+      <input type="submit" name="btn_submit" value="Submit"/>
     </div>
   </form>
 </section>
