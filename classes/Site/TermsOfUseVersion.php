@@ -4,6 +4,7 @@
 	class TermsOfUseVersion Extends \BaseModel {
 		public $status;
 		public $content;
+		public $number;
 
 		/********************************************/
 		/* Instance Constructor						*/
@@ -47,16 +48,21 @@
 				return false;
 			}
 
+			$versionList = new \Site\TermsOfUseVersionList();
+			$number = $versionList->nextNumber($tou_id);
+
 			// Prepare Query
 			$add_object_query = "
 				INSERT
 				INTO	`".$this->_tableName."`
-				(		tou_id,status
-				VALUES	()
+				(		tou_id,status,number)
+				VALUES	(?,?,?)
 			";
 
 			// Add Parameters
-			$database->AddParam($tou->id,$params['status']);
+			$database->AddParam($tou->id);
+			$database->AddParam($params['status']);
+			$database->AddParam($this->number);
 
 			// Execute Query
 			$rs = $database->Execute($add_object_query);
@@ -168,5 +174,14 @@
 		public function actions(): array {
 			$eventList = new TermsOfUseEventList();
 			return $eventList->find(array('tou_id' => $this->id));
+		}
+
+		public function number(): int {
+			return $this->number;
+		}
+
+		public function validContent($string) {
+			if (preg_match('/\<script/',urldecode($string))) return false;
+			else return true;
 		}
 	}

@@ -389,6 +389,8 @@
 			if (preg_match('/Input\sarray\shas\s\d+\sparams\,\sdoes\snot\smatch\squery\:/',$message)) {
 				app_log("Database Input Array count missmatch at ".$this->module()."/".$this->view(),'error');
 				app_log($message,'notice');
+				$counter = new \Site\Counter("SQL.InputArray.error");
+				$counter->increment();
 				$message = "Application Error";
 			}
 		    // Return Messsage

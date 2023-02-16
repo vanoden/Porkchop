@@ -16,9 +16,13 @@
 	}
 
 	if ($_REQUEST['btn_submit']) {
+		$page->appendSuccess("Form submitted");
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
             $page->addError("Invalid Request");
 	    }
+		elseif (empty($tou->id)) {
+			$page->addError("No terms of use selected [tou_id=".$_REQUEST['tou_id']."]");
+		}
 		elseif (!empty($_REQUEST['content']) && ! $version->validContent($_REQUEST['content'])) {
 			$page->addError("Invalid content");
 		}
@@ -30,13 +34,14 @@
 			}
 			else {
 				$version = $tou->addVersion($parameters);
-				$page->appendSuccess("Added Version ".$version->number());
+				if ($tou->error()) $page->addError($tou->error());
+				else $page->appendSuccess("Added Version ".$version->number());
 			}
 		}
 	}
 
 	$page->title('Terms Of Use Version');
-	$page->instructions("Add some stuff here");
+	$page->instructions = "Add some stuff here";
 	$page->addBreadCrumb("Terms of Use","/_site/terms_of_use");
 	$page->addBreadCrumb($tou->name,"/_site/term_of_use?id=".$tou->id);
 	$page->addBreadCrumb("Versions","/_site/tou_versions?tou_id=".$tou->id);
