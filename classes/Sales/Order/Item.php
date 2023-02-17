@@ -19,8 +19,9 @@
 			parent::__construct($id);
 		}
 		
-		public function add($parameters = []) {
+		public function add($parameters = []) {		
 			$product = new \Product\Item($parameters['product_id']);
+			
 			if (! $product->id) {
 				$this->error("Product not found");
 				return false;
@@ -43,7 +44,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			$update_object_query = "
 				UPDATE	sales_order_items
 				SET		id = id";
@@ -132,7 +133,7 @@
 			}
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
 				FROM	sales_order_items

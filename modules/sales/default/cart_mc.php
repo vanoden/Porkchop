@@ -122,12 +122,14 @@
             
             $salesOrder->addItem (
                 array (
+                    "order_id" => $order_id,
                     "product_id" => $itemInCart->id,
                     "description" => $itemInCart->description,
                     "quantity" => 1,
-                    "price" => $price
+                    "unit_price" => $price,
+                    "status" => "OPEN"
                 )
-            );
+            );        
         }
     }
     

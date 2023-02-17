@@ -1,5 +1,6 @@
 <?php
 	class BaseModel Extends \BaseClass {
+	
 		// Primary Key
 		public $id = 0;
 
@@ -284,7 +285,8 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			return list($value) = $rs->FetchRow();
+			list($value) = $rs->FetchRow();
+			return $value;
 		}
 		
         /**

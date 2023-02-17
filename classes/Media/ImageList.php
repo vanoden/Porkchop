@@ -1,9 +1,7 @@
 <?php
 	namespace Media;
 
-	class ImageList {
-		public $error;
-		public $count;
+	class ImageList extends \BaseListClass {
 
 		public function find($parameters = array()) {
 			$parameters['type'] = 'document';
