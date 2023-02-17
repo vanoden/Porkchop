@@ -22,7 +22,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			$update_object_query = "
 				UPDATE	sales_order_events
 				SET		id = id";
@@ -53,7 +53,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
 				FROM	sales_order_events

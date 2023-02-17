@@ -207,59 +207,13 @@ class Order extends \BaseModel {
 			)) return false;
 			return true;
 		}
-
-		private function nextNumber() {
-			$get_number_query = "
-				SELECT	max(line_number)
-				FROM	sales_order_items
-				WHERE	order_id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($get_number_query,array($this->id));
-			if (! $rs) {
-				$this->error("SQL Error in Sales::Order::nextNumber(): ".$GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($number) = $rs->FetchRow();
-			return $number + 1;
-		}
-
 		public function addItem($parameters) {
 			if (empty($parameters['price'])) {
 				$this->error("Price required for line item");
 				return null;
 			}
-			$insert_item_query = "
-				INSERT
-				INTO	sales_order_items
-				(		order_id,
-						line_number,
-						product_id,
-						description,
-						quantity,
-						unit_price,
-						status
-				)
-				VALUES
-				(		?,?,?,?,?,?,'OPEN')
-			";
-			$parameters['line_number'] = $this->nextNumber();
-			$bind_params = array(
-				$this->id,
-				$parameters['line_number'],
-				$parameters['product_id'],
-				$parameters['description'],
-				$parameters['quantity'],
-				$parameters['price']
-			);
-			query_log($insert_item_query,$bind_params,true);
-			$GLOBALS['_database']->Execute($insert_item_query,$bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				app_log("Error: ".$this->error(),'error');
-				return false;
-			}
-			$this->lastID = $GLOBALS['_database']->Insert_ID();
-			return true;
+			$orderItem = new \Sales\Order\Item();
+			$orderItem->add($parameters);
 		}
 
 		public function getItem($line_number) {

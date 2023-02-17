@@ -1,5 +1,6 @@
 <?php
 	class BaseListClass Extends \BaseClass {
+	
 		protected $_count = 0;
 		
 		// Name of the Table
@@ -24,7 +25,7 @@
 
 		public function resetCount() {
 			$this->_count = 0;
-		}
+		}	
 
 		// Return Incremented Line Number
 		public function nextNumber($parent_id) {
