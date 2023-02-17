@@ -130,4 +130,10 @@
 		public function version() {
 			$version = new \TermsOfUseVersion($this->version_id);
 		}
+
+		public function date_created() {
+			$eventList = new \TermsOfUseEvent();
+			list($event) = $eventList->find(array('tou_id' => $this->id, 'type' => 'CREATION'));
+			return $event;
+		}
 	}

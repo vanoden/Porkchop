@@ -21,7 +21,8 @@ class Person Extends \BaseModel {
 	public $auth_failures;
     public $timezone;
     public $auth_method;
-    public $_settings = array( "date_format" => "US" );
+    protected $_settings = array( "date_format" => "US" );
+	protected $_database;
 
     public function __construct(int $id = null) {
     	$this->_database = new \Database\Service();

@@ -106,8 +106,8 @@
 
 		public function addVersion($params) {
 			$version = new TermsOfUseVersion();
-			if ($version->add(array('tou_id' => $this->id, 'version' => $params['version'], 'content' => $params['content']))) {
-				return $version->id;
+			if ($version->add(array('tou_id' => $this->id, 'content' => $params['content']))) {
+				return $version;
 			}
 			else {
 				$this->error($version->error());
@@ -120,5 +120,10 @@
 			list($version) = $versionList->find(array('tou_id' => $this->id, 'status' => 'PUBLISHED', '_sort' => 'date_published', '_order' => 'desc', '_limit' => 1));
 			if (! $version) return new TermsOfUseVersion();
 			else return $version;
+		}
+
+		public function versions() {
+			$list = new TermsOfUseVersionList();
+			return $list->find(array('tou_id' => $this->id));
 		}
 	}

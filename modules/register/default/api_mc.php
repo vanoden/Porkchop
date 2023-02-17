@@ -6,7 +6,7 @@
     ###############################################
 	$page = new \Site\Page();
 	$api = new \Register\API();
-	api_log("Request: ".print_r($_REQUEST,true),'debug');
+	//api_log("Request: ".print_r($_REQUEST,true),'debug');
 
 	# Call Requested Event
 	if ($_REQUEST["method"]) {

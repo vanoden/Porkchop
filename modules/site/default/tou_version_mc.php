@@ -30,12 +30,12 @@
 			$parameters = array('content' => $_REQUEST['content']);
 			if ($_REQUEST['id']) {
 				$version->update($parameters);
-				$page->appendSuccess("Updated version ".$version->number());
+				$page->appendSuccess("Updated version ".$version->date_created());
 			}
 			else {
 				$version = $tou->addVersion($parameters);
 				if ($tou->error()) $page->addError($tou->error());
-				else $page->appendSuccess("Added Version ".$version->number());
+				else $page->appendSuccess("Added Version ".$version->date_created());
 			}
 		}
 	}

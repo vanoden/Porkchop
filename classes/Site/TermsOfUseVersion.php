@@ -12,6 +12,7 @@
 		public function __construct($id = 0) {
 			// Set Table Name
 			$this->_tableName = 'site_terms_of_use_versions';
+			$this->_addFields(array('status','content'));
 
 			// Set cache key name - MUST Be Unique to Class
 			$this->_cacheKeyPrefix = $this->_tableName;
@@ -35,7 +36,7 @@
 			// Initialize Services
 			$porkchop = new \Porkchop();
 			$database = new \Database\Service();
-
+print_r($params);
 			$tou = new \Site\TermsOfUse($params['tou_id']);
 			if (!$tou->id) {
 				$this->error("Terms of Use item not found");
@@ -48,21 +49,17 @@
 				return false;
 			}
 
-			$versionList = new \Site\TermsOfUseVersionList();
-			$number = $versionList->nextNumber($tou_id);
-
 			// Prepare Query
 			$add_object_query = "
 				INSERT
 				INTO	`".$this->_tableName."`
-				(		tou_id,status,number)
-				VALUES	(?,?,?)
+				(		tou_id,status)
+				VALUES	(?,?)
 			";
 
 			// Add Parameters
 			$database->AddParam($tou->id);
 			$database->AddParam($params['status']);
-			$database->AddParam($this->number);
 
 			// Execute Query
 			$rs = $database->Execute($add_object_query);
@@ -70,7 +67,6 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-
 			// Fetch New ID
 			$this->id = $database->Insert_ID();
 
@@ -176,8 +172,8 @@
 			return $eventList->find(array('tou_id' => $this->id));
 		}
 
-		public function number(): int {
-			return $this->number;
+		public function number() {
+			return $this->date_event();
 		}
 
 		public function validContent($string) {

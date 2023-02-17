@@ -24,14 +24,17 @@
             $siteMessageDeliveryList = new \Site\SiteMessageDeliveryList();
             $siteMessageDeliveryList->find(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'acknowledged' => false));
             $siteMessagesUnread = $siteMessageDeliveryList->count();
-            $GLOBALS['_SESSION_']->customer->unreadMessages = $siteMessagesUnread;
-            $response = new \HTTP\Response();
-            $response->customer = $GLOBALS['_SESSION_']->customer;
-			$response->customer->organization = $GLOBALS['_SESSION_']->customer->organization();
-            $response->success = 1;
+
+			$me = $GLOBALS['_SESSION_']->customer;
+			$me->unreadMessages = $siteMessagesUnread;
+			$me->organization = $me->organization();
+
+            $response = new \APIResponse();
+			$response->success(true);
+            $response->customer = $me;
 
             # Send Response
-            api_log($response);
+            //api_log($response);
             print $this->formatOutput($response);
         }
  
