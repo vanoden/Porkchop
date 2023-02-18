@@ -30,7 +30,7 @@
 			$parameters = array('content' => $_REQUEST['content']);
 			if ($_REQUEST['id']) {
 				$version->update($parameters);
-				$page->appendSuccess("Updated version ".$version->number());
+				$page->appendSuccess("Updated version ".$version->date_created());
 			}
 			else {
 				$version = $tou->addVersion($parameters);

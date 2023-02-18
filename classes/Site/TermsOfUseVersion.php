@@ -12,6 +12,7 @@
 		public function __construct($id = 0) {
 			// Set Table Name
 			$this->_tableName = 'site_terms_of_use_versions';
+			$this->_addFields(array('status','content'));
 
 			// Set cache key name - MUST Be Unique to Class
 			$this->_cacheKeyPrefix = $this->_tableName;
@@ -68,7 +69,6 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-
 			// Fetch New ID
 			$this->id = $database->Insert_ID();
 
@@ -174,8 +174,8 @@
 			return $eventList->find(array('tou_id' => $this->id));
 		}
 
-		public function number(): int {
-			return $this->number;
+		public function number() {
+			return $this->date_event();
 		}
 
 		public function validContent($string) {
