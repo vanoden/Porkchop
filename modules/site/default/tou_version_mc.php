@@ -4,18 +4,18 @@
 	$page->requirePrivilege('manage terms of use');
 
 	$version = new \Site\TermsOfUseVersion();
-	if ($_REQUEST['version_id']) {
+	if (!empty($_REQUEST['version_id'])) {
 		$version->load($_REQUEST['version_id']);
 	}
 
-	if ($_REQUEST['tou_id']) {
+	if (!empty($_REQUEST['tou_id'])) {
 		$tou = new \Site\TermsOfUse($_REQUEST['tou_id']);
 	}
 	else {
 		$tou = $version->terms_of_use();
 	}
 
-	if ($_REQUEST['btn_submit']) {
+	if (!empty($_REQUEST['btn_submit'])) {
 		$page->appendSuccess("Form submitted");
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
             $page->addError("Invalid Request");
@@ -35,7 +35,7 @@
 			else {
 				$version = $tou->addVersion($parameters);
 				if ($tou->error()) $page->addError($tou->error());
-				else $page->appendSuccess("Added Version ".$version->number());
+				else $page->appendSuccess("Added Version ".$version->date_created());
 			}
 		}
 	}
@@ -55,3 +55,7 @@
 	else {
 		$version_number = $version->number();
 	}
+
+	$tou_id = (!empty($tou->id)) ? $tou->id : 0;
+	$tou_name = (!empty($tou->name)) ? $tou->name : "";
+	$message_id = (!empty($message->id)) ? $message->id : 0;

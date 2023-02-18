@@ -29,7 +29,7 @@
 		<div class="tableCell">Date Retracted</div>
 		<div class="tableCell">Action</div>
 	</div>
-<?php	foreach ($termsOfUse as $tou) { ?>
+<?php	foreach ($versions as $version) { ?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_site/tou_version?id=<?=$version->id?>"><?=$version->number()?></a></div>
 		<div class="tableCell"><?=$version->status?></div>

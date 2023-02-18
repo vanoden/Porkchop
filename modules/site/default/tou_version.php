@@ -18,8 +18,8 @@
 
 <section class="table-group">
   <form method="post" action="/_site/tou_version">
-    <input type="hidden" name="id" value="<?=$message->id?>"/>
-	<input type="hidden" name="tou_id" value="<?=$tou->id?>"/>
+    <input type="hidden" name="id" value="<?=$message_id?>"/>
+	<input type="hidden" name="tou_id" value="<?=$tou_id?>"/>
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <ul class="form-grid three-col">
 			<li><label for="name">Terms of Use Record</label><span class="value"><?=$tou->name?></span></li>

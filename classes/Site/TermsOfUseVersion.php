@@ -49,20 +49,18 @@
 			}
 
 			$versionList = new \Site\TermsOfUseVersionList();
-			$number = $versionList->nextNumber($tou_id);
 
 			// Prepare Query
 			$add_object_query = "
 				INSERT
 				INTO	`".$this->_tableName."`
-				(		tou_id,status,number)
-				VALUES	(?,?,?)
+				(		tou_id,status)
+				VALUES	(?,?)
 			";
 
 			// Add Parameters
 			$database->AddParam($tou->id);
 			$database->AddParam($params['status']);
-			$database->AddParam($this->number);
 
 			// Execute Query
 			$rs = $database->Execute($add_object_query);

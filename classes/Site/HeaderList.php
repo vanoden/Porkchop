@@ -2,7 +2,7 @@
     namespace Site;
 
     class HeaderList Extends \BaseListClass {
-        public function find($params = array()) {
+        public function find($params = []) {
             $find_objects_query = "
                 SELECT  id
                 FROM    site_headers
