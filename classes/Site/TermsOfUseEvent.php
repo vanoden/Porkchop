@@ -2,6 +2,11 @@
 	namespace Site;
 
 	class TermsOfUseEvent Extends \BaseModel {
+		public $date_event;
+		public $timestamp_event;
+		public $type;
+		public $version_id;
+		public $user_id;
 
 		/********************************************/
 		/* Instance Constructor						*/
@@ -9,13 +14,14 @@
 		public function __construct(int $id = null) {
 			// Set Table Name
 			$this->_tableName = 'site_terms_of_use_events';
+			$this->_addFields(array('date_event','type','version_id','user_id'));
 
 			// Set cache key name - MUST Be Unique to Class
 			// Comment out to disable cache
 			//$this->_cacheKeyPrefix = $this->_tableName;
 
 			// Add Types for Validation
-			$this->_addType(array('CREATION','ACTIVATION','RETRACTION'));
+			$this->_addTypes(array('CREATION','ACTIVATION','RETRACTION'));
 
 			// Load Record for Specified ID if given
 			if (isset($id) && is_numeric($id)) {
@@ -39,7 +45,7 @@
 
 			if (!isset($params['type'])) $params['type'] = 'CREATION';
 
-			if (!$this->validStatus($params['type'])) {
+			if (!$this->validType($params['type'])) {
 				$this->error("Invalid type");
 				return false;
 			}
@@ -53,14 +59,14 @@
 			";
 
 			// Add Parameters
-			$database->AddParam($param['version_id']);
+			$database->AddParam($params['version_id']);
 			$database->AddParam($GLOBALS['_SESSION_']->customer->id);
-			$database->AddParam($param['type']);
+			$database->AddParam($params['type']);
 
 			// Execute Query
 			$rs = $database->Execute($add_object_query);
 			if (! $rs) {
-				$this->SQLError($rs->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
@@ -86,7 +92,7 @@
 			$get_object_query = "
 				SELECT	*,unix_timestamp(date_event) timestamp_event
 				FROM	`".$this->_tableName."`
-				WHERE	id = ?";
+				WHERE	`".$this->_tableIDColumn."` = ?";
 
 			// Bind Params
 			$database->AddParam($this->id);
@@ -108,14 +114,14 @@
 				$this->version_id = $object->version_id;
 				$this->user_id = $object->user_id;
 
-				$this->_exists = true;
+				$this->exists(true);
 			}
 			else {
 				// Null out any values
 				$this->id = null;
-				$this->code = null;
+				$this->type = null;
 
-				$this->_exists = false;
+				$this->exists(false);
 			}
 
 			// Return True as long as No Errors - Not Found is NOT an error
@@ -128,12 +134,6 @@
 		}
 
 		public function version() {
-			$version = new \TermsOfUseVersion($this->version_id);
-		}
-
-		public function date_created() {
-			$eventList = new \TermsOfUseEvent();
-			list($event) = $eventList->find(array('tou_id' => $this->id, 'type' => 'CREATION'));
-			return $event;
+			return new TermsOfUseVersion($this->version_id);
 		}
 	}

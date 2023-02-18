@@ -3,9 +3,7 @@
 
 	class TermsOfUseVersionList Extends \BaseListClass {
 		public function __construct() {
-			$this->_tableName = 'site_terms_of_use_versions';
-			$this->_tableFKColumn = 'tou_id';
-			$this->_tableNumberColumn = 'number';
+			$this->_modelName = '\Site\TermsOfUseVersion';
 		}
 
 		public function find($params = [],$controls = []): array {
@@ -25,7 +23,7 @@
 				}
 			}
 
-			parent::find($params,$controls);
+			return parent::find($params,$controls);
 		}
 
 		public function latestPublished($tou_id): TermsOfUseVersion {

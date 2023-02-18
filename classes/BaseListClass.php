@@ -5,21 +5,6 @@
 
 		protected $_modelName;
 
-		// Name of the Table
-		protected $_tableName;
-
-		// Name of Autoincrementing id column
-		protected $_tableIDColumn = 'id';
-
-		// Array of Fields for Query Filters
-		protected $_fields;
-
-		// Foreign Parent ID Column
-		protected $_tableFKColumn;
-
-		// Column with Incrementing Line Number within Parent
-		protected $_tableNumberColumn;
-
 		// Default Sort Controls
 		protected $_tableDefaultSortBy;
 		protected $_tableDefaultSortOrder;
@@ -38,7 +23,7 @@
 
 		public function __call($name,$parameters) {
 			if ($name == "find") {
-				if (func_num_args() == 2) {
+				if (func_num_args() == 3) {
 					return $this->findAdvanced($parameters[0],$parameters[1]);
 				}
 				else return $this->findAdvanced($parameters[0],[]);
@@ -52,18 +37,22 @@
 		public function findAdvanced($parameters = [], $controls = []) {
 			$this->clearError();
 			$this->resetCount();
-
 			$database = new \Database\Service();
-			$model = new $this->_modelName();
+			$modelName = $this->_modelName;
+			$model = new $modelName();
+
+			$tableName = $model->_tableName();
+			$tableIDColumn = $model->_tableIDColumn();
+			$fields = $model->_fields();
 
 			$find_objects_query = "
-				SELECT	`$model->_tableIDColumn`
-				FROM	`$model->_tableName`
-				WHERE	`$model->_tableIDColumn` = `$model->_tableIDColumn`
+				SELECT	`$tableIDColumn`
+				FROM	`$tableName`
+				WHERE	`$tableIDColumn` = `$tableIDColumn`
 			";
 
 			foreach ($parameters as $key => $value) {
-				if (in_array($key,$model->_fields)) {
+				if (in_array($key,$fields)) {
 					$find_objects_query .= "
 					AND	`$key` = ?";
 					$database->AddParam($value);
@@ -71,7 +60,7 @@
 			}
 
 			if (!empty($controls['sort'])) {
-				if (!in_array($controls['sort'],$model->_fields)) {
+				if (!in_array($controls['sort'],$fields)) {
 					$this->error("Invalid sort column name");
 					return null;
 				}
@@ -102,40 +91,40 @@
 				}
 				else {
 					$this->error("Invalid limit qty");
-					return null;
+					return array();
 				}
 			}
 
-			$events = array();
-
+			$objects = array();
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				$events;
+				return array();
 			}
 
 			while (list($id) = $rs->FetchRow()) {
 				$object = new $this->_modelName($id);
-				array_push($events,$object);
+				array_push($objects,$object);
 				$this->incrementCount();
 			}
-			return $events;
+			return $objects;
 		}
 
 		// Return Incremented Line Number
 		public function nextNumber($parent_id) {
 			$this->clearError();
+			$database = new \Database\Service();
+			$modelName = $this->_modelName;
+			$model = new $modelName();
 
-			if (empty($this->_tableName || empty($this->_tableFKColumn || empty($this->_tableNumberColumn)))) {
+			if (empty($model->_tableName() || empty($model->_tableFKColumn() || empty($model->_tableNumberColumn())))) {
 				$this->error("Class not configured for Line Numbers");
 			}
 
-			$database = new \Database\Service();
-
 			$get_number_query = "
-				SELECT	max(`$this->_tableNumberColumn`)
-				FROM	`$this->_tableName`
-				WHERE	`$this->_tableFKColumn` = ?
+				SELECT	max(`$model->_tableNumberColumn()`)
+				FROM	`$model->_tableName()`
+				WHERE	`$model->_tableFKColumn()` = ?
 			";
 			$database->AddParam($parent_id);
 			$rs = $database->Execute($get_number_query);

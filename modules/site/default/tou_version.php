@@ -23,7 +23,7 @@
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <ul class="form-grid three-col">
 			<li><label for="name">Terms of Use Record</label><span class="value"><?=$tou->name?></span></li>
-			<li><label for="name">Version Number</label><span class="value"><?=$version_number()?></span></li>
+			<li><label for="name">Version Number</label><span class="value"><?=$version->date_created()?></span></li>
 			<li><label for="name">Version Status</label><span class="value"><?=$version->status?></span></li>
 		</ul>
     <div id="contentArea">

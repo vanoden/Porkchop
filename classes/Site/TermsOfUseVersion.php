@@ -49,8 +49,6 @@
 				return false;
 			}
 
-			$versionList = new \Site\TermsOfUseVersionList();
-
 			// Prepare Query
 			$add_object_query = "
 				INSERT
@@ -72,9 +70,8 @@
 			// Fetch New ID
 			$this->id = $database->Insert_ID();
 
-			$event = new TermsOfUseEvent();
-			$event->add(array('version_id' => $this->id, 'status' => 'NEW'));
-			if ($params['status'] == 'PUBLISHED') $event->add(array('version_id' => $this->id, 'status' => 'PUBLISHED'));
+			$this->addEvent('CREATION');
+			if ($params['status'] == 'PUBLISHED') $this->addEvent('ACTIVATION');
 
 			// Update Any Nullable Values
 			return $this->update($params);
@@ -164,6 +161,14 @@
 			return $this->details();
 		}
 
+		public function addEvent($type) {
+			$event = new TermsOfUseEvent();
+			if ($event->add(array('version_id' => $this->id, 'type' => $type))) return true;
+			print_r($event);
+			$this->error("Unable to add event: ".$event->error());
+			return false;
+		}
+
 		public function events(): array {
 			$eventList = new TermsOfUseEventList();
 			return $eventList->find(array('tou_id' => $this->id));
@@ -176,6 +181,27 @@
 
 		public function number() {
 			return $this->date_event();
+		}
+
+		public function date_created() {
+			$eventList = new TermsOfUseEventList();
+			list($event) = $eventList->find(array('version_id' => $this->id, 'type' => 'CREATION'));
+			if ($eventList->error()) $this->error($eventList->error());
+			return $event->date_event;
+		}
+
+		public function date_published() {
+			$eventList = new TermsOfUseEventList();
+			list($event) = $eventList->find(array('version_id' => $this->id, 'type' => 'PUBLISHED'));
+			if ($eventList->error()) $this->error($eventList->error());
+			return $event->date_event;
+		}
+
+		public function date_retracted() {
+			$eventList = new TermsOfUseEventList();
+			list($event) = $eventList->find(array('version_id' => $this->id, 'type' => 'RETRACTED'));
+			if ($eventList->error()) $this->error($eventList->error());
+			return $event->date_event;
 		}
 
 		public function validContent($string) {

@@ -19,7 +19,30 @@
 		border: 1px solid #999999;
 	}
 </style>
+<script language="Javascript">
+	function edit(id) {
+		document.forms[0].version_id.value = id;
+		document.forms[0].action = '/_site/tou_version';
+		document.forms[0].submit();
+		return true;
+	}
+	function publish(id) {
+		document.forms[0].method = 'publish';
+		document.forms[0].version_id.value = id;
+		document.forms[0].submit();
+		return true;
+	}
+	function retract(id) {
+		document.forms[0].method = 'retract';
+		document.forms[0].version_id.value = id;
+		document.forms[0].submit();
+		return true;
+	}
+</script>
 <form method="post" action="/_site/tou_versions">
+<input type="hidden" name="tou_id" value="<?=$tou->id?>"/>
+<input type="hidden" name="version_id"/>
+<input type="hidden" name="method"/>
 <div class="table">
 	<div class="tableHead">
 		<div class="tableCell">Version</div>
@@ -31,17 +54,17 @@
 	</div>
 <?php	foreach ($versions as $version) { ?>
 	<div class="tableRow">
-		<div class="tableCell"><a href="/_site/tou_version?id=<?=$version->id?>"><?=$version->number()?></a></div>
+		<div class="tableCell"><a href="/_site/tou_version?id=<?=$version->id?>"><?=$version->id?></a></div>
 		<div class="tableCell"><?=$version->status?></div>
-		<div class="tableCell"><?=$version->dateReleased()?></div>
+		<div class="tableCell"><?=$version->date_created()?></div>
 		<div class="tableCell"><?=$version->datePublished()?></div>
 		<div class="tableCell"><?=$version->dateRetracted()?></div>
 		<div class="tableCell">
 <?php	if ($version->status == 'NEW') {?>
-		<input type="button" name="todo" value="Edit" />
-		<input type="button" name="todo" value="Publish" />
+		<input type="button" name="todo" value="Edit" onclick="edit(<?=$version->id?>);" />
+		<input type="button" name="todo" value="Publish" onclick="publish(<?=$version->id?>);" />
 <?php	} elseif ($version->status == '') { ?>
-		<input type="button" name="todo" value="Retract" />
+		<input type="button" name="todo" value="Retract" onclick="retract(<?=$version->id?>);" />
 <?php	} ?>		
 		</div>
 	</div>

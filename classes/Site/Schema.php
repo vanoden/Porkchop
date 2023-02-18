@@ -457,6 +457,19 @@
 				$this->setVersion(16);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 17) {
+				$alter_table_query = "
+                    ALTER TABLE `site_terms_of_use_events` add `id` int(11) PRIMARY KEY AUTO_INCREMENT
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error = "SQL Error altering page_pages table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(17);
+				$GLOBALS['_database']->CommitTrans();
+			}
 		
 			return true;
 		}

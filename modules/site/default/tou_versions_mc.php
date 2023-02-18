@@ -5,6 +5,17 @@
 
 	$tou = new \Site\TermsOfUse($_REQUEST['tou_id']);
 
+	if (!empty($_REQUEST['method'])) {
+		if ($_REQUEST['method'] == 'Publish') {
+			$version = new \Site\TermsOfUseVersion($_REQUEST['version_id']);
+			if ($version->publish()) {
+				$page->appendSuccess("Published version ".$version->date_created());
+			}
+			else {
+				$page->addError("Error publishing version: ".$version->error());
+			}
+		}
+	}
 	$versions = $tou->versions();
 	if (!is_array($versions)) {
 		$page->addError("No versions found");

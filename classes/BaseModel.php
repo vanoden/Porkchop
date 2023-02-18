@@ -36,8 +36,18 @@
 		// Polymorphism for Fun and Profit
 		public function __call($name,$parameters) {
 			if ($name == 'get') return $this->_getObject($parameters[0]);
+			else $this->error("Invalid method '$name'");
 		}
 
+		public function _tableName(){
+			return $this->_tableName;
+		}
+		public function _tableIDColumn() {
+			return $this->_tableIDColumn;
+		}
+		public function _fields() {
+			return $this->_fields;
+		}
         /**
          * update by params
          * 
@@ -352,6 +362,11 @@
 		public function _addStatus($param) {
 			if (is_array($param)) $this->_statii = array_merge($this->_statii,$param);
 			else array_push($this->_statii,$param);
+		}
+
+		public function _addTypes($param) {
+			if (is_array($param)) $this->_types = array_merge($this->_types,$param);
+			else array_push($this->_types,$param);
 		}
 
 		public function statii() {
