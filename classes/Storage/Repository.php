@@ -2,12 +2,13 @@
 	namespace Storage;
 
 	class Repository Extends \BaseModel {
-
 		public $name;
 		public $type;
 		public $code;
 		public $status;
 		public $endpoint;
+        public $secretKey;
+        public $accessKey;
 		public $default_privileges_json;
 		public $override_privileges_json;
 

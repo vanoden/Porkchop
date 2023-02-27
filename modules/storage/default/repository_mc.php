@@ -1,15 +1,19 @@
 <?php
-	$page = new \Site\Page();
+    $site = new \Site();
+	$page = $site->page();
 	$page->requirePrivilege('manage storage repositories');
 
 	$factory = new \Storage\RepositoryFactory();
 
 	if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
 		$repository = $factory->load($_REQUEST['id']);
-		if ($factory->error) $page->addError("Cannot load repository #".$_REQUEST['id'].": ".$factory->error);
+		if ($factory->error()) $page->addError("Cannot load repository #".$_REQUEST['id'].": ".$factory->error());
 	}
+    else {
+        $repository = new \Storage\Repository();
+    }
 
-	if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
+    if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
             $page->addError("Invalid Token");
         }
@@ -65,15 +69,16 @@
 			if ($repository->id) {
 				$repository->update($parameters);
 				$page->success = "Repository updated";
-			} else {
+			}
+            else {
 				$repository = $factory->create($_REQUEST['type']);
-				if ($factory->error) $page->addError($factory->error);
+				if ($factory->error()) $page->addError($factory->error());
 				$repository->add($parameters);           
 				$page->success = "Repository created";
 			}
 
-			if ($repository->error) {
-				$page->addError($repository->error);
+			if ($repository->error()) {
+				$page->addError($repository->error());
 				$page->success = null;
 				$form['code'] = $_REQUEST['code'];
 				$form['name'] = $_REQUEST['name'];
@@ -85,7 +90,8 @@
 				$form['secretKey'] = $_REQUEST['secretKey'];
 				$form['region'] = $_REQUEST['region'];
 				$form['bucket'] = $_REQUEST['bucket'];
-			} else {
+			}
+            else {
 				$repository = $factory->get($repository->code);
 				$repository->_setMetadata('path',$_REQUEST['path']);
 				$repository->_setMetadata('endpoint',$_REQUEST['endpoint']);
@@ -126,11 +132,12 @@
 			$form['region'] = $_REQUEST['region'];
 			$form['bucket'] = $_REQUEST['bucket'];
 		}
-	} elseif (! $page->errorCount()) {
+	}
+    elseif (! $page->errorCount()) {
 	
 		if (isset($_REQUEST['code'])) {
 			$repository = $factory->get($_REQUEST['code']);
-			if ($factory->error) $page->addError("Cannot load repository '".$_REQUEST['code']."': ".$factory->error);
+			if ($factory->error()) $page->addError("Cannot load repository '".$_REQUEST['code']."': ".$factory->error());
 		}
 		
 		if ($repository->id) {
@@ -144,7 +151,14 @@
     	    $form['secretKey'] = $repository->_metadata('secretKey');
     	    $form['region'] = $repository->_metadata('region');
     	    $form['bucket'] = $repository->_metadata('bucket');
-			$default_privileges = $repository->default_privileges;
-			$override_privileges = $repository->override_privileges;
+			$default_privileges = $repository->default_privileges();
+			$override_privileges = $repository->override_privileges();
 		}
     }
+
+    $page->title("Storage Repository");
+	if ($repository->id) $page->instructions = "Update values and click Submit to update repository setting";
+	else $page->instructions = "Fill out form and click Submit to create a new Storage Repository";
+	$page->addBreadCrumb("Repositories","/_storage/repositories");
+    if ($repository->id) $page->addBreadCrumb($repository->name,"/_storage/repository?id=".$repository->id);
+	else $page->addBreadCrumb("New Repository");

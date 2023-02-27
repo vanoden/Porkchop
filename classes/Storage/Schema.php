@@ -7,7 +7,7 @@
 		public function upgrade() {
 			$this->error = null;
 
-			if ($this->version < 1) {
+			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `storage_repositories` (
@@ -104,7 +104,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			
-			if ($this->version < 2) {
+			if ($this->version() < 2) {
 				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
 				$table = new \Database\Schema\Table('storage_files');
@@ -125,7 +125,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			
-			if ($this->version < 5) {
+			if ($this->version() < 5) {
 			
 				app_log("Upgrading schema to version 5",'notice',__FILE__,__LINE__);
 		        $create_table_query = "
@@ -147,7 +147,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			
-			if ($this->version < 6) {
+			if ($this->version() < 6) {
 				app_log("Upgrading schema to version 6",'notice',__FILE__,__LINE__);
 
 				$table = new \Database\Schema\Table('storage_repositories');

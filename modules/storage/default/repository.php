@@ -19,13 +19,12 @@
     ?>
 </script>
 
-<div class="title">Repository <?=$repository->code?></div>
-<?php	 if ($page->errorCount() > 0) { ?>
-<div class="form_error"><?=$page->errorString()?></div>
-<?php	 }
-    if ($page->success) { ?>
-<div class="form_success"><?=$page->success?></div>
-<?php	 } ?>
+<?php
+    $page->showTitle();
+	$page->showBreadCrumbs();
+	$page->showMessages();
+?>
+
 <form name="repositoryForm" action="/_storage/repository" method="post">
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="id" value="<?=$repository->id?>" />

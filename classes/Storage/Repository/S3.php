@@ -15,7 +15,6 @@
 	    public $region;
 		protected $credentials;
 		private $s3Client;
-		private $secretKey;
 		private $_connected = false;
 	    
 		public function __construct($id = null) {

@@ -105,6 +105,13 @@
 				"edit"				=> $templates['admin'],
 			),
 		),
+        "Storage"       => array(
+            "schema"    => 6,
+            "templates"     => array(
+                "repositories"      => $templates['admin'],
+                "repository"        => $templates['admin']
+            )
+        ),
 		"Email"			=> array(
 			"schema"	=> 2,
             "privileges"    => array(
