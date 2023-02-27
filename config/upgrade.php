@@ -133,6 +133,9 @@
 				"manage hosts",
 				"manage acls"
 			)
+			),
+		"Sales"			=> array(
+			"schema"	=> 9
 		)
 	);
 
