@@ -64,13 +64,13 @@
 
 			    $item->update(
 				    array(
-					    "code"	=> $_REQUEST['code'],
-					    "type"	=> $_REQUEST['type'],
-					    "status"			=> $_REQUEST["status"]
+					    "code"		=> $_REQUEST['code'],
+					    "type"		=> $_REQUEST['type'],
+					    "status"	=> $_REQUEST["status"]
 				    )
 			    );
-			    if ($item->error) {
-				    app_log("Error updating item: ".$item->error,'error',__FILE__,__LINE__);
+			    if ($item->error()) {
+				    app_log("Error updating item: ".$item->error(),'error',__FILE__,__LINE__);
 				    $page->addError("Error updating Item");
 			    }
 
@@ -78,7 +78,7 @@
 			    if (!empty($_REQUEST['parent_code'])) {
 				    $parent = new \Product\Item();
 				    $parent->get($_REQUEST['parent_code']);
-				    if ($parent->error) {
+				    if ($parent->error()) {
 					    app_log("Error finding item ".$_REQUEST['parent_code'],'error',__FILE__,__LINE__);
 					    $page->addError("Error finding parent");
 				    }

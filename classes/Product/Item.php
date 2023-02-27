@@ -47,6 +47,7 @@
 			$cache_item->delete();
 
 			$ok_params = array(
+				"code"			=> '/^\w[\w\-\.\_]*$/',
 				"status"		=> '/^\w+$/',
 				"type"			=> "/.+/",
 				"name"			=> '/^[\w\-\.\_\s]+$/',
@@ -288,8 +289,8 @@
 			$images = array();
 			while (list($image_id) = $rs->FetchRow()) {
 				$image = new \Media\Item($image_id);
-				if ($image->error) {
-					$this->error("Could not load Media Item class: ".$image->error);
+				if ($image->error()) {
+					$this->error("Could not load Media Item class: ".$image->error());
 					return null;
 				}
 				array_push($images,$image);
