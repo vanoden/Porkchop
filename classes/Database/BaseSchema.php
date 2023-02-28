@@ -1,12 +1,12 @@
 <?php
 	namespace Database;
 
-	class BaseSchema {
-		public $errno;
-		public $error;
+	class BaseSchema Extends \BaseClass {
+
 		public $module;
 		public $infoTable;
 		public $infoKey;
+		public $current_version;
 
 		public function __construct() {
 			if (! isset($this->infoTable)) $this->infoTable = strtolower($this->module)."__info";
@@ -29,7 +29,7 @@
 				";
 				$GLOBALS['_database']->Execute($create_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error creating info table in ".$this->module."Schema::version(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
 					return null;
 				}
 			}
@@ -45,7 +45,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_version_query);
 			if (! $rs) {
-				$this->error = "SQL Error in ".$this->module."::version(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -65,17 +65,16 @@
 			";
 			$GLOBALS['_database']->Execute($update_schema_version,array($version,$version));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in ".$this->module."::Schema::upgrade(): ".$GLOBALS['_database']->ErrorMsg();
-				app_log($this->error,'error',__FILE__,__LINE__);
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				$GLOBALS['_database']->RollbackTrans();
-				return undef;
+				return null;
 			}
 		}
 
 		public function executeSQL($sql,$parameters = array()) {
 			$GLOBALS['_database']->Execute($sql,$parameters);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in ".$this->module."::executeSQL(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				$GLOBALS['_database']->RollbackTrans();
 				return false;
 			}
@@ -91,14 +90,10 @@
 					$role->add(array('name' => $name,'description' => $description));
 				}
 				if ($role->error()) {
-					$this->_error = "Error adding role '$name': ".$role->error();
+					$this->error("Error adding role '$name': ".$role->error());
 					return false;
 				}
 			}
 			return true;
-		}
-
-		public function error() {
-			return $this->error;
 		}
 	}

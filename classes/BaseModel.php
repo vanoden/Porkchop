@@ -61,7 +61,7 @@
 		    
     	    // unique id is required to perform an updat
     	    if (!$this->id) {
-        	    $this->error('ERROR: id is required for object update.');
+        	    $this->error('ERROR: id is required for '.$this->_objectName().' update.');
         	    return false;
     	    }
 
@@ -92,15 +92,15 @@
 			$database = new \Database\Service();
 	
     		$addQuery = "INSERT INTO `$this->_tableName` ";
-			$bindParams = $bindFields = array();
+			$bindFields = array();
 	        foreach ($parameters as $fieldKey => $fieldValue) {
 	            if (in_array($fieldKey, $this->_fields)) {
     	            array_push($bindFields, $fieldKey);
-    	            array_push($bindParams, $fieldValue);
+					$database->AddParam($fieldValue);
 	            }
 	        }
 	        $addQuery .= '(`'.implode('`,`',$bindFields).'`';
-            $addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindParams)) ,',') . ")";
+            $addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindFields)) ,',') . ")";
             
             // Execute DB Query
             $database->Execute($addQuery);
@@ -110,7 +110,7 @@
 			}
 			
 			// get recent added row id to return update() and details()
-			$this->_tableIDColumn = $database->Insert_ID();
+			$this->id = $database->Insert_ID();
 			return $this->update($parameters);
 		}
 

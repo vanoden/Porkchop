@@ -1,7 +1,9 @@
 <?php
 	namespace Content\Template;
-	
-	class Shell Extends \BaseModel {
+
+	use Exception;
+
+	class Shell Extends \BaseClass {
 		private $_content;
 		private $_params = array();
 		private $_groups = array();
@@ -17,7 +19,7 @@
 						}
 					}
 					else {
-						$this->_error = "Template file '".$argument['path']."' not found";
+						$this->error("Template file '".$argument['path']."' not found");
 					}
 				}
 			}
@@ -28,7 +30,6 @@
 					}
 				}
 			}
-			parent::__construct();
 		}
 
 		public function load($path) {

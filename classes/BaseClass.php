@@ -28,6 +28,17 @@
 			return $this->_error;
 		}
 
+		public function _objectName() {
+			if (!isset($caller)) {
+				$trace = debug_backtrace();
+				$caller = $trace[2];
+			}
+			$class = $caller['class'];
+			if (preg_match('/(\w[\w\_]*)$/',$class,$matches)) $classname = $matches[1];
+			else $classname = "Object";
+			return $classname;
+		}
+
 		/********************************************/
 		/* SQL Errors - Identified and Formatted	*/
 		/* for filtering and reporting				*/
