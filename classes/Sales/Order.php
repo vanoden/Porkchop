@@ -1,7 +1,5 @@
 <?php
-	namespace Sales;
-
-use Aws\Emr\Enum\InstanceRoleType;
+namespace Sales;
 
 class Order extends \BaseModel {
 
@@ -21,6 +19,7 @@ class Order extends \BaseModel {
 		}
 
 		public function add($parameters = []) {
+
 			$customer = new \Register\Customer($parameters['customer_id']);
 			if (! $customer->id) {
 				$this->error("Customer not found");
@@ -208,7 +207,7 @@ class Order extends \BaseModel {
 			return true;
 		}
 		public function addItem($parameters) {
-			if (empty($parameters['price'])) {
+			if (empty($parameters['unit_price'])) {
 				$this->error("Price required for line item");
 				return null;
 			}

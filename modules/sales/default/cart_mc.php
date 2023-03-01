@@ -60,7 +60,7 @@
     // shipping vendors available
     $shippingVendorList = new \Shipping\VendorList();
     $shippingVendors = $shippingVendorList->findUnique();
-    if (isset($shipping_vendor) && in_array($shipping_vendor, $shippingVendors)) $shipping_vendor = $_REQUEST['shipping_vendor'];
+    if (isset($_REQUEST['shipping_vendor']) && in_array($_REQUEST['shipping_vendor'], $shippingVendors)) $shipping_vendor = $_REQUEST['shipping_vendor'];
 
 	// Security - Only Register Module Operators or Managers can see other customers
 	$organizationlist = new \Register\OrganizationList();

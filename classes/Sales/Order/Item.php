@@ -20,22 +20,29 @@
 		}
 		
 		public function add($parameters = []) {		
+		
 			$product = new \Product\Item($parameters['product_id']);
-			
 			if (! $product->id) {
 				$this->error("Product not found");
 				return false;
 			}
+			
+			$salesOrder = new \Sales\Order($parameters['order_id']);
+			if (! $salesOrder->id) {
+				$this->error("Sales Order not found");
+				return false;
+			}			
+			
 			$line_number = $this->maxColumnValue('line_number');
-
 			$add_object_query = "
 				INSERT
 				INTO	sales_order_items
-				(		id,line_number,product_id)
+				(		id,order_id,line_number,product_id)
 				VALUES
-				(		null,?,?)
+				(		null,?,?,?)
 			";
-			$GLOBALS['_database']->Execute($add_object_query,array($line_number,$product->id));
+			
+			$GLOBALS['_database']->Execute($add_object_query,array($salesOrder->id,$line_number,$product->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
@@ -74,6 +81,10 @@
 			if (isset($parameters['unit_price'])) {
 				$update_object_query .= ", unit_price = ?";
 				array_push($bind_params,$parameters['unit_price']);
+			}
+			if (isset($parameters['status'])) {
+				$update_object_query .= ", status = ?";
+				array_push($bind_params,$parameters['status']);
 			}
 
 			$update_object_query .= "

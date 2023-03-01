@@ -1,5 +1,8 @@
 <?php	if ($page->errorCount()) { ?>
-    <div class="form_error"><?=$page->errorString()?></div>
+    <div style="color:red; margin-top: 25px;"><img src="/img/_global/icon_error.svg" style="max-width: 10px; max-height: 10px;"/>
+    Error:
+    <?=$page->errorString()?>
+    </div>
 <?php	} ?>
 <style>
     fieldset {

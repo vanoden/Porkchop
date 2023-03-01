@@ -191,7 +191,7 @@
 				$drop_table_query = "
 					DROP TABLE IF EXISTS storage_file_roles
 				";
-				if (! $this->executeSQL($update_table_query)) {
+				if (! $this->executeSQL($drop_table_query)) {
 					$this->error = "SQL Error altering storage_files table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
