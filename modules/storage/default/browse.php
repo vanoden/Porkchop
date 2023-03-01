@@ -39,7 +39,7 @@
                             <?=$file->date_created?>
                         </td>
                         <td>
-                            <?=$file->user->full_name()?>
+                            <?=$file->owner()->full_name()?>
                         </td>
                         <td>
                             <?=$file->endpoint?>
