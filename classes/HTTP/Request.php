@@ -154,19 +154,24 @@
 
 			# Parse Query String
 			if ($this->_uri == "/") {
+				// Home Page
 				$this->module = "content";
 				$this->view = "index";
 				$this->index = $GLOBALS['_config']->site->default_index;
 			}
 			if (preg_match('/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/',$this->_uri,$matches)) {
+				// Full Porkchop URIs
 				$this->module = $matches[1];
 			}
 			elseif (preg_match('/^\/([\w\-\_]*)$/',$this->_uri,$matches)) {
+				// Short CMS URIs
 				if (empty($matches[1])) {
+					// 'Home' Page
 					$this->module = "content";
 					$this->view = "index";
 				}
 				elseif (! file_exists(HTML."/".$matches[1])) {
+					// No Matching Static File, CMS Request
 					$this->module = "content";
 					$this->view = "index";
 					$this->index = $matches[1];
