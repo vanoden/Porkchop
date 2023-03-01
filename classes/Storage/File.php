@@ -499,8 +499,8 @@
 				$repository = $factory->find($parameters['repository_name']);
 			}
 
-		    if ($factory->error) {
-			    $this->addError("Error loading repository: ".$factory->error);
+		    if ($factory->error()) {
+			    $this->addError("Error loading repository: ".$factory->error());
 		    } else if (! $repository->id) {
 			    $this->addError("Repository not found");
 		    } else {
