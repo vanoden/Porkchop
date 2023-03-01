@@ -161,7 +161,7 @@
 			if (preg_match('/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/',$this->_uri,$matches)) {
 				$this->module = $matches[1];
 			}
-			elseif (preg_match('/^\/([\w\_]*)$/',$this->_uri,$matches)) {
+			elseif (preg_match('/^\/([\w\-\_]*)$/',$this->_uri,$matches)) {
 				if (empty($matches[1])) {
 					$this->module = "content";
 					$this->view = "index";
