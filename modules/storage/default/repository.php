@@ -19,11 +19,9 @@
     ?>
 </script>
 
-<?php
-    $page->showTitle();
-	$page->showBreadCrumbs();
-	$page->showMessages();
-?>
+<?=$page->showTitle()?>
+<?=$page->showBreadCrumbs()?>
+<?=$page->showMessages()?>
 
 <form name="repositoryForm" action="/_storage/repository" method="post">
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">

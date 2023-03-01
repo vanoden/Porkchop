@@ -9,6 +9,10 @@
 		$repository = $factory->load($_REQUEST['id']);
 		if ($factory->error()) $page->addError("Cannot load repository #".$_REQUEST['id'].": ".$factory->error());
 	}
+	elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+        $repository = new \Storage\Repository();
+		$repository->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
+	}
     else {
         $repository = new \Storage\Repository();
     }

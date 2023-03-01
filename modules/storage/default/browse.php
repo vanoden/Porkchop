@@ -1,9 +1,7 @@
-<div class="title">Files</div>
-<?php  if ($page->errorCount()) { ?>
-    <div class="form_error">
-        <?=$page->errorString()?>
-    </div>
-    <?php  } ?>
+<?=$page->showTitle()?>
+<?=$page->showBreadcrumbs()?>
+<?=$page->showMessages()?>
+
         <table class="body">
             <tr>
                 <th>Name</th>

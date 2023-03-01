@@ -14,3 +14,11 @@
 		$directories = $repository->directories($_REQUEST['path']);
 		$files = $repository->files($_REQUEST['path']);
     }
+
+	$page->title = $repository->name;
+	$page->addBreadcrumb("Storage");
+	$page->addBreadcrumb("Repositories",'/_storage/repositories');
+	if ($repository->id) {
+		$page->addBreadcrumb($repository->name,'/_storage/repository/'.$repository->code);
+		$page->addBreadcrumb("Browse");
+	}

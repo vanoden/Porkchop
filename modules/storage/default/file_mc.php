@@ -2,13 +2,16 @@
 	$page = new \Site\Page();
 	if ($_REQUEST['id']) {
 		$file = new \Storage\File($_REQUEST['id']);
-	} else {
+	}
+	else {
 		$file = new \Storage\File();
 		if ($_REQUEST['code']) {
 			$file->get($_REQUEST['code']);
-		} elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
+		}
+		elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
 			$file->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
-		} else {
+		}
+		else {
 			// New File
 		}
 	}
@@ -19,7 +22,8 @@
 	    if (isset($_REQUEST['btn_submit']) && !empty($_REQUEST['btn_submit'])) {
             if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
                 $page->addError("Invalid Request");
-            } else {
+            }
+			else {
                 if (preg_match('/^download$/i',$GLOBALS['_REQUEST_']->query_vars_array[1])) $_REQUEST['btn_submit'] = 'Download';
 		        
 		        if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Download') {
@@ -62,7 +66,8 @@
 					        else $page->success = "File updated";
 						}
 			        }
-		        } elseif (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
+		        }
+				elseif (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 			        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 				        $page->addError("Invalid Token");
 			        }
@@ -72,8 +77,8 @@
 				        $factory = new \Storage\RepositoryFactory();
 				        $repository = $factory->load($_REQUEST['repository_id']);
 				        
-				        if ($factory->error) {
-					        $page->addError("Error loading repository: ".$factory->error);
+				        if ($factory->error()) {
+					        $page->addError("Error loading repository: ".$factory->error());
 				        } else if (! $repository->id) {
 					        $page->addError("Repository not found");
 				        } else {
@@ -99,7 +104,7 @@
 						        
 							        // Add File to Library 
 							        $file = new \Storage\File();
-							        if ($file->error) error("Error initializing file: ".$file->error);
+							        if ($file->error()) error("Error initializing file: ".$file->error());
 							        $file->add(
 								        array(
 									        'repository_id'     => $repository->id,
@@ -111,10 +116,10 @@
 							        );
 
 							        // Upload File Into Repository 
-							        if ($file->error) $page->addError("Error adding file: ".$file->error);
+							        if ($file->error()) $page->addError("Error adding file: ".$file->error());
 							        elseif (! $repository->addFile($file,$_FILES['uploadFile']['tmp_name'])) {
 								        $file->delete();
-								        $page->addError('Unable to add file to repository: '.$repository->error);
+								        $page->addError('Unable to add file to repository: '.$repository->error());
 							        } else {
 								        app_log("Stored file ".$file->id." at ".$repostory->path."/".$file->code);
 								        $page->success = "File uploaded";
@@ -126,4 +131,13 @@
 		        }
             }
 	    }
+	}
+
+	if ($file->id) $page->title = $file->name;
+	$page->addBreadcrumb("Storage");
+	$page->addBreadcrumb("Repositories",'/_storage/repositories');
+	$repository = $file->repository();
+	if ($repository->id) {
+		$page->addBreadcrumb($repository->name,'/_storage/repository/'.$repository->code);
+		$page->addBreadcrumb($file->name);
 	}

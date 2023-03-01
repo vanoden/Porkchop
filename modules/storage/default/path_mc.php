@@ -12,6 +12,7 @@
 			$file = $repository->getFileFromPath($path_string);
 			if (empty($file)) {
 				$page->addError("File '$path_string' not found");
+				app_log("File '$path_string' requested but not found",'warn');
 				return 404;
 			}
 			else {
@@ -23,10 +24,11 @@
 		}
 		else {
 			$page->addError("Repository not found");
+			app_log("Repository '$repository_string' requested but not found",'warn');
 			return 404;
 		}
 	}
 	else {
 		$page->addError("Error: $path invalid");
-		return 404;
+		app_log("Invalid path '$path' requested",'warn');
 	}
