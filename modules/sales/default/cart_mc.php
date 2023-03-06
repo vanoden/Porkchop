@@ -168,7 +168,7 @@
     foreach ($itemsForSale as $itemForSale) if (!in_array($itemForSale->code, $itemsInOrder)) $itemsForOrder[] = $itemForSale; 
     
     $isReadyToQuote = false;
-    if (!empty($organization_id) && !empty($member_id) && !empty($billing_location) && !empty($shipping_location) && count($itemsInOrder) > 1) $isReadyToQuote = true;
+    if (!empty($organization_id) && !empty($member_id) && !empty($billing_location) && !empty($shipping_location) && count($itemsInOrder) > 0) $isReadyToQuote = true;
     
     // if we're quoting or approving the order update as such
     if (isset($_REQUEST['btn_quote'])) $salesOrder->update(array('status' => 'QUOTE')); 
