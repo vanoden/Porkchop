@@ -164,6 +164,5 @@
 	$images = $item->images();
 
 	$page->addBreadcrumb("Products", "/_product/report");
-	if (isset($item->id)) {
-		$page->addBreadcrumb($item->code);
-	}
+	if (isset($item->id)) $page->addBreadcrumb($item->code);
+

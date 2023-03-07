@@ -1,9 +1,3 @@
-<?php	if ($page->errorCount()) { ?>
-    <div style="color:red; margin-top: 25px;"><img src="/img/_global/icon_error.svg" style="max-width: 10px; max-height: 10px;"/>
-    Error:
-    <?=$page->errorString()?>
-    </div>
-<?php	} ?>
 <style>
     fieldset {
         max-width: 500px;
@@ -298,3 +292,10 @@ if (!isset($_REQUEST['btn_save']) && !isset($_REQUEST['btn_quote']) && !isset($_
     }
 }
 ?>
+
+<?php	if ($page->errorCount()) { ?>
+    <div style="color:red; margin-top: 25px; font-size: 14px;"><img src="/img/_global/icon_error.svg" style="max-width: 10px; max-height: 10px;"/>
+    Error:
+    <?=$page->errorString()?>
+    </div>
+<?php	} ?>

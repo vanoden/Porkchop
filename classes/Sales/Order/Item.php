@@ -33,7 +33,8 @@
 				return false;
 			}			
 			
-			$line_number = $this->maxColumnValue('line_number');
+			$line_number = $this->maxLineNumberByOrder($salesOrder->id);
+			
 			$add_object_query = "
 				INSERT
 				INTO	sales_order_items
@@ -42,13 +43,31 @@
 				(		null,?,?,?)
 			";
 			
-			$GLOBALS['_database']->Execute($add_object_query,array($salesOrder->id,$line_number,$product->id));
+			$GLOBALS['_database']->Execute($add_object_query,array($salesOrder->id,($line_number+1),$product->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
+		}
+		
+        /**
+         * get max value from a sales order line number based on the order it's in
+         */
+		public function maxLineNumberByOrder($salesOrderId) {
+		
+		    $this->clearError();
+			$database = new \Database\Service();
+			$get_object_query = "SELECT MAX(`line_number`) FROM `$this->_tableName` WHERE `order_id` = " . $salesOrderId;
+
+			$rs = $database->Execute($get_object_query);
+			if (!$rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			list($value) = $rs->FetchRow();
+			return $value;
 		}
 
 		public function update($parameters = array()): bool {
