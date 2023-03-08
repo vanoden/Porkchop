@@ -3,6 +3,11 @@
 	$page->fromRequest();
 	$page->requirePrivilege('see sales quotes');
 	
+	
+	print "<!-- DB ERRORS: ";	
+	print_r($GLOBALS['_database']->ErrorMsg());
+	print "-->";
+		
 	print "<!-- REQUEST DEBUG: ";
 	print_r($_REQUEST);
 	print "-->";
@@ -133,7 +138,7 @@
                 $page->addError("Product " . $itemCode . " doesn't have an ACTIVE price set. [<a href='/_product/report'>Find Product</a>]");
             }
             
-            $salesOrder->addItem (
+            $itemAdded = $salesOrder->addItem (
                 array (
                     "order_id" => $order_id,
                     "product_id" => $itemInCart->id,
@@ -142,7 +147,8 @@
                     "unit_price" => $price,
                     "status" => "OPEN"
                 )
-            );        
+            );
+            if (!$itemAdded) $page->addError("Error Adding Item to Order");
         }
     }
     
