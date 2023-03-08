@@ -212,7 +212,7 @@ class Order extends \BaseModel {
 				return null;
 			}
 			$orderItem = new \Sales\Order\Item();
-			$orderItem->add($parameters);
+			return $orderItem->add($parameters);
 		}
 
 		public function getItem($line_number) {
@@ -226,7 +226,7 @@ class Order extends \BaseModel {
 
 		public function items($parameters = array()) {
 			$parameters['order_id'] = $this->id;
-			$itemList = new Order\ItemList();
+			$itemList = new \Sales\Order\ItemList();
 			$items = $itemList->find($parameters);
 			if ($itemList->error()) {
 				$this->error($itemList->error());

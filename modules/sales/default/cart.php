@@ -20,36 +20,35 @@
         display:inline;
     }
 </style>
-
 <script>
-function scrollToBottom (id) {
-   var div = document.getElementById(id);
-   div.scrollTop = div.scrollHeight - div.clientHeight;
-}
-document.addEventListener("DOMContentLoaded", function() {
-  scrollToBottom('sales_cart_form')
-});
+    function scrollToBottom (id) {
+       var div = document.getElementById(id);
+       div.scrollTop = div.scrollHeight - div.clientHeight;
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+      scrollToBottom('sales_cart_form')
+    });
 
-function updateTotal(product) {
-    var price = document.getElementById('price-' + product);
-    var qty = document.getElementById('qty-' + product);
-    var total = document.getElementById('total-' + product);
-    total.value = (price.value * qty.value);
-    
-    var quoteTotalPrice = 0;
-    var quoteTotal = document.getElementById('quote-total');
-    <?php
-        foreach ($itemsInOrder as $itemCode) {
-        if (empty($itemCode)) continue;
-    ?> 
-        price = document.getElementById('price-<?=$itemCode?>');
-        qty = document.getElementById('qty-<?=$itemCode?>');
-        quoteTotalPrice = parseInt(quoteTotalPrice) + (parseInt(price.value) * parseInt(qty.value));
-    <?php
-        }
-    ?>
-    quoteTotal.value = quoteTotalPrice;
-}
+    function updateTotal(product) {
+        var price = document.getElementById('price-' + product);
+        var qty = document.getElementById('qty-' + product);
+        var total = document.getElementById('total-' + product);
+        total.value = (price.value * qty.value);
+        
+        var quoteTotalPrice = 0;
+        var quoteTotal = document.getElementById('quote-total');
+        <?php
+            foreach ($itemsInOrder as $itemCode) {
+            if (empty($itemCode)) continue;
+        ?> 
+            price = document.getElementById('price-<?=$itemCode?>');
+            qty = document.getElementById('qty-<?=$itemCode?>');
+            quoteTotalPrice = parseInt(quoteTotalPrice) + (parseInt(price.value) * parseInt(qty.value));
+        <?php
+            }
+        ?>
+        quoteTotal.value = quoteTotalPrice;
+    }
 </script>
 <br/>
 
@@ -292,10 +291,3 @@ if (!isset($_REQUEST['btn_save']) && !isset($_REQUEST['btn_quote']) && !isset($_
     }
 }
 ?>
-
-<?php	if ($page->errorCount()) { ?>
-    <div style="color:red; margin-top: 25px; font-size: 14px;"><img src="/img/_global/icon_error.svg" style="max-width: 10px; max-height: 10px;"/>
-    Error:
-    <?=$page->errorString()?>
-    </div>
-<?php	} ?>

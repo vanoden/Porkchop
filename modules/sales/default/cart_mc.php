@@ -3,6 +3,10 @@
 	$page->fromRequest();
 	$page->requirePrivilege('see sales quotes');
 	
+	print "<!-- REQUEST DEBUG: ";
+	print_r($_REQUEST);
+	print "-->";
+	
 	// get sales order if existing from URL
 	$salesOrder = new \Sales\Order();
 	if (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
@@ -100,7 +104,16 @@
     if (isset($_REQUEST['btn_add']) && !empty($_REQUEST['add_items_select']) && $_REQUEST['add_items_select'] != 0) $itemsInOrder[] = $_REQUEST['add_items_select'];
     
     $salesOrderItems = $salesOrder->items();
+    
+	print "<!-- salesOrderItems DEBUG: ";
+	print_r($itemsInOrder);
+	print "-->";
+    
     foreach ($itemsInOrder as $itemCode) {
+    
+	    print "<!-- foreach ($itemsInOrder as $itemCode) DEBUG: ";
+	    print_r($itemCode);
+	    print "-->";
     
         if (empty($itemCode)) continue;
 
