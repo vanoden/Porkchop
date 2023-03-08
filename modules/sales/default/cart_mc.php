@@ -4,6 +4,10 @@
 	$page->requirePrivilege('see sales quotes');
 	
 	
+	print "<!--";
+	print_r($page);
+	print "-->";
+	
 	print "<!-- DB ERRORS: ";	
 	print_r($GLOBALS['_database']->ErrorMsg());
 	print "-->";
@@ -129,6 +133,7 @@
         foreach ($salesOrderItems as $salesOrderItem) if ($salesOrderItem->product_id == $itemInCart->id) $itemInSalesOrder = true;
         if (!$itemInSalesOrder) {
         
+        
             // get current set price for product, else default to 0
             $price = 0;
             $currentPrice = $itemInCart->currentPrice();
@@ -137,7 +142,6 @@
             } else {
                 $page->addError("Product " . $itemCode . " doesn't have an ACTIVE price set. [<a href='/_product/report'>Find Product</a>]");
             }
-            
             $itemAdded = $salesOrder->addItem (
                 array (
                     "order_id" => $order_id,

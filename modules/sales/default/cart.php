@@ -1,3 +1,7 @@
+<?php
+    print_r($page->errors());
+?>
+
 <style>
     fieldset {
         max-width: 500px;
