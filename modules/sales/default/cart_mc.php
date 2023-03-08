@@ -2,20 +2,7 @@
 	$page = new \Site\Page();
 	$page->fromRequest();
 	$page->requirePrivilege('see sales quotes');
-	
-	
-	print "<!--";
-	print_r($page);
-	print "-->";
-	
-	print "<!-- DB ERRORS: ";	
-	print_r($GLOBALS['_database']->ErrorMsg());
-	print "-->";
 		
-	print "<!-- REQUEST DEBUG: ";
-	print_r($_REQUEST);
-	print "-->";
-	
 	// get sales order if existing from URL
 	$salesOrder = new \Sales\Order();
 	if (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
@@ -196,3 +183,16 @@
     // if we're quoting or approving the order update as such
     if (isset($_REQUEST['btn_quote'])) $salesOrder->update(array('status' => 'QUOTE')); 
     if (isset($_REQUEST['btn_create'])) $salesOrder->approve();
+    
+	
+	print "<!--";
+	print_r($page);
+	print "-->";
+	
+	print "<!-- DB ERRORS: ";	
+	print_r($GLOBALS['_database']->ErrorMsg());
+	print "-->";
+		
+	print "<!-- REQUEST DEBUG: ";
+	print_r($_REQUEST);
+	print "-->";    
