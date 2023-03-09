@@ -43,6 +43,9 @@
 				(		null,?,?,?)
 			";
 			
+			print_r($add_object_query);
+			print_r($parameters);
+			
 			$GLOBALS['_database']->Execute($add_object_query,array($salesOrder->id,($line_number+1),$product->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
@@ -57,7 +60,6 @@
          */
 		public function maxLineNumberByOrder($salesOrderId) {
 		
-		    $this->clearError();
 			$database = new \Database\Service();
 			$get_object_query = "SELECT MAX(`line_number`) FROM `$this->_tableName` WHERE `order_id` = " . $salesOrderId;
 

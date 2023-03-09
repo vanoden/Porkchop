@@ -1,7 +1,5 @@
-<?php
-    print_r($page->errors());
-?>
-
+<link rel="stylesheet" href="css/admin.css">
+<?=$page->showMessages();?>
 <style>
     fieldset {
         max-width: 500px;
@@ -123,7 +121,6 @@ if (!isset($_REQUEST['btn_save']) && !isset($_REQUEST['btn_quote']) && !isset($_
                 if (isset($locations) && count($locations)) {
                 ?>
                 <p>Customer Preferred <strong>Billing</strong> Address:</p>
-
                 <select id="billing_location" name="billing_location">
                     <?php
                         $currentLocation = "";
