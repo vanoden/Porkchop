@@ -139,7 +139,7 @@
     // add item to order and sync the sales order items
     $itemsInOrder = array();
     if (isset($_REQUEST['items_in_order'])) $itemsInOrder = explode(",", trim($_REQUEST['items_in_order'],','));
-    if (isset($_REQUEST['btn_add']) && !empty($_REQUEST['add_items_select']) && $_REQUEST['add_items_select'] != 0) $itemsInOrder[] = $_REQUEST['add_items_select'];
+    if (isset($_REQUEST['btn_add']) && !empty($_REQUEST['add_items_select'])) $itemsInOrder[] = $_REQUEST['add_items_select'];
     
     $salesOrderItems = $salesOrder->items();
     
