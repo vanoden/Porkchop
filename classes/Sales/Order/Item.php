@@ -43,9 +43,6 @@
 				(		null,?,?,?)
 			";
 			
-			print_r($add_object_query);
-			print_r($parameters);
-			
 			$GLOBALS['_database']->Execute($add_object_query,array($salesOrder->id,($line_number+1),$product->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());

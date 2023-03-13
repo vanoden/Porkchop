@@ -171,7 +171,6 @@
 		public function owner() {
 			return new \Register\Customer($this->user_id);
 		}
-
 		public function name($name = '') {
 			if (strlen($name)) {
 				if (! preg_match('/^[\w\-\.\_\s]+$/',$name)) {
