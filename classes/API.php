@@ -130,9 +130,10 @@
 		###################################################
 		public function deny() {
 			$_REQUEST["stylesheet"] = '';
-			$response = new \HTTP\Response();
+			$response = new \APIResponse();
 			$response->error = "Permission Denied";
 			$response->success = 0;
+			$response->code(403);
 			print $this->formatOutput($response);
 			exit;
 		}
@@ -151,6 +152,7 @@
 			}
 			$document = new \Document($format);
 			$document->prepare($object);
+			http_response_code(403);
 			if (isset($GLOBALS['_config']->site->force_content_length) && $GLOBALS['_config']->site->force_content_length == true) {
 				$content = $document->content();
 				header('Content-Length: '.strlen($content));
