@@ -83,23 +83,22 @@
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
             # Initiate Product Object
+            if ($_REQUEST["login"] and (! $_REQUEST["code"])) $_REQUEST['code'] = $_REQUEST['login'];
             $customer = new \Register\Customer();
+            $customer->get($_REQUEST["code"]);
 
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 # Can Get Anyone
             }
-            elseif ($GLOBALS['_SESSION_']->customer->id = $customer->id) {
-                # Can Get Yourself
+            elseif ($GLOBALS['_SESSION_']->customer->organization_id = $customer->organization_id) {
+                # Can Get Other Members of Your Organization
             }
             else {
                 $this->deny();
             }
 
-            if ($_REQUEST["login"] and (! $_REQUEST["code"])) $_REQUEST['code'] = $_REQUEST['login'];
-            $customer->get($_REQUEST["code"]);
-
             # Error Handling
-            if ($customer->error) $this->error($customer->error);
+            if ($customer->error()) $this->error($customer->error());
             else{
                 $response = new \HTTP\Response();
                 $response->customer = $customer;
