@@ -11,6 +11,7 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
+
     		parent::__construct($id);
 		}
 
@@ -409,6 +410,12 @@
 				return null;
 			}
 			return 1;
+		}
+
+		public function metadata() {
+			$meta = new \Product\Item\Metadata();
+			$meta->fk_id = $this->id;
+			return $meta;
 		}
 
 		public function currentPrice() {

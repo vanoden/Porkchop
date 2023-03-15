@@ -60,7 +60,8 @@
 					    "type"	=> $_REQUEST['type'],
 					    "status"	=> $_REQUEST['status']
 				    ));
-			    } else app_log("Admin ".$GLOBALS['_SESSION_']->customer->first_name." adding product ".$_REQUEST['code'],'notice',__FILE__,__LINE__);
+			    }
+				else app_log("Admin ".$GLOBALS['_SESSION_']->customer->first_name." adding product ".$_REQUEST['code'],'notice',__FILE__,__LINE__);
 
 			    $item->update(
 				    array(
@@ -99,28 +100,19 @@
 			    }
 
 			    // Add Company Specific Metadata (REPLACE WITH CONFIGURED LOOP OF KEYS)
-			    $item->addMeta("name",noXSS($_REQUEST["name"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
-			    $item->addMeta("short_description",noXSS($_REQUEST["short_description"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
-			    $item->addMeta("description",noXSS($_REQUEST["description"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
-			    $item->addMeta("model",noXSS($_REQUEST["model"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
-			    $item->addMeta("empirical_formula",noXSS($_REQUEST["empirical_formula"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
-			    $item->addMeta("sensitivity",noXSS($_REQUEST["sensitivity"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
-			    $item->addMeta("measure_range",noXSS($_REQUEST["measure_range"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
-			    $item->addMeta("accuracy",noXSS($_REQUEST["accuracy"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
-			    $item->addMeta("manual_id",noXSS($_REQUEST["manual_id"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
-			    $item->addMeta("spec_table_image",noXSS($_REQUEST["spec_table_image"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
-			    $item->addMeta("default_dashboard_id",noXSS($_REQUEST["default_dashboard_id"]));
-			    if ($item->error()) app_log("Error setting metadata: ".$item->error(),'error',__FILE__,__LINE__);
+				$meta_fields = array("name","short_description","description","model","emperical_formula","sensitivity","measure_range","accuracy","manual_id","spec_table_image","default_dashboard_id");
+				foreach ($meta_fields as $meta_field) {
+					if (isset($_REQUEST[$meta_field])) {
+						$metadata = $item->metadata();
+						$metadata->get($meta_field);
+						$value = trim($_REQUEST[$meta_field]);
+						if ($metadata->value != $value) {
+							$metadata->set($value);
+							if ($metadata->error()) $page->addError("Error setting ".$meta_field.": ".$metadata->error());
+							else $page->appendSuccess("Updated '".$meta_field."'");
+						}
+					}
+				}
 
 			    $image = new \Media\Image();
 			    if ($_REQUEST['new_image_code']) {
@@ -164,5 +156,4 @@
 	$images = $item->images();
 
 	$page->addBreadcrumb("Products", "/_product/report");
-	if (isset($item->id)) $page->addBreadcrumb($item->code);
-
+	if (isset($item->id)) $page->addBreadcrumb($item->code,"/_product/edit/".$item->code);
