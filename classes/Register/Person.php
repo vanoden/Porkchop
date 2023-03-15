@@ -24,7 +24,7 @@ class Person Extends \BaseModel {
     protected $_settings = array( "date_format" => "US" );
 	protected $_database;
 
-    public function __construct(int $id = null) {
+    public function __construct($id = null) {
     	$this->_database = new \Database\Service();
 		$this->_tableName = 'register_users';
 		$this->_tableUKColumn = 'login';
