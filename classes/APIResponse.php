@@ -12,5 +12,9 @@
 		public function data(array $data) {
 			$this->_data = $data;
 		}
+
+		public function addElement($name,$object) {
+			$this->$name = $object;
+		}
 	}
 ?>
