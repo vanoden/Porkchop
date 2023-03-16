@@ -133,7 +133,6 @@
 
 			$database = new \Database\Service();
 
-			$parameters = array ($module, $view );
 		    if (strlen ( $index ) < 1) $index = null;
 
 		    // Prepare Query
@@ -160,7 +159,7 @@
 
 		    $rs = $database->Execute($get_object_query);
 		    if (! $rs) {
-			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
+			    $this->SQLError($database->ErrorMsg());
 			    return ;
 		    }
 		    list($id) = $rs->FetchRow();
@@ -169,6 +168,12 @@
 			    $this->id = $id;
 			    return $this->details();
 		    }
+			elseif ($module == "static") {
+				// Override module and view - somehow being overridden elsewhere
+				$this->module = $module;
+				$this->view = $view;
+				return true;
+			}
 			elseif ($module == "content" && $view == "index") {
 				$message = new \Content\Message();
 				if ($message->get($index)) {
@@ -369,6 +374,10 @@
 
 		public function load_template() {
             $this->loadSiteHeaders();
+
+			if ($this->module() == 'static') {
+				return $this->parse(file_get_contents(HTML."/".$this->view));
+			}
 			$template = $this->template();
 			if (isset ( $template ) && file_exists(HTML."/".$template)) return $this->parse(file_get_contents(HTML."/".$template));
 			elseif (isset ($template)) app_log("Template ".HTML."/".$template." not found!",'error');

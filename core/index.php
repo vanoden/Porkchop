@@ -158,7 +158,10 @@
 		$logger->writeln("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
 		exit;
 	}
-	if (! $_page->id) {
+	if ($_page->module() == 'static') {
+		// All Set!
+	}
+	elseif (! $_page->id) {
 		if (! $_page->getPage('server','404')) {
 			$_page->module = $_REQUEST_->module;
 			$_page->view = $_REQUEST_->view;
