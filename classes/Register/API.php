@@ -31,7 +31,7 @@
 
             $response = new \APIResponse();
 			$response->success(true);
-            $response->customer = $me;
+            $response->addElement('customer',$me);
 
             # Send Response
             //api_log($response);
@@ -69,10 +69,11 @@
 
             if (! $result) $this->error("Invalid login password combination");
 
-			$this->response->success = 1;
+			$response = new \APIResponse();
+			$response->success(true);
 
             # Send Response
-            print $this->formatOutput($this->response);
+            print $this->formatOutput($response);
         }
         
         ###################################################
@@ -90,7 +91,7 @@
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 # Can Get Anyone
             }
-            elseif ($GLOBALS['_SESSION_']->customer->organization_id = $customer->organization_id) {
+            elseif ($GLOBALS['_SESSION_']->customer->organization_id == $customer->organization_id) {
                 # Can Get Other Members of Your Organization
             }
             else {
@@ -100,9 +101,9 @@
             # Error Handling
             if ($customer->error()) $this->error($customer->error());
             else{
-                $response = new \HTTP\Response();
-                $response->customer = $customer;
-				if ($customer->cached) $response->customer->_cached = 1;
+                $response = new \APIResponse();
+				if ($customer->cached()) $customer->_cached = 1;
+                $response->addElement('customer',$customer);
                 $response->success = 1;
             }
 
@@ -258,9 +259,9 @@
             $roleList = new \Register\RoleList();
             $roles = $roleList->find();
             
-            $response = new \HTTP\Response();
-            $response->success = 1;
-            $response->role = $roles;
+            $response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('role',$roles);
             
             print $this->formatOutput($response);
         }
@@ -284,11 +285,12 @@
             # Error Handling
             if ($role->error()) $this->error($role->error());
 
-            $this->response->success = 1;
-            $this->response->admin = $admins;
+			$response = new \APIResponse();
+            $response->success(1);
+            $response->addElement('admin',$admins);
 
             # Send Response
-            print $this->formatOutput($this->response);
+            print $this->formatOutput($response);
         }
         
         ###################################################
@@ -308,9 +310,9 @@
             );
             if ($role->error()) $this->error($role->error());
 
-            $response = new \HTTP\Response();
-            $response->success = 1;
-            $response->role = $result;
+            $response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('role',$result);
 
             print $this->formatOutput($response);
         }
@@ -323,7 +325,7 @@
 
             if (! $GLOBALS['_SESSION_']->customer->can('manage privileges')) $this->deny();
 
-            $response = new \HTTP\Response();
+            $response = new \APIResponse();
 
             $role = new \Register\Role();
             $role->get($_REQUEST['name']);
@@ -332,12 +334,10 @@
             $parameters = array();
             if (isset($_REQUEST['description'])) $parameters['description'] = $_REQUEST['description'];
             if ($role->update($parameters)) {
-                $response->success = 1;
+                $response->success(true);
             }
-            else {
-                $response->success = 0;
-                $response->error = $role->error();
-            }
+            else $this->error($role->error());
+
             print $this->formatOutput($response);
         }
         
@@ -356,14 +356,14 @@
             
             $person = new \Register\Customer();
             $person->get($_REQUEST['login']);
-            if ($person->error) $this->app_error("Error getting person: ".$person->error,'error',__FILE__,__LINE__);
+            if ($person->error()) $this->app_error("Error getting person: ".$person->error(),'error',__FILE__,__LINE__);
             if (! $person->id) $this->error("Person not found");
 
             $result = $role->addMember($person->id);
             if ($role->error()) $this->error($role->error());
 
-            $response = new \HTTP\Response();
-            $response->success = 1;
+            $response = new \APIResponse();
+            $response->success(true);
 
             print $this->formatOutput($response);
         }
@@ -386,9 +386,9 @@
                 $this->error('role required');
             }
 
-            $response = new \HTTP\Response();
+            $response = new \APIResponse();
             if ($role->addPrivilege($_REQUEST['privilege'])) {
-                $response->success = 1;
+                $response->success(true);
             }
             else {
                 $this->error($role->error());
@@ -414,9 +414,9 @@
 
             $privileges = $role->privileges();
 
-            $response = new \HTTP\Response();
-            $response->success = 1;
-            $response->privilege = $privileges;
+            $response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('privilege',$privileges);
 
             # Send Response
             print $this->formatOutput($response);
@@ -429,17 +429,18 @@
             if ($_REQUEST['login']) {
                 $customer = new \Register\Customer();
                 $customer->get($_REQUEST['login']);
-                if ($customer->error) $this->error ($customer->error);
+                if ($customer->error()) $this->error ($customer->error());
                 if (! $customer->id) $this->error ("Customer not found");
             }
             else {
                 $this->error('login required');
             }
 
-            $response = new \HTTP\Response();
+            $response = new \APIResponse();
             $response->success = 1;
-            if ($customer->can($_REQUEST['privilege'])) $response->can = 'yes';
-            else $response->can = 'no';
+            if ($customer->can($_REQUEST['privilege'])) $can = 'yes';
+            else $can = 'no';
+			$response->addElement('can',$can);
 
             # Send Response
             print $this->formatOutput($response);
@@ -476,10 +477,11 @@
             );
 
             # Error Handling
-            if ($_image->error) $this->error($_image->error);
+            if ($_image->error()) $this->error($_image->error());
             else{
-                $response->image = $_image->details();
-                $response->success = 1;
+				$response = new \APIResponse();
+                $response->addElement('image',$_image);
+                $response->success(true);
             }
 
             # Send Response
@@ -509,20 +511,20 @@
             $organization_id = 0;
             if (!empty($_REQUEST['organization_id'])) {
                 $organization = new \Register\Organization($_REQUEST['organization_id']);
-                if ($organization->error) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
+                if ($organization->error()) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
                 if (! $organization->id) $this->error("Could not find organization by id");
                 $organization_id = $organization->id;
             }
             elseif (!empty($_REQUEST['organization'])) {
                 $organization = new \Register\Organization();
                 $organization->get($_REQUEST['organization']);
-                if ($organization->error) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
+                if ($organization->error()) $this->app_error("Error finding organization: ",'error',__FILE__,__LINE__);
                 if (! $organization->id) $this->error("Could not find organization");
                 $organization_id = $organization->id;
             }
 
             if (! $_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['code'];
-			if (! validLogin($_REQUEST['login'])) $this->error("Login not valid");
+			if (! $user->validLogin($_REQUEST['login'])) $this->error("Login not valid");
 
             if (isset($_REQUEST['automation'])) {
                 if (preg_match('/^(yes|true|1)$/i',$_REQUEST['automation'])) $automation = true;
@@ -550,12 +552,13 @@
             $user->add($params);
 
             # Error Handling
-            if ($user->error) $this->error($user->error);
-            $this->response->customer = $user;
-            $this->response->success = 1;
+            if ($user->error()) $this->error($user->error());
+			$response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('customer',$user);
 
             # Send Response
-            print $this->formatOutput($this->response);
+            print $this->formatOutput($response);
         }
  
         function findContacts() {
@@ -564,7 +567,7 @@
             if (isset($_REQUEST['person'])) {
                 $customer = new \Register\Customer();
                 $customer->get($_REQUEST['person']);
-                if ($customer->error) $this->error($customer->error);
+                if ($customer->error()) $this->error($customer->error());
                 if (! $customer->id) $this->app_error("Customer not found");
             }
 
@@ -578,10 +581,10 @@
             
             $contactList = new \Register\ContactList();
             $contacts = $contactList->find($parameters);
-            if ($contactList->error) $this->error($contactList->error);
-            $response = new \HTTP\Response();
-            $response->contact = $contacts;
-            $response->success = 1;
+            if ($contactList->error()) $this->error($contactList->error());
+            $response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('contact',$contacts);
             
 
             # Send Response
@@ -608,7 +611,7 @@
                 if ($user->verify_email($_REQUEST['validation_key'])) {
                     $response->success = 1;
                 } else $this->error("Invalid validation key");
-            } elseif ($user->error) $this->error($user->error);
+            } elseif ($user->error()) $this->error($user->error());
             
             else $this->error("Invalid validation key");
 
