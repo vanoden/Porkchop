@@ -35,7 +35,8 @@
 		
 		// Polymorphism for Fun and Profit
 		public function __call($name,$parameters) {
-			if ($name == 'get') return $this->_getObject($parameters[0]);
+			if ($name == 'get' && count($parameters) == 2) $this->error("Too many parameters for 'get'");
+			elseif ($name == 'get')  return $this->_getObject($parameters[0]);
 			else $this->error("Invalid method '$name'");
 		}
 

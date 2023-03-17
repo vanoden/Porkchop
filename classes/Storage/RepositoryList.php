@@ -1,13 +1,11 @@
 <?php
 	namespace Storage;
 
-	class RepositoryList {
-		public $error;
-		public $count;
-
-		public function _construct() {}
-
+	class RepositoryList Extends \BaseListClass {
 		public function find($parameters = array()) {
+			$this->clearError();
+			$this->resetCount();
+
 			$get_objects_query = "
 				SELECT	id,type
 				FROM	storage_repositories
@@ -30,7 +28,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Storage::RepositoryList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$repositories = array();
@@ -38,7 +36,7 @@
 				$factory = new RepositoryFactory();
 				$repository = $factory->create($type,$id);
 				array_push($repositories,$repository);
-				$this->count ++;
+				$this->incrementCount();
 			}
 			return $repositories;
 		}

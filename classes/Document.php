@@ -21,7 +21,7 @@
 			}
 			else {
 				$this->error = "Invalid document type";
-				return undef;
+				return null;
 			}
 		}
 

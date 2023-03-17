@@ -2,19 +2,15 @@
 	namespace HTTP;
 
 	class Response {
-		public $message;
-		public $success;
-		public $header;
-		public $error;	// For response content
-		private $_error;
-		private $_code;
-		private $_status;
-		private $_headers = array();
-		private $_content;
-		private $_cookies = array();
+		protected $_error;
+		protected int $_code = 200;
+		protected $_status;
+		protected $_headers = array();
+		protected $_content;
+		protected $_cookies = array();
 		
 		public function __construct() {
-			$this->header = new Header();
+			//$this->header = new Header();
 		}
 		
 		public function parse($string) {
@@ -57,7 +53,8 @@
 			return $this->_content;
 		}
 		
-		public function code() {
+		public function code(int $value = 0): int {
+			if ($value > 0) $this->_code = $value;
 			return $this->_code;
 		}
 		
