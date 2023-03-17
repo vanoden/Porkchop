@@ -20,7 +20,11 @@
 
 		public function __call($name,$parameters) {
 			if ($name == 'get' && count($parameters) == 2) return $this->getWithProduct($parameters[0],$parameters[1]);
-			elseif ($name == 'get') return $this->get($parameters);
+			elseif ($name == 'get') return $this->getSimple($parameters[0]);
+			else {
+				$this->error("Invalid method called");
+				return null;
+			}
 		}
 
 		public function add($parameters = []) {
@@ -76,10 +80,6 @@
 		}
 
 		public function getSimple($code) {
-			return $this->get($code);
-		}
-
-		public function get($code): bool {
 			$this->clearError();
 
 			$database = new \Database\Service();
@@ -91,7 +91,7 @@
 			";
 			$database->AddParam($code);
 			
-			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('browse product instances')) {
 				$get_object_query .= " AND organization_id = ?";
 				$database->AddParam($GLOBALS['_SESSION_']->customer->organization()->id);
 			}
@@ -111,7 +111,13 @@
 		public function getWithProduct($code,$product_id) {
 			$this->clearError();
 
-			$bind_params = array();
+			$database = new \Database\Service();
+
+			$product = new \Product\Item($product_id);
+			if (!$product->exists()) {
+				$this->error("Product Not Found");
+				return false;
+			}
 
 			$get_object_query = "
 				SELECT	asset_id
@@ -119,16 +125,17 @@
 				WHERE	asset_code = ?
 				AND		product_id = ?
 			";
-			array_push($bind_params,$code,$product_id);
+			$database->AddParam($code);
+			$database->AddParam($product_id);
 
-			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
 			if (! $id) {
-				$this->error("Product not found");
+				$this->error("Product Instance not found");
 				return false;
 			}
 			$this->id = $id;
