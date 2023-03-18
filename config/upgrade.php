@@ -90,54 +90,12 @@
 				"items"		=> $templates['admin'],
 				"item"		=> $templates['admin']
 			)
-        ),
-		"Product"		=> array(
-			"schema"	=> 5,
-			"privileges"	=> array(
-                "edit product prices",
-                "manage products",
-                "manage product instances",
-				"add product instances",
-				"see product api"
-            ),
-			"templates"		=> array(
-				"report"			=> $templates['admin'],
-				"edit"				=> $templates['admin'],
-			),
-		),
-        "Storage"       => array(
-            "schema"    => 6,
-            "templates"     => array(
-                "repositories"      => $templates['admin'],
-                "repository"        => $templates['admin']
-            )
-        ),
-		"Email"			=> array(
-			"schema"	=> 2,
-            "privileges"    => array(
-                "create email",
-				"see email api"
-            )
-		),
-		"Action"		=> array(
-			"schema"	=> 1,
-			"roles"			=> array(
-				"action manager"	=> array(),
-				"action user"		=> array(),
-			),
-		),
-		"Network"		=> array(
-			"schema"	=> 2,
-			"privileges"	=> array(
-				"manage subnets",
-				"manage hosts",
-				"manage acls"
-			)
-			),
-		"Sales"			=> array(
-			"schema"	=> 9
-		)
+        )
 	);
+
+	include(MODULES."/product/default/_metadata.php");
+	include(MODULES."/sales/default/_metadata.php");
+	include(MODULES."/network/default/_metadata.php");
 
 	$menus = array();
 
