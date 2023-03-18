@@ -5,6 +5,7 @@
     use Aws\Common\Aws;
     use Aws\S3\S3Client;
     use Aws\Common\Credentials\Credentials;
+	use Aws\S3\Exception\S3Exception;
 
 	class S3 extends \Storage\Repository {
 
@@ -35,9 +36,17 @@
 			$this->aws = Aws::factory();
 		
 			// Get the client from the builder by namespace
-			$this->client = $this->aws->get('S3');
+			try {
+				$this->client = $this->aws->get('S3');
+			}
+			catch (\Aws\S3\Exception\S3Exception $e) {
+				$this->error($e->getMessage());
+				$this->_connected = false;
+				return false;
+			}
 
 			$this->_connected = true;
+			return true;
 		}
 
         public function update($parameters = array()): bool {
@@ -93,8 +102,7 @@
                 'SourceFile' => $path,
                 'Metadata'   => array(
                     'Source' => 'Uploaded from Website'
-                ),
-                'ACL' => 'public-read'
+                )
             ));
             
             return $result;
