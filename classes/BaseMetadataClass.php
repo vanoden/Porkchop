@@ -1,6 +1,5 @@
 <?php
     class BaseMetadataClass Extends \BaseClass {
-    
 		public $id;
 		protected $_tableName;
 		protected $_tableIDColumn = 'id';
@@ -88,7 +87,7 @@
                 $this->value = $value;
             }
             else {
-                $this->error("Data not found");
+                $this->warn("Data not found");
                 return false;
             }
 			return true;
@@ -130,7 +129,7 @@
 
 		public function drop() {
 			if (empty($this->id)) {
-				$this->error("Metadata id not set");
+				$this->warn("Metadata id not set");
 				return false;
 			}
 			$drop_key_query = "
