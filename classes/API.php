@@ -10,6 +10,7 @@
 		protected $_version;
 		protected $_name;
 		protected $_release;
+		protected $_communication;
 
 		public function __construct() {
 			if (!empty($_REQUEST["method"])) {
@@ -19,6 +20,7 @@
 				app_log($this->_name.".".$_REQUEST['method']);
 			}
 			$this->response = new \HTTP\Response();
+			$this->_communication = new \Monitor\Communication();
 		}
 
 
@@ -50,11 +52,6 @@
 			$response->addElement('header',$header);
 			$response->addElement('message',"PING RESPONSE");
 			$response->success(true);
-
-			$comm = new \Monitor\Communication();
-			$comm->update(json_encode($response));
-			api_log($response);
-	
 			$response->print();
 		}
 
@@ -177,6 +174,40 @@
 			$response->addElement('error',$message);
 			$response->print();
 			exit;
+		}
+
+		/************************************************/
+		/* Send Proper Missing Requirement Response		*/
+		/************************************************/
+		public function invalidRequest($message = null) {
+			if (empty($message)) $message = "Invalid Request";
+			$_REQUEST["stylesheet"] = '';
+			$response = new \APIResponse();
+			$response->code(400);
+			$response->success(false);
+			$response->addElement('error',$message);
+			$response->print();
+			exit;
+		}
+
+		public function _store_communication() {
+			$message = "Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code;
+			if (array_key_exists('asset_code',$_REQUEST)) $message .= " for asset ".$_REQUEST['asset_code'];
+			app_log($message,'debug',__FILE__,__LINE__);
+
+			if ($_REQUEST['method'] == 'findLastCommunication') return;
+
+			# Comm Dashboard
+			$store_request = $GLOBALS['_REQUEST_'];
+			$this_post = $_POST;
+			unset($this_post['password']);
+			$store_request->post = $this_post;
+			$store_request->method = $_REQUEST["method"];
+
+			$this->_communication->add(array(json_encode($store_request),'[PENDING]'));
+			if ($this->_communication->error()) {
+				app_log("Error in api comm storage: ".$this->_communication->error(),'error',__FILE__,__LINE__);
+			}
 		}
 
 		/************************************************/
