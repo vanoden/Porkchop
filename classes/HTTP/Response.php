@@ -3,7 +3,7 @@
 
 	class Response {
 		protected $_error;
-		protected int $_code = 200;
+		protected $_code = 200;
 		protected $_status;
 		protected $_headers = array();
 		protected $_content;
