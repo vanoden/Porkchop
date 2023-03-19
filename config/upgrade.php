@@ -96,6 +96,7 @@
 	include(MODULES."/product/default/_metadata.php");
 	include(MODULES."/sales/default/_metadata.php");
 	include(MODULES."/network/default/_metadata.php");
+	include(MODULES."/storage/default/_metadata.php");
 
 	$menus = array();
 

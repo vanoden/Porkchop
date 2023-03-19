@@ -1,5 +1,6 @@
-<?=$page->showTitle()?>
+
 <?=$page->showBreadcrumbs()?>
+<?=$page->showTitle()?>
 <?=$page->showMessages()?>
 
         <table class="body">
