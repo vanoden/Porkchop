@@ -76,4 +76,12 @@
 
 			return $this->details();
 		}
+
+		public function locations() {
+			$locationList = new \Company\LocationList();
+			$locations = $locationList->find();
+			if ($locationList->error()) $this->error($locationList->error());
+
+			return $locations;
+		}
 	}

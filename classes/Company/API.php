@@ -29,13 +29,10 @@
 			# Error Handling
 			if ($companylist->error) $this->error($companylist->error);
 			else{
-				$response = new \HTTP\Response();
-				$response->success = 1;
-				$response->customer = $company;
+				$response = new \APIResponse();
+				$response->addElement('customer',$company);
+				$response->print();
 			}
-	
-			# Send Response
-			print $this->formatOutput($response);
 		}
 	
 		###################################################
@@ -60,9 +57,8 @@
 					"status"		=> $_REQUEST["category"]
 				)
 			)) {
-				$response = new \HTTP\Response();
-				$response->company = $company;
-				$response->success = 1;
+				$response = new \APIResponse();
+				$response->addElement('company',$company);
 			}
 			else if ($company->error) {
 				$this->error($company->error);
@@ -70,9 +66,54 @@
 			else{
 				$this->error("Unhandled exception");
 			}
-	
+
 			# Send Response
 			print $this->formatOutput($response);
+		}
+
+		public function findLocations() {
+			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) $this->deny();
+
+			$companyList = new \Company\CompanyList();
+			list($company) = $companyList->find();
+
+			$locations = $company->locations();
+
+			$response = new \APIResponse();
+			$response->addElement('location',$locations);
+			$response->print();
+		}
+
+		public function addLocation() {
+			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) $this->deny();
+
+			$companyList = new \Company\CompanyList();
+			list($company) = $companyList->find();
+
+			if (!empty($_REQUEST['domain_code'])) {
+				$domain = new \Company\Domain();
+				$domain->get($_REQUEST['domain_code']);
+				if (!$domain->error()) $this->error($domain->error());
+				if (!$domain->exists()) $this->notFound();
+			}
+
+			$location = new \Company\Location();
+			$parameters = array(
+				'company_id'	=> $company->id,
+				'code'			=> $_REQUEST['code'],
+				'name'			=> $_REQUEST['name'],
+				'host'			=> $_REQUEST['host']
+			);
+			if (!empty($domain->id)) {
+				$parameters['domain_id'] = $domain->id;
+			}
+
+			$location->add($parameters);
+			if ($location->error()) $this->error($location->error());
+
+			$response = new \APIResponse();
+			$response->addElement('location',$location);
+			$response->print();
 		}
 
 		public function _methods() {
@@ -83,6 +124,13 @@
 					'name'		=> array(),
 					'status'	=> array(),
 				),
+				'findLocations'	=> array(
+				),
+				'addLocation'	=> array(
+					'code'	=> array(),
+					'name'	=> array(),
+					'host'	=> array()
+				)
 			);
 		}
 	}
