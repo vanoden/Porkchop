@@ -19,6 +19,7 @@
 	    public $success;
 		public $instructions;
 		public $tou_id;
+		public $sitemap;
 		private $_breadcrumbs = array();
 	    private $_errors = array();
 
@@ -238,14 +239,22 @@
 				SET		`$this->_tableIDColumn` = `$this->_tableIDColumn`
 			";
 			if (isset($parameters['tou_id'])) {
-				if ($parameters['tou_id'] < 1) $parameters['tou_id'] = '0';
 				$update_object_query .= ",
 						tou_id = ?";
+				if ($parameters['tou_id'] < 1) $parameters['tou_id'] = '0';
 				$database->AddParam($parameters['tou_id']);
 			}
+			if (isset($parameters['sitemap'])) {
+				$update_object_query .= ",
+						sitemap = ?";
+				if ($parameters['sitemap'] == true || $parameters['sitemap'] == 1) $database->AddParam(1);
+				else $database->AddParam(0);
+			}
+
 			$update_object_query .= "
 				WHERE	`$this->_tableIDColumn` = ?";
 			$database->AddParam($this->id);
+
 			$this->clearCache();
 			$database->Execute($update_object_query);
 			if ($database->ErrorMsg()) {
@@ -282,26 +291,47 @@
 			return true;
 		}
 	    public function details(): bool {
-		    $get_details_query = "
-				    SELECT	id,
-						    module,
-						    view,
-							tou_id,
-						    `index` idx
-				    FROM	page_pages
-				    WHERE	id = ?
-			    ";
-		    $rs = $GLOBALS ['_database']->Execute ( $get_details_query, array ($this->id ) );
+			$database = new \Database\Service();
+			$schema = new \Database\Schema();
+			$table = $schema->table('page_pages');
+			if ($table->has_column('sitemap')) {
+				$get_details_query = "
+						SELECT	id,
+								module,
+								view,
+								tou_id,
+								`index` idx,
+								sitemap
+						FROM	page_pages
+						WHERE	id = ?
+					";
+			}
+			else {
+				$get_details_query = "
+						SELECT	id,
+								module,
+								view,
+								tou_id,
+								`index` idx,
+								0 sitemap
+						FROM	page_pages
+						WHERE	id = ?
+					";
+			}
+			$database->AddParam($this->id);
+		    $rs = $database->Execute($get_details_query);
 		    if (! $rs) {
-			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
+			    $this->SQLError($database->ErrorMsg());
 			    return false;
 		    }
-		    $object = $rs->FetchNextObject ( false );
+		    $object = $rs->FetchNextObject(false);
 		    if (gettype($object) == 'object') {
 			    $this->module = $object->module;
 			    $this->view = $object->view;
 				$this->tou_id = $object->tou_id;
 			    $this->index = $object->idx;
+				if ($object->sitemap == 1) $this->sitemap = true;
+				else $this->sitemap = false;
 		    }
 			else {
 			    // Just Let The Defaults Go
