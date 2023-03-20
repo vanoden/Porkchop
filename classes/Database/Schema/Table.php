@@ -1,7 +1,7 @@
 <?php
 	namespace Database\Schema;
 
-	class Table {
+	class Table Extends \BaseClass {
 		private $name;
 		private $exists = false;
 		private $database;
@@ -15,14 +15,13 @@
 		public $create_time;
 		public $collation;
 		public $auto_increment_id;
-		private $_error;
 
 		public function __construct($name) {
 			if (preg_match('/^\w[\w\_]*$/',$name)) {
 				$this->name = $name;
 				$this->load();
 			}
-			else $this->_error = "Invalid name";
+			else $this->error("Invalid name");
 		}
 
 		public function load() {
@@ -33,7 +32,7 @@
 				AND		table_name = ?";
 			$rs = $GLOBALS['_database']->Execute($get_sql_query,array($GLOBALS['_config']->database->schema,$this->name));
 			if (! $rs) {
-				$this->_error = "SQL Error in Database::Table::load(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -67,7 +66,7 @@
 				AND		table_name = ?";
 			$rs = $GLOBALS['_database']->Execute($get_columns_query,array($GLOBALS['_config']->database->schema,$this->name));
 			if (! $rs) {
-				$this->_error = "SQL Error in Database::Table::columns(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$columns = array();
@@ -106,7 +105,7 @@
 				ALTER TABLE `".$this->name."` DISABLE KEYS";
 			$GLOBALS['_database']->Execute($disable_keys_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Database::Table::disable_keys(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -117,7 +116,7 @@
 				ALTER TABLE `".$this->name."` ENABLE KEYS";
 			$GLOBALS['_database']->Execute($enable_keys_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Database::Table::enable_keys(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -132,7 +131,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_constraints_query,array($GLOBALS['_config']->database->schema,$this->name));
 			if (! $rs) {
-				$this->_error = "SQL Error in Database::Table::constraints(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$constraints = array();
@@ -157,9 +156,5 @@
 				if ($constraint->name == $name) return true;
 			}
 			return false;
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}
