@@ -84,4 +84,12 @@
 
 			return $locations;
 		}
+
+		public function domains() {
+			$domainList = new \Company\DomainList();
+			$domains = $domainList->find();
+			if ($domainList->error()) $this->error($domainList->error());
+
+			return $domains;
+		}
 	}
