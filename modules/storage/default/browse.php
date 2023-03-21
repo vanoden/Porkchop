@@ -6,7 +6,7 @@
         <table class="body">
             <tr>
                 <th>Name</th>
-                <th>Download</th>
+                <th>Action</th>
                 <th>Mime-Type</th>
                 <th>Size (Bytes)</th>
                 <th>Date Created</th>
@@ -21,34 +21,19 @@
                 <tr>
                     <td colspan=9><a href="/_storage/browse?code=<?=$repository->code?>&path=<?=$directory->path?>"><?=$directory->name()?>/</a></td>
                 </tr>
-                <?php  } 
+                <?php  }
                 }
                 if (is_array($files)) {
                       foreach ($files as $file) { ?>
-                    <tr>
-                        <td><a href="/_storage/file?id=<?=$file->id?>"><?=$file->name()?></a></td>
-                        <td><a href="/_storage/downloadfile?id=<?=$file->id?>">Download</a></td>
-                        <td>
-                            <?=$file->mime_type?>
-                        </td>
-                        <td>
-                            <?=$file->size?>
-                        </td>
-                        <td>
-                            <?=$file->date_created?>
-                        </td>
-                        <td>
-                            <?=$file->owner()->full_name()?>
-                        </td>
-                        <td>
-                            <?=$file->endpoint?>
-                        </td>
-                        <td>
-                            <?=$file->read_protect?>
-                        </td>
-                        <td>
-                            <?=$file->write_protect?>
-                        </td>
+                    <tr><td><a href="/_storage/file?id=<?=$file->id?>"><?=$file->name()?></a></td>
+                        <td><a href="/_storage/downloadfile?id=<?=$file->id?>">Download</a>&nbsp;<a href="/_storage/browse?method=deleteFile?file_id=<?=$file->id?>">Delete</a></td>
+                        <td><?=$file->mime_type?></td>
+                        <td><?=$file->size?></td>
+                        <td><?=$file->date_created?></td>
+                        <td><?=$file->owner()->full_name()?></td>
+                        <td><?=$file->endpoint?></td>
+                        <td><?=$file->read_protect?></td>
+                        <td><?=$file->write_protect?></td>
                     </tr>
                     <?php  } 
                         }

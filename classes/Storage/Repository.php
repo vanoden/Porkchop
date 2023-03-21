@@ -163,6 +163,29 @@
 			$filelist = new FileList();
 			return $filelist->find(array('repository_id' => $this->id,'path' => $path));
 		}
+
+		public function addFileToDb($parameters) {
+			$file = new \Storage\File();
+			$parameters['repository_id'] = $this->id;
+			return $file->add($parameters);
+		}
+
+		public function deleteFileFromDb($file_id) {
+			$file = new \Storage\File($file_id);
+			if ($file->exists()) {
+				if ($file->delete()) {
+					return true;
+				}
+				else {
+					$this->error($file->error());
+					return false;
+				}
+			}
+			else {
+				$this->error("File not found");
+				return false;
+			}
+		}
 		
 		public function directories($path = "/") {
 			$directorylist = new DirectoryList();
