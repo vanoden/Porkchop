@@ -83,11 +83,11 @@
 					if (!empty($controls['offset'])) {
 						if (is_numeric($controls['offset'])) {
 							$find_objects_query .= "
-							LIMIT BY ".$controls['offset'].",".$controls['limit'];
+							LIMIT ".$controls['offset'].",".$controls['limit'];
 						}
 					}
 					$find_objects_query .= "
-					LIMIT BY ".$parameters['limit'];
+					LIMIT ".$controls['limit'];
 				}
 				else {
 					$this->error("Invalid limit qty");
@@ -107,11 +107,12 @@
 				array_push($objects,$object);
 				$this->incrementCount();
 			}
+
 			return $objects;
 		}
 
 		// Return Incremented Line Number
-		public function nextNumber($parent_id) {
+		public function nextNumber($parent_id = null) {
 			$this->clearError();
 			$database = new \Database\Service();
 			$modelName = $this->_modelName;
@@ -122,11 +123,15 @@
 			}
 
 			$get_number_query = "
-				SELECT	max(`$model->_tableNumberColumn()`)
-				FROM	`$model->_tableName()`
-				WHERE	`$model->_tableFKColumn()` = ?
+				SELECT	max(`$model->_tableNumberColumn`)
+				FROM	`$model->_tableName`
 			";
-			$database->AddParam($parent_id);
+			if (isset($parent_id)) {
+				$get_number_query .= "
+				WHERE	`$model->_tableFKColumn` = ?
+				";
+				$database->AddParam($parent_id);
+			}
 			$rs = $database->Execute($get_number_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
@@ -135,6 +140,18 @@
 			list($last) = $rs->FetchRow();
 			if (is_numeric($last)) return $last + 1;
 			else return 1;
+		}
+
+		public function first($parameters = array()) {
+			$objects = $this->findAdvanced($parameters,array('sort' => 'date_event', 'order' => 'asc', 'limit' => 1));
+			if ($this->error()) return null;
+			return $objects[0];
+		}
+
+		public function last($parameters = array()) {
+			$objects = $this->findAdvanced($parameters,array('sort' => 'date_event', 'order' => 'desc', 'limit' => 1));
+			if ($this->error()) return null;
+			return $objects[-1];
 		}
 
 		public function validSearchString($string) {

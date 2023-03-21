@@ -424,7 +424,11 @@
 			if ($priceList->error()) {
 				$this->error($priceList->error());
 				return null;
-			} else {
+			}
+			elseif (empty($prices)) {
+				return 0;
+			}
+			else {
     			return array_pop($prices);
 			}
 		}

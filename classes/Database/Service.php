@@ -30,6 +30,10 @@
 			array_push($this->_params,$value);
 		}
 
+		public function Parameters() {
+			return $this->_params;
+		}
+
 		public function Execute($query,$bind_params = null) {
 		
 			if (is_array($bind_params)) $this->_params = array_merge($this->_params,$bind_params);

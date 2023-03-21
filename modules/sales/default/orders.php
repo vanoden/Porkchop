@@ -140,10 +140,12 @@
 <!--	START First Table -->
 	<div class="tableBody min-tablet">
 	<div class="tableRowHeader">
-		<div class="tableCell" style="width: 25%;">Code</div>
-		<div class="tableCell" style="width: 25%;">Customer</div>
-		<div class="tableCell" style="width: 25%;">Sales Agent</div>
-		<div class="tableCell" style="width: 25%;">Status</div>
+		<div class="tableCell" style="width: 15%;">Code</div>
+		<div class="tableCell" style="width: 15%;">Created</div>
+		<div class="tableCell" style="width: 20%;">Customer</div>
+		<div class="tableCell" style="width: 20%;">Sales Agent</div>
+		<div class="tableCell" style="width: 15%;">Status</div>
+		<div class="tableCell" style="width: 15%;">Amount</div>
 	</div>
 <?php
 	foreach ($orders as $order) {
@@ -152,9 +154,9 @@
 		<div class="tableCell">
 			<a href="/_sales/cart/<?=$order->code?>"><?=$order->code?></a>
 		</div>
+		<div class="tableCell"><?=$order->date_created()?></div>
 		<div class="tableCell">
             <?php
-                
                 $registerCustomer = new \Register\Customer($order->customer_id);
                 $registerOrganization = new \Register\Organization($registerCustomer->organization_id);
             ?>        
@@ -173,6 +175,7 @@
 		<div class="tableCell">
             <?=$order->status?>
 		</div>
+		<div class="tableCell">$<?=number_format($order->total(),2)?></div>
 	</div>
 <?php	} ?>
 </div>

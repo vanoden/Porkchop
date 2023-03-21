@@ -11,13 +11,16 @@
 		private $_cached = false;
 
 		// Name of Table Holding This Class
-		protected $_tableName;
+		public $_tableName;
 
 		// Name for Unique Surrogate Key Column (for get)
 		protected $_tableUKColumn = 'code';
 
 		// Name for Auto-Increment ID Column
 		protected $_tableIDColumn = 'id';
+
+		// Name for Software Incrementing Number Field
+		public $_tableNumberColumn;
 
         // field names for columns in database tables
 	    protected $_fields = array();
@@ -37,7 +40,10 @@
 		public function __call($name,$parameters) {
 			if ($name == 'get' && count($parameters) == 2) $this->error("Too many parameters for 'get'");
 			elseif ($name == 'get')  return $this->_getObject($parameters[0]);
-			else $this->error("Invalid method '$name'");
+			else {
+				app_log("No function '$name' found",'warning');
+				$this->error("Invalid method '$name'"); // for ".$this->objectName());
+			}
 		}
 
 		public function _tableName(){

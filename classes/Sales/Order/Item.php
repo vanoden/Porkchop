@@ -16,6 +16,7 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'sales_order_items';
 			$this->_addFields(array('id','order_id','line_number','product_id','serial_number','description','quantity','unit_price','status','cost'));
+			$this->_addStatus(array('OPEN','VOID','FULFILLED','RETURNED'));
 			parent::__construct($id);
 		}
 		
@@ -108,58 +109,13 @@
 			$update_object_query .= "
 				WHERE	id = ?";
 			array_push($bind_params,$this->id);
-			
+
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return $this->details();
-		}
-
-		public function getByProductIdOrderId($product_id, $order_id) {
-			$get_object_query = "
-				SELECT	id
-				FROM	sales_order_items
-				WHERE	product_id = ? AND order_id = ?
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($product_id, $order_id));
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			list($this->id) = $rs->FetchRow();
-			if ($this->id) {
-				app_log("Found item ".$this->id);
-				return $this->details();
-			}
-			else {
-				return false;
-			}
-		}
-
-		public function getByOrderLineNumber($order_id,$line_number) {
-			$get_object_query = "
-				SELECT	id
-				FROM	sales_order_items
-				WHERE	order_id = ?
-				AND		line_number = ?
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($order_id,$line_number));
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			list($this->id) = $rs->FetchRow();
-			if ($this->id) {
-				app_log("Found item ".$this->id);
-				return $this->details();
-			}
-			else {
-				return false;
-			}
 		}
 
 		public function details(): bool {
@@ -174,8 +130,7 @@
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
-			if ($this->id) {
-				app_log("Got details for ".$this->id);
+			if ($object) {
 				$this->id = $object->id;
 				$this->line_number = $object->line_number;
 				$this->product_id = $object->product_id;
@@ -186,8 +141,13 @@
 				return true;
 			}
 			else {
+				print_r("Oh noes! No item found ".$this->id."\n");
 				return false;
 			}
+		}
+
+		public function total() {
+			return $this->quantity * $this->unit_price;
 		}
 
 		public function product() {

@@ -1,11 +1,16 @@
 <?php
-	$page = new \Site\Page();
-	$page->fromRequest();
+	$site = new \Site();
+	$page = $site->page();
 	$page->requirePrivilege('see sales quotes');
-	
-	// get orders based on current search
+
 	$parameters = array();
 	$parameters['status'] = array();
+	// get orders based on current search
+	if (! $_REQUEST['btn_submit']) {
+		$_REQUEST["new"] = 1;
+		$_REQUEST["quote"] = 1;
+		$_REQUEST["accepted"] = 1;
+	}
 	if ($_REQUEST["new"]) array_push($parameters['status'],'NEW');
 	if ($_REQUEST["quote"]) array_push($parameters['status'],'QUOTE');
 	if ($_REQUEST["cancelled"]) array_push($parameters['status'],'CANCELLED');

@@ -1,9 +1,10 @@
 <?php
 	namespace Sales;
 
-	class OrderList {
-		private $_count = 0;
-		private $_error;
+	class OrderList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = 'Sales\Order';
+		}
 
 		public function find($parameters = array()) {
 			$bind_params = array();
@@ -26,19 +27,25 @@
 				array_push($bind_params,$parameters['customer_id']);
 			}
 
-			if (!empty($parameters['status'])) {
+			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
-					$statii = "";
-					foreach ($parameters['status'] as $status) {
-						if (preg_match('/^\w+$/',$status)) {
-							if (strlen($statii) > 0) $statii .= ",";
-							$statii .= "'$status'";
+					if (count($parameters['status']) > 0) {
+						$statii = "";
+						foreach ($parameters['status'] as $status) {
+							if (preg_match('/^\w+$/',$status)) {
+								if (strlen($statii) > 0) $statii .= ",";
+								$statii .= "'$status'";
+							}
 						}
+						$find_order_query .= "
+						AND	status in (".$statii.")";
 					}
-					$find_order_query .= "
-					AND	status in (".$statii.")";
+					else {
+						$find_order_query .= "
+						AND		id != id";
+					}
 				}
-				else {
+				elseif (!empty($parameters['status'])) {
 					$find_order_query .= "
 					AND		status = ?";
 					array_push($bind_params,$parameters['status']);
@@ -64,11 +71,5 @@
 			}
 			return $orders;
 		}
-		public function count() {
-			return $this->_count;
-		}
-		public function error($message = null) {
-			if (isset($message)) $this->_error = $message;
-			return $this->_error;
-		}
+
 	}

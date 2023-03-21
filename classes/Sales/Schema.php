@@ -5,7 +5,7 @@
 		public $module = 'sales';
 	
 		public function upgrade($max_version = 999) {
-			$this->error = null;
+			$this->clearError();
 
 			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
@@ -29,8 +29,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating sales_orders table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating sales_orders table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
@@ -52,8 +51,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating sales_order_events table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating sales_order_events table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
@@ -78,8 +76,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
@@ -108,8 +105,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating sales_currencies table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating sales_currencies table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
@@ -135,8 +131,7 @@
 					ADD INDEX `idx_order_item_status` (`status`)
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Altering sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
@@ -161,8 +156,7 @@
 					ADD INDEX `idx_customer_order_num` (`customer_id`,`customer_order_number`)
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering sales_orders table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Altering sales_orders table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
@@ -187,8 +181,7 @@
 					ADD INDEX `idx_order_org_id` (`organization_id`,`status`)
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering sales_orders table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Altering sales_orders table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
@@ -212,8 +205,7 @@
 					ADD	COLUMN `message` text(512)
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering sales_order_events table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Altering sales_order_events table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
@@ -237,8 +229,7 @@
 					ADD	COLUMN `date_event` datetime
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering sales_order_events table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Altering sales_order_events table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
@@ -262,15 +253,13 @@
 				if (! $table->has_column('billing_location_id')) {
 					$alter_table_query = "ALTER TABLE `sales_orders` ADD COLUMN `billing_location_id` int NULL";
 					if (! $this->executeSQL($alter_table_query)) {
-						$this->error = "SQL Error altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-						app_log($this->error, 'error');
+						$this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
 						return false;
 					}
 					
 					$alter_table_query = "ALTER TABLE `sales_orders` ADD CONSTRAINT `sales_orders_ibfk_3` FOREIGN KEY (`billing_location_id`) REFERENCES `register_locations` (`id`);";
 					if (! $this->executeSQL($alter_table_query)) {
-						$this->error = "SQL Error altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-						app_log($this->error, 'error');
+						$this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
 						return false;
 					}
 				}
@@ -278,14 +267,13 @@
 				if (! $table->has_column('shipping_location_id')) {
 					$alter_table_query = "ALTER TABLE `sales_orders` ADD COLUMN `shipping_location_id` int NULL;";
 					if (! $this->executeSQL($alter_table_query)) {
-						$this->error = "SQL Error altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-						app_log($this->error, 'error');
+						$this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
 						return false;
 					}
+
 					$alter_table_query = "ALTER TABLE `sales_orders` ADD CONSTRAINT `sales_orders_ibfk_4` FOREIGN KEY (`shipping_location_id`) REFERENCES `register_locations` (`id`);";
 					if (! $this->executeSQL($alter_table_query)) {
-						$this->error = "SQL Error altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-						app_log($this->error, 'error');
+						$this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
 						return false;
 					}
 				}
@@ -303,11 +291,26 @@
 			    $table = new \Database\Schema\Table('sales_orders');				    
                 $alter_table_query = "ALTER TABLE `sales_orders` MODIFY COLUMN `status` ENUM('NEW','QUOTE','CANCELLED','APPROVED','ACCEPTED','COMPLETE');";
                 if (! $this->executeSQL($alter_table_query)) {
-                    $this->error = "SQL Error altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-                    app_log($this->error, 'error');
+                    $this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
                     return false;
                 }
 				$this->setVersion(9);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+            if ($this->version() < 10) {
+
+				app_log("Upgrading schema to version 10",'notice',__FILE__,__LINE__);
+
+				// Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+			    
+                $alter_table_query = "ALTER TABLE `sales_orders` ADD `shipping_vendor_id` int(11)";
+                if (! $this->executeSQL($alter_table_query)) {
+                    $this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
+                    return false;
+                }
+				$this->setVersion(10);
 				$GLOBALS['_database']->CommitTrans();
 
 			}
