@@ -459,6 +459,19 @@
 				$this->setVersion(18);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 19) {
+				app_log("Upgrading ".$this->module." schema to version 19",'notice',__FILE__,__LINE__);
+				$alter_table_query = "
+                    ALTER TABLE `site_terms_of_use_actions` add `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("altering site_terms_of_use_actions table: ".$this->error());
+					return false;
+				}
+
+				$this->setVersion(19);
+				$GLOBALS['_database']->CommitTrans();
+			}
 		
 			return true;
 		}
