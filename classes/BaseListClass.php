@@ -143,15 +143,15 @@
 		}
 
 		public function first($parameters = array()) {
-			$objects = $this->findAdvanced($parameters,array('sort' => 'date_event', 'order' => 'asc', 'limit' => 1));
+			$objects = $this->findAdvanced($parameters,array('sort' => $this->_tableDefaultSortBy, 'order' => 'asc', 'limit' => 1));
 			if ($this->error()) return null;
 			return $objects[0];
 		}
 
 		public function last($parameters = array()) {
-			$objects = $this->findAdvanced($parameters,array('sort' => 'date_event', 'order' => 'desc', 'limit' => 1));
+			$objects = $this->findAdvanced($parameters,array('sort' => $this->_tableDefaultSortBy, 'order' => 'desc', 'limit' => 1));
 			if ($this->error()) return null;
-			return $objects[-1];
+			return end($objects);
 		}
 
 		public function validSearchString($string) {
