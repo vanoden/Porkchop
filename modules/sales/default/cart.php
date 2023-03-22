@@ -28,7 +28,7 @@
 		return true;
 	}
 	function update(elem) {
-		document.forms[0].active_element.value = elem.name;
+		if (elem) document.forms[0].active_element.value = elem.name;
 		document.forms[0].submit();
 	}
 	function addProduct() {
@@ -40,7 +40,8 @@
 	}
 	document.addEventListener("DOMContentLoaded", function() {
 		scrollToBottom('sales_cart_form');
-		document.forms[0].<?=$_REQUEST['active_element']?>.focus();
+		var activeElem = "<?=$_REQUEST['active_element']?>";
+		if (activeElem.length > 0) document.forms[0].activeElem.focus();
 	});
 </script>
 

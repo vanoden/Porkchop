@@ -135,7 +135,8 @@
 				}
 				else {
 					$item->addPrice(array('date_active' => $_REQUEST['new_price_date'], 'status' => $_REQUEST['new_price_status'], 'amount' => $_REQUEST['new_price_amount']));
-					$page->success .= "Price Added";
+					if ($item->error()) $page->addError($item->error());
+					else $page->success .= "Price Added";
 				}
 			}
 		}

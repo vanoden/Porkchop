@@ -179,7 +179,7 @@
 			$database = new \Database\Service();
 
 			$cache = $this->cache();
-			if (!empty($this->_cacheKeyPrefix)) {
+			if (isset($cache) && !empty($this->_cacheKeyPrefix)) {
 				$fromCache = $cache->get();
 				if (isset($fromCache) && !empty($fromCache)) {
 					foreach ($fromCache as $key => $value) {

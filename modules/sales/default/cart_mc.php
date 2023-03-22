@@ -79,7 +79,7 @@
 	elseif ($order->id > 0) {
 		// Update the order
 		$order->update($parameters);
-		if (!$order->error()) $page->addError("Error updating order: ".$order->error());
+		if ($order->error()) $page->addError("Error updating order: ".$order->error());
 
 		// Update any existing items
 		if (isset($_REQUEST['items'])) {
@@ -165,7 +165,14 @@
 	/* Update Order Status Per Footer Buttons	*/
 	/********************************************/
 	if (isset($_REQUEST['btn_submit'])) {
-		if (preg_match('/Quote/',$_REQUEST['btn_submit'])) {
+		if ($page->errorCount() > 0) {
+			$page->addError("Not updating order status");
+		}
+		if (preg_match('/Save/',$_REQUEST['btn_submit'])) {
+			header("Location: /_sales/orders");
+
+		}
+		elseif (preg_match('/Quote/',$_REQUEST['btn_submit'])) {
 			if ($order->quote()) {
 				header("Location: /_sales/orders");
 				exit;
