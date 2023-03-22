@@ -5,6 +5,7 @@
 		public $status;
 		public $content;
 		public $number;
+		public $tou_id;
 
 		/********************************************/
 		/* Instance Constructor						*/
@@ -112,7 +113,11 @@
 			}
 
 			$event = new TermsOfUseEvent();
-			$event->add(array('version_id' => $this->id, 'status' => 'PUBLISHED'));
+			$event->add(array('version_id' => $this->id, 'type' => 'ACTIVATION'));
+			if ($event->error()) {
+				$this->error($event->error());
+				return false;
+			}
 
 			// Bust Cache for Updated Object
 			$cache->delete();
@@ -152,13 +157,17 @@
 			}
 
 			$event = new TermsOfUseEvent();
-			$event->add(array('version_id' => $this->id, 'status' => 'RETRACTED'));
+			$event->add(array('version_id' => $this->id, 'type' => 'RETRACTION'));
 
 			// Bust Cache for Updated Object
 			$cache->delete();
 
 			// Load Updated Details from Database
 			return $this->details();
+		}
+
+		public function termsOfUse() {
+			return new \Site\TermsOfUse($this->tou_id);
 		}
 
 		public function addEvent($type) {
@@ -185,21 +194,21 @@
 
 		public function date_created() {
 			$eventList = new TermsOfUseEventList();
-			list($event) = $eventList->find(array('version_id' => $this->id, 'type' => 'CREATION'));
+			$event = $eventList->first(array('version_id' => $this->id, 'type' => 'CREATION'));
 			if ($eventList->error()) $this->error($eventList->error());
 			return $event->date_event;
 		}
 
 		public function date_published() {
 			$eventList = new TermsOfUseEventList();
-			list($event) = $eventList->find(array('version_id' => $this->id, 'type' => 'PUBLISHED'));
+			$event = $eventList->last(array('version_id' => $this->id, 'type' => 'ACTIVATION'));
 			if ($eventList->error()) $this->error($eventList->error());
 			return $event->date_event;
 		}
 
 		public function date_retracted() {
 			$eventList = new TermsOfUseEventList();
-			list($event) = $eventList->find(array('version_id' => $this->id, 'type' => 'RETRACTED'));
+			$event = $eventList->last(array('version_id' => $this->id, 'type' => 'RETRACTION'));
 			if ($eventList->error()) $this->error($eventList->error());
 			return $event->date_event;
 		}

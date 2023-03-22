@@ -28,7 +28,9 @@
 				"counters"	=> $templates['admin'],
 				"content_block"	=> $templates['admin'],
 				"terms_of_use"	=> $templates['admin'],
-				"term_of_use"	=> $templates['admin']
+				"term_of_use"	=> $templates['admin'],
+				"tou_versions"	=> $templates['admin'],
+				"tou_version"	=> $templates['admin']
 			),
 		),
 		"Geography"		=> array(

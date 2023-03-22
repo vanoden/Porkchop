@@ -4,15 +4,15 @@
 	$page->requirePrivilege('manage terms of use');
 
 	$version = new \Site\TermsOfUseVersion();
-	if (!empty($_REQUEST['version_id'])) {
-		$version->load($_REQUEST['version_id']);
+	if (!empty($_REQUEST['id'])) {
+		$version->load($_REQUEST['id']);
 	}
 
 	if (!empty($_REQUEST['tou_id'])) {
 		$tou = new \Site\TermsOfUse($_REQUEST['tou_id']);
 	}
 	else {
-		$tou = $version->terms_of_use();
+		$tou = $version->termsOfUse();
 	}
 
 	if (!empty($_REQUEST['btn_submit'])) {

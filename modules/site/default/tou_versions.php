@@ -21,27 +21,27 @@
 </style>
 <script language="Javascript">
 	function edit(id) {
-		document.forms[0].version_id.value = id;
+		document.forms[0].id.value = id;
 		document.forms[0].action = '/_site/tou_version';
 		document.forms[0].submit();
 		return true;
 	}
 	function publish(id) {
-		document.forms[0].method = 'publish';
-		document.forms[0].version_id.value = id;
+		document.forms[0].method.value = 'publish';
+		document.forms[0].id.value = id;
 		document.forms[0].submit();
 		return true;
 	}
 	function retract(id) {
-		document.forms[0].method = 'retract';
-		document.forms[0].version_id.value = id;
+		document.forms[0].method.value = 'retract';
+		document.forms[0].id.value = id;
 		document.forms[0].submit();
 		return true;
 	}
 </script>
 <form method="post" action="/_site/tou_versions">
 <input type="hidden" name="tou_id" value="<?=$tou->id?>"/>
-<input type="hidden" name="version_id"/>
+<input type="hidden" name="id"/>
 <input type="hidden" name="method"/>
 <div class="table">
 	<div class="tableHead">
@@ -57,13 +57,13 @@
 		<div class="tableCell"><a href="/_site/tou_version?id=<?=$version->id?>"><?=$version->id?></a></div>
 		<div class="tableCell"><?=$version->status?></div>
 		<div class="tableCell"><?=$version->date_created()?></div>
-		<div class="tableCell"><?=$version->datePublished()?></div>
-		<div class="tableCell"><?=$version->dateRetracted()?></div>
+		<div class="tableCell"><?=$version->date_published()?></div>
+		<div class="tableCell"><?=$version->date_retracted()?></div>
 		<div class="tableCell">
 <?php	if ($version->status == 'NEW') {?>
 		<input type="button" name="todo" value="Edit" onclick="edit(<?=$version->id?>);" />
 		<input type="button" name="todo" value="Publish" onclick="publish(<?=$version->id?>);" />
-<?php	} elseif ($version->status == '') { ?>
+<?php	} elseif ($version->status == 'PUBLISHED') { ?>
 		<input type="button" name="todo" value="Retract" onclick="retract(<?=$version->id?>);" />
 <?php	} ?>		
 		</div>
