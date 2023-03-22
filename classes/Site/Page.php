@@ -128,7 +128,28 @@
 			    exit();
 			}
 		}
-        
+
+		public function confirmTOUAcceptance() {
+			if ($this->tou_id > 0) {
+				app_log("-------CHECKING TOU ACCEPTANCE----------");
+				$tou = $this->tou();
+				$latest_version = $tou->latestVersion();
+				if ($tou->error()) app_log($tou->error(),'error');
+				elseif (!$latest_version) app_log('No published version of tou '.$tou->id);
+				else {
+					app_log("--------HAVE WE ACCEPTED?------------");
+					if (! $GLOBALS['_SESSION_']->customer->acceptedTOU($tou_id)) {
+						app_log("Customer has not yet accepted version ".$latest_version->id." of TOU ".$tou->id);
+						header("Location: /_site/terms_of_use_form?module=".$this->module()."&view=".$this->view()."&index=".$this->index());
+						exit;
+					}
+					app_log("----------BUT OF COURSE-----------");
+					app_log("Customer has accepted version ".$latest_version->id." of TOU ".$tou->id);
+				}
+			}
+			return true;
+		}
+
 	    public function getPage($module, $view, $index = null) {
 			$this->clearError();
 
@@ -947,6 +968,10 @@
 			}
 		}
 
+		public function tou() {
+			return new \Site\TermsOfUse($this->tou_id);
+		}
+
 	    public function addError($error) {
 		    $trace = debug_backtrace ();
 		    $caller = $trace [0];
@@ -991,6 +1016,10 @@
 		/************************************/
 		/* Breadcrumb Methods				*/
 		/************************************/
+		public function showAdminPageInfo() {
+			return $this->showBreadcrumbs()."\n".$this->showTitle()."\n".$this->showMessages()."\n";
+		}
+
 		public function addBreadcrumb($name,$target = '') {
 			$breadcrumb = array("name" => $name, "target" => $target);
 			array_push($this->_breadcrumbs,$breadcrumb);

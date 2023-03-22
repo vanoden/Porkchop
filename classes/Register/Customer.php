@@ -593,4 +593,45 @@
 			}
 			return $key;
 		}
+
+		public function acceptedTOU($tou_id) {
+			$tou = new \Site\TermsOfUse($tou_id);
+			$latest_version = $tou->latestVersion();
+			if ($tou->error()) {
+				$this->error($tou->error());
+				return false;
+			}
+			elseif (!$latest_version) {
+				$this->error('No published version of tou '.$this->tou_id);
+				return false;
+			}
+			else {
+				$actionList = new \Site\TermsOfUseActionList();
+				list($action) = $actionList->find(array('version_id' => $latest_version->id,'user_id' => $this->id,'type' => 'ACCEPTED'));
+				if ($action) return true;
+			}
+			return false;
+		}
+
+		public function acceptTOU($version_id) {
+			$version = new \Site\TermsOfUseVersion($version_id);
+			$version->addAction($this->id,'ACCEPTED');
+
+			if ($version->error()) {
+				$this->error($version->error());
+				return false;
+			}
+			return true;
+		}
+
+		public function declineTOU($version_id) {
+			$version = new \Site\TermsOfUseVersion($version_id);
+			$version->addAction($this->id,'DECLINED');
+
+			if ($version->error()) {
+				$this->error($version->error());
+				return false;
+			}
+			return true;
+		}
     }

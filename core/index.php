@@ -158,6 +158,7 @@
 		$logger->writeln("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
 		exit;
 	}
+	$_page->confirmTOUAcceptance();
 	if ($_page->module() == 'static') {
 		// All Set!
 	}

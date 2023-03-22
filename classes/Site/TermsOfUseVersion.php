@@ -171,10 +171,25 @@
 		}
 
 		public function addEvent($type) {
+			app_log("Do we have cache for tou ".$this->tou_id."?");
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], "latest_tou[".$this->tou_id."]");
+			if ($cache->exists()) {
+				app_log("TOU Cache Must Be Destroyed");
+				if (!$cache->delete()) {
+					$this->error("Couldn't delete cache: ".$cache->error());
+					return false;
+				}
+			}
 			$event = new TermsOfUseEvent();
 			if ($event->add(array('version_id' => $this->id, 'type' => $type))) return true;
-			print_r($event);
 			$this->error("Unable to add event: ".$event->error());
+			return false;
+		}
+
+		public function addAction($user_id,$type) {
+			$action = new TermsOfUseAction();
+			if ($action->add(array('version_id' => $this->id, 'user_id' => $user_id, 'type' => $type))) return true;
+			$this->error("Unable to add action: ".$action->error());
 			return false;
 		}
 

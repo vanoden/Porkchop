@@ -12,6 +12,7 @@
         ),
 		"templates"		=> array(
 			"cart"		=> $templates['admin'],
-			"orders"	=> $templates['admin']
+			"orders"	=> $templates['admin'],
+			"currencies"	=> $templates['admin']
 		),        
     );
