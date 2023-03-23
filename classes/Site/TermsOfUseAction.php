@@ -2,6 +2,9 @@
 	namespace Site;
 
 	class TermsOfUseAction Extends \BaseModel {
+		public $version_id;
+		public $user_id;
+		public $type;
 
 		/********************************************/
 		/* Instance Constructor						*/
@@ -14,7 +17,7 @@
 			$this->_cacheKeyPrefix = $this->_tableName;
 
 			// Possible Types
-			//$this->_addType(array('VIEWED','ACCEPTED','DECLINED'));
+			$this->_addTypes(array('VIEWED','ACCEPTED','DECLINED'));
 
 			// Load Record for Specified ID if given
 			if (isset($id) && is_numeric($id)) {
@@ -81,72 +84,5 @@
 
 			// No Update, Load Details
 			return $this->details();
-		}
-
-		/********************************************/
-		/* Load Object Details						*/
-		/* from Cache or Database					*/
-		/********************************************/
-		public function details(): bool {
-			// Clear Errors
-			$this->clearError();
-
-			// Load Services
-			$database = new \Database\Service();
-			$cache = $this->cache();
-
-			// Fetch Cached Data
-	        if ($this->cache && $this->cache->exists()) {
-				$data = $this->cache->get();
-
-				// Fetch Each Class Attribute
-				$this->code = $data->code;
-
-				// Tag Class as Cached
-				$this->_cached = true;
-
-				$this->_exists = true;
-
-				// Return Success - No DB Hit Needed!
-				return true;
-			}
-
-			// Initialize Query
-			$get_object_query = "
-				SELECT	*
-				FROM	`".$this->_tableName."`
-				WHERE	id = ?";
-
-			// Bind Params
-			$database->AddParam($this->id);
-
-			// Execute Query
-			$rs = $database->Execute($get_object_query);
-			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
-				return false;
-			}
-
-			// Fetch Results From Database
-			$object = $rs->FetchNextObject();
-			if ($object->id) {
-				$this->id = $object->id;
-				$this->code = $object->code;
-
-				// Cache Database Results
-				$cache->set($object);
-
-				$this->_exists = true;
-			}
-			else {
-				// Null out any values
-				$this->id = null;
-				$this->code = null;
-
-				$this->_exists = false;
-			}
-
-			// Return True as long as No Errors - Not Found is NOT an error
-			return true;
 		}
 	}

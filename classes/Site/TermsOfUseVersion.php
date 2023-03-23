@@ -90,7 +90,6 @@
 
 			// Initialize Services
 			$database = new \Database\Service();
-			$cache = $this->cache();
 
 			if ($this->status == "PUBLISHED") return true;
 			if ($this->status == "RECTRACTED") {
@@ -120,6 +119,8 @@
 			}
 
 			// Bust Cache for Updated Object
+			app_log("-----DELETING CACHE-------");
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], 'latest_tou['.$this->tou_id.']');
 			$cache->delete();
 
 			// Load Updated Details from Database
@@ -138,7 +139,6 @@
 
 			// Initialize Services
 			$database = new \Database\Service();
-			$cache = $this->cache();
 
 			if ($this->status == "RETRACTED") return true;
 
@@ -160,6 +160,8 @@
 			$event->add(array('version_id' => $this->id, 'type' => 'RETRACTION'));
 
 			// Bust Cache for Updated Object
+			app_log("-----DELETING CACHE-------");
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], 'latest_tou['.$this->tou_id.']');
 			$cache->delete();
 
 			// Load Updated Details from Database
@@ -210,21 +212,39 @@
 		public function date_created() {
 			$eventList = new TermsOfUseEventList();
 			$event = $eventList->first(array('version_id' => $this->id, 'type' => 'CREATION'));
-			if ($eventList->error()) $this->error($eventList->error());
+			if ($eventList->error()) {
+				$this->error($eventList->error());
+				return null;
+			}
+			elseif (!$event) {
+				$event = new \Site\TermsOfUseEvent();
+			}
 			return $event->date_event;
 		}
 
 		public function date_published() {
 			$eventList = new TermsOfUseEventList();
 			$event = $eventList->last(array('version_id' => $this->id, 'type' => 'ACTIVATION'));
-			if ($eventList->error()) $this->error($eventList->error());
+			if ($eventList->error()) {
+				$this->error($eventList->error());
+				return null;
+			}
+			elseif (!$event) {
+				$event = new \Site\TermsOfUseEvent();
+			}
 			return $event->date_event;
 		}
 
 		public function date_retracted() {
 			$eventList = new TermsOfUseEventList();
 			$event = $eventList->last(array('version_id' => $this->id, 'type' => 'RETRACTION'));
-			if ($eventList->error()) $this->error($eventList->error());
+			if ($eventList->error()) {
+				$this->error($eventList->error());
+				return null;
+			}
+			elseif (!$event) {
+				$event = new \Site\TermsOfUseEvent();
+			}
 			return $event->date_event;
 		}
 

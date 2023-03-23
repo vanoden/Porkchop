@@ -35,7 +35,7 @@
 				$this->details();
 			}
 		}
-		
+
 		// Polymorphism for Fun and Profit
 		public function __call($name,$parameters) {
 			if ($name == 'get' && count($parameters) == 2) $this->error("Too many parameters for 'get'");
@@ -52,7 +52,20 @@
 		public function _tableIDColumn() {
 			return $this->_tableIDColumn;
 		}
+
+		/************************************************/
+		/* Return List of Object Fields					*/
+		/* Auto-populate if not provided by constructor	*/
+		/************************************************/
 		public function _fields() {
+			if (count($this->_fields) < 1) {
+				$properties = get_object_vars($this);
+				foreach ($properties as $property => $stuff) {
+					if (preg_match('/^_/',$property)) continue;
+					array_push($this->_fields,$property);
+				}
+				return array_keys(get_object_vars($this));
+			}
 			return $this->_fields;
 		}
         /**

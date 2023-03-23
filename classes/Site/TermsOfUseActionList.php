@@ -9,16 +9,32 @@
 		public function find($params = [],$controls = []): array {
 			if (isset($params['tou_id'])) {
 				$tou = new \Site\TermsOfUse($params['tou_id']);
+				if ($tou->error()) {
+					$this->error($tou->error());
+					return array();
+				}
 				if (empty($tou->id)) {
 					$this->error("Terms Of Use Record Not Found");
 					return array();
 				}
 			}
 
-			if (isset($params['status'])) {
-				$tou = new \Site\TermsOfUse();
-				if (!$tou->validStatus($params['status'])) {
-					$this->error("Invalid Status '".$params['status']."'");
+			if (isset($params['version_id'])) {
+				$version = new \Site\TermsOfUseVersion($params['version_id']);
+				if ($version->error()) {
+					$this->error($version->error());
+					return array();
+				}
+				if (empty($version->id)) {
+					$this->error("Version not found");
+					return array();
+				}
+			}
+
+			if (isset($params['type'])) {
+				$action = new $this->_modelName;
+				if (!$action->validType($params['type'])) {
+					$this->error("Invalid type '".$params['type']."'");
 					return array();
 				}
 			}

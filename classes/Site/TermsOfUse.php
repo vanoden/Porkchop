@@ -117,12 +117,18 @@
 		}
 
 		public function latestVersion(): TermsOfUseVersion {
+			// See if Latest Version is in Cache
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], "latest_tou[".$this->id."]");
 			if ($cache->exists()) {
 				app_log("TOU Cache Returned");
-				return $cache->get();
+				$object = $cache->get();
+				if ($object) return $object;
 			}
 
+			// Find the Latest Version by looping through
+			// all PUBLISHED version and finding the one with
+			// the latest date
+			app_log("Finding latest version of TOU");
 			$versionList = new TermsOfUseVersionList();
 			$versions = $versionList->find(array('tou_id' => $this->id,'status' => 'PUBLISHED'));
 			if ($versionList->error()) {
@@ -131,12 +137,16 @@
 			$date_published = '0000-00-00 00:00:00';
 			$latest_id = 0;
 			foreach ($versions as $version) {
+				app_log("Is version ".$version->id." the latest?");
 				$version_published = $version->date_published();
 				app_log($version_published." vs ".$date_published);
 				if ($version_published > $date_published) {
-					app_log($version->id." is newer");
+					app_log("Yes, ".$version->id." is newer");
 					$date_published = $version_published;
 					$latest_id = $version->id;
+				}
+				else {
+					app_log("No, it is not");
 				}
 			}
 			$version = new TermsOfUseVersion($latest_id);

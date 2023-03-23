@@ -131,20 +131,17 @@
 
 		public function confirmTOUAcceptance() {
 			if ($this->tou_id > 0) {
-				app_log("-------CHECKING TOU ACCEPTANCE----------");
 				$tou = $this->tou();
 				$latest_version = $tou->latestVersion();
 				if ($tou->error()) app_log($tou->error(),'error');
 				elseif (!$latest_version) app_log('No published version of tou '.$tou->id);
 				else {
-					app_log("--------HAVE WE ACCEPTED?------------");
-					if (! $GLOBALS['_SESSION_']->customer->acceptedTOU($tou_id)) {
+					if (! $GLOBALS['_SESSION_']->customer->acceptedTOU($tou->id)) {
 						app_log("Customer has not yet accepted version ".$latest_version->id." of TOU ".$tou->id);
 						header("Location: /_site/terms_of_use_form?module=".$this->module()."&view=".$this->view()."&index=".$this->index());
 						exit;
 					}
-					app_log("----------BUT OF COURSE-----------");
-					app_log("Customer has accepted version ".$latest_version->id." of TOU ".$tou->id);
+					app_log("Customer has accepted version ".$latest_version->id." of TOU ".$tou->id,'trace');
 				}
 			}
 			return true;
@@ -1080,6 +1077,11 @@
 
 		public function showTitle() {
 			return "<h1>".$this->title()."</h1>";
+		}
+	
+		public function uri() {
+			if ($this->module() == 'content') return "/".$this->index();
+			return "/_".$this->module()."/".$this->view()."/".$this->index();
 		}
 
 		/************************************/

@@ -94,7 +94,7 @@
 					return array();
 				}
 			}
-
+app_log($find_objects_query);
 			$objects = array();
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
@@ -145,6 +145,7 @@
 		public function first($parameters = array()) {
 			$objects = $this->findAdvanced($parameters,array('sort' => $this->_tableDefaultSortBy, 'order' => 'asc', 'limit' => 1));
 			if ($this->error()) return null;
+			if (count($objects) < 1) return null;
 			return $objects[0];
 		}
 

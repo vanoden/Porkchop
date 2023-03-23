@@ -601,14 +601,22 @@
 				$this->error($tou->error());
 				return false;
 			}
-			elseif (!$latest_version) {
-				$this->error('No published version of tou '.$this->tou_id);
+			elseif (empty($latest_version)) {
+				$this->error('No published version of tou '.$tou_id);
 				return false;
 			}
 			else {
 				$actionList = new \Site\TermsOfUseActionList();
+				app_log("Checking for user ".$this->id." approval of version ".$latest_version->id,'trace');
 				list($action) = $actionList->find(array('version_id' => $latest_version->id,'user_id' => $this->id,'type' => 'ACCEPTED'));
-				if ($action) return true;
+				if ($actionList->error()) {
+					$this->error($actionList->error());
+					return false;
+				}
+				if (!empty($action)) {
+					app_log("User has approved version ".$latest_version->id,'trace');
+					return true;
+				}
 			}
 			return false;
 		}

@@ -1,10 +1,10 @@
 <?=$page->showAdminPageInfo();?>
 
-<?=$latest_version->title?>
+<?=$latest_version->name?>
 <?=$latest_version->content?>
 <p>To view the requested contact, you must accept the above Terms of Use.</p>
 <form method="post">
-<input type="hidden" name="module" value="<?=$target_page->module()?>" />
+<input type="hidden" name="target_uri" value="<?=$target_page->uri()?>" />
 <input type="hidden" name="view" value="<?=$target_page->view()?>" />
 <input type="hidden" name="index" value="<?=$target_page->index()?>" />
 <input type="hidden" name="tou_id" value="<?=$tou->id?>" />

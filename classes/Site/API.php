@@ -31,7 +31,7 @@
 
 			$response = new \APIResponse();
 			# Error Handling
-			if ($page_list->error) $this->error($page_list->error);
+			if ($page_list->error()) $this->error($page_list->error());
 			else{
 				$response->addElement('page',$pages);
 			}
@@ -578,7 +578,7 @@
 			$response->addElement('id',$siteMessageDelivery->id);
         	$response->print();
 	    }
-	    
+
         public function editSiteMessageDelivery() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -835,6 +835,24 @@
             $response->print();
 		}
 
+		public function getTOULatestVersion() {
+			// Confirm Require Inputs
+			if (empty($_REQUEST['tou_id'])) $this->invalidRequest("tou_id required");
+
+			// Get Associated Resources
+			$tou = new \Site\TermsOfUse($_REQUEST['tou_id']);
+			if ($tou->error()) $this->error($tou->error());
+			if (!$tou->exists()) $this->notFound();
+
+			$version = $tou->latestVersion();
+			if (!$version) $this->notFound("No published versions");
+
+			// Prepare and Return Response
+			$response = new \APIResponse();
+			$response->addElement('version',$version);
+			$response->print();
+		}
+
 		public function getUUID() {
 			$porkchop = new \Porkchop();
 			print $porkchop->uuid();
@@ -1021,7 +1039,10 @@
                     'name'  => array('required' => true),
                     'value' => array('required' => true)
 				),
-				'getSiteStatus' => array()
+				'getSiteStatus' => array(),
+				'getTOULatestVersion'	=> array(
+					'tou_id'	=> array('required')
+				)
 			);		
 		}
 	}
