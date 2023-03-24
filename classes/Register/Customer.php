@@ -8,7 +8,7 @@
 
 		public function __construct($id = 0) {
 			parent::__construct($id);
-			if ($this->id) $this->roles();
+			//if ($this->id) $this->roles();
 		}
 
 		public function add($parameters = []) {
@@ -22,7 +22,7 @@
 		public function details(): bool {
 		    parent::details();
 			if ($this->id) {
-				$this->roles();
+				//$this->roles();
 				$this->login = $this->code;
 				return true;
 			}
