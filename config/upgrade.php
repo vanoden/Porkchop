@@ -11,6 +11,10 @@
 	$modules = array(
 		"Company"		=> array(
 			"schema"	=> 3,
+			"templates"	=> array(
+				"configuration"	=> $templates['admin'],
+				"domains"		=> $templates['admin']
+			)
 		),
 		"Site"			=> array(
 			"schema"	=> 19,
