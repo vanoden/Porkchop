@@ -1,9 +1,7 @@
 <?php
 	namespace Register;
 
-	class CustomerList {
-		public $error;
-		public $count = 0;
+	class CustomerList Extends \BaseListClass {
 
 		public function flagActive() {
 			$find_session_query = "
@@ -15,7 +13,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($find_session_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::CustomerList::flagActive(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$counter = 0;
@@ -31,7 +29,7 @@
 					array($id)
 				);
 				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->error = "SQL Error in Register::CustomerList::flagActive(): ".$GLOBALS['_database']->ErrorMsg();
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
 					return null;
 				}
 			}
@@ -41,7 +39,7 @@
 		
 		public function expireInactive($age = 14) {
 			if (! is_numeric($age)) {
-				$this->error = "Age must be a number";
+				$this->error("Age must be a number");
 				return null;
 			}
 
@@ -57,7 +55,7 @@
 				array($age)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::CustomerList::expireInactive(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -67,7 +65,7 @@
 			if (get_mysql_date($date_threshold))
 				$date = get_mysql_date($date_threshold);
 			else {
-				$this->error = "Invalid date: '$date_threshold'";
+				$this->error("Invalid date: '$date_threshold'");
 				return null;
 			}
 
@@ -90,7 +88,7 @@
 
 			$people = $GLOBALS['_database']->Execute($find_people_query,$bind_params);
 			if (! $people) {
-				$this->error = "SQL Error in Register::Customers::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -105,7 +103,12 @@
 		}
 		
 		public function find($parameters = array(), $count = false) {
+			$this->clearError();
+			$this->resetCount();
+
 			if ($count == true) $ADODB_COUNTRECS = true;
+
+			if (isset($parameters['role'])) app_log("Don't use role as a filter for customers, use Register::Role::Members",'warning');
 
 			$bind_params = array();
 
@@ -119,7 +122,7 @@
 
 			if (isset($searchTerm)) {
 				if (! preg_match('/^[\w\-\.\_\s\*]{3,64}$/',$searchTerm)) {
-					$this->error = "Invalid search string";
+					$this->error("Invalid search string");
 					return null;
 				}
 				if (preg_match('/\*/',$searchTerm))
@@ -142,7 +145,7 @@
 				array_push($bind_params,$parameters['id']);
 			}
 			elseif (isset($parameters['id'])) {
-				$this->error = "Invalid id in Person::find";
+				$this->error("Invalid id");
 				return null;
 			}
 			if (isset($parameters['code'])) {
@@ -226,10 +229,10 @@
 					$find_person_query .= "
 					LIMIT	".$parameters['_limit'];
 			}
-			query_log($find_person_query,$bind_params,true);
+
 			$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Person::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -240,23 +243,25 @@
 				}
 				if (isset($parameters['role']) && ! $customer->has_role($parameters['role'])) continue;
 				if (! $count) array_push($people,$customer);
-				$this->count ++;
+				$this->incrementCount();
 			}
-			if ($count) return $this->count;
+
 			return $people;
 		}
 		
 		public function search($search_string,$limit = 0,$offset = 0) {
+			$this->clearError();
+			$this->resetCount();
+
 			if (is_bool($limit) && $limit == true) $count = true;
 			else $count = false;
 
 			$bind_params = array();
 
 			app_log("Customer Search Requested",'debug',__FILE__,__LINE__);
-			$this->count = 0;
 
 			if (! preg_match('/^[\w\-\.\_\s\*]{3,64}$/',$search_string)) {
-				$this->error = "Invalid search string";
+				$this->error("Invalid search string");
 				return null;
 			}
 			if (preg_match('/\*/',$search_string))
@@ -265,7 +270,7 @@
 				$search_string = '%'.$search_string.'%';
 
 			if (empty($search_string)) {
-				$this->error = "Search string required";
+				$this->error("Search string required");
 				return null;
 			}
 			$find_person_query = "
@@ -314,7 +319,7 @@
 			app_log("Search query: ".$find_person_query,'trace',__FILE__,__LINE__);
 			$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in \Register\Customer::search(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -324,18 +329,8 @@
 					$customer = new Customer($id);
 					array_push($people,$customer);
 				}
-				$this->count ++;
+				$this->incrementCount();
 			}
-			app_log($this->count." records found",'debug',__FILE__,__LINE__);
-			if ($count == true) return $this->count;
 			return $people;
-		}
-
-		public function error() {
-			return $this->error;
-		}
-
-		public function count() {
-			return $this->count;
 		}
 	}
