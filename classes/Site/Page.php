@@ -1096,10 +1096,10 @@
 					$this->getPage('content','index','learning');
 				}
 				elseif ($this->view() == 'contact_home.html') {
-					$this->getPage('content','index','contact_home');
+					$this->getPage('static','contact_sales.html');
 				}
 				elseif ($this->view() == 'contact_support.html') {
-					$this->getPage('content','index','contact_support');
+					$this->getPage('static','contact_sales.html');
 				}
 				elseif ($this->view() == 'distributors.html') {
 					$this->getPage('content','index','distributors');
