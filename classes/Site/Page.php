@@ -426,9 +426,9 @@
 			if ($this->module() == 'static') {
 				return $this->parse(file_get_contents(HTML."/".$this->view));
 			}
-			$template = $this->template();
-			if (isset ( $template ) && file_exists(HTML."/".$template)) return $this->parse(file_get_contents(HTML."/".$template));
-			elseif (isset ($template)) app_log("Template ".HTML."/".$template." not found!",'error');
+			$this->template = $this->template();
+			if (!empty($this->template ) && file_exists(HTML."/".$this->template)) return $this->parse(file_get_contents(HTML."/".$this->template));
+			elseif (!empty($this->template)) app_log("Template ".HTML."/".$this->template." not found!",'error');
 			return $this->parse('<r7 object="page" property="view"/>');
 	    }
 
@@ -450,9 +450,9 @@
 				$counter->increment();
 				$message = "Application Error";
 			}
-		    // Return Messsage
-		    //return "<!-- ".$this->module()." ".$this->view()." ".$this->index()." -->\n".$message;
-		    return $message;
+			if (!empty($this->template())) header("X-Template: ".$this->template());
+			if (!empty($this->module)) header("X-Module: ".$this->module());
+			return $message;
 	    }
 	    
 	    private function parse_element($string) {
