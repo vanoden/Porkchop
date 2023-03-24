@@ -1084,6 +1084,28 @@
 			return "/_".$this->module()."/".$this->view()."/".$this->index();
 		}
 
+		public function rewrite() {
+			if ($this->module() == 'static') {
+				if ($this->view() == 'index.html') {
+					$this->getPage('content','index','home');
+				}
+				elseif ($this->view() == 'products.html') {
+					$this->getPage('content','index','products');
+				}
+				elseif ($this->view() == 'learning.html') {
+					$this->getPage('content','index','learning');
+				}
+				elseif ($this->view() == 'contact_home.html') {
+					$this->getPage('content','index','contact_home');
+				}
+				elseif ($this->view() == 'contact_support.html') {
+					$this->getPage('content','index','contact_support');
+				}
+				elseif ($this->view() == 'distributors.html') {
+					$this->getPage('content','index','distributors');
+				}
+			}
+		}
 		/************************************/
 		/* Validation Methods				*/
 		/************************************/
