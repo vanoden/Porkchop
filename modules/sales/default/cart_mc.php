@@ -135,7 +135,7 @@
 						'product_id'	=> $product->id,
 						'description'	=> $product->description,
 						'quantity'		=> 1,
-						'unit_price'	=> $product->currentPrice()
+						'unit_price'	=> $product->currentPrice()->amount
 					));
 					if ($order->error()) $page->addError($order->error());
 					else $page->appendSuccess("Added ".$product->code);
@@ -147,7 +147,7 @@
 					'product_id'	=> $product->id,
 					'description'	=> $product->description,
 					'quantity'		=> 1,
-					'unit_price'	=> $product->currentPrice()
+					'unit_price'	=> $product->currentPrice()->amount
 				));
 				if ($order->error()) $page->addError($order->error());
 				else $page->appendSuccess("Added ".$product->code);
