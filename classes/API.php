@@ -151,12 +151,13 @@
 		/************************************************/
 		/* Send Proper Permission Denied Response		*/
 		/************************************************/
-		public function deny() {
+		public function deny($message = null) {
 			$_REQUEST["stylesheet"] = '';
 			$response = new \APIResponse();
 			$response->code(403);
 			$response->success(false);
-			$response->addElement('error',"Permission Denied");
+			if (!empty($message)) $response->addElement('error',$message);
+			else $response->addElement('error',"Permission Denied");
 			http_response_code(403);
 			$response->print();
 			exit;
