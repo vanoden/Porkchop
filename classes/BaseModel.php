@@ -188,6 +188,7 @@
 
 		// Load Object Attributes from Cache or Database
 		public function details(): bool {
+		
 			$this->clearError();
 			$database = new \Database\Service();
 
