@@ -181,7 +181,7 @@
 			else {
 				$cls = get_called_class();
 				$parts = explode("\\",$cls);
-				$this->error($parts[1]." not found");
+				$this->warn($parts[1]." not found");
 				return false;
 			}
 		}

@@ -22,6 +22,7 @@
 		public $sitemap;
 		private $_breadcrumbs = array();
 	    private $_errors = array();
+		private $_warnings = array();
 
 	    public function __construct() {
 			$this->_tableName = "page_pages";
@@ -965,10 +966,46 @@
 			}
 		}
 
+		// Return the Terms of Use object for this page
 		public function tou() {
 			return new \Site\TermsOfUse($this->tou_id);
 		}
 
+		/********************************************/
+		/* Warning and Error Handling				*/
+		/********************************************/
+		// Add a warning to the page
+		public function addWarning($msg) {
+		    $trace = debug_backtrace ();
+		    $caller = $trace [0];
+		    $file = $caller ['file'];
+		    $line = $caller ['line'];
+		    app_log ( $msg, 'warn', $file, $line );
+		    array_push ( $this->_warnings, $msg );
+	    }
+
+		// Return the serialized warning string
+	    public function warningString($delimiter = "<br>\n") {
+		    $warning_string = '';
+		    foreach ( $this->_warnings as $warning ) {
+			    if (strlen ( $warning_string )) $warning_string .= $delimiter;
+			    $warning_string .= $warning;
+		    }
+		    return $warning_string;
+	    }
+
+		// Return the warning array
+	    public function warnings() {
+		    return $this->_warnings;
+	    }
+
+		// Return the number of warnings in the array
+	    public function warningCount() {
+		    if (empty ( $this->_warnings )) $this->_warnings = array();
+		    return count ( $this->_warnings );
+	    }
+
+		// Add an error to the page
 	    public function addError($error) {
 		    $trace = debug_backtrace ();
 		    $caller = $trace [0];
@@ -977,7 +1014,8 @@
 		    app_log ( $error, 'error', $file, $line );
 		    array_push ( $this->_errors, $error );
 	    }
-	    
+
+		// Return the serialized error string
 	    public function errorString($delimiter = "<br>\n") {
 		    if (isset ( $this->error )) array_push ( $this->_errors, $this->error );
 		    $error_string = '';
@@ -994,17 +1032,21 @@
 		    }
 		    return $error_string;
 	    }
-	    
+
+		// Return the error array
 	    public function errors() {
 		    return $this->_errors;
 	    }
-	    
+
+		// Return the number of errors in the array
 	    public function errorCount() {
 		    if (empty ( $this->_errors )) $this->_errors = array();
 		    if (! empty ( $this->error )) array_push ($this->_errors, $this->error);
 		    return count ( $this->_errors );
 	    }
 
+		// We don't keep an array of successes, just a string
+		// Append a success message to the success string
 		public function appendSuccess($string) {
 			if (!empty($this->success)) $this->success .= "<br>\n";
 			$this->success .= $string;
