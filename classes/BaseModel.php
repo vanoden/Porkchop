@@ -114,14 +114,14 @@
     		$addQuery = "INSERT INTO `$this->_tableName` ";
 			$bindFields = array();
 	        foreach ($parameters as $fieldKey => $fieldValue) {
-	            if (in_array($fieldKey, $this->_fields)) {
+	            if (in_array($fieldKey, $this->_fields())) {
     	            array_push($bindFields, $fieldKey);
 					$database->AddParam($fieldValue);
 	            }
 	        }
 	        $addQuery .= '(`'.implode('`,`',$bindFields).'`';
             $addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindFields)) ,',') . ")";
-            
+
             // Execute DB Query
             $database->Execute($addQuery);
 			if ($database->ErrorMsg()) {
@@ -181,7 +181,7 @@
 			else {
 				$cls = get_called_class();
 				$parts = explode("\\",$cls);
-				$this->error($parts[1]." not found");
+				$this->error($parts[1]." '".$code."' not found");
 				return false;
 			}
 		}
@@ -209,9 +209,10 @@
 				FROM	`$this->_tableName`
 				WHERE	`$this->_tableIDColumn` = ?
 			";
+
 			$database->AddParam($this->id);
 			$rs = $database->Execute($get_object_query);
-			
+
 			if (!$rs) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
@@ -219,7 +220,7 @@
 			$object = $rs->FetchNextObject(false);
 			$column = $this->_tableIDColumn;
 			if (is_object($object) && $object->$column > 0) {
-			
+
 				// Collect all attributes from response record
 				foreach ($object as $key => $value) {
 					if (property_exists($this,$key)) $this->$key = $value;
