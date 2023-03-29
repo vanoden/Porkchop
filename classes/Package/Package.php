@@ -2,6 +2,16 @@
 	namespace Package;
 
 	class Package Extends \BaseModel {
+		public $repository_id;
+		public $code;
+		public $name;
+		public $license;
+		public $description;
+		public $status;
+		public $date_created;
+		public $timestamp;
+		public $platform;
+		public $package_version_id;
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'package_packages';
@@ -26,7 +36,7 @@
 			$packagelist = new PackageList();
 			$packagelist->find(array('name' => $parameters['name']));
 			if ($packagelist->count() > 0) {
-				$this->error = "A package already exists by that name";
+				$this->error("A package already exists by that name");
 				return false;
 			}
 
@@ -167,15 +177,12 @@
 			$object = $rs->FetchNextObject(false);
 			$this->code = $object->code;
 			$this->name = $object->name;
-			$this->owner = new \Register\Person($object->owner_id);
 			$this->license = $object->license;
 			$this->description = $object->description;
 			$this->status = $object->status;
 			$this->date_created = $object->date_created;
 			$this->timestamp = $object->timestamp;
 			$this->platform = $object->platform;
-			$factory = new \Storage\RepositoryFactory();
-			$this->repository = $factory->load($object->repository_id);
 			$this->package_version_id = $object->package_version_id;
 
 			return true;
@@ -194,7 +201,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Package::Version::latest(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();

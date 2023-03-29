@@ -3,6 +3,12 @@
 	$page = $site->page();
 	$page->requirePrivilege('see sales quotes');
 
+	// CSRF Protection
+	if($_SERVER['REQUEST_METHOD'] == 'POST' && ! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])){
+		echo "Invalid Request";
+		die();
+	}
+
 	/****************************************/
 	/* Validate Form Data					*/
 	/****************************************/

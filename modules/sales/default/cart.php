@@ -47,6 +47,7 @@
 
 <div id="sales_cart_form" style="clear: both">
 	<form method="post" action="/_sales/cart">
+    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 	<input id="order_id" type="hidden" name="order_id" value="<?=$order->id?>" />
 	<input id="new_status"	type="hidden" name="new_status" />
 	<input id="remove_item" type="hidden" name="remove_item" />
