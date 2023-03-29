@@ -1096,6 +1096,15 @@
 </section>
 			";
 			}
+			if ($this->warningCount() > 0) {
+				$buffer .= "
+<section id=\"form-message\">
+	<ul class=\"connectBorder warningText\">
+		<li>".$this->warningString()."</li>
+	</ul>
+</section>
+			";
+			}
 			if (!empty($this->instructions)) {
 				$buffer .= "
 <section id=\"form-message\">
