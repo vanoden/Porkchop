@@ -37,7 +37,14 @@
 		public function findAdvanced($parameters = [], $controls = []) {
 			$this->clearError();
 			$this->resetCount();
+
 			$database = new \Database\Service();
+
+			if (empty($this->_modelName)) {
+				$this->error("Model Name Not Set");
+				return array();
+			}
+
 			$modelName = $this->_modelName;
 			$model = new $modelName();
 
@@ -94,7 +101,7 @@
 					return array();
 				}
 			}
-app_log($find_objects_query);
+
 			$objects = array();
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
