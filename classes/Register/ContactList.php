@@ -22,28 +22,26 @@
 					$this->error("Invalid contact type");
 					return null;
 				}
-			}
-			
-			if (isset($parameters['user_id'])) {
-				if (preg_match('/^\d+$/',$parameters['user_id'])) {
-					$get_contacts_query .= "
-						AND	person_id = ?";
-					array_push($bind_params,$parameters['user_id']);
+			}			
+
+			// check if we are looking for a specific person by user_id or person_id
+			if (array_key_exists('person_id', $parameters) || array_key_exists('user_id', $parameters)) {
+
+				if (isset($parameters['person_id'])) {
+					$person_id = $parameters['person_id'];
 				} else {
-					$this->error("Invalid user id");
-					return null;
+					$person_id = $parameters['user_id'];
 				}
-			} elseif (isset($parameters['person_id'])) {
-				if (preg_match('/^\d+$/',$parameters['person_id'])) {
+				if (preg_match('/^\d+$/',$person_id) && !empty($person_id)) {
 					$get_contacts_query .= "
 						AND	person_id = ?";
-					array_push($bind_params,$parameters['person_id']);
+					array_push($bind_params,$person_id);
 				} else {
 					$this->error("Invalid user id");
 					return null;
 				}
 			}
-			
+
 			if (isset($parameters['notify'])) {
 				if ($parameters['notify'] == 1 || $parameters['notify'] == true) {
 					$get_contacts_query .= "

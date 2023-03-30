@@ -8,7 +8,6 @@
 
 		public function __construct($id = 0) {
 			parent::__construct($id);
-			//if ($this->id) $this->roles();
 		}
 
 		public function add($parameters = []) {
@@ -506,6 +505,7 @@
 			$parameters = array(
 				'person_id'	=> $this->id
 			);
+
 			if (isset($params['type'])) $parameters['type'] = $params['type'];
 			$contacts = $contactList->find($parameters);
 			if ($contactList->error()) {
