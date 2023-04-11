@@ -1005,6 +1005,11 @@
 		    return count ( $this->_warnings );
 	    }
 
+		// Add an errors to the page from an array
+	    public function addErrors(array $errors) {
+		    foreach ($errors as $error) $this->addError($error);
+	    }
+
 		// Add an error to the page
 	    public function addError($error) {
 		    $trace = debug_backtrace ();
