@@ -1,5 +1,6 @@
 <?php
     class BaseMetadataClass Extends \BaseClass {
+    
 		public $id;
 		protected $_tableName;
 		protected $_tableIDColumn = 'id';

@@ -2,6 +2,7 @@
 	namespace Product;
 
 	class Instance extends \BaseModel {
+	
 		public $id;
 		public $code;
 		public $name;
@@ -80,8 +81,8 @@
 		}
 
 		public function getSimple($code) {
+		
 			$this->clearError();
-
 			$database = new \Database\Service();
 
 			$get_object_query = "
@@ -238,7 +239,6 @@
 		
 		public function details(): bool {
 			$this->clearError();
-
 			$database = new \Database\Service();
 
 			$get_object_query = "
