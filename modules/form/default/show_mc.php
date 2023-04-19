@@ -1,13 +1,13 @@
 <?php
-	###########################################
-	### /_form/show/<code>					###
-	### Display the form identified by		###
-	### <code> or with id post param.		###
-	###########################################
+###########################################
+### /_form/show/<code>					###
+### Display the form identified by		###
+### <code> or with id post param.		###
+###########################################
 
-	# Load Page Info
-	$site = new \Site();
-	$page = $site->page();
+# Load Page Info
+$site = new \Site();
+$page = $site->page();
 
 	// Load Form
 	if (!empty($_REQUEST['code'])) {

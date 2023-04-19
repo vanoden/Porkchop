@@ -2,6 +2,7 @@
 	namespace Product;
 
 	class Instance extends \BaseModel {
+	
 		public $id;
 		public $code;
 		public $name;
@@ -80,8 +81,8 @@
 		}
 
 		public function getSimple($code) {
+		
 			$this->clearError();
-
 			$database = new \Database\Service();
 
 			$get_object_query = "
@@ -148,7 +149,7 @@
 
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid asset id required for update");
-				return null;
+				return false;
 			}
 
 			$bind_params = array();
@@ -156,7 +157,7 @@
 			# Get Current Details
 			if (! $this->id) {
 				$this->error("No matching asset to update");
-				return null;
+				return false;
 			}
 
 			# Update Object Query
@@ -187,7 +188,7 @@
 					$database->addParam($parameters['organization_id']);
 				} else {
 					$this->error("Insufficient privileges for update");
-					return null;
+					return false;
 				}
 			}
 
@@ -238,7 +239,6 @@
 		
 		public function details(): bool {
 			$this->clearError();
-
 			$database = new \Database\Service();
 
 			$get_object_query = "
@@ -255,7 +255,7 @@
 			$rs = $database->Execute($get_object_query);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
 			else {
 				$object = $rs->FetchNextObject(false);
