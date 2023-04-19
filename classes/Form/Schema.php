@@ -21,7 +21,7 @@
 						`action` varchar(128),
 						`method` enum('get','post') NOT NULL DEFAULT 'post',
 						PRIMARY KEY (`id`),
-						UNIQUE KEY `idx_form_code` (`company_id`,`user_id`)
+						UNIQUE KEY `idx_form_code` (`code`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
@@ -33,9 +33,9 @@
 					CREATE TABLE IF NOT EXISTS `form_questions` (
 						`id` int(10) NOT NULL AUTO_INCREMENT,
 						`form_id` int(5) NOT NULL DEFAULT '0',
-						`type` enum('hidden','text','textarea','select','checkbox','submit') NOT NULL DEFAULT 'text',
-						`name` varchar(64) NOT NULL,
-						'prompt'	varchar(256) NOT NULL,
+						`type` enum('hidden','text','textarea','select','checkbox','radio','submit') NOT NULL DEFAULT 'text',
+						`text` varchar(64) NOT NULL,
+						`prompt` varchar(256) NOT NULL,
 						`example` varchar(64) DEFAULT NULL,
 						`validation_pattern` varchar(128),
 						`group_id` varchar(64) DEFAULT NULL,
@@ -50,7 +50,6 @@
 				";
 				if (! $this->executeSQL($create_table_query)) {
 					$this->SQLError($this->error());
-					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -58,9 +57,9 @@
 					CREATE TABLE IF NOT EXISTS `form_question_options` (
 						`id` int(10) NOT NULL AUTO_INCREMENT,
 						`question_id` int(5) NOT NULL DEFAULT '0',
-						'text' varchar(128) NOT NULL,
-						'value'	varchar(128) NOT NULL,
-						'sort_order' INT(3) NOT NULL DEFAULT 50,
+						`text` varchar(128) NOT NULL,
+						`value`	varchar(128) NOT NULL,
+						`sort_order` INT(3) NOT NULL DEFAULT 50,
 						PRIMARY KEY (`id`),
 						INDEX `idx_form_question_` (`question_id`, `sort_order`),
 						FOREIGN KEY `fk_form_option_question` (`question_id`) REFERENCES `form_questions` (`id`)
@@ -68,7 +67,6 @@
 				";
 				if (! $this->executeSQL($create_table_query)) {
 					$this->SQLError($this->error());
-					app_log($this->error(), 'error');
 					return false;
 				}
 

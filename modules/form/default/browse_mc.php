@@ -11,3 +11,6 @@
 
 	$formList = new \Form\FormList();
 	$forms = $formList->find();
+	if ($formList->error()) {
+		$page->addError($formList->error());
+	};

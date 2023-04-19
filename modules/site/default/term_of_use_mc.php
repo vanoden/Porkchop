@@ -4,7 +4,13 @@
 	$page->requirePrivilege('manage terms of use');
 
 	$tou = new \Site\TermsOfUse();
-	if (isset($_REQUEST['id'])) $tou = new \Site\TermsOfUse($_REQUEST['id']);
+	if (isset($_REQUEST['id'])) {
+		$tou = new \Site\TermsOfUse($_REQUEST['id']);
+		if (!$tou->exists()) {
+			$page->addError("Requested Terms of Use Agreement not found");
+			http_response_code(404);
+		}
+	}
 
 	if (!empty($_REQUEST['btn_submit'])) {
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
