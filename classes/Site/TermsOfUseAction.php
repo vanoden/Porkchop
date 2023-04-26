@@ -5,6 +5,7 @@
 		public $version_id;
 		public $user_id;
 		public $type;
+		public $date_action;
 
 		/********************************************/
 		/* Instance Constructor						*/
