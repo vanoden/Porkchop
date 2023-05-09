@@ -346,6 +346,25 @@
 			return $array;
 		}
 		
+		
+		public function getAllMetadata() {
+			$get_value_query = "
+				SELECT	value
+				FROM	monitor_asset_metadata
+				WHERE	asset_id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_value_query,
+				array($this->id)
+			);
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			list($value) = $rs->FetchRow();
+			return $value;
+		}		
+		
 		public function getMetadata($key) {
 			$get_value_query = "
 				SELECT	value
