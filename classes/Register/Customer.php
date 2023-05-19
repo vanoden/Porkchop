@@ -21,7 +21,6 @@
 		public function details(): bool {
 		    parent::details();
 			if ($this->id) {
-				//$this->roles();
 				$this->login = $this->code;
 				return true;
 			}

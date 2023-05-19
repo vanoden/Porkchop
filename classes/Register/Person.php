@@ -301,6 +301,7 @@ class Person Extends \BaseModel {
 		$update_customer_query .= "
 			WHERE	id = ?
 		";
+
 		array_push($bind_params,$this->id);
         $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
         if ($GLOBALS['_database']->ErrorMsg()) {
