@@ -67,7 +67,7 @@
 
 			# Record Event
 			$event = new \Action\Event();
-			$event->add(
+			$event->addEvent(
 				"MonitorAsset",
 				[	"code"  => $parameters["code"],
 					"timestamp" => date("Y-m-d H:i:s"),
@@ -213,7 +213,7 @@
 				
 					# Record Event
 					$event = new \Action\Event();
-					$event->add(
+					$event->addEvent(
 						"MonitorAsset",
 						[	"code"  => $parameters["code"],
 							"timestamp" => date("Y-m-d H:i:s"),

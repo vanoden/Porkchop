@@ -19,12 +19,24 @@
 				array_push($bind_params,$parameters['document_id']);
 			}
 
+			if ($parameters['send_contact_id']) {
+				$find_objects_query .= "
+				AND		send_contact_id = ?";
+				array_push($bind_params,$parameters['send_contact_id']);
+			}
+			
+			if (isset($parameters['status']) and preg_match('/^(NEW|SHIPPED|LOST|RECEIVED|RETURNED)$/',$parameters['status'])) {
+				$find_objects_query .= "
+				AND		status = ?";
+				array_push($bind_params,$parameters['status']);
+			}
+
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
 				$this->_error = "SQL Error in Shipping::ShipmentList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-
+			
 			$shipments = array();
 			while (list($id) = $rs->FetchRow()) {
 				$shipment = new \Shipping\Shipment($id);
