@@ -1078,7 +1078,7 @@
 			}
 			if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
 				$html .= "&nbsp;&nbsp;<a href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\">Manage</a>";
-			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+			return "<nav id=\"breadcrumb\">\n\t<ul><li>\n$html\n\t</li></ul>\n</nav>\n";
 		}
 
 		public function showMessages() {
