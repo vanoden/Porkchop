@@ -124,6 +124,13 @@
 		"admin"	=> array(
 			"title"	=> "Admin Left Nav",
 			"items"	=> array(
+			    array(
+				    "title"			=> "Overview",
+				    "target"		=> "/_spectros/outstanding_requests",
+				    "view_order"	=> 1,
+				    "alt"			=> "Outstanding Task Tickler",
+				    "description"	=> "Outstanding Task Tickler"
+			    ),				
 				array(
 					"title"			=> "Customer",
 					"view_order"	=> 10,

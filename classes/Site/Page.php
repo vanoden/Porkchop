@@ -19,8 +19,10 @@
 	    public $success;
 		public $instructions;
 		public $tou_id;
+		public $sitemap;
 		private $_breadcrumbs = array();
 	    private $_errors = array();
+		private $_warnings = array();
 
 	    public function __construct() {
 			$this->_tableName = "page_pages";
@@ -127,13 +129,30 @@
 			    exit();
 			}
 		}
-        
+
+		public function confirmTOUAcceptance() {
+			if ($this->tou_id > 0) {
+				$tou = $this->tou();
+				$latest_version = $tou->latestVersion();
+				if ($tou->error()) app_log($tou->error(),'error');
+				elseif (!$latest_version) app_log('No published version of tou '.$tou->id);
+				else {
+					if (! $GLOBALS['_SESSION_']->customer->acceptedTOU($tou->id)) {
+						app_log("Customer has not yet accepted version ".$latest_version->id." of TOU ".$tou->id);
+						header("Location: /_site/terms_of_use_form?module=".$this->module()."&view=".$this->view()."&index=".$this->index());
+						exit;
+					}
+					app_log("Customer has accepted version ".$latest_version->id." of TOU ".$tou->id,'trace');
+				}
+			}
+			return true;
+		}
+
 	    public function getPage($module, $view, $index = null) {
 			$this->clearError();
 
 			$database = new \Database\Service();
 
-			$parameters = array ($module, $view );
 		    if (strlen ( $index ) < 1) $index = null;
 
 		    // Prepare Query
@@ -160,7 +179,7 @@
 
 		    $rs = $database->Execute($get_object_query);
 		    if (! $rs) {
-			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
+			    $this->SQLError($database->ErrorMsg());
 			    return ;
 		    }
 		    list($id) = $rs->FetchRow();
@@ -169,6 +188,12 @@
 			    $this->id = $id;
 			    return $this->details();
 		    }
+			elseif ($module == "static") {
+				// Override module and view - somehow being overridden elsewhere
+				$this->module = $module;
+				$this->view = $view;
+				return true;
+			}
 			elseif ($module == "content" && $view == "index") {
 				$message = new \Content\Message();
 				if ($message->get($index)) {
@@ -233,14 +258,22 @@
 				SET		`$this->_tableIDColumn` = `$this->_tableIDColumn`
 			";
 			if (isset($parameters['tou_id'])) {
-				if ($parameters['tou_id'] < 1) $parameters['tou_id'] = '0';
 				$update_object_query .= ",
 						tou_id = ?";
+				if ($parameters['tou_id'] < 1) $parameters['tou_id'] = '0';
 				$database->AddParam($parameters['tou_id']);
 			}
+			if (isset($parameters['sitemap'])) {
+				$update_object_query .= ",
+						sitemap = ?";
+				if ($parameters['sitemap'] == true || $parameters['sitemap'] == 1) $database->AddParam(1);
+				else $database->AddParam(0);
+			}
+
 			$update_object_query .= "
 				WHERE	`$this->_tableIDColumn` = ?";
 			$database->AddParam($this->id);
+
 			$this->clearCache();
 			$database->Execute($update_object_query);
 			if ($database->ErrorMsg()) {
@@ -277,26 +310,47 @@
 			return true;
 		}
 	    public function details(): bool {
-		    $get_details_query = "
-				    SELECT	id,
-						    module,
-						    view,
-							tou_id,
-						    `index` idx
-				    FROM	page_pages
-				    WHERE	id = ?
-			    ";
-		    $rs = $GLOBALS ['_database']->Execute ( $get_details_query, array ($this->id ) );
+			$database = new \Database\Service();
+			$schema = new \Database\Schema();
+			$table = $schema->table('page_pages');
+			if ($table->has_column('sitemap')) {
+				$get_details_query = "
+						SELECT	id,
+								module,
+								view,
+								tou_id,
+								`index` idx,
+								sitemap
+						FROM	page_pages
+						WHERE	id = ?
+					";
+			}
+			else {
+				$get_details_query = "
+						SELECT	id,
+								module,
+								view,
+								tou_id,
+								`index` idx,
+								0 sitemap
+						FROM	page_pages
+						WHERE	id = ?
+					";
+			}
+			$database->AddParam($this->id);
+		    $rs = $database->Execute($get_details_query);
 		    if (! $rs) {
-			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
+			    $this->SQLError($database->ErrorMsg());
 			    return false;
 		    }
-		    $object = $rs->FetchNextObject ( false );
+		    $object = $rs->FetchNextObject(false);
 		    if (gettype($object) == 'object') {
 			    $this->module = $object->module;
 			    $this->view = $object->view;
 				$this->tou_id = $object->tou_id;
 			    $this->index = $object->idx;
+				if ($object->sitemap == 1) $this->sitemap = true;
+				else $this->sitemap = false;
 		    }
 			else {
 			    // Just Let The Defaults Go
@@ -369,9 +423,13 @@
 
 		public function load_template() {
             $this->loadSiteHeaders();
-			$template = $this->template();
-			if (isset ( $template ) && file_exists(HTML."/".$template)) return $this->parse(file_get_contents(HTML."/".$template));
-			elseif (isset ($template)) app_log("Template ".HTML."/".$template." not found!",'error');
+
+			if ($this->module() == 'static') {
+				return $this->parse(file_get_contents(HTML."/".$this->view));
+			}
+			$this->template = $this->template();
+			if (!empty($this->template ) && file_exists(HTML."/".$this->template)) return $this->parse(file_get_contents(HTML."/".$this->template));
+			elseif (!empty($this->template)) app_log("Template ".HTML."/".$this->template." not found!",'error');
 			return $this->parse('<r7 object="page" property="view"/>');
 	    }
 
@@ -393,9 +451,9 @@
 				$counter->increment();
 				$message = "Application Error";
 			}
-		    // Return Messsage
-		    //return "<!-- ".$this->module()." ".$this->view()." ".$this->index()." -->\n".$message;
-		    return $message;
+			if (!empty($this->template())) header("X-Template: ".$this->template());
+			if (!empty($this->module)) header("X-Module: ".$this->module());
+			return $message;
 	    }
 	    
 	    private function parse_element($string) {
@@ -908,6 +966,51 @@
 			}
 		}
 
+		// Return the Terms of Use object for this page
+		public function tou() {
+			return new \Site\TermsOfUse($this->tou_id);
+		}
+
+		/********************************************/
+		/* Warning and Error Handling				*/
+		/********************************************/
+		// Add a warning to the page
+		public function addWarning($msg) {
+		    $trace = debug_backtrace ();
+		    $caller = $trace [0];
+		    $file = $caller ['file'];
+		    $line = $caller ['line'];
+		    app_log ( $msg, 'warn', $file, $line );
+		    array_push ( $this->_warnings, $msg );
+	    }
+
+		// Return the serialized warning string
+	    public function warningString($delimiter = "<br>\n") {
+		    $warning_string = '';
+		    foreach ( $this->_warnings as $warning ) {
+			    if (strlen ( $warning_string )) $warning_string .= $delimiter;
+			    $warning_string .= $warning;
+		    }
+		    return $warning_string;
+	    }
+
+		// Return the warning array
+	    public function warnings() {
+		    return $this->_warnings;
+	    }
+
+		// Return the number of warnings in the array
+	    public function warningCount() {
+		    if (empty ( $this->_warnings )) $this->_warnings = array();
+		    return count ( $this->_warnings );
+	    }
+
+		// Add an errors to the page from an array
+	    public function addErrors(array $errors) {
+		    foreach ($errors as $error) $this->addError($error);
+	    }
+
+		// Add an error to the page
 	    public function addError($error) {
 		    $trace = debug_backtrace ();
 		    $caller = $trace [0];
@@ -916,7 +1019,8 @@
 		    app_log ( $error, 'error', $file, $line );
 		    array_push ( $this->_errors, $error );
 	    }
-	    
+
+		// Return the serialized error string
 	    public function errorString($delimiter = "<br>\n") {
 		    if (isset ( $this->error )) array_push ( $this->_errors, $this->error );
 		    $error_string = '';
@@ -933,17 +1037,21 @@
 		    }
 		    return $error_string;
 	    }
-	    
+
+		// Return the error array
 	    public function errors() {
 		    return $this->_errors;
 	    }
-	    
+
+		// Return the number of errors in the array
 	    public function errorCount() {
 		    if (empty ( $this->_errors )) $this->_errors = array();
 		    if (! empty ( $this->error )) array_push ($this->_errors, $this->error);
 		    return count ( $this->_errors );
 	    }
 
+		// We don't keep an array of successes, just a string
+		// Append a success message to the success string
 		public function appendSuccess($string) {
 			if (!empty($this->success)) $this->success .= "<br>\n";
 			$this->success .= $string;
@@ -952,6 +1060,10 @@
 		/************************************/
 		/* Breadcrumb Methods				*/
 		/************************************/
+		public function showAdminPageInfo() {
+			return $this->showBreadcrumbs()."\n".$this->showTitle()."\n".$this->showMessages()."\n";
+		}
+
 		public function addBreadcrumb($name,$target = '') {
 			$breadcrumb = array("name" => $name, "target" => $target);
 			array_push($this->_breadcrumbs,$breadcrumb);
@@ -965,8 +1077,13 @@
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
 			if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
+<<<<<<< HEAD
 				$html .= "<li><a href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\">Manage</a></li>";
 			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+=======
+				$html .= "&nbsp;&nbsp;<a href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\">Manage</a>";
+			return "<nav id=\"breadcrumb\">\n\t<ul><li>\n$html\n\t</li></ul>\n</nav>\n";
+>>>>>>> 780ef9d023dc909f3247e49c5b2e17410659bc83
 		}
 
 		public function showMessages() {
@@ -985,6 +1102,15 @@
 <section id=\"form-message\">
 	<ul class=\"connectBorder progressText\">
 		<li>".$this->success."</li>
+	</ul>
+</section>
+			";
+			}
+			if ($this->warningCount() > 0) {
+				$buffer .= "
+<section id=\"form-message\">
+	<ul class=\"connectBorder warningText\">
+		<li>".$this->warningString()."</li>
 	</ul>
 </section>
 			";
@@ -1013,7 +1139,34 @@
 		public function showTitle() {
 			return "<h1>".$this->title()."</h1>";
 		}
+	
+		public function uri() {
+			if ($this->module() == 'content') return "/".$this->index();
+			return "/_".$this->module()."/".$this->view()."/".$this->index();
+		}
 
+		public function rewrite() {
+			if ($this->module() == 'static') {
+				if ($this->view() == 'index.html') {
+					$this->getPage('content','index','home');
+				}
+				elseif ($this->view() == 'products.html') {
+					$this->getPage('content','index','products');
+				}
+				elseif ($this->view() == 'learning.html') {
+					$this->getPage('content','index','learning');
+				}
+				elseif ($this->view() == 'contact_home.html') {
+					$this->getPage('static','contact_sales.html');
+				}
+				elseif ($this->view() == 'contact_support.html') {
+					$this->getPage('static','contact_sales.html');
+				}
+				elseif ($this->view() == 'distributors.html') {
+					$this->getPage('content','index','distributors');
+				}
+			}
+		}
 		/************************************/
 		/* Validation Methods				*/
 		/************************************/

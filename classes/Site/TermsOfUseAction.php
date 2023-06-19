@@ -1,8 +1,11 @@
 <?php
 	namespace Site;
 
-	class TermsOfUseAction Extends \BaseModelList {
-		public int $id;
+	class TermsOfUseAction Extends \BaseModel {
+		public $version_id;
+		public $user_id;
+		public $type;
+		public $date_action;
 
 		/********************************************/
 		/* Instance Constructor						*/
@@ -15,7 +18,7 @@
 			$this->_cacheKeyPrefix = $this->_tableName;
 
 			// Possible Types
-			$this->_addType(array('VIEWED','ACCEPTED','DECLINED'));
+			$this->_addTypes(array('VIEWED','ACCEPTED','DECLINED'));
 
 			// Load Record for Specified ID if given
 			if (isset($id) && is_numeric($id)) {
@@ -29,7 +32,7 @@
 		/* Must include non-nullable fields.		*/
 		/* Others should be handled in update().	*/
 		/********************************************/
-		public function add(array $params): bool {
+		public function add($params = []): bool {
 			// Clear Any Existing Errors
 			$this->clearError();
 
@@ -40,6 +43,21 @@
 			// Default New Object Code If Not Provided
 			if (empty($params['code'])) $params['code'] = $porkchop->uuid();
 			if (empty($params['status'])) $params['status'] = 'NEW';
+			if (empty($params['version_id'])) {
+				$this->error("version_id required");
+				return false;
+			}
+			else {
+				$version = new \Site\TermsOfUseVersion($params['version_id']);
+				if ($version->error()) {
+					$this->error($version->error());
+					return false;
+				}
+				elseif (!$version->id) {
+					$this->error("Version Not Found");
+					return false;
+				}
+			}
 
 			// Prepare Query
 			$add_object_query = "
@@ -51,14 +69,14 @@
 			";
 
 			// Add Parameters
-			$database->AddParam($param['version_id']);
+			$database->AddParam($version->id);
 			$database->AddParam($GLOBALS['_SESSION_']->customer->id);
-			$database->AddParam($param['type']);
+			$database->AddParam($params['type']);
 
 			// Execute Query
 			$rs = $database->Execute($add_object_query);
 			if (! $rs) {
-				$this->SQLError($rs->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
@@ -67,72 +85,5 @@
 
 			// No Update, Load Details
 			return $this->details();
-		}
-
-		/********************************************/
-		/* Load Object Details						*/
-		/* from Cache or Database					*/
-		/********************************************/
-		public function details() {
-			// Clear Errors
-			$this->clearError();
-
-			// Load Services
-			$database = new \Database\Service();
-			$cache = $this->cache();
-
-			// Fetch Cached Data
-	        if ($cache && $cache->exists()) {
-				$data = $this->cache->get();
-
-				// Fetch Each Class Attribute
-				$this->code = $data->code;
-
-				// Tag Class as Cached
-				$this->_cached = true;
-
-				$this->_exists = true;
-
-				// Return Success - No DB Hit Needed!
-				return true;
-			}
-
-			// Initialize Query
-			$get_object_query = "
-				SELECT	*
-				FROM	`".$this->_tableName."`
-				WHERE	id = ?";
-
-			// Bind Params
-			$database->AddParam($this->id);
-
-			// Execute Query
-			$rs = $database->Execute($get_object_query);
-			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
-				return false;
-			}
-
-			// Fetch Results From Database
-			$object = $rs->FetchNextObject();
-			if ($object->id) {
-				$this->id = $object->id;
-				$this->code = $object->code;
-
-				// Cache Database Results
-				$cache->set($object);
-
-				$this->_exists = true;
-			}
-			else {
-				// Null out any values
-				$this->id = null;
-				$this->code = null;
-
-				$this->_exists = false;
-			}
-
-			// Return True as long as No Errors - Not Found is NOT an error
-			return true;
 		}
 	}

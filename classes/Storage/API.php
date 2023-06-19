@@ -22,7 +22,7 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
 			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->create($_REQUEST['type']);
-			if ($factory->error) $this->error("Error adding repository: ".$factory->error);
+			if ($factory->error()) $this->error("Error adding repository: ".$factory->error());
 			$repository->add(
 				array(
 					'code'				=> $_REQUEST['code'],
@@ -31,13 +31,11 @@
 					'path'				=> $_REQUEST['path']
 				)
 			);
-			if ($repository->error) $this->error("Error adding repository: ".$repository->error);
+			if ($repository->error()) $this->error("Error adding repository: ".$repository->error());
 
-			$this->response->success = 1;
-			$this->response->repository = $repository;
-
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('repository',$repository);
+			$response->print();
 		}
 
 		###################################################
@@ -48,9 +46,9 @@
 
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
 			$repository = new \Storage\Repository();
-			if ($repository->error) $this->error("Error adding repository: ".$repository->error);
+			if ($repository->error()) $this->error("Error adding repository: ".$repository->error());
 			$repository->get($_REQUEST['code']);
-			if ($repository->error) $this->app_error("Error finding repository: ".$repository->error,__FILE__,__LINE__);
+			if ($repository->error()) $this->app_error("Error finding repository: ".$repository->error(),__FILE__,__LINE__);
 			if (! $repository->id) $this->error("Repository not found");
 
 			$parameters = array();
@@ -59,13 +57,11 @@
 			if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 
 			$repository->update($parameters);
-			if ($repository->error) $this->app_error("Error updating repository: ".$repository->error,__FILE__,__LINE__);
+			if ($repository->error()) $this->app_error("Error updating repository: ".$repository->error(),__FILE__,__LINE__);
 
-			$this->response->success = 1;
-			$this->response->repository = $repository;
-
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('repository',$repository);
+			$response->print();
 		}
 	
 		###################################################
@@ -73,7 +69,7 @@
 		###################################################
 		public function findRepositories() {
 			$repositorylist = new \Storage\RepositoryList();
-			if ($repositorylist->error) app_error("Error initializing repository list: ".$repositorylist->error,__FILE__,__LINE__);
+			if ($repositorylist->error()) app_error("Error initializing repository list: ".$repositorylist->error(),__FILE__,__LINE__);
 
 			$parameters = array();
 			if (isset($_REQUEST['code']) and strlen($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
@@ -89,13 +85,11 @@
 				}
 				array_push($shownRepositories,$repository);
 			}
-			if ($repositorylist->error) app_error("Error finding repositories: ".$repositorylist->error,__FILE__,__LINE__);
+			if ($repositorylist->error()) app_error("Error finding repositories: ".$repositorylist->error(),__FILE__,__LINE__);
 
-			$this->response->success = 1;
-			$this->response->repository = $shownRepositories;
-
-			api_log($shownRepositories);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('repository',$shownRepositories);
+			$response->print();
 		}
 		
 		###################################################
@@ -107,19 +101,19 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
 			$repositoryList = new \Storage\RepositoryList();
 			list($repository) = $repositoryList->find(array("code" => $_REQUEST['code']));
-			if ($repositoryList->error) $this->app_error("Error finding repository: ".$repository->error,__FILE__,__LINE__);
+			if ($repositoryList->error()) $this->app_error("Error finding repository: ".$repository->error(),__FILE__,__LINE__);
 			if (! $repository->id) $this->error("Repository not found");
 
 			$repository->setMetadata($_REQUEST['key'],$_REQUEST['value']);
-			if ($repository->error) $this->error($repository->error);
+			if ($repository->error()) $this->error($repository->error());
 
 			$repository->get($_REQUEST['code']);
 
-			$this->response->success = 1;
-			$this->response->repository = $repository;
+			$response = new \APIResponse();
+			$response->addElement('repository',$repository);
 
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			api_log($response);
+			$response->print();
 		}
 		
 		###################################################
@@ -127,20 +121,18 @@
 		###################################################
 		public function getRepositoryMetadata() {
 			$repository = new \Storage\Repository();
-			if ($repository->error) $this->app_error("Error initializing repository: ".$repository->error,__FILE__,__LINE__);
+			if ($repository->error()) $this->app_error("Error initializing repository: ".$repository->error(),__FILE__,__LINE__);
 
 			$repository->get($_REQUEST['code']);
-			if ($repository->error) $this->app_error("Error finding repository: ".$repository->error,__FILE__,__LINE__);
+			if ($repository->error()) $this->app_error("Error finding repository: ".$repository->error(),__FILE__,__LINE__);
 			if (! $repository->id) $this->error("Repository '".$_REQUEST['code']."' not found");
 
 			$metadata = new \Storage\Repository\Metadata($repository->id,$_REQUEST['key']);
-			if ($metadata->error) $this->app_error("Error getting metadata: ".$metadata->error,__FILE__,__LINE__);
+			if ($metadata->error()) $this->app_error("Error getting metadata: ".$metadata->error(),__FILE__,__LINE__);
 
-			$this->response->success = 1;
-			$this->response->metadata = $metadata;
-
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('metadata',$metadata);
+			$response->print();
 		}
 
 		###################################################
@@ -153,7 +145,7 @@
 
 			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->get($_REQUEST['repository_code']);
-			if ($factory->error) $this->error("Error loading repository: ".$factory->error);
+			if ($factory->error()) $this->error("Error loading repository: ".$factory->error());
 			if (! $repository->id) $this->error("Repository not found");
 			app_log("Identified repo '".$repository->name."'");
 
@@ -167,7 +159,7 @@
 			app_log("Storing ".$_REQUEST['name']." to ".$repository->path);
 			if (isset($_REQUEST['read_protect']) && strlen($_REQUEST['read_protect']) && $_REQUEST['read_protect'] != 'NONE') {
 				if ($repository->endpoint) {
-					$this->error = "Can't protect a file in a repository with external endpoint";
+					$this->error("Can't protect a file in a repository with external endpoint");
 					return false;
 				}
 			}
@@ -184,7 +176,7 @@
 
 			# Add File to Library
 			$file = new \Storage\File();
-			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->add(
 				array(
 					'repository_id'		=> $repository->id,
@@ -198,18 +190,16 @@
 			);
 
 			# Upload File Into Repository
-			if ($file->error) $this->error("Error adding file: ".$file->error);
+			if ($file->error()) $this->error("Error adding file: ".$file->error());
 			if (! $repository->addFile($file,$_FILES['file']['tmp_name'])) {
 				$file->delete();
-				$this->error('Unable to add file to repository: '.$repository->error);
+				$this->error('Unable to add file to repository: '.$repository->error());
 			}
 			app_log("Stored file ".$file->id." at ".$repository->path."/".$file->code);
 
-			$this->response->success = 1;
-			$this->response->file = $file;
-
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('file',$file);
+			$response->print();
 		}
 
 		###################################################
@@ -220,9 +210,9 @@
 
 			if (! $GLOBALS['_SESSION_']->customer->can('upload storage files')) error('storage upload role required');
 			$file = new \Storage\File();
-			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->get($_REQUEST['code']);
-			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
 			if (! $file->id) $this->error("File not found");
 
 			$parameters = array();
@@ -230,13 +220,11 @@
 			if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 
 			$file->update($parameters);
-			if ($file->error) $this->app_error("Error updating file: ".$file->error,__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error updating file: ".$file->error(),__FILE__,__LINE__);
 
-			$this->response->success = 1;
-			$this->response->file = $file;
-
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('file',$file);
+			$response->print();
 		}
 
 		###################################################
@@ -247,24 +235,20 @@
 
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage files')) error('storage upload role required');
 			$file = new \Storage\File();
-			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->get($_REQUEST['code']);
-			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
-			if (! $file->id) $this->error("File not found");
+			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
+			if (! $file->id) $this->notFound("File not found");
 
 			# Remove File From Repository
 			$repository = $file->repository();
-			if (! $file->repository->eraseFile($file)) {
-				app_log("Failed to delete file ".$_REQUEST['code'].": ".$repository->error,'error',__FILE__,__LINE__);
-			}
+			if (! $file->repository()->eraseFile($file)) $this->app_error("Failed to delete file ".$_REQUEST['code'].": ".$repository->error());
 
 			$file->delete();
-			if ($file->error) $this->app_error("Error deleting file: ".$file->error,__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error deleting file: ".$file->error(),__FILE__,__LINE__);
 
-			$this->response->success = 1;
-
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->print();
 		}
 
 		###################################################
@@ -272,10 +256,10 @@
 		###################################################
 		public function readPermitted() {
 			$file = new \Storage\File();
-			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->get($_REQUEST['file_code']);
-			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
-			if (! $file->id) $this->error("File not found");
+			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
+			if (! $file->id) $this->notFound("File not found");
 
 			$user_id = null;
 			if (! empty($_REQUEST['user_code'])) {
@@ -287,16 +271,11 @@
 					$this->error("User not found");
 				}
 			}
-			if ($file->readPermitted($user_id)) {
-				$this->response->permitted = 1;
-			}
-			else {
-				$this->response->permitted = 0;
-			}
-			$this->response->success = 1;
 
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			if ($file->readPermitted($user_id)) $response->addElement('permitted',1);
+			else $response->addElement('permitted',0);
+			$response->print();
 		}
 
 		###################################################
@@ -304,9 +283,9 @@
 		###################################################
 		public function writePermitted() {
 			$file = new \Storage\File();
-			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->get($_REQUEST['file_code']);
-			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
 			if (! $file->id) $this->error("File not found");
 
 			$user_id = null;
@@ -316,19 +295,14 @@
 					$user_id = $user->id;
 				}
 				else {
-					$this->error("User not found");
+					$this->notFound("User not found");
 				}
 			}
-			if ($file->writePermitted($user_id)) {
-				$this->response->permitted = 1;
-			}
-			else {
-				$this->response->permitted = 0;
-			}
-			$this->response->success = 1;
 
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			if ($file->writePermitted($user_id)) $response->addElement('permitted',1);
+			else $response->addElement('permitted',0);
+			$response->print();
 		}
 
 		###################################################
@@ -336,11 +310,11 @@
 		###################################################
 		public function getFilePrivileges() {
 			$file = new \Storage\File();
-			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->get($_REQUEST['code']);
-			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
-			if (! $file->id) $this->error("File not found");
-			if ($file->user->id != $GLOBALS['_SESSION_']->customer->id && ! $GLOBALS['_SESSION_']->customer->can('update storage file permissions')) error('permission denied');
+			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
+			if (! $file->id) $this->notFound("File not found");
+			if ($file->user()->id != $GLOBALS['_SESSION_']->customer->id && ! $GLOBALS['_SESSION_']->customer->can('update storage file permissions')) error('permission denied');
 
 			$privileges = $file->getPrivileges();
 			$document = array();
@@ -360,11 +334,10 @@
 					}
 				}
 			}
-			$this->response->privilege = $document;
-			$this->response->success = 1;
 
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('privilege',$document);
+			$response->print();
 		}
 
 		###################################################
@@ -374,11 +347,11 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			$file = new \Storage\File();
-			if ($file->error) $this->error("Error initializing file: ".$file->error);
+			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->get($_REQUEST['file_code']);
-			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
 			if (! $file->id) $this->error("File not found");
-			if ($file->user->id != $GLOBALS['_SESSION_']->customer->id && ! $GLOBALS['_SESSION_']->customer->can('update storage file permissions')) error('permission denied');
+			if ($file->user()->id != $GLOBALS['_SESSION_']->customer->id && ! $GLOBALS['_SESSION_']->customer->can('update storage file permissions')) error('permission denied');
 
 			if (empty($_REQUEST['entity_type']) || !preg_match('/^[uora]/i',$_REQUEST['entity_type'])) $this->error("entity_type must be 'user','organization', 'role' or 'all'");
 			if (empty($_REQUEST['mask']) || !preg_match('/^[\-\+wrgf]+/i',$_REQUEST['mask'])) $this->error("mask must be some combination of signs (+/-) and letters 'wrgf'");
@@ -407,7 +380,7 @@
 				}
 				else $this->error("Must identify user");
 				if (! $user->id) $this->error("User not found");
-				if (! $file->updatePrivileges("u",$user->id,$mask)) $this->error("Error updating privileges: ".$file->error);
+				if (! $file->updatePrivileges("u",$user->id,$mask)) $this->error("Error updating privileges: ".$file->error());
 			}
 			elseif (preg_match('/^o/i',$_REQUEST['entity_type'])) {
 				if (isset($_REQUEST['entity_id'])) {
@@ -419,28 +392,26 @@
 				}
 				else $this->error("Must identify organization");
 				if (! $organization->id) $this->error("Organization not found");
-				if (! $file->updatePrivileges("o",$organization->id,$mask)) $this->error("Error updating privileges: ".$file->error);
+				if (! $file->updatePrivileges("o",$organization->id,$mask)) $this->error("Error updating privileges: ".$file->error());
 			}
 			elseif (preg_match('/^r/i',$_REQUEST['entity_type'])) {
 				if (isset($_REQUEST['entity_id'])) {
 					$role = new \Register\Role($_REQUEST['entity_id']);
 				}
-				elseif($isset($_REQUEST['entity_code'])) {
+				elseif(isset($_REQUEST['entity_code'])) {
 					$role = new \Register\Role();
 					if (! $role->get($_REQUEST['entity_code'])) $this->error("Role not found");
 				}
 				else $this->error("Must identify role");
 				if (! $role->id) $this->error("Role not found");
-				if (! $file->updatePrivileges("r",$role->id,$_REQUEST['mask'])) $this->error("Error updating privileges: ".$file->error);
+				if (! $file->updatePrivileges("r",$role->id,$_REQUEST['mask'])) $this->error("Error updating privileges: ".$file->error());
 			}
 			elseif (preg_match('/^a/i',$_REQUEST['entity_type'])) {
-				if (! $file->updatePrivileges("a",null,$mask)) $this->error("Error updating privileges: ".$file->error);
+				if (! $file->updatePrivileges("a",null,$mask)) $this->error("Error updating privileges: ".$file->error());
 			}
 
-			$this->response->success = 1;
-
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->print();
 		}
 
 		###################################################
@@ -448,7 +419,7 @@
 		###################################################
 		public function findFiles() {
 			$filelist = new \Storage\FileList();
-			if ($filelist->error) $this->app_error("Error initializing file list: ".$filelist->error,__FILE__,__LINE__);
+			if ($filelist->error()) $this->app_error("Error initializing file list: ".$filelist->error(),__FILE__,__LINE__);
 
 			$parameters = array();
 			if (isset($_REQUEST['code']) and strlen($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
@@ -457,19 +428,17 @@
 			if (isset($_REQUEST['repository_code']) && strlen($_REQUEST['repository_code'])) {
 				$repositorylist = new \Storage\RepositoryList();
 				list($repository) = $repositorylist->find(array('code' => $_REQUEST['repository_code']));
-				if ($repositorylist->error) $this->error("Error finding repository");
+				if ($repositorylist->error()) $this->error("Error finding repository");
 				if (! $repository->id) $this->error("Repository not found");
 				$parameters['repository_id'] = $repository->id;
 			}
 			$files = $filelist->find($parameters);
 
-			if ($filelist->error) $this->app_error("Error finding filelist: ".$filelist->error,__FILE__,__LINE__);
+			if ($filelist->error()) $this->app_error("Error finding filelist: ".$filelist->error(),__FILE__,__LINE__);
 
-			$this->response->success = 1;
-			$this->response->file = $files;
-
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('file',$files);
+			$response->print();
 		}
 		
 		###################################################
@@ -480,21 +449,20 @@
 
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage files')) error('storage upload role required');
 			$file = new \Storage\File();
-			if ($file->error) $this->app_error("Error initializing file: ".$file->error,__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error initializing file: ".$file->error(),__FILE__,__LINE__);
 
 			$file->get($_REQUEST['code']);
-			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
-			if (! $file->id) error("File '".$_REQUEST['code']."' not found");
+			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
+			if (! $file->id) $this->notFound("File not found");
 
 			$file->setMetadata($_REQUEST['key'],$_REQUEST['value']);
-			if ($file->error) $this->app_error("Error setting metadata: ".$file->error,__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error setting metadata: ".$file->error(),__FILE__,__LINE__);
 
 			$file->get($_REQUEST['code']);
-			$this->response->success = 1;
-			$this->response->file = $file;
 
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('file',$file);
+			$response->print();
 		}
 		
 		###################################################
@@ -503,20 +471,18 @@
 		public function getFileMetadata() {
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage files')) error('storage upload role required');
 			$file = new \Storage\File();
-			if ($file->error) $this->app_error("Error initializing file: ".$file->error,__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error initializing file: ".$file->error(),__FILE__,__LINE__);
 
 			$file->get($_REQUEST['code']);
-			if ($file->error) $this->app_error("Error finding file: ".$file->error,__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
 			if (! $file->id) $this->error("File '".$_REQUEST['code']."' not found");
 
 			$metadata = $file->getMetadata($_REQUEST['key']);
-			if ($metadata->error) $this->app_error("Error getting metadata: ".$metadata->error,__FILE__,__LINE__);
+			if ($metadata->error()) $this->app_error("Error getting metadata: ".$metadata->error(),__FILE__,__LINE__);
 
-			$this->response->success = 1;
-			$this->response->metadata = $metadata;
-
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('metadata',$metadata);
+			$response->print();
 		}
 
 		###################################################
@@ -525,12 +491,12 @@
 		public function downloadFile() {
 			$file = new \Storage\File();
 			$file->get($_REQUEST['code']);
-			if ($file->error) $this->app_error("Error getting file: ".$file->error,__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error getting file: ".$file->error(),__FILE__,__LINE__);
 			if (! $file->id) $this->error("File not found");
-			$file->repository->retrieveFile($file);
-			if ($file->error) $this->app_error("Error getting file: ".$file->error,__FILE__,__LINE__);
+			$file->repository()->retrieveFile($file);
+			if ($file->error()) $this->app_error("Error getting file: ".$file->error(),__FILE__,__LINE__);
 		}
-		
+
 		###################################################
 		### Set Empty Paths to Root						###
 		###################################################
@@ -547,11 +513,9 @@
 					}
 				}
 			}
-			$this->response->success = 1;
-			$this->response->count = $count;
-
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('count',$count);
+			$response->print();
 		}
 
 		public function _methods() {

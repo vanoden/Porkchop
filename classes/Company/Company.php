@@ -12,7 +12,7 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'company_companies';
 			$this->_tableUKColumn = 'name';
-			$this->_cacheKeyPrefix = 'company.domain';
+			$this->_cacheKeyPrefix = 'site.company';
     		parent::__construct($id);
 		}
 
@@ -44,6 +44,8 @@
 				return false;
 			}
 
+			$cache = $this->cache();
+
 			# Update Object
 			$update_object_query = "
 				UPDATE	company_companies
@@ -73,7 +75,23 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-
+			$cache->delete();
 			return $this->details();
+		}
+
+		public function locations() {
+			$locationList = new \Company\LocationList();
+			$locations = $locationList->find();
+			if ($locationList->error()) $this->error($locationList->error());
+
+			return $locations;
+		}
+
+		public function domains() {
+			$domainList = new \Company\DomainList();
+			$domains = $domainList->find();
+			if ($domainList->error()) $this->error($domainList->error());
+
+			return $domains;
 		}
 	}

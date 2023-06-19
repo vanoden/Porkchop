@@ -5,6 +5,7 @@
 	}
 </script>
 <?=$page->showBreadCrumbs()?>
+<?=$page->showTitle()?>
 <?=$page->showMessages()?>
 <form method="post" action="/_site/term_of_use">
 <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>"/>

@@ -6,8 +6,7 @@
 		public $name;
 		public $account_number;
 
-		public function __construct($id = 0) {
-			$this->_database = new \Database\Service();		
+		public function __construct($id = 0) {	
 			$this->_tableName = 'shipping_vendors';
 			$this->_addFields(array('id', 'name', 'account_number'));
 			$this->_tableUKColumn = 'name';
@@ -27,10 +26,5 @@
 			}
 			
 			return parent::add($parameters);
-		}
-
-		public function get($name): bool {
-			app_log("Getting vendor $name");
-			return parent::get($name,'name');
 		}
 	}

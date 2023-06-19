@@ -11,6 +11,7 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
+
     		parent::__construct($id);
 		}
 
@@ -411,13 +412,23 @@
 			return 1;
 		}
 
+		public function metadata() {
+			$meta = new \Product\Item\Metadata();
+			$meta->fk_id = $this->id;
+			return $meta;
+		}
+
 		public function currentPrice() {
 			$priceList = new \Product\PriceList();
 			$prices = $priceList->find(array('product_id' => $this->id, 'status' => 'ACTIVE'));
 			if ($priceList->error()) {
 				$this->error($priceList->error());
 				return null;
-			} else {
+			}
+			elseif (empty($prices)) {
+				return 0;
+			}
+			else {
     			return array_pop($prices);
 			}
 		}

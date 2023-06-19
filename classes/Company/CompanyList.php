@@ -1,10 +1,7 @@
 <?php
 	namespace Company;
 
-	class CompanyList {
-		public $count;
-		public $error;
-
+	class CompanyList Extends \BaseListClass {
 		public function find($parameters = array()) {
 			$find_objects_query = "
 				SELECT	id
@@ -13,20 +10,16 @@
 			
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Company::find(): ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
 			}
 			
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
 				$company = new Company($id);
 				array_push($objects,$company);
-				$this->count ++;
+				$this->incrementCount();
 			}
 			return $objects;
-		}
-
-		public function error() {
-			return $this->error;
 		}
 	}

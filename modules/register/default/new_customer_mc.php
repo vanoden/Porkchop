@@ -67,7 +67,7 @@
 				$page->addError("Sorry, login already taken");
 				$_REQUEST['login'] = '';
 			}
-			elseif ($customer->error() != "Customer not found") {
+			elseif (!empty($customer->error())) {
 				$page->addError("Error checking login: ".$customer->error());
 			}
 			elseif (!empty($_REQUEST['phone_number']) && ! $contact->validValue('phone',$_REQUEST['phone_number'])) {

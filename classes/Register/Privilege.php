@@ -8,7 +8,6 @@
 		public $module;
 
 		public function __construct($id = 0) {
-			$this->_database = new \Database\Service();
 			$this->_tableName = 'register_privileges';
 			$this->_tableUKColumn = 'name';
 		    parent::__construct($id);

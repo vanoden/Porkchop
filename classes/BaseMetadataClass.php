@@ -17,6 +17,14 @@
 			if ($name == 'get' && count($params) == 2) return $this->getWithKeys($params[0],$params[1]);
 			elseif ($name == 'get' && count($params) == 1) return $this->getWithKey($params[0]);
 			elseif ($name == 'get') return $this->getSimple();
+			elseif ($name == 'getValue') {
+				if (count($params) == 1) {
+					return $this->getValWithKey($params[0]);
+				}
+				else {
+					return $this->getVal();
+				}
+			}
 			else {
 				$this->error("Unrecognized method");
 				return false;
@@ -34,6 +42,19 @@
 		public function getWithKey($key): bool {
 			$this->key = $key;
 			return $this->getSimple();
+		}
+
+		// Just Return the Value
+		public function getValWithKey($key) {
+			$this->key = $key;
+			if ($this->getSimple($key)) return $this->value;
+			else return null;
+		}
+
+		// Just Return the Value
+		public function getVal() {
+			if ($this->getSimple()) return $this->value;
+			else return null;
 		}
 
 		// Relative ID and Key Already Set
@@ -67,7 +88,7 @@
                 $this->value = $value;
             }
             else {
-                $this->error("Data not found");
+                $this->warn("Data not found");
                 return false;
             }
 			return true;
@@ -76,7 +97,7 @@
 		public function set($value) {
 			$this->clearError();
 
-			if (! isset($this->fk_id)) {
+			if (! is_numeric($this->fk_id)) {
 				$this->error("Invalid relative id");
 				return false;
 			}
@@ -94,6 +115,7 @@
 				VALUES
 				(		?,?,?)
 			";
+
 			$database->AddParam($this->fk_id);
 			$database->AddParam($this->key);
 			$database->AddParam($value);
@@ -108,7 +130,7 @@
 
 		public function drop() {
 			if (empty($this->id)) {
-				$this->error("Metadata id not set");
+				$this->warn("Metadata id not set");
 				return false;
 			}
 			$drop_key_query = "

@@ -8,7 +8,6 @@
 
 		public function __construct($id = 0) {
 			parent::__construct($id);
-			if ($this->id) $this->roles();
 		}
 
 		public function add($parameters = []) {
@@ -22,7 +21,6 @@
 		public function details(): bool {
 		    parent::details();
 			if ($this->id) {
-				$this->roles();
 				$this->login = $this->code;
 				return true;
 			}
@@ -506,6 +504,7 @@
 			$parameters = array(
 				'person_id'	=> $this->id
 			);
+
 			if (isset($params['type'])) $parameters['type'] = $params['type'];
 			$contacts = $contactList->find($parameters);
 			if ($contactList->error()) {
@@ -592,5 +591,54 @@
 				return null;
 			}
 			return $key;
+		}
+
+		public function acceptedTOU($tou_id) {
+			$tou = new \Site\TermsOfUse($tou_id);
+			$latest_version = $tou->latestVersion();
+			if ($tou->error()) {
+				$this->error($tou->error());
+				return false;
+			}
+			elseif (empty($latest_version)) {
+				$this->error('No published version of tou '.$tou_id);
+				return false;
+			}
+			else {
+				$actionList = new \Site\TermsOfUseActionList();
+				app_log("Checking for user ".$this->id." approval of version ".$latest_version->id,'trace');
+				list($action) = $actionList->find(array('version_id' => $latest_version->id,'user_id' => $this->id,'type' => 'ACCEPTED'));
+				if ($actionList->error()) {
+					$this->error($actionList->error());
+					return false;
+				}
+				if (!empty($action)) {
+					app_log("User has approved version ".$latest_version->id,'trace');
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public function acceptTOU($version_id) {
+			$version = new \Site\TermsOfUseVersion($version_id);
+			$version->addAction($this->id,'ACCEPTED');
+
+			if ($version->error()) {
+				$this->error($version->error());
+				return false;
+			}
+			return true;
+		}
+
+		public function declineTOU($version_id) {
+			$version = new \Site\TermsOfUseVersion($version_id);
+			$version->addAction($this->id,'DECLINED');
+
+			if ($version->error()) {
+				$this->error($version->error());
+				return false;
+			}
+			return true;
 		}
     }

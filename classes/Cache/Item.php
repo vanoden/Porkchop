@@ -42,6 +42,7 @@
 		}
 
 		public function delete() {
+			app_log("Deleting cache of ".$this->_key);
 			if ($this->_client->delete($this->_key)) return true;
 			else return false;
 		}

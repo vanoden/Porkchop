@@ -24,7 +24,7 @@ class Person Extends \BaseModel {
     protected $_settings = array( "date_format" => "US" );
 	protected $_database;
 
-    public function __construct(int $id = null) {
+    public function __construct($id = null) {
     	$this->_database = new \Database\Service();
 		$this->_tableName = 'register_users';
 		$this->_tableUKColumn = 'login';
@@ -301,6 +301,7 @@ class Person Extends \BaseModel {
 		$update_customer_query .= "
 			WHERE	id = ?
 		";
+
 		array_push($bind_params,$this->id);
         $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
         if ($GLOBALS['_database']->ErrorMsg()) {

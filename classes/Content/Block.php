@@ -37,7 +37,8 @@
 			list($id) = $rs->FetchRow();
 			if ($id) {
 				$this->id = $id;
-			} elseif(false) {
+			}
+			elseif(false) {
 				# Make Sure User Has Privileges
 				app_log("No match found for message '$target', adding",'info',__FILE__,__LINE__);
 				if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {

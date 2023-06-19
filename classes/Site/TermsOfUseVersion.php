@@ -5,6 +5,7 @@
 		public $status;
 		public $content;
 		public $number;
+		public $tou_id;
 
 		/********************************************/
 		/* Instance Constructor						*/
@@ -89,7 +90,6 @@
 
 			// Initialize Services
 			$database = new \Database\Service();
-			$cache = $this->cache();
 
 			if ($this->status == "PUBLISHED") return true;
 			if ($this->status == "RECTRACTED") {
@@ -112,9 +112,15 @@
 			}
 
 			$event = new TermsOfUseEvent();
-			$event->add(array('version_id' => $this->id, 'status' => 'PUBLISHED'));
+			$event->add(array('version_id' => $this->id, 'type' => 'ACTIVATION'));
+			if ($event->error()) {
+				$this->error($event->error());
+				return false;
+			}
 
 			// Bust Cache for Updated Object
+			app_log("-----DELETING CACHE-------");
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], 'latest_tou['.$this->tou_id.']');
 			$cache->delete();
 
 			// Load Updated Details from Database
@@ -133,7 +139,6 @@
 
 			// Initialize Services
 			$database = new \Database\Service();
-			$cache = $this->cache();
 
 			if ($this->status == "RETRACTED") return true;
 
@@ -152,20 +157,41 @@
 			}
 
 			$event = new TermsOfUseEvent();
-			$event->add(array('version_id' => $this->id, 'status' => 'RETRACTED'));
+			$event->add(array('version_id' => $this->id, 'type' => 'RETRACTION'));
 
 			// Bust Cache for Updated Object
+			app_log("-----DELETING CACHE-------");
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], 'latest_tou['.$this->tou_id.']');
 			$cache->delete();
 
 			// Load Updated Details from Database
 			return $this->details();
 		}
 
+		public function termsOfUse() {
+			return new \Site\TermsOfUse($this->tou_id);
+		}
+
 		public function addEvent($type) {
+			app_log("Do we have cache for tou ".$this->tou_id."?");
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], "latest_tou[".$this->tou_id."]");
+			if ($cache->exists()) {
+				app_log("TOU Cache Must Be Destroyed");
+				if (!$cache->delete()) {
+					$this->error("Couldn't delete cache: ".$cache->error());
+					return false;
+				}
+			}
 			$event = new TermsOfUseEvent();
 			if ($event->add(array('version_id' => $this->id, 'type' => $type))) return true;
-			print_r($event);
 			$this->error("Unable to add event: ".$event->error());
+			return false;
+		}
+
+		public function addAction($user_id,$type) {
+			$action = new TermsOfUseAction();
+			if ($action->add(array('version_id' => $this->id, 'user_id' => $user_id, 'type' => $type))) return true;
+			$this->error("Unable to add action: ".$action->error());
 			return false;
 		}
 
@@ -185,22 +211,40 @@
 
 		public function date_created() {
 			$eventList = new TermsOfUseEventList();
-			list($event) = $eventList->find(array('version_id' => $this->id, 'type' => 'CREATION'));
-			if ($eventList->error()) $this->error($eventList->error());
+			$event = $eventList->first(array('version_id' => $this->id, 'type' => 'CREATION'));
+			if ($eventList->error()) {
+				$this->error($eventList->error());
+				return null;
+			}
+			elseif (!$event) {
+				$event = new \Site\TermsOfUseEvent();
+			}
 			return $event->date_event;
 		}
 
 		public function date_published() {
 			$eventList = new TermsOfUseEventList();
-			list($event) = $eventList->find(array('version_id' => $this->id, 'type' => 'PUBLISHED'));
-			if ($eventList->error()) $this->error($eventList->error());
+			$event = $eventList->last(array('version_id' => $this->id, 'type' => 'ACTIVATION'));
+			if ($eventList->error()) {
+				$this->error($eventList->error());
+				return null;
+			}
+			elseif (!$event) {
+				$event = new \Site\TermsOfUseEvent();
+			}
 			return $event->date_event;
 		}
 
 		public function date_retracted() {
 			$eventList = new TermsOfUseEventList();
-			list($event) = $eventList->find(array('version_id' => $this->id, 'type' => 'RETRACTED'));
-			if ($eventList->error()) $this->error($eventList->error());
+			$event = $eventList->last(array('version_id' => $this->id, 'type' => 'RETRACTION'));
+			if ($eventList->error()) {
+				$this->error($eventList->error());
+				return null;
+			}
+			elseif (!$event) {
+				$event = new \Site\TermsOfUseEvent();
+			}
 			return $event->date_event;
 		}
 

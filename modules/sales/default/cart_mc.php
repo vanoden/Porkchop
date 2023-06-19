@@ -1,226 +1,270 @@
 <?php
-	$page = new \Site\Page();
-	$page->fromRequest();
+	$site = new \Site();
+	$page = $site->page();
 	$page->requirePrivilege('see sales quotes');
-	
-	// get sales order if existing from URL
-	$salesOrder = new \Sales\Order();
-	if (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
-    	$salesOrder->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
-    	if (!empty($salesOrder->id)) {
-        	$_REQUEST['organization_id'] = $salesOrder->organization_id;
-        	$_REQUEST['member_id'] = $salesOrder->customer_id;
-        	$_REQUEST['order_code'] = $salesOrder->code;
-    	}
+
+	// CSRF Protection
+	if($_SERVER['REQUEST_METHOD'] == 'POST' && ! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])){
+		echo "Invalid Request";
+		die();
 	}
 
-	// clean user input
-	$organization_id = 0;
-	if (isset($_REQUEST['organization_id'])) $organization_id = intval($_REQUEST['organization_id']);
-	
-	$member_id = 0;
-	if (isset($_REQUEST['member_id'])) $member_id = intval($_REQUEST['member_id']);
-	
-    $order_code = '';
-	if (isset($_REQUEST['order_code'])) $order_code = $_REQUEST['order_code'];
-	
-    $order_id = 0;
-	if (isset($_REQUEST['order_id'])) $order_id = intval($_REQUEST['order_id']);
-	
-	// add new or find existing sales order
-    if (empty($order_code) && !empty($member_id) && !empty($organization_id)) {
-    
-        $salesOrderAdded = $salesOrder->add(
-            array(
-                'customer_id' => $member_id, 
-                'salesperson_id' => $GLOBALS ['_SESSION_']->customer->id, 
-                'status' => 'NEW',
-                'customer_order_number' => rand(10000, 100000)
-            )
-        );
-        if (!$salesOrderAdded) {
-            $page->addError("Error: sales order could not be created");
-        } else {
-            $page->appendSuccess("Sales Order Created");
-        }
-        
-        // apply organization
-        $salesOrderUpdated = $salesOrder->update(array('status' => 'NEW', 'organization_id' => $organization_id));
-        $order_code = $salesOrder->code;
-        $order_id = $salesOrder->id;
-        if (!$salesOrderUpdated) {
-            $page->addError("Error: could not apply organization to Sales Order");
-        } else {
-            $page->appendSuccess("Sales Order applied to organization");
-        }
-        
-    } else {
-        $salesOrder->get($order_code);
-        $order_id = $salesOrder->id;
-    }
-    
-	$billing_location = 0;
-	if (isset($_REQUEST['billing_location'])) {
-    	$billing_location = intval($_REQUEST['billing_location']);
-	} else {
-    	$billing_location = $salesOrder->billing_location_id;
+	/****************************************/
+	/* Validate Form Data					*/
+	/****************************************/
+	// Get the order from Post or Get Vars
+	if (isset($_REQUEST['order_id'])) {
+		$order = new \Sales\Order($_REQUEST['order_id']);
 	}
-	
-	if (!empty($billing_location)) {
-    	$salesOrderUpdated = $salesOrder->update(array('status' => $salesOrder->status, 'billing_location_id' => $billing_location));
-        if (!$salesOrderUpdated) {
-            $page->addError("Error: could not apply a billing location to Sales Order");
-        } else {
-            $page->appendSuccess("Sales Order applied a billing location");
-        }
+	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+		$order = new \Sales\Order();
+		$order->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
 	}
-	
-	$shipping_location = 0;
-	if (isset($_REQUEST['shipping_location'])) {
-    	$shipping_location = intval($_REQUEST['shipping_location']);
-	} else {
-    	$shipping_location = $salesOrder->shipping_location_id;
-	}
-	
-	if (!empty($shipping_location)) {
-    	$salesOrderUpdated = $salesOrder->update(array('status' => $salesOrder->status, 'shipping_location_id' => $shipping_location));
-        if (!$salesOrderUpdated) {
-            $page->addError("Error: could not apply shipping location to Sales Order");
-        } else {
-            $page->appendSuccess("Sales Order applied a shipping location");
-        }    	
-	} 
-    
-	// get shipping vendor
-	$shipping_vendor = "DHL";
-	
-    // shipping vendors available
-    $shippingVendorList = new \Shipping\VendorList();
-    $shippingVendors = $shippingVendorList->findUnique();
-    if (isset($_REQUEST['shipping_vendor']) && in_array($_REQUEST['shipping_vendor'], $shippingVendors)) $shipping_vendor = $_REQUEST['shipping_vendor'];
 
-	// Security - Only Register Module Operators or Managers can see other customers
-	$organizationlist = new \Register\OrganizationList();
-	
 	// Initialize Parameter Array
-	$find_parameters = array();
-	$find_parameters['status'] = array('NEW','ACTIVE');
+	$parameters = array();
 
-	// Get Count before Pagination
-	$organizations = $organizationlist->find($find_parameters,true);
+	// Load Each of the necessary objects
+	$form = array();
+	if (!empty($_REQUEST['organization_id'])) {
+		$organization = new \Register\Organization($_REQUEST['organization_id']);
+		$parameters['organization_id'] = $organization->id;
+		$form['organization_id'] = $organization->id;
+	}
+	else $organization = $order->organization();
+
+	if (!empty($_REQUEST['customer_id'])) {
+		$customer = new \Register\Customer($_REQUEST['customer_id']);
+		$parameters['customer_id'] = $customer->id;
+		$form['customer_id'] = $customer->id;
+	}
+	else $customer = $order->customer();
+
+	if (!empty($_REQUEST['shipping_location'])) {
+		$shipping_location = new \Register\Location($_REQUEST['shipping_location']);
+		$parameters['shipping_location_id'] = $shipping_location->id;
+		$form['shipping_location_id'] = $shipping_location->id;
+	}
+	else $shipping_location = $order->shipping_location();
+
+	if (!empty($_REQUEST['billing_location'])) {
+		$billing_location = new \Register\Location($_REQUEST['billing_location']);
+		$parameters['billing_location_id'] = $billing_location->id;
+		$form['billing_location_id'] = $billing_location->id;
+	}
+	else $billing_location = $order->billing_location();
+
+	if (!empty($_REQUEST['shipping_vendor_id'])) {
+		$shipping_vendor = new \Shipping\Vendor($_REQUEST['shipping_vendor_id']);
+		$parameters['shipping_vendor_id'] = $shipping_vendor->id;
+		$form['shipping_vendor_id'] = $shipping_vendor->id;
+	}
+	else $shipping_vendor = $order->shipping_vendor();
+
+	/********************************************/
+	/* Create a New Order						*/
+	/********************************************/
+	if ($order->id < 1 && $customer->id > 0 && $shipping_location->id > 0 && $billing_location->id > 0) {
+		// We Have What We Need to Create an Order
+		// New Order Parameters
+		$parameters['salesperson_id'] = $GLOBALS['_SESSION_']->customer->id;
+		$orderList = new \Sales\OrderList();
+		$parameters['order_number'] = $orderList->nextNumber();
+
+		$order->add($parameters);
+		if ($order->error()) {
+			$page->addError("Error: sales order could not be created: ".$order->error());
+		}
+		else {
+			$page->appendSuccess("Sales Order Created");
+		}
+	}
+	/********************************************/
+	/* Update Existing Order					*/
+	/********************************************/
+	elseif ($order->id > 0) {
+		// Update the order
+		$order->update($parameters);
+		if ($order->error()) $page->addError("Error updating order: ".$order->error());
+
+		// Update any existing items
+		if (isset($_REQUEST['items'])) {
+			foreach ($_REQUEST['items'] as $item_id => $one) {
+				$item_params = array();
+				$item = $order->getItem($item_id);
+				if ($_REQUEST['description'][$item_id] != $item->description) $item_params['description'] = $_REQUEST['description'][$item_id];
+				if ($_REQUEST['price'][$item_id] != $item->unit_price) $item_params['unit_price'] = $_REQUEST['price'][$item_id];
+				if ($item->product()->type != 'unique') {
+					if ($_REQUEST['quantity'][$item_id] != $item->quantity) {
+						if ($_REQUEST['quantity'][$item_id] <= 0) {
+							$order->dropItem($item_id);
+							$page->appendSuccess("Dropped item ".$item_id);
+							continue;
+						}
+						else $item_params['quantity'] = $_REQUEST['quantity'][$item_id];
+					}
+				}
+				else {
+				if ($_REQUEST['serial_number'][$item_id] != $item->serial_number) $item_params['serial_number'] = $_REQUEST['serial_number'][$item_id];
+				}
+				if (count($item_params)) {
+					if ($item->update($item_params)) {
+						$page->appendSuccess("Updated line ".$item_id);
+					}
+					else {
+						$page->addError("Cannot update order item: ".$item->error());
+					}
+				}
+			}
+		}
+
+		// Add a new Item
+		if ($_REQUEST['new_item']) {
+			$product = new \Product\Item($_REQUEST['new_item']);
+			if (!$product->exists()) $page->addError("Product not found");
+			elseif ($product->type != 'unique') {
+				// Don't want numerous lines of same product
+				// unless it's a Unique product.
+				// See if Order has An Item with that Product
+				$line = $order->productLine($product->id);
+				if (!empty($line)) {
+					// Update the existing line
+					$line->update(array(
+						'quantity'	=> $line->quantity + $_REQUEST['product_id'][$item_id]
+					));
+					if ($line->error()) $page->addError($line->error());
+					else $page->appendSuccess("Incremented quantity of ".$product->code);
+				}
+				else {
+					// Add as a new line
+					$order->addItem(array(
+						'product_id'	=> $product->id,
+						'description'	=> $product->description,
+						'quantity'		=> 1,
+						'unit_price'	=> $product->currentPrice()->amount
+					));
+					if ($order->error()) $page->addError($order->error());
+					else $page->appendSuccess("Added ".$product->code);
+				}
+			}
+			// Unique Product - Add a new line
+			else {
+				$order->addItem(array(
+					'product_id'	=> $product->id,
+					'description'	=> $product->description,
+					'quantity'		=> 1,
+					'unit_price'	=> $product->currentPrice()->amount
+				));
+				if ($order->error()) $page->addError($order->error());
+				else $page->appendSuccess("Added ".$product->code);
+			}
+		}
+
+		// remove item from order
+		if (!empty($_REQUEST['remove_item'])) {
+			$order->appendSuccess("Removing item ".$_REQUEST['remove_item']);
+			$order->dropItem($_REQUEST['remove_item']);
+		}
+	}
+
+	/********************************************/
+	/* Update Order Status Per Footer Buttons	*/
+	/********************************************/
+	if (isset($_REQUEST['btn_submit'])) {
+		if ($page->errorCount() > 0) {
+			$page->addError("Not updating order status");
+		}
+		if (preg_match('/Save/',$_REQUEST['btn_submit'])) {
+			header("Location: /_sales/orders");
+
+		}
+		elseif (preg_match('/Quote/',$_REQUEST['btn_submit'])) {
+			if ($order->quote()) {
+				header("Location: /_sales/orders");
+				exit;
+			}
+			else {
+				$page->addError($order->error());
+			}
+		}
+		elseif (preg_match('/Approve/',$_REQUEST['btn_submit'])) {
+			if ($order->approve()) {
+				header("Location: /_sales/orders");
+				exit;
+			}
+			else {
+				$page->addError($order->error());
+			}
+		}
+		elseif (preg_match('/Cancel/',$_REQUEST['btn_submit'])) {
+			if ($order->cancel()) {
+				header("Location: /_sales/orders");
+				exit;
+			}
+			else {
+				$page->addError($order->error());
+			}
+		}
+	}
+
+	/****************************************/
+	/* Load Resources Needed by the Form	*/
+	/****************************************/
+	// Organization List
+	$organizationlist = new \Register\OrganizationList();
+	$organizations = $organizationlist->find();
 	if ($organizationlist->error()) $page->addError($organizationlist->error());
-    if (empty($organizations)) $page->addError("Error: no organizations to create a sales order");
+	if (empty($organizations)) $page->addError("Error: no organizations to create a sales order");
 
-    // get members for organization
-    $members = array();
-    if (isset($organization_id) && intval($organization_id)) {
-        $organization = new \Register\Organization($organization_id);
-        $members = $organization->members('human',array('NEW','ACTIVE'));
-        if (empty($members)) $page->addError("Error: no NEW or ACTIVE members in organization to create sales order");
-    }
-    
-    // get contact info for selected member
-    $locations = array();
-    if (!empty($member_id)) {
-        $registerPerson = new \Register\Person($member_id);
-        $contacts = $registerPerson->contacts();
-        $contactMethods = array('phone' => array(), 'email' => array(), 'sms' => array(), 'facebook' => array(), 'insite' => array());
-        foreach ($contacts as $contact) $contactMethods[$contact->type][] = $contact->value;
+	// Customes from Selected Assocation
+	$customers = array();
+	if ($organization->id > 0) {
+		$customers = $organization->members('human',array('NEW','ACTIVE'));
+		if (empty($customers)) $page->addError("Error: no NEW or ACTIVE customers in organization to create sales order");
+		else {
+			$locations = $organization->locations();
+			if (empty($locations)) $page->addError("Error: no NEW or ACTIVE locations in organization to create sales order");
+		}
+	}
 
-        // get default locations here
-        $displayedOrganizations = array();
-        if (!empty($organization)) $locations = $organization->locations();
-    }
+	// Get Shipping Vendors
+	$shippingVendorList = new \Shipping\VendorList();
+	$shippingVendors = $shippingVendorList->find();
 
-    // add item to order and sync the sales order items
-    $itemsInOrder = array();
-    if (isset($_REQUEST['items_in_order'])) $itemsInOrder = explode(",", trim($_REQUEST['items_in_order'],','));
-    if (isset($_REQUEST['btn_add']) && !empty($_REQUEST['add_items_select'])) $itemsInOrder[] = $_REQUEST['add_items_select'];
-    
-    $salesOrderItems = $salesOrder->items();
-    foreach ($itemsInOrder as $itemCode) {
-    
-        if (empty($itemCode)) continue;
+	// Get Available Products
+	$productList = new \Product\ItemList();
+	$products = $productList->find(array('type' => array('unique','inventory','service')));
 
-        // add item if not in order
-        $itemInSalesOrder = false;
-        $itemInCart = new \Product\Item();
-        $itemInCart->get($itemCode);
-        foreach ($salesOrderItems as $salesOrderItem) if ($salesOrderItem->product_id == $itemInCart->id) $itemInSalesOrder = true;
-        if (!$itemInSalesOrder) {
-        
-            // get current set price for product, else default to 0
-            $price = 0;
-            $currentPrice = $itemInCart->currentPrice();
-            if (!empty($currentPrice)) {
-                $price = $currentPrice->amount;
-                $page->appendSuccess("ACTIVE price located for Product " . $itemCode);
-            } else {
-                $page->addError("Product " . $itemCode . " doesn't have an ACTIVE price set. [<a href='/_product/report'>Find Product</a>]");
-            }
-            $itemAdded = $salesOrder->addItem (
-                array (
-                    "order_id" => $order_id,
-                    "product_id" => $itemInCart->id,
-                    "description" => $itemInCart->description,
-                    "quantity" => 1,
-                    "unit_price" => $price,
-                    "status" => "OPEN"
-                )
-            );
-            
-            if (!$itemAdded) {
-                $page->addError("Error Adding Item to Order");
-            } else {
-                $page->appendSuccess("Sales Order item has been added");
-            }  
-        }
-    }
-    
-    // update the order with custom prices or descriptions and build the list to show in the UI
-    $itemsInOrder = array();
-    if (!empty($salesOrder->id)) {
-        $salesOrderItems = $salesOrder->items();
-        foreach ($salesOrderItems as $salesOrderItem) {
-            $itemInCart = new \Product\Item($salesOrderItem->product_id, true);
-            $salesOrderItemUpdated = $salesOrderItem->update(
-                array(
-                    'quantity' => $_REQUEST["qty-".$itemInCart->code],
-                    'description' => $_REQUEST["description-".$itemInCart->code],
-                    'unit_price' => $_REQUEST["price-".$itemInCart->code]
-                )        
-            );
-            $itemsInOrder[] = $itemInCart->code;        
-            if (!$salesOrderItemUpdated) {
-                $page->addError("Error Updating Sales Item");
-            } else {
-                $page->appendSuccess("Sales Order item has been updated");
-            }
-        }    
-    }
-    
-    // remove item from order
-    if (isset($_REQUEST['btn_remove']) && !empty($_REQUEST['btn_remove'])) {
-    
-        $itemToRemove = new \Product\Item();
-        $itemToRemove->get($_REQUEST['btn_remove']);
-        
-        $saleOrderItem = new \Sales\Order\Item();
-        $saleOrderItem->getByProductIdOrderId($itemToRemove->id, $order_id);
-        $saleOrderItem->delete();
+	// Get Existing Order Items
+	$orderItems = array();
+	if ($order->id) {
+		$orderItems = $order->items(array('status' => 'OPEN'));
+	}
 
-        if (($key = array_search($_REQUEST['btn_remove'], $itemsInOrder)) !== false) unset($itemsInOrder[$key]);
-    }
+	// Prefill Form Fields from Database Info
+	if ($order->id > 0) {
+		$form["organization_id"] = $organization->id;
+		$form["customer_id"] = $customer->id;
+		$form["shipping_location_id"] = $shipping_location->id;
+		$form["billing_location_id"] = $billing_location->id;
+		$form["shipping_vendor_id"] = $shipping_vendor->id;
+	}
 
-    // get existing ACTIVE items for the add products dropdown, but ONLY the ones not added to the cart yet
-    $itemsForOrder = array();
-    $itemList = new \Product\ItemList();
-    $itemsForSale = $itemList->find(array('type' => array('unique', 'inventory')));
-    foreach ($itemsForSale as $itemForSale) if (!in_array($itemForSale->code, $itemsInOrder)) $itemsForOrder[] = $itemForSale; 
-    
-    $isReadyToQuote = false;
-    if (!empty($organization_id) && !empty($member_id) && !empty($billing_location) && !empty($shipping_location) && count($itemsInOrder) > 0) $isReadyToQuote = true;
-    
-    // if we're quoting or approving the order update as such
-    if (isset($_REQUEST['btn_quote'])) $salesOrder->update(array('status' => 'QUOTE')); 
-    if (isset($_REQUEST['btn_create'])) $salesOrder->approve();
+	// Populate Instructions
+	if ($form["organization_id"] < 1) $page->instructions = "Select an Organization";
+	elseif ($form["customer_id"] < 1) $page->instructions = "Select a Customer";
+	elseif ($form["billing_location_id"] < 1) $page->instructions = "Select a Billing Location";
+	elseif ($form["shipping_location_id"] < 1) $page->instructions = "Select a Shipping Location";
+	elseif ($form["shipping_vendor_id"] < 1) $page->instructions = "Select a Shipping Vendor";
+	elseif ($order->id > 0) $page->instructions = "Add Items to Order.<br>Click 'Save For Later' to keep the order in new status and return for completion.<br>Click 'Prepare Quote' to provide a Quote for a customer.<br>Click 'Approve Order' to initiate fullfilment.";
+
+	// Breadcrumbs and Title
+	$page->addBreadcrumb("Sales");
+	$page->addBreadcrumb("Orders","/_sales/orders");
+	if ($order->id) {
+		$page->addBreadCrumb("Order ".$order->number(),"/_sales/cart?order_id=".$order->id);
+		$page->title("Sales Order ".$order->number());
+	}
+	else {
+		$page->title("Create Order");
+	}

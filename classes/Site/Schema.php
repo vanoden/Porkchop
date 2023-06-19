@@ -5,7 +5,7 @@
 		public $module = "Session";
 
 		public function upgrade() {
-			$this->error = null;
+			$this->clearError();
 
 			if ($this->version() < 2) {
 				app_log("Upgrading ".$this->module." schema to version 2",'notice',__FILE__,__LINE__);
@@ -32,8 +32,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating session_sessions table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating session_sessions table: ".$this->error());
 					return false;
 				}
 
@@ -54,8 +53,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating session_hits table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating session_hits table: ".$this->error());
 					return false;
 				}
 
@@ -68,8 +66,7 @@
 					ALTER TABLE `session_sessions` MODIFY `code` char(64) NOT NULL DEFAULT ''
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error altering session_sessions table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering session_sessions table: ".$this->error());
 					return false;
 				}
 
@@ -82,8 +79,7 @@
 					ALTER TABLE `session_sessions` ADD `timezone` varchar(32) NOT NULL DEFAULT 'America/New_York'
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error altering session_sessions table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering session_sessions table: ".$this->error());
 					return false;
 				}
 
@@ -91,6 +87,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 5) {
+				app_log("Upgrading ".$this->module." schema to version 5",'notice',__FILE__,__LINE__);
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `page_pages` (
 					  `id` int(5) NOT NULL AUTO_INCREMENT,
@@ -102,8 +99,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating page_pages table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating page_pages table: ".$this->error());
 					return false;
 				}
 
@@ -119,8 +115,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating page_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating page_metadata table: ".$this->error());
 					return false;
 				}
 
@@ -133,8 +128,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating page_widget_types table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating page_widget_types table: ".$this->error());
 					return false;
 				}
 
@@ -149,8 +143,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating page_widgets table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating page_widgets table: ".$this->error());
 					return false;
 				}
 
@@ -158,7 +151,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 6) {
-			
+				app_log("Upgrading ".$this->module." schema to version 6",'notice',__FILE__,__LINE__);
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `site_configurations` (
 						`key`	varchar(150) NOT NULL PRIMARY KEY,
@@ -166,8 +159,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating site_configurations table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating site_configurations table: ".$this->error());
 					return false;
 				}
 
@@ -175,7 +167,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 7) {
-			
+				app_log("Upgrading ".$this->module." schema to version 7",'notice',__FILE__,__LINE__);
 				$create_table_query = "
 	                CREATE TABLE IF NOT EXISTS `site_messages` (
 	                  `id` int(10) NOT NULL AUTO_INCREMENT,
@@ -190,8 +182,7 @@
                     )
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating site_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating site_messages table: ".$this->error());
 					return false;
 				}
 
@@ -210,8 +201,7 @@
                     )
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating site_message_deliveries table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating site_message_deliveries table: ".$this->error());
 					return false;
 				}
 				
@@ -226,8 +216,7 @@
                     ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating site_messages_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating site_messages_metadata table: ".$this->error());
 					return false;
 				}
 
@@ -235,15 +224,14 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 8) {
-			
+				app_log("Upgrading ".$this->module." schema to version 8",'notice',__FILE__,__LINE__);
 				$create_table_query = "
 					ALTER TABLE `site_message_deliveries`
 					MODIFY `date_viewed` timestamp NULL default NULL,
 					MODIFY `date_acknowledged` timestamp NULL default NULL
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating site_configurations table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating site_configurations table: ".$this->error());
 					return false;
 				}
 
@@ -252,7 +240,7 @@
 			}
 			
 			if ($this->version() < 9) {
-			
+				app_log("Upgrading ".$this->module." schema to version 9",'notice',__FILE__,__LINE__);
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `counters_watched` (
   	                    `id`    int(10) NOT NULL AUTO_INCREMENT,
@@ -262,8 +250,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating counters_watched table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating counters_watched table: ".$this->error());
 					return false;
 				}
 
@@ -272,13 +259,12 @@
 			}
 
 			if ($this->version() < 10) {
-			
+				app_log("Upgrading ".$this->module." schema to version 10",'notice',__FILE__,__LINE__);
 				$alter_table_query = "
                     ALTER TABLE `session_sessions` ADD COLUMN `super_elevation_expires` DATETIME DEFAULT NULL;
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering session_sessions table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering session_sessions table: ".$this->error());
 					return false;
 				}
 
@@ -287,13 +273,12 @@
 			}
 
 			if ($this->version() < 11) {
-			
+				app_log("Upgrading ".$this->module." schema to version 11",'notice',__FILE__,__LINE__);
 				$alter_table_query = "
                     ALTER TABLE `session_sessions` ADD COLUMN `oauth2_state` varchar(255) DEFAULT NULL;
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering session_sessions table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering session_sessions table: ".$this->error());
 					return false;
 				}
 
@@ -302,13 +287,12 @@
 			}
 			
 			if ($this->version() < 12) {
-			
+				app_log("Upgrading ".$this->module." schema to version 12",'notice',__FILE__,__LINE__);
 				$alter_table_query = "
                     ALTER TABLE `site_messages` ADD COLUMN `subject` text DEFAULT NULL AFTER `important`;
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering session_sessions table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering session_sessions table: ".$this->error());
 					return false;
 				}
 
@@ -317,13 +301,12 @@
 			}
 			
 			if ($this->version() < 13) {
-			
+				app_log("Upgrading ".$this->module." schema to version 13",'notice',__FILE__,__LINE__);
 				$alter_table_query = "
                     ALTER TABLE `site_messages` ADD COLUMN `recipient_id` int NULL AFTER `user_created`;
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering site_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering site_messages table: ".$this->error());
 					return false;
 				}
 
@@ -331,8 +314,7 @@
 		            ALTER TABLE `site_messages` ADD FOREIGN KEY (recipient_id) REFERENCES `register_users` (`id`)
 		        ";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering `site_messages` table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering `site_messages` table: ".$this->error());
 					return false;
 				}
 
@@ -341,7 +323,7 @@
 			}
 			
 			if ($this->version() < 14) {
-			
+				app_log("Upgrading ".$this->module." schema to version 14",'notice',__FILE__,__LINE__);
 				$create_table_query = "
                     CREATE TABLE IF NOT EXISTS `site_headers`(
                         id  int(11) NOT NULL AUTO_INCREMENT,
@@ -352,8 +334,7 @@
                     )
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error altering site_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering site_messages table: ".$this->error());
 					return false;
 				}
 
@@ -361,13 +342,12 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 15) {
-			
+				app_log("Upgrading ".$this->module." schema to version 15",'notice',__FILE__,__LINE__);
 				$alter_table_query = "
                     ALTER TABLE `site_headers` modify `value` varchar(1024)
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering site_headers table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering site_headers table: ".$this->error());
 					return false;
 				}
 
@@ -375,6 +355,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 16) {
+				app_log("Upgrading ".$this->module." schema to version 16",'notice',__FILE__,__LINE__);
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `site_terms_of_use` (
 						id				int(11) NOT NULL AUTO_INCREMENT,
@@ -387,8 +368,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error altering site_terms_of_use table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering site_terms_of_use table: ".$this->error());
 					return false;
 				}
 
@@ -404,8 +384,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error altering site_terms_of_use_versions table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering site_terms_of_use_versions table: ".$this->error());
 					return false;
 				}
 
@@ -422,8 +401,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error altering site_terms_of_use_events table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering site_terms_of_use_events table: ".$this->error());
 					return false;
 				}
 
@@ -440,8 +418,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error altering site_terms_of_use_events table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering site_terms_of_use_events table: ".$this->error());
 					return false;
 				}
 
@@ -449,8 +426,7 @@
                     ALTER TABLE `page_pages` add `tou_id` int(11)
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering page_pages table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering page_pages table: ".$this->error());
 					return false;
 				}
 
@@ -458,16 +434,42 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			if ($this->version() < 17) {
+				app_log("Upgrading ".$this->module." schema to version 17",'notice',__FILE__,__LINE__);
 				$alter_table_query = "
                     ALTER TABLE `site_terms_of_use_events` add `id` int(11) PRIMARY KEY AUTO_INCREMENT
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering page_pages table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("altering page_pages table: ".$this->error());
 					return false;
 				}
 
 				$this->setVersion(17);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 18) {
+				app_log("Upgrading ".$this->module." schema to version 18",'notice',__FILE__,__LINE__);
+				$alter_table_query = "
+                    ALTER TABLE `page_pages` add `sitemap` int(1) DEFAULT 0
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("altering page_pages table: ".$this->error());
+					return false;
+				}
+
+				$this->setVersion(18);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 19) {
+				app_log("Upgrading ".$this->module." schema to version 19",'notice',__FILE__,__LINE__);
+				$alter_table_query = "
+                    ALTER TABLE `site_terms_of_use_actions` add `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("altering site_terms_of_use_actions table: ".$this->error());
+					return false;
+				}
+
+				$this->setVersion(19);
 				$GLOBALS['_database']->CommitTrans();
 			}
 		

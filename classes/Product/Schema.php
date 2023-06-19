@@ -64,8 +64,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_relations table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating product_relations table: ".$this->error());
 					return false;
 				}
 
@@ -81,8 +80,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating product_metadata table: ".$this->error());
 					return false;
 				}
 
@@ -109,8 +107,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_vendors table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating product_vendors table: ".$this->error());
 					return false;
 				}
 
@@ -124,8 +121,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_vendor_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating product_vendor_locations table: ".$this->error());
 					return false;
 				}
 

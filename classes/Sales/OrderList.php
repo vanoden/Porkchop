@@ -1,53 +1,65 @@
 <?php
 	namespace Sales;
 
-	class OrderList {
-		private $_count = 0;
-		private $_error;
+	class OrderList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = 'Sales\Order';
+
+			$this->_tableDefaultSortBy = 'date_event';
+		}
 
 		public function find($parameters = array()) {
+
 			$bind_params = array();
-
 			$find_order_query = "
-				SELECT	id
-				FROM	sales_orders
-				WHERE	id = id
+				SELECT id
+				FROM sales_orders
+				WHERE id = id
 			";
-
+			
 			if (!empty($parameters['id'])) {
 				$find_order_query .= "
-				AND		id = ?";
-				array_push($bind_params,$parameters['id']);
+					AND id = ?";
+				array_push($bind_params, $parameters['id']);
 			}
-
+			
 			if (!empty($parameters['customer_id'])) {
 				$find_order_query .= "
-				AND		customer_id = ?";
-				array_push($bind_params,$parameters['customer_id']);
+					AND customer_id = ?";
+				array_push($bind_params, $parameters['customer_id']);
 			}
-
-			if (!empty($parameters['status'])) {
+			
+			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
-					$statii = "";
-					foreach ($parameters['status'] as $status) {
-						if (preg_match('/^\w+$/',$status)) {
-							if (strlen($statii) > 0) $statii .= ",";
-							$statii .= "'$status'";
+					if (count($parameters['status']) > 0) {
+						$statii = "";
+						foreach ($parameters['status'] as $status) {
+							if (preg_match('/^\w+$/',$status)) {
+								if (strlen($statii) > 0) $statii .= ",";
+								$statii .= "'$status'";
+							}
 						}
+						$find_order_query .= "
+							AND status in (".$statii.")";
 					}
-					$find_order_query .= "
-					AND	status in (".$statii.")";
+					else {
+						$find_order_query .= "
+							AND id != id";
+					}
 				}
-				else {
+				elseif (!empty($parameters['status'])) {
 					$find_order_query .= "
-					AND		status = ?";
-					array_push($bind_params,$parameters['status']);
+						AND status = ?";
+					array_push($bind_params, $parameters['status']);
 				}
 			}
-
-			$find_order_query .= "
-				ORDER BY id
-			";
+			
+			// apply the order and sort direction
+			if (!empty($parameters['order_by']) && !empty($parameters['sort_direction'])) {
+				$order_by_clause = " ORDER BY ";
+				$sort_direction_clause = " `" . $parameters['sort_direction'] . "` " . strtoupper($parameters['order_by']);
+				$find_order_query .= $order_by_clause . $sort_direction_clause;
+			}
 
 			query_log($find_order_query,$bind_params,true);
 			$rs = $GLOBALS['_database']->Execute($find_order_query,$bind_params);
@@ -64,11 +76,5 @@
 			}
 			return $orders;
 		}
-		public function count() {
-			return $this->_count;
-		}
-		public function error($message = null) {
-			if (isset($message)) $this->_error = $message;
-			return $this->_error;
-		}
+
 	}

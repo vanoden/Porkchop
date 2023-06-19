@@ -33,6 +33,7 @@
 		<div class="tableCell">Index</div>
 		<div class="tableCell">Template</div>
 		<div class="tableCell">Metadata</div>
+		<div class="tableCell">Sitemap</div>
 		<div class="tableCell">Terms of Use Required</div>
 	</div>
 <?php	foreach ($pages as $page) {
@@ -59,6 +60,9 @@
 			<?=$data->key?> = <?=$data->value?>
 <?php	} ?>
 			</span>
+		</div>
+		<div class="tableCell">
+			<input type="checkbox" name="sitemap[<?=$page->id?>]" class="value input" value="1"<?php if ($page->sitemap) print " checked";?> />
 		</div>
 		<div class="tableCell">
 			<select name="tou_id[<?=$page->id?>]" class="value input">

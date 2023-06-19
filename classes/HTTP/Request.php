@@ -177,6 +177,11 @@
 					$this->index = $matches[1];
 				}
 			}
+			else {
+				// Static Content
+				$this->module = "static";
+				$this->view = preg_replace('/^\//','',$this->_uri);
+			}
 
 			# Identify module, view and index
 			if ($this->module == "content") {
@@ -198,6 +203,10 @@
 					$this->index = $matches[2];
 				}
 				if (! isset($this->index)) $this->index = '';
+			}
+			elseif ($this->module == "static") {
+				$this->query_vars = '';
+				$this->index = '';
 			}
 			elseif (! $this->module) {
 				$this->module = 'content';

@@ -30,13 +30,25 @@
 			array_push($this->_params,$value);
 		}
 
+		public function Parameters() {
+			return $this->_params;
+		}
+
 		public function Execute($query,$bind_params = null) {
-		
+
 			if (is_array($bind_params)) $this->_params = array_merge($this->_params,$bind_params);
 			if ($this->debug == 'log' && $this->_trace_level > 0) query_log($query,$this->_params,true);
 			elseif ($this->debug == 'screen' && $this->_trace_level > 0) print "<pre>$query</pre>";
-			$recordSet = new \Database\RecordSet($this->_connection->Execute($query,$this->_params));
 
+			// Execute Query
+			try {
+				$recordSet = new \Database\RecordSet($this->_connection->Execute($query,$this->_params));
+			} catch (\mysqli_sql_exception $e) {
+				$this->error($e->getMessage());
+				$recordSet = null;
+			}
+
+			// Query Counter
 			$execCounter = new \Site\Counter("database.sql_execute");
 			$execCounter->increment();
 

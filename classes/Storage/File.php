@@ -564,10 +564,12 @@
 					        $this->delete();
 					        $this->addError('System Exception has occured, unable to add file to repository: '.$repository->error());
     						app_log("repository->addFile(): Exception" . $e->getMessage(),'notice');
+							return false;
                         }
 				    }
 			    }
 		    }
+			return true;
 		}
 
 		public function writePermitted($user_id = null) {

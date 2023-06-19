@@ -4,6 +4,8 @@
 		// Error Message
 		private $_error;
 
+		private $_warning;
+
 		// Possible statuses in enum status table for validation (where applicable)
 		protected $_statii = array();
 
@@ -26,6 +28,21 @@
 				app_log(get_called_class()."::".$method."(): ".$this->_error,'error');
 			}
 			return $this->_error;
+		}
+
+		public function warn($value = null, $caller = null) {
+			if (isset($value)) {
+				if (!isset($caller)) {
+					$trace = debug_backtrace();
+					$caller = $trace[1];
+				}
+				$class = $caller['class'];
+				$classname = str_replace('\\','::',$class);
+				$method = $caller['function'];
+				$this->_warning = $value;
+				app_log(get_called_class()."::".$method."(): ".$this->_warning,'warn');
+			}
+			return $this->_warning;
 		}
 
 		public function _objectName() {

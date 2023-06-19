@@ -2,6 +2,7 @@
 	namespace Product;
 
 	class Instance extends \BaseModel {
+	
 		public $id;
 		public $code;
 		public $name;
@@ -20,7 +21,11 @@
 
 		public function __call($name,$parameters) {
 			if ($name == 'get' && count($parameters) == 2) return $this->getWithProduct($parameters[0],$parameters[1]);
-			elseif ($name == 'get') return $this->get($parameters);
+			elseif ($name == 'get') return $this->getSimple($parameters[0]);
+			else {
+				$this->error("Invalid method called");
+				return null;
+			}
 		}
 
 		public function add($parameters = []) {
@@ -62,7 +67,7 @@
 
 			# Record Event
 			$event = new \Action\Event();
-			$event->add(
+			$event->addEvent(
 				"MonitorAsset",
 				[	"code"  => $parameters["code"],
 					"timestamp" => date("Y-m-d H:i:s"),
@@ -76,12 +81,8 @@
 		}
 
 		public function getSimple($code) {
-			return $this->get($code);
-		}
-
-		public function get($code): bool {
+		
 			$this->clearError();
-
 			$database = new \Database\Service();
 
 			$get_object_query = "
@@ -91,7 +92,7 @@
 			";
 			$database->AddParam($code);
 			
-			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances')) {
+			if (! $GLOBALS['_SESSION_']->customer->can('browse product instances')) {
 				$get_object_query .= " AND organization_id = ?";
 				$database->AddParam($GLOBALS['_SESSION_']->customer->organization()->id);
 			}
@@ -111,7 +112,13 @@
 		public function getWithProduct($code,$product_id) {
 			$this->clearError();
 
-			$bind_params = array();
+			$database = new \Database\Service();
+
+			$product = new \Product\Item($product_id);
+			if (!$product->exists()) {
+				$this->error("Product Not Found");
+				return false;
+			}
 
 			$get_object_query = "
 				SELECT	asset_id
@@ -119,16 +126,17 @@
 				WHERE	asset_code = ?
 				AND		product_id = ?
 			";
-			array_push($bind_params,$code,$product_id);
+			$database->AddParam($code);
+			$database->AddParam($product_id);
 
-			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
 			if (! $id) {
-				$this->error("Product not found");
+				$this->error("Product Instance not found");
 				return false;
 			}
 			$this->id = $id;
@@ -141,7 +149,7 @@
 
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid asset id required for update");
-				return null;
+				return false;
 			}
 
 			$bind_params = array();
@@ -149,7 +157,7 @@
 			# Get Current Details
 			if (! $this->id) {
 				$this->error("No matching asset to update");
-				return null;
+				return false;
 			}
 
 			# Update Object Query
@@ -180,7 +188,7 @@
 					$database->addParam($parameters['organization_id']);
 				} else {
 					$this->error("Insufficient privileges for update");
-					return null;
+					return false;
 				}
 			}
 
@@ -205,7 +213,7 @@
 				
 					# Record Event
 					$event = new \Action\Event();
-					$event->add(
+					$event->addEvent(
 						"MonitorAsset",
 						[	"code"  => $parameters["code"],
 							"timestamp" => date("Y-m-d H:i:s"),
@@ -231,7 +239,6 @@
 		
 		public function details(): bool {
 			$this->clearError();
-
 			$database = new \Database\Service();
 
 			$get_object_query = "
@@ -248,7 +255,7 @@
 			$rs = $database->Execute($get_object_query);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
 			else {
 				$object = $rs->FetchNextObject(false);
@@ -338,6 +345,25 @@
 			}
 			return $array;
 		}
+		
+		
+		public function getAllMetadata() {
+			$get_value_query = "
+				SELECT	value
+				FROM	monitor_asset_metadata
+				WHERE	asset_id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_value_query,
+				array($this->id)
+			);
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			list($value) = $rs->FetchRow();
+			return $value;
+		}		
 		
 		public function getMetadata($key) {
 			$get_value_query = "

@@ -11,13 +11,16 @@
 		private $_cached = false;
 
 		// Name of Table Holding This Class
-		protected $_tableName;
+		public $_tableName;
 
 		// Name for Unique Surrogate Key Column (for get)
 		protected $_tableUKColumn = 'code';
 
 		// Name for Auto-Increment ID Column
 		protected $_tableIDColumn = 'id';
+
+		// Name for Software Incrementing Number Field
+		public $_tableNumberColumn;
 
         // field names for columns in database tables
 	    protected $_fields = array();
@@ -32,11 +35,15 @@
 				$this->details();
 			}
 		}
-		
+
 		// Polymorphism for Fun and Profit
 		public function __call($name,$parameters) {
-			if ($name == 'get') return $this->_getObject($parameters[0]);
-			else $this->error("Invalid method '$name'");
+			if ($name == 'get' && count($parameters) == 2) $this->error("Too many parameters for 'get'");
+			elseif ($name == 'get')  return $this->_getObject($parameters[0]);
+			else {
+				app_log("No function '$name' found",'warning');
+				$this->error("Invalid method '$name'"); // for ".$this->objectName());
+			}
 		}
 
 		public function _tableName(){
@@ -45,7 +52,20 @@
 		public function _tableIDColumn() {
 			return $this->_tableIDColumn;
 		}
+
+		/************************************************/
+		/* Return List of Object Fields					*/
+		/* Auto-populate if not provided by constructor	*/
+		/************************************************/
 		public function _fields() {
+			if (count($this->_fields) < 1) {
+				$properties = get_object_vars($this);
+				foreach ($properties as $property => $stuff) {
+					if (preg_match('/^_/',$property)) continue;
+					array_push($this->_fields,$property);
+				}
+				return array_keys(get_object_vars($this));
+			}
 			return $this->_fields;
 		}
         /**
@@ -94,7 +114,7 @@
     		$addQuery = "INSERT INTO `$this->_tableName` ";
 			$bindFields = array();
 	        foreach ($parameters as $fieldKey => $fieldValue) {
-	            if (in_array($fieldKey, $this->_fields)) {
+	            if (in_array($fieldKey, $this->_fields())) {
     	            array_push($bindFields, $fieldKey);
 					$database->AddParam($fieldValue);
 	            }
@@ -161,18 +181,19 @@
 			else {
 				$cls = get_called_class();
 				$parts = explode("\\",$cls);
-				$this->error($parts[1]." not found");
+				$this->warn($parts[1]." not found");
 				return false;
 			}
 		}
 
 		// Load Object Attributes from Cache or Database
 		public function details(): bool {
+		
 			$this->clearError();
 			$database = new \Database\Service();
 
 			$cache = $this->cache();
-			if (!empty($this->_cacheKeyPrefix)) {
+			if (isset($cache) && !empty($this->_cacheKeyPrefix)) {
 				$fromCache = $cache->get();
 				if (isset($fromCache) && !empty($fromCache)) {
 					foreach ($fromCache as $key => $value) {
@@ -189,9 +210,10 @@
 				FROM	`$this->_tableName`
 				WHERE	`$this->_tableIDColumn` = ?
 			";
+
 			$database->AddParam($this->id);
 			$rs = $database->Execute($get_object_query);
-			
+
 			if (!$rs) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
@@ -199,7 +221,7 @@
 			$object = $rs->FetchNextObject(false);
 			$column = $this->_tableIDColumn;
 			if (is_object($object) && $object->$column > 0) {
-			
+
 				// Collect all attributes from response record
 				foreach ($object as $key => $value) {
 					if (property_exists($this,$key)) $this->$key = $value;

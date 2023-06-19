@@ -2,6 +2,7 @@
 	namespace Bench;
 
 	class Build {
+
 		private $_error;
 		public $id;
 
@@ -85,4 +86,3 @@
 			return $response;
 		}
 	}
-?>

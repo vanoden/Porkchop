@@ -1,41 +1,50 @@
 <?php
 	namespace Site;
 	
-	class PageList {
-		public $error;
+	class PageList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
-			$bind_params = array();
+			$this->clearError();
+			$this->resetCount();
+
+			$database = new \Database\Service();
+
 			# Prepare Query
 			$get_object_query = "
 				SELECT	id
 				FROM	page_pages
 				WHERE	id = id
 			";
-			if (isset($parameters['module']) && $parameters['module']) {
+			if (!empty($parameters['module'])) {
 				$get_object_query .= "
 					AND		module = ?";
-				array_push($bind_params,$parameters['module']);
+				$database->AddParam($parameters['module']);
 			}
-			if (isset($parameters['view']) && $parameters['view']) {
+			if (!empty($parameters['view'])) {
 				$get_object_query .= "
 					AND		view = ?";
-				array_push($bind_params,$parameters['view']);
+				$database->AddParam($parameters['view']);
 			}
-			if (isset($parameters['index']) && $parameters['index']) {
+			if (!empty($parameters['index'])) {
 				$get_object_query .= "
 					AND		`index` = ?";
-				array_push($bind_params,$parameters['index']);
+				$database->AddParam($parameters['index']);
 			}
+			if (!empty($parameters['sitemap'])) {
+				$get_object_query .= "
+					AND		`sitemap` = ?";
+				if ($parameters['sitemap'] == true || $parameters['sitemap'] == 1) $database->AddParam(1);
+				else $database->AddParam(0);
+			}
+
 			$get_object_query .= "
 					ORDER BY module,view
 			";
-			$rs = $GLOBALS['_database']->Execute($get_object_query,$bind_params);
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->error = "SQL Error in PageList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
-			query_log($get_object_query,$bind_params,true);
 			$pages = array();
 			while(list($id) = $rs->FetchRow()) {
 				$page = new \Site\Page($id);

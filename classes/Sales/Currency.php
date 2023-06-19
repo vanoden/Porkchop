@@ -10,6 +10,7 @@
 			$this->_tableName = 'sales_currencies';
 			$this->_cacheKeyPrefix = 'sales.currency';
 			$this->_tableUKColumn = 'name';
+			$this->_addField('name','symbol');
     		parent::__construct($id);
 		}
 
@@ -19,6 +20,12 @@
 				$this->error("Currency name required");
 				return false;
 			}
+
+			if (! $this->validName($parameters['name'])) {
+				$this->error("Invalid currency name '".$parameters['name']."'");
+				return false;
+			}
+
 			$add_currency_query = "
 				INSERT
 				INTO	sales_currencies
@@ -41,6 +48,16 @@
 				SET		id = id
 			";
 			$bind_params = array();
+			if (!empty($parameters['name'])) {
+				if (! $this->validName($parameters['name'])) {
+					$this->error("Invalid name");
+					return false;
+				}
+				$update_object_query .= ",
+						name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
+
 			if (!empty($parameters['symbol'])) {
 				$update_object_query .= ",
 						symbol = ?";
@@ -54,6 +71,8 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
+			$cache = $this->cache();
+			$cache->delete();
 			return $this->details();
 		}
 

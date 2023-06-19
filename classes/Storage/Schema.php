@@ -5,7 +5,7 @@
 		public $module = "Storage";
 
 		public function upgrade() {
-			$this->error = null;
+			$this->clearError();
 
 			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
@@ -21,8 +21,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating storage_repositories table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating storage_repositories table: ".$this->error());
 					return false;
 				}
 
@@ -36,8 +35,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating storage_repository_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating storage_repository_metadata table: ".$this->error());
 					return false;
 				}
 
@@ -63,8 +61,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating storage_files table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating storage_files table: ".$this->error());
 					return false;
 				}
 
@@ -78,8 +75,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating storage_file_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating storage_file_metadata table: ".$this->error());
 					return false;
 				}
 
@@ -95,8 +91,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating storage_file_roles table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating storage_file_roles table: ".$this->error());
 					return false;
 				}
 
@@ -115,8 +110,7 @@
 						ADD description text
 					";
 					if (! $this->executeSQL($update_table_query)) {
-						$this->error = "SQL Error altering storage_files table in ".$this->module."::Schema::upgrade(): ".$this->error;
-						app_log($this->error, 'error');
+						$this->SQLError("Altering storage_files table: ".$this->error());
 						return false;
 					}
 				}
@@ -138,8 +132,7 @@
                     ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 		        ";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating storage_files_types table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating storage_files_types table: ".$this->error());
 					return false;
 				}
 
@@ -158,8 +151,7 @@
 						ADD COLUMN override_privileges varchar(1024) NOT NULL DEFAULT '{\"a\": \"-f\"}'
 					";
 					if (! $this->executeSQL($update_table_query)) {
-						$this->error = "SQL Error altering storage_files table in ".$this->module."::Schema::upgrade(): ".$this->error;
-						app_log($this->error, 'error');
+						$this->SQLError("Altering storage_files table: ".$this->error());
 						return false;
 					}
 				}
@@ -171,8 +163,7 @@
 						DROP column write_protect
 					";
 					if (! $this->executeSQL($update_table_query)) {
-						$this->error = "SQL Error altering storage_files table in ".$this->module."::Schema::upgrade(): ".$this->error;
-						app_log($this->error, 'error');
+						$this->SQLError("Altering storage_files table: ".$this->error());
 						return false;
 					}
 				}
@@ -183,8 +174,7 @@
 						ADD COLUMN date_modified datetime NOT NULL DEFAULT '1970-01-01' after `date_created`
 					";
 					if (! $this->executeSQL($update_table_query)) {
-						$this->error = "SQL Error altering storage_files table in ".$this->module."::Schema::upgrade(): ".$this->error;
-						app_log($this->error, 'error');
+						$this->SQLError("Altering storage_files table: ".$this->error());
 						return false;
 					}
 				}
@@ -192,8 +182,7 @@
 					DROP TABLE IF EXISTS storage_file_roles
 				";
 				if (! $this->executeSQL($drop_table_query)) {
-					$this->error = "SQL Error altering storage_files table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Altering storage_files table: ".$this->error());
 					return false;
 				}
 

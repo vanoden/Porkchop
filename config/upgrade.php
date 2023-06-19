@@ -11,9 +11,13 @@
 	$modules = array(
 		"Company"		=> array(
 			"schema"	=> 3,
+			"templates"	=> array(
+				"configuration"	=> $templates['admin'],
+				"domains"		=> $templates['admin']
+			)
 		),
 		"Site"			=> array(
-			"schema"	=> 17,
+			"schema"	=> 19,
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
@@ -28,7 +32,9 @@
 				"counters"	=> $templates['admin'],
 				"content_block"	=> $templates['admin'],
 				"terms_of_use"	=> $templates['admin'],
-				"term_of_use"	=> $templates['admin']
+				"term_of_use"	=> $templates['admin'],
+				"tou_versions"	=> $templates['admin'],
+				"tou_version"	=> $templates['admin']
 			),
 		),
 		"Geography"		=> array(
@@ -90,54 +96,13 @@
 				"items"		=> $templates['admin'],
 				"item"		=> $templates['admin']
 			)
-        ),
-		"Product"		=> array(
-			"schema"	=> 5,
-			"privileges"	=> array(
-                "edit product prices",
-                "manage products",
-                "manage product instances",
-				"add product instances",
-				"see product api"
-            ),
-			"templates"		=> array(
-				"report"			=> $templates['admin'],
-				"edit"				=> $templates['admin'],
-			),
-		),
-        "Storage"       => array(
-            "schema"    => 6,
-            "templates"     => array(
-                "repositories"      => $templates['admin'],
-                "repository"        => $templates['admin']
-            )
-        ),
-		"Email"			=> array(
-			"schema"	=> 2,
-            "privileges"    => array(
-                "create email",
-				"see email api"
-            )
-		),
-		"Action"		=> array(
-			"schema"	=> 1,
-			"roles"			=> array(
-				"action manager"	=> array(),
-				"action user"		=> array(),
-			),
-		),
-		"Network"		=> array(
-			"schema"	=> 2,
-			"privileges"	=> array(
-				"manage subnets",
-				"manage hosts",
-				"manage acls"
-			)
-			),
-		"Sales"			=> array(
-			"schema"	=> 9
-		)
+        )
 	);
+
+	include(MODULES."/product/default/_metadata.php");
+	include(MODULES."/sales/default/_metadata.php");
+	include(MODULES."/network/default/_metadata.php");
+	include(MODULES."/storage/default/_metadata.php");
 
 	$menus = array();
 

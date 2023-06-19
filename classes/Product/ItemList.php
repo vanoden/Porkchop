@@ -4,7 +4,7 @@
 	class ItemList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
-			$this->error = '';
+			$this->clearError();
 
 			$find_product_query = "
 				SELECT	DISTINCT(p.id)

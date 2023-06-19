@@ -117,6 +117,7 @@
 		}
 
 		public function find($parameters = array(),$recursive = true) {
+
 			$this->clearError();
 			$this->resetCount();
 			app_log("Register::OrganizationList::find()",'trace',__FILE__,__LINE__);
