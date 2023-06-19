@@ -97,6 +97,12 @@
 		exit;
 	}
 
+    $_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
+    if ($_CACHE_->error()) {
+        $site->install_log('Unable to initiate Cache client: '.$_CACHE_->error(),'error');
+    }
+    $site->install_log("Cache Initiated");
+
 	###################################################
 	### Connect to Database							###
 	###################################################
@@ -212,7 +218,3 @@
 	$site->install_log("Upgrade completed successfully",'notice');
 
 exit;
-
-function app_log($message,$level='debug') {
-	$GLOBALS['site']->install_log($message);
-}
