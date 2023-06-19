@@ -1077,13 +1077,8 @@
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
 			if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
-<<<<<<< HEAD
 				$html .= "<li><a href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\">Manage</a></li>";
-			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
-=======
-				$html .= "&nbsp;&nbsp;<a href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\">Manage</a>";
-			return "<nav id=\"breadcrumb\">\n\t<ul><li>\n$html\n\t</li></ul>\n</nav>\n";
->>>>>>> 780ef9d023dc909f3247e49c5b2e17410659bc83
+			  return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
 		}
 
 		public function showMessages() {
