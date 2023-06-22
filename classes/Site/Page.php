@@ -1077,20 +1077,20 @@
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
 			if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
-				$html .= "&nbsp;&nbsp;<a href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\">Manage</a>";
-			return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+				$html .= "<li><a href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\">Manage</a></li>";
+			  return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
 		}
 
 		public function showMessages() {
 			$buffer = "";
 			if ($this->errorCount() > 0) {
 				$buffer .= "
-<section id=\"form-message\">
-	<ul class=\"connectBorder errorText\">
-		<li>".$this->errorString()."</li>
-	</ul>
-</section>
-			";
+          <section id=\"form-message\">
+            <ul class=\"connectBorder errorText\">
+              <li>".$this->errorString()."</li>
+            </ul>
+          </section>
+			  ";
 			}
 			elseif (!empty($this->success)) {
 				$buffer .= "
