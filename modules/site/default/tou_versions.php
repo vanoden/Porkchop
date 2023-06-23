@@ -1,5 +1,4 @@
-<?=$page->showBreadCrumbs()?>
-<?=$page->showMessages()?>
+<?=$page->showAdminInfo()?>
 <style>
 	.table {
 		display: table;
