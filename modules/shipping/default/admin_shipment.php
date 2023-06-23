@@ -18,37 +18,36 @@
 <form method="post">
     <input type="hidden" name="id" value="<?=$shipment->id?>">
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-    <div class="container">
-	    <span class="label">Code</span>
-	    <span class="value"><?=$shipment->code?></span>
-    </div>
-    <div class="container">
-	    <span class="label">Document</span>
-	    <span class="value"><?=$shipment->document_number?></span>
-    </div>
-    <div class="container">
-	    <span class="label">Status</span>
-	    <span class="value"><?=$shipment->status?></span>
-    </div>
-    <div class="container">
-	    <span class="label">Entered By</span>
-	    <span class="value"><?=$shipment->send_contact()->full_name()?></span>
-    </div>
-    <div class="container">
-	    <span class="label">Entered On</span>
-	    <span class="value"><?=$shipment->date_entered?></span>
-    </div>
-    <?php if (!empty($shipment->date_shipped)) { ?>
-        <div class="container">
-	        <span class="label">Shipped On</span>
-	        <span class="value"><?=$shipment->date_shipped?></span>
+    
+    <div class="table">
+        <div class="tableRowHeader">
+            <div class="tableCell">Code</div>
+            <div class="tableCell">Document</div>
+            <div class="tableCell">Status</div>
+            <div class="tableCell">Entered By</div>
+            <div class="tableCell">Entered On</div>
+            <?php if (!empty($shipment->date_shipped)) { ?>
+                    <div class="tableCell">Shipped On</div>
+            <?php } ?>
+            <div class="tableCell">Vendor</div>	        
+        </div>   
+        <div class="tableRow">
+            <div class="tableCell"><?=$shipment->code?></div>
+            <div class="tableCell"><?=$shipment->document_number?></div>
+            <div class="tableCell"><?=$shipment->status?></div>
+            <div class="tableCell"><?=$shipment->send_contact()->full_name()?></div>
+            <div class="tableCell"><?=$shipment->date_entered?></div>
+            <?php if (!empty($shipment->date_shipped)) { ?>
+                    <div class="tableCell"><?=$shipment->date_shipped?></div>
+            <?php } ?>
+            <div class="tableCell"><?=$shippingVendor->name?></div>	  
         </div>
-    <?php } ?>
-    <div class="container">
-	    <span class="label">Vendor</span>
-	    <?=$shippingVendor->name?>
     </div>
-    <?php	foreach ($packages as $package) { ?>
+
+    <br/><br/>
+
+    <?php	foreach ($packages as $package) { 
+    ?>
         <div class="table">
 	        <div class="tableRowHeader">
 		        <div class="tableCell">Package</div>
@@ -65,7 +64,7 @@
 		        <div class="tableCell"><?=$package->condtion?></div>
 	        </div>
         </div>
-        <br>
+        <br/><br/>
         <div class="table">
 	        <div class="tableRowHeader">
 		        <div class="tableCell">Quantity</div>

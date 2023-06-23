@@ -47,6 +47,7 @@
 	$vendorList = new \Shipping\VendorList();
 	$vendors = $vendorList->find();
 	$packages = $shipment->packages();
+
 	if (empty($shipment->vendor_id)) $shippingVendor = 'Not provided';
 	else $shippingVendor = $shipment->vendor();
 
