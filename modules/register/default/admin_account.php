@@ -169,11 +169,10 @@
                <input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> />
             </div>
             <div class="tableCell">
-               <input type="image" id="dropitem" alt="remove item" src="/img/icons/icon_tools_trash_1C.svg" style="cursor: pointer;" onclick="submitDelete(<?= $contact->id ?>)">
+               <input type="image" id="dropitem" alt="remove item" src="/img/icons/icon_tools_trash_2C.svg" style="cursor: pointer; border: none; width: 35px" onclick="submitDelete(<?= $contact->id ?>)">
             </div>
          </div>
       <?php } ?>
-      <br />
       <div class="tableRow">
          <div class="tableCell">
             <strong>New Contact Entry:</strong>
