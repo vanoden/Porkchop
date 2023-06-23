@@ -1,53 +1,25 @@
-<style>
-   a.button,
-   input.button,
-   input[type="button"] {
-      border-radius: 3px;
-   }
-
-   .largeButton {
-      width: 400px;
-      height: 35px;
-   }
-
-   #btn_submit {
-      min-width: 175px;
-      min-height: 50px;
-      border-radius: 10px;
-   }
-
-   #submit-button-container {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-   }
-
-   #terms-of-use-table {
-      margin-bottom: 100px;
-   }
-</style>
 <script type="text/javascript">
 
-   // submit form
-   function submitForm() {
+  // submit form
+  function submitForm() {
 
-      // make sure that all the notify contacts have a 'description' value populated
-      var contactTable = document.getElementById("contact-main-table");
-      var notifyChecked = contactTable.getElementsByTagName("input");
-      for (var i = 0; i < notifyChecked.length; i++) {
-         if (notifyChecked[i].checked) {
-            var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
-            if (matches[0]) {
-               contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[', '').replace(']', '') + "]");
-               contactDescriptionField[0].style.border = "";
-               if (!contactDescriptionField[0].value) {
-                  alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
-                  contactDescriptionField[0].style.border = "3px solid red";
-                  return false;
-               }
-            }
-         }
+    // make sure that all the notify contacts have a 'description' value populated
+    var contactTable = document.getElementById("contact-main-table");
+    var notifyChecked = contactTable.getElementsByTagName("input");
+    for (var i = 0; i < notifyChecked.length; i++) {
+      if (notifyChecked[i].checked) {
+        var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
+        if (matches[0]) {
+          contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[', '').replace(']', '') + "]");
+          contactDescriptionField[0].style.border = "";
+          if (!contactDescriptionField[0].value) {
+            alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
+            contactDescriptionField[0].style.border = "3px solid red";
+            return false;
+          }
+        }
       }
+    }
 
       if (document.register.password.value.length > 0 || document.register.password_2.value.length > 0) {
          if (document.register.password.value.length < 6) {
@@ -73,31 +45,31 @@
    }
 
    function disableNewContact() {
-      document.getElementById('disable-new-contact-button').style.display = "none";
-      document.getElementById('new-description').style.display = "none";
-      document.getElementById('new-value').style.display = "none";
-      document.getElementById('new-notes').style.display = "none";
-      document.getElementById('new-notify').style.display = "none";
-      var newContactSelect = document.getElementById("new-contact-select");
-      newContactSelect.options[4] = new Option('Select', 0);
-      newContactSelect.options[4].selected = 'selected';
+    document.getElementById('disable-new-contact-button').style.display = "none";
+    document.getElementById('new-description').style.display = "none";
+    document.getElementById('new-value').style.display = "none";
+    document.getElementById('new-notes').style.display = "none";
+    document.getElementById('new-notify').style.display = "none";
+    var newContactSelect = document.getElementById("new-contact-select");
+    newContactSelect.options[4] = new Option('Select', 0);
+    newContactSelect.options[4].selected = 'selected';
 
    }
 
    function enableNewContact() {
-      document.getElementById('disable-new-contact-button').style.display = "block";
-      document.getElementById('new-description').style.display = "block";
-      document.getElementById('new-value').style.display = "block";
-      document.getElementById('new-notes').style.display = "block";
-      document.getElementById('new-notify').style.display = "block";
-      var newContactSelect = document.getElementById("new-contact-select");
-      newContactSelect.remove(5);
+    document.getElementById('disable-new-contact-button').style.display = "block";
+    document.getElementById('new-description').style.display = "block";
+    document.getElementById('new-value').style.display = "block";
+    document.getElementById('new-notes').style.display = "block";
+    document.getElementById('new-notify').style.display = "block";
+    var newContactSelect = document.getElementById("new-contact-select");
+    newContactSelect.remove(5);
    }
 </script>
 
 <!-- Page Header -->
-<?= $page->showBreadcrumbs() ?>
 <?= $page->showTitle() ?>
+<?= $page->showBreadcrumbs() ?>
 <?= $page->showMessages() ?>
 <!-- End Page Header -->
 
@@ -106,32 +78,24 @@
    <input type="hidden" name="target" value="<?= $target ?>" />
    <input type="hidden" name="customer_id" value="<?= $customer_id ?>" />
    <input type="hidden" name="login" value="<?= $customer->login ?>" />
-   <?php
-   if ($page->errorCount() > 0) { ?>
-      <div class="form_error"><?= $page->errorString() ?></div>
-   <?php } ?>
 
-   <?php
-   if ($page->success) {
-      ?>
-      <div class="form_success">
-         <h1 style="display:inline; margin-bottom: 25px;"><?= $page->success ?></h1>
-      </div>
-   <?php } ?>
-   <div class="form_instruction">Make changes and click 'Apply' to complete.</div>
+   <section id="form-message">
+    <ul class="connectBorder infoText"><li>Make changes and click 'Apply' to complete.</li></ul>
+   </section>
+
    <!--	 Login Details -->
-   <div id="accountLoginQuestion" class="login-area">
-      <span class="label" style="display: inline;">Login:</span>
-      <span class="value"><?= $customer->login ?></span>
-      <span class="value">[<?= $customer->auth_method ?>]</span>
-   </div>
-   <div id="accountTypeQuestion" class="login-area">
-      <span class="label" style="display: inline;">Type:</span>
+  <div id="contact-main-table" class="tableBody min-tablet" style="font-size: 1.11rem;">
+    <div class="tableRow" style="background: var(--color-light-one);">
+      <div class="tableCell" style="width: 50%;">Login: <span class="value"><?= $customer->login ?></span></div>
+      <div class="tableCell" style="width: 50%;">Type:
       <select name="automation" class="value input">
-         <option value="0" <?php if ($customer->human()) print " selected"; ?>>Human</option>
-         <option value="1" <?php if ($customer->automation()) print " selected"; ?>>Automation</option>
+        <option value="0" <?php if ($customer->human()) print " selected"; ?>>Human</option>
+        <option value="1" <?php if ($customer->automation()) print " selected"; ?>>Automation</option>
       </select>
-   </div>
+      </div>
+    </div>
+  </div>
+
    <!--	Start LOGIN Specs -->
    <div class="tableBody clean min-tablet">
       <div class="tableRowHeader">
@@ -205,7 +169,7 @@
                <input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> />
             </div>
             <div class="tableCell">
-               <input type="button" name="drop_contact[<?= $contact->id ?>]" class="deleteButton" value="X" style="cursor: pointer;" onclick="submitDelete(<?= $contact->id ?>)" />
+               <input type="image" id="dropitem" alt="remove item" src="/img/icons/icon_tools_trash_1C.svg" style="cursor: pointer;" onclick="submitDelete(<?= $contact->id ?>)">
             </div>
          </div>
       <?php } ?>
@@ -241,18 +205,19 @@
       </div>
    </div>
    <div style="text-align: left;">
-      <input type="button" id="disable-new-contact-button" class="deleteButton" value="cancel" style="cursor: pointer; display:none;" onclick="disableNewContact()" />
+      <input type="button" id="disable-new-contact-button" class="deleteButton" value="Cancel" style="cursor: pointer; display:none;" onclick="disableNewContact()" />
    </div>
    <!--	END Methods of Contact -->
    <!--	START Change Password-->
    <?php if ($customer->auth_method == 'local') { ?>
       <h3 class="marginTop_20">Change Password</h3>
-      <div class="form_instruction">Leave both fields empty for your password to stay the same.</div>
+      <section id="form-message">
+        <ul class="connectBorder infoText"><li>Leave both fields empty for your password to stay the same.</li></ul>
+      </section>
       <div class="tableBody clean min-tablet">
          <div class="tableRowHeader">
-            <div class="tableCell" style="width: 25%;">New Password</div>
-            <div class="tableCell" style="width: 25%;">Confirm New Password</div>
-            <div class="tableCell" style="width: 50%;"></div>
+            <div class="tableCell" style="width: 30%;">New Password</div>
+            <div class="tableCell" style="width: 30%;">Confirm New Password</div>
          </div>
          <!-- end row header -->
          <div class="tableRow">
@@ -267,7 +232,7 @@
          </div>
       </div>
    <?php } ?>
-   <hr />
+
    <!--	END Change Password-->
    <h3>Status</h3>
    <select class="input" name="status">
@@ -300,6 +265,11 @@
       ?>
    </table>
    <h3>Recent Auth Failures</h3>
+
+    <section id="form-message">
+    <ul class="connectBorder infoText"><li>Auth Failures Since Last Success: <?= $customer->auth_failures ?></li></ul>
+    </section>
+
    <div id="auth-failures-table">
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
@@ -317,19 +287,11 @@
             </div>
          <?php } ?>
       </div>
-      <span class="label" style="display:inline;">Auth Failures Since Last Success: </span><span class="value"><?= $customer->auth_failures ?></span>
-      <br />
       <input type="submit" name="btnResetFailures" value="Reset Failures" />
-   </div>
-   <!-- entire page button submit -->
-   <div id="submit-button-container" class="tableBody min-tablet">
-      <div class="tableRow button-bar">
-         <input id="btn_submit" type="submit" name="method" class="button" value="Apply" onclick="return submitForm();" />
-      </div>
    </div>
 
    <h3>Terms of Use History</h3>
-   <div id="terms-of-use-table">
+   <div id="terms-of-use-table" style="margin-bottom: 180px;">
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
             <div class="tableCell">Code</div>
@@ -353,6 +315,12 @@
                <div class="tableCell"><?=date('m/d/Y', strtotime($mostRecentAction->date_action))?></div>
             </div>
          <?php } ?>
+      </div>
+   </div>
+   <!-- entire page button submit -->
+   <div id="submit-button-container" class="tableBody min-tablet">
+      <div class="tableRow button-bar">
+         <input id="btn_submit" type="submit" name="method" class="button" value="Apply" onclick="return submitForm();" />
       </div>
    </div>
 </form>
