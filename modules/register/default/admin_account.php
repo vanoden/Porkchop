@@ -278,7 +278,7 @@
         <div class="tableCell" style="width: 25%;">Name</div>
         <div class="tableCell" style="width: 30%;">Description</div>
       </div>
-      <?php foreach ($contacts as $contact) { ?>
+      <?php foreach ($all_roles as $role) { ?>
       <div class="tableRow">
         <div class="tableCell"><input type="checkbox" name="role[<?= $role->id ?>]" value="1" <?php if ($customer->has_role($role->name)) print " CHECKED"; ?> /></div>
         <div class="tableCell"><?= $role->name ?></div>
