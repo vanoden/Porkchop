@@ -68,7 +68,14 @@
 </script>
 
 <!-- Page Header -->
-<?= $page->showTitle() ?>
+<div style="display: flex; flex-direction: row;">
+  <?= $page->showTitle() ?>
+  <div id="search bar">
+    <label for="site-search">Search the site:</label>
+    <input type="search" id="site-search" name="q">
+    <button>Search</button>
+  </div>
+</div>
 <?= $page->showBreadcrumbs() ?>
 <?= $page->showMessages() ?>
 <!-- End Page Header -->
