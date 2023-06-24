@@ -134,7 +134,54 @@
     </div>
   </div>
    
- 
+   <!-- ============================================== -->
+   <!-- METHODS OF CONTACT -->
+   <!-- ============================================== -->
+  <h3>Methods of Contact</h3>
+  <div id="contact-main-table" class="tableBody min-tablet">
+  <div class="tableRowHeader">
+    <div class="tableCell" style="width: 20%;">Type</div>
+    <div class="tableCell" style="width: 25%;">Description</div>
+    <div class="tableCell" style="width: 30%;">Address/Number</div>
+    <div class="tableCell" style="width: 15%;">Notes</div>
+    <div class="tableCell" style="width: 5%;">Notify</div>
+    <div class="tableCell" style="width: 5%;">Drop</div>
+  </div>
+  <?php foreach ($contacts as $contact) { ?>
+  <div class="tableRow">
+    <div class="tableCell">
+      <select class="value input" name="type[<?= $contact->id ?>]">
+        <?php foreach (array_keys($contact_types) as $contact_type) { ?>
+            <option value="<?= $contact_type ?>" <?php if ($contact_type == $contact->type) print " selected"; ?>><?= $contact_types[$contact_type] ?></option>
+        <?php } ?>
+      </select>
+    </div>
+    <div class="tableCell"><input type="text" name="description[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->description) ?>" /></div>
+    <div class="tableCell"><input type="text" name="value[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->value) ?>" /></div>
+    <div class="tableCell"><input type="text" name="notes[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->notes) ?>" /></div>
+    <div class="tableCell"><input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> /></div>
+    <div class="tableCell"><input type="image" id="dropitem" alt="remove item" src="/img/icons/icon_tools_trash_act.svg" style="cursor: pointer; border: none; width: 30px" onclick="submitDelete(<?= $contact->id ?>)"></div>
+  </div>
+  <?php } ?>
+  <div class="tableRow">
+    <div class="tableCell">
+      <strong>New Contact Entry:</strong>
+      <select id="new-contact-select" class="value input" name="type[0]" onchange="enableNewContact()">
+        <?php foreach (array_keys($contact_types) as $contact_type) { ?>
+          <option value="<?= $contact_type ?>"><?= $contact_types[$contact_type] ?></option>
+        <?php } ?>
+        <option value="0" selected="selected">Select</option>
+      </select>
+    </div>
+    <div class="tableCell"><input type="text" id="new-description" name="description[0]" class="value wide_100per" style="display:none;" /></div>
+    <div class="tableCell"><input type="text" id="new-value" name="value[0]" class="value wide_100per" style="display:none;" /></div>
+    <div class="tableCell"><input type="text" id="new-notes" name="notes[0]" class="value wide_100per" style="display:none;" /></div>
+    <div class="tableCell"><input type="checkbox" id="new-notify" name="notify[0]" value="1" style="display:none;" /></div>
+    <div class="tableCell"></div>
+  </div>
+  <div style="text-align: left;">
+    <input type="button" id="disable-new-contact-button" class="deleteButton" value="Cancel" style="cursor: pointer; display:none;" onclick="disableNewContact()" />
+  </div>
    
    <!-- ============================================== -->
    <!-- CHANGE PASSWORD -->
