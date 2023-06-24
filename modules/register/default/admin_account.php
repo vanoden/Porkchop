@@ -68,7 +68,7 @@
 </script>
 
 <!-- Page Header -->
-<div style="display: flex; flex-direction: row;">
+<div style="display: flex; flex-direction: row; width: 100%; justify-content: space-between; max-width: 1000px; align-content: baseline; align-items: baseline;">
   <?= $page->showTitle() ?>
   <div id="search bar">
     <label for="site-search">Search the site:</label>
