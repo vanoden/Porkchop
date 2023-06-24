@@ -161,7 +161,7 @@
       <div class="tableCell"><input type="text" name="value[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->value) ?>" /></div>
       <div class="tableCell"><input type="text" name="notes[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->notes) ?>" /></div>
       <div class="tableCell"><input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> /></div>
-      <div class="tableCell"><input type="image" name="drop_contact[<?= $contact->id ?>]" class="deleteButton" src="/img/icons/icon_tools_trash_active.svg" style="cursor: pointer;" onclick="submitDelete(<?= $contact->id ?>)" /></div>
+      <div class="tableCell"><input type="image" name="drop_contact[<?= $contact->id ?>]" class="deleteButton" src="/img/icons/icon_tools_trash_active.svg" style="cursor: pointer; width: 30px; border: none;" onclick="submitDelete(<?= $contact->id ?>)" /></div>
     </div>
     <!-- New contact entry -->
     <?php } ?>
