@@ -70,8 +70,8 @@
 <!-- Page Header -->
 <div style="display: flex; flex-direction: row; width: 100%; justify-content: space-between; max-width: 1000px; align-content: baseline; align-items: baseline;">
   <?= $page->showTitle() ?>
-  <div id="search bar">
-    <input type="search" id="site-search" name="q" style="margin-right: 1rem;">
+  <div id="search bar" style="display: flex;">
+    <input type="search" id="site-search" name="q" style="margin-right: 1rem;" placeholder="enter search terms">
     <input type="image" src="/img/icons/icon_tools_search.svg" style="cursor: pointer; width: 30px; border: none;" onclick="" /> 
   </div>
 </div>
