@@ -243,33 +243,7 @@
    </select>
 
 <!-- ============================================== -->
-<!-- ASSIGNED ROLES OPT 1 -->
-<!-- ============================================== -->
-    <h3>Assigned Roles</h3>
-    <table cellpadding="0" cellspacing="0" class="body">
-      <tr>
-        <th class="label" style="width: 10%;">&nbsp;</th>
-        <th class="label" style="width: 25%;">Name</th>
-        <th class="label" style="width: 65%;">Description</th>
-      </tr>
-      <?php
-        $greenbar = '';
-        foreach ($all_roles as $role) {
-          if ($greenbar)
-            $greenbar = '';
-          else
-            $greenbar = ' greenbar';
-          ?>
-        <tr>
-          <td class="value<?= $greenbar ?>"><input type="checkbox" name="role[<?= $role->id ?>]" value="1" <?php if ($customer->has_role($role->name)) print " CHECKED"; ?> /></td>
-          <td class="value<?= $greenbar ?>"><?= $role->name ?></td>
-          <td class="value<?= $greenbar ?>"><?= $role->description ?></td>
-        </tr>
-      <?php } ?>
-    </table>
-
-<!-- ============================================== -->
-<!-- ASSIGNED ROLES OPT 2 -->
+<!-- ASSIGNED ROLES -->
 <!-- ============================================== -->
     <h3>Assigned Roles</h3>
     <div class="tableBody min-tablet">
