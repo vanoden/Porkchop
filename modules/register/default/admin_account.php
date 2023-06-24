@@ -138,17 +138,15 @@
    <!-- METHODS OF CONTACT -->
    <!-- ============================================== -->
   <h3>Methods of Contact</h3>
-  <!-- START Methods of Contact -->
   <div id="contact-main-table" class="tableBody min-tablet">
     <div class="tableRowHeader">
-        <div class="tableCell" style="width: 20%;">Type</div>
-        <div class="tableCell" style="width: 25%;">Description</div>
-        <div class="tableCell" style="width: 30%;">Address/Number</div>
-        <div class="tableCell" style="width: 15%;">Notes</div>
-        <div class="tableCell" style="width: 5%;">Notify</div>
-        <div class="tableCell" style="width: 5%;">Drop</div>
+      <div class="tableCell" style="width: 20%;">Type</div>
+      <div class="tableCell" style="width: 25%;">Description</div>
+      <div class="tableCell" style="width: 30%;">Address/Number</div>
+      <div class="tableCell" style="width: 15%;">Notes</div>
+      <div class="tableCell" style="width: 5%;">Notify</div>
+      <div class="tableCell" style="width: 5%;">Drop</div>
     </div>
-    <!-- end row header -->
     <?php foreach ($contacts as $contact) { ?>
     <div class="tableRow">
       <div class="tableCell">
@@ -163,7 +161,7 @@
       <div class="tableCell"><input type="text" name="value[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->value) ?>" /></div>
       <div class="tableCell"><input type="text" name="notes[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->notes) ?>" /></div>
       <div class="tableCell"><input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> /></div>
-      <div class="tableCell"><input type="button" name="drop_contact[<?= $contact->id ?>]" class="deleteButton" value="X" style="cursor: pointer;" onclick="submitDelete(<?= $contact->id ?>)" /></div>
+      <div class="tableCell"><input type="image" name="drop_contact[<?= $contact->id ?>]" class="deleteButton" src="/img/icons/icon_tools_trash.active.svg" style="cursor: pointer;" onclick="submitDelete(<?= $contact->id ?>)" /></div>
     </div>
     <!-- New contact entry -->
     <?php } ?>
