@@ -71,9 +71,8 @@
 <div style="display: flex; flex-direction: row; width: 100%; justify-content: space-between; max-width: 1000px; align-content: baseline; align-items: baseline;">
   <?= $page->showTitle() ?>
   <div id="search bar">
-    <label for="site-search">Search the site:</label>
-    <input type="search" id="site-search" name="q">
-    <button>Search</button>
+    <input type="search" id="site-search" name="q" style="margin-right: 1rem;">
+    <input type="image" src="/img/icons/icon_tools_search.svg" style="cursor: pointer; width: 30px; border: none;" onclick="" /> 
   </div>
 </div>
 <?= $page->showBreadcrumbs() ?>
