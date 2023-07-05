@@ -305,6 +305,15 @@
          <input id="btn_submit" type="submit" name="method" class="button" value="Apply" onclick="return submitForm();" />
       </div>
    </div>
+
+	<nav class="pageNav">
+		<a href="javascript:void(0)" class="pager pagerFirst" onclick="submitSearch(0)"><< <span class="hiddenMobile">First</span> </a>
+		<a href="javascript:void(0)" class="pager pagerPrevious" onclick="submitSearch(<?=$prev_offset?>)"><</a>
+		<?=$_REQUEST['start']+1?> - <?=$next_offset?> of <?=$total_collections?>
+		<a href="javascript:void(0)" class="pager pagerNext" onclick="submitSearch(<?=$next_offset?>)">></a>
+		<a href="javascript:void(0)" class="pager pagerLast" onclick="submitSearch(<?=$last_offset?>)"> <span class="hiddenMobile">Last</span> >></a>
+	</nav>
+
 </form>
 
 <!-- hidden for for "delete contact" -->
