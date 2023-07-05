@@ -299,13 +299,6 @@
          <?php } ?>
       </div>
    </div>
-   <!-- entire page button submit -->
-   <div id="submit-button-container" class="tableBody min-tablet">
-      <div class="tableRow button-bar">
-         <input id="btn_submit" type="submit" name="method" class="button" value="Apply" onclick="return submitForm();" />
-      </div>
-   </div>
-
    <!--    Standard Page Navigation Bar ADMIN ONLY -->
    <div class="pager_bar">
 	    <div class="pager_controls">
@@ -324,6 +317,12 @@
 		<a href="javascript:void(0)" class="pager pagerNext" onclick="submitSearch(<?=$next_offset?>)">></a>
 		<a href="javascript:void(0)" class="pager pagerLast" onclick="submitSearch(<?=$last_offset?>)"> <span class="hiddenMobile">Last</span> >></a>
 	</nav>
+   <!-- entire page button submit -->
+   <div id="submit-button-container" class="tableBody min-tablet">
+      <div class="tableRow button-bar">
+         <input id="btn_submit" type="submit" name="method" class="button" value="Apply" onclick="return submitForm();" />
+      </div>
+   </div>
 
 </form>
 
