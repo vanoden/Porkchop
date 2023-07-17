@@ -19,9 +19,7 @@
     ?>
 </script>
 
-<?=$page->showTitle()?>
-<?=$page->showBreadCrumbs()?>
-<?=$page->showMessages()?>
+<?=$page->showAdminPageInfo()?>
 
 <form name="repositoryForm" action="/_storage/repository" method="post">
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
@@ -60,7 +58,7 @@
         <input type="text" name="endpoint" class="value input wide_xl" value="<?=$form['endpoint']?>" />
     </div>
     
-    <div id="s3Settings" style="display:none;">
+    <div id="s3Settings"<?php if ($form['type'] != "s3") { print "style=\"display:none;\""; } ?>>
         <div class="container" style="margin: 10px; padding: 20px; border:dashed 1px gray; display: inline-table;">
             <h4 style="padding: 0px; margin: 0px;">S3 Configuration</h4>
             <span class="label">Access Key</span>
