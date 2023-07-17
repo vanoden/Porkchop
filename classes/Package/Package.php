@@ -184,8 +184,13 @@
 			$this->timestamp = $object->timestamp;
 			$this->platform = $object->platform;
 			$this->package_version_id = $object->package_version_id;
+			$this->repository_id = $object->repository_id;
 
 			return true;
+		}
+
+		public function repository() {
+			return new \Storage\Repository($this->repository_id);
 		}
 
 		public function latestVersion() {

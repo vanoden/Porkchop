@@ -6,7 +6,7 @@
 
 	# Call Requested Event
 	if ($_REQUEST["method"]) {
-        if ($api->can($_REQUEST['method'])) {
+        if (method_exists($api,$_REQUEST['method'])) {
     		# Call the Specified Method
     		$function_name = $_REQUEST["method"];
 	    	$api->$function_name();
@@ -15,7 +15,8 @@
             $api->error("Method not supported");
         }
 		exit;
-	} else {
+	}
+	else {
 		$page->requireRole($api->admin_role());
 		print $api->_form();
 	}

@@ -41,21 +41,23 @@
 			$page->addError("Invalid endpoint");
 			$_REQUEST['endpoint'] = htmlspecialchars($_REQUEST['endpoint']);
 		}
-		if (!$repository->validAccessKey($_REQUEST['endpoint'])) {
-			$page->addError("Invalid endpoint");
-			$_REQUEST['endpoint'] = htmlspecialchars($_REQUEST['endpoint']);
-		}
-		if (!$repository->validSecretKey($_REQUEST['secretKey'])) {
-			$page->addError("Invalid secretKey");
-			$_REQUEST['secretKey'] = htmlspecialchars($_REQUEST['secretKey']);
-		}
-		if (!$repository->validBucket($_REQUEST['bucket'])) {
-			$page->addError("Invalid bucket");
-			$_REQUEST['bucket'] = htmlspecialchars($_REQUEST['bucket']);
-		}
-		if (!$repository->validRegion($_REQUEST['region'])) {
-			$page->addError("Invalid region");
-			$_REQUEST['region'] = htmlspecialchars($_REQUEST['region']);
+		if (preg_match('/^s3$/i',$_REQUEST['type'])) {
+			if (!$repository->validAccessKey($_REQUEST['endpoint'])) {
+				$page->addError("Invalid endpoint");
+				$_REQUEST['endpoint'] = htmlspecialchars($_REQUEST['endpoint']);
+			}
+			if (!$repository->validSecretKey($_REQUEST['secretKey'])) {
+				$page->addError("Invalid secretKey");
+				$_REQUEST['secretKey'] = htmlspecialchars($_REQUEST['secretKey']);
+			}
+			if (!$repository->validBucket($_REQUEST['bucket'])) {
+				$page->addError("Invalid bucket");
+				$_REQUEST['bucket'] = htmlspecialchars($_REQUEST['bucket']);
+			}
+			if (!$repository->validRegion($_REQUEST['region'])) {
+				$page->addError("Invalid region");
+				$_REQUEST['region'] = htmlspecialchars($_REQUEST['region']);
+			}
 		}
 
 		if ($page->errorCount() < 1) {

@@ -295,14 +295,12 @@
 			else return false;
 		}
 		public function validAccessKey($string) {
-			// Only certain instances require accessKey
-			if (empty($string)) return true;
-			else return false;
+			if (preg_match('/^\w{20}$/',$string)) return true;
+			return false;
 		}
 		public function validSecretKey($string) {
-			// Only certain instances require accessKey
-			if (empty($string)) return true;
-			else return false;
+			if (preg_match('/^[\w\+\/]{40}$/',$string)) return true;
+			return false;
 		}
 		public function validBucket($string) {
 			// Only certain instances require bucket
@@ -313,5 +311,8 @@
 			// Only certain instances require bucket
 			if (empty($string)) return true;
 			else return false;
+		}
+		public function validEndpoint($string) {
+			return true;
 		}
 	}
