@@ -68,11 +68,11 @@
 </script>
 
 <!-- Page Header -->
-<div style="display: flex; flex-direction: row; width: 100%; justify-content: space-between; max-width: 1000px; align-content: baseline; align-items: baseline;">
+<div id="pageTitle">
   <?= $page->showTitle() ?>
-  <div id="search bar" style="display: flex;">
-    <input type="search" id="site-search" name="q" style="margin-right: 1rem;" placeholder="enter search terms">
-    <input type="image" src="/img/icons/icon_tools_search.svg" style="cursor: pointer; width: 30px; border: none;" onclick="" /> 
+  <div id="searchBar" style="">
+    <input type="search" id="site-search" name="q" placeholder="enter search terms">
+    <input type="image" class="searchButton" src="/img/icons/icon_tools_search.svg" onclick="" /> 
   </div>
 </div>
 <?= $page->showBreadcrumbs() ?>

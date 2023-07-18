@@ -48,31 +48,35 @@
 	    <input type="hidden" id="start" name="start" value="0">
     </div>
 </form>
-<hr style="visibility: hidden">
-<table cellpadding="0" cellspacing="0" class="body">
-    <tr><th class="label accountsLoginLabel">Login</th>
-	    <th class="label accountsFirstLabel">First Name</th>
-	    <th class="label accountsLastLabel">Last Name</th>
-	    <th class="label accountsOrgLabel">Organization</th>
-	    <th class="label accountsStatus">Status</th>
-	    <th class="label accountsLastActive">Last Active</th>
-    </tr>
-    <?php
-	    foreach ($customers as $customer) { 
-	        if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
-    ?>
-    <tr><td class="value<?=$greenbar?>"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->code?></a></td>
-	    <td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->first_name)?></td>
-	    <td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->last_name)?></td>
-	    <td class="value<?=$greenbar?>"><a href="/_register/organization?organization_id=<?=$customer->organization()->id?>"><?=$customer->organization()->name?></a></td>
-	    <td class="value<?=$greenbar?>"><?=htmlspecialchars($customer->status)?></td>
-	    <td class="value<?=$greenbar?>"><?=$customer->last_active()?></td>
-    </tr>
-    <?php		
-	    }
-    ?>
-    <!--    Standard Page Navigation Bar ADMIN ONLY -->
-    <div class="pager_bar">
+
+<div class="tableBody">
+  <div class="tableRowHeader">
+    <div class="tableCell" style="width: 18%;" >Login</div>
+    <div class="tableCell" style="width: 15%;">First Name</div>
+    <div class="tableCell" style="width: 15%;">Last Name</div>
+    <div class="tableCell" style="width: 24%; overflow-x: hidden;">Organization</div>
+    <div class="tableCell" style="width: 10%;">Status</div>
+    <div class="tableCell" style="width: 18%;">Last Active</div>
+  </div>
+  <?php
+    foreach ($customers as $customer) { 
+        if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
+  ?>
+  <div class="tableRow">
+    <div class="tableCell"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
+    <div class="tableCell"><?=htmlspecialchars($customer->first_name)?></div>
+    <div class="tableCell"><?=htmlspecialchars($customer->last_name)?></div>
+    <div class="tableCell"><a href="/_register/organization?organization_id=<?=$customer->organization()->id?>"><?=$customer->organization()->name?></a></div>
+    <div class="tableCell"><?=htmlspecialchars($customer->status)?></div>
+    <div class="tableCell"><?=$customer->last_active()?></div>
+  </div>
+  <?php		
+    }
+  ?>
+  </div>
+
+  <!--    Standard Page Navigation Bar ADMIN ONLY -->
+  <div class="pager_bar">
 	    <div class="pager_controls">
 		    <a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerFirst"><< First </a>
 		    <a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerPrevious"><</a>
@@ -84,10 +88,10 @@
     <?php
 	    if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
     ?>
-</table>
+
 <form action="<?=PATH?>/_register/register" method="get">
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <div class="button-bar"><input type="submit" name="button_submit" value="Add Account" class="input button"/></div>
 </form>
 <?php	} ?>
-<!--    [end] Standard Page Navigation Bar ADMIN ONLY-->
+<!--    [end] Standard Page Navigation Bar ADMIN ONLY--
