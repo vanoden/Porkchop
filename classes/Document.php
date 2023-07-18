@@ -12,7 +12,7 @@
 
 		public function prepare($object) {
 			if ($this->type == 'xml') {
-				$this->_content = $this->_xmlout($object);
+				$this->_content = $this->_xmlout(json_decode(json_encode($object)));
 				return;
 			}
 			elseif ($this->type == 'json') {

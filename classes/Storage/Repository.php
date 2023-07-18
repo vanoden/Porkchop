@@ -7,20 +7,31 @@
 		public $code;
 		public $status;
 		public $endpoint;
-        public $secretKey;
-        public $accessKey;
+		public $secretKey;
+		public $accessKey;
 		public $default_privileges_json;
 		public $override_privileges_json;
 
+		# Constructor
 		public function __construct($id = 0) {
 			$this->_tableName = 'storage_repositories';
 			parent::__construct($id);
 		}
 
+		# Add a Repository Record
 		public function add($parameters = []) {
-		
+			$this->clearError();
+
+			# Generate Unique Code if none provided
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
-			if (isset($parameters['type'])) $this->type = $parameters['type'];
+
+			if (! $this->validType($parameters['type'])) {
+				$this->error("Invalid type");
+				return false;
+			}
+			else {
+				$this->type = $parameters['type'];
+			}
 			
 			if (! $this->validCode($parameters['code'])) {
 				$this->error("Invalid code");
@@ -39,6 +50,7 @@
 				return false;
 			}
 	
+			# Prepare Query
 			$add_object_query = "
 				INSERT
 				INTO	storage_repositories
@@ -46,6 +58,8 @@
 				VALUES
 				(		?,?,?,?)
 			";
+
+			# Execute Query
 			$GLOBALS['_database']->Execute(
 				$add_object_query,
 				array(
@@ -55,19 +69,24 @@
 					$parameters['status']
 				)
 			);
-			
+
+			# Check for errors
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			
+
+			# Fetch ID of new record
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			app_log("Repo ".$this->id." created, updating");
 			return $this->update($parameters);
 		}
 
+		# Update Repository Record
 		public function update($parameters = []): bool {
-		
+			$this->clearError();
+
+			# Prepare Query
 			$update_object_query = "
 				UPDATE	storage_repositories
 				SET		id = id
@@ -113,6 +132,7 @@
 			return $this->details();
 		}
 
+		# Fetch Repository Record and Populate Object Variables
 		public function details(): bool {
 		
 			$get_object_query = "
@@ -158,18 +178,21 @@
 			while ($row = $rs->fetchRow(false)) $this->$row['key'] = $row['value'];
 			return true;
 		}
-		
+
+		# Get Files in Repository
 		public function files($path = "/") {
 			$filelist = new FileList();
 			return $filelist->find(array('repository_id' => $this->id,'path' => $path));
 		}
 
+		# Add File to Database
 		public function addFileToDb($parameters) {
 			$file = new \Storage\File();
 			$parameters['repository_id'] = $this->id;
 			return $file->add($parameters);
 		}
 
+		# Drop File from Database
 		public function deleteFileFromDb($file_id) {
 			$file = new \Storage\File($file_id);
 			if ($file->exists()) {
@@ -186,15 +209,16 @@
 				return false;
 			}
 		}
-		
+
+		# List Existing Directories
 		public function directories($path = "/") {
 			$directorylist = new DirectoryList();
 			return $directorylist->find(array('repository_id' => $this->id,'path' => $path));
 		}
 
-        public function _updateMetadata($key, $value) {
-		
-            $update_object_query = "
+		public function _updateMetadata($key, $value) {
+			# Prepare Query
+			$update_object_query = "
 				UPDATE	`storage_repository_metadata`
 				SET		`repository_id` = `repository_id`
 			";
@@ -215,11 +239,10 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-            return true;
+			return true;
 		}
 		
 		public function _setMetadata($key,$value) {
-		
 			$set_object_query = "
 				INSERT
 				INTO	storage_repository_metadata
@@ -276,7 +299,10 @@
 		public function override_privileges() {
 			return json_decode($this->override_privileges_json,true);
 		}
-		
+
+		/************************************/
+		/* Validation Functions             */
+		/************************************/
 		public function validName($string): bool {
 			if (preg_match('/^\w[\w\-\_\.\s]*$/',$string)) return true;
 			return false;
@@ -286,7 +312,7 @@
 			return false;
 		}
 		public function validType($string): bool {
-			if (preg_match('/^(Local|S3)$/',$string)) return true;
+			if (preg_match('/^(Local|s3|Drive|DropBox)$/i',$string)) return true;
 			return false;
 		}
 		public function validPath($string) {
@@ -295,12 +321,12 @@
 			else return false;
 		}
 		public function validAccessKey($string) {
-			// Only certain instances require accessKey
+			// Only certain instances require access key
 			if (empty($string)) return true;
 			else return false;
 		}
 		public function validSecretKey($string) {
-			// Only certain instances require accessKey
+			// Only certain instances require secret key
 			if (empty($string)) return true;
 			else return false;
 		}
@@ -310,8 +336,11 @@
 			else return false;
 		}
 		public function validRegion($string) {
-			// Only certain instances require bucket
+			// Only certain instances require region
 			if (empty($string)) return true;
 			else return false;
+		}
+		public function validEndpoint($string) {
+			return true;
 		}
 	}
