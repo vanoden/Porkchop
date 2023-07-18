@@ -37,6 +37,7 @@
 				$this->error = "Package not found";
 				return false;
 			}
+			$this->package_id = $package->id;
 			
             if (! $package->repository_id) {
                 $this->error = "No repository assigned to package";
@@ -116,7 +117,7 @@
 			if ($file->error()) {
 				return false;
 			}
-			app_log(print_r($file,true));
+			//app_log(print_r($file,true));
 			$this->id = $file->id;
 			if (! $repository->addFile($file,$parameters['path'])) {
 				$this->error = "Error adding file to repository: ".$repository->error();
@@ -328,6 +329,9 @@
 		public function repository() {
 			return $this->file()->repository();
 			
+		}
+		public function package() {
+			return new \Package\Package($this->package_id);
 		}
 		
 		public function version() {

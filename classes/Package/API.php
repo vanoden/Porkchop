@@ -160,19 +160,16 @@
 			$package->get($_REQUEST['package_code']);
 			if ($package->error) $this->error("Error finding package: ".$package->error);
 			if (! $package->id) $this->error("Package not found");
-	
-			$version = new \Package\Version();
-			if ($version->error) $this->error("Error adding version: ".$version->error);
-			app_log(print_r($_FILES,true));
+
+			//app_log(print_r($_FILES,true));
 			if ($_FILES['file']['type']) {
 				$mime_type = $_FILES['file']['type'];
 			} elseif(guess_mime_type($_FILES['file']['name'])) {
 				$mime_type = guess_mime_type($_FILES['file']['name']);
 			} else $this->error("Can't guess mime-type for ".$_FILES['file']['name']);
 	
-			$version->add(
+			$version = $package->addVersion(
 				array(
-					'package_id'	=> $package->id,
 					'major'			=> $_REQUEST['major'],
 					'minor'			=> $_REQUEST['minor'],
 					'build'			=> $_REQUEST['build'],
@@ -191,7 +188,7 @@
 			api_log($response);
 			print $this->formatOutput($response);
 		}
-		
+
 		###################################################
 		### Update a Version							###
 		###################################################

@@ -27,9 +27,6 @@
 		}
 
 		public function add($parameters = []) {
-	
-            app_log('Storage::File::add(): '.print_r($parameters,false));
-            
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
 			
 			if (! preg_match('/^[\w\-\.\_]+$/',$parameters['code'])) {
