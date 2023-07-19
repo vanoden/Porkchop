@@ -107,15 +107,22 @@
 				}
 			}
 
-			// Upload an object by streaming the contents of a file
-			$result = $this->s3Client->putObject(array(
-				'Bucket'     => $this->_bucket(),
-				'Key'        => $file->code(),
-				'SourceFile' => $path,
-				'Metadata'   => array(
-					'Source' => 'Uploaded from Website'
-				)
-			));
+            try {
+                // Upload an object by streaming the contents of a file
+                $result = $this->s3Client->putObject(array(
+                    'Bucket'     => $this->_bucket(),
+                    'Key'        => $file->code(),
+                    'SourceFile' => $path,
+                    'Metadata'   => array(
+                        'Source' => 'Uploaded from Website'
+                    )
+                ));
+            }
+            catch (\Aws\S3\Exception\S3Exception $e) {
+                $this->error("Repository upload error: ".$e->getMessage());
+                $this->_connected = false;
+                return false;
+            }
 			
 			return $result;
 		}
