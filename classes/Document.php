@@ -11,6 +11,7 @@
 		}
 
 		public function prepare($object) {
+            $object = $this->filterElements($object);
 			if ($this->type == 'xml') {
 				$this->_content = $this->_xmlout(json_decode(json_encode($object)));
 				return;
@@ -70,4 +71,19 @@
 		public function data() {
 			return $this->_data;
 		}
+
+        protected function filterElements($object) {
+            foreach ($object as $key=>$value) {
+                if ($key == '_tableName') {
+                    unset($object->$key);
+                }
+                elseif ($key == '_tableNumberColumn') {
+                    unset($object->$key);
+                }
+                elseif (is_object($value)) {
+                    $object->$key = $this->filterElements($value);
+                }
+            }
+            return $object;
+        }
 	}
