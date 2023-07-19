@@ -39,10 +39,10 @@
 			}
 			$this->package_id = $package->id;
 			
-            if (! $package->repository_id) {
-                $this->error = "No repository assigned to package";
-                return false;
-            }
+			if (! $package->repository_id) {
+				$this->error = "No repository assigned to package";
+				return false;
+			}
 
 			if (! preg_match('/^\d+$/',$parameters['major'])) {
 				$this->error = "major sequence required";
@@ -89,7 +89,7 @@
 			if (! isset($parameters['mime_type'])) $parameters['mime_type'] = guess_mime_type($parameters['filename']);
 			if (! isset($parameters['size'])) $parameters['size'] = filesize($parameters['path']);
 
-            // Open Repository for File Storage
+			// Open Repository for File Storage
 			app_log("Getting Repository");
 			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->load($package->repository_id);
@@ -106,21 +106,22 @@
 				$parameters['date_published'] = get_mysql_date(time());
 			}
 
-            // Add File to Repository
+			// Add File to Repository
 			app_log("Adding file to repository");
-            $file->add(array(
-                'repository_id' => $parameters['repository_id'],
-                'name'          => $parameters['name'],
-                'size'          => $parameters['size'],
-                'mime_type'     => $parameters['mime_type'],
-            ));
+			$file->add(array(
+				'repository_id' => $parameters['repository_id'],
+				'name'          => $parameters['name'],
+				'size'          => $parameters['size'],
+				'mime_type'     => $parameters['mime_type'],
+			));
 			if ($file->error()) {
+				$this->error("Error adding file to repository: ".$file->error());
 				return false;
 			}
 			//app_log(print_r($file,true));
 			$this->id = $file->id;
 			if (! $repository->addFile($file,$parameters['path'])) {
-				$this->error = "Error adding file to repository: ".$repository->error();
+				$this->error("Error adding file to repository: ".$repository->error());
 				return false;
 			}
 
