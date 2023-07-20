@@ -35,7 +35,7 @@
 				return null;
 			}
 			$eventList = new TermsOfUseEventList();
-			list($last) = $eventList->find(array('tou_id' => $tou->id, 'type' => 'ACTIVATION'),array('sort' => 'date_event','order' => 'desc','limit' => 1));
+			list($last) = $eventList->find(array('tou_id' => $tou->id, 'type' => 'ACTIVATION'), array('sort' => 'date_event','order' => 'desc','limit' => 1));
 			if (!isset($last)) $last = new TermsOfUseVersion;
 			return $last;
 		}

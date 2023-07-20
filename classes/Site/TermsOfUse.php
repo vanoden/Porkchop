@@ -10,7 +10,6 @@
 			$this->_tableName = 'site_terms_of_use';
 			$this->_cacheKeyPrefix = $this->_tableName;
 			$this->_addStatus(array('NEW','PUBLISHED','RETRACTED'));
-
 			parent::__construct($id);
 		}
 
@@ -117,6 +116,7 @@
 		}
 
 		public function latestVersion(): TermsOfUseVersion {
+		
 			// See if Latest Version is in Cache
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], "latest_tou[".$this->id."]");
 			if ($cache->exists()) {
@@ -125,15 +125,11 @@
 				if ($object) return $object;
 			}
 
-			// Find the Latest Version by looping through
-			// all PUBLISHED version and finding the one with
-			// the latest date
+			// Find the Latest Version by looping through all PUBLISHED version and finding the one with the latest date
 			app_log("Finding latest version of TOU");
 			$versionList = new TermsOfUseVersionList();
 			$versions = $versionList->find(array('tou_id' => $this->id,'status' => 'PUBLISHED'));
-			if ($versionList->error()) {
-				$this->error($versionList->error());
-			}
+			if ($versionList->error()) $this->error($versionList->error());
 			$date_published = '0000-00-00 00:00:00';
 			$latest_id = 0;
 			foreach ($versions as $version) {
@@ -144,8 +140,7 @@
 					app_log("Yes, ".$version->id." is newer");
 					$date_published = $version_published;
 					$latest_id = $version->id;
-				}
-				else {
+				} else {
 					app_log("No, it is not");
 				}
 			}
@@ -159,6 +154,6 @@
 
 		public function versions() {
 			$list = new TermsOfUseVersionList();
-			return $list->find(array('tou_id' => $this->id));
+			return $list->find(array('tou_id' => $this->id), array('sort' => 'id','order' => 'desc'));
 		}
 	}
