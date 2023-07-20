@@ -30,7 +30,7 @@
 			app_log("Repository ".$repository->id);
 	
 			$package = new \Package\Package();
-			if ($package->error) $this->error("Error adding package: ".$package->error);
+			if ($package->error()) $this->error("Error adding package: ".$package->error());
 			$package->add(
 				array(
 					'code'				=> $_REQUEST['code'],
@@ -42,13 +42,11 @@
 					'repository_id'		=> $repository->id
 				)
 			);
-			if ($package->error) $this->error("Error adding package: ".$package->error);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->package = $package;
-	
-			api_log($response);
-			print $this->formatOutput($response);
+			if ($package->error()) $this->error("Error adding package: ".$package->error());
+
+            $response = new \APIResponse();
+            $response->addElement('package',$package);
+            $response->print();
 		}
 
 		###################################################
@@ -60,9 +58,9 @@
 			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) $this->error("Permission Denied");
 	
 			$package = new \Package\Package();
-			if ($package->error) error("Error adding package: ".$package->error);
+			if ($package->error()) error("Error adding package: ".$package->error());
 			$package->get($_REQUEST['code']);
-			if ($package->error) $this->app_error("Error finding package: ".$package->error,__FILE__,__LINE__);
+			if ($package->error()) $this->app_error("Error finding package: ".$package->error(),__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
 	
 			$parameters = array();
@@ -76,20 +74,18 @@
 				$repositorylist = new \Storage\RepositoryList();
 				list($repository) = $repositorylist->find(array('code' => $_REQUEST['repository_code']));
 				if (! $repository->id) {
-					$this->error = "Repository not found";
+					$this->error("Repository not found");
 					return false;
 				}
 				$parameters['repository_id'] = $_REQUEST['repository_id'];
 			}
 	
 			$package->update($parameters);
-			if ($package->error) $this->app_error("Error updating package: ".$package->error,__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->package = $package;
-	
-			api_log($response);
-			print $this->formatOutput($response);
+			if ($package->error()) $this->app_error("Error updating package: ".$package->error(),__FILE__,__LINE__);
+
+            $response = new \APIResponse();
+            $response->addElement('package',$package);
+            $response->print();
 		}
 
 		###################################################
@@ -98,10 +94,9 @@
 		public function getPackage() {
 			$package = new \Package\Package();
 			if ($package->get($_REQUEST['code'])) {
-				$response = new \HTTP\Response();
-				$response->success = 1;
-				$response->package = $package;
-				print $this->formatOutput($response);
+                $response = new \APIResponse();
+                $response->addElement('package',$package);
+                $response->print();
 			}
 			else {
 				$this->error("Package not found");
@@ -115,7 +110,7 @@
 			$packagelist = new \Package\PackageList();
 			if (! $GLOBALS['_SESSION_']->customer->can('use package module')) $this->error("Permission Denied");
 	
-			if ($packagelist->error) app_error("Error initializing packages: ".$packagelist->error,__FILE__,__LINE__);
+			if ($packagelist->error()) app_error("Error initializing packages: ".$packagelist->error(),__FILE__,__LINE__);
 	
 			$parameters = array();
 			if (isset($_REQUEST['code']) and strlen($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
@@ -127,7 +122,7 @@
 				$repositorylist = new \Storage\RepositoryList();
 				list($repository) = $repositorylist->find(array('code' => $_REQUEST['repository_code']));
 				if (! $repository->id) {
-					$this->error = "Repository not found";
+					$this->error("Repository not found");
 					return false;
 				}
 				$parameters['repository_id'] = $_REQUEST['repository_id'];
@@ -136,13 +131,11 @@
 		
 			$packages = $packagelist->find($parameters);
 	
-			if ($packagelist->error) app_error("Error finding packages: ".$packagelist->error,__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->package = $packages;
-	
-			api_log($response);
-			print $this->formatOutput($response);
+			if ($packagelist->error()) app_error("Error finding packages: ".$packagelist->error(),__FILE__,__LINE__);
+
+			$response = new \APIResponse();
+			$response->addElement('package',$packages);
+			$response->print();
 		}
 
 		###################################################
@@ -158,7 +151,7 @@
 	
 			$package = new \Package\Package();
 			$package->get($_REQUEST['package_code']);
-			if ($package->error) $this->error("Error finding package: ".$package->error);
+			if ($package->error()) $this->error("Error finding package: ".$package->error());
 			if (! $package->id) $this->error("Package not found");
 
 			//app_log(print_r($_FILES,true));
@@ -180,13 +173,12 @@
 					'mime_type'     => $mime_type
 				)
 			);
-			if ($version->error) $this->error("Error adding version: ".$version->error);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $version;
-	
-			api_log($response);
-			print $this->formatOutput($response);
+			if ($package->error()) $this->error("Error adding version: ".$package->error());
+            if (empty($version)) $this->error("Unhandled exception");
+
+			$response = new \APIResponse();
+			$response->addElement('version',$version);
+			$response->print();
 		}
 
 		###################################################
@@ -199,7 +191,7 @@
 	
 			$package = new \Package\Package();
 			$package->get($_REQUEST['package_code']);
-			if ($package->error) $this->app_error("Error getting package: ".$package->error,'error',__FILE__,__LINE__);
+			if ($package->error()) $this->app_error("Error getting package: ".$package->error(),'error',__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
 	
 			$version = new \Package\Version();
@@ -213,12 +205,10 @@
 	
 			$version->update($parameters);
 			if ($version->error) $this->app_error("Error updating version: ".$version->error,__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $version;
-	
-			api_log($response);
-			print $this->formatOutput($response);
+
+			$response = new \APIResponse();
+			$response->addElement('version',$version);
+			$response->print();
 		}
 
 		###################################################
@@ -237,12 +227,10 @@
 			$versions = $versionlist->find($parameters);
 	
 			if ($versionlist->error) $this->app_error("Error finding versions: ".$versionlist->error,__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $versions;
-	
-			api_log($response);
-			print $this->formatOutput($response);
+
+			$response = new \APIResponse();
+			$response->addElement('version',$versions);
+			$response->print();
 		}
 	
 		###################################################
@@ -251,7 +239,7 @@
 		public function downloadVersion() {
 			$package = new \Package\Package();
 			$package->get($_REQUEST['package_code']);
-			if ($package->error) $this->app_error("Error finding package: ".$package->error,__FILE__,__LINE__);
+			if ($package->error()) $this->app_error("Error finding package: ".$package->error(),__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
 
 			$version = new \Package\Version();
@@ -270,16 +258,16 @@
 		public function latestVersion() {
 			$package = new \Package\Package();
 			$package->get($_REQUEST['package_code']);
-			if ($package->error) $this->app_error("Error finding package: ".$package->error,__FILE__,__LINE__);
+			if ($package->error()) $this->app_error("Error finding package: ".$package->error(),__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
 	
 			$version = $package->latestVersion();
-			if ($package->error) $this->app_error("Error finding version: ".$package->error,__FILE__,__LINE__);
+			if ($package->error()) $this->app_error("Error finding version: ".$package->error(),__FILE__,__LINE__);
 			if (! $version->id) $this->error("Version not found");
-	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $version;
+
+			$response = new \APIResponse();
+			$response->addElement('version',$version);
+			$response->print();
 	
 			api_log($response);
 			print $this->formatOutput($response);
@@ -291,7 +279,7 @@
 		public function downloadLatestVersion() {
 			$package = new \Package\Package();
 			$package->get($_REQUEST['package_code']);
-			if ($package->error) $this->app_error("Error finding package: ".$package->error,__FILE__,__LINE__);
+			if ($package->error()) $this->app_error("Error finding package: ".$package->error(),__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
 
 			if (! $package->permitRead($GLOBALS['_SESSION_']->customer->id)) $this->error("Permission Denied");

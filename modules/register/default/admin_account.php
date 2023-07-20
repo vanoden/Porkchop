@@ -68,13 +68,7 @@
 </script>
 
 <!-- Page Header -->
-<div id="pageTitle">
-  <?= $page->showTitle() ?>
-  <div id="searchBar" style="">
-    <input type="search" id="site-search" name="q" placeholder="enter search terms">
-    <input type="image" class="searchButton" src="/img/icons/icon_tools_search.svg" onclick="" /> 
-  </div>
-</div>
+<?= $page->showTitle() ?>
 <?= $page->showBreadcrumbs() ?>
 <?= $page->showMessages() ?>
 <!-- End Page Header -->

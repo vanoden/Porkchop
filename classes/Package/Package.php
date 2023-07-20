@@ -216,7 +216,9 @@
 		public function addVersion($parameters = array()) {
 			$parameters['package_id'] = $this->id;
 			$version = new Version();
-			return $version->add($parameters);
+			$result = $version->add($parameters);
+            $this->error($version->error());
+            return $result;
 		}
 
 		public function packageVersion() {
