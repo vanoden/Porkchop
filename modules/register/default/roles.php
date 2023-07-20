@@ -1,17 +1,10 @@
-<div class="title">Roles</div>
-<style>
-	ul {
-		list-style-type: none;
-	}
-</style>
-
 <!-- Page Header -->
-<?=$page->showBreadcrumbs()?>
 <?=$page->showTitle()?>
+<?=$page->showBreadcrumbs()?>
 <?=$page->showMessages()?>
 <!-- End Page Header -->
 
-<p><a href="/_register/role">Create Role</a></p>
+<a class="button" href="/_register/role">Create Role</a>
 
 <div class="tableBody">
 	<div class="tableRowHeader">
@@ -23,7 +16,7 @@
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_register/role/<?=$role->name?>"><?=$role->name?></a></div>
 		<div class="tableCell"><?=$role->description?></div>
-		<div class="tableCell"><a href="/_register/roles?remove_id=<?=$role->id?>">&#x1F5D1;</a></div>
+		<div class="tableCell"><a href="/_register/roles?remove_id=<?=$role->id?>"><img src="/img/icons/icon_tools_trash_active.svg" style="cursor: pointer; width: 20px; border: none;" alt="delete role"></a></div>
 	</div>
 <?php	} ?>
 </div>
