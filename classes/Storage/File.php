@@ -687,7 +687,22 @@
 
 		public function validPath($string) {
 			// Only a virtual path!
+            if (preg_match('/\.{2}/',$string)) return false;
+            if (preg_match('/\/{2}/',$string)) return false;
 			if (preg_match('/^\/[\w\-\.\_\/]*$/',$string)) return true;
 			else return false;
 		}
+
+        public function validExtension($string) {
+            // Images
+            if (preg_match('/^(png|jpg|jpeg|gif|tif)$/',$string)) return true;
+            // Documents
+            if (preg_match('/^(doc|docx|pdf|xls|xlsx|ppt|pptx|txt|rtf|html|htm|css|xml|json|csv|odt|ods)$/',$string)) return true;
+            // Media
+            if (preg_match('/^(mp3|mp4|mov|avi|wmv)$/',$string)) return true;
+            // Archives
+            if (preg_match('/^(zip|tar|gz|tgz|bz2|rar)$/',$string)) return true;
+
+            return false;
+        }
 	}
