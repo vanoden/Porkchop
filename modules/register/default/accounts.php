@@ -20,32 +20,22 @@
 		return true;
 	}
 </script>
-<style>
-	.label { text-align: left; }
-	th.accountsLoginLabel { width: 18%; }
-	th.accountsFirstLabel { width: 15%; }
-	th.accountsLastLabel { width: 15%; }
-	th.accountsOrgLabel { width: 24%; overflow-x: hidden; }
-	th.accountsStatus {	width: 10%;	}
-	th.accountsLastActive {	width: 18%; }
-	td.value { overflow: hidden; }
-</style>
 
 <!-- Page Header -->
+<?= $page->showTitle() ?>
 <?=$page->showBreadcrumbs()?>
-<?=$page->showTitle()?>
 <?=$page->showMessages()?>
 <!-- End Page Header -->
 
-<form id="custSearch" method="get" class="float: left">
+<form id="custSearch" method="get">
     <div id="search_container">
-	    <input type="text" id="searchAccountInput" name="search" value="<?=$_REQUEST['search']?>" class="value input searchInput wide_md"/>
-        <a href="#" id="searchOrganizationButton" name="btn_search" class="search_button" onclick="submitSearch(0)"/>&nbsp;</a>
-	    <input type="checkbox" name="hidden" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><span>Hidden</span>
-	    <input type="checkbox" name="expired" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><span>Expired</span>
-	    <input type="checkbox" name="blocked" value="1" <?php if (isset($_REQUEST['blocked'])) print "checked"; ?> /><span>Blocked</span>
-	    <input type="checkbox" name="deleted" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><span>Deleted</span>
-	    <input type="hidden" id="start" name="start" value="0">
+	    <input type="text" id="searchAccountInput" name="search" placeholder="account name" value="<?=$_REQUEST['search']?>"/>
+	    <div><input type="checkbox" name="hidden" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><label>Hidden</label></div>
+	    <div><input type="checkbox" name="expired" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><label>Expired</label></div>
+	    <div><input type="checkbox" name="blocked" value="1" <?php if (isset($_REQUEST['blocked'])) print "checked"; ?> /><label>Blocked</label></div>
+	    <div><input type="checkbox" name="deleted" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><label>Deleted</label></div>
+	    <div><input type="hidden" id="start" name="start" value="0"></div>
+      <button id="searchOrganizationButton" name="btn_search" onclick="submitSearch(0)"/>Search</button>
     </div>
 </form>
 
@@ -73,25 +63,27 @@
   <?php		
     }
   ?>
-  </div>
+</div>
 
-  <!--    Standard Page Navigation Bar ADMIN ONLY -->
-  <div class="pager_bar">
-	    <div class="pager_controls">
-		    <a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerFirst"><< First </a>
-		    <a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerPrevious"><</a>
-		    &nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$customers_per_page+1?> of <?=$total_customers?>&nbsp;
-		    <a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerNext">></a>
-		    <a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerLast"> Last >></a>
-	    </div>
-    </div>
-    <?php
-	    if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
-    ?>
+<!--    Standard Page Navigation Bar ADMIN ONLY -->
+<div class="pager_bar">
+  <div class="pager_controls">
+    <a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerFirst"><< First </a>
+    <a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerPrevious"><</a>
+    &nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$customers_per_page+1?> of <?=$total_customers?>&nbsp;
+    <a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerNext">></a>
+    <a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerLast"> Last >></a>
+  </div>
+</div>
+
+<?php
+  if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
+?>
 
 <form action="<?=PATH?>/_register/register" method="get">
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <div class="button-bar"><input type="submit" name="button_submit" value="Add Account" class="input button"/></div>
 </form>
+
 <?php	} ?>
-<!--    [end] Standard Page Navigation Bar ADMIN ONLY--
+<!--    [end] Standard Page Navigation Bar ADMIN ONLY-->
