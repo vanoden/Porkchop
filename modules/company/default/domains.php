@@ -1,35 +1,31 @@
-<span class="title">Domains</span>
+<!-- Page Header -->
+<?= $page->showTitle()?>
+<?=$page->showBreadcrumbs()?>
+<?=$page->showMessages()?>
+<!-- End Page Header -->
 
-<?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
-
-<?php	} else if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
-<?php	} ?>
-
-<table class="body">
-<tr><th>Name</th>
-	<th>Created</th>
-	<th>Registered</th>
-	<th>Expires</th>
-	<th>Company</th>
-</tr>
-<?php	foreach ($domains as $domain) { ?>
-<tr><td><a href="/_company/domain?name=<?=$domain->name?>"><?=$domain->name?></a></td>
-	<td><?=$domain->date_created?></td>
-	<td><?=$domain->date_registered?></td>
-	<td><?=$domain->date_expires?></td>
-	<td><?=$domain->company->name?></td>
-</tr>
+<div class="tableBody">
+  <div class="tableRowHeader">
+    <div class="tableCell">Name</div>
+    <div class="tableCell">Created</div>
+    <div class="tableCell">Registered</div>
+    <div class="tableCell">Expires</div>
+    <div class="tableCell">Company</div>
+  </div>
+  <?php	foreach ($domains as $domain) { ?>
+  <div class="tableRow">
+    <div class="tableCell"><a href="/_company/domain?name=<?=$domain->name?>"><?=$domain->name?></a></div>
+    <div class="tableCell"><?=$domain->date_created?></div>
+    <div class="tableCell"><?=$domain->date_registered?></div>
+    <div class="tableCell"><?=$domain->date_expires?></div>
+    <div class="tableCell"><?=$domain->company->name?></div>
+  </div>
 <?php } ?>
-</table>
-<br>
-<a href="/_company/domain">Add a domain</a>
+</div>
+
+<!-- entire page button bar -->
+<div id="submit-button-container" class="tableBody min-tablet">
+  <div class="tableRow button-bar">
+    <a href="/_company/domain" class="input button" id="btn_submit">Add a domain</a>
+  </div>
+</div>
