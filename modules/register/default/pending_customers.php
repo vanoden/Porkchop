@@ -59,26 +59,6 @@
    }
    .hidden {
 	display:none;
-   }    
-   .success-message {
-	   border: 1px solid #0093ff;
-	   background-color: #0093ff;
-	   padding: 5px;
-	   border-radius: 5px;
-	   color: white;
-   }
-   .error-message {
-	   border: 1px solid #ef2929;
-	   background-color: #ef2929;
-	   padding: 5px;
-	   border-radius: 5px;
-	   color: white;
-   }
-   td, tr, th {
-	   border:0;
-   }
-   table {
-	border-bottom: 1px solid #000;
    }
    .vertical-align-top {
 	vertical-align: unset;
@@ -223,12 +203,12 @@
           switch ($queuedCustomer->status) {
           case 'PENDING':
         ?>
-        <div class="ui-widget">
+        <div>
           <label for="organization">Match Organization: </label>
           <input class="organization" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?=$queuedCustomer->name?>"/><br>
-          <button type="button" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-check-circle" aria-hidden="true"></i> Assign Existing</button>
-          <button type="button" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-plus" aria-hidden="true"></i> Add as New</button>
-          <button type="button" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)"><i class="fa fa-ban" aria-hidden="true"></i> Deny</button>
+          <input type="image" src="/img/icons/icon_status_progress.svg" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" /> 
+          <input type="image" src="/img/icons/icon_tools_check_1C.svg" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" /> 
+          <input type="image" src="/img/icons/icon_status_closed.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" />
         </div>
         <?php
           break;
@@ -254,6 +234,7 @@
 		    <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>
 		  </form>
 		</div>
+    
 	  <div class="tableCell">
 		  <?=$registerCustomer->first_name?> <?=$registerCustomer->last_name?>
 		  <br/>
