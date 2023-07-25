@@ -247,7 +247,7 @@
 			if ($version->error) $this->app_error("Error finding version: ".$version->error,__FILE__,__LINE__);
 			if (! $version->id) $this->error("Version not found");
 
-			if (! $version->permitRead($GLOBALS['_SESSION_']->customer->id)) $this->error("Permission Denied");
+			//if (! $version->permitRead($GLOBALS['_SESSION_']->customer->id)) $this->error("Permission Denied");
 			$file = $version->file();
 			$file->download();
 		}
@@ -268,9 +268,6 @@
 			$response = new \APIResponse();
 			$response->addElement('version',$version);
 			$response->print();
-	
-			api_log($response);
-			print $this->formatOutput($response);
 		}
 
 		###################################################
@@ -282,7 +279,7 @@
 			if ($package->error()) $this->app_error("Error finding package: ".$package->error(),__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
 
-			if (! $package->permitRead($GLOBALS['_SESSION_']->customer->id)) $this->error("Permission Denied");
+			//if (! $package->permitRead($GLOBALS['_SESSION_']->customer->id)) $this->error("Permission Denied");
 	
 			$version = new \Package\Version();
 			$version->latest($package->id);
