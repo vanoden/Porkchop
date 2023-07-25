@@ -41,16 +41,16 @@ function checkUncheck(isChecked) {
 
 
 	  <div class="tableBody">
-      
+
       <div class="tableRowHeader">
-        <div class="tableCell">Select</div>
-        <div class="tableCell">Privilege Module</div>
+        <div class="tableCell" style="width: 10%; text-align: center;">Select</div>
+        <div class="tableCell" style="width: 30%;">Privilege Module</div>
         <div class="tableCell">Privilege Name</div>
       </div>
 
       <?php	foreach ($privileges as $privilege) { ?>
       <div class="tableRow">
-        <div class="tableCell"><input type="checkbox" name="privilege[<?=$privilege->id?>]" value="1"<?php if ($role->has_privilege($privilege->id)) print " checked";?>></div>
+        <div class="tableCell" style="text-align: center;"><input type="checkbox" name="privilege[<?=$privilege->id?>]" value="1"<?php if ($role->has_privilege($privilege->id)) print " checked";?>></div>
         <div class="tableCell"><?=$privilege->module?></div>
         <div class="tableCell"><?=$privilege->name?></div>
       </div>
