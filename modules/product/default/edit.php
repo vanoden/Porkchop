@@ -120,32 +120,58 @@
 		<div class="input-horiz" id="itemPrices">
 			<span class="label align-top">Add Price</span>
 			<table class="body">
-			<tr><th>Date Active</th>
-				<th>Status</th>
-				<th>Amount</th>
-			</tr>
-			<tr><td><input type="text" name="new_price_date" value="now" /></td>
-				<td><select name="new_price_status">
-						<option value="ACTIVE">ACTIVE</option>
-						<option value="INACTIVE">INACTIVE</option>
-				</select></td>
-				<td><input type="text" name="new_price_amount" value="0.00" /></td>
-			</tr>
+			    <tr>
+			        <th>Date Active</th>
+				    <th>Status</th>
+				    <th>Amount</th>
+			    </tr>
+			    <tr>
+			        <td><input type="text" name="new_price_date" value="now" /></td>
+				    <td>
+				        <select name="new_price_status">
+				            <option value="ACTIVE">ACTIVE</option>
+				            <option value="INACTIVE">INACTIVE</option>
+				        </select>
+				    </td>
+				    <td><input type="text" name="new_price_amount" value="0.00" /></td>
+			    </tr>
 			</table>
-			<span class="label align-top">Prices</span>
+			
+			<h3>Prices</h3>
 			<table class="body">
-			<tr><th>Date Active</th>
-				<th>Status</th>
-				<th>Amount</th>
-			</tr>
-			<?php foreach ($prices as $price) { ?>
-			<tr>
-				<td class="value"><?=$price->date_active?></td>
-				<td class="value"><?=$price->status?></td>
-				<td class="value"><?=$price->amount?></td>
-			</tr>
-			<?php } ?>
+			    <tr>
+			        <th>Date Active</th>
+				    <th>Status</th>
+				    <th>Amount</th>
+			    </tr>
+			    <?php foreach ($prices as $price) { ?>
+			    <tr>
+				    <td class="value"><?=$price->date_active?></td>
+				    <td class="value"><?=$price->status?></td>
+				    <td class="value"><?=$price->amount?></td>
+			    </tr>
+			    <?php } ?>
 			</table>
+        
+			<h3>Price Audit Info</h3>
+			<table class="body">
+			    <tr>
+		            <th>User</th>
+			        <th>Date</th>
+			        <th>Note</th>		
+			    </tr>
+			    <?php foreach ($auditedPrices as $priceAudit) { ?>
+			        <tr>
+				        <td class="value">
+                            <?php $customer = new Register\Customer($priceAudit->user_id); ?>
+				            <?=$customer->first_name?> <?=$customer->last_name?>
+				        </td>
+				        <td class="value"><?=$priceAudit->date_updated?></td>
+				        <td class="value"><?=$priceAudit->note?></td>
+			        </tr>
+			    <?php } ?>
+			</table>
+
 	    <div class="editSubmit button-bar floating">
 		    <input type="submit" class="button" value="Update" name="submit" id="submit"/>
 	    </div>

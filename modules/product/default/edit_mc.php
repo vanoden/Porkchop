@@ -60,8 +60,7 @@
 					    "type"	=> $_REQUEST['type'],
 					    "status"	=> $_REQUEST['status']
 				    ));
-			    }
-				else app_log("Admin ".$GLOBALS['_SESSION_']->customer->first_name." adding product ".$_REQUEST['code'],'notice',__FILE__,__LINE__);
+			    } else app_log("Admin ".$GLOBALS['_SESSION_']->customer->first_name." adding product ".$_REQUEST['code'],'notice',__FILE__,__LINE__);
 
 			    $item->update(
 				    array(
@@ -82,16 +81,14 @@
 				    if ($parent->error()) {
 					    app_log("Error finding item ".$_REQUEST['parent_code'],'error',__FILE__,__LINE__);
 					    $page->addError("Error finding parent");
-				    }
-					elseif ($parent->id) {
+				    } elseif ($parent->id) {
 					    $relationship = new \Product\Relationship();
 					    $relationship->add(array(
 						    "parent_id"	=> $parent->id,
 						    "child_id" => $item->id
 					    ));
 				    }
-			    }
-				elseif ($new_item) {
+			    } elseif ($new_item) {
 				    $relationship = new \Product\Relationship();
 				    $relationship->add(array(
 					    "parent_id"	=> 0,
@@ -119,6 +116,7 @@
 				    $image->get($_REQUEST['new_image_code']);
 				    $item->addImage($image->id);
 			    }
+			    
 			    if ($_REQUEST['deleteImage']) {
 				    $image->get($_REQUEST['deleteImage']);
 				    $item->dropImage($image->id);
@@ -129,14 +127,30 @@
 				$price = new \Product\Price();
 				if (! $price->validStatus($_REQUEST['new_price_status'])) {
 					$page->addError("Invalid price status");
-				}
-				elseif (!get_mysql_date($_REQUEST['new_price_date'])) {
+				} elseif (!get_mysql_date($_REQUEST['new_price_date'])) {
 					$page->addError("Invalid price active date: '".$_REQUEST['new_price_date']."'");
-				}
-				else {
-					$item->addPrice(array('date_active' => $_REQUEST['new_price_date'], 'status' => $_REQUEST['new_price_status'], 'amount' => $_REQUEST['new_price_amount']));
-					if ($item->error()) $page->addError($item->error());
-					else $page->success .= "Price Added";
+				} else {
+					$newPrice = $item->addPrice(array('date_active' => $_REQUEST['new_price_date'], 'status' => $_REQUEST['new_price_status'], 'amount' => $_REQUEST['new_price_amount']));
+
+					if ($item->error()) {
+    					$page->addError($item->error());
+					} else {
+					
+    					$page->success .= "Price Added";
+    					
+					    // audit the price change
+					    $priceAudit = new \Product\PriceAudit();
+					    $priceAudit->add (
+                            array (
+                                'product_price_id' => $newPrice->id,
+                                'user_id' => $GLOBALS['_SESSION_']->customer->id,
+                                'note' => "New Price Added by: " . $GLOBALS['_SESSION_']->customer->first_name . " " . $GLOBALS['_SESSION_']->customer->last_name
+                            )
+					    );
+					    
+					    // catch price audit error
+					    if ($priceAudit->error()) $page->addError($priceAudit->error());
+					}
 				}
 			}
 		}
@@ -154,6 +168,8 @@
 	$dashboardlist = new \Monitor\DashboardList();
 	$dashboards = $dashboardlist->find();
 	$prices = $item->prices();
+    $priceAudit = new \Product\PriceAuditList();
+    $auditedPrices = $priceAudit->find(array('product_id'=>$item->id));    
 	$images = $item->images();
 
 	$page->addBreadcrumb("Products", "/_product/report");

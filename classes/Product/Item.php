@@ -453,7 +453,7 @@
 				'date_active'	=> $parameters['date_active'],
 				'status'		=> $parameters['status']
 			);
-			if ($price->add($parameters)) return true;
+			if ($price->add($parameters)) return $price;
 			$this->error("Error adding price: ".$price->error());			
 			return false;
 		}

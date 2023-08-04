@@ -241,6 +241,34 @@
 				$this->setVersion(5);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 6 and $max_version >= 6) {
+				app_log("Upgrading schema to version 6",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `product_prices_audit` (
+						`id`			    int(11) NOT NULL AUTO_INCREMENT,
+						`product_price_id`	int(11) NOT NULL,
+                        `user_id`           int(11) NOT NULL,
+                        `date_updated`      timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,   
+						`note`	text,     
+						PRIMARY KEY (`id`),						                                        
+						FOREIGN KEY `fk_product_price_id` (`product_price_id`) REFERENCES `product_prices` (`id`),
+                        FOREIGN KEY `fk_user` (`user_id`) REFERENCES `register_users` (`id`)
+					)
+				"; 
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating product_prices_audit table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(6);
+				$GLOBALS['_database']->CommitTrans();
+			}			
 			return true;
 		}
 	}
