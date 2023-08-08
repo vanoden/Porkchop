@@ -1061,7 +1061,7 @@
 		/* Breadcrumb Methods				*/
 		/************************************/
 		public function showAdminPageInfo() {
-			return $this->showBreadcrumbs()."\n".$this->showTitle()."\n".$this->showMessages()."\n";
+			return "<div id='adminPageInfo'>"$this->showTitle()."\n".$this->showBreadcrumbs()."\n".$this->showSearch()."\n".$this->showMessages()."</div>";
 		}
 
 		public function addBreadcrumb($name,$target = '') {
@@ -1129,6 +1129,10 @@
 			";
 			}
 			return $buffer;
+		}
+
+		public function showSearch() {
+			return "<div id='searchBar'><input list='categories' type='search' id='site-search' name='q' placeholder='What are you looking for?'><datalist id='categories'><option value='Engineering'><option value='Support'><option value='Sales'><option value='Information'></datalist><input type='image' class='searchButton' src='/img/icons/icon_tools_search.svg' onclick='' /></div>";
 		}
 
 		public function showTitle() {
