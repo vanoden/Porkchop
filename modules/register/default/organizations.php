@@ -32,7 +32,7 @@
     <div>
       <label>Filter by Tag:</label>
       <select name="searchedTag" id="organizationStatusValue" class="">
-        <option value="Choose tag"></option>
+        <option value="">Select Tag</option>
           <?php		foreach ($organizationTags as $tag) { print_r($tag); ?>
           <option value="<?=$tag?>"<?php	if ($tag == $_REQUEST['searchedTag']) print " selected"; ?>><?=$tag?>
           </option>
