@@ -1061,7 +1061,7 @@
 		/* Breadcrumb Methods				*/
 		/************************************/
 		public function showAdminPageInfo() {
-			return $this->showBreadcrumbs()."\n".$this->showTitle()."\n".$this->showMessages()."\n";
+			return "<div id='adminPageInfo'>".$this->showTitle()."\n".$this->showBreadcrumbs()."\n".$this->showSearch()."\n".$this->showMessages()."</div>";
 		}
 
 		public function addBreadcrumb($name,$target = '') {
@@ -1094,41 +1094,45 @@
 			}
 			elseif (!empty($this->success)) {
 				$buffer .= "
-<section id=\"form-message\">
-	<ul class=\"connectBorder progressText\">
-		<li>".$this->success."</li>
-	</ul>
-</section>
-			";
+          <section id=\"form-message\">
+            <ul class=\"connectBorder progressText\">
+              <li>".$this->success."</li>
+            </ul>
+          </section>
+			  ";
 			}
 			if ($this->warningCount() > 0) {
 				$buffer .= "
-<section id=\"form-message\">
-	<ul class=\"connectBorder warningText\">
-		<li>".$this->warningString()."</li>
-	</ul>
-</section>
-			";
+          <section id=\"form-message\">
+            <ul class=\"connectBorder warningText\">
+              <li>".$this->warningString()."</li>
+            </ul>
+          </section>
+			  ";
 			}
 			if (!empty($this->instructions)) {
 				$buffer .= "
-<section id=\"form-message\">
-	<ul class=\"connectBorder infoText\">
-		<li>".$this->instructions."</li>
-	</ul>
-</section>
-			";
+          <section id=\"form-message\">
+            <ul class=\"connectBorder infoText\">
+              <li>".$this->instructions."</li>
+            </ul>
+          </section>
+        ";
 			}
 			elseif (!empty($this->getMetadata("instructions"))) {
 				$buffer .= "
-<section id=\"form-message\">
-	<ul class=\"connectBorder infoText\">
-		<li>".$this->getMetadata("instructions")."</li>
-	</ul>
-</section>
-			";
+          <section id=\"form-message\">
+            <ul class=\"connectBorder infoText\">
+              <li>".$this->getMetadata("instructions")."</li>
+            </ul>
+          </section>
+        ";
 			}
 			return $buffer;
+		}
+
+		public function showSearch() {
+			return "<div id='searchBar'><input list='categories' type='search' id='site-search' name='q' placeholder='What are you looking for?'><datalist id='categories'><option value='Engineering'><option value='Support'><option value='Customer'><option value='Monitors'></datalist><input type='image' class='searchButton' src='/img/icons/icon_tools_search.svg' onclick='' /></div>";
 		}
 
 		public function showTitle() {

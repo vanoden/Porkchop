@@ -68,9 +68,7 @@
 </script>
 
 <!-- Page Header -->
-<?= $page->showTitle() ?>
-<?= $page->showBreadcrumbs() ?>
-<?= $page->showMessages() ?>
+<?= $page->showAdminPageInfo() ?>
 <!-- End Page Header -->
 
 <form id="admin-account-form" name="register" action="<?= PATH ?>/_register/admin_account" method="POST">
