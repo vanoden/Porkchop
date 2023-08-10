@@ -108,6 +108,7 @@
     </div>
     <div class="tableRow">
       <div class="tableCell">
+        <label class="hiddenDesktop value">Organization: </label>
         <select class="value input registerValue" name="organization_id">
           <option value="">Select</option>
           <?php foreach ($organizations as $organization) { ?>
@@ -115,9 +116,15 @@
           <?php } ?>
         </select>
       </div>
-      <div class="tableCell"><input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?= htmlentities($customer->first_name) ?>" /></div>
-      <div class="tableCell"><input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?= htmlentities($customer->last_name) ?>" /></div>
       <div class="tableCell">
+        <label class="hiddenDesktop value">First Name: </label>
+        <input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?= htmlentities($customer->first_name) ?>" />
+      </div>
+      <div class="tableCell">
+        <label class="hiddenDesktop value">Last Name: </label>
+        <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?= htmlentities($customer->last_name) ?>" /></div>
+      <div class="tableCell">
+        <label class="hiddenDesktop value">Time Zone: </label>
         <select id="timezone" name="timezone" class="value input collectionField">
           <?php foreach (timezone_identifiers_list() as $timezone) {
             if (isset($customer->timezone))
