@@ -155,6 +155,7 @@
     <?php foreach ($contacts as $contact) { ?>
     <div class="tableRow">
       <div class="tableCell">
+        <label class="hiddenDesktop value">Type: </label>
         <select class="value input" name="type[<?= $contact->id ?>]">
           <?php foreach (array_keys($contact_types) as $contact_type) { ?>
               <option value="<?= $contact_type ?>" <?php if ($contact_type == $contact->type) print " selected"; ?>><?= $contact_types[$contact_type] ?></option>
