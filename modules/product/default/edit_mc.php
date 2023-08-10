@@ -144,7 +144,7 @@
                             array (
                                 'product_price_id' => $newPrice->id,
                                 'user_id' => $GLOBALS['_SESSION_']->customer->id,
-                                'note' => "New Price Added by: " . $GLOBALS['_SESSION_']->customer->first_name . " " . $GLOBALS['_SESSION_']->customer->last_name
+                                'note' => "New Price Added by: " . $GLOBALS['_SESSION_']->customer->first_name . " " . $GLOBALS['_SESSION_']->customer->last_name . " for: $" .$_REQUEST['new_price_amount'] 
                             )
 					    );
 					    

@@ -4,6 +4,7 @@
 	class OrganizationList Extends \BaseListClass {
 
 		public function search($parameters = array(), $wildcards = false) {
+		
 			app_log("Register::OrganizationList::search()",'trace',__FILE__,__LINE__);
 			$this->clearError();
 			$this->resetCount();
@@ -28,12 +29,14 @@
 				else {
 					$string = str_replace("'","\'",$string);
 				}
-				if ($wildcards) {
+
+				if ($wildcards && strpos($string, "*") !== false) {
 					$string = preg_replace('/\*/','%',$string);
 				}
 				else {
 					$string = '%'.$string.'%';
 				}
+
 				$get_organizations_query .= "
 					WHERE ro.name like '$string'";
 			}
@@ -41,7 +44,7 @@
 				$get_organizations_query .= "
 					WHERE	ro.id = ro.id";
 			}
-
+			
 			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) {
 				$get_organizations_query .= " AND rt.name = ? ";
 				$database->AddParam($parameters['searchedTag']);
