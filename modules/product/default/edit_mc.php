@@ -97,7 +97,7 @@
 			    }
 
 			    // Add Company Specific Metadata (REPLACE WITH CONFIGURED LOOP OF KEYS)
-				$meta_fields = array("name","short_description","description","model","emperical_formula","sensitivity","measure_range","accuracy","manual_id","spec_table_image","default_dashboard_id");
+				$meta_fields = array("name","short_description","description","model","emperical_formula","sensitivity","measure_range","accuracy","manual_id","datalogger","spec_table_image","default_dashboard_id");
 				foreach ($meta_fields as $meta_field) {
 					if (isset($_REQUEST[$meta_field])) {
 						$metadata = $item->metadata();
