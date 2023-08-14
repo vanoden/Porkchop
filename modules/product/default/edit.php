@@ -75,6 +75,10 @@
 		    <input type="text" class="value input wide_md" name="measure_range" id="measure_range" value="<?=htmlspecialchars($item->metadata()->getValue('measure_range'))?>" />
 	    </div>
 	    <div class="input-horiz">
+		    <span class="label">Datalogger</span>
+		    <input type="text" class="value input wide_md" name="datalogger" id="datalogger" value="<?=htmlspecialchars($item->metadata()->getValue('datalogger'))?>" />
+	    </div>
+	    <div class="input-horiz">
 		    <span class="label">Accuracy</span>
 		    <input type="text" class="value input wide_md" name="accuracy" id="accuracy" value="<?=htmlspecialchars($item->metadata()->getValue('accuracy'))?>" />
 	    </div>

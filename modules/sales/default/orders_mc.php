@@ -30,9 +30,19 @@
 	$orders = $orderslist->find($parameters);
 
 	// paginate results
-	$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+	$pageNumber = isset($_GET['pageNumber']) && is_numeric($_GET['pageNumber']) ? (int)$_GET['pageNumber'] : 1;
 	$recordsPerPage = 10;
-	$offset = ($page - 1) * $recordsPerPage;
+	$offset = ($pageNumber - 1) * $recordsPerPage;
 	$totalResults = count($orders);
 	$orderCurrentPage = array_slice($orders, $offset, $recordsPerPage);
 	$totalPages = ceil($totalResults / $recordsPerPage);
+	
+	if ($_REQUEST['start'] < $recordsPerPage)
+		$prev_offset = 0;
+	else
+		$prev_offset = $_REQUEST['start'] - $recordsPerPage;
+		
+	$next_offset = $_REQUEST['start'] + $recordsPerPage;
+	$last_offset = $totalResults - $recordsPerPage;
+
+	if ($next_offset > $totalResults) $next_offset = $_REQUEST['start'] + $totalResults;
