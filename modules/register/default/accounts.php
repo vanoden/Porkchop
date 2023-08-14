@@ -22,10 +22,7 @@
 </script>
 
 <!-- Page Header -->
-<?= $page->showTitle() ?>
-<?=$page->showBreadcrumbs()?>
-<?=$page->showMessages()?>
-<!-- End Page Header -->
+<?= $page->showAdminPageInfo() ?>
 
 <form id="custSearch" method="get">
     <div id="search_container">
