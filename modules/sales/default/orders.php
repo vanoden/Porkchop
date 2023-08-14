@@ -1,8 +1,9 @@
 <!-- Page Header -->
-<?= $page->showTitle() ?>
 <?=$page->showBreadcrumbs()?>
+<?=$page->showTitle() ?>
 <?=$page->showMessages()?>
 <!-- End Page Header -->
+
 <h3>Order Count: <?=isset($page->isSearchResults) ? "[Matched Orders: ". count($orders)."]" : "";?></h3>
 
 <?php
@@ -27,17 +28,17 @@
   <div class="tableBody min-tablet">
     <div class="tableRowHeader">
       <div class="tableCell" style="width: 15%;">
-      <a href="/_sales/orders?page=<?php echo $page; ?>&sort_by=code&order_by=<?php echo $sort_direction === 'code' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Code</a>
+      <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=code&order_by=<?php echo $sort_direction === 'code' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Code</a>
       </div>
       <div class="tableCell" style="width: 15%;">Created</div>
       <div class="tableCell" style="width: 20%;">
-        <a href="/_sales/orders?page=<?php echo $page; ?>&sort_by=customer_id&order_by=<?php echo $sort_direction === 'customer_id' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Customer</a>
+        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=customer_id&order_by=<?php echo $sort_direction === 'customer_id' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Customer</a>
       </div>
       <div class="tableCell" style="width: 20%;">
-        <a href="/_sales/orders?page=<?php echo $page; ?>&sort_by=salesperson_id&order_by=<?php echo $sort_direction === 'salesperson_id' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Sales Agent</a>
+        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=salesperson_id&order_by=<?php echo $sort_direction === 'salesperson_id' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Sales Agent</a>
       </div>
       <div class="tableCell" style="width: 15%;">
-        <a href="/_sales/orders?page=<?php echo $page; ?>&sort_by=status&order_by=<?php echo $sort_direction === 'status' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Status</a>
+        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=status&order_by=<?php echo $sort_direction === 'status' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Status</a>
       </div>
       <div class="tableCell" style="width: 15%;">Amount</div>
     </div>
@@ -68,11 +69,11 @@
   <!-- START Pagination -->
   <div class="pager_bar">
     <div class="pager_controls">
-      <a href="/_register/accounts?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerFirst"><< First </a>
-      <a href="/_register/accounts?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerPrevious"><</a>
-      <?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$customers_per_page+1?> of <?=$total_customers?>&nbsp;
-      <a href="/_register/accounts?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerNext">></a>
-      <a href="/_register/accounts?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>" class="pager pagerLast"> Last >></a>
+      <a href="/_sales/orders?start=0" class="pager pagerFirst"><< First </a>
+      <a href="/_sales/orders?start=<?=$prev_offset?>" class="pager pagerPrevious"><</a>
+        <?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$recordsPerPage+1?> of <?=$totalResults?>&nbsp;
+      <a href="/_sales/orders?start=<?=$next_offset?>" class="pager pagerNext">></a>
+      <a href="/_sales/orders?start=<?=$last_offset?>" class="pager pagerLast"> Last >></a>
     </div>
   </div>
 
