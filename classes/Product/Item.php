@@ -385,11 +385,14 @@
 				return null;
 			}
 			list($value) = $rs->FetchRow();
-			return (object) array(
-				'product_id'	=> $this->id,
-				'key'			=> $key,
-				'value'			=> $value
-			);
+            if (!empty($value)) {
+    			return (object) array(
+				    'product_id'	=> $this->id,
+				    'key'			=> $key,
+				    'value'			=> $value
+			    );
+            }
+            else return null;
 		}
 		public function addMeta($key,$value) {
 			$add_meta_query = "
