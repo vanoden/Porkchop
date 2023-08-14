@@ -5,7 +5,9 @@
 	### for the user.								###
 	### A. Caravello 11/12/2002						###
 	###################################################
-	$page = new \Site\Page();
+  $site = new \Site();
+  $page = $site->page();
+	// $page = new \Site\Page();
 	$page->requirePrivilege("manage customers");
 
 	// Initialize Parameter Array
