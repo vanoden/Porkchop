@@ -5,7 +5,7 @@
 		public $module = 'product';
 	
 		public function upgrade($max_version = 999) {
-			$this->error = null;
+			$this->clearError();
 
 			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
@@ -27,15 +27,15 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_products table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
 				# Media Items Table Required
 				$media_schema = new \Media\Schema;
 				if (! $media_schema->upgrade()) {
-					$this->error = "Cannot upgrade Media Schema: ".$media_schema->error();
+					$this->error("Cannot upgrade Media Schema: ".$media_schema->error());
 					return false;
 				}
 				$create_table_query = "
@@ -49,8 +49,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_images table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_images table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -140,8 +140,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_vendor_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_vendor_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -155,8 +155,8 @@
 					ADD		`total_cost`		decimal(10,2) NOT NULL DEFAULT 0
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -185,8 +185,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -213,8 +213,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_instances table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_instances table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -233,8 +233,8 @@
 					MODIFY COLUMN id int(11) NOT NULL AUTO_INCREMENT
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error altering product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -257,12 +257,12 @@
 						`note`	text,     
 						PRIMARY KEY (`id`),						                                        
 						FOREIGN KEY `fk_product_price_id` (`product_price_id`) REFERENCES `product_prices` (`id`),
-                        FOREIGN KEY `fk_user` (`user_id`) REFERENCES `register_users` (`id`)
+                        FOREIGN KEY `fk_product_price_user` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				"; 
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_prices_audit table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_prices_audit table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
