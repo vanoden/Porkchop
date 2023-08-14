@@ -99,7 +99,7 @@
    <!-- ============================================== -->
    <!-- LOGIN SPECIFICS -->
    <!-- ============================================== -->
-  <div class="tableBody clean min-tablet">
+  <section class="tableBody clean">
     <div class="tableRowHeader">
       <div class="tableCell" style="width: 30%;">Organization</div>
       <div class="tableCell" style="width: 20%;">First Name</div>
@@ -137,7 +137,7 @@
         </select>
       </div>
     </div>
-  </div>
+  </section>
    
    <!-- ============================================== -->
    <!-- METHODS OF CONTACT -->
@@ -167,7 +167,7 @@
       <div class="tableCell"><input type="text" name="value[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->value) ?>" /></div>
       <div class="tableCell"><input type="text" name="notes[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->notes) ?>" /></div>
       <div class="tableCell"><input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> /></div>
-      <div class="tableCell"><input type="image" name="drop_contact[<?= $contact->id ?>]" class="deleteButton" src="/img/icons/icon_tools_trash_active.svg" style="" onclick="submitDelete(<?= $contact->id ?>)" /></div>
+      <div class="tableCell"><input type="image" name="drop_contact[<?= $contact->id ?>]" class="icon-button" src="/img/icons/icon_tools_trash_active.svg" style="" onclick="submitDelete(<?= $contact->id ?>)" /></div>
     </div>
     <!-- New contact entry -->
     <?php } ?>
