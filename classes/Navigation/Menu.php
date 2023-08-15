@@ -124,6 +124,7 @@
 			    // Nav Container
 			    $html .= '<nav id="' . $parameters ['nav_id'] . '">' . "\n";
           $html .= '<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>' . "\n";
+          $html .= '<span onclick="openNav()"><img src="/img/icons/icon_hamburger.png" alt="Open menu"></span>' . "\n";
 			    $items = $this->cascade ();
 			    foreach ( $items as $item ) {
 				    if ($item->hasChildren ()) $has_children = 1;
