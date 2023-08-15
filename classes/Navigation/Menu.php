@@ -122,7 +122,7 @@
 			    if (! isset ( $parameters ['subnav_button_class'] )) $parameters ['subnav_button_class'] = 'left_subnav_button';
 
 			    // Nav Container
-          $html .= '<span onclick="openNav()" class="openbtn"><img src="/img/icons/icon_hamburger.png" alt="Open menu"></span>' . "\n";
+          $html .= '<span onclick="openNav()" class="openbtn"><img src="/img/icons/icon_hamburger.svg" alt="Open menu"></span>' . "\n";
 			    $html .= '<nav id="' . $parameters ['nav_id'] . '">' . "\n";
           $html .= '<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>' . "\n";
 			    $items = $this->cascade ();
