@@ -38,7 +38,7 @@
 
 <div class="tableBody">
   <div class="tableRowHeader">
-    <div class="tableCell" style="width: 18%;" >Login</div>
+    <div class="tableCell" style="width: 18%;">Login</div>
     <div class="tableCell" style="width: 15%;">First Name</div>
     <div class="tableCell" style="width: 15%;">Last Name</div>
     <div class="tableCell" style="width: 24%; overflow-x: hidden;">Organization</div>
@@ -50,12 +50,12 @@
         if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
   ?>
   <div class="tableRow">
-    <div class="tableCell"><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
-    <div class="tableCell"><?=htmlspecialchars($customer->first_name)?></div>
-    <div class="tableCell"><?=htmlspecialchars($customer->last_name)?></div>
-    <div class="tableCell"><a href="/_register/organization?organization_id=<?=$customer->organization()->id?>"><?=$customer->organization()->name?></a></div>
-    <div class="tableCell"><?=htmlspecialchars($customer->status)?></div>
-    <div class="tableCell"><?=$customer->last_active()?></div>
+    <div class="tableCell"><label for="customer" class="hiddenDesktop">Login</label><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
+    <div class="tableCell"><label for="first" class="hiddenDesktop">First Name</label><?=htmlspecialchars($customer->first_name)?></div>
+    <div class="tableCell"><label for="last" class="hiddenDesktop">Last Name</label><?=htmlspecialchars($customer->last_name)?></div>
+    <div class="tableCell"><label for="organization" class="hiddenDesktop">Organization</label><a href="/_register/organization?organization_id=<?=$customer->organization()->id?>"><?=$customer->organization()->name?></a></div>
+    <div class="tableCell"><label for="status" class="hiddenDesktop">Status</label><?=htmlspecialchars($customer->status)?></div>
+    <div class="tableCell"><label for="activity" class="hiddenDesktop">Last Active</label><?=$customer->last_active()?></div>
   </div>
   <?php		
     }
