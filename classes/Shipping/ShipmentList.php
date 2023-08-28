@@ -13,13 +13,13 @@
 
 			$bind_params = array();
 
-			if ($parameters['document_id']) {
+			if (isset($parameters['document_id']) && $parameters['document_id']) {
 				$find_objects_query .= "
 				AND		document_id = ?";
 				array_push($bind_params,$parameters['document_id']);
 			}
 
-			if ($parameters['send_contact_id']) {
+			if (isset($parameters['send_contact_id']) && $parameters['send_contact_id']) {
 				$find_objects_query .= "
 				AND		send_contact_id = ?";
 				array_push($bind_params,$parameters['send_contact_id']);
