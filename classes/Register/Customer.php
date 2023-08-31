@@ -208,7 +208,7 @@
 			if ($authenticationService->authenticate($login,$password)) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
 				$this->update(array("auth_failures" => 0));
-				$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
+				//$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
 				return true;
 			}
 			else {
@@ -226,7 +226,7 @@
 		}
 
 		public function changePassword($password) {
-			if ($this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
+			if (isset($GLOBALS['_config']->register->minimum_password_strength) && $this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
 				$this->error("Password needs more complexity");
 				return false;
 			}
@@ -663,7 +663,7 @@
 
 		public function auditRecord($type,$notes,$admin_id = null) {
 			$audit = new \Register\UserAuditEvent();
-			if (!isset($admin_id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
+			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
 
 			// New Registration by customer
 			if (empty($admin_id)) $admin_id = $this->id;
