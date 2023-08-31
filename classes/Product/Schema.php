@@ -170,6 +170,10 @@
 				if (! $GLOBALS['_database']->BeginTrans())
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
+				// Sales Schema must be ready for Foreign Key
+				$sales_schema = new \Sales\Schema();
+				$sales_schema->upgrade();
+
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `product_prices` (
 						id			int(11) NOT NULL,
