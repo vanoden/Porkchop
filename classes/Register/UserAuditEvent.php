@@ -15,4 +15,17 @@
 			$this->_addFields("user_id", "admin_id", "event_date", "event_class", "event_notes");
             parent::__construct($id);
 		}
+
+		public function user() {
+			return new \Register\Customer($this->user_id);
+		}
+
+		public function admin() {
+			return new \Register\Admin($this->admin_id);
+		}
+
+		public function validClass($string) {
+			if (preg_match('/^(REGISTRATION_SUBMITTED|REGISTRATION_APPROVED|REGISTRATION_DISCARDED|AUTHENTICATION_SUCCESS|AUTHENTICATION_FAILURE|PASSWORD_CHANGED|PASSWORD_RECOVERY_REQUESTED|ORGANIZATION_CHANGED|ROLE_ADDED|ROLE_REMOVED|STATUS_CHANGED)$/',$string)) return true;
+			return false;
+		}
 	}

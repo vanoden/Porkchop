@@ -2,7 +2,7 @@
 	namespace Register;
 
 	class UserAuditEventList extends \BaseListClass {
-		public function __construct($parameters = []) {
-			parent::__construct($parameters);
-		}
+		public function __construct() {
+                $this->_modelName = '\Register\UserAuditEvent';
+        }
 	}
