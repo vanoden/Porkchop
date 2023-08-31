@@ -86,7 +86,7 @@
          * 
          * @param array $parameters, name value pairs to add by
          */
-		public function add_package($parameters) {
+		public function addPackage($parameters) {
 			$parameters['shipment_id'] = $this->id;
 			$package = new \Shipping\Package();
 			if ($package->add($parameters)) {
@@ -97,6 +97,9 @@
 				return null;
 			}
 		}
+        public function add_package($parameters) {
+            return $this->addPackage($parameters);
+        }
 		
         /**
          * add item to shipment by parameters
@@ -140,9 +143,7 @@
 			$packageList = new \Shipping\PackageList();
 			return $packageList->find(array('shipment_id' => $this->id));
 		}
-		public function addPackage() {
-			return new \Shipping\Package(array('shipment_id' => $this->id));
-		}
+
 		public function package($id) {
 			return new \Shipping\Package($id);
 		}
@@ -174,6 +175,11 @@
 			foreach ($this->packages() as $package) {
 				$package->ship();
 			}
-			return $this->update(array('status' => 'SHIPPED','vendor_id' => $params['vendor_id']));
+			return $this->update(array('status' => 'SHIPPED','vendor_id' => $params['vendor_id'],'date_shipped' => date('Y-m-d H:i:s')));
 		}
+
+        public function shipped() {
+            if ($this->status == 'SHIPPED') return true;
+            return false;
+        }
 	}

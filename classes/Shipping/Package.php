@@ -108,7 +108,7 @@
 			return 1;
 		}
 
-		public function add_item($parameters = array()) {
+		public function addItem($parameters = array()) {
 			$product = new \Product\Item($parameters['product_id']);
 			if (! $product->id) {
 				$this->error("Product '".$parameters['product_id']."' not found");
@@ -134,6 +134,10 @@
 				return null;
 			}
 		}
+
+        public function add_item($parameters = array()) {
+            return $this->addItem($parameters);
+        }
 
 		public function items() {
 			if (empty($this->id)) return array();

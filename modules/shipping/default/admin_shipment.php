@@ -92,9 +92,13 @@
 		        <option value="<?=$vendor->id?>"<?php	if ($shipment->vendor_id == $vendor->id) print " selected"; ?>><?=$vendor->name?></option>
     <?php	} ?>
 	    </select>
+    <?php } else { ?>
+        <input type="hidden" name="vendor_id" value="<?=$shipment->vendor_id?>">
     <?php } ?>
     <div class="form_footer">
+    <?php if (!$shipment->shipped()) { ?>
 	    <input type="submit" name="btn_shipped" class="button" value="Shipment Shipped" />
+    <?php } ?>
 	    <input type="submit" name="btn_lost" class="button" value="Shipment Lost" />
 	    <input type="submit" name="btn_received" class="button" value="Shipment Received" />
     </div>
