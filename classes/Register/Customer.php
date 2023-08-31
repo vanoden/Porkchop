@@ -31,7 +31,20 @@
 		}
 
 		public function update($parameters = []): bool {
-		
+			if (isset($parameters['password'])) {
+				if ($this->changePassword($parameters['password'])) {
+					unset($parameters['password']);
+				}
+				else {
+					return false;
+				}
+			}
+			if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) {
+				$this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$this->organization()->name." to ".$parameters['organization_id']);
+			}
+			if (!empty($parameters['status']) && $this->status != $parameters['status']) {
+				$this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
+			}
 			parent::update($parameters);
 			if ($this->error()) return false;
 
@@ -183,6 +196,7 @@
 				$this->error("Your password is expired.  Please use Recover Password to restore.");
 				$failure = new \Register\AuthFailure();
 				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'PASSEXPIRED',$_SERVER['PHP_SELF']));
+				$this->auditRecord("AUTHENTICATION_FAILURE","Password expired");
 				return false;
 			}
 
@@ -194,6 +208,7 @@
 			if ($authenticationService->authenticate($login,$password)) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
 				$this->update(array("auth_failures" => 0));
+				$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
 				return true;
 			}
 			else {
@@ -204,6 +219,7 @@
 				if ($this->auth_failures() >= 6) {
 					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
+					$this->auditRecord("AUTHENTICATION_FAILURE","Blocked after ".$this->auth_failures()." failures");
 					return false;
 				}
 			}
@@ -221,6 +237,7 @@
 
 			if ($authenticationService->changePassword($this->code,$password)) {
 				$this->resetAuthFailures();
+				$this->auditRecord('PASSWORD_CHANGED','Password changed');
 				return true;
 			}
 			else {
@@ -644,18 +661,18 @@
 			return true;
 		}
 
-		public function auditRecord($type,$notes) {
+		public function auditRecord($type,$notes,$admin_id = null) {
 			$audit = new \Register\UserAuditEvent();
-			$admin_id = $GLOBALS['_SESSION_']->customer->id;
+			if (!isset($admin_id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
 
 			// New Registration by customer
-			if (! $admin_id) $admin_id = $this->id;
+			if (empty($admin_id)) $admin_id = $this->id;
 
 			$audit->add(array(
 				'user_id'		=> $this->id,
-				'admin_id'		=> $GLOBALS['_SESSION_']->customer->id,
+				'admin_id'		=> $admin_id,
 				'event_date'	=> date('Y-m-d H:i:s'),
-				'event_type'	=> $type,
+				'event_class'	=> $type,
 				'event_notes'	=> $notes
 			));
 			if ($audit->error()) {

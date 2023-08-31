@@ -1088,7 +1088,7 @@
 				
 				$create_table_query = "
 					CREATE TABLE register_user_audit (
-						id int(11) NOT NULL AUTO_INCREMENT,
+						id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 						user_id int(11) NOT NULL,
 						admin_id int(11) NOT NULL,
 						event_date datetime NOT NULL,
