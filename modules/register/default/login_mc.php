@@ -44,7 +44,8 @@
 		# This is how the SHOULD come in from FORM submit
 		$target = $_POST['login_target'];
 		if (!preg_match('/^[\/\w\-\.\_]+$/',$target)) $target = '';
-		app_log("login_target = ".$GLOBALS['_config']->register->auth_target);
+		if (!isset($GLOBALS['_config']->register->auth_target)) app_log("auth_target not configured",'warning');
+		else app_log("login_target = ".$GLOBALS['_config']->register->auth_target);
 	}
 	elseif(isset($_GET['target'])) {
 		# Translate target
@@ -189,3 +190,6 @@
 	else {
 		app_log("No authentication information sent",'debug',__FILE__,__LINE__);
 	}
+
+	if (isset($GLOBALS['_config']->captcha->public_key)) $captcha_public_key = $GLOBALS['_config']->captcha->public_key;
+	else app_log("CAPTCH Not Configured",'warn');
