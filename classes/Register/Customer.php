@@ -12,6 +12,7 @@
 
 		public function add($parameters = []) {
 			if (parent::add($parameters)) {
+				$this->auditRecord('REGISTERED','Customer added');
 				$this->changePassword($parameters['password']);
 				return true;
 			}
@@ -108,6 +109,7 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
+			$this->auditRecord('ROLE_ADDED','Role '.$role_id.' added');
 			return 1;
 		}
 
@@ -129,7 +131,7 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			
+			$this->auditRecord('ROLE_DROPPED','Role '.$role_id.' dropped');
 			return true;
 		}
 
@@ -637,6 +639,27 @@
 
 			if ($version->error()) {
 				$this->error($version->error());
+				return false;
+			}
+			return true;
+		}
+
+		public function auditRecord($type,$notes) {
+			$audit = new \Register\UserAuditEvent();
+			$admin_id = $GLOBALS['_SESSION_']->customer->id;
+
+			// New Registration by customer
+			if (! $admin_id) $admin_id = $this->id;
+
+			$audit->add(array(
+				'user_id'		=> $this->id,
+				'admin_id'		=> $GLOBALS['_SESSION_']->customer->id,
+				'event_date'	=> date('Y-m-d H:i:s'),
+				'event_type'	=> $type,
+				'event_notes'	=> $notes
+			));
+			if ($audit->error()) {
+				$this->error($audit->error());
 				return false;
 			}
 			return true;
