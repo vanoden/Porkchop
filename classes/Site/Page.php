@@ -1061,7 +1061,8 @@
 		/* Breadcrumb Methods				*/
 		/************************************/
 		public function showAdminPageInfo() {
-			return "<div id='adminPageInfo'><div id='adminTitle'>".$this->showTitle()."\n".$this->showBreadcrumbs()."</div>".$this->showSearch()."\n".$this->showMessages()."</div>";
+			//return "<div id='adminPageInfo'><div id='adminTitle'>".$this->showTitle()."\n".$this->showBreadcrumbs()."</div>".$this->showSearch()."\n".$this->showMessages()."</div>";
+			return "<div id='adminPageInfo'><div id='adminTitle'>".$this->showTitle()."\n".$this->showBreadcrumbs()."</div>".$this->showMessages()."</div>";
 		}
 
 		public function addBreadcrumb($name,$target = '') {
