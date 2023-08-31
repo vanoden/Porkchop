@@ -270,6 +270,7 @@
          <?php } ?>
       </div>
       <input type="submit" name="btnResetFailures" value="Reset Failures" />
+      <input type="button" name="btnAuditLog" value="Audit Log" onclick="location.href='/_register/audit_log?user_id=<?=$user->id?>';" />
    </div>
 
    <h3>Terms of Use History</h3>
