@@ -206,4 +206,8 @@
 		public function page($module = null, $view = null, $index = null) {
 			return new \Site\Page($module,$view,$index);
 		}
+
+        public function configuration($key) {
+            return new \Site\Configuration($key);
+        }
 	}
