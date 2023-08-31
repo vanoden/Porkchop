@@ -22,7 +22,7 @@ class BaseListClass extends \BaseClass {
 
 	public function __call($name, $parameters) {
 		if ($name == "find") {
-			if (func_num_args() == 3) {
+			if (func_num_args() == 2) {
 				return $this->findAdvanced($parameters[0], $parameters[1]);
 			} else
 				return $this->findAdvanced($parameters[0], []);
@@ -96,7 +96,6 @@ class BaseListClass extends \BaseClass {
 				return array();
 			}
 		}
-
 		$objects = array();
 		$rs = $database->Execute($find_objects_query);
 		if (!$rs) {
