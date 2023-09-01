@@ -195,7 +195,7 @@
             if ($this->status == 'CLOSED') return false;
             $packages = $this->packages();
             foreach ($packages as $package) {
-                if ($package->status != 'RECEIVED' && $package->status != 'LOST' && $package->status != 'RETURNED') {
+                if ($package->status != 'RECEIVED' && $package->status != 'INCOMPLETE' && $package->status != 'LOST' && $package->status != 'RETURNED') {
                     $this->error("Package ".$package->number." has not been received");
                     return false;
                 }
