@@ -1,23 +1,30 @@
-<?=$page->showBreadcrumbs()?>
-<div class="title">Shipment Detail</div>
-<?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
-
-<?php	} else if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
-<?php	} ?>
-
+<?=$page->showAdminPageInfo()?>
+<script language="JavaScript">
+    function shipPackage(packageId) {
+        document.forms[0].package_id.value = packageId;
+        document.forms[0].action_type.value = 'ship';
+        document.forms[0].submit();
+    }
+    function receivePackage(packageId) {
+        document.forms[0].package_id.value = packageId;
+        document.forms[0].action_type.value = 'receive';
+        document.forms[0].submit();
+    }
+    function lostPackage(packageId) {
+        document.forms[0].package_id.value = packageId;
+        document.forms[0].action_type.value = 'lost';
+        document.forms[0].submit();
+    }
+    function closeShipment() {
+        document.forms[0].action_type.value = 'close';
+        document.forms[0].submit();
+    }
+</script>
 <form method="post">
     <input type="hidden" name="id" value="<?=$shipment->id?>">
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+    <input type="hidden" name="package_id" />
+    <input type="hidden" name="action_type" />
     
     <div class="table">
         <div class="tableRowHeader">
@@ -44,33 +51,41 @@
         </div>
     </div>
 
-    <br/><br/>
-
-    <?php	foreach ($packages as $package) { 
-    ?>
+    <?php	foreach ($packages as $package) { ?>
+        <h3>Package <?=$package->number?></h3>
         <div class="table">
 	        <div class="tableRowHeader">
-		        <div class="tableCell">Package</div>
 		        <div class="tableCell">Tracking Number</div>
 		        <div class="tableCell">Status</div>
 		        <div class="tableCell">Received</div>
 		        <div class="tableCell">Condition</div>
 	        </div>
 	        <div class="tableRow">
-		        <div class="tableCell"><?=$package->number?></div>
 		        <div class="tableCell"><?=$package->tracking_code?></div>
 		        <div class="tableCell"><?=$package->status?></div>
 		        <div class="tableCell"><?=$package->date_received?> by <?=$package->user_received()->full_name()?></div>
-		        <div class="tableCell"><?=$package->condtion?></div>
+    <?php   if ($package->status == 'READY') { ?>
+                <div class="tableCell">N/A</div>
+    <?php   } elseif ($package->status == 'RECEIVED') { ?>
+		        <div class="tableCell"><?=$package->condition?></div>
+    <?php   } else { ?>
+		        <div class="tableCell">
+                    <select name="package_condition[<?=$package->id?>]">
+                        <option value="OK">Ok</option>
+                        <option value="DAMAGED">Damaged</option>
+                    </select>
+                </div>
+    <?php   } ?>
 	        </div>
         </div>
-        <br/><br/>
+        <h3>Package <?=$package->number?> Items</h3>
         <div class="table">
 	        <div class="tableRowHeader">
 		        <div class="tableCell">Quantity</div>
 		        <div class="tableCell">Product</div>
 		        <div class="tableCell">Serial Number</div>
 		        <div class="tableCell">Description</div>
+                <div class="tableCell">Received</div>
 	        </div>
         <?php	$items = $package->items();
 		        foreach ($items as $item) {
@@ -80,9 +95,28 @@
 		        <div class="tableCell"><?=$item->product()->code?></div>
 		        <div class="tableCell"><?=$item->serial_number?></div>
 		        <div class="tableCell"><?=$item->description?></div>
+                <div class="tableCell">
+        <?php   if ($package->status == "READY") { ?>
+                N/A
+        <?php   } elseif ($package->status == "RECEIVED") { ?>
+                <?=$item->condition?>
+        <?php   } else { ?>
+                <select name="item_condition[<?=$item->id?>]">
+                    <option value="OK">Ok</option>
+                    <option value="DAMAGED">Damaged</option>
+                    <option value="MISSING">Missing</option>
+                </select>
+        <?php   } ?>
+                </div>
 	        </div>
         <?php	} ?>
         </div>
+        <?php   if ($package->status == "READY") { ?>
+        <input type="button" name="btn_ship_package" class="button" value="Ship Package <?=$package->number?>" onclick="shipPackage(<?=$package->id?>)" />
+        <?php   } elseif ($package->status != "RECEIVED") { ?>
+        <input type="button" name="btn_receive_package" class="button" value="Receive Package <?=$package->number?>" onclick="receivePackage(<?=$package->id?>)" />
+        <input type="button" name="btn_lost_package" class="button" value="Package <?=$package->number?> Lost" onclick="lostPackage(<?=$package->id?>)" />
+        <?php   } ?>
     <?php	} ?>
     <?php if (empty($shipment->vendor_id)) { ?>
 	    <span class="label">Shipping Vendor</span>
@@ -96,10 +130,25 @@
         <input type="hidden" name="vendor_id" value="<?=$shipment->vendor_id?>">
     <?php } ?>
     <div class="form_footer">
-    <?php if (!$shipment->shipped()) { ?>
-	    <input type="submit" name="btn_shipped" class="button" value="Shipment Shipped" />
-    <?php } ?>
-	    <input type="submit" name="btn_lost" class="button" value="Shipment Lost" />
-	    <input type="submit" name="btn_received" class="button" value="Shipment Received" />
+    <?php if ($shipment->ok_to_close()) { ?>
+	    <input type="button" name="btn_close" class="button" value="Close Shipment" onclick="closeShipment()" />
+    <?php  } ?>
+    </div>
+    <h3>Addresses</h3>
+    <div class="table">
+        <div class="tableRowHeader">
+            <div class="tableCell">Ship From</div>
+            <div class="tableCell">Ship To</div>
+        </div>
+        <div class="tableRow">
+            <div class="tableCell">
+                <a class="value"><a href="/_register/admin_location?id=<?=$from_location->id?>"><?=$from_location->name?></a><br>
+                <span class="value"><?=$from_location->HTMLBlockFormat()?></span>
+            </div>
+            <div class="tableCell">
+                <a class="value"><a href="/_register/admin_location?id=<?=$to_location->id?>"><?=$to_location->name?></a><br>
+                <span class="value"><?=$to_location->HTMLBlockFormat()?></span>
+            </div>
+        </div>
     </div>
 </form>

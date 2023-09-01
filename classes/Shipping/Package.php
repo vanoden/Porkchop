@@ -64,6 +64,29 @@
 			}
 		}
 
+        public function getByPackageNumber($shipment_id,$package_id) {
+            $database = new \Database\Service();
+            $get_object_query = "
+                SELECT  id
+                FROM    shipping_packages
+                WHERE   shipment_id = ?
+                AND     number = ?
+                ";
+            $database->AddParam($shipment_id);
+            $database->AddParam($package_id);
+            $rs = $database->Execute($get_object_query);
+            if (! $rs) {
+                $this->error("Error getting package: ".$database->Error());
+                return false;
+            }
+            list($id) = $rs->FetchRow();
+            if ($id > 0) $this->id = $id;
+            else {
+                $this->error("Package not found");
+                return false;
+            }
+            return $this->details();
+        }
         /**
          * update by params
          * 

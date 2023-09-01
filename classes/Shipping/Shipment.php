@@ -145,8 +145,16 @@
 		}
 
 		public function package($id) {
-			return new \Shipping\Package($id);
+			$package = new \Shipping\Package();
+            if ($package->getByPackageNumber($this->id,$id)) {
+                return $package;
+            }
+            else {
+                $this->error("Package not found");
+                return null;
+            }
 		}
+
 		public function vendor() {
 			return new \Shipping\Vendor($this->vendor_id);
 		}
@@ -181,5 +189,20 @@
         public function shipped() {
             if ($this->status == 'SHIPPED') return true;
             return false;
+        }
+
+        public function ok_to_close() {
+            if ($this->status == 'CLOSED') return false;
+            $packages = $this->packages();
+            foreach ($packages as $package) {
+                if ($package->status != 'RECEIVED' && $package->status != 'LOST' && $package->status != 'RETURNED') {
+                    $this->error("Package ".$package->number." has not been received");
+                    return false;
+                }
+            }
+            return true;
+        }
+        public function close() {
+            return $this->update(array('status' => 'CLOSED'));
         }
 	}
