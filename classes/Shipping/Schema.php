@@ -189,6 +189,30 @@
 				$this->setVersion(4);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 4) {
+				app_log("Upgrading schema to version 4",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `shipping_packages`
+                    MODIFY status enum('READY','SHIPPED','INCOMPLETE','RECEIVED','RETURNED','LOST') NOT NULL DEFAULT 'READY'
+				";
+
+				if (! $this->executeSQL($alter_table_query)) return false;
+
+				$alter_table_query = "
+					ALTER TABLE `shipping_items`
+                    MODIFY `condition` enum('OK','DAMAGED','MISSING')
+				";
+
+				if (! $this->executeSQL($alter_table_query)) return false;
+                
+				$this->setVersion(4);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}

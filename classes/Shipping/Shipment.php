@@ -17,7 +17,7 @@
 
 		public function __construct($id = 0) {	
 			$this->_tableName = 'shipping_shipments';
-			$this->_addStatus(array('NEW','SHIPPED','LOST','RECEIVED','RETURNED'));
+			$this->_addStatus(array('OPEN','CLOSED'));
 			$this->_addFields(array('id','code','document_number','date_entered','date_shipped','status','send_contact_id','send_location_id','rec_contact_id','rec_location_id','vendor_id', 'instructions'));
 			parent::__construct($id);
 		}

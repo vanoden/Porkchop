@@ -25,6 +25,9 @@
                         if (! $item->update(array('condition' => $_REQUEST['item_condition'][$item->id]))) {
                             $page->addError("Error updating item ".$item->id.": ".$item->error());
                         }
+                        if ($_REQUEST['item_condition'][$item->id] == 'MISSING' && $_REQUEST['package_condition'][$package->id] != 'DAMAGED') {
+                            $_REQUEST['package_condition'][$package->id] = 'INCOMPLETE';
+                        }
                     }
                     if (! $page->errorCount()) {
                         if (! $package->update(array('status' => 'RECEIVED', 'condition' => $_REQUEST['package_condition'][$package->id]))) {
