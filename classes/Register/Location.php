@@ -145,7 +145,11 @@
 		}
 
         public function country() {
-            return new \Geography\Country($this->province()->country_id);
+            $country_id = $this->province()->country_id;
+            if (!isset($country_id)) {
+                return new \Geography\Country();
+            }
+            return new \Geography\Country($country_id);
         }
 
 		public function organization() {

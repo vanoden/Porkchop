@@ -25,7 +25,7 @@
 				array_push($bind_params,$parameters['send_contact_id']);
 			}
 			
-			if (isset($parameters['status']) and preg_match('/^(NEW|SHIPPED|LOST|RECEIVED|RETURNED)$/',$parameters['status'])) {
+			if (isset($parameters['status']) and preg_match('/^(OPEN|CLOSED)$/',$parameters['status'])) {
 				$find_objects_query .= "
 				AND		status = ?";
 				array_push($bind_params,$parameters['status']);
