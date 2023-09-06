@@ -72,14 +72,16 @@
 		    if (! $GLOBALS ['_SESSION_']->customer->id > 0) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+                exit;
 		    }
 	    }
 	    public function requireSuperElevation() {
 		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+                exit;
 		    }
 	    }
 	    public function requireRole($role) {	 
@@ -89,14 +91,14 @@
 			elseif (! $GLOBALS ['_SESSION_']->customer->id) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
-			    exit ();
+			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    exit;
 		    }
 			elseif (! $GLOBALS ['_SESSION_']->customer->has_role($role)) {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
-			    header ( 'location: /_register/permission_denied' );
-			    exit ();
+			    header('location: /_register/permission_denied' );
+			    exit;
 		    }
 			else {
 				return true;
@@ -108,16 +110,18 @@
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
                 return true;
-            } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+            }
+            elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
-			    exit ();
-		    } else {
+			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    exit;
+		    }
+            else {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
-			    header ( 'location: /_register/permission_denied' );
-			    exit ();
+			    header('location: /_register/permission_denied' );
+			    exit;
 		    }
         }
 
@@ -125,8 +129,8 @@
 			if (empty($GLOBALS['_SESSION_']->customer->organization()->id)) {
 				$counter = new \Site\Counter("organization_required");
 				$counter->increment();
-			    header ('location: /_register/organization_required');
-			    exit();
+			    header('location: /_register/organization_required');
+			    exit;
 			}
 		}
 
