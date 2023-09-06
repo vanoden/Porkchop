@@ -79,6 +79,19 @@
 	$vendors = $vendorList->find();
 	$packages = $shipment->packages();
 
+    if (preg_match('/^RMA(\d+)$/',$shipment->document_number,$matches)) {
+        $object_id = $matches[1] * 1;
+        $object_link = "/_support/admin_rma?id=$object_id";
+    }
+    elseif (preg_match('/^TCKT(\d+)$/',$shipment->document_number,$matches)) {
+        $object_id = $matches[1] * 1;
+        $object_link = "/_support/request_item?id=$object_id";
+    }
+    elseif (preg_match('/^PO(\d+)$/',$shipment->document_number,$matches)) {
+        $object_id = $matches[1] * 1;
+        $object_link = "/_sales/purchase_order?id=$object_id";
+    }
+
 	if (empty($shipment->vendor_id)) $shippingVendor = 'Not provided';
 	else $shippingVendor = $shipment->vendor();
 
