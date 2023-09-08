@@ -19,11 +19,29 @@
 				array_push($bind_params,$parameters['document_id']);
 			}
 
+			if (isset($parameters['rec_contact_id']) && $parameters['rec_contact_id']) {
+				$find_objects_query .= "
+				AND		rec_contact_id = ?";
+				array_push($bind_params,$parameters['rec_contact_id']);
+			}
+
 			if (isset($parameters['send_contact_id']) && $parameters['send_contact_id']) {
 				$find_objects_query .= "
 				AND		send_contact_id = ?";
 				array_push($bind_params,$parameters['send_contact_id']);
 			}
+
+            if (isset($parameters['rec_location_id'])) {
+                $find_objects_query .= "
+                AND     rec_location_id = ?";
+                array_push($bind_params,$parameters['rec_location_id']);
+            }
+
+            if (isset($parameters['send_location_id'])) {
+                $find_objects_query .= "
+                AND     send_location_id = ?";
+                array_push($bind_params,$parameters['send_location_id']);
+            }
 			
 			if (isset($parameters['status']) and preg_match('/^(OPEN|CLOSED)$/',$parameters['status'])) {
 				$find_objects_query .= "
