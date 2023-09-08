@@ -1081,9 +1081,7 @@
 				if (!empty($breadcrumb['target'])) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
-			if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
-				$html .= "<li><a href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\">Manage</a></li>";
-			  return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+		    return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
 		}
 
 		public function showMessages() {
@@ -1141,7 +1139,10 @@
 		}
 
 		public function showTitle() {
-			return "<h1>".$this->title()."</h1>";
+			$title = "<h1 id=\"page_title\">".$this->title()."</h1>";
+            if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
+                $title .= "<a id=\"icon_settings\" href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\"></a>";
+            return $title;
 		}
 	
 		public function uri() {
