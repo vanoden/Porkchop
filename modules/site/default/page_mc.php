@@ -68,7 +68,9 @@
 		$metadata = $editPage->allMetadata();
 	}
 
+    $bc_view = ucfirst($editPage->module)."::".ucfirst($editPage->view);
+    if (!empty($editPage->index)) $bc_view .= "::".$editPage->index;
 	$page->addBreadcrumb("Site Pages", "/_site/pages");
 	if (isset($editPage->view)) {
-		$page->addBreadcrumb($editPage->module."::".$editPage->view);
+		$page->addBreadcrumb($bc_view);
 	}

@@ -5,7 +5,7 @@
 <form method="post" action="/_site/pages">
   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>"/>
   <div class="tableBody">
-    <div class="tabledRowHeader">
+    <div class="tableRowHeader">
       <div class="tableCell">Module</div>
       <div class="tableCell">View</div>
       <div class="tableCell">Index</div>
