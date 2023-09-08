@@ -10,7 +10,7 @@
 		public $sort;
 		public $baseURI;
 		public $divElemClass;
-		public $linkElemClass;
+		public $linkElemClass = [];
 		public $elemName = "pagerBar";
 		public $elemId = "pagerBar";
         private $_forwardParameters = array();

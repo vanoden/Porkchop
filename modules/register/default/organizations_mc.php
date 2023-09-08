@@ -69,3 +69,8 @@
 
 	$page->title = "Organizations";
 	$page->instructions = "Fill in the search field.  Use * for a wildcard.  Or click an organization code to see details.";
+
+    $pagination = new \Site\Page\Pagination();
+    $pagination->forwardParameters('hidden','deleted','expired','name','searchedTag');
+    $pagination->size($organizations_per_page);
+    $pagination->count($total_organizations);

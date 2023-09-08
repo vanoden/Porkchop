@@ -77,11 +77,7 @@
         <!--    Standard Page Navigation Bar ADMIN ONLY -->
         <div class="pager_bar">
 	        <div class="pager_controls">
-		        <a href="/_register/organizations?start=0&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>&name=<?=$_REQUEST['name']?>&searchedTag=<?=$_REQUEST['searchedTag']?>&page_size=<?=$organizations_per_page?>" class="pager pagerFirst"><< First </a>
-		        <a href="/_register/organizations?start=<?=$prev_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>&name=<?=$_REQUEST['name']?>&searchedTag=<?=$_REQUEST['searchedTag']?>&page_size=<?=$organizations_per_page?>" class="pager pagerPrevious"><</a>
-		        &nbsp;<?=$_REQUEST['start']+1?> - <?=$_REQUEST['start']+$organizations_per_page?> of <?=$total_organizations?>&nbsp;
-		        <a href="/_register/organizations?start=<?=$next_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>&name=<?=$_REQUEST['name']?>&searchedTag=<?=$_REQUEST['searchedTag']?>&page_size=<?=$organizations_per_page?>" class="pager pagerNext">></a>
-		        <a href="/_register/organizations?start=<?=$last_offset?>&hidden=<?=$_REQUEST['hidden']?>&deleted=<?=$_REQUEST['deleted']?>&expired=<?=$_REQUEST['expired']?>&name=<?=$_REQUEST['name']?>&searchedTag=<?=$_REQUEST['searchedTag']?>&page_size=<?=$organizations_per_page?>" class="pager pagerLast"> Last >></a>
+<?=$pagination->render()?>
             </div>
         </div>
     </form>
