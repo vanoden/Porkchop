@@ -315,3 +315,6 @@ if (isset($customer->id)) {
 $termsOfUseList = new \Site\TermsOfUseList();
 $terms = $termsOfUseList->find();
 $termsOfUseActionList = new \Site\TermsOfUseActionList();
+
+// Get List of Locations
+$locations = $customer->locations();
