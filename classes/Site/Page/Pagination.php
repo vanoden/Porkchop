@@ -5,55 +5,127 @@
 		public $count = 0;
 		public $startId = 0;
 		public $endId = 0;
-		public $size = 20;
-		public $direction = 'asc';
-		public $search = '';
-		public $parameters;
+		public $size = 25;
+		public $direction;
 		public $sort;
 		public $baseURI;
 		public $divElemClass;
 		public $linkElemClass;
 		public $elemName = "pagerBar";
 		public $elemId = "pagerBar";
+        private $_forwardParameters = array();
 
-		public function __construct($count,$uri = '') {
-			if (!empty($uri)) $this->baseURI = $uri;
-			else $this->baseURI = $_SERVER['REQUEST_URI'];
-			$this->startId = $_REQUEST['start'];
-			$this->endId = $this->startId + $this->size;
+		public function __construct($uri = null,$size = 25,$count = null,$startId = null,$sort = null, $direction = null) {
+			$this->baseURI = $uri;
+            if (empty($this->baseURI)) $this->baseURI = $_SERVER['SCRIPT_URI'];
+
+			if ($startId > 0) $this->startId = $startId;
+            else $this->startId = isset($_REQUEST['pagination_start_id']) && is_numeric($_REQUEST['pagination_start_id']) ? (int)$_REQUEST['pagination_start_id'] : 0;
+
+            $this->endId = $this->startId + $this->size;
 			if ($this->count < $this->endId) $this->endId = $this->count;
 			$this->count = $count;
-			if (!empty($_REQUEST['size'])) $this->size = $_REQUEST['size'];
-			$this->sort = $_REQUEST['sort'];
-			$this->direction = $_REQUEST['direction'];
-			$this->search = $_REQUEST['search'];
+			$this->size = $size;
+
+            $this->sort = $sort;
+            if (empty($this->sort)) $this->sort = isset($_REQUEST['pagination_sort']) ? $_REQUEST['pagination_sort'] : null;
+
+			$this->direction = $direction;
+            if (empty($this->direction)) $this->direction = isset($_REQUEST['pagination_direction']) ? $_REQUEST['pagination_direction'] : null;
+
 			$this->divElemClass = array('pager_bar');
 			$this->linkElemClass = array('pager');
 		}
 
+        public function count($count = null) {
+            if (isset($count) && is_numeric($count)) {
+                $this->count = $count;
+                $this->endId = $this->startId + $this->size;
+                if ($this->endId > $this->count) $this->endId = $this->count;
+            }
+            return $this->count;
+        }
+
+        public function size($size = null) {
+            if (isset($size) && is_numeric($size)) $this->size = $size;
+            return $this->size;
+        }
+
+        public function startId($startId = null) {
+            if (isset($startId) && is_numeric($startId)) $this->startId = $startId;
+            if ($this->startId < 0) $this->startId = 0;
+        }
+
+        public function pageNumber($page = null) {
+            if (isset($page)) $this->startId = ($page - 1) * $this->size;
+            return ($this->startId / $this->size) + 1;
+        }
+
+        private function paramString() {
+            $string = '';
+            if (!empty($this->sort)) $string .= '&pagination_sort=' . $this->sort;
+            if (!empty($this->direction)) $string .= '&pagination_direction=' . $this->direction;
+            foreach ($this->_forwardParameters as $parameter) {
+                $string .= "&" . key($parameter) . "=" . $parameter[key($parameter)];
+            }
+            return $string;
+        }
+
+        private function totalPages() {
+            return ceil($this->count / $this->size);
+        }
 		public function prevPageLink() {
-			return $this->baseURI . '?start=' . ($this->startId - $this->size) . '&size=' . $this->size . '&sort=' . $this->sort . '&direction=' . $this->direction . '&search=' . $this->search;
+			return $this->baseURI . '?pagination_start_id=' . ($this->startId - $this->size) . $this->paramString();
 		}
 
 		public function nextPageLink() {
-			return $this->baseURI . '?start=' . ($this->startId + $this->size) . '&size=' . $this->size . '&sort=' . $this->sort . '&direction=' . $this->direction . '&search=' . $this->search;
+			return $this->baseURI . '?pagination_start_id=' . ($this->startId + $this->size) . $this->paramString();
 		}
 
 		public function firstPageLink() {
-			return $this->baseURI . '?start=0&size=' . $this->size . '&sort=' . $this->sort . '&direction=' . $this->direction . '&search=' . $this->search;
+			return $this->baseURI . '?pagination_start_id=0' . $this->paramString();
 		}
 
 		public function lastPageLink() {
-			return $this->baseURI . '?start=' . ($this->count - $this->size) . '&size=' . $this->size . '&sort=' . $this->sort . '&direction=' . $this->direction . '&search=' . $this->search;
+			return $this->baseURI . '?pagination_start_id=' . ($this->count - $this->size) . $this->paramString();
 		}
 
-		public function formContent() {
-			$string  = '<div id="'.$this->elemId.'" name="'.$this->elemName.'" class="'.join(" ",$this->linkElemClass).'">"';
-			$string .= '<a href="'.$this->firstPageLink().'" class="'.join("",$this->linkElemClass).'">&lt;&lt; First</a>';
-			$string .= '<a href="'.$this->prevPageLink().'" class="'.join(" ",$this->linkElemClass)."\">&lt; Previous</a>";
-			$string .= ' &nbsp;'.$this->startId.' - '.$this->endId.' of '.$this->count.' &nbsp; ';
-			$string .= '<a href="'.$this->nextPageLink().'" class="'.join(" ",$this->linkElemClass)."\">Next &gt;</a>";
-			$string .= '<a href="'.$this->lastPageLink().'" class="'.join(" ",$this->linkElemClass)."\">Last &gt;&gt;</a>";
+		public function pageLink($pageNumber) {
+			return $this->baseURI . '?pagination_start_id=' . (($pageNumber - 1) * $this->size) . $this->paramString();
+		}
+
+        public function forwardParameters($parameters) {
+            foreach ($parameters as $parameter) {
+                $this->forwardParameter($parameter);
+            }
+        }
+        public function forwardParameter($name) {
+            if (isset($_REQUEST[$name])) array_push($this->_forwardParameters,array($name => $_REQUEST[$name]));
+        }
+
+		public function render() {
+            $string = "";
+			if ($this->startId > 0) $string .= '<a id="paginationFirst" href="'.$this->firstPageLink().'" class="'.join("",$this->linkElemClass).'">&lt;&lt; First</a>';
+			if ($this->startId >= $this->size) $string .= '<a id="paginationPrevious" href="'.$this->prevPageLink().'" class="'.join(" ",$this->linkElemClass)."\">&lt; Previous</a>";
+			$string .= '<span id="paginationRange"> &nbsp;'.$this->startId.' - '.$this->endId.' of '.$this->count.' &nbsp; </span>';
+			if ($this->startId <= $this->count - ($this->size * 2)) $string .= '<a id="paginationNext" href="'.$this->nextPageLink().'" class="'.join(" ",$this->linkElemClass)."\">Next &gt;</a>";
+			if ($this->startId < $this->count - $this->size) $string .= '<a id="paginationLast" href="'.$this->lastPageLink().'" class="'.join(" ",$this->linkElemClass)."\">Last &gt;&gt;</a>";
 			return $string;
 		}
+
+        public function renderPages() {
+            if ($this->totalPages() > 1) {
+                $string = '';
+                $string .= "<ul>\n";
+                if ($this->pageNumber() > 1) $string .= "<li><a href=\"".$this->prevPageLink()."\">&laquo; Prev</a></li>\n";
+                for ($i = 1; $i <= $this->totalPages(); $i++) {
+                    $string .= "<li";
+                    if ($i == $this->pageNumber()) $string .= ' class="active"';
+                    $string .= "><a href=\"".$this->pageLink($i)."\">$i</a></li>\n";
+                }
+                if ($this->pageNumber() < $this->totalPages()) $string .= "<li><a href=\"".$this->nextPageLink()."\">Next &raquo;</a></li>\n";		  
+                $string .= "</ul>\n";
+                return $string;
+            }
+        }
 	}
