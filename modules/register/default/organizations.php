@@ -17,9 +17,7 @@
 </style>
 
 <!-- Page Header -->
-<?=$page->showTitle()?>
-<?=$page->showBreadcrumbs()?>
-<?=$page->showMessages()?>
+<?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
 <form id="orgSearch" method="get" class="float: left">

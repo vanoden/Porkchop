@@ -45,7 +45,7 @@
 
 	// Add Pagination to Query
 	$find_parameters["_limit"] = $organizations_per_page;
-	$find_parameters["_offset"] = isset($_REQUEST['start']) ? $_REQUEST['start']: 0;
+	$find_parameters["_offset"] = isset($_REQUEST['pagination_start_id']) ? $_REQUEST['pagination_start_id']: 0;
 
 	// Get Records
 	$organizations = $organizationlist->search($find_parameters,true);
@@ -67,8 +67,10 @@
 
 	if (is_array($organizations) && $next_offset > count($organizations)) $next_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) + count($organizations);
 
-	$page->title = "Organizations";
+	$page->title("Organizations");
 	$page->instructions = "Fill in the search field.  Use * for a wildcard.  Or click an organization code to see details.";
+    $page->addBreadcrumb("Customer");
+    $page->addBreadcrumb("Organizations");
 
     $pagination = new \Site\Page\Pagination();
     $pagination->forwardParameters('hidden','deleted','expired','name','searchedTag');
