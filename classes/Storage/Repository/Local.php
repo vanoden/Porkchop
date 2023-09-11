@@ -43,6 +43,13 @@
 			}
 		}
 
+		public function connect() {
+			$path = $this->getMetadata('path');
+			if (is_dir($path)) return true;
+			$this->error($path." doesn't exist or is not a directory");
+			return false;
+		}
+
 		private function _path($path = null) {
 			if (isset($path)) {
 			
