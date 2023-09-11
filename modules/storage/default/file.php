@@ -144,5 +144,3 @@
     </div>
 </div>
 </form>
-<?php   if ($file->readable(2)) { $tessie = new \Register\Customer(2); print $tessie->full_name()." can read the file\n"; } else {$tessie = new \Register\Customer(2); print $tessie->full_name()." cannot read the file\n"; } ?>
-<?php   if ($file->writable(2)) { $tessie = new \Register\Customer(2); print $tessie->full_name()." can write the file\n"; } else {$tessie = new \Register\Customer(2); print $tessie->full_name()." cannot write the file\n"; } ?>
