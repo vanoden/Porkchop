@@ -8,19 +8,46 @@
 </style>
 <script language="Javascript">
 	function updateIds(elem) {
-		alert("updateIds");
+		console.log("updateIds()");
 		if (elem.value == 'u') {
-			alert("UserLoad");
+			console.log("Populating users list");
 			var customerlist = Object.create(CustomerList);
 			var customers = customerlist.find();
+            console.log(customers);
 			for (i = 0; i < customers.length; i ++) {
 				console.log("Adding user "+customers[i].full_name+" to list");
 				var option = document.createElement("option");
-				option.text = customers[i].full_name;
+				option.text = customers[i].code;
 				option.value = customers[i].id;
 				elem.form.perm_id.add(option);
 			}
 		}
+        else if (elem.value == 'o') {
+            console.log("Populating organizations list");
+            var organizationlist = Object.create(OrganizationList);
+            var organizations = organizationlist.find();
+            console.log(organizations);
+            for (i = 0; i < organizations.length; i ++) {
+                console.log("Adding organization "+organizations[i].name+" to list");
+                var option = document.createElement("option");
+                option.text = organizations[i].name;
+                option.value = organizations[i].id;
+                elem.form.perm_id.add(option);
+            }
+        }
+        else if (elem.value == 'r') {
+            console.log("Populating roles list");
+            var rolelist = Object.create(RoleList);
+            var roles = rolelist.find();
+            console.log(roles);
+            for (i = 0; i < roles.length; i ++) {
+                console.log("Adding role "+roles[i].name+" to list");
+                var option = document.createElement("option");
+                option.text = roles[i].name;
+                option.value = roles[i].id;
+                elem.form.perm_id.add(option);
+            }
+        }
 	}
 </script>
 <form name="fileForm" action="/_storage/file" method="post">
