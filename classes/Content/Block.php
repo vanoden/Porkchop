@@ -17,6 +17,7 @@
         }
 
 		public function get($target = ''): bool {
+		
 			$this->clearError();
 
 			$get_contents_query = "
@@ -56,6 +57,7 @@
 		}
 
 		public function add($parameters = []) {
+		
 			$this->clearError();
 			$_customer = new \Register\Customer();
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
@@ -93,6 +95,7 @@
 			return $this->update($parameters);
 		}
         public function update($parameters = []): bool {
+        
 			$this->clearCache();
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error("You do not have permission to update content");
@@ -144,6 +147,7 @@
         }
 
 		public function drop() {
+		
 			$database = new \Database\Service();
 			$delete_object_query = "
 				DELETE
@@ -159,7 +163,9 @@
 				return true;
 			}
 		}
+		
 		public function purge_cache() {
+		
 			$this->clearError();
 			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 				$this->error("You do not have permission to update content");

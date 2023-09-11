@@ -11,7 +11,7 @@
 		private $_cached = false;
 
 		// Name of Table Holding This Class
-		public $_tableName;
+		protected $_tableName;
 
 		// Name for Unique Surrogate Key Column (for get)
 		protected $_tableUKColumn = 'code';
@@ -20,7 +20,7 @@
 		protected $_tableIDColumn = 'id';
 
 		// Name for Software Incrementing Number Field
-		public $_tableNumberColumn;
+		protected $_tableNumberColumn;
 
         // field names for columns in database tables
 	    protected $_fields = array();
