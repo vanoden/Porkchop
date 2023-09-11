@@ -2,6 +2,7 @@
 	namespace Site;
 
 	class TermsOfUseVersion Extends \BaseModel {
+	
 		public $status;
 		public $content;
 		public $number;

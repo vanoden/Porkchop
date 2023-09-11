@@ -1,6 +1,4 @@
 <?php
 	namespace Content;
 
-	class Message Extends Block {
-	}
-?>
+	class Message Extends Block {}

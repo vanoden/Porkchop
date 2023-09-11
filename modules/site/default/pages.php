@@ -5,14 +5,14 @@
 <form method="post" action="/_site/pages">
   <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>"/>
   <div class="tableBody">
-    <div class="tableRowHeader">
-      <div class="tableCell">Module</div>
-      <div class="tableCell">View</div>
-      <div class="tableCell">Index</div>
-      <div class="tableCell">Template</div>
-      <div class="tableCell">Metadata</div>
-      <div class="tableCell">Sitemap</div>
-		  <div class="tableCell">Terms of Use Required</div>
+    <div class="tableRow">
+      <div class="tableCell"><strong>Module</strong></div>
+      <div class="tableCell"><strong>View</strong></div>
+      <div class="tableCell"><strong>Index</strong></div>
+      <div class="tableCell"><strong>Template</strong></div>
+      <div class="tableCell"><strong>Metadata</strong></div>
+      <div class="tableCell"><strong>Sitemap</strong></div>
+		  <div class="tableCell"><strong>Terms of Use Required</strong></div>
 	  </div>
     <?php	foreach ($pages as $page) {
 		  $metadata = $page->allMetadata(); ?>
