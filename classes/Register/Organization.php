@@ -144,8 +144,7 @@
 				$this->name = $organization->name;
 				$this->code = $organization->code;
 				$this->status = $organization->status;
-				if ($organization->is_reseller) $this->is_reseller = true;
-				if (isset($this->assigned_reseller_id)) $this->reseller = new Organization($this->assigned_reseller_id);
+				$this->is_reseller = boolval($organization->is_reseller);
 				$this->notes = $organization->notes;
 				$this->password_expiration_days = $organization->password_expiration_days;
 				$this->default_billing_location_id = $organization->default_billing_location_id;
@@ -196,8 +195,7 @@
                 $this->password_expiration_days = $object->password_expiration_days;
                 $this->default_billing_location_id = $object->default_billing_location_id;
                 $this->default_shipping_location_id = $object->default_shipping_location_id;
-				if ($object->is_reseller) $this->is_reseller = true;
-				if ($object->assigned_reseller_id) $this->reseller = new Organization($object->assigned_reseller_id);
+				$this->is_reseller = boolval($object->is_reseller);
 				$this->notes = $object->notes;
 			}
 			else {
