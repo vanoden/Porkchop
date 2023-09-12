@@ -29,6 +29,9 @@
 					http_response_code($value);
 					continue;
 				}
+				elseif ($key == '_cached') {
+                    // Ok to display this
+				}
 				elseif (preg_match('/^_/',$key)) continue;
 				$data->$key = $value;
 			}
