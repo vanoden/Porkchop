@@ -8,7 +8,7 @@
 		private $_exists = false;
 
 		// Did data come from cache?
-		private $_cached = false;
+		public $_cached = false;
 
 		// Name of Table Holding This Class
 		public $_tableName;
@@ -100,6 +100,11 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+
+            // Clear Cache to Allow Update
+			$cache = $this->cache();
+			if (isset($cache)) $cache->delete();
+
             return $this->details();
 		}
 		
