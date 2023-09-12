@@ -18,13 +18,13 @@
 		}
 	}
 
-	if (! $file->readable()) {
+	if (!empty($file->id) && ! $file->readable()) {
 		$page->addError("Permission Denied");
 		return 403;
 	}
 
 	if (empty($file->id) && empty($_REQUEST['repository_id'])) $page->addError("No repository selected, return to <a href=\"/_storage/repositories\">/_storage/repositories</a>");
-	
+
 	if ($page->errorCount() < 1) {
 		if ((isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Download') || preg_match('/^download$/i',$GLOBALS['_REQUEST_']->query_vars_array[1])) {
 			if ($file->readPermitted()) {
@@ -203,6 +203,34 @@
 								$page->success .= "<br>\nGranted ".$level." ".$id." ".$action."";
 								if (!$file->grant($level,$id,$action)) $page->addError("Error granting privilege: ".$file->error());
 							}
+						}
+					}
+				}
+
+				if(!empty($_REQUEST['perm_level']) && !empty($_REQUEST['perm_id'])) {
+					if ($_REQUEST['perm_level'] == 'u') {
+						$entity = new \Register\Customer($_REQUEST['perm_id']);
+						if (! $entity->id) $page->addError("User ".$_REQUEST['perm_id']." not found");
+					}
+					elseif ($_REQUEST['perm_level'] == 'r') {
+						$entity = new \Register\Role($_REQUEST['perm_id']);
+						if (! $entity->id) $page->addError("Role ".$_REQUEST['perm_id']." not found");
+					}
+					elseif ($_REQUEST['perm_level'] == 'o') {
+						$entity = new \Register\Organization($_REQUEST['perm_id']);
+						if (! $entity->id) $page->addError("Organization ".$_REQUEST['perm_id']." not found");
+					}
+
+					if ($entity->id > 0) {
+						if ($_REQUEST['perm_read'] == 1) {
+							if ($file->grant($_REQUEST['perm_level'],$_REQUEST['perm_id'],'r'))
+							$page->success .= "<br>\nGranted ".$perm_level." ".$perm_id." read";
+							else $page->addError($file->error());
+						}
+						if ($_REQUEST['perm_write'] == 1) {
+							if ($file->grant($_REQUEST['perm_level'],$_REQUEST['perm_id'],'w'))
+							$page->success .= "<br>\nGranted ".$perm_level." ".$perm_id." write";
+							else $page->addError($file->error());
 						}
 					}
 				}

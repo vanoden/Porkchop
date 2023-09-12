@@ -2,7 +2,6 @@
 	namespace Storage;
 
 	class File Extends \BaseModel {
-	
 		private $_repository_id;
 		public $code;
 		public $display_name;
@@ -168,6 +167,7 @@
 		public function owner() {
 			return new \Register\Customer($this->user_id);
 		}
+
 		public function name($name = '') {
 			if (strlen($name)) {
 				if (! preg_match('/^[\w\-\.\_\s]+$/',$name)) {
@@ -311,15 +311,11 @@
 			if ($this->user_id == $user_id) return true;
 			$privileges = $this->getPrivileges();
 
-			print_r("Here r1<br>\n");
-			if (isset($privileges->a) && preg_match('"/$flag/"',$privileges->a)) return true;
-			print_r("Here r2<br>\n");
+			if (isset($privileges->a) && preg_match("/$flag/",$privileges->a)) return true;
 
 			if (isset($privileges->u->$user_id) && preg_match("/$flag/",$privileges->u->$user_id)) return true;
-			print_r("Here r3<br>\n");
 
 			if (isset($privileges->o->$organization_id) && preg_match("/$flag/",$privileges->o->$organization_id)) return true;
-			print_r("Here r4<br>\n");
 
 			$roles = $user->roles();
 			foreach ($roles as $role) {
@@ -339,15 +335,11 @@
 			if ($this->user_id == $user_id) return true;
 			$privileges = $this->getPrivileges();
 
-			print_r("Here r1<br>\n");
 			if (isset($privileges->a) && preg_match("/$flag/",$privileges->a)) return true;
-			print_r("Here r2<br>\n");
 
 			if (isset($privileges->u->$user_id) && preg_match("/$flag/",$privileges->u->$user_id)) return true;
-			print_r("Here r3<br>\n");
 
 			if (isset($privileges->o->$organization_id) && preg_match("/$flag/",$privileges->o->$organization_id)) return true;
-			print_r("Here r4<br>\n");
 
 			$roles = $user->roles();
 			foreach ($roles as $role) {

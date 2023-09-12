@@ -2,11 +2,13 @@
 	namespace Site;
 
 	class TermsOfUseVersionList Extends \BaseListClass {
+	
 		public function __construct() {
 			$this->_modelName = '\Site\TermsOfUseVersion';
 		}
 
 		public function find($params = [],$controls = []): array {
+		
 			if (isset($params['tou_id'])) {
 				$tou = new \Site\TermsOfUse($params['tou_id']);
 				if (empty($tou->id)) {
