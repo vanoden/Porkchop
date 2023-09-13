@@ -68,6 +68,9 @@
 			}
 			return $this->_fields;
 		}
+		public function hasField($name) {
+			return in_array($name,$this->_fields);
+		}
         /**
          * update by params
          * 
