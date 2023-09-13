@@ -27,7 +27,7 @@ class BaseListClass extends \BaseClass {
 			} else
 				return $this->findAdvanced($parameters[0], []);
 		} else {
-			$this->error("Invalid method");
+			$this->error("Invalid method '$name'");
 			return false;
 		}
 	}
