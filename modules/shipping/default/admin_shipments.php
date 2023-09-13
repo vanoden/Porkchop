@@ -1,33 +1,29 @@
-<div class="title">Shipments</div>
-<?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
-
-<?php	} else if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
-<?php	} ?>
-
+<?=$page->showAdminPageInfo()?>
+<script src="/js/sort.js"></script>
+<script language="javascript">
+	var sortFields = ['document_number','date_entered','status'];
+	var defaultSortField = 'date_entered';
+	var formName = 'shippingListForm';
+</script>
+<script src="/js/sortHelper.js"></script>
+<form id="shippingListForm" name="shippingListForm">
+<input id="sort_field" type="hidden" name="sort_field" value="<?=$_REQUEST['sort_field']?>" />
+<input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />	      
+<input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" /> 
 <div class="table">
 	<div class="tableRowHeader">
-		<div class="tableCell">Document</div>
-		<div class="tableCell">Date Entered</div>
-		<div class="tableCell">Status</div>
-		<div class="tableCell">Shipping Vendor</div>
-		<div class="tableCell">Source</div>
-		<div class="tableCell">Destination</div>
+		<div id="document_number-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_field').value = 'document_number'; updateReport()">Document</div>
+		<div id="date_entered-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_field').value = 'date_entered'; updateReport()">Date Entered</div>
+		<div id="status-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_field').value = 'status'; updateReport()">Status</div>
+		<div id="vendor-sortable-column" class="tableCell">Shipping Vendor</div>
+		<div id="source-sortable-column" class="tableCell">Source</div>
+		<div id="destination-sortable-column" class="tableCell">Destination</div>
 	</div>
 <?php	foreach ($shipments as $shipment) {
 		$vendor = new \Shipping\Vendor($shipment->vendor_id);
 		$sender = new \Register\Customer($shipment->send_contact_id);
 		$receiver = new \Register\Customer($shipment->rec_contact_id);
- ?>
+?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_shipping/admin_shipment?id=<?=$shipment->id?>"><?=$shipment->document_number?></a></div>
 		<div class="tableCell"><?=$shipment->date_entered?></div>
@@ -38,3 +34,10 @@
 	</div>
 <?php	} ?>
 </div>
+</form>
+
+<!-- Start pagination -->
+<div class="pagination" id="pagination">
+    <?=$pagination->renderPages()?>
+</div>
+<!-- End pagination -->
