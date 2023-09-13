@@ -6,9 +6,10 @@
 	var formName = 'shippingListForm';
 </script>
 <script src="/js/sortHelper.js"></script>
+
 <form id="shippingListForm" name="shippingListForm">
+<input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />
 <input id="sort_field" type="hidden" name="sort_field" value="<?=$_REQUEST['sort_field']?>" />
-<input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />	      
 <input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" /> 
 <div class="table">
 	<div class="tableRowHeader">
