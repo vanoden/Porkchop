@@ -6,6 +6,11 @@
             $this->_modelName('\Product\Item');
         }
 
+        public function count($parameters = []) {
+            if (!empty($this->_count)) return $this->_count;
+            $this->_count = count($this->find($parameters));
+            return $this->_count;
+        }
 		public function find($parameters = [],$controls = []) {
 			$this->clearError();
             $this->resetCount();
@@ -139,7 +144,7 @@
 			$items = array();
 			while (list($id) = $rs->FetchRow()) {
 				$item = new Item($id);
-                $this->_count ++;
+                $this->incrementCount();
 				array_push($items,$item);
 			}
 			return $items;

@@ -11,6 +11,7 @@
 	.nameValue { width: 35%; }
 	.descValue { width: 30%; }
 </style>
+<?=$totalRecords?> Products Found
 <a href="/_product/edit">New Product</a>
 <div id="search_container">
     <form method="get">
@@ -57,3 +58,9 @@ foreach ($products as $product) {
 	} 
 	?>
 </div>
+
+<!-- Start pagination -->
+<div class="pagination" id="pagination">
+    <?=$pagination->renderPages()?>
+</div>
+<!-- End pagination -->
