@@ -9,12 +9,14 @@
 		public $product_id;
 		public $organization;
 		public $organization_id;
+        public $asset_code;
 		private $_flat = false;
 
 		public function __construct(int $id = 0,$flat = false) {
 			$this->_tableName = "monitor_assets";
 			$this->_tableIDColumn = "asset_id";
 			$this->_tableUKColumn = null;
+            $this->_aliasField("asset_code","code");
 			$this->_flat = $flat;
     		parent::__construct($id);
 		}
@@ -163,6 +165,13 @@
 				UPDATE	monitor_assets
 				SET		asset_id = asset_id
 			";
+
+            foreach ($this->_aliasFields as $alias => $real) {
+                if (isset($parameters[$alias])) {
+                    $parameters[$real] = $parameters[$alias];
+                    unset($parameters[$alias]);
+                }
+            }
 
 			if (isset($parameters['code']) && $this->validCode($parameters['code'])) {
 				$update_object_query .= ",

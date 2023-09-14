@@ -1030,10 +1030,10 @@
 		    $error_string = '';
 		    foreach ( $this->_errors as $error ) {
 			    if (strlen ( $error_string )) $error_string .= $delimiter;
-			    
+			    $called_from = debug_backtrace()[1];
 			    // SQL errors in the error log, then output to page is standard "site error message"
 			    if (preg_match ( '/SQL\sError/', $error ) || preg_match ( '/ query\:/', $error )) {
-				    app_log ( $error, 'error' );
+				    app_log ( $error, 'error',$called_from['file'],$called_from['line']);
 				    $error_string .= "Internal site error";
 			    } else {
 				    $error_string .= $error;

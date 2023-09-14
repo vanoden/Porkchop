@@ -24,6 +24,7 @@
 
         // field names for columns in database tables
 	    protected $_fields = array();
+        protected $_aliasFields = array();
 
 		// Name for Cache Key - id appended in square brackets
 		protected $_cacheKeyPrefix;
@@ -87,6 +88,13 @@
         	    $this->error('ERROR: id is required for '.$this->_objectName().' update.');
         	    return false;
     	    }
+
+            foreach ($this->_aliasFields as $alias => $real) {
+                if (isset($parameters[$alias])) {
+                    $parameters[$real] = $parameters[$alias];
+                    unset($parameters[$alias]);
+                }
+            }
 
 	        foreach ($parameters as $fieldKey => $fieldValue) {
 	            if (in_array($fieldKey, $this->_fields)) {
@@ -203,12 +211,17 @@
 			$cache = $this->cache();
 			if (isset($cache) && !empty($this->_cacheKeyPrefix)) {
 				$fromCache = $cache->get();
-				if (isset($fromCache) && !empty($fromCache)) {
+				if (!empty($fromCache)) {
 					foreach ($fromCache as $key => $value) {
 						if (property_exists($this,$key)) $this->$key = $value;
 					}
 					$this->cached(true);
 					$this->exists(true);
+                    foreach ($this->_aliasFields as $alias => $real) {
+                        // Cached values might have alias instead of real field name
+                        if (isset($this->$alias) && !isset($this->$real)) continue;
+                        $this->$alias = $this->$real;
+                    }
 					return true;
 				}
 			}
@@ -245,6 +258,9 @@
 				$this->exists(false);
 				$this->cached(false);
 			}
+            foreach ($this->_aliasFields as $alias => $real) {
+                $this->$alias = $this->$real;
+            }
 			return true;
 		}
 
@@ -354,6 +370,10 @@
 				foreach ($fields as $field) array_push($this->_fields,$field);
 			}
 		}
+
+        protected function _aliasField($real,$alias) {
+            $this->_aliasFields[$alias] = $real;
+        }
 
 		/********************************************/
 		/* Get Object Record Using Unique Code		*/

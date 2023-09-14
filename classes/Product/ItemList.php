@@ -3,7 +3,7 @@
 
 	class ItemList Extends \BaseListClass {
         public function __construct() {
-            $this->_modelName('\Product\Item');
+            $this->_modelName = '\Product\Item';
         }
 
         public function count($parameters = []) {
