@@ -6,9 +6,13 @@
     $recordsPerPage = 15;
 
     $parameters = [];
+
+    // For Validation
+    $product = new \Product\Item();
+
     if (isset($_REQUEST['btn_search'])) {
         if (!empty($_REQUEST['search'])) {
-            if (! preg_match('/^[\w\-\_\.\s]+$/',$_REQUEST['search']) ) $page->addError("Invalid Search String");
+            if (! $product->validSearch($_REQUEST['search'])) $page->addError("Invalid Search String");
             else $parameters['search'] = $_REQUEST['search'];
         }
         if (!empty($_REQUEST['product_type'])) {

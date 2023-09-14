@@ -29,7 +29,7 @@
 			$bind_params = array();
 
             if (!empty($parameters['search'])) {
-                if (! preg_match('/^[\w\-\_\.\s]+$/',$parameters['search']) ) {
+                if (!$validationclass->validSearch($parameters['search']) ) {
                     $this->error("Invalid Search String");
                     return null;
                 }
@@ -39,7 +39,17 @@
                             OR p.name LIKE ?
                             OR p.description LIKE ?
                         )";
-                $search_string = '%'.$parameters['search'].'%';
+                $search_string = $parameters['search'];
+
+                if (preg_match('/^\*/',$search_string) || preg_match('/\*$/',$search_string)) {
+                    // Specified Wildcards
+                    $search_string = preg_replace('/^\*/','%',$search_string);
+                    $search_string = preg_replace('/\*$/','%',$search_string);
+                }
+                else {
+                    // Implied Wildcards
+                    $search_string = '%'.$parameters['search'].'%';
+                }
                 array_push($bind_params,$search_string,$search_string,$search_string);
             }
 			# Filter on Given Parameters
@@ -49,6 +59,10 @@
 					AND		p.type in (";
 					$count = 0;
 					foreach ($parameters['type'] as $type) {
+                        if (!$validationclass->validType($type)) {
+                            $this->error("Invalid Type: ".$type);
+                            return null;
+                        }
 						if ($count) $find_product_query .= ",";
 						$count ++;
 						$find_product_query .= $GLOBALS['_database']->qstr($type,get_magic_quotes_gpc());
@@ -56,6 +70,10 @@
 					$find_product_query .= ")";
 				}
 				else {
+                    if (!$validationclass->validType($parameters["type"])) {
+                        $this->error("Invalid Type: ".$parameters["type"]);
+                        return null;
+                    }
 					$find_product_query .= "
 					AND		p.type = ?";
 					array_push($bind_params,$parameters["type"]);
@@ -133,6 +151,15 @@
 			else	
 			    $find_product_query .= "
 				ORDER BY p.id";
+
+            if (isset($controls['limit']) && is_numeric($controls['limit'])) {
+                $find_product_query .= "
+                LIMIT   ".$controls['limit'];
+                if (isset($controls['offset']) && is_numeric($controls['offset'])) {
+                    $find_product_query .= "
+                    OFFSET  ".$controls['offset'];
+                }
+            }
 
 			query_log($find_product_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
