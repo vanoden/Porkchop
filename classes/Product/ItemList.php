@@ -2,9 +2,16 @@
 	namespace Product;
 
 	class ItemList Extends \BaseListClass {
+        public function __construct() {
+            $this->_modelName('\Product\Item');
+        }
 
-		public function find($parameters = array()) {
+		public function find($parameters = [],$controls = []) {
 			$this->clearError();
+            $this->resetCount();
+
+            // For Validation
+            $validationclass = new \Product\Item();
 
 			$find_product_query = "
 				SELECT	DISTINCT(p.id)
@@ -15,6 +22,21 @@
 				WHERE	p.status != 'DELETED'";
 
 			$bind_params = array();
+
+            if (!empty($parameters['search'])) {
+                if (! preg_match('/^[\w\-\_\.\s]+$/',$parameters['search']) ) {
+                    $this->error("Invalid Search String");
+                    return null;
+                }
+                $find_product_query .= "
+                AND     (
+                            p.code LIKE ?
+                            OR p.name LIKE ?
+                            OR p.description LIKE ?
+                        )";
+                $search_string = '%'.$parameters['search'].'%';
+                array_push($bind_params,$search_string,$search_string,$search_string);
+            }
 			# Filter on Given Parameters
 			if (isset($parameters['type'])) {
 				if (is_array($parameters['type'])) {
@@ -34,7 +56,17 @@
 					array_push($bind_params,$parameters["type"]);
 				}
 			}
-			if (isset($parameters['status']) && strlen($parameters['status'])) {
+			if (isset($parameters['status']) && is_array($parameters['status'])) {
+                foreach ($parameters['status'] as $status) {
+                    if (! $validationclass->validStatus($status)) {
+                        $this->error("Invalid Status: ".$status);
+                        return null;
+                    }
+                    $find_product_query .= "
+                    AND     p.status IN ('".implode("','",$parameters['status'])."')";
+                }
+            }
+            elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
 				$find_product_query .= "
 				AND		p.status = ?";
 				array_push($bind_params,strtoupper($parameters["status"]));

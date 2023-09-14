@@ -11,6 +11,7 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
+            $this->_addStatus(array('ACTIVE','HIDDEN','DELETED'));
 
     		parent::__construct($id);
 		}
