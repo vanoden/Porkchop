@@ -7,6 +7,7 @@ class TermsOfUseActionList extends \BaseListClass {
 	}
 
 	public function find($params = [], $controls = []): array {
+	
 		if (isset($params['tou_id'])) {
 			
 			$tou = new \Site\TermsOfUse($params['tou_id']);
