@@ -235,7 +235,7 @@
 			$authenticationFactory = new \Register\AuthenticationService\Factory();
 			$authenticationService = $authenticationFactory->service($this->auth_method);
 
-			if ($authenticationService->changePassword($this->code,$password)) {
+			if ($authenticationService->changePassword($this->login,$password)) {
 				$this->resetAuthFailures();
 				$this->auditRecord('PASSWORD_CHANGED','Password changed');
 				return true;
