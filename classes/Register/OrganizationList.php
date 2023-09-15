@@ -2,22 +2,36 @@
 	namespace Register;
 
 	class OrganizationList Extends \BaseListClass {
+        public function __construct() {
+            $this->_modelName = '\Register\Organization';
+        }
 
-		public function search($parameters = array(), $wildcards = false) {
-		
+		public function search($parameters = [], $controls = []) {		
 			app_log("Register::OrganizationList::search()",'trace',__FILE__,__LINE__);
 			$this->clearError();
 			$this->resetCount();
 
+            // Backwards Compatibility
+            if (is_bool($controls)) {
+                $controls = array('id' => $controls);
+            }
+            elseif (! is_array($controls)) {
+                $this->error("Invalid controls");
+                return null;
+            }
+
 			$database = new \Database\Service();
 	
+            $validationClass = new \Register\Organization();
+
 			$get_organizations_query = "
 				SELECT	ro.id
 				FROM	register_organizations ro
 			";
 
 			// add searched Tag Join
-			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) $get_organizations_query .= " INNER JOIN register_tags rt ON rt.register_id = ro.id ";
+			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag']))
+                $get_organizations_query .= " INNER JOIN register_tags rt ON rt.register_id = ro.id ";
 
 			$string = $parameters['string'];
 			if (! empty($string)) {
@@ -30,8 +44,9 @@
 					$string = str_replace("'","\'",$string);
 				}
 
-				if ($wildcards && strpos($string, "*") !== false) {
-					$string = preg_replace('/\*/','%',$string);
+				if (preg_match('/^\*/',$string) || preg_match('/\*$/',$string)) {
+					$string = preg_replace('/^\*/','%',$string);
+                    $string = preg_replace('/\*$/','%',$string);
 				}
 				else {
 					$string = '%'.$string.'%';
@@ -56,6 +71,10 @@
 				$get_organizations_query .= "
 				AND	status IN (";
 				foreach ($parameters['status'] as $status) {
+                    if (!$validationClass->validStatus($status)) {
+                        $this->error("Invalid status");
+                        return null;
+                    }
 					if ($icount > 0) $get_organizations_query .= ","; 
 					$icount ++;
 					if (preg_match('/^[\w\-\_\.]+$/',$status))
@@ -64,6 +83,10 @@
 				$get_organizations_query .= ")";
 			}
 			elseif (isset($parameters['status'])) {
+                if (!$validationClass->validStatus($parameters['status'])) {
+                    $this->error("Invalid status");
+                    return null;
+                }
 				$get_organizations_query .= "
 				AND		ro.status = ?";
 				$database->AddParam($parameters['status']);
@@ -72,31 +95,42 @@
 				$get_organizations_query .= "
 				AND		ro.status IN ('NEW','ACTIVE','EXPIRED')";
 
-			if (isset($parameters['is_reseller'])) {
-				if ($parameters['is_reseller'])
-					$get_organizations_query .= "
-					AND		ro.is_reseller = 1";
-				else
-					$get_organizations_query .= "
-					AND		ro.is_reseller = 0";
-			}
-			if (isset($parameters['reseller_id'])) {
+			if (is_numeric($parameters['is_reseller'])) 
 				$get_organizations_query .= "
-				AND		ro.reseller_id = ?";
-				$database->AddParam(parameters['reseller_id']);
-			}
+				AND		ro.is_reseller = ".$parameters['is_reseller'];
 
-			$get_organizations_query .= "
-				ORDER BY ro.name
-			";
+            if (! preg_match('/^desc$/i',$controls['direction'])) $controls['direction'] = 'ASC';
+            if (is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
+            if (is_numeric($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
 
-			if (isset($parameters['_limit']) and preg_match('/^\d+$/',$parameters['_limit'])) {
-				if (preg_match('/^\d+$/',$parameters['_offset']))
+            if (isset($controls['sort'])) {
+                if (!$validationClass->hasField($controls['sort'])) {
+                    $this->error("Invalid sort field");
+                    return null;
+                }
+                switch($controls['sort']) {
+                    case 'status':
+                        $get_organizations_query .= "
+                        ORDER BY ro.status ".$controls['direction'];
+                        break;
+                    default:
+                        $get_organizations_query .= "
+                        ORDER BY ro.name ".$controls['direction'];
+                        break;
+                }
+            }
+            else {
+    			$get_organizations_query .= "
+	    			ORDER BY ro.name
+		    	";
+            }
+
+			if (is_numeric($controls['limit'])) {
+				$get_organizations_query .= "
+                    LIMIT ".$controls['limit'];
+                if (is_numeric($controls['offset']))
 					$get_organizations_query .= "
-					LIMIT	".$parameters['_offset'].",".$parameters['_limit'];
-				else
-					$get_organizations_query .= "
-					LIMIT	".$parameters['_limit'];
+					OFFSET	".$controls['offset'];
 			}
 
 			$rs = $database->Execute($get_organizations_query);
@@ -119,13 +153,21 @@
 			return $organizations;
 		}
 
-		public function find($parameters = array(),$recursive = true) {
-
+		public function find($parameters = [],$controls = []) {
 			$this->clearError();
 			$this->resetCount();
 			app_log("Register::OrganizationList::find()",'trace',__FILE__,__LINE__);
-			
-			$this->error = null;
+
+            if (is_bool($controls)) {
+                $controls = array('id' => $controls);
+            }
+            elseif (! is_array($controls)) {
+                $this->error("Invalid controls");
+                return null;
+            }
+
+            $validationClass = new \Register\Organization();
+
 			$get_organizations_query = "
 				SELECT	ro.id
 				FROM	register_organizations ro
@@ -143,7 +185,7 @@
 				$get_organizations_query .= " AND rt.type = 'ORGANIZATION' ";
 			}
 			
-			if (isset($parameters['name'])) {
+			if (!empty($parameters['name'])) {
 				if (isset($parameters['_like']) && in_array("name",$parameters['_like'])) {
 					$get_organizations_query .= "
 					AND		ro.name like '%".preg_replace('/[^\w\-\.\_\s]/','',$parameters['name'])."%'";
@@ -154,24 +196,37 @@
 				}
 			}
 
-			if (isset($parameters['code'])) {
+			if (!empty($parameters['code'])) {
+                if (! $validationClass->validCode($parameters['code'])) {
+                    $this->error("Invalid code");
+                    return null;
+                }
 				$get_organizations_query .= "
 				AND		ro.code = ?";
 				array_push($bind_params,$parameters['code']);
 			}
 
-			if (isset($parameters['status']) && is_array($parameters['status'])) {
+			if (!empty($parameters['status']) && is_array($parameters['status'])) {
 				$icount = 0;
 				$get_organizations_query .= "
 				AND	ro.status IN (";
 				foreach ($parameters['status'] as $status) {
+                    if (! $validationClass->validStatus($status)) {
+                        $this->error("Invalid status");
+                        return null;
+                    }
 					if ($icount > 0) $get_organizations_query .= ","; 
 					$icount ++;
 					if (preg_match('/^[\w\-\_\.]+$/',$status))
 					$get_organizations_query .= "'".$status."'";
 				}
 				$get_organizations_query .= ")";
-			} elseif (isset($parameters['status'])) {
+			}
+            elseif (!empty($parameters['status'])) {
+                if (! $validationClass($parameters['status'])) {
+                    $this->error("Invalid status");
+                    return null;
+                }
 				$get_organizations_query .= "
 				AND		ro.status = ?";
 				array_push($bind_params,$parameters['status']);
@@ -179,31 +234,38 @@
 				$get_organizations_query .= "
 				AND		ro.status IN ('NEW','ACTIVE')";
 
-			if (isset($parameters['is_reseller'])) {
-				if ($parameters['is_reseller'])
-					$get_organizations_query .= "
-					AND		ro.is_reseller = 1";
-				else
-					$get_organizations_query .= "
-					AND		ro.is_reseller = 0";
-			}
-			if (isset($parameters['reseller_id'])) {
+			if (is_numeric($parameters['reseller_id'])) {
 				$get_organizations_query .= "
 				AND		ro.reseller_id = ?";
 				array_push($bind_params,$parameters['reseller_id']);
 			}
 
-			$get_organizations_query .= "
-				ORDER BY ro.name
-			";
-			
-			if (isset($parameters['_limit']) and preg_match('/^\d+$/',$parameters['_limit'])) {
-				if (preg_match('/^\d+$/',$parameters['_offset']))
-					$get_organizations_query .= "
-					LIMIT	".$parameters['_offset'].",".$parameters['_limit'];
-				else
-					$get_organizations_query .= "
-					LIMIT	".$parameters['_limit'];
+            if (! preg_match('/^desc$/i',$controls['direction'])) $controls['direction'] = 'ASC';
+            if (is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
+            if (is_numeric($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
+
+            if (isset($controls['sort'])) {
+                if (!$validationClass->hasField($controls['sort'])) {
+                    $this->error("Invalid sort field");
+                    return null;
+                }
+            }
+            switch($controls['sort']) {
+                case 'status':
+                    $get_organizations_query .= "
+                    ORDER BY ro.status ".$controls['direction'];
+                    break;
+                default:
+                    $get_organizations_query .= "
+                    ORDER BY ro.name ".$controls['direction'];
+                    break;
+            }
+
+			if (is_numeric($controls['limit'])) {
+                $get_organizations_query .= "
+                    LIMIT ".$controls['limit'];
+                if (is_numeric($controls['offset'])) $get_organizations_query .= "
+                    OFFSET ".$controls['offset'];
 			}
 			
 			query_log($get_organizations_query,$bind_params);
@@ -215,14 +277,14 @@
 			
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
-				if ($recursive) {
-					$organization = new Organization($id);
-					$this->incrementCount();
-					array_push($organizations,$organization);
-				} else {
+				if ($controls['id'] || $controls['count']) {
 					array_push($organizations,$id);
-					$this->incrementCount();
 				}
+                else {
+					$organization = new Organization($id);
+					array_push($organizations,$organization);
+				}
+				$this->incrementCount();
 			}
 			
 			return $organizations;
@@ -232,7 +294,7 @@
 			$this->clearError();
 			$this->resetCount();
 			app_log("Register::OrganizationList::findArray()",'trace',__FILE__,__LINE__);
-			$this->error = null;
+
 			$objects = $this->find($parameters);
 
 			$organizations = array();
