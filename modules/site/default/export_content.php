@@ -1,7 +1,5 @@
 <!-- Page Header -->
-<?=$page->showBreadcrumbs()?>
-<?=$page->showTitle()?>
-<?=$page->showMessages()?>
+<?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
 <style>	
@@ -36,8 +34,8 @@
 
     <input id="submitButton" type="submit" value="Export">
 
-    <textarea><?=$siteData->viewData();?></textarea>
-    <textarea><?=$siteData->getJSON();?></textarea>
+    <textarea><?=$siteData->viewData()?></textarea>
+    <textarea><?=$siteData->getJSON()?></textarea>
 </form>
 
 <script>
