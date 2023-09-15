@@ -11,6 +11,7 @@ class Person Extends \BaseModel {
     public $location;
     public $organization_id;
     public $department_id;
+    public $login;
     public $code;
     public $message;
     public $department;
@@ -29,6 +30,7 @@ class Person Extends \BaseModel {
 		$this->_tableName = 'register_users';
 		$this->_tableUKColumn = 'login';
 		$this->_cacheKeyPrefix = 'customer';
+        $this->_aliasField('login','code');
 
         // Clear Error Info
         $this->clearError();
@@ -43,7 +45,7 @@ class Person Extends \BaseModel {
         $this->id = $id;
     }
 
-    public function details(): bool {
+    public function detailsx(): bool {
 		$this->clearError();
 
 		$database = new \Database\Service();
@@ -65,6 +67,11 @@ class Person Extends \BaseModel {
             if (isset($customer->password_age)) $this->password_age = $customer->password_age;
 			if (isset($customer->auth_failures)) $this->auth_failures = $customer->auth_failures;
             $this->_cached = 1;
+            foreach ($this->_aliasFields as $alias => $real) {
+                // Cached values might have alias instead of real field name
+                if (isset($this->$alias) && !isset($this->$real)) continue;
+                $this->$alias = $this->$real;
+            }
 			return true;
         }
 		else {
@@ -74,7 +81,7 @@ class Person Extends \BaseModel {
         # Get Persons Info From Database
         $get_person_query = "
 			SELECT	id,
-					login code,
+					login,
 					first_name,
 					last_name,
 					date_created,
@@ -110,8 +117,7 @@ class Person Extends \BaseModel {
 			$this->id = $customer->id;
             $this->first_name = $customer->first_name;
             $this->last_name = $customer->last_name;
-            $this->code = $customer->code;
-            $customer->login = $customer->code;
+            $this->login = $customer->login;
             $this->organization_id = $customer->organization_id;
             $this->department_id = $customer->department_id;
             if (isset($customer->department)) $this->department = $customer->department;
@@ -124,6 +130,9 @@ class Person Extends \BaseModel {
 			$this->auth_failures = $customer->auth_failures;
             $this->cached(true);
 			$this->exists(true);
+            foreach ($this->_aliasFields as $alias => $real) {
+                $this->$alias = $this->$real;
+            }
 			if (isset($cache) && isset($customer->id)) $cache->set($customer);
         }
         else {
@@ -154,13 +163,15 @@ class Person Extends \BaseModel {
 			if (strlen($full_name)) $full_name .= " ";
 			$full_name .= $this->last_name;
 		}
-		if (!strlen($full_name)) $full_name = $this->code;
+		if (!strlen($full_name)) $full_name = $this->login;
 		if (!strlen($full_name)) $full_name = '[empty]';
 		return $full_name;
 	}
     
     public function add($parameters = []) {
 		$this->clearError();
+
+        if (!isset($parameters['login']) && isset($parameters['code'])) $parameters['login'] = $parameters['code'];
 
         if (!$this->validLogin($parameters['login'])) {
             $this->error("Invalid Login");
@@ -571,7 +582,7 @@ class Person Extends \BaseModel {
     }
 
 	public function block() {
-		app_log("Blocking customer '".$this->code."'",'INFO');
+		app_log("Blocking customer '".$this->login."'",'INFO');
 		return $this->update(array('status' => 'BLOCKED'));
 	}
 
