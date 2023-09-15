@@ -9,11 +9,11 @@
 	$page->requirePrivilege('manage customers');
 
 	// Customers to display at a time
-	if (isset($_REQUEST['page_size']) && preg_match('/^\d+$/',$_REQUEST['page_size']))
-		$organizations_per_page = $_REQUEST['page_size'];
+	if (isset($_REQUEST['recordsPerPage']) && preg_match('/^\d+$/',$_REQUEST['recordsPerPage']))
+		$recordsPerPage = $_REQUEST['recordsPerPage'];
 	else
-		$organizations_per_page = 20;
-	if (isset($_REQUEST['start']) && ! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
+		$recordsPerPage = 20;
+	if (is_numeric($_REQUEST['start'])) $_REQUEST['start'] = 0;
 
 	// Security - Only Register Module Operators or Managers can see other customers
 	$organizationlist = new \Register\OrganizationList();
@@ -39,26 +39,17 @@
 	if (!empty($_REQUEST['searchedTag'])) $find_parameters['searchedTag'] = $_REQUEST['searchedTag'];
 
 	// Get Count before Pagination
-	$organizationlist->search($find_parameters,true);
-	$total_organizations = $organizationlist->count();
+	$organizationlist->search($find_parameters,['count' => true]);
+	$total_organizations = $organizationlist->count($find_parameters);
 	if ($organizationlist->error()) $page->addError($organizationlist->error());
 
 	// Add Pagination to Query
-	$find_parameters["_limit"] = $organizations_per_page;
-	$find_parameters["_offset"] = isset($_REQUEST['pagination_start_id']) ? $_REQUEST['pagination_start_id']: 0;
+	$controls["limit"] = $recordsPerPage;
+	$controls["offset"] = isset($_REQUEST['pagination_start_id']) ? $_REQUEST['pagination_start_id']: 0;
 
 	// Get Records
-	$organizations = $organizationlist->search($find_parameters,true);
+	$organizations = $organizationlist->search($find_parameters,$controls);
 	if ($organizationlist->error()) $page->addError("Error finding organizations: ".$organizationlist->error());
-
-	if (!empty($_REQUEST['start'])) {
-		if ($_REQUEST['start'] < $organizations_per_page) $prev_offset = 0;
-		else $prev_offset = $_REQUEST['start'] - $organizations_per_page;
-	}
-	$next_offset = $_REQUEST['start'] + $organizations_per_page + 1;
-	if ($next_offset > $total_organizations - $organizations_per_page) $next_offset = $total_organizations - $organizations_per_page;
-	if ($total_organizations >= $organization_per_page) $last_offset = $total_organizations - $organizations_per_page;
-	else $last_offset = 0;
 
     // get tags for organization
     $registerTagList = new \Register\TagList();
@@ -73,6 +64,6 @@
     $page->addBreadcrumb("Organizations");
 
     $pagination = new \Site\Page\Pagination();
-    $pagination->forwardParameters('hidden','deleted','expired','name','searchedTag');
-    $pagination->size($organizations_per_page);
+    $pagination->forwardParameters(array('hidden','deleted','expired','name','searchedTag','recordsPerPage'));
+    $pagination->size($recordsPerPage);
     $pagination->count($total_organizations);

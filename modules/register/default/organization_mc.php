@@ -92,7 +92,7 @@
 							$customer = new \Register\Customer();
 							$customer->add(
 							    array(
-								    "login"			=> $_REQUEST['new_login'],
+								    "code"			=> $_REQUEST['new_login'],
 								    "first_name"	=> noXSS(trim($_REQUEST['new_first_name'])),
 								    "last_name"		=> noXSS(trim($_REQUEST['new_last_name'])),
 								    "organization_id"	=> $organization->id,

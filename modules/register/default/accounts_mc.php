@@ -5,8 +5,8 @@
 	### for the user.								###
 	### A. Caravello 11/12/2002						###
 	###################################################
-  $site = new \Site();
-  $page = $site->page();
+    $site = new \Site();
+    $page = $site->page();
 	// $page = new \Site\Page();
 	$page->requirePrivilege("manage customers");
 
@@ -14,10 +14,10 @@
 	$find_parameters = array();
 
 	// Customers to display at a time
-	if (isset($_REQUEST['page_size']) && preg_match('/^\d+$/',$_REQUEST['page_size']))
-		$customers_per_page = $_REQUEST['page_size'];
+	if (is_numeric($_REQUEST['recordsPerPage']))
+		$recordsPerPage = $_REQUEST['recordsPerPage'];
 	else
-		$customers_per_page = 15;
+		$recordsPerPage = 20;
 
 	if (isset($_REQUEST['start']) && ! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
 
@@ -30,7 +30,7 @@
 	else 
 		return 403;
 
-	$customer_list = new \Register\CustomerList();
+	$customerList = new \Register\CustomerList();
 
 	if (!empty($_REQUEST['search']) && !preg_match('/^\*?[\w\-\.\_\s]+\*?$/',$_REQUEST['search'])) {
 		$page->addError("Invalid search string");
@@ -45,21 +45,29 @@
 	if (isset($_REQUEST['search']) && strlen($_REQUEST['search'])) $find_parameters['_search'] = $_REQUEST['search'];
 
 	// Get Count before Pagination
-	$customer_list->find($find_parameters,true);
-	$total_customers = $customer_list->count;
+	$customerList->find($find_parameters,true);
+	$total_customers = $customerList->count();
+    
+	// Add Pagination to Query
+	$controls["limit"] = $recordsPerPage;
+	$controls["offset"] = isset($_REQUEST['pagination_start_id']) ? $_REQUEST['pagination_start_id']: 0;
 
-	// Apply Pagination and Get Records
-	$find_parameters["_limit"] = $customers_per_page;
-	$find_parameters["_offset"] = isset($_REQUEST['start']) ? $_REQUEST['start'] : 0;
-	$customers = $customer_list->find($find_parameters);
-	if ($customer_list->error) $page->error = "Error finding customers: ".$customer_list->error;
+    $totalRecords = $customerList->count();
+	$customers = $customerList->find($find_parameters,$controls);
+	if ($customerList->error()) $page->addError("Error finding customers: ".$customerList->error());
 
-	if (isset($_REQUEST['start']) && $_REQUEST['start'] < $customers_per_page)
+	if (isset($_REQUEST['start']) && $_REQUEST['start'] < $recordsPerPage)
 		$prev_offset = 0;
 	else
-		$prev_offset = $_REQUEST['start'] - $customers_per_page;
-	$next_offset = $_REQUEST['start'] + $customers_per_page;
-	app_log("$total_customers - $customers_per_page",'trace',__FILE__,__LINE__);
-	$last_offset = $total_customers - $customers_per_page;
+		$prev_offset = $_REQUEST['start'] - $recordsPerPage;
+	$next_offset = $_REQUEST['start'] + $recordsPerPage;
+	app_log("$total_customers - $recordsPerPage",'trace',__FILE__,__LINE__);
+	$last_offset = $total_customers - $recordsPerPage;
 
 	$page->title = "Accounts";
+
+	// paginate results
+    $pagination = new \Site\Page\Pagination();
+    $pagination->forwardParameters(array('search','hidden','expired','blocked','deleted','sort_field','sort_direction','recordsPerPage'));
+    $pagination->size($recordsPerPage);
+    $pagination->count($totalRecords);
