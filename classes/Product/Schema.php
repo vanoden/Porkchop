@@ -282,7 +282,7 @@
 
 				$alter_table_query = "
 					ALTER TABLE `product_products`
-					MODIFY COLUMN `type` enum('group','kit','inventory','unique','service') DEFAULT 'inventory',
+					MODIFY COLUMN `type` enum('group','kit','inventory','unique','service') DEFAULT 'inventory'
 				";
 				if (! $this->executeSQL($alter_table_query)) {
 					$this->error("SQL Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
