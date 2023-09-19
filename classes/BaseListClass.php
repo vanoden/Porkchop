@@ -32,7 +32,7 @@ class BaseListClass extends \BaseClass {
 		}
 	}
 
-	public function findAdvanced($parameters = [], $controls = []) {
+	public function findAdvanced($parameters = [], $controls = []): array {
 		$this->clearError();
 		$this->resetCount();
 
@@ -66,7 +66,7 @@ class BaseListClass extends \BaseClass {
 		if (!empty($controls['sort'])) {
 			if (!in_array($controls['sort'], $fields)) {
 				$this->error("Invalid sort column name");
-				return null;
+				return array();
 			}
 			$find_objects_query .= "
 					ORDER BY `" . $controls['sort'] . "`";
