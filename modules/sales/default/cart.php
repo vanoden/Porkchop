@@ -1,7 +1,5 @@
 <!-- Page Header -->
-<?= $page->showTitle() ?>
-<?=$page->showBreadcrumbs()?>
-<?=$page->showMessages()?>
+<?=$page->showAdminPageInfo() ?>
 <!-- End Page Header -->
 
 <style>

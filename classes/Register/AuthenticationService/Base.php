@@ -1,6 +1,6 @@
 <?php
 	namespace Register\AuthenticationService;
 
-	class Base Extends \BaseModel {
+	class Base Extends \BaseClass {
 
 	}
