@@ -8,7 +8,7 @@
 		}
 
 		public function find($params = [],$controls = []): array {
-		
+
 			if (isset($params['tou_id'])) {
 				$tou = new \Site\TermsOfUse($params['tou_id']);
 				if (empty($tou->id)) {
@@ -24,8 +24,11 @@
 					return array();
 				}
 			}
-
-			return parent::find($params,$controls);
+			$objects = parent::find($params,$controls);
+			if (parent::error()) {
+				$this->error(parent::error());
+			}
+			return $objects;
 		}
 
 		public function latestPublished($tou_id): TermsOfUseVersion {

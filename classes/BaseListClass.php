@@ -65,7 +65,7 @@ class BaseListClass extends \BaseClass {
 
 		if (!empty($controls['sort'])) {
 			if (!in_array($controls['sort'], $fields)) {
-				$this->error("Invalid sort column name");
+				$this->error("Invalid sort column name '".$controls['sort']."'");
 				return array();
 			}
 			$find_objects_query .= "

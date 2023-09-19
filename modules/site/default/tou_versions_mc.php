@@ -26,9 +26,11 @@
 		}
 	}
 	$versions = $tou->versions();
-	if (!is_array($versions)) {
+	if ($tou->error()) {
+		$page->addError($tou->error());
+	}
+	elseif (count($version) < 0) {
 		$page->addError("No versions found");
-		$versions = [];
 	}
 
 	if ($tou->id) $page->instructions = "Update values and click Submit to update this Terms of Use record";
