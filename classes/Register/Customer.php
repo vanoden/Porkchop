@@ -22,7 +22,7 @@
 		public function details(): bool {
 		    parent::details();
 			if ($this->id) {
-				$this->login = $this->code;
+				//$this->login = $this->code;
 				return true;
 			}
 			else {
@@ -217,7 +217,7 @@
 				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']));
 				$this->increment_auth_failures();
 				if ($this->auth_failures() >= 6) {
-					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
+					app_log("Blocking customer '".$this->login."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
 					$this->auditRecord("AUTHENTICATION_FAILURE","Blocked after ".$this->auth_failures()." failures");
 					return false;
@@ -599,7 +599,7 @@
 		}
 
 		public function login() {
-			return $this->code;
+			return $this->login;
 		}
 
 		public function resetKey() {
