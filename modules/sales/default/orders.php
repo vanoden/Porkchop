@@ -1,7 +1,5 @@
 <!-- Page Header -->
-<?=$page->showBreadcrumbs()?>
-<?=$page->showTitle() ?>
-<?=$page->showMessages()?>
+<?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
 <h3>Order Count: <?=isset($page->isSearchResults) ? "[Matched Orders: ". count($orders)."]" : "";?></h3>
