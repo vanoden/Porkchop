@@ -476,7 +476,7 @@
             else return false;
         }
         public function validType($string): bool {
-            if (in_array($string,array('group','kit','inventory','unique'))) return true;
+            if (in_array($string,array('group','kit','inventory','unique','service'))) return true;
             else return false;
         }
         public function validStatus($string): bool {
