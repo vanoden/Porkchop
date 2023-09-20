@@ -1045,7 +1045,7 @@
             $search['_like'] = array('name');
             $search['status'] = array('NEW','ACTIVE','EXPIRED');
             $organizationsFound = $organizationList->search($search);
-            
+
             $results = array();
             foreach ($organizationsFound as $organization) {
                 $newOrganization = new \stdClass();
