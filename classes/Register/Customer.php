@@ -3,7 +3,6 @@
 
     class Customer extends Person {
 		public $auth_method;
-		public $login;
 		public $elevated = 0;
 
 		public function __construct($id = 0) {
@@ -19,19 +18,15 @@
 			else return false;
 		}
 
-		public function details(): bool {
-		    parent::details();
-			if ($this->id) {
-				//$this->login = $this->code;
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-
 		public function update($parameters = []): bool {
+            // Password must be changed per Authentication Service
 			if (isset($parameters['password'])) {
+                // Authentication Service needs login to change password
+                if (empty($this->login)) $this->login = $parameters["login"];
+                if (empty($this->login)) {
+                    $this->error("Login required to change password");
+                    return false;
+                }
 				if ($this->changePassword($parameters['password'])) {
 					unset($parameters['password']);
 				}
