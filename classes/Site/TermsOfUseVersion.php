@@ -2,6 +2,7 @@
 	namespace Site;
 
 	class TermsOfUseVersion Extends \BaseModel {
+	
 		public $status;
 		public $content;
 		public $number;
@@ -13,7 +14,7 @@
 		public function __construct($id = 0) {
 			// Set Table Name
 			$this->_tableName = 'site_terms_of_use_versions';
-			$this->_addFields(array('status','content'));
+			$this->_addFields(array('id','status','content'));
 
 			// Set cache key name - MUST Be Unique to Class
 			$this->_cacheKeyPrefix = $this->_tableName;

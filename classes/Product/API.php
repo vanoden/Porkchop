@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'product';
-			$this->_version = '0.2.0';
-			$this->_release = '2020-02-04';
+			$this->_version = '0.3.3';
+			$this->_release = '2023-09-12';
 			$this->_schema = new \Product\Schema();
 			parent::__construct();
 		}
@@ -31,11 +31,10 @@
 				)
 			);
 			if ($product->error()) $this->error("Error adding product: ".$product->error());
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->item = $product;
-	
-			print $this->formatOutput($response);
+
+			$response = new \APIResponse();
+			$response->addElement('item',$product);
+			$response->print();
 		}
 	
 		###################################################
@@ -64,11 +63,10 @@
 				)
 			);
 			if ($product->error()) $this->error("Error updating product: ".$product->error());
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->item = $product;
-	
-			print $this->formatOutput($response);
+
+			$response = new \APIResponse();
+			$response->addElement('item',$product);
+			$response->print();
 		}
 	
 		###################################################
@@ -84,9 +82,10 @@
 			}
 	
 			if ($product->error()) $this->error("Error getting product: ".$product->error());
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->item = $product;
+
+			$response = new \APIResponse();
+			$response->addElement('item',$product);
+			$response->print();
 	
 			print $this->formatOutput($response);
 		}
@@ -103,10 +102,10 @@
 			if (isset($_REQUEST['type']) && !empty($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 			$products = $productlist->find($parameters);
 			if ($productlist->error()) $this->error("Error finding products: ".$productlist->error());
-			$this->response->success = 1;
-			$this->response->product = $products;
 	
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->addElement('item',$products);
+			$response->print();
 		}
 	
         ###################################################
@@ -131,8 +130,9 @@
             else $parameters['date_active'] = get_mysql_date(time());
 
             if (! $product->addPrice($parameters)) $this->error($product->error());
-            $this->response->success = 1;
-            print $this->formatOutput($this->response);
+
+            $response = new \APIResponse();
+			$response->print();
         }
 
         ###################################################
@@ -145,9 +145,10 @@
             $parameters['product_id'] = $product->id;
             $price =  $product->getPrice($parameters);
             if ($product->error()) $this->error($product->error());
-            $this->response->success = 1;
-            $this->response->price = $price;
-            print $this->formatOutput($this->response);
+
+			$response = new \APIResponse();
+			$response->addElement('price',$price);
+			$response->print();
         }
 
 		###################################################
@@ -179,11 +180,10 @@
 				)
 			);
 			if ($relationship->error()) $this->error("Error adding relationship: ".$relationship->error());
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->relationship = $relationship;
-	
-			print $this->formatOutput($response);
+
+			$response = new \APIResponse();
+			$response->addElement('relationship',$relationship);
+			$response->print();
 		}
 	
 		###################################################
@@ -207,40 +207,36 @@
 			$relationship->get($_REQUEST['parent_id'],$_REQUEST['child_id']);
 	
 			if ($relationship->error()) $this->error("Error getting relationship: ".$relationship->error());
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->relationship = $relationship;
-	
-			print $this->formatOutput($response);
+
+			$response = new \APIResponse();
+			$response->addElement('relationship',$relationship);
+			$response->print();
 		}
 	
 		###################################################
 		### Find Relationships							###
 		###################################################
 		public function findRelationships() {
-			$_product = new \Product\Item();
-			if ($_REQUEST['parent_code'])
-			{
-				$parent = $_product->get($_REQUEST['parent_code']);
-				$_REQUEST['parent_id'] = $parent->id;
+			$product = new \Product\Item();
+			if ($_REQUEST['parent_code']) {
+				if ($product->get($_REQUEST['parent_code']))$_REQUEST['parent_id'] = $product->id;
+                else $this->error("Parent product not found");
 			}
-			if ($_REQUEST['child_code'])
-			{
-				$child = $_product->get($_REQUEST['child_code']);
+			if ($_REQUEST['child_code']) {
+				$child = $product->get($_REQUEST['child_code']);
 				$_REQUEST['child_id'] = $child->id;
 			}
 			if (preg_match('/^\d+$/',$_REQUEST['parent_id'])) $parameters['parent_id'] = $_REQUEST['parent_id'];
 			if ($_REQUEST['child_id']) $parameters['child_id'] = $_REQUEST['child_id'];
 			
-			$_relationship = new \Product\Relationship();
-			$relationships = $_relationship->find($parameters);
+			$relationshipList = new \Product\RelationshipList();
+			$relationships = $relationshipList->find($parameters);
 	
-			if ($_relationship->error()) $this->error("Error finding relationships: ".$_relationship->error());
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->relationship = $relationships;
-	
-			print $this->formatOutput($response);
+			if ($relationshipList->error()) $this->error("Error finding relationships: ".$relationshipList->error());
+
+			$response = new \APIResponse();
+			$response->addElement('relationship',$relationships);
+			$response->print();
 		}
 	
 		###################################################
@@ -292,10 +288,9 @@
 	
 			$group->addItem($item);
 			if ($group->error()) $this->error("Error adding item to group: ".$group->error());
-			$response = new \HTTP\Response();
-			$response->success = 1;
-	
-			print $this->formatOutput($response);
+
+			$response = new \APIResponse();
+			$response->print();
 		}
 
 		###################################################
@@ -309,12 +304,10 @@
 
 			$items = $group->items();
 			if ($group->error()) $this->error("Error finding items: ".$group->error());
-	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->item = $items;
 
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->addElement('relationship',$items);
+			$response->print();
 		}
 
 		###################################################
@@ -360,11 +353,10 @@
 				)
 			);
 			if ($instance->error()) $this->error("Error adding instance: ".$instance->error());
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->instance = $instance;
-	
-			print $this->formatOutput($response);
+
+			$response = new \APIResponse();
+			$response->addElement('instance',$instance);
+			$response->print();
 		}
 
 		###################################################
@@ -388,18 +380,14 @@
 			}
 			if (! $GLOBALS['_SESSION_']->customer->can('manage product instances') && $instance->organization_id != $instance->organization_id)
 				$this->app_error("Permission Denied");
-	
-			$response = new \HTTP\Response();
+
 			if (isset($instance->code)) {
-				$response->success = 1;
-				$response->instance = $instance;
+                $response = new \APIResponse();
+				$response->addElement('instance',$instance);
+                $response->print();
 			} else {
-				$response->success = '0';
-				$response->error = 'Instance '.$_REQUEST['code'].' not found';
-				$response->instance = $instance;
+				$this->error('Instance '.$_REQUEST['code'].' not found');
 			}
-	
-			print $this->formatOutput($response);
 		}
 
 		###################################################
@@ -440,10 +428,9 @@
 			$instance->update($parameters);
 			if ($instance->error()) $this->app_error("Error updating instance: ".$instance->error(),__FILE__,__LINE__);
 
-			$this->response->success = 1;
-			$this->response->instance = $instance;
-
-			print $this->formatOutput($this->response);
+            $response = new \APIResponse();
+            $response->addElement('instance',$instance);
+            $response->print();
 		}
 
 		###################################################
@@ -486,11 +473,9 @@
 	
 			$instances = $instancelist->find($parameters);
 			if ($instancelist->error()) $this->app_error("Error initializing instance(s): ".$instancelist->error(),__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->instance = $instances;
-
-			print $this->formatOutput($response);
+            $response = new \APIResponse();
+            $response->addElement('instance',$instances);
+            $response->print();
 		}
 
 		###################################################
@@ -514,11 +499,11 @@
 	
 			$product->addImage($product->id,$image->id,$_REQUEST['label']);
 			if ($product->error()) app_error("Error adding image: ".$product->error(),__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-	
-			print $this->formatOutput($response);
+
+            $response = new \APIResponse();
+            $response->print();
 		}
+
 		public function addProductImage() {
 			$this->addItemImage();
 		}
@@ -537,10 +522,9 @@
 	
 			$product->addMeta($product->id,$_REQUEST['key'],$_REQUEST['value']);
 			if ($product->error()) app_error("Error adding metadata: ".$product->error(),__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-	
-			print $this->formatOutput($response);
+
+            $response = new \APIResponse();
+            $response->print();
 		}
 		
 		public function addProductMeta() {

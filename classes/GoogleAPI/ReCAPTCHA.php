@@ -1,7 +1,7 @@
 <?php
 	namespace GoogleAPI;
 
-	class ReCAPTCHA Extends \BaseModel {	
+	class ReCAPTCHA Extends \BaseClass {	
 		public function test($customer,$response) {
 			if (isset($GLOBALS['_config']->captcha->bypass_key) && isset($_REQUEST['captcha_bypass_key']) && ($GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key'])) return true;
 

@@ -1,28 +1,8 @@
 <?php
-	$page->showBreadCrumbs();
-	$page->showMessages();
+	$page->showAdminPageInfo();
 ?>
-<style>
-	.table {
-		display: table;
-		width: 756px;
-	}
-	.tableHead {
-		display: table-row;
-		font-weight: bold;
-		text-align: center;
-	}
-	.tableRow {
-		display: table-row;
-	}
-	.tableCell {
-		display: table-cell;
-		padding: 3px 10px;
-		border: 1px solid #999999;
-	}
-</style>
-<div class="table">
-	<div class="tableHead">
+<div class="tableBody">
+	<div class="tableRowHeader">
 		<div class="tableCell">Name</div>
 		<div class="tableCell">Description</div>
 		<div class="tableCell">Active Version</div>

@@ -144,6 +144,14 @@
 			return new \Geography\Province($this->province_id);
 		}
 
+        public function country() {
+            $country_id = $this->province()->country_id;
+            if (!isset($country_id)) {
+                return new \Geography\Country();
+            }
+            return new \Geography\Country($country_id);
+        }
+
 		public function organization() {
 			$get_org_query = "
 				SELECT	organization_id
@@ -159,6 +167,21 @@
 			return new \Register\Organization($org_id);
 		}
 
+		public function user() {
+			$get_user_query = "
+				SELECT	user_id
+				FROM	register_user_locations
+				WHERE	location_id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_user_query,array($this->id));
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			list($user_id) = $rs->FetchRow();
+			return new \Register\Person($user_id);
+		}
+
 		public function validAddress($string) {	    	
 			if (empty($string)) return true;
 			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
@@ -169,4 +192,13 @@
 			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
 			else return false;
 		}
+
+        public function HTMLBlockFormat() {
+            $address = "";
+            if (!empty($this->address_1)) $address = $this->address_1."<br />\n";
+            if (!empty($this->address_2)) $address .= $this->address_2."<br />\n";
+            $address .= $this->city.", ".$this->province()->abbreviation." ".$this->zip_code."<br />\n";
+            $address .= $this->country()->name;
+            return $address;
+        }
 	}

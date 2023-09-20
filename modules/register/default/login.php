@@ -33,7 +33,7 @@
 					<input type="password" name="password">
 				</li>
 				<?php	if ($CAPTCHA_GO) { ?>
-				    <li class="g-recaptcha" data-sitekey="<?=$GLOBALS['_config']->captcha->public_key?>"></li>
+				    <li class="g-recaptcha" data-sitekey="<?=$captcha_public_key?>"></li>
 				<?php	}	?>
 			</ul>
 			<button href="#" onclick="document.loginForm.submit();">Sign In</button>

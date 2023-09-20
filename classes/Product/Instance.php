@@ -9,12 +9,14 @@
 		public $product_id;
 		public $organization;
 		public $organization_id;
+        public $asset_code;
 		private $_flat = false;
 
 		public function __construct(int $id = 0,$flat = false) {
 			$this->_tableName = "monitor_assets";
 			$this->_tableIDColumn = "asset_id";
 			$this->_tableUKColumn = null;
+            $this->_aliasField("asset_code","code");
 			$this->_flat = $flat;
     		parent::__construct($id);
 		}
@@ -147,12 +149,10 @@
 			$this->clearError();
 			$database = new \Database\Service();
 
-			if (! preg_match('/^\d+$/',$this->id)) {
+			if (! is_numeric($this->id)) {
 				$this->error("Valid asset id required for update");
 				return false;
 			}
-
-			$bind_params = array();
 
 			# Get Current Details
 			if (! $this->id) {
@@ -166,7 +166,14 @@
 				SET		asset_id = asset_id
 			";
 
-			if (isset($parameters['code']) && preg_match('/^[\w\-\.\_]+$/',$parameters['code'])) {
+            foreach ($this->_aliasFields as $alias => $real) {
+                if (isset($parameters[$alias])) {
+                    $parameters[$real] = $parameters[$alias];
+                    unset($parameters[$alias]);
+                }
+            }
+
+			if (isset($parameters['code']) && $this->validCode($parameters['code'])) {
 				$update_object_query .= ",
 						asset_code = ?";
 				$database->addParam($parameters['code']);
@@ -176,12 +183,12 @@
 						asset_name = ?";
 				$database->addParam($parameters['name']);
 			}
-			if (isset($parameters['product_id']) && preg_match('/^\d+$/',$parameters['product_id'])) {
+			if (is_numeric($parameters['product_id'])) {
 				$update_object_query .= ",
 						product_id = ?";
 				$database->addParam($parameters['product_id']);
 			}
-			if (isset($parameters['organization_id']) && preg_match('/^\d+$/',$parameters['organization_id'])) {
+			if (is_numeric($parameters['organization_id'])) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 					$update_object_query .= ",
 						organization_id = ?";
@@ -195,7 +202,7 @@
 			$update_object_query .= "
 				WHERE	asset_id = ?
 			";
-			$database->addParam($this->id);
+			$database->AddParam($this->id);
 
 			$database->Execute($update_object_query);
 			if ($database->ErrorMsg()) {
@@ -225,6 +232,10 @@
 					);
 					if ($event->error()) app_log("Failed to add change to history: ".$event->error(),'error',__FILE__,__LINE__);
 				}
+
+                $cache = $this->cache();
+                if (isset($cache)) $cache->delete();
+
 				return $this->details();
 			}
 		}
@@ -235,46 +246,6 @@
 				return true;
 			}
 			else return false;
-		}
-		
-		public function details(): bool {
-			$this->clearError();
-			$database = new \Database\Service();
-
-			$get_object_query = "
-				SELECT	asset_id id,
-						asset_code code,
-						asset_name name,
-						organization_id,
-						product_id
-				FROM	monitor_assets
-				WHERE	asset_id = ?
-			";
-
-			$database->AddParam($this->id);
-			$rs = $database->Execute($get_object_query);
-			if ($database->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			else {
-				$object = $rs->FetchNextObject(false);
-				if (isset($object)) {
-					$this->id = $object->id;
-					$this->code = $object->code;
-					$this->name = $object->name;
-					$this->organization_id = $object->organization_id;
-					$this->product_id = $object->product_id;
-				}
-				else {
-					$this->id = null;
-					$this->code = null;
-					$this->name = null;
-					$this->organization_id = null;
-					$this->product_id = null;
-				}
-				return true;
-			}
 		}
 
 		public function organization() {

@@ -64,6 +64,29 @@
 			}
 		}
 
+        public function getByPackageNumber($shipment_id,$package_id) {
+            $database = new \Database\Service();
+            $get_object_query = "
+                SELECT  id
+                FROM    shipping_packages
+                WHERE   shipment_id = ?
+                AND     number = ?
+                ";
+            $database->AddParam($shipment_id);
+            $database->AddParam($package_id);
+            $rs = $database->Execute($get_object_query);
+            if (! $rs) {
+                $this->error("Error getting package: ".$database->Error());
+                return false;
+            }
+            list($id) = $rs->FetchRow();
+            if ($id > 0) $this->id = $id;
+            else {
+                $this->error("Package not found");
+                return false;
+            }
+            return $this->details();
+        }
         /**
          * update by params
          * 
@@ -108,7 +131,7 @@
 			return 1;
 		}
 
-		public function add_item($parameters = array()) {
+		public function addItem($parameters = array()) {
 			$product = new \Product\Item($parameters['product_id']);
 			if (! $product->id) {
 				$this->error("Product '".$parameters['product_id']."' not found");
@@ -135,6 +158,10 @@
 			}
 		}
 
+        public function add_item($parameters = array()) {
+            return $this->addItem($parameters);
+        }
+
 		public function items() {
 			if (empty($this->id)) return array();
 			$itemList = new \Shipping\ItemList();
@@ -153,4 +180,8 @@
 
 			return $this->update($params);
 		}
+
+        public function received() {
+            if ($this->status == 'RECEIVED') return true;
+        }
 	}

@@ -1,0 +1,2 @@
+<?=$page->showAdminPageInfo()?>
+<?=$location->HTMLBlockFormat()?>

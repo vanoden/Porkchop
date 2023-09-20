@@ -170,6 +170,10 @@
 				if (! $GLOBALS['_database']->BeginTrans())
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
+				// Sales Schema must be ready for Foreign Key
+				$sales_schema = new \Sales\Schema();
+				$sales_schema->upgrade();
+
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `product_prices` (
 						id			int(11) NOT NULL,
@@ -268,7 +272,27 @@
 
 				$this->setVersion(6);
 				$GLOBALS['_database']->CommitTrans();
-			}			
+			}
+			if ($this->version() < 7 && $max_version >= 7) {
+				app_log("Upgrading schema to version 7",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `product_products`
+					MODIFY COLUMN `type` enum('group','kit','inventory','unique','service') DEFAULT 'inventory'
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error("SQL Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(7);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}

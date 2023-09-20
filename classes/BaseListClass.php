@@ -22,17 +22,17 @@ class BaseListClass extends \BaseClass {
 
 	public function __call($name, $parameters) {
 		if ($name == "find") {
-			if (func_num_args() == 3) {
+			if (func_num_args() == 2) {
 				return $this->findAdvanced($parameters[0], $parameters[1]);
 			} else
 				return $this->findAdvanced($parameters[0], []);
 		} else {
-			$this->error("Invalid method");
+			$this->error("Invalid method '$name'");
 			return false;
 		}
 	}
 
-	public function findAdvanced($parameters = [], $controls = []) {
+	public function findAdvanced($parameters = [], $controls = []): array {
 		$this->clearError();
 		$this->resetCount();
 
@@ -65,8 +65,8 @@ class BaseListClass extends \BaseClass {
 
 		if (!empty($controls['sort'])) {
 			if (!in_array($controls['sort'], $fields)) {
-				$this->error("Invalid sort column name");
-				return null;
+				$this->error("Invalid sort column name '".$controls['sort']."'");
+				return array();
 			}
 			$find_objects_query .= "
 					ORDER BY `" . $controls['sort'] . "`";
@@ -96,7 +96,6 @@ class BaseListClass extends \BaseClass {
 				return array();
 			}
 		}
-
 		$objects = array();
 		$rs = $database->Execute($find_objects_query);
 		if (!$rs) {

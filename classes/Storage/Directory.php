@@ -25,4 +25,11 @@
 		public function name() {
 			return $this->name;
 		}
+
+        public function getInPath($repository_id,$path) {
+            $this->repository_id = $repository_id;
+            $this->path = $path;
+            $this->name = basename($path);
+            return true;
+        }
 	}

@@ -145,9 +145,65 @@
 				$this->setVersion(3);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			$this->addRoles(array(
-				'shipping manager'	=> 'Can browse all shipments'
-			));
+			if ($this->version() < 4) {
+				app_log("Upgrading schema to version 4",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+                $alter_table_query = "
+					ALTER TABLE `shipping_shipments`
+                    MODIFY status enum('NEW','SHIPPED','LOST','RECEIVED','RETURNED','OPEN','CLOSED') NOT NULL DEFAULT 'OPEN'
+                ";
+
+				if (! $this->executeSQL($alter_table_query)) return false;
+
+                $update_table_query = "
+					UPDATE `shipping_shipments` SET status = 'OPEN';
+                ";
+
+				if (! $this->executeSQL($update_table_query)) return false;
+
+                $alter_table_query = "
+					ALTER TABLE `shipping_shipments`
+                    MODIFY status enum('OPEN','CLOSED') NOT NULL DEFAULT 'OPEN'
+                ";
+
+				if (! $this->executeSQL($alter_table_query)) return false;
+
+				$alter_table_query = "
+					ALTER TABLE `shipping_packages`
+                    MODIFY status enum('READY','SHIPPED','RECEIVED','RETURNED','LOST') NOT NULL DEFAULT 'READY'
+				";
+
+				if (! $this->executeSQL($alter_table_query)) return false;
+
+				$alter_table_query = "
+					ALTER TABLE `shipping_items`
+                    MODIFY `condition` enum('OK','DAMAGED','MISSING')
+				";
+
+				if (! $this->executeSQL($alter_table_query)) return false;
+                
+				$this->setVersion(4);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 5) {
+				app_log("Upgrading schema to version 4",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `shipping_packages`
+                    MODIFY status enum('READY','SHIPPED','INCOMPLETE','RECEIVED','RETURNED','LOST') NOT NULL DEFAULT 'READY'
+				";
+                
+				$this->setVersion(5);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}

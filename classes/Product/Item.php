@@ -11,6 +11,7 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
+            $this->_addStatus(array('ACTIVE','HIDDEN','DELETED'));
 
     		parent::__construct($id);
 		}
@@ -475,7 +476,7 @@
             else return false;
         }
         public function validType($string): bool {
-            if (in_array($string,array('group','kit','inventory','unique'))) return true;
+            if (in_array($string,array('group','kit','inventory','unique','service'))) return true;
             else return false;
         }
         public function validStatus($string): bool {

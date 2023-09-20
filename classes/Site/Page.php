@@ -72,14 +72,16 @@
 		    if (! $GLOBALS ['_SESSION_']->customer->id > 0) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+                exit;
 		    }
 	    }
 	    public function requireSuperElevation() {
 		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+                exit;
 		    }
 	    }
 	    public function requireRole($role) {	 
@@ -89,14 +91,14 @@
 			elseif (! $GLOBALS ['_SESSION_']->customer->id) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
-			    exit ();
+			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    exit;
 		    }
 			elseif (! $GLOBALS ['_SESSION_']->customer->has_role($role)) {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
-			    header ( 'location: /_register/permission_denied' );
-			    exit ();
+			    header('location: /_register/permission_denied' );
+			    exit;
 		    }
 			else {
 				return true;
@@ -108,16 +110,18 @@
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
                 return true;
-            } elseif (! $GLOBALS ['_SESSION_']->customer->id) {
+            }
+            elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header ( 'location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
-			    exit ();
-		    } else {
+			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    exit;
+		    }
+            else {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
-			    header ( 'location: /_register/permission_denied' );
-			    exit ();
+			    header('location: /_register/permission_denied' );
+			    exit;
 		    }
         }
 
@@ -125,8 +129,8 @@
 			if (empty($GLOBALS['_SESSION_']->customer->organization()->id)) {
 				$counter = new \Site\Counter("organization_required");
 				$counter->increment();
-			    header ('location: /_register/organization_required');
-			    exit();
+			    header('location: /_register/organization_required');
+			    exit;
 			}
 		}
 
@@ -1026,10 +1030,10 @@
 		    $error_string = '';
 		    foreach ( $this->_errors as $error ) {
 			    if (strlen ( $error_string )) $error_string .= $delimiter;
-			    
+			    $called_from = debug_backtrace()[1];
 			    // SQL errors in the error log, then output to page is standard "site error message"
 			    if (preg_match ( '/SQL\sError/', $error ) || preg_match ( '/ query\:/', $error )) {
-				    app_log ( $error, 'error' );
+				    app_log ( $error, 'error',$called_from['file'],$called_from['line']);
 				    $error_string .= "Internal site error";
 			    } else {
 				    $error_string .= $error;
@@ -1061,7 +1065,8 @@
 		/* Breadcrumb Methods				*/
 		/************************************/
 		public function showAdminPageInfo() {
-			return "<div id='adminPageInfo'><div id='adminTitle'>".$this->showTitle()."\n".$this->showBreadcrumbs()."</div>".$this->showSearch()."\n".$this->showMessages()."</div>";
+			//return "<div id='adminPageInfo'><div id='adminTitle'>".$this->showTitle()."\n".$this->showBreadcrumbs()."</div>".$this->showSearch()."\n".$this->showMessages()."</div>";
+			return "<div id='adminPageInfo'><div id='adminTitle'>".$this->showTitle()."\n".$this->showBreadcrumbs()."</div>".$this->showMessages()."</div>";
 		}
 
 		public function addBreadcrumb($name,$target = '') {
@@ -1076,9 +1081,7 @@
 				if (!empty($breadcrumb['target'])) $html .= "\t\t<li><a href=\"".$breadcrumb['target']."\">".$breadcrumb['name']."</a></li>\n";
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
-			if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
-				$html .= "<li><a href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\">Manage</a></li>";
-			  return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+		    return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
 		}
 
 		public function showMessages() {
@@ -1136,7 +1139,10 @@
 		}
 
 		public function showTitle() {
-			return "<h1>".$this->title()."</h1>";
+			$title = "<h1 id=\"page_title\">".$this->title()."</h1>";
+            if ($GLOBALS['_SESSION_']->customer->can("edit site pages"))
+                $title .= "<a id=\"icon_settings\" href=\"/_site/page?module=".$this->module()."&view=".$this->view()."&index=".$this->index."\"></a>";
+            return $title;
 		}
 	
 		public function uri() {

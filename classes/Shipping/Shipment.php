@@ -17,7 +17,7 @@
 
 		public function __construct($id = 0) {	
 			$this->_tableName = 'shipping_shipments';
-			$this->_addStatus(array('NEW','SHIPPED','LOST','RECEIVED','RETURNED'));
+			$this->_addStatus(array('OPEN','CLOSED'));
 			$this->_addFields(array('id','code','document_number','date_entered','date_shipped','status','send_contact_id','send_location_id','rec_contact_id','rec_location_id','vendor_id', 'instructions'));
 			parent::__construct($id);
 		}
@@ -86,7 +86,7 @@
          * 
          * @param array $parameters, name value pairs to add by
          */
-		public function add_package($parameters) {
+		public function addPackage($parameters) {
 			$parameters['shipment_id'] = $this->id;
 			$package = new \Shipping\Package();
 			if ($package->add($parameters)) {
@@ -97,6 +97,9 @@
 				return null;
 			}
 		}
+        public function add_package($parameters) {
+            return $this->addPackage($parameters);
+        }
 		
         /**
          * add item to shipment by parameters
@@ -140,12 +143,18 @@
 			$packageList = new \Shipping\PackageList();
 			return $packageList->find(array('shipment_id' => $this->id));
 		}
-		public function addPackage() {
-			return new \Shipping\Package(array('shipment_id' => $this->id));
-		}
+
 		public function package($id) {
-			return new \Shipping\Package($id);
+			$package = new \Shipping\Package();
+            if ($package->getByPackageNumber($this->id,$id)) {
+                return $package;
+            }
+            else {
+                $this->error("Package not found");
+                return null;
+            }
 		}
+
 		public function vendor() {
 			return new \Shipping\Vendor($this->vendor_id);
 		}
@@ -174,6 +183,26 @@
 			foreach ($this->packages() as $package) {
 				$package->ship();
 			}
-			return $this->update(array('status' => 'SHIPPED','vendor_id' => $params['vendor_id']));
+			return $this->update(array('status' => 'SHIPPED','vendor_id' => $params['vendor_id'],'date_shipped' => date('Y-m-d H:i:s')));
 		}
+
+        public function shipped() {
+            if ($this->status == 'CLOSED' || !empty($this->date_shipped)) return true;
+            return false;
+        }
+
+        public function ok_to_close() {
+            if ($this->status == 'CLOSED') return false;
+            $packages = $this->packages();
+            foreach ($packages as $package) {
+                if ($package->status != 'RECEIVED' && $package->status != 'INCOMPLETE' && $package->status != 'LOST' && $package->status != 'RETURNED') {
+                    $this->error("Package ".$package->number." has not been received");
+                    return false;
+                }
+            }
+            return true;
+        }
+        public function close() {
+            return $this->update(array('status' => 'CLOSED'));
+        }
 	}

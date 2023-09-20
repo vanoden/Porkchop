@@ -1,6 +1,6 @@
 <?php
 	$modules['Shipping'] = array(
-        "schema"    => 3,
+        "schema"    => 5,
         "privileges"    => array(
             "receive shipments",
 			"manage shipments"

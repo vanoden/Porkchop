@@ -3,7 +3,6 @@
 
     class Customer extends Person {
 		public $auth_method;
-		public $login;
 		public $elevated = 0;
 
 		public function __construct($id = 0) {
@@ -12,25 +11,35 @@
 
 		public function add($parameters = []) {
 			if (parent::add($parameters)) {
+				$this->auditRecord('REGISTERED','Customer added');
 				$this->changePassword($parameters['password']);
 				return true;
 			}
 			else return false;
 		}
 
-		public function details(): bool {
-		    parent::details();
-			if ($this->id) {
-				$this->login = $this->code;
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-
 		public function update($parameters = []): bool {
-		
+            // Password must be changed per Authentication Service
+			if (isset($parameters['password'])) {
+                // Authentication Service needs login to change password
+                if (empty($this->login)) $this->login = $parameters["login"];
+                if (empty($this->login)) {
+                    $this->error("Login required to change password");
+                    return false;
+                }
+				if ($this->changePassword($parameters['password'])) {
+					unset($parameters['password']);
+				}
+				else {
+					return false;
+				}
+			}
+			if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) {
+				$this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$this->organization()->name." to ".$parameters['organization_id']);
+			}
+			if (!empty($parameters['status']) && $this->status != $parameters['status']) {
+				$this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
+			}
 			parent::update($parameters);
 			if ($this->error()) return false;
 
@@ -108,6 +117,7 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
+			$this->auditRecord('ROLE_ADDED','Role '.$role_id.' added');
 			return 1;
 		}
 
@@ -129,7 +139,7 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			
+			$this->auditRecord('ROLE_DROPPED','Role '.$role_id.' dropped');
 			return true;
 		}
 
@@ -181,6 +191,7 @@
 				$this->error("Your password is expired.  Please use Recover Password to restore.");
 				$failure = new \Register\AuthFailure();
 				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'PASSEXPIRED',$_SERVER['PHP_SELF']));
+				$this->auditRecord("AUTHENTICATION_FAILURE","Password expired");
 				return false;
 			}
 
@@ -192,6 +203,7 @@
 			if ($authenticationService->authenticate($login,$password)) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
 				$this->update(array("auth_failures" => 0));
+				//$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
 				return true;
 			}
 			else {
@@ -200,15 +212,16 @@
 				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']));
 				$this->increment_auth_failures();
 				if ($this->auth_failures() >= 6) {
-					app_log("Blocking customer '".$this->code."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
+					app_log("Blocking customer '".$this->login."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
+					$this->auditRecord("AUTHENTICATION_FAILURE","Blocked after ".$this->auth_failures()." failures");
 					return false;
 				}
 			}
 		}
 
 		public function changePassword($password) {
-			if ($this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
+			if (isset($GLOBALS['_config']->register->minimum_password_strength) && $this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
 				$this->error("Password needs more complexity");
 				return false;
 			}
@@ -217,8 +230,9 @@
 			$authenticationFactory = new \Register\AuthenticationService\Factory();
 			$authenticationService = $authenticationFactory->service($this->auth_method);
 
-			if ($authenticationService->changePassword($this->code,$password)) {
+			if ($authenticationService->changePassword($this->login,$password)) {
 				$this->resetAuthFailures();
+				$this->auditRecord('PASSWORD_CHANGED','Password changed');
 				return true;
 			}
 			else {
@@ -580,7 +594,7 @@
 		}
 
 		public function login() {
-			return $this->code;
+			return $this->login;
 		}
 
 		public function resetKey() {
@@ -637,6 +651,27 @@
 
 			if ($version->error()) {
 				$this->error($version->error());
+				return false;
+			}
+			return true;
+		}
+
+		public function auditRecord($type,$notes,$admin_id = null) {
+			$audit = new \Register\UserAuditEvent();
+			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
+
+			// New Registration by customer
+			if (empty($admin_id)) $admin_id = $this->id;
+
+			$audit->add(array(
+				'user_id'		=> $this->id,
+				'admin_id'		=> $admin_id,
+				'event_date'	=> date('Y-m-d H:i:s'),
+				'event_class'	=> $type,
+				'event_notes'	=> $notes
+			));
+			if ($audit->error()) {
+				$this->error($audit->error());
 				return false;
 			}
 			return true;
