@@ -206,9 +206,9 @@
         <div>
           <label for="organization">Match Organization: </label>
           <input class="organization" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?=$queuedCustomer->name?>"/><br>
-          <input type="image" class="icon-button" src="/img/icons/icon_status_progress.svg" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" /> 
-          <input type="image" class="icon-button" src="/img/icons/icon_tools_check_1C.svg" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" /> 
-          <input type="image" class="icon-button" src="/img/icons/icon_status_closed.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" />
+          <input type="image" class="icon-button" src="/img/icons/icon_cust_add-existing.svg" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" /> 
+          <input type="image" class="icon-button" src="/img/icons/icon_cust_add-new.svg" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" /> 
+          <input type="image" class="icon-button" src="/img/icons/icon_cust_deny.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" />
         </div>
         <?php
           break;
