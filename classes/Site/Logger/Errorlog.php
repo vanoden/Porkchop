@@ -5,6 +5,7 @@
 		private $host;
 
 		public function __construct($parameters) {
+			parent::__construct($parameters);
 		}
 
 		public function connect() {

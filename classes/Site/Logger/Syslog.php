@@ -6,6 +6,7 @@
 
 		public function __construct($parameters) {
 			$this->syslog = true;
+			parent::__construct($parameters);
 		}
 
 		public function connect() {
