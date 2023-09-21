@@ -24,6 +24,30 @@
 			else $this->error("Method '$name' not found");
 		}
 
+		/**
+		 * get navigation item by target
+		 * 
+		 * @param $target, target of navigation item
+		 */
+		public function getByTarget( $target ) {
+			$get_object_query = "
+				SELECT	id
+				FROM	navigation_menu_items
+				WHERE	target = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($target));
+			if (! $rs) {
+				$this->error = $GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			list($id) = $rs->FetchRow();
+			if ($id > 0) {
+				$this->id = $id;
+				return $this->details();
+			}
+			return null;
+		}
+
 		public function add($parameters = []) {
 			if ($parameters['menu_id']) {
 				$menu = new Menu($parameters['menu_id']);

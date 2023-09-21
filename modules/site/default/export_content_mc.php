@@ -64,16 +64,15 @@
                 // get page metadata
                 $pageMetaDataList = new \Site\Page\MetadataList();
                 $pageMetaData = $pageMetaDataList->find();
-                
+
                 // get all the HTML content blocks for pages
                 $contentBlocks = array();
                 foreach ($pages as $page) {
                 	$message = new \Content\Message();
                 	$message->get($page->index);
-                	$message->name = $page->index;
-                	$message->target = $page->index;
                 	$contentBlocks[] = $message;
-                }   
+                } 
+
                 $siteData->setMarketingContent(array('pages' => $pages, 'pageMetaData' => $pageMetaData, 'contentBlocks' => $contentBlocks));
 		    }
 		}

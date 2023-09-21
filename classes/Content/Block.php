@@ -3,11 +3,17 @@
 
 	class Block Extends \BaseModel {
 
-        public $name;
-		public $cached = 0;
-		public $content;
-		public $title;
+		public $id;
+		public $company_id;
 		public $target;
+		public $view_order;
+		public $active;
+		public $deleted;
+		public $title;
+		public $menu_id;
+		public $name;		
+		public $content;
+		public $cached = 0;
 
         public function __construct($id = 0) {
 			$this->_tableName = 'content_messages';
@@ -38,16 +44,6 @@
 			list($id) = $rs->FetchRow();
 			if ($id) {
 				$this->id = $id;
-			}
-			elseif(false) {
-				# Make Sure User Has Privileges
-				app_log("No match found for message '$target', adding",'info',__FILE__,__LINE__);
-				if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
-					$this->error("Sorry, insufficient privileges. Role 'content developer' required.");
-					return null;
-				}
-				$this->add(array("target" => $target));
-				if ($this->error()) return null;
 			}
 			else {
 				$this->error("Message not found");
@@ -94,6 +90,7 @@
 			$this->id = $id;
 			return $this->update($parameters);
 		}
+
         public function update($parameters = []): bool {
         
 			$this->clearCache();

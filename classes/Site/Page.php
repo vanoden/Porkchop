@@ -224,6 +224,16 @@
 		    }
 		    return true;
 	    }
+
+		/**
+		 * Add a page by raw data parameters
+		 * @param array $parameters
+		 */
+		public function addByParameters($parameters = []) {
+			$this->clearError();
+			parent::add($parameters);
+		}
+
 	    public function add($module = '', $view = '', $index = '') {
 		    // Apply optional parameters
 		    if ($module) {

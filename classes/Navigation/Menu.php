@@ -12,6 +12,30 @@
     		parent::__construct($id);
 	    }
 
+		/**
+		 * get navigation menu by code
+		 * 
+		 * @param $code, code of navigation menu
+		 */
+		public function getByCode($code) {
+			$get_object_query = "
+				SELECT	id
+				FROM	navigation_menus
+				WHERE	code = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($code));
+			if (! $rs) {
+				$this->error = $GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			list($id) = $rs->FetchRow();
+			if ($id > 0) {
+				$this->id = $id;
+				return $this->details();
+			}
+			return null;
+		}
+
 	    public function add($parameters = array ()) {
 		    if (! isset($parameters ['code'])) {
 			    $this->error("code required");
