@@ -207,7 +207,6 @@
 
 		// Load Object Attributes from Cache or Database
 		public function details(): bool {
-		
 			$this->clearError();
 			$database = new \Database\Service();
 
@@ -245,7 +244,6 @@
 			$object = $rs->FetchNextObject(false);
 			$column = $this->_tableIDColumn;
 			if (is_object($object) && $object->$column > 0) {
-
 				// Collect all attributes from response record
 				foreach ($object as $key => $value) {
 					if (property_exists($this,$key)) $this->$key = $value;
@@ -253,17 +251,16 @@
 				$this->exists(true);
 				$this->cached(false);
 				if (!empty($this->_cacheKeyPrefix)) $cache->set($object);
+                foreach ($this->_aliasFields as $alias => $real) {
+                    $this->$alias = $this->$real;
+                }
 			}
 			else {
-			
 				// Clear all attributes
 				foreach ($this as $key => $value) $this->$key = null;
 				$this->exists(false);
 				$this->cached(false);
 			}
-            foreach ($this->_aliasFields as $alias => $real) {
-                $this->$alias = $this->$real;
-            }
 			return true;
 		}
 

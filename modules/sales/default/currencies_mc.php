@@ -1,6 +1,7 @@
 <?php
 	$site = new \Site();
 	$page = $site->page();
+	$page->requirePrivilege('edit currencies');
 
 	// Handle User Input
 	foreach ($_REQUEST['currency_name'] as $currency_id => $currency_name) {

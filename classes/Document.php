@@ -73,17 +73,27 @@
 		}
 
         protected function filterElements($object) {
-            foreach ($object as $key=>$value) {
-                if ($key == '_tableName') {
-                    unset($object->$key);
+            if (is_array($object)) {
+                foreach ($object as $key=>$value) {
+                    if (is_object($value)) {
+                        $object[$key] = $this->filterElements($value);
+                    }
                 }
-                elseif ($key == '_tableNumberColumn') {
-                    unset($object->$key);
-                }
-                elseif (is_object($value)) {
-                    $object->$key = $this->filterElements($value);
-                }
+                return $object;
             }
-            return $object;
+            else {
+                foreach ($object as $key=>$value) {
+                    if ($key == '_tableName') {
+                        unset($object->$key);
+                    }
+                    elseif ($key == '_tableNumberColumn') {
+                        unset($object->$key);
+                    }
+                    elseif (is_object($value)) {
+                        $object->$key = $this->filterElements($value);
+                    }
+                }
+                return $object;
+            }
         }
 	}
