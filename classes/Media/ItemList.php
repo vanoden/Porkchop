@@ -1,9 +1,7 @@
 <?php
 	namespace Media;
 
-	class ItemList {
-		public $error;
-		public $count;
+	class ItemList extends \BaseListClass {
 
 		public function find($parameters = array()) {
 			$find_object_query = "

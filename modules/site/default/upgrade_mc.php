@@ -124,6 +124,13 @@
 		"admin"	=> array(
 			"title"	=> "Admin Left Nav",
 			"items"	=> array(
+			    array(
+				    "title"			=> "Overview",
+				    "target"		=> "/_spectros/outstanding_requests",
+				    "view_order"	=> 1,
+				    "alt"			=> "Outstanding Task Tickler",
+				    "description"	=> "Outstanding Task Tickler"
+			    ),				
 				array(
 					"title"			=> "Customer",
 					"view_order"	=> 10,
@@ -337,7 +344,14 @@
 							"view_order"	=> 20,
 							"alt"			=> "Session Report",
 							"description"	=> "Session Report"
-						)
+						),
+						array (
+							"title"	=> "Site Counters",
+							"target"	=> "/_site/counters",
+							"view_order"	=> 20,
+							"alt"			=> "Site Counters",
+							"description"	=> "Site Counters"
+						)						
 					)
 				)
 			)
@@ -389,8 +403,8 @@
 				install_log("Adding role '$role_name'");
 				if (! isset($role_data['description'])) $role_data['description'] = $role_name;
 				$role->add(array('name' => $role_name,'description' => $role_data['description']));
-				if ($role->error) {
-					install_fail("Error adding role '$role_name': ".$role->error);
+				if ($role->error()) {
+					install_fail("Error adding role '$role_name': ".$role->error());
 				}
 				elseif (isset($role_data['privileges'])) {
 					foreach ($role_data['privileges'] as $privilege_name) {
@@ -419,8 +433,7 @@
 					continue;
 				};
 			}
-			//install_log(print_r($page,true));
-			//install_log($page->metadata->template." vs $template");
+
 			if ($page->metadata->template != $template) {
 				install_log("Add template '$template' to $module_name::$view");
 				$page->setMetadata("template",$template);

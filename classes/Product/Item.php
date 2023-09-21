@@ -1,22 +1,19 @@
 <?php
 	namespace Product;
 
-	class Item Extends \BaseClass {
-		public $id;
+	class Item Extends \BaseModel {
+
 		public $code;
 		public $name;
 		public $description;
 		public $type;
 		public $status;
-		private $_flat = false;
 
-		public function __construct($id = 0,$flat = false) {
-			if ($flat) $this->_flat = true;
+		public function __construct($id = 0) {
+			$this->_tableName = 'product_products';
+            $this->_addStatus(array('ACTIVE','HIDDEN','DELETED'));
 
-			if ($id) {
-				$this->id = $id;
-				$this->details();
-			}
+    		parent::__construct($id);
 		}
 
 		public function defaultCategory() {
@@ -34,35 +31,10 @@
 			return $this->details($this->id);
 		}
 
-		public function get($code = '') {
-			app_log("Product::Item::get()",'trace',__FILE__,__LINE__);
-			# Prepare Query to Get Product
-			$get_object_query = "
-				SELECT	id
-				FROM	product_products
-				WHERE	code = ?
-			";
+		public function update($parameters = []): bool {
+			$this->clearError();
+			$database = new \Database\Service();
 
-			# Return new product
-            $rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-            if (! $rs) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return null;
-            }
-			else {
-				list($this->id) = $rs->FetchRow();
-				if (! $this->id) {
-					$this->error("No Product Found");
-					return null;
-				}
-				return $this->details();
-			}
-		}
-
-		public function update($parameters) {
 			app_log("Product::Item::update()",'trace',__FILE__,__LINE__);
 			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
 				$this->error("You do not have permissions for this task.");
@@ -77,6 +49,7 @@
 			$cache_item->delete();
 
 			$ok_params = array(
+				"code"			=> '/^\w[\w\-\.\_]*$/',
 				"status"		=> '/^\w+$/',
 				"type"			=> "/.+/",
 				"name"			=> '/^[\w\-\.\_\s]+$/',
@@ -96,27 +69,25 @@
 				if ($ok_params[$parameter]) {
 					$update_product_query .= ",
 					$parameter	= ?";
-					array_push($bind_params,$parameters[$parameter]);
+					$database->addParam($parameters[$parameter]);
 				}
 			}
 
 			$update_product_query .= "
 				WHERE	id = ?
 			";
-			array_push($bind_params,$this->id);
-			$rs = $GLOBALS['_database']->Execute(
-				$update_product_query,$bind_params
-			);
+			$database->addParam($this->id);
+			$rs = $database->Execute($update_product_query);
             if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				app_log($update_product_query,'debug',__FILE__,__LINE__);
+				$this->SQLError($database->ErrorMsg());
+				app_log($update_product_query,'debug');
 				return null;
             }
 			return $this->details();
 		}
 
-		public function add($parameters) {
-			app_log("Product::Item::add()",'trace',__FILE__,__LINE__);
+		public function add($parameters = []) {
+			app_log("Product::Item::add()",'trace');
 			$this->clearError();
 			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
 				$this->error("You do not have permissions for this task.");
@@ -175,8 +146,11 @@
 			return $this->update($parameters);
 		}
 
-		public function details() {
+		public function details(): bool {
 			app_log("Product::Item::details()",'trace');
+			$this->clearError();
+			$database = new \Database\Service();
+			$database->trace(1);
 
 			$cache_key = "product[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -190,23 +164,19 @@
 				$this->status = $product->status;
 				$this->type = $product->type;
 				$this->description = $product->description;
-				$this->_cached = $product->_cached;
-				if (! $this->_flat) {
-					$this->metadata = $this->getMeta();
-					$this->images = $this->images();
-				}
+				$this->cached($product->_cached);
 
 				# In Case Cache Corrupted
 				if ($product->id) {
 					app_log("Product '".$this->name."' [".$this->id."] found in cache",'trace');
-					return $product;
+					return true;
 				}
 				else {
 					$this->error("Product ".$this->id." returned unpopulated cache");
 				}
 			}
 			else {
-				$this->_cached = false;
+				$this->cached(false);
 			}
 
 			# Prepare Query to Get Product Details
@@ -220,13 +190,11 @@
 				FROM	product_products
 				WHERE	id = ?";
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_details_query,
-				array($this->id)
-			);
+			$database->addParam($this->id);
+			$rs = $database->Execute($get_details_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
 
 			$object = $rs->FetchNextObject(false);
@@ -244,12 +212,9 @@
 				if ($cache_item->set($object))
 					app_log("Cache result: success");
 				else
-					app_log("Cache result: failed: ".$cache_item->error);
+					app_log("Cache result: failed: ".$cache_item->error());
 
-			$this->metadata = $this->getMeta();
-			$this->images = $this->images();
-
-			return $object;
+			return true;
 		}
 
 		public function inCategory($category_id) {
@@ -326,8 +291,8 @@
 			$images = array();
 			while (list($image_id) = $rs->FetchRow()) {
 				$image = new \Media\Item($image_id);
-				if ($image->error) {
-					$this->error("Could not load Media Item class: ".$image->error);
+				if ($image->error()) {
+					$this->error("Could not load Media Item class: ".$image->error());
 					return null;
 				}
 				array_push($images,$image);
@@ -348,7 +313,7 @@
 			";
 			$GLOBALS['_database']->Execute($add_image_query,array($this->id,$image_id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Product::Item::addImage(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 			return 1;
@@ -363,7 +328,7 @@
 			";
 			$GLOBALS['_database']->Execute($drop_image_query,array($this->id,$image_id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Product::Item::dropImage(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 			return 1;
@@ -378,7 +343,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_image_query,array($this->id,$image_id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::hasImage(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($found) = $rs->FetchRow();
@@ -396,7 +361,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::getMeta(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$metadata = array();
@@ -417,15 +382,18 @@
 				array($this->id,$key)
 			);
 			if (! $rs) {
-				$this->_error = "SQL Error in Product::Item::getMetadata(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($value) = $rs->FetchRow();
-			return (object) array(
-				'product_id'	=> $this->id,
-				'key'			=> $key,
-				'value'			=> $value
-			);
+            if (!empty($value)) {
+    			return (object) array(
+				    'product_id'	=> $this->id,
+				    'key'			=> $key,
+				    'value'			=> $value
+			    );
+            }
+            else return null;
 		}
 		public function addMeta($key,$value) {
 			$add_meta_query = "
@@ -442,14 +410,46 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Product::Item::addMeta: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			return 1;
 		}
+
+		public function metadata() {
+			$meta = new \Product\Item\Metadata();
+			$meta->fk_id = $this->id;
+			return $meta;
+		}
+
+		public function currentPrice() {
+			$priceList = new \Product\PriceList();
+			$prices = $priceList->find(array('product_id' => $this->id, 'status' => 'ACTIVE'));
+			if ($priceList->error()) {
+				$this->error($priceList->error());
+				return null;
+			}
+			elseif (empty($prices)) {
+				return 0;
+			}
+			else {
+    			return array_pop($prices);
+			}
+		}
+
+		public function prices() {
+			$priceList = new \Product\PriceList();
+			$prices = $priceList->find(array('product_id' => $this->id));
+			if ($priceList->error()) {
+				$this->error($priceList->error());
+				return null;
+			} else {
+				return $prices;
+			}
+		}
+
 		public function addPrice($parameters = array()) {
 			if (! $GLOBALS['_SESSION_']->customer->can('edit product prices')) $this->error("Permission denied");
-
 			$price = new \Product\Price();
 			$parameters = array(
 				'product_id'	=> $this->id,
@@ -457,8 +457,8 @@
 				'date_active'	=> $parameters['date_active'],
 				'status'		=> $parameters['status']
 			);
-			if ($price->add($parameters)) return true;
-			$this->error("Error adding price: ".$price->error());
+			if ($price->add($parameters)) return $price;
+			$this->error("Error adding price: ".$price->error());			
 			return false;
 		}
 		public function getPrice($parameters = array()) {
@@ -470,5 +470,17 @@
         public function getPriceAmount($parameters = array()) {
 			$price = new \Product\Price();
 			return $price->getCurrent($this->id);
+        }
+        public function validCode($string): bool {
+            if (preg_match('/^\w[\w\-\.\_\s]*$/',$string)) return true;
+            else return false;
+        }
+        public function validType($string): bool {
+            if (in_array($string,array('group','kit','inventory','unique','service'))) return true;
+            else return false;
+        }
+        public function validStatus($string): bool {
+            if (in_array($string,array('ACTIVE','HIDDEN','DELETED'))) return true;
+            else return false;
         }
 	}

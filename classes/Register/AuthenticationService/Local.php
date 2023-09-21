@@ -21,8 +21,7 @@
 					SELECT	`password`,password(?) FROM register_users WHERE login = ?";
 				$rs = $GLOBALS['_database']->Execute($check_password_query,array($password,$login));
 				if (! $rs) {
-					$this->error("SQL Error in Register::AuthenticationService::Local::authenticate(): ".$GLOBALS['_database']->ErrorMsg());
-					app_log("SQL Error in Register::AuthenticationService::Local::authenticate(): ".$GLOBALS['_database']->ErrorMsg(),'error');
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
@@ -40,8 +39,7 @@
 					SELECT	`password`,CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?))))) FROM register_users WHERE login = ?";
 				$rs = $GLOBALS['_database']->Execute($check_password_query,array($password,$login));
 				if (! $rs) {
-					$this->error("SQL Error in Register::AuthenticationService::Local::authenticate(): ".$GLOBALS['_database']->ErrorMsg());
-					app_log("SQL Error in Register::AuthenticationService::Local::authenticate(): ".$GLOBALS['_database']->ErrorMsg(),'error');
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
@@ -61,19 +59,22 @@
 				$get_user_query,$bind_params
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::AuthenticationService::Local::authenticate(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			
             // Login Failed
-			if (! $id) return false;
+			if (! $id) {
+				$this->error("Login Failed");
+				return false;
+			}
 			$this->account = new \Register\Customer($id);
 			return true;
 		}
 
 		public function changePassword($login,$password) {
-			app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$this->login,'info');
+			app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$login,'info');
 	
 			$customer = new \Register\Customer();
 			if (! $customer->get($login)) {
@@ -86,8 +87,7 @@
 				SELECT	`password`,password(?) FROM register_users WHERE login = ?";
 				$rs = $GLOBALS['_database']->Execute($check_password_query,array($password,$login));
 				if (! $rs) {
-					$this->error("SQL Error in Register::AuthenticationService::Local::authenticate(): ".$GLOBALS['_database']->ErrorMsg());
-					app_log("SQL Error in Register::AuthenticationService::Local::authenticate(): ".$GLOBALS['_database']->ErrorMsg(),'error');
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
@@ -105,8 +105,7 @@
 					SELECT	`password`,CONCAT('*', UPPER(SHA1(UNHEX(SHA1(?))))) FROM register_users WHERE login = ?";
 				$rs = $GLOBALS['_database']->Execute($check_password_query,array($password,$login));
 				if (! $rs) {
-					$this->error("SQL Error in Register::AuthenticationService::Local::authenticate(): ".$GLOBALS['_database']->ErrorMsg());
-					app_log("SQL Error in Register::AuthenticationService::Local::authenticate(): ".$GLOBALS['_database']->ErrorMsg(),'error');
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
 					return false;
 				}
 				list($x,$y) = $rs->FetchRow();
@@ -121,7 +120,7 @@
 			}
 			$GLOBALS['_database']->Execute($update_password_query,array($password,$customer->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error("SQL Error in Register::Person::changePassword(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;

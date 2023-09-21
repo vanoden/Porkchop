@@ -1,4 +1,6 @@
 <?php
+// This Page Not Used, /_support/tickets is used
+exit;
 	$page = new \Site\Page();
 	$page->requireAuth();
 	

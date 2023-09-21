@@ -1,12 +1,10 @@
-<span class="title">Privileges</span>
-<?php 
-    if ($page->errorCount() > 0) { ?>
-        <div class="form_error"><?=$page->errorString()?></div>
-<?php 
-    } elseif ($page->success) { ?>
-    <div class="form_success"><?=$page->success?></div>
-<?php 
-      }
+<!-- Page Header -->
+<?=$page->showBreadcrumbs()?>
+<?=$page->showTitle()?>
+<?=$page->showMessages()?>
+<!-- End Page Header -->
+
+<?php
     foreach ($privileges as $privilege) { 
 ?>
     <form name="privilege_delete" action="/_register/privileges" method="post">

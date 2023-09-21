@@ -1032,6 +1032,88 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 			
+            if ($this->version() < 28) {
+				app_log("Upgrading schema to version 28", 'notice', __FILE__, __LINE__);
+				
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				
+				$alter_table_query = "
+						ALTER TABLE `register_contacts` MODIFY `type` enum('phone','email','sms','facebook', 'insite')
+					";
+
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_contacts table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(28);
+				$GLOBALS['_database']->CommitTrans();			
+			}
+
+			if ($this->version() < 29) {
+				app_log("Upgrading schema to version 29", 'notice', __FILE__, __LINE__);
+				
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				
+				$alter_table_query = "
+					ALTER TABLE register_auth_failures
+					MODIFY `reason` enum('NOACCOUNT','PASSEXPIRED','WRONGPASS','INACTIVE','INVALIDPASS','CSRFTOKEN','UNKNOWN') NOT NULL DEFAULT 'UNKNOWN'
+				";
+
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_auth_failures table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(29);
+				$GLOBALS['_database']->CommitTrans();	
+			}
+
+			if ($this->version() < 30) {
+				app_log("Upgrading schema to version 30", 'notice', __FILE__, __LINE__);
+				
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				
+				$create_table_query = "
+					CREATE TABLE register_user_audit (
+						id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+						user_id int(11) NOT NULL,
+						admin_id int(11) NOT NULL,
+						event_date datetime NOT NULL,
+						event_class enum('REGISTRATION_SUBMITTED','REGISTRATION_APPROVED','REGISTRATION_DISCARDED','AUTHENTICATION_SUCCESS','AUTHENTICATION_FAILURE','PASSWORD_CHANGED','PASSWORD_RECOVERY_REQUESTED','ORGANIZATION_CHANGED','ROLE_ADDED','ROLE_REMOVED','STATUS_CHANGED') NOT NULL,
+						event_notes varchar(255),
+						FOREIGN KEY `fk_register_user_audit_user` (`user_id`) REFERENCES `register_users` (`id`),
+						FOREIGN KEY `fk_register_user_audit_by` (`admin_id`) REFERENCES `register_users` (`id`),
+						INDEX `idx_register_user_audit_user` (`user_id`),
+						INDEX `idx_register_user_audit_by` (`admin_id`),
+						INDEX `idx_register_user_audit_date` (`event_date`),
+						INDEX `idx_register_user_audit_class` (`event_class`)
+					)
+				";
+
+				$GLOBALS['_database']->Execute($create_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error creating register_user_audit table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+
+				$this->setVersion(30);
+				$GLOBALS['_database']->CommitTrans();	
+			}
 			return true;
 		}
 	}

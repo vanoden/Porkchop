@@ -1,17 +1,32 @@
 <?php
 	namespace Sales\Order;
 
-	class Event extends \ORM\BaseModel {
-		public $id;
+	class Event extends \BaseModel {
+		public $order_id;
+		public $user_id;
+		public $date_event;
+		public $new_status;
+		public $message;
 
 		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->_tableName = 'sales_order_events';
+			$this->_addFields(array('order_id','user_id','date_event','new_status'));
+			parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
+			$this->clearError();
+
+			$database = new \Database\Service();
+
+			$order = new \Sales\Order($parameters['order_id']);
+			if (! $order->exists()) {
+				$this->error("Order not found");
+				return false;
+			}
+            if (!isset($parameters['user_id'])) $parameters['user_id'] = $GLOBALS['_SESSION_']->customer->id;
+			if (!isset($parameters['new_status'])) $parameters['new_status'] = $order->status;
+
 			$add_object_query = "
 				INSERT
 				INTO	sales_order_events
@@ -19,17 +34,20 @@
 				VALUES
 				(		null,?,sysdate(),?,?)
 			";
-            if (!isset($parameters['user_id'])) $parameters['user_id'] = $GLOBALS['_SESSION_']->customer->id;
-			$GLOBALS['_database']->Execute($add_object_query,array($parameters["order_id"],$parameters['user_id'],$parameters['new_status']));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Sales::Event::add(): ".$GLOBALS['_database']->ErrorMsg();
+			$database->AddParam($parameters['order_id']);
+			$database->AddParam($parameters['user_id']);
+			$database->AddParam($parameters['new_status']);
+
+			$database->Execute($add_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			$update_object_query = "
 				UPDATE	sales_order_events
 				SET		id = id";
@@ -54,13 +72,13 @@
 
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Sales::Event::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
 				FROM	sales_order_events
@@ -68,7 +86,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_details_query,array($this->id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Sales::Event::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -85,9 +103,5 @@
 			else {
 				return false;
 			}
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

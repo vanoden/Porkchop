@@ -1,19 +1,16 @@
 <?php
 	namespace Storage;
 
-	class FileMetadata extends \ORM\BaseModel {
+	class FileMetadata extends \BaseModel {
 
-        public $file_id;
         public $key;
         public $value;
-		public $tableName = 'storage_file_metadata';
-        public $fields = array('file_id','key','value');
 
-		public function __construct($file_id,$key = null) {
-			$this->file_id = $file_id;
-			if (defined($key)) {
-				$this->key = $key;
-			}
+		public function __construct($id = 0,$key = null) {
+            $this->_tableName = 'storage_file_metadata';
+            $this->_addFields(array('file_id','key','value'));
+            $this->key = $key;
+            parent::__construct($id);
 		}
 
         /**
@@ -22,21 +19,20 @@
          * @param \Storage\File $file
          */
 		public function getByFile($file) {
-	      if ($file->id) {
-		    $getObjectQuery = "SELECT `file_id` FROM `$this->tableName` WHERE `file_id` = ?";
-		    print $getObjectQuery;
-		    $rs = $this->execute($getObjectQuery, array($file->id));
-            if ($rs) {
-                list($file_id) = $rs->FetchRow();
-                if ($file_id) {
-                    $this->file_id = $file_id;
-                    return $this->details();
+	        if ($file->id) {
+		        $getObjectQuery = "SELECT `file_id` FROM `$this->_tableName` WHERE `file_id` = ?";
+
+                $rs = $this->execute($getObjectQuery, array($file->id));
+                if ($rs) {
+                    list($file_id) = $rs->FetchRow();
+                    if ($file_id) {
+                        $this->id = $file_id;
+                        return $this->details();
+                    }
                 }
-            }
-            $this->_error = "ERROR: no records found for this value.";
-            return false;		      
-	      }
-	      return false;
+                $this->error("ERROR: no records found for this value.");
+                return false;
+	        }
+	        return false;
 		}
-        
 	}

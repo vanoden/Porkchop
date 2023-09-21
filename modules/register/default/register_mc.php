@@ -1,4 +1,6 @@
 <?php
+// This Page no longer used
+exit;
 	###################################################
 	### register_mc.php								###
 	### This program collects registration info		###

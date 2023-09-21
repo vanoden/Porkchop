@@ -1,12 +1,19 @@
 <?php
 	namespace Site\Logger;
 
-	class Log {
+	class Log Extends \BaseClass {
 		public $error = null;
 		public $level = 'debug';
 		public $connected = false;
 		public $html = false;
 		public $syslog = false;
+
+		public function __construct($parameters = []) {
+			if (isset($parameters['level'])) {
+				$this->level = $parameters['level'];
+			}
+
+		}
 
 		public function caller($file,$line) {
 			if (isset($file)) return array($file,$line);
@@ -69,9 +76,5 @@
 			elseif ($this->level == "alert"		&& in_array($level,array('alert','emergency'))) return true;
 			elseif ($this->level == "emergency"	&& in_array($level,array('emergency'))) return true;
 			return false;
-		}
-
-		public function error() {
-			return $this->error;
 		}
 	}

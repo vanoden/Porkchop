@@ -11,12 +11,6 @@
 		private $_html = false;
 
 		public function __construct($argument = null) {
-			$schema = new Schema();
-			if ($schema->error) {
-				$this->_error = $schema->error;
-				return null;
-			}
-
 			if (gettype($argument) == 'array') {
 				if (isset($argument['to'])) $this->add_recipients($argument['recipients']);
 				if (isset($argument['from'])) $this->from($argument['from']);

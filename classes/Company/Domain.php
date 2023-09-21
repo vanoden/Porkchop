@@ -1,48 +1,27 @@
 <?php
 	namespace Company;
 
-	class Domain {
+	class Domain Extends \BaseModel {
 		private $schema_version = 1;
-		public $error;
 		public $id;
 		public $status;
 		public $comments;
-		public $location;
+		public $location_id;
 		public $name;
 		public $date_registered;
 		public $date_created;
 		public $date_expires;
 		public $registration_period;
-		public $register;
+		public $registrar;
 		public $company;
 
 		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->_tableName = 'company_domains';
+			$this->_tableUKColumn = 'domain_name';
+    		parent::__construct($id);
 		}
 
-		public function get($name) {
-			$get_object_query = "
-				SELECT	id
-				FROM	company_domains
-				WHERE	domain_name = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($name)
-			);
-			if (! $rs) {
-				$this->error = "SQL Error in Site::Domain::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			list($id) = $rs->FetchRow();
-			$this->id = $id;
-			return $this->details();
-		}
-
-		public function details() {
+		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
 				FROM	company_domains
@@ -53,7 +32,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::Domain::details: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -65,13 +44,12 @@
 				$this->date_created = $object->date_created;
 				$this->date_expires = $object->date_expires;
 				$this->registration_period = $object->registration_period;
-				$this->register = $object->register;
+				$this->location_id = $object->location_id;
 				$this->registrar = $object->register;
 				$this->company = new Company($object->company_id);
 				return true;
 			}
 			else {
-				$this->object = null;
 				$this->status = null;
 				$this->comments = null;
 				$this->name = null;
@@ -79,25 +57,25 @@
 				$this->date_created = null;
 				$this->date_expires = null;
 				$this->registration_period = null;
-				$this->register = null;
+				$this->registrar = null;
 				$this->company = new Company();
 				return false;
 			}
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			$bind_params = array();
 			if (! isset($parameters['company_id'])) {
 				if (preg_match('/^\d+$/',$GLOBALS['_SESSION_']->company->id)) {
 					$parameters['company_id'] = $GLOBALS['_SESSION_']->company->id;
 				}
 				else {
-					$this->error = "company must be set for Company::Domain::add";
+					$this->error("company must be set");
 					return false;
 				}
 			}
 			if (! preg_match('/\w/',$parameters['name'])) {
-				$this->error = "name parameter required in Company::Domain::add";
+				$this->error("name parameter required");
 				return false;
 			}
 			if (! preg_match('/^(0|1)$/',$parameters['status'])) {
@@ -117,7 +95,7 @@
 
 			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Domain::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -125,9 +103,9 @@
 			return $this->update($this->id,$parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = []): bool {
 			if (! preg_match('/^\d+$/',$this->id)) {
-				$this->error = "Valid id required for details in Site::Domain::update";
+				$this->error("Valid id required for details in Company::Domain::update");
 				return false;
 			}
 
@@ -177,7 +155,7 @@
 			if (isset($parameters['location_id']) && strlen($parameters['location_id'])) {
 				$location = new \Company\Location($parameters['location_id']);
 				if (! $location->id) {
-					$this->error = "Location ID not found";
+					$this->error("Location ID not found");
 					return false;
 				}
 				$update_object_query .= ",
@@ -192,10 +170,14 @@
 
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Domain::update: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
 			return $this->details();
+		}
+
+		public function location(): Location {
+			return new Location($this->location_id);
 		}
 	}

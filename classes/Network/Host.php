@@ -1,21 +1,20 @@
 <?php
 	namespace Network;
 
-	class Host Extends \BaseClass {
-		public $id;
+	class Host Extends \BaseModel {
+
 		public $name;
 		public $domain;
 		public $os_name;
 		public $os_version;
 
-		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+		public function __construct(int $id = 0) {
+			$this->_tableName = 'network_hosts';
+			$this->_tableUKColumn = null;
+    		parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! isset($parameters['name'])) {
 				$this->error("name required for new host");
 			}
@@ -46,7 +45,19 @@
 			return $this->update($parameters);
 		}
 
-		public function get($domain_id,$name) {
+		public function getByIPAddress($ip_address) {
+			$address = new \Network\IPAddress();
+			if ($address->get($ip_address)) {
+				$adapter = $address->adapter();
+				$this->id = $adapter->host_id;
+				return $this->details();
+			}
+			else {
+				return false;
+			}
+		}
+
+		public function getByName($domain_id,$name) {
 			$get_object_query = "
 				SELECT	id
 				FROM	network_hosts
@@ -63,7 +74,7 @@
 			return $this->details();
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = []): bool {
 			$bind_params = array();
 
 			$update_object_query = "
@@ -106,6 +117,7 @@
 			return $this->details();
 		}
 
+<<<<<<< HEAD
 		public function details() {
 			$get_object_query = "
 				SELECT	 *
@@ -131,6 +143,8 @@
 			return true;
 		}
 
+=======
+>>>>>>> 89c59b50583395720461b2358b2c07e3da8e5fd2
 		public function adapters() {
 			$adapterList = new AdapterList();
 
@@ -148,4 +162,11 @@
 			if (isset($this->domain)) $fqdn .= ".".$this->domain;
 			return $fqdn;
 		}
+<<<<<<< HEAD
+=======
+
+		public function CAPTCHARequired(): bool {
+			return false;
+		}
+>>>>>>> 89c59b50583395720461b2358b2c07e3da8e5fd2
 	}

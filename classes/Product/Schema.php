@@ -5,7 +5,7 @@
 		public $module = 'product';
 	
 		public function upgrade($max_version = 999) {
-			$this->error = null;
+			$this->clearError();
 
 			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
@@ -27,15 +27,15 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_products table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
 				# Media Items Table Required
 				$media_schema = new \Media\Schema;
 				if (! $media_schema->upgrade()) {
-					$this->error = "Cannot upgrade Media Schema: ".$media_schema->error();
+					$this->error("Cannot upgrade Media Schema: ".$media_schema->error());
 					return false;
 				}
 				$create_table_query = "
@@ -49,8 +49,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_images table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_images table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -64,8 +64,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_relations table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating product_relations table: ".$this->error());
 					return false;
 				}
 
@@ -81,8 +80,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating product_metadata table: ".$this->error());
 					return false;
 				}
 
@@ -109,8 +107,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_vendors table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating product_vendors table: ".$this->error());
 					return false;
 				}
 
@@ -124,8 +121,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_vendor_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating product_vendor_locations table: ".$this->error());
 					return false;
 				}
 
@@ -144,8 +140,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_vendor_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_vendor_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -159,8 +155,8 @@
 					ADD		`total_cost`		decimal(10,2) NOT NULL DEFAULT 0
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -173,6 +169,10 @@
 				# Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans())
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				// Sales Schema must be ready for Foreign Key
+				$sales_schema = new \Sales\Schema();
+				$sales_schema->upgrade();
 
 				$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `product_prices` (
@@ -189,8 +189,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -217,8 +217,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating product_instances table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error creating product_instances table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -237,12 +237,60 @@
 					MODIFY COLUMN id int(11) NOT NULL AUTO_INCREMENT
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error altering product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->error("SQL Error altering product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
 				$this->setVersion(5);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 6 and $max_version >= 6) {
+				app_log("Upgrading schema to version 6",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `product_prices_audit` (
+						`id`			    int(11) NOT NULL AUTO_INCREMENT,
+						`product_price_id`	int(11) NOT NULL,
+                        `user_id`           int(11) NOT NULL,
+                        `date_updated`      timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,   
+						`note`	text,     
+						PRIMARY KEY (`id`),						                                        
+						FOREIGN KEY `fk_product_price_id` (`product_price_id`) REFERENCES `product_prices` (`id`),
+                        FOREIGN KEY `fk_product_price_user` (`user_id`) REFERENCES `register_users` (`id`)
+					)
+				"; 
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error("SQL Error creating product_prices_audit table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(6);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 7 && $max_version >= 7) {
+				app_log("Upgrading schema to version 7",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `product_products`
+					MODIFY COLUMN `type` enum('group','kit','inventory','unique','service') DEFAULT 'inventory'
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->error("SQL Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(7);
 				$GLOBALS['_database']->CommitTrans();
 			}
 			return true;

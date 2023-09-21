@@ -17,6 +17,8 @@
 		### Send Email									###
 		###################################################
 		public function sendEmail() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$parameters = array();
 			if ($_REQUEST['to']) $parameters['to'] = $_REQUEST['to'];
 			if ($_REQUEST['from']) $parameters['from'] = $_REQUEST['from'];

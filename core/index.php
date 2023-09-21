@@ -122,13 +122,12 @@
 	###################################################
 	$_REQUEST_ = new \HTTP\Request();
 	$_REQUEST_->deconstruct();
-
+	
 	# Identify Remote IP.  User X-Forwarded-For if local address
 	if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) and preg_match('/^(192\.168|172\.16|10|127\.)\./',$_SERVER['REMOTE_ADDR'])) $_REQUEST_->client_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
 	else $_REQUEST_->client_ip = $_SERVER['REMOTE_ADDR'];
 
 	$_REQUEST_->user_agent = $_SERVER['HTTP_USER_AGENT'];
-	$_REQUEST_->timer = microtime();
 
 	###################################################
 	### Build Dynamic Page							###
@@ -139,8 +138,8 @@
 
 	# Create Session
 	$_SESSION_->start();
-	if ($_SESSION_->error) {
-		$logger->writeln($_SESSION_->error,'error',__FILE__,__LINE__);
+	if ($_SESSION_->error()) {
+		$logger->writeln($_SESSION_->error(),'error',__FILE__,__LINE__);
 		exit;
 	}
 
@@ -153,18 +152,28 @@
 
 	# Load Page Information
 	$_page = new \Site\Page();
-	$_page->get($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
+	$_page->getPage($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
 	if ($_page->error) {
 		print "Error: ".$_page->error;
 		$logger->writeln("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
 		exit;
 	}
-	if (! $_page->id) {
-		if (! $_page->get('server','404')) {
+	$_page->rewrite();
+	$_page->confirmTOUAcceptance();
+	if ($_page->module() == 'static') {
+		// All Set!
+	}
+	elseif (! $_page->id) {
+		if (! $_page->getPage('server','404')) {
 			$_page->module = $_REQUEST_->module;
 			$_page->view = $_REQUEST_->view;
 			$_page->index = $_REQUEST_->index;
 			$_page->applyStyle();
 		}
 	}
+
+	// Site Counter
+	$counter = new \Site\Counter("site.connections");
+	$counter->increment();
+
 	print $_page->load_template();

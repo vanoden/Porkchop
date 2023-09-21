@@ -2,38 +2,19 @@
 
     namespace Navigation;
 
-    class Menu {
-	    public $id;
-	    public $name;
-	    public $error;
+    class Menu Extends \BaseModel {
+
+		public $code;
+		public $title;
+
 	    public function __construct($id = 0) {
-		    if (is_numeric ( $id ) && $id > 0) {
-			    $this->id = $id;
-			    $this->details ();
-		    }
+			$this->_tableName = 'navigation_menus';
+    		parent::__construct($id);
 	    }
-	    public function get($code) {
-		    $get_object_query = "
-				    SELECT	id
-				    FROM	navigation_menus
-				    WHERE	code = ?
-			    ";
-		    $rs = $GLOBALS ['_database']->Execute ( $get_object_query, array ($code ) );
-		    if (! $rs) {
-			    $this->_error = "SQL Error in Navigation::Menu::get(): " . $GLOBALS ['_database']->ErrorMsg ();
-			    return false;
-		    }
-		    list ( $id ) = $rs->FetchRow ();
-		    if (isset ( $id )) {
-			    $this->id = $id;
-			    return $this->details ();
-		    } else {
-			    return false;
-		    }
-	    }
+
 	    public function add($parameters = array ()) {
-		    if (! isset ( $parameters ['code'] )) {
-			    $this->_error = "code required";
+		    if (! isset($parameters ['code'])) {
+			    $this->error("code required");
 			    return false;
 		    }
 		    $add_object_query = "
@@ -43,15 +24,15 @@
 				    VALUES
 				    (?)
 			    ";
-		    $GLOBALS ['_database']->Execute ( $add_object_query, array ($parameters ['code'] ) );
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->_error = "SQL Error in Navigation::Menu::add(): ".$GLOBALS['_database']->ErrorMsg ();
+		    $GLOBALS ['_database']->Execute($add_object_query, array ($parameters ['code']));
+		    if ($GLOBALS['_database']->ErrorMsg()) {
+			    $this->SQLError($GLOBALS['_database']->ErrorMsg());
 			    return false;
 		    }
-		    $this->id = $GLOBALS ['_database']->Insert_ID ();
-		    return $this->update ( $parameters );
+		    $this->id = $GLOBALS['_database']->Insert_ID();
+		    return $this->update($parameters);
 	    }
-	    public function update($parameters = array ()) {
+	    public function update($parameters = []): bool {
 		    $update_object_query = "
 				    UPDATE	navigation_menus
 				    SET		id = id
@@ -70,35 +51,35 @@
 		    }
 		    $update_object_query .= "
 				    WHERE	id = ?
-			    ";
-		    array_push ( $bind_params, $this->id );
-		    query_log ( $update_object_query );
-		    $GLOBALS ['_database']->Execute ( $update_object_query, $bind_params );
+			";
+		    array_push($bind_params,$this->id );
+		    query_log($update_object_query,$bind_params);
+		    $GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->_error = "SQL Error in Navigation::Menu::update(): " . $GLOBALS ['_database']->ErrorMsg ();
+		    if ($GLOBALS['_database']->ErrorMsg()) {
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return false;
 		    }
 		    return $this->details ();
 	    }
-	    public function details() {
+	    public function details(): bool {
 		    $get_default_query = "
-				    SELECT  id,code,title
+				    SELECT  *
 				    FROM    navigation_menus
 				    WHERE   id = ?
 			    ";
-		    $rs = $GLOBALS ['_database']->Execute ( $get_default_query, array ($this->id ) );
+		    $rs = $GLOBALS['_database']->Execute($get_default_query, array($this->id ) );
 		    if (! $rs) {
-			    $this->error = "SQL Error in Navigation::Menu::details(): " . $GLOBALS ['_database']->ErrorMsg ();
+			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return false;
 		    }
 		    $object = $rs->FetchNextObject ( false );
-
 		    if ($object->id) {
 			    $this->id = $object->id;
 			    $this->code = $object->code;
 			    $this->title = $object->title;
-		    } else {
+		    }
+			else {
 			    $this->id = null;
 			    $this->code = null;
 			    $this->title = null;
@@ -106,12 +87,12 @@
 		    return true;
 	    }
 	    public function items($parent_id = 0) {
-		    if (! preg_match ( "/^\d+$/", $parent_id )) $parent_id = 0;
+		    if (! preg_match("/^\d+$/", $parent_id )) $parent_id = 0;
 
-		    $itemlist = new \Navigation\ItemList ();
-		    $items = $itemlist->find ( array ('menu_id' => $this->id, 'parent_id' => $parent_id ) );
-		    if ($itemlist->error ()) {
-			    $this->_error = $itemlist->error ();
+		    $itemlist = new \Navigation\ItemList();
+		    $items = $itemlist->find(array('menu_id' => $this->id, 'parent_id' => $parent_id));
+		    if ($itemlist->error()) {
+			    $this->error($itemlist->error());
 			    return null;
 		    }
 		    return $items;
@@ -133,7 +114,8 @@
 			    $html .= '<nav id="' . $parameters ['nav_id'] . '">';
 			    $items = $this->cascade ();
 			    foreach ( $items as $item ) $html .= '<a class="' . $parameters ['a_class'] . '">' . $item->title . "</a>";
-		    } else {
+		    }
+			else {
 			    // Defaults
 			    if (! isset ( $parameters ['nav_id'] )) $parameters ['nav_id'] = 'left_nav';
 			    if (! isset ( $parameters ['nav_button_class'] )) $parameters ['nav_button_class'] = 'left_nav_button';
@@ -141,6 +123,7 @@
 
 			    // Nav Container
 			    $html .= '<nav id="' . $parameters ['nav_id'] . '">' . "\n";
+          $html .= '<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>' . "\n";
 			    $items = $this->cascade ();
 			    foreach ( $items as $item ) {
 				    if ($item->hasChildren ()) $has_children = 1;
@@ -175,12 +158,37 @@
 		    return $html;
 	    }
 
-        public function valid_code($code) {
-            if (preg_match('/^\w[\w\-\.\_\s]+$/',$code)) return true;
-            return false;
-        }
+		public function asHTMLV2($parameters = array()) {
+			$items = $this->items();
+			$buffer = '';
 
-	    public function error() {
-		    return $this->_error;
-	    }
+			if (count($items)) {
+				$buffer = <<<END
+<ul>
+	<input type="checkbox" id="collapse" aria-haspopup="true" />
+	<label for="collapse"></label>
+
+END;
+				foreach ($items as $item) {
+					if (empty($item->target)) $buffer .= "\t<li hi=\"1\">".$item->title."\n";
+					else $buffer .= "\t<li><a href=\"".$item->target."\">".$item->title."</a>\n";
+					$children = $item->children();
+					if (count($children)) {
+						$buffer .= "\t<ul>\n";
+						foreach ( $children as $child ) {
+							$buffer .= "\t\t<li><a href=\"".$child->target."\">".$child->title."</a></li>\n";
+						}
+						$buffer .= "\t</ul>\n";
+					}
+					$buffer .= "</li>\n";
+				}
+				$buffer .= "</ul>\n";
+			}
+			return $buffer;
+		}
+
+		public function validTitle($string) {
+			if (! preg_match('/\<\>/',urldecode($string))) return true;
+			else return false;
+		}
     }

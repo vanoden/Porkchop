@@ -1,49 +1,56 @@
 <?php
 	namespace Storage;
 
-	class Repository Extends \BaseClass {
-	
-		public $error;
+	class Repository Extends \BaseModel {
 		public $name;
 		public $type;
-		public $id;
 		public $code;
-		protected $default_privileges;
-		protected $override_privileges;
+		public $status;
+		public $endpoint;
+		public $secretKey;
+		public $accessKey;
+		public $default_privileges_json;
+		public $override_privileges_json;
 
+		# Constructor
 		public function __construct($id = 0) {
-			$this->_init($id);
-		}
-		protected function _init($id = 0) {
-			app_log("Loading repository $id",'info');
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->_tableName = 'storage_repositories';
+			parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
-		
+		# Add a Repository Record
+		public function add($parameters = []) {
+			$this->clearError();
+
+			# Generate Unique Code if none provided
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
-			if (isset($parameters['type'])) $this->type = $parameters['type'];
+
+			if (! $this->validType($parameters['type'])) {
+				$this->error("Invalid type");
+				return false;
+			}
+			else {
+				$this->type = $parameters['type'];
+			}
 			
-			if (! $this->_valid_code($parameters['code'])) {
-				$this->error = "Invalid code";
+			if (! $this->validCode($parameters['code'])) {
+				$this->error("Invalid code");
 				return false;
 			}
 			
 			if (! isset($parameters['status']) || ! strlen($parameters['status'])) {
 				$parameters['status'] = 'NEW';
-			} else if (! $this->_valid_status($parameters['status'])) {
-				$this->error = "Invalid status";
+			} else if (! $this->validStatus($parameters['status'])) {
+				$this->error("Invalid status");
 				return false;
 			}
 			
-			if (! $this->_valid_name($parameters['name'])) {
-				$this->error = "Invalid name";
+			if (! $this->validName($parameters['name'])) {
+				$this->error("Invalid name");
 				return false;
 			}
 	
+			# Prepare Query
 			$add_object_query = "
 				INSERT
 				INTO	storage_repositories
@@ -51,6 +58,8 @@
 				VALUES
 				(		?,?,?,?)
 			";
+
+			# Execute Query
 			$GLOBALS['_database']->Execute(
 				$add_object_query,
 				array(
@@ -60,19 +69,24 @@
 					$parameters['status']
 				)
 			);
-			
+
+			# Check for errors
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::Repository::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			
+
+			# Fetch ID of new record
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			app_log("Repo ".$this->id." created, updating");
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
-		
+		# Update Repository Record
+		public function update($parameters = []): bool {
+			$this->clearError();
+
+			# Prepare Query
 			$update_object_query = "
 				UPDATE	storage_repositories
 				SET		id = id
@@ -85,7 +99,7 @@
 					name = ?";
 					array_push($bind_params,$parameters['name']);
 				} else {
-					$this->error = "Invalid name '".$parameters['name']."'";
+					$this->error("Invalid name '".$parameters['name']."'");
 					return false;
 				}
 			}
@@ -96,7 +110,7 @@
 					status = ?";
 					array_push($bind_params,$parameters['status']);
 				} else {
-					$this->error = "Invalid status";
+					$this->error("Invalid status");
 					return false;
 				}
 			}
@@ -110,68 +124,16 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::Repository::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			if (isset($parameters['path'])) $this->_setMetadata('path',$parameters['path']);
 			app_log("Repo ".$this->id." updated, getting details");
 			return $this->details();
 		}
-	
-		public function get($code) {
-		
-			$get_object_query = "
-				SELECT	id
-				FROM	storage_repositories
-				WHERE	code = ?
-			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			
-			if (! $rs) {
-				$this->error = "SQL Error in Storage::Repository::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			
-			list($this->id) = $rs->FetchRow();
-			if (! $this->id) {
-				$this->error = "Repository not found";
-				return false;
-			}
-			
-			return $this->details();
-		}
-		
-		public function find($name) {
-		
-			$get_object_query = "
-				SELECT	id
-				FROM	storage_repositories
-				WHERE	name = ?
-			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array(trim($name))
-			);
-			
-			if (! $rs) {
-				$this->error = "SQL Error in Storage::Repository::find(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			list($this->id) = $rs->FetchRow();
-			if (! $this->id) {
-				$this->error = "Repository not found";
-				return false;
-			}
-			
-			return $this->details();
-		}
 
-		public function details() {
+		# Fetch Repository Record and Populate Object Variables
+		public function details(): bool {
 		
 			$get_object_query = "
 				SELECT	*
@@ -185,7 +147,7 @@
 			);
 			
 			if (! $rs) {
-				$this->error = "SQL Error in Storage::Repository::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -194,10 +156,8 @@
 			$this->type = $object->type;
 			$this->code = $object->code;
 			$this->status = $object->status;
-			$default_privileges_json = $object->default_privileges;
-			$this->default_privileges = json_decode($default_privileges_json,true);
-			$override_privileges_json = $object->override_privileges;
-			$this->override_privileges = json_decode($override_privileges_json,true);
+			$this->default_privileges_json = $object->default_privileges;
+			$this->override_privileges_json = $object->override_privileges;;
 			
 			$get_object_query = "
 				SELECT	*
@@ -211,27 +171,54 @@
 			);
 			
 			if (! $rs) {
-				$this->error = "SQL Error in Storage::Repository::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
 			while ($row = $rs->fetchRow(false)) $this->$row['key'] = $row['value'];
 			return true;
 		}
-		
+
+		# Get Files in Repository
 		public function files($path = "/") {
 			$filelist = new FileList();
 			return $filelist->find(array('repository_id' => $this->id,'path' => $path));
 		}
-		
+
+		# Add File to Database
+		public function addFileToDb($parameters) {
+			$file = new \Storage\File();
+			$parameters['repository_id'] = $this->id;
+			return $file->add($parameters);
+		}
+
+		# Drop File from Database
+		public function deleteFileFromDb($file_id) {
+			$file = new \Storage\File($file_id);
+			if ($file->exists()) {
+				if ($file->delete()) {
+					return true;
+				}
+				else {
+					$this->error($file->error());
+					return false;
+				}
+			}
+			else {
+				$this->error("File not found");
+				return false;
+			}
+		}
+
+		# List Existing Directories
 		public function directories($path = "/") {
 			$directorylist = new DirectoryList();
 			return $directorylist->find(array('repository_id' => $this->id,'path' => $path));
 		}
 
-        public function _updateMetadata($key, $value) {
-		
-            $update_object_query = "
+		public function _updateMetadata($key, $value) {
+			# Prepare Query
+			$update_object_query = "
 				UPDATE	`storage_repository_metadata`
 				SET		`repository_id` = `repository_id`
 			";
@@ -249,14 +236,13 @@
 			query_log($update_object_query);
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::Repository::_updateMetadata(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-            return true;
+			return true;
 		}
 		
 		public function _setMetadata($key,$value) {
-		
 			$set_object_query = "
 				INSERT
 				INTO	storage_repository_metadata
@@ -272,7 +258,7 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Storage::Repository::setMetadata: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -290,7 +276,7 @@
 				array($this->id,$key)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Storage::Repository::metadata(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($value) = $rs->FetchRow();
@@ -313,21 +299,20 @@
 		public function override_privileges() {
 			return json_decode($this->override_privileges_json,true);
 		}
-		
-		public function validCode($string) {
-			if (preg_match('/^\w[\w\-\_\.]*$/',$string)) return true;
-			return false;
-		}
-		public function validName($string) {
+
+		/************************************/
+		/* Validation Functions             */
+		/************************************/
+		public function validName($string): bool {
 			if (preg_match('/^\w[\w\-\_\.\s]*$/',$string)) return true;
 			return false;
 		}
-		public function validStatus($string) {
+		public function validStatus($string): bool {
 			if (preg_match('/^(NEW|ACTIVE|DISABLED)$/i',$string)) return true;
 			return false;
 		}
-		public function validType($string) {
-			if (preg_match('/^(Local|S3)$/',$string)) return true;
+		public function validType($string): bool {
+			if (preg_match('/^(Local|s3|Drive|DropBox)$/i',$string)) return true;
 			return false;
 		}
 		public function validPath($string) {
@@ -336,12 +321,12 @@
 			else return false;
 		}
 		public function validAccessKey($string) {
-			// Only certain instances require accessKey
+			// Only certain instances require access key
 			if (empty($string)) return true;
 			else return false;
 		}
 		public function validSecretKey($string) {
-			// Only certain instances require accessKey
+			// Only certain instances require secret key
 			if (empty($string)) return true;
 			else return false;
 		}
@@ -351,8 +336,11 @@
 			else return false;
 		}
 		public function validRegion($string) {
-			// Only certain instances require bucket
+			// Only certain instances require region
 			if (empty($string)) return true;
 			else return false;
+		}
+		public function validEndpoint($string) {
+			return true;
 		}
 	}

@@ -1,2 +1,3 @@
 <?php
-	foreach my ($pages as $page) print_r($page);
+foreach ($pages as $page)
+	print_r($page);

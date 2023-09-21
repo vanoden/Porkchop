@@ -28,6 +28,14 @@
 		return false;
 	}
 
+	function valid_email($email) {
+		if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+\.[a-z]{2,}$/",strtolower($email))) return true;
+		else {
+			app_log("Invalid email address: '$email'",'info');
+			return false;
+		}
+	}
+
 	function get_mysql_date($date = null,$range=0) {
 		if (empty($date)) {
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
@@ -221,14 +229,17 @@
 	# API Logging (With actual parameters)
 	function api_log($response = 'N/A') {
 		$log = "";
-		$module = $GLOBALS['_REQUEST_']->module;
 		$login = $GLOBALS['_SESSION_']->customer->code;
-		$method = $_REQUEST['method'];
-		$host = $GLOBALS['_REQUEST_']->client_ip;
+		if (!empty($_REQUEST['method'])) $method = $_REQUEST['method'];
+		else $method = "[none]";
 
 		if (is_object($response) && $response->success) $status = "SUCCESS";
 		else $status = "FAILED";
-		$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+
+		$module = $GLOBALS['_REQUEST_']->module;
+		$host = $GLOBALS['_REQUEST_']->client_ip;
+		if (is_numeric($GLOBALS['_REQUEST_']->timer)) $elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+		else $elapsed = 0;
 
 		if (API_LOG) {
 			if (is_dir(API_LOG))

@@ -97,6 +97,12 @@
 		exit;
 	}
 
+    $_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
+    if ($_CACHE_->error()) {
+        $site->install_log('Unable to initiate Cache client: '.$_CACHE_->error(),'error');
+    }
+    $site->install_log("Cache Initiated");
+
 	###################################################
 	### Connect to Database							###
 	###################################################
@@ -187,7 +193,7 @@
 	if (! $role->get('administrator')) {
 		$site->install_log("Adding 'administrator' role");
 		$role->add(array('name' => 'administrator','description' => "Access to admin tools"));
-		if ($role->error) install_fail("Error adding role: ".$role->error);
+		if ($role->error()) install_fail("Error adding role: ".$role->error());
 	}
 
 	if ($_REQUEST['log_level']) $site->log_level = $_REQUEST['log_level'];
@@ -212,7 +218,3 @@
 	$site->install_log("Upgrade completed successfully",'notice');
 
 exit;
-
-//function app_log($message,$level='debug') {
-//	$GLOBALS['site']->install_log($message);
-//}

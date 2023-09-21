@@ -1,9 +1,7 @@
 <?php
 	namespace Email\Transport;
 
-	class Base {
-		protected $_error;
-
+	class Base Extends \BaseModel {
 		public function hostname() {
 			return $this->hostname;
 		}
@@ -14,9 +12,5 @@
 
 		public function result() {
 			return $this->_result;
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

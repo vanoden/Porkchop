@@ -1,9 +1,8 @@
 <?php
 	namespace Register;
 
-	class Location extends \ORM\BaseModel {
+	class Location extends \BaseModel {
 	
-		public $id;
 		public $name;
 		public $address_1;
 		public $address_2;
@@ -11,10 +10,12 @@
 		public $province_id;
 		public $zip_code;
 		public $notes;
-		public $tableName = 'register_locations';
-        public $fields = array('id','name','address_1','address_2','city','province_id','zip_code', 'notes','country_id');
+		public $province;
+		public $country;
 
-		public function __construct($id = 0,$parameters = array()) {
+		public function __construct($id = 0,$parameters = array()) {		
+			$this->_tableName = 'register_locations';
+			$this->_addFields(array('id','name','address_1','address_2','city','province_id','zip_code', 'notes','country_id'));
 			parent::__construct($id);
 			if (isset($parameters['recursive']) && $parameters['recursive']) {
 				$this->province = new \Geography\Province($this->province_id);
@@ -34,7 +35,7 @@
          * @param array, $parameters
          */
         public function findExistingByAddress($parameters = array()) {
-            $getObjectQuery = "SELECT id FROM `$this->tableName` WHERE
+            $getObjectQuery = "SELECT id FROM `$this->_tableName` WHERE
                 LOWER(`address_1`) LIKE '%".strtolower($parameters['address_1'])."%'
                 AND LOWER(`address_2`) LIKE '%".strtolower($parameters['address_2'])."%'
                 AND LOWER(`city`) LIKE '%".strtolower($parameters['city'])."%'
@@ -48,7 +49,7 @@
                     return true;
                 }
             }
-            $this->_error = "ERROR: no records found for these values.";
+            $this->error("No records found for these values.");
             return false;
         }
 
@@ -65,7 +66,7 @@
 			query_log($add_record_query,$bind_params,true);
 			$GLOBALS['_database']->Execute($add_record_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Register::Location::associateUser(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
@@ -84,15 +85,20 @@
 			query_log($add_record_query,$bind_params,true);
 			$GLOBALS['_database']->Execute($add_record_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Register::Location::associateOrganization(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return true;
 		}
 
         public function applyDefaultBillingAndShippingAddresses($organizationId, $locationId, $isDefaultBilling=false, $isDefaultShipping=false) {
-        
             if (!empty($isDefaultBilling)|| !empty($isDefaultShipping)) {
+            
+			    // bust register_organizations cache
+			    $cache_key = "organization[".$organizationId."]";
+			    $cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			    $cache_item->delete();
+            
 			    $update_record_query = "
 				    UPDATE `register_organizations` SET default_billing_location_id = NULL AND default_shipping_location_id = NULL WHERE id = ?;
 			    ";
@@ -100,7 +106,7 @@
 	            query_log($update_record_query,$bind_params,true);
 	            $GLOBALS['_database']->Execute($update_record_query,$bind_params);
 	            if ($GLOBALS['_database']->ErrorMsg()) {
-		            $this->_error = "SQL Error in Register::Location::applyDefaultBillingAndShippingAddresses(): ".$GLOBALS['_database']->ErrorMsg();
+		            $this->SQLError($GLOBALS['_database']->ErrorMsg());
 		            return false;
 	            }
 
@@ -112,7 +118,7 @@
 	                query_log($update_record_query,$bind_params,true);
 	                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
 	                if ($GLOBALS['_database']->ErrorMsg()) {
-		                $this->_error = "SQL Error in Register::Location::applyDefaultBillingAndShippingAddresses(): ".$GLOBALS['_database']->ErrorMsg();
+		                $this->SQLError($GLOBALS['_database']->ErrorMsg());
 		                return false;
 	                }
 	            }
@@ -125,7 +131,7 @@
 	                query_log($update_record_query,$bind_params,true);
 	                $GLOBALS['_database']->Execute($update_record_query,$bind_params);
 	                if ($GLOBALS['_database']->ErrorMsg()) {
-		                $this->_error = "SQL Error in Register::Location::applyDefaultBillingAndShippingAddresses(): ".$GLOBALS['_database']->ErrorMsg();
+		                $this->SQLError($GLOBALS['_database']->ErrorMsg());
 		                return false;
 	                }
 	            }
@@ -138,6 +144,14 @@
 			return new \Geography\Province($this->province_id);
 		}
 
+        public function country() {
+            $country_id = $this->province()->country_id;
+            if (!isset($country_id)) {
+                return new \Geography\Country();
+            }
+            return new \Geography\Country($country_id);
+        }
+
 		public function organization() {
 			$get_org_query = "
 				SELECT	organization_id
@@ -146,10 +160,45 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_org_query,array($this->id));
 			if (! $rs) {
-				$this->error("SQL Error in Register::Location::organization(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($org_id) = $rs->FetchRow();
 			return new \Register\Organization($org_id);
 		}
+
+		public function user() {
+			$get_user_query = "
+				SELECT	user_id
+				FROM	register_user_locations
+				WHERE	location_id = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_user_query,array($this->id));
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			list($user_id) = $rs->FetchRow();
+			return new \Register\Person($user_id);
+		}
+
+		public function validAddress($string) {	    	
+			if (empty($string)) return true;
+			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
+			else return false;
+		}
+
+		public function validCity($string) {
+			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
+			else return false;
+		}
+
+        public function HTMLBlockFormat() {
+            $address = "";
+            if (!empty($this->address_1)) $address = $this->address_1."<br />\n";
+            if (!empty($this->address_2)) $address .= $this->address_2."<br />\n";
+            $address .= $this->city.", ".$this->province()->abbreviation." ".$this->zip_code."<br />\n";
+            $address .= $this->country()->name;
+            return $address;
+        }
 	}

@@ -2,6 +2,7 @@
 	namespace Bench;
 
 	class Build {
+
 		private $_error;
 		public $id;
 
@@ -12,7 +13,7 @@
 			}
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			if (isset($parameters['product_code'])) {
 				$product = new \Bench\Product();
 				if ($product->get($parameters['product_code'])) {
@@ -85,4 +86,3 @@
 			return $response;
 		}
 	}
-?>

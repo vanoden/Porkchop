@@ -17,13 +17,11 @@
 		document.forms[0].submit();
 	}
 </script>
-<div class="title">Edit Page Parameters</div>
-<?php	if ($page->errorCount()) { ?>
-<div class="form_error"><?=$page->errorString()?></div>
-<?php	}
-	if ($page->success) { ?>
-<div class="form_success"><?=$page->success?></div>
-<?php	} ?>
+
+<!-- Page Header -->
+<?=$page->showAdminPageInfo()?>
+<!-- End Page Header -->
+
 <div class="container_narrow">
 	<span class="label">Module</span><span class="label"><?=$module?></span>
 </div>
@@ -34,6 +32,7 @@
 	<span class="label">Index</span><span class="label"><?=$index?></span>
 </div>
 <form method="post" action="/_site/page">
+    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="module" value="<?=$module?>" />
     <input type="hidden" name="view" value="<?=$view?>" />
     <input type="hidden" name="index" value="<?=$index?>" />

@@ -11,6 +11,7 @@
 		return true;
 	}
 </script>
+
 <h1>Registration</h1>
 <span class="form_instruction">Fill out all required information to apply. You will receive and email once your account has been created.</span>
 <form name="register" action="/_register/register" method="POST">

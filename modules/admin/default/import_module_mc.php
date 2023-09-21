@@ -1,4 +1,6 @@
 <?php
+// No Longer Used
+exit;
 	require_once(MODULES."/admin/_classes/admin.php");
 	$name = $GLOBALS['_page']->query_vars_array[0];
 	$_module = new PorkchopModule();
@@ -8,15 +10,15 @@
 		# Add Roles
 		foreach ($module->role as $role) {
 			print "Adding role '".$role["title"]."'<br>\n";
-			$_role = new Role();
-			$role = $_role->add(
-				$role['title'],
+			$role = new \Register\Role();
+			$role->add(
 				array(
+					"title"	=> $role["title"],
 					"description"	=> $role["description"]
 				)
 			);
-			if ($_role->error) {
-				print "Failed to add role: ".$_role->error;
+			if ($role->error()) {
+				print "Failed to add role: ".$role->error();
 				exit;
 			}
 		}

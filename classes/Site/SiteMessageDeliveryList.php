@@ -1,16 +1,13 @@
 <?php
 	namespace Site;
 
-	class SiteMessageDeliveryList {
-	
-		private $_count = 0;
-		private $_error;
-
+	class SiteMessageDeliveryList Extends \BaseListClass {
 		public function find($parameters = array()) {
-	
-			app_log("Site::SiteMessageDeliveryList::find()",'trace',__FILE__,__LINE__);
-			
-			$this->error = null;
+			$this->clearError();
+			$this->resetCount();
+
+			$database = new \Database\Service();
+
 			$get_objects_query = "
 				SELECT	smd.id
 				FROM	site_message_deliveries smd,
@@ -18,16 +15,15 @@
 				WHERE	smd.message_id = sm.id
 			";			
 
-			$bind_params = array();
 			if (isset($parameters['user_id'])) {
 				$get_objects_query .= "
 				AND smd.user_id = ?";
-				array_push($bind_params,$parameters['user_id']);
+				$database->AddParam($parameters['user_id']);
 			}
 			if (isset($parameters['user_created'])) {
 				$get_objects_query .= "
 				AND sm.user_created = ?";
-				array_push($bind_params,$parameters['user_created']);
+				$database->AddParam($parameters['user_created']);
 			}
 			if (isset($parameters['viewed'])) {
 				if ($parameters['viewed'] == false) {
@@ -54,27 +50,18 @@
 				}
 			}
 
-			query_log($get_objects_query,$bind_params,true);
-			$rs = $GLOBALS['_database']->Execute($get_objects_query,$bind_params);
+			$rs = $database->Execute($get_objects_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SiteMessageDeliveryList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			
 			$deliveries = array();
 			while (list($id) = $rs->FetchRow()) {
 			    $delivery = new \Site\SiteMessageDelivery($id);
-			    $this->_count ++;
+			    $this->incrementCount();
 			    array_push($deliveries,$delivery);
 			}
 			return $deliveries;
 		}
-        
-        public function error() {
-            return $this->_error;
-        }
-
-        public function count() {
-            return $this->_count;
-        }
 	}

@@ -7,11 +7,12 @@
 	###################################################
 
 	$page = new \Site\Page(array("module" => 'register',"view" => 'account'));
-
+	
 	if (isset($GLOBALS['_SESSION_']->customer->id)) {
 		$customer_id = $GLOBALS['_SESSION_']->customer->id;
 		$customer = new \Register\Customer($customer_id);
-	} else {
+	}
+	else {
 		header("location: /_register/login?target=_register/account");
 		exit;
 	}
@@ -26,8 +27,8 @@
 			$page->addError("Invalid Request");
 		}
 		else {
-		    $_contact = new \Register\Contact($_REQUEST['register-contacts-id']);
-		    $_contact->delete();
+		    $contact = new \Register\Contact($_REQUEST['register-contacts-id']);
+		    $contact->delete();
 		    $page->success = 'Contact Entry ' . $_REQUEST['register-contacts-id'] . ' has been removed.';
 		}
 	}
@@ -71,7 +72,8 @@
 					goto load;
 				}
 				
-			} else {
+			}
+			else {
 			
 				### THIS NEVER HAPPENS ###
 				app_log("New customer registration",'debug',__FILE__,__LINE__);
@@ -84,10 +86,9 @@
 
 				$parameters["login"] = $_REQUEST['login'];
 
-				###########################################
-				### Add User To Database				###
-				###########################################
-				# Add Customer Record to Database
+				###################################################
+				### Add Customer Record to Database				###
+				###################################################
 				$customer = new \Register\Customer();
 				$customer->add($parameters);
 		
@@ -104,7 +105,7 @@
 					}
 				}
 
-				# Registration Confirmation
+				// Registration Confirmation
 				$_contact = new \Register\Contact();
 				$_contact->notify(array(
 						"from"		=> $GLOBALS['_config']->register->confirmation->from,
@@ -118,18 +119,18 @@
 					goto load;
 				}
 
-				# Redirect to Address Page If Order Started
+				// Redirect to Address Page If Order Started
 				if (isset($target)) $next_page = $target;
 				elseif (isset($order_id)) $next_page = "/_cart/address";
 				else $next_page = "/_register/thank_you";
 				header("Location: $next_page");
 			}
 			
-			# Process Contact Entries
+			// Process Contact Entries
 			app_log("Processing contact entries",'debug',__FILE__,__LINE__);
-			while (list($contact_id) = each($_REQUEST['type'])) {
-				if (! $_REQUEST['type'][$contact_id]) continue;
-
+			
+			foreach ($_REQUEST['type'] as $contact_id => $value) {
+				if (! isset($_REQUEST['type'][$contact_id])) continue;
 				if ($contact_id > 0) {
 
 					app_log("Updating contact record",'debug',__FILE__,__LINE__);
@@ -137,20 +138,27 @@
 
 					if ($_REQUEST['notify'][$contact_id]) $notify = true;
 					else $notify = false;
+					
+					if (! $contact->validType($_REQUEST['type'][$contact_id])) {
+    					$page->addError("Invalid contact type: " . $_REQUEST['type'][$contact_id]);
+					} elseif (! $contact->validValue($_REQUEST['type'][$contact_id],$_REQUEST['value'][$contact_id])) {
+    					$page->addError("Invalid value for contact type: " . $_REQUEST['type'][$contact_id]);
+					} else {
 
-					# Update Existing Contact Record
-					$contact->update(
-						array(
-							"type"			=> $_REQUEST['type'][$contact_id],
-							"description"	=> noXSS($_REQUEST['description'][$contact_id]),
-							"value"			=> $_REQUEST['value'][$contact_id],
-							"notes"			=> $_REQUEST['notes'][$contact_id],
-							"notify"		=> $notify
-						)
-					);
-					if ($contact->error) {
-						$page->addError("Error updating contact: ".$customer->error);
-						goto load;
+						// Update Existing Contact Record
+						$contact->update(
+							array(
+								"type"			=> $_REQUEST['type'][$contact_id],
+								"description"	=> noXSS(trim($_REQUEST['description'][$contact_id])),
+								"value"			=> $_REQUEST['value'][$contact_id],
+								"notes"			=> noXSS(trim($_REQUEST['notes'][$contact_id])),
+								"notify"		=> $notify
+							)
+						);
+						if ($contact->error) {
+							$page->addError("Error updating contact: ".$customer->error);
+							goto load;
+						}
 					}
 				}
 				else {
@@ -159,7 +167,7 @@
 					if ($_REQUEST['notify'][0]) $notify = true;
 					else $notify = false;
 
-					# Create Contact Record
+					// Create Contact Record
 					$customer->addContact(
 						array(
 							"person_id"		=> $customer_id,

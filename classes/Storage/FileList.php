@@ -1,12 +1,11 @@
 <?php
 	namespace Storage;
 
-	class FileList {
-	
-		public $error;
-		public $count;
+	class FileList Extends \BaseListClass {
 
-		public function _construct() {}
+		public function _construct() {
+			$this->_tableName = 'storage_files';
+		}
 
         /**
          * construct a new list of files
@@ -14,7 +13,7 @@
          * @param array $parameters, name value pairs to find files by
          */
 		public function find($parameters = array()) {
-				
+
 			$get_objects_query = "
 				SELECT sf.id
 				FROM storage_files sf
@@ -24,9 +23,9 @@
 			$bind_params = array();
 			
 			// if we're looking for a specific type of file upload with a reference id
-            if (isset($parameters['type']) && strlen($parameters['type']) && isset($parameters['ref_id']) && strlen($parameters['ref_id'])) {
+            if (isset($parameters['type']) && strlen($parameters['type']) && !empty($parameters['ref_id'])) {
                 $get_objects_query .= "
-					                AND sfm.key = ? AND sfm.value = ?";
+				AND sfm.key = ? AND sfm.value = ?";
 				array_push($bind_params, $parameters['type']);
 				array_push($bind_params, $parameters['ref_id']);
             }
@@ -37,7 +36,7 @@
 						AND sf.name = ?";
 					array_push($bind_params,$parameters['name']);
 				} else {
-					$this->error = "Invalid name";
+					$this->error("Invalid name");
 					return false;
 				}
 			}
@@ -48,7 +47,7 @@
 						AND sf.repository_id = ?";
 					array_push($bind_params,$parameters['repository_id']);
 				} else {
-					$this->error = "Invalid repository ID";
+					$this->error("Invalid repository ID");
 					return false;
 				}
 			}
@@ -62,7 +61,7 @@
 			query_log($get_objects_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Storage::FileList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -71,7 +70,7 @@
 				$file = new File($id);
 				if ($file->readable($GLOBALS['_SESSION_']->customer->id)) {
 					array_push($files,$file);
-					$this->count ++;
+					$this->incrementCount();
 				}
 			}
 			return $files;

@@ -2,6 +2,7 @@
 	namespace Sales\Order;
 
 	class ItemList {
+	
 		private $_count = 0;
 		private $_error;
 

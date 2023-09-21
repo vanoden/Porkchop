@@ -2,22 +2,25 @@
 	namespace Storage\Repository;
 
 	class Local extends \Storage\Repository {
-	
+		public $path;
+
 		public function __construct($id = null) {
 			$this->type = 'Local';
-			parent::_init($id);
+			parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			app_log("Creating local repository ".$parameters['name'],'notice');
 			if (! isset($parameters['path'])) {
-				$this->error = "Path required";
+				$this->error("Path required");
 				return false;
-			} elseif (! is_dir($parameters['path'])) {
-				$this->error = "Path doesn't exist";
+			}
+			elseif (! is_dir($parameters['path'])) {
+				$this->error("Path doesn't exist");
 				return false;
-			} elseif (! is_writable($parameters['path'])) {
-				$this->error = "Path not writable";
+			}
+			elseif (! is_writable($parameters['path'])) {
+				$this->error("Path not writable");
 				return false;
 			}
 
@@ -30,26 +33,33 @@
 					$this->path = $this->_path();
 					return true;
 				} else {
-					app_log("Failed to set path: ".$this->error,'error');
-					$this->error = "Failed to add path to metadata: ".parent::error;
+					app_log("Failed to set path: ".$this->error(),'error');
+					$this->error("Failed to add path to metadata: ".parent::error());
 					return false;
 				}
 			} else {
-				app_log("Parent add returned false: ".$this->error,'error');
+				app_log("Parent add returned false: ".$this->error(),'error');
 				return false;
 			}
+		}
+
+		public function connect() {
+			$path = $this->getMetadata('path');
+			if (is_dir($path)) return true;
+			$this->error($path." doesn't exist or is not a directory");
+			return false;
 		}
 
 		private function _path($path = null) {
 			if (isset($path)) {
 			
 				if (! is_dir($path)) {
-					$this->error = "Path doesn't exist on server";
+					$this->error("Path doesn't exist on server");
 					return false;
 				}
 				
 				if (! is_writable($path)) {
-					$this->error = "Path not writable";
+					$this->error("Path not writable");
 					return false;
 				}
 				
@@ -69,7 +79,7 @@
 			} else if ($key == 'endpoint') {
 				return $this->_endpoint($value);
 			} else {
-				$this->error = "Invalid key";
+				$this->error("Invalid key");
 				return false;
 			}
 		}
@@ -80,15 +90,16 @@
 			} else if ($key == 'endpoint') {
 				return $this->_endpoint();
 			} else {
-				$this->error = "Invalid key";
+				$this->error("Invalid key");
 				return false;
 			}
 		}
 
-		public function details() {
+		public function details(): bool {
 			parent::details();
 			$this->path = $this->_path();
 			$this->endpoint = $this->_endpoint();
+			return true;
 		}
 
         /**
@@ -108,14 +119,14 @@
 			}
 
 			if (! file_exists($this->_path()."/".$file->code)) {
-				$this->error = "File not found";
+				$this->error("File not found");
 				return false;
 			}
 
 			// Load contents from filesystem 
 			$fh = fopen($this->_path()."/".$file->code,'rb');
 			if (FALSE === $fh) {
-				$this->error = "Failed to open file";
+				$this->error("Failed to open file");
 				return false;
 			}
 
@@ -135,12 +146,12 @@
 		public function eraseFile($file) {
 		
 			if (! file_exists($this->_path()."/".$file->code)) {
-                $this->error = "File not found";
+                $this->error("File not found");
                 return false;
             }
             
             if (! unlink($this->_path()."/".$file->code)) {
-                $this->error = "Failed to delete file";
+                $this->error("Failed to delete file");
                 return false;
             }
             

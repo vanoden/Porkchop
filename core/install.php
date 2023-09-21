@@ -168,7 +168,7 @@
 	###################################################
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
 	if ($_CACHE_->error()) {
-		$site->install_log('Unable to initiate Cache client: '.$_CACHE_->error,'error');
+		$site->install_log('Unable to initiate Cache client: '.$_CACHE_->error(),'error');
 	}
 	else {
 		$site->install_log("Cache Initiated");
@@ -236,8 +236,8 @@
 	###################################################
 	$site->install_log("Setting up company");
 	$company = new \Company\Company();
-	if ($company->error) {
-		$site->install_log("Error loading company module: ".$company->error,'error');
+	if ($company->error()) {
+		$site->install_log("Error loading company module: ".$company->error(),'error');
 		exit;
 	}
 	$site->install_log("Checking for existing company");
@@ -250,8 +250,8 @@
 				"name" => $_REQUEST['company_name'],
 			)
 		);
-		if ($company->error) {
-			install_log("Cannot add company: ".$company->error);
+		if ($company->error()) {
+			install_log("Cannot add company: ".$company->error());
 			exit;
 		}
 	}
@@ -274,8 +274,8 @@
 				"company_id"	=> $company->id,
 			)
 		);
-		if ($domain->error) {
-			$site->install_log("Cannot add domain: ".$domain->error);
+		if ($domain->error()) {
+			$site->install_log("Cannot add domain: ".$domain->error());
 			exit;
 		}
 	}
@@ -298,8 +298,8 @@
 				"code"	=> uniqid()
 			)
 		);
-		if ($location->error) {
-			$site->install_log("Failed to add location: ".$location->error,'error');
+		if ($location->error()) {
+			$site->install_log("Failed to add location: ".$location->error(),'error');
 			exit;
 		}
 	}
@@ -318,13 +318,13 @@
 
 	$site->install_log("Setting up admin account");
 	$admin = new \Register\Customer();
-	if ($admin->error) {
-		$site->install_log("Error initializing Admin object: ".$admin->error,'error');
+	if ($admin->error()) {
+		$site->install_log("Error initializing Admin object: ".$admin->error(),'error');
 		exit;
 	}
 	$admin->get($_REQUEST['admin_login']);
-	if ($admin->error) {
-		$site->install_log("Error identifying superuser: ".$admin->error,'error');
+	if ($admin->error()) {
+		$site->install_log("Error identifying superuser: ".$admin->error(),'error');
 		exit;
 	}
 
@@ -339,8 +339,8 @@
 				"organization_id"	=> $organization->id
 			)
 		);
-		if ($admin->error) {
-			install_log("Cannot add admin user: ".$admin->error,'error');
+		if ($admin->error()) {
+			install_log("Cannot add admin user: ".$admin->error(),'error');
 			exit;
 		}
 	}
@@ -357,7 +357,7 @@
 	$rolelist = new \Register\RoleList();
 	$roles = $rolelist->find();
 	if ($rolelist->error()) {
-		$site->install_log("Error getting roles: ".$rolelist->error,'error');
+		$site->install_log("Error getting roles: ".$rolelist->error(),'error');
 		exit;
 	}
 
@@ -369,9 +369,9 @@
 		}
 		$site->install_log("Granting ".$role->name."[".$role->id."]");
 		$admin->add_role($role->id);
-		if ($admin->error) {
-			error_log("Error: ".$admin->error);
-			$site->install_log("Error: ".$admin->error,'error');
+		if ($admin->error()) {
+			error_log("Error: ".$admin->error());
+			$site->install_log("Error: ".$admin->error(),'error');
 			exit;
 		}
 	}

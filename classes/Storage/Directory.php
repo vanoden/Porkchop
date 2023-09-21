@@ -1,21 +1,17 @@
 <?php
 	namespace Storage;
 
-	class Directory {
-		private $error;
-		public $path;
+	class Directory Extends \BaseModel {
 
-		public function get($repository_id,$path) {
-			$this->repository_id = $repository_id;
-			$this->path = $path;
-			$this->name = preg_replace('/^\//','',$this->path);
-		}
+		public $path;
+		public $repository_id;
+		public $name;
 
 		public function files() {
 			$filelist = new FileList();
-			$file = $filelist->find(array('path' => $this->path));
+			$files = $filelist->find(array('path' => $this->path));
 			if ($filelist->error()) {
-				$this->error = $filelist->error();
+				$this->error($filelist->error());
 				return null;
 			}
 			return $files;
@@ -29,4 +25,11 @@
 		public function name() {
 			return $this->name;
 		}
+
+        public function getInPath($repository_id,$path) {
+            $this->repository_id = $repository_id;
+            $this->path = $path;
+            $this->name = basename($path);
+            return true;
+        }
 	}

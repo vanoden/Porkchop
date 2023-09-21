@@ -11,19 +11,32 @@
 	$modules = array(
 		"Company"		=> array(
 			"schema"	=> 3,
+			"templates"	=> array(
+				"configuration"	=> $templates['admin'],
+				"domains"		=> $templates['admin']
+			)
 		),
 		"Site"			=> array(
-			"schema"	=> 15,
+			"schema"	=> 19,
 			"privileges"	=> array(
 				'send admin in-site message',
 				'edit site pages',
 				'configure site',
-				'see site api'
+				'see site api',
+				'manage terms of use'
 			),
 			"templates"	=> array(
 				"page"	=> $templates['admin'],
 				"pages"	=> $templates['admin'],
-				"configurations"	=> $templates['admin']
+				"configurations"	=> $templates['admin'],
+				"counters"	=> $templates['admin'],
+				"content_block"	=> $templates['admin'],
+				"terms_of_use"	=> $templates['admin'],
+				"term_of_use"	=> $templates['admin'],
+				"tou_versions"	=> $templates['admin'],
+				"tou_version"	=> $templates['admin'],
+				"export_content"	=> $templates['admin'],
+				"import_content"	=> $templates['admin']
 			),
 		),
 		"Geography"		=> array(
@@ -47,7 +60,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 27,
+			"schema"		=> 30,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -78,38 +91,20 @@
 		"Navigation"	=> array(
             "privileges"    => array(
                 "manage navigation menus",
-		"see navigation api"
-            )
-        ),
-		"Product"		=> array(
-			"schema"	=> 5,
-			"privileges"	=> array(
-                "edit product prices",
-                "manage products",
-                "manage product instances",
-		"add product instances",
-		"see product api"
-            ),
-			"templates"		=> array(
-				"report"			=> $templates['admin'],
-				"edit"				=> $templates['admin'],
+				"see navigation api"
 			),
-		),
-		"Email"			=> array(
-			"schema"	=> 2,
-            "privileges"    => array(
-                "can create email",
-		        "see email api"
-            )
-		),
-		"Action"		=> array(
-			"schema"	=> 1,
-			"roles"			=> array(
-				"action manager"	=> array(),
-				"action user"		=> array(),
-			),
-		)
+			"templates" => array(
+				"menus"		=> $templates['admin'],
+				"items"		=> $templates['admin'],
+				"item"		=> $templates['admin']
+			)
+        )
 	);
+
+	include(MODULES."/product/default/_metadata.php");
+	include(MODULES."/sales/default/_metadata.php");
+	include(MODULES."/network/default/_metadata.php");
+	include(MODULES."/storage/default/_metadata.php");
 
 	$menus = array();
 

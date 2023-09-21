@@ -1,26 +1,26 @@
 <?php
 	namespace Storage\Repository;
-    require THIRD_PARTY.'/autoload.php';
+	require THIRD_PARTY.'/autoload.php';
 
-    use Aws\Common\Aws;
-    use Aws\S3\S3Client;
-    use Aws\Common\Credentials\Credentials;
+	use Aws\Common\Aws;
+	use Aws\S3\S3Client;
+	use Aws\Common\Credentials\Credentials;
+	use Aws\S3\Exception\S3Exception;
 
 	class S3 extends \Storage\Repository {
 
-	    protected $aws;
-	    protected $client;
-	    public $bucket;
-	    public $configuration;
-	    public $region;
+		protected $aws;
+		protected $client;
+		public $bucket;
+		public $configuration;
+		public $region;
+		protected $credentials;
+		private $s3Client;
 		private $_connected = false;
-	    
+		
 		public function __construct($id = null) {
 			$this->type = 's3';
-			$this->_init($id);
-			if ($this->id) {
-				$this->connect();
-			}
+			parent::__construct($id);
 		}
 
 		public function connect() {
@@ -36,20 +36,41 @@
 			$this->aws = Aws::factory();
 		
 			// Get the client from the builder by namespace
-			$this->client = $this->aws->get('S3');
+			try {
+				$this->client = $this->aws->get('S3');
+			}
+			catch (\Aws\S3\Exception\S3Exception $e) {
+				$this->error($e->getMessage());
+				$this->_connected = false;
+				return false;
+			}
+
+			// This fails if not in an EC2 host
+			if (!empty($this->getMetadata('bucket'))) {
+				try {
+					$result = $this->client->doesBucketExist($this->getMetadata('bucket'));
+				}
+				catch (\Aws\S3\Exception\S3Exception $e) {
+					$this->error($e->getMessage());
+					$this->_connected = false;
+					return false;
+				}
+			}
 
 			$this->_connected = true;
+			return true;
 		}
 
-        public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 
-            // create the repo, then continue to add the custom values needed for S3 only
-            parent::update($parameters);
+			// create the repo, then continue to add the custom values needed for S3 only
+			parent::update($parameters);
 		
-		    $this->_updateMetadata('accessKey', $parameters['accessKey']);
-		    $this->_updateMetadata('secretKey', $parameters['secretKey']);
-		    $this->_updateMetadata('bucket', $parameters['bucket']);
-		    $this->_updateMetadata('region', $parameters['region']);
+			$this->_updateMetadata('accessKey', $parameters['accessKey']);
+			$this->_updateMetadata('secretKey', $parameters['secretKey']);
+			$this->_updateMetadata('bucket', $parameters['bucket']);
+			$this->_updateMetadata('region', $parameters['region']);
+			return true;
 		}
 		
 		private function _path($path = null) {
@@ -72,54 +93,59 @@
 			return $this->getMetadata('secretKey');
 		}
 
-        /**
-         * Write contents to S3 cloud storage
-         *
-         * @param $file
-         * @param $path
-         */
+		/**
+		 * Write contents to S3 cloud storage
+		 *
+		 * @param $file
+		 * @param $path
+		 */
 		public function addFile($file, $path) {
 			if (!$this->_connected) {
 				if (!$this->connect()) {
-					$this->error = "Failed to connect to S3 service";
+					$this->error("Failed to connect to S3 service");
 					return null;
 				}
 			}
 
-            // Upload an object by streaming the contents of a file
-            $result = $this->s3Client->putObject(array(
-                'Bucket'     => $this->_bucket(),
-                'Key'        => $file->code(),
-                'SourceFile' => $path,
-                'Metadata'   => array(
-                    'Source' => 'Uploaded from Website'
-                ),
-                'ACL' => 'public-read'
-            ));
-            
-            return $result;
+            try {
+                // Upload an object by streaming the contents of a file
+                $result = $this->s3Client->putObject(array(
+                    'Bucket'     => $this->_bucket(),
+                    'Key'        => $file->code(),
+                    'SourceFile' => $path,
+                    'Metadata'   => array(
+                        'Source' => 'Uploaded from Website'
+                    )
+                ));
+            }
+            catch (\Aws\S3\Exception\S3Exception $e) {
+                $this->error("Repository upload error: ".$e->getMessage());
+                $this->_connected = false;
+                return false;
+            }
+			
+			return $result;
 		}
 		
 		/**
 		 * for public API, unset the AWS info for security
 		 */
 		public function unsetAWS() {
-		    unset($this->aws);
-		    unset($this->client);
-		    unset($this->configuration);
-		    unset($this->secretKey);
-		    unset($this->Array);
-		    unset($this->credentials);
-		    unset($this->s3Client);
-	    }
+			unset($this->aws);
+			unset($this->client);
+			unset($this->configuration);
+			unset($this->secretKey);
+			unset($this->credentials);
+			unset($this->s3Client);
+		}
 		
-        /**
-         * Load contents from filesystem
-         */
+		/**
+		 * Load contents from filesystem
+		 */
 		public function retrieveFile($file) {
 			if (!$this->_connected) {
 				if (!$this->connect()) {
-					$this->error = "Failed to connect to S3 service";
+					$this->error("Failed to connect to S3 service");
 					return null;
 				}
 			}
@@ -134,7 +160,7 @@
 					'SaveAs'	=> $tmpFile
 				));
 			} catch (\exception $e) {
-				$this->error = "Failed to get file: ".$e->getMessage();
+				$this->error("Failed to get file: ".$e->getMessage());
 				return;
 			}
 			if (file_exists($tmpFile)) {
@@ -175,7 +201,7 @@
 			if (preg_match('/\.\./',$string)) return false;
 
 			// Bucket names cannot be formated as an ip address
-			if (preg_match('/^\d+\.\d+\.\d+\.\d+$')) return false;
+			if (preg_match('/^\d+\.\d+\.\d+\.\d+$',$string)) return false;
 
 			// Bucket names cannot start with xn--
 			if (preg_match('/^xn\-\-',$string)) return false;
@@ -184,8 +210,13 @@
 			if (preg_match('/\-s3alias$/',$string)) return false;
 
 			// Bucket names must start and end with a letter or number, and must be 3-63 letters, numbers, dots or hyphens
-			if (preg_match('/^\w[\w\.\-]{1,61}+\w$/',$string)) return true;
+			if (preg_match('/^\w[\w\.\-]{1,61}\w$/',$string)) return true;
 
+			return false;
+		}
+
+		public function validRegion($string) {
+			if (preg_match('/^[a-z]{2}\-[a-z]+\-\d+$/',$string)) return true;
 			else return false;
 		}
 	}

@@ -35,6 +35,8 @@
 		### Add a Vendor								###
 		###################################################
 		public function addVendor() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$vendor = new \Shipping\Vendor();
 
 			$parameters = array();
@@ -55,6 +57,8 @@
 		### Update a Vendor								###
 		###################################################
 		public function updateVendor() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$vendor = new \Shipping\Vendor();
 			$vendor->get($_REQUEST['name']);
 			if ($vendor->error) $this->app_error("Error finding vendor: ".$vendor->error,'error',__FILE__,__LINE__);
@@ -93,6 +97,8 @@
 		### Add a Shipment								###
 		###################################################
 		public function addShipment() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$parameters = array();
 			$send_location = new \Register\Location($_REQUEST['send_location_id']);
 			if ($send_location->id) $parameters['send_location_id'] = $send_location->id;
@@ -133,6 +139,8 @@
 		### Update a Shipment							###
 		###################################################
 		public function updateShipment() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$shipment = new \Shipping\Shipment();
 			$shipment->get($_REQUEST['code']);
 			if ($shipment->error) $this->app_error("Error finding shipment: ".$shipment->error,'error',__FILE__,__LINE__);
@@ -188,6 +196,8 @@
 		### Add a Package to a Shipment					###
 		###################################################
 		public function addPackage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$parameters = array();
 			$shipment = new \Shipping\Shipment($_REQUEST['shipment_id']);
 			if ($shipment->id) $parameters['shipment_id'] = $shipment->id;
@@ -206,6 +216,8 @@
 		### Update a Package							###
 		###################################################
 		public function updatePackage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$shipment = new \Shipping\Shipment($_REQUEST['shipment_id']);
 			$package = $shipment->package($_REQUEST['id']);
 			if ($shipment->error) $this->app_error("Error finding package: ".$shipment->error,'error',__FILE__,__LINE__);

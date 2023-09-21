@@ -7,6 +7,7 @@
 		public $type;
 		public $schema;
 		public $table;
+		public $auto_increment;
 
 		public function name($name = null) {
 			if (! empty($name)) {

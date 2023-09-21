@@ -2,6 +2,7 @@
 	namespace Network;
 
 	class InterfaceList {
+		
 		private $_error;
 		private $_count;
 

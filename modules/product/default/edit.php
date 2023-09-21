@@ -12,13 +12,11 @@
 		document.getElementById('ItemImageDiv_'+code).style.display = "none";
 	}
 </script>
-<h2><?php
-	if (isset($item->id)) print "Edit Product '".$item->code."'";
-	else print "Add product"; ?>
-</h2>
-<?php if ($page->errorCount() > 0) { ?>
-    <div class="form_error"><?=$page->errorString()?></div>
-<?php } ?>
+
+<!-- Page Header -->
+<?=$page->showAdminPageInfo()?>
+<!-- End Page Header -->
+
 <form name="productEdit" method="post" action="/_product/edit">
     <input type="hidden" name="id" id="id" value="<?=$item->id?>" />
     <input type="hidden" name="deleteImage" id="deleteImage" value="" />
@@ -39,7 +37,7 @@
 	    </div>
 	    <div class="input-horiz" id="itemName">
 		    <span class="label">Name</span>
-		    <input type="text" class="value input wide_lg" name="name" id="name" value="<?=htmlspecialchars($item->metadata['name'])?>" />
+		    <input type="text" class="value input wide_lg" name="name" id="name" value="<?=htmlspecialchars($item->metadata()->getValue('name'))?>" />
 	    </div>
 	    <div class="input-horiz" id="itemStatus">
 		    <span class="label">Status</span>
@@ -52,31 +50,35 @@
 	    </div>
 	    <div class="input-horiz" id="itemShortDescription">
 		    <span class="label align-top">Short Description</span>
-		    <textarea class="value input wide_lg" name="short_description" id="short_description"><?=htmlspecialchars($item->metadata['short_description'])?></textarea>
+		    <textarea class="value input wide_lg" name="short_description" id="short_description"><?=htmlspecialchars($item->metadata()->getValue('short_description'))?></textarea>
 	    </div>
 	    <div class="input-horiz" id="itemDescription">
 		    <span class="label align-top">Description</span>
-		    <textarea class="value input wide_lg" name="description" id="description"><?=htmlspecialchars($item->metadata['description'])?></textarea>
+		    <textarea class="value input wide_lg" name="description" id="description"><?=htmlspecialchars($item->metadata()->getValue('description'))?></textarea>
 	    </div>
-	    <div class="input-horiz">
+	    <div class="input-horiz" id="itemModel">
 		    <span class="label">Model</span>
-		    <input type="text" class="value input wide_md" name="model" id="model" value="<?=htmlspecialchars($item->metadata['model'])?>" />
+		    <input type="text" class="value input wide_md" name="model" id="model" value="<?=htmlspecialchars($item->metadata()->getValue('model'))?>" />
 	    </div>
-	    <div class="input-horiz">
+	    <div class="input-horiz" id="itemEmpericalFormula">
 		    <span class="label">Empirical Formula</span>
-		    <input type="text" class="value input wide_md" name="empirical_formula" id="empirical_formula" value="<?=htmlspecialchars($item->metadata['empirical_formula'])?>" />
+		    <input type="text" class="value input wide_md" name="empirical_formula" id="empirical_formula" value="<?=htmlspecialchars($item->metadata()->getValue('empirical_formula'))?>" />
 	    </div>
 	    <div class="input-horiz">
 		    <span class="label">Sensitivity</span>
-		    <input type="text" class="value input wide_md" name="sensitivity" id="sensitivity" value="<?=htmlspecialchars($item->metadata['sensitivity'])?>" />
+		    <input type="text" class="value input wide_md" name="sensitivity" id="sensitivity" value="<?=htmlspecialchars($item->metadata()->getValue('sensitivity'))?>" />
 	    </div>
 	    <div class="input-horiz">
 		    <span class="label">Measure Range</span>
-		    <input type="text" class="value input wide_md" name="measure_range" id="measure_range" value="<?=htmlspecialchars($item->metadata['measure_range'])?>" />
+		    <input type="text" class="value input wide_md" name="measure_range" id="measure_range" value="<?=htmlspecialchars($item->metadata()->getValue('measure_range'))?>" />
+	    </div>
+	    <div class="input-horiz">
+		    <span class="label">Datalogger</span>
+		    <input type="text" class="value input wide_md" name="datalogger" id="datalogger" value="<?=htmlspecialchars($item->metadata()->getValue('datalogger'))?>" />
 	    </div>
 	    <div class="input-horiz">
 		    <span class="label">Accuracy</span>
-		    <input type="text" class="value input wide_md" name="accuracy" id="accuracy" value="<?=htmlspecialchars($item->metadata['accuracy'])?>" />
+		    <input type="text" class="value input wide_md" name="accuracy" id="accuracy" value="<?=htmlspecialchars($item->metadata()->getValue('accuracy'))?>" />
 	    </div>
 	    <div class="input-horiz">
 		    <span class="label">Default Dashboard</span>
@@ -106,7 +108,7 @@
 	    </div>
 	    <div class="input-horiz" id="itemImages">
 		    <span class="label align-top">Images</span>
-            <?php foreach($item->image as $image) { ?>
+            <?php foreach($images as $image) { ?>
 		        <div class="editItemImage" id="ItemImageDiv_<?=$image->code?>">
 			        <input type="button" name="btn_drop" class="editItemThumbnail" onclick="dropImage('<?=$image->code?>')" value="X" />
 			        <img class="editItemThumbnail" src="/_media/api?method=downloadMediaFile&code=<?=$image->files[0]->code?>">
@@ -117,6 +119,61 @@
                 <input type="hidden" name="new_image_code" id="new_image_code" />
             </div>
 	    </div>
+		<div class="input-horiz" id="itemPrices">
+			<span class="label align-top">Add Price</span>
+			<table class="body">
+			    <tr>
+			        <th>Date Active</th>
+				    <th>Status</th>
+				    <th>Amount</th>
+			    </tr>
+			    <tr>
+			        <td><input type="text" name="new_price_date" value="now" /></td>
+				    <td>
+				        <select name="new_price_status">
+				            <option value="ACTIVE">ACTIVE</option>
+				            <option value="INACTIVE">INACTIVE</option>
+				        </select>
+				    </td>
+				    <td><input type="text" name="new_price_amount" value="0.00" /></td>
+			    </tr>
+			</table>
+			
+			<h3>Prices</h3>
+			<table class="body">
+			    <tr>
+			        <th>Date Active</th>
+				    <th>Status</th>
+				    <th>Amount</th>
+			    </tr>
+			    <?php foreach ($prices as $price) { ?>
+			    <tr>
+				    <td class="value"><?=$price->date_active?></td>
+				    <td class="value"><?=$price->status?></td>
+				    <td class="value"><?=$price->amount?></td>
+			    </tr>
+			    <?php } ?>
+			</table>
+        
+			<h3>Price Audit Info</h3>
+			<table class="body">
+			    <tr>
+		            <th>User</th>
+			        <th>Date</th>
+			        <th>Note</th>		
+			    </tr>
+			    <?php foreach ($auditedPrices as $priceAudit) { ?>
+			        <tr>
+				        <td class="value">
+                            <?php $customer = new Register\Customer($priceAudit->user_id); ?>
+				            <?=$customer->first_name?> <?=$customer->last_name?>
+				        </td>
+				        <td class="value"><?=$priceAudit->date_updated?></td>
+				        <td class="value"><?=$priceAudit->note?></td>
+			        </tr>
+			    <?php } ?>
+			</table>
+
 	    <div class="editSubmit button-bar floating">
 		    <input type="submit" class="button" value="Update" name="submit" id="submit"/>
 	    </div>

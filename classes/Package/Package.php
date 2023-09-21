@@ -1,54 +1,59 @@
 <?php
 	namespace Package;
 
-	class Package {
-		public $error;
-		public $id;
+	class Package Extends \BaseModel {
+		public $repository_id;
 		public $code;
 		public $name;
-		public $description;
 		public $license;
-		public $owner;
+		public $description;
 		public $status;
 		public $date_created;
 		public $timestamp;
+		public $platform;
+		public $package_version_id;
 
 		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->_tableName = 'package_packages';
+			$this->_addStatus(array('TEST','ACTIVE','HIDDEN'));
+    		parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			# Authorization Required
 			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) {
-				$this->error = "Must be an authorized package manager to upload files";
-				return null;
+				$this->error("Must be an authorized package manager to upload files");
+				return false;
 			}
 
 			# Validation
-			if (! preg_match('/^[\w\-\_\.\s]+$/',$parameters['name'])) {
-				$this->error = "Valid name required";
-				return null;
+			if (! $this->validName($parameters['name'])) {
+				$this->error("Valid name required");
+				return false;
 			}
 
 			# See If Name Already Used
 			$packagelist = new PackageList();
 			$packagelist->find(array('name' => $parameters['name']));
-			if ($packagelist->count > 0) {
-				$this->error = "A package already exists by that name";
-				return null;
+			if ($packagelist->count() > 0) {
+				$this->error("A package already exists by that name");
+				return false;
 			}
 
 			if (! isset($parameters['code'])) {
 				$parameters['code'] = uniqid();
 			}
 
-			if (! preg_match('/^[\w\-\_\.]+$/',$parameters['code'])) {
-				$this->error = "Invalid code";
+			if (! $this->validCode($parameters['code'])) {
+				$this->error("Invalid code");
 				return false;
 			}
+
+            $repository = new \Storage\Repository($parameters['repository_id']);
+            if (! $repository->exists()) {
+                $this->error("Repository not found");
+                return false;
+            }
 
 			$add_object_query = "
 				INSERT
@@ -75,8 +80,8 @@
 
 			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Package::Package::add(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -84,10 +89,10 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = []): bool {
 			if (! $this->id) {
-				$this->error = "Must identify package first";
-				return null;
+				$this->error("Must identify package first");
+				return false;
 			}
 
 			$bind_params = array();
@@ -96,19 +101,19 @@
 				SET		id = id
 			";
 
-			if (isset($parameters['status']) && strlen($parameters['status'])) {
+			if (isset($parameters['status']) && $this->validStatus($parameters['status'])) {
 				$parameters['status'] = strtoupper($parameters['status']);
-				if (preg_match('/^(NEW|ACTIVE|HIDDEN)$/',$parameters['status'])) {
+				if ($this->validStatus($parameters['status'])) {
 					$update_object_query .= ",
 						status = ?";
 					array_push($bind_params,$parameters['status']);
 				}
 				else {
-					$this->error = "Invalid package status '".$parameters['status']."'";
-					return null;
+					$this->error("Invalid package status '".$parameters['status']."'");
+					return false;
 				}
 			}
-			if (isset($parameters['name']) && strlen($parameters['name'])) {
+			if (isset($parameters['name']) && $this->validName($parameters['name'])) {
 				$update_object_query .= ",
 						name = ?";
 				array_push($bind_params,$parameters['name']);
@@ -148,32 +153,13 @@
 			array_push($bind_params,$this->id);
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Package::Package::update(): ".$GLOBALS['_database']->ErrorMsg()."=>$update_object_query";
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return $this->details();
 		}
 
-		public function get($code) {
-			$get_object_query = "
-				SELECT	id
-				FROM	package_packages
-				WHERE	code = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($code));
-			if (! $rs) {
-				$this->error = "SQL Error in Package::Package::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			list($this->id) = $rs->FetchRow();
-			if (! $this->id) {
-				$this->error = "Package not found";
-				return false;
-			}
-			return $this->details();
-		}
-
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	*,
 						unix_timestamp(date_created) `timestamp`
@@ -185,24 +171,26 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Package::Package::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
 			$this->code = $object->code;
 			$this->name = $object->name;
-			$this->owner = new \Register\Person($object->owner_id);
 			$this->license = $object->license;
 			$this->description = $object->description;
 			$this->status = $object->status;
 			$this->date_created = $object->date_created;
 			$this->timestamp = $object->timestamp;
 			$this->platform = $object->platform;
-			$factory = new \Storage\RepositoryFactory();
-			$this->repository = $factory->load($object->repository_id);
 			$this->package_version_id = $object->package_version_id;
+			$this->repository_id = $object->repository_id;
 
 			return true;
+		}
+
+		public function repository() {
+			return new \Storage\Repository($this->repository_id);
 		}
 
 		public function latestVersion() {
@@ -218,7 +206,7 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Package::Version::latest(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -228,10 +216,18 @@
 		public function addVersion($parameters = array()) {
 			$parameters['package_id'] = $this->id;
 			$version = new Version();
-			return $version->add($parameters);
+			$result = $version->add($parameters);
+            $this->error($version->error());
+            return $result;
 		}
 
 		public function packageVersion() {
 			return new \Package\Version($this->package_version_id);
 		}
+
+        public function validName($string): bool {
+            if (preg_match('/\.\./',$string)) return false;
+            if (preg_match('/^[\w\.\-\_\s]+$/',$string)) return true;
+            else return false;
+        }
 	}

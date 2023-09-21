@@ -13,7 +13,7 @@
 
 			$bind_params = array();
 
-			if ($parameters['shipment_id']) {
+			if (isset($parameters['shipment_id']) && !empty($parameters['shipment_id'])) {
 				$find_objects_query .= "
 				AND		shipment_id = ?";
 				array_push($bind_params,$parameters['shipment_id']);

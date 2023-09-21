@@ -15,6 +15,8 @@
 		### Add a Country								###
 		###################################################
 		public function addCountry() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$country = new \Geography\Country();
 	
 			$parameters = array();
@@ -33,6 +35,8 @@
 		### Update a Country							###
 		###################################################
 		public function updateCountry() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$country = new \Geography\Country();
 			$country->get($_REQUEST['code']);
 			if ($country->error) $this->error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
@@ -63,7 +67,7 @@
 				$country = new \Geography\Country($_REQUEST['id']);
 			}
 			else {
-				error("Not enough parameters");
+				$this->error("Not enough parameters");
 			}
 			$response = new \HTTP\Response();
 			$response->success = 1;
@@ -94,6 +98,8 @@
 		### Add a Province or State						###
 		###################################################
 		public function addProvince() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$country = new \Geography\Country($_REQUEST['country_id']);
 			if (! $country->id) $this->error("Country not found");
 	
@@ -116,6 +122,8 @@
 		### Update a Province							###
 		###################################################
 		public function updateProvince() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			$country = new \Geography\Country();
 			$country->get($_REQUEST['code']);
 			if ($country->error) $this->error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
@@ -137,19 +145,20 @@
 		### Get Specified Province						###
 		###################################################
 		public function getProvince() {
-			if (isset($_REQUEST['country_id'])) {
+			if (!empty($_REQUEST['country_id'])) {
+				$_REQUEST['country_id'] = (int) $_REQUEST['country_id'];
 				$country = new \Geography\Country($_REQUEST['country_id']);
 				if (! $country->id) $this->error("Country not found");
 	
 				$province = new \Geography\Province();
-				if (! $province->get($country->id,$_REQUEST['name'])) $this->error("Province not found");
+				if (! $province->getProvince($country->id,$_REQUEST['name'])) $this->error("Province not found");
 			}
 			elseif (isset($_REQUEST['id'])) {
 				$province = new \Geography\Province($_REQUEST['id']);
 				if (! $province->id) $this->error("Province not found");
 			}
 			else {
-				error("Not enough parameters");
+				$this->error("Not enough parameters");
 			}
 	
 			$response = new \HTTP\Response();

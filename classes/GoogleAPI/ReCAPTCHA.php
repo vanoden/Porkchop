@@ -3,6 +3,8 @@
 
 	class ReCAPTCHA Extends \BaseClass {	
 		public function test($customer,$response) {
+			if (isset($GLOBALS['_config']->captcha->bypass_key) && isset($_REQUEST['captcha_bypass_key']) && ($GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key'])) return true;
+
 			# Check reCAPTCHA
 			$url = "https://www.google.com/recaptcha/api/siteverify";
 			$data = array(
@@ -30,7 +32,8 @@
 				app_log("ReCAPTCHA presented and SOLVED for " . $customer->status . " Customer (must be a human attempting)" , 'notice' , __FILE__ , __LINE__);
 				$customer->update(array('status' => 'ACTIVE'));
 				return true;
-			} else {
+			}
+			else {
 				$this->error("Sorry, CAPTCHA Invalid.  Please Try Again");
 				app_log("ReCAPTCHA presented and FAILED for " . $customer->status . " Customer" , 'notice' , __FILE__ , __LINE__);
 				return false;

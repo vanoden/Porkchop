@@ -1,37 +1,41 @@
 <?php
 	namespace Register;
 
-	class Organization {
-	
-		public $error;
+	class Organization Extends \BaseModel {
+
 		public $name;
 		public $code;
 		public $status;
-		public $id;
 		public $is_reseller;
 		public $reseller;
+		public $assigned_reseller_id;
 		public $notes;
 		public $_cached;
 		public $password_expiration_days;
 		public $default_billing_location_id;
 		public $default_shipping_location_id;
 		private $_nocache = false;
+		private $database;
 
-		public function __construct($id = 0,$options = array()) {
-		
-			// Clear Error Info
-			$this->error = '';
+		public function __construct($id = null,$options = array()) {
+			$this->_tableName = "register_organizations";
+
+			// Set Valid Statuses
+			$this->_addStatus(array('NEW','ACTIVE','EXPIRED','HIDDEN','DELETED'));
+
+			// Disable cache if requested
 			if (isset($options['nocache']) && $options['nocache']) $this->_nocache = true;
-			if (isset($id) && is_numeric($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+
+			// Load ID'd Record
+    		parent::__construct($id);
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
+			$database = new \Database\Service;
+
 			if (empty($parameters['code'])) $parameters['code'] = uniqid();
-			$this->error = null;
+			$this->clearError();
 			$add_object_query = "
 				INSERT
 				INTO	register_organizations
@@ -39,25 +43,22 @@
 				VALUES
 				(		null,?,?,sysdate())
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$parameters['code'],
-					$parameters['name']
-				)
-			);
+
+			$database->addParam($parameters['code']);
+			$database->addParam($parameters['name']);
+
+			$rs = $database->Execute($add_object_query);
 			if (! $rs) {			
-				$this->error = "SQL Error in RegisterOrganization::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			$this->id = $database->Insert_ID();
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
-		
+		public function update($parameters = []): bool {
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
-			$this->error = null;
+			$this->clearError();
 		
 			$bind_params = array();
 
@@ -122,36 +123,16 @@
 				$bind_params
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::update(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			return $this->details();
 		}
 		
-		public function get($code) {
-			app_log("Register::Organization::get($code)",'trace',__FILE__,__LINE__);
-			$this->error = null;
-			$get_object_query = "
-				SELECT	id
-				FROM	register_organizations
-				WHERE	code = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			list($id) = $rs->FetchRow();
-			$this->id = $id;
-			return $this->details();
-		}
-		
-		public function details() {
+		public function details(): bool {
 			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
-			$this->error = null;
+			$database = new \Database\Service();
+			$this->clearError();
 
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -163,21 +144,21 @@
 				$this->name = $organization->name;
 				$this->code = $organization->code;
 				$this->status = $organization->status;
-				if ($organization->is_reseller) $this->is_reseller = true;
-				if (isset($this->assigned_reseller_id)) $this->reseller = new Organization($this->assigned_reseller_id);
+				$this->is_reseller = boolval($organization->is_reseller);
 				$this->notes = $organization->notes;
 				$this->password_expiration_days = $organization->password_expiration_days;
 				$this->default_billing_location_id = $organization->default_billing_location_id;
 				$this->default_shipping_location_id = $organization->default_shipping_location_id;
-				$this->_cached = $organization->_cached;
+				$this->cached(true);
+				$this->exists(true);
 
 				// In Case Cache Corrupted
 				if ($organization->id) {
 					app_log("Organization '".$this->name."' [".$this->id."] found in cache",'trace',__FILE__,__LINE__);
-					return $organization;
+					return true;
 				}
 				else {
-					$this->error = "Organization ".$this->id." returned unpopulated cache";
+					$this->error("Organization ".$this->id." returned unpopulated cache");
 				}
 			}
 
@@ -197,12 +178,12 @@
 				WHERE	id = ?
 			";
 			query_log($get_details_query);
-			$rs = $GLOBALS['_database']->Execute(
+			$rs = $database->Execute(
 				$get_details_query,
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -214,8 +195,7 @@
                 $this->password_expiration_days = $object->password_expiration_days;
                 $this->default_billing_location_id = $object->default_billing_location_id;
                 $this->default_shipping_location_id = $object->default_shipping_location_id;
-				if ($object->is_reseller) $this->is_reseller = true;
-				if ($object->assigned_reseller_id) $this->reseller = new Organization($object->assigned_reseller_id);
+				$this->is_reseller = boolval($object->is_reseller);
 				$this->notes = $object->notes;
 			}
 			else {
@@ -242,11 +222,11 @@
 		public function product($product_id) {
 			$product = new \Product\Item($product_id);
 			if ($product->error()) {
-				$this->error = $product->error();
+				$this->error($product->error());
 				return null;
 			}
 			if (! $product->id) {
-				$this->error = "Product not found";
+				$this->error("Product not found");
 				return null;
 			}
 			return new \Register\Organization\OwnedProduct($this->id,$product->id);
@@ -258,10 +238,18 @@
 			return count($customers);
 		}
 
-		public function exists() {
-			if (isset($this->id) && is_numeric($this->id) && $this->id > 0) return true;
-			return false;
+		public function activeHumans() {
+			$customerlist = new CustomerList();
+			$customers = $customerlist->find(array("organization_id" => $this->id,'automation' => false, "status" => array('NEW','ACTIVE')));
+			return count($customers);
 		}
+
+		public function activeDevices() {
+			$customerlist = new CustomerList();
+			$customers = $customerlist->find(array("organization_id" => $this->id,'automation' => true, "status" => array('NEW','ACTIVE')));
+			return count($customers);
+		}
+
 		public function expire() {
 			$update_org_query = "
 				UPDATE	register_organizations
@@ -273,7 +261,7 @@
 				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Organization::expire(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			
@@ -292,7 +280,7 @@
 				WHERE	organization_id = ?";
 			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->id));
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::locations(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$locations = array();
@@ -301,8 +289,5 @@
 				array_push($locations,$location);
 			}
 			return $locations;
-		}
-		public function error() {
-			return $this->error;
 		}
     }

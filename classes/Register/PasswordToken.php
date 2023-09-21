@@ -1,13 +1,17 @@
 <?php
 	namespace Register;
 
-	class PasswordToken {
-		public $error;
+	class PasswordToken Extends \BaseModel {
 		public $person_id;
 		public $expiration;
 		public $code;
-		
-		public function add($person_id) {
+
+		public function __construct($id = null) {
+			$this->_tableName = "register_password_tokens";
+			$this->_addFields(array('code','person_id','date_expires'));
+		}
+
+		public function add($person_id = []) {
 			# Get Large Random value
 			$randval = mt_rand();		
 
@@ -29,7 +33,7 @@
 				)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in RegisterPasswordToken::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$this->code = $code;
@@ -51,7 +55,7 @@
 			);
 
 			if (! $rs) {
-				$this->error = "SQL Error in RegisterRecovery::consume: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -67,8 +71,35 @@
 					$delete_record_query,
 					array($person_id)
 				);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				}
 				return $person_id;
 			}
 			else return null;
+		}
+
+		public function getKey($person_id) {
+			$database = new \Database\Service();
+			$get_object_query = "
+				SELECT	code
+				FROM	register_password_tokens
+				WHERE	person_id = ?
+				AND		date_expires > sysdate()
+			";
+			$database->addParam($person_id);
+			$rs = $database->Execute($get_object_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+			list($code) = $rs->FetchRow();
+			app_log("ResetKey: $code");
+			return $code;
+		}
+
+		public function validCode($string): bool {
+			if (preg_match('/^[a-f0-9]{64}$/',$string)) return true;
+			else return false;
 		}
 	}

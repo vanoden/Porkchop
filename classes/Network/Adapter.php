@@ -1,21 +1,25 @@
 <?php
 	namespace Network;
 
-	class Adapter {
-		private $_error;
-		public $id;
+	class Adapter Extends \BaseModel {
+
 		public $name;
 		public $mac_address;
 		public $type;
-		public $host;
+		public $host_id;
 
 		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->_tableName = 'network_adapters';
+			$this->_tableUKColumn = null;
+		    parent::__construct($id);
 		}
-		public function get($param_1,$param_2) {
+
+		public function __call($name,$parameters) {
+			if ($name == "get") return $this->getAdapter($parameters[0],$parameters[1]);
+			else $this->error("No method $name");
+		}
+
+		public function getAdapter($param_1,$param_2) {
 			if (preg_match('/^\w\w\:\w\w\:\w\w\:\w\w\:\w\w\:\w\w$/',$param_1)) {
 				$mac_address = $param_1;
 
@@ -39,7 +43,7 @@
 				$rs = $GLOBALS['_database']->Execute($get_object_query,array($host_id,$name));
 			}
 			if (! $rs) {
-				$this->_error = "SQL Error in Network::Adapter::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($id) = $rs->FetchRow();
@@ -47,9 +51,9 @@
 			return $this->details();
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! isset($parameters['name'])) {
-				$this->_error = "name required for new adapter";
+				$this->error("name required for new adapter");
 			}
 			$add_object_query = "
 				INSERT
@@ -74,7 +78,7 @@
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Network::Adapter::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -82,7 +86,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = []): bool {
 			$bind_params = array();
 
 			$update_object_query = "
@@ -98,14 +102,14 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Network::Adapter::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	 *
 				FROM	network_adapters
@@ -115,7 +119,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 
 			if (! $rs) {
-				$this->_error = "SQL Error in Network::NIC::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -125,24 +129,24 @@
 				$this->name = $object->name;
 				$this->mac_address = $object->mac_address;
 				$this->type = $object->type;
-				$this->host = new Host($object->host_id);
+				$this->host_id = $object->host_id;
 			}
 			return true;
 		}
 
+		public function host() {
+			return new \Network\Host($this->host_id);
+		}
+
 		public function ip_addresses() {
-			$addressList = new AddressList();
+			$addressList = new IPAddressList();
 
 			$addresses = $addressList->find(array('adapter_id' => $this->id));
 			if ($addressList->error()) {
-				$this->_error = $addressList->error();
+				$this->error($addressList->error());
 				return null;
 			}
 
 			return $addresses;
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

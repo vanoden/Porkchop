@@ -1,15 +1,14 @@
 <?php
 	namespace Site;
 
-	class Header Extends \BaseClass {
+	class Header Extends \BaseModel {
         public $name;
         public $value;
 
 		public function __construct($id = null) {
-			if (!empty($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->_tableName = "site_headers";
+			$this->_tableUKColumn = "name";
+    		parent::__construct($id);
 		}
 
 		public function add($params = array()) {
@@ -17,7 +16,7 @@
 				$this->error("name required for header");
 				return false;
 			}
-			if (! preg_match('/^\w[\w\-]*$/',$params['name'])) {
+			if (! $this->validName($params['name'])) {
 				$this->error("Invalid header name");
 				return false;
 			}
@@ -44,7 +43,7 @@
 			return $this->update($params);
 		}
 
-		public function update($params) {
+		public function update($params = []): bool {
 			$update_object_query = "
 				UPDATE	site_headers
 				SET		id = id";
@@ -64,24 +63,7 @@
 			return $this->details();
 		}
 
-        public function get($name) {
-            $get_object_query = "
-                SELECT  id
-                FROM    site_headers
-                WHERE   name = ?
-            ";
-            $rs = $GLOBALS['_database']->Execute($get_object_query,array($name));
-            query_log($get_object_query,array($name),true);
-            if (! $rs) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return false;
-            }
-            list($id) = $rs->FetchRow();
-            $this->id = $id;
-            return $this->details();
-        }
-
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	*
 				FROM	site_headers
@@ -104,6 +86,11 @@
 				$this->value = null;
 			}
 			return true;
+		}
+
+		public function validName($string): bool {
+			if (preg_match('/^\w[\w\-]*$/',$string)) return true;
+			else return false;
 		}
 	}
 ?>

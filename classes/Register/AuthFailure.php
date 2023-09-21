@@ -1,8 +1,8 @@
 <?php
 	namespace Register;
 
-	class AuthFailure Extends \BaseClass {
-		public $id;
+	class AuthFailure Extends \BaseModel {
+
 		public $ip_address;
 		public $login;
 		public $reason;
@@ -10,19 +10,30 @@
 		public $date;
 
 		public function __construct($id = 0) {
-			if (is_numeric($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->_database = new \Database\Service();		
+			$this->_tableName = 'register_auth_failures';
+    		parent::__construct($id);
 		}
 
-		public function add($ip_address, $login, $reason, $endpoint) {
+		public function add($parameters = []) {
+
+		    list ($ip_address, $login, $reason, $endpoint) = $parameters;
+		    
+		    if (empty($ip_address)) $ip_address = '';
+		    if (empty($login)) $login = '';
+		    if (empty($reason)) $reason = '';
+		    if (empty($endpoint)) $endpoint = '';
+		    
 			$add_object_query = "
 				INSERT
 				INTO	register_auth_failures
 				VALUES	(null,?,?,sysdate(),?,?)
 			";
 
+			if (! $this->validReason($reason)) {
+				app_log("Invalid auth failure reason '".$reason."'",'warn');
+				$reason = 'UNKNOWN';
+			}
 			$bind_params = array(ip2long($ip_address),$login,$reason,$endpoint);
 
 			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
@@ -37,7 +48,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
 				FROM	register_auth_failures
@@ -50,7 +61,7 @@
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
-			if ($object->id) {
+			if (isset($object->id)) {
 				$this->id = $object->id;
 				$this->ip_address = long2ip($object->ip_address);
 				$this->login = $object->login;
@@ -67,6 +78,15 @@
 				$this->endpoint = null;
 			}
 			return true;
+		}
+
+		public function validReason($string): bool {
+			if (in_array($string,array('NOACCOUNT','PASSEXPIRED','WRONGPASS','INACTIVE','INVALIDPASS','CSRFTOKEN','UNKNOWN'))) return true;
+			else {
+				$this->error("Invalid Failure reason: '".$string."'");
+				error_log($this->error());
+				return false;
+			}
 		}
 	}
 

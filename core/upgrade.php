@@ -147,7 +147,7 @@
 		include(BASE."/config/upgrade_local.php");
 	}
 
-	if ($_REQUEST['log_level']) $site->log_level = $_REQUEST['log_level'];
+	if ($_REQUEST['log_level']) $site->log_level($_REQUEST['log_level']);
 
 	$site->install_log("Starting site upgrade",'notice');
 	if (file_exists(HTML."/version.txt")) {

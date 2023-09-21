@@ -107,6 +107,8 @@
 		### Get Details regarding Specified Product		###
 		###################################################
 		public function addMessage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
 			$response = new \HTTP\Response();
@@ -140,6 +142,8 @@
 		### Update Specified Message					###
 		###################################################
 		public function updateMessage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			# Default StyleSheet
 			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'content.message.xsl';
 			$response = new \HTTP\Response();
@@ -179,6 +183,8 @@
 		### Purge Cache of Specified Message			###
 		###################################################
 		public function purgeMessage() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
 
@@ -273,6 +279,8 @@
 		### Add Page Metadata							###
 		###################################################
 		public function addMetadata() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
 			if (! $GLOBALS['_SESSION_']->customer->can('edit page metadata'));
 
 			# Default StyleSheet

@@ -10,16 +10,14 @@
 				$this->path = $parameters['path'];
 			}
 			else {
-				$this->error = "Path required";
+				$this->error("Path required");
 			}
 
-			if (isset($parameters['level'])) {
-				$this->level = $parameters['level'];
-			}
 			if (is_dir($this->path)) {
 				if (! preg_match('/\/$/',$this->path)) $this->path .= "/";
 				$this->path .= "application.log";
 			}
+			parent::__construct($parameters);
 		}
 
 		public function connect() {
@@ -27,7 +25,7 @@
 			try {
 				$this->fh = fopen($this->path,'a');
 			}
-			catch (Exception $e) {
+			catch (\Exception $e) {
 				$this->connected = false;
 				$this->error = $e->getMessage();
 				return false;

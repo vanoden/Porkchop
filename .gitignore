@@ -6,6 +6,8 @@ classes/Action
 classes/Solvay
 classes/Alert
 classes/Brand
+classes/Support
+classes/Engineering
 html
 html.src
 modules/monitor/spectros
@@ -13,6 +15,9 @@ modules/contact/spectros
 modules/action/spectros
 modules/event/spectros
 modules/monitor/local
+modules/support/default
+modules/engineering/default
+modules/spectros
 modules/brand
 modules/local
 modules/alert

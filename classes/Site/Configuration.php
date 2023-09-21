@@ -1,39 +1,25 @@
 <?php
 	namespace Site;
 	
-	class Configuration {
-	
+	class Configuration Extends \BaseModel {
+
 		public $key;
 		public $value;
-		private $_error;
 
 		public function __construct($key = null) {
+			$this->_tableName = 'site_configurations';
+			$this->_tableUKColumn = 'key';
 			if (isset($key)) {
 				$this->key = $key;
 				$this->get($key);
 			}
-		}
-
-		public function delete() {
-			$unset_config_query = "
-				DELETE
-				FROM	site_configurations
-				WHERE	`key` = ?
-			";
-			query_log($unset_config_query,array($this->key),true);
-			$GLOBALS['_database']->Execute($unset_config_query,array($this->key));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Site::Configuration::unset(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			else {
-				$this->value = $value;
-				app_log("Set ".$this->key." to $value");
-				return true;
-			}
+    		parent::__construct();			
 		}
 
 		public function set($value='') {
+			$this->clearError();
+			$database = new \Database\Service();
+
 			$set_config_query = "
 				INSERT
 				INTO	site_configurations
@@ -42,10 +28,12 @@
 				ON DUPLICATE KEY UPDATE
 					`value` = ?
 			";
-			query_log($set_config_query,array($this->key,$value,$value),true);
-			$GLOBALS['_database']->Execute($set_config_query,array($this->key,$value,$value));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Site::Configuration::set(): ".$GLOBALS['_database']->ErrorMsg();
+			$database->addParam($this->key);
+			$database->addParam($value);
+			$database->addParam($value);
+			$database->Execute($set_config_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			else {
@@ -55,25 +43,27 @@
 			}
 		}
 		
-		public function get($key) {
-		
+		public function get($key): bool {
+			$this->clearError();
+			$database = new \Database\Service();
+
 			$get_config_query = "
 				SELECT	`key`,`value`
 				FROM	site_configurations
 				WHERE	`key` = ?
 			";
-			query_log($get_config_query,array($key),true);
-			$rs = $GLOBALS['_database']->Execute($get_config_query,array($key));
+			$database->addParam($key);
+			$rs = $database->Execute($get_config_query);
 			if (! $rs) {
-				$this->_error = "SQL Error in Site::Configuration::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			list($this->key,$this->value) = $rs->FetchRow();
 			if (empty($this->key)) {
 				app_log("No Record in DB, Checking Config Global");
-				if (isset($GLOBALS['_config']->{$key})) {
+				if (isset($GLOBALS['_config']->site->{$key})) {
 					$this->key = $key;
-					$this->value = $GLOBALS['_config']->{$key};
+					$this->value = $GLOBALS['_config']->site->{$key};
 					return true;
 				}
 				else {
@@ -102,7 +92,12 @@
 			return $this->key;
 		}
 
-		public function error() {
-			return $this->_error;
+		public function validKey($string) {
+			if (preg_match('/^\w[\w\.\-\_\s]*$/',$string)) return true;
+			else return false;
+		}
+
+		public function validValue($string) {
+			return true;
 		}
 	}

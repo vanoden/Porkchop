@@ -12,7 +12,7 @@
 			}
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			if ($parameters['product_id']) {
 				$product = new Product($parameters['product_id']);
 				if (! $product->id) {

@@ -166,8 +166,8 @@ function getProvinces() {
 </script>
 
 <?php
-  if (isset($page->isVerifedAccount)) {
-    if ($page->isVerifedAccount) {
+  if (isset($isVerifedAccount)) {
+    if ($isVerifedAccount) {
       ?>
         <section>
           <ul class="connectBorder progressText">
@@ -181,7 +181,10 @@ function getProvinces() {
       <?php        
     } else {
       ?>
-        <h3>Account could not be verified</h3>
+        <section id="form-message">
+			<ul class="connectBorder errorText"><?=$page->errorString()?></ul>
+		</section>
+		<h3>Your account could not be verified</h3>
         <h5>Please check your <strong>spam / other</strong> mail folders in case you still need to find the correct verification link.</h5>
         <form name="register" action="/_register/new_customer" method="POST">
             <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
@@ -206,9 +209,6 @@ function getProvinces() {
   <form name="register" action="/_register/new_customer" method="POST">
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="method" value="register">
-    <ul class="connectBorder infoText">
-      <li><r7_page.message id=100></li>
-    </ul>
 
     <?php	if ($page->errorCount()) { ?>
       <section id="form-message">
@@ -226,11 +226,11 @@ function getProvinces() {
 
     <h3>Register your Product</h3>
     <section>
-      <ul id="serial_number_message" class="connectBorder errorText"><li>Serial number not found in our system</li></ul>
+      <ul id="serial_number_message" class="connectBorder errorText" style="display: none"><li>Serial number not found in our system</li></ul>
     </section>
 
     <section>
-      <ul id="serial_number_message_ok" class="connectBorder progressText"><li>Serial number has been found</li></ul>
+      <ul id="serial_number_message_ok" class="connectBorder progressText" style="display: none"><li>Serial number has been found</li></ul>
     </section>
 
     <ul class="form-grid four-col connectBorder">
@@ -242,10 +242,7 @@ function getProvinces() {
         <select id="product_id" name="product_id" class="value input collectionField" style="display: block" onchange="document.getElementById('serial_number_message').style.display = 'none';">
           <option value="" <?php	if (isset($selectedProduct) && $product==$selectedProduct) print " selected"; ?>>---</option>
           <?php	foreach ($productsAvailable as $product) { ?>
-            <option value="<?=$product->id?>" <?php	if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>>
-            <?=$product->code?> -
-            <?=$product->description?>
-            </option>
+            <option value="<?=$product->id?>"<?php	if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=$product->description?></option>
           <?php	} ?>
         </select>
       </li>
@@ -316,7 +313,7 @@ function getProvinces() {
       </li>
       <li>
         <label for="username">Username:</span>
-        <input type="text" id="login" style="<?=isset($page->loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onchange="checkUserName()" maxlength="50" required/>
+        <input type="text" id="login" style="<?=isset($loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onchange="checkUserName()" maxlength="50" required/>
       </li>
       <li>
         <label for="password">Create Password:</span>
@@ -329,20 +326,12 @@ function getProvinces() {
       </li>
     </ul>
 
-    <?php	if (isset($page->loginTaken)) { ?>
-      <section>
-        <ul id="login-message" class="connectBorder errorText">
-          <li><?=$page->error;?></li>
-        </ul>
-      <section>
-    <?php	} ?>
-
     <div id="registerSubmit" class="registerQuestion">
       <?php
-      if (!$page->captchaPassed) {
+      if (!$captcha_ok) {
       ?>
         <div style="color:red; font-size: 12px; padding-top:15px;">
-          <?=$page->error;?>
+          <?=$page->errorString()?>
         </div>
       <?php    
       }

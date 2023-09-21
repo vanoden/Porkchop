@@ -84,7 +84,7 @@
 						`address`		bigint(8) NOT NULL,
 						`size`			bigint(8) NOT NULL,
 						`type`			enum('ipv4','ipv6') NOT NULL DEFAULT 'ipv4',
-						PRIMARY KEY `pk_network_subnets` (`id`)
+						PRIMARY KEY `pk_network_subnet_id` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
@@ -111,6 +111,26 @@
 				}
 
 				$this->setVersion(1);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 2) {
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `network_acls` (
+						`id`		int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+						`subnet_id`	int(11) NOT NULL,
+						`priority`	int(11) NOT NULL DEFAULT 0,
+						`content`	TEXT,
+						`status`	enum('INACTVE','LOG','ACTIVE') NOT NULL DEFAULT 'LOG',
+						INDEX `idx_priority` (`priority`)
+					)
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error = "SQL Error creating network_acls table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
 			}
 			return true;

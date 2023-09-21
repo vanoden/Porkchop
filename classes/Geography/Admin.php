@@ -1,40 +1,40 @@
 <?php
 	namespace Geography;
 
-	class Admin extends \BaseClass {
-		public $id;
-		public $_error;
+	class Admin extends \BaseModel {
 
-		public function __construct($id = null) {
-			if (isset($id) && is_numeric($id)) {
-				app_log("Loading admin $id",'notice');
-				$this->id = $id;
-				$this->details();
-			}
+		public $country_id;
+		public $name;
+		public $abbreviation;
+		public $code;
+
+		public function __construct($id = 0) {
+			$this->_tableName = 'geography_provinces';
+			parent::__construct($id);
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			if (isset($parameters['country_id'])) {
 				$country = new Country($parameters['country_id']);
 				if (!$country->id) {
-					$this->_error = "Country not found";
+					$this->error("Country not found");
 					return false;
 				}
 			}
 			else {
-				$this->_error = "country_id required";
+				$this->error("country_id required");
 				return false;
 			}
 			if (! isset($parameters['name']) || ! preg_match('/^\w.*$/',$parameters['name'])) {
-				$this->_error = "Name required";
+				$this->error("Name required");
 				return false;
 			}
             if (! isset($parameters['abbreviation'])) {
-                $this->_error = "Abbreviation required";
+                $this->error("Abbreviation required");
                 return false;
             }
 			if ($this->get($country->id,$parameters['name'])) {
-				$this->_error = "Area already exists";
+				$this->error("Area already exists");
 				return false;
 			}
 			if (empty($parameters['code'])) {
@@ -56,16 +56,16 @@
                 )
             );
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Geography::Admin::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = []): bool {
 			if (! isset($this->id)) {
-				$this->_error = "id required for update";
+				$this->error("id required for update");
 				return false;
 			}
 
@@ -91,15 +91,20 @@
 
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Geography::Admin::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			return $this->details();
 		}
 
-		public function get($country_id,$name) {
-			if (strlen($name) < 3) return $this->getByAbbreviation($country_id,$name);
+		public function __call($name, $arguments) {
+			if ($name == "get") return $this->getProvince($arguments[0],$arguments[1]);
+			else $this->error("Method '$name' not found");
+		}
 
+		public function getProvince($country_id,$name): bool {
+            app_log("Country $country_id Name $name");
+			if (strlen($name) < 3) return $this->getByAbbreviation($country_id,$name);
 			$get_object_query = "
 				SELECT	id
 				FROM	geography_provinces
@@ -109,7 +114,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($country_id,$name));
 			if (! $rs) {
-				$this->_error = "SQL Error in Geography::Admin::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -135,7 +140,7 @@
 			list($this->id) = $rs->FetchRow();
 			return $this->details();
 		}
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	*
 				FROM	geography_provinces
@@ -143,7 +148,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Geography::Admin::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -153,12 +158,15 @@
 				$this->name = $object->name;
 				$this->abbreviation = $object->abbreviation;
 				$this->code = $object->code;
-				return true;
 			}
 			else {
 				$this->id = null;
-				return false;
+				$this->country_id = null;
+				$this->name = null;
+				$this->abbreviation = null;
+				$this->code = null;
 			}
+			return true;
 		}
 
 		public function country() {

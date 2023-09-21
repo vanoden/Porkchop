@@ -2,48 +2,44 @@
 	namespace Register;
 
     class Customer extends Person {
-    
 		public $auth_method;
 		public $elevated = 0;
 
-		public function __construct($person_id = 0) {
-			parent::__construct($person_id);
-			if ($this->id) $this->roles();
+		public function __construct($id = 0) {
+			parent::__construct($id);
 		}
 
-		public function get($code = '') {
-			$this->error = null;
-			$get_object_query = "
-				SELECT	id
-				FROM	register_users
-				WHERE	login = ?
-			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($code)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			list($id) = $rs->FetchRow();
-			$this->id = $id;
-			return $this->details();
-		}
-
-		public function details() {
-		    parent::details();
-			if ($this->id) {
-				$this->roles();
+		public function add($parameters = []) {
+			if (parent::add($parameters)) {
+				$this->auditRecord('REGISTERED','Customer added');
+				$this->changePassword($parameters['password']);
 				return true;
-			} else {
-				return false;
 			}
+			else return false;
 		}
 
-		public function update($parameters = array()) {
-		
+		public function update($parameters = []): bool {
+            // Password must be changed per Authentication Service
+			if (isset($parameters['password'])) {
+                // Authentication Service needs login to change password
+                if (empty($this->login)) $this->login = $parameters["login"];
+                if (empty($this->login)) {
+                    $this->error("Login required to change password");
+                    return false;
+                }
+				if ($this->changePassword($parameters['password'])) {
+					unset($parameters['password']);
+				}
+				else {
+					return false;
+				}
+			}
+			if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) {
+				$this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$this->organization()->name." to ".$parameters['organization_id']);
+			}
+			if (!empty($parameters['status']) && $this->status != $parameters['status']) {
+				$this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
+			}
 			parent::update($parameters);
 			if ($this->error()) return false;
 
@@ -88,11 +84,13 @@
 		
 			if ($GLOBALS['_SESSION_']->elevated()) {
 				app_log("Elevated Session adding role");
-			} elseif ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
+			}
+			elseif ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 				app_log("Granting role '$role_id' to customer '".$this->id."'",'info',__FILE__,__LINE__);
-			} else {
+			}
+			else {
 				app_log("Non admin failed to update roles",'notice',__FILE__,__LINE__);
-				$this->error = "Only Register Managers can update roles.";
+				$this->error("Insufficient Privileges");
 				return 0;
 			}
 			
@@ -116,9 +114,10 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::add_role(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
+			$this->auditRecord('ROLE_ADDED','Role '.$role_id.' added');
 			return 1;
 		}
 
@@ -137,10 +136,10 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::drop_role(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			
+			$this->auditRecord('ROLE_DROPPED','Role '.$role_id.' dropped');
 			return true;
 		}
 
@@ -158,7 +157,7 @@
 		function authenticate ($login, $password) {
 			if (! $this->validLogin($login)) {
 				$failure = new \Register\AuthFailure();
-				$failure->add($_SERVER['REMOTE_ADDR'],$login,'INVALIDLOGIN',$_SERVER['PHP_SELF']);
+				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'INVALIDLOGIN',$_SERVER['PHP_SELF']));
 				return false;
 			}
 
@@ -182,7 +181,7 @@
 			if (! $id) {
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
 				$failure = new \Register\AuthFailure();
-				$failure->add($_SERVER['REMOTE_ADDR'],$login,'NOACCOUNT',$_SERVER['PHP_SELF']);
+				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'NOACCOUNT',$_SERVER['PHP_SELF']));
 				return false;
 			}
 
@@ -191,7 +190,8 @@
 			if ($this->password_expired()) {
 				$this->error("Your password is expired.  Please use Recover Password to restore.");
 				$failure = new \Register\AuthFailure();
-				$failure->add($_SERVER['REMOTE_ADDR'],$login,'PASSEXPIRED',$_SERVER['PHP_SELF']);
+				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'PASSEXPIRED',$_SERVER['PHP_SELF']));
+				$this->auditRecord("AUTHENTICATION_FAILURE","Password expired");
 				return false;
 			}
 
@@ -203,23 +203,25 @@
 			if ($authenticationService->authenticate($login,$password)) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
 				$this->update(array("auth_failures" => 0));
+				//$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
 				return true;
 			}
 			else {
 				app_log("'$login' failed to authenticate",'notice',__FILE__,__LINE__);
 				$failure = new \Register\AuthFailure();
-				$failure->add($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']);
+				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'WRONGPASS',$_SERVER['PHP_SELF']));
 				$this->increment_auth_failures();
 				if ($this->auth_failures() >= 6) {
 					app_log("Blocking customer '".$this->login."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
+					$this->auditRecord("AUTHENTICATION_FAILURE","Blocked after ".$this->auth_failures()." failures");
 					return false;
 				}
 			}
 		}
 
 		public function changePassword($password) {
-			if ($this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
+			if (isset($GLOBALS['_config']->register->minimum_password_strength) && $this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
 				$this->error("Password needs more complexity");
 				return false;
 			}
@@ -230,8 +232,10 @@
 
 			if ($authenticationService->changePassword($this->login,$password)) {
 				$this->resetAuthFailures();
+				$this->auditRecord('PASSWORD_CHANGED','Password changed');
 				return true;
-			} else {
+			}
+			else {
 				$this->error($authenticationService->error());
 				return false;
 			}
@@ -311,28 +315,28 @@
 			// Execute Query
 			$rs = $GLOBALS['_database']->Execute($get_products_query,$bind_params);
 			if ($rs->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::products(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 			$products = array();
 			while ($record = $rs->FetchRow()) {
 				$product = new \Product\Item($product['id']);
-				$product->expire_date = $record['expire_date'];
-				$product->quantity = $record['quantity'];
-				$product->expired = $record['expired'];
-				$product->group_flag = $record['group_flag'];
 				array_push($products,$product);
 			}
 			return $products;
 		}
 
-		public function can($privilege_name) {
+		public function can($privilege_name): bool {
+			if ($GLOBALS['_SESSION_']->elevated()) return true;
 			return $this->has_privilege($privilege_name);
 		}
 
 		// See If a User has been granted a Role
 		public function has_role($role_name) {
-		
+			$this->clearError();
+
+			$database = new \Database\Service();
+
 			// Check Role Query
 			$check_role_query = "
 				SELECT	r.id
@@ -342,30 +346,31 @@
 				WHERE	rur.user_id = ?
 				AND		r.name = ?
 			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$check_role_query,
-				array(
-					$this->id,
-					$role_name
-				)
-			);
-			
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Customer::has_role(): ".$GLOBALS['_database']->ErrorMsg();
+
+			$database->AddParam($this->id);
+			$database->AddParam($role_name);
+
+			$rs = $database->Execute($check_role_query);
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			
-			list($has_it) = $rs->fields;
+
+			list($has_it) = $rs->Fields();
 			if ($has_it) {
 				return $has_it;
-			} else {
+			}
+			else {
 				return false;
 			}
 		}
 
 		public function has_privilege($privilege_name) {
+			$this->clearError();
+			$database = new \Database\Service();
 			$privilege = new \Register\Privilege();
+			
 			if (! $privilege->get($privilege_name)) {
 				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
 					$privilege->add(array('name' => $privilege_name));
@@ -382,15 +387,12 @@
 				AND		rrp.role_id = rur.role_id
 				AND		rrp.privilege_id = ?
 			";
-			$bind_params = array(
-				$this->id,
-				$privilege->id
-			);
+			$database->AddParam($this->id);
+			$database->AddParam($privilege->id);
 
-			query_log($check_privilege_query,$bind_params,true);
-			$rs = $GLOBALS['_database']->Execute($check_privilege_query,$bind_params);
+			$rs = $database->Execute($check_privilege_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			list($found) = $rs->FetchRow();
@@ -492,8 +494,8 @@
 		public function last_active() {
 			$sessionList = new \Site\SessionList();
 			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
-			if ($sessionList->error) {
-				$this->error("Error getting session: ".$sessionList->error);
+			if ($sessionList->error()) {
+				$this->error("Error getting session: ".$sessionList->error());
 				return null;
 			}
 			if (! $session) return null;
@@ -503,8 +505,8 @@
 		public function is_super_elevated() {
 			$sessionList = new \Site\SessionList();
 			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
-			if ($sessionList->error) {
-				$this->error("Error getting session: ".$sessionList->error);
+			if ($sessionList->error()) {
+				$this->error("Error getting session: ".$sessionList->error());
 				return false;
 			}
 			if (! $session) return false;
@@ -516,6 +518,7 @@
 			$parameters = array(
 				'person_id'	=> $this->id
 			);
+
 			if (isset($params['type'])) $parameters['type'] = $params['type'];
 			$contacts = $contactList->find($parameters);
 			if ($contactList->error()) {
@@ -525,6 +528,17 @@
 			else {
 				return $contacts;
 			}
+		}
+
+		public function notify_email() {
+			$contactList = new \Register\ContactList();
+			$parameters = array(
+				'person_id'	=> $this->id,
+				'type'		=> 'email',
+				'notify'	=> true,
+			);
+			list($contact) = $contactList->find($parameters);
+			return $contact->value;
 		}
 				
 		public function locations($parameters = array()) {
@@ -537,7 +551,7 @@
 				FROM	register_user_locations rul
 				WHERE	rul.user_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->organization->id,$this->id));
+			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->organization()->id,$this->id));
 			
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
@@ -560,5 +574,106 @@
 				$pass .= substr($chars,rand(0,$num_chars),1);
 			}
 			return $pass; //turn the array into a string
+		}
+
+		public function validationKey() {
+			$database = new \Database\Service();
+			$get_key_query = "
+				SELECT	validation_key
+				FROM	register_users
+				WHERE	id = ?
+			";
+			$database->AddParam($this->id);
+			$rs = $database->Execute($get_key_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+			list($key) = $rs->FetchRow();
+			return $key;
+		}
+
+		public function login() {
+			return $this->login;
+		}
+
+		public function resetKey() {
+			$token = new \Register\PasswordToken();
+			$key = $token->getKey($this->id);
+			if ($token->error()) {
+				$this->error($token->error());
+				return null;
+			}
+			return $key;
+		}
+
+		public function acceptedTOU($tou_id) {
+			$tou = new \Site\TermsOfUse($tou_id);
+			$latest_version = $tou->latestVersion();
+			if ($tou->error()) {
+				$this->error($tou->error());
+				return false;
+			}
+			elseif (empty($latest_version)) {
+				$this->error('No published version of tou '.$tou_id);
+				return false;
+			}
+			else {
+				$actionList = new \Site\TermsOfUseActionList();
+				app_log("Checking for user ".$this->id." approval of version ".$latest_version->id,'trace');
+				list($action) = $actionList->find(array('version_id' => $latest_version->id,'user_id' => $this->id,'type' => 'ACCEPTED'));
+				if ($actionList->error()) {
+					$this->error($actionList->error());
+					return false;
+				}
+				if (!empty($action)) {
+					app_log("User has approved version ".$latest_version->id,'trace');
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public function acceptTOU($version_id) {
+			$version = new \Site\TermsOfUseVersion($version_id);
+			$version->addAction($this->id,'ACCEPTED');
+
+			if ($version->error()) {
+				$this->error($version->error());
+				return false;
+			}
+			return true;
+		}
+
+		public function declineTOU($version_id) {
+			$version = new \Site\TermsOfUseVersion($version_id);
+			$version->addAction($this->id,'DECLINED');
+
+			if ($version->error()) {
+				$this->error($version->error());
+				return false;
+			}
+			return true;
+		}
+
+		public function auditRecord($type,$notes,$admin_id = null) {
+			$audit = new \Register\UserAuditEvent();
+			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
+
+			// New Registration by customer
+			if (empty($admin_id)) $admin_id = $this->id;
+
+			$audit->add(array(
+				'user_id'		=> $this->id,
+				'admin_id'		=> $admin_id,
+				'event_date'	=> date('Y-m-d H:i:s'),
+				'event_class'	=> $type,
+				'event_notes'	=> $notes
+			));
+			if ($audit->error()) {
+				$this->error($audit->error());
+				return false;
+			}
+			return true;
 		}
     }

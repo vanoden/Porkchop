@@ -12,7 +12,7 @@
 			}
 		}
 
-		public function add($parameters) {
+		public function add($parameters = []) {
 			if (! isset($parameters['name']) || ! preg_match('/^\w.*$/',$parameters['name'])) {
 				$this->_error = "Name required";
 				return false;

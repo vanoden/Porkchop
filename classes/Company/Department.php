@@ -1,20 +1,17 @@
 <?php
 	namespace Company;
 
-	class Department {
-		public $id;
-		public $error;
+	class Department Extends \BaseModel {
+
 		public $name;
 		public $description;
 		
 		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->_tableName = 'company_departments';
+    		parent::__construct($id);
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! isset($parameters['code'])) {
 				$parameters['code'] = uniqid();
 			}
@@ -31,14 +28,14 @@
 				array($parameters['code'])
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Company::Department::add(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			list($this->id) = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = []): bool {
 			$update_object_query = "
 				UPDATE	company_departments
 				SET		id = id
@@ -72,14 +69,14 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Company::Department::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			
 			return $this->details();
 		}
 
-		public function get($code) {
+		public function get($code): bool {
 			$get_object_query = "
 				SELECT	id
 				FROM	company_departments
@@ -91,7 +88,7 @@
 				array($code)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Company::Department::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			if ($GLOBALS['_database']->rows > 0) {
@@ -99,32 +96,9 @@
 				return $this->details();
 			}
 			else {
-				$this->error = "Department not found";
+				$this->error("Department not found");
 				return null;
 			}
-		}
-
-		public function details() {
-			$get_object_query = "
-				SELECT	*
-				FROM	company_departments
-				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-			if (! $rs) {
-				$this->error = "SQL Error in Company::Department::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			$object = $rs->FetchNextObject(false);
-			$this->id = $object->id;
-			$this->code = $object->code;
-			$this->name = $object->name;
-			$this->description = $object->description;
-			
-			return $object;
 		}
 
 		public function add_member($id) {

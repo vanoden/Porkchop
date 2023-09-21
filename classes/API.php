@@ -10,14 +10,24 @@
 		protected $_version;
 		protected $_name;
 		protected $_release;
+		protected $_communication;
 
 		public function __construct() {
-			$counterKey = "api.".$this->_name.".".$_REQUEST["method"];
-			$counter = new \Site\Counter($counterKey);
-			$counter->increment();
+			if (!empty($_REQUEST["method"])) {
+				$counterKey = "api.".$this->_name.".".$_REQUEST["method"];
+				$counter = new \Site\Counter($counterKey);
+				$counter->increment();
+				app_log($this->_name.".".$_REQUEST['method']);
+			}
 			$this->response = new \HTTP\Response();
+			$this->_communication = new \Monitor\Communication();
 		}
 
+
+		/********************************************/
+		/* Show be overridden by child, but return	*/
+		/* an array if not.							*/
+		/********************************************/
 		public function _methods() {
 			return array();
 		}
@@ -30,50 +40,92 @@
 			return $this->_default_home;
 		}
 
-		###################################################
-		### Just See if Server Is Communicating			###
-		###################################################
+		/********************************************/
+		/* Just See if Server Is Communicating		*/
+		/********************************************/
 		public function ping() {
-			$response = new \HTTP\Response();
-			$response->header->session = $GLOBALS['_SESSION_']->code;
-			$response->header->method = $_REQUEST["method"];
-			$response->header->date = $this->system_time();
-			$response->message = "PING RESPONSE";
-			$response->success = 1;
-
-			$comm = new \Monitor\Communication();
-			$comm->update(json_encode($response));
-			api_log($response);
-	
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$header = new stdClass();
+			$header->session = $GLOBALS['_SESSION_']->code;
+			$header->method = $_REQUEST["method"];
+			$header->date = $this->system_time();
+			$response->addElement('header',$header);
+			$response->addElement('message',"PING RESPONSE");
+			$response->success(true);
+			$response->print();
 		}
 
+		/********************************************/
+		/* Return Error unless User Authenticated	*/
+		/********************************************/
 		public function requireAuth() {
-			if (! $GLOBALS['_SESSION_']->authenticated()) $this->deny();;
+			if (! $GLOBALS['_SESSION_']->authenticated()) $this->deny();
 		}
 
+		/********************************************/
+		/* Return Error unless User has 			*/
+		/* the required role.						*/
+		/********************************************/
 		public function requireRole($role_name) {
 			if (! $GLOBALS['_SESSION_']->customer->has_role($role_name)) $this->deny();
 		}
 
+		/********************************************/
+		/* Return Error unless User has 			*/
+		/* the required privilege.					*/
+		/********************************************/
 		public function requirePrivilege($privilege_name) {
 			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name)) $this->deny();
 		}
 
-		###################################################
-		### System Time									###
-		###################################################
+		/********************************************/
+		/* Return Active Anti-CSRF Token			*/
+		/********************************************/
+		public function csrfToken() {
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('token',$GLOBALS['_SESSION_']->getCSRFToken());
+
+			$comm = new \Monitor\Communication();
+			$comm->update(json_encode($response));
+	
+			$response->print();
+		}
+
+		/************************************************/
+		/* Validate Anti-CSRF Token						*/
+		/************************************************/
+		public function validCSRFToken() {
+			// Machines don't send CSRF Token
+			if (preg_match('/^portal_sync/',$_SERVER['HTTP_USER_AGENT'])) return true;
+
+			// Not valid if token not even sent
+			if (empty($_REQUEST['csrfToken'])) return false;
+
+			// Check provided token against session
+			if ($GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) return true;
+
+			// All else fails, check failed
+			return false;
+		}
+
+		/************************************************/
+		/* Formatted System Time						*/
+		/************************************************/
 		private function system_time() {
 			return date("Y-m-d H:i:s");
 		}
-		###################################################
-		### Return Properly Formatted Error Message		###
-		###################################################
+
+		/************************************************/
+		/* Send Properly Formatted Error Message		*/
+		/************************************************/
 		public function error($message) {
 			$_REQUEST["stylesheet"] = '';
 			error_log($message);
 
+			$response = new \APIResponse();
 			if (preg_match('/SQL\sError/',$message)) {
+				$response->code(500);
 				$message = "Application Data Error";
 			}
 
@@ -81,36 +133,88 @@
 			$errCounter = new \Site\Counter($counterKey);
 			$errCounter->increment();
 
-			$response = new \HTTP\Response();
-			$response->error = $message;
-			$response->success = 0;
-			print $this->formatOutput($response);
+			$response->addElement('error',$message);
+			$response->success(false);
+			$response->print();
 			exit;
 		}
 
-		###################################################
-		### Application Error							###
-		###################################################
+		/************************************************/
+		/* Send Generic Internal Error Response			*/
+		/* To Log and Hides Sensitive Errors			*/
+		/************************************************/
 		public function app_error($message,$file = __FILE__,$line = __LINE__) {
 			app_log($message,'error',$file,$line);
 			$this->error('Application Error');
 		}
 
-		###################################################
-		### Send Proper Permission Denied Response		###
-		###################################################
-		public function deny() {
+		/************************************************/
+		/* Send Proper Permission Denied Response		*/
+		/************************************************/
+		public function deny($message = null) {
 			$_REQUEST["stylesheet"] = '';
-			$response = new \HTTP\Response();
-			$response->error = "Permission Denied";
-			$response->success = 0;
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->code(403);
+			$response->success(false);
+			if (!empty($message)) $response->addElement('error',$message);
+			else $response->addElement('error',"Permission Denied");
+			http_response_code(403);
+			$response->print();
 			exit;
 		}
 
-		###################################################
-		### Convert Object to XML						###
-		###################################################
+		/************************************************/
+		/* Send Proper Resource Not Found Response		*/
+		/************************************************/
+		public function notFound($message = null) {
+			if (empty($message)) $message = "Resource not found";
+			$_REQUEST["stylesheet"] = '';
+			$response = new \APIResponse();
+			$response->code(404);
+			$response->success(false);
+			$response->addElement('error',$message);
+			$response->print();
+			exit;
+		}
+
+		/************************************************/
+		/* Send Proper Missing Requirement Response		*/
+		/************************************************/
+		public function invalidRequest($message = null) {
+			if (empty($message)) $message = "Invalid Request";
+			$_REQUEST["stylesheet"] = '';
+			$response = new \APIResponse();
+			$response->code(400);
+			$response->success(false);
+			$response->addElement('error',$message);
+			$response->print();
+			exit;
+		}
+
+		public function _store_communication() {
+			$message = "Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code;
+			if (array_key_exists('asset_code',$_REQUEST)) $message .= " for asset ".$_REQUEST['asset_code'];
+			app_log($message,'debug',__FILE__,__LINE__);
+
+			if ($_REQUEST['method'] == 'findLastCommunication') return;
+
+			# Comm Dashboard
+			$store_request = $GLOBALS['_REQUEST_'];
+			$this_post = $_POST;
+			unset($this_post['password']);
+			$store_request->post = $this_post;
+			$store_request->method = $_REQUEST["method"];
+
+			$this->_communication->add(array(json_encode($store_request),'[PENDING]'));
+			if ($this->_communication->error()) {
+				app_log("Error in api comm storage: ".$this->_communication->error(),'error',__FILE__,__LINE__);
+			}
+		}
+
+		/************************************************/
+		/* Return the object as XML Model.				*/
+		/* DEPRECATED - Use APIResponse::print()		*/
+		/************************************************/
 		public function formatOutput($object,$format = 'xml') {
 			if ($format == 'json' || (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json')) {
 				$format = 'json';
@@ -122,7 +226,7 @@
 			}
 			$document = new \Document($format);
 			$document->prepare($object);
-			if ($GLOBALS['_config']->site->force_content_length) {
+			if (isset($GLOBALS['_config']->site->force_content_length) && $GLOBALS['_config']->site->force_content_length == true) {
 				$content = $document->content();
 				header('Content-Length: '.strlen($content));
 				return $content;
@@ -132,14 +236,20 @@
 			}
 		}
 
+		/************************************************/
+		/* Return List of Available Methods				*/
+		/************************************************/
 		public function apiMethods() {
 			$methods = $this->_methods();
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->method = $methods;
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('method',$methods);
+			$response->print();
 		}
 
+		/************************************************/
+		/* Write an Event to the proper API Log			*/
+		/************************************************/
 		public function log($message) {
 			if (! API_LOG) return false;
 			$log = "";
@@ -147,8 +257,8 @@
 			$login = $GLOBALS['_SESSION_']->customer->code;
 			$method = $_REQUEST['method'];
 			$host = $GLOBALS['_REQUEST_']->client_ip;
-			$response = new \HTTP\Response();
-			if (is_object($response) && $response->success) $status = "SUCCESS";
+			$response = new \APIResponse();
+			if (is_object($response) && $response->success()) $status = "SUCCESS";
 			else $status = "FAILED";
 			$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
 
@@ -163,32 +273,41 @@
 			fclose($log);
 		}
 
-		# Manage Module Schema
+		/************************************************/
+		/* Get Database Schema 							*/
+		/************************************************/
 		public function schemaVersion() {
 			if ($this->_schema->error) {
 				$this->app_error("Error getting version: ".$this->_schema->error,__FILE__,__LINE__);
 			}
+
 			$version = $this->_schema->version();
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->version = $version;
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->addElement('version',$version);
+			$response->print();
 		}
+
+		/************************************************/
+		/* Run Database Schema Upgrade Function			*/
+		/************************************************/
 		public function schemaUpgrade() {
 			if ($this->_schema->error) {
 				$this->app_error("Error getting version: ".$this->_schema->error,__FILE__,__LINE__);
 			}
-			$response = new \HTTP\Response();
+
+			$response = new \APIResponse();
 			if ($this->_schema->upgrade()) {
-				$response->success = 1;
-				$response->version = $this->_schema->version();
+				$response->success(true);
+				$response->addElement('version',$this->_schema->version());
 			}
 			else {
 				$this->app_error("Error upgrading schema: ".$this->_schema->error,__FILE__,__LINE__);
 			}
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
+		// Increments Site Counter, not to be confused with BaseListClass::incrementCounter()
 		public function _incrementCounter($reason) {
 			$counterKey = "api.".$this->_name.".".$_REQUEST["method"].".".$reason;
 			$counter = new \Site\Counter($counterKey);
@@ -234,7 +353,7 @@
 					if ($options['type'] == "textarea") {
 						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$param.'">'.$default.'</textarea>'.$cr;
 					}
-					elseif (is_array($options['options'])) {
+					elseif (isset($options['options']) && is_array($options['options'])) {
 						$form .= $t.$t.$t.$t.'<select class="value input apiInput" name="'.$param.'">';
 						foreach ($options['options'] as $optname) {
 							$form .= $t.$t.$t.$t.$t.'<option value="'.$optname.'">'.$optname.'</option>'.$cr;

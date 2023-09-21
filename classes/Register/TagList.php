@@ -1,14 +1,13 @@
 <?php
 	namespace Register;
 
-	class TagList {
-	
-		public $count;
-		public $_error;
+	class TagList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
-	
+		
 			app_log("Register::TagList::find()",'trace',__FILE__,__LINE__);
+			$this->resetCount();
+			$this->clearError();
 			
 			$this->error = null;
 			$get_tags_query = "
@@ -32,12 +31,17 @@
 				$get_tags_query .= "
 				AND     name = ?";
 				array_push($bind_params,$parameters['name']);
+			}			
+			if (isset($parameters['id']) && !empty($parameters['id'])) {
+				$get_tags_query .= "
+				AND     id = ?";
+				array_push($bind_params,$parameters['id']);
 			}
-			
+
 			query_log($get_tags_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_tags_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::TagList::find: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			
@@ -45,7 +49,7 @@
 			while (list($id) = $rs->FetchRow()) {
 			    $regsterTag = new \Register\Tag($id);
 			    $regsterTag->details();
-			    $this->count ++;
+			    $this->incrementCount();
 			    array_push($regsterTags,$regsterTag);
 			}
 			
@@ -53,10 +57,10 @@
 		}
 		
 		public function getDistinct() {
-		
             app_log("Register::TagList::getDistinct()",'trace',__FILE__,__LINE__);
-			
-			$this->error = null;
+			$this->resetCount();
+			$this->clearError();
+
 			$bind_params = array();
 			$get_tags_query = "
 				SELECT	distinct(name)
@@ -67,16 +71,15 @@
 			query_log($get_tags_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_tags_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::TagList::getDistinct: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
-			
+
 			$regsterTags = array();
-			while (list($name) = $rs->FetchRow()) $regsterTags[] = $name;
+			while (list($name) = $rs->FetchRow()) {
+				$this->incrementCount();
+				$regsterTags[] = $name;
+			}
 			return $regsterTags;
-		}
-		
-		public function error() {
-			return $this->_error;
 		}
 	}

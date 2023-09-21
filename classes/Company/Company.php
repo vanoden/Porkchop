@@ -1,73 +1,24 @@
 <?php
 	namespace Company;
 
-	class Company {
-		private $schema_version = 1;
-		public	$error;
-		public	$id;
+	class Company Extends \BaseModel {
+
 		public $login;
+		public $name;
 		public $primary_domain;
 		public $status;
 		public $deleted;
 
 		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->_tableName = 'company_companies';
+			$this->_tableUKColumn = 'name';
+			$this->_cacheKeyPrefix = 'site.company';
+    		parent::__construct($id);
 		}
 
-		public function get($name) {
-			$get_object_query = "
-				SELECT	id
-				FROM	company_companies
-				WHERE	name = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($name)
-			);
-			if (! $rs) {
-				$this->error = "SQL Error in Site::Company::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return false;
-			}
-			list($id) = $rs->FetchRow();
-			$this->id = $id;
-			return $this->details();
-		}
-
-		public function details() {
-			$get_details_query = "
-				SELECT	*
-				FROM	company_companies
-				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_details_query,
-				array($this->id)
-			);
-			if (! $rs) {
-				$this->error = "SQL Error in Site::Company::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			$object = $rs->FetchNextObject(false);
-			if (is_object($object)) {
-				$this->name = $object->name;
-				$this->login = $object->login;
-				$this->primary_domain = $object->primary_domain;
-				$this->status = $object->status;
-				$this->deleted = $object->deleted;
-				return $object;
-			}
-			else {
-				app_log("No company found for id '".$this->id."'",'debug');
-				return new \stdClass();
-			}
-		}
-
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! preg_match('/\w/',$parameters['name'])) {
-				$this->error = "name parameter required in Company::Company::add";
+				$this->error("name parameter required in Company::Company::add");
 				return 0;
 			}
 			
@@ -79,7 +30,7 @@
 				(?)";
 			$GLOBALS['_database']->Execute($add_object_query,array($parameters['name']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in company::Company::add: ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -87,11 +38,13 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()){
+		public function update($parameters = []): bool {
 			if (! preg_match('/^\d+$/',$this->id)) {
-				$this->error = "Valid id required for details in company::Company::update";
+				$this->error("Valid id required for details in company::Company::update");
 				return false;
 			}
+
+			$cache = $this->cache();
 
 			# Update Object
 			$update_object_query = "
@@ -119,10 +72,26 @@
 				$update_object_query,$bind_params
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Site::Company::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			
-			return true;
+			$cache->delete();
+			return $this->details();
+		}
+
+		public function locations() {
+			$locationList = new \Company\LocationList();
+			$locations = $locationList->find();
+			if ($locationList->error()) $this->error($locationList->error());
+
+			return $locations;
+		}
+
+		public function domains() {
+			$domainList = new \Company\DomainList();
+			$domains = $domainList->find();
+			if ($domainList->error()) $this->error($domainList->error());
+
+			return $domains;
 		}
 	}

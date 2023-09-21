@@ -1,30 +1,30 @@
 <?php
 	namespace Shipping;
 	
-	class Vendor extends \ORM\BaseModel {
-		public $id;
+	class Vendor extends \BaseModel {
+	
 		public $name;
 		public $account_number;
-		public $tableName = 'shipping_vendors';
-        public $fields = array('id', 'name', 'account_number');
-        
+
+		public function __construct($id = 0) {	
+			$this->_tableName = 'shipping_vendors';
+			$this->_addFields(array('id', 'name', 'account_number'));
+			$this->_tableUKColumn = 'name';
+			parent::__construct($id);
+		}
+
         /**
          * add by params
          * 
          * @param array $parameters, name value pairs to add and populate new object by
          */
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			
 			if (! isset($parameters['name'])) {
-				$this->_error = "Name required";
+				$this->error("Name required");
 				return false;
 			}
 			
 			return parent::add($parameters);
-		}
-
-		public function get($name) {
-			app_log("Getting vendor $name");
-			return parent::get($name,'name');
 		}
 	}

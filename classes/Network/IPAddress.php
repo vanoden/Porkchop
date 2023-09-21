@@ -1,22 +1,27 @@
 <?php
 	namespace Network;
 
-	class IPAddress Extends \BaseClass {
-		public $id;
+	class IPAddress Extends \BaseModel {
+
 		public $address;
 		public $prefix;
 		public $gateway;
+		public $adapter_id;
 
-		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				$this->details();
-			}
+		public function __construct(int $id = 0) {
+			$this->_tableName = "network_addresses";
+			$this->_tableUKColumn = null;
+		    parent::__construct($id);
 		}
-		public function get($address) {
+
+		public function get($address): bool {
+			$this->clearError();
+
+			$database = new \Database\Service;
+
 			if (! isset($address)) {
 				$this->error("address required");
-				return null;
+				return false;
 			}
 			if (preg_match('/^(\d+\.\d+\.\d+\.\d+)\/(\d+)$/',$address,$matches)) {
 				$address = $matches[1];
@@ -28,7 +33,7 @@
 				$prefix = $matches[2];
 				$type = 'ipv6';
 			}
-			elseif(preg_match('/^[a-f0-9\:]+/$',$address)) {
+			elseif(preg_match('/^[a-f0-9\:]+$/',$address)) {
 				$type = 'ipv6';
 			}
 			elseif(preg_match('/^(\d+\.\d+\.\d+\.\d+)$/',$address)) {
@@ -36,33 +41,35 @@
 			}
 			else {
 				$this->error('Invalid ip address');
-				return null;
+				return false;
 			}
 
 			$get_object_query = "
-				SELECT	id
-				FROM	network_addresses
-				WHERE	type = ?
-				AND		address = ?
+				SELECT	na.id
+				FROM	network_addresses na,
+						network_subnets ns
+				WHERE	na.address = ?
+				AND		na.subnet_id = ns.id
+				AND		ns.type = ?
 			";
+			$database->AddParam($address);
+			$database->AddParam($type);
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($type,$address)
-			);
+			$rs = $database->Execute($get_object_query);
 
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
 
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
 			return $this->details();
 		}
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! isset($parameters['address'])) {
 				$this->error("address required for new address");
+				return false;
 			}
 			$add_object_query = "
 				INSERT
@@ -93,7 +100,7 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = []): bool {
 			$bind_params = array();
 
 			$update_object_query = "
@@ -116,7 +123,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	 *
 				FROM	network_addresses
@@ -131,11 +138,16 @@
 			}
 
 			$object = $rs->FetchNextObject(false);
-			if ($object->id) {
+			if (isset($object->id)) {
 				$this->address = $object->address;
 				$this->prefix = $object->prefix;
-				$this->adapter = new Adapter($object->adapter_id);
+				$this->adapter_id = $object->adapter_id;
 			}
+			return true;
+		}
+
+		public function adapter() {
+			return new \Network\Adapter($this->adapter_id);
 		}
 
 		public function cidr() {

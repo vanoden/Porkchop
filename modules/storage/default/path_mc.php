@@ -10,12 +10,25 @@
 		$repository = $repositoryList->find(array('name' => $repository_string))[0];
 		if (!empty($repository)) {
 			$file = $repository->getFileFromPath($path_string);
-			header('Content-Type: '.$file->mime_type);
-			header('Size: '.$file->size);
-			$file->download();
+			if (empty($file)) {
+				$page->addError("File '$path_string' not found");
+				app_log("File '$path_string' requested but not found",'warn');
+				return 404;
+			}
+			else {
+				header('Content-Type: '.$file->mime_type);
+				header('Size: '.$file->size);
+				$file->download();
+				exit();
+			}
+		}
+		else {
+			$page->addError("Repository not found");
+			app_log("Repository '$repository_string' requested but not found",'warn');
+			return 404;
 		}
 	}
 	else {
-		print "Error: $path invalid<br>\n";
+		$page->addError("Error: $path invalid");
+		app_log("Invalid path '$path' requested",'warn');
 	}
-	exit;

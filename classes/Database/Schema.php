@@ -1,15 +1,10 @@
 <?php
 	namespace Database;
 
-	class Schema {
-		private $_error;
+	class Schema Extends \BaseClass {
 		private $name;
 
-		public function __construct($name) {
-			
-		}
-
-		public function error() {
-			return $this->error;
+		public function table($name) {
+			return new \Database\Schema\Table($name);
 		}
 	}

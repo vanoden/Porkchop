@@ -8,6 +8,9 @@
 		public $minor;
 		public $build;
 		public $status;
+		public $package_id;
+		public $owner_id;
+		public $date_published;
 		private $_file;
 		private $extension;
 
@@ -18,7 +21,7 @@
 			}
 		}
 
-		public function add($parameters = array()) {
+		public function add($parameters = []) {
 			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) {
 				$this->error = "Not permitted to manage packages";
 				return false;
@@ -34,13 +37,13 @@
 				$this->error = "Package not found";
 				return false;
 			}
+			$this->package_id = $package->id;
 			
-            if (! $package->repository->id) {
-                $this->error = "No repository assigned to package";
-                return false;
-            }
-            
-			$this->package = $package;
+			if (! $package->repository_id) {
+				$this->error = "No repository assigned to package";
+				return false;
+			}
+
 			if (! preg_match('/^\d+$/',$parameters['major'])) {
 				$this->error = "major sequence required";
 				return false;
@@ -81,17 +84,17 @@
 			$file = new \Storage\File();
 			$file->name($this->formatted_name());
 
-			$parameters['repository_id'] = $package->repository->id;
+			$parameters['repository_id'] = $package->repository_id;
 			$parameters['name'] = $this->formatted_name();
 			if (! isset($parameters['mime_type'])) $parameters['mime_type'] = guess_mime_type($parameters['filename']);
 			if (! isset($parameters['size'])) $parameters['size'] = filesize($parameters['path']);
 
-            // Open Repository for File Storage
+			// Open Repository for File Storage
 			app_log("Getting Repository");
 			$factory = new \Storage\RepositoryFactory();
-			$repository = $factory->load($package->repository->id);
-			if ($factory->error) {
-				$this->error = "Error finding repository: ".$factory->error;
+			$repository = $factory->load($package->repository_id);
+			if ($factory->error()) {
+				$this->error = "Error finding repository: ".$factory->error();
 				app_log($this->error,'error');
 				return false;
 			}
@@ -103,21 +106,22 @@
 				$parameters['date_published'] = get_mysql_date(time());
 			}
 
-            // Add File to Repository
+			// Add File to Repository
 			app_log("Adding file to repository");
-            $file->add(array(
-                'repository_id' => $parameters['repository_id'],
-                'name'          => $parameters['name'],
-                'size'          => $parameters['size'],
-                'mime_type'     => $parameters['mime_type'],
-            ));
+			$file->add(array(
+				'repository_id' => $parameters['repository_id'],
+				'name'          => $parameters['name'],
+				'size'          => $parameters['size'],
+				'mime_type'     => $parameters['mime_type'],
+			));
 			if ($file->error()) {
+				$this->error("Error adding file to repository: ".$file->error());
 				return false;
 			}
-			app_log(print_r($file,true));
+			//app_log(print_r($file,true));
 			$this->id = $file->id;
 			if (! $repository->addFile($file,$parameters['path'])) {
-				$this->error = "Error adding file to repository: ".$repository->error;
+				$this->error("Error adding file to repository: ".$repository->error());
 				return false;
 			}
 
@@ -207,8 +211,8 @@
 		}
 
 		public function formatted_name() {
-			app_log("Formatting name with ".$this->package->code."-".$this->major.".".$this->minor.".".$this->build.".".$this->extension,'trace');
-			return sprintf("%s-%d.%d.%d.%s",$this->package->code,$this->major,$this->minor,$this->build,$this->extension);
+			app_log("Formatting name with ".$this->package()->code."-".$this->major.".".$this->minor.".".$this->build.".".$this->extension,'trace');
+			return sprintf("%s-%d.%d.%d.%s",$this->package()->code,$this->major,$this->minor,$this->build,$this->extension);
 		}
 
 		public function publish() {
@@ -246,7 +250,7 @@
 			return $this->details();
 		}
 		
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 		
 			$update_object_query = "
 				UPDATE	package_versions
@@ -278,7 +282,7 @@
 				AND		minor = ?
 				AND		build = ?
 			";
-			array_push($bind_params,$this->package->id,$this->major,$this->minor,$this->build);
+			array_push($bind_params,$this->package_id,$this->major,$this->minor,$this->build);
 
 			query_log($update_object_query,$bind_params);
 
@@ -291,7 +295,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	*
 				FROM	package_versions
@@ -310,7 +314,6 @@
 			$object = $rs->FetchNextObject(false);
 			$this->id = $object->id;
 			$this->package_id = $object->package_id;
-			$this->package = new Package($object->package_id);
 			$this->major = $object->major;
 			$this->minor = $object->minor;
 			$this->build = $object->build;
@@ -327,6 +330,9 @@
 		public function repository() {
 			return $this->file()->repository();
 			
+		}
+		public function package() {
+			return new \Package\Package($this->package_id);
 		}
 		
 		public function version() {

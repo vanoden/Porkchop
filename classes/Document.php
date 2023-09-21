@@ -11,8 +11,9 @@
 		}
 
 		public function prepare($object) {
+            $object = $this->filterElements($object);
 			if ($this->type == 'xml') {
-				$this->_content = $this->_xmlout($object);
+				$this->_content = $this->_xmlout(json_decode(json_encode($object)));
 				return;
 			}
 			elseif ($this->type == 'json') {
@@ -21,7 +22,7 @@
 			}
 			else {
 				$this->error = "Invalid document type";
-				return undef;
+				return null;
 			}
 		}
 
@@ -70,4 +71,29 @@
 		public function data() {
 			return $this->_data;
 		}
+
+        protected function filterElements($object) {
+            if (is_array($object)) {
+                foreach ($object as $key=>$value) {
+                    if (is_object($value)) {
+                        $object[$key] = $this->filterElements($value);
+                    }
+                }
+                return $object;
+            }
+            else {
+                foreach ($object as $key=>$value) {
+                    if ($key == '_tableName') {
+                        unset($object->$key);
+                    }
+                    elseif ($key == '_tableNumberColumn') {
+                        unset($object->$key);
+                    }
+                    elseif (is_object($value)) {
+                        $object->$key = $this->filterElements($value);
+                    }
+                }
+                return $object;
+            }
+        }
 	}

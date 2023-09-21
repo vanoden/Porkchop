@@ -1,20 +1,15 @@
 <?php
 	namespace Contact;
 
-	class Event {
-		public $error;
+	class Event Extends \BaseModel {
 
-		public function __construct() {
+		public function __construct($id = 0) {
 			app_log("Initializing Contact Module",'debug',__FILE__,__LINE__);
-
-			$_init = new Schema();
-			if ($_init->error)
-			{
-				$this->error = "Error initializing Contact module: ".$_init->error;
-				return null;
-			}
+			$this->_tableName = 'contact_events';
+			parent::__construct($id);
 		}
-		public function add($parameters) {
+
+		public function add($parameters = []) {
 			$add_object_query = "
 				INSERT
 				INTO	contact_events
@@ -27,14 +22,14 @@
 				array(json_encode($parameters))
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Contact::Event::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return NULL;
 			}
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			return $this->update($parameters);
 		}
-		public function update($parameters) {
+		public function update($parameters = []): bool {
 			$update_object_query = "
 				UPDATE	contact_events
 				SET		id = id";
@@ -51,32 +46,9 @@
 				array($this->id)
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Contact::Event::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return NULL;
 			}
 			return $this->details();
-		}
-
-		public function details() {
-			$get_object_query = "
-				SELECT	id,
-						date_event,
-						status,
-						content
-				FROM	contact_events
-				WHERE	id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-			if (! $rs) {
-				$this->error = "SQL Error in Contact::Event::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			$object = $rs->FetchNextObject(false);
-			$content = json_decode($object->content);
-			$object->content = $content;
-			return $object;
 		}
 	}

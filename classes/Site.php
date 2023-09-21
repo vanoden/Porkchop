@@ -47,8 +47,8 @@
 						$this->install_log("Adding role '$role_name'");
 						if (! isset($role_data['description'])) $role_data['description'] = $role_name;
 						$role->add(array('name' => $role_name,'description' => $role_data['description']));
-						if ($role->error) {
-							$this->install_fail("Error adding role '$role_name': ".$role->error);
+						if ($role->error()) {
+							$this->install_fail("Error adding role '$role_name': ".$role->error());
 						}
 						elseif (isset($role_data['privileges'])) {
 							foreach ($role_data['privileges'] as $privilege_name) {
@@ -107,7 +107,7 @@
 				}
 				foreach ($menu["items"] as $item) {
 					$nav_item = new \Navigation\Item();
-					if ($nav_item->get($nav_menu->id,$item["title"])) {
+					if ($nav_item->getItem($nav_menu->id,$item["title"])) {
 						$nav_item->update(
 							array(
 								"view_order"	=> $item["view_order"],
@@ -135,7 +135,7 @@
 					}
 					foreach ($item['items'] as $subitem) {
 						$subnav_item = new \Navigation\Item();
-						if ($subnav_item->get($nav_menu->id,$subitem["title"],$nav_item)) {
+						if ($subnav_item->getItem($nav_menu->id,$subitem["title"],$nav_item)) {
 							$subnav_item->update(
 								array(
 									"view_order"	=> $subitem["view_order"],
@@ -202,4 +202,12 @@
 			if ($GLOBALS['_config']->site->https) return 'https://'.$GLOBALS['_config']->site->hostname;
 			else return 'http://'.$GLOBALS['_config']->site->hostname;
 		}
+
+		public function page($module = null, $view = null, $index = null) {
+			return new \Site\Page($module,$view,$index);
+		}
+
+        public function configuration($key) {
+            return new \Site\Configuration($key);
+        }
 	}

@@ -1,23 +1,24 @@
 <?php
 	namespace Site;
 
-	class SiteMessageDelivery extends \ORM\BaseModel {
+	class SiteMessageDelivery extends \BaseModel {
 	
-        public $id;
         public $message_id;
         public $user_id;
         public $date_viewed;
         public $date_acknowledged;
-        public $tableName = 'site_message_deliveries';
-        public $fields = array('id','message_id','user_id','date_viewed','date_acknowledged');
 
 		public function __construct($id = null) {
-			if (isset($id)) {
-				$this->id = $id;
-				$this->details();
-			}
+			$this->_tableName = "site_message_deliveries";
+			$this->_addFields(array('id','message_id','user_id','date_viewed','date_acknowledged'));
+    		parent::__construct($id);
 		}
-        public function get($message_id,$user_id) {
+
+		public function __call($name,$parameters) {
+			if ($name == "get") return $this->getDelivery($parameters[0],$parameters[1]);
+		}
+
+        public function getDelivery($message_id,$user_id) {
             $get_object_query = "
                 SELECT  id
                 FROM    site_message_deliveries
@@ -26,9 +27,10 @@
             ";
             $rs = $GLOBALS['_database']->Execute($get_object_query,array($message_id,$user_id));
             if (! $rs) {
-                $this->error("SQL Error in Site::SiteMessageDelivery::get(): ".$GLOBALS['_database']->ErrorMsg());
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return false;
             }
+            
             list($this->id) = $rs->FetchRow();
             return $this->details();
         }

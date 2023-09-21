@@ -1,7 +1,8 @@
 <?php
 	namespace Register;
 
-	class Notification Extends \BaseClass {
+	class Notification Extends \BaseModel {
+	
 		public function add($params = array()) {
 			$add_notification_query = "
 				INSERT
@@ -17,7 +18,7 @@
 			return $this->update($params);
 		}
 
-		public function update($params = array()) {
+		public function update($params = []): bool {
 			$update_object_query = "
 				UPDATE	register_notifications
 				SET		id = id

@@ -19,13 +19,8 @@
     ?>
 </script>
 
-<div class="title">Repository <?=$repository->code?></div>
-<?php	 if ($page->errorCount() > 0) { ?>
-<div class="form_error"><?=$page->errorString()?></div>
-<?php	 }
-    if ($page->success) { ?>
-<div class="form_success"><?=$page->success?></div>
-<?php	 } ?>
+<?=$page->showAdminPageInfo()?>
+
 <form name="repositoryForm" action="/_storage/repository" method="post">
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="id" value="<?=$repository->id?>" />
@@ -63,7 +58,7 @@
         <input type="text" name="endpoint" class="value input wide_xl" value="<?=$form['endpoint']?>" />
     </div>
     
-    <div id="s3Settings" style="display:none;">
+    <div id="s3Settings"<?php if ($form['type'] != "s3") { print "style=\"display:none;\""; } ?>>
         <div class="container" style="margin: 10px; padding: 20px; border:dashed 1px gray; display: inline-table;">
             <h4 style="padding: 0px; margin: 0px;">S3 Configuration</h4>
             <span class="label">Access Key</span>
@@ -79,6 +74,53 @@
             <input type="text" name="region" class="value input wide_xl" value="<?=$form['region']?>" />
         </div>
     </div>
+	<div class="tableBody clean min-tablet">
+		<div class="tableRowHeader">
+        	<div class="tableCell" style="width: 25%;">Type</div>
+        	<div class="tableCell" style="width: 25%;">ID</div>
+        	<div class="tableCell" style="width: 50%;">Permissions</div>
+    	</div>
+    	<!-- end row header -->
+		<?php foreach ($default_privileges as $privilege) { ?>
+    	<div class="tableRow">
+    		<div class="tableCell">
+	            <select name="d_privilege_type[1]">
+					<option value="">Select</option>
+					<option value="all">All</option>
+					<option value="user">User</option>
+					<option value="organization">Organization</option>
+					<option value="role">Role</option>
+				</select>
+    		</div>
+    		<div class="tableCell">
+				<input type="text" name="d_privilege_id[1]" class="value input" />
+    		</div>
+    		<div class="tableCell">
+				r<input type="checkbox" name="d_w[1]" value="1" />
+				w<input type="checkbox" value="d_r[1]" value="1" />
+				g<input type="checkbox" value="d_g[1]" value="1" />
+    		</div>
+		</div>
+		<?php	} ?>
+    	<div class="tableRow">
+    		<div class="tableCell">
+	            <select name="privilege_type[0]">
+					<option value="all">All</option>
+					<option value="user">User</option>
+					<option value="organization">Organization</option>
+					<option value="role">Role</option>
+				</select>
+    		</div>
+    		<div class="tableCell">
+				<input type="text" name="privilege_id[0]" class="value input" />
+    		</div>
+    		<div class="tableCell">
+				r<input type="checkbox" name="w[0]" value="1" />
+				w<input type="checkbox" value="r[0]" value="1" />
+				g<input type="checkbox" value="g[0]" value="1" />
+    		</div>
+		</div>
+	</div>
     
     <div class="form_footer">
         <input type="submit" name="btn_submit" class="button" value="Update" />

@@ -1,14 +1,15 @@
 <?php
 	namespace Site;
 
-	class Module {
-		private $_error;
+	class Module Extends \BaseModel {
+
 		private $_name;
 		private $_path;
 		private $_metadata;
 
 		public function __construct() {
 			$this->_metadata = new \stdClass();
+    		parent::__construct();			
 		}
 
 		public function import_metadata($module) {
@@ -17,17 +18,14 @@
 			# Loop through Roles
 			print_r($metadata);
 		}
-		public function error() {
-			return $this->_error;
-		}
 
-		public function get($name) {
+		public function get($name): bool {
 			if (! preg_match('/^\w[\w\-\_]*$/',$name)) {
-				$this->_error = "Invalid module name";
+				$this->error("Invalid module name");
 				return false;
 			}
 			if (! is_dir(MODULES."/".$name)) {
-				$this->_error = "Module not found";
+				$this->error("Module not found");
 				return false;
 			}
 			$this->_name = $name;
@@ -42,11 +40,11 @@
 		}
 		public function views() {
 			if (! $this->_name) {
-				$this->_error = "Module not identified";
+				$this->error("Module not identified");
 				return null;
 			}
 			if (! is_dir($this->_path)) {
-				$this->_error = "Module style not found"; 
+				$this->error("Module style not found"); 
 				return null;
 			}
 			if ($handle = opendir($this->_path)) {
@@ -59,7 +57,7 @@
 				return $views;
 			}
 			else {
-				$this->_error = "Cannot view view data";
+				$this->error("Cannot view view data");
 				return null;
 			}
 		}
@@ -72,7 +70,7 @@
 					XML_SERIALIZER_OPTION_RETURN_RESULT => true,
 					XML_SERIALIZER_OPTION_MODE          => 'simplexml',
 				);
-				$xml = new XML_Unserializer($options);
+				$xml = new \XML_Unserializer($options);
 				if ($xml->unserialize($path,true,$options)) {
 					$this->_metadata = (object) $xml->getUnserializedData();
 				}
@@ -85,5 +83,9 @@
 		public function description() {
 			if (isset($this->_metadata->description)) return $this->_metadata->description;
 			return null;
+		}
+
+		public function validName($string): bool {
+			return $this->validCode($string);
 		}
 	}

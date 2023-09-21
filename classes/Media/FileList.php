@@ -1,9 +1,7 @@
 <?php
 	namespace Media;
 
-	class FileList {
-		public $error;
-		public $count;
+	class FileList extends \BaseListClass {
 	
 		public function find($parameters = array()) {
 			# Get Code From Table
@@ -28,8 +26,8 @@
 			}
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				$object = $this->details($id);
-				array_push($objects,$object);
+			    $file = new \Media\File($id);
+				array_push($objects,$file);
 			}
 			return $objects;
 		}

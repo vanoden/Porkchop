@@ -1,11 +1,11 @@
 <?php
 	namespace Site;
 
-	class HitList {
-		public $errno;
-		public $error;
-
+	class HitList Extends \BaseListClass {
 		function find($parameters = array()) {
+			$this->clearError();
+			$this->resetCount();
+
 			$find_objects_query = "
 				SELECT	id
 				FROM	session_hits
@@ -28,13 +28,14 @@
 					limit ".$parameters['_limit'];
 			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Session::HitList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			$hits = array();
 			while (list($id) = $rs->FetchRow()) {
 				$hit = new Hit($id);
 				array_push($hits,$hit);
+				$this->incrementCount();
 			}
 			return $hits;
 		}

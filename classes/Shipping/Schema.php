@@ -5,7 +5,7 @@
 		public $module = "shipping";
 
 		public function upgrade() {
-			$this->error = null;
+			$this->clearError();
 
 			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
@@ -24,11 +24,7 @@
 						UNIQUE KEY `uk_name` (`name`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating shipping_vendors table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
+				if (! $this->executeSQL($create_table_query)) return false;
 
 				# Collection of Shipments
 				$create_table_query = "
@@ -57,11 +53,7 @@
 						INDEX `idx_status` (`status`,`date_entered`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating shipping_shipments table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
+				if (! $this->executeSQL($create_table_query)) return false;
 
 				# Items requiring action
 				$create_table_query = "
@@ -85,11 +77,7 @@
 						KEY `idx_tracking_code` (`shipment_id`,`tracking_code`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating shipping_packages table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
+				if (! $this->executeSQL($create_table_query)) return false;
 
 				# Things We Have To Do
 				$create_table_query = "
@@ -105,11 +93,7 @@
 						FOREIGN KEY `fk_shipment_product` (`product_id`) REFERENCES `product_products` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating shipping_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
+				if (! $this->executeSQL($create_table_query)) return false;
 
 				$this->setVersion(1);
 				$GLOBALS['_database']->CommitTrans();
@@ -121,40 +105,26 @@
 					$alter_table_query = "
 						ALTER TABLE `shipping_items` ADD `shipment_id` INT(11)
 					";
-					if (! $this->executeSQL($alter_table_query)) {
-						$this->error = "SQL Error adding column to shipping_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
-						app_log($this->error, 'error');
-						return false;
-					}
+					if (! $this->executeSQL($alter_table_query)) return false;
 				}
 
 				$itemList = new \Shipping\ItemList();
 				$items = $itemList->find();
 				foreach ($items as $item) {
 					if (empty($item->package_id)) $item->delete();
-					if ($item->error()) {
-						$this->_error = "Error deleting item: ".$item->error();
-						return false;
-					}
+					if ($item->error()) return false;
+
 					$package = new \Shipping\Package($item->package_id);
 					if ($item->package_id != $package->id) {
 						$item->update(array('shipment_id' => $package->shipment_id));
-						if ($item->error()) {
-							$this->_error = "Error updating item: ".$item->error();
-							return false;
-						}
+						if ($item->error()) return false;
 					}
 				}
 
 				$alter_table_query = "
 					ALTER TABLE `shipping_items` ADD FOREIGN KEY `fk_shipping_items_shipment` (`shipment_id`) REFERENCES `shipping_shipments` (`id`)";
 
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error adding foreign key to shipping_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-				
+				if (! $this->executeSQL($alter_table_query)) return false;
 
 				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
@@ -170,19 +140,70 @@
 					ALTER TABLE `shipping_shipments` MODIFY vendor_id int(11)
 				";
 
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->error = "SQL Error adding foreign key to shipping_shipments table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-				
+				if (! $this->executeSQL($alter_table_query)) return false;
 
 				$this->setVersion(3);
 				$GLOBALS['_database']->CommitTrans();
 			}
-			$this->addRoles(array(
-				'shipping manager'	=> 'Can browse all shipments'
-			));
+			if ($this->version() < 4) {
+				app_log("Upgrading schema to version 4",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+                $alter_table_query = "
+					ALTER TABLE `shipping_shipments`
+                    MODIFY status enum('NEW','SHIPPED','LOST','RECEIVED','RETURNED','OPEN','CLOSED') NOT NULL DEFAULT 'OPEN'
+                ";
+
+				if (! $this->executeSQL($alter_table_query)) return false;
+
+                $update_table_query = "
+					UPDATE `shipping_shipments` SET status = 'OPEN';
+                ";
+
+				if (! $this->executeSQL($update_table_query)) return false;
+
+                $alter_table_query = "
+					ALTER TABLE `shipping_shipments`
+                    MODIFY status enum('OPEN','CLOSED') NOT NULL DEFAULT 'OPEN'
+                ";
+
+				if (! $this->executeSQL($alter_table_query)) return false;
+
+				$alter_table_query = "
+					ALTER TABLE `shipping_packages`
+                    MODIFY status enum('READY','SHIPPED','RECEIVED','RETURNED','LOST') NOT NULL DEFAULT 'READY'
+				";
+
+				if (! $this->executeSQL($alter_table_query)) return false;
+
+				$alter_table_query = "
+					ALTER TABLE `shipping_items`
+                    MODIFY `condition` enum('OK','DAMAGED','MISSING')
+				";
+
+				if (! $this->executeSQL($alter_table_query)) return false;
+                
+				$this->setVersion(4);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 5) {
+				app_log("Upgrading schema to version 4",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `shipping_packages`
+                    MODIFY status enum('READY','SHIPPED','INCOMPLETE','RECEIVED','RETURNED','LOST') NOT NULL DEFAULT 'READY'
+				";
+                
+				$this->setVersion(5);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}

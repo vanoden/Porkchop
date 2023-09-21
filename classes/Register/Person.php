@@ -1,14 +1,17 @@
 <?php
 namespace Register;
 
-class Person Extends \BaseClass {
+class Person Extends \BaseModel {
 
     public $id;
     public $title;
+    public $first_name;
     public $middle_name;    
     public $last_name;
     public $location;
-    public $organization;
+    public $organization_id;
+    public $department_id;
+    public $login;
     public $code;
     public $message;
     public $department;
@@ -17,135 +20,29 @@ class Person Extends \BaseClass {
     public $automation;
     public $password_age;
 	public $auth_failures;
-    public $_settings = array( "date_format" => "US" );
+    public $timezone;
+    public $auth_method;
+    protected $_settings = array( "date_format" => "US" );
+	protected $_database;
 
-    public function __construct($id = 0) {
+    public function __construct($id = null) {
+    	$this->_database = new \Database\Service();
+		$this->_tableName = 'register_users';
+		$this->_tableUKColumn = 'login';
+		$this->_cacheKeyPrefix = 'customer';
+        $this->_aliasField('login','code');
 
         // Clear Error Info
-        $this->_error = '';
+        $this->clearError();
+
+		$this->_addStatus(array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED","BLOCKED"));
 
         // Find Person if id given
-        if (isset($id) && is_numeric($id)) {
-            $this->id = $id;
-            $this->details();
-        }
+		parent::__construct($id);
     }
-    
+
     public function setId($id=0) {
         $this->id = $id;
-    }
-    
-    public function details() {
-    
-        $cache_key = "customer[" . $this->id . "]";
-
-        # Cached Customer Object, Yay!
-        $cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
-        if (($this->id) and ($customer = $cache->get())) {
-            $this->first_name = $customer->first_name;
-            $this->last_name = $customer->last_name;
-            $this->code = $customer->code;
-            $this->login = $customer->code;
-            $this->department_id = $customer->department_id;
-            if (isset($customer->department)) $this->department = $customer->department;
-            $this->organization = new Organization($customer->organization_id);
-            $this->status = $customer->status;
-            $this->timezone = $customer->timezone;
-            $this->auth_method = $customer->auth_method;
-            $this->automation = $customer->automation;
-            $this->password_age = $customer->password_age;
-			$this->auth_failures = $customer->auth_failures;
-            $this->cached(true);
-
-            # In Case Cache Corrupted
-            if ($customer->id) {
-                app_log("Customer " . $this->login . " [" . $this->id . "] found in cache", 'trace', __FILE__, __LINE__);
-				$this->exists(true);
-                return $customer;
-            }
-            else {
-                $this->error("Customer " . $this->id . " returned unpopulated cache");
-            }
-        }
-
-        # Get Persons Info From Database
-        $get_person_query = "
-			SELECT	id,
-					login code,
-					first_name,
-					last_name,
-					date_created,
-					organization_id,
-					department_id,
-					auth_method,
-					status,
-					timezone,
-					automation,
-					unix_timestamp(password_age) password_age,
-					auth_failures						
-			FROM	register_users
-			WHERE   id = ?
-		";
-
-		$rs = $GLOBALS['_database']->Execute($get_person_query, array(
-			$this->id
-		));
-		if (!$rs) {
-			$this->error("SQL Error in Register::Person::details(): " . $GLOBALS['_database']->ErrorMsg());
-			return null;
-		}
-		$customer = $rs->FetchNextObject(false);
-		if (!isset($customer->id)) {
-			app_log("No customer found for " . $this->id);
-			$this->id = null;
-			return $this;
-		}
-
-		app_log("Caching details for person '" . $this->id . "'", 'trace', __FILE__, __LINE__);
-		# Store Some Object Vars
-		if ($customer->id && $customer->id > 0) {
-			$this->id = $customer->id;
-            $this->first_name = $customer->first_name;
-            $this->last_name = $customer->last_name;
-            $this->code = $customer->code;
-            $this->login = $customer->code;
-            $customer->login = $customer->code;
-            $this->organization = new Organization($customer->organization_id);
-            $this->department_id = $customer->department_id;
-            if (isset($customer->department)) $this->department = $customer->department;
-            $this->status = $customer->status;
-            $this->timezone = $customer->timezone;
-            $this->auth_method = $customer->auth_method;
-            if ($customer->automation == 0) $this->automation = false;
-            else $this->automation = true;
-            $this->password_age = $customer->password_age;            
-			$this->auth_failures = $customer->auth_failures;
-            $this->cached(true);
-			$this->exists(true);
-        }
-        else {
-            $this->id = null;
-            $this->first_name = null;
-            $this->last_name = null;
-            $this->code = null;
-            $this->login = null;
-            $customer->login = null;
-            $this->organization = new Organization();
-            $this->department_id = null;
-            $this->status = null;
-            $this->timezone = null;
-            $this->auth_method = null;
-            $this->automation = false;
-            $this->password_age = null;
-			$this->auth_failures = 0;
-            $this->_cached = 0;
-        }
-
-        // Cache Customer Object
-        if ($customer->id) cache_set($cache_key, $customer);
-
-        // Return Object
-        return $this;
     }
 
 	public function full_name() {
@@ -155,15 +52,19 @@ class Person Extends \BaseClass {
 			if (strlen($full_name)) $full_name .= " ";
 			$full_name .= $this->last_name;
 		}
-		if (!strlen($full_name)) $full_name = $this->code;
+		if (!strlen($full_name)) $full_name = $this->login;
 		if (!strlen($full_name)) $full_name = '[empty]';
 		return $full_name;
 	}
     
-    public function add($parameters = array()) {
+    public function add($parameters = []) {
+		$this->clearError();
+
+        if (!isset($parameters['login']) && isset($parameters['code'])) $parameters['login'] = $parameters['code'];
+
         if (!$this->validLogin($parameters['login'])) {
             $this->error("Invalid Login");
-            return null;
+            return false;
         }
 
         // Defaults
@@ -197,7 +98,7 @@ class Person Extends \BaseClass {
 					?,
 					?
 				)
-			";
+		";
 
         $GLOBALS['_database']->Execute($add_user_query, array(
             $parameters['date_expires'],
@@ -207,7 +108,7 @@ class Person Extends \BaseClass {
             $parameters['validation_key']
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error("SQL Error in Register::Person::add(): Error: " . $GLOBALS['_database']->ErrorMsg() . " Query: " . preg_replace("/[\t\r\n]/", " ", $add_user_query));
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return false;
         }
         $this->id = $GLOBALS['_database']->Insert_ID();
@@ -215,8 +116,7 @@ class Person Extends \BaseClass {
         return $this->update($parameters);
     }
 
-    public function update($parameters = array()) {
-    
+    public function update($parameters = []): bool {
         if (!$this->id) {
             $this->error("User ID Required for Update");
             return false;
@@ -249,7 +149,7 @@ class Person Extends \BaseClass {
 		}
 		if (isset($parameters['login']) and !empty($parameters['login'])) {
 			if (!$this->validLogin($parameters['login'])) {
-				$this->error = "Invalid login";
+				$this->error("Invalid login");
 				return false;
 			}
 			$update_customer_query .= ",
@@ -301,11 +201,11 @@ class Person Extends \BaseClass {
 		$update_customer_query .= "
 			WHERE	id = ?
 		";
+
 		array_push($bind_params,$this->id);
-		query_log($update_customer_query,$bind_params,true);
         $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Register::Person::update(): " . $GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return null;
         }
 
@@ -317,6 +217,10 @@ class Person Extends \BaseClass {
         // Get Updated Information
         return $this->details();
     }
+
+    public function organization() {
+        return new \Register\Organization($this->organization_id);
+    }
     
 	public function getMeta($id = 0) {
 		if (!$id) $id = $this->id;
@@ -327,7 +231,7 @@ class Person Extends \BaseClass {
 		";
 		$rs = $GLOBALS['_database']->Execute($get_meta_query, array($id));
 		if (!$rs) {
-			$this->error = "SQL Error in Register::Person::getMeta(): " . $GLOBALS['_database']->ErrorMsg();
+			$this->SQLError($GLOBALS['_database']->ErrorMsg());
 			return null;
 		}
 		$metadata = array();
@@ -349,7 +253,7 @@ class Person Extends \BaseClass {
             $value = $arg2;
         }
         if (!$id) {
-            $this->error = "No person_id for metadata";
+            $this->error("No person_id for metadata");
             return null;
         }
         $add_meta_query = "
@@ -365,7 +269,7 @@ class Person Extends \BaseClass {
             $value
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Register::Person::setMeta(): " . $GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return null;
         }
         return 1;
@@ -385,7 +289,7 @@ class Person Extends \BaseClass {
 
         $rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
         if (!$rs) {
-            $this->error = "SQL Error in Register::Person::metadata(): " . $GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return null;
         }
         list($value) = $rs->FetchRow();
@@ -408,14 +312,14 @@ class Person Extends \BaseClass {
 
 		$rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
 		if (!$rs) {
-			$this->error = "SQL Error in Register::Person::searchMeta(): " . $GLOBALS['_database']->ErrorMsg();
+			$this->SQLError($GLOBALS['_database']->ErrorMsg());
 			return null;
 		}
 		$objects = array();
 		while (list($id) = $rs->FetchRow()) {
-			$object = $this->details($id);
-			if ($object->status == 'DELETED') continue;
-			array_push($objects, $object);
+            $person = new Person($id);
+			if ($person->status == 'DELETED') continue;
+			array_push($objects, $person);
 		}
 		return $objects;
     }
@@ -435,23 +339,23 @@ class Person Extends \BaseClass {
             $this->id
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Register::Person::verify_email(): ".$GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return false;
         }
         list($id, $unverified_key) = $rs->fields;
         if (!$id) {
             app_log("Key doesn't match");
-            $this->error = "Invalid Login or Validation Key";
+            $this->error("Invalid Login or Validation Key");
             return false;
         }
         if (!$unverified_key) {
             app_log("No key in system to match");
-            $this->error = "Email Address already verified for this account";
+            $this->error("Email Address already verified for this account");
             return false;
         }
         if ($unverified_key != $validation_key) {
             app_log($unverified_key . " != " . $validation_key);
-            $this->error = "Invalid Login or Validation Key";
+            $this->error("Invalid Login or Validation Key");
             return false;
         }
         $validate_email_query = "
@@ -463,7 +367,7 @@ class Person Extends \BaseClass {
             $this->id
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->error = "SQL Error in Register::Person::verify_email(): ".$GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return false;
         }
         $this->id = $id;
@@ -474,8 +378,8 @@ class Person Extends \BaseClass {
         $parameters['person_id'] = $this->id;
         $contact = new Contact();
         $contact->add($parameters);
-        if ($contact->error) {
-            $this->error = "Error adding contact: " . $contact->error;
+        if ($contact->error()) {
+            $this->error("Error adding contact: " . $contact->error());
             return null;
         }
         return $contact;
@@ -518,10 +422,9 @@ class Person Extends \BaseClass {
     }
     
     public function notify($message) {
-    
         // Make Sure We have identifed a person
         if (!preg_match('/^\d+$/', $this->id)) {
-            $this->error = "Customer not specified";
+            $this->error("Customer not specified");
             return false;
         }
         
@@ -533,20 +436,21 @@ class Person Extends \BaseClass {
             "notify" => true
         ));
         
-        if ($contactList->error) {
-            app_log("Error loading contacts: " . $contactList->error, 'error', __FILE__, __LINE__);
-            $this->error = "Error loading contacts";
+        if ($contactList->error()) {
+            app_log("Error loading contacts: " . $contactList->error(), 'error', __FILE__, __LINE__);
+            $this->error("Error loading contacts");
             return false;
         }
         foreach ($contacts as $contact) {
             app_log("Sending notifications to " . $contact->value, 'notice');
             $message->to($contact->value);
-            $transport = \Email\Transport::Create(array(
+			$transportFactory = new \Email\Transport();
+            $transport = $transportFactory->Create(array(
                 'provider' => $GLOBALS['_config']->email->provider
             ));
             if (! isset($transport)) {
-                $this->error = "Error initializing email transport";
-                app_log("Message to " . $contact->value . " failed: " . $this->error, 'error');
+                $this->error("Error initializing email transport");
+                app_log("Message to " . $contact->value . " failed: " . $this->error(), 'error');
                 return false;
             }
             $transport->hostname($GLOBALS['_config']->email->hostname);
@@ -554,11 +458,11 @@ class Person Extends \BaseClass {
             if ($transport->deliver($message)) {
                 app_log("Message to " . $contact->value . " successful");
             } elseif ($transport->error()) {
-                $this->error = "Error sending notification: " . $transport->error();
-                app_log("Message to " . $contact->value . " failed: " . $this->error, 'error');
+                $this->error("Error sending notification: " . $transport->error());
+                app_log("Message to " . $contact->value . " failed: " . $this->error(), 'error');
                 return false;
             } else {
-                $this->error = "Unhandled Error sending notification";
+                $this->error("Unhandled Error sending notification");
                 app_log("Message to " . $contact->value . " failed", 'error');
                 return false;
             }
@@ -567,11 +471,11 @@ class Person Extends \BaseClass {
     }
 
 	public function block() {
-		app_log("Blocking customer '".$this->code."'",'INFO');
+		app_log("Blocking customer '".$this->login."'",'INFO');
 		return $this->update(array('status' => 'BLOCKED'));
 	}
 
-    public function delete() {
+    public function delete(): bool {
         app_log("Changing person " . $this->id . " to status DELETED", 'debug', __FILE__, __LINE__);
 
         # Bust Cache
@@ -582,6 +486,7 @@ class Person Extends \BaseClass {
         $this->update($this->id, array(
             'status' => "DELETED"
         ));
+		return true;
     }
     
     public function parents() {
@@ -603,7 +508,7 @@ class Person Extends \BaseClass {
             $this->id
         ));
         if (!$rs) {
-            $this->error = "SQL Error in Register::Person::locations: " . $GLOBALS['_database']->ErrorMsg();
+            $this->SQLError($GLOBALS['_database']->ErrorMsg());
             return null;
         }
         $locations = array();
@@ -639,8 +544,8 @@ class Person Extends \BaseClass {
 	}
 
 	public function password_expired() {
-		if (isset($this->organization->password_expiration_days) && !empty($this->organization->password_expiration_days)) {
-			$passwordAllowedAgeSeconds = $this->organization->password_expiration_days * 86400;
+		if (isset($this->organization()->password_expiration_days) && !empty($this->organization()->password_expiration_days)) {
+			$passwordAllowedAgeSeconds = $this->organization()->password_expiration_days * 86400;
 			$passwordAgeSeconds = time() - $this->password_age;
 			if ($passwordAgeSeconds < $passwordAllowedAgeSeconds) {
 				return false;

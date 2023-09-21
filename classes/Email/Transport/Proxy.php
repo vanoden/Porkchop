@@ -26,7 +26,7 @@
 			$request = new \HTTP\Request();
 			$request->url('http://'.$this->hostname().'/send.php');
 			if ($request->error()) {
-				$this->_error = $request->error();
+				$this->error($request->error());
 				return false;
 			}
 			$request->addParam('token',$this->token());
@@ -39,12 +39,12 @@
 			$client = new \HTTP\Client();
 			$client->connect($this->hostname());
 			if ($client->error()) {
-				$this->_error = "Cannot connect to host: ".$client->error();
+				$this->error("Cannot connect to host: ".$client->error());
 				return false;
 			}
 			$response = $client->post($request);
 			if ($client->error()) {
-				$this->_error = "Cannot send request: ".$client->error();
+				$this->error("Cannot send request: ".$client->error());
 				return false;
 			}
 			app_log("Email response: ".print_r($response,true),'trace');
@@ -52,12 +52,12 @@
 				$content = $response->content();
 				app_log($content);
 				if (preg_match('/^ERROR\:\s(.*)$/',$content,$matches)) {
-					$this->_error = $matches[1];
+					$this->error($matches[1]);
 					$this->_result = "Failed";
 					return false;
 				}
 				elseif (preg_match('/Mailer\sError/',$content)) {
-					$this->_error = $content;
+					$this->error($content);
 					$this->_result = "Failed";
 					return false;
 				}
