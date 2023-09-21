@@ -16,7 +16,7 @@
 					CREATE TABLE IF NOT EXISTS `network_domains` (
 						`id`			int(11) NOT NULL AUTO_INCREMENT,
 						`name`			varchar(255) NOT NULL,
-						PRIMARY KEY (`id`),
+						PRIMARY KEY `pk_network_domains` (`id`),
 						UNIQUE KEY		`uk_name` (`name`)
 					)
 				";
@@ -133,5 +133,6 @@
 				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			return true;
 		}
 	}

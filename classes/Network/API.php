@@ -515,7 +515,7 @@
 				$_REQUEST['prefix'] = $matches[2];
 				$_REQUEST['type'] = 'ipv6';
 			}
-			elseif(preg_match('/^[a-f0-9\:]+/$',$_REQUEST['address'])) {
+			elseif(preg_match('/^[a-f0-9\:]+$/',$_REQUEST['address'])) {
 				$_REQUEST['type'] = 'ipv6';
 			}
 			elseif(preg_match('/^(\d+\.\d+\.\d+\.\d+)$/',$_REQUEST['address'])) {
@@ -525,6 +525,7 @@
 			if (! isset($_REQUEST['prefix'])) $this->error("prefix required");
 	
 			$address = new \Network\IPAddress();
+			app_log("Adding Address",'info');
 			$address->add(
 				array(
 					'adapter_id' => $adapter->id,
@@ -533,11 +534,33 @@
 					'type' => $_REQUEST['type']
 				)
 			);
-			if ($address->error) $this->error("Error adding adapter: ".$address->error());
+			if ($address->error()) {
+				print $address->error()."<br>\n";
+				$this->error("Error adding adapter: ".$address->error());
+			}
 	
 			$response = new \HTTP\Response();
 			$response->success = 1;
 			$response->address = $address;
+			print $this->formatOutput($response);
+		}
+
+		public function addSubnet() {
+			$subnet = new \Network\Subnet();
+
+			$params = array();
+			if (!empty($_REQUEST['address'])) $params['address'] = $_REQUEST['address'];
+			if (!empty($_REQUEST['mask'])) $params['mask'] = $_REQUEST['mask'];
+			if (!empty($_REQUEST['prefix'])) $params['prefix'] = $_REQUEST['prefix'];
+			if (!empty($_REQUEST['type'])) $params['type'] = $_REQUEST['type'];
+
+			if (! $subnet->add($params)) {
+				$this->error($subnet->error());
+			}
+
+			$response = new \HTTP\Response();
+			$response->success = 1;
+			$response->subnet = $subnet;
 			print $this->formatOutput($response);
 		}
 
@@ -602,7 +625,12 @@
 					'host_name'		=> array('required'	=> true),
 					'adapter_name'	=> array(),
 					'address'		=> array(),
-					'prefix'		=> array(),
+					'subnet_id'		=> array(),
+					'type'			=> array(),
+				),
+				'addSubnet'	=> array(
+					'address'		=> array(),
+					'subnet_id'		=> array(),
 					'type'			=> array(),
 				),
 			);

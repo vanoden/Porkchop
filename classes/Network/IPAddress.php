@@ -75,7 +75,7 @@
 				INSERT
 				INTO	network_addresses
 				(		`address`,
-						`prefix`,
+						`subnet_id`,
 						`adapter_id`
 				)
 				VALUES
@@ -86,7 +86,7 @@
 				$add_object_query,
 				array(
 					$parameters['address'],
-					$parameters['prefix'],
+					$parameters['subnet_id'],
 					$parameters['adapter_id']
 				)
 			);

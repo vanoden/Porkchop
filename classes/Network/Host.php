@@ -117,6 +117,34 @@
 			return $this->details();
 		}
 
+<<<<<<< HEAD
+		public function details() {
+			$get_object_query = "
+				SELECT	 *
+				FROM	network_hosts
+				WHERE	id = ?
+			";
+
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
+
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			$object = $rs->FetchNextObject(false);
+			if ($object->id) {
+				$this->id = $object->id;
+				$this->name = $object->name;
+				$this->domain = new Domain($object->domain_id);
+				$this->os_version = $object->os_version;
+				$this->os_name = $object->os_name;
+			}
+			return true;
+		}
+
+=======
+>>>>>>> 89c59b50583395720461b2358b2c07e3da8e5fd2
 		public function adapters() {
 			$adapterList = new AdapterList();
 
@@ -134,8 +162,11 @@
 			if (isset($this->domain)) $fqdn .= ".".$this->domain;
 			return $fqdn;
 		}
+<<<<<<< HEAD
+=======
 
 		public function CAPTCHARequired(): bool {
 			return false;
 		}
+>>>>>>> 89c59b50583395720461b2358b2c07e3da8e5fd2
 	}
