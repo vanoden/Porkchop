@@ -185,7 +185,6 @@
                 FROM    `$this->_tableName`
                 WHERE   `$this->_tableIDColumn` = ?
             ";
-
             $database->AddParam($this->id);
 
             $rs = $database->Execute($get_key_query);

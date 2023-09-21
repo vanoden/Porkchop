@@ -79,6 +79,8 @@
         ### Get Details regarding Specified Customer	###
         ###################################################
         function getCustomer() {
+            $this->requireAuth();
+
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
@@ -216,7 +218,7 @@
             $customers = $customerlist->find($parameters);
 
             # Error Handling
-            if ($customerlist->error) $this->error($customerlist->error);
+            if ($customerlist->error()) $this->error($customerlist->error());
 
             $response = new \APIResponse();
             $response->success(true);
@@ -1043,7 +1045,7 @@
             $search['_like'] = array('name');
             $search['status'] = array('NEW','ACTIVE','EXPIRED');
             $organizationsFound = $organizationList->search($search);
-            
+
             $results = array();
             foreach ($organizationsFound as $organization) {
                 $newOrganization = new \stdClass();

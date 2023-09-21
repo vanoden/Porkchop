@@ -40,7 +40,7 @@
         </div>   
         <div class="tableRow">
             <div class="tableCell"><?=$shipment->code?></div>
-            <div class="tableCell"><?=$shipment->document_number?></div>
+            <div class="tableCell"><a href="<?=$object_link?>"><?=$shipment->document_number?></a></div>
             <div class="tableCell"><?=$shipment->status?></div>
             <div class="tableCell"><?=$shipment->send_contact()->full_name()?></div>
             <div class="tableCell"><?=$shipment->date_entered?></div>

@@ -19,9 +19,7 @@
 </script>
 
 <!-- Page Header -->
-<?=$page->showBreadcrumbs()?>
-<?=$page->showTitle()?>
-<?=$page->showMessages()?>
+<?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
 <div class="container_narrow">

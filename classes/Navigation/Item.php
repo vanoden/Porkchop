@@ -3,7 +3,7 @@
 
 	class Item Extends \BaseModel {
 
-		private $menu_id;
+		public $menu_id;
 		public $title;
 		public $target;
 		public $view_order;

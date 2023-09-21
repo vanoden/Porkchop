@@ -308,10 +308,13 @@ if (isset($organization->id)) {
 	$page->addBreadcrumb($organization->name, "/_register/organization?id=" . $organization->id);
 }
 if (isset($customer->id)) {
-	$page->addBreadcrumb($customer->full_name(), "/_register/admin_account?id=" . $customer->id);
+	$page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);
 }
 
 // terms of use user history list
 $termsOfUseList = new \Site\TermsOfUseList();
 $terms = $termsOfUseList->find();
 $termsOfUseActionList = new \Site\TermsOfUseActionList();
+
+// Get List of Locations
+$locations = $customer->locations();

@@ -1,53 +1,70 @@
 
-<?=$page->showBreadcrumbs()?>
-<?=$page->showTitle()?>
-<?=$page->showMessages()?>
+<?=$page->showAdminPageInfo()?><div class="tableBody min-tablet">
+<h3>Directories</h3>
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell">Name</div>
+		<div class="tableCell">Action</div>
+		<div class="tableCell">Owner</div>
+		<div class="tableCell">Read Protect</div>
+		<div class="tableCell">Write Protect</div>
+	</div>
+<?php
+	if (is_array($directories)) {
+		foreach ($directories as $directory) { ?>
+	<div class="tableRow">
+		<div class="tableCell"><a href="/_storage/browse?code=<?=$repository->code?>&path=<?=$directory->path?>"><?=$directory->name()?></a></div>
+		<div class="tableCell"></div>
+		<div class="tableCell">N/A</div>
+		<div class="tableCell"><?=$directory->read_protect?></div>
+		<div class="tableCell"><?=$directory->write_protect?></div>
+	</div>
+<?php	}
+	}
+?>
+</div>
 
-        <table class="body">
-            <tr>
-                <th>Name</th>
-                <th>Action</th>
-                <th>Mime-Type</th>
-                <th>Size (Bytes)</th>
-                <th>Date Created</th>
-                <th>Owner</th>
-                <th>Endpoint</th>
-                <th>Read Protect</th>
-                <th>Write Protect</th>
-            </tr>
-            <?php
-                if (is_array($directories)) {
-                    foreach ($directories as $directory) { ?>
-                <tr>
-                    <td colspan=9><a href="/_storage/browse?code=<?=$repository->code?>&path=<?=$directory->path?>"><?=$directory->name()?>/</a></td>
-                </tr>
-                <?php  }
-                }
-                if (is_array($files)) {
-                      foreach ($files as $file) { ?>
-                    <tr><td><a href="/_storage/file?id=<?=$file->id?>"><?=$file->name()?></a></td>
-                        <td><a href="/_storage/downloadfile?id=<?=$file->id?>">Download</a>&nbsp;<a href="/_storage/browse?method=deleteFile?file_id=<?=$file->id?>">Delete</a></td>
-                        <td><?=$file->mime_type?></td>
-                        <td><?=$file->size?></td>
-                        <td><?=$file->date_created?></td>
-                        <td><?=$file->owner()->full_name()?></td>
-                        <td><?=$file->endpoint?></td>
-                        <td><?=$file->read_protect?></td>
-                        <td><?=$file->write_protect?></td>
-                    </tr>
-                    <?php  } 
-                        }
-                        ?>
-        </table>
-        <?php	if ($repository->id) { ?>
-            <form name="repoUpload" action="/_storage/file" method="post" enctype="multipart/form-data">
-                <div class="container">
-                    <span class="label">Upload File</span>
-                    <input type="hidden" name="repository_id" value="<?=$repository->id?>" />
-                    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-                    <input type="hidden" name="path" value="<?=$_REQUEST['path']?>" />
-                    <input type="file" name="uploadFile" />
-                    <input type="submit" name="btn_submit" class="button" value="Upload" />
-                </div>
-            </form>
-            <?php	} ?>
+<h3>Files in <?=$_REQUEST["path"]?></h3>
+<div class="tableBody min-tablet">
+	<div class="tableRowHeader">
+		<div class="tableCell">Name</div>
+		<div class="tableCell">Action</div>
+		<div class="tableCell">Mime-Type</div>
+		<div class="tableCell">Size (Bytes)</div>
+		<div class="tableCell">Date Created</div>
+		<div class="tableCell">Owner</div>
+		<div class="tableCell">Endpoint</div>
+		<div class="tableCell">Read Protect</div>
+		<div class="tableCell">Write Protect</div>
+	</div>
+<?php
+	if (is_array($files)) {
+		foreach ($files as $file) {
+?>
+	<div class="tableRow">
+		<div class="tableCell"><a href="/_storage/file?id=<?=$file->id?>"><?=$file->name()?></a></div>
+		<div class="tableCell"><a href="/_storage/downloadfile?id=<?=$file->id?>">Download</a>&nbsp;<a href="/_storage/browse?method=deleteFile?file_id=<?=$file->id?>">Delete</a></div>
+		<div class="tableCell"><?=$file->mime_type?></div>
+		<div class="tableCell"><?=$file->size?></div>
+		<div class="tableCell"><?=$file->date_created?></div>
+		<div class="tableCell"><?=$file->owner()->full_name()?></div>
+		<div class="tableCell"><?=$file->endpoint?></div>
+		<div class="tableCell"><?=$file->read_protect?></div>
+		<div class="tableCell"><?=$file->write_protect?></div>
+	</div>
+<?php		} 
+		}
+?>
+</div>
+<?php	if ($repository->id) { ?>
+<form name="repoUpload" action="/_storage/file" method="post" enctype="multipart/form-data">
+	<div class="container">
+		<span class="label">Upload File</span>
+		<input type="hidden" name="repository_id" value="<?=$repository->id?>" />
+		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+		<input type="hidden" name="path" value="<?=$_REQUEST['path']?>" />
+		<input type="file" name="uploadFile" />
+		<input type="submit" name="btn_submit" class="button" value="Upload" />
+	</div>
+</form>
+<?php	} ?>

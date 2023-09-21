@@ -101,4 +101,10 @@
 			if (in_array($string,$this->_types)) return true;
 			else return false;
 		}
+
+        // Standard 'search' field validation
+        public function validSearch($string): bool {
+            if (preg_match('/^[\*\w\-\_\.\s]*$/',$string)) return true;
+            else return false;
+        }
 	}

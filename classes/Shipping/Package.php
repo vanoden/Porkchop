@@ -180,4 +180,8 @@
 
 			return $this->update($params);
 		}
+
+        public function received() {
+            if ($this->status == 'RECEIVED') return true;
+        }
 	}

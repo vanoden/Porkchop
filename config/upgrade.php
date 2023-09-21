@@ -34,7 +34,9 @@
 				"terms_of_use"	=> $templates['admin'],
 				"term_of_use"	=> $templates['admin'],
 				"tou_versions"	=> $templates['admin'],
-				"tou_version"	=> $templates['admin']
+				"tou_version"	=> $templates['admin'],
+				"export_content"	=> $templates['admin'],
+				"import_content"	=> $templates['admin']
 			),
 		),
 		"Geography"		=> array(

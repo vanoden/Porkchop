@@ -1,23 +1,4 @@
-<?=$page->showAdminInfo()?>
-<style>
-	.table {
-		display: table;
-		width: 756px;
-	}
-	.tableHead {
-		display: table-row;
-		font-weight: bold;
-		text-align: center;
-	}
-	.tableRow {
-		display: table-row;
-	}
-	.tableCell {
-		display: table-cell;
-		padding: 3px 10px;
-		border: 1px solid #999999;
-	}
-</style>
+<?=$page->showAdminPageInfo()?>
 <script language="Javascript">
 	function edit(id) {
 		document.forms[0].id.value = id;
@@ -42,8 +23,8 @@
 <input type="hidden" name="tou_id" value="<?=$tou->id?>"/>
 <input type="hidden" name="id"/>
 <input type="hidden" name="method"/>
-<div class="table">
-	<div class="tableHead">
+<div class="tableBody">
+	<div class="tableRowHeader">
 		<div class="tableCell">Version</div>
 		<div class="tableCell">Status</div>
 		<div class="tableCell">Date Created</div>

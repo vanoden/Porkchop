@@ -187,7 +187,7 @@
 		}
 
         public function shipped() {
-            if ($this->status == 'SHIPPED') return true;
+            if ($this->status == 'CLOSED' || !empty($this->date_shipped)) return true;
             return false;
         }
 

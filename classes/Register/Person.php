@@ -11,6 +11,7 @@ class Person Extends \BaseModel {
     public $location;
     public $organization_id;
     public $department_id;
+    public $login;
     public $code;
     public $message;
     public $department;
@@ -29,6 +30,7 @@ class Person Extends \BaseModel {
 		$this->_tableName = 'register_users';
 		$this->_tableUKColumn = 'login';
 		$this->_cacheKeyPrefix = 'customer';
+        $this->_aliasField('login','code');
 
         // Clear Error Info
         $this->clearError();
@@ -43,110 +45,6 @@ class Person Extends \BaseModel {
         $this->id = $id;
     }
 
-    public function details(): bool {
-		$this->clearError();
-
-		$database = new \Database\Service();
-		$cache = $this->cache();
-
-        # Cached Customer Object, Yay!
-        if ($this->id && isset($cache) && ($customer = $cache->get())) {
-			app_log("Loaded customer from cache");
-            $this->first_name = $customer->first_name;
-            $this->last_name = $customer->last_name;
-            $this->code = $customer->code;
-            $this->department_id = $customer->department_id;
-            if (isset($customer->department)) $this->department = $customer->department;
-            $this->organization_id = $customer->organization_id;
-            $this->status = $customer->status;
-            $this->timezone = $customer->timezone;
-            $this->auth_method = $customer->auth_method;
-            $this->automation = $customer->automation;
-            if (isset($customer->password_age)) $this->password_age = $customer->password_age;
-			if (isset($customer->auth_failures)) $this->auth_failures = $customer->auth_failures;
-            $this->_cached = 1;
-			return true;
-        }
-		else {
-			app_log("No record found in cache");
-		}
-
-        # Get Persons Info From Database
-        $get_person_query = "
-			SELECT	id,
-					login code,
-					first_name,
-					last_name,
-					date_created,
-					organization_id,
-					department_id,
-					auth_method,
-					status,
-					timezone,
-					automation,
-					unix_timestamp(password_age) password_age,
-					auth_failures						
-			FROM	register_users
-			WHERE   id = ?
-		";
-
-		$rs = $GLOBALS['_database']->Execute($get_person_query, array(
-			$this->id
-		));
-		if (!$rs) {
-			$this->SQLError($GLOBALS['_database']->ErrorMsg());
-			return false;
-		}
-		$customer = $rs->FetchNextObject(false);
-		if (!isset($customer->id)) {
-			app_log("No customer found for " . $this->id);
-			$this->id = null;
-			return true;
-		}
-
-		app_log("Caching details for person '" . $this->id . "'", 'trace', __FILE__, __LINE__);
-		# Store Some Object Vars
-		if ($customer->id && $customer->id > 0) {
-			$this->id = $customer->id;
-            $this->first_name = $customer->first_name;
-            $this->last_name = $customer->last_name;
-            $this->code = $customer->code;
-            $customer->login = $customer->code;
-            $this->organization_id = $customer->organization_id;
-            $this->department_id = $customer->department_id;
-            if (isset($customer->department)) $this->department = $customer->department;
-            $this->status = $customer->status;
-            $this->timezone = $customer->timezone;
-            $this->auth_method = $customer->auth_method;
-            if ($customer->automation == 0) $this->automation = false;
-            else $this->automation = true;
-            $this->password_age = $customer->password_age;            
-			$this->auth_failures = $customer->auth_failures;
-            $this->cached(true);
-			$this->exists(true);
-			if (isset($cache) && isset($customer->id)) $cache->set($customer);
-        }
-        else {
-            $this->id = null;
-            $this->first_name = null;
-            $this->last_name = null;
-            $this->code = null;
-            $customer->login = null;
-            $this->organization_id = null;
-            $this->department_id = null;
-            $this->status = null;
-            $this->timezone = null;
-            $this->auth_method = null;
-            $this->automation = false;
-            $this->password_age = null;
-			$this->auth_failures = 0;
-            $this->_cached = 0;
-        }
-
-        // Return Object
-        return true;
-    }
-
 	public function full_name() {
 		$full_name = '';
 		if (strlen($this->first_name)) $full_name .= $this->first_name;
@@ -154,13 +52,15 @@ class Person Extends \BaseModel {
 			if (strlen($full_name)) $full_name .= " ";
 			$full_name .= $this->last_name;
 		}
-		if (!strlen($full_name)) $full_name = $this->code;
+		if (!strlen($full_name)) $full_name = $this->login;
 		if (!strlen($full_name)) $full_name = '[empty]';
 		return $full_name;
 	}
     
     public function add($parameters = []) {
 		$this->clearError();
+
+        if (!isset($parameters['login']) && isset($parameters['code'])) $parameters['login'] = $parameters['code'];
 
         if (!$this->validLogin($parameters['login'])) {
             $this->error("Invalid Login");
@@ -571,7 +471,7 @@ class Person Extends \BaseModel {
     }
 
 	public function block() {
-		app_log("Blocking customer '".$this->code."'",'INFO');
+		app_log("Blocking customer '".$this->login."'",'INFO');
 		return $this->update(array('status' => 'BLOCKED'));
 	}
 

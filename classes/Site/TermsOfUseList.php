@@ -2,7 +2,11 @@
 	namespace Site;
 
 	class TermsOfUseList Extends \BaseListClass {
-		public function find(array $params = array()): array {
+		public function __construct() {
+			$this->_moduleName = "\Site\TermsOfUse";
+		}
+
+		public function find($params = [],$controls = []): array {
 			$this->clearError();
 			$this->resetCount();
 

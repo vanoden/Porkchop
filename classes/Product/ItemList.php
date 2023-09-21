@@ -2,9 +2,21 @@
 	namespace Product;
 
 	class ItemList Extends \BaseListClass {
+        public function __construct() {
+            $this->_modelName = '\Product\Item';
+        }
 
-		public function find($parameters = array()) {
+        public function count($parameters = []) {
+            if (!empty($this->_count)) return $this->_count;
+            $this->_count = count($this->find($parameters));
+            return $this->_count;
+        }
+		public function find($parameters = [],$controls = []) {
 			$this->clearError();
+            $this->resetCount();
+
+            // For Validation
+            $validationclass = new \Product\Item();
 
 			$find_product_query = "
 				SELECT	DISTINCT(p.id)
@@ -15,6 +27,31 @@
 				WHERE	p.status != 'DELETED'";
 
 			$bind_params = array();
+
+            if (!empty($parameters['search'])) {
+                if (!$validationclass->validSearch($parameters['search']) ) {
+                    $this->error("Invalid Search String");
+                    return null;
+                }
+                $find_product_query .= "
+                AND     (
+                            p.code LIKE ?
+                            OR p.name LIKE ?
+                            OR p.description LIKE ?
+                        )";
+                $search_string = $parameters['search'];
+
+                if (preg_match('/^\*/',$search_string) || preg_match('/\*$/',$search_string)) {
+                    // Specified Wildcards
+                    $search_string = preg_replace('/^\*/','%',$search_string);
+                    $search_string = preg_replace('/\*$/','%',$search_string);
+                }
+                else {
+                    // Implied Wildcards
+                    $search_string = '%'.$parameters['search'].'%';
+                }
+                array_push($bind_params,$search_string,$search_string,$search_string);
+            }
 			# Filter on Given Parameters
 			if (isset($parameters['type'])) {
 				if (is_array($parameters['type'])) {
@@ -22,6 +59,10 @@
 					AND		p.type in (";
 					$count = 0;
 					foreach ($parameters['type'] as $type) {
+                        if (!$validationclass->validType($type)) {
+                            $this->error("Invalid Type: ".$type);
+                            return null;
+                        }
 						if ($count) $find_product_query .= ",";
 						$count ++;
 						$find_product_query .= $GLOBALS['_database']->qstr($type,get_magic_quotes_gpc());
@@ -29,12 +70,26 @@
 					$find_product_query .= ")";
 				}
 				else {
+                    if (!$validationclass->validType($parameters["type"])) {
+                        $this->error("Invalid Type: ".$parameters["type"]);
+                        return null;
+                    }
 					$find_product_query .= "
 					AND		p.type = ?";
 					array_push($bind_params,$parameters["type"]);
 				}
 			}
-			if (isset($parameters['status']) && strlen($parameters['status'])) {
+			if (isset($parameters['status']) && is_array($parameters['status'])) {
+                foreach ($parameters['status'] as $status) {
+                    if (! $validationclass->validStatus($status)) {
+                        $this->error("Invalid Status: ".$status);
+                        return null;
+                    }
+                    $find_product_query .= "
+                    AND     p.status IN ('".implode("','",$parameters['status'])."')";
+                }
+            }
+            elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
 				$find_product_query .= "
 				AND		p.status = ?";
 				array_push($bind_params,strtoupper($parameters["status"]));
@@ -97,6 +152,15 @@
 			    $find_product_query .= "
 				ORDER BY p.id";
 
+            if (isset($controls['limit']) && is_numeric($controls['limit'])) {
+                $find_product_query .= "
+                LIMIT   ".$controls['limit'];
+                if (isset($controls['offset']) && is_numeric($controls['offset'])) {
+                    $find_product_query .= "
+                    OFFSET  ".$controls['offset'];
+                }
+            }
+
 			query_log($find_product_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
@@ -107,7 +171,7 @@
 			$items = array();
 			while (list($id) = $rs->FetchRow()) {
 				$item = new Item($id);
-                $this->_count ++;
+                $this->incrementCount();
 				array_push($items,$item);
 			}
 			return $items;

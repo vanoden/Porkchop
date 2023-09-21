@@ -1,19 +1,20 @@
 <?php
 	namespace Storage;
 
-	class DirectoryList {
-		private $error;
-		private $count = 0;
+	class DirectoryList Extends \BaseListClass {
+        public function __construct ($id = 0) {
+            $this->_modelName = '\Storage\Directory';
+        }
 
-		public function find($parameters = array()) {
+		public function find($parameters = [], $controls = []) {
 			if (! isset($parameters['repository_id'])) {
-				$this->error = "Repository ID Required";
+				$this->error("Repository ID Required");
 				return null;
 			}
-			
-			$bind_params = array();
+
+            $bind_params = array();
 			$get_dirs_query = "
-				SELECT	max(path)
+				SELECT	DISTINCT path
 				FROM	storage_files
 				WHERE	id = id";
 
@@ -27,14 +28,14 @@
 			
 			$get_dirs_query .= "
 				AND		repository_id = ?
-				GROUP BY path
 			";
 			array_push($bind_params,$parameters['repository_id']);
-			query_log($get_dirs_query,$bind_params);
+			query_log($get_dirs_query,$bind_params,true);
+            app_log("Getting directories for ".$parameters['repository_id']." in ".$parameters['path'],"info");
 
 			$rs = $GLOBALS['_database']->Execute($get_dirs_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Storage::DirectoryList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -48,19 +49,11 @@
 			while(list($path) = $rs->FetchRow()) {
 				$directory = new \Storage\Directory();
 				app_log("Adding directory $path");
-				$directory->get($parameters['repository_id'],$path);
+				$directory->getInPath($parameters['repository_id'],$path);
 				array_push($directories,$directory);
-				$this->count ++;
+				$this->incrementCount();
 			}
-			app_log("Found ".$this->count." directories in $path");
+			app_log("Found ".$this->count()." directories in $path");
 			return $directories;
-		}
-
-		public function error() {
-			return $this->error;
-		}
-
-		public function count() {
-			return $this->count;
 		}
 	}

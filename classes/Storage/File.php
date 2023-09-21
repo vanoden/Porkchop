@@ -2,7 +2,6 @@
 	namespace Storage;
 
 	class File Extends \BaseModel {
-	
 		private $_repository_id;
 		public $code;
 		public $display_name;
@@ -23,7 +22,7 @@
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'storage_files';
-            parent::__construct($id);
+			parent::__construct($id);
 		}
 
 		public function add($parameters = []) {
@@ -168,6 +167,7 @@
 		public function owner() {
 			return new \Register\Customer($this->user_id);
 		}
+
 		public function name($name = '') {
 			if (strlen($name)) {
 				if (! preg_match('/^[\w\-\.\_\s]+$/',$name)) {
@@ -255,185 +255,96 @@
 			return false;
 		}
 
-		public function grant($id,$type) {
-		
-			if ($type == 'read') {
-			
-				if ($this->read_protect == 'NONE') return true;
-				else if ($this->read_protect == 'AUTH') return true;
-				else if ($this->read_protect == 'ROLE') {
-					$role = new \Register\Role($id);
-					if ($role->id) {
-						$update_privilege_query = "
-							INSERT
-							INTO	storage_file_roles
-							(		read,write)
-							VALUES
-							(		1,0)
-							WHERE	file_id = ?
-							AND		role_id = ?
-							ON DUPLICATE KEY UPDATE
-									read = 1
-						";
-						$GLOBALS['_database']->Execute(
-							$update_privilege_query,
-							array($this->id,$role->id)
-						);
-						
-						if ($GLOBALS['_database']->ErrorMsg()) {
-							$this->SQLError($GLOBALS['_database']->ErrorMsg());
-							return false;
-						}
-					} else {
-						$this->error("Role not found");
-						return false;
-					}
-				}
-		
-				return false;
-				
-			}
-			else if ($type == 'write') {
-			
-				if ($this->write_protect == 'NONE') return true;
-				else if ($this->write_protect == 'AUTH') return true;
-				else if ($this->write_protect == 'ROLE') {
-					$role = new \Register\Role($id);
-					if ($role->id) {
-						$update_privilege_query = "
-							INSERT
-							INTO	storage_file_roles
-							(		read,write)
-							VALUES
-							(		1,1)
-							WHERE	file_id = ?
-							AND		role_id = ?
-							ON DUPLICATE KEY UPDATE
-									write = 1
-						";
-						$GLOBALS['_database']->Execute(
-							$update_privilege_query,
-							array($this->id,$role->id)
-						);
-						if ($GLOBALS['_database']->ErrorMsg()) {
-							$this->SQLError($GLOBALS['_database']->ErrorMsg());
-							return false;
-						}
-					} else {
-						$this->error("Role not found");
-						return false;
-					}
-				}
+		public function grant($level,$id,$type) {
+			$level = substr($level,0,1);
+			if (!in_array($level,array('a','o','u','r'))) {
+				$this->error("Invalid level");
 				return false;
 			}
+			$type = substr($type,0,1);
+			if (!in_array($type,array('r','w'))) {
+				$this->error("Invalid type $type");
+				return false;
+			}
+
+			// Get Existing Privileges
+			$privileges = $this->getPrivileges();
+			if ($level == 'a') {
+				if (!preg_match("/$type/",$privileges->a)) $privileges->a .= $type;
+			}
+			else {
+				if (!preg_match("/$type/",$privileges->$level->$id)) $privileges->$level->$id .= $type;
+			}
+			return $this->update(array('access_privileges' => json_encode($privileges)));
 		}
 
-		public function revoke($id,$type) {
-		
-			if ($type == 'read') {
-			
-				if ($this->read_protect == 'NONE') {
-					$this->error("File is globally readable");
-					return false;
-				}
-				else if ($this->read_protect == 'AUTH') {
-					$this->error("File is readable by all authenticated users");
-					return false;
-				}
-				else if ($this->read_protect == 'ROLE') {
-					$role = new \Register\Role($id);
-					if ($role->id) {
-						$update_privilege_query = "
-							UPDATE	storage_file_roles
-							SET		read = 0, write = 0
-							WHERE	file_id = ?
-							AND		role_id = ?
-						";
-						$GLOBALS['_database']->Execute(
-							$update_privilege_query,
-							array($this->id,$role->id)
-						);
-						if ($GLOBALS['_database']->ErrorMsg()) {
-							$this->SQLError($GLOBALS['_database']->ErrorMsg());
-							return false;
-						}
-					} else {
-						$this->error("Role not found");
-						return false;
-					}
-				}				
-				return false;
-
-			} else if ($type == 'write') {
-				if ($this->write_protect == 'NONE') {
-					$this->error("File is globally writable");
-					return false;
-				}
-				else if ($this->write_protect == 'AUTH') {
-					$this->error("File is writable by all authenticated users");
-					return false;
-				}
-				else if ($this->write_protect == 'ROLE') {
-				
-					$role = new \Register\Role($id);
-					if ($role->id) {
-						$update_privilege_query = "
-							UPDATE	storage_file_roles
-							SET		write = 0
-							WHERE	file_id = ?
-							AND		role_id = ?
-						";
-						$GLOBALS['_database']->Execute(
-							$update_privilege_query,
-							array($this->id,$role->id)
-						);
-						if ($GLOBALS['_database']->ErrorMsg()) {
-							$this->SQLError($GLOBALS['_database']->ErrorMsg());
-							return false;
-						}
-					} else {
-						$this->error("Role not found");
-						return false;
-					}
-				}
+		public function revoke($level,$id,$type) {
+			$level = substr($level,0,1);
+			if (!in_array($level,array('a','o','u','r'))) {
+				$this->error("Invalid level");
 				return false;
 			}
+			$type = substr($type,0,1);
+			if (!in_array($type,array('r','w'))) {
+				$this->error("Invalid type $type");
+				return false;
+			}
+
+			// Get Existing Privileges
+			$privileges = $this->getPrivileges();
+			if ($level == 'a') {
+				$privileges->$level = preg_replace("/$type/","",$privileges->$level);
+			}
+			else {
+				$privileges->$level->$id = preg_replace("/$type/","",$privileges->$level->$id);
+			}
+			return $this->update(array('access_privileges' => json_encode($privileges)));
 		}
 
-		public function readable($user_id) {
-		
-			// World Readable 
-			if ($this->read_protect == 'NONE') return true;
+		public function readable($user_id = null) {
+			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+			$user = new \Register\Customer($user_id);
+			$organization_id = $user->organization_id;
 
-			// Owner Can Always Access 
-			if ($this->user_id == $GLOBALS['_SESSION_']->customer->id) return true;
+			$flag = 'r';
 
-			// Any Authenticated Visitor 
-			if ($this->read_protect == 'AUTH' && $GLOBALS['_SESSION_']->customer->id > 0) return true;
+			if ($this->user_id == $user_id) return true;
+			$privileges = $this->getPrivileges();
 
-			// Visitor in Specified Role 
-			if ($this->read_protect == 'ROLE') {
-				$get_privileges_query = "
-					SELECT	read
-					FROM	storage_file_roles sfr,
-							register_user_roles rur
-					WHERE	sfr.file_id = ?
-					AND		sfr.role_id = rur.role_id
-					AND		rur.user_id = ?
-				";
-				
-				$rs = $GLOBALS['_database']->Execute(
-					$get_privileges_query,
-					array($this->id,$user_id)
-				);
-				
-				if (! $rs) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
-					return false;
-				};
-				
-				list($ok) = $rs->fetchrow();
-				if ($ok > 0) return true;
+			if (isset($privileges->a) && preg_match("/$flag/",$privileges->a)) return true;
+
+			if (isset($privileges->u->$user_id) && preg_match("/$flag/",$privileges->u->$user_id)) return true;
+
+			if (isset($privileges->o->$organization_id) && preg_match("/$flag/",$privileges->o->$organization_id)) return true;
+
+			$roles = $user->roles();
+			foreach ($roles as $role) {
+				$role_id = $role->id;
+				if (isset($privileges->r->$role_id) && preg_match("/$flag/",$privileges->r->$role_id)) return true;
+			}
+			return false;
+		}
+
+		public function writable($user_id = null) {
+			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+			$user = new \Register\Customer($user_id);
+			$organization_id = $user->organization_id;
+
+			$flag = 'w';
+
+			if ($this->user_id == $user_id) return true;
+			$privileges = $this->getPrivileges();
+
+			if (isset($privileges->a) && preg_match("/$flag/",$privileges->a)) return true;
+
+			if (isset($privileges->u->$user_id) && preg_match("/$flag/",$privileges->u->$user_id)) return true;
+
+			if (isset($privileges->o->$organization_id) && preg_match("/$flag/",$privileges->o->$organization_id)) return true;
+
+			$roles = $user->roles();
+			foreach ($roles as $role) {
+				$role_id = $role->id;
+				if (isset($privileges->r->$role_id) && preg_match("/$flag/",$privileges->r->$role_id)) return true;
 			}
 			return false;
 		}
@@ -444,18 +355,18 @@
 			$this->error($repository->error());
 		}
 		
-        public function code() {
-            return $this->code;
-        }
+		public function code() {
+			return $this->code;
+		}
 
-        public function addError($errorMessage = '') {
-            $this->error($errorMessage);
-            return $this->error();
-        }
+		public function addError($errorMessage = '') {
+			$this->error($errorMessage);
+			return $this->error();
+		}
 
-        public function success() {
-            return $this->success;
-        }
+		public function success() {
+			return $this->success;
+		}
 
 		public function downloadURI() {
 			return '/_storage/file/'.$this->code.'/download';
@@ -480,12 +391,12 @@
 
 		public function upload ($parameters) {
 		
-		    // make sure we have a file present in the request to upload it
-    		if (empty($_FILES)) $this->addError("Repository not found");
+			// make sure we have a file present in the request to upload it
+			if (empty($_FILES)) $this->addError("Repository not found");
 		
-		    // make sure all the required parameters are set for upload to continue
-            if (! preg_match('/^\//',$parameters['path'])) $parameters['path'] = '/'.$parameters['path'];
-		    $factory = new \Storage\RepositoryFactory();
+			// make sure all the required parameters are set for upload to continue
+			if (! preg_match('/^\//',$parameters['path'])) $parameters['path'] = '/'.$parameters['path'];
+			$factory = new \Storage\RepositoryFactory();
 			if (!empty($parameters['repository_id'])) {
 				$repository = $factory->load($parameters['repository_id']);
 			}
@@ -496,137 +407,85 @@
 				$repository = $factory->find($parameters['repository_name']);
 			}
 
-		    if ($factory->error()) {
-			    $this->addError("Error loading repository: ".$factory->error());
-		    } else if (! $repository->id) {
-			    $this->addError("Repository not found");
-		    } else {
-			    app_log("Identified repo '".$repository->name."'");
-			    
-			    if (! file_exists($_FILES['uploadFile']['tmp_name'])) {
-			        if (empty($_FILES['uploadFile']['tmp_name']) && empty($_FILES['uploadFile']['name'])) {
-    			        $this->addError("No file was selected to upload");
-                    } else if (empty($_FILES['uploadFile']['tmp_name']) && !empty($_FILES['uploadFile']['name'])) {
-    			        $this->addError("File chosen was file too large: php.ini upload_max_filesize=".ini_get('upload_max_filesize'));
-			        } else {
-    			        $this->addError("Temp file '" . $_FILES['uploadFile']['tmp_name'] . "' not found");
-			        }
-			    } else {
-			    
-				    // Check for Conflict 
-				    $filelist = new \Storage\FileList();
-				    list($existing) = $filelist->find(
-					    array (
-						    'repository_id' => $repository->id,
-						    'path'	=> $parameters['path'],
-						    'name' => $_FILES['uploadFile']['name'],
-                		)
-          			);
-          			
-         			if ($existing->id) {
-					    $this->addError("File already exists with that name in repository: ". $repository->name);
-				    } else {
-				    
-					    // Add File to Library
-					    if ($this->error()) $this->addError("Error initializing file: " . $this->error());
-					    $this->add(
-						    array(
-							    'repository_id'     => $repository->id,
-							    'name'              => $_FILES['uploadFile']['name'],
-							    'path'				=> $parameters['path'],
-							    'mime_type'         => $_FILES['uploadFile']['type'],
-							    'size'              => $_FILES['uploadFile']['size'],
-                			)
-					    );
+			if ($factory->error()) {
+				$this->addError("Error loading repository: ".$factory->error());
+			} else if (! $repository->id) {
+				$this->addError("Repository not found");
+			} else {
+				app_log("Identified repo '".$repository->name."'");
+				
+				if (! file_exists($_FILES['uploadFile']['tmp_name'])) {
+					if (empty($_FILES['uploadFile']['tmp_name']) && empty($_FILES['uploadFile']['name'])) {
+						$this->addError("No file was selected to upload");
+					} else if (empty($_FILES['uploadFile']['tmp_name']) && !empty($_FILES['uploadFile']['name'])) {
+						$this->addError("File chosen was file too large: php.ini upload_max_filesize=".ini_get('upload_max_filesize'));
+					} else {
+						$this->addError("Temp file '" . $_FILES['uploadFile']['tmp_name'] . "' not found");
+					}
+				} else {
+				
+					// Check for Conflict 
+					$filelist = new \Storage\FileList();
+					list($existing) = $filelist->find(
+						array (
+							'repository_id' => $repository->id,
+							'path'	=> $parameters['path'],
+							'name' => $_FILES['uploadFile']['name'],
+						)
+		  			);
+		  			
+		 			if ($existing->id) {
+						$this->addError("File already exists with that name in repository: ". $repository->name);
+					} else {
+					
+						// Add File to Library
+						if ($this->error()) $this->addError("Error initializing file: " . $this->error());
+						$this->add(
+							array(
+								'repository_id'     => $repository->id,
+								'name'              => $_FILES['uploadFile']['name'],
+								'path'				=> $parameters['path'],
+								'mime_type'         => $_FILES['uploadFile']['type'],
+								'size'              => $_FILES['uploadFile']['size'],
+							)
+						);
 
-					    // Upload File Into Repository 
-					    $destinationPath = $parameters['type'] . "/" . $parameters['ref_id']  . "/";
-				        try {
-					        if ($this->error()) { 
-					            $this->addError("Error adding file: " . $this->error());
-					        } else if (! $repository->addFile($this, $_FILES['uploadFile']['tmp_name'], $destinationPath)) {
-						        $this->delete();
-						        $this->addError('Unable to add file to repository: '.$repository->error());
-					        } else {
-						        app_log("Stored file ".$this->id." at ".$repository->path."/".$this->code);
-						        $this->success = "File uploaded";
-						        
-                                // add file type refrence for this file to be a part of the support/engineering ticket
-                                if (isset($parameters['type']) && isset($parameters['ref_id'])) {
-                                    $fileMetaData = new \Storage\FileMetadata($this->id);
-                                    $fileMetaData->add(array('file_id' => $this->id, 'key' => $parameters['type'], 'value' => $parameters['ref_id']));   
-                                }                            
-					        }
-                        } catch (\Exception $e) {
-					        $this->delete();
-					        $this->addError('System Exception has occured, unable to add file to repository: '.$repository->error());
-    						app_log("repository->addFile(): Exception" . $e->getMessage(),'notice');
+						// Upload File Into Repository 
+						$destinationPath = $parameters['type'] . "/" . $parameters['ref_id']  . "/";
+						try {
+							if ($this->error()) { 
+								$this->addError("Error adding file: " . $this->error());
+							} else if (! $repository->addFile($this, $_FILES['uploadFile']['tmp_name'], $destinationPath)) {
+								$this->delete();
+								$this->addError('Unable to add file to repository: '.$repository->error());
+							} else {
+								app_log("Stored file ".$this->id." at ".$repository->path."/".$this->code);
+								$this->success = "File uploaded";
+								
+								// add file type refrence for this file to be a part of the support/engineering ticket
+								if (isset($parameters['type']) && isset($parameters['ref_id'])) {
+									$fileMetaData = new \Storage\FileMetadata($this->id);
+									$fileMetaData->add(array('file_id' => $this->id, 'key' => $parameters['type'], 'value' => $parameters['ref_id']));   
+								}                            
+							}
+						} catch (\Exception $e) {
+							$this->delete();
+							$this->addError('System Exception has occured, unable to add file to repository: '.$repository->error());
+							app_log("repository->addFile(): Exception" . $e->getMessage(),'notice');
 							return false;
-                        }
-				    }
-			    }
-		    }
+						}
+					}
+				}
+			}
 			return true;
 		}
 
 		public function writePermitted($user_id = null) {
-			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
-			$user = new \Register\Person($user_id);
-
-			$privileges = array();
-			if (!empty($this->access_privilege_json)) {
-				$privileges = json_decode($this->access_privilege_json,true);
-			}
-			if (empty($this->repository())) return false;
-			$default_privileges = $this->repository()->default_privileges();
-			$override_privileges = $this->repository()->override_privileges();
-
-			app_log($this->user_id." vs ".$user_id,'info');
-			if ($this->user_id == $user_id) return true;
-			app_log(print_r($override_privileges['o'][$user->organization()->id],false),'info');
-			if (in_array('-w',$override_privileges['o'][$user->organization()->id])) return false;
-			app_log("Here 4",'info');
-			if (in_array('-w',$override_privileges['u'][$user->id])) return false;
-			app_log("Here 5",'info');
-			if (in_array('w',$privileges['o'][$user->organization()->id])) return true;
-			app_log("Here 6",'info');
-			if (in_array('w',$privileges['u'][$user->id])) return true;
-			app_log("Here 7",'info');
-			if (in_array('w',$default_privileges['o'][$user->organization()->id])) return true;
-			app_log("Here 8",'info');
-			if (in_array('w',$default_privileges['u'][$user->id])) return true;
-			app_log("Here 9",'info');
-			return false;
+			return $this->writable($user_id);
 		}
 
 		public function readPermitted($user_id = null) {
-			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
-			$user = new \Register\Person($user_id);
-
-			$privileges = array();
-			if (!empty($this->access_privilege_json)) {
-				$privileges = json_decode($this->access_privilege_json,true);
-			}
-			if (empty($this->repository())) return false;
-			$default_privileges = $this->repository()->default_privileges();
-			$override_privileges = $this->repository()->override_privileges();
-
-			app_log($this->user_id." vs ".$user_id,'info');
-			if ($this->user_id == $user_id) return true;
-			app_log(print_r($override_privileges['o'][$user->organization()->id],false),'info');
-			if (in_array('-r',$override_privileges['o'][$user->organization()->id])) return false;
-			app_log("Here 4",'info');
-			if (in_array('-r',$override_privileges['u'][$user->id])) return false;
-			app_log("Here 5",'info');
-			if (in_array('r',$privileges['o'][$user->organization()->id])) return true;
-			app_log("Here 6",'info');
-			if (in_array('r',$privileges['u'][$user->id])) return true;
-			app_log("Here 7",'info');
-			if (in_array('r',$default_privileges['o'][$user->organization()->id])) return true;
-			app_log("Here 8",'info');
-			if (in_array('r',$default_privileges['u'][$user->id])) return true;
-			app_log("Here 9",'info');
-			return false;
+			return $this->readable($user_id);
 		}
 
 		public function getPrivileges() {
@@ -638,6 +497,95 @@
 			else {
 				return json_decode($this->access_privilege_json);
 			}
+		}
+
+		public function privilegeList() {
+			$privileges = $this->getPrivileges();
+			$list = array();
+			$allSet = false;
+			foreach ($privileges as $level => $privilege) {
+				$read = false;
+				$write = false;
+
+				if ($level == 'a') {
+					$allSet = true;
+					if (is_array($privilege)) {
+						foreach ($privilege as $id => $mask) {
+							if (preg_match('/r/',$mask)) $read = true;
+							if (preg_match('/w/',$mask)) $write = true;
+						}
+					}
+					else {
+						if (is_object($privilege)) $privilege = implode('',get_object_vars($privilege));
+						if (preg_match('/r/',$privilege)) $read = true;
+						if (preg_match('/w/',$privilege)) $write = true;
+					}
+					$list['a'][0] = (object) array(
+						'level'			=> 'a',
+						'levelName'		=> 'All',
+						'entityId'		=> 0,
+						'entityName'	=> 'N/A',
+						'mask'			=> $privilege,
+						'read'			=> $read,
+						'write'			=> $write
+					);
+				}
+				else {
+					foreach ($privilege as $id => $mask) {
+						if (is_array($mask)) {
+							foreach ($mask as $set) {
+								if (is_object($set)) $set = implode('',get_object_vars($set));
+								if (preg_match('/r/',$set)) $read = true;
+								if (preg_match('/w/',$set)) $write = true;
+								if (preg_match('/x/',$set)) $execute = true;
+							}
+						}
+						else {
+							if (is_object($mask)) $set = implode('',get_object_vars($mask));
+							if (preg_match('/r/',$mask)) $read = true;
+							if (preg_match('/w/',$mask)) $write = true;
+							if (preg_match('/x/',$mask)) $execute = true;
+						}
+						if ($level == 'o') {
+							$organization = new \Register\Organization($id);
+							$levelName = "Organization";
+							$entityName = $organization->name;
+						}
+						elseif ($level == 'u') {
+							$user = new \Register\Customer($id);
+							$levelName = "User";
+							$entityName = $user->login;
+						}
+						elseif ($level == 'r') {
+							$role = new \Register\Role($id);
+							$levelName = "Role";
+							$entityName = $role->name;
+						}
+						$list[$level][$id] = (object) array(
+							'level' => $level,
+							'levelName'		=> $levelName,
+							'entityId'		=> $id,
+							'entityName'	=> $entityName,
+							'mask'			=> $mask,
+							'read'			=> $read,
+							'write'			=> $write
+						);
+					}
+				}
+			}
+			if (! $allSet) {
+				$list['a'][0] = (object) array(
+					'level'			=> 'a',
+					'levelName' 	=> 'All',
+					'entityId'		=> 0,
+					'entityName'	=> 'N/A',
+					'mask'			=> null,
+					'read'			=> false,
+					'write'			=> false,
+					'execute'		=> false
+				);
+			}
+			return $list;
 		}
 
 		public function updatePrivileges($object_type, $object_id, $mask) {
@@ -687,22 +635,22 @@
 
 		public function validPath($string) {
 			// Only a virtual path!
-            if (preg_match('/\.{2}/',$string)) return false;
-            if (preg_match('/\/{2}/',$string)) return false;
+			if (preg_match('/\.{2}/',$string)) return false;
+			if (preg_match('/\/{2}/',$string)) return false;
 			if (preg_match('/^\/[\w\-\.\_\/]*$/',$string)) return true;
 			else return false;
 		}
 
-        public function validExtension($string) {
-            // Images
-            if (preg_match('/^(png|jpg|jpeg|gif|tif)$/',$string)) return true;
-            // Documents
-            if (preg_match('/^(doc|docx|pdf|xls|xlsx|ppt|pptx|txt|rtf|html|htm|css|xml|json|csv|odt|ods)$/',$string)) return true;
-            // Media
-            if (preg_match('/^(mp3|mp4|mov|avi|wmv)$/',$string)) return true;
-            // Archives
-            if (preg_match('/^(zip|tar|gz|tgz|bz2|rar)$/',$string)) return true;
+		public function validExtension($string) {
+			// Images
+			if (preg_match('/^(png|jpg|jpeg|gif|tif)$/',$string)) return true;
+			// Documents
+			if (preg_match('/^(doc|docx|pdf|xls|xlsx|ppt|pptx|txt|rtf|html|htm|css|xml|json|csv|odt|ods)$/',$string)) return true;
+			// Media
+			if (preg_match('/^(mp3|mp4|mov|avi|wmv)$/',$string)) return true;
+			// Archives
+			if (preg_match('/^(zip|tar|gz|tgz|bz2|rar)$/',$string)) return true;
 
-            return false;
-        }
+			return false;
+		}
 	}

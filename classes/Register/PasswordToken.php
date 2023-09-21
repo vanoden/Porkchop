@@ -6,6 +6,11 @@
 		public $expiration;
 		public $code;
 
+		public function __construct($id = null) {
+			$this->_tableName = "register_password_tokens";
+			$this->_addFields(array('code','person_id','date_expires'));
+		}
+
 		public function add($person_id = []) {
 			# Get Large Random value
 			$randval = mt_rand();		

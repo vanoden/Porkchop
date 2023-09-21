@@ -4,20 +4,23 @@
 		return false;
 	}
 </script>
-<?=$page->showBreadCrumbs()?>
-<?=$page->showTitle()?>
-<?=$page->showMessages()?>
+<style>
+	input.value {
+		width: 100%;
+	}
+</style>
+<?=$page->showAdminPageInfo()?>
 <form method="post" action="/_site/term_of_use">
 <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>"/>
 <input type="hidden" name="id" value="<?=$tou->id?>"/>
-<div class="table">
-	<div class="tableHead">
+<div class="tableBody">
+	<div class="tableRowHeader">
 		<div class="tableCell">Name</div>
 	</div>
 	<div class="tableRow">
 		<div class="tableCell"><input type="text" name="name" class="value input" value="<?=$tou->name?>" /></div>
 	</div>
-	<div class="tableHead">
+	<div class="tableRowHeader">
 		<div class="tableCell">Description</div>
 	</div>
 	<div class="tableRow">

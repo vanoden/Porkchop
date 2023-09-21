@@ -14,9 +14,7 @@
 </script>
 
 <!-- Page Header -->
-<?=$page->showBreadcrumbs()?>
-<?=$page->showTitle()?>
-<?=$page->showMessages()?>
+<?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
 <form name="productEdit" method="post" action="/_product/edit">

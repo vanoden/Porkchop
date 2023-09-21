@@ -3,7 +3,7 @@
 
 	class OrderList Extends \BaseListClass {
 		public function __construct() {
-			$this->_modelName = 'Sales\Order';
+			$this->_modelName = '\Sales\Order';
 
 			$this->_tableDefaultSortBy = 'date_event';
 		}
