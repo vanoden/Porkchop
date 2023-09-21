@@ -4,12 +4,10 @@
 	class Screen Extends Log {
 
 		public function __construct($parameters) {
-			if (isset($parameters['level'])) {
-				$this->level = $parameters['level'];
-			}
 			if (isset($parameters['html']) && $parameters['html']) {
 				$this->html = true;
 			}
+			parent::__construct($parameters);
 		}
 
 		public function connect() {
@@ -28,9 +26,5 @@
 			list($file,$line) = $this->caller($file,$line);
 
 			$this->write($message."\n",$level,$file,$line);
-		}
-
-		public function error() {
-			return $this->error;
 		}
 	}
