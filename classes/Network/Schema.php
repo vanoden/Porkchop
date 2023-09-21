@@ -16,7 +16,7 @@
 					CREATE TABLE IF NOT EXISTS `network_domains` (
 						`id`			int(11) NOT NULL AUTO_INCREMENT,
 						`name`			varchar(255) NOT NULL,
-						PRIMARY KEY (`id`),
+						PRIMARY KEY `pk_network_domains` (`id`),
 						UNIQUE KEY		`uk_name` (`name`)
 					)
 				";
@@ -39,7 +39,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating network_hosts table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
@@ -73,7 +73,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating network_adapters table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
@@ -83,11 +83,12 @@
 						`id`			int(11) NOT NULL AUTO_INCREMENT,
 						`address`		bigint(8) NOT NULL,
 						`size`			bigint(8) NOT NULL,
-						`type`			enum('ipv4','ipv6') NOT NULL DEFAULT 'ipv4'
+						`type`			enum('ipv4','ipv6') NOT NULL DEFAULT 'ipv4',
+						PRIMARY KEY `pk_network_subnets` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating network_subnets table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
@@ -104,26 +105,14 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating network_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					$this->error = "SQL Error creating network_addresses table in ".$this->module."::Schema::upgrade(): ".$this->error;
 					app_log($this->error, 'error');
 					return false;
 				}
 
-                                $this->setVersion(1);
-                                $GLOBALS['_database']->CommitTrans();
+				$this->setVersion(1);
+				$GLOBALS['_database']->CommitTrans();
 			}
-
-			# Add Roles
-			foreach ($this->roles as $name => $description) {
-				$role = new \Register\Role();
-				if (! $role->get($name)) {
-					app_log("Adding role '$name'");
-					$role->add(array('name' => $name,'description' => $description));
-				}
-				if ($role->error) {
-					$this->_error = "Error adding role '$name': ".$role->error;
-					return false;
-				}
-			}
+			return true;
 		}
 	}

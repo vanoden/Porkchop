@@ -1,8 +1,7 @@
 <?php
 	namespace Network;
 
-	class IPAddress {
-		private $_error;
+	class IPAddress Extends \BaseClass {
 		public $id;
 		public $address;
 		public $prefix;
@@ -16,7 +15,7 @@
 		}
 		public function get($address) {
 			if (! isset($address)) {
-				$this->_error = "address required";
+				$this->error("address required");
 				return null;
 			}
 			if (preg_match('/^(\d+\.\d+\.\d+\.\d+)\/(\d+)$/',$address,$matches)) {
@@ -36,7 +35,7 @@
 				$type = 'ipv4';
 			}
 			else {
-				$this->_error = 'Invalid ip address';
+				$this->error('Invalid ip address');
 				return null;
 			}
 
@@ -53,7 +52,7 @@
 			);
 
 			if (! $rs) {
-				$this->_error = "SQL Error in Network::IPAddress::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 
@@ -63,13 +62,13 @@
 		}
 		public function add($parameters = array()) {
 			if (! isset($parameters['address'])) {
-				$this->_error = "address required for new address";
+				$this->error("address required for new address");
 			}
 			$add_object_query = "
 				INSERT
 				INTO	network_addresses
 				(		`address`,
-						`prefix`,
+						`subnet_id`,
 						`adapter_id`
 				)
 				VALUES
@@ -80,13 +79,13 @@
 				$add_object_query,
 				array(
 					$parameters['address'],
-					$parameters['prefix'],
+					$parameters['subnet_id'],
 					$parameters['adapter_id']
 				)
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Network::Address::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -110,7 +109,7 @@
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Network::Address::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -127,7 +126,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 
 			if (! $rs) {
-				$this->_error = "SQL Error in Network::Address::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -140,9 +139,5 @@
 		}
 
 		public function cidr() {
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}
