@@ -22,80 +22,53 @@
 		} else {
 			
 			$jsonData = json_decode($_REQUEST['jsonData'], true);
+			$overwrite = $_REQUEST['overwrite'];
 
 		    // Configurations Selected
 		    if (in_array('Configurations', $_REQUEST['content'])) {
 				if ($jsonData['configurations']) {
 					foreach ($jsonData['configurations'] as $configuration) {
-						print_r($configuration);
-
-					/**
-						Array
-						(
-							[key] => engineering_attachments
-							[value] => 6233820da65ef
-							[id] => 0
-							[_cached] => 
-						)
-					 */
+						$siteConfiguration = new \Site\Configuration();
+						$siteConfiguration->get( $configuration['key'] );
+						if ($overwrite && isset($siteConfiguration->id)) $siteConfiguration->delete();					
+						$siteConfiguration->add( 
+							array( 'key' => $configuration['key'], 
+							'value' => $configuration['value'] )
+						);
 					}
 				}
-
 		    }    
 
     		// Navigation Selected
 		    if (in_array('Navigation', $_REQUEST['content'])) {
 				if ($jsonData['navigation']) {
 					foreach ($jsonData['navigation'] as $navigation) {
-						print_r($navigation);
+						
+						$navigationMenu = new \Navigation\Menu();
+						$navigationMenu->getByCode( $navigation['menuItem']['code'] );
+						$navigationMenu->add( array( 'code' => $navigation['menuItem']['code'], 'title' => $navigation['menuItem']['title'] ));
 
-							/**
-								Array
-								(
-									[menuItem] => Array
-										(
-											[code] => main
-											[title] => Chris Navigation
-											[id] => 3
-											[_cached] => 
-										)
+						foreach ( $navigation['navigationItems'] as $navigationItem ) {
+							$navigationMenuItem = new \Navigation\Item();
+							$navigationMenuItem->getByTarget( $navigationItem['target'] );
+							if ($overwrite && isset($navigationMenuItem->id)) $navigationMenuItem->delete();
+							$navigationMenuItem->add( 
+								array( 
+									'menu_id' => $navigationMenu->id, 
+									'title' => $navigationItem['title'], 
+									'target' => $navigationItem['target'], 
+									'view_order' => $navigationItem['view_order'], 
+									'alt' => $navigationItem['alt'], 
+									'description' => $navigationItem['description'], 
+									'parent_id' => $navigationItem['parent_id'],
+									'external' => $navigationItem['external'], 
+									'ssl' => $navigationItem['ssl'] 
+								)
+							);
+						}
 
-									[navigationItems] => Array
-										(
-											[0] => Array
-												(
-													[menu_id] => 3
-													[title] => test
-													[target] => /_content/kevin3
-													[view_order] => 0
-													[alt] => 
-													[description] => 
-													[parent_id] => 0
-													[external] => 
-													[ssl] => 
-													[id] => 43
-													[_cached] => 
-												)
-
-											[1] => Array
-												(
-													[menu_id] => 3
-													[title] => child link
-													[target] => /_content/kevin3
-													[view_order] => 1
-													[alt] => child
-													[description] => asdf
-													[parent_id] => 43
-													[external] => 
-													[ssl] => 
-													[id] => 44
-													[_cached] => 
-												)
-										)
-								) 
-							*/
-
-
+						// delete parent menu item after no children left
+						if ($overwrite && isset($navigationMenu->id)) $navigationMenu->delete();
 					}
 				}
 		    }
@@ -105,75 +78,98 @@
 
 				if ($jsonData['termsOfUse']) {
 					foreach ($jsonData['termsOfUse'] as $term) {
-						print_r($term);
 
-							/**
-							 
-							Array
-							(
-								[termsOfUseItem] => Array
-									(
-										[code] => 0987654321fedcba
-										[name] => Term of Use 2
-										[description] => This is the second term of use.
-										[id] => 2
-										[_cached] => 0
-									)
-
-								[termsOfUseVersions] => Array
-									(
-										[0] => Array
-											(
-												[status] => NEW
-												[content] => It has survived not only five centuries, but also the leap into electronic typesetting,
-												[tou_id] => 2
-												[id] => 3
-												[_cached] => 1
-											)
-
-										[1] => Array
-											(
-												[status] => NEW
-												[content] => <p>It has survived not only five centuries, but also the leap into electronic typesetting, treste</p>
-												[tou_id] => 2
-												[id] => 6
-												[_cached] => 1
-											)
-
-										[2] => Array
-											(
-												[status] => NEW
-												[content] => <p>dfdsfdsa</p>
-												[tou_id] => 2
-												[id] => 7
-												[_cached] => 1
-											)
-
-										[3] => Array
-											(
-												[status] => RETRACTED
-												[content] => remaining essentially unchanged.
-												[tou_id] => 2
-												[id] => 4
-												[_cached] => 1
-											)
-
-									)
-
+						$termsOfUse = new \Site\TermsOfUse();
+						$termsOfUse->getByCode( $term['termsOfUseItem']['code'] );
+						$termsOfUse->add(
+							array(
+								'code' => $term['termsOfUseItem']['code'],
+								'name' => $term['termsOfUseItem']['name'],
+								'description' => $term['termsOfUseItem']['description']
 							)
+						);
+						foreach ( $term['termsOfUseVersions'] as $termsOfUseVersion ) {
+							$termsOfUseVersionItem = new \Site\TermsOfUseVersion();
+							$termsOfUseVersionItem->get( $term['id'] );
+							if ($overwrite && isset($termsOfUseVersionItem->id)) $termsOfUseVersionItem->delete();
+							$termsOfUseVersionItem->add(
+								array(
+									'tou_id' => $termsOfUse->id,
+									'status' => $termsOfUseVersion['status'],
+									'content' => $termsOfUseVersion['content']
+								)
+							);
+						}
 
-
-							*/
-
-
+						// delete parent menu item after no children left
+						if ($overwrite && isset($termsOfUse->id)) $termsOfUse->delete();
 					}
 				}
-
 		    }
 
             // Marketing content Selected
 		    if (in_array('Marketing', $_REQUEST['content'])) {
 
+				if ($jsonData['marketingContent']) {
+
+					// add pages
+					foreach ($jsonData['marketingContent'] as $page) {
+
+						$marketingPage = new \Site\Page();
+						$marketingPage->getPage( $page['page']['module'], $page['page']['view'], $page['page']['index'] );
+						$marketingPage->addByParameters(
+							array(
+								'module' => $page['page']['module'],
+								'view' => $page['page']['view'],
+								'index' => $page['page']['index'],
+								'style' => $page['page']['style'],
+								'auth_required' => $page['page']['auth_required'],
+								'sitemap' => $page['page']['sitemap']
+							)
+						);
+						
+						// add page meta data
+						foreach( $page['pageMetaData'] as $pageMetaData ) {
+							$marketingPageMetaData = new \Site\Page\MetaData();
+							$marketingPageMetaData->getWithKey( $pageMetaData['key'] );
+							if ($overwrite && isset($marketingPageMetaData->id)) $marketingPageMetaData->delete();
+
+							$marketingPageMetaData->addByParameters(
+								array(
+									'page_id' => $marketingPage->id,
+									'key' => $pageMetaData['key'],
+									'value' => $pageMetaData['value']
+								)
+							);
+						}
+
+						// add page content block(s)
+						foreach ( $page['contentBlocks'] as $contentBlock ) {
+							
+							$marketingContentBlock = new \Content\Message();
+							$marketingContentBlock->get( $contentBlock['target'] );
+							if ($overwrite && isset($marketingContentBlock->id)) $marketingContentBlock->delete();
+
+							$marketingContentBlock->add(
+								array(
+									'company_id' => $contentBlock['company_id'],
+									'target' => $contentBlock['target'],
+									'view_order' => $contentBlock['view_order'],
+									'active' => $contentBlock['active'],
+									'deleted' => $contentBlock['deleted'],
+									'title' => $contentBlock['title'],
+									'menu_id' => $contentBlock['menu_id'],
+									'name' => $contentBlock['name'],
+									'content' => $contentBlock['content'],
+									'cached' => $contentBlock['cached']
+								)
+							);
+						}
+
+						// delete parent page item after no children left
+						if ($overwrite && isset($marketingPage->id)) $marketingPage->delete();
+					}
 		    }
 		}
+	}
 	}

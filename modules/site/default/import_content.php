@@ -32,6 +32,13 @@
     <input type="checkbox" id="termsOfUse" class="contentCheckbox" name="content[]" value="Terms" <?=isChecked('Terms')?>>
     <label for="termsOfUse">Terms of Use - All TOU objects and versions</label><br>
 
+    <br/>Overwrite existing records?<br/>
+
+    <input type="radio" id="overwrite" name="overwrite" value="true" checked>
+    <label for="overwrite">Overwrite</label><br>
+    <input type="radio" id="overwrite" name="overwrite" value="false">
+    <label for="overwrite">Keep Existing</label><br>
+
     <input id="submitButton" type="submit" value="Import">
 
     <br/>Paste JSON data here (for import):<br/>

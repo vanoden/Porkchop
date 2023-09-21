@@ -33,9 +33,12 @@
     <label for="termsOfUse">Terms of Use - All TOU objects and versions</label><br>
 
     <input id="submitButton" type="submit" value="Export">
-
-    <textarea><?=$siteData->viewData()?></textarea>
+    
     <textarea><?=$siteData->getJSON()?></textarea>
+
+    <br/><br/><br/>Debug:<br/>
+    <textarea><?=$siteData->viewData()?></textarea>
+    
 </form>
 
 <script>

@@ -75,11 +75,13 @@
 		 * @param $values, current values in database
 		 */
 		 public function setMarketingContent($marketingContentData) {
-		 
             if (isset($marketingContentData['pages']) && isset($marketingContentData['pageMetaData']) && isset($marketingContentData['contentBlocks'])) {
                 $jsonData = array();
-                foreach ($marketingContentData['pages'] as $page) 
-                    $jsonData['page_id_'.$page->id] = array('page' => $this->getPublicFieldValues('marketingContent', $page), 'pageMetaData' => array());
+                foreach ($marketingContentData['pages'] as $page) {
+					$jsonData['page_id_'.$page->id] = array('page' => $this->getPublicFieldValues('marketingContent', $page), 'pageMetaData' => array());
+					foreach ($marketingContentData['contentBlocks'] as $contentBlock) 
+						if ($contentBlock->target == $page->index) $jsonData['page_id_'.$page->id]['contentBlocks'][] = $this->getPublicFieldValues('contentBlocks', $contentBlock);			
+				}
                 foreach ($marketingContentData['pageMetaData'] as $pageMetaDataItem) 
                     $jsonData['page_id_'.$pageMetaDataItem->page_id]['pageMetaData'][] = $this->getPublicFieldValues('marketingContentMetaData', $pageMetaDataItem);    
                     
@@ -99,7 +101,6 @@
             foreach ($objectArray as $objectInstance) $objArray[] = $this->getPublicFieldValues($mappedClassName, $objectInstance);
             return $objArray;
         }
-        
         
 		/**
 		 * get public properties ONLY of given mapped class tied to ORM objects
@@ -141,5 +142,4 @@
 		public function import() {
 		
 		}
-		
 	}

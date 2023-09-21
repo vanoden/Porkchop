@@ -26,6 +26,40 @@
 				$this->details();
 			}
 		}
+
+        public function addByParameters($parameters): bool {
+            $this->clearError();
+
+            $database = new \Database\Service();
+
+            $add_query = "
+                INSERT INTO `$this->_tableName`
+                (
+                    `page_id`,
+                    `key`,
+                    `value`
+                )
+                VALUES
+                (
+                    ?,
+                    ?,
+                    ?
+                )
+            ";
+            $database->NewQuery($add_query);
+            $database->AddParam($parameters['page_id']);
+            $database->AddParam($parameters['key']);
+            $database->AddParam($parameters['value']);
+
+            $rs = $database->Execute($add_query);
+            if (! $rs) {
+                $this->SQLError($database->ErrorMsg());
+                return false;
+            }
+
+            $this->id = $database->Insert_ID();
+            return true;
+        }
 		
         public function details(): bool {
             $this->clearError();
