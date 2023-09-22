@@ -65,6 +65,11 @@
 	$_debug_queries = array();
 
 	###################################################
+	### Initialize Site Instance					###
+	###################################################
+	$site = new \Site();
+
+	###################################################
 	### Connect to Logger							###
 	###################################################
 	if (! defined('APPLICATION_LOG_HOST')) define('APPLICATION_LOG_HOST','127.0.0.1');
@@ -151,24 +156,33 @@
 	$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info',__FILE__,__LINE__);
 
 	# Load Page Information
-	$_page = new \Site\Page();
-	$_page->getPage($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
-	if ($_page->error) {
-		print "Error: ".$_page->error;
-		$logger->writeln("Error initializing page: ".$_page->error,'error',__FILE__,__LINE__);
+	$page = $site->page();
+	$page->getPage($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
+	if ($page->error()) {
+		print "Error: ".$page->error;
+		$logger->writeln("Error initializing page: ".$page->error,'error',__FILE__,__LINE__);
 		exit;
 	}
-	$_page->rewrite();
-	$_page->confirmTOUAcceptance();
-	if ($_page->module() == 'static') {
+
+	# Login-only Sites - No Public Content
+	if (isset($GLOBALS['_config']->site->private) && $GLOBALS['_config']->site->private == true) $page->requireAuth();
+
+	# Redirect old URL's
+	$page->rewrite();
+
+	# Require Terms Of Use Acceptance per page configuration
+	$page->confirmTOUAcceptance();
+
+	# Static HTML - Skip CMS Processing
+	if ($page->module() == 'static') {
 		// All Set!
 	}
-	elseif (! $_page->id) {
-		if (! $_page->getPage('server','404')) {
-			$_page->module = $_REQUEST_->module;
-			$_page->view = $_REQUEST_->view;
-			$_page->index = $_REQUEST_->index;
-			$_page->applyStyle();
+	elseif (! $page->id) {
+		if (! $page->getPage('server','404')) {
+			$page->module = $_REQUEST_->module;
+			$page->view = $_REQUEST_->view;
+			$page->index = $_REQUEST_->index;
+			$page->applyStyle();
 		}
 	}
 
@@ -176,4 +190,4 @@
 	$counter = new \Site\Counter("site.connections");
 	$counter->increment();
 
-	print $_page->load_template();
+	print $page->load_template();
