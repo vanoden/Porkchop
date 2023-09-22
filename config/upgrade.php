@@ -10,7 +10,7 @@
 
 	$modules = array(
 		"Company"		=> array(
-			"schema"	=> 3,
+			"schema"	=> 4,
 			"templates"	=> array(
 				"configuration"	=> $templates['admin'],
 				"domains"		=> $templates['admin']
