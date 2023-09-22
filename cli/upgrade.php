@@ -124,12 +124,6 @@
 		$site->install_fail("Error connecting to database: ".$_database->ErrorMsg());
 	}
 
-	# Unset Templates
-	$site->install_log("Clear old template settings");
-	$pagelist = new \Site\PageList();
-	$pages = $pagelist->find();
-	foreach ($pages as $page) $page->unsetMetadata("template");
-
 	###################################################
 	### Initialize Session							###
 	###################################################
@@ -143,6 +137,9 @@
 	list($company) = $companylist->find();
 	if (! $company->id) $site->install_fail("No company found.  You must run installer");
 	$_SESSION_->company = $company;
+
+	# Update Schemas 
+	$site->loadModules($modules);
 
 	###################################################
 	### See if Location Present						###
@@ -169,7 +166,7 @@
 					'status'	=> 1
 				)
 			);
-			if ($domain->error) $this->install_fail("Failed to add domain: ".$domain->error);
+			if ($domain->error()) $this->install_fail("Failed to add domain: ".$domain->error());
 		}
 		else {
 			$site->install_log("Found domain ".$domain->id);
@@ -211,7 +208,14 @@
 		$site->install_log("No version.txt found",'warning');
 	}
 
-	$site->loadModules($modules);
+	if (false) {
+		# Unset Templates
+		$site->install_log("Clear old template settings");
+		$pagelist = new \Site\PageList();
+		$pages = $pagelist->find();
+		foreach ($pages as $page) $page->unsetMetadata("template");
+	}
+
 	#$site->setShippingLocation($company);
 	$site->populateMenus($menus);
 
