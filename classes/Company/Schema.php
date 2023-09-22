@@ -138,6 +138,21 @@
 				$this->setVersion(3);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			
+			if ($this->version() < 4) {
+				$update_table_query = "
+					ALTER TABLE `company_locations` 
+					MODIFY COLUMN `content` text DEFAULT ''
+				";
+				if (! $this->executeSQL($update_table_query)) {
+					$this->error = "SQL Error updating company_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
+					app_log($this->error, 'error');
+					return false;
+				}
+
+				$this->setVersion(4);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}
