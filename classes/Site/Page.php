@@ -69,6 +69,7 @@
 		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS ['_config']->style [$this->module()];
 	    }
 	    public function requireAuth() {
+			if ($this->module == 'register' && $this->view == 'login') return true;
 		    if (! $GLOBALS ['_SESSION_']->customer->id > 0) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
@@ -327,7 +328,7 @@
 			$database = new \Database\Service();
 			$schema = new \Database\Schema();
 			$table = $schema->table('page_pages');
-			if ($table->has_column('sitemap')) {
+			if ($table->has_column('tou_id')) {
 				$get_details_query = "
 						SELECT	id,
 								module,
@@ -344,7 +345,7 @@
 						SELECT	id,
 								module,
 								view,
-								tou_id,
+								0 tou_id,
 								`index` idx,
 								0 sitemap
 						FROM	page_pages
