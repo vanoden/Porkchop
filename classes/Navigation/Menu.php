@@ -48,13 +48,13 @@
 				    VALUES
 				    (?)
 			    ";
-		    $GLOBALS ['_database']->Execute($add_object_query, array ($parameters ['code']));
-		    if ($GLOBALS['_database']->ErrorMsg()) {
-			    $this->SQLError($GLOBALS['_database']->ErrorMsg());
-			    return false;
-		    }
-		    $this->id = $GLOBALS['_database']->Insert_ID();
-		    return $this->update($parameters);
+				$GLOBALS ['_database']->Execute($add_object_query, array ($parameters ['code']));
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+					return false;
+				}
+				$this->id = $GLOBALS['_database']->Insert_ID();
+				return $this->update($parameters);
 	    }
 	    public function update($parameters = []): bool {
 		    $update_object_query = "

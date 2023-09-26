@@ -52,6 +52,36 @@
 			return $this->details();
 		}
 
+		public function getByCompanyIdTargetDeleted ($company_id, $target, $deleted = 0) {
+			$get_contents_query = "
+				SELECT	id
+				FROM	content_messages
+				WHERE	company_id = ?
+				AND		target = ?
+				AND		deleted = ?
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_contents_query,
+				array(
+					$company_id,
+					$target,
+					$deleted
+				)
+			);
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			list($id) = $rs->FetchRow();
+			if ($id) {
+				$this->id = $id;
+			} else {
+				$this->error("Message not found");
+				return false;
+			}
+			return $this->details();
+		}
+
 		public function add($parameters = []) {
 		
 			$this->clearError();

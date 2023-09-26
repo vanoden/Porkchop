@@ -6,6 +6,8 @@
 		public $key;
 		public $value;
 
+		protected $_fields = array('value');
+
 		public function __construct($key = null) {
 			$this->_tableName = 'site_configurations';
 			$this->_tableUKColumn = 'key';
@@ -76,6 +78,68 @@
 				app_log("Config record ".$this->key." found with ".$this->value);
 				return true;
 			}
+		}
+
+        /**
+         * add by params
+         * 
+         * @param array $parameters, name value pairs to add and populate new object by
+         */
+		public function add($parameters = []) {
+			$database = new \Database\Service();
+	
+    		$addQuery = "INSERT INTO `$this->_tableName` ";
+			$bindFields = array();
+	        foreach ($parameters as $fieldKey => $fieldValue) {
+	            if (in_array($fieldKey, $this->_fields())) {
+    	            array_push($bindFields, $fieldKey);
+					$database->AddParam($fieldValue);
+	            }
+	        }
+	        $addQuery .= '(`'.implode('`,`',$bindFields).'`';
+            $addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindFields)) ,',') . ")";
+            
+            // Execute DB Query
+            $database->Execute($addQuery);
+			if ($database->ErrorMsg()) {
+				$this->_error .= $database->ErrorMsg();
+				return false;
+			}
+			
+			// get recent added row id to return update() and details()
+			$this->id = $database->Insert_ID();			
+			return true;
+		}
+
+        /**
+         * update by params
+         * 
+         * @param array $parameters, name value pairs to update object by
+         */
+        public function update($parameters = []): bool {
+			$this->clearError();
+			$database = new \Database\Service();
+            $updateQuery = "UPDATE `$this->_tableName` SET `key` = '$this->key'";
+	        foreach ($parameters as $fieldKey => $fieldValue) {
+	            if (in_array($fieldKey, $this->_fields)) {
+	               $updateQuery .= ", `$fieldKey` = ?";
+	               $database->AddParam($fieldValue);
+	            }
+	        }
+	        
+            $updateQuery .= " WHERE `key` = '$this->key'";
+            $database->Execute($updateQuery);
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+            // Clear Cache to Allow Update
+			$cache = $this->cache();
+			if (isset($cache)) $cache->delete();
+
+            return true;
 		}
 
         public function getByKey($key) {

@@ -86,7 +86,7 @@
 
             $updateQuery = "UPDATE `$this->_tableName` SET `$this->_tableIDColumn` = `$this->_tableIDColumn` ";
 		    
-    	    // unique id is required to perform an updat
+    	    // unique id is required to perform an update
     	    if (!$this->id) {
         	    $this->error('ERROR: id is required for '.$this->_objectName().' update.');
         	    return false;
@@ -459,4 +459,8 @@
 			}
 			return $this->_cached;
 		}
+
+		public function getError() {
+			return $this->_error;
+        }	
 	}

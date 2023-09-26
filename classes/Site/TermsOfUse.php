@@ -13,6 +13,25 @@
 			parent::__construct($id);
 		}
 
+		public function getByCode($code) {
+			$get_object_query = "
+				SELECT	id
+				FROM	site_terms_of_use
+				WHERE	code = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($code));
+			if (! $rs) {
+				$this->error = $GLOBALS['_database']->ErrorMsg();
+				return null;
+			}
+			list($id) = $rs->FetchRow();
+			if ($id > 0) {
+				$this->id = $id;
+				return $this->details();
+			}
+			return null;
+		}
+
 		public function add($params = []): bool {
 			$this->clearError();
 

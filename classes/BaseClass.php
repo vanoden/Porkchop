@@ -2,7 +2,7 @@
 	class BaseClass {
 	
 		// Error Message
-		private $_error;
+		protected $_error;
 
 		private $_warning;
 
@@ -107,4 +107,8 @@
             if (preg_match('/^[\*\w\-\_\.\s]*$/',$string)) return true;
             else return false;
         }
+
+		public function getError() {
+			return $this->_error;
+        }		
 	}

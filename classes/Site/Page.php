@@ -345,7 +345,7 @@
 						SELECT	id,
 								module,
 								view,
-								0 tou_id,
+								tou_id,
 								`index` idx,
 								0 sitemap
 						FROM	page_pages
