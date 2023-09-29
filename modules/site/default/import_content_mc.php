@@ -114,7 +114,7 @@
 									$page->appendSuccess("Skipped Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
 								}
 							} else {
-								$addedNavigationMenuItem = $navigationMenuItem->add( navigationItemData );
+								$addedNavigationMenuItem = $navigationMenuItem->add( $navigationItemData );
 								if (!$addedNavigationMenuItem) {
 									$page->addError("<strong>Error Adding Navigation Menu Item: </strong>" . $navigationMenuItem->getError() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['target'] . "<br/>");
 								} else {
