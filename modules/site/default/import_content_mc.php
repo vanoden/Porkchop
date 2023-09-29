@@ -192,42 +192,41 @@
 
 				if ($jsonData['marketingContent']) {
 
-					// add marketing content pages
-					foreach ($jsonData['marketingContent'] as $page) {
+					foreach ($jsonData['marketingContent'] as $currentPage) {
 
 						$marketingPage = new \Site\Page();
-						$marketingPage->getPage($page['page']['module'],$page['page']['view'],$page['page']['index']);
+						$marketingPage->getPage($currentPage['page']['module'],$currentPage['page']['view'],$currentPage['page']['index']);
 						$marketingPageData = array (
-							'module' => $page['page']['module'],
-							'view' => $page['page']['view'],
-							'index' => $page['page']['index'],
-							'style' => $page['page']['style'],
-							'auth_required' => $page['page']['auth_required'],
-							'sitemap' => $page['page']['sitemap']
+							'module' => $currentPage['page']['module'],
+							'view' => $currentPage['page']['view'],
+							'index' => $currentPage['page']['index'],
+							'style' => $currentPage['page']['style'],
+							'auth_required' => $currentPage['page']['auth_required'],
+							'sitemap' => $currentPage['page']['sitemap']
 						);
 
 						if ($marketingPage->id) {
 							if ($overwrite) {
 								$isUpdated = $marketingPage->update( $marketingPageData );
 								if (!$isUpdated) {
-									$page->addError("<strong>Error Updating Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $page['page']['module'] . " <strong>View: </strong> " . $page['page']['view'] . "<br/>");
+									$page->addError("<strong>Error Updating Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $currentPage['page']['module'] . " <strong>View: </strong> " . $currentPage['page']['view'] . "<br/>");
 								} else {
-									$page->appendSuccess("Updated Marketing Page: " . $page['page']['module'] . " - " . $page['page']['view']);
+									$page->appendSuccess("Updated Marketing Page: " . $currentPage['page']['module'] . " - " . $currentPage['page']['view']);
 								}								
 							} else {
-								$page->appendSuccess("Skipped Marketing Page: " . $page['page']['module'] . " - " . $page['page']['view']);
+								$page->appendSuccess("Skipped Marketing Page: " . $currentPage['page']['module'] . " - " . $currentPage['page']['view']);
 							}
 						} else {
 							$addedMarketingPage = $marketingPage->add( $marketingPageData );
 							if (!$addedMarketingPage) {
-								$page->addError("<strong>Error Adding Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $page['page']['module'] . " <strong>View: </strong> " . $page['page']['view'] . "<br/>");
+								$page->addError("<strong>Error Adding Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $currentPage['page']['module'] . " <strong>View: </strong> " . $currentPage['page']['view'] . "<br/>");
 							} else {
-								$page->appendSuccess("Added Marketing Page: " . $page['page']['module'] . " - " . $page['page']['view']);
+								$page->appendSuccess("Added Marketing Page: " . $currentPage['page']['module'] . " - " . $currentPage['page']['view']);
 							}
 						}
 							
 						// add page meta data
-						foreach( $page['pageMetaData'] as $pageMetaData ) {
+						foreach( $currentPage['pageMetaData'] as $pageMetaData ) {
 
 							$marketingPageMetaData = new \Site\Page\MetaData();
 							$marketingPageMetaData->getByPageIdKey($marketingPage->id,$pageMetaData['key']);
@@ -260,7 +259,7 @@
 						}
 
 						// add page content block(s)
-						foreach ( $page['contentBlocks'] as $contentBlock ) {
+						foreach ( $currentPage['contentBlocks'] as $contentBlock ) {
 							
 							$marketingContentBlock = new \Content\Message();
 							$marketingContentBlock->getByCompanyIdTargetDeleted($contentBlock['company_id'],$contentBlock['target'],$contentBlock['deleted']);
