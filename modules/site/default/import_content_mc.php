@@ -163,7 +163,25 @@
 						foreach ( $term['termsOfUseVersions'] as $termsOfUseVersion ) {
 
 							$termsOfUseVersionItem = new \Site\TermsOfUseVersion();
-							// @TODO  site_terms_of_use_versions table needs a version_number or unique date
+							$termsOfUseVersionItem->getByTermsOfUseIdVersionNumber($termsOfUse->id,$termsOfUseVersion['version_number']);
+							$termsOfUseVersionData = array (
+							'tou_id' => $termsOfUse->id,
+							'version_number' => $termsOfUseVersion['version_number'],
+							'status' => $termsOfUseVersion['status'],
+							'content' => $termsOfUseVersion['content']
+							);
+							if ($termsOfUseVersionItem->id) {
+								if ($overwrite) {
+									$isUpdated = $termsOfUseVersionItem->update( $termsOfUseVersionData );
+									if (!$isUpdated) {
+										$page->addError("<strong>Error Updating Terms of Use Version: </strong>" . $termsOfUseVersionItem->getError() . "<br/><strong> Version Number: </strong>" . $termsOfUseVersion['version_number'] . " <strong>Status: </strong> " . $termsOfUseVersion['status'] . "<br/>");
+									} else {
+										$page->appendSuccess("Updated Terms of Use Version: " . $termsOfUseVersion['version_number'] . " - " . $termsOfUseVersion['status']);
+									}								
+								} else {
+									$page->appendSuccess("Skipped Terms of Use Version: " . $termsOfUseVersion['version_number'] . " - " . $termsOfUseVersion['status']);
+								}
+							}
 						}
 					}
 				}
@@ -284,4 +302,4 @@
 		    }
 		}
 	}
-	}
+}

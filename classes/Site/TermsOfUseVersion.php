@@ -6,15 +6,18 @@
 		public $status;
 		public $content;
 		public $number;
+		public $version_number;
 		public $tou_id;
 
+	
 		/********************************************/
 		/* Instance Constructor						*/
 		/********************************************/
 		public function __construct($id = 0) {
+
 			// Set Table Name
 			$this->_tableName = 'site_terms_of_use_versions';
-			$this->_addFields(array('id','status','content'));
+			$this->_addFields(array('id','version_number', 'status','content'));
 
 			// Set cache key name - MUST Be Unique to Class
 			$this->_cacheKeyPrefix = $this->_tableName;
@@ -32,6 +35,7 @@
 		/* Others should be handled in update().	*/
 		/********************************************/
 		public function add($params = []): bool {
+
 			// Clear Any Existing Errors
 			$this->clearError();
 
@@ -51,16 +55,20 @@
 				return false;
 			}
 
+			// get next version for the terms of use
+			$params['version_number'] = $this->get_next_version($params['tou_id']);
+
 			// Prepare Query
 			$add_object_query = "
 				INSERT
 				INTO	`".$this->_tableName."`
-				(		tou_id,status)
-				VALUES	(?,?)
+				(		tou_id,version_number,status)
+				VALUES	(?,?,?)
 			";
 
 			// Add Parameters
 			$database->AddParam($tou->id);
+			$database->AddParam($params['version_number']);
 			$database->AddParam($params['status']);
 
 			// Execute Query
@@ -132,6 +140,7 @@
 		/* Update Existing Record					*/
 		/********************************************/
 		public function retract(): bool {
+
 			// Clear Any Existing Errors
 			$this->clearError();
 
@@ -252,5 +261,24 @@
 		public function validContent($string) {
 			if (preg_match('/\<script/',urldecode($string))) return false;
 			else return true;
+		}
+
+		public function getByTermsOfUseIdVersionNumber($tou_id,$version_number) {
+			$rs = $this->execute("SELECT id FROM `site_terms_of_use_versions` WHERE tou_id = ? AND version_number = ?", array($tou_id,$version_number));
+			list($id) = $rs->FetchRow();
+			if ($id) return $this->get($id);
+			return false;
+		}
+
+		/**
+		 * get the next highest version number
+		 *
+         * @param number $tou_id
+		 */
+		private function get_next_version($tou_id) {
+			$rs = $this->execute("SELECT max(`version_number`) FROM `site_terms_of_use_versions` WHERE tou_id = ?", array($tou_id));
+			list($number) = $rs->FetchRow();
+			if (is_numeric($number)) return $number + 1;
+			return 1;
 		}
 	}

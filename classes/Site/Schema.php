@@ -473,6 +473,29 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 		
+			if ($this->version() < 20) {
+
+				app_log("Upgrading ".$this->module." schema to version 20",'notice',__FILE__,__LINE__);
+				$alter_table_query = "
+					ALTER TABLE `site_terms_of_use_versions` ADD COLUMN `version_number` int DEFAULT NULL AFTER id;
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("altering site_terms_of_use_actions table: ".$this->error());
+					return false;
+				}
+
+				$alter_table_query = "
+					ALTER TABLE `site_terms_of_use_versions` ADD KEY `idx_tou_version_number` (`version_number`,`tou_id`);
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("altering site_terms_of_use_actions table: ".$this->error());
+					return false;
+				}
+
+				$this->setVersion(20);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}
