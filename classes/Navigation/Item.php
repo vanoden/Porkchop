@@ -79,14 +79,26 @@
 		}
 
 		public function getByParentIdViewOrderMenuId($parent_id,$view_order,$menu_id) {
-			$get_object_query = "
-				SELECT	id
-				FROM	navigation_menu_items
-				WHERE	parent_id = ?
-				AND		view_order = ?
-				AND		menu_id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($parent_id,$view_order,$menu_id));
+
+			if (!empty($view_order)) {
+				$get_object_query = "
+					SELECT	id
+					FROM	navigation_menu_items
+					WHERE	parent_id = ?
+					AND		view_order = ?
+					AND		menu_id = ?
+				";
+				$rs = $GLOBALS['_database']->Execute($get_object_query,array($parent_id,$view_order,$menu_id));
+			} else {
+				$get_object_query = "
+					SELECT	id
+					FROM	navigation_menu_items
+					WHERE	parent_id = ?
+					AND		menu_id = ?
+				";
+				$rs = $GLOBALS['_database']->Execute($get_object_query,array($parent_id,$menu_id));
+			}
+
 			if (! $rs) {
 				$this->error = $GLOBALS['_database']->ErrorMsg();
 				return null;

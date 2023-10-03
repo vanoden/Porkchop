@@ -1,304 +1,314 @@
 <?php
-	$site = new \Site();
-    $page = $site->page();
-	$page->requirePrivilege('configure site');
-	$page->addBreadCrumb("Import Settings","/_site/import_content");
-	$page->instructions = "Select the settings you would like to export to a JSON formatted file.";
-	
-	/** 
-	 * is checked check for checkboxes
-	 *
-	 * @param $name
-	 */
-	function isChecked ($name="") {
-        if (!empty($name) && isset($_REQUEST['content']) && in_array($name, $_REQUEST['content'])) return "checked=checked";
-	}
-	
-	// content requested to export form submitted
-	$siteData = new \Site\Data();
-	if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
-		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
-			$page->addError("Invalid Token");
-		} else {
-			
-			// get JSON data and overwrite flag
-			$jsonData = json_decode($_REQUEST['jsonData'], true);
-			$overwrite = ($_REQUEST['overwrite'] == 'true') ? true : false;
+$site = new \Site();
+$page = $site->page();
+$page->requirePrivilege('configure site');
+$page->addBreadCrumb("Import Settings", "/_site/import_content");
+$page->instructions = "Select the settings you would like to export to a JSON formatted file.";
 
-		    // Configurations Selected
-		    if (in_array('Configurations', $_REQUEST['content'])) {
-				if ($jsonData['configurations']) {
-					foreach ($jsonData['configurations'] as $configuration) {
+/** 
+ * is checked check for checkboxes
+ *
+ * @param $name
+ */
+function isChecked ($name="") {
+    if (!empty($name) && isset($_REQUEST['content']) && in_array($name, $_REQUEST['content'])) return "checked=checked";
+}
 
-						$siteConfiguration = new \Site\Configuration();
-						$siteConfiguration->getByKey($configuration['key']);
+// content requested to export form submitted
+$siteData = new \Site\Data();
+if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
+	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+		$page->addError("Invalid Token");
+	} else {
 
-						// if key exists, update (only if overwrite), else add
-						if ($siteConfiguration->key) {
-							if ($overwrite) {
-								$isUpdated = $siteConfiguration->update( array( 'value' => $configuration['value'] ) );
-								if (!$isUpdated) {
-									$page->addError("<strong>Error Updating Site Configuration: </strong>" . $siteConfiguration->getError() . "<br/><strong> Key: </strong>" . $configuration['key'] . " <strong>Name: </strong> " . $configuration['value'] . "<br/>");
-								} else {
-									$page->appendSuccess("Updated Site Configuration: " . $configuration['key'] . " - " . $configuration['value']);
-								}								
+		// get JSON data and overwrite flag
+		$jsonData = json_decode($_REQUEST['jsonData'], true);
+		$overwrite = ($_REQUEST['overwrite'] == 'true') ? true : false;
+
+		// Configurations Selected
+		if (in_array('Configurations', $_REQUEST['content'])) {
+			if ($jsonData['configurations']) {
+				foreach ($jsonData['configurations'] as $configuration) {
+
+					$siteConfiguration = new \Site\Configuration();
+					$siteConfiguration->getByKey($configuration['key']);
+
+					// if key exists, update (only if overwrite), else add
+					if ($siteConfiguration->key) {
+						if ($overwrite) {
+							$isUpdated = $siteConfiguration->update(array('value' => $configuration['value']));
+							if (!$isUpdated) {
+								$page->addError("<strong>Error Updating Site Configuration: </strong>" . $siteConfiguration->getError() . "<br/><strong> Key: </strong>" . $configuration['key'] . " <strong>Name: </strong> " . $configuration['value'] . "<br/>");
 							} else {
-								$page->appendSuccess("Skipped Site Configuration: " . $configuration['key'] . " - " . $configuration['value']);
+								$page->appendSuccess("Updated Site Configuration: " . $configuration['key'] . " - " . $configuration['value']);
 							}
 						} else {
-							$addedSiteConfiguration = $siteConfiguration->add(array( 'key' => $configuration['key'], 'value' => $configuration['value'] ));
-							if (!$addedSiteConfiguration) {
-								$page->addError("<strong>Error Adding Site Configuration: </strong>" . $siteConfiguration->getError() . "<br/><strong> Key: </strong>" . $configuration['key'] . " <strong>Name: </strong> " . $configuration['value'] . "<br/>");
-							} else {
-								$page->appendSuccess("Added Site Configuration: " . $configuration['key'] . " - " . $configuration['value']);
-							}
+							$page->appendSuccess("Skipped Site Configuration: " . $configuration['key'] . " - " . $configuration['value']);
+						}
+					} else {
+						$addedSiteConfiguration = $siteConfiguration->add(array('key' => $configuration['key'], 'value' => $configuration['value']));
+						if (!$addedSiteConfiguration) {
+							$page->addError("<strong>Error Adding Site Configuration: </strong>" . $siteConfiguration->getError() . "<br/><strong> Key: </strong>" . $configuration['key'] . " <strong>Name: </strong> " . $configuration['value'] . "<br/>");
+						} else {
+							$page->appendSuccess("Added Site Configuration: " . $configuration['key'] . " - " . $configuration['value']);
 						}
 					}
 				}
-		    }
+			}
+		}
 
-    		// Navigation Selected
-		    if (in_array('Navigation', $_REQUEST['content'])) {
-				if ($jsonData['navigation']) {
-					foreach ($jsonData['navigation'] as $navigation) {
-						$navigationMenu = new \Navigation\Menu();
-						$navigationMenu->getByCode($navigation['menuItem']['code']);
+		// Navigation Selected
+		if (in_array('Navigation', $_REQUEST['content'])) {
+			if ($jsonData['navigation']) {
+				foreach ($jsonData['navigation'] as $navigation) {
+					$navigationMenu = new \Navigation\Menu();
+					$navigationMenu->getByCode($navigation['menuItem']['code']);
 
-						// if key exists, update (only if overwrite), else add
-						if ($navigationMenu->id) {
-							if ($overwrite) {
-								$isUpdated = $navigationMenu->update( array( 'title' => $navigation['menuItem']['title'] ) );
-								if (!$isUpdated) {
-									$page->addError("<strong>Error Updating Navigation Menu: </strong>" . $navigationMenu->getError() . "<br/><strong> Code: </strong>" . $navigation['menuItem']['code'] . " <strong>Title: </strong> " . $navigation['menuItem']['title'] . "<br/>");
-								} else {
-									$page->appendSuccess("Updated Navigation Menu: " . $navigation['menuItem']['code'] . " - " . $navigation['menuItem']['title']);
-								}								
+					// if key exists, update (only if overwrite), else add
+					if ($navigationMenu->id) {
+						if ($overwrite) {
+							$isUpdated = $navigationMenu->update(array('title' => $navigation['menuItem']['title']));
+							if (!$isUpdated) {
+								$page->addError("<strong>Error Updating Navigation Menu: </strong>" . $navigationMenu->getError() . "<br/><strong> Code: </strong>" . $navigation['menuItem']['code'] . " <strong>Title: </strong> " . $navigation['menuItem']['title'] . "<br/>");
 							} else {
-								$page->appendSuccess("Skipped Navigation Menu: " . $navigation['menuItem']['code'] . " - " . $navigation['menuItem']['title']);
+								$page->appendSuccess("Updated Navigation Menu: " . $navigation['menuItem']['code'] . " - " . $navigation['menuItem']['title']);
 							}
 						} else {
-							$addedNavigationMenu = $navigationMenu->add( array( 'code' => $navigation['menuItem']['code'], 'title' => $navigation['menuItem']['title'] ) );
-							if (!$addedNavigationMenu) {
-								$page->addError("<strong>Error Adding Navigation Menu: </strong>" . $navigationMenu->getError() . "<br/><strong> Code: </strong>" . $navigation['menuItem']['code'] . " <strong>Title: </strong> " . $navigation['menuItem']['title'] . "<br/>");
-							} else {
-								$page->appendSuccess("Added Navigation Menu: " . $navigation['menuItem']['code'] . " - " . $navigation['menuItem']['title']);
-							}
+							$page->appendSuccess("Skipped Navigation Menu: " . $navigation['menuItem']['code'] . " - " . $navigation['menuItem']['title']);
 						}
-
-						// create/update navigation menu items
-						foreach ( $navigation['navigationItems'] as $navigationItem ) {
-
-							$navigationMenuItem = new \Navigation\Item();
-							$navigationMenuItem->getByParentIdViewOrderMenuId($navigationItem['parent_id'],$navigationItem['view_order'],$navigationMenu->id);
-							$navigationItemData = array (
-								'menu_id' => $navigationItem['menu_id'],
-								'title' => $navigationItem['title'],
-								'target' => $navigationItem['target'],
-								'view_order' => $navigationItem['view_order'],
-								'alt' => $navigationItem['alt'],
-								'description' => $navigationItem['description'],
-								'parent_id' => $navigationItem['parent_id'],
-								'external' => $navigationItem['external'],
-								'ssl' => $navigationItem['ssl']
-							);
-
-							if ($navigationMenuItem->id) {
-								if ($overwrite) {
-									$isUpdated = $navigationMenuItem->update( $navigationItemData );
-									if (!$isUpdated) {
-										$page->addError("<strong>Error Updating Navigation Menu Item: </strong>" . $navigationMenuItem->getError() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['url'] . "<br/>");
-									} else {
-										$page->appendSuccess("Updated Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
-									}								
-								} else {
-									$page->appendSuccess("Skipped Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
-								}
-							} else {
-								$addedNavigationMenuItem = $navigationMenuItem->add( $navigationItemData );
-								if (!$addedNavigationMenuItem) {
-									$page->addError("<strong>Error Adding Navigation Menu Item: </strong>" . $navigationMenuItem->getError() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['target'] . "<br/>");
-								} else {
-									$page->appendSuccess("Added Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
-								}
-							}
+					} else {
+						$addedNavigationMenu = $navigationMenu->add(array('code' => $navigation['menuItem']['code'], 'title' => $navigation['menuItem']['title']));
+						if (!$addedNavigationMenu) {
+							$page->addError("<strong>Error Adding Navigation Menu: </strong>" . $navigationMenu->getError() . "<br/><strong> Code: </strong>" . $navigation['menuItem']['code'] . " <strong>Title: </strong> " . $navigation['menuItem']['title'] . "<br/>");
+						} else {
+							$page->appendSuccess("Added Navigation Menu: " . $navigation['menuItem']['code'] . " - " . $navigation['menuItem']['title']);
 						}
 					}
-				}
-		    }
 
-    	    // Terms of Use Selected
-		    if (in_array('Terms', $_REQUEST['content'])) {
+					// create/update navigation menu items
+					foreach ($navigation['navigationItems'] as $navigationItem) {
 
-				if ($jsonData['termsOfUse']) {
-					foreach ($jsonData['termsOfUse'] as $term) {
-
-						$termsOfUse = new \Site\TermsOfUse();
-						$termsOfUse->getByCode($term['termsOfUseItem']['code']);
-						$termsOfUseItemData = array (
-							'code' => $term['termsOfUseItem']['code'],
-							'name' => $term['termsOfUseItem']['name'],
-							'description' => $term['termsOfUseItem']['description']
+						$navigationMenuItem = new \Navigation\Item();
+						$navigationMenuItem->getByParentIdViewOrderMenuId($navigationItem['parent_id'], $navigationItem['view_order'], $navigationMenu->id);
+						$navigationItemData = array(
+							'menu_id' => $navigationItem['menu_id'],
+							'title' => $navigationItem['title'],
+							'target' => $navigationItem['target'],
+							'view_order' => $navigationItem['view_order'],
+							'alt' => $navigationItem['alt'],
+							'description' => $navigationItem['description'],
+							'parent_id' => $navigationItem['parent_id'],
+							'external' => $navigationItem['external'],
+							'ssl' => $navigationItem['ssl']
 						);
-						if ($termsOfUse->id) {
+
+						if ($navigationMenuItem->id) {
 							if ($overwrite) {
-								$isUpdated = $termsOfUse->update( $termsOfUseItemData );
+								$isUpdated = $navigationMenuItem->update($navigationItemData);
 								if (!$isUpdated) {
-									$page->addError("<strong>Error Updating Terms of Use: </strong>" . $termsOfUse->getError() . "<br/><strong> Code: </strong>" . $term['termsOfUseItem']['code'] . " <strong>Name: </strong> " . $term['termsOfUseItem']['name'] . "<br/>");
+									$page->addError("<strong>Error Updating Navigation Menu Item: </strong>" . $navigationMenuItem->getError() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['url'] . "<br/>");
 								} else {
-									$page->appendSuccess("Updated Terms of Use: " . $term['termsOfUseItem']['code'] . " - " . $term['termsOfUseItem']['name']);
-								}								
+									$page->appendSuccess("Updated Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
+								}
 							} else {
-								$page->appendSuccess("Skipped Terms of Use: " . $term['termsOfUseItem']['code'] . " - " . $term['termsOfUseItem']['name']);
+								$page->appendSuccess("Skipped Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
 							}
 						} else {
-							$addedTermOfUse = $termsOfUse->add( $termsOfUseItemData );
-							if (!$addedTermOfUse) {
-								$page->addError("<strong>Error Adding Terms of Use: </strong>" . $termsOfUse->getError() . "<br/><strong> Code: </strong>" . $term['termsOfUseItem']['code'] . " <strong>Name: </strong> " . $term['termsOfUseItem']['name'] . "<br/>");
+							$addedNavigationMenuItem = $navigationMenuItem->add($navigationItemData);
+							if (!$addedNavigationMenuItem) {
+								$page->addError("<strong>Error Adding Navigation Menu Item: </strong>" . $navigationMenuItem->getError() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['target'] . "<br/>");
 							} else {
-								$page->appendSuccess("Added Terms of Use: " . $term['termsOfUseItem']['code'] . " - " . $term['termsOfUseItem']['name']);
+								$page->appendSuccess("Added Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
 							}
 						}
+					}
+				}
+			}
+		}
 
-						// create/update terms of use versions
-						foreach ( $term['termsOfUseVersions'] as $termsOfUseVersion ) {
+		// Terms of Use Selected
+		if (in_array('Terms', $_REQUEST['content'])) {
 
-							$termsOfUseVersionItem = new \Site\TermsOfUseVersion();
-							$termsOfUseVersionItem->getByTermsOfUseIdVersionNumber($termsOfUse->id,$termsOfUseVersion['version_number']);
-							$termsOfUseVersionData = array (
+			if ($jsonData['termsOfUse']) {
+				foreach ($jsonData['termsOfUse'] as $term) {
+
+					$termsOfUse = new \Site\TermsOfUse();
+					$termsOfUse->getByCode($term['termsOfUseItem']['code']);
+					$termsOfUseItemData = array(
+						'code' => $term['termsOfUseItem']['code'],
+						'name' => $term['termsOfUseItem']['name'],
+						'description' => $term['termsOfUseItem']['description']
+					);
+					if ($termsOfUse->id) {
+						if ($overwrite) {
+							$isUpdated = $termsOfUse->update($termsOfUseItemData);
+							if (!$isUpdated) {
+								$page->addError("<strong>Error Updating Terms of Use: </strong>" . $termsOfUse->getError() . "<br/><strong> Code: </strong>" . $term['termsOfUseItem']['code'] . " <strong>Name: </strong> " . $term['termsOfUseItem']['name'] . "<br/>");
+							} else {
+								$page->appendSuccess("Updated Terms of Use: " . $term['termsOfUseItem']['code'] . " - " . $term['termsOfUseItem']['name']);
+							}
+						} else {
+							$page->appendSuccess("Skipped Terms of Use: " . $term['termsOfUseItem']['code'] . " - " . $term['termsOfUseItem']['name']);
+						}
+					} else {
+						$addedTermOfUse = $termsOfUse->add($termsOfUseItemData);
+						if (!$addedTermOfUse) {
+							$page->addError("<strong>Error Adding Terms of Use: </strong>" . $termsOfUse->getError() . "<br/><strong> Code: </strong>" . $term['termsOfUseItem']['code'] . " <strong>Name: </strong> " . $term['termsOfUseItem']['name'] . "<br/>");
+						} else {
+							$page->appendSuccess("Added Terms of Use: " . $term['termsOfUseItem']['code'] . " - " . $term['termsOfUseItem']['name']);
+						}
+					}
+
+					// create/update terms of use versions
+					foreach ($term['termsOfUseVersions'] as $termsOfUseVersion) {
+
+						$termsOfUseVersionItem = new \Site\TermsOfUseVersion();
+						$termsOfUseVersionItem->getByTermsOfUseIdVersionNumber($termsOfUse->id, $termsOfUseVersion['version_number']);
+						$termsOfUseVersionData = array(
 							'tou_id' => $termsOfUse->id,
 							'version_number' => $termsOfUseVersion['version_number'],
 							'status' => $termsOfUseVersion['status'],
 							'content' => $termsOfUseVersion['content']
-							);
-							if ($termsOfUseVersionItem->id) {
-								if ($overwrite) {
-									$isUpdated = $termsOfUseVersionItem->update( $termsOfUseVersionData );
-									if (!$isUpdated) {
-										$page->addError("<strong>Error Updating Terms of Use Version: </strong>" . $termsOfUseVersionItem->getError() . "<br/><strong> Version Number: </strong>" . $termsOfUseVersion['version_number'] . " <strong>Status: </strong> " . $termsOfUseVersion['status'] . "<br/>");
-									} else {
-										$page->appendSuccess("Updated Terms of Use Version: " . $termsOfUseVersion['version_number'] . " - " . $termsOfUseVersion['status']);
-									}								
+						);
+						if ($termsOfUseVersionItem->id) {
+							if ($overwrite) {
+								$isUpdated = $termsOfUseVersionItem->update($termsOfUseVersionData);
+								if (!$isUpdated) {
+									$page->addError("<strong>Error Updating Terms of Use Version: </strong>" . $termsOfUseVersionItem->getError() . "<br/><strong> Version Number: </strong>" . $termsOfUseVersion['version_number'] . " <strong>Status: </strong> " . $termsOfUseVersion['status'] . "<br/>");
 								} else {
-									$page->appendSuccess("Skipped Terms of Use Version: " . $termsOfUseVersion['version_number'] . " - " . $termsOfUseVersion['status']);
+									$page->appendSuccess("Updated Terms of Use Version: " . $termsOfUseVersion['version_number'] . " - " . $termsOfUseVersion['status']);
+								}
+							} else {
+								$page->appendSuccess("Skipped Terms of Use Version: " . $termsOfUseVersion['version_number'] . " - " . $termsOfUseVersion['status']);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Marketing content Selected
+		if (in_array('Marketing', $_REQUEST['content'])) {
+
+			if ($jsonData['marketingContent']) {
+				foreach ($jsonData['marketingContent'] as $currentPageImport) {
+
+					foreach ($currentPageImport as $marketingCurrentPage) {
+
+						if (isset($marketingCurrentPage['module']) && isset($marketingCurrentPage['view']) && isset($marketingCurrentPage['index']) && !empty($marketingCurrentPage['module']) && !empty($marketingCurrentPage['view']) && !empty($marketingCurrentPage['index'])) {
+							$marketingPage = new \Site\Page();
+							$marketingPage->getPage($marketingCurrentPage['module'], $marketingCurrentPage['view'], $marketingCurrentPage['index']);
+							$marketingPageData = array(
+								'module' => $marketingCurrentPage['module'],
+								'view' => $marketingCurrentPage['view'],
+								'index' => $marketingCurrentPage['index'],
+								'style' => $marketingCurrentPage['style'],
+								'auth_required' => $marketingCurrentPage['auth_required'],
+								'sitemap' => $marketingCurrentPage['sitemap']
+							);
+
+							if ($marketingPage->id) {
+								if ($overwrite) {
+									$isUpdated = $marketingPage->update($marketingPageData);
+									if (!$isUpdated) {
+										$page->addError("<strong>Error Updating Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $marketingCurrentPage['module'] . " <strong>View: </strong> " . $marketingCurrentPage['view'] . "<br/>");
+									} else {
+										$page->appendSuccess("Updated Marketing Page: " . $marketingCurrentPage['module'] . " - " . $marketingCurrentPage['view']);
+									}
+								} else {
+									$page->appendSuccess("Skipped Marketing Page: " . $marketingCurrentPage['module'] . " - " . $marketingCurrentPage['view']);
+								}
+							} else {
+								$addedMarketingPage = $marketingPage->add($marketingPageData);
+								if (!$addedMarketingPage) {
+									$page->addError("<strong>Error Adding Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $marketingCurrentPage['module'] . " <strong>View: </strong> " . $marketingCurrentPage['view'] . "<br/>");
+								} else {
+									$page->appendSuccess("Added Marketing Page: " . $marketingCurrentPage['module'] . " - " . $marketingCurrentPage['view']);
+								}
+							}
+
+							// add page meta data if it exists
+							if (isset($marketingCurrentPage['pageMetaData']) && !empty($marketingCurrentPage['pageMetaData'])) {
+
+								foreach ($marketingCurrentPage['pageMetaData'] as $pageMetaData) {
+									$marketingPageMetaData = new \Site\Page\MetaData();
+									$marketingPageMetaData->getByPageIdKey($marketingPage->id, $pageMetaData['key']);
+									$marketingPageMetaDataData = array(
+										'page_id' => $marketingPage->id,
+										'key' => $pageMetaData['key'],
+										'value' => $pageMetaData['value']
+									);
+
+									if ($marketingPageMetaData->id) {
+										if ($overwrite) {
+											$isUpdated = $marketingPageMetaData->update($marketingPageMetaDataData);
+											if (!$isUpdated) {
+												$page->addError("<strong>Error Updating Marketing Page Meta Data: </strong>" . $marketingPageMetaData->getError() . "<br/><strong> Key: </strong>" . $pageMetaData['key'] . " <strong>Value: </strong> " . $pageMetaData['value'] . "<br/>");
+											} else {
+												$page->appendSuccess("Updated Marketing Page Meta Data: " . $pageMetaData['key'] . " - " . $pageMetaData['value']);
+											}
+										} else {
+											$page->appendSuccess("Skipped Marketing Page Meta Data: " . $pageMetaData['key'] . " - " . $pageMetaData['value']);
+										}
+									} else {
+										$addedMarketingPageMetaData = $marketingPageMetaData->addByParameters($marketingPageMetaDataData);
+										if (!$addedMarketingPageMetaData) {
+											$page->addError("<strong>Error Adding Marketing Page Meta Data: </strong>" . $marketingPageMetaData->getError() . "<br/><strong> Key: </strong>" . $pageMetaData['key'] . " <strong>Value: </strong> " . $pageMetaData['value'] . "<br/>");
+										} else {
+											$page->appendSuccess("Added Marketing Page Meta Data: " . $pageMetaData['key'] . " - " . $pageMetaData['value']);
+										}
+									}
+								}
+							}
+
+							// add page content block(s)
+							if (isset($marketingCurrentPage['contentBlocks']) && !empty($marketingCurrentPage['contentBlocks'])) {
+								foreach ($marketingCurrentPage['contentBlocks'] as $contentBlock) {
+
+									if (isset($contentBlock['company_id']) && isset($contentBlock['target']) && isset($contentBlock['deleted'])) {
+
+										$marketingContentBlock = new \Content\Message();
+										$marketingContentBlock->getByCompanyIdTargetDeleted($contentBlock['company_id'], $contentBlock['target'], $contentBlock['deleted']);
+
+										$contentBlockData = array(
+											'company_id' => $contentBlock['company_id'],
+											'target' => $contentBlock['target'],
+											'view_order' => $contentBlock['view_order'],
+											'active' => $contentBlock['active'],
+											'deleted' => $contentBlock['deleted'],
+											'title' => $contentBlock['title'],
+											'menu_id' => $contentBlock['menu_id'],
+											'name' => $contentBlock['name'],
+											'content' => $contentBlock['content'],
+											'cached' => $contentBlock['cached']
+										);
+
+										if ($marketingContentBlock->id) {
+											if ($overwrite) {
+												$isUpdated = $marketingContentBlock->update($contentBlockData);
+												if (!$isUpdated) {
+													$page->addError("<strong>Error Updating Marketing Content Block: </strong>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . $contentBlock['content'] . "<br/>");
+												} else {
+													$page->appendSuccess("Updated Marketing Content Block: " . $contentBlock['title'] . " - " . $contentBlock['content']);
+												}
+											} else {
+												$page->appendSuccess("Skipped Marketing Content Block: " . $contentBlock['title'] . " - " . $contentBlock['content']);
+											}
+										} else {
+											$addedMarketingContentBlock = $marketingContentBlock->add($contentBlockData);
+											if (!$addedMarketingContentBlock) {
+												$page->addError("<strong>Error Adding Marketing Content Block: </strong>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . $contentBlock['content'] . "<br/>");
+											} else {
+												$page->appendSuccess("Added Marketing Content Block: " . $contentBlock['title'] . " - " . $contentBlock['content']);
+											}
+										}
+									}
 								}
 							}
 						}
 					}
 				}
-		    }
-
-            // Marketing content Selected
-		    if (in_array('Marketing', $_REQUEST['content'])) {
-
-				if ($jsonData['marketingContent']) {
-
-					foreach ($jsonData['marketingContent'] as $currentPage) {
-
-						$marketingPage = new \Site\Page();
-						$marketingPage->getPage($currentPage['page']['module'],$currentPage['page']['view'],$currentPage['page']['index']);
-						$marketingPageData = array (
-							'module' => $currentPage['page']['module'],
-							'view' => $currentPage['page']['view'],
-							'index' => $currentPage['page']['index'],
-							'style' => $currentPage['page']['style'],
-							'auth_required' => $currentPage['page']['auth_required'],
-							'sitemap' => $currentPage['page']['sitemap']
-						);
-
-						if ($marketingPage->id) {
-							if ($overwrite) {
-								$isUpdated = $marketingPage->update( $marketingPageData );
-								if (!$isUpdated) {
-									$page->addError("<strong>Error Updating Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $currentPage['page']['module'] . " <strong>View: </strong> " . $currentPage['page']['view'] . "<br/>");
-								} else {
-									$page->appendSuccess("Updated Marketing Page: " . $currentPage['page']['module'] . " - " . $currentPage['page']['view']);
-								}								
-							} else {
-								$page->appendSuccess("Skipped Marketing Page: " . $currentPage['page']['module'] . " - " . $currentPage['page']['view']);
-							}
-						} else {
-							$addedMarketingPage = $marketingPage->add( $marketingPageData );
-							if (!$addedMarketingPage) {
-								$page->addError("<strong>Error Adding Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $currentPage['page']['module'] . " <strong>View: </strong> " . $currentPage['page']['view'] . "<br/>");
-							} else {
-								$page->appendSuccess("Added Marketing Page: " . $currentPage['page']['module'] . " - " . $currentPage['page']['view']);
-							}
-						}
-							
-						// add page meta data
-						foreach( $currentPage['pageMetaData'] as $pageMetaData ) {
-
-							$marketingPageMetaData = new \Site\Page\MetaData();
-							$marketingPageMetaData->getByPageIdKey($marketingPage->id,$pageMetaData['key']);
-							$marketingPageMetaDataData = array(
-								'page_id' => $marketingPage->id,
-								'key' => $pageMetaData['key'],
-								'value' => $pageMetaData['value']
-							);
-
-							if ($marketingPageMetaData->id) {
-								if ($overwrite) {
-									$isUpdated = $marketingPageMetaData->update( $marketingPageMetaDataData );
-									if (!$isUpdated) {
-										$page->addError("<strong>Error Updating Marketing Page Meta Data: </strong>" . $marketingPageMetaData->getError() . "<br/><strong> Key: </strong>" . $pageMetaData['key'] . " <strong>Value: </strong> " . $pageMetaData['value'] . "<br/>");
-									} else {
-										$page->appendSuccess("Updated Marketing Page Meta Data: " . $pageMetaData['key'] . " - " . $pageMetaData['value']);
-									}								
-								} else {
-									$page->appendSuccess("Skipped Marketing Page Meta Data: " . $pageMetaData['key'] . " - " . $pageMetaData['value']);
-								}
-							} else {
-								$addedMarketingPageMetaData = $marketingPageMetaData->addByParameters( $marketingPageMetaDataData );
-								if (!$addedMarketingPageMetaData) {
-									$page->addError("<strong>Error Adding Marketing Page Meta Data: </strong>" . $marketingPageMetaData->getError() . "<br/><strong> Key: </strong>" . $pageMetaData['key'] . " <strong>Value: </strong> " . $pageMetaData['value'] . "<br/>");
-								} else {
-									$page->appendSuccess("Added Marketing Page Meta Data: " . $pageMetaData['key'] . " - " . $pageMetaData['value']);
-								}
-							}
-
-						}
-
-						// add page content block(s)
-						foreach ( $currentPage['contentBlocks'] as $contentBlock ) {
-							
-							$marketingContentBlock = new \Content\Message();
-							$marketingContentBlock->getByCompanyIdTargetDeleted($contentBlock['company_id'],$contentBlock['target'],$contentBlock['deleted']);
-
-							$contentBlockData = array (
-								'company_id' => $contentBlock['company_id'],
-								'target' => $contentBlock['target'],
-								'view_order' => $contentBlock['view_order'],
-								'active' => $contentBlock['active'],
-								'deleted' => $contentBlock['deleted'],
-								'title' => $contentBlock['title'],
-								'menu_id' => $contentBlock['menu_id'],
-								'name' => $contentBlock['name'],
-								'content' => $contentBlock['content'],
-								'cached' => $contentBlock['cached']
-							);
-
-							if ($marketingContentBlock->id) {
-								if ($overwrite) {
-									$isUpdated = $marketingContentBlock->update( $contentBlockData );
-									if (!$isUpdated) {
-										$page->addError("<strong>Error Updating Marketing Content Block: </strong>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . $contentBlock['content'] . "<br/>");
-									} else {
-										$page->appendSuccess("Updated Marketing Content Block: " . $contentBlock['title'] . " - " . $contentBlock['content']);
-									}								
-								} else {
-									$page->appendSuccess("Skipped Marketing Content Block: " . $contentBlock['title'] . " - " . $contentBlock['content']);
-								}
-							} else {
-								$addedMarketingContentBlock = $marketingContentBlock->add( $contentBlockData );
-								if (!$addedMarketingContentBlock) {
-									$page->addError("<strong>Error Adding Marketing Content Block: </strong>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . $contentBlock['content'] . "<br/>");
-								} else {
-									$page->appendSuccess("Added Marketing Content Block: " . $contentBlock['title'] . " - " . $contentBlock['content']);
-								}
-							}
-						}
-					}
-		    }
+			}
 		}
 	}
 }
