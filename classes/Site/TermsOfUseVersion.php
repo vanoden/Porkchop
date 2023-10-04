@@ -17,7 +17,7 @@
 
 			// Set Table Name
 			$this->_tableName = 'site_terms_of_use_versions';
-			$this->_addFields(array('id','version_number', 'status','content'));
+			$this->_addFields(array('id','version_number', 'tou_id', 'status','content'));
 
 			// Set cache key name - MUST Be Unique to Class
 			$this->_cacheKeyPrefix = $this->_tableName;

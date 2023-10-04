@@ -484,8 +484,50 @@
 					return false;
 				}
 
+				// sql query to update version number (for legacy instance with existing TOS entries)
+				$update_version_query = "SET @version_number := 0;";
+				if (! $this->executeSQL($update_version_query)) {
+					$this->SQLError("error updating legacy site_terms_of_use_actions version_number(s): ".$this->error());
+					return false;
+				}
+				
+				$update_version_query = "SET @prev_tou_id := 0;";
+				if (! $this->executeSQL($update_version_query)) {
+					$this->SQLError("error updating legacy site_terms_of_use_actions version_number(s): ".$this->error());
+					return false;
+				}
+				
+				// increment version numbers by 1 for each tou_id
+				$update_version_query = "
+					UPDATE `site_terms_of_use_versions` t1
+					JOIN (
+					SELECT `id`, `tou_id`,
+						(@version_number := IF(@prev_tou_id = tou_id, @version_number + 1,
+											IF(@prev_tou_id := tou_id, 1, 1))) as new_version_number
+					FROM `site_terms_of_use_versions`
+					ORDER BY `tou_id`, `id`
+					) t2
+					ON t1.id = t2.id
+					SET t1.version_number = t2.new_version_number;
+				";
+
+				if (! $this->executeSQL($update_version_query)) {
+					$this->SQLError("error updating legacy site_terms_of_use_actions version_number(s): ".$this->error());
+					return false;
+				}
+				
+				// add key to table
 				$alter_table_query = "
 					ALTER TABLE `site_terms_of_use_versions` ADD KEY `idx_tou_version_number` (`version_number`,`tou_id`);
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("altering site_terms_of_use_actions table: ".$this->error());
+					return false;
+				}
+
+				// make version number not null for future entries
+				$alter_table_query = "
+					ALTER TABLE `site_terms_of_use_versions` MODIFY `version_number` int NOT NULL;
 				";
 				if (! $this->executeSQL($alter_table_query)) {
 					$this->SQLError("altering site_terms_of_use_actions table: ".$this->error());

@@ -29,7 +29,7 @@
 	if ($tou->error()) {
 		$page->addError($tou->error());
 	}
-	elseif (!empty($version) && count($version) < 0) {
+	elseif (!empty($versions) && count($versions) < 0) {
 		$page->addError("No versions found");
 	}
 

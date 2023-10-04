@@ -4,7 +4,7 @@
 	$page->requirePrivilege('manage terms of use');
 
 	$tou = new \Site\TermsOfUse();
-	if (isset($_REQUEST['id'])) {
+	if (isset($_REQUEST['id']) && !empty($_REQUEST['id'])) {
 		$tou = new \Site\TermsOfUse($_REQUEST['id']);
 		if (!$tou->exists()) {
 			$page->addError("Requested Terms of Use Agreement not found");
