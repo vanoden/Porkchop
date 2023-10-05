@@ -8,7 +8,6 @@
 		public $number;
 		public $version_number;
 		public $tou_id;
-
 	
 		/********************************************/
 		/* Instance Constructor						*/

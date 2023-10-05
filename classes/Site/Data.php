@@ -59,15 +59,17 @@
 		 */
 		 public function setTermsOfUseItems($termsOfUseData) {
             if (isset($termsOfUseData['termsOfUse']) && isset($termsOfUseData['termsOfUseVersions'])) {
-                $jsonData = array();
-                foreach ($termsOfUseData['termsOfUse'] as $touItem) 
-                    $jsonData['tou_id_'.$touItem->id] = array('termsOfUseItem' => $this->getPublicFieldValues('termsOfUse', $touItem), 'termsOfUseVersions' => array());
-                foreach ($termsOfUseData['termsOfUseVersions'] as $touVersions) 
-                    $jsonData['tou_id_'.$touVersions->tou_id]['termsOfUseVersions'][] = $this->getPublicFieldValues('termsOfUseVersions', $touVersions);    
-                $this->termsOfUse = $jsonData;   
+				$jsonData = array();
+                foreach ($termsOfUseData['termsOfUse'] as $touItem) {
+					$touVersionsData = array();
+					$jsonData['tou_id_'.$touItem->id] = array('termsOfUseItem' => $this->getPublicFieldValues('termsOfUse', $touItem), 'termsOfUseVersions' => array());
+					foreach ($termsOfUseData['termsOfUseVersions']['tou_id_'.$touItem->id] as $touVersion) 
+						$touVersionsData[] = $this->getPublicFieldValues('termsOfUseVersions', $touVersion);
+					$jsonData['tou_id_'.$touItem->id]['termsOfUseVersions'][] = $touVersionsData;
+				}
+				$this->termsOfUse = $jsonData;
             }
         }
-        
         
         /**
 		 * set nested level JSON array of terms of use items for export of DB objects and sub-objects

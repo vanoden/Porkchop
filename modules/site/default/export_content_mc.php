@@ -49,8 +49,9 @@
                 
                 // get sub terms of use items for JSON data
                 $termsOfUseVersionList = new \Site\TermsOfUseVersionList();
+                $termsOfUseVersionListItems = array();
                 foreach ($termsOfUse as $termOfUseVersion) 
-                    $termsOfUseVersionListItems = $termsOfUseVersionList->find(array('tou_id'=>$termOfUseVersion->tou_id));
+                    $termsOfUseVersionListItems["tou_id_".$termOfUseVersion->id] = $termsOfUseVersionList->find(array('tou_id'=>$termOfUseVersion->id));
                 $siteData->setTermsOfUseItems(array('termsOfUse' => $termsOfUse, 'termsOfUseVersions' => $termsOfUseVersionListItems));
 		    }
 
