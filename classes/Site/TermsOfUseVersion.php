@@ -54,8 +54,8 @@
 				return false;
 			}
 
-			// get next version for the terms of use
-			$params['version_number'] = $this->get_next_version($params['tou_id']);
+			// get next version for the terms of use, if not provided
+			if (!isset($params['version_number'])) $params['version_number'] = $this->get_next_version($params['tou_id']);
 
 			// Prepare Query
 			$add_object_query = "
@@ -265,7 +265,10 @@
 		public function getByTermsOfUseIdVersionNumber($tou_id,$version_number) {
 			$rs = $this->execute("SELECT id FROM `site_terms_of_use_versions` WHERE tou_id = ? AND version_number = ?", array($tou_id,$version_number));
 			list($id) = $rs->FetchRow();
-			if ($id) return $this->get($id);
+			if ($id) {
+				$this->id = $id;
+				return $this->details($id);
+			}
 			return false;
 		}
 

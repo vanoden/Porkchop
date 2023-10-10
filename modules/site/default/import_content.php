@@ -34,15 +34,15 @@
 
     <br/>Overwrite existing records?<br/>
 
-    <input type="radio" id="overwrite" name="overwrite" value="true" checked>
+    <input type="radio" id="overwrite" name="overwrite" value="true" checked onclick="toggleSubmitButton()">
     <label for="overwrite">Overwrite</label><br>
-    <input type="radio" id="overwrite" name="overwrite" value="false">
+    <input type="radio" id="existing" name="overwrite" value="false" onclick="toggleSubmitButton()">
     <label for="overwrite">Keep Existing</label><br>
 
     <input id="submitButton" type="submit" value="Import">
 
     <br/>Paste JSON data here (for import):<br/>
-    <textarea id="jsonData" name="jsonData"></textarea>
+    <textarea id="jsonData" name="jsonData" oninput="toggleSubmitButton()"></textarea>
     
 </form>
 

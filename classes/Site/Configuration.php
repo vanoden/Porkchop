@@ -6,7 +6,7 @@
 		public $key;
 		public $value;
 
-		protected $_fields = array('value');
+		protected $_fields = array('key','value');
 
 		public function __construct($key = null) {
 			$this->_tableName = 'site_configurations';
@@ -98,7 +98,7 @@
 	        }
 	        $addQuery .= '(`'.implode('`,`',$bindFields).'`';
             $addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindFields)) ,',') . ")";
-            
+
             // Execute DB Query
             $database->Execute($addQuery);
 			if ($database->ErrorMsg()) {
