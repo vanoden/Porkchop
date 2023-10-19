@@ -203,11 +203,13 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 				foreach ($jsonData['marketingContent'] as $currentPageImport) {
 					foreach ($currentPageImport as $marketingCurrentPageKey => $marketingCurrentPage) {
 
+						// get page in question
+						$marketingPage = new \Site\Page();
+						$marketingPage->getPage($marketingCurrentPage['module'], $marketingCurrentPage['view'], $marketingCurrentPage['index']);
+
 						// page_pages upsert
 						if ($marketingCurrentPageKey == 'page') {
 							if (isset($marketingCurrentPage['module']) && isset($marketingCurrentPage['view']) && isset($marketingCurrentPage['index']) && !empty($marketingCurrentPage['module']) && !empty($marketingCurrentPage['view']) && !empty($marketingCurrentPage['index'])) {
-								$marketingPage = new \Site\Page();
-								$marketingPage->getPage($marketingCurrentPage['module'], $marketingCurrentPage['view'], $marketingCurrentPage['index']);
 								$marketingPageData = array(
 									'module' => $marketingCurrentPage['module'],
 									'view' => $marketingCurrentPage['view'],
@@ -299,19 +301,19 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 										if ($overwrite) {
 											$isUpdated = $marketingContentBlock->update($contentBlockData);
 											if (!$isUpdated) {
-												$page->addError("<strong>Error Updating Marketing Content Block: </strong>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . $contentBlock['content'] . "<br/>");
+												$page->addError("<br/><u>Error Updating Marketing Content Block: </u>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . strip_tags($contentBlock['content']) . "<br/>");
 											} else {
-												$page->appendSuccess("Updated Marketing Content Block: " . $contentBlock['title'] . " - " . $contentBlock['content']);
+												$page->appendSuccess("<br/><u>Updated Marketing Content Block: </u><br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
 											}
 										} else {
-											$page->appendSuccess("Skipped Marketing Content Block: " . $contentBlock['title'] . " - " . $contentBlock['content']);
+											$page->appendSuccess("<br/><u>Skipped Marketing Content Block: </u><br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
 										}
 									} else {
 										$addedMarketingContentBlock = $marketingContentBlock->add($contentBlockData);
 										if (!$addedMarketingContentBlock) {
-											$page->addError("<strong>Error Adding Marketing Content Block: </strong>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . $contentBlock['content'] . "<br/>");
+											$page->addError("<br/><u>Error Adding Marketing Content Block: </u>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . strip_tags($contentBlock['content']) . "<br/>");
 										} else {
-											$page->appendSuccess("Added Marketing Content Block: " . $contentBlock['title'] . " - " . $contentBlock['content']);
+											$page->appendSuccess("<br/><u>Added Marketing Content Block:</u> <br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
 										}
 									}
 								}

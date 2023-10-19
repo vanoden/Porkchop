@@ -13,8 +13,41 @@
         height: 1000px;
         overflow: auto;
     }
-    
+    button {
+        background-color: #4CAF50;
+    }
 </style>
+
+<script>
+// copy the JSON data to the clipboard
+async function copyText() {
+  var text = document.getElementById("JSONContent").value;
+  try {
+    await navigator.clipboard.writeText(text);
+    alert('Text copied to clipboard');
+  } catch (err) {
+    // copy for older browsers
+    var text = document.getElementById("JSONContent");
+    text.select();
+    document.execCommand("copy");
+    alert("Text copied to clipboard");
+  }
+}
+
+// toggle the debug content
+function toggleCollapse() {
+    var content = document.getElementById("content");
+    var chevron = document.getElementById("chevron");
+
+    if (content.style.display === "none") {
+        content.style.display = "block";
+        chevron.innerHTML = "&#9660;";
+    } else {
+        content.style.display = "none";
+        chevron.innerHTML = "&#9655;";
+    }
+}
+</script>
 
 <form action="/_site/export_content" method="post">
 
@@ -34,11 +67,17 @@
 
     <input id="submitButton" type="submit" value="Export">
     
-    <textarea><?=$siteData->getJSON()?></textarea>
+    <button onclick="copyText()" class="secondary" type="button">&#x1F4CB; Copy to clipboard</button>
+    <textarea id="JSONContent"><?=$siteData->getJSON()?></textarea>
 
-    <br/><br/><br/>Debug:<br/>
-    <textarea><?=$siteData->viewData()?></textarea>
-    
+    <div id="collapsibleDiv">
+        <button onclick="toggleCollapse()" class="secondary chevron-btn" type="button">
+            Debug <span id="chevron">&#9655;</span>
+        </button>
+        <div id="content" style="display: none;">
+            <textarea><?=$siteData->viewData()?></textarea>
+        </div>
+    </div>
 </form>
 
 <script>
