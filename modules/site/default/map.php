@@ -14,7 +14,7 @@
 <?php			} else {
 ?>
 <div class="sitemap_container">
-	<a href="/_register/<?=$page->view?>" class="sitemap_title"><?=$page->name()?></a>
+	<a href="/_<?=$page->module?>/<?=$page->view?>" class="sitemap_title"><?=$page->name()?></a>
 </div>
 <?php
 				}
