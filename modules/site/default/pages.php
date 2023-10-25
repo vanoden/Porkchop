@@ -70,5 +70,5 @@
 	  </div>
     <?php	} ?>
   </div>
-  <div class="button-bar"><input type="submit" name="button_submit" value="Add Account" class="input button"/></div>
+  <div class="button-bar"><input type="submit" name="button_submit" value="Update" class="input button"/></div>
 </form>
