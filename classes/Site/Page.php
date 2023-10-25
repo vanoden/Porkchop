@@ -1183,6 +1183,14 @@
 				}
 			}
 		}
+
+		public function name() {
+			if ($this->module() == 'content' && $this->view() == 'index')
+				return ucwords(preg_replace('/_/',' ',$this->index()));
+			else
+				return ucwords(preg_replace('/_/',' ',$this->view()));
+		}
+
 		/************************************/
 		/* Validation Methods				*/
 		/************************************/

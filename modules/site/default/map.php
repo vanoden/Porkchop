@@ -1,26 +1,24 @@
 <?php
-	$pages = $pageList->find(array('module' => 'register'));
-	print '<div class="sitemap_module">My Account</div>';
-	foreach ($pages as $page) {
-		if ($page->view == 'api') {
-			continue;
-		}
-		else {
-			print '<div class="sitemap_container">';
-			print '  <a href="/_register/'.$page->view.'" class="sitemap_title">'.$page->view.'</a>';
-			print '</div>';
-		}
-	}
-
-	$pages = $pageList->find(array('module' => 'content'));
-	print '<div class="sitemap_module">Site Content</div>';
-	foreach ($pages as $page) {
-		if ($page->view == 'api') {
-			continue;
-		} else {
-			if (! isset($page->title)) $page->title = $page->index;
-			print '<div class="sitemap_container">';
-			print '  <a href="/_content/'.$page->index.'" class="sitemap_title">'.$page->title.'</a>';
-			print '</div>';
+	$modules = $moduleList->find();
+	foreach ($modules as $module) {
+		$pages = $pageList->find(array('module' => $module->name(),'sitemap' => 1));
+		if (count($pages)) {
+?>
+<div class="sitemap_module"><?=ucwords($module->name())?></div>
+<?php		foreach ($pages as $page) {
+				if ($module->name() == 'content' && $page->view() == 'index') {
+?>
+<div class="sitemap_container">
+	<a href="/<?=$page->index?>" class="sitemap_title"><?=$page->name()?></a>
+</div>
+<?php			} else {
+?>
+<div class="sitemap_container">
+	<a href="/_register/<?=$page->view?>" class="sitemap_title"><?=$page->name()?></a>
+</div>
+<?php
+				}
+			}
 		}
 	}
+?>

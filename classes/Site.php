@@ -210,4 +210,8 @@
         public function configuration($key) {
             return new \Site\Configuration($key);
         }
+
+		public function module_list() {
+			return new \Site\ModuleList();
+		}
 	}
