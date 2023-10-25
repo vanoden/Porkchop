@@ -12,7 +12,7 @@
         public $asset_code;
 		private $_flat = false;
 
-		public function __construct(int $id = 0,$flat = false) {
+		public function __construct($id = 0,$flat = false) {
 			$this->_tableName = "monitor_assets";
 			$this->_tableIDColumn = "asset_id";
 			$this->_tableUKColumn = null;
