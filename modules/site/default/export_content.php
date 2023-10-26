@@ -70,14 +70,21 @@ function toggleCollapse() {
     <button onclick="copyText()" class="secondary" type="button">&#x1F4CB; Copy to clipboard</button>
     <textarea id="JSONContent"><?=$siteData->getJSON()?></textarea>
 
-    <div id="collapsibleDiv">
-        <button onclick="toggleCollapse()" class="secondary chevron-btn" type="button">
-            Debug <span id="chevron">&#9655;</span>
-        </button>
-        <div id="content" style="display: none;">
-            <textarea><?=$siteData->viewData()?></textarea>
+    <?php
+    if (isset($_REQUEST['debug']) && $_REQUEST['debug'] == 'true'):
+    ?>
+        <div id="collapsibleDiv">
+            <button onclick="toggleCollapse()" class="secondary chevron-btn" type="button">
+                Debug <span id="chevron">&#9655;</span>
+            </button>
+            <div id="content" style="display: none;">
+                <textarea><?=$siteData->viewData()?></textarea>
+            </div>
         </div>
-    </div>
+    <?php
+    endif;
+    ?>
+    
 </form>
 
 <script>
