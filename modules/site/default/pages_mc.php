@@ -1,12 +1,12 @@
 <?php
-	$page = new \Site\Page();
+	$site = new \Site();
+	$page = $site->page();
 	$page->requirePrivilege('edit site pages');
 
 	$pagelist = new \Site\PageList();
 	$pages = $pagelist->find();
 
-	if ($_REQUEST['btn_submit']) {
-		//foreach($_REQUEST['tou_id'] as $page_id => $tou_id) {
+	if ($_REQUEST['button_submit']) {
 		foreach ($pages as $edit_page) {
 			$page_id = $edit_page->id;
 			if ($_REQUEST['tou_id'][$page_id] > 0) $tou_id = $_REQUEST['tou_id'][$page_id] > 0;

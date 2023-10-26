@@ -158,7 +158,12 @@
 				$this->view = "index";
 				$this->index = $GLOBALS['_config']->site->default_index;
 			}
-			if (preg_match('/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/',$this->_uri,$matches)) {
+			elseif ($this->_uri == "/sitemap.xml") {
+				$matches = [];
+				$this->module = "site";
+				$this->view = "map_xml";
+			}
+			elseif (preg_match('/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/',$this->_uri,$matches)) {
 				// Full Porkchop URIs
 				$this->module = $matches[1];
 			}
