@@ -234,34 +234,38 @@
 				$get_organizations_query .= "
 				AND		ro.status IN ('NEW','ACTIVE')";
 
-			if (is_numeric($parameters['reseller_id'])) {
+			if (isset($parameters['reseller_id']) && is_numeric($parameters['reseller_id'])) {
 				$get_organizations_query .= "
 				AND		ro.reseller_id = ?";
 				array_push($bind_params,$parameters['reseller_id']);
 			}
 
-            if (! preg_match('/^desc$/i',$controls['direction'])) $controls['direction'] = 'ASC';
-            if (is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
-            if (is_numeric($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
+            if (isset($controls['direction']) && ! preg_match('/^desc$/i',$controls['direction'])) $controls['direction'] = 'ASC';
+
+            if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
+
+            if (isset($parameters['_offset']) && is_numeric($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
 
             if (isset($controls['sort'])) {
+
                 if (!$validationClass->hasField($controls['sort'])) {
                     $this->error("Invalid sort field");
                     return null;
                 }
-            }
-            switch($controls['sort']) {
-                case 'status':
-                    $get_organizations_query .= "
-                    ORDER BY ro.status ".$controls['direction'];
-                    break;
-                default:
-                    $get_organizations_query .= "
-                    ORDER BY ro.name ".$controls['direction'];
-                    break;
-            }
 
-			if (is_numeric($controls['limit'])) {
+				switch($controls['sort']) {
+					case 'status':
+						$get_organizations_query .= "
+						ORDER BY ro.status ".$controls['direction'];
+						break;
+					default:
+						$get_organizations_query .= "
+						ORDER BY ro.name ".$controls['direction'];
+						break;
+				}
+			}
+
+			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
                 $get_organizations_query .= "
                     LIMIT ".$controls['limit'];
                 if (is_numeric($controls['offset'])) $get_organizations_query .= "
@@ -277,7 +281,7 @@
 			
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
-				if ($controls['id'] || $controls['count']) {
+				if (isset($controls['id']) || isset($controls['count'])) {
 					array_push($organizations,$id);
 				}
                 else {

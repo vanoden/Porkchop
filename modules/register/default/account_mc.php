@@ -194,6 +194,47 @@
 			$page->success = 'Your changes have been saved';
 		}
 	}
+	
+	// handle send another verification email
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Resend Email") {
+	
+		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+			$page->addError("Invalid Request");
+		} else {
+
+			$validation_key = md5(microtime());
+			$customer->update(array('validation_key'=>$validation_key));
+
+			// create the verify account email
+			$verify_url = $GLOBALS['_config']->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->login;
+			if ($GLOBALS['_config']->site->https) $verify_url = "https://$verify_url";
+			else $verify_url = "http://$verify_url";
+
+			$template = new \Content\Template\Shell(
+				array(
+					'path'	=> $GLOBALS['_config']->register->verify_email->template,
+					'parameters'	=> array(
+						'VERIFYING.URL' => $verify_url
+					)
+				)
+			);
+			if ($template->error()) {
+				app_log($template->error(),'error');
+				$page->addError("Error generating verification email, please contact us at ".$GLOBALS['_config']->site->support_email." to complete your registration, thank you!");
+			}
+			else {
+				$message = new \Email\Message($GLOBALS['_config']->register->verify_email);
+				$message->html(true);
+				$message->body($template->output());
+				if (! $customer->notify($message)) {
+					$page->addError("Confirmation email could not be sent, please contact us at ".$GLOBALS['_config']->site->support_email." to complete your registration, thank you!");
+					app_log("Error sending confirmation email: ".$customer->error(),'error');
+				} else {
+					$page->success = "You have been issued another verification email.";
+				}
+			}
+		}
+	}	
 
 	load:
 	if ($customer_id) {
@@ -210,4 +251,8 @@
 	$_contact = new \Register\Contact();
 	$contact_types = $_contact->types;
 	
+	// get customer queued status
+	$queuedCustomer = new \Register\Queue(); 
+	$queuedCustomer->getByQueuedLogin($customer->id);
+
 	if (! isset($target)) $target = '';

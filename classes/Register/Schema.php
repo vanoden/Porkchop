@@ -4,6 +4,8 @@
 	class Schema Extends \Database\BaseSchema {
 
 		public $module = "register";
+		
+		public $error;
 
 		public function upgrade() {
 

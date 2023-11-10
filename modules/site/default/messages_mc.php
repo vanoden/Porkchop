@@ -1,6 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->requireAuth();
+    $page->requireOrganization();
 
 	if (empty($GLOBALS['_SESSION_']->customer->organization()->id)) $page->addError("Your registration has not been completed.  Please make sure you've validated your email and contact ".$GLOBALS['_config']->site->support_email.' for assistance.');
 

@@ -43,12 +43,12 @@
            document.getElementById("delete-contact").submit();
        }
    }
-	// Redirect user to reset password page
-	function passChange() {
+   
+   // Redirect user to reset password page
+   function passChange() {
 		window.location.replace("/_register/reset_password");
 		return true;
-	}
-
+   }
 </script>
 
 <style type="text/css"></style>
@@ -85,6 +85,17 @@
 	<section class="form-group">
 	    <ul class="form-grid three-col">
 		    <h4>Account Information</h4>
+			<li id="accountEmailQuestion">
+			    <label for="status">Status:</label>
+			    <span id="status" class="value"><?=$queuedCustomer->status?></span>
+				<?php
+					if ($queuedCustomer->status == "VERIFYING") {
+				?>
+					<input type="submit" name="method" value="Resend Email" class="button submitButton registerSubmitButton"/>
+				<?php
+					}
+				?>
+			</li> 
 		    <li id="accountLoginQuestion">
 			    <label for="user_name">Login:</label>
 			    <span class="value"><?=$customer->login?></span>

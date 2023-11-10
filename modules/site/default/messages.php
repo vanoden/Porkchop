@@ -1,5 +1,4 @@
 <style>
-
     a { text-decoration: none; cursor: pointer; color: blue; }
     a:visited { color: blue; }
     a:not([href]):not([tabindex]) { color:blue; }
@@ -35,7 +34,9 @@
       .year-column.list-column { display:unset; padding: 10px; }
     }
 </style>
+
 <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+
 <script>
 
     // expand text to read the whole message
@@ -90,21 +91,23 @@
         });
     }
 </script>
+
 <span class="title">In-Site Messages</span>
 
 <?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
+    
+    <section id="form-message">
+        <ul class="connectBorder errorText">
+            <li><?=$page->errorString()?></li>
+        </ul>
+    </section>
 
 <?php	} else if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
+    <section id="form-message">
+        <ul class="connectBorder progressText">
+            <li><?=$page->success?></li>
+        </ul>
+    </section>
 <?php	} ?>
 
 <div class="row full-column-row">

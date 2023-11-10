@@ -1,3 +1,10 @@
+<style>
+  #submit-button-container {
+    bottom: 0px;
+    left: 10%;
+  }
+</style>
+
 <script type="text/javascript">
 
   // submit form
@@ -41,23 +48,11 @@
       if (confirmDelete == true) {
          document.getElementById("register-contacts-id").value = contactId;
          document.getElementById("delete-contact").submit();
+         return false;
       }
    }
 
-   function disableNewContact() {
-    document.getElementById('disable-new-contact-button').style.display = "none";
-    document.getElementById('new-description').style.display = "none";
-    document.getElementById('new-value').style.display = "none";
-    document.getElementById('new-notes').style.display = "none";
-    document.getElementById('new-notify').style.display = "none";
-    var newContactSelect = document.getElementById("new-contact-select");
-    newContactSelect.options[4] = new Option('Select', 0);
-    newContactSelect.options[4].selected = 'selected';
-
-   }
-
    function enableNewContact() {
-    document.getElementById('disable-new-contact-button').style.display = "block";
     document.getElementById('new-description').style.display = "block";
     document.getElementById('new-value').style.display = "block";
     document.getElementById('new-notes').style.display = "block";
@@ -71,14 +66,15 @@
 <?= $page->showAdminPageInfo() ?>
 <!-- End Page Header -->
 
-<form id="admin-account-form" name="register" action="<?= PATH ?>/_register/admin_account" method="POST">
+<form id="admin-account-form" name="register" action="<?= PATH ?>/_register/admin_account?customer_id=<?=$customer_id?>" method="POST">
+
   <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
   <input type="hidden" name="target" value="<?= $target ?>" />
   <input type="hidden" name="customer_id" value="<?= $customer_id ?>" />
   <input type="hidden" name="login" value="<?= $customer->login ?>" />
 
   <section id="form-message">
-  <ul class="connectBorder infoText"><li>Make changes and click 'Apply' to complete.</li></ul>
+    <ul class="connectBorder infoText"><li>Make changes and click 'Apply' to complete.</li></ul>
   </section>
    
    <!-- ============================================== -->
@@ -162,12 +158,11 @@
           <?php } ?>
         </select>
       </div>
-      <div class="tableCell"><input type="text" name="description[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->description) ?>" />
-      </div>
+      <div class="tableCell"><input type="text" name="description[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->description) ?>" /></div>
       <div class="tableCell"><input type="text" name="value[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->value) ?>" /></div>
       <div class="tableCell"><input type="text" name="notes[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->notes) ?>" /></div>
       <div class="tableCell"><input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> /></div>
-      <div class="tableCell"><input type="image" name="drop_contact[<?= $contact->id ?>]" class="icon-button" src="/img/icons/icon_tools_trash_active.svg" style="" onclick="submitDelete(<?= $contact->id ?>)" /></div>
+      <div class="tableCell"><img style="max-width: 18px; cursor:pointer;" name="drop_contact[<?= $contact->id ?>]" class="icon-button" src="/img/icons/icon_tools_trash_active.svg" onclick="submitDelete(<?= $contact->id ?>)" /></div>
     </div>
     <!-- New contact entry -->
     <?php } ?>
@@ -181,15 +176,12 @@
             <option value="0" selected="selected">Select</option>
         </select>
       </div>
-      <div class="tableCell"><input type="text" id="new-description" name="description[0]" class="value wide_100per" style="display:none;" /></div>
-      <div class="tableCell"><input type="text" id="new-value" name="value[0]" class="value wide_100per" style="display:none;" /></div>
-      <div class="tableCell"><input type="text" id="new-notes" name="notes[0]" class="value wide_100per" style="display:none;" /></div>
-      <div class="tableCell"><input type="checkbox" id="new-notify" name="notify[0]" value="1" style="display:none;" /></div>
+      <div class="tableCell"><br/><input type="text" id="new-description" name="description[0]" class="value wide_100per" style="display:none;" /></div>
+      <div class="tableCell"><br/><input type="text" id="new-value" name="value[0]" class="value wide_100per" style="display:none;" /></div>
+      <div class="tableCell"><br/><input type="text" id="new-notes" name="notes[0]" class="value wide_100per" style="display:none;" /></div>
+      <div class="tableCell"><br/><input type="checkbox" id="new-notify" name="notify[0]" value="1" style="display:none;" /></div>
       <div class="tableCell"></div>
       </div>
-   </div>
-   <div style="text-align: left;">
-      <input type="button" id="disable-new-contact-button" class="deleteButton" value="cancel" style="cursor: pointer; display:none;" onclick="disableNewContact()" />
    </div>
    <!--	END Methods of Contact -->
    
@@ -273,7 +265,7 @@
    </div>
 
    <h3>Terms of Use History</h3>
-   <div id="terms-of-use-table" style="margin-bottom: 180px;">
+   <div id="terms-of-use-table" style="margin-bottom: 10px;">
       <div class="tableBody min-tablet">
          <div class="tableRowHeader">
             <div class="tableCell">Code</div>
@@ -290,31 +282,36 @@
                <div class="tableCell">
                   <?php
                   $mostRecentAction = $termsOfUseActionList->find(array('user_id' => $customer->id, 'version_id' => $term->id, 'sort' => 'date_action', 'order' => 'DESC', 'limit' => 1));
-                  $mostRecentAction = array_pop($mostRecentAction);
-                  print $mostRecentAction->type;
+                  $mostRecentActionDate = "";
+                  if (!is_array($mostRecentAction)) {
+                    $mostRecentAction = array_pop($mostRecentAction);
+                    if (isset($mostRecentAction->type)) print $mostRecentAction->type;
+                    if (isset($mostRecentAction->type)) $mostRecentActionDate = date('m/d/Y', strtotime($mostRecentAction->date_action));
+                  }
                   ?>
                </div>
-               <div class="tableCell"><?=date('m/d/Y', strtotime($mostRecentAction->date_action))?></div>
+               <div class="tableCell">
+                <?=$mostRecentActionDate?>
+              </div>
             </div>
          <?php } ?>
       </div>
    </div>
-<section>
+
     <h3>Locations</h3>
-    <div class="table">
+    <div class="table" style="width: 80%;">
         <div class="tableRowHeader">
-            <div class="tableCell">Name</div>
-            <div class="tableCell">Address</div>
+            <div class="tableCell" style="width: 20%;">Name</div>
+            <div class="tableCell" style="width: 80%;">Address</div>
         </div>
-</section>
-<?php   foreach ($locations as $location) { ?>
-        <div class="tableRow">
-            <div class="tableCell"><?= $location->name ?></div>
-            <div class="tableCell"><?= $location->HTMLBlockFormat() ?></div>
-        </div>
-<?php   } ?>
+        <?php   foreach ($locations as $location) { ?>
+          <div class="tableRow">
+              <div class="tableCell" style="width: 20%;"><?= $location->name ?></div>
+              <div class="tableCell" style="width: 80%;"><?= $location->HTMLBlockFormat() ?></div>
+          </div>
+        <?php   } ?>
     </div>
-</section>
+
 
    <!-- entire page button submit -->
    <div id="submit-button-container" class="tableBody min-tablet">
@@ -325,7 +322,7 @@
 </form>
 
 <!-- hidden for for "delete contact" -->
-<form id="delete-contact" name="delete-contact" action="<?= PATH ?>/_register/admin_account" method="post">
+<form id="delete-contact" name="delete-contact" action="<?= PATH ?>/_register/admin_account?customer_id=<?=$customer_id?>" method="post">
    <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
    <input type="hidden" id="submit-type" name="submit-type" value="delete-contact" />
    <input type="hidden" id="register-contacts-id" name="register-contacts-id" value="" />

@@ -8,7 +8,6 @@
 
 $page = new \Site\Page(array("module" => 'register', "view" => 'account'));
 $page->requirePrivilege('manage customers');
-
 $customer = new \Register\Customer();
 
 if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id']))
@@ -175,7 +174,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				if ($contact->error()) {
 					$page->addError($contact->error());
 				} else {
-					if ($_REQUEST['notify'][$contact_id])
+					if (isset($_REQUEST['notify'][$contact_id]))
 						$notify = true;
 					else
 						$notify = false;
@@ -203,7 +202,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				}
 			} else {
 				app_log("Adding contact record", 'debug', __FILE__, __LINE__);
-				if ($_REQUEST['notify'][0])
+				if (isset($_REQUEST['notify'][0]))
 					$notify = true;
 				else
 					$notify = false;
@@ -266,6 +265,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 }
 
 if (isset($_REQUEST["btnResetFailures"])) {
+
 	// Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
 	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 		$page->addError("Invalid request");
@@ -298,18 +298,13 @@ if (!empty($customer->code)) {
 	$authFailures = array();
 }
 
-if (!isset($target))
-	$target = '';
+if (!isset($target)) $target = '';
 
 $page->title = "Customer Account Details";
 $page->addBreadcrumb("Organizations", "/_register/organizations");
 $organization = $customer->organization();
-if (isset($organization->id)) {
-	$page->addBreadcrumb($organization->name, "/_register/organization?id=" . $organization->id);
-}
-if (isset($customer->id)) {
-	$page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);
-}
+if (isset($organization->id)) $page->addBreadcrumb($organization->name, "/_register/organization?id=" . $organization->id);
+if (isset($customer->id)) $page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);
 
 // terms of use user history list
 $termsOfUseList = new \Site\TermsOfUseList();

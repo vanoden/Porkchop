@@ -123,6 +123,7 @@
     );
 
     // handle send another verification email
+    app_log("Verify Again");
     if (isset($_GET['verifyAgain']) && !empty($_GET['verifyAgain'])) {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
         	$page->addError("Invalid Request");
