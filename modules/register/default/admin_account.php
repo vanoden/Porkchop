@@ -81,14 +81,32 @@
    <!-- CUSTOMER LOGIN -->
    <!-- ============================================== -->
   <div id="contact-main-table" class="tableBody min-tablet" style="font-size: 1.11rem;">
-    <div class="tableRow" style="background: var(--color-light-one);">
+  <div class="tableRowHeader">
+      <div class="tableCell" style="width: 30%;">Login / Registration</div>
+      <div class="tableCell" style="width: 20%;">Type</div>
+  </div>
+  <div class="tableRow" style="background: var(--color-light-one);">
       <div class="tableCell" style="width: 50%;">Login: <span class="value"><?= $customer->login ?></span></div>
       <div class="tableCell" style="width: 50%;">Type:
-      <select name="automation" class="value input">
-        <option value="0" <?php if ($customer->human()) print " selected"; ?>>Human</option>
-        <option value="1" <?php if ($customer->automation()) print " selected"; ?>>Automation</option>
-      </select>
+        <select name="automation" class="value input">
+          <option value="0" <?php if ($customer->human()) print " selected"; ?>>Human</option>
+          <option value="1" <?php if ($customer->automation()) print " selected"; ?>>Automation</option>
+        </select>
       </div>
+    </div>
+    <div class="tableRow">
+      <div class="tableCell" style="width: 50%;">
+        <label for="status">Status:</label>
+        <span id="status" class="value"><?=$queuedCustomer->status?></span>
+        <?php
+        if ($queuedCustomer->status == "VERIFYING") {
+        ?><br/>
+        <input type="submit" name="method" value="Resend Email" class="button submitButton registerSubmitButton"/>
+        <?php
+        }
+        ?>
+      </div>
+      <div class="tableCell" style="width: 50%;"></div>
     </div>
   </div>
    
