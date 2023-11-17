@@ -2,17 +2,32 @@
 	$page = new \Site\Page();
 	$page->requireAuth();
 
+    print_r($_REQUEST);
+
+	// Security - Only Register Module Operators or Managers can see other customers
+	$organizationlist = new \Register\OrganizationList();
+	$organization = new \Register\Organization();
+
+	// Initialize Parameter Array
+    $find_parameters = array();
+	$find_parameters['status'] = array('NEW','ACTIVE');
+
+	// Get Count before Pagination
+	$organizationlist->search($find_parameters,['count' => true]);
+	if ($organizationlist->error()) $page->addError($organizationlist->error());
+
+	// Get Records
+	$organizations = $organizationlist->search($find_parameters);
+	if ($organizationlist->error()) $page->addError("Error finding organizations: ".$organizationlist->error());
+
 	// customer list in organization
 	$customerList = new \Register\CustomerList();
-	$customersInOrg = $customerList->find(array('organization_id' => $GLOBALS['_SESSION_']->customer->organization()->id, 'automation' => 0));
+    $customersInOrg = array();
+    if (isset($_REQUEST['organization']) && !empty($_REQUEST['organization'])) $customersInOrg = $customerList->find(array('organization_id' => $_REQUEST['organization'], 'automation' => 0));
 	
-    // roles list in organization
-	$customersInRoles = array();
-	foreach ($customersInOrg as $customer) $customersInRoles[] = $customer->id;
-
 	// get all the roles that belong to this organization
-	$registerRole = new \Register\Role();
-    $rolesUsersIn = $registerRole->getRolesforUsers($customersInRoles);
+	$registerRolesList = new \Register\RoleList();
+    $userRoles = $registerRolesList->find();
     
     // process sending user messages
     if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'submit') {
@@ -54,4 +69,3 @@
             $page->success = 'Message sent to specfied users';
         }
     }
-    

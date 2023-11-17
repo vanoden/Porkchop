@@ -24,15 +24,25 @@
     function selectUsers(type) {
         if (type == 'role') {
             document.getElementById("role").disabled = false;
-            document.getElementById("role").value = '';
+            document.getElementById("role").value = 'All';
             document.getElementById("customer").disabled = true;
-            document.getElementById("customer").value = '';
+            document.getElementById("customer").value = 'All';
+            document.getElementById("organization").disabled = true;
+            document.getElementById("organization").value = 'All';
         } else {
             document.getElementById("role").disabled = true;
-            document.getElementById("role").value = '';
+            document.getElementById("role").value = 'All';
             document.getElementById("customer").disabled = false;
-            document.getElementById("customer").value = '';
+            document.getElementById("customer").value = 'All';
+            document.getElementById("organization").disabled = false;
+            document.getElementById("organization").value = 'All';            
         }
+    }
+
+    // update form for organization change
+    function changeOrganization() {
+        document.getElementById("method").value = 'organizationUpdated';
+        document.getElementById("createMessageForm").submit();
     }
 
     function createMessage() {
@@ -55,15 +65,18 @@
             return false;
         }
 
-        // make sure a recipient is selected
+        // submit final form
+        document.getElementById("method").value = 'submit';
         document.getElementById("createMessageForm").submit();
     }
 </script>
+
 <h2 class="title">Create In-Site Message</h2>
 <?php
 	$page->showAdminPageInfo();
 ?>
 
+<span id="formError" class="errorText"></span>
 <div class="container">
     <form id="createMessageForm" action="/_site/send_customer_message" method="POST">
         <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
@@ -73,30 +86,45 @@
             </div>
             <div class="tableRow">
                 <div class="tableCell">
-                    <input id="user_select_radio" class="radio" type="radio" name="selectSendTo" value="role"
-                        onclick="selectUsers('role')">
+                    <input id="user_select_radio" class="radio" type="radio" name="selectSendTo" value="role" onclick="selectUsers('role')">
                     <label for="role">All Users in Role</label>
                     <select id="role" name="role" disabled="disabled">
-                        <option value=""></option>
+                        <option value="All">All</option>
                         <?php
-                        foreach ($rolesUsersIn as $role) {
+                        foreach ($userRoles as $role) {
                             ?>
-                            <option value="<?= $role ?>">
-                                <?= $role ?>
+                            <option value="<?= $role->id ?>">
+                                <?= $role->name ?>
                             </option>
                             <?php
                         }
                         ?>
                     </select>
+
                     <br /> -or-<br />
-                    <input id="customer_select_radio" class="radio" type="radio" name="selectSendTo" value="customer" onclick="selectUsers('customer')">
+
+                    <input id="customer_select_radio" class="radio" type="radio" name="selectSendTo" value="customer" <?=isset($_REQUEST['organization']) && !empty($_REQUEST['organization']) ? "checked=\"checked\"" : ""; ?> onclick="selectUsers('customer')">
+                    <label for="organization">Organization</label>
+                    <select id="organization" name="organization" <?=isset($_REQUEST['organization']) && !empty($_REQUEST['organization']) ? "" : "disabled=\"disabled\""?> onchange="changeOrganization()">
+                        <option value="All">All</option>
+                        <?php
+                        foreach ($organizations as $organization) {
+                            ?>
+                            <option value="<?= $organization->id ?>"<?php if (isset($_REQUEST['organization']) && !empty($_REQUEST['organization']) && ($organization->id == $_REQUEST['organization'])) echo "selected=\"selected\""?>>
+                                <?= $organization->name ?>
+                            </option>
+                            <?php
+                        }
+                        ?>
+                    </select>
+
                     <label for="customer">Customer</label>
-                    <select id="customer" name="customer" disabled="disabled">
-                        <option value=""></option>
+                    <select id="customer" name="customer" <?=isset($_REQUEST['organization']) && !empty($_REQUEST['organization']) ? "" : "disabled=\"disabled\""?>>
+                        <option value="All">All</option>
                         <?php
                         foreach ($customersInOrg as $customer) {
                             ?>
-                            <option value="<?= $customer->id ?>">
+                            <option value="<?= $customer->id ?>" <?php if (isset($_REQUEST['customer']) && !empty($_REQUEST['customer']) && ($customer->id == $_REQUEST['customer'])) echo "selected=\"selected\""?>>
                                 <?= $customer->first_name ?>
                                 <?= $customer->last_name ?>
                             </option>
@@ -111,13 +139,13 @@
             </div>
             <div class="tableRow">
                 <div class="tableCell">
-                    <br /><input type="checkbox" id="important" name="important" value="important">
+                    <br /><input type="checkbox" id="important" name="important" value="important" <?=isset($_REQUEST['important']) && !empty($_REQUEST['important']) ? "checked=\"checked\"" : ""?>>
                     <label for="important">Important?</label><br />
                     <br /><label for="subject">Subject</label><br />
-                    <input type="text" id="subject" name="subject" style="min-width: 100%;"><br /><br />
+                    <input type="text" id="subject" name="subject" style="min-width: 100%;" value="<?=$_REQUEST['subject']?>"><br /><br />
                     <label for="content">Message Content</label><br />
-                    <textarea id="content" name="content" style="height:200px"></textarea>
-                    <input type="hidden" value="submit" name="method" />
+                    <textarea id="content" name="content" style="height:200px"><?=$_REQUEST['content']?></textarea>
+                    <input type="hidden" id="method" value="submit" name="method" />
                     <input type="button" value="Submit" onclick="createMessage()">
                 </div>
             </div>
