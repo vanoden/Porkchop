@@ -23,7 +23,6 @@
 			$this->_communication = new \Monitor\Communication();
 		}
 
-
 		/********************************************/
 		/* Show be overridden by child, but return	*/
 		/* an array if not.							*/
@@ -159,6 +158,21 @@
 			if (!empty($message)) $response->addElement('error',$message);
 			else $response->addElement('error',"Permission Denied");
 			http_response_code(403);
+			$response->print();
+			exit;
+		}
+
+		/************************************************/
+		/* Send Proper Incorrect Request Response		*/
+		/************************************************/
+		public function incompleteRequest($message = null) {
+			$_REQUEST["stylesheet"] = '';
+			$response = new \APIResponse();
+			$response->code(422);
+			$response->success(false);
+			if (!empty($message)) $response->addElement('error',$message);
+			else $response->addElement('error',"Unprocessable Request");
+			http_response_code(422);
 			$response->print();
 			exit;
 		}
@@ -313,6 +327,8 @@
 			$counter = new \Site\Counter($counterKey);
 			$counter->increment();
 		}
+
+		// Build HTML Form for API Methods
 		public function _form() {
 			$form = '';
 			$methods = $this->_methods();
