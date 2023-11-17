@@ -1,7 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->requireAuth();
-	
+
 	// customer list in organization
 	$customerList = new \Register\CustomerList();
 	$customersInOrg = $customerList->find(array('organization_id' => $GLOBALS['_SESSION_']->customer->organization()->id, 'automation' => 0));
