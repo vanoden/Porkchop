@@ -140,7 +140,7 @@
 	        }
 	        $addQuery .= '(`'.implode('`,`',$bindFields).'`';
             $addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindFields)) ,',') . ")";
-            
+
             // Execute DB Query
             $database->Execute($addQuery);
 			if ($database->ErrorMsg()) {

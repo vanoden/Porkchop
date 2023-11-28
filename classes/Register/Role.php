@@ -265,16 +265,16 @@
          * check if a user is in a role by name
          *
          * @param $user_id
-         * @param $role_name
+         * @param $role_id
          */
-        public function checkIfUserInRole($user_id, $role_name) {
+        public function checkIfUserInRole($user_id, $role_id) {
             $checkIfUserInRole = "
             SELECT * FROM `register_roles` rr
                 INNER JOIN register_users_roles rur ON rr.id = rur.role_id
-                WHERE rur.user_id = ? AND rr.name = ?;
+                WHERE rur.user_id = ? AND rr.id = ?;
 
 			";
-            $rs = $GLOBALS['_database']->Execute($checkIfUserInRole,array($user_id, $role_name));
+            $rs = $GLOBALS['_database']->Execute($checkIfUserInRole,array($user_id, $role_id));
 			list($id) = $rs->FetchRow();
 			if (!empty($id)) {
 				return true;

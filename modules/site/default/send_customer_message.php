@@ -3,7 +3,7 @@
         list-style-type: none;
     }
 
-    input.radio {
+    input.checkbox {
         box-shadow: unset;
     }
 
@@ -21,22 +21,15 @@
     }
 </style>
 <script>
-    function selectUsers(type) {
-        if (type == 'role') {
-            document.getElementById("role").disabled = false;
-            document.getElementById("role").value = 'All';
-            document.getElementById("customer").disabled = true;
-            document.getElementById("customer").value = 'All';
-            document.getElementById("organization").disabled = true;
+    function filterUsers() {
+        document.getElementById("role").disabled = !document.getElementById('user_select_checkbox').checked;
+        document.getElementById("customer").disabled = !document.getElementById('customer_select_checkbox').checked;
+        document.getElementById("organization").disabled = !document.getElementById('customer_select_checkbox').checked;
+        if (!document.getElementById('customer_select_checkbox').checked) {
             document.getElementById("organization").value = 'All';
-        } else {
-            document.getElementById("role").disabled = true;
-            document.getElementById("role").value = 'All';
-            document.getElementById("customer").disabled = false;
             document.getElementById("customer").value = 'All';
-            document.getElementById("organization").disabled = false;
-            document.getElementById("organization").value = 'All';            
         }
+        if (!document.getElementById('user_select_checkbox').checked) document.getElementById("role").value = 'All';
     }
 
     // update form for organization change
@@ -72,9 +65,7 @@
 </script>
 
 <h2 class="title">Create In-Site Message</h2>
-<?php
-	$page->showAdminPageInfo();
-?>
+<?=$page->showAdminPageInfo();?>
 
 <span id="formError" class="errorText"></span>
 <div class="container">
@@ -86,14 +77,14 @@
             </div>
             <div class="tableRow">
                 <div class="tableCell">
-                    <input id="user_select_radio" class="radio" type="radio" name="selectSendTo" value="role" onclick="selectUsers('role')">
+                    <input id="user_select_checkbox" class="checkbox" type="checkbox" name="selectSendTo[]" value="role" <?=isset($_REQUEST['role']) && !empty($_REQUEST['role']) ? "checked=\"checked\"" : ""; ?> onclick="filterUsers()">
                     <label for="role">All Users in Role</label>
-                    <select id="role" name="role" disabled="disabled">
+                    <select id="role" name="role" <?=isset($_REQUEST['role']) && !empty($_REQUEST['role']) ? "" : "disabled=\"disabled\""?>>
                         <option value="All">All</option>
                         <?php
                         foreach ($userRoles as $role) {
                             ?>
-                            <option value="<?= $role->id ?>">
+                            <option value="<?= $role->id ?>" <?php if (isset($_REQUEST['role']) && !empty($_REQUEST['role']) && ($role->id == $_REQUEST['role'])) echo "selected=\"selected\""?>>
                                 <?= $role->name ?>
                             </option>
                             <?php
@@ -101,15 +92,15 @@
                         ?>
                     </select>
 
-                    <br /> -or-<br />
+                    <br /> 
 
-                    <input id="customer_select_radio" class="radio" type="radio" name="selectSendTo" value="customer" <?=isset($_REQUEST['organization']) && !empty($_REQUEST['organization']) ? "checked=\"checked\"" : ""; ?> onclick="selectUsers('customer')">
+                    <input id="customer_select_checkbox" class="checkbox" type="checkbox" name="selectSendTo[]" value="customer" <?=isset($_REQUEST['organization']) && !empty($_REQUEST['organization']) ? "checked=\"checked\"" : ""; ?> onclick="filterUsers()">
                     <label for="organization">Organization</label>
                     <select id="organization" name="organization" <?=isset($_REQUEST['organization']) && !empty($_REQUEST['organization']) ? "" : "disabled=\"disabled\""?> onchange="changeOrganization()">
                         <option value="All">All</option>
                         <?php
                         foreach ($organizations as $organization) {
-                            ?>
+                            ?> 
                             <option value="<?= $organization->id ?>"<?php if (isset($_REQUEST['organization']) && !empty($_REQUEST['organization']) && ($organization->id == $_REQUEST['organization'])) echo "selected=\"selected\""?>>
                                 <?= $organization->name ?>
                             </option>
@@ -122,7 +113,7 @@
                     <select id="customer" name="customer" <?=isset($_REQUEST['organization']) && !empty($_REQUEST['organization']) ? "" : "disabled=\"disabled\""?>>
                         <option value="All">All</option>
                         <?php
-                        foreach ($customersInOrg as $customer) {
+                        foreach ($customers as $customer) {
                             ?>
                             <option value="<?= $customer->id ?>" <?php if (isset($_REQUEST['customer']) && !empty($_REQUEST['customer']) && ($customer->id == $_REQUEST['customer'])) echo "selected=\"selected\""?>>
                                 <?= $customer->first_name ?>
