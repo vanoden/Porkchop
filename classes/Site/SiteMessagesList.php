@@ -24,6 +24,12 @@
 				array_push($bind_params,$parameters['user_created']);
 			}
 
+			if (isset($parameters['recipient_id'])) {
+				$get_site_messages_query .= "
+				AND recipient_id = ?";
+				array_push($bind_params,$parameters['recipient_id']);
+			}
+
 			query_log($get_site_messages_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
 			if (! $rs) {
