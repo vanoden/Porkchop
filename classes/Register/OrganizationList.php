@@ -263,6 +263,9 @@
 						ORDER BY ro.name ".$controls['direction'];
 						break;
 				}
+			} else {
+				$get_organizations_query .= "
+				ORDER BY ro.name ".$controls['direction'];
 			}
 
 			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
