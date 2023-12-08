@@ -661,15 +661,15 @@
         function addOrganization() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            # Default StyleSheet
+            // Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
             if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
-            # Initiate Object
+            // Initiate Object
             $organization = new \Register\Organization();
 
-            # Add Object
+            // Add Object
             $organization->add(
                 array(
                     "name"		=> $_REQUEST['name'],
@@ -677,16 +677,15 @@
                 )
             );
 
-            # Error Handling
+            // Error Handling
             if ($organization->error()) $this->error($organization->error());
 
-
-            # Initiate Response
+            // Initiate Response
             $response = new \APIResponse();
             $response->success(true);
             $response->addElement('organization',$organization);
 
-            # Send Response
+            // Send Response
             $response->print();
         }
         
