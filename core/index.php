@@ -141,13 +141,6 @@
 	header("Expires: 0");
 	header("Cache-Control: no-cache, must-revalidate");
 
-	# Create Session
-	$_SESSION_->start();
-	if ($_SESSION_->error()) {
-		$logger->writeln($_SESSION_->error(),'error',__FILE__,__LINE__);
-		exit;
-	}
-
 	# Create Hit Record
 	$_SESSION_->hit();
 	if ($_SESSION_->message) $page_message = $_SESSION_->message;
@@ -159,7 +152,7 @@
 	$page = $site->page();
 	$page->getPage($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
 	if ($page->error()) {
-		print "Error: ".$page->error;
+		print "Error: ".$page->error();
 		$logger->writeln("Error initializing page: ".$page->error,'error',__FILE__,__LINE__);
 		exit;
 	}
