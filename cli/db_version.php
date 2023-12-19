@@ -14,10 +14,13 @@
 	###################################################
 	### Load Dependencies							###
 	###################################################
-	$_SERVER['SERVER_NAME'] = "localhost";
-
 	# Load Config
 	require '../config/config.php';
+
+	# Set Server Environment
+	$_SERVER['HTTP_HOST'] = "localhost";
+	$_SERVER['SERVER_NAME'] = $GLOBALS['_config']->site->hostname;
+	$_SERVER['HTTP_USER_AGENT'] = "cron";
 
 	# General Utilities
 	require INCLUDES.'/functions.php';
@@ -28,10 +31,6 @@
 
 	# Debug Variables
 	$_debug_queries = array();
-
-	###################################################
-	### User Input									###
-	###################################################
 
 	###################################################
 	### Connect to Logger							###
@@ -68,10 +67,6 @@
 		exit;
 	}
 	$logger->write("Database Initiated",'trace');
-
-    $_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
-    if ($_CACHE_->error()) $logger->write('Unable to initiate Cache client: '.$_CACHE_->error(),'error');
-    $logger->write("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
 	### Main Procedure								###
