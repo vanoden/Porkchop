@@ -1,6 +1,5 @@
 <?php
-	class Document {
-		public $error;
+	class Document Extends \BaseClass {
 		public $type;
 		public $stylesheet;
 		private $_content;
@@ -21,7 +20,7 @@
 				return;
 			}
 			else {
-				$this->error = "Invalid document type";
+				$this->error("Invalid document type");
 				return null;
 			}
 		}
