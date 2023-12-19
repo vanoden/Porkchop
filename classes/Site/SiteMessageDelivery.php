@@ -30,10 +30,11 @@
                 $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return false;
             }
-            
             list($this->id) = $rs->FetchRow();
-            return $this->details();
+			if (!empty($this->id)) return $this->details();
+			return false;
         }
+
 		public function message() {
 			return new \Site\SiteMessage($this->message_id);
 		}

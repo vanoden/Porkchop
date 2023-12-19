@@ -7,14 +7,13 @@
 
     // get current messages for user
     $params = array(
-        "user_id"   => $GLOBALS['_SESSION_']->customer->id,
+        "recipient_id"   => $GLOBALS['_SESSION_']->customer->id,
         "acknowledged" => false
     );
+    if (isset($_REQUEST['btn_filter']) && isset($_REQUEST['seeAcknowledged'])) $params['acknowledged'] = true;
 
-    if ($_REQUEST['btn_filter']) {
-        if ($_REQUEST['seeAcknowledged']) $params['acknowledged'] = true;
-    }
-
-	$siteMessageDeliveryList = new \Site\SiteMessageDeliveryList();
-	$siteMessageDeliveries = $siteMessageDeliveryList->find($params);
-	if ($siteMessageDeliveryList->error()) $page->addError($siteMessageDeliveryList->error());
+    $siteMessage = new \Site\SiteMessagesList();
+    $siteMessageDelivery = new \Site\SiteMessageDelivery();
+    $siteMessages = $siteMessage->find($params);
+    if ($siteMessage->error()) $page->addError($siteMessage->error());
+    

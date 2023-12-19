@@ -112,6 +112,7 @@
 		
 		# Get Specific Hub
 		public function getWithProduct($code,$product_id) {
+
 			$this->clearError();
 
 			$database = new \Database\Service();
@@ -295,7 +296,6 @@
 			return 1;
 		}
 		
-		
 		public function allMetadata() {
 			$get_object_query = "
 				SELECT	`key`,value
@@ -316,7 +316,6 @@
 			}
 			return $array;
 		}
-		
 		
 		public function getAllMetadata() {
 			$get_value_query = "

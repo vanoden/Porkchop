@@ -19,6 +19,7 @@
 		}
 
 		public function update($parameters = []): bool {
+
             // Password must be changed per Authentication Service
 			if (isset($parameters['password'])) {
                 // Authentication Service needs login to change password
@@ -34,12 +35,8 @@
 					return false;
 				}
 			}
-			if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) {
-				$this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$this->organization()->name." to ".$parameters['organization_id']);
-			}
-			if (!empty($parameters['status']) && $this->status != $parameters['status']) {
-				$this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
-			}
+			if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) $this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$this->organization()->name." to ".$parameters['organization_id']);
+			if (!empty($parameters['status']) && $this->status != $parameters['status']) $this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
 			parent::update($parameters);
 			if ($this->error()) return false;
 
@@ -595,6 +592,25 @@
 
 		public function login() {
 			return $this->login;
+		}
+
+		public function getByLogin($login) {
+			$get_user_query = "
+				SELECT	id
+				FROM	register_users
+				WHERE	login = ?
+			";
+
+			$rs = $GLOBALS['_database']->Execute($get_user_query,array($login));
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			list($id) = $rs->FetchRow();
+			if ($id) {
+				$this->id = $id;
+				return $this->details();
+			} else return null;
 		}
 
 		public function resetKey() {

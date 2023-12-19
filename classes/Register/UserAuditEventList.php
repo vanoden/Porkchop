@@ -3,6 +3,6 @@
 
 	class UserAuditEventList extends \BaseListClass {
 		public function __construct() {
-                $this->_modelName = '\Register\UserAuditEvent';
+            $this->_modelName = '\Register\UserAuditEvent';
         }
 	}

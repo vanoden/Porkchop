@@ -12,7 +12,7 @@
 	    public function __construct(int $id = null) {
 			$this->_tableName = "register_user_audit";
 			$this->_tableUKColumn = null;
-			$this->_addFields("user_id", "admin_id", "event_date", "event_class", "event_notes");
+			$this->_addFields(array("user_id", "admin_id", "event_date", "event_class", "event_notes"));
             parent::__construct($id);
 		}
 

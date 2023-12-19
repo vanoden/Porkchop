@@ -27,6 +27,9 @@
     .message-title-chevron { min-width: 20px; text-align: end;font-size: 30px; color: #999;}
     .year-column { font-size: 24px; }
     .message-content { overflow: hidden; text-overflow: ellipsis;  height: 25px; }
+    .bold {
+        font-weight: bold;
+    }
     
     @media only screen and (max-width: 900px) {
       .row {flex-direction: column; }
@@ -56,7 +59,7 @@
             document.getElementById('message-subject-' + messageId).classList.remove('bold');
             document.getElementById('message-date-' + messageId).classList.remove('bold');         
         });
-        document.getElementById('row-'+messageId).style.display = 'none';
+        location.reload(true);
     }
     
     // toggle all messages for acknowledged option
@@ -77,7 +80,6 @@
     // acknowledge all messages at once on button click
     function acknowledgeAll() {
         $.post( "/_site/api", { 
-        
             method: "acknowledgeSiteMessageByUserId", 
             'user_created': '<?=$GLOBALS['_SESSION_']->customer->id?>', 
             'csrfToken': '<?=$GLOBALS['_SESSION_']->getCSRFToken()?>',
@@ -92,23 +94,9 @@
     }
 </script>
 
-<span class="title">In-Site Messages</span>
-
-<?php if ($page->errorCount() > 0) { ?>
-    
-    <section id="form-message">
-        <ul class="connectBorder errorText">
-            <li><?=$page->errorString()?></li>
-        </ul>
-    </section>
-
-<?php	} else if ($page->success) { ?>
-    <section id="form-message">
-        <ul class="connectBorder progressText">
-            <li><?=$page->success?></li>
-        </ul>
-    </section>
-<?php	} ?>
+<?=$page->showBreadCrumbs()?>
+<?=$page->showTitle()?>
+<?=$page->showMessages()?>
 
 <div class="row full-column-row">
     <form method="post" id="filterForm">
@@ -122,15 +110,15 @@
 <div class="messaging-page-wrapper">
     <?php
     $currentYear = '';
-    foreach ($siteMessageDeliveries as $siteMessageDelivery) {
-        $siteMessageDelivery->view();
-		$userMessage = $siteMessageDelivery->message();
-        $siteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
-        $siteMessageMetaDataValues = $siteMessageMetaDataList->find(array('item_id'=>$userMessage->id));
-        $currentYearCheck = date('Y', strtotime($userMessage->date_created));
+    foreach ($siteMessages as $siteMessage) {
+
+        // insert that the message has been viewed
+        $sender = new \Register\Customer($siteMessage->user_created);
+        $messageDelivery = $siteMessageDelivery->getDelivery($siteMessage->id,$GLOBALS['_SESSION_']->customer->id);
+        if (empty($messageDelivery)) $siteMessageDelivery->add(array('message_id' => $siteMessage->id,'user_id' => $GLOBALS['_SESSION_']->customer->id, 'date_viewed' => date('Y-m-d H:i:s')));
+        $currentYearCheck = date('Y', strtotime($siteMessage->date_created));
         if ($currentYear != $currentYearCheck) {
-        $currentYear = $currentYearCheck;
-		$sender = new \Register\Customer($userMessage->user_created);
+        $currentYear = $currentYearCheck;	
     ?>
       <div class="row full-column-row">
         <div class="column full-column">
@@ -142,12 +130,11 @@
     <?php
         }
     ?>
-      <div id="row-<?=$siteMessageDelivery->id?>" class="row info-row">
+      <div id="row-<?=$siteMessage->id?>" class="row info-row">
         <div class="column left-column">
           <div class="list-column">
             <div style="flex: 2;">
-                <div id="message-date-<?=$userMessage->id?>" class="message-date <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=date('m/d/Y', strtotime($userMessage->date_created));?></div>
-
+                <div id="message-date-<?=$siteMessage->id?>" class="message-date <?=($siteMessageDelivery->acknowledged()) ? '' : 'bold'?>"><?=date('m/d/Y', strtotime($siteMessage->date_created));?></div>
             </div>
             <div style="flex: 1;"></div>   
           </div>
@@ -161,20 +148,19 @@
 				</div>
             </div>
             <div style="flex: 2;">
-                <div id="message-title-<?=$userMessage->id?>" class="message-title <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=isset($siteMessageMetaDataValues['title'][0]->value) ? $siteMessageMetaDataValues['summary'][0]->value : '';?></div>
+                <div id="message-title-<?=$siteMessage->id?>" class="message-title <?=($siteMessageDelivery->acknowledged()) ? '' : 'bold'?>"></div>
             </div>
             <div style="flex: 1;"></div>
-            <div class="message-title-chevron">&#8250;</div>
           </div>
         </div>
         <div class="column right-column">
           <div class="messages-column">
-            <div id="message-subject-<?=$userMessage->id?>" class="message-subject <?=isset($siteMessageMetaDataValues['acknowledged'][0]->value) ? '' : 'bold'?>"><?=isset($siteMessageMetaDataValues['summary'][0]->value) ? $siteMessageMetaDataValues['title'][0]->value : '';?></div>
+            <div id="message-subject-<?=$siteMessage->id?>" class="message-subject <?=($siteMessageDelivery->acknowledged()) ? '' : 'bold'?>"></div>
             <div class="message-subject">
-                <div id="message-subject-<?=$userMessage->id?>" class="message-content"><?=$userMessage->subject?></div>
+                <div id="message-subject-<?=$siteMessage->id?>" class="message-content"><?=$siteMessage->subject?></div>
             </div>
             <div class="message-text">
-                <div id="message-text-<?=$userMessage->id?>" class="message-content"><?=$userMessage->content?></div>
+                <div id="message-text-<?=$siteMessage->id?>" class="message-content"><?=$siteMessage->content?></div>
             </div>
           </div>
         </div>

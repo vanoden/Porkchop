@@ -14,7 +14,8 @@
 			"templates" => array(
 				"page"	=> $admin_template,
 				"pages"	=> $admin_template,
-				"configurations"	=> $admin_template
+				"configurations"	=> $admin_template,
+				"send_customer_message" => $admin_template
 			),
 		),
 		"Geography"		=> array(

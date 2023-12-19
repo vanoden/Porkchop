@@ -53,6 +53,7 @@
 				return null;
 			}
 			$this->id = $database->Insert_ID();
+			$this->auditRecord('ORGANIZATION_CREATED','Organization has been added');
 			return $this->update($parameters);
 		}
 
@@ -126,6 +127,13 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
+
+			// audit any/all the organization changes made
+			$this->auditRecord('ORGANIZATION_UPDATED','Organization has been updated');
+			if (isset($parameters['status'])) $this->auditRecord('STATUS_CHANGED','Organization status has been updated: '.$parameters['status']);
+			if (isset($parameters['name'])) $this->auditRecord('NAME_CHANGED','Organization name has been changed: '.$parameters['name']);
+			if (isset($parameters['is_reseller'])) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated: '.$parameters['is_reseller']);
+			if (isset($parameters['assigned_reseller_id'])) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated: '.$parameters['assigned_reseller_id']);
 			return $this->details();
 		}
 		
@@ -289,5 +297,28 @@
 				array_push($locations,$location);
 			}
 			return $locations;
+		}
+
+		public function auditRecord($type,$notes,$user_id = null) {
+
+			$audit = new \Register\OrganizationAuditEvent();
+			if (!isset($user_id) && isset($GLOBALS['_SESSION_']->customer->id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+			if (!isset($this->id)) {
+				$this->error("Organization is not set");
+				return false;
+			}
+			
+			$audit->add(array(
+				'organization_id'	=> $this->id,
+				'user_id'			=> $user_id,
+				'event_date'		=> date('Y-m-d H:i:s'),
+				'event_class'		=> $type,
+				'event_notes'		=> $notes
+			));
+			if ($audit->error()) {
+				$this->error($audit->error());
+				return false;
+			}
+			return true;
 		}
     }
