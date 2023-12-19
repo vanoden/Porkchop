@@ -17,9 +17,11 @@
 	# Load Config
 	require '../config/config.php';
 
-	# Some HTTP Stuff
+	# Spoof Server Variables
 	$_SERVER['HTTP_HOST'] = "localhost";
 	$_SERVER['REQUEST_URI'] = $argv[1];
+	$_SERVER['SERVER_NAME'] = $_config->site->hostname;
+	$_SERVER['HTTP_USER_AGENT'] = "cron";
 
 	# General Utilities
 	require INCLUDES.'/functions.php';
@@ -74,48 +76,39 @@
 	### Connect to Memcache if so configured		###
 	###################################################
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
-	if ($_CACHE_->error) test_fail('Unable to initiate Cache client: '.$_CACHE_->error);
+	if ($_CACHE_->error()) test_fail('Unable to initiate Cache client: '.$_CACHE_->error());
 	$logger->write("Cache Initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
 	### Initialize Session							###
 	###################################################
 	$_SESSION_ = new \Site\Session();
-	$_SESSION_->start();
+	$_SESSION_->elevate();
 	$logger->write("Session initiated",'trace',__FILE__,__LINE__);
+
+	# Spoof Request Variables
+	$_REQUEST_ = new \HTTP\Request();
+	$_REQUEST_->deconstruct($_SERVER['REQUEST_URI']);
 
 	# Don't Cache this Page
 	header("Expires: 0");
 	header("Cache-Control: no-cache, must-revalidate");
-
-	# Create Session
-	$_session = new Session($_COOKIE['session_code']);
-
-	if ($_session->error)
-	{
-		error_log($_session->error);
-		die("Session Error: ".$_session->error);
-	}
-	if ($_session->message)
-	{
-	    $page_message = $_session->message;
-	}
-
-	# Get Info about person
-	$_customer = new Customer($_session->customer);
 
 	# Load Page Information
 	$page_parameters = array(
 		    "auth_required" => 0,
 		    "style"			=> ''
 	    );
-	$_page = new Page($page_parameters);
-	if ($_page->error)
-	{
-		print "Error: ".$_page->error;
-		error_log($_page->error);
+	$page = new \Site\Page($page_parameters);
+	if ($page->error()) {
+		error_log($page->error());
 		exit;   
 	}
 
-	print $_page->load_template();
+	print $page->load_template();
+
+	function test_fail($message) {
+		error_log($message);
+		exit;
+	}
 ?>
