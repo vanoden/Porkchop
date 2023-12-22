@@ -12,31 +12,38 @@
 			
 			$this->error = null;
 			$get_site_messages_query = "
-				SELECT	id
-				FROM	site_messages
-				WHERE	id = id
-			";			
+				SELECT	sm.id
+				FROM	site_messages sm
+				LEFT JOIN site_message_deliveries smd
+				ON smd.message_id = sm.id
+				WHERE	sm.id = sm.id 
+			";
 
 			$bind_params = array();
 			if (isset($parameters['user_created'])) {
 				$get_site_messages_query .= "
-				AND user_created = ?";
+				AND sm.user_created = ?";
 				array_push($bind_params,$parameters['user_created']);
 			}
 
 			if (isset($parameters['recipient_id'])) {
 				$get_site_messages_query .= "
-				AND recipient_id = ?";
+				AND sm.recipient_id = ?";
 				array_push($bind_params,$parameters['recipient_id']);
 			}
 
+			if (isset($parameters['acknowledged']) && !empty($parameters['acknowledged'])) {
+				$get_site_messages_query .= "
+				AND smd.date_acknowledged is NULL";
+			}
+			
 			query_log($get_site_messages_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
 			if (! $rs) {
 				$this->error = "SQL Error in Site::SiteMessagesList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
-			
+
 			$siteMessages = array();
 			while (list($id) = $rs->FetchRow()) {
 			    $siteMessage = new \Site\SiteMessage($id);
@@ -81,10 +88,10 @@
 			$get_site_messages_query = "
 				SELECT	sm.id
 				FROM	site_messages sm
-				LEFT JOIN site_messages_metadata smm
-				ON smm.item_id = sm.id
+				LEFT JOIN site_message_deliveries smd
+				ON smd.message_id = sm.id
 				WHERE	sm.id = sm.id
-				AND smm.label = 'acknowledged'
+				AND smd.date_acknowledged == NULL
 			";			
 
 			$bind_params = array();
@@ -102,7 +109,7 @@
 			}
 
 			$acknowledgedMessages = 0;
-			while (list($id) = $rs->FetchRow()) $acknowledgedMessages ++;			
+			while (list($id) = $rs->FetchRow()) $acknowledgedMessages ++;	
 			return $totalMessages - $acknowledgedMessages;		
 		}
 		

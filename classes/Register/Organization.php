@@ -132,8 +132,8 @@
 			$this->auditRecord('ORGANIZATION_UPDATED','Organization has been updated');
 			if (isset($parameters['status'])) $this->auditRecord('STATUS_CHANGED','Organization status has been updated: '.$parameters['status']);
 			if (isset($parameters['name'])) $this->auditRecord('NAME_CHANGED','Organization name has been changed: '.$parameters['name']);
-			if (isset($parameters['is_reseller'])) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated: '.$parameters['is_reseller']);
-			if (isset($parameters['assigned_reseller_id'])) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated: '.$parameters['assigned_reseller_id']);
+			if (isset($parameters['is_reseller'])) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (is_reseller): '.$parameters['is_reseller']);
+			if (isset($parameters['assigned_reseller_id'])) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (assigned_reseller_id): '.$parameters['assigned_reseller_id']);
 			return $this->details();
 		}
 		
@@ -299,18 +299,31 @@
 			return $locations;
 		}
 
-		public function auditRecord($type,$notes,$user_id = null) {
+		public function auditRecord($type,$notes,$admin_id = null) {
 
 			$audit = new \Register\OrganizationAuditEvent();
-			if (!isset($user_id) && isset($GLOBALS['_SESSION_']->customer->id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
+
+			if (!isset($admin_id) || empty($admin_id)) {
+				$this->error("Admin User is not set");
+				return false;
+			}
+
 			if (!isset($this->id)) {
 				$this->error("Organization is not set");
 				return false;
 			}
 			
+			// validate type
+			if ($audit->validClass($type) == false) {
+				$this->error("Invalid audit class: ".$type);
+				return false;
+			}
+
+			// add record if all good
 			$audit->add(array(
 				'organization_id'	=> $this->id,
-				'user_id'			=> $user_id,
+				'admin_id'			=> $admin_id,
 				'event_date'		=> date('Y-m-d H:i:s'),
 				'event_class'		=> $type,
 				'event_notes'		=> $notes

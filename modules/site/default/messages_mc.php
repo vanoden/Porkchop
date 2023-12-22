@@ -16,4 +16,3 @@
     $siteMessageDelivery = new \Site\SiteMessageDelivery();
     $siteMessages = $siteMessage->find($params);
     if ($siteMessage->error()) $page->addError($siteMessage->error());
-    

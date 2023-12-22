@@ -424,15 +424,8 @@
             $siteMessages = new \Site\SiteMessagesList();
             $siteMessagesList = $siteMessages->find(array('user_created' => $_REQUEST['user_created']));
             foreach ($siteMessagesList as $siteMessage) {
-                $siteMessageMetaData = new \Site\SiteMessageMetaData();
-            	$siteMessageMetaData->add(
-                     array(
-                      'item_id' => $siteMessage->id,
-                      'label' => 'acknowledged',
-                      'value' => 'true'
-                     )
-                 );
-				 if ($siteMessageMetaData->error()) $this->error($siteMessageMetaData->error());
+				$siteMessage->acknowledge();
+				 if ($siteMessage->error()) $this->error($siteMessage->error());
             }        
 
 			$response = new \APIResponse();

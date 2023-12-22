@@ -673,11 +673,17 @@
 		}
 
 		public function auditRecord($type,$notes,$admin_id = null) {
+
 			$audit = new \Register\UserAuditEvent();
 			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
 
 			// New Registration by customer
 			if (empty($admin_id)) $admin_id = $this->id;
+
+			if ($audit->validClass($type) == false) {
+				$this->error("Invalid audit class: ".$type);
+				return false;
+			}
 
 			$audit->add(array(
 				'user_id'		=> $this->id,
@@ -686,6 +692,7 @@
 				'event_class'	=> $type,
 				'event_notes'	=> $notes
 			));
+			
 			if ($audit->error()) {
 				$this->error($audit->error());
 				return false;

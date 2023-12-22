@@ -109,8 +109,10 @@
 	    </div>
     </div>
     <div><input type="submit" name="method" value="Apply" class="button"/></div>
+	<input type="button" name="btnAuditLog" value="Audit Log" onclick="location.href='/_register/organization_audit_log?user_id=<?=$organization->id?>';" />
+
     <!--End first row-->
-<?php	if ($organization->id) { ?>
+	<?php	if ($organization->id) { ?>
     <h3>Add Organization Tag</h3>
     <div class="tableBody min-tablet">
 	    <div class="tableRowHeader">

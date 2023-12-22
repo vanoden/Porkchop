@@ -1125,21 +1125,21 @@
 					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
 				
 				$create_table_query = "
-				CREATE TABLE `register_organization_audit` (
+                CREATE TABLE `register_organization_audit` (
 					`id` int NOT NULL AUTO_INCREMENT,
 					`organization_id` int NOT NULL,
-					`user_id` int NOT NULL,
+					`admin_id` int NOT NULL,
 					`event_date` datetime NOT NULL,
-					`event_class` enum('ORGANIZATION_CREATED','ORGANIZATION_UPDATED','STATUS_CHANGED','NAME_CHANGED','RESELLER_CHANGED') NOT NULL,
+					`event_class` enum('ORGANIZATION_CREATED', 'ORGANIZATION_UPDATED', 'STATUS_CHANGED','NAME_CHANGED','RESELLER_CHANGED') NOT NULL,
 					`event_notes` varchar(255) DEFAULT NULL,
 					PRIMARY KEY (`id`),
 					KEY `idx_register_organization_audit_organization` (`organization_id`),
-					KEY `idx_register_organization_audit_user` (`user_id`),
+					KEY `idx_register_organization_audit_by` (`admin_id`),
 					KEY `idx_register_organization_audit_date` (`event_date`),
 					KEY `idx_register_organization_audit_class` (`event_class`),
 					CONSTRAINT `register_organization_audit_ibfk_1` FOREIGN KEY (`organization_id`) REFERENCES `register_organizations` (`id`),
-					CONSTRAINT `register_organization_audit_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
-				  )
+					CONSTRAINT `register_organization_audit_ibfk_2` FOREIGN KEY (`admin_id`) REFERENCES `register_users` (`id`)
+				  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 				";
 
 				$GLOBALS['_database']->Execute($create_table_query);
