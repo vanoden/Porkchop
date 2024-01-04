@@ -5,7 +5,7 @@
 		public $module = "Navigation";
 
 		public function upgrade() {
-			$this->error = null;
+			$this->clearError();
 
 			if ($this->version() < 2) {
 				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
@@ -55,6 +55,24 @@
 
 				$this->setVersion(2);
 				$GLOBALS['_database']->CommitTrans();
+			}
+
+			if ($this->version() < 3) {
+                app_log("Upgrading schema to version 3",'notice',__FILE__,__LINE__);
+
+                // Start Transaction
+                if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+                $table_query = "
+                    ALTER TABLE `navigation_menu_items` ADD `required_role_id` int(11) DEFAULT NULL 
+                ";
+                if (! $this->executeSQL($table_query)) {
+                    $this->SQLError("Error altering `navigation_menu_items` table in ".$this->module."::Schema::upgrade(): ".$this->error());
+                    return false;
+                }
+
+                $this->setVersion(3);
+                $GLOBALS['_database']->CommitTrans();
 			}
 
 			return true;
