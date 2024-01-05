@@ -800,6 +800,7 @@
 			$denied_counter = new \Site\Counter("permission_denied");
 			$counter_404 = new \Site\Counter("return404");
 			$counter_403 = new \Site\Counter("return403");
+			$counter_500 = new \Site\Counter("return500");
 			$auth_failed_counter = new \Site\Counter("auth_failed");
 			$auth_blocked_counter = new \Site\Counter("auth_blocked");
 
@@ -809,6 +810,7 @@
 			$counter->permission_denied = $denied_counter->get();
 			$counter->code_404 = $counter_404->get();
 			$counter->code_403 = $counter_403->get();
+			$counter->code_500 = $counter_500->get();
 			$counter->auth_failed = $auth_failed_counter->get();
 			$counter->auth_blocked = $auth_blocked_counter->get();
 			$cache = $cache->stats();
@@ -817,6 +819,14 @@
 			$db->uptime = $database->global('uptime');
 			$db->queries = $database->global('queries');
 			$db->slow_queries = $database->global('slow_queries');
+			$db->connections = $database->global('connections');
+			$db->com_select = $database->global('Com_select');
+			$db->com_insert = $database->global('Com_insert');
+			$db->com_update = $database->global('Com_update');
+			$db->com_replace = $database->global('Com_replace');
+			$db->aborted_connects = $database->global('Aborted_connects');
+			$db->threads_connected = $database->global('Threads_connected');
+			$db->threads_running = $database->global('Threads_running');
 			$apache = new \stdClass();
 			$apache->version = apache_get_version();
 
