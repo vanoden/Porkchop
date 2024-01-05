@@ -37,8 +37,11 @@
 			}
 			$items = array();
 			while(list($id) = $rs->FetchRow()) {
-				$this->incrementCount();
 				$item = new Item($id);
+				if (!$GLOBALS['_SESSION_']->customer->can("manage navigation menus") && $item->required_role_id > 0) {
+					if (!$GLOBALS['_SESSION_']->customer->has_role_id($item->required_role_id)) continue;
+				}
+				$this->incrementCount();
 				array_push($items,$item);
 			}
 			return $items;
