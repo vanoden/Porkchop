@@ -26,11 +26,19 @@
 <tr><th>Title</th>
 	<th>Target</th>
 	<th>Alt</th>
+	<th>Required Role</th>
 	<th>View Order</th>
 </tr>
 <tr><td><input type="text" name="title" class="value input" value="<?=$item->title?>" /></td>
 	<td><input type="text" name="target" class="value input" style="width: 300px" value="<?=$item->target?>" /></td>
 	<td><input type="text" name="alt" class="value input" value="<?=$item->alt?>" /></td>
+	<td><select name="required_role_id" class="value input">
+			<option value="">None</option>
+<?php	foreach ($roles as $role) { ?>
+			<option value="<?=$role->id?>"<?php if ($role->id == $item->required_role_id) print " selected";?>><?=$role->name?></option>
+<?php	} ?>
+		</select>
+	</td>
 	<td><input type="text" name="view_order" class="value input" style="width: 80px; text-align: right" value="<?=$item->view_order?>" /></td>
 </tr>
 <tr><th colspan="6">Description</th></tr>

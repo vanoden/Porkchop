@@ -29,6 +29,7 @@
                 "title"			=> noXSS($_REQUEST['title']),
                 "target"		=> noXSS($_REQUEST['target']),
                 "alt"			=> noXSS($_REQUEST['alt']),
+				"required_role_id"	=> $_REQUEST['required_role_id'],
                 "view_order"	=> filter_var($_REQUEST['view_order'],FILTER_VALIDATE_INT),
                 "description"	=> noXSS($_REQUEST['description'])
             );
@@ -61,6 +62,9 @@
 			$item->delete();
 		}
 	}
+
+	$roleList = new \Register\RoleList();
+	$roles = $roleList->find();
 
 	$page->addBreadcrumb("Menus", "/_navigation/menus");
 	if (isset($parent)) {
