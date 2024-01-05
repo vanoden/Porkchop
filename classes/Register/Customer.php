@@ -328,24 +328,32 @@
 			return $this->has_privilege($privilege_name);
 		}
 
-		// See If a User has been granted a Role
 		public function has_role($role_name) {
+			$this->clearError();
+			$role = new \Register\Role();
+			if (! $role->get($role_name)) {
+				$this->error("Role not found");
+				return false;
+			}
+			return $this->has_role_id($role->id);
+		}
+
+		// See If a User has been granted a Role
+		public function has_role_id($role_id) {
 			$this->clearError();
 
 			$database = new \Database\Service();
 
 			// Check Role Query
 			$check_role_query = "
-				SELECT	r.id
-				FROM	register_roles r
-				INNER JOIN 	register_users_roles rur
-				ON		r.id = rur.role_id
-				WHERE	rur.user_id = ?
-				AND		r.name = ?
+				SELECT	role_id
+				FROM 	register_users_roles
+				WHERE	user_id = ?
+				AND		role_id = ?
 			";
 
 			$database->AddParam($this->id);
-			$database->AddParam($role_name);
+			$database->AddParam($role_id);
 
 			$rs = $database->Execute($check_role_query);
 
