@@ -150,7 +150,6 @@
 			app_log("Product::Item::details()",'trace');
 			$this->clearError();
 			$database = new \Database\Service();
-			$database->trace(1);
 
 			$cache_key = "product[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -165,6 +164,7 @@
 				$this->type = $product->type;
 				$this->description = $product->description;
 				$this->cached($product->_cached);
+				$this->exists(true);
 
 				# In Case Cache Corrupted
 				if ($product->id) {
@@ -190,7 +190,7 @@
 				FROM	product_products
 				WHERE	id = ?";
 
-			$database->addParam($this->id);
+			$database->AddParam($this->id);
 			$rs = $database->Execute($get_details_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
@@ -205,6 +205,7 @@
 			$this->status = $object->status;
 			$this->description = $object->description;
 			$this->type = $object->type;
+			$this->exists(true);
 
 			# Cache Product Object
 			app_log("Setting cache key ".$cache_key);
