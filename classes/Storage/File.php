@@ -16,7 +16,7 @@
 		public $timestamp;
 		public $name;
 		private $user_id;
-		private $path;
+		public $path;
 		private $original_name;
 		private $access_privilege_json;
 
