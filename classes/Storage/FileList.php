@@ -2,9 +2,8 @@
 	namespace Storage;
 
 	class FileList Extends \BaseListClass {
-
 		public function _construct() {
-			$this->_tableName = 'storage_files';
+            $this->_modelName = '\Storage\File';
 		}
 
         /**
@@ -13,6 +12,8 @@
          * @param array $parameters, name value pairs to find files by
          */
 		public function find($parameters = array()) {
+			$this->clearError();
+			$this->resetCount();
 
 			$get_objects_query = "
 				SELECT sf.id
