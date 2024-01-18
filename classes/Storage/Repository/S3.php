@@ -55,6 +55,16 @@
 					$this->_connected = false;
 					return false;
 				}
+				catch (\Aws\Common\Exception\InstanceProfileCredentialsException $e) {
+					$this->error($e->getMessage());
+					$this->_connected = false;
+					return false;
+				}
+				catch (Exception $e) {
+					$this->error($e->getMessage());
+					$this->_connected = false;
+					return false;
+				}
 			}
 
 			$this->_connected = true;
@@ -107,22 +117,22 @@
 				}
 			}
 
-            try {
-                // Upload an object by streaming the contents of a file
-                $result = $this->s3Client->putObject(array(
-                    'Bucket'     => $this->_bucket(),
-                    'Key'        => $file->code(),
-                    'SourceFile' => $path,
-                    'Metadata'   => array(
-                        'Source' => 'Uploaded from Website'
-                    )
-                ));
-            }
-            catch (\Aws\S3\Exception\S3Exception $e) {
-                $this->error("Repository upload error: ".$e->getMessage());
-                $this->_connected = false;
-                return false;
-            }
+			try {
+				// Upload an object by streaming the contents of a file
+				$result = $this->s3Client->putObject(array(
+					'Bucket'     => $this->_bucket(),
+					'Key'        => $file->code(),
+					'SourceFile' => $path,
+					'Metadata'   => array(
+						'Source' => 'Uploaded from Website'
+					)
+				));
+			}
+			catch (\Aws\S3\Exception\S3Exception $e) {
+				$this->error("Repository upload error: ".$e->getMessage());
+				$this->_connected = false;
+				return false;
+			}
 			
 			return $result;
 		}
@@ -145,7 +155,7 @@
 		public function retrieveFile($file) {
 			if (!$this->_connected) {
 				if (!$this->connect()) {
-					$this->error("Failed to connect to S3 service");
+					if (empty($this->error())) $this->error("Failed to connect to S3 service");
 					return null;
 				}
 			}
