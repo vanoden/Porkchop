@@ -38,6 +38,7 @@
 <tr><th>Title</th>
 	<th>Target</th>
 	<th>Alt</th>
+	<th>Required Role</th>
 	<th>View Order</th>
 	<th>Actions</th>
 </tr>
@@ -45,6 +46,7 @@
 <tr><td><?=$item->title?></td>
 	<td><?=$item->target?></td>
 	<td><?=$item->alt?></td>
+	<td><?=$item->required_role()->name?></td>
 	<td><?=$item->view_order?></td>
 	<td>
 		<input type="button" name="details[<?=$item->id?>]" class="button" value="Edit" onclick="edit(<?=$item->id?>,<?=$menu->id?>,<?=$parent->id?>);" />

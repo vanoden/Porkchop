@@ -134,7 +134,8 @@
 
 		# Fetch Repository Record and Populate Object Variables
 		public function details(): bool {
-		
+			$this->clearError();
+
 			$get_object_query = "
 				SELECT	*
 				FROM	storage_repositories
@@ -158,24 +159,7 @@
 			$this->status = $object->status;
 			$this->default_privileges_json = $object->default_privileges;
 			$this->override_privileges_json = $object->override_privileges;;
-			
-			$get_object_query = "
-				SELECT	*
-				FROM	`storage_repository_metadata`
-				WHERE	`repository_id` = ?
-			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-			
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			
-			while ($row = $rs->fetchRow(false)) $this->$row['key'] = $row['value'];
+
 			return true;
 		}
 
@@ -183,6 +167,90 @@
 		public function files($path = "/") {
 			$filelist = new FileList();
 			return $filelist->find(array('repository_id' => $this->id,'path' => $path));
+		}
+
+		public function uploadFile($uploadedFile,$path = '/') {
+			// Check for Errors
+			if ($uploadedFile['error'] == 1) {
+				$this->error("Uploaded file too large");
+				app_log("Upload file exceeds the upload_max_filesize directive",'info');
+				return null;
+			}
+			elseif ($uploadedFile['error'] == 2) {
+				$this->error("Uploaded file too large");
+				app_log("Uploaded file exceeds the MAX_FILE_SIZE directive in the HTML form",'info');
+				return null;
+			}
+			elseif ($uploadedFile['error'] == 3) {
+				$this->error("Upload failed before completion");
+				app_log("The uploaded file was only partially uploaded",'info');
+				return null;
+			}
+			elseif ($uploadedFile['error'] == 4) {
+				$this->error("No file was uploaded");
+				app_log("No file was uploaded",'info');
+				return null;
+			}
+			elseif ($uploadedFile['error'] == 6) {
+				$this->error("Server error uploading file");
+				app_log("Upload failed: Temporary folder unavailable",'error');
+				return null;
+			}
+			elseif ($uploadedFile['error'] == 7) {
+				$this->error("Server error uploading file");
+				app_log("Upload failed: Failed to write upload to disk",'error');
+				return null;
+			}
+			elseif ($uploadedFile['error'] == 8) {
+				$this->error("Server error uploading file");
+				app_log("Upload failed: Upload blocked by extension",'error');
+				return null;
+			}
+			elseif (! file_exists($uploadedFile['tmp_name'])) {
+				$this->error("Temp file '".$uploadedFile['tmp_name']."' not found");
+				return null;
+			}
+			else {
+			
+				// Check for Conflict 
+				$filelist = new \Storage\FileList();
+				list($existing) = $filelist->find(
+					array(
+						'repository_id' => $this->id,
+						'path'	=> $path,
+						'name' => $uploadedFile['name'],
+					)
+				);
+				
+				if ($existing->id) {
+					$this->error("File already exists with that name in repo ".$this->name);
+				}
+				else {
+					// Add File to Library 
+					$file = new \Storage\File();
+					if ($file->error()) error("Error initializing file: ".$file->error());
+					$file->add(
+						array(
+							'repository_id'     => $this->id,
+							'name'              => $uploadedFile['name'],
+							'path'				=> $path,
+							'mime_type'         => $uploadedFile['type'],
+							'size'              => $uploadedFile['size'],
+						)
+					);
+
+					// Upload File Into Repository 
+					if ($file->error()) $this->error("Error adding file: ".$file->error());
+					elseif (! $this->addFile($file,$_FILES['uploadFile']['tmp_name'])) {
+						$file->delete();
+						$this->error('Unable to add file to repository: '.$this->error());
+						return null;
+					} else {
+						app_log("Stored file ".$file->id." at ".$path."/".$file->code);
+						return $file;
+					}
+				}
+			}
 		}
 
 		# Add File to Database

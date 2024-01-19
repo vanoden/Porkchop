@@ -5,7 +5,7 @@
 		public $id = 0;
 
 		// Was data found in db or cache
-		private $_exists = false;
+		protected $_exists = false;
 
 		// Did data come from cache?
 		public $_cached = false;

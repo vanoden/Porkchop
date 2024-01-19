@@ -2,6 +2,10 @@
 	namespace Storage;
 
 	class RepositoryList Extends \BaseListClass {
+		public function _construct() {
+            $this->_modelName = '\Storage\Repository';
+		}
+
 		public function find($parameters = array()) {
 			$this->clearError();
 			$this->resetCount();

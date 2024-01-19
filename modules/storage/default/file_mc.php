@@ -81,7 +81,7 @@
 						if (! preg_match('/^\//',$_REQUEST['path'])) $_REQUEST['path'] = '/'.$_REQUEST['path'];
 						$factory = new \Storage\RepositoryFactory();
 						$repository = $factory->load($_REQUEST['repository_id']);
-						
+
 						if ($factory->error()) {
 							$page->addError("Error loading repository: ".$factory->error());
 						}
@@ -91,77 +91,12 @@
 						else {
 							app_log("Identified repo '".$repository->name."'");
 
-							// Check for Errors
-							if ($_FILES['uploadFile']['error'] == 1) {
-								$page->addError("Uploaded file too large");
-								app_log("Upload file exceeds the upload_max_filesize directive",'info');
-							}
-							elseif ($_FILES['uploadFile']['error'] == 2) {
-								$page->addError("Uploaded file too large");
-								app_log("Uploaded file exceeds the MAX_FILE_SIZE directive in the HTML form",'info');
-							}
-							elseif ($_FILES['uploadFile']['error'] == 3) {
-								$page->addError("Upload failed before completion");
-								app_log("The uploaded file was only partially uploaded",'info');
-							}
-							elseif ($_FILES['uploadFile']['error'] == 4) {
-								$page->addError("No file was uploaded");
-								app_log("No file was uploaded",'info');
-							}
-							elseif ($_FILES['uploadFile']['error'] == 6) {
-								$page->addError("Server error uploading file");
-								app_log("Upload failed: Temporary folder unavailable",'error');
-							}
-							elseif ($_FILES['uploadFile']['error'] == 7) {
-								$page->addError("Server error uploading file");
-								app_log("Upload failed: Failed to write upload to disk",'error');
-							}
-							elseif ($_FILES['uploadFile']['error'] == 8) {
-								$page->addError("Server error uploading file");
-								app_log("Upload failed: Upload blocked by extension",'error');
-							}
-							elseif (! file_exists($_FILES['uploadFile']['tmp_name'])) {
-								$page->addError("Temp file '".$_FILES['uploadFile']['tmp_name']."' not found");
+							if ($uploadedFile = $repository->uploadFile($_FILES['uploadFile'],$_REQUEST['path'])) {
+								$page->success = "File uploaded";
+								$file = $uploadedFile;
 							}
 							else {
-							
-								// Check for Conflict 
-								$filelist = new \Storage\FileList();
-								list($existing) = $filelist->find(
-									array(
-										'repository_id' => $repository->id,
-										'path'	=> $_REQUEST['path'],
-										'name' => $_FILES['uploadFile']['name'],
-									)
-								);
-								
-								if ($existing->id) {
-									$page->addError("File already exists with that name in repo ".$repository->name);
-								} else {
-								
-									// Add File to Library 
-									$file = new \Storage\File();
-									if ($file->error()) error("Error initializing file: ".$file->error());
-									$file->add(
-										array(
-											'repository_id'     => $repository->id,
-											'name'              => $_FILES['uploadFile']['name'],
-											'path'				=> $_REQUEST['path'],
-											'mime_type'         => $_FILES['uploadFile']['type'],
-											'size'              => $_FILES['uploadFile']['size'],
-										)
-									);
-
-									// Upload File Into Repository 
-									if ($file->error()) $page->addError("Error adding file: ".$file->error());
-									elseif (! $repository->addFile($file,$_FILES['uploadFile']['tmp_name'])) {
-										$file->delete();
-										$page->addError('Unable to add file to repository: '.$repository->error());
-									} else {
-										app_log("Stored file ".$file->id." at ".$repostory->path."/".$file->code);
-										$page->success = "File uploaded";
-									}
-								}
+								$page->addError("Error uploading file: ".$repository->error());
 							}
 						}
 					}

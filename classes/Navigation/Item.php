@@ -10,6 +10,7 @@
 		public $alt;
 		public $description;
 		public $parent_id;
+		public $required_role_id;
 		public $external = false;
 		public $ssl = false;
 
@@ -179,6 +180,25 @@
 						view_order = ?";
 				array_push($bind_params,$parameters['view_order']);
 			}
+			if (isset($parameters['required_role_id'])) {
+				if ($parameters['required_role_id'] == "")
+					$update_object_query .= ",
+						required_role_id = NULL";
+				elseif (is_numeric($parameters['required_role_id'])) {
+					$role = new \Register\Role($parameters['required_role_id']);
+					if (! $role->exists()) {
+						$this->error("Required Role not found");
+						return false;
+					}
+					$update_object_query .= ",
+						required_role_id = ?";
+					array_push($bind_params,$parameters['required_role_id']);
+				}
+				else {
+					$this->error("Invalid required role id");
+					return false;
+				}
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?
@@ -191,6 +211,10 @@
 				return false;
 			}
 			return $this->details();
+		}
+
+		public function required_role() {
+			return new \Register\Role($this->required_role_id);
 		}
 
 		public function details(): bool {
@@ -215,6 +239,7 @@
 				$this->alt = $object->alt;
 				$this->description = $object->description;
 				$this->parent_id = $object->parent_id;
+				$this->required_role_id = $object->required_role_id;
 				if ($object->external) $this->external = true;
 				else $this->external = false;
 				if ($object->ssl) $this->ssl = true;

@@ -322,7 +322,7 @@
 			$this->date_created = $object->date_created;
 			$this->date_published = $object->date_published;
 
-			return true;
+			return parent::details();
 		}
 		public function owner() {
 			return new \Register\Person($this->owner_id);

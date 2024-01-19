@@ -112,7 +112,8 @@
 			$this->clearError();
 			$this->resetCount();
 
-			if (isset($controls['count']) && !empty($controls['count'])) $ADODB_COUNTRECS = true;
+			if (! isset($controls['count'])) $controls['count'] = false;
+			if ($controls['count']) $ADODB_COUNTRECS = true;
 			if (isset($parameters['role'])) app_log("Don't use role as a filter for customers, use Register::Role::Members",'warning');
 
             $validationclass = new \Register\Customer();
@@ -242,12 +243,15 @@
                 }
 			}
 
-			if (isset($parameters['department_id']) && is_numeric($parameters['department_id'])) {
+			if (!empty($parameters['department_id']) && is_numeric($parameters['department_id'])) {
+
 				$find_person_query .= "
 				AND		department_id = ?";
 				array_push($bind_params,$parameters['department_id']);
 			}
-			if (isset($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
+
+			if (!empty($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
+
                 $organization = new \Register\Organization($parameters['organization_id']);
                 if (!$organization->exists()) {
                     $this->error("Invalid organization");
@@ -265,9 +269,9 @@
 			}
 
             if (!empty($parameters['_sort'])) $controls['sort'] = $parameters['_sort'];
-            if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
-            if (isset($parameters['_offset']) && is_numeric($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
-    
+            if (!empty($parameters['_limit']) && is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
+            if (!empty($parameters['_offset']) && is_numeric($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
+
 			if (isset($controls['sort']) && $controls['_sort'] == 'full_name') {
 				$find_person_query .= " ORDER BY first_name,last_name";
 			}
@@ -277,8 +281,8 @@
 			else
 				$find_person_query .= " ORDER BY login";
 
-			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
-				if (isset($controls['offset']) && is_numeric($controls['offset']))
+			if (!empty($controls['limit']) && is_numeric($controls['limit'])) {
+				if (is_numeric($controls['offset']))
 					$find_person_query .= "
 					LIMIT ".$controls['offset'].",".$controls['limit'];
 				if (! is_numeric($controls['offset']))

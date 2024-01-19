@@ -36,6 +36,12 @@
 		}
 	}
 
+	function caller($level = 1) {
+		$trace = debug_backtrace();
+		$caller = $trace[$level];
+		return array('function' => $caller['function'], 'class' => $caller['class'], 'file' => $caller['file'], 'line' => $caller['line']);
+	}
+
 	function get_mysql_date($date = null,$range=0) {
 		if (empty($date)) {
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
