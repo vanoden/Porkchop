@@ -109,7 +109,7 @@
 	    </div>
     </div>
     <div><input type="submit" name="method" value="Apply" class="button"/></div>
-	<input type="button" name="btnAuditLog" value="Audit Log" onclick="location.href='/_register/organization_audit_log?user_id=<?=$organization->id?>';" />
+	<input type="button" name="btnAuditLog" value="Audit Log" onclick="location.href='/_register/organization_audit_log?organization_id=<?=$organization->id?>';" />
 
     <!--End first row-->
 	<?php	if ($organization->id) { ?>

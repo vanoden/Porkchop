@@ -106,7 +106,7 @@
 		$customer = new \Register\Customer();
 		if ($customer->validLogin($_REQUEST['login'])) {
 			if ($customer->get($_REQUEST['login'])) {
-				if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+				if ( !$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 					$page->addError("Invalid Request");
 					$failure = new \Register\AuthFailure();
 					$failure->add($_SERVER['REMOTE_ADDR'],$_REQUEST['login'],'CSRFTOKEN',$_SERVER['PHP_SELF']);

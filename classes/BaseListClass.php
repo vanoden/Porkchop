@@ -1,7 +1,7 @@
 <?php
 class BaseListClass extends \BaseClass {
-	protected $_count = 0;
 
+	protected $_count = 0;
 	protected $_modelName;
 
 	// Default Sort Controls

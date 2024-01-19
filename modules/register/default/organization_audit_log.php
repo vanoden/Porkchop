@@ -8,11 +8,11 @@
 		<div class="tableCell" style="width: 10%;">Action</div>
 		<div class="tableCell" style="width: 60%;">Notes</div>
 	</div>
-<?php	foreach ($records as $record) { 
-			if (isset($users[$record->user_id])) $user = $users[$record->user_id];
+<?php	foreach ($records as $record) {
+			if (isset($users[$record->admin_id])) $user = $users[$record->admin_id];
 			else {
 				$user = $record->user();
-				$users[$record->user_id] = $user;
+				$users[$record->admin_id] = $user;
 			}
 ?>
 	<div class="tableRow">

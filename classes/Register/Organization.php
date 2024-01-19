@@ -58,6 +58,7 @@
 		}
 
 		public function update($parameters = []): bool {
+
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
 			$this->clearError();
 		
@@ -129,11 +130,12 @@
 			}
 
 			// audit any/all the organization changes made
-			$this->auditRecord('ORGANIZATION_UPDATED','Organization has been updated');
-			if (isset($parameters['status'])) $this->auditRecord('STATUS_CHANGED','Organization status has been updated: '.$parameters['status']);
-			if (isset($parameters['name'])) $this->auditRecord('NAME_CHANGED','Organization name has been changed: '.$parameters['name']);
-			if (isset($parameters['is_reseller'])) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (is_reseller): '.$parameters['is_reseller']);
-			if (isset($parameters['assigned_reseller_id'])) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (assigned_reseller_id): '.$parameters['assigned_reseller_id']);
+			if (isset($parameters['notes']) && ($parameters['notes'] != $this->notes)) $this->auditRecord('ORGANIZATION_UPDATED','Organization notes have been updated: '.$parameters['notes']);
+			if (isset($parameters['status']) && ($parameters['status'] != $this->status)) $this->auditRecord('STATUS_CHANGED','Organization status has been updated: '.$parameters['status']);
+			if (isset($parameters['name']) && ($parameters['name'] != $this->name)) $this->auditRecord('NAME_CHANGED','Organization name has been changed: '.$parameters['name']);
+			if (isset($parameters['is_reseller']) && ($parameters['is_reseller'] != $this->is_reseller)) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (is_reseller): '.$parameters['is_reseller']);
+			if (isset($parameters['assigned_reseller_id']) && ($parameters['assigned_reseller_id'] != $this->assigned_reseller_id)) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (assigned_reseller_id): '.$parameters['assigned_reseller_id']);
+			
 			return $this->details();
 		}
 		

@@ -77,6 +77,9 @@
 
 			# Cookie Parameters
 			if (isset($GLOBALS['_config']->session->domain)) $this->cookie_domain = $GLOBALS['_config']->session->domain;
+
+
+
 			else $this->cookie_domain = $domain;
 			if (isset($GLOBALS['_config']->session->cookie) && is_string($GLOBALS['_config']->session->cookie)) $this->cookie_name = $GLOBALS['_config']->session->cookie;
 			else $this->cookie_name = "session_code";
@@ -97,7 +100,7 @@
 				}
 				else {
 					app_log("Session $request_code not available or expired, deleting cookie for ".$domain->name,'notice',__FILE__,__LINE__);
-					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['HTTP_HOST'],false,true);
+					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['SERVER_NAME'],false,true);
 				}
 			}
 			elseif (isset($request_code)) {
@@ -255,7 +258,7 @@
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
 			# Set Session Cookie
-			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['HTTP_HOST'],false,true)) {
+			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['SERVER_NAME'],false,true)) {
 				app_log("New Session ".$this->id." created for ".$this->domain()->id." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
 				app_log("Session Code ".$new_code,'debug',__FILE__,__LINE__);
 			}
