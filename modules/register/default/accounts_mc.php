@@ -45,9 +45,9 @@
 	if (isset($_REQUEST['search']) && strlen($_REQUEST['search'])) $find_parameters['_search'] = $_REQUEST['search'];
 
 	// Get Count before Pagination
-	$customerList->find($find_parameters,true);
+	$customerList->find($find_parameters,array('count' => true));
 	$total_customers = $customerList->count();
-    
+
 	// Add Pagination to Query
 	$controls["limit"] = $recordsPerPage;
 	$controls["offset"] = isset($_REQUEST['pagination_start_id']) ? $_REQUEST['pagination_start_id']: 0;
