@@ -57,7 +57,7 @@
 					<input type="password" id="password_2" name="password_2"/>
 				</li>
 			</ul>
-			<button type="submit">Update Password</button>
+			<input type="submit" name="btn_submit" value="Update Password" />
 		</div>
 	</form>
 </section>
