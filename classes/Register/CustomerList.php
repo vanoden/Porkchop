@@ -112,7 +112,9 @@
 			$this->clearError();
 			$this->resetCount();
 
-			if (! isset($controls['count'])) $controls['count'] = false;
+			// Backward compatibility
+			if (is_bool($controls)) $controls = array('count' => $controls);
+			if (isset($controls['count'])) $controls['count'] = false;
 			if ($controls['count']) $ADODB_COUNTRECS = true;
 			if (isset($parameters['role'])) app_log("Don't use role as a filter for customers, use Register::Role::Members",'warning');
 
