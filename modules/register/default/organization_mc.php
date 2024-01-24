@@ -60,7 +60,8 @@
 				    'is_reseller'			    => $_REQUEST['is_reseller'],
 				    "assigned_reseller_id"	    => $_REQUEST['assigned_reseller_id'],
 				    "notes"					    => noXSS(trim($_REQUEST['notes'])),
-				    "password_expiration_days"	=> $_REQUEST['password_expiration_days']
+				    "password_expiration_days"	=> $_REQUEST['password_expiration_days'],
+					"website_url"				=> $_REQUEST['website_url'],
 			    );
 			    if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
 			    if ($organization->id) {

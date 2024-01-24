@@ -838,6 +838,32 @@
             $response->print();
 		}
 
+		public function getNodeHealth() {
+
+			$response = new \APIResponse();
+			$response->code(200);
+			$databaseStatus = 'available';
+			$cacheStatus = 'available';
+
+			// check the database
+			$database = new \Database\Service();
+			if (empty($database->version())) {
+				$databaseStatus = 'error';
+				$response->code(500);
+			}
+
+			// check the cache
+			$cache = $GLOBALS['_CACHE_'];
+			if (empty($cache->stats())) {
+				$cacheStatus = 'error';
+				$response->code(500);
+			}
+			
+			$response->addElement('cache',$cacheStatus);
+			$response->addElement('database',$databaseStatus);
+            $response->print();
+		}
+
 		public function getTOULatestVersion() {
 			// Confirm Require Inputs
 			if (empty($_REQUEST['tou_id'])) $this->invalidRequest("tou_id required");
@@ -1043,6 +1069,7 @@
                     'value' => array('required' => true)
 				),
 				'getSiteStatus' => array(),
+				'getNodeHealth' => array(),
 				'getTOULatestVersion'	=> array(
 					'tou_id'	=> array('required')
 				)

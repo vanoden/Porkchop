@@ -12,6 +12,7 @@
 		}
 
 		public function add($person_id = []) {
+			
 			# Get Large Random value
 			$randval = mt_rand();		
 
@@ -24,6 +25,7 @@
 				INTO	register_password_tokens
 				VALUES	(?,?,date_add(sysdate(),INTERVAL 1 day),?)
 			";
+
 			$GLOBALS['_database']->Execute(
 				$add_object_query,
 				array(
@@ -32,9 +34,18 @@
 					$GLOBALS['_REQUEST_']->client_ip
 				)
 			);
+
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
+			}
+
+			// Audit Record for RESET_KEY_GENERATED
+			$customer = new \Register\Customer($person_id);
+			if ($customer->error()) {
+				app_log("Error finding customer: ".$person_id,'error',__FILE__,__LINE__);
+			} else {
+				$customer->auditRecord('RESET_KEY_GENERATED',$code);
 			}
 			$this->code = $code;
 			return $code;

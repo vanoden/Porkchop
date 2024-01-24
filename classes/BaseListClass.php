@@ -33,6 +33,7 @@ class BaseListClass extends \BaseClass {
 	}
 
 	public function findAdvanced($parameters = [], $controls = []): array {
+		
 		$this->clearError();
 		$this->resetCount();
 

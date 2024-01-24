@@ -29,6 +29,7 @@
 
 		public function stats() {
 			$stats = $this->_service->getStats();
+			if (! is_array($stats)) return false;
 			$hosts = array_keys($stats);
 			$host = $hosts[0];
 			$stats[$host]["type"] = $this->mechanism();

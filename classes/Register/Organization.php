@@ -14,10 +14,12 @@
 		public $password_expiration_days;
 		public $default_billing_location_id;
 		public $default_shipping_location_id;
+		public $website_url;
 		private $_nocache = false;
 		private $database;
 
 		public function __construct($id = null,$options = array()) {
+
 			$this->_tableName = "register_organizations";
 
 			// Set Valid Statuses
@@ -31,6 +33,7 @@
 		}
 
 		public function add($parameters = []) {
+			
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
 			$database = new \Database\Service;
 
@@ -61,7 +64,6 @@
 
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
 			$this->clearError();
-		
 			$bind_params = array();
 
 			// Bust Cache
@@ -114,7 +116,12 @@
 			    default_shipping_location_id = ?";
 			    array_push($bind_params,$parameters['default_shipping_location_id']);
 		    }
-            
+			if (isset($parameters['website_url'])) {
+				$update_object_query .= ",
+						website_url = ?";
+				array_push($bind_params,$parameters['website_url']);
+			}
+
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -131,6 +138,7 @@
 
 			// audit any/all the organization changes made
 			if (isset($parameters['notes']) && ($parameters['notes'] != $this->notes)) $this->auditRecord('ORGANIZATION_UPDATED','Organization notes have been updated: '.$parameters['notes']);
+			if (isset($parameters['website_url']) && ($parameters['website_url'] != $this->website_url)) $this->auditRecord('ORGANIZATION_UPDATED','Organization website_url has been updated: '.$parameters['website_url']);
 			if (isset($parameters['status']) && ($parameters['status'] != $this->status)) $this->auditRecord('STATUS_CHANGED','Organization status has been updated: '.$parameters['status']);
 			if (isset($parameters['name']) && ($parameters['name'] != $this->name)) $this->auditRecord('NAME_CHANGED','Organization name has been changed: '.$parameters['name']);
 			if (isset($parameters['is_reseller']) && ($parameters['is_reseller'] != $this->is_reseller)) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (is_reseller): '.$parameters['is_reseller']);
@@ -159,6 +167,7 @@
 				$this->password_expiration_days = $organization->password_expiration_days;
 				$this->default_billing_location_id = $organization->default_billing_location_id;
 				$this->default_shipping_location_id = $organization->default_shipping_location_id;
+				$this->website_url = $organization->website_url;
 				$this->cached(true);
 				$this->exists(true);
 
@@ -183,7 +192,8 @@
 						notes,
 						password_expiration_days,
 				        default_billing_location_id,
-				        default_shipping_location_id
+				        default_shipping_location_id,
+						website_url
 				FROM	register_organizations
 				WHERE	id = ?
 			";
@@ -205,6 +215,7 @@
                 $this->password_expiration_days = $object->password_expiration_days;
                 $this->default_billing_location_id = $object->default_billing_location_id;
                 $this->default_shipping_location_id = $object->default_shipping_location_id;
+				$this->website_url = $object->website_url;
 				$this->is_reseller = boolval($object->is_reseller);
 				$this->notes = $object->notes;
 			}

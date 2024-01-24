@@ -200,7 +200,11 @@
 			if ($authenticationService->authenticate($login,$password)) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
 				$this->update(array("auth_failures" => 0));
-				//$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
+				$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
+
+				// update last_hit_date	for user login
+				$GLOBALS['_database']->Execute("UPDATE	`register_users` SET `last_hit_date` = sysdate() WHERE	`id` = ?", array($this->id));
+				
 				return true;
 			}
 			else {

@@ -1154,6 +1154,66 @@
 				$GLOBALS['_database']->CommitTrans();	
 			}
 
+			if ($this->version() < 32) {
+
+				// Add website_url column to register_organizations table
+				app_log("Upgrading schema to version 32", 'notice', __FILE__, __LINE__);
+				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				$alter_table_query = "
+					ALTER TABLE `register_organizations` ADD COLUMN `website_url` varchar(255) DEFAULT NULL
+				";
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_organizations table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(32);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			if ($this->version() < 33) {
+
+				// Add last_hit_date column to register_users table
+				app_log("Upgrading schema to version 33", 'notice', __FILE__, __LINE__);
+				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				$alter_table_query = "
+					ALTER TABLE `register_users` ADD COLUMN `last_hit_date` datetime NOT NULL DEFAULT '0000-00-00 00:00:00'
+				";
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_users table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(33);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			if ($this->version() < 34) {
+				
+				// Add event_class enum RESET_KEY_GENERATED to register_user_audit table
+				app_log("Upgrading schema to version 34", 'notice', __FILE__, __LINE__);
+				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+				$alter_table_query = "ALTER TABLE `register_user_audit` 
+										MODIFY COLUMN `event_class` ENUM('REGISTRATION_SUBMITTED','REGISTRATION_APPROVED','REGISTRATION_DISCARDED',
+											'AUTHENTICATION_SUCCESS','AUTHENTICATION_FAILURE','PASSWORD_CHANGED','PASSWORD_RECOVERY_REQUESTED',
+											'ORGANIZATION_CHANGED','ROLE_ADDED','ROLE_REMOVED','STATUS_CHANGED','RESET_KEY_GENERATED')";
+
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_users table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(34);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}

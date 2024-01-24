@@ -108,6 +108,16 @@
 		    </div>
 	    </div>
     </div>
+    <div class="tableBody">
+	    <div class="tableRowHeader">
+		    <div class="tableCell" style="width: 100%;">Website URL</div>
+	    </div> <!-- end row header -->
+	    <div class="tableRow">
+		    <div class="tableCell">
+			    <input id="website_url" name="website_url" class="wide_lg" placeholder="http://" value="<?=$organization->website_url?>"/>
+		    </div>
+	    </div>
+    </div>	
     <div><input type="submit" name="method" value="Apply" class="button"/></div>
 	<input type="button" name="btnAuditLog" value="Audit Log" onclick="location.href='/_register/organization_audit_log?organization_id=<?=$organization->id?>';" />
 
