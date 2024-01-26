@@ -4,7 +4,7 @@
 		"setasign/fpdf": "~1.8.1",
 		"adodb/adodb-php": "~5.20.20",
 		"elasticsearch/elasticsearch": "~2.0@beta",
-		"aws/aws-sdk-php": "3.*",
+		"aws/aws-sdk-php": "3.297.2",
 		"phpmailer/phpmailer": "~5.2",
 		"guzzlehttp/guzzle": "^6.3",
 		"paragonie/random_compat": "<9.99",
