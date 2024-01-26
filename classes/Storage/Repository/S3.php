@@ -8,7 +8,6 @@
 	use Aws\S3\Exception\S3Exception;
 
 	class S3 extends \Storage\Repository {
-
 		protected $aws;
 		protected $client;
 		public $bucket;
@@ -25,12 +24,21 @@
 
 		public function connect() {
 			$this->configuration = new \Site\Configuration();
-			$this->credentials = new Credentials($this->accessKey(), $this->secretKey());
 
-			// Instantiate the S3 client with your AWS credentials
-			$this->s3Client = S3Client::factory ( array (
-				'credentials' => $this->credentials
-			) );
+			if (false) {
+				$this->credentials = new Credentials($this->accessKey(), $this->secretKey());
+
+				// Instantiate the S3 client with your AWS credentials
+				$this->s3Client = S3Client::factory ( array (
+					'credentials' => $this->credentials
+				) );
+			}
+			else {
+				$this->s3Client = S3Client::factory ( array (
+					'region' => $this->region(),
+					'version' => 'latest'
+				) );
+			}
 
 			// Create a service builder using a configuration file
 			$this->aws = Aws::factory();
@@ -60,7 +68,7 @@
 					$this->_connected = false;
 					return false;
 				}
-				catch (Exception $e) {
+				catch (\Exception $e) {
 					$this->error($e->getMessage());
 					$this->_connected = false;
 					return false;
