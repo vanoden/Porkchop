@@ -25,15 +25,17 @@
 			$this->configuration = new \Site\Configuration();
 
 			if (!empty($this->accessKey())) {
-				//$this->credentials = new Credentials($this->accessKey(), $this->secretKey());
+				$this->credentials = new \Aws\Credentials\CredentialProvider($this->accessKey(), $this->secretKey());
 
 				// Instantiate the S3 client with your AWS credentials
-				//$this->s3Client = S3Client::factory ( array (
-				//	'credentials' => $this->credentials
-				//) );
+				$this->client = new \Aws\S3\S3Client( [
+					'region' => $this->region(),
+					'version' => 'latest',
+					'credentials' => $this->credentials
+				]);
 			}
 			else {
-				$this->client = \Aws\S3\S3Client([
+				$this->client = new \Aws\S3\S3Client([
 					'region' => $this->region(),
 					'version' => 'latest'
 				]);
@@ -90,6 +92,11 @@
 		public function secretKey($key = null) {
 			if (isset($key)) $this->_setMetadata('secretKey', $key);
 			return $this->getMetadata('secretKey');
+		}
+
+		public function region($region = null) {
+			if (isset($region)) $this->_setMetadata('region', $region);
+			return $this->getMetadata('region');
 		}
 
 		/**
