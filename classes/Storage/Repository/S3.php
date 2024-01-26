@@ -2,19 +2,18 @@
 	namespace Storage\Repository;
 	require THIRD_PARTY.'/autoload.php';
 
-	use Aws\Common\Aws;
-	use Aws\S3\S3Client;
-	use Aws\Common\Credentials\Credentials;
-	use Aws\S3\Exception\S3Exception;
+	use \Aws\Common\Aws;
+	use \Aws\S3\S3Client;
+	use \Aws\Common\Credentials\Credentials;
+	use \Aws\S3\Exception\S3Exception;
 
 	class S3 extends \Storage\Repository {
 		protected $aws;
-		protected $client;
 		public $bucket;
 		public $configuration;
 		public $region;
 		protected $credentials;
-		private $s3Client;
+		private $client;
 		private $_connected = false;
 		
 		public function __construct($id = null) {
@@ -25,32 +24,19 @@
 		public function connect() {
 			$this->configuration = new \Site\Configuration();
 
-			if (false) {
-				$this->credentials = new Credentials($this->accessKey(), $this->secretKey());
+			if (!empty($this->accessKey())) {
+				//$this->credentials = new Credentials($this->accessKey(), $this->secretKey());
 
 				// Instantiate the S3 client with your AWS credentials
-				$this->s3Client = S3Client::factory ( array (
-					'credentials' => $this->credentials
-				) );
+				//$this->s3Client = S3Client::factory ( array (
+				//	'credentials' => $this->credentials
+				//) );
 			}
 			else {
-				$this->s3Client = S3Client::factory ( array (
+				$this->client = \Aws\S3\S3Client([
 					'region' => $this->region(),
 					'version' => 'latest'
-				) );
-			}
-
-			// Create a service builder using a configuration file
-			$this->aws = Aws::factory();
-		
-			// Get the client from the builder by namespace
-			try {
-				$this->client = $this->aws->get('S3');
-			}
-			catch (\Aws\S3\Exception\S3Exception $e) {
-				$this->error($e->getMessage());
-				$this->_connected = false;
-				return false;
+				]);
 			}
 
 			// This fails if not in an EC2 host
@@ -59,11 +45,6 @@
 					$result = $this->client->doesBucketExist($this->getMetadata('bucket'));
 				}
 				catch (\Aws\S3\Exception\S3Exception $e) {
-					$this->error($e->getMessage());
-					$this->_connected = false;
-					return false;
-				}
-				catch (\Aws\Common\Exception\InstanceProfileCredentialsException $e) {
 					$this->error($e->getMessage());
 					$this->_connected = false;
 					return false;
@@ -127,7 +108,7 @@
 
 			try {
 				// Upload an object by streaming the contents of a file
-				$result = $this->s3Client->putObject(array(
+				$result = $this->client->putObject(array(
 					'Bucket'     => $this->_bucket(),
 					'Key'        => $file->code(),
 					'SourceFile' => $path,
@@ -154,9 +135,8 @@
 			unset($this->configuration);
 			unset($this->secretKey);
 			unset($this->credentials);
-			unset($this->s3Client);
 		}
-		
+
 		/**
 		 * Load contents from filesystem
 		 */
@@ -172,7 +152,7 @@
 			app_log("Getting file ".$file->code());
 			// Load contents from filesystem
 			try {
-				$result = $this->s3Client->getObject(array(
+				$this->client->getObject(array(
 					'Bucket'	=> $this->_bucket(),
 					'Key'		=> $file->code(),
 					'SaveAs'	=> $tmpFile
@@ -201,6 +181,19 @@
 			}
 		}
 
+		public function checkFile($string) {
+			if (!$this->_connected) {
+				if (!$this->connect()) {
+					if (empty($this->error())) $this->error("Failed to connect to S3 service");
+					return null;
+				}
+			}
+			$result = $this->client->headObject(array(
+				'Bucket'	=> $this->_bucket(),
+				'Key'		=> $string
+			));
+			print_r($result);
+		}
 		public function validAccessKey($string) {
 			if (preg_match('/^\w{16,128}$/',$string)) return true;
 			else return false;

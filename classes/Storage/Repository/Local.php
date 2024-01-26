@@ -143,6 +143,19 @@
 			exit;
 		}
 
+		public function checkFile($file) {
+			if (!$this->validPath($this->_path())) {
+				$this->error("Invalid path for repository");
+				return false;
+			}
+
+			if (! file_exists($this->_path()."/".$file->code)) {
+				$this->error("File not found");
+				return false;
+			}
+			return true;
+		}
+
 		public function eraseFile($file) {
 		
 			if (! file_exists($this->_path()."/".$file->code)) {
