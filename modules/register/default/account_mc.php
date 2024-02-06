@@ -30,6 +30,7 @@
 		    $contact = new \Register\Contact($_REQUEST['register-contacts-id']);
 		    $contact->delete();
 		    $page->success = 'Contact Entry ' . $_REQUEST['register-contacts-id'] . ' has been removed.';
+			$contact->auditRecord('USER_UPDATED', 'Contact Entry ' . $contact->type . ' ' . $contact->value . ' ' . $contact->notes . ' ' . $contact->description . ' has been removed.');
 		}
 	}
 	
@@ -66,8 +67,8 @@
 					if ($customer->status == 'EXPIRED') $customer->update(array('status' => 'ACTIVE'));
 				}
 				
-				if ($customer->error) {
-					app_log("Error updating customer: ".$customer->error,'error',__FILE__,__LINE__);
+				if ($customer->error()) {
+					app_log("Error updating customer: ".$customer->error(),'error',__FILE__,__LINE__);
 					$page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
 					goto load;
 				}
@@ -92,8 +93,8 @@
 				$customer = new \Register\Customer();
 				$customer->add($parameters);
 		
-				if ($customer->error) {
-					$page->addError($customer->error);
+				if ($customer->error()) {
+					$page->addError($customer->error());
 					goto load;
 				}
 
@@ -113,8 +114,8 @@
 						"message"	=> "Thank you for registering",
 					)
 				);
-				if ($_contact->error) {
-					app_log("Error sending registration confirmation: ".$_contact->error,'error',__FILE__,__LINE__);
+				if ($_contact->error()) {
+					app_log("Error sending registration confirmation: ".$_contact->error(),'error',__FILE__,__LINE__);
 					$page->addError("Sorry, we were unable to complete your registration");
 					goto load;
 				}
@@ -130,7 +131,8 @@
 			app_log("Processing contact entries",'debug',__FILE__,__LINE__);
 			
 			foreach ($_REQUEST['type'] as $contact_id => $value) {
-				if (! isset($_REQUEST['type'][$contact_id])) continue;
+				if (! isset($_REQUEST['type'][$contact_id]) || empty($_REQUEST['type'][$contact_id])) continue;
+
 				if ($contact_id > 0) {
 
 					app_log("Updating contact record",'debug',__FILE__,__LINE__);
@@ -146,17 +148,27 @@
 					} else {
 
 						// Update Existing Contact Record
-						$contact->update(
-							array(
-								"type"			=> $_REQUEST['type'][$contact_id],
-								"description"	=> noXSS(trim($_REQUEST['description'][$contact_id])),
-								"value"			=> $_REQUEST['value'][$contact_id],
-								"notes"			=> noXSS(trim($_REQUEST['notes'][$contact_id])),
-								"notify"		=> $notify
-							)
+						$contactRecord = array(
+							"type"			=> $_REQUEST['type'][$contact_id],
+							"description"	=> noXSS(trim($_REQUEST['description'][$contact_id])),
+							"value"			=> $_REQUEST['value'][$contact_id],
+							"notes"			=> noXSS(trim($_REQUEST['notes'][$contact_id])),
+							"notify"		=> $notify
 						);
-						if ($contact->error) {
-							$page->addError("Error updating contact: ".$customer->error);
+						
+
+						$noChanges = (
+							$contact->type == $contactRecord['type'] &&
+							$contact->description == $contactRecord['description'] &&
+							$contact->value == $contactRecord['value'] &&
+							$contact->notes == $contactRecord['notes'] &&
+							$contact->notify == $contactRecord['notify']
+						);
+						if (!$noChanges) $contact->auditRecord("USER_UPDATED","Customer Contact updated: " . implode(", ", $contactRecord));
+						
+						$contact->update($contactRecord);
+						if ($contact->error()) {
+							$page->addError("Error updating contact: ".$customer->error());
 							goto load;
 						}
 					}
@@ -168,17 +180,18 @@
 					else $notify = false;
 
 					// Create Contact Record
-					$customer->addContact(
-						array(
-							"person_id"		=> $customer_id,
-							"type"			=> $_REQUEST['type'][0],
-							"description"	=> noXSS($_REQUEST['description'][0]),
-							"value"			=> $_REQUEST['value'][0],
-							"notes"			=> $_REQUEST['notes'][0],
-							"notify"		=> $notify
-						)
+					$contactRecord = array(
+						"person_id"		=> $customer_id,
+						"type"			=> $_REQUEST['type'][0],
+						"description"	=> noXSS($_REQUEST['description'][0]),
+						"value"			=> $_REQUEST['value'][0],
+						"notes"			=> $_REQUEST['notes'][0],
+						"notify"		=> $notify
 					);
-					if ($customer->error) {
+					$customer->addContact($contactRecord);
+					$contact->auditRecord("USER_UPDATED","Customer Contact added: " . implode(", ", $contactRecord));
+
+					if ($customer->error()) {
 						$page->addError("Error adding contact: ".$customer->error);
 						goto load;
 					}
@@ -189,8 +202,7 @@
 			app_log("Checking roles",'notice',__FILE__,__LINE__);
 			$rolelist = new \Register\RoleList();
 			$available_roles = $rolelist->find();
-			app_log("Found ".$rolelist->count." roles",'trace',__FILE__,__LINE__);
-
+			app_log("Found ".$rolelist->count()." roles",'trace',__FILE__,__LINE__);
 			$page->success = 'Your changes have been saved';
 		}
 	}
