@@ -31,6 +31,8 @@
 			";
 
 			if (! $this->validReason($reason)) {
+				app_log("WHATS WRONG!",'warn');
+				app_log(debug_backtrace()[1]['function'],'warn');
 				app_log("Invalid auth failure reason '".$reason."'",'warn');
 				$reason = 'UNKNOWN';
 			}

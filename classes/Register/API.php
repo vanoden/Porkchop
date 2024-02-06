@@ -22,12 +22,25 @@
             if (!empty($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('see admin tools')) $GLOBALS['_SESSION_']->customer->admin = 1;
  
             $siteMessageDeliveryList = new \Site\SiteMessageDeliveryList();
-            $siteMessageDeliveryList->find(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'acknowledged' => false));
-            $siteMessagesUnread = $siteMessageDeliveryList->count();
+			if (! empty($GLOBALS['_SESSION_']->customer)) {
+				$siteMessageDeliveryList->find(array('user_id' => $GLOBALS['_SESSION_']->customer->id, 'acknowledged' => false));
+				$siteMessagesUnread = $siteMessageDeliveryList->count();
+			}
+			else {
+				$siteMessagesUnread = [];
+			}
 
 			$me = $GLOBALS['_SESSION_']->customer;
-			$me->unreadMessages = $siteMessagesUnread;
-			$me->organization = $me->organization();
+			if (!empty($me)) {
+				$me->unreadMessages = $siteMessagesUnread;
+				$me->organization = $me->organization();
+			}
+			else {
+print_r($me);
+exit;
+				$me->unreadMessages = 0;
+				$me->organization = \Register\Organization->new();
+			}
 
             $response = new \APIResponse();
 			$response->success(true);
