@@ -89,7 +89,6 @@
          * string $id
          */
 		public function get($code) {
-		
 			$repository = new Repository();
 			$repository->get($code);
 			if (! $repository->id) {
