@@ -35,8 +35,13 @@
 					return false;
 				}
 			}
+
 			if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) $this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$this->organization()->name." to ".$parameters['organization_id']);
 			if (!empty($parameters['status']) && $this->status != $parameters['status']) $this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
+			
+			if (!empty($parameters['first_name']) && $this->first_name != $parameters['first_name'] || !empty($parameters['last_name']) && $this->last_name != $parameters['last_name']) 
+				$this->auditRecord("USER_UPDATED","Customer Name changed from " . $this->first_name . " " . $this->first_name . " to " . $parameters['first_name'] . " " . $parameters['last_name']);
+			
 			parent::update($parameters);
 			if ($this->error()) return false;
 

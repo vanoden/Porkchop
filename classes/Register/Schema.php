@@ -1214,6 +1214,28 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			if ($this->version() < 35) {
+				
+				// Add event_class enum RESET_KEY_GENERATED to register_user_audit table
+				app_log("Upgrading schema to version 35", 'notice', __FILE__, __LINE__);
+				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+				$alter_table_query = "ALTER TABLE `register_user_audit` 
+										MODIFY COLUMN `event_class` ENUM('REGISTRATION_SUBMITTED','REGISTRATION_APPROVED','REGISTRATION_DISCARDED',
+											'AUTHENTICATION_SUCCESS','AUTHENTICATION_FAILURE','PASSWORD_CHANGED','PASSWORD_RECOVERY_REQUESTED',
+											'ORGANIZATION_CHANGED','ROLE_ADDED','ROLE_REMOVED','STATUS_CHANGED','RESET_KEY_GENERATED', 'USER_UPDATED')";
+
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_users table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(35);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}

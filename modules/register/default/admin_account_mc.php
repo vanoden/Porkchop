@@ -37,6 +37,7 @@ if (isset($_REQUEST['submit-type']) && $_REQUEST['submit-type'] == "delete-conta
 	} else {
 		$_contact = new \Register\Contact($_REQUEST['register-contacts-id']);
 		$_contact->delete();
+		$_contact->auditRecord('USER_UPDATED', 'Contact Entry ' . $_contact->type . ' ' . $_contact->value . ' ' . $_contact->notes . ' ' . $_contact->description . ' has been removed.', $customer_id);
 		$page->success = 'Contact Entry ' . $_REQUEST['register-contacts-id'] . ' has been removed.';
 	}
 }
@@ -140,12 +141,10 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				app_log("New customer registration", 'debug', __FILE__, __LINE__);
 
 				// Default Login to Email Address
-				if (!$_REQUEST['login'])
-					$_REQUEST['login'] = $_REQUEST['email_address'];
+				if (!$_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['email_address'];
 
 				// Generate Validation Key
 				$validation_key = md5(microtime());
-
 				$parameters["login"] = $_REQUEST['login'];
 
 				###########################################
@@ -226,16 +225,26 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 					elseif (!$contact->validValue($_REQUEST['type'][$contact_id], $_REQUEST['value'][$contact_id]))
 						$page->addError("Invalid value for added contact type: " . $_REQUEST['type'][$contact_id]);
 					else {
+
 						// Update Existing Contact Record
-						$contact->update(
-							array(
-								"type" => $_REQUEST['type'][$contact_id],
-								"description" => noXSS(trim($_REQUEST['description'][$contact_id])),
-								"value" => $_REQUEST['value'][$contact_id],
-								"notes" => noXSS(trim($_REQUEST['notes'][$contact_id])),
-								"notify" => $notify
-							)
+						$contactRecord = array(
+							"type" => $_REQUEST['type'][$contact_id],
+							"description" => noXSS(trim($_REQUEST['description'][$contact_id])),
+							"value" => $_REQUEST['value'][$contact_id],
+							"notes" => noXSS(trim($_REQUEST['notes'][$contact_id])),
+							"notify" => $notify
 						);
+						
+						$noChanges = (
+							$contact->type == $contactRecord['type'] &&
+							$contact->description == $contactRecord['description'] &&
+							$contact->value == $contactRecord['value'] &&
+							$contact->notes == $contactRecord['notes'] &&
+							$contact->notify == $contactRecord['notify']
+						);
+						if (!$noChanges) $contact->auditRecord("USER_UPDATED","Customer Contact updated: " . implode(", ", $contactRecord), $customer_id);	
+
+						$contact->update($contactRecord);
 						if ($contact->error()) {
 							$page->addError("Error updating contact: " . $customer->error());
 							goto load;
@@ -259,17 +268,16 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 					elseif (!$contact->validValue($_REQUEST['type'][0], $_REQUEST['value'][0]))
 						$page->addError("Invalid value for contact type");
 					else {
-						$customer->addContact(
-							array(
-								"person_id" => $customer_id,
-								"type" => $_REQUEST['type'][0],
-								"description" => noXSS(trim($_REQUEST['description'][0])),
-								"value" => $_REQUEST['value'][0],
-								"notes" => noXSS(trim($_REQUEST['notes'][0])),
-								"notify" => $notify
-							)
+						$contactRecord = array(
+							"person_id" => $customer_id,
+							"type" => $_REQUEST['type'][0],
+							"description" => noXSS(trim($_REQUEST['description'][0])),
+							"value" => $_REQUEST['value'][0],
+							"notes" => noXSS(trim($_REQUEST['notes'][0])),
+							"notify" => $notify
 						);
-
+						$customer->addContact($contactRecord);
+						$contact->auditRecord("USER_UPDATED","Customer Contact added: " . implode(", ", $contactRecord), $customer_id);
 						if ($customer->error()) {
 							$page->addError("Error adding contact: " . $customer->error());
 							goto load;

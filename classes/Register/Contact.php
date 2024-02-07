@@ -237,4 +237,33 @@
 			}
 			return false;
 		}
+
+		public function auditRecord($type,$notes,$user_id = null,$admin_id = null) {
+
+			$audit = new \Register\UserAuditEvent();
+			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
+			if (!isset($user_id) && isset($GLOBALS['_SESSION_']->customer->id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+
+			// New Registration by customer
+			if (empty($admin_id)) $admin_id = $this->id;
+
+			if ($audit->validClass($type) == false) {
+				$this->error("Invalid audit class: ".$type);
+				return false;
+			}
+
+			$audit->add(array(
+				'user_id'		=> $user_id,
+				'admin_id'		=> $admin_id,
+				'event_date'	=> date('Y-m-d H:i:s'),
+				'event_class'	=> $type,
+				'event_notes'	=> $notes
+			));
+			
+			if ($audit->error()) {
+				$this->error($audit->error());
+				return false;
+			}
+			return true;
+		}
 	}
