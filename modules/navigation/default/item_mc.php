@@ -49,8 +49,8 @@
 				if ($item->error()) $page->addError($item->error());
 				else $page->success = "Item Added";
             }
-            if ($item->error) {
-                $page->addError($item->error);
+            if ($item->error()) {
+                $page->addError($item->error());
             }
         }
     }
@@ -66,6 +66,7 @@
 	$roleList = new \Register\RoleList();
 	$roles = $roleList->find();
 
+	$page->title("Menu Item Details");
 	$page->addBreadcrumb("Menus", "/_navigation/menus");
 	if (isset($parent)) {
 		$page->addBreadcrumb($menu->title,"/_navigation/items/".$menu->code);

@@ -22,11 +22,8 @@
 		window.location.href = "/_navigation/item?menu_id=<?=$menu->id?>&parent_id="+parent;
 	}
 </script>
-<div class="title"><?=$menu->title?></div>
-<?=$page->showBreadcrumbs()?>
-<?php	if ($page->errorCount()) { ?>
-<div class="form_error"><?=$page->errorString()?></div>
-<?php	} ?>
+<?=$page->showAdminPageInfo()?>
+
 <form name="menuForm" action="/_navigation/items" method="post">
 <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <input type="hidden" name="id" value="<?=$menu->id?>" />

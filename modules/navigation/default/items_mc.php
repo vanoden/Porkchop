@@ -29,6 +29,7 @@
 		$items = $menu->items();
 	}
 
+	$page->title("Menu Items");
 	$page->addBreadcrumb("Menus", "/_navigation/menus");
 	if (isset($parent)) {
 		$page->addBreadcrumb($menu->title,"/_navigation/items/".$menu->code);

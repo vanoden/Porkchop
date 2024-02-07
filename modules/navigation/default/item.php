@@ -1,20 +1,4 @@
-<div class="title">Menu Item</div>
-<div class="breadcrumb"><?=$page->showBreadcrumbs()?></div>
-
-<?php if ($page->errorCount() > 0) { ?>
-<section id="form-message">
-	<ul class="connectBorder errorText">
-		<li><?=$page->errorString()?></li>
-	</ul>
-</section>
-
-<?php	} else if ($page->success) { ?>
-<section id="form-message">
-	<ul class="connectBorder progressText">
-		<li><?=$page->success?></li>
-	</ul>
-</section>
-<?php	} ?>
+<?=$page->showAdminPageInfo()?>
 
 <form name="menuForm" action="/_navigation/item" method="post">
 <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
