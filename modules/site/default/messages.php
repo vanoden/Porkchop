@@ -101,8 +101,8 @@
 <div class="row full-column-row">
     <form method="post" id="filterForm">
     <div style="flex: 1;">
-        <span class="value">Acknowledged</span>&nbsp;<input type="checkbox" name="seeAcknowledged"<?php if ($params['acknowledged']) print " checked";?> />
-        <input type="submit" name="btn_filter" value="Filter" />
+        <span class="value">Acknowledged</span>&nbsp;<input type="checkbox" name="seeAcknowledged"<?php if ($params['acknowledged'] && $params['acknowledged'] == 'read') print " checked";?> onchange="document.getElementById('filterForm').submit()"/>
+        <input type="hidden" name="filter" value="Filter" />
     </div>
     </form>
 </div>
