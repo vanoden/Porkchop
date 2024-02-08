@@ -10,7 +10,7 @@
 			if (preg_match('/\d+/',$_REQUEST['rma_number'])) {
 				$rma_id = $_REQUEST['rma_number'];
 			}
-			elseif (!preg_match('/^RMA(\d+)/i',$_REQUEST['rma_number'],$matches)) {
+			elseif (preg_match('/^RMA(\d+)/i',$_REQUEST['rma_number'],$matches)) {
 				$rma_id = $matches[1];
 			}
 			
