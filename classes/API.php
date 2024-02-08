@@ -337,11 +337,15 @@
 			$t = "\t";
 
 			$token = $GLOBALS['_SESSION_']->getCSRFToken();
-			foreach ($methods as $name => $params) {
+			foreach ($methods as $name => $settings) {
+				$method = new \API\Method($settings);
+
 				// See if method has file inputs
 				$has_file_inputs = false;
-				foreach ($params as $param => $options) {
-					if (isset($options['type']) && $options['type'] == 'file') {
+
+				$parameters = $method->parameters();
+				foreach ($parameters as $param) {
+					if ($param->type == 'file') {
 						$has_file_inputs = true;
 						continue;
 					}
@@ -357,27 +361,37 @@
 				$form .= $t.$t.'<div class="apiMethod">'.$cr;
 				$form .= $t.$t.'<div class="h3 apiMethodTitle">'.$name.'</div>'.$cr;
 
+				if ($method->description) {
+					$form .= $t.$t.'<span class="apiMethodDescription">'.$method->description.'</span>'.$cr;
+				}
+				$form .= '<div class="apiSetting"><span class="label apiMethodAuthRequired">Authentication Required</span><span class="value apiMethodAuthRequired">';
+				if ($method->authentication_required) $form .= "Yes";
+				else $form .= "No";
+				$form .= '</span></div>'.$cr;
+
+				if ($method->privilege_required) $form .= $t.$t.'<div class="apiSetting"><span class="apiMethodPrivilege">'.$method->privilege_required.'</span></div>'.$cr;
+
 				// Add Parameters
-				foreach ($params as $param => $options) {
-					if (isset($options['required']) && $options['required']) $required = ' required';
+				$parameters = $method->parameters();
+				foreach ($parameters as $name => $parameter) {
+					if ($parameter->required) $required = ' required';
 					else $required = '';
-					if (! isset($options['type'])) $options['type'] = 'text';
-					if (isset($options['default'])) $default = $options['default'];
-					else $default = '';
+					$default = $parameter->default;
 					$form .= $t.$t.$t.'<div class="apiParameter">'.$cr;
-					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required.'">'.$param.'</span>'.$cr;
-					if ($options['type'] == "textarea") {
-						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$param.'">'.$default.'</textarea>'.$cr;
+					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required.'">'.$name.'</span>'.$cr;
+					if ($parameter->type == "textarea") {
+						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$name.'">'.$default.'</textarea>'.$cr;
 					}
-					elseif (isset($options['options']) && is_array($options['options'])) {
-						$form .= $t.$t.$t.$t.'<select class="value input apiInput" name="'.$param.'">';
-						foreach ($options['options'] as $optname) {
-							$form .= $t.$t.$t.$t.$t.'<option value="'.$optname.'">'.$optname.'</option>'.$cr;
+					elseif (count($parameter->options)) {
+						$form .= $t.$t.$t.$t.'<select class="value input apiInput" name="'.$name.'">';
+						$options = $parameter->options;
+						foreach ($options as $option) {
+							$form .= $t.$t.$t.$t.$t.'<option value="'.$option.'">'.$option.'</option>'.$cr;
 						}
 						$form .= $t.$t.$t.$t.'</select>';
 					}
 					else {
-						$form .= $t.$t.$t.$t.'<input type="'.$options['type'].'" id="'.$param.'" name="'.$param.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+						$form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput" value="'.$default.'" />'.$cr;
 					}
 					$form .= $t.$t.$t.'</div>'.$cr;
 				}
