@@ -10,7 +10,7 @@
 	
 			app_log("Site::SiteMessagesList::find()",'trace',__FILE__,__LINE__);
 			
-			$this->error = null;
+			$this->_error = null;
 			$get_site_messages_query = "
 				SELECT	sm.id
 				FROM	site_messages sm
@@ -32,7 +32,10 @@
 				array_push($bind_params,$parameters['recipient_id']);
 			}
 
-			if (isset($parameters['acknowledged']) && !empty($parameters['acknowledged'])) {
+			if (isset($parameters['acknowledged']) && $parameters['acknowledged'] == 'read') {
+				$get_site_messages_query .= "
+				AND smd.date_acknowledged is NOT NULL";
+			} else if (isset($parameters['acknowledged']) && $parameters['acknowledged'] == 'unread') {
 				$get_site_messages_query .= "
 				AND smd.date_acknowledged is NULL";
 			}
@@ -40,7 +43,7 @@
 			query_log($get_site_messages_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SiteMessagesList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Site::SiteMessagesList::find(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 
@@ -48,7 +51,7 @@
 			while (list($id) = $rs->FetchRow()) {
 			    $siteMessage = new \Site\SiteMessage($id);
 			    $siteMessage->details();
-			    $this->count ++;
+			    $this->_count ++;
 			    array_push($siteMessages,$siteMessage);
 			}
 			
@@ -59,7 +62,7 @@
 		
 			app_log("Site::SiteMessagesList::getUnreadForUserId()",'trace',__FILE__,__LINE__);
 			
-			$this->error = null;
+			$this->_error = null;
 			$get_site_messages_query = "
 				SELECT	count(sm.id) as total_messages
 				FROM	site_messages sm
@@ -76,7 +79,7 @@
 			query_log($get_site_messages_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SiteMessagesList::getUnreadForUserId(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Site::SiteMessagesList::getUnreadForUserId(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 			
@@ -84,7 +87,7 @@
 			while (list($row) = $rs->FetchRow()) {
 			    $totalMessages = $row;
 			};			
-			$this->error = null;
+			$this->_error = null;
 			$get_site_messages_query = "
 				SELECT	sm.id
 				FROM	site_messages sm
@@ -104,7 +107,7 @@
 			query_log($get_site_messages_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SiteMessagesList::getUnreadForUserId(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->_error = "SQL Error in Site::SiteMessagesList::getUnreadForUserId(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
 

@@ -9,7 +9,7 @@
 			$this->_version = '0.3.2';
 			$this->_release = '2021-06-01';
 			$this->_schema = new Schema();
-			$this->_admin_role = 'register manager';
+			$this->_admin_role = 'administrator';
 			parent::__construct();
 		}
 
@@ -1258,13 +1258,17 @@
 			return array(
 				'ping'	=> array(
 					'description' => 'Check API Availability',
+					'authentication_required' => false,
 					'parameters' => array()
 				),
 				'me'	=> array(
 				),
 				'authenticateSession'	=> array(
-					'login'			=> array('required' => true),
-					'password'		=> array('required' => true)
+					'description'	=> 'Authenticate your account',
+					'parameters' 	=> array(
+						'login'			=> array('required' => true),
+						'password'		=> array('required' => true)
+					)
 				),
 				'getCustomer'	=> array(
 					'code' 	=> array('required' => true),

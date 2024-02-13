@@ -442,6 +442,9 @@
 			if ($this->module() == 'static') {
 				return $this->parse(file_get_contents(HTML."/".$this->view));
 			}
+			if ($this->view() == 'api') {
+				return $this->parse(file_get_contents(HTML."/api.html"));
+			}
 			$this->template = $this->template();
 			if (!empty($this->template ) && file_exists(HTML."/".$this->template)) return $this->parse(file_get_contents(HTML."/".$this->template));
 			elseif (!empty($this->template)) app_log("Template ".HTML."/".$this->template." not found!",'error');
@@ -522,6 +525,17 @@
 				    $buffer .= $_SERVER ['HTTP_HOST'];
 			    }
 		    }
+			elseif ($this->view() == "api") {
+				$api = new \API();
+				if (empty($_REQUEST["method"])) {
+					# Call the Specified Method
+					$buffer = $api->_form();
+				}
+				else {
+					$api->method($_REQUEST["method"]);
+					exit;
+				}
+			}
 			elseif ($object == "page") {
 			    if ($property == "view") {
 					$buffer = "<r7 object=\"" . $this->module() . "\" property=\"" . $this->view() . "\"/>";

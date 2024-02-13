@@ -10,7 +10,8 @@
         "recipient_id"   => $GLOBALS['_SESSION_']->customer->id,
         "acknowledged" => false
     );
-    if (isset($_REQUEST['btn_filter']) && isset($_REQUEST['seeAcknowledged'])) $params['acknowledged'] = true;
+    $params['acknowledged'] = 'unread';
+    if (isset($_REQUEST['filter']) && isset($_REQUEST['seeAcknowledged'])) $params['acknowledged'] = 'read';
 
     $siteMessage = new \Site\SiteMessagesList();
     $siteMessageDelivery = new \Site\SiteMessageDelivery();
