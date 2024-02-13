@@ -11,6 +11,7 @@
 		protected $_name;
 		protected $_release;
 		protected $_communication;
+		private $page;
 
 		public function __construct() {
 			if (!empty($_REQUEST["method"])) {
@@ -19,6 +20,9 @@
 				$counter->increment();
 				app_log($this->_name.".".$_REQUEST['method']);
 			}
+			$site = new \Site();
+			$this->page = $site->page();
+			$this->module = $this->page->module();
 			$this->response = new \HTTP\Response();
 			$this->_communication = new \Monitor\Communication();
 		}
@@ -251,6 +255,53 @@
 		}
 
 		/************************************************/
+		/* Call requested API function					*/
+		/************************************************/
+		public function method($function_name = null) {
+			// What Module is this?
+			$api_name = "\\".ucfirst($this->module)."\\API";
+			$api = new $api_name();
+
+			if (empty($function_name)) {
+				if ($this->page->requireRole('API User') || $this->page->requireRole('Administrator')) {
+					$this->apiMethods();
+				}
+				else {
+					$this->deny();
+				}
+				$this->incompleteRequest("Missing method");
+			}
+
+			// Method Requirements
+			$method = $api->_methods()[$function_name];
+			if (isset($method['required_privilege'])) {
+				$this->requirePrivilege($method['required_privilege']);
+			}
+			if (isset($method['auth_required']) && $method['auth_required']) {
+				$this->requireAuth();
+			}
+			if (isset($method['token_required']) && $method['token_required']) {
+				if (! $this->validCSRFToken()) {
+					$this->invalidRequest("Invalid or missing CSRF Token");
+				}
+			}
+			foreach ($method as $param => $options) {
+				if (isset($options['required']) && $options['required']) {
+					if (empty($_REQUEST[$param])) {
+						$this->incompleteRequest("Missing required parameter: $param");
+					}
+				}
+			}
+			$this->_store_communication();
+			$this->log("Request: ".print_r($_REQUEST,true));
+			if (! method_exists($api,$function_name)) {
+				$this->notFound("Method not found");
+			}
+			$api->$function_name();
+			$this->log("Response: ".print_r($this->response,true));
+		}
+
+		/************************************************/
 		/* Return List of Available Methods				*/
 		/************************************************/
 		public function apiMethods() {
@@ -274,7 +325,8 @@
 			$response = new \APIResponse();
 			if (is_object($response) && $response->success()) $status = "SUCCESS";
 			else $status = "FAILED";
-			$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+			if (is_numeric($GLOBALS['_REQUEST_']->timer)) $elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+			else $elapsed = -1;
 
             if (is_dir(API_LOG))
                 $log = fopen(API_LOG."/".$module.".log",'a');
@@ -330,8 +382,10 @@
 
 		// Build HTML Form for API Methods
 		public function _form() {
+			$api_name = "\\".ucfirst($this->module)."\\API";
+			$api = new $api_name();
 			$form = '';
-			$methods = $this->_methods();
+			$methods = $api->_methods();
 
 			$cr = "\n";
 			$t = "\t";
@@ -347,10 +401,10 @@
 					}
 				}
 				if ($has_file_inputs) {
-					$form .= $t.'<form method="post" action="/_'.$this->_name.'/api" name="'.$name.'" enctype="multipart/form-data">'.$cr;
+					$form .= $t.'<form method="post" action="/_'.$api->_name.'/api" name="'.$name.'" enctype="multipart/form-data">'.$cr;
 				}
 				else {
-					$form .= $t.'<form method="post" action="/_'.$this->_name.'/api" name="'.$name.'">'.$cr;
+					$form .= $t.'<form method="post" action="/_'.$api->_name.'/api" name="'.$name.'">'.$cr;
 				}
 				$form .= $t.$t.'<input type="hidden" name="csrfToken" value="'.$token.'">'.$cr;
 				$form .= $t.$t.'<input type="hidden" name="method" value="'.$name.'" />'.$cr;
