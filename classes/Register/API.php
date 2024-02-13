@@ -36,10 +36,8 @@
 				$me->organization = $me->organization();
 			}
 			else {
-print_r($me);
-exit;
 				$me->unreadMessages = 0;
-				$me->organization = \Register\Organization->new();
+				$me->organization = new \Register\Organization();
 			}
 
             $response = new \APIResponse();
@@ -1258,7 +1256,10 @@ exit;
 		public function _methods() {
 			$queue = new \Register\Queue();
 			return array(
-				'ping'	=> array(),
+				'ping'	=> array(
+					'description' => 'Check API Availability',
+					'parameters' => array()
+				),
 				'me'	=> array(
 				),
 				'authenticateSession'	=> array(
@@ -1266,7 +1267,7 @@ exit;
 					'password'		=> array('required' => true)
 				),
 				'getCustomer'	=> array(
-					'login' 	=> array('required' => true),
+					'code' 	=> array('required' => true),
 				),
 				'updateCustomer'	=> array(
 					'code'			=> array('required' => true),
