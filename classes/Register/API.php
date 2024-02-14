@@ -221,8 +221,9 @@
             }
             if ($_REQUEST["code"]) $parameters["code"] = $_REQUEST["code"];
             elseif ($_REQUEST["login"]) $parameters["code"] = $_REQUEST["login"];
-            if ($_REQUEST["first_name"]) $parameters["first_name"] = $_REQUEST["first_name"];
-            if ($_REQUEST["last_name"]) $parameters["last_name"] = $_REQUEST["last_name"];
+            if (!empty($_REQUEST["first_name"])) $parameters["first_name"] = $_REQUEST["first_name"];
+            if (!empty($_REQUEST["last_name"])) $parameters["last_name"] = $_REQUEST["last_name"];
+			if (!empty($_REQUEST["automation"])) $parameters["automation"] = $_REQUEST["automation"];
 
             # Get List of Matching Customers
             $customerlist = new \Register\CustomerList();
@@ -1259,34 +1260,69 @@
 				'ping'	=> array(
 					'description' => 'Check API Availability',
 					'authentication_required' => false,
-					'parameters' => array()
+					'parameters' => array(),
+					'return_element' => 'message',
+					'return_type' => 'string'
 				),
 				'me'	=> array(
+					'description' => 'Get information about the authenticated user',
+					'parameters' => array(),
+					'authentication_required' => false,
+					'return_element' => 'customer',
+					'return_type' => 'Register::Customer'
 				),
 				'authenticateSession'	=> array(
 					'description'	=> 'Authenticate your account',
+					'authentication_required'	=> false,
+					'token_required' => true,
+					'return_element' => 'success',
+					'return_type' => 'boolean',
 					'parameters' 	=> array(
-						'login'			=> array('required' => true),
-						'password'		=> array('required' => true)
+						'login'			=> array('required' => true, 'prompt' => 'Customer Login'),
+						'password'		=> array('required' => true, 'prompt' => 'Customer Password')
 					)
 				),
 				'getCustomer'	=> array(
-					'code' 	=> array('required' => true),
+					'description'	=> 'Get information about a customer',
+					'authentication_required'	=> true,
+					'privilege_required' => '[CONDITIONAL]',
+					'parameters'	=> array(
+						'code' 	=> array('required' => true, 'prompt' => 'Customer Login')
+					)
 				),
 				'updateCustomer'	=> array(
-					'code'			=> array('required' => true),
-					'organization'	=> array(),
-					'first_name'	=> array(),
-					'last_name'		=> array(),
-					'password'  	=> array(),
-					'automation'	=> array(),
-					'timezone'		=> array()
+					'description'	=> 'Change customer information. Empty fields will not be changed.',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required' => '[CONDITIONAL]',
+					'parameters'	=> array(
+						'code'			=> array('required' => true, 'prompt' => 'Customer Login'),
+						'organization_code'	=> array('prompt' => 'Organization Code'),
+						'first_name'	=> array(),
+						'last_name'		=> array(),
+						'password'  	=> array(),
+						'automation'	=> array(
+							'options' => array('','true','false')
+						),
+						'timezone'		=> array()
+					)
 				),
 				'findCustomers'	=> array(
-					'organization_code' => array(),
-					'login'     	=> array(),
-					'first_name'	=> array(),
-					'last_name'		=> array(),
+					'description'	=> 'Change customer information',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required' => '[CONDITIONAL]',
+					'parameters'	=> array(
+						'organization_code'	=> array('prompt' => 'Organization Code'),
+						'login'		=> array('prompt' => 'Customer Login'),
+						'first_name'	=> array('prompt' => 'Customer First Name'),
+						'last_name'		=> array('prompt' => 'Customer Last Name'),
+						'automation'	=> array(
+							'options' => array('','true','false')
+						),
+						'limit'		=> array(),
+						'offset'	=> array()
+					)
 				),
 				'findOrganizations'	=> array(
 					'organization_code'	=> array(),
@@ -1298,7 +1334,15 @@
 					'product_code'	=> array(),
 					'product_id' => array()
 				),
-				'findRoles'	    => array(),
+				'findRoles'	    => array(
+					'description'	=> 'List all roles',
+					'authentication_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element' => 'role',
+					'return_type' => 'Register::Role',
+					'return_mime_type' => 'application/xml',
+					'parameters'	=> array()
+				),
 				'findRoleMembers'	=> array(
 					'code'	=> array('required' => true)
 				),
@@ -1319,12 +1363,38 @@
 					'login'	=> array('required' => true)
 				),
 				'acceptTermsOfUse'	=> array(
-					'tou_code'	=> array('required' => true),
-					'tou_version'	=> array('required' => true),
+					'description' => 'Decline a terms of use agreement',
+					'authentication_required' => true,
+					'token_required' => true,
+					'return_element' => 'success',
+					'return_type' => 'integer',
+					'return_mime_type' => 'application/xml',
+					'parameters' => array(
+						'tou_code'	=> array('required' => true),
+						'tou_version'	=> array('required' => true),
+					)
 				),
 				'declineTermsOfUse'	=> array(
-					'tou_code'	=> array('required' => true),
-					'tou_version'	=> array('required' => true),
+					'description' => 'Decline a terms of use agreement',
+					'authentication_required' => true,
+					'token_required' => true,
+					'return_element' => 'success',
+					'return_type' => 'integer',
+					'return_mime_type' => 'application/xml',
+					'parameters' => array(
+						'tou_code'	=> array('required' => true),
+						'tou_version'	=> array('required' => true),
+					)
+				),
+				'checkLoginNotTaken' => array(
+					'description' => 'Check if a login is available.  Used for registration forms.  Returns 1 if available, 0 if not.',
+					'authentication_required' => false,
+					'token_required' => false,
+					'return_type' => 'integer',
+					'return_mime_type' => 'plain/text',
+					'parameters' => array(
+						'login' => array('required' => true)
+					),
 				)
 			);
 		}
