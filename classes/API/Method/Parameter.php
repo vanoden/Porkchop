@@ -6,6 +6,7 @@
 		public $description = '';
 		public $type = 'text';
 		public $required = false;
+		public $prompt = '';
 		public $options = [];
 		public $default = null;
 		public $format = null;
@@ -20,14 +21,16 @@
 					else {
 						$this->error("Invalid Type");
 					}
-				elseif ($name == "required")
-					if ($value == "false") $this->required = false;
+				elseif ($name == "required") 
+					if (is_bool($value)) $this->required = $value;
+					elseif ($value == "false") $this->required = false;
 					else $this->required = true;
 				elseif ($name == "options") {
 					foreach ($value as $option) {
 						array_push($this->options,$option);
 					}
 				}
+				elseif ($name == "prompt") $this->prompt = $value;
 				elseif ($name == "default") $this->default = $value;
 				elseif ($name == "format") $this->format = $value;
 			}
