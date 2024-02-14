@@ -405,25 +405,78 @@
 					}
 				}
 				if ($has_file_inputs) {
-					$form .= $t.'<form method="post" action="/_'.$api->_name.'/api" name="'.$name.'" enctype="multipart/form-data">'.$cr;
+					$form .= $t.'<form method="post" action="/api/'.$api->_name.'" name="'.$name.'" enctype="multipart/form-data">'.$cr;
 				}
 				else {
-					$form .= $t.'<form method="post" action="/_'.$api->_name.'/api" name="'.$name.'">'.$cr;
+					$form .= $t.'<form method="post" action="/api/'.$api->_name.'" name="'.$name.'">'.$cr;
 				}
 				$form .= $t.$t.'<input type="hidden" name="csrfToken" value="'.$token.'">'.$cr;
 				$form .= $t.$t.'<input type="hidden" name="method" value="'.$name.'" />'.$cr;
 				$form .= $t.$t.'<div class="apiMethod">'.$cr;
 				$form .= $t.$t.'<div class="h3 apiMethodTitle">'.$name.'</div>'.$cr;
 
+				// Show Method Description if provided
 				if ($method->description) {
 					$form .= $t.$t.'<span class="apiMethodDescription">'.$method->description.'</span>'.$cr;
 				}
-				$form .= '<div class="apiSetting"><span class="label apiMethodAuthRequired">Authentication Required</span><span class="value apiMethodAuthRequired">';
+
+				// Show Method Return Info if provided
+				if ($method->return_element) {
+					$form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">return_element</span>
+						<span class="value apiMethodSetting">'.$method->return_element.'</span>
+					</div>'.$cr;
+				}
+				if ($method->return_type) {
+					$form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">return_type</span>
+						<span class="value apiMethodSetting">'.$method->return_type.'</span>
+					</div>'.$cr;
+				}
+				if ($method->return_mime_type) {
+					$form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">return_mime_type</span>
+						<span class="value apiMethodSetting">'.$method->return_mime_type.'</span>
+					</div>'.$cr;
+				}
+
+				// Show Method Authentication Requirement
+				$form .= '
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">Authentication Required</span>
+						<span class="value apiMethodSetting">';
 				if ($method->authentication_required) $form .= "Yes";
 				else $form .= "No";
-				$form .= '</span></div>'.$cr;
+				$form .= '
+						</span>
+					</div>'.$cr;
 
-				if ($method->privilege_required) $form .= $t.$t.'<div class="apiSetting"><span class="apiMethodPrivilege">'.$method->privilege_required.'</span></div>'.$cr;
+				// Show Method AntiCSRF Requirement
+				$form .= '
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">AntiCSRF Token Required</span>
+						<span class="value apiMethodSetting">';
+				if ($method->token_required) $form .= "Yes";
+				else $form .= "No";
+				$form .= '
+						</span>
+					</div>'.$cr;
+
+				// Show Method Privilege Requirement
+				if (!empty($method->privilege_required)) $form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">Authentication Required</span>
+						<span class="value apiMethodSetting">'.$method->privilege_required.'
+						</span>
+					</div>'.$cr;
+				else $form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">Privilege Required</span>
+						<span class="value apiMethodSetting">None</span>
+					</div>'.$cr;
 
 				// Add Parameters
 				$parameters = $method->parameters();
@@ -445,7 +498,8 @@
 						$form .= $t.$t.$t.$t.'</select>';
 					}
 					else {
-						$form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+						if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" placeholder="'.$parameter->prompt.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+						else $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput" value="'.$default.'" />'.$cr;
 					}
 					$form .= $t.$t.$t.'</div>'.$cr;
 				}
