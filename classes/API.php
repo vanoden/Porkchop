@@ -11,6 +11,7 @@
 		protected $_name;
 		protected $_release;
 		protected $_communication;
+		private $page;
 
 		public function __construct() {
 			if (!empty($_REQUEST["method"])) {
@@ -19,6 +20,9 @@
 				$counter->increment();
 				app_log($this->_name.".".$_REQUEST['method']);
 			}
+			$site = new \Site();
+			$this->page = $site->page();
+			$this->module = $this->page->module();
 			$this->response = new \HTTP\Response();
 			$this->_communication = new \Monitor\Communication();
 		}
@@ -251,6 +255,53 @@
 		}
 
 		/************************************************/
+		/* Call requested API function					*/
+		/************************************************/
+		public function method($function_name = null) {
+			// What Module is this?
+			$api_name = "\\".ucfirst($this->module)."\\API";
+			$api = new $api_name();
+
+			if (empty($function_name)) {
+				if ($this->page->requireRole('API User') || $this->page->requireRole('Administrator')) {
+					$this->apiMethods();
+				}
+				else {
+					$this->deny();
+				}
+				$this->incompleteRequest("Missing method");
+			}
+
+			// Method Requirements
+			$method = $api->_methods()[$function_name];
+			if (isset($method['required_privilege'])) {
+				$this->requirePrivilege($method['required_privilege']);
+			}
+			if (isset($method['auth_required']) && $method['auth_required']) {
+				$this->requireAuth();
+			}
+			if (isset($method['token_required']) && $method['token_required']) {
+				if (! $this->validCSRFToken()) {
+					$this->invalidRequest("Invalid or missing CSRF Token");
+				}
+			}
+			foreach ($method as $param => $options) {
+				if (isset($options['required']) && $options['required']) {
+					if (empty($_REQUEST[$param])) {
+						$this->incompleteRequest("Missing required parameter: $param");
+					}
+				}
+			}
+			$this->_store_communication();
+			$this->log("Request: ".print_r($_REQUEST,true));
+			if (! method_exists($api,$function_name)) {
+				$this->notFound("Method not found");
+			}
+			$api->$function_name();
+			$this->log("Response: ".print_r($this->response,true));
+		}
+
+		/************************************************/
 		/* Return List of Available Methods				*/
 		/************************************************/
 		public function apiMethods() {
@@ -274,7 +325,8 @@
 			$response = new \APIResponse();
 			if (is_object($response) && $response->success()) $status = "SUCCESS";
 			else $status = "FAILED";
-			$elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+			if (is_numeric($GLOBALS['_REQUEST_']->timer)) $elapsed = microtime() - $GLOBALS['_REQUEST_']->timer;
+			else $elapsed = -1;
 
             if (is_dir(API_LOG))
                 $log = fopen(API_LOG."/".$module.".log",'a');
@@ -330,8 +382,10 @@
 
 		// Build HTML Form for API Methods
 		public function _form() {
+			$api_name = "\\".ucfirst($this->module)."\\API";
+			$api = new $api_name();
 			$form = '';
-			$methods = $this->_methods();
+			$methods = $api->_methods();
 
 			$cr = "\n";
 			$t = "\t";
@@ -351,25 +405,78 @@
 					}
 				}
 				if ($has_file_inputs) {
-					$form .= $t.'<form method="post" action="/_'.$this->_name.'/api" name="'.$name.'" enctype="multipart/form-data">'.$cr;
+					$form .= $t.'<form method="post" action="/api/'.$api->_name.'" name="'.$name.'" enctype="multipart/form-data">'.$cr;
 				}
 				else {
-					$form .= $t.'<form method="post" action="/_'.$this->_name.'/api" name="'.$name.'">'.$cr;
+					$form .= $t.'<form method="post" action="/api/'.$api->_name.'" name="'.$name.'">'.$cr;
 				}
 				$form .= $t.$t.'<input type="hidden" name="csrfToken" value="'.$token.'">'.$cr;
 				$form .= $t.$t.'<input type="hidden" name="method" value="'.$name.'" />'.$cr;
 				$form .= $t.$t.'<div class="apiMethod">'.$cr;
 				$form .= $t.$t.'<div class="h3 apiMethodTitle">'.$name.'</div>'.$cr;
 
+				// Show Method Description if provided
 				if ($method->description) {
 					$form .= $t.$t.'<span class="apiMethodDescription">'.$method->description.'</span>'.$cr;
 				}
-				$form .= '<div class="apiSetting"><span class="label apiMethodAuthRequired">Authentication Required</span><span class="value apiMethodAuthRequired">';
+
+				// Show Method Return Info if provided
+				if ($method->return_element) {
+					$form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">return_element</span>
+						<span class="value apiMethodSetting">'.$method->return_element.'</span>
+					</div>'.$cr;
+				}
+				if ($method->return_type) {
+					$form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">return_type</span>
+						<span class="value apiMethodSetting">'.$method->return_type.'</span>
+					</div>'.$cr;
+				}
+				if ($method->return_mime_type) {
+					$form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">return_mime_type</span>
+						<span class="value apiMethodSetting">'.$method->return_mime_type.'</span>
+					</div>'.$cr;
+				}
+
+				// Show Method Authentication Requirement
+				$form .= '
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">Authentication Required</span>
+						<span class="value apiMethodSetting">';
 				if ($method->authentication_required) $form .= "Yes";
 				else $form .= "No";
-				$form .= '</span></div>'.$cr;
+				$form .= '
+						</span>
+					</div>'.$cr;
 
-				if ($method->privilege_required) $form .= $t.$t.'<div class="apiSetting"><span class="apiMethodPrivilege">'.$method->privilege_required.'</span></div>'.$cr;
+				// Show Method AntiCSRF Requirement
+				$form .= '
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">AntiCSRF Token Required</span>
+						<span class="value apiMethodSetting">';
+				if ($method->token_required) $form .= "Yes";
+				else $form .= "No";
+				$form .= '
+						</span>
+					</div>'.$cr;
+
+				// Show Method Privilege Requirement
+				if (!empty($method->privilege_required)) $form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">Authentication Required</span>
+						<span class="value apiMethodSetting">'.$method->privilege_required.'
+						</span>
+					</div>'.$cr;
+				else $form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">Privilege Required</span>
+						<span class="value apiMethodSetting">None</span>
+					</div>'.$cr;
 
 				// Add Parameters
 				$parameters = $method->parameters();
@@ -391,7 +498,8 @@
 						$form .= $t.$t.$t.$t.'</select>';
 					}
 					else {
-						$form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+						if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" placeholder="'.$parameter->prompt.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+						else $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput" value="'.$default.'" />'.$cr;
 					}
 					$form .= $t.$t.$t.'</div>'.$cr;
 				}

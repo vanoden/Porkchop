@@ -263,11 +263,36 @@
 				AND		organization_id = ?";
 				array_push($bind_params,$organization->id);
 			}
-			if (isset($parameters['automation']) && is_bool($parameters['automation'])) {
-				if ($parameters['automation']) $find_person_query .= "
-					AND		automation = 1";
-				else $find_person_query .= "
-					AND		automation = 0";
+			if (isset($parameters['automation'])) {
+				if (is_bool($parameters['automation'])) {
+					if ($parameters['automation']) $find_person_query .= "
+						AND		automation = 1";
+					else $find_person_query .= "
+						AND		automation = 0";
+				}
+				elseif (is_numeric($parameters['automation'])) {
+					$find_person_query .= "
+					AND		automation = ?";
+					array_push($bind_params,$parameters['automation']);
+				}
+				elseif (!empty($parameters['automation'])) {
+					if ($parameters['automation'] == 'true') {
+						$find_person_query .= "
+						AND		automation = 1";
+					}
+					elseif ($parameters['automation'] == 'false') {
+						$find_person_query .= "
+						AND		automation = 0";
+					}
+					else {
+						$this->error("Invalid automation");
+						return null;
+					}
+				}
+				else {
+					$this->error("Invalid automation");
+					return null;
+				}
 			}
 
             if (!empty($parameters['_sort'])) $controls['sort'] = $parameters['_sort'];

@@ -163,6 +163,25 @@
 				$this->module = "site";
 				$this->view = "map_xml";
 			}
+			elseif (preg_match('/api\/([\w\-\_]+)\/([\w\-\_]+)\/([\w\-\_]+)/',$this->_uri,$matches)) {
+				// API URIs
+				$this->module = $matches[1];
+				$this->view = "api";
+				$_REQUEST['method'] = $matches[2];
+				$_REQUEST['code'] = $matches[3];
+			}
+			elseif (preg_match('/api\/([\w\-\_]+)\/([\w\-\_]+)\/?([\w\-\_]*)/',$this->_uri,$matches)) {
+				// API URIs
+				$this->module = $matches[1];
+				$this->view = "api";
+				$_REQUEST['method'] = $matches[2];
+				$this->query_vars = $matches[3];
+			}
+			elseif (preg_match('/api\/([\w\-\_]+)\/?/',$this->_uri,$matches)) {
+				// API URIs
+				$this->module = $matches[1];
+				$this->view = "api";
+			}
 			elseif (preg_match('/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/',$this->_uri,$matches)) {
 				// Full Porkchop URIs
 				$this->module = $matches[1];
@@ -217,6 +236,9 @@
 				$this->view = 'index';
 				$this->query_vars = $this->_uri;
 				$this->index = '';
+			}
+			elseif ($this->view == 'api') {
+				// Nothing More To Do
 			}
 			else {
 				$this->index = '';
