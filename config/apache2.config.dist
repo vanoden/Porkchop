@@ -5,11 +5,18 @@
     ServerName		localhost
     DocumentRoot	${BASE}/html
     DirectoryIndex	index.html index.php
+
     ReWriteEngine	On
-    ReWriteRule		^/_install$ "${BASE}/core/install.php" [L]
-    ReWriteRule		^/_upgrade$ "${BASE}/core/upgrade.php" [L]
-    ReWriteRule		^/_test$ "${BASE}/core/test.php" [L]
-    ReWriteRule		^/_(.*) "${BASE}/core/index.php" [L]
+    ReWriteRule             ^/$ "${BASE}/core/index.php" [L]
+    ReWriteRule             ^/version$ "${BASE}/html/version" [L]
+    ReWriteRule             ^/_install$ "${BASE}/core/install.php" [L]
+    ReWriteRule             ^/_upgrade$ "${BASE}/core/upgrade.php" [L]
+    ReWriteRule             ^/sitemap\.xml "${BASE}/core/index.php" [L]
+    ReWriteRule             ^/_(.*) "${BASE}/core/index.php" [L]
+    ReWriteRule             ^/api/ "${BASE}/core/index.php" [L]
+    ReWriteRule             ^/([\w\-\_]*)$ "${BASE}/core/index.php" [L]
+    ReWriteRule             ^/([\w\-\_]*\.html?)$ "${BASE}/core/index.php" [L] 
+    ReWriteRule		        ^/_test$ "${BASE}/core/test.php" [L]
 
     <Directory />
 	    Options FollowSymLinks
