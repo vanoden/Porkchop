@@ -58,9 +58,9 @@
             # Initiate Product Object
             $customer = new \Register\Customer();
 
-			if ($customer->status == 'BLOCKED') error("Your account has been blocked");
-			if ($customer->status == 'EXPIRED') error("Your account has expired.  Please use 'forgot password' on the website to restore.");
-			if ($customer->auth_failures() >= 3) error("Too many auth failures.  Please use 'forget password' on the website to restore");
+			if ($customer->status == 'BLOCKED') $this->auth_failed("blocked_account","Your account has been blocked");
+			if ($customer->status == 'EXPIRED') $this->auth_failed("expired_account","Your account has expired.  Please use 'forgot password' on the website to restore.");
+			if ($customer->auth_failures() >= 3) $this->auth_failed("too_many_failures","Too many auth failures.  Please use 'forget password' on the website to restore");
 
             $result = $customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
             if ($customer->error()) $this->error($customer->error());
@@ -70,14 +70,11 @@
                 $GLOBALS['_SESSION_']->assign($customer->id);
             }
 			elseif ($result) {
-				$this->error("This account is not active");
+				$this->auth_failed("inactive_account","This account is not active");
 			}
             else {
-				$this->_incrementCounter("incorrect");
-                app_log("Authentication failed",'notice',__FILE__,__LINE__);
+				$this->auth_failed("incorrect_password","Invalid login password combination");
             }
-
-            if (! $result) $this->error("Invalid login password combination");
 
 			$response = new \APIResponse();
 			$response->success(true);
