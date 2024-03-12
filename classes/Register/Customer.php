@@ -716,4 +716,17 @@
 			}
 			return true;
 		}
+
+		public function sessions($parameters = array()) {
+			$sessionList = new \Site\SessionList();
+			$parameters['user_id'] = $this->id;
+			$sessions = $sessionList->find($parameters);
+			if ($sessionList->error()) {
+				$this->error($sessionList->error());
+				return null;
+			}
+			else {
+				return $sessions;
+			}
+		}
     }
