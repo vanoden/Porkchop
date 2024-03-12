@@ -152,6 +152,22 @@
 		}
 
 		/************************************************/
+		/* Send Proper Auth Failure Response			*/
+		/************************************************/
+		public function auth_failed($reason,$message = null) {
+			$this->_incrementCounter('incorrect');
+			$_REQUEST["stylesheet"] = '';
+			$response = new \APIResponse();
+			$response->code(401);
+			$response->success(false);
+			if (!empty($message)) $response->addElement('error',$message);
+			else $response->addElement('error',"Authentication Failed");
+			http_response_code(401);
+			$response->print();
+			exit;
+		}
+
+		/************************************************/
 		/* Send Proper Permission Denied Response		*/
 		/************************************************/
 		public function deny($message = null) {
