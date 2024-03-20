@@ -93,11 +93,6 @@
 				WHERE	asset_code = ?
 			";
 			$database->AddParam($code);
-			
-			if (! $GLOBALS['_SESSION_']->customer->can('browse product instances')) {
-				$get_object_query .= " AND organization_id = ?";
-				$database->AddParam($GLOBALS['_SESSION_']->customer->organization()->id);
-			}
 
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
