@@ -188,13 +188,12 @@
 						"notes"			=> $_REQUEST['notes'][0],
 						"notify"		=> $notify
 					);
-					$customer->addContact($contactRecord);
-					$contact->auditRecord("USER_UPDATED","Customer Contact added: " . implode(", ", $contactRecord));
-
+					$contact = $customer->addContact($contactRecord);
 					if ($customer->error()) {
 						$page->addError("Error adding contact: ".$customer->error);
 						goto load;
 					}
+					$contact->auditRecord("USER_UPDATED","Customer Contact added: " . implode(", ", $contactRecord));
 				}
 			}
 

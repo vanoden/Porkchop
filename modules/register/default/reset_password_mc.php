@@ -90,7 +90,7 @@
 					}
 					else {
 						app_log("Expiring session and showing logged out page","info");
-						if ($GLOBALS['_SESSION_']->expire()) {
+						if ($GLOBALS['_SESSION_']->end()) {
 							header("Location: /_register/reset_password?status=complete");
 							exit;
 						}

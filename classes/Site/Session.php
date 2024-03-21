@@ -162,7 +162,7 @@
 				SET		code = 'logout'
 				WHERE	id = ?
 			";
-			$database->addParam($this->id);
+			$database->AddParam($this->id);
 
 			$database->Execute($end_session_query);
 			if ($database->ErrorMsg()) {

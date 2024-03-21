@@ -30,9 +30,9 @@
 				ON DUPLICATE KEY UPDATE
 					`value` = ?
 			";
-			$database->addParam($this->key);
-			$database->addParam($value);
-			$database->addParam($value);
+			$database->AddParam($this->key);
+			$database->AddParam($value);
+			$database->AddParam($value);
 			$database->Execute($set_config_query);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
@@ -54,7 +54,7 @@
 				FROM	site_configurations
 				WHERE	`key` = ?
 			";
-			$database->addParam($key);
+			$database->AddParam($key);
 			$rs = $database->Execute($get_config_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());

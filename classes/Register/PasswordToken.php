@@ -12,7 +12,10 @@
 		}
 
 		public function add($person_id = []) {
-			
+			$this->clearError();
+
+			$database = new \Database\Service();
+
 			# Get Large Random value
 			$randval = mt_rand();		
 
@@ -26,17 +29,14 @@
 				VALUES	(?,?,date_add(sysdate(),INTERVAL 1 day),?)
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$person_id,
-					$code,
-					$GLOBALS['_REQUEST_']->client_ip
-				)
-			);
+			$database->AddParam($person_id);
+			$database->AddParam($code);
+			$database->AddParam($GLOBALS['_REQUEST_']->client_ip);
 
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$database->Execute($add_object_query);
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database>ErrorMsg());
 				return null;
 			}
 
@@ -98,7 +98,7 @@
 				WHERE	person_id = ?
 				AND		date_expires > sysdate()
 			";
-			$database->addParam($person_id);
+			$database->AddParam($person_id);
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());

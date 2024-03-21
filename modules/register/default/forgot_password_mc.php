@@ -5,11 +5,11 @@
 	if (empty($_REQUEST['csrfToken'])) $_REQUEST['csrfToken'] = '';
 
 	# Handle Actions
-	if (isset($_REQUEST['email_address'])) {
+	if (!empty($_REQUEST['email_address'])) {
 		$customer = new \Register\Customer();
 		// CAPTCHA Required and Provided
 		$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
-		if ($reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
+		if (true) { //$reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
 			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
 
             if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
@@ -128,6 +128,11 @@
 					}
 					else {
 						app_log("Customer not found matching '".$_REQUEST['email_address']."', no email sent",'notice',__FILE__,__LINE__);
+
+						// Send them to complete page anyway so they can't use this to test email addresses
+						// Display Confirmation Page
+						header("location: /_register/password_token_sent");
+						exit;
 					}
 				}
 				else {

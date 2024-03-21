@@ -172,23 +172,23 @@
 			if (isset($parameters['code']) && $this->validCode($parameters['code'])) {
 				$update_object_query .= ",
 						asset_code = ?";
-				$database->addParam($parameters['code']);
+				$database->AddParam($parameters['code']);
 			}
 			if (isset($parameters['name'])) {
 				$update_object_query .= ",
 						asset_name = ?";
-				$database->addParam($parameters['name']);
+				$database->AddParam($parameters['name']);
 			}
 			if (is_numeric($parameters['product_id'])) {
 				$update_object_query .= ",
 						product_id = ?";
-				$database->addParam($parameters['product_id']);
+				$database->AddParam($parameters['product_id']);
 			}
 			if (is_numeric($parameters['organization_id'])) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 					$update_object_query .= ",
 						organization_id = ?";
-					$database->addParam($parameters['organization_id']);
+					$database->AddParam($parameters['organization_id']);
 				} else {
 					$this->error("Insufficient privileges for update");
 					return false;
