@@ -201,7 +201,7 @@
             # Build Query Parameters
             $parameters = array();
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
-                if ($_REQUEST["organization_code"]) {
+                if (!empty($_REQUEST["organization_code"])) {
                     app_log("Getting organization '".$_REQUEST['organization_code']."'",'debug',__FILE__,__LINE__);
                     $organization = new \Register\Organization();
                     $organization->get($_REQUEST["organization_code"]);
@@ -210,7 +210,7 @@
                     $parameters['organization_id'] = $organization->id;
                 }
             }
-            elseif (isset($GLOBALS['_SESSION_']->customer->organization()->id) && $GLOBALS['_SESSION_']->customer->organization()->id > 0) {
+            elseif (isset($GLOBALS['_SESSION_']->customer->organization_id) && $GLOBALS['_SESSION_']->customer->organization_id > 0) {
                 $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
             }
 			else {
@@ -1307,7 +1307,7 @@
 				'findCustomers'	=> array(
 					'description'	=> 'Change customer information',
 					'authentication_required'	=> true,
-					'token_required' => true,
+					'token_required' => false,
 					'privilege_required' => '[CONDITIONAL]',
 					'parameters'	=> array(
 						'organization_code'	=> array('prompt' => 'Organization Code'),
