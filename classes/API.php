@@ -78,7 +78,7 @@
 		/* the required privilege.					*/
 		/********************************************/
 		public function requirePrivilege($privilege_name) {
-			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name)) $this->deny();
+			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name)) $this->deny("Privilege '$privilege_name' required");
 		}
 
 		/********************************************/
