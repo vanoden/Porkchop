@@ -98,7 +98,7 @@
 				WHERE	person_id = ?
 				AND		date_expires > sysdate()
 			";
-			$database->addParam($person_id);
+			$database->AddParam($person_id);
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());

@@ -20,13 +20,13 @@
 			if (!empty($parameters['key'])) {
 				$get_object_query .= "
 					AND `key` = ?";
-				$database->addParam($parameters['key']);
+				$database->AddParam($parameters['key']);
 			}
 
 			if (!empty($parameters['value'])) {
 				$get_object_query .= "
 					AND `value` = ?";
-				$database->addParam($parameters['value']);
+				$database->AddParam($parameters['value']);
 			}
 		
 			$get_object_query .= "

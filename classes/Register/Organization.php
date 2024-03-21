@@ -47,8 +47,8 @@
 				(		null,?,?,sysdate())
 			";
 
-			$database->addParam($parameters['code']);
-			$database->addParam($parameters['name']);
+			$database->AddParam($parameters['code']);
+			$database->AddParam($parameters['name']);
 
 			$rs = $database->Execute($add_object_query);
 			if (! $rs) {			

@@ -69,14 +69,14 @@
 				if ($ok_params[$parameter]) {
 					$update_product_query .= ",
 					$parameter	= ?";
-					$database->addParam($parameters[$parameter]);
+					$database->AddParam($parameters[$parameter]);
 				}
 			}
 
 			$update_product_query .= "
 				WHERE	id = ?
 			";
-			$database->addParam($this->id);
+			$database->AddParam($this->id);
 			$rs = $database->Execute($update_product_query);
             if (! $rs) {
 				$this->SQLError($database->ErrorMsg());

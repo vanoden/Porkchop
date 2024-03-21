@@ -180,7 +180,7 @@
 				DELETE
 				FROM	content_messages
 				WHERE	target = ?";
-			$database->addParam($this->id);
+			$database->AddParam($this->id);
 			$database->Execute($delete_object_query);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());

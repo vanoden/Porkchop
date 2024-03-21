@@ -316,7 +316,7 @@
 				FROM	page_pages
 				WHERE	id = ?
 			";
-			$database->addParam($this->id);
+			$database->AddParam($this->id);
 			$database->Execute($delete_object_query);
 			if ($database->ErrorMsg()) {
 				$this->addError($database->ErrorMsg());

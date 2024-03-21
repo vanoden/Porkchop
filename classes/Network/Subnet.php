@@ -31,9 +31,9 @@
 				return false;
 			}
 
-			$database->addParam($params['address']);
-			$database->addParam($params['size']);
-			$database->addParam($params['type']);
+			$database->AddParam($params['address']);
+			$database->AddParam($params['size']);
+			$database->AddParam($params['type']);
 				
 			$add_object_query = "
 				INSERT
@@ -74,7 +74,7 @@
 				else {
 					$update_object_query .= ",
 					type = ?";
-					$database->addParam($params['type']);
+					$database->AddParam($params['type']);
 				}
 			}
 			if (isset($params['size'])) {
@@ -86,7 +86,7 @@
 			if (isset($params['description'])) {
 				$update_object_query .= ",
 					description = ?";
-				$database->addParam(noXSS(trim($params['description'])));
+				$database->AddParam(noXSS(trim($params['description'])));
 			}
 
 			$database->Execute($update_object_query);
@@ -105,7 +105,7 @@
 				FROM	network_subnets
 				WHERE	id = ?
 			";
-			$database->addParam($this->id);
+			$database->AddParam($this->id);
 			$database->Execute($delete_object_query);
 			if ($database->ErrorMsg()) {
 				$this-SQLError($database->ErrorMsg());
@@ -121,7 +121,7 @@
 				FROM	network_subnets
 				WHERE	id = ?
 			";
-			$database->addParam($this->id);
+			$database->AddParam($this->id);
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
