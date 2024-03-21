@@ -74,10 +74,20 @@
 		}
 
 		/********************************************/
-		/* Return Error unless User has 			*/
-		/* the required privilege.					*/
+		/* Return Error unless User has the			*/
+		/* required privilege.  If an array is 		*/
+		/* passed, only one is required.			*/
+		/* To require multiple privileges, call 	*/
+		/* this function multiple times.			*/
 		/********************************************/
 		public function requirePrivilege($privilege_name) {
+			if (is_array($privilege_name)) {
+				// Ok if ANY privilege is matched
+				foreach ($privilege_name as $privilege) {
+					if ($GLOBALS['_SESSION_']->customer->can($privilege)) return;
+				}
+				$this->deny();
+			}
 			if (! $GLOBALS['_SESSION_']->customer->can($privilege_name)) $this->deny();
 		}
 
