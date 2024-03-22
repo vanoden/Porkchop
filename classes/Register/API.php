@@ -56,12 +56,14 @@
             if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
             # Initiate Product Object
+			$checkCustomer = new \Register\Customer();
+			if (! $checkCustomer->validLogin($_REQUEST['login'])) $this->invalidRequest("valid login required");
+			$checkCustomer->get($_REQUEST['login']);
+			if ($checkCustomer->status == 'BLOCKED') $this->auth_failed("blocked_account","Your account has been blocked");
+			if ($checkCustomer->status == 'EXPIRED') $this->auth_failed("expired_account","Your account has expired.  Please use 'forgot password' on the website to restore.");
+			if ($checkCustomer->auth_failures() >= 3) $this->auth_failed("too_many_failures","Too many auth failures.  Please use 'forget password' on the website to restore");
+
             $customer = new \Register\Customer();
-
-			if ($customer->status == 'BLOCKED') $this->auth_failed("blocked_account","Your account has been blocked");
-			if ($customer->status == 'EXPIRED') $this->auth_failed("expired_account","Your account has expired.  Please use 'forgot password' on the website to restore.");
-			if ($customer->auth_failures() >= 3) $this->auth_failed("too_many_failures","Too many auth failures.  Please use 'forget password' on the website to restore");
-
             $result = $customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
             if ($customer->error()) $this->error($customer->error());
 
@@ -1271,7 +1273,7 @@
 				'authenticateSession'	=> array(
 					'description'	=> 'Authenticate your account',
 					'authentication_required'	=> false,
-					'token_required' => true,
+					'token_required' => false,
 					'return_element' => 'success',
 					'return_type' => 'boolean',
 					'parameters' 	=> array(
