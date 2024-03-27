@@ -7,8 +7,11 @@
 			foreach ($modules as $module_name => $module_data) {
 				if (!isset($module_data['roles'])) $module_data['roles'] = array();
 				if (!isset($module_data['templates'])) $module_data['templates'] = array();
-				$this->install_log("Loading module $module_name");
-				# Update Schema
+				$this->install_log("Loading module <b>$module_name</b>");
+
+				/********************************************/
+				/* Update Schema							*/
+				/********************************************/
 				$class_name = "\\$module_name\\Schema";
 				$schema_path = CLASS_PATH."/$module_name/Schema.php";
 				if (file_exists($schema_path)) {
@@ -28,7 +31,9 @@
 					}
 				}
 
-				# Add Privileges
+				/********************************************/
+				/* Add Privileges							*/
+				/********************************************/
 				foreach ($module_data['privileges'] as $privilege_name) {
 					$this->install_log("Adding privilege ".$privilege_name);
 					$privilege = new \Register\Privilege();
@@ -40,7 +45,9 @@
 					}
 				}
 
-				# Add Roles
+				/********************************************/
+				/* Add Roles								*/
+				/********************************************/
 				foreach ($module_data['roles'] as $role_name => $role_data) {
 					$role = new \Register\Role();
 					if (! $role->get($role_name)) {
@@ -61,7 +68,9 @@
 					}
 				}
 
-				# Assign Templates
+				/********************************************/
+				/* Add Templates							*/
+				/********************************************/
 				foreach ($module_data['templates'] as $view => $template) {
 					$page = new \Site\Page(strtolower($module_name),$view);
 					if ($page->error) {
