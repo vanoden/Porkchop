@@ -182,7 +182,7 @@
 				'domain_id'		=> $domain->id
 			)
 		);
-		if ($location->error) install_fail("Error adding location: ".$location->error);
+		if ($location->error()) install_fail("Error adding location: ".$location->error());
 	}
 
 	# Add administrator role
