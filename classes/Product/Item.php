@@ -518,7 +518,7 @@
         }
 
 		public function isMultiZone() {
-			if (preg_match("/(SF|PM|MB)\-400/",$this->code)) return true;
+			if (preg_match("/(SF|PM|MB)400\-/",$this->code)) return true;
 			else return false;
 		}
 	}
