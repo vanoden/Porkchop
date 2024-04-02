@@ -77,7 +77,7 @@
 				"pending_customers"	=> $templates['admin'],
 				"roles"				=> $templates['admin'],
 				"role"				=> $templates['admin'],
-				"admin_location"	=> $templates['admin'],
+				"admin_location"	=> $templates['admin']
 			),
 		),
 		"Contact"		=> array(
@@ -107,5 +107,4 @@
 	include(MODULES."/storage/default/_metadata.php");
 
 	$menus = array();
-
 	$shipping_vendors = array('DHL','FedEx','UPS','USPS');

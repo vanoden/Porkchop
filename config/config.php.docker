@@ -16,7 +16,7 @@
 	define ( 'REPORTS',BASE.'/reports' );	
 	define ( 'SPECTROS_LOCATION_ID', 1);
 	define ( 'SPECTROS_VENDOR_ID', 0);
-    define ( 'IS_DOCKER_DEVELOPMENT', 1);
+        define ( 'IS_DOCKER_DEVELOPMENT', 1);
 	
         # Initialize config object
         $_config = new stdClass();

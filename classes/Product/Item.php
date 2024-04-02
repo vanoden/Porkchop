@@ -12,7 +12,6 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
             $this->_addStatus(array('ACTIVE','HIDDEN','DELETED'));
-
     		parent::__construct($id);
 		}
 
@@ -218,6 +217,21 @@
 			return true;
 		}
 
+		public function getByCode($code) {
+			$get_details_query = "
+				SELECT	id
+				FROM	product_products
+				WHERE	code = ?
+			";
+			$rs = $GLOBALS['_database']->Execute($get_details_query,array($code));
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			list($this->id) = $rs->FetchRow();
+			return $this->details();
+		}
+
 		public function inCategory($category_id) {
 			app_log("Product::Item::inCategory()",'trace',__FILE__,__LINE__);
 
@@ -300,6 +314,7 @@
 			}
 			return $images;
 		}
+
 		public function addImage($image_id) {
 			# Prepare Query to Tie Product to Category
 			$add_image_query = "
@@ -319,6 +334,7 @@
 			}
 			return 1;
 		}
+
 		public function dropImage($image_id) {
 			# Prepare Query to Drop Image from Product
 			$drop_image_query = "
@@ -334,6 +350,7 @@
 			}
 			return 1;
 		}
+
 		public function hasImage($image_id) {
 			# Prepare Query to Get Image
 			$get_image_query = "
@@ -351,6 +368,7 @@
 			if (! $found) $found = 0;
 			return $found;
 		}
+
 		public function getMeta() {
 			$get_meta_query = "
 				SELECT	`key`,value
@@ -371,6 +389,7 @@
 			}
 			return $metadata;
 		}
+
 		public function getMetadata($key) {
 			$get_meta_query = "
 				SELECT	value
@@ -396,6 +415,7 @@
             }
             else return null;
 		}
+
 		public function addMeta($key,$value) {
 			$add_meta_query = "
 				REPLACE
@@ -462,26 +482,43 @@
 			$this->error("Error adding price: ".$price->error());			
 			return false;
 		}
+
 		public function getPrice($parameters = array()) {
 			$price = new \Product\Price();
 			if ($price->getCurrent($this->id)) return $price;
 			$this->error($price->error());
 			return null;
 		}
+
         public function getPriceAmount($parameters = array()) {
 			$price = new \Product\Price();
 			return $price->getCurrent($this->id);
         }
+
         public function validCode($string): bool {
             if (preg_match('/^\w[\w\-\.\_\s]*$/',$string)) return true;
             else return false;
         }
+
+		public function validName($string): bool {
+			if (preg_match('/^[\w\-\.\_\s\:\!]+$/', $string))
+				return true;
+			else
+				return false;
+		}	
+
         public function validType($string): bool {
             if (in_array($string,array('group','kit','inventory','unique','service'))) return true;
             else return false;
         }
+
         public function validStatus($string): bool {
             if (in_array($string,array('ACTIVE','HIDDEN','DELETED'))) return true;
             else return false;
         }
+
+		public function isMultiZone() {
+			if (preg_match("/(SF|PM|MB)\-400/",$this->code)) return true;
+			else return false;
+		}
 	}

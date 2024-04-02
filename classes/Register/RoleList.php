@@ -8,6 +8,13 @@
 				FROM	register_roles
 				WHERE	id = id
 			";
+
+			if (!empty($parameters['name'])) {
+				$get_objects_query .= "
+				AND		name = ?";
+				array_push($bind_params,$parameters['name']);
+			}
+
 			$rs = $GLOBALS['_database']->Execute($get_objects_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
