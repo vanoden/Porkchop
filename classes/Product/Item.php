@@ -229,7 +229,11 @@
 				return null;
 			}
 			list($this->id) = $rs->FetchRow();
-			return $this->details();
+
+			if ($this->id)
+				return $this->details();
+			else
+				return false;
 		}
 
 		public function inCategory($category_id) {

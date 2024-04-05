@@ -38,6 +38,7 @@
 		<div class="tableCell nameValue">Name</div>
 		<div class="tableCell descValue">Description</div>
 		<div class="tableCell smallValue">Object</div>
+		<div class="tableCell smallValue">Sensor Profile</div>
 	</div>
 <?php
 foreach ($products as $product) { 
@@ -53,6 +54,7 @@ foreach ($products as $product) {
 		<script language="JavaScript">
 			metadata[<?=$product->id?>] = "<?php foreach (get_object_vars($product) as $key => $value) { print "$key=$value\\n"; } ?>";
 		</script>
+		<div class="tableCell descValue<?=$greenbar?>"><a href="/_spectros/admin_asset_sensors?product_id=<?=$product->id?>">View/Edit</a></div>
 	</div>
 <?php	
 	} 

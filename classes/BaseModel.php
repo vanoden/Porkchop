@@ -107,6 +107,7 @@
 	        }
 	        
             $updateQuery .= " WHERE	`$this->_tableIDColumn` = ?";
+
             $database->AddParam($this->id);
             $database->Execute($updateQuery);
 
