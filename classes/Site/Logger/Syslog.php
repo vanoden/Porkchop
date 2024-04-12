@@ -11,7 +11,7 @@
 
 		public function connect() {
 			if ($this->connected) return true;
-			openlog("Porkchop", LOG_PID | LOG_PERROR, LOG_LOCAL0);
+			openlog("Porkchop", LOG_PID | LOG_PERROR, LOG_LOCAL1);
 			$this->connected = true;
 			return 1;
 		}
