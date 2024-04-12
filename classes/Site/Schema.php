@@ -538,6 +538,33 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			if ($this->version() < 21) {
+				app_log("Upgrading ".$this->module." schema to version 21",'notice',__FILE__,__LINE__);
+				$create_table_query = "
+					CREATE TABLE `site_audit_events` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`event_date` datetime NOT NULL,
+						`user_id` int(11) NOT NULL,
+						`instance_id` int(11) NOT NULL,
+						`class_name` varchar(64) NOT NULL,
+						`class_method` varchar(64) NOT NULL,
+						`description` text NOT NULL,
+						PRIMARY KEY (`id`),
+						KEY `class_name_instance_id_class_method` (`class_name`, `instance_id`, `class_method`),
+						KEY `event_date_user_id` (`event_date`, `user_id`),
+						KEY `user_id_class_name_class_method` (`user_id`, `class_name`, `class_method`),
+						CONSTRAINT `site_audit_events_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `register_users` (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->SQLError("create site_audit_events table: ".$this->error());
+					return false;
+				}
+
+				$this->setVersion(21);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}
