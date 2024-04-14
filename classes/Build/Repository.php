@@ -31,8 +31,30 @@
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+			
 			return $this->update($parameters);
 		}
+
+		public function _objectName() {
+			if (!isset($caller)) {
+				$trace = debug_backtrace();
+				$caller = $trace[2];
+			}
+
+			$class = isset($caller['class']) ? $caller['class'] : null;
+			if (preg_match('/(\w[\w\_]*)$/',$class,$matches)) $classname = $matches[1];
+			else $classname = "Object";
+			return $classname;
+		}	
 
 		public function update($parameters = array()) {
 			return $this->details();

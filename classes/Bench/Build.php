@@ -7,7 +7,7 @@
 		public $id;
 
 		public function __construct($id = 0) {
-			if ($id =~ /^\d+$/ && $id > 0) {
+			if (preg_match('/^\d+$/', $id) && $id > 0) {
 				$this->id = $id;
 				$this->details();
 			}
@@ -23,7 +23,7 @@
 					$this->_error = "Product not found";
 					return false;
 				}
-			else {
+			} else {
 				$this->_error = "Product code required";
 				return false;
 			}
@@ -44,9 +44,54 @@
 					$parameters['message']
 				)
 			);
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
 		}
 
+		public function _objectName() {
+			if (!isset($caller)) {
+				$trace = debug_backtrace();
+				$caller = $trace[2];
+			}
+
+			$class = isset($caller['class']) ? $caller['class'] : null;
+			if (preg_match('/(\w[\w\_]*)$/',$class,$matches)) $classname = $matches[1];
+			else $classname = "Object";
+			return $classname;
+		}	
+
 		public function update($parameters) {
+			
+			$update_object_query = "
+				UPDATE	bench_builds
+				SET		status = ?, message = ?
+				WHERE	id = ?
+			";
+
+			$GLOBALS['_database']->Execute(
+				$update_object_query,
+				array(
+					$parameters['status'],
+					$parameters['message'],
+					$this->id
+				)
+			);
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
 		}
 
 		public function details($parameters) {

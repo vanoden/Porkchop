@@ -78,6 +78,15 @@
 			}
 			// Fetch New ID
 			$this->id = $database->Insert_ID();
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
 
 			$this->addEvent('CREATION');
 			if ($params['status'] == 'PUBLISHED') $this->addEvent('ACTIVATION');

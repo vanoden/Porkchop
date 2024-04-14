@@ -19,6 +19,7 @@
 		}
 
 		public function set($value='') {
+
 			$this->clearError();
 			$database = new \Database\Service();
 
@@ -86,6 +87,7 @@
          * @param array $parameters, name value pairs to add and populate new object by
          */
 		public function add($parameters = []) {
+
 			$database = new \Database\Service();
 	
     		$addQuery = "INSERT INTO `$this->_tableName` ";
@@ -107,7 +109,17 @@
 			}
 			
 			// get recent added row id to return update() and details()
-			$this->id = $database->Insert_ID();			
+			$this->id = $database->Insert_ID();	
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
+
 			return true;
 		}
 
@@ -117,6 +129,7 @@
          * @param array $parameters, name value pairs to update object by
          */
         public function update($parameters = []): bool {
+			
 			$this->clearError();
 			$database = new \Database\Service();
             $updateQuery = "UPDATE `$this->_tableName` SET `key` = '$this->key'";
@@ -135,6 +148,15 @@
 				return false;
 			}
 
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+			
             // Clear Cache to Allow Update
 			$cache = $this->cache();
 			if (isset($cache)) $cache->delete();

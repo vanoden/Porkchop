@@ -9,6 +9,7 @@
 		public $description;
 
 		public function add($params = array()) {
+
 			$database = new \Database\Service();
 			if ($params['type'] == 'ipv4') {
 				if (! $this->validipv4($params['address'])) {
@@ -53,6 +54,15 @@
 			}
 			$this->id = $database->Insert_ID();
 
+			// add audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			return $this->upgrade($params);
 		}
 
@@ -61,6 +71,7 @@
 		}
 
 		public function update($params = []): bool {
+
 			$database = new \Database\Service();
 			$update_object_query = "
 				UPDATE	network_subnets
@@ -94,11 +105,21 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-				
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+
 			return $this->details();
 		}
 
 		public function delete() {
+			
 			$database = new \Database\Service();
 			$delete_object_query = "
 				DELETE
@@ -111,6 +132,16 @@
 				$this-SQLError($database->ErrorMsg());
 				return false;
 			}
+
+			// audit the delete event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Deleted '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'delete'
+			));	
+
 			return true;
 		}
 

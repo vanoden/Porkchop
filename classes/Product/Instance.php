@@ -31,6 +31,7 @@
 		}
 
 		public function add($parameters = []) {
+
 			$this->clearError();
 
 			# See If Existing Unit Present
@@ -66,6 +67,15 @@
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
 
 			# Record Event
 			$event = new \Action\Event();
@@ -232,6 +242,15 @@
                 $cache = $this->cache();
                 if (isset($cache)) $cache->delete();
 
+				// audit the update event
+				$auditLog = new \Site\AuditLog\Event();
+				$auditLog->add(array(
+					'instance_id' => $this->id,
+					'description' => 'Updated '.$this->_objectName(),
+					'class_name' => get_class($this),
+					'class_method' => 'update'
+				));
+
 				return $this->details();
 			}
 		}
@@ -274,6 +293,7 @@
 		}
 		
 		public function deleteMetadata($key) {
+			
 			app_log("Removing metadata '$key' for '".$this->code."'",'debug',__FILE__,__LINE__);
 			$set_object_query = "
 				DELETE
@@ -288,6 +308,16 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
+
+			// audit the delete event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Deleted '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'deleteMetadata'
+			));	
+
 			return 1;
 		}
 		

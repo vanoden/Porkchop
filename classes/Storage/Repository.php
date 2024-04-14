@@ -20,6 +20,7 @@
 
 		# Add a Repository Record
 		public function add($parameters = []) {
+
 			$this->clearError();
 
 			# Generate Unique Code if none provided
@@ -78,6 +79,16 @@
 
 			# Fetch ID of new record
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			app_log("Repo ".$this->id." created, updating");
 			return $this->update($parameters);
 		}
@@ -129,6 +140,16 @@
 			}
 			if (isset($parameters['path'])) $this->_setMetadata('path',$parameters['path']);
 			app_log("Repo ".$this->id." updated, getting details");
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+
 			return $this->details();
 		}
 

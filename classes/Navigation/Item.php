@@ -31,6 +31,7 @@
 		 * @param $target, target of navigation item
 		 */
 		public function getByTarget( $target ) {
+
 			$get_object_query = "
 				SELECT	id
 				FROM	navigation_menu_items
@@ -50,6 +51,7 @@
 		}
 
 		public function add($parameters = []) {
+
 			if ($parameters['menu_id']) {
 				$menu = new Menu($parameters['menu_id']);
 				if (! $menu->id) {
@@ -75,6 +77,16 @@
 			}
 
 			$id = $GLOBALS['_database']->Insert_ID();
+
+			// add audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+			
 			$this->id = $id;
 			return $this->update($parameters);
 		}

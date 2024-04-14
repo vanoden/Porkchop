@@ -13,6 +13,7 @@ class Order {
 	}
 
 	public function add($params = array()) {
+
 		if (!empty($params['vendor_contact'])) {
 			$user = new \Register\Person();
 			if (!$user->get($params['vendor_contact'])) {
@@ -68,6 +69,16 @@ class Order {
 			return false;
 		}
 		$this->id = $GLOBALS['_database']->Insert_ID();
+
+		// add audit log
+		$auditLog = new \Site\AuditLog\Event();
+		$auditLog->add(array(
+			'instance_id' => $this->id,
+			'description' => 'Added new ' . $this->_objectName(),
+			'class_name' => get_class($this),
+			'class_method' => 'add'
+		));
+
 		return $this->update($params);
 	}
 
@@ -99,6 +110,16 @@ class Order {
 		list($result) = $rs->FetchRow();
 		if ($result > 0) {
 			$this->id = $result;
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));			
+			
 			return $this->details();
 		} else {
 			$this->error("WorkInvoice not found");

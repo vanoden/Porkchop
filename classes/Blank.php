@@ -29,7 +29,7 @@
 		/* Must include non-nullable fields.		*/
 		/* Others should be handled in update().	*/
 		/********************************************/
-		public function add(array $params): bool {
+		public function add($parameters = []) {
 			// Clear Any Existing Errors
 			$this->clearError();
 
@@ -64,6 +64,15 @@
 
 			// Fetch New ID
 			$this->id = $database->Insert_ID();
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
 
 			// Update Any Nullable Values
 			return $this->update($params);
@@ -112,6 +121,15 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
 
 			// Bust Cache for Updated Object
 			$cache->delete();

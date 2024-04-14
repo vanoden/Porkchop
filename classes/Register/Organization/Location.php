@@ -104,6 +104,7 @@
 		}
 
 		public function add($parameters = []) {
+
 			if (! preg_match('/^\d+$/',$parameters['company_id'])) {
 				$this->error = "company_id parameter required for Register::Organization::Location::add()";
 				return null;
@@ -133,11 +134,21 @@
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
 
 			return $this->update($parameters);
 		}
 
 		public function update($parameters = array()) {
+
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error = "Valid id required for details in Register::Organization::Location::update()";
 				return null;
@@ -173,6 +184,15 @@
 				$this->error = "SQL Error in Register::Organization::Location::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));	
 			
 			return $this->details();
 		}

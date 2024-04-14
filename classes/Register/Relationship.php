@@ -6,8 +6,8 @@
 		public $parent_id;
 		public $person_id;
 
-		public function add($parent_id,$person_id)
-		{
+		public function add($parent_id,$person_id) {
+
 			$add_relationship_query = "
 				INSERT
 				INTO	register_relations
@@ -23,34 +23,68 @@
 					  $person_id
 				)
 			);
-			if ($GLOBALS['_database']->ErrorMsg())
-			{
+			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in RegisterRelationship::add: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
+
 			return $this;
 		}
-		public function delete($parent_id,$person_id)
-		{
+
+		public function delete($parent_id,$person_id) {
+
 			$delete_relationship_query = "
 				DELETE
 				FROM	register_relations
 				WHERE	parent_id = ?
 				AND		person_id = ?
 			";
+
 			$GLOBALS['_database']->Execute(
 				$delete_relationship_query,
 				array($parent_id,
 					  $person_id
 				)
 			);
-			if (! $GLOBALS['_database']->ErrorMsg())
-			{
+
+			if (! $GLOBALS['_database']->ErrorMsg()) {
 				$this->error = "SQL Error in RegisterRelationship::delete: ".$GLOBALS['_database']->ErrorMsg();
 				return null;
 			}
+
+			// audit the delete event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Deleted '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'delete'
+			));
+
 			return 1;
 		}
+
+		public function _objectName() {
+			if (!isset($caller)) {
+				$trace = debug_backtrace();
+				$caller = $trace[2];
+			}
+
+			$class = isset($caller['class']) ? $caller['class'] : null;
+			if (preg_match('/(\w[\w\_]*)$/',$class,$matches)) $classname = $matches[1];
+			else $classname = "Object";
+			return $classname;
+		}	
+				
 		public function exists($parent_id,$person_id)
 		{
 			$check_relationship_query = "

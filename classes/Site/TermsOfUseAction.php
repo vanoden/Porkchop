@@ -2,6 +2,7 @@
 	namespace Site;
 
 	class TermsOfUseAction Extends \BaseModel {
+
 		public $version_id;
 		public $user_id;
 		public $type;
@@ -33,6 +34,7 @@
 		/* Others should be handled in update().	*/
 		/********************************************/
 		public function add($params = []): bool {
+			
 			// Clear Any Existing Errors
 			$this->clearError();
 
@@ -82,6 +84,15 @@
 
 			// Fetch New ID
 			$this->id = $database->Insert_ID();
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
 
 			// No Update, Load Details
 			return $this->details();

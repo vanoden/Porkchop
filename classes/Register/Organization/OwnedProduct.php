@@ -14,6 +14,7 @@
 		}
 	
         public function add($parameters = []) {
+
 			$this->clearError();
 			$organization = new \Register\Organization($this->organization_id);
 			if ($organization->id < 1) {
@@ -55,10 +56,21 @@
                 $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return null;
             }
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
+
             return $this->details();
 		}
 
         public function consume($quantity = 1) {
+
 			$on_hand = $this->count();
 			if ($quantity > $on_hand) {
 				$this->error("Less than $quantity available");
@@ -85,12 +97,14 @@
             }
             return $this->details();
         }
+
 		public function count() {
 			$this->details();
 			return $this->quantity;
 		}
 
         public function details(): bool {
+
             $get_details_query = "
                 SELECT  organization_id,
 						product_id,

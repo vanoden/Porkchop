@@ -12,6 +12,7 @@
 		}
 
 		public function add($params = array()) {
+
 			if (empty($params['name'])) {
 				$this->error("name required for header");
 				return false;
@@ -40,6 +41,16 @@
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
+
 			return $this->update($params);
 		}
 
@@ -59,11 +70,21 @@
 			array_push($bind_params,$this->id);
 
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
 
 			return $this->details();
 		}
 
 		public function details(): bool {
+
 			$get_object_query = "
 				SELECT	*
 				FROM	site_headers

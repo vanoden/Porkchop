@@ -56,6 +56,16 @@
 				return null;
 			}
 			$this->id = $database->Insert_ID();
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			$this->auditRecord('ORGANIZATION_CREATED','Organization has been added');
 			return $this->update($parameters);
 		}
@@ -131,6 +141,7 @@
 				$update_object_query,
 				$bind_params
 			);
+
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
@@ -144,10 +155,20 @@
 			if (isset($parameters['is_reseller']) && ($parameters['is_reseller'] != $this->is_reseller)) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (is_reseller): '.$parameters['is_reseller']);
 			if (isset($parameters['assigned_reseller_id']) && ($parameters['assigned_reseller_id'] != $this->assigned_reseller_id)) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (assigned_reseller_id): '.$parameters['assigned_reseller_id']);
 			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));	
+						
 			return $this->details();
 		}
 		
 		public function details(): bool {
+
 			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
 			$database = new \Database\Service();
 			$this->clearError();

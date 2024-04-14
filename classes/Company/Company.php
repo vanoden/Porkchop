@@ -28,13 +28,23 @@
 				(name)
 				VALUES
 				(?)";
+
 			$GLOBALS['_database']->Execute($add_object_query,array($parameters['name']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
-			
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			return $this->update($parameters);
 		}
 
@@ -76,6 +86,16 @@
 				return false;
 			}
 			$cache->delete();
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+						
 			return $this->details();
 		}
 

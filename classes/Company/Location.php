@@ -27,6 +27,7 @@
 		}
 
 		public function getByHost($hostname) {
+
 			$get_object_query = "
 				SELECT	id
 				FROM	company_locations
@@ -46,6 +47,7 @@
 		}
 
 		public function details(): bool {
+
 			$get_details_query = "
 				SELECT	*
 				FROM	company_locations
@@ -105,6 +107,7 @@
 		}
 
 		public function add($parameters = []) {
+
 			if (! preg_match('/^\d+$/',$parameters['company_id'])) {
 				$this->error("company_id parameter required");
 				return false;
@@ -135,10 +138,20 @@
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			return $this->update($parameters);
 		}
 
 		public function update($parameters = []): bool {
+
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid id required for details in Company::Domain::update");
 				return null;
@@ -177,6 +190,16 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));	
+					
 			return $this->details();
 		}
 

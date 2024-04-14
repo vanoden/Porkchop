@@ -67,6 +67,16 @@ class Order extends \BaseModel {
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
+
 			$this->addEvent(array('new_status' => $status,'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "CREATE"));
 			return $this->update($parameters);
 		}
@@ -164,6 +174,16 @@ class Order extends \BaseModel {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));	
+
 			$this->addEvent(array('new_status' => $parameters['status'],'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "UPDATE"));
 			return $this->details();
 		}

@@ -16,6 +16,7 @@ class Price Extends \BaseModel {
 	}
 
 	public function add($parameters = []) {
+
 		$product = new \Product\Item($parameters['product_id']);
 		if (!$product->id) {
 			$this->error("Product not found");
@@ -99,6 +100,16 @@ class Price Extends \BaseModel {
 			return false;
 		}
 		$this->id = $GLOBALS['_database']->Insert_ID();
+
+		// add audit log
+		$auditLog = new \Site\AuditLog\Event();
+		$auditLog->add(array(
+			'instance_id' => $this->id,
+			'description' => 'Added new '.$this->_objectName(),
+			'class_name' => get_class($this),
+			'class_method' => 'add'
+		));
+
 		app_log("User ".$GLOBALS['_SESSION_']->customer->id." added price '".$this->id."'");
 		return $this->details();
 	}

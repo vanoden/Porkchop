@@ -15,6 +15,7 @@
 		}
 
 		public function add($parameters = []) {
+
 			$this->clearError();
 			if (empty($parameters['name'])) {
 				$this->error("Currency name required");
@@ -38,6 +39,16 @@
 				return false;
 			}
 			list($id) = $GLOBALS['_database']->Insert_ID();
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
+
 			$this->id = $id;
 			return $this->update($parameters);
 		}
@@ -73,6 +84,16 @@
 			}
 			$cache = $this->cache();
 			$cache->delete();
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));	
+						
 			return $this->details();
 		}
 

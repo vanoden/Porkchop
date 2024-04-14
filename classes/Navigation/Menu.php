@@ -18,6 +18,7 @@
 		 * @param $code, code of navigation menu
 		 */
 		public function getByCode($code) {
+
 			$get_object_query = "
 				SELECT	id
 				FROM	navigation_menus
@@ -37,6 +38,7 @@
 		}
 
 	    public function add($parameters = array ()) {
+
 		    if (! isset($parameters ['code'])) {
 			    $this->error("code required");
 			    return false;
@@ -54,6 +56,16 @@
 					return false;
 				}
 				$this->id = $GLOBALS['_database']->Insert_ID();
+
+				// add audit log
+				$auditLog = new \Site\AuditLog\Event();
+				$auditLog->add(array(
+					'instance_id' => $this->id,
+					'description' => 'Added new '.$this->_objectName(),
+					'class_name' => get_class($this),
+					'class_method' => 'add'
+				));
+
 				return $this->update($parameters);
 	    }
 	    public function update($parameters = []): bool {
@@ -84,9 +96,21 @@
 			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
 			    return false;
 		    }
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+
 		    return $this->details ();
 	    }
+
 	    public function details(): bool {
+
 		    $get_default_query = "
 				    SELECT  *
 				    FROM    navigation_menus

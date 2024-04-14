@@ -236,6 +236,7 @@
 		}
 
 	    public function add($module = '', $view = '', $index = '') {
+
 		    // Apply optional parameters
 		    if ($module) {
 			    $this->module = $module;
@@ -260,11 +261,22 @@
 			    return false;
 		    }
 		    $this->id = $GLOBALS ['_database']->Insert_ID ();
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
+
 		    app_log ( "Added page id " . $this->id );
 		    return $this->details();
 	    }
 
 		public function update($parameters = []): bool {
+
 			$this->clearError();
 			$database = new \Database\Service();
 
@@ -294,11 +306,23 @@
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
-			}
-			else return $this->details();
+			} else {
+
+				// audit the update event
+				$auditLog = new \Site\AuditLog\Event();
+				$auditLog->add(array(
+					'instance_id' => $this->id,
+					'description' => 'Updated '.$this->_objectName(),
+					'class_name' => get_class($this),
+					'class_method' => 'update'
+				));
+
+				return $this->details();
+			} 
 		}
 
 		public function delete(): bool {
+
 			// Delete Content Block for Page
 			if (!empty($this->index)) {
 				$block = new \Content\Message();
@@ -322,8 +346,19 @@
 				$this->addError($database->ErrorMsg());
 				return false;
 			}
+			
+			// audit the delete event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Deleted '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'delete'
+			));		
+				
 			return true;
 		}
+
 	    public function details(): bool {
 			$database = new \Database\Service();
 			$schema = new \Database\Schema();

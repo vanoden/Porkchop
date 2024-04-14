@@ -10,6 +10,7 @@
 		}
 
 		public function add($parameters = []) {
+
 			$add_object_query = "
 				INSERT
 				INTO	contact_events
@@ -27,9 +28,21 @@
 			}
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+ 			// add audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			return $this->update($parameters);
 		}
+
 		public function update($parameters = []): bool {
+
 			$update_object_query = "
 				UPDATE	contact_events
 				SET		id = id";
@@ -49,6 +62,16 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return NULL;
 			}
+
+			// update audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+			
 			return $this->details();
 		}
 	}

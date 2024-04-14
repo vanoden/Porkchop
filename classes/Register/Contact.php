@@ -33,6 +33,7 @@
 		}
 
 		public function getContact($type,$value): bool {
+
 			$get_object_query = "
 				SELECT	id
 				FROM	register_contacts
@@ -56,6 +57,7 @@
 		}
 		
 		public function add($parameters = array()) {
+
 			if (! preg_match('/^\d+$/',$parameters['person_id'])) {
 				$this->error("Valid person_id required for addContact method");
 				return null;
@@ -96,10 +98,21 @@
 			}
 					
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			return $this->update($parameters);
 		}
 		
 		public function update($parameters = []): bool {
+
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
 				$this->error("ID Required for update method.");
 				return false;
@@ -154,6 +167,16 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));	
+					
 			return $this->details();
 		}
 		

@@ -14,9 +14,9 @@
 		}
 
 		public function add($parameters = []) {
-			if (! isset($parameters['name'])) {
-				$this->_error = "name required for new host";
-			}
+
+			if (! isset($parameters['name'])) $this->_error = "name required for new host";
+
 			$add_object_query = "
 				INSERT
 				INTO	network_domains
@@ -39,8 +39,31 @@
 			}
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			return $this->update($parameters);
 		}
+
+		public function _objectName() {
+
+			if (!isset($caller)) {
+				$trace = debug_backtrace();
+				$caller = $trace[2];
+			}
+
+			$class = isset($caller['class']) ? $caller['class'] : null;
+			if (preg_match('/(\w[\w\_]*)$/',$class,$matches)) $classname = $matches[1];
+			else $classname = "Object";
+			return $classname;
+		}			
 
 		public function get($name) {
 			$get_object_query = "
@@ -83,11 +106,21 @@
 				$this->_error = "SQL Error in Network::Domain::update(): ".$GLOBALS['_database']->ErrorMsg();
 				return false;
 			}
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
 
 			return $this->details();
 		}
 
 		public function details() {
+
 			$get_object_query = "
 				SELECT	 *
 				FROM	network_domains

@@ -16,6 +16,7 @@
 		}
 
 		public function add ($parameters = array()) {
+
 			if (! $GLOBALS['_SESSION_']->customer->can("manage organization comments")) {
 				$this->error = "Not enough privileges";
 				return null;
@@ -55,6 +56,16 @@
 			}
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
+
 			return $this->details();
 		}
 
@@ -63,6 +74,7 @@
 		}
 
 		public function details () {
+
 			if (! $this->id) {
 				$this->_error = "id required";
 				return null;

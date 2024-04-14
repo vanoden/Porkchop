@@ -8,6 +8,7 @@
 		}
 
 		public function add($parameters = []) {
+
 			# Some Things Required
 			if (! $parameters['type']) {
 				$this->error("type required for new MediaItem");
@@ -42,10 +43,21 @@
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+			// add audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			return $this->update($this->id,$parameters);
 		}
 
 		public function update($parameters = array()): bool {
+
 			foreach($parameters as $label => $value) {
 				app_log("Setting meta '$label' = '$value'",'debug',__FILE__,__LINE__);
 				$this->setMeta($this->id,$label,$value);
@@ -59,6 +71,16 @@
 				$update_object_query,
 				array($this->id)
 			);
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+
 			return $this->details();
 		}
 		public function find($parameters = array()) {

@@ -2,6 +2,7 @@
 	namespace Network;
 
 	class NIC {
+
 		private $_error;
 		public $id;
 		public $name;
@@ -17,9 +18,9 @@
 		}
 
 		public function add($parameters = []) {
-			if (! isset($parameters['name'])) {
-				$this->_error = "name required for new interface";
-			}
+
+			if (! isset($parameters['name'])) $this->_error = "name required for new interface";
+
 			$add_object_query = "
 				INSERT
 				INTO	network_interfaces
@@ -48,10 +49,21 @@
 			}
 
 			$this->id = $GLOBALS['database']->Insert_ID();
+
+			// add audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			return $this->update($parameters);
 		}
 
 		public function update($parameters = array()) {
+
 			$bind_params = array();
 
 			$update_object_query = "
@@ -70,6 +82,15 @@
 				$this->_error = "SQL Error in Network::NIC::update(): ".$GLOBALS['database']->ErrorMsg();
 				return false;
 			}
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
 
 			return $this->details();
 		}

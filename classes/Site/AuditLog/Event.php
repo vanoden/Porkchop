@@ -1,7 +1,7 @@
 <?php
 namespace Site\AuditLog;
 
-class Event {
+class Event Extends \BaseModel {
     
     public $id;
     public $event_date;
@@ -12,6 +12,8 @@ class Event {
     public $description;
 
     public function add($params = []) {
+
+        $database = new \Database\Service();
 
         if (empty($params['instance_id']) || empty($params['description'])) {
             $this->error = "Instance ID and description are required.";
@@ -40,13 +42,14 @@ class Event {
             $this->description
         ];
 
-        $rs = $this->database->Execute($query, $bind_params);
+        $rs = $database->Execute($query, $bind_params);
         if (!$rs) {
-            $this->error = "SQL Error in Site\\AuditLog\\Event::add: " . $this->database->ErrorMsg();
+            $this->error = "SQL Error in Site\\AuditLog\\Event::add: " . $database->ErrorMsg();
             return false;
         }
 
-        $this->id = $this->database->Insert_ID();
+        $this->id = $database->Insert_ID();
+			
         return true;
     }   
 

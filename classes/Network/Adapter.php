@@ -52,9 +52,8 @@
 		}
 
 		public function add($parameters = []) {
-			if (! isset($parameters['name'])) {
-				$this->error("name required for new adapter");
-			}
+
+			if (! isset($parameters['name'])) $this->error("name required for new adapter");
 			$add_object_query = "
 				INSERT
 				INTO	network_adapters
@@ -83,6 +82,16 @@
 			}
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+			// add audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+			
 			return $this->update($parameters);
 		}
 
@@ -106,6 +115,15 @@
 				return false;
 			}
 
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+			
 			return $this->details();
 		}
 

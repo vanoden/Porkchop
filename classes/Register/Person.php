@@ -58,6 +58,7 @@ class Person Extends \BaseModel {
 	}
     
     public function add($parameters = []) {
+
 		$this->clearError();
 
         if (!isset($parameters['login']) && isset($parameters['code'])) $parameters['login'] = $parameters['code'];
@@ -112,11 +113,22 @@ class Person Extends \BaseModel {
             return false;
         }
         $this->id = $GLOBALS['_database']->Insert_ID();
+
+		// audit the add event
+		$auditLog = new \Site\AuditLog\Event();
+		$auditLog->add(array(
+			'instance_id' => $this->id,
+			'description' => 'Added new '.$this->_objectName(),
+			'class_name' => get_class($this),
+			'class_method' => 'add'
+		));
+
         app_log("Added customer " . $parameters['login'] . " [" . $this->id . "]", 'debug', __FILE__, __LINE__);
         return $this->update($parameters);
     }
 
     public function update($parameters = []): bool {
+
         if (!$this->id) {
             $this->error("User ID Required for Update");
             return false;
@@ -214,6 +226,15 @@ class Person Extends \BaseModel {
         $cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
         $cache->delete();
 
+        // audit the update event
+        $auditLog = new \Site\AuditLog\Event();
+        $auditLog->add(array(
+            'instance_id' => $this->id,
+            'description' => 'Updated '.$this->_objectName(),
+            'class_name' => get_class($this),
+            'class_method' => 'update'
+        ));	
+        
         // Get Updated Information
         return $this->details();
     }

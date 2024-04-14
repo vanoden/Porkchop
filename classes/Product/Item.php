@@ -31,6 +31,7 @@
 		}
 
 		public function update($parameters = []): bool {
+
 			$this->clearError();
 			$database = new \Database\Service();
 
@@ -82,6 +83,16 @@
 				app_log($update_product_query,'debug');
 				return null;
             }
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));	
+					
 			return $this->details();
 		}
 
@@ -140,6 +151,15 @@
                 return null;
             }
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+			// add audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
 
 			app_log("Created Product ".$this->id,'notice');
 			return $this->update($parameters);

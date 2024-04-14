@@ -12,7 +12,9 @@
 			$this->_cacheKeyPrefix = "geography.country";
     		parent::__construct($id);
 		}
+
 		public function add($parameters=array()) {
+			
 			if (! isset($parameters['name'])) {
 				$this->error("Country name required");
 				return false;
@@ -34,10 +36,21 @@
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+			// add audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			return $this->update($parameters);
 		}
 
 		public function update($parameters = []): bool {
+
 			$update_object_query = "
 				UPDATE	geography_countries
 				SET		id = id";
@@ -61,6 +74,16 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
+			
+			// update audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+
 			$this->clearCache();
 			return $this->details();
 		}

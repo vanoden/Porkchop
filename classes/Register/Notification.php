@@ -4,6 +4,7 @@
 	class Notification Extends \BaseModel {
 	
 		public function add($params = array()) {
+
 			$add_notification_query = "
 				INSERT
 				INTO	register_notifications
@@ -15,10 +16,21 @@
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			return $this->update($params);
 		}
 
 		public function update($params = []): bool {
+
 			$update_object_query = "
 				UPDATE	register_notifications
 				SET		id = id
@@ -28,6 +40,7 @@
 		}
 
 		public function get($name) {
+
 			$get_object_query = "
 				SELECT	id
 				FROM	register_notifications
@@ -41,10 +54,21 @@
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));	
+
 			return $this->details();
 		}
 
 		public function details() {
+
 			$get_object_query = "
 				SELECT	*
 				FROM	register_notifications

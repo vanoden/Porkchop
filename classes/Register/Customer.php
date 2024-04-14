@@ -59,11 +59,21 @@
 					}
 				}
 			}
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
 
 			return $this->details();
 		}
 
 		public function increment_auth_failures() {
+
 			if (! isset($this->id)) return false;
 			$update_customer_query = "
 				UPDATE	register_users
@@ -157,6 +167,7 @@
 
 		// Check login and password against configured authentication mechanism
 		function authenticate ($login, $password) {
+
 			if (! $this->validLogin($login)) {
 				$failure = new \Register\AuthFailure();
 				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'INVALIDLOGIN',$_SERVER['PHP_SELF']));
@@ -227,6 +238,7 @@
 		}
 
 		public function changePassword($password) {
+
 			if (isset($GLOBALS['_config']->register->minimum_password_strength) && $this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
 				$this->error("Password needs more complexity");
 				return false;
@@ -381,6 +393,7 @@
 		}
 
 		public function has_privilege($privilege_name) {
+
 			$this->clearError();
 			$database = new \Database\Service();
 			$privilege = new \Register\Privilege();

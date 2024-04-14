@@ -22,6 +22,7 @@
 		}
 
 		public function add($parameters = []) {
+
 			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) {
 				$this->error = "Not permitted to manage packages";
 				return false;
@@ -152,6 +153,15 @@
 				$file->delete();
 				return false;
 			}
+
+			// add audit log
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
 
 			return $this->update($parameters);
 		}

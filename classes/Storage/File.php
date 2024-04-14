@@ -26,6 +26,7 @@
 		}
 
 		public function add($parameters = []) {
+
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
 			
 			if (! preg_match('/^[\w\-\.\_]+$/',$parameters['code'])) {
@@ -69,6 +70,16 @@
 			}
 			
 			$this->id = $GLOBALS['_database']->Insert_ID();
+			
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
 			app_log("File '".$this->id."' uploaded");
 			return $this->update($parameters);
 		}
@@ -117,6 +128,16 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));	
+					
 			return $this->details();
 		}
 

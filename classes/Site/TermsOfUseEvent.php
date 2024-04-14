@@ -12,6 +12,7 @@
 		/* Instance Constructor						*/
 		/********************************************/
 		public function __construct(int $id = null) {
+
 			// Set Table Name
 			$this->_tableName = 'site_terms_of_use_events';
 			$this->_addFields(array('date_event','type','version_id','user_id'));
@@ -36,6 +37,7 @@
 		/* Others should be handled in update().	*/
 		/********************************************/
 		public function add($params = []): bool {
+
 			// Clear Any Existing Errors
 			$this->clearError();
 
@@ -72,6 +74,15 @@
 
 			// Fetch New ID
 			$this->id = $database->Insert_ID();
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
 
 			// No Update, Load Details
 			return $this->details();
@@ -82,6 +93,7 @@
 		/* from Cache or Database					*/
 		/********************************************/
 		public function details(): bool {
+
 			// Clear Errors
 			$this->clearError();
 

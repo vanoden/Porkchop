@@ -72,6 +72,16 @@ class PriceAudit Extends \BaseModel {
 			return false;
 		}
 		$this->id = $GLOBALS['_database']->Insert_ID();
+
+		// add audit log
+		$auditLog = new \Site\AuditLog\Event();
+		$auditLog->add(array(
+			'instance_id' => $this->id,
+			'description' => 'Added new '.$this->_objectName(),
+			'class_name' => get_class($this),
+			'class_method' => 'add'
+		));
+
 		app_log("User ".$GLOBALS['_SESSION_']->customer->id." new price has been audited '".$this->id."'");
 		return $this->details();
 	}

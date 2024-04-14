@@ -31,6 +31,7 @@
 		}
 
 		public function get($login): bool {
+
 			$this->clearError();
 
 			$customer = new \Register\Customer();
@@ -81,6 +82,7 @@
 		 * @param array $parameters
 		 */
 		public function update ($parameters = []): bool {
+
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
 				$this->error("ID Required for update method.");
 				return false;
@@ -115,7 +117,16 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
-						
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));	
+			
 			// return basic queue entry details
 			return $this->details();
 		}
@@ -124,6 +135,7 @@
 		 * sync the live account that may or may not be associated with the queued account being edited
 		 */
 		public function syncLiveAccount () {
+
 			// if they've found an existing organization
 			if(!empty($_REQUEST['organization'])) $this->name = $_REQUEST['organization'];
 
@@ -240,6 +252,7 @@
 
 		// hydrate known details about this queue object from known id if set
 		public function details(): bool {
+
 			if (empty($this->id)) {
 				$this->error("ID Required for details method.");
 				return false;
@@ -362,6 +375,16 @@
 				return null;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
+
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
+
 			return $this->id;
 		}
 

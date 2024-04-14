@@ -50,7 +50,8 @@
 				$trace = debug_backtrace();
 				$caller = $trace[2];
 			}
-			$class = $caller['class'];
+
+			$class = isset($caller['class']) ? $caller['class'] : null;
 			if (preg_match('/(\w[\w\_]*)$/',$class,$matches)) $classname = $matches[1];
 			else $classname = "Object";
 			return $classname;

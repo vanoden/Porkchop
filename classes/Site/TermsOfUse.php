@@ -14,6 +14,7 @@
 		}
 
 		public function getByCode($code) {
+
 			$get_object_query = "
 				SELECT	id
 				FROM	site_terms_of_use
@@ -33,6 +34,7 @@
 		}
 
 		public function add($params = []): bool {
+
 			$this->clearError();
 
 			$termsList = new \Site\TermsOfUseList();
@@ -79,6 +81,16 @@
 				return false;
 			}
 			$this->id = $database->Insert_ID();
+			
+            // audit the add event
+            $auditLog = new \Site\AuditLog\Event();
+            $auditLog->add(array(
+                'instance_id' => $this->id,
+                'description' => 'Added new '.$this->_objectName(),
+                'class_name' => get_class($this),
+                'class_method' => 'add'
+            ));
+
 			return $this->update($params);
 		}
 
@@ -120,6 +132,16 @@
 
 	        // Bust Cache
 			$this->clearCache();
+			
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+
 			return $this->details();
 		}
 

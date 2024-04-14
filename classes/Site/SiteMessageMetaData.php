@@ -69,7 +69,17 @@
             array_push($bindParams, $this->id);
             $this->execute($updateQuery, $bindParams);
 
-			if ($this->error()) return false;            
+			if ($this->error()) return false;  
+
+			// audit the update event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Updated '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'update'
+			));
+
             return $this->details();
 		}
 	}
