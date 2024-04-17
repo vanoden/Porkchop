@@ -143,3 +143,18 @@
                 "contact"       => "spectros",
                 "event"         => "spectros"
        );
+
+        # Site Auditing Setup
+        $_config->auditing = new stdClass();
+        $_config->auditing->auditedClasses =  array(
+                "Monitor\\Dashboard",
+                "Monitor\\SensorDefinition",
+                "Register\\Customer",
+                "Register\\Privilege",
+                "Register\\Role",
+                "Register\\Tag",
+                "Sales\\Order",
+                "Sales\\Order\\Event",
+                "Site\\Page",
+                "Support\\Request\\Item"
+        );

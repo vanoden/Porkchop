@@ -6,6 +6,7 @@
 		public $startId = 0;
 		public $endId = 0;
 		public $size = 25;
+        public $numberPageLinks = 3;
 		public $direction;
 		public $sort;
 		public $baseURI;
@@ -44,6 +45,11 @@
                 if ($this->endId > $this->count) $this->endId = $this->count;
             }
             return $this->count;
+        }
+
+        public function numberPageLinks($numberPageLinks = null) {
+            if (isset($numberPageLinks) && is_numeric($numberPageLinks)) $this->numberPageLinks = $numberPageLinks;
+            return $this->numberPageLinks;
         }
 
         public function size($size = null) {
@@ -117,13 +123,19 @@
             if ($this->totalPages() > 1) {
                 $string = '';
                 $string .= "<ul>\n";
-                if ($this->pageNumber() > 1) $string .= "<li><a href=\"".$this->prevPageLink()."\">&laquo; Prev</a></li>\n";
-                for ($i = 1; $i <= $this->totalPages(); $i++) {
+                if ($this->pageNumber() > 1) {
+                    $string .= "<li><a href=\"".$this->firstPageLink()."\">&laquo;&laquo; First</a></li>\n";
+                    $string .= "<li><a href=\"".$this->prevPageLink()."\">&laquo; Prev</a></li>\n";
+                }
+                $start = max(1, $this->pageNumber() - $this->numberPageLinks);
+                $end = min($this->totalPages(), $this->pageNumber() + $this->numberPageLinks);
+
+                for ($i = $start; $i <= $end; $i++) {
                     $string .= "<li";
                     if ($i == $this->pageNumber()) $string .= ' class="active"';
-                    $string .= "><a href=\"".$this->pageLink($i)."\">$i</a></li>\n";
+                    $string .= "><a href=\"".$this->pageLink($i)."\">".$i."</a></li>\n";
                 }
-                if ($this->pageNumber() < $this->totalPages()) $string .= "<li><a href=\"".$this->nextPageLink()."\">Next &raquo;</a></li>\n";		  
+                if ($this->pageNumber() < $this->totalPages()) $string .= "<li><a href=\"".$this->nextPageLink()."\">Next &raquo;</a></li>\n";
                 $string .= "</ul>\n";
                 return $string;
             }

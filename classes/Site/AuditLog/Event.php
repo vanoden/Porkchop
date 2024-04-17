@@ -11,12 +11,23 @@ class Event Extends \BaseModel {
     public $class_method;
     public $description;
 
+    public function __construct($id = 0) {
+        $this->_tableName = 'site_audit_events';
+        $this->_addFields(array('id', 'event_date', 'user_id', 'instance_id', 'class_name', 'class_method', 'description'));
+        parent::__construct($id);
+    }
+
     public function add($params = []) {
 
-        $database = new \Database\Service();
+        // if no classes set to be audited, return true
+        if (!isset($GLOBALS['_config']->auditing->auditedClasses) || empty($GLOBALS['_config']->auditing->auditedClasses)) return true;
 
+        // if the class_name is set in $params, check if it is in the auditedClasses array
+        if (isset($params['class_name']) && !in_array($params['class_name'], $GLOBALS['_config']->auditing->auditedClasses)) return true;
+
+        $database = new \Database\Service();
         if (empty($params['instance_id']) || empty($params['description'])) {
-            $this->error = "Instance ID and description are required.";
+            $this->error("Instance ID and description are required.");
             return false;
         }
 
@@ -44,12 +55,10 @@ class Event Extends \BaseModel {
 
         $rs = $database->Execute($query, $bind_params);
         if (!$rs) {
-            $this->error = "SQL Error in Site\\AuditLog\\Event::add: " . $database->ErrorMsg();
+            $this->error("SQL Error in Site\\AuditLog\\Event::add: " . $database->ErrorMsg());
             return false;
         }
-
         $this->id = $database->Insert_ID();
-			
         return true;
     }   
 

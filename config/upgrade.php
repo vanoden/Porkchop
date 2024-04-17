@@ -36,7 +36,8 @@
 				"tou_versions"	=> $templates['admin'],
 				"tou_version"	=> $templates['admin'],
 				"export_content"	=> $templates['admin'],
-				"import_content"	=> $templates['admin']
+				"import_content"	=> $templates['admin'],
+				"audit_log"		=> $templates['admin']
 			),
 		),
 		"Geography"		=> array(
