@@ -5,6 +5,7 @@
 
 	$templates = array(
 		"default"	=> "default.html",
+		"support"	=> "support.html",
 		"admin"		=> "admin.html"
 	);
 
