@@ -57,14 +57,15 @@
 		}
 		
 		public function add($parameters = array()) {
+			$database = new \Database\Service();
 
 			if (! preg_match('/^\d+$/',$parameters['person_id'])) {
 				$this->error("Valid person_id required for addContact method");
-				return null;
+				return false;
 			}
 			if (! $this->validType($parameters['type'])) {
 				$this->error("Valid type required for addContact method");
-				return null;
+				return false;
 			}
 
 			if (! isset($parameters['notify'])) $parameters['notify'] = 0;
@@ -81,23 +82,20 @@
 				    ?,?,?,?
 				)
 			";
+
+			$database->AddParam($parameters['person_id']);
+			$database->AddParam($parameters['type']);
+			$database->AddParam($parameters['value']);
+			$database->AddParam($parameters['notify']);
+
+			$database->Execute($add_contact_query);
 			
-			$GLOBALS['_database']->Execute(
-				$add_contact_query,
-				array(
-					$parameters['person_id'],
-					$parameters['type'],
-					$parameters['value'],
-					$parameters['notify']
-				)
-			);
-			
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMSg());
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMSg());
 				return null;
 			}
 					
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			$this->id = $database->Insert_ID();
 
 			// audit the add event
 			$auditLog = new \Site\AuditLog\Event();
@@ -110,15 +108,15 @@
 
 			return $this->update($parameters);
 		}
-		
-		public function update($parameters = []): bool {
 
+		// Update an existing record
+		public function update($parameters = []): bool {
+			$database = new \Database\Service();
 			if (! preg_match('/^[0-9]+$/',$this->id)) {
 				$this->error("ID Required for update method.");
 				return false;
 			}
-			
-			$bind_params = array();
+
 			$update_contact_query = " UPDATE register_contacts SET id = id";
 				
 			if ($parameters['type']) {
@@ -128,44 +126,44 @@
 				}
 				$update_contact_query .= ",
 						type = ?";
-				array_push($bind_params,$parameters['type']);
+				$database->AddParam($parameters['type']);
 			}
 			if (isset($parameters['description'])) {
 				$update_contact_query .= ",
 						description = ?";
-				array_push($bind_params,$parameters['description']);
+				$database->AddParam($parameters['description']);
+			}
 			if (isset($parameters['notify'])){
 				$update_contact_query .= ",
 						notify = ?";
-				if ($parameters['notify']) array_push($bind_params,1);
-				else array_push($bind_params,0);
+				if ($parameters['notify']) $database->AddParam(1);
+				else $database->AddParam(0);
 			}
 			if (isset($parameters['value'])) {
 				if ($this->validValue($parameters['type'],$parameters['value'])) {
 					$update_contact_query .= ",
 							value = ?";
-					array_push($bind_params,$parameters['value']);
+					$database->AddParam($parameters['value']);
 				}
 				else {
 					$this->error("Invalid contact value");
 					return false;
 				}
 			}
-			if (isset($parameters['notes']))
+			if (isset($parameters['notes'])) {
 				$update_contact_query .= ",
 						notes = ?";
-				array_push($bind_params,$parameters['notes']);
+				$database->AddParam($parameters['notes']);
 			}
 
 			$update_contact_query .= "
 				WHERE	id = ?";
-			array_push($bind_params,$this->id);
+			$database->AddParam($this->id);
 
-			query_log($update_contact_query);
-			$GLOBALS['_database']->Execute($update_contact_query,$bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+			$database->Execute($update_contact_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
 
 			// audit the update event
