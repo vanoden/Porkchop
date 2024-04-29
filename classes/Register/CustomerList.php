@@ -4,6 +4,7 @@
 	class CustomerList Extends \BaseListClass {
 
 		public function flagActive() {
+
 			$find_session_query = "
 				SELECT 	MAX(user_id)
 				FROM	session_sessions
@@ -38,6 +39,7 @@
 		}
 		
 		public function expireInactive($age = 14) {
+			
 			if (! is_numeric($age)) {
 				$this->error("Age must be a number");
 				return null;

@@ -11,7 +11,6 @@
     // check if the organization already exists for button states
     function checkExisting(id, orgName) {
         $.get("/_register/api?method=searchOrganizationsByName&term=" + orgName, function(data) {
-            console.log(data.length);
             if (data.length > 0) {
                 document.getElementById(id + "_assign_button").disabled = false;
                 document.getElementById(id + "_new_button").disabled = true;
@@ -48,24 +47,27 @@
     });
 </script>
 <style>
-   .strong-text {
-	font-weight: bold;
-   }
-   .small-text {
-	font-size: 10px;
-   }
-   .cursor-pointer {
-	cursor:pointer;
-   }
-   .hidden {
-	display:none;
-   }
-   .vertical-align-top {
-	vertical-align: unset;
-   }   
-   .resend-verify-message {
+  .strong-text {
+    font-weight: bold;
+  }
+  .small-text {
     font-size: 10px;
-   }
+  }
+  .cursor-pointer {
+    cursor:pointer;
+  }
+  .hidden {
+    display:none;
+  }
+  .vertical-align-top {
+    vertical-align: unset;
+  }   
+  .resend-verify-message {
+    font-size: 10px;
+  }
+  .icon-button:disabled {
+    opacity: 0.25;
+  }
 </style>
 <script>
    // reset the page forms to only allow the one in question
@@ -188,11 +190,11 @@
     <div class="tableCell">Admin Notes</div>
   </div>
   <?php
-	  foreach ($queuedCustomersList as $queuedCustomer) {      
-			$registerCustomer = $queuedCustomer->customer();  
-			$productItem = new \Product\Item($queuedCustomer->product_id);
-			$phone = $registerCustomer->contacts(array('type' => 'phone'))[0];
-			$email = $registerCustomer->contacts(array('type' => 'email'))[0];
+    foreach ($queuedCustomersList as $queuedCustomer) {
+      $registerCustomer = $queuedCustomer->customer();
+      $productItem = new \Product\Item($queuedCustomer->product_id);
+      $phone = isset($registerCustomer->contacts(array('type' => 'phone'))[0]) ? $registerCustomer->contacts(array('type' => 'phone'))[0] : "";
+      $email = isset($registerCustomer->contacts(array('type' => 'email'))[0]) ? $registerCustomer->contacts(array('type' => 'email'))[0] : "";
 	?>
 	<div class="tableRow">
 		<div class="tableCell"><?=$queuedCustomer->name?>
@@ -206,8 +208,8 @@
         <div>
           <label for="organization">Match Organization: </label>
           <input class="organization" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?=$queuedCustomer->name?>"/><br>
-          <input type="image" class="icon-button" src="/img/icons/icon_cust_add-existing.svg" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" /> 
-          <input type="image" class="icon-button" src="/img/icons/icon_cust_add-new.svg" disabled="disabled" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" title="Assign customer to new organization" /> 
+          <input type="image" class="icon-button" src="/img/icons/icon_cust_add-existing.svg" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" disabled="disabled"/> 
+          <input type="image" class="icon-button" src="/img/icons/icon_cust_add-new.svg" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" title="Assign customer to new organization" disabled="disabled"/> 
           <input type="image" class="icon-button" src="/img/icons/icon_cust_deny.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" title="Deny customer creation" />
         </div>
         <?php

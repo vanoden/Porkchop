@@ -240,7 +240,7 @@
 				array_push($bind_params,$parameters['reseller_id']);
 			}
 
-            if (isset($controls['direction']) && ! preg_match('/^desc$/i',$controls['direction'])) $controls['direction'] = 'ASC';
+			$controls['direction'] = (isset($controls['direction']) && preg_match('/^desc$/i',$controls['direction'])) ? $controls['direction'] : 'ASC';
 
             if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
 

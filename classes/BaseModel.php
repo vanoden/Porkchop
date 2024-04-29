@@ -31,9 +31,7 @@
 
 		// Load object base on ID if given
 		public function __construct($id = 0) {
-			if (empty($this->_tableName)) {
-				app_log("Class ".get_called_class()." constructed w/o table name!",'notice');
-			}
+			if (empty($this->_tableName)) app_log("Class ".get_called_class()." constructed w/o table name!",'notice');
 			if (is_numeric($id) && $id > 0) {
 				$this->id = $id;
 				$this->details();

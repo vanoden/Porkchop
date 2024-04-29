@@ -37,7 +37,7 @@
 		else {
             $queuedCustomer = new Register\Queue($_REQUEST['id']);
             $queuedCustomer->update(array('notes' => noXSS(trim($_REQUEST['notes']))));
-            $page->success = true;
+            $page->success = 'Notes updated successfully.';
         }
 	}
 
@@ -54,7 +54,7 @@
 		else {    
             $queuedCustomer->update(array('status' => $_REQUEST['status']));
             if ($_REQUEST['status'] == 'APPROVED') $queuedCustomer->syncLiveAccount();
-            $page->success = true;
+            $page->success = 'Status updated successfully.';
         }
 	}
 
@@ -66,7 +66,7 @@
         } else {
             $queuedCustomer = new Register\Queue($_REQUEST['id']);	    
             $queuedCustomer->update(array('status' => 'DENIED'));
-            $page->success = true;
+            $page->success = 'Customer denied.';
         }
 	}
 

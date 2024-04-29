@@ -11,6 +11,7 @@
 		"mobiledetect/mobiledetectlib": "^2.8",
 		"tecnickcom/tcpdf": "^6.3",
 		"picqer/php-barcode-generator": "^0.3.0",
-		"spomky-labs/otphp": "^11.2"
+		"spomky-labs/otphp": "^11.2",
+		"bacon/bacon-qr-code": "^3.0"
 	}
 }
