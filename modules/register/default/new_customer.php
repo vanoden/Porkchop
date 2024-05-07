@@ -113,7 +113,7 @@ function checkSerial() {
     }
   } else {
     serialInput.style.border = 'solid 2px red';
-    serialNumberMessage.innerHTML = 'Serial number not found in our system FUBAR';
+    serialNumberMessage.innerHTML = 'Serial number not found in our system';
     serialNumberMessage.style.display = 'block';
     serialNumberMessageOK.style.display = 'none';
     return false;
