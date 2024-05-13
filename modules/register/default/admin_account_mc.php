@@ -99,29 +99,32 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 		elseif (!$customer->validStatus($_REQUEST['status']))
 			$page->addError("Invalid status " . $_REQUEST['status']);
 		else {
+
 			$parameters['login'] = $_REQUEST["login"];
-			if (isset($_REQUEST["first_name"]) && preg_match('/^[\w\-\.\_\s]+$/', $_REQUEST["first_name"]))
-				$parameters['first_name'] = $_REQUEST["first_name"];
-			if (isset($_REQUEST["last_name"]) && preg_match('/^[\w\-\.\_\s]+$/', $_REQUEST["last_name"]))
-				$parameters['last_name'] = $_REQUEST["last_name"];
-			if (isset($_REQUEST["timezone"]))
-				$parameters['timezone'] = $_REQUEST["timezone"];
-			if (isset($_REQUEST["status"]))
-				$parameters['status'] = $_REQUEST["status"];
+			if (isset($_REQUEST["first_name"]) && preg_match('/^[\w\-\.\_\s]+$/', $_REQUEST["first_name"])) $parameters['first_name'] = $_REQUEST["first_name"];
+			if (isset($_REQUEST["last_name"]) && preg_match('/^[\w\-\.\_\s]+$/', $_REQUEST["last_name"])) $parameters['last_name'] = $_REQUEST["last_name"];
+			if (isset($_REQUEST["timezone"])) $parameters['timezone'] = $_REQUEST["timezone"];
+			if (isset($_REQUEST["status"])) $parameters['status'] = $_REQUEST["status"];
+			
 			if (isset($_REQUEST["automation"])) {
 				if ($_REQUEST['automation'])
 					$parameters['automation'] = true;
 				else
 					$parameters['automation'] = false;
 			}
-			if (isset($_REQUEST['organization_id']))
-				$parameters["organization_id"] = $_REQUEST["organization_id"];
+
+			if (isset($_REQUEST['organization_id'])) $parameters["organization_id"] = $_REQUEST["organization_id"];
+
 			if (isset($_REQUEST["password"]) and ($_REQUEST["password_2"])) {
 				if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 					$page->addError("Passwords do not match");
 					goto load;
 				}
 			}
+
+			// time_based_password required or not
+			$parameters['time_based_password'] = 0;
+			if (isset($_REQUEST["time_based_password"]) && !empty($_REQUEST["time_based_password"])) $parameters['time_based_password'] = 1;
 
 			if ($customer_id) {
 				app_log("Updating customer " . $customer_id, 'debug', __FILE__, __LINE__);
@@ -137,7 +140,9 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 						$page->addError("Password needs more complexity");
 					}
 				}
+
 			} else {
+
 				app_log("New customer registration", 'debug', __FILE__, __LINE__);
 
 				// Default Login to Email Address
@@ -168,9 +173,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 					}
 				}
 
-				if (empty($_REQUEST['password'])) {
-					$_REQUEST['password'] = $customer->randomPassword();
-				}
+				if (empty($_REQUEST['password'])) $_REQUEST['password'] = $customer->randomPassword();
 				$customer->changePassword($_REQUEST['password']);
 
 				$template = new \Content\Template\Shell($GLOBALS['_config']->register->account_created->template);
@@ -206,9 +209,8 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 		// Process Contact Entries
 		app_log("Processing contact entries", 'debug', __FILE__, __LINE__);
 		foreach ($_REQUEST['type'] as $contact_id => $type) {
-			if (!$_REQUEST['type'][$contact_id])
-				continue;
 
+			if (!$_REQUEST['type'][$contact_id]) continue;
 			if ($contact_id > 0) {
 				app_log("Updating contact record", 'debug', __FILE__, __LINE__);
 				$contact = new \Register\Contact($contact_id);

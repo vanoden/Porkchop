@@ -4,7 +4,6 @@
 	$page->requirePrivilege('manage products');
 
     $recordsPerPage = 15;
-
     $parameters = [];
 
     // For Validation
@@ -28,8 +27,7 @@
         if (!empty($_REQUEST['status_deleted'])) {
             $parameters['status'][] = 'DELETED';
         }
-    }
-    else {
+    } else {
         $_REQUEST['status_active'] = true;
         $_REQUEST['status_hidden'] = false;
         $_REQUEST['status_deleted'] = false;

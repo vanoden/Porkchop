@@ -5,6 +5,7 @@
 
 	$parameters = array();
 	$parameters['status'] = array();
+	$recordsPerPage = 10;
 
 	// extract sort and order parameters from request
 	$sort_direction = isset($_REQUEST['sort_by']) ? $_REQUEST['sort_by'] : '';
@@ -27,22 +28,12 @@
 
 	// find orders
 	$orderslist = new \Sales\OrderList();
-	$orders = $orderslist->find($parameters);
+	$totalRecords = $orderslist->count($parameters);
+	$orders = $orderslist->find($parameters, ['limit' => $recordsPerPage,'offset' => $_REQUEST['pagination_start_id']]);
+	if ($orderslist->error()) $page->addError($orderslist->error());
 
 	// paginate results
-	$pageNumber = isset($_GET['pageNumber']) && is_numeric($_GET['pageNumber']) ? (int)$_GET['pageNumber'] : 1;
-	$recordsPerPage = 10;
-	$offset = ($pageNumber - 1) * $recordsPerPage;
-	$totalResults = count($orders);
-	$orderCurrentPage = array_slice($orders, $offset, $recordsPerPage);
-	$totalPages = ceil($totalResults / $recordsPerPage);
-	
-	if ($_REQUEST['start'] < $recordsPerPage)
-		$prev_offset = 0;
-	else
-		$prev_offset = $_REQUEST['start'] - $recordsPerPage;
-		
-	$next_offset = $_REQUEST['start'] + $recordsPerPage;
-	$last_offset = $totalResults - $recordsPerPage;
-
-	if ($next_offset > $totalResults) $next_offset = $_REQUEST['start'] + $totalResults;
+    $pagination = new \Site\Page\Pagination();
+    $pagination->forwardParameters(array('search','status_active','status_hidden','status_deleted','sort_by', 'order_by'));
+    $pagination->size($recordsPerPage);
+    $pagination->count($totalRecords);

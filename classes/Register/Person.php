@@ -22,6 +22,7 @@ class Person Extends \BaseModel {
 	public $auth_failures;
     public $timezone;
     public $auth_method;
+    public $time_based_password = 0;
     protected $_settings = array( "date_format" => "US" );
 	protected $_database;
 
@@ -207,6 +208,16 @@ class Person Extends \BaseModel {
             else {
                 $update_customer_query .= ",
 						automation = 0";
+            }
+        }
+
+        if (isset($parameters['time_based_password'])) {
+            if ($parameters['time_based_password']) {
+                $update_customer_query .= ",
+                time_based_password = 1";
+            } else {
+                $update_customer_query .= ",
+                time_based_password = 0";
             }
         }
         

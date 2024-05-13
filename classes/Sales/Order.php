@@ -123,7 +123,7 @@ class Order extends \BaseModel {
 				}
 				$update_object_query .= ", customer_id = ?";
 				array_push($bind_params,$parameters['customer_id']);
-			}		
+			}	
 		
 			if (isset($parameters['salesperson_id'])) {
 				$admin = new \Register\Admin($parameters['salesperson_id']);

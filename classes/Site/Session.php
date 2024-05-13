@@ -25,6 +25,7 @@
 		public $timezone;
 		public $location_id;
 		public $customer_id;
+		public $otp_redirect;
 		private $csrfToken;
 		private $cookie_name;
 		private $cookie_domain;
@@ -32,7 +33,7 @@
 		private $cookie_path;
 		private $elevated = false;
 		private $oauth2_state = null;
-
+		
 		public function __construct($id = 0) {
     		$this->_database = new \Database\Service();
 			$this->_tableName = 'session_sessions';
@@ -643,6 +644,7 @@
         }
 
         public function verifyCSRFToken($csrfToken) {
+
 			if (empty($csrfToken)) {
 				app_log("No csrfToken provided",'debug');
 				return false;

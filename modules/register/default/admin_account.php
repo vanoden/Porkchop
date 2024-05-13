@@ -106,7 +106,9 @@
         }
         ?>
       </div>
-      <div class="tableCell" style="width: 50%;"></div>
+      <div class="tableCell" style="width: 50%;">Time Based Password [TOTP]
+        <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?>>
+      </div>
     </div>
   </div>
    
