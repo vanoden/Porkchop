@@ -167,14 +167,16 @@
 						$page->addError("This account is ".$customer->status);
 					} else {
 
+						// populate the final target after the user logs in
+						if (empty($target) || !isset($target)) $target = "/_register/account";
+						
 						// Check for Time Based Password redirect, saving the final redirect once the OTP is verified
+						$OTPRedirect = '';
 						if ($customer->time_based_password) {
-							if (empty($target) || !isset($target)) $target = "/_register/account";
-							$GLOBALS['_SESSION_']->otp_redirect = $target;
+							$OTPRedirect = $target;
 							$target = "/_register/otp";
 						}
-
-						$GLOBALS['_SESSION_']->assign($customer->id);
+						$GLOBALS['_SESSION_']->assign($customer->id, false, $OTPRedirect);
 						$GLOBALS['_SESSION_']->touch();
 						$customer->update(array("status" => "ACTIVE", "auth_failures" => 0));
 

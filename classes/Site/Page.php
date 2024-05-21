@@ -76,6 +76,12 @@
 			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
                 exit;
 		    }
+			if (!empty($GLOBALS ['_SESSION_']->refer_url)) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
+				header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				exit;
+			}
 	    }
 	    public function requireSuperElevation() {
 		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
