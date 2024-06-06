@@ -1,17 +1,26 @@
 {
-	"require": {
-		"jms/serializer": "1.5.0",
-		"setasign/fpdf": "~1.8.1",
-		"adodb/adodb-php": "~5.20.20",
-		"elasticsearch/elasticsearch": "~2.0@beta",
-		"aws/aws-sdk-php": "3.297.2",
-		"phpmailer/phpmailer": "~5.2",
-		"guzzlehttp/guzzle": "^6.3",
-		"paragonie/random_compat": "<9.99",
-		"mobiledetect/mobiledetectlib": "^2.8",
-		"tecnickcom/tcpdf": "^6.3",
-		"picqer/php-barcode-generator": "^0.3.0",
-		"spomky-labs/otphp": "^11.2",
-		"bacon/bacon-qr-code": "^3.0"
-	}
+    "require": {
+        "amphp/amp": "^3.0",
+        "revolt/event-loop": "^1.0",
+        "jms/serializer": "^3.30",
+        "setasign/fpdf": "^1.8",
+        "adodb/adodb-php": "^5.22",
+        "elasticsearch/elasticsearch": "^8.13",
+        "aws/aws-sdk-php": "^3.311",
+        "phpmailer/phpmailer": "^6.9",
+        "guzzlehttp/guzzle": "^7.8",
+        "paragonie/random_compat": "^9.99",
+        "mobiledetect/mobiledetectlib": "^4.8",
+        "tecnickcom/tcpdf": "^6.7",
+        "picqer/php-barcode-generator": "^2.4",
+        "spomky-labs/otphp": "^11.2",
+        "bacon/bacon-qr-code": "^3.0",
+        "amphp/socket": "^2.3",
+        "amphp/byte-stream": "^2.1"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
 }

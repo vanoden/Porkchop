@@ -268,7 +268,7 @@
 			$path = $caller['file'];
 			$line = $caller['line'];
 		}
-		$GLOBALS['logger']->writeln($message,$level,$path,$line);
+		if (!empty($GLOBALS['logger'])) $GLOBALS['logger']->writeln($message,$level,$path,$line);
 	}
 	
 	function executeSQLByParams($query, $bindParams) {
