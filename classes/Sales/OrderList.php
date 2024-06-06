@@ -8,7 +8,13 @@
 			$this->_tableDefaultSortBy = 'date_event';
 		}
 
-		public function find($parameters = array()) {
+        public function count($parameters = []) {
+            if (!empty($this->_count)) return $this->_count;
+            $this->_count = count($this->find($parameters));
+            return $this->_count;
+        }
+
+		public function find($parameters = [],$controls = []) {
 
 			$bind_params = array();
 			$find_order_query = "
@@ -61,6 +67,15 @@
 				$find_order_query .= $order_by_clause . $sort_direction_clause;
 			}
 
+            if (isset($controls['limit']) && is_numeric($controls['limit'])) {
+                $find_order_query .= "
+                LIMIT   ".$controls['limit'];
+                if (isset($controls['offset']) && is_numeric($controls['offset'])) {
+                    $find_order_query .= "
+                    OFFSET  ".$controls['offset'];
+                }
+            }
+
 			query_log($find_order_query,$bind_params,true);
 			$rs = $GLOBALS['_database']->Execute($find_order_query,$bind_params);
 			if (! $rs) {
@@ -74,6 +89,7 @@
 				array_push($orders,$order);
 				$this->_count ++;
 			}
+
 			return $orders;
 		}
 

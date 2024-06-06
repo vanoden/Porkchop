@@ -11,6 +11,7 @@
             $this->_count = count($this->find($parameters));
             return $this->_count;
         }
+		
 		public function find($parameters = [],$controls = []) {
 			$this->clearError();
             $this->resetCount();

@@ -1,5 +1,5 @@
 <!-- Page Header -->
-<?= $page->showTitle() ?>
+<?=$page->showTitle() ?>
 <?=$page->showBreadcrumbs()?>
 <?=$page->showMessages()?>
 <!-- End Page Header -->

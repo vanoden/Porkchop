@@ -7,7 +7,6 @@
 	###################################################
     $site = new \Site();
     $page = $site->page();
-	// $page = new \Site\Page();
 	$page->requirePrivilege("manage customers");
 
 	// Initialize Parameter Array

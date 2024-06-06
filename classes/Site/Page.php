@@ -76,6 +76,12 @@
 			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
                 exit;
 		    }
+			if (!empty($GLOBALS ['_SESSION_']->refer_url)) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
+				header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				exit;
+			}
 	    }
 	    public function requireSuperElevation() {
 		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
@@ -489,11 +495,10 @@
 	    public function parse($message) {
 		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
 		    while ( preg_match( $module_pattern, $message, $matched ) ) {
-			    $search = $matched[0];
+			    $search = isset($matched[0]) ? $matched[0] : "";
 			    $parse_message = "Replaced $search";
 			    $replace_start = microtime( true );
-			    $replace = $this->replace($matched[0]);
-			    // app_log($parse_message." with $replace in ".sprintf("%0.4f",(microtime(true) - $replace_start))." seconds",'debug',__FILE__,__LINE__);
+			    $replace = $this->replace($search);
 			    $message = str_replace( $search, $replace, $message );
 		    }
 
@@ -610,7 +615,8 @@
 					else {
 						$this->error($menu->error());
 						return '';
-					}					$items = $menu->items();
+					}					
+					$items = $menu->items();
 
 				    if (count($items)) {
 					    foreach ($items as $item) {
