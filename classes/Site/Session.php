@@ -330,7 +330,7 @@
 				$this->refer_url = $session->refer_url;
 				$this->oauth2_state = $session->oauth2_state;
 
-                require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/Mobile_Detect.php';
+                require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/src/MobileDetect.php';
                 $detect = new \Mobile_Detect;
 
                 if ($detect->isMobile())
