@@ -331,7 +331,7 @@
 				$this->oauth2_state = $session->oauth2_state;
 
                 require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/src/MobileDetect.php';
-                $detect = new \Mobile_Detect;
+                $detect = new \Detection\MobileDetect;
 
                 if ($detect->isMobile())
                     $this->isMobile = true;
