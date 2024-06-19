@@ -32,10 +32,8 @@
 	
 	// remove an organization tag by id
 	function removeTagById(id) {
-	    var orgDetailsForm = document.getElementById('orgDetails');
-	    var removeTagId = document.getElementById('removeTagId');
-	    removeTagId.value = id;
-	    orgDetailsForm.submit();
+	    document.getElementById('removeTagId').value = id;
+	    document.getElementById('orgDetails').submit();
 	}
 </script>
 

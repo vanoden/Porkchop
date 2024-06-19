@@ -12,6 +12,10 @@
             return $this->_count;
         }
 		
+		public function search($parameters = []) {
+			return $this->find($parameters);
+		}
+
 		public function find($parameters = [],$controls = []) {
 			$this->clearError();
             $this->resetCount();

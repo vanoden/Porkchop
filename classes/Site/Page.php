@@ -543,6 +543,7 @@
 	    }
 	    
 	    public function replace($string) {
+			
 		    // Initialize Replacement Buffer
 		    $buffer = '';
 

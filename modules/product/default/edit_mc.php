@@ -32,11 +32,11 @@
 		$item = new \Product\Item();
 		$new_item = true;
 	}
-
+	
 	if (! $new_item && ! $item->id) $page->addError("Item not found");
     	
 	// Handle Actions
-	elseif (isset($_REQUEST['submit'])) {
+	elseif (isset($_REQUEST['updateSubmit'])) {
 	    // CSRF Token Check
 	    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) $page->addError("Invalid Request");
 	    if (!$page->errorCount()) {
@@ -155,6 +155,35 @@
 			}
 		}
 	}
+
+	// add tag to product
+	if (!empty($_REQUEST['addTag']) && empty($_REQUEST['removeTag'])) {
+	    $productTag = new \Product\Tag();
+	    if (!empty($_REQUEST['newTag']) && $productTag->validName($_REQUEST['newTag'])) {
+	        $productTag->add(array('product_id'=>$item->id,'name'=>$_REQUEST['newTag']));
+			if ($productTag->error()) {
+				$page->addError("Error adding product tag: ".$productTag->error());
+			} else {
+				$page->appendSuccess("Product Tag added Successfully");
+			}
+	    } else {
+    	    $page->addError("Value for Product Tag is required");
+	    }
+	}
+	
+	// remove tag from organization
+	if (!empty($_REQUEST['removeTagId'])) {
+        $productTagList = new \Product\TagList();
+        $productTags = $productTagList->find(array("product_id" => $item->id, "id"=> $_REQUEST['removeTagId']));
+	    foreach ($productTags as $productTag) {
+			$productTag->delete();
+			$page->appendSuccess("Product Tag removed Successfully");
+		}
+	}
+
+	// get tags for product
+	$productTagList = new \Product\TagList();
+	$productTags = $productTagList->find(array("product_id" => $item->id));
 
 	// Get Product
 	if (isset($_REQUEST['code'])) $item->get($_REQUEST['code']);

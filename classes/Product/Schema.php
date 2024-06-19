@@ -293,6 +293,33 @@
 				$this->setVersion(7);
 				$GLOBALS['_database']->CommitTrans();
 			}
+
+			if ($this->version() < 8 && $max_version >= 8) {
+				app_log("Upgrading schema to version 8",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE if not exists `product_tags` (
+					  `id` int NOT NULL AUTO_INCREMENT,
+					  `product_id` int DEFAULT NULL,
+					  `name` varchar(255) NOT NULL,
+					  PRIMARY KEY (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+				";
+
+				if (! $this->executeSQL($create_table_query)) {
+					$this->error("SQL Error creating product_tags table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(8);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}

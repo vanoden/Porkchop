@@ -149,7 +149,7 @@
 			}
 	    }
 		else {
-    	    $page->addError("Value for Organization Tag value is required");
+    	    $page->addError("Value for Organization Tag is required");
 	    }
 	}
 	

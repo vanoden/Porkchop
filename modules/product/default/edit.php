@@ -11,16 +11,26 @@
 		document.getElementById('deleteImage').value = code;
 		document.getElementById('ItemImageDiv_'+code).style.display = "none";
 	}
+
+	// remove an organization tag by id
+	function removeTagById(id) {
+	    document.getElementById('removeTagId').value = id;
+	    document.getElementById('productEdit').submit();
+	}
+
 </script>
 
 <!-- Page Header -->
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
-<form name="productEdit" method="post" action="/_product/edit">
+<form id="productEdit" name="productEdit" method="post" action="/_product/edit/<?=$item->code?>">
+	
     <input type="hidden" name="id" id="id" value="<?=$item->id?>" />
     <input type="hidden" name="deleteImage" id="deleteImage" value="" />
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+	<input type="hidden" id="removeTagId" name="removeTagId" value=""/>
+
     <div class="body">
 	    <div class="input-horiz" id="itemCode">
 		    <span class="label">Code</span>
@@ -154,7 +164,29 @@
 			    </tr>
 			    <?php } ?>
 			</table>
-        
+
+			<h3>Add Product Tag</h3>
+			<div class="tableBody min-tablet">
+				<div class="tableRowHeader">
+					<div class="tableCell" style="width: 35%;">Tag</div>
+				</div>
+				<?php	
+					foreach ($productTags as $tag) {
+				?>
+					<div class="tableRow">
+						<div class="tableCell">
+							<input type="button" onclick="removeTagById('<?=$tag->id?>')" name="removeTag" value="Remove" class="button"/> <strong><?=$tag->name?></strong>
+						</div>
+					</div>
+				<?php	
+					} 
+				?>
+				<div class="tableRow">
+					<div class="tableCell"><label>New Tag:</label><input type="text" class="" name="newTag" value="" /></div>
+				</div>
+				<div><input type="submit" name="addTag" value="Add Tag" class="button"/></div>
+			</div>
+
 			<h3>Price Audit Info</h3>
 			<table class="body">
 			    <tr>
@@ -175,7 +207,7 @@
 			</table>
 
 	    <div class="editSubmit button-bar floating">
-		    <input type="submit" class="button" value="Update" name="submit" id="submit"/>
+		    <input type="submit" class="button" value="Update" name="updateSubmit" id="updateSubmit"/>
 	    </div>
     </div>
 </form>
