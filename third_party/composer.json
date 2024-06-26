@@ -16,7 +16,8 @@
         "spomky-labs/otphp": "^11.2",
         "bacon/bacon-qr-code": "^3.0",
         "amphp/socket": "^2.3",
-        "amphp/byte-stream": "^2.1"
+        "amphp/byte-stream": "^2.1",
+        "psr/simple-cache": "2.0"
     },
     "config": {
         "allow-plugins": {
