@@ -1,12 +1,15 @@
 <?php
 	namespace Storage;
 
+use Storage\Repository\Local;
+use Storage\Repository\S3;
+
 	class File Extends \BaseModel {
-		private $_repository_id;
-		public $code;
-		public $display_name;
-		public $description;
-		public $date_created;
+		private $_repository_id;			// Repository ID that file belongs to
+		public $code;						// Unique code for file
+		public $display_name;				// Name to be displayed in UI
+		public $description;				// Description of file
+		public $date_created;				// Date file was uploaded/created
 		public $success;
 		public $uri;
 		public $read_protect;
@@ -20,29 +23,49 @@
 		private $original_name;
 		private $access_privilege_json;
 
+		/**
+		 * Class Constructor
+		 * @param int $id - Optional ID of the file to load
+		 * @return void
+		 */
 		public function __construct($id = 0) {
 			$this->_tableName = 'storage_files';
 			parent::__construct($id);
 		}
 
+		/**
+		 * Add a new file to the storage_files table
+		 * Supported parameters are code, repository_id, name, mime_type, size, path, display_name, description, access_privileges
+		 * @param array $parameters - Array of parameters to add to the table
+		 * @return bool - True if successful, False if not
+		 */
 		public function add($parameters = []) {
+			// Clear any previous errors
+			$this->clearError();
 
+			// Generate unique code if no code provided
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
-			
+
+			// Validate the code
 			if (! preg_match('/^[\w\-\.\_]+$/',$parameters['code'])) {
 				$this->error("Invalid code '".$parameters['code']."'");
 				return false;
 			}
-			
+
+			// Validate the mime type
 			$this->code = $parameters['code'];
 			if (! $this->_valid_type($parameters['mime_type'])) {
 				$this->error("Invalid mime_type '".$parameters['mime_type']."'");
 				return false;
 			}
 
+			// Default Original Name frmo Current Name
 			if (! $parameters['original_name']) $parameters['original_name'] = $parameters['name'];
+			// Default Path is '/'
 			if (! $parameters['path']) $parameters['path'] = '/';
 
+			// Prepare Query
+			$database = new \Database\Service();
 			$add_object_query = "
 				INSERT
 				INTO	storage_files
@@ -50,25 +73,24 @@
 				VALUES
 				(		?,?,?,?,?,sysdate(),?,?)
 			";
-			
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$parameters['code'],
-					$parameters['repository_id'],
-					$parameters['name'],
-					$parameters['mime_type'],
-					$parameters['size'],
-					$GLOBALS['_SESSION_']->customer->id,
-					$parameters['path']
-				)
-			);
-			
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$database->AddParam($parameters['code']);
+			$database->AddParam($parameters['repository_id']);
+			$database->AddParam($parameters['name']);
+			$database->AddParam($parameters['mime_type']);
+			$database->AddParam($parameters['size']);
+			$database->AddParam($GLOBALS['_SESSION_']->customer->id);
+			$database->AddParam($parameters['path']);
+
+			// Execute Query
+			$GLOBALS['_database']->Execute($add_object_query);
+
+			// Check for Errors
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			
+
+			// Fetch Autoincremented ID
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			
 			// audit the add event
@@ -83,49 +105,58 @@
 			app_log("File '".$this->id."' uploaded");
 			return $this->update($parameters);
 		}
-		
+
+		/**
+		 * Update the current file's parameters
+		 * Supported parameters are display_name, description, path, access_privileges
+		 * @param array $parameters
+		 * @return bool 
+		 */
 		public function update($parameters = []): bool {
-		
+			// Clear any previous errors
+			$this->clearError();
+
+			// Prepare Query
+			$database = new \Database\Service();
 			$update_object_query = "
 				UPDATE	storage_files
 				SET		id = id";
 
-			$bind_params = array();
-
 			if (isset($parameters['display_name'])) {
 				$update_object_query .= ",
 						display_name = ?";
-				array_push($bind_params,$parameters['display_name']);
+				$database->AddParam($parameters['display_name']);
 			}
-			
+
 			if (isset($parameters['description'])) {
 				$update_object_query .= ",
 						description = ?";
-				array_push($bind_params,$parameters['description']);
+				$database->AddParam($parameters['description']);
 			}
-			
+
 			if (isset($parameters['path'])) {
 				$update_object_query .= ",
 						path = ?";
-				array_push($bind_params,$parameters['path']);
+				$database->AddParam($parameters['path']);
 			}
 
 			if (isset($parameters['access_privileges'])) {
 				$update_object_query .= ",
 						access_privileges = ?";
-				array_push($bind_params,$parameters['access_privileges']);
+				$database->AddParam($parameters['access_privileges']);
 			}
 
-			query_log($update_object_query);
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-			array_push($bind_params,$this->id);
+			$database->AddParam($this->id);
 
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+			// Execute Query
+			$database->Execute($update_object_query);
 
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			// Check for Errors
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
@@ -141,24 +172,33 @@
 			return $this->details();
 		}
 
+		/**
+		 * Get details of the current file
+		 * @return bool
+		 */
 		public function details(): bool {
-		
+			// Clear any previous errors
+			$this->clearError();
+
+			// Prepare Query
+			$database = new \Database\Service();
 			$get_object_query = "
 				SELECT	*
 				FROM	storage_files
 				WHERE	id = ?
 			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-			
+			$database->AddParam($this->id);
+
+			// Execute Query
+			$rs = $database->Execute($get_object_query);
+
+			// Check for Errors
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			
+
+			// Fetch result row as object
 			$object = $rs->FetchNextObject(false);
 			if ($object->id) {
 				$this->code = $object->code;
@@ -172,7 +212,6 @@
 				$this->date_created = $object->date_created;
 				$this->timestamp = strtotime($this->timestamp);
 				$this->_repository_id = $object->repository_id;
-				$factory = new RepositoryFactory();
 				$this->read_protect = $object->read_protect;
 				$this->write_protect = $object->write_protect;
 				$this->access_privilege_json = $object->access_privileges;
@@ -209,7 +248,17 @@
 			return $this->path;
 		}
 
+		/**
+		 * Get file from specified path
+		 * @param mixed $repository_id 
+		 * @param mixed $path 
+		 * @return null|File
+		 */
 		public function fromPath($repository_id,$path) {
+			// Clear any previous errors
+			$this->clearError();
+
+			// Parse Given Path
 			if (preg_match('/^(.*)\/([^\/]+)/',$path,$matches)) {
 				$path = $matches[1];
 				$file = $matches[2];
@@ -222,27 +271,36 @@
 				$this->error("Path required");
 				return null;
 			}
+
+			// Prepare Query
+			$database = new \Database\Service();
 			$get_file_query = "
 				SELECT	id
 				FROM	storage_files
 				WHERE	repository_id = ?
 				AND		name = ?
 			";
-			$bind_params = array($repository_id,$file);
+			$database->AddParam($repository_id);
+			$database->AddParam($file);
 			if (!empty($path)) {
 				$get_file_query .= "
 				AND		path = ?";
-				array_push($bind_params,$path);
+				$database->AddParam($path);
 			}
 
-			query_log($get_file_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($get_file_query,$bind_params);
+			// Execute Query
+			$rs = $database->Execute($get_file_query);
+
+			// Check for Errors
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
+
+			// Fetch first column of result row as file id
 			list($file_id) = $rs->FetchRow();
 			if (!empty($file_id)) {
+				// Return Storage\File instance with returned id
 				return new \Storage\File($file_id);
 			}
 			else {
@@ -251,6 +309,11 @@
 			}
 		}
 
+		/**
+		 * Getter for Repository ID
+		 * @param int $id - ID of file's repository
+		 * @return mixed 
+		 */
 		public function repository_id($id = 0) {
 			if ($id > 0) {
 			
@@ -266,62 +329,111 @@
 			return $this->_repository_id;
 		}
 
+		/**
+		 * Getter for Repository
+		 * @return instance of file's Storage/Repository 
+		 */
 		public function repository() {
 			$factory = new \Storage\RepositoryFactory();
 			return $factory->load($this->_repository_id);
 		}
 
+		/**
+		 * Check if the file type is valid and supported
+		 * @param string mime type of file
+		 * @return bool
+		 */
 		private function _valid_type($name) {
 			if (preg_match('/^(image|application|text|video)\/(png|jpg|jpeg|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip|pdf|octet\-stream|mp4|vcard)$/',$name)) return true;
 			return false;
 		}
 
-		public function grant($level,$id,$type) {
-			$level = substr($level,0,1);
-			if (!in_array($level,array('a','o','u','r'))) {
+		/**
+		 * Grant an entity access to the resource
+		 * @param mixed $type - Type of Entity
+		 * 		a = All
+		 * 		o = Organization
+		 * 		u = User
+		 * 		r = Role
+		 * @param mixed $id - ID of the entity
+		 * @param mixed $level - Level of Access
+		 * 		r = Read
+		 * 		w = Write
+		 * @return bool 
+		 */
+		public function grant($type,$id,$level) {
+			// We only care about the first character
+			$type = substr($type,0,1);
+
+			// Validate the Entity Type
+			if (!in_array($type,array('a','o','u','r'))) {
 				$this->error("Invalid level");
 				return false;
 			}
-			$type = substr($type,0,1);
-			if (!in_array($type,array('r','w'))) {
-				$this->error("Invalid type $type");
+
+			// We only care about the first character
+			$level = substr($level,0,1);
+
+			// Validate the Access Level
+			if (!in_array($level,array('r','w'))) {
+				$this->error("Invalid type $level");
 				return false;
 			}
 
 			// Get Existing Privileges
 			$privileges = $this->getPrivileges();
-			if ($level == 'a') {
-				if (!preg_match("/$type/",$privileges->a)) $privileges->a .= $type;
+			if ($type == 'a') {
+				// Entity Type is All, so we only have one entity
+				if (!preg_match("/$level/",$privileges->a)) $privileges->a .= $level;
 			}
 			else {
-				if (!preg_match("/$type/",$privileges->$level->$id)) $privileges->$level->$id .= $type;
+				// Entity Type is not All, so we have to specify the entity type and id
+				if (!preg_match("/$level/",$privileges->$type->$id)) $privileges->$type->$id .= $level;
 			}
 			return $this->update(array('access_privileges' => json_encode($privileges)));
 		}
 
-		public function revoke($level,$id,$type) {
-			$level = substr($level,0,1);
-			if (!in_array($level,array('a','o','u','r'))) {
+		/**
+		 * Revoke an entity's access to the resource
+		 * @param mixed $type - Type of Entity
+		 * 		a = All
+		 * 		o = Organization
+		 * 		u = User
+		 * 		r = Role
+		 * @param mixed $id - ID of the entity
+		 * @param mixed $level - Level of Access
+		 * 		r = Read
+		 * 		w = Write
+		 * @return bool 
+		 */
+		public function revoke($type,$id,$level) {
+			$type = substr($type,0,1);
+			if (!in_array($type,array('a','o','u','r'))) {
 				$this->error("Invalid level");
 				return false;
 			}
-			$type = substr($type,0,1);
-			if (!in_array($type,array('r','w'))) {
-				$this->error("Invalid type $type");
+			$level = substr($level,0,1);
+			if (!in_array($level,array('r','w'))) {
+				$this->error("Invalid type $level");
 				return false;
 			}
 
 			// Get Existing Privileges
 			$privileges = $this->getPrivileges();
-			if ($level == 'a') {
-				$privileges->$level = preg_replace("/$type/","",$privileges->$level);
+			if ($type == 'a') {
+				$privileges->$type = preg_replace("/$level/","",$privileges->$type);
 			}
 			else {
-				$privileges->$level->$id = preg_replace("/$type/","",$privileges->$level->$id);
+				$privileges->$type->$id = preg_replace("/$level/","",$privileges->$level->$id);
 			}
 			return $this->update(array('access_privileges' => json_encode($privileges)));
 		}
 
+		/**
+		 * Check if the current user has read access to the file
+		 * @param mixed $user_id - ID of the user to check
+		 * @return bool - True if user has read access, False if not
+		 */
 		public function readable($user_id = null) {
 			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
 			$user = new \Register\Customer($user_id);
@@ -329,23 +441,41 @@
 
 			$flag = 'r';
 
+			// Owners always have access
 			if ($this->user_id == $user_id) return true;
-			$privileges = $this->getPrivileges();
 
-			if (isset($privileges->a) && preg_match("/$flag/",$privileges->a)) return true;
+			// Get Repo Privileges
+			$repository = $this->repository();
+			if ($repository->readable($user_id)) return true;
 
-			if (isset($privileges->u->$user_id) && preg_match("/$flag/",$privileges->u->$user_id)) return true;
+			// Get File Privileges
+			$file_privileges = $this->getPrivileges();
 
-			if (isset($privileges->o->$organization_id) && preg_match("/$flag/",$privileges->o->$organization_id)) return true;
+			foreach ($file_privileges as $privilege) {
+				// Check 'All' Privileges
+				if ($privilege->entity_type == 'a' && $privilege->read == 1) return true;
 
-			$roles = $user->roles();
-			foreach ($roles as $role) {
-				$role_id = $role->id;
-				if (isset($privileges->r->$role_id) && preg_match("/$flag/",$privileges->r->$role_id)) return true;
+				// Check 'User' Privileges
+				if ($privilege->entity_type == 'u' && $privilege->entity_id == $user_id && $privilege->read == 1) return true;
+
+				// Check 'Organization' Privileges
+				if ($privilege->entity_type == 'o' && $privilege->entity_id == $organization_id && $privilege->read == 1) return true;
+
+				$roles = $user->roles();
+				foreach ($roles as $role) {
+					$role_id = $role->id;
+					if ($privilege->entity_type == 'r' && $privilege->entity_id == $role_id && $privilege->read == 1) return true;
+				}
 			}
+
 			return false;
 		}
 
+		/**
+		 * Check if the current user has write access to the file
+		 * @param mixed $user_id - ID of the user to check
+		 * @return bool - True if user has write access, False if not
+		 */
 		public function writable($user_id = null) {
 			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
 			$user = new \Register\Customer($user_id);
@@ -356,20 +486,35 @@
 			if ($this->user_id == $user_id) return true;
 			$privileges = $this->getPrivileges();
 
+			// Access for All
 			if (isset($privileges->a) && preg_match("/$flag/",$privileges->a)) return true;
 
+			// Access for User
 			if (isset($privileges->u->$user_id) && preg_match("/$flag/",$privileges->u->$user_id)) return true;
 
+			// Access for Organization
 			if (isset($privileges->o->$organization_id) && preg_match("/$flag/",$privileges->o->$organization_id)) return true;
 
+			// Access for Roles
 			$roles = $user->roles();
 			foreach ($roles as $role) {
 				$role_id = $role->id;
 				if (isset($privileges->r->$role_id) && preg_match("/$flag/",$privileges->r->$role_id)) return true;
 			}
+
+			// Repository Default Access
+			$repository = $this->repository();
+			if ($repository->writable($user_id)) return true;
+
+			// Default no access
 			return false;
 		}
 
+		/**
+		 * Load the file from its repository and send to browser with appropriate headers
+		 * to allow local storage
+		 * @return void 
+		 */
 		public function download() {
 			$repository = $this->repository();
 			$repository->retrieveFile($this);
@@ -509,107 +654,26 @@
 			return $this->readable($user_id);
 		}
 
+		/**
+		 * Get the privileges for the current file
+		 * Privileges are stored as a JSON object
+		 * @return mixed - Associative Array of Entities and Privilege Levels
+		 */
 		public function getPrivileges() {
-			app_log("File: ".$this->name,'info');
-			app_log("Privilege JSON: ".$this->access_privilege_json,'info');
-			if (empty($this->access_privilege_json)) {
-				return new \stdClass();
-			}
-			else {
-				return json_decode($this->access_privilege_json);
-			}
+			$privilegeList = new \Resource\PrivilegeList();
+			return $privilegeList->fromJSON($this->access_privilege_json);
 		}
 
+		/**
+		 * Return multi-dimensional array of privileges for the current file
+		 * @return object[][] 
+		 */
 		public function privilegeList() {
-			$privileges = $this->getPrivileges();
-			$list = array();
-			$allSet = false;
-			foreach ($privileges as $level => $privilege) {
-				$read = false;
-				$write = false;
-
-				if ($level == 'a') {
-					$allSet = true;
-					if (is_array($privilege)) {
-						foreach ($privilege as $id => $mask) {
-							if (preg_match('/r/',$mask)) $read = true;
-							if (preg_match('/w/',$mask)) $write = true;
-						}
-					}
-					else {
-						if (is_object($privilege)) $privilege = implode('',get_object_vars($privilege));
-						if (preg_match('/r/',$privilege)) $read = true;
-						if (preg_match('/w/',$privilege)) $write = true;
-					}
-					$list['a'][0] = (object) array(
-						'level'			=> 'a',
-						'levelName'		=> 'All',
-						'entityId'		=> 0,
-						'entityName'	=> 'N/A',
-						'mask'			=> $privilege,
-						'read'			=> $read,
-						'write'			=> $write
-					);
-				}
-				else {
-					foreach ($privilege as $id => $mask) {
-						if (is_array($mask)) {
-							foreach ($mask as $set) {
-								if (is_object($set)) $set = implode('',get_object_vars($set));
-								if (preg_match('/r/',$set)) $read = true;
-								if (preg_match('/w/',$set)) $write = true;
-								if (preg_match('/x/',$set)) $execute = true;
-							}
-						}
-						else {
-							if (is_object($mask)) $set = implode('',get_object_vars($mask));
-							if (preg_match('/r/',$mask)) $read = true;
-							if (preg_match('/w/',$mask)) $write = true;
-							if (preg_match('/x/',$mask)) $execute = true;
-						}
-						if ($level == 'o') {
-							$organization = new \Register\Organization($id);
-							$levelName = "Organization";
-							$entityName = $organization->name;
-						}
-						elseif ($level == 'u') {
-							$user = new \Register\Customer($id);
-							$levelName = "User";
-							$entityName = $user->login;
-						}
-						elseif ($level == 'r') {
-							$role = new \Register\Role($id);
-							$levelName = "Role";
-							$entityName = $role->name;
-						}
-						$list[$level][$id] = (object) array(
-							'level' => $level,
-							'levelName'		=> $levelName,
-							'entityId'		=> $id,
-							'entityName'	=> $entityName,
-							'mask'			=> $mask,
-							'read'			=> $read,
-							'write'			=> $write
-						);
-					}
-				}
-			}
-			if (! $allSet) {
-				$list['a'][0] = (object) array(
-					'level'			=> 'a',
-					'levelName' 	=> 'All',
-					'entityId'		=> 0,
-					'entityName'	=> 'N/A',
-					'mask'			=> null,
-					'read'			=> false,
-					'write'			=> false,
-					'execute'		=> false
-				);
-			}
-			return $list;
+			// Get the privileges for the file
+			return $this->getPrivileges();
 		}
 
-		public function updatePrivileges($object_type, $object_id, $mask) {
+		public function updatePrivilegesDontUse($object_type, $object_id, $mask) {
 			app_log("Updating privileges on ".$this->code,'info');
 			$privileges = new \stdClass();
 			if (!empty($this->access_privilege_json)) {
@@ -648,10 +712,6 @@
 			}
 			app_log("Writing ".json_encode($privileges)." to ".$this->name,'info');
 			return $this->update(array('access_privileges' => json_encode($privileges)));
-		}
-
-		public function accessPrivilege() {
-
 		}
 
 		public function validPath($string) {

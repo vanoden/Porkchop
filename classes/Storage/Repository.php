@@ -2,30 +2,39 @@
 	namespace Storage;
 
 	class Repository Extends \BaseModel {
-		public $name;
-		public $type;
-		public $code;
-		public $status;
-		public $endpoint;
-		public $secretKey;
-		public $accessKey;
-		public $default_privileges_json;
-		public $override_privileges_json;
+		public $name;						// Name of Repository
+		public $type;						// Type of Repository - S3, Local, etc.
+		public $code;						// Unique Code for Repository
+		public $status;						// Status of Repository - NEW, ACTIVE, DISABLED
+		public $endpoint;					// Endpoint for Repository
+		public $secretKey;					// Secret Key for AWS Repository
+		public $accessKey;					// Access Key for AWS Repository
+		public $default_privileges_json;	// JSON string representing default privileges
+		public $override_privileges_json;	// JSON string representing override privileges
 
-		# Constructor
+		/**
+		 * Class Constructor
+		 * @param int Optional 
+		 * @return void 
+		 */
 		public function __construct($id = 0) {
 			$this->_tableName = 'storage_repositories';
 			parent::__construct($id);
 		}
 
-		# Add a Repository Record
+		/** 
+		 * Create a new Storage Repository
+		 * @param array $parameters
+		 * @return bool - True if successfully added
+		 */
 		public function add($parameters = []) {
-
+			// Clear any previous errors
 			$this->clearError();
 
-			# Generate Unique Code if none provided
+			// Generate Unique Code if none provided
 			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
 
+			// Make sure the specified type is valid
 			if (! $this->validType($parameters['type'])) {
 				$this->error("Invalid type");
 				return false;
@@ -33,25 +42,29 @@
 			else {
 				$this->type = $parameters['type'];
 			}
-			
+
+			// Make sure the specified code is valid
 			if (! $this->validCode($parameters['code'])) {
 				$this->error("Invalid code");
 				return false;
 			}
-			
+
+			// Make sure the specified status is valid
 			if (! isset($parameters['status']) || ! strlen($parameters['status'])) {
 				$parameters['status'] = 'NEW';
 			} else if (! $this->validStatus($parameters['status'])) {
 				$this->error("Invalid status");
 				return false;
 			}
-			
+
+			// Make sure the specified name is valid
 			if (! $this->validName($parameters['name'])) {
 				$this->error("Invalid name");
 				return false;
 			}
 	
-			# Prepare Query
+			// Prepare Query
+			$database = new \Database\Service();
 			$add_object_query = "
 				INSERT
 				INTO	storage_repositories
@@ -60,27 +73,24 @@
 				(		?,?,?,?)
 			";
 
-			# Execute Query
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$parameters['code'],
-					$parameters['name'],
-					$this->type,
-					$parameters['status']
-				)
-			);
+			$database->AddParam($parameters['code']);
+			$database->AddParam($parameters['name']);
+			$database->AddParam($this->type);
+			$database->AddParam($parameters['status']);
 
-			# Check for errors
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			// Execute Query
+			$database->Execute($add_object_query);
+
+			// Check for errors
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
-			# Fetch ID of new record
+			// Fetch ID of new record
 			$this->id = $GLOBALS['_database']->Insert_ID();
 
-			// audit the add event
+			// Audit the add event
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
 				'instance_id' => $this->id,
@@ -93,55 +103,72 @@
 			return $this->update($parameters);
 		}
 
-		# Update Repository Record
+		/**
+		 * Update Currently Selected Repository Record
+		 * @param array $parameters
+		 * @return bool - True if successfully updated
+		 */
 		public function update($parameters = []): bool {
+			// Clear any previous errors
 			$this->clearError();
 
 			# Prepare Query
+			$database = new \Database\Service();
 			$update_object_query = "
 				UPDATE	storage_repositories
 				SET		id = id
 			";
-			$bind_params = array();
 
 			if (isset($parameters['name'])) {
 				if ($this->validName($parameters['name'])) {
 					$update_object_query .= ",
 					name = ?";
-					array_push($bind_params,$parameters['name']);
+					$database->AddParam($parameters['name']);
 				} else {
 					$this->error("Invalid name '".$parameters['name']."'");
 					return false;
 				}
 			}
-			
+
 			if (isset($parameters['status'])) {
 				if ($this->validStatus($parameters['status'])) {
 					$update_object_query .= ",
 					status = ?";
-					array_push($bind_params,$parameters['status']);
+					$database->AddParam($parameters['status']);
 				} else {
 					$this->error("Invalid status");
 					return false;
 				}
+			}
+
+			if (isset($parameters['default_privileges_json'])) {
+				if (!json_decode($parameters['default_privileges_json'])) {
+					$this->error("Invalid default privileges JSON");
+					return false;
+				}
+				$update_object_query .= ",
+					default_privileges = ?";
+				$database->AddParam($parameters['default_privileges_json']);
 			}
 			
 			$update_object_query .= "
 				WHERE	id = ?
 			";
 			
-			array_push($bind_params,$this->id);
-			query_log($update_object_query);
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+			$database->AddParam($this->id);
 
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			// Execute Query
+			$database->Execute($update_object_query);
+
+			// Check for errors
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			if (isset($parameters['path'])) $this->_setMetadata('path',$parameters['path']);
 			app_log("Repo ".$this->id." updated, getting details");
 			
-			// audit the update event
+			// Audit the update event
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
 				'instance_id' => $this->id,
@@ -155,24 +182,28 @@
 
 		# Fetch Repository Record and Populate Object Variables
 		public function details(): bool {
+			// Clear any previous errors
 			$this->clearError();
 
+			// Prepare Query
+			$database = new \Database\Service();
 			$get_object_query = "
 				SELECT	*
 				FROM	storage_repositories
 				WHERE	id = ?
 			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-			
+			$database->AddParam($this->id);
+
+			// Execute Query
+			$rs = $database->Execute($get_object_query);
+
+			// Check for errors
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
+			// Fetch Record From Database as Object
 			$object = $rs->FetchNextObject(false);
 			$this->name = $object->name;
 			$this->type = $object->type;
@@ -184,12 +215,22 @@
 			return true;
 		}
 
-		# Get Files in Repository
+		/**
+		 * Get Files in Repository
+		 * @param string $path
+		 * @return array - Array of File Objects - Optional, defaults to '/'
+		 */
 		public function files($path = "/") {
 			$filelist = new FileList();
 			return $filelist->find(array('repository_id' => $this->id,'path' => $path));
 		}
 
+		/**
+		 * Add File to Repository
+		 * @param PHP Uploaded File, single element of $_FILES array
+		 * @param string $source
+		 * @return Storage\File instance
+		 */
 		public function uploadFile($uploadedFile,$path = '/') {
 			// Check for Errors
 			if ($uploadedFile['error'] == 1) {
@@ -242,7 +283,7 @@
 						'name' => $uploadedFile['name'],
 					)
 				);
-				
+
 				if ($existing->id) {
 					$this->error("File already exists with that name in repo ".$this->name);
 				}
@@ -263,6 +304,7 @@
 					// Upload File Into Repository 
 					if ($file->error()) $this->error("Error adding file: ".$file->error());
 					elseif (! $this->addFile($file,$_FILES['uploadFile']['tmp_name'])) {
+						// Remove the file from the database so they can try again
 						$file->delete();
 						$this->error('Unable to add file to repository: '.$this->error());
 						return null;
@@ -274,14 +316,22 @@
 			}
 		}
 
-		# Add File to Database
+		/**
+		 * Add File to Database
+		 * @param array $parameters
+		 * @return bool - True if successfully added
+		 */
 		public function addFileToDb($parameters) {
 			$file = new \Storage\File();
 			$parameters['repository_id'] = $this->id;
 			return $file->add($parameters);
 		}
 
-		# Drop File from Database
+		/**
+		 * Drop File from Database
+		 * @param int $file_id
+		 * @return bool - True if successfully deleted
+		 */
 		public function deleteFileFromDb($file_id) {
 			$file = new \Storage\File($file_id);
 			if ($file->exists()) {
@@ -299,39 +349,36 @@
 			}
 		}
 
-		# List Existing Directories
+		/**
+		 * List Existing Directories
+		 * @param string $path - Optional, defaults to '/'
+		 * @return array - Array of Directory Objects
+		 */
 		public function directories($path = "/") {
 			$directorylist = new DirectoryList();
 			return $directorylist->find(array('repository_id' => $this->id,'path' => $path));
 		}
 
+		/**
+		 * Update Repository Metadata - Wrapper for _setMetadata as it does the same thing
+		 * @param string key - Identifer
+		 * @param string value - Content
+		 */
 		public function _updateMetadata($key, $value) {
-			# Prepare Query
-			$update_object_query = "
-				UPDATE	`storage_repository_metadata`
-				SET		`repository_id` = `repository_id`
-			";
-			$bind_params = array();
-			if (!empty($key)) {
-				$update_object_query .= ",
-				`value` = ?";
-				array_push($bind_params, $value);
-			}
-			$update_object_query .= "
-				WHERE	`repository_id` = ? AND `key` = ?
-			";            
-			array_push($bind_params, $this->id);
-			array_push($bind_params, $key);
-			query_log($update_object_query);
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return false;
-			}
-			return true;
+			return $this->_setMetadata($key,$value);
 		}
-		
+
+		/**
+		 * Set Repository Metadata
+		 * @param string key - Identifer
+		 * @param string value - Content
+		 */
 		public function _setMetadata($key,$value) {
+			// Clear Existing Errors
+			$this->clearError();
+
+			// Prepare Query
+			$database = new \Database\Service();
 			$set_object_query = "
 				INSERT
 				INTO	storage_repository_metadata
@@ -340,38 +387,60 @@
 				ON DUPLICATE KEY UPDATE
 				value = ?
 			";
-			
-			$GLOBALS['_database']->Execute(
-				$set_object_query,
-				array($this->id,$key,$value,$value)
-			);
-			
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$database->AddParam($this->id);
+			$database->AddParam($key);
+			$database->AddParam($value);
+			$database->AddParam($value);
+
+			// Execute Query
+			$database->Execute($set_object_query);
+
+			// Check for errors
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			return true;
 		}
-		
+
+		/**
+		 * Get value associated with specified key from repository metadata
+		 * @param mixed $key 
+		 * @return mixed
+		 */
 		public function _metadata($key) {
+			// Clear Existing Errors
+			$this->clearError();
+
+			// Prepare Query
+			$database = new \Database\Service();
 			$get_value_query = "
 				SELECT	value
 				FROM	storage_repository_metadata
 				WHERE	repository_id = ?
 				AND		`key` = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_value_query,
-				array($this->id,$key)
-			);
+			$database->AddParam($this->id);
+			$database->AddParam($key);
+
+			// Execute Query
+			$rs = $database->Execute($get_value_query);
+
+			// Check for errors
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			list($value) = $rs->FetchRow();
 			return $value;
 		}
 
+		/**
+		 * Get value associated with specified key from repository metadata
+		 * Deprecated - Use _metadata instead
+		 * @param mixed $key 
+		 * @return mixed
+		 */
 		public function getMetadata($key) {
 			return $this->_metadata($key);
 		}
@@ -382,11 +451,89 @@
 		}
 
 		public function default_privileges() {
-			return json_decode($this->default_privileges_json,true);
+			$privileges = new \Resource\PrivilegeList();
+			return $privileges->fromJSON($this->default_privileges_json);
 		}
 
 		public function override_privileges() {
-			return json_decode($this->override_privileges_json,true);
+			$privileges = new \Resource\PrivilegeList();
+			return $privileges->fromJSON($this->override_privileges_json);
+		}
+
+		/************************************/
+		/* Repository Privileges			*/
+		/************************************/
+		/**
+		 * Check if user has read access to repository
+		 * @param mixed $user_id 
+		 * @return bool 
+		 */
+		public function readable($user_id) {
+			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+			$user = new \Register\Customer($user_id);
+			$organization_id = $user->organization_id;
+	
+			$flag = 'r';
+	
+			$privileges = new \Resource\PrivilegeList();
+			$privileges->fromJSON($this->default_privileges_json);
+
+			// Access for All
+			$privilege = $privileges->privilege('a');
+			if ($privilege->read) return true;
+
+			// Access for User
+			$privilege = $privileges->privilege('u',$user_id);
+			if ($privilege->read) return true;
+
+			// Access for Organization
+			$privilege = $privileges->privilege('o',$organization_id);
+			if ($privilege->read) return true;
+	
+			// Access for Roles
+			$roles = $user->roles();
+			foreach ($roles as $role) {
+				$role_id = $role->id;
+				$privilege = $privileges->privilege('r',$role_id);
+				if ($privilege->read) return true;
+			}
+			return false;
+		}
+		/**
+		 * Check if user has write access to repository
+		 * @param mixed $user_id 
+		 * @return bool 
+		 */
+		public function writable($user_id) {
+			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+			$user = new \Register\Customer($user_id);
+			$organization_id = $user->organization_id;
+
+			$flag = 'r';
+	
+			$privileges = new \Resource\PrivilegeList();
+			$privileges->fromJSON($this->default_privileges_json);
+
+			// Access for All
+			$privilege = $privileges->privilege('a');
+			if ($privilege->write) return true;
+
+			// Access for User
+			$privilege = $privileges->privilege('u',$user_id);
+			if ($privilege->write) return true;
+
+			// Access for Organization
+			$privilege = $privileges->privilege('o',$organization_id);
+			if ($privilege->write) return true;
+	
+			// Access for Roles
+			$roles = $user->roles();
+			foreach ($roles as $role) {
+				$role_id = $role->id;
+				$privilege = $privileges->privilege('r',$role_id);
+				if ($privilege->write) return true;
+			}
+			return false;
 		}
 
 		/************************************/

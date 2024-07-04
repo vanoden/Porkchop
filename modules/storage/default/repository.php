@@ -8,6 +8,56 @@
             document.getElementById('s3Settings').style.display = 'none';
         }
     }
+	function updateIds(typeElem,entityElemName) {
+		var entityElem = typeElem.form[entityElemName];
+
+		// Remove Existing Items
+		var idx, len = entityElem.options.length - 1;
+		for (idx = len; idx >= 0; idx--) {
+			entityElem.remove(idx);
+		}
+
+		console.log("updateIds()");
+		if (typeElem.value == 'u') {
+			console.log("Populating users list");
+			var customerlist = Object.create(CustomerList);
+			var customers = customerlist.find();
+			console.log(customers);
+			for (i = 0; i < customers.length; i ++) {
+				console.log("Adding user "+customers[i].full_name+" to list");
+				var option = document.createElement("option");
+				option.text = customers[i].code;
+				option.value = customers[i].id;
+				entityElem.add(option);
+			}
+		}
+		else if (typeElem.value == 'o') {
+			console.log("Populating organizations list");
+			var organizationlist = Object.create(OrganizationList);
+			var organizations = organizationlist.find();
+			console.log(organizations);
+			for (i = 0; i < organizations.length; i ++) {
+				console.log("Adding organization "+organizations[i].name+" to list");
+				var option = document.createElement("option");
+				option.text = organizations[i].name;
+				option.value = organizations[i].id;
+				entityElem.add(option);
+			}
+		}
+		else if (typeElem.value == 'r') {
+			console.log("Populating roles list");
+			var rolelist = Object.create(RoleList);
+			var roles = rolelist.find();
+			console.log(roles);
+			for (i = 0; i < roles.length; i ++) {
+				console.log("Adding role "+roles[i].name+" to list");
+				var option = document.createElement("option");
+				option.text = roles[i].name;
+				option.value = roles[i].id;
+				entityElem.perm_id.add(option);
+			}
+		}
+	}
     <?php
     if ($repository->type == 's3') {
     ?>
@@ -81,43 +131,41 @@
         	<div class="tableCell" style="width: 50%;">Permissions</div>
     	</div>
     	<!-- end row header -->
-		<?php foreach ($default_privileges as $privilege) { ?>
+		<!-- Existing Privileges -->
+		<?php foreach ($default_privileges as $privilege) {
+			if (empty($privilege->entity_type)) continue;
+		?>
     	<div class="tableRow">
     		<div class="tableCell">
-	            <select name="d_privilege_type[1]">
-					<option value="">Select</option>
-					<option value="all">All</option>
-					<option value="user">User</option>
-					<option value="organization">Organization</option>
-					<option value="role">Role</option>
-				</select>
+	            <?=$privilege->entity_type_name()?>
     		</div>
     		<div class="tableCell">
-				<input type="text" name="d_privilege_id[1]" class="value input" />
+				<?=$privilege->entity_name()?>
     		</div>
     		<div class="tableCell">
-				r<input type="checkbox" name="d_w[1]" value="1" />
-				w<input type="checkbox" value="d_r[1]" value="1" />
-				g<input type="checkbox" value="d_g[1]" value="1" />
+				r<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['r']" value="1"<?php if ($privilege->read) print " checked"; ?> />
+				w<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['w']" value="1"<?php if ($privilege->write) print " checked"; ?> />
+				g<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['g']" value="1" />
     		</div>
 		</div>
 		<?php	} ?>
+		<!-- New Privilege -->
     	<div class="tableRow">
     		<div class="tableCell">
-	            <select name="privilege_type[0]">
-					<option value="all">All</option>
-					<option value="user">User</option>
-					<option value="organization">Organization</option>
-					<option value="role">Role</option>
+	            <select name="new_privilege_entity_type" onchange="updateIds(this,'new_privilege_entity_id')">
+					<option value="a">All</option>
+					<option value="u">User</option>
+					<option value="o">Organization</option>
+					<option value="r">Role</option>
 				</select>
     		</div>
     		<div class="tableCell">
-				<input type="text" name="privilege_id[0]" class="value input" />
+				<select name="new_privilege_entity_id" class="value input"></select>
     		</div>
     		<div class="tableCell">
-				r<input type="checkbox" name="w[0]" value="1" />
-				w<input type="checkbox" value="r[0]" value="1" />
-				g<input type="checkbox" value="g[0]" value="1" />
+				r<input type="checkbox" name="new_privilege_read" value="1" />
+				w<input type="checkbox" name="new_privilege_write" value="1" />
+				g<input type="checkbox" name="new_privilege_grant" value="1" />
     		</div>
 		</div>
 	</div>
