@@ -99,7 +99,7 @@
 				}
 
 				if ($customer->id) {
-					$GLOBALS['_SESSION_']->update(array("user_id" => $customer->{id}));
+					$GLOBALS['_SESSION_']->update(array("user_id" => $customer->id));
 					if ($GLOBALS['_SESSION_']->error) {
 						$page->addError("Error updating session: ".$GLOBALS['_SESSION_']->error);
 						goto load;
@@ -190,7 +190,7 @@
 					);
 					$contact = $customer->addContact($contactRecord);
 					if ($customer->error()) {
-						$page->addError("Error adding contact: ".$customer->error);
+						$page->addError("Error adding contact: ".$customer->error());
 						goto load;
 					}
 					$contact->auditRecord("USER_UPDATED","Customer Contact added: " . implode(", ", $contactRecord));
