@@ -51,7 +51,7 @@ class EventList extends \BaseListClass {
             $find_events_query .= " AND description LIKE ?";
             $bind_params[] = '%' . $description . '%';
         }
-
+/*
         if (isset($params['status'])) {
             if (is_array($params['status'])) {
                 if (count($params['status']) > 0) {
@@ -76,7 +76,7 @@ class EventList extends \BaseListClass {
                 array_push($bind_params, $params['status']);
             }
         }
-
+*/
         // apply the order and sort direction
         if (!empty($params['order_by']) && !empty($params['sort_direction'])) {
             $order_by_clause = " ORDER BY ";

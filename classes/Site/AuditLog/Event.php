@@ -1,74 +1,120 @@
 <?php
 namespace Site\AuditLog;
 
+use Aws\TrustedAdvisor\TrustedAdvisorClient;
+
 class Event Extends \BaseModel {
-    
-    public $id;
-    public $event_date;
-    public $user_id;
-    public $instance_id;
-    public $class_name;
-    public $class_method;
-    public $description;
+	
+	public $id;
+	public $event_date;
+	public $user_id;
+	public $instance_id;
+	public $class_name;
+	public $class_method;
+	public $description;
 
-    public function __construct($id = 0) {
-        $this->_tableName = 'site_audit_events';
-        $this->_addFields(array('id', 'event_date', 'user_id', 'instance_id', 'class_name', 'class_method', 'description'));
-        parent::__construct($id);
-    }
+	public function __construct($id = 0) {
+		$this->_tableName = 'site_audit_events';
+		$this->_addFields(array('id', 'event_date', 'user_id', 'instance_id', 'class_name', 'class_method', 'description'));
+		parent::__construct($id);
+	}
 
-    public function add($params = []) {
+	public function addIfDescription($params = []) {
+		app_log("Shall we log?");
+		if (empty($this->description)) return true;
+		app_log("Yes, we shall log.");
+		return $this->add($params);
+	}
+	public function add($params = []) {
+		$log_this_event = false;
 
-        // if no classes set to be audited, return true
-        if (!isset($GLOBALS['_config']->auditing->auditedClasses) || empty($GLOBALS['_config']->auditing->auditedClasses)) return true;
+		$callingClassName = $this->getCallingClass();
+		if (empty($callingClassName)) {
+			app_log("Calling Class is empty");
+			app_log(print_r(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4), true));
+			return true;
+		}
+		$callingClass = new $callingClassName;
+		app_log("Calling Class: $callingClassName");
+		// If auditEvents not set to true in class definition, check site config
+		if ($callingClass->_auditEvents) $log_this_event = true;
 
-        // if the class_name is set in $params, check if it is in the auditedClasses array
-        if (isset($params['class_name']) && !in_array($params['class_name'], $GLOBALS['_config']->auditing->auditedClasses)) return true;
+		// if no classes set to be audited, return true
+		if (!empty($GLOBALS['_config']->auditing->auditedClasses) && is_array($GLOBALS['_config']->auditing->auditedClasses)) {
+			// if the class_name is set in $params, check if it is in the auditedClasses array
+			if (isset($params['class_name']) && in_array($params['class_name'], $GLOBALS['_config']->auditing->auditedClasses)) $log_this_event = true;
+		}
+		app_log("Logging for $callingClassName? ".$log_this_event);
+		if (! $log_this_event) return true;
+		app_log("Yessiree");
 
-        $database = new \Database\Service();
-        if (empty($params['instance_id']) || empty($params['description'])) {
-            $this->error("Instance ID and description are required.");
-            return false;
-        }
+		$database = new \Database\Service();
+		if (empty($params['instance_id']) || empty($params['description'])) {
+			print_r($params);
+			$this->error("Instance ID and description are required.");
+			return false;
+		}
 
-        $this->instance_id = $params['instance_id'];
-        $this->class_name = !empty($params['class_name']) ? $params['class_name'] : $this->getCallingClass();
-        $this->class_method = !empty($params['class_method']) ? $params['class_method'] : $this->getCallingMethod();
-        $this->description = $params['description'];
-        $this->event_date = date('Y-m-d H:i:s');
-        $this->user_id = !empty($GLOBALS['_SESSION_']->customer->id) ? $GLOBALS['_SESSION_']->customer->id : null;
+		$this->instance_id = $params['instance_id'];
+		$this->class_name = !empty($params['class_name']) ? $params['class_name'] : $this->getCallingClass();
+		$this->class_method = !empty($params['class_method']) ? $params['class_method'] : $this->getCallingMethod();
+		if (!empty($params['description'])) $this->description = $params['description'];
+		$this->event_date = date('Y-m-d H:i:s');
+		$this->user_id = !empty($GLOBALS['_SESSION_']->customer->id) ? $GLOBALS['_SESSION_']->customer->id : null;
 
-        $query = "
-            INSERT INTO site_audit_events
-            (event_date, user_id, instance_id, class_name, class_method, description)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ";
+		$query = "
+			INSERT INTO site_audit_events
+			(event_date, user_id, instance_id, class_name, class_method, description)
+			VALUES (?, ?, ?, ?, ?, ?)
+		";
 
-        $bind_params = [
-            $this->event_date,
-            $this->user_id,
-            $this->instance_id,
-            $this->class_name,
-            $this->class_method,
-            $this->description
-        ];
+		$bind_params = [
+			$this->event_date,
+			$this->user_id,
+			$this->instance_id,
+			$this->class_name,
+			$this->class_method,
+			$this->description
+		];
 
-        $rs = $database->Execute($query, $bind_params);
-        if (!$rs) {
-            $this->error("SQL Error in Site\\AuditLog\\Event::add: " . $database->ErrorMsg());
-            return false;
-        }
-        $this->id = $database->Insert_ID();
-        return true;
-    }   
+		$rs = $database->Execute($query, $bind_params);
+		if (!$rs) {
+			$this->error("SQL Error in Site\\AuditLog\\Event::add: " . $database->ErrorMsg());
+			return false;
+		}
 
-    protected function getCallingClass() {
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-        return isset($backtrace[1]['class']) ? $backtrace[1]['class'] : null;
-    }
+		$this->id = $database->Insert_ID();
+		return true;
+	}   
 
-    protected function getCallingMethod() {
-        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-        return isset($backtrace[1]['function']) ? $backtrace[1]['function'] : null;
-    }
+	protected function getCallingClass() {
+		$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4);
+		if ($backtrace[1]['class'] == 'Site\AuditLog\Event' || $backtrace[1]['class'] == 'BaseModel') {
+			if ($backtrace[2]['class'] == 'Site\AuditLog\Event' || $backtrace[2]['class'] == 'BaseModel') {
+				if (!empty($backtrace[3]['class'])) return $backtrace[3]['class'];
+				return null;
+			}
+			if (!empty($backtrace[2]['class'])) return $backtrace[2]['class'];
+			return null;
+		}
+		return isset($backtrace[1]['class']) ? $backtrace[1]['class'] : null;
+	}
+
+	protected function getCallingMethod() {
+		$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4);
+		if ($backtrace[1]['class'] == 'Site\AuditLog\Event' || $backtrace[1]['class'] == 'BaseModel') {
+			if ($backtrace[2]['class'] == 'Site\AuditLog\Event' || $backtrace[2]['class'] == 'BaseModel') {
+				if (!empty($backtrace[3]['function'])) return $backtrace[3]['function'];
+				return null;
+			}
+			if (!empty($backtrace[2]['function'])) return $backtrace[2]['function'];
+			return null;
+		}
+		return isset($backtrace[1]['function']) ? $backtrace[1]['function'] : null;
+	}
+
+	public function appendDescription($description) {
+		if (strlen($this->description) > 0) $this->description .= ', ';
+		$this->description .= $description;
+	}
 }
