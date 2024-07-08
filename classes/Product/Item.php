@@ -9,12 +9,24 @@
 		public $type;
 		public $status;
 
+		/**
+		 * Constructor
+		 * @param int $id - optional 
+		 * @return void 
+		 */
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
             $this->_addStatus(array('ACTIVE','HIDDEN','DELETED'));
+			$this->_auditEvents = true;
     		parent::__construct($id);
 		}
 
+		/**
+		 * Get the root product group.  This is just a placeholder for the top
+		 * level of the product hierarchy.  Returns the id of the default
+		 * product group for adding new products if a parent group isn't provided.
+		 * @return bool 
+		 */
 		public function defaultCategory() {
 			$get_category_query = "
 				SELECT	id
@@ -24,12 +36,70 @@
 			$rs = $GLOBALS['_database']->Execute($get_category_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return 0;
+				return false;
 			}
 			list($this->id) = $rs->FetchRow();
 			return $this->details($this->id);
 		}
 
+		/**
+		 * Special product update function just to change the code of a product.
+		 * The regular update method should not allow this as special privileges
+		 * and auditing are required.
+		 * @param mixed $new_code 
+		 * @param mixed $reason 
+		 * @return bool 
+		 */
+		public function changeCode($new_code, $reason): bool {
+			$this->clearError();
+			$database = new \Database\Service();
+
+			app_log("Changing product code from ".$this->code." to ".$new_code,'notice',__FILE__,__LINE__);
+
+			// Check the users authorization - Should really be done in the interface
+			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
+				$this->error("You do not have permissions for this task.");
+				app_log($GLOBALS['_SESSION_']->customer->login." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
+				app_log(print_r($GLOBALS['_SESSION_'],true),'debug',__FILE__,__LINE__);
+				return false;
+			}
+
+			// Validate the new code
+			if (! $this->validCode($new_code)) {
+				$this->error("Invalid code");
+				return false;
+			}
+
+			// Bust the existing cache
+			$cache_key = "product[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
+
+			// Prepare the query
+			$update_product_query = "
+				UPDATE	product_products
+				SET		code = ?
+				WHERE	id = ?";
+
+			// Add Parameters and Execute Query
+			$database->AddParam($new_code);
+			$database->AddParam($this->id);
+			$database->Execute($update_product_query);
+
+			// Check for errors
+			if ($database->ErrorMsg()) {
+				$this->error($database->ErrorMsg());
+				return false;
+			}
+			return true;
+		}
+
+		/**
+		 * Update the product with the provided parameters.  This is the standard
+		 * update method for the product class.
+		 * @param mixed $parameters 
+		 * @return bool 
+		 */
 		public function update($parameters = []): bool {
 
 			$this->clearError();
@@ -96,6 +166,11 @@
 			return $this->details();
 		}
 
+		/**
+		 * Add a new product with the provided parameters.
+		 * @param mixed $parameters 
+		 * @return bool 
+		 */
 		public function add($parameters = []) {
 			app_log("Product::Item::add()",'trace');
 			$this->clearError();
@@ -165,6 +240,12 @@
 			return $this->update($parameters);
 		}
 
+		/**
+		 * Get all database details for the product.
+		 * Acquire from cache first if available.  Otherwise populate cache for
+		 * next access.
+		 * @return bool - True if product found
+		 */
 		public function details(): bool {
 			app_log("Product::Item::details()",'trace');
 			$this->clearError();
@@ -173,8 +254,8 @@
 			$cache_key = "product[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 
-			# Cached Organization Object, Yay!
 			if (($this->id) and ($product = $cache_item->get())) {
+				// Object found in cache, populate properties from cache
 				$product->_cached = true;
 				$this->id = $product->id;
 				$this->name = $product->name;
@@ -198,7 +279,7 @@
 				$this->cached(false);
 			}
 
-			# Prepare Query to Get Product Details
+			// Prepare Query to Get Product Details
 			$get_details_query = "
 				SELECT	id,
 						code,
@@ -209,6 +290,7 @@
 				FROM	product_products
 				WHERE	id = ?";
 
+			// Add params and execute query
 			$database->AddParam($this->id);
 			$rs = $database->Execute($get_details_query);
 			if (! $rs) {
@@ -216,6 +298,7 @@
 				return false;
 			}
 
+			// Grab the object and populate properties
 			$object = $rs->FetchNextObject(false);
 
 			$this->id = $object->id;
@@ -226,7 +309,7 @@
 			$this->type = $object->type;
 			$this->exists(true);
 
-			# Cache Product Object
+			// Cache Product Object
 			app_log("Setting cache key ".$cache_key);
 			if ($object->id)
 				if ($cache_item->set($object))
