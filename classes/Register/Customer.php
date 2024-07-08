@@ -45,6 +45,8 @@
 			parent::update($parameters);
 			if ($this->error()) return false;
 
+			$auditLog = new \Site\AuditLog\Event();
+
 			// roles
 			if (isset($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('manage customers')) {
 				$rolelist = new RoleList();
@@ -52,8 +54,10 @@
 				foreach ($roles as $role) {
 					if (isset($parameters['roles']) && is_array($parameters['roles'])) {
 						if (array_key_exists($role['id'],$parameters['roles'])) {
+							$auditLog->appendDescription("Added role ".$role['name']);
 							$this->add_role($role['id']);
 						} else {
+							$auditLog->appendDescription("Added role ".$role['name']);
 							$this->drop_role($role['id']);
 						}
 					}
@@ -61,10 +65,9 @@
 			}
 			
 			// audit the update event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
+			app_log("Well, log it already!");
+			$auditLog->addIfDescription(array(
 				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
 				'class_name' => get_class($this),
 				'class_method' => 'update'
 			));
