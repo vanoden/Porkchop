@@ -12,9 +12,14 @@
 			parent::__construct();
 		}
 
-		###################################################
-		### Add an Item									###
-		###################################################
+		/**
+		 * Add a new Product
+		 * Takes values from $_REQUEST
+		 * Required: code, name, type
+		 * Optional: description, status
+		 * 
+		 * @return void
+		 */
 		public function addItem() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -37,9 +42,11 @@
 			$response->print();
 		}
 	
-		###################################################
-		### Update a Product							###
-		###################################################
+		/**
+		 * Update an existing Product's details
+		 * Takes values from $_REQUEST
+		 * @return void
+		 */
 		public function updateItem() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -68,10 +75,13 @@
 			$response->addElement('item',$product);
 			$response->print();
 		}
-	
-		###################################################
-		### Get Specified Product						###
-		###################################################
+
+		/**
+		 * Get Specified Product with id or code
+		 * Takes values from $_REQUEST
+		 * Required: id or code
+		 * @return void
+		 */
 		public function getItem() {
 			if (isset($_REQUEST['id'])) {
 				$product = new \Product\Item($_REQUEST['id']);
@@ -478,6 +488,42 @@
             $response->print();
 		}
 
+		/**
+		 * Change the code of an existing product instance
+		 * Takes values from $_REQUEST
+		 * Required: code, new_code, reason
+		 * Optional: product_id
+		 * @return void 
+		 */
+		public function changeInstanceCode() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
+			$this->requirePrivilege("manage products");
+
+			$product = new \Product\Item();
+			$instance = new \Product\Instance();
+
+			if (!$product->validCode($_REQUEST['product_code'])) $this->error("Valid product code required");
+
+			if (!$instance->validCode($_REQUEST['code'])) $this->error("Valid code required");
+			if (!$instance->validCode($_REQUEST['new_code'])) $this->error("Valid code required");
+			if (empty($_REQUEST['reason'])) $this->error("Reason required");
+	
+			if (! $product->get($_REQUEST['product_code'])) $this->error("Product not found");
+
+			$instance->get($_REQUEST['code'],$product->id);
+			if ($instance->error()) $this->error("Error finding product instance: ".$instance->error());
+			if (! $instance->id) $this->error("Instance "+$_REQUEST['code']+" of "+$product->code+" not found");
+
+			$instance->changeCode($_REQUEST['new_code'],$_REQUEST['reason']);
+			if ($instance->error()) $this->error("Error changing instance code: ".$instance->error());
+			$instance->details();
+
+			$response = new \APIResponse();
+			$response->addElement('instance',$instance);
+			$response->print();
+		}
+
 		###################################################
 		### Add Image to Product						###
 		###################################################
@@ -535,10 +581,15 @@
 			return array(
 				'ping'			=> array(),
 				'findItems'	=> array(
-					'code'		=> array(),
-					'name'		=> array(),
-					'status'	=> array(),
-					'type'		=> array(),
+					'description'		=> 'Find products matching criteria',
+					'authentication_required' => false,
+					'return_type'		=> 'array',
+					'parameters'		=> array(
+						'code'		=> array(),
+						'name'		=> array(),
+						'status'	=> array(),
+						'type'		=> array()
+					)
 				),
 				'getItem'	=> array(
 					'code'	=> array(),
@@ -548,6 +599,17 @@
 					'name'		=> array('required' => true),
 					'status'	=> array('default' => 'ACTIVE'),
 					'type'		=> array('required' => true),
+				),
+				'changeInstanceCode'	=> array(
+					'description' => 'Change the serial number of a product instance',
+					'authentication_required' => true,
+					'parameters' => array(
+						'code'		=> array('required' => true),
+						'new_code'	=> array('required' => true),
+						'product_code'	=> array('required' => true),
+						'reason'	=> array('required' => true),
+					),
+					'return_type' => 'bool'
 				),
 				'updateItem'	=> array(
 					'code'		=> array('required' => true),
