@@ -118,7 +118,7 @@
 				else {
 					array_push($objects,$id);
 				}
-				$this->incrementCou8nt();
+				$this->incrementCount();
 			}
 			return $objects;
 		}
