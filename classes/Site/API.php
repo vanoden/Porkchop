@@ -887,6 +887,30 @@
 			print $porkchop->uuid();
 		}
 
+		public function getSiteAuditEvents() {
+			$auditList = new \Site\AuditLog\EventList();
+
+			$className = $_REQUEST['class'];
+			$parameters = [
+				'class_name'	=> $className
+			];
+
+			// See if class exists
+			if (!class_exists($className)) $this->error("Class not found");
+
+			$class = new $className;
+			if ($class->get($_REQUEST['code'])) {
+				$parameters['instance_id'] = $class->id;
+			}
+
+			$events = $auditList->find($parameters);
+			if ($auditList->error()) $this->error($auditList->error());
+
+			$response = new \APIResponse();
+			$response->addElement('event',$events);
+			$response->print();
+		}
+
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
@@ -1072,7 +1096,15 @@
 				'getNodeHealth' => array(),
 				'getTOULatestVersion'	=> array(
 					'tou_id'	=> array('required')
-				)
+				),
+				'getSiteAuditEvents'	=> array(
+					'description'				=> 'Get events related to an object instance',
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'class'	=> array('required'),
+						'code'	=> array('required')
+					]
+				),
 			);		
 		}
 	}
