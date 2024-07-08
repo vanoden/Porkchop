@@ -4,12 +4,17 @@
 
 <form action="/_site/audit_log" method="post">
   <div id="search_container">
-    <div><input type="checkbox" name="add" value="1"<?php if (isset($_REQUEST['add']) && !empty($_REQUEST['add'])) print " checked"; ?> /><label>Add</label></div>
-    <div><input type="checkbox" name="update" value="1"<?php if (isset($_REQUEST['update']) && !empty($_REQUEST['update'])) print " checked"; ?> /><label>Update</label></div>
-    <div><input type="checkbox" name="delete" value="1"<?php if (isset($_REQUEST['delete']) && !empty($_REQUEST['delete'])) print " checked"; ?> /><label>Delete</label></div>
+	<div><select name="class_name">
+		<option value="">Select a class</option>
+		<?php foreach ($classList as $class) { ?>
+			<option value="<?=$class?>"<?php if ($_REQUEST["class_name"] == $class) print " selected";?>><?=$class?></option>
+		<?php } ?>
+	</select></div>
+	<div><input type="text" name="code" value="<?php if (isset($_REQUEST['code'])) print $_REQUEST['code']; ?>" placeholder="Instance Code" /></div>
     <input type="submit" name="btn_submit" class="button" value="Apply Filter" />
   </div>
 
+  <?php if ($display_results) { ?>
   <div class="tableBody min-tablet">
     <div class="tableRowHeader">
         <div class="tableCell" style="width: 15%;">
@@ -50,5 +55,6 @@
   <!--    Standard Page Navigation Bar -->
   <div class="pagination" id="pagination">
     <?=$pagination->renderPages(); ?>
-  </div>
+	</div>
+  <?php	} ?>
 </form>
