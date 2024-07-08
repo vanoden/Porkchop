@@ -10,23 +10,34 @@
 		public $organization;
 		public $organization_id;
         public $asset_code;
-		private $_flat = false;
 
-		public function __construct($id = 0,$flat = false) {
+		/**
+		 * Constructor
+		 * @param int $id
+		 * @param bool $flat
+		 */
+		public function __construct($id = 0) {
 			$this->_tableName = "monitor_assets";
 			$this->_tableIDColumn = "asset_id";
 			$this->_tableUKColumn = null;
             $this->_aliasField("asset_code","code");
-			$this->_flat = $flat;
+			$this->_auditEvents = true;
     		parent::__construct($id);
 		}
 
+		/**
+		 * Polymorphic wrapper of the get method allowing
+		 * request with or without a specified product id
+		 * @param mixed $name
+		 * @param mixed $parameters
+		 * @return bool
+		 */
 		public function __call($name,$parameters) {
 			if ($name == 'get' && count($parameters) == 2) return $this->getWithProduct($parameters[0],$parameters[1]);
 			elseif ($name == 'get') return $this->getSimple($parameters[0]);
 			else {
 				$this->error("Invalid method called");
-				return null;
+				return false;
 			}
 		}
 
@@ -92,6 +103,13 @@
 			return $this->update($parameters);
 		}
 
+		/**
+		 * Get a product instance by code w/o product id
+		 * If multiple instances have the same product id, the first
+		 * one found will be returned
+		 * @param mixed $code 
+		 * @return bool 
+		 */
 		public function getSimple($code) {
 		
 			$this->clearError();
@@ -107,7 +125,7 @@
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
 
 			list($id) = $rs->FetchRow();
@@ -115,42 +133,64 @@
 			return $this->details();
 		}
 		
-		# Get Specific Hub
+		/**
+		 * Get specific product instance by code and product id
+		 * @param string code
+		 * @param int product_id
+		 * @return bool
+		 */
 		public function getWithProduct($code,$product_id) {
-
 			$this->clearError();
-
 			$database = new \Database\Service();
 
+			// Validate the Instance Code (Serial Number)
+			if (! $this->validCode($code)) {
+				$this->error("Invalid code");
+				return false;
+			}
+
+			// Get the product
 			$product = new \Product\Item($product_id);
 			if (!$product->exists()) {
 				$this->error("Product Not Found");
 				return false;
 			}
 
+			// Prepare Query
 			$get_object_query = "
 				SELECT	asset_id
 				FROM	monitor_assets
 				WHERE	asset_code = ?
 				AND		product_id = ?
 			";
+			// Add Parameters and Execute Query
 			$database->AddParam($code);
-			$database->AddParam($product_id);
-
+			$database->AddParam($product->id);
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+
+			// Fetch the id from the result set
 			list($id) = $rs->FetchRow();
 			if (! $id) {
-				$this->error("Product Instance not found");
+				$this->error("Product Instance '$code' of Product '".$product->code."' not found");
 				return false;
 			}
+
+			// Store the current id
 			$this->id = $id;
+
+			// Call and return the results of the details() method
 			return $this->details();
 		}
 
+		/**
+		 * Update a product instance properties
+		 * @param array $parameters
+		 * @return bool
+		 */
 		public function update($parameters = []): bool {
 			$this->clearError();
 			$database = new \Database\Service();
@@ -253,6 +293,69 @@
 
 				return $this->details();
 			}
+		}
+
+		/**
+		 * Special product update function just to change the code of a product
+		 * instance.  The regular update method should not allow this as special
+		 * privileges and auditing are required.
+		 * @param mixed $new_code 
+		 * @param mixed $reason 
+		 * @return bool 
+		 */
+		public function changeCode($new_code, $reason): bool {
+			$this->clearError();
+			$database = new \Database\Service();
+
+			app_log("Changing product code from ".$this->code." to ".$new_code,'notice',__FILE__,__LINE__);
+
+			// Check the users authorization - Should really be done in the interface
+			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
+				$this->error("You do not have permissions for this task.");
+				app_log($GLOBALS['_SESSION_']->customer->login." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
+				app_log(print_r($GLOBALS['_SESSION_'],true),'debug',__FILE__,__LINE__);
+				return false;
+			}
+
+			// Validate the new code
+			if (! $this->validCode($new_code)) {
+				$this->error("Invalid code");
+				return false;
+			}
+
+			// Bust the existing cache
+			$cache_key = "product.instance[".$this->id."]";
+			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
+			$cache_item->delete();
+
+			// Prepare the query
+			$update_product_query = "
+				UPDATE	monitor_assets
+				SET		asset_code = ?
+				WHERE	asset_id = ?";
+
+			// Add Parameters and Execute Query
+			$database->AddParam($new_code);
+			$database->AddParam($this->id);
+			$database->Execute($update_product_query);
+
+			// Check for errors
+			if ($database->ErrorMsg()) {
+				$this->error($database->ErrorMsg());
+				return false;
+			}
+			
+			// audit the update event
+			app_log("Logging event for product code change",'debug');
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Changed code from '.$this->code.' to '.$new_code,
+				'class_name' => get_class($this),
+				'class_method' => __FUNCTION__
+			));
+
+			return true;
 		}
 
 		public function transfer($org_id,$reason) {
