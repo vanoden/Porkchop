@@ -31,6 +31,7 @@ class Person Extends \BaseModel {
 		$this->_tableName = 'register_users';
 		$this->_tableUKColumn = 'login';
 		$this->_cacheKeyPrefix = 'customer';
+		$this->_auditEvents = true;
         $this->_aliasField('login','code');
 
         // Clear Error Info
@@ -135,6 +136,8 @@ class Person Extends \BaseModel {
             return false;
         }
 
+        $auditEvent = new \Site\AuditLog\Event();
+
         // Loop through and apply changes
         $update_customer_query = "
 				UPDATE	register_users
@@ -142,7 +145,7 @@ class Person Extends \BaseModel {
 			";
 
 		$bind_params = array();
-		if (isset($parameters['first_name'])) {
+		if (isset($parameters['first_name']) && $parameters['first_name'] != $this->first_name) {
 			if (! preg_match('/^[\w\-\.\_\s]*$/',$parameters['first_name'])) {
 				$this->error("Invalid name");
 				return false;
@@ -150,8 +153,9 @@ class Person Extends \BaseModel {
 			$update_customer_query .= ",
 			first_name = ?";
 			array_push($bind_params,$parameters['first_name']);
+			$auditEvent->appendDescription("First Name changed to ".$parameters['first_name']);
 		}
-		if (isset($parameters['last_name'])) {
+		if (isset($parameters['last_name']) && $parameters['last_name'] != $this->last_name) {
 			if (! preg_match('/^[\w\-\.\_\s]*$/',$parameters['last_name'])) {
 				$this->error("Invalid name");
 				return false;
@@ -159,32 +163,43 @@ class Person Extends \BaseModel {
 			$update_customer_query .= ",
 			last_name = ?";
 			array_push($bind_params,$parameters['last_name']);
+			$auditEvent->appendDescription("Last Name changed to ".$parameters['last_name']);
 		}
-		if (isset($parameters['login']) and !empty($parameters['login'])) {
+		if (isset($parameters['login']) and !empty($parameters['login']) && $parameters['login'] != $this->login) {
 			if (!$this->validLogin($parameters['login'])) {
 				$this->error("Invalid login");
+				return false;
+			}
+			// Make Sure Login not Taken
+			$check = new \Register\Person();
+			if ($check->get($parameters['login'])) {
+				$this->error("Login already in use");
 				return false;
 			}
 			$update_customer_query .= ",
 			login = ?";
 			array_push($bind_params,$parameters['login']);
+			$auditEvent->appendDescription("Login changed to ".$parameters['login']);
 		}
-		if (isset($parameters['organization_id']) and ! empty($parameters['organization_id'])) {
+		if (isset($parameters['organization_id']) and ! empty($parameters['organization_id']) && $parameters['organization_id'] != $this->organization_id) {
 			$update_customer_query .= ",
 			organization_id = ?";
 			array_push($bind_params,$parameters['organization_id']);
+			$auditEvent->appendDescription("Organization changed to ".$parameters['organization_id']);
 		}
-		if (isset($parameters['auth_failures']) and is_numeric($parameters['auth_failures'])) {
+		if (isset($parameters['auth_failures']) and is_numeric($parameters['auth_failures']) && $parameters['auth_failures'] != $this->auth_failures) {
 			$update_customer_query .= ",
 			auth_failures = ?";
 			array_push($bind_params,$parameters['auth_failures']);
+			$auditEvent->appendDescription("Auth Failures changed to ".$parameters['auth_failures']);
 		}
-		if (isset($parameters['status'])) {
+		if (isset($parameters['status']) && $parameters['status'] != $this->status) {
 			$update_customer_query .= ",
 			status = ?";
 			array_push($bind_params,$parameters['status']);
+			$auditEvent->appendDescription("Status changed to ".$parameters['status']);
 		}
-		if (isset($parameters['timezone'])) {
+		if (isset($parameters['timezone']) && $parameters['timezone'] != $this->timezone) {
 			if (! in_array($parameters['timezone'], \DateTimeZone::listIdentifiers())) {
 				$this->error("Invalid timezone");
 				return false;
@@ -192,15 +207,17 @@ class Person Extends \BaseModel {
 			$update_customer_query .= ",
 			timezone = ?";
 			array_push($bind_params,$parameters['timezone']);
+			$auditEvent->appendDescription("Timezone changed to ".$parameters['timezone']);
 		}
 
 		if (isset($parameters['validation_key'])) {
 			$update_customer_query .= ",
 			validation_key = ?";
 			array_push($bind_params,$parameters['validation_key']);
+			$auditEvent->appendDescription("Validation Key changed");
 		}
 
-        if (isset($parameters['automation']) && is_bool($parameters['automation'])) {
+        if (isset($parameters['automation']) && is_bool($parameters['automation']) && $parameters['automation'] != $this->automation) {
             if ($parameters['automation']) {
                 $update_customer_query .= ",
 						automation = 1";
@@ -209,9 +226,10 @@ class Person Extends \BaseModel {
                 $update_customer_query .= ",
 						automation = 0";
             }
+			$auditEvent->appendDescription("Automation changed to ".$parameters['automation']);
         }
 
-        if (isset($parameters['time_based_password'])) {
+        if (isset($parameters['time_based_password']) && is_bool($parameters['time_based_password']) && $parameters['time_based_password'] != $this->time_based_password) {
             if ($parameters['time_based_password']) {
                 $update_customer_query .= ",
                 time_based_password = 1";
@@ -220,7 +238,7 @@ class Person Extends \BaseModel {
                 time_based_password = 0";
             }
         }
-        
+
 		$update_customer_query .= "
 			WHERE	id = ?
 		";
@@ -238,14 +256,13 @@ class Person Extends \BaseModel {
         $cache->delete();
 
         // audit the update event
-        $auditLog = new \Site\AuditLog\Event();
-        $auditLog->add(array(
+		app_log("Log customer updates?");
+        $auditEvent->addIfDescription(array(
             'instance_id' => $this->id,
-            'description' => 'Updated '.$this->_objectName(),
             'class_name' => get_class($this),
             'class_method' => 'update'
         ));	
-        
+
         // Get Updated Information
         return $this->details();
     }
