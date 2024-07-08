@@ -188,7 +188,8 @@
 				$this->password_expiration_days = $organization->password_expiration_days;
 				$this->default_billing_location_id = $organization->default_billing_location_id;
 				$this->default_shipping_location_id = $organization->default_shipping_location_id;
-				$this->website_url = $organization->website_url;
+				if (!empty($organization->website_url)) $this->website_url = $organization->website_url;
+				else $this->website_url = "";
 				$this->cached(true);
 				$this->exists(true);
 
