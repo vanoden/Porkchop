@@ -22,12 +22,15 @@
 		// Name for Software Incrementing Number Field
 		protected $_tableNumberColumn;
 
-        // field names for columns in database tables
-	    protected $_fields = array();
-        protected $_aliasFields = array();
+		// field names for columns in database tables
+		protected $_fields = array();
+		protected $_aliasFields = array();
 
 		// Name for Cache Key - id appended in square brackets
 		protected $_cacheKeyPrefix;
+
+		// Should we always audit events for this class?
+		protected $_auditEvents = false;
 
 		// Load object base on ID if given
 		public function __construct($id = 0) {
@@ -73,48 +76,53 @@
 		public function hasField($name) {
 			return in_array($name,$this->_fields);
 		}
-        /**
-         * update by params
-         * 
-         * @param array $parameters, name value pairs to update object by
-         */
-        public function update($parameters = []): bool {
+		/**
+		 * update by params
+		 * 
+		 * @param array $parameters, name value pairs to update object by
+		 */
+		public function update($parameters = []): bool {
 			$this->clearError();
 			$database = new \Database\Service();
 
-            $updateQuery = "UPDATE `$this->_tableName` SET `$this->_tableIDColumn` = `$this->_tableIDColumn` ";
-		    
-    	    // unique id is required to perform an update
-    	    if (!$this->id) {
-        	    $this->error('ERROR: id is required for '.$this->_objectName().' update.');
-        	    return false;
-    	    }
+			$updateQuery = "UPDATE `$this->_tableName` SET `$this->_tableIDColumn` = `$this->_tableIDColumn` ";
+			
+			// unique id is required to perform an update
+			if (!$this->id) {
+				$this->error('ERROR: id is required for '.$this->_objectName().' update.');
+				return false;
+			}
 
-            foreach ($this->_aliasFields as $alias => $real) {
-                if (isset($parameters[$alias])) {
-                    $parameters[$real] = $parameters[$alias];
-                    unset($parameters[$alias]);
-                }
-            }
+			foreach ($this->_aliasFields as $alias => $real) {
+				if (isset($parameters[$alias])) {
+					$parameters[$real] = $parameters[$alias];
+					unset($parameters[$alias]);
+				}
+			}
 
-	        foreach ($parameters as $fieldKey => $fieldValue) {
-	            if (in_array($fieldKey, $this->_fields)) {
-	               $updateQuery .= ", `$fieldKey` = ?";
-	               $database->AddParam($fieldValue);
-	            }
-	        }
-	        
-            $updateQuery .= " WHERE	`$this->_tableIDColumn` = ?";
+			$audit_message = "";
+			foreach ($parameters as $fieldKey => $fieldValue) {
+				if (in_array($fieldKey, $this->_fields)) {
+					if ($this->$fieldKey != $fieldValue) {
+						$updateQuery .= ", `$fieldKey` = ?";
+						$database->AddParam($fieldValue);
+						if (strlen($audit_message) > 0) $audit_message .= ", ";
+						$audit_message .= $fieldKey." changed to ".$fieldValue;
+					}
+				}
+			}
 
-            $database->AddParam($this->id);
-            $database->Execute($updateQuery);
+			$updateQuery .= " WHERE	`$this->_tableIDColumn` = ?";
+
+			$database->AddParam($this->id);
+			$database->Execute($updateQuery);
 
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
-            // Clear Cache to Allow Update
+			// Clear Cache to Allow Update
 			$cache = $this->cache();
 			if (isset($cache)) $cache->delete();
 
@@ -127,31 +135,31 @@
 				'class_method' => 'update'
 			));
 
-            return $this->details();
+			return $this->details();
 
 		}
 		
-        /**
-         * add by params
-         * 
-         * @param array $parameters, name value pairs to add and populate new object by
-         */
+		/**
+		 * add by params
+		 * 
+		 * @param array $parameters, name value pairs to add and populate new object by
+		 */
 		public function add($parameters = []) {
 			$database = new \Database\Service();
 	
-    		$addQuery = "INSERT INTO `$this->_tableName` ";
+			$addQuery = "INSERT INTO `$this->_tableName` ";
 			$bindFields = array();
-	        foreach ($parameters as $fieldKey => $fieldValue) {
-	            if (in_array($fieldKey, $this->_fields())) {
-    	            array_push($bindFields, $fieldKey);
+			foreach ($parameters as $fieldKey => $fieldValue) {
+				if (in_array($fieldKey, $this->_fields())) {
+					array_push($bindFields, $fieldKey);
 					$database->AddParam($fieldValue);
-	            }
-	        }
-	        $addQuery .= '(`'.implode('`,`',$bindFields).'`';
-            $addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindFields)) ,',') . ")";
+				}
+			}
+			$addQuery .= '(`'.implode('`,`',$bindFields).'`';
+			$addQuery .= ") VALUES (" . trim ( str_repeat("?,", count($bindFields)) ,',') . ")";
 
-            // Execute DB Query
-            $database->Execute($addQuery);
+			// Execute DB Query
+			$database->Execute($addQuery);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
@@ -238,11 +246,11 @@
 					}
 					$this->cached(true);
 					$this->exists(true);
-                    foreach ($this->_aliasFields as $alias => $real) {
-                        // Cached values might have alias instead of real field name
-                        if (isset($this->$alias) && !isset($this->$real)) continue;
-                        $this->$alias = $this->$real;
-                    }
+					foreach ($this->_aliasFields as $alias => $real) {
+						// Cached values might have alias instead of real field name
+						if (isset($this->$alias) && !isset($this->$real)) continue;
+						$this->$alias = $this->$real;
+					}
 					return true;
 				}
 			}
@@ -270,9 +278,9 @@
 				$this->exists(true);
 				$this->cached(false);
 				if (!empty($this->_cacheKeyPrefix)) $cache->set($object);
-                foreach ($this->_aliasFields as $alias => $real) {
-                    $this->$alias = $this->$real;
-                }
+				foreach ($this->_aliasFields as $alias => $real) {
+					$this->$alias = $this->$real;
+				}
 			}
 			else {
 				// Clear all attributes
@@ -328,7 +336,7 @@
 		
 		public function deleteByKey($keyName) {
 		
-            // Clear Errors
+			// Clear Errors
 			$this->clearError();
 			$database = new \Database\Service();
 
@@ -366,12 +374,12 @@
 			return true;
 		}		
 		
-        /**
-         * get max value from a column in the current DB table
-         */
+		/**
+		 * get max value from a column in the current DB table
+		 */
 		public function maxColumnValue($column='id') {
 		
-		    $this->clearError();
+			$this->clearError();
 			$database = new \Database\Service();
 			$get_object_query = "SELECT MAX(`$column`) FROM `$this->_tableName`";
 
@@ -384,21 +392,21 @@
 			return $value;
 		}
 		
-        /**
-         * @TODO REMOVE -> move to the recordset Service->Execute()
-         *
-         * get the error that may have happened on the DB level
-         *
-         * @params string $query, prepared statement query
-         * @params array $params, values to populated prepared statement query
-         */		
+		/**
+		 * @TODO REMOVE -> move to the recordset Service->Execute()
+		 *
+		 * get the error that may have happened on the DB level
+		 *
+		 * @params string $query, prepared statement query
+		 * @params array $params, values to populated prepared statement query
+		 */		
 		protected function execute($query, $params) {
 			$rs = $GLOBALS["_database"]->Execute($query,$params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-            return $rs;
+			return $rs;
 		}
 
 		/********************************************/
@@ -410,9 +418,9 @@
 			}
 		}
 
-        protected function _aliasField($real,$alias) {
-            $this->_aliasFields[$alias] = $real;
-        }
+		protected function _aliasField($real,$alias) {
+			$this->_aliasFields[$alias] = $real;
+		}
 
 		/********************************************/
 		/* Get Object Record Using Unique Code		*/
@@ -474,9 +482,9 @@
 		// Get Cache Object using _cacheKeyPrefix and current ID
 		public function cache() {
 			if (!empty($this->_cacheKeyPrefix) && !empty($this->id)) {
-		        // Bust Cache
-		        $cache_key = $this->_cacheKeyPrefix."[" . $this->id . "]";
-		        return new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+				// Bust Cache
+				$cache_key = $this->_cacheKeyPrefix."[" . $this->id . "]";
+				return new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 			}
 			return null;
 		}
@@ -501,5 +509,5 @@
 
 		public function getError() {
 			return $this->_error;
-        }	
+		}	
 	}
