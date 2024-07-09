@@ -6,6 +6,7 @@
 		public $description = '';
 		public $type = 'text';
 		public $required = false;
+		public $requirement_group = null;
 		public $prompt = '';
 		public $options = [];
 		public $default = null;
@@ -25,6 +26,7 @@
 					if (is_bool($value)) $this->required = $value;
 					elseif ($value == "false") $this->required = false;
 					else $this->required = true;
+				elseif ($name == "requirement_group") $this->requirement_group = $value;
 				elseif ($name == "options") {
 					foreach ($value as $option) {
 						array_push($this->options,$option);
