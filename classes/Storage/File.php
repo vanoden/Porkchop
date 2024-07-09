@@ -212,8 +212,6 @@ use Storage\Repository\S3;
 				$this->date_created = $object->date_created;
 				$this->timestamp = strtotime($this->timestamp);
 				$this->_repository_id = $object->repository_id;
-				$this->read_protect = $object->read_protect;
-				$this->write_protect = $object->write_protect;
 				$this->access_privilege_json = $object->access_privileges;
 			}
 			else {
@@ -271,6 +269,18 @@ use Storage\Repository\S3;
 				$this->error("Path required");
 				return null;
 			}
+			return $this->fromPathName($repository_id,$path,$file);
+		}
+
+		/**
+		 * Get File Using Repository id, Path and Name
+		 * @param int $repository_id
+		 * @param mixed $path
+		 * @param mixed $name
+		 * @return null|File
+		 */
+		public function fromPathName($repository_id,$path,$name) {
+			$this->clearError();
 
 			// Prepare Query
 			$database = new \Database\Service();
@@ -281,13 +291,13 @@ use Storage\Repository\S3;
 				AND		name = ?
 			";
 			$database->AddParam($repository_id);
-			$database->AddParam($file);
+			$database->AddParam($name);
 			if (!empty($path)) {
 				$get_file_query .= "
 				AND		path = ?";
 				$database->AddParam($path);
 			}
-
+			$database->trace(9);
 			// Execute Query
 			$rs = $database->Execute($get_file_query);
 
@@ -299,14 +309,26 @@ use Storage\Repository\S3;
 
 			// Fetch first column of result row as file id
 			list($file_id) = $rs->FetchRow();
-			if (!empty($file_id)) {
+			$this->id = $file_id;
+			if (!empty($this->id)) {
+				// Get Details from Database
+				$this->details();
+
 				// Return Storage\File instance with returned id
 				return new \Storage\File($file_id);
 			}
 			else {
-				$this->error("File not found");
 				return null;
 			}
+		}
+
+		/**
+		 * Was the requested file found
+		 * @return bool
+		 */
+		public function exists($exists = null): bool {
+			if ($this->id) return true;
+			return false;
 		}
 
 		/**
@@ -439,7 +461,8 @@ use Storage\Repository\S3;
 			$user = new \Register\Customer($user_id);
 			$organization_id = $user->organization_id;
 
-			$flag = 'r';
+			// File Managers always have access
+			if ($user->can('manage storage files')) return true;
 
 			// Owners always have access
 			if ($this->user_id == $user_id) return true;
@@ -481,30 +504,35 @@ use Storage\Repository\S3;
 			$user = new \Register\Customer($user_id);
 			$organization_id = $user->organization_id;
 
-			$flag = 'w';
+			// File Managers always have access
+			if ($user->can('manage storage files')) return true;
 
+			// Owners always have access
 			if ($this->user_id == $user_id) return true;
-			$privileges = $this->getPrivileges();
 
-			// Access for All
-			if (isset($privileges->a) && preg_match("/$flag/",$privileges->a)) return true;
-
-			// Access for User
-			if (isset($privileges->u->$user_id) && preg_match("/$flag/",$privileges->u->$user_id)) return true;
-
-			// Access for Organization
-			if (isset($privileges->o->$organization_id) && preg_match("/$flag/",$privileges->o->$organization_id)) return true;
-
-			// Access for Roles
-			$roles = $user->roles();
-			foreach ($roles as $role) {
-				$role_id = $role->id;
-				if (isset($privileges->r->$role_id) && preg_match("/$flag/",$privileges->r->$role_id)) return true;
-			}
-
-			// Repository Default Access
+			// Get Repo Privileges
 			$repository = $this->repository();
 			if ($repository->writable($user_id)) return true;
+
+			// Get File Privileges
+			$file_privileges = $this->getPrivileges();
+
+			foreach ($file_privileges as $privilege) {
+				// Check 'All' Privileges
+				if ($privilege->entity_type == 'a' && $privilege->write == 1) return true;
+
+				// Check 'User' Privileges
+				if ($privilege->entity_type == 'u' && $privilege->entity_id == $user_id && $privilege->write == 1) return true;
+
+				// Check 'Organization' Privileges
+				if ($privilege->entity_type == 'o' && $privilege->entity_id == $organization_id && $privilege->write == 1) return true;
+
+				$roles = $user->roles();
+				foreach ($roles as $role) {
+					$role_id = $role->id;
+					if ($privilege->entity_type == 'r' && $privilege->entity_id == $role_id && $privilege->write == 1) return true;
+				}
+			}
 
 			// Default no access
 			return false;
@@ -625,7 +653,7 @@ use Storage\Repository\S3;
 								$this->delete();
 								$this->addError('Unable to add file to repository: '.$repository->error());
 							} else {
-								app_log("Stored file ".$this->id." at ".$repository->path."/".$this->code);
+								app_log("Stored file ".$this->id." at ".$repository->path()."/".$this->code);
 								$this->success = "File uploaded";
 								
 								// add file type refrence for this file to be a part of the support/engineering ticket

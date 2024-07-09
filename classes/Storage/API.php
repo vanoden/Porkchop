@@ -139,16 +139,17 @@
 		### Add a File									###
 		###################################################
 		public function addFile() {
+			// Check for CSRF Token
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-			if (! $GLOBALS['_SESSION_']->customer->can('upload storage files')) error('storage upload role required');
-
+			// Find Specified Repository
 			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->get($_REQUEST['repository_code']);
 			if ($factory->error()) $this->error("Error loading repository: ".$factory->error());
 			if (! $repository->id) $this->error("Repository not found");
 			app_log("Identified repo '".$repository->name."'");
 
+			// Pull Parameters from Form
 			if (! $_REQUEST['name']) $_REQUEST['name'] = $_FILES['file']['name'];
 			if (! file_exists($_FILES['file']['tmp_name'])) $this->error("Temp file '".$_FILES['file']['tmp_name']."' not found");
 			if (! $_REQUEST['mime_type']) $_REQUEST['mime_type'] = $_FILES['file']['type'];
@@ -156,25 +157,21 @@
 			if (! $_REQUEST['mime_type']) $_REQUEST['mime_type'] = guess_mime_type($_FILES['file']['name']);
 			if (! $_REQUEST['mime_type']) $this->error("mime_type not available for '".$_FILES['file']['name']."'");
 
-			app_log("Storing ".$_REQUEST['name']." to ".$repository->path);
-			if (isset($_REQUEST['read_protect']) && strlen($_REQUEST['read_protect']) && $_REQUEST['read_protect'] != 'NONE') {
-				if ($repository->endpoint) {
-					$this->error("Can't protect a file in a repository with external endpoint");
-					return false;
-				}
-			}
+			// Check for Privileges
+			if (! $repository->writable()) $this->error("Permission denied");
 
-			# Check for Conflict
+			// Check for File Name Conflict within repository
 			$filelist = new \Storage\FileList();
 			list($existing) = $filelist->find(
 				array(
 					'repository_id' => $repository->id,
-					'name' => $_REQUEST['name'],
+					'path'			=> $_REQUEST['path'],
+					'name'			=> $_REQUEST['name']
 				)
 			);
 			if ($existing->id) error("File already exists with that name in repo ".$repository->name);
 
-			# Add File to Library
+			// Add File to Database
 			$file = new \Storage\File();
 			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->add(
@@ -189,13 +186,14 @@
 				)
 			);
 
-			# Upload File Into Repository
+			// Upload File Into Repository
 			if ($file->error()) $this->error("Error adding file: ".$file->error());
 			if (! $repository->addFile($file,$_FILES['file']['tmp_name'])) {
+				// Remove file from database if upload to repository failed
 				$file->delete();
 				$this->error('Unable to add file to repository: '.$repository->error());
 			}
-			app_log("Stored file ".$file->id." at ".$repository->path."/".$file->code);
+			app_log("Stored file ".$file->id." at ".$repository->path()."/".$file->code);
 
 			$response = new \APIResponse();
 			$response->addElement('file',$file);
@@ -206,19 +204,25 @@
 		### Update a File								###
 		###################################################
 		public function updateFile() {
+			// Check for CSRF Token
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-			if (! $GLOBALS['_SESSION_']->customer->can('upload storage files')) error('storage upload role required');
+			// Find Specified File
 			$file = new \Storage\File();
 			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->get($_REQUEST['code']);
 			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
 			if (! $file->id) $this->error("File not found");
 
+			// Check Privileges
+			if (! $file->writable()) $this->error("Permission denied");
+
+			// Prepare Update Parameters
 			$parameters = array();
 			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 			if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 
+			// Update File
 			$file->update($parameters);
 			if ($file->error()) $this->app_error("Error updating file: ".$file->error(),__FILE__,__LINE__);
 
@@ -231,19 +235,24 @@
 		### Delete a File								###
 		###################################################
 		public function deleteFile() {
+			// Check for CSRF Token
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-			if (! $GLOBALS['_SESSION_']->customer->can('manage storage files')) error('storage upload role required');
+			// Find Specified File
 			$file = new \Storage\File();
 			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->get($_REQUEST['code']);
 			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
 			if (! $file->id) $this->notFound("File not found");
 
-			# Remove File From Repository
+			// Check Privileges
+			if (! $file->writable()) $this->error("Permission denied");
+
+			// Remove File From Repository
 			$repository = $file->repository();
 			if (! $file->repository()->eraseFile($file)) $this->app_error("Failed to delete file ".$_REQUEST['code'].": ".$repository->error());
 
+			// Remove Record from database
 			$file->delete();
 			if ($file->error()) $this->app_error("Error deleting file: ".$file->error(),__FILE__,__LINE__);
 
@@ -255,13 +264,14 @@
 		### Is User Permitted to Read File			###
 		###################################################
 		public function readPermitted() {
+			// Find Specified File
 			$file = new \Storage\File();
 			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->get($_REQUEST['file_code']);
 			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
 			if (! $file->id) $this->notFound("File not found");
 
-			$user_id = null;
+			// Find Specified User
 			if (! empty($_REQUEST['user_code'])) {
 				$user = new \Register\Customer();
 				if ($user->get($_REQUEST['user_code'])) {
@@ -271,9 +281,14 @@
 					$this->error("User not found");
 				}
 			}
+			// Default to session user if not specified
+			else {
+				$user_id = $GLOBALS['_SESSION_']->customer->id;
+			}
 
+			// Respond with Permission Status
 			$response = new \APIResponse();
-			if ($file->readPermitted($user_id)) $response->addElement('permitted',1);
+			if ($file->readable($user_id)) $response->addElement('permitted',1);
 			else $response->addElement('permitted',0);
 			$response->print();
 		}
@@ -282,13 +297,14 @@
 		### Is User Permitted to Update File			###
 		###################################################
 		public function writePermitted() {
+			// Find Specified File
 			$file = new \Storage\File();
 			if ($file->error()) $this->error("Error initializing file: ".$file->error());
 			$file->get($_REQUEST['file_code']);
 			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
 			if (! $file->id) $this->error("File not found");
 
-			$user_id = null;
+			// Find Specified User
 			if (! empty($_REQUEST['user_code'])) {
 				$user = new \Register\Customer();
 				if ($user->get($_REQUEST['user_code'])) {
@@ -298,7 +314,12 @@
 					$this->notFound("User not found");
 				}
 			}
+			// Default to session user if not specified
+			else {
+				$user_id = $GLOBALS['_SESSION_']->customer->id;
+			}
 
+			// Respond with Permission Status
 			$response = new \APIResponse();
 			if ($file->writePermitted($user_id)) $response->addElement('permitted',1);
 			else $response->addElement('permitted',0);
@@ -309,30 +330,45 @@
 		### Get Privileges for a File					###
 		###################################################
 		public function getFilePrivileges() {
+			// Find Specified File
 			$file = new \Storage\File();
 			if ($file->error()) $this->error("Error initializing file: ".$file->error());
-			$file->get($_REQUEST['code']);
+			if (!empty($_REQUEST['code'])) {
+				if (! $file->validCode($_REQUEST['code'])) $this->error("Invalid file code");
+				$file->get($_REQUEST['code']);
+			}
+			else if (! empty($_REQUEST['id'])) {
+				if (! $file->validID($_REQUEST['id'])) $this->error("Invalid file id");
+				$file->get($_REQUEST['id']);
+			}
+			else {
+				if (empty($_REQUEST['repository_code'])) {
+					$this->error("Must specify code or repository_code and path and name");
+				}
+				$repositoryFactory = new \Storage\RepositoryFactory();
+				$repository = $repositoryFactory->get($_REQUEST['repository_code']);
+				if ($repository->error()) $this->error("Error loading repository: ".$repository->error());
+				if (!empty($repository->id) && !empty($_REQUEST['path']) && !empty($_REQUEST['name'])) {
+					$file->fromPathName($repository->id,$_REQUEST['path'],$_REQUEST['name']);
+				}
+				else $this->error("Must specify code or path and name");
+				if (! $file->validPath($_REQUEST['path'])) {
+					$this->error("Invalid path");
+				}
+			}
 			if ($file->error()) $this->app_error("Error finding file: ".$file->error(),__FILE__,__LINE__);
-			if (! $file->id) $this->notFound("File not found");
-			if ($file->user()->id != $GLOBALS['_SESSION_']->customer->id && ! $GLOBALS['_SESSION_']->customer->can('update storage file permissions')) error('permission denied');
+			if (! $file->exists()) $this->notFound("File ".$_REQUEST['name']." not found at path ".$_REQUEST['path']." in repository ".$repository->name);
+			if (! $file->readable() && ! $GLOBALS['_SESSION_']->customer->can('manage storage files')) $this->error('permission denied');
 
+			// Get Privilege Settings for File
 			$privileges = $file->getPrivileges();
 			$document = array();
-			foreach ($privileges as $object => $privilege) {
-				if ($object == "u") {
-					foreach ($privilege as $id => $perms) {
-						//print "User => $id: ";
-						$user = new \Register\Person($id);
-						$document["user"][$user->code]['can'] = $perms;
-					}
-				}
-				if ($object == "o") {
-					foreach ($privilege as $id => $perms) {
-						//print "User => $id: ";
-						$organization = new \Register\Organization($id);
-						$document["organization"][$organization->code]['can'] = $perms;
-					}
-				}
+			foreach ($privileges as $privilege) {
+				$perms = "";
+				if ($privilege->read) $perms .= "r";
+				if ($privilege->write) $perms .= "w";
+				$document["entity"][$privilege->entity_type_name()][$privilege->entity_code()]['name'] = $privilege->entity_name();
+				$document["entity"][$privilege->entity_type_name()][$privilege->entity_code()]['can'] = $perms;
 			}
 
 			$response = new \APIResponse();
@@ -560,7 +596,11 @@
 					'status'	=> array()
 				),
 				'getFilePrivileges' => array(
-					'code'			=> array('required' => true)
+					'code'			=> array('requirement_group' => 0),
+					'id'			=> array('requirement_group' => 1),
+					'repository_code'	=> array('requirement_group' => 2),
+					'path'			=> array('requirement_group' => 2),
+					'name'			=> array('requirement_group' => 2)
 				),
 				'readPermitted' => array(
 					'user_code'	=> array(),

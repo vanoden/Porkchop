@@ -78,6 +78,7 @@
 						}
 					}
 				}
+				// File Upload Form Submitted
 				elseif (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 					if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 						$page->addError("Invalid Token");
@@ -93,6 +94,9 @@
 						}
 						else if (! $repository->id) {
 							$page->addError("Repository not found");
+						}
+						else if (! $repository->writable()) {
+							$page->addError("Permission Denied");
 						}
 						else {
 							app_log("Identified repo '".$repository->name."'");

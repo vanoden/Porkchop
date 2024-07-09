@@ -6,8 +6,9 @@
         /**
          * create new repo
          *
-         * local|file|filesystem $type
-         * int $id
+         * @param type local|file|filesystem $type
+         * @param int $id - Optional
+		 * @return Repository|NULL
          */
 		public function create($type, $id = null) {
 		
@@ -34,7 +35,8 @@
         /**
          * find by name
          *
-         * string $name
+         * @param string $name
+		 * @return Repository|NULL
          */
 		public function find($name) {
 		
@@ -61,7 +63,8 @@
         /**
          * find by name
          *
-         * int $id
+         * @param int $id
+		 * @return Repository|NULL
          */
 		public function load($id) {
 			
@@ -84,9 +87,10 @@
 		}
 		
         /**
-         * find by code
+         * Find repository by code
          *
-         * string $id
+         * @param string $id
+		 * @return Repository|NULL
          */
 		public function get($code) {
 			$repository = new Repository();

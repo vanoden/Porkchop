@@ -469,12 +469,17 @@
 		 * @return bool 
 		 */
 		public function readable($user_id) {
+			// Default User to current session
 			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+
+			// Fetch User and Organization Records
 			$user = new \Register\Customer($user_id);
 			$organization_id = $user->organization_id;
-	
-			$flag = 'r';
-	
+
+			// File Admins Always have Read Access
+			if ($user->can("manage storage files")) return true;
+
+			// Fetch Repository Privilege Settings
 			$privileges = new \Resource\PrivilegeList();
 			$privileges->fromJSON($this->default_privileges_json);
 
@@ -504,13 +509,18 @@
 		 * @param mixed $user_id 
 		 * @return bool 
 		 */
-		public function writable($user_id) {
+		public function writable($user_id = null) {
+			// Default User to current session
 			if (!isset($user_id)) $user_id = $GLOBALS['_SESSION_']->customer->id;
+
+			// Fetch User and Organization Records
 			$user = new \Register\Customer($user_id);
 			$organization_id = $user->organization_id;
 
-			$flag = 'r';
-	
+			// File Admins Always have Write Access
+			if ($user->can("manage storage files")) return true;
+
+			// Fetch Repository Privilege Settings
 			$privileges = new \Resource\PrivilegeList();
 			$privileges->fromJSON($this->default_privileges_json);
 
