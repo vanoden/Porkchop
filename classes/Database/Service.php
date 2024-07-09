@@ -34,6 +34,12 @@
 			return $this->_params;
 		}
 
+		/**
+		 * Execute a Query against the database
+		 * @param mixed $query 
+		 * @param mixed $bind_params 
+		 * @return null|RecordSet 
+		 */
 		public function Execute($query,$bind_params = null) {
 
 			if (is_array($bind_params)) $this->_params = array_merge($this->_params,$bind_params);
@@ -63,7 +69,10 @@
 		}
 
 		public function trace($level = null) {
-			if (isset($level)) $this->_trace_level = $level;
+			if (isset($level)) {
+				$this->_trace_level = $level;
+				if (empty($this->debug)) $this->debug == 'log';
+			}
 			return $this->_trace_level;
 		}
 
