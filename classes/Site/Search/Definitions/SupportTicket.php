@@ -6,7 +6,7 @@ class SupportTicket extends \Site\Search\Definition {
     public function __construct() {
         $this->class = '\Support\Request\ItemList';
         $this->customer_url = '/_support/ticket/';
-        $this->admin_url = '/_admin/support/ticket/';
+        $this->admin_url = '/_support/request_item/';
         $this->admin_privilege = 'support_admin';
     }
 
@@ -22,10 +22,10 @@ class SupportTicket extends \Site\Search\Definition {
         $ticket_list = $this->search($search_string);
         foreach ($ticket_list as $ticket) {
             $result = new \Site\Search\Result();
-            $result->type = 'ticket';
+            $result->type = 'support';
             $result->summary = $ticket->serial_number. " " . $ticket->description;
-            $result->customer_url = $this->customer_url . $ticket->serial_number;
-            $result->admin_url = $this->admin_url . $ticket->serial_number;
+            $result->customer_url = $this->customer_url . $ticket->request_id;
+            $result->admin_url = $this->admin_url . $ticket->request_id;
             $result->admin_privilege = $this->admin_privilege;
             $results->addResult($result);
         }

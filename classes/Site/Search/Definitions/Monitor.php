@@ -5,8 +5,8 @@ class Monitor extends \Site\Search\Definition {
 
     public function __construct() {
         $this->class = '\Monitor\AssetList';
-        $this->customer_url = '/_monitor/';
-        $this->admin_url = '/_admin/monitor/';
+        $this->customer_url = '/_monitor/asset/';
+        $this->admin_url = '/_monitor/admin_details/';
         $this->admin_privilege = 'monitor_admin';
     }
 
@@ -25,7 +25,8 @@ class Monitor extends \Site\Search\Definition {
             $result->type = 'monitor';
             $result->summary = $monitor->code. " " . $monitor->asset_code;
             $result->customer_url = $this->customer_url . $monitor->asset_code;
-            $result->admin_url = $this->admin_url . $monitor->asset_code;
+            $productItem = new \Product\Item($monitor->product_id);
+            $result->admin_url = $this->admin_url . $monitor->asset_code . "/" . $productItem->code;
             $result->admin_privilege = $this->admin_privilege;
             $results->addResult($result);
         }

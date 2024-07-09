@@ -5,8 +5,8 @@ class Customer extends \Site\Search\Definition {
 
     public function __construct() {        
         $this->class = '\Register\CustomerList';
-        $this->customer_url = '/_customer/';
-        $this->admin_url = '/_admin/customer/';
+        $this->customer_url = '/_register/account';
+        $this->admin_url = '/_register/admin_account?customer_id=';
         $this->admin_privilege = 'customer_admin';
     }
 
@@ -22,7 +22,7 @@ class Customer extends \Site\Search\Definition {
             $result = new \Site\Search\Result();
             $result->type = 'customer';
             $result->summary = $customer->first_name. " " . $customer->last_name;
-            $result->customer_url = $this->customer_url . $customer->id;
+            $result->customer_url = $this->customer_url;
             $result->admin_url = $this->admin_url . $customer->id;
             $result->admin_privilege = $this->admin_privilege;
             $results->addResult($result);

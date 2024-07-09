@@ -13,7 +13,7 @@
         "mobiledetect/mobiledetectlib": "^4.8",
         "tecnickcom/tcpdf": "^6.7",
         "picqer/php-barcode-generator": "^2.4",
-        "spomky-labs/otphp": "^11.2",
+	"spomky-labs/otphp": "^11.2",
         "bacon/bacon-qr-code": "^3.0",
         "amphp/socket": "^2.3",
         "amphp/byte-stream": "^2.1",
