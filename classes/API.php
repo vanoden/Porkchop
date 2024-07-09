@@ -311,6 +311,7 @@
 					$this->invalidRequest("Invalid or missing CSRF Token");
 				}
 			}
+			// Enforce Individual Parameter Requirements
 			foreach ($method as $param => $options) {
 				if (isset($options['required']) && $options['required']) {
 					if (empty($_REQUEST[$param])) {
@@ -318,6 +319,31 @@
 					}
 				}
 			}
+
+			// Enforce Parameter Group Requirements
+			$requirement_groups = array();
+			foreach ($method as $param => $options) {
+				if (isset($options['requirement_group']) && is_numeric($options['requirement_group'])) {
+					if (! in_array($options['requirement_group'],$requirement_groups)) {
+						$requirement_groups[] = $options['requirement_group'];
+					}
+				}
+			}
+			$found = true;
+			foreach ($requirement_groups as $group_id) {
+				$found = true;
+				foreach ($method as $param => $options) {
+					if ($options['requirement_group'] == $group_id) {
+						if (empty($_REQUEST[$param])) {
+							$found = false;
+							break;
+						}
+					}
+				}
+				if ($found) break;
+			}
+			if (! $found) $this->incompleteRequest("Missing required parameter");
+
 			$this->_store_communication();
 			$this->log("Request: ".print_r($_REQUEST,true));
 			if (! method_exists($api,$function_name)) {
@@ -507,16 +533,19 @@
 				// Add Parameters
 				$parameters = $method->parameters();
 				foreach ($parameters as $name => $parameter) {
-					if ($parameter->required) $required = ' required';
-					else $required = '';
+					// Formatting for Required Fields
+					if ($parameter->required) $required_class = ' required';
+					elseif (!empty($parameter->requirement_group)) $required_class = ' required-group-'.$parameter->requirement_group;
+					else $required_class = '';
+
 					$default = $parameter->default;
 					$form .= $t.$t.$t.'<div class="apiParameter">'.$cr;
-					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required.'">'.$name.'</span>'.$cr;
+					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required_class.'">'.$name.'</span>'.$cr;
 					if ($parameter->type == "textarea") {
 						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$name.'">'.$default.'</textarea>'.$cr;
 					}
 					elseif (count($parameter->options)) {
-						$form .= $t.$t.$t.$t.'<select class="value input apiInput" name="'.$name.'">';
+						$form .= $t.$t.$t.$t.'<select class="value input apiInput'.$required_class.'" name="'.$name.'">';
 						$options = $parameter->options;
 						foreach ($options as $option) {
 							$form .= $t.$t.$t.$t.$t.'<option value="'.$option.'">'.$option.'</option>'.$cr;
@@ -524,8 +553,8 @@
 						$form .= $t.$t.$t.$t.'</select>';
 					}
 					else {
-						if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" placeholder="'.$parameter->prompt.'" class="value input apiInput" value="'.$default.'" />'.$cr;
-						else $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput" value="'.$default.'" />'.$cr;
+						if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" placeholder="'.$parameter->prompt.'" class="value input apiInput'.$required_class.'" value="'.$default.'" />'.$cr;
+						else $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput'.$required_class.'" value="'.$default.'" />'.$cr;
 					}
 					$form .= $t.$t.$t.'</div>'.$cr;
 				}
