@@ -1,6 +1,7 @@
 <?php
 	namespace Storage;
 
+use Register\Customer;
 use Storage\Repository\Local;
 use Storage\Repository\S3;
 
@@ -82,7 +83,7 @@ use Storage\Repository\S3;
 			$database->AddParam($parameters['path']);
 
 			// Execute Query
-			$GLOBALS['_database']->Execute($add_object_query);
+			$database->Execute($add_object_query);
 
 			// Check for Errors
 			if ($database->ErrorMsg()) {
@@ -222,15 +223,24 @@ use Storage\Repository\S3;
 			return true;
 		}
 
+		/**
+		 * Return the files owner as object
+		 * @return Customer 
+		 */
 		public function owner() {
 			return new \Register\Customer($this->user_id);
 		}
 
+		/**
+		 * Get/Set File Name
+		 * @param string $name - Optional
+		 * @return string|null
+		 */
 		public function name($name = '') {
 			if (strlen($name)) {
 				if (! preg_match('/^[\w\-\.\_\s]+$/',$name)) {
 					$this->error("Invalid File Name");
-					return false;
+					return null;
 				} else {
 					$this->name = $name;
 				}
@@ -238,10 +248,20 @@ use Storage\Repository\S3;
 			return $this->name;
 		}
 
+		/**
+		 * Get the file's URI, combines repository endpoint and file name
+		 * Used for downloading the file from static storage, ie AWS S3
+		 * @return string 
+		 */
 		public function uri() {
 			return $this->repository()->endpoint."/".$this->name;
 		}
 
+		/**
+		 * Path of the file as designated by the database
+		 * Not the real file path
+		 * @return mixed 
+		 */
 		public function path() {
 			return $this->path;
 		}
@@ -371,6 +391,7 @@ use Storage\Repository\S3;
 		}
 
 		/**
+		 * DEPRECATED!!! User Resource\Privilege grant instead
 		 * Grant an entity access to the resource
 		 * @param mixed $type - Type of Entity
 		 * 		a = All
@@ -416,6 +437,7 @@ use Storage\Repository\S3;
 		}
 
 		/**
+		 * DEPRECATED!!! Use Resource\Privilege grant() instead
 		 * Revoke an entity's access to the resource
 		 * @param mixed $type - Type of Entity
 		 * 		a = All
@@ -593,11 +615,15 @@ use Storage\Repository\S3;
 			return $metadata;
 		}
 
+		/**
+		 * Upload a file to the repository
+		 * @param array $parameters - Array of parameters to upload the file
+		 * @return bool - True if successful, False if not
+		 */
 		public function upload ($parameters) {
-		
 			// make sure we have a file present in the request to upload it
-			if (empty($_FILES)) $this->addError("Repository not found");
-		
+			if (empty($_FILES)) $this->addError("No file was selected to upload");
+
 			// make sure all the required parameters are set for upload to continue
 			if (! preg_match('/^\//',$parameters['path'])) $parameters['path'] = '/'.$parameters['path'];
 			$factory = new \Storage\RepositoryFactory();
@@ -610,12 +636,18 @@ use Storage\Repository\S3;
 			elseif (!empty($parameters['repository_name'])) {
 				$repository = $factory->find($parameters['repository_name']);
 			}
+			else {
+				$this->addError("Repository not specified");
+				return false;
+			}
 
-			if ($factory->error()) {
+			if (isset($factory) && $factory->error()) {
 				$this->addError("Error loading repository: ".$factory->error());
-			} else if (! $repository->id) {
+			}
+			elseif (!$repository->exists()) {
 				$this->addError("Repository not found");
-			} else {
+			}
+			else {
 				app_log("Identified repo '".$repository->name."'");
 				
 				if (! file_exists($_FILES['uploadFile']['tmp_name'])) {
@@ -760,6 +792,11 @@ use Storage\Repository\S3;
 			else return false;
 		}
 
+		/**
+		 * Validate the file extension - Only extensions listed here are supported
+		 * @param string $string - File extension to validate
+		 * @return bool - True if valid, False if not
+		 */
 		public function validExtension($string) {
 			// Images
 			if (preg_match('/^(png|jpg|jpeg|gif|tif)$/',$string)) return true;
