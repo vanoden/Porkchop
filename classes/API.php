@@ -311,6 +311,14 @@
 					$this->invalidRequest("Invalid or missing CSRF Token");
 				}
 			}
+
+			// Unset [NULL] values (Allows user to opt not to change value in form)
+			foreach ($_REQUEST as $key => $value) {
+				if ($value == '[NULL]') {
+					$_REQUEST[$key] = null;
+				}
+			}
+
 			// Enforce Individual Parameter Requirements
 			foreach ($method as $param => $options) {
 				if (isset($options['required']) && $options['required']) {
@@ -439,11 +447,13 @@
 			$form = '';
 			$methods = $api->_methods();
 
+			$form .= '<h1>'.ucfirst($this->module).' API</h1>';
+
 			$cr = "\n";
 			$t = "\t";
 
 			$token = $GLOBALS['_SESSION_']->getCSRFToken();
-			foreach ($methods as $name => $settings) {
+			foreach ($methods as $form_name => $settings) {
 				$method = new \API\Method($settings);
 
 				// See if method has file inputs
@@ -457,15 +467,15 @@
 					}
 				}
 				if ($has_file_inputs) {
-					$form .= $t.'<form method="post" action="/api/'.$api->_name.'" name="'.$name.'" enctype="multipart/form-data">'.$cr;
+					$form .= $t.'<form method="post" action="/api/'.$api->_name.'" id="'.$form_name.'" name="'.$form_name.'" enctype="multipart/form-data">'.$cr;
 				}
 				else {
-					$form .= $t.'<form method="post" action="/api/'.$api->_name.'" name="'.$name.'">'.$cr;
+					$form .= $t.'<form method="post" action="/api/'.$api->_name.'" id="'.$form_name.'" name="'.$form_name.'">'.$cr;
 				}
 				$form .= $t.$t.'<input type="hidden" name="csrfToken" value="'.$token.'">'.$cr;
-				$form .= $t.$t.'<input type="hidden" name="method" value="'.$name.'" />'.$cr;
-				$form .= $t.$t.'<div class="apiMethod">'.$cr;
-				$form .= $t.$t.'<div class="h3 apiMethodTitle">'.$name.'</div>'.$cr;
+				$form .= $t.$t.'<input type="hidden" name="method" value="'.$form_name.'" />'.$cr;
+				$form .= $t.$t.'<div class="apiMethod" onMouseOver="frameAPIFormBorder(this)" onMouseOut="unframeAPIFormBorder(this)">'.$cr;
+				$form .= $t.$t.'<div class="h3 apiMethodTitle">'.$form_name.'</div>'.$cr;
 
 				// Show Method Description if provided
 				if ($method->description) {
@@ -520,7 +530,7 @@
 				// Show Method Privilege Requirement
 				if (!empty($method->privilege_required)) $form .= $t.$t.'
 					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">Authentication Required</span>
+						<span class="label apiMethodSetting">Privilege Required</span>
 						<span class="value apiMethodSetting">'.$method->privilege_required.'
 						</span>
 					</div>'.$cr;
@@ -538,23 +548,41 @@
 					elseif (!empty($parameter->requirement_group)) $required_class = ' required-group-'.$parameter->requirement_group;
 					else $required_class = '';
 
+					// Initialize Default Value
 					$default = $parameter->default;
+
+					// Open Parameter Div Element
 					$form .= $t.$t.$t.'<div class="apiParameter">'.$cr;
-					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required_class.'">'.$name.'</span>'.$cr;
+
+					// Open Label Span Element
+					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required_class.'" for="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">'.$name.'</span>'.$cr;
+
+					// Populate Form Helper Values
+					if (!empty($parameter->object)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_object" value="'.addslashes($parameter->object).'"/>'.$cr;
+					if (!empty($parameter->property)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_property" value="'.addslashes($parameter->property).'"/>'.$cr;
+					if (!empty($parameter->type)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_type" value="'.addslashes($parameter->type).'"/>'.$cr;
+					if (!empty($parameter->description)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_description" value="'.addslashes($parameter->description).'"/>'.$cr;
+					if ($parameter->required) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_required" value="'.addslashes($parameter->required).'"/>'.$cr;
+					if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_prompt" value="'.addslashes($parameter->prompt).'"/>'.$cr;
+					if (!empty($parameter->default)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_default" value="'.addslashes($parameter->default).'"/>'.$cr;
+
+					// Textarea Input
 					if ($parameter->type == "textarea") {
-						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$name.'">'.$default.'</textarea>'.$cr;
+						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">'.$default.'</textarea>'.$cr;
 					}
+					// Select Input
 					elseif (count($parameter->options)) {
-						$form .= $t.$t.$t.$t.'<select class="value input apiInput'.$required_class.'" name="'.$name.'">';
+						$form .= $t.$t.$t.$t.'<select class="value input apiInput'.$required_class.'" name="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">';
 						$options = $parameter->options;
 						foreach ($options as $option) {
 							$form .= $t.$t.$t.$t.$t.'<option value="'.$option.'">'.$option.'</option>'.$cr;
 						}
 						$form .= $t.$t.$t.$t.'</select>';
 					}
+					// Other Input Types
 					else {
-						if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" placeholder="'.$parameter->prompt.'" class="value input apiInput'.$required_class.'" value="'.$default.'" />'.$cr;
-						else $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput'.$required_class.'" value="'.$default.'" />'.$cr;
+						if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" placeholder="'.$parameter->prompt.'" class="value input apiInput'.$required_class.'" value="'.$default.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()" />'.$cr;
+						else $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput'.$required_class.'" value="'.$default.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()" />'.$cr;
 					}
 					$form .= $t.$t.$t.'</div>'.$cr;
 				}

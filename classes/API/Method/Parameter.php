@@ -3,6 +3,8 @@
 
 	class Parameter Extends \BaseClass {
 		public $name;
+		public $object;
+		public $property;
 		public $description = '';
 		public $type = 'text';
 		public $required = false;
@@ -11,6 +13,8 @@
 		public $options = [];
 		public $default = null;
 		public $format = null;
+		public $parameter_type = 'string';
+		public $validation_regex = null;
 
 		public function __construct($parameters = []) {
 			foreach ($parameters as $name => $value) {
@@ -32,9 +36,13 @@
 						array_push($this->options,$option);
 					}
 				}
+				elseif ($name == "object") $this->object = $value;
+				elseif ($name == "property") $this->property = $value;
 				elseif ($name == "prompt") $this->prompt = $value;
 				elseif ($name == "default") $this->default = $value;
 				elseif ($name == "format") $this->format = $value;
+				elseif ($name == "parameter_type") $this->parameter_type = $value;
+				elseif ($name == "validation_regex") $this->validation_regex = $value;
 			}
 		}
 	}
