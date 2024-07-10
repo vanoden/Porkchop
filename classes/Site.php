@@ -217,7 +217,11 @@
 		}
 
         public function configuration($key) {
-            return new \Site\Configuration($key);
+            $config = new \Site\Configuration();
+			$config->get($key);
+			if ($config->error()) $this->error($config->error());
+			else return $config->value;
+			return null;
         }
 
 		public function module_list() {
