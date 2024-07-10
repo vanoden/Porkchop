@@ -54,7 +54,7 @@
 				var option = document.createElement("option");
 				option.text = roles[i].name;
 				option.value = roles[i].id;
-				entityElem.perm_id.add(option);
+				entityElem.add(option);
 			}
 		}
 	}
@@ -143,9 +143,8 @@
 				<?=$privilege->entity_name()?>
     		</div>
     		<div class="tableCell">
-				r<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['r']" value="1"<?php if ($privilege->read) print " checked"; ?> />
-				w<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['w']" value="1"<?php if ($privilege->write) print " checked"; ?> />
-				g<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['g']" value="1" />
+				Read<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['r']" value="1"<?php if ($privilege->read) print " checked"; ?> />
+				Write<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['w']" value="1"<?php if ($privilege->write) print " checked"; ?> />
     		</div>
 		</div>
 		<?php	} ?>
@@ -153,7 +152,6 @@
     	<div class="tableRow">
     		<div class="tableCell">
 	            <select name="new_privilege_entity_type" onchange="updateIds(this,'new_privilege_entity_id')">
-					<option value="a">All</option>
 					<option value="u">User</option>
 					<option value="o">Organization</option>
 					<option value="r">Role</option>
@@ -163,9 +161,8 @@
 				<select name="new_privilege_entity_id" class="value input"></select>
     		</div>
     		<div class="tableCell">
-				r<input type="checkbox" name="new_privilege_read" value="1" />
-				w<input type="checkbox" name="new_privilege_write" value="1" />
-				g<input type="checkbox" name="new_privilege_grant" value="1" />
+				Read<input type="checkbox" name="new_privilege_read" value="1" />
+				Write<input type="checkbox" name="new_privilege_write" value="1" />
     		</div>
 		</div>
 	</div>

@@ -17,7 +17,6 @@
 	}
 	elseif (!empty($_REQUEST['code'])) {
 		// POST/GET Variable with Repository Code
-		print_r("Getting repository with code ".$_REQUEST['code']);
 		$repository = $factory->get($_REQUEST['code']);
 	}
 	elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
@@ -53,7 +52,7 @@
 			$page->addError("Invalid path");
 			$_REQUEST['path'] = htmlspecialchars($_REQUEST['path']);
 		}
-		if (preg_match('/^s3$/i',$_REQUEST['type'])) {
+		if (isset($_REQUEST['type']) && preg_match('/^s3$/i',$_REQUEST['type'])) {
 			if (!$repository->validAccessKey($_REQUEST['accessKey'])) {
 				$page->addError("Invalid access key '".$_REQUEST['accessKey']."'");
 				$_REQUEST['accessKey'] = htmlspecialchars($_REQUEST['accessKey']);
@@ -80,7 +79,7 @@
 		if ($page->errorCount() < 1) {
 			$parameters = array();
 			$parameters['name'] = $_REQUEST['name'];
-			$parameters['type'] = $_REQUEST['type'];
+			if (isset($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 			$parameters['status'] = $_REQUEST['status'];
 			$parameters['path'] = $_REQUEST['path'];
 			$parameters['endpoint'] = $_REQUEST['endpoint'];
@@ -139,7 +138,7 @@
 				$repository = $factory->get($repository->code);
 				$repository->_setMetadata('path',$_REQUEST['path']);
 				$repository->_setMetadata('endpoint',$_REQUEST['endpoint']);
-				if ($_REQUEST['type'] == 's3') {
+				if (isset($_REQUEST['type']) && $_REQUEST['type'] == 's3') {
 					$repository->_setMetadata('accessKey', $_REQUEST['accessKey']);
 					$repository->_setMetadata('secretKey', $_REQUEST['secretKey']);
 					$repository->_setMetadata('bucket', $_REQUEST['bucket']);

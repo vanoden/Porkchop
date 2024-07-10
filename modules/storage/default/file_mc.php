@@ -4,12 +4,12 @@
 	$page = $site->page();
 
 	// Identify File from User Input
-	if ($_REQUEST['id']) {
+	if (array_key_exists('id',$_REQUEST) && is_numeric($_REQUEST['id']) && $_REQUEST['id'] > 0) {
 		$file = new \Storage\File($_REQUEST['id']);
 	}
 	else {
 		$file = new \Storage\File();
-		if ($_REQUEST['code']) {
+		if (array_key_exists("code",$_REQUEST) && $file->validCode($_REQUEST['code'])) {
 			$file->get($_REQUEST['code']);
 		}
 		elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
@@ -31,7 +31,7 @@
 
 	if ($page->errorCount() < 1) {
 		// File Download Requests
-		if ((isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Download') || preg_match('/^download$/i',$GLOBALS['_REQUEST_']->query_vars_array[1])) {
+		if ((isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Download') || (!empty($GLOBALS['_REQUEST_']->query_vars_array[1]) && preg_match('/^download$/i',$GLOBALS['_REQUEST_']->query_vars_array[1]))) {
 			if ($file->readable()) {
 				$file->download();
 			}
@@ -112,6 +112,7 @@
 					}
 				}
 				// Compile new privilege JSON
+				if (!isset($_REQUEST['privilege'])) $_REQUEST['privilege'] = array();
 				$privilegeList = new \Resource\PrivilegeList($file->privilegeList());
 				$privilegeList->apply($_REQUEST['privilege']);
 				if ($_REQUEST['perm_level'] && $_REQUEST['perm_id']) {

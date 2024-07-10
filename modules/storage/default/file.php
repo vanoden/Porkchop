@@ -65,7 +65,7 @@
 	</div>
 	<div class="container fileDetailContainer">
 		<span class="label">Repository</span>
-		<span class="value"><?=$file->repository->name?></span>
+		<span class="value"><?=$file->repository()->name?></span>
 	</div>
 	<div class="container fileDetailContainer">
 		<span class="label">Name</span>
@@ -120,7 +120,7 @@
 		<div class="tableRow">
 			<div class="tableCell">
 				<select name="perm_level" onchange="updateIds(this)">
-					<option value=""></option>
+					<option value="">Select</option>
 					<option value="u">User</option>
 					<option value="r">Role</option>
 					<option value="o">Organization</option>

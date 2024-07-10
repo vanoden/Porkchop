@@ -58,6 +58,27 @@
 							array_push($privileges,$privilege);
 							array_push($this->_data,$privilege);
 						}
+						elseif ($entity_type == 't') {
+							$authSet = true;
+							if (is_array($privs)) {
+								foreach ($privs as $id => $mask) {
+									if (preg_match('/r/',$mask)) $read = true;
+									if (preg_match('/w/',$mask)) $write = true;
+								}
+							}
+							else {
+								if (is_object($privs)) $privs = implode('',get_object_vars($privs));
+								if (preg_match('/r/',$privs)) $read = true;
+								if (preg_match('/w/',$privs)) $write = true;
+							}
+							$privilege = new \Resource\Privilege();
+							$privilege->entity_type = $entity_type;
+							$privilege->entity_id = 0;
+							$privilege->read = $read;
+							$privilege->write = $write;
+							array_push($privileges,$privilege);
+							array_push($this->_data,$privilege);
+						}
 						// Handle Specific Entity Privileges
 						else {
 							foreach ($privs as $id => $mask) {
@@ -108,6 +129,7 @@
 						}
 					}
 					if (! $allSet) {
+						// Always Show All
 						$privilege = new \Resource\Privilege();
 						$privilege->entity_type = 'a';
 						$privilege->entity_id = 0;
@@ -116,10 +138,24 @@
 						array_push($privileges,$privilege);
 						array_push($this->_data,$privilege);
 					}
-					return $privileges;
+					if (! $authSet) {
+						// Always Show Authenticated
+						$privilege = new \Resource\Privilege();
+						$privilege->entity_type = 't';
+						$privilege->entity_id = 0;
+						$privilege->read = false;
+						$privilege->write = false;
+						array_push($privileges,$privilege);
+						array_push($this->_data,$privilege);
+					}
+					return $this->_sort($privileges);
 				}
 				else {
-					return array(new \stdClass());
+					// Build 'Empty' Privileges Array
+					return [
+						new \Resource\Privilege('a',0,false,false),
+						new \Resource\Privilege('t',0,false,false)
+					];
 				}
 			}
 		}
@@ -132,13 +168,16 @@
 			$privilege_array = [];
 			foreach ($this->_data as $privilege) {
 				if ($privilege->entity_type == 'a') {
-					//$privilege_array['a'] = [];
 					if ($privilege->read && $privilege->write) $privilege_array['a'] = array('r','w');
 					elseif ($privilege->read) $privilege_array['a'] = array('r');
 					elseif ($privilege->write) $privilege_array['a'] = array('w');
 				}
+				elseif ($privilege->entity_type == 't') {
+					if ($privilege->read && $privilege->write) $privilege_array['t'] = array('r','w');
+					elseif ($privilege->read) $privilege_array['t'] = array('r');
+					elseif ($privilege->write) $privilege_array['t'] = array('w');
+				}
 				elseif ($privilege->entity_type == 'u' || $privilege->entity_type == 'r' || $privilege->entity_type == 'o') {
-					//if (!isset($privilege_array[$privilege->entity_type])) $privilege_array[$privilege->entity_type] = [];
 					if ($privilege->read && $privilege->write) $privilege_array[$privilege->entity_type][$privilege->entity_id] = array('r','w');
 					elseif ($privilege->read) $privilege_array[$privilege->entity_type][$privilege->entity_id] = array('r');
 					elseif ($privilege->write) $privilege_array[$privilege->entity_type][$privilege->entity_id] = array('w');
@@ -154,20 +193,37 @@
 		 */
 		public function apply($form_data) {
 			$current = [];
+			$current['a'][0] = [];
+			$current['t'][0] = [];
 			$applied = [];
+			$applied['a'][0]['read'] = 0;
+			$applied['a'][0]['write'] = 0;
+			$applied['t'][0]['read'] = 0;
+			$applied['t'][0]['write'] = 0;
 			$keys = [];
 			$keys['a']['0'] = 1;
+			$keys['t']['0'] = 1;
 
 			// Copy Internal Data to Array
 			foreach ($this->_data as $privilege) {
 				$keys[$privilege->entity_type][$privilege->entity_id] = 1;
 				if ($privilege->entity_type == 'a') {
 					if ($privilege->read) $current['a']['0']['read'] = 1;
+					else $current['a']['0']['read'] = 0;
 					if ($privilege->write) $current['a']['0']['write'] = 1;
+					else $current['a']['0']['write'] = 0;
+				}
+				elseif ($privilege->entity_type == 't') {
+					if ($privilege->read) $current['t']['0']['read'] = 1;
+					else $current['t']['0']['read'] = 0;
+					if ($privilege->write) $current['t']['0']['write'] = 1;
+					else $current['t']['0']['write'] = 0;
 				}
 				else {
 					if ($privilege->read) $current[$privilege->entity_type][$privilege->entity_id]['read'] = 1;
+					else $current[$privilege->entity_type][$privilege->entity_id]['read'] = 0;
 					if ($privilege->write) $current[$privilege->entity_type][$privilege->entity_id]['write'] = 1;
+					else $current[$privilege->entity_type][$privilege->entity_id]['write'] = 0;
 				}
 			}
 
@@ -178,20 +234,22 @@
 					$keys[$entity_type][$entity_id] = 1;
 					// Store in Array
 					if ($entity_type == 'a') {
-						if (isset($accessLevels["'r'"]) && $accessLevels["'r'"] == 1) {
-							$applied['a']['0']['read'] = 1;
-						}
-						if (isset($accessLevels["'w'"]) && $accessLevels["'w'"] == 1) {
-							$applied['a']['0']['write'] = 1;
-						}
+						if (isset($accessLevels["'r'"]) && $accessLevels["'r'"] == 1) $applied['a']['0']['read'] = 1;
+						else $applied['a']['0']['read'] = 0;
+						if (isset($accessLevels["'w'"]) && $accessLevels["'w'"] == 1) $applied['a']['0']['write'] = 1;
+						else $applied['a']['0']['write'] = 0;
+					}
+					elseif ($entity_type == 't') {
+						if (isset($accessLevels["'r'"]) && $accessLevels["'r'"] == 1) $applied['t']['0']['read'] = 1;
+						else $applied['t']['0']['read'] = 0;
+						if (isset($accessLevels["'w'"]) && $accessLevels["'w'"] == 1) $applied['t']['0']['write'] = 1;
+						else $applied['t']['0']['write'] = 0;
 					}
 					else {
-						if (isset($accessLevels["'r'"]) && $accessLevels["'r'"] == 1) {
-							$applied[$entity_type][$entity_id]['read'] = 1;
-						}
-						if (isset($accessLevels["'w'"]) && $accessLevels["'w'"] == 1) {
-							$applied[$entity_type][$entity_id]['write'] = 1;
-						}
+						if (isset($accessLevels["'r'"]) && $accessLevels["'r'"] == 1) $applied[$entity_type][$entity_id]['read'] = 1;
+						else $applied[$entity_type][$entity_id]['read'] = 0;
+						if (isset($accessLevels["'w'"]) && $accessLevels["'w'"] == 1) $applied[$entity_type][$entity_id]['write'] = 1;
+						else $applied[$entity_type][$entity_id]['write'] = 0;
 					}
 				}
 			}
@@ -210,11 +268,13 @@
 						$msgPriv = new \Resource\Privilege($entity_type,$id);
 						if ($existing && ! $form) {
 							if ($entity_type == 'a') $this->message .= "Revoked ".$action." privilege from ".$msgPriv->entity_type_name()."\n";
+							elseif ($entity_type == 't') $this->message .= "Revoked ".$action." privilege from ".$msgPriv->entity_type_name()."\n";
 							else $this->message .= "Revoked ".$action." privilege from ".$msgPriv->entity_type_name()." ".$msgPriv->entity_name()."\n";
 							$this->_data[$privilege_elem_id]->$action = false;
 						}
 						elseif (! $existing && $form) {
 							if ($entity_type == 'a') $this->message .= "Granted ".$action." privilege to ".$msgPriv->entity_type_name()."\n";
+							elseif ($entity_type == 't') $this->message .= "Granted ".$action." privilege to ".$msgPriv->entity_type_name()."\n";
 							else $this->message .= "Granted ".$action." privilege to ".$msgPriv->entity_type_name()." ".$msgPriv->entity_name()."\n";
 							$this->_data[$privilege_elem_id]->$action = true;
 						}
@@ -252,12 +312,35 @@
 		}
 
 		public function privileges() {
-			return $this->_data;
+			return $this->_sort($this->_data);
 		}
 
 		public function privilege($entity_type,$entity_id = 0) {
 			for ($elem = 0; $elem < count($this->_data); $elem ++) {
-				if ($this->_data[$elem]->entity_type == $entity_type && $this->_data[$elem]->entity_id == $entity_id) return $this->_data[$elem];
+				if ($this->_data[$elem]->entity_type == $entity_type && $this->_data[$elem]->entity_id == $entity_id) {
+					if ($entity_type == 't' && empty($entity_id)) return null;
+					return $this->_data[$elem];
+				}
 			}
+		}
+
+		private function _sort($privs) {
+			$return = array();
+			foreach ($privs as $priv) {
+				if ($priv->entity_type == 'a') array_push($return,$priv);
+			}
+			foreach ($privs as $priv) {
+				if ($priv->entity_type == 't') array_push($return,$priv);
+			}
+			foreach ($privs as $priv) {
+				if ($priv->entity_type == 'r') array_push($return,$priv);
+			}
+			foreach ($privs as $priv) {
+				if ($priv->entity_type == 'o') array_push($return,$priv);
+			}
+			foreach ($privs as $priv) {
+				if ($priv->entity_type == 'u') array_push($return,$priv);
+			}
+			return $return;
 		}
 	}

@@ -463,9 +463,11 @@ use Storage\Repository\S3;
 
 			// File Managers always have access
 			if ($user->can('manage storage files')) return true;
+			header("X-File-Admin: No");
 
 			// Owners always have access
 			if ($this->user_id == $user_id) return true;
+			header("X-File-Owner: No");
 
 			// Get Repo Privileges
 			$repository = $this->repository();
@@ -478,12 +480,16 @@ use Storage\Repository\S3;
 				// Check 'All' Privileges
 				if ($privilege->entity_type == 'a' && $privilege->read == 1) return true;
 
+				// Check 'Authenticated' Privileges
+				if ($privilege->entity_type == 't' && $user_id > 0 && $privilege->read == 1) return true;
+
 				// Check 'User' Privileges
 				if ($privilege->entity_type == 'u' && $privilege->entity_id == $user_id && $privilege->read == 1) return true;
 
 				// Check 'Organization' Privileges
 				if ($privilege->entity_type == 'o' && $privilege->entity_id == $organization_id && $privilege->read == 1) return true;
 
+				// Check 'Role' Privileges
 				$roles = $user->roles();
 				foreach ($roles as $role) {
 					$role_id = $role->id;
@@ -521,12 +527,16 @@ use Storage\Repository\S3;
 				// Check 'All' Privileges
 				if ($privilege->entity_type == 'a' && $privilege->write == 1) return true;
 
+				// Check 'Authenticated' Privileges
+				if ($privilege->entity_type == 't' && $user_id > 0 && $privilege->write == 1) return true;
+
 				// Check 'User' Privileges
 				if ($privilege->entity_type == 'u' && $privilege->entity_id == $user_id && $privilege->write == 1) return true;
 
 				// Check 'Organization' Privileges
 				if ($privilege->entity_type == 'o' && $privilege->entity_id == $organization_id && $privilege->write == 1) return true;
 
+				// Check 'Role' Privileges
 				$roles = $user->roles();
 				foreach ($roles as $role) {
 					$role_id = $role->id;

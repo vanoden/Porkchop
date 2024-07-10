@@ -6,13 +6,15 @@
 		public $entity_type;
 
 		// Entity ID
-		public int $entity_id;
+		public int $entity_id = 0;
 
 		// Read
 		public bool $read = false;
+		public bool $readInherited = false;
 		
 		// Write
 		public bool $write = false;
+		public bool $writeInherited = false;
 
 		/**
 		 * Constructor
@@ -30,13 +32,16 @@
 		}
 
 		/**
-		 * Entity Type Name
+		 * Readable name of entity type
 		 * @return string 
 		 */
 		public function entity_type_name(): string {
 			switch ($this->entity_type) {
 				case 'a':
 					return "All";
+					break;
+				case 't':
+					return "Authenticated";
 					break;
 				case 'u':
 					return "User";
@@ -54,13 +59,16 @@
 		}
 
 		/**
-		 * Entity Code
+		 * Unique code of privilege entity
 		 * @return string 
 		 */
 		public function entity_code(): string {
 			switch ($this->entity_type) {
 				case 'a':
 					return 'All';
+					break;
+				case 't':
+					return 'Authenticated';
 					break;
 				case 'u':
 					$entity = new \Register\Customer($this->entity_id);
@@ -80,13 +88,16 @@
 			};
 		}
 		/**
-		 * Entity Name
+		 * Readable name of privilege entity
 		 * @return mixed 
 		 */
 		public function entity_name() {
 			switch ($this->entity_type) {
 				case 'a':
 					return 'All';
+					break;
+				case 't':
+					return 'Authenticated';
 					break;
 				case 'u':
 					$entity = new \Register\Customer($this->entity_id);
@@ -107,7 +118,7 @@
 		}
 
 		/**
-		 * Access Level Name
+		 * Readable name of access level
 		 * @return string 
 		 */
 		public function access_level_name(): string {

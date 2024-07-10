@@ -479,13 +479,17 @@
 
 			// File Admins Always have Read Access
 			if ($user->can("manage storage files")) return true;
-
+			header("X-Storage-Admin: No");
 			// Fetch Repository Privilege Settings
 			$privileges = new \Resource\PrivilegeList();
 			$privileges->fromJSON($this->default_privileges_json);
 
 			// Access for All
 			$privilege = $privileges->privilege('a');
+			if ($privilege->read) return true;
+
+			// Access for Authenticated User
+			$privilege = $privileges->privilege('t',$user_id);
 			if ($privilege->read) return true;
 
 			// Access for User
@@ -495,7 +499,7 @@
 			// Access for Organization
 			$privilege = $privileges->privilege('o',$organization_id);
 			if ($privilege->read) return true;
-	
+
 			// Access for Roles
 			$roles = $user->roles();
 			foreach ($roles as $role) {
@@ -527,6 +531,10 @@
 
 			// Access for All
 			$privilege = $privileges->privilege('a');
+			if ($privilege->write) return true;
+
+			// Access for Authenticated User
+			$privilege = $privileges->privilege('t');
 			if ($privilege->write) return true;
 
 			// Access for User
