@@ -32,13 +32,14 @@
 		private $cookie_path;
 		private $elevated = false;
 		private $oauth2_state = null;
-
+		
 		/**
 		 * Constructor
 		 * @param int $id 
 		 * @return void 
 		 */
 		public function __construct($id = 0) {
+    		$this->_database = new \Database\Service();
 			$this->_tableName = 'session_sessions';
     		parent::__construct($id);
 		}
@@ -48,6 +49,7 @@
 		 * @return void 
 		 */
 		public function start() {
+
 			# Fetch Company Information
 			$location = new \Company\Location();
 			$location->getByHost($_SERVER['SERVER_NAME']);
@@ -57,6 +59,7 @@
 				$this->error("Location ".$_SERVER['SERVER_NAME']." not configured");
 				return null;
 			}
+
 			if (! $location->domain()->id) {
 				$this->error("No domain assigned to location '".$location->id."'");
 				return null;
@@ -85,9 +88,6 @@
 
 			# Cookie Parameters
 			if (isset($GLOBALS['_config']->session->domain)) $this->cookie_domain = $GLOBALS['_config']->session->domain;
-
-
-
 			else $this->cookie_domain = $domain;
 			if (isset($GLOBALS['_config']->session->cookie) && is_string($GLOBALS['_config']->session->cookie)) $this->cookie_name = $GLOBALS['_config']->session->cookie;
 			else $this->cookie_name = "session_code";
@@ -105,8 +105,7 @@
 				if ($this->id) {
 					app_log("Loaded session ".$this->id.", customer ".$this->customer->id,'debug',__FILE__,__LINE__);
 					$this->timestamp($this->id);
-				}
-				else {
+				} else {
 					app_log("Session $request_code not available or expired, deleting cookie for ".$domain->name,'notice',__FILE__,__LINE__);
 					setcookie($this->cookie_name, $request_code, time() - 604800, $this->cookie_path, $_SERVER['SERVER_NAME'],false,true);
 				}
@@ -145,9 +144,7 @@
 						$this->message = $customer->message;
 						return;
 					}
-					if ($customer->id) {
-						$this->customer_id = $customer->id;
-					}
+					if ($customer->id) $this->customer_id = $customer->id;
 				}
 				if ($this->customer->id) {
 					app_log("Customer $login [".$this->customer_id."] logged in",'info',__FILE__,__LINE__);
@@ -162,10 +159,7 @@
 			}
 		}
 
-		/**
-		 * Get Session Information
-		 * @return bool 
-		 */
+		# End a Session
 		public function end() {
 			$database = new \Database\Service();
 			$end_session_query = "
@@ -183,7 +177,6 @@
 
 			# Delete Cookie
 			app_log("Deleting session_code cookie '".$GLOBALS['_SESSION_']->code."' for ".$GLOBALS['_SESSION_']->domain()->name,'notice');
-			//setcookie("session_code", $GLOBALS['_SESSION_']->code, time() - 604800, '/', $GLOBALS['_SESSION_']->domain->name);
 			setcookie("session_code","",time() - 3600);
 
 			return true;
@@ -214,7 +207,6 @@
 		function validCode($request_code): bool {
 			# Test to See Session Code is 32 character hexadecimal
 			if (preg_match("/^[0-9a-f]{64}$/i",$request_code)) return true;
-			#error_log("Invalid session code: $request_code");
 			return false;
 		}
 
@@ -225,6 +217,7 @@
 		function create() {
 			$new_code = '';
 			while (! $new_code) {
+
 				# Get Large Random value
 				$randval = mt_rand();		
 	
@@ -236,9 +229,7 @@
 			}
 			app_log("Generated session code '$new_code'");
 
-			if (! is_object($this->customer)) {
-				$this->customer = new \Register\Customer();
-			}
+			if (! is_object($this->customer)) $this->customer = new \Register\Customer();
 
 			# Create The New Session
 			$query = "
@@ -287,18 +278,18 @@
 			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['SERVER_NAME'],false,true)) {
 				app_log("New Session ".$this->id." created for ".$this->domain()->id." expires ".date("Y-m-d H:i:s",time() + 36000),'debug',__FILE__,__LINE__);
 				app_log("Session Code ".$new_code,'debug',__FILE__,__LINE__);
-			}
-			else{
+			} else {
 				app_log("Could not set session cookie",'error',__FILE__,__LINE__);
 			}
 			return $this->get($new_code);
 		}
-
+		
 		/**
 		 * Get Session Information
 		 * @return bool 
 		 */
 		function details(): bool {
+		
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
 
@@ -316,6 +307,7 @@
 					$this->first_hit_date = $session->first_hit_date;
 					$this->last_hit_date = $session->last_hit_date;
 					$this->super_elevation_expires = $session->super_elevation_expires;
+					$this->refer_url = $session->refer_url;
 					$this->oauth2_state = $session->oauth2_state;
                     if (isset($session->isMobile)) $this->isMobile = $session->isMobile;
                     if (empty($session->csrfToken)) {
@@ -338,6 +330,7 @@
 						first_hit_date,
 						last_hit_date,
 						super_elevation_expires,
+						refer_url,
 						oauth2_state
 				FROM	session_sessions
 				WHERE	id = ?
@@ -362,6 +355,7 @@
 				$this->first_hit_date = $session->first_hit_date;
 				$this->last_hit_date = $session->last_hit_date;
 				$this->super_elevation_expires = $session->super_elevation_expires;
+				$this->refer_url = $session->refer_url;
 				$this->oauth2_state = $session->oauth2_state;
 
 				require_once THIRD_PARTY.'/psr/simple-cache/src/CacheInterface.php';
@@ -389,10 +383,15 @@
 			if ($session->code) return 1;
 			return 0;
 		}
-		
+
+		/**
+		 * Assign a session to a customer
+		 * @param int $customer_id
+		 * @param bool $isElevated
+		 * @param string $OTPRedirect, @TODO using refer_url as the TOPRedirect required value for now
+		 */		
 		function assign ($customer_id, $isElevated = false) {
 			app_log("Assigning session ".$this->id." to customer ".$customer_id,'debug',__FILE__,__LINE__);
-
 			$customer = new \Register\Customer($customer_id);
 			if (! $customer->id) $this->error("Customer not found");
 
@@ -422,14 +421,17 @@
 			$update_session_query = "
 				UPDATE  session_sessions
 				SET     user_id = ?,
-						timezone = ?
+						timezone = ?,
+						refer_url = ?
 				WHERE   id = ?
 			";
+
 			$GLOBALS['_database']->Execute(
 				$update_session_query,
 				array(
 					  $customer->id,
 					  $customer->timezone,
+					  $OTPRedirect,
 					  $this->id
 				)
 			);
@@ -493,7 +495,7 @@
 			}
 			return 1;
 		}
-
+		
 		function update ($parameters = []): bool {
 		
 			# Name For Xcache Variable
@@ -512,6 +514,7 @@
 				"user_id"	=> "user_id",
 				"timezone"	=> "timezone",
 				"super_elevation_expires" => "super_elevation_expires",
+				"refer_url" => "refer_url",
 				"oauth2_state"	=> "oauth2_state"
 			);
 
@@ -532,7 +535,6 @@
 				WHERE	id = ?
 			";
 			array_push($bind_params,$this->id);
-
 			query_log($update_session_query,$bind_params,true);
 
 			$rs = $GLOBALS['_database']->Execute($update_session_query,$bind_params);
@@ -554,6 +556,7 @@
 		}
 
 		function hits($id = 0) {
+
 			if ($id < 1) $id = $this->id;
 			$hitlist = new HitList();
 			$hits = $hitlist->find(
@@ -594,10 +597,12 @@
 		}
 		
 		public function expire() {
+
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Invalid session id for session::Session::expire");
 				return false;
 			}
+
 			# Delete Hits
 			$delete_hits_query = "
 				DELETE
@@ -663,9 +668,7 @@
 		}
 
 		public function oauthState($state = null) {
-			if (isset($state)) {
-				$this->update(array('oauth2_state' => $state));
-			}
+			if (isset($state)) $this->update(array('oauth2_state' => $state));
 			return $this->oauth2_state;
 		}
 
@@ -675,6 +678,7 @@
         }
 
         public function verifyCSRFToken($csrfToken) {
+
 			if (empty($csrfToken)) {
 				app_log("No csrfToken provided",'debug');
 				return false;
@@ -691,6 +695,7 @@
         }
 
 		private function generateCSRFToken() {
+
 			$data = bin2hex(openssl_random_pseudo_bytes(32));
 			$token = htmlspecialchars($data, ENT_QUOTES | ENT_HTML401, 'UTF-8');
 			app_log("Generated token '$token'",'debug');

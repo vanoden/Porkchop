@@ -28,7 +28,7 @@
 <?php  } ?>
 
 <form class="form" method="POST" action="/_site/search">
-  <input type="text" placeholder="Enter Search..." name="string" value="<?= $_REQUEST['string'] ?>">
+  <input type="text" placeholder="Enter Search..." name="string" value="<?= isset($_REQUEST['string']) ? $_REQUEST['string'] : '' ?>">
   <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
   <div class="checkboxes">
     <?php foreach ($definitionValues as $value) { ?>
@@ -72,6 +72,6 @@ if (!empty($results)) {
 <br />
 <hr />
 <?php
-$totalString = count($results = is_array($results) ? $results : array());
+$totalString = (is_array($results) && count($results) > 0) ? count($results) : 0;
 ?>
 <p><span style="float: right;">Total Result(s): <?= $totalString ?></span></p>

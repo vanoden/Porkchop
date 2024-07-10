@@ -46,7 +46,7 @@
     
     // ignore all the isset warnings for now
     if (PHP_VERSION_ID > 70000) error_reporting(~E_DEPRECATED & ~E_NOTICE);
-    
+
 	define("MODE","http");
 	###################################################
 	### Load Dependencies							###
