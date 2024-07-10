@@ -32,7 +32,8 @@
 			$this->clearError();
 
 			// Generate Unique Code if none provided
-			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = uniqid();
+			$porkchop = new \Porkchop();
+			if (! isset($parameters['code']) || ! strlen($parameters['code'])) $parameters['code'] = $porkchop->biguuid();
 
 			// Make sure the specified type is valid
 			if (! $this->validType($parameters['type'])) {
