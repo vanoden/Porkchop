@@ -42,23 +42,30 @@
 		### Update a Repository							###
 		###################################################
 		public function updateRepository() {
+			// Validate AntiCSRF Token
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
+			// Check for Session User's Authorization
 			if (! $GLOBALS['_SESSION_']->customer->can('manage storage repositories')) error('storage manager role required');
+
+			// Fetch Specified Repository
 			$repository = new \Storage\Repository();
 			if ($repository->error()) $this->error("Error adding repository: ".$repository->error());
 			$repository->get($_REQUEST['code']);
 			if ($repository->error()) $this->app_error("Error finding repository: ".$repository->error(),__FILE__,__LINE__);
 			if (! $repository->id) $this->error("Repository not found");
 
+			// Populate Update Parameters
 			$parameters = array();
-			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+			if (!empty($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 			if (isset($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
-			if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+			if (!empty($_REQUEST['status']) && $_REQUEST['status'] != '[NULL]') $parameters['status'] = $_REQUEST['status'];
 
+			// Update Repository
 			$repository->update($parameters);
 			if ($repository->error()) $this->app_error("Error updating repository: ".$repository->error(),__FILE__,__LINE__);
 
+			// Generate Formatted Response
 			$response = new \APIResponse();
 			$response->addElement('repository',$repository);
 			$response->print();
@@ -555,25 +562,121 @@
 		}
 
 		public function _methods() {
+			$porkchop = new \Porkchop();
 			return array(
-				'ping'			=> array(),
+				'ping'			=> array(
+					'description'	=> "Simple ping method to test connectivity",
+					'parameters'	=> array()
+				),
 				'addRepository'	=> array(
-					'code'		=> array(),
-					'type'		=> array('required' => true),
-					'name'		=> array('required' => true),
-					'status'	=> array(),
-					'path'		=> array('required' => true),
+					'description'	=> "Add a new storage repository",
+					'privilege_required'	=> 'manage storage repositories',
+					'token_required'		=> true,
+					'parameters'		=> array(
+						'code'		=> array(
+							'default'			=> $porkchop->biguuid(),
+							'object'			=> "repository",
+							'property'			=> "code",
+							'description'		=> "unique code to identify a repository",
+							'type'				=> 'string',
+						),
+						'type'		=> array(
+							'object'			=> "repository",
+							'property'			=> "type",
+							'description'		=> "type of repository",
+							'options'			=> array(
+								'local'		=> "local",
+								's3'		=> "s3"
+							),
+							'required' => true),
+						'name'		=> array(
+							'object'			=> "repository",
+							'property'			=> "name",
+							'description'		=> "Name of Repository",
+							'type'				=> "string",
+							'prompt'			=> "new repository name",
+							'required' => true
+						),
+						'status'	=> array(
+							'object'			=> "repository",
+							'property'			=> "status",
+							'description'		=> "Status of Repository",
+							'type'				=> "string",
+							'options'			=> array(
+								'NEW'		=> "NEW",
+								'ACTIVE'	=> "ACTIVE",
+								'INACTIVE'	=> "INACTIVE"
+							),
+							'required' => true
+						)
+					),
 				),
 				'updateRepository'	=> array(
-					'code'		=> array(),
-					'name'		=> array('required' => true),
-					'status'	=> array(),
+					'description'	=> "Update an existing repository",
+					'parameters'	=> array(
+						'code'		=> array(
+							'object'			=> "repository",
+							'property'			=> "code",
+							'description'		=> "unique code to identify a repository",
+							'type'				=> 'string',
+							'required'			=> true
+						),
+						'name'		=> array(
+							'object'			=> "repository",
+							'property'			=> "name",
+							'description'		=> "New name of repository",
+							'type'				=> "string",
+							'prompt'			=> "new repository name"
+						),
+						'status'	=> array(
+							'object'			=> "repository",
+							'property'			=> "status",
+							'description'		=> "New status of repository",
+							'type'				=> "string",
+							'options'			=> array(
+								'[NULL]'	=> "unchanged",
+								'NEW'		=> "NEW",
+								'ACTIVE'	=> "ACTIVE",
+								'INACTIVE'	=> "INACTIVE"
+							)
+						)
+					)
 				),
 				'findRepositories'	=> array(
-					'code'		=> array(),
-					'name'		=> array(),
-					'status'	=> array(),
-					'type'		=> array(),
+					'description'	=> "Find matching repositories",
+					'parameters'	=> array(
+						'code'		=> array(
+							'object'			=> "repository",
+							'property'			=> "code",
+							'description'		=> "Unique code for repository"
+						),
+						'name'		=> array(
+							'object'			=> "repository",
+							'property'			=> "name",
+							'description'		=> "Name of repository"
+						),
+						'status'	=> array(
+							'object'			=> "repository",
+							'property'			=> "status",
+							'description'		=> "Status of repository",
+							'options'			=> array(
+								'[NULL]'	=> 'any',
+								'NEW'		=> "NEW",
+								'ACTIVE'	=> "ACTIVE",
+								'INACTIVE'	=> "INACTIVE"
+							)
+						),
+						'type'		=> array(
+							'object'			=> "repository",
+							'property'			=> "type",
+							'description'		=> "Type of repository",
+							'options'			=> array(
+								'[NULL]'	=> "any",
+								'local'		=> "local",
+								's3'		=> "s3"
+							)
+						)
+					)
 				),
 				'setRepositoryMetadata' => array(
 					'code'		=> array('required' => true),
@@ -596,9 +699,22 @@
 					'status'	=> array()
 				),
 				'getFilePrivileges' => array(
-					'code'			=> array('requirement_group' => 0),
-					'id'			=> array('requirement_group' => 1),
-					'repository_code'	=> array('requirement_group' => 2),
+					'code'			=> array(
+						'object'			=> "file",
+						'property'			=> "code",
+						'type'				=> "string",
+						'description'		=> "Unique code for repository",
+						'requirement_group' => 0
+					),
+					'id'			=> array(
+						'object'			=> "file",
+						'property'			=> "id",
+						'type'				=> "int",
+						'description'		=> "Unique id for repository",
+						'requirement_group' => 1),
+					'repository_code'	=> array(
+						'object'			=> "repository",
+						'requirement_group' => 2),
 					'path'			=> array('requirement_group' => 2),
 					'name'			=> array('requirement_group' => 2)
 				),
