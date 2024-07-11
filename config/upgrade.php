@@ -109,4 +109,4 @@
 	include(MODULES."/storage/default/_metadata.php");
 
 	$menus = array();
-	$shipping_vendors = array('Aramex','Australia Post','Canada Post','DB Schenker','DHL','DPD','FedEx','Hermes','OnTrac Logistics','Parcelforce','Purolator','Royal Mail','Spee-dee Delivery','TNT','UPS','USPS','Yodel');
+	$shipping_vendors = array('Aramex','Australia Post','Bombino','Blue Dart','Canada Post','DB Schenker','Delhivery','DHL','DPD','DTDC','FedEx','Hermes','Nippon','OnTrac Logistics','Parcelforce','PostNL','Purolator','Royal Mail','Spee-dee Delivery','Startrack','TNT','UPS','USPS','Yodel','ZTO Express');
