@@ -99,29 +99,13 @@
             <option value="DISABLED"<?php	if ($form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
         </select>
     </div>
-    <div class="container">
-        <span class="label">Path</span>
-        <input type="text" name="path" class="value input wide_xl" value="<?=$form['path']?>" />
-    </div>
-    <div class="container">
-        <span class="label">Endpoint</span>
-        <input type="text" name="endpoint" class="value input wide_xl" value="<?=$form['endpoint']?>" />
-    </div>
     
-    <div id="s3Settings"<?php if ($form['type'] != "s3") { print "style=\"display:none;\""; } ?>>
+    <div id="s3Settings"<?php if (count($metadata_keys) < 1) { print "style=\"display:none;\""; } ?>>
         <div class="container" style="margin: 10px; padding: 20px; border:dashed 1px gray; display: inline-table;">
-            <h4 style="padding: 0px; margin: 0px;">S3 Configuration</h4>
-            <span class="label">Access Key</span>
-            <input type="text" name="accessKey" class="value input wide_xl" value="<?=$form['accessKey']?>" />
-            
-            <span class="label">Secret Key</span>
-            <input type="password" name="secretKey" class="value input wide_xl" value="<?=$form['secretKey']?>" />
-            
-            <span class="label">Bucket</span>
-            <input type="text" name="bucket" class="value input wide_xl" value="<?=$form['bucket']?>" />
-            
-            <span class="label">Region</span>
-            <input type="text" name="region" class="value input wide_xl" value="<?=$form['region']?>" />
+<?php	foreach($metadata_keys as $key) { ?>
+            <span class="label"><?=ucfirst($key)?></span>
+            <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" name="<?=$key?>" class="value input wide_xl" value="<?=$form[$key]?>" />
+<?php	} ?>
         </div>
     </div>
 	<div class="tableBody clean min-tablet">

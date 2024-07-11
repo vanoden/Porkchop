@@ -11,6 +11,7 @@
 		public $accessKey;					// Access Key for AWS Repository
 		public $default_privileges_json;	// JSON string representing default privileges
 		public $override_privileges_json;	// JSON string representing override privileges
+		protected $_metadata_keys = [];		// Array of metadata keys
 
 		/**
 		 * Class Constructor
@@ -151,7 +152,7 @@
 					default_privileges = ?";
 				$database->AddParam($parameters['default_privileges_json']);
 			}
-			
+
 			$update_object_query .= "
 				WHERE	id = ?
 			";
@@ -166,9 +167,10 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+
 			if (isset($parameters['path'])) $this->_setMetadata('path',$parameters['path']);
 			app_log("Repo ".$this->id." updated, getting details");
-			
+
 			// Audit the update event
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
@@ -211,8 +213,7 @@
 			$this->code = $object->code;
 			$this->status = $object->status;
 			$this->default_privileges_json = $object->default_privileges;
-			$this->override_privileges_json = $object->override_privileges;;
-
+			$this->override_privileges_json = $object->override_privileges;
 			return true;
 		}
 
@@ -461,6 +462,13 @@
 			return $privileges->fromJSON($this->override_privileges_json);
 		}
 
+		/**
+		 * Return list of metadata keys for specific repo type
+		 * @return array
+		 */
+		public function metadata_keys() {
+			return $this->_metadata_keys;
+		}
 		/************************************/
 		/* Repository Privileges			*/
 		/************************************/
@@ -558,6 +566,38 @@
 		/************************************/
 		/* Validation Functions             */
 		/************************************/
+		public function validMetadata($key,$value) {
+			if (! in_array($key,$this->_metadata_keys)) {
+				$this->error("Invalid metadata key");
+				return false;
+			}
+			if ($key == "path" && ! $this->validPath($value)) {
+				$this->error("Invalid path");
+				return false;
+			}
+			elseif ($key == "accessKey" && ! $this->validAccessKey($value)) {
+				$this->error("Invalid access key");
+				return false;
+			}
+			elseif ($key == "secretKey" && ! $this->validSecretKey($value)) {
+				$this->error("Invalid secret key");
+				return false;
+			}
+			elseif ($key == "bucket" && ! $this->validBucket($value)) {
+				$this->error("Invalid bucket");
+				return false;
+			}
+			elseif ($key == "region" && ! $this->validRegion($value)) {
+				$this->error("Invalid region");
+				return false;
+			}
+			elseif ($key == "endpoint" && ! $this->validEndpoint($value)) {
+				$this->error("Invalid endpoint");
+				return false;
+			}
+			return true;
+		}
+
 		public function validName($string): bool {
 			if (preg_match('/^\w[\w\-\_\.\s]*$/',$string)) return true;
 			return false;

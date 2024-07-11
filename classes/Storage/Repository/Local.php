@@ -6,6 +6,7 @@
 
 		public function __construct($id = null) {
 			$this->type = 'Local';
+			$this->_metadata_keys = ["path","endpoint"];
 			parent::__construct($id);
 		}
 

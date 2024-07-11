@@ -18,6 +18,7 @@
 		
 		public function __construct($id = null) {
 			$this->type = 's3';
+			$this->_metadata_keys = ["accessKey","secretKey","bucket","region"];
 			parent::__construct($id);
 		}
 
@@ -67,10 +68,10 @@
 			// create the repo, then continue to add the custom values needed for S3 only
 			parent::update($parameters);
 		
-			$this->_updateMetadata('accessKey', $parameters['accessKey']);
-			$this->_updateMetadata('secretKey', $parameters['secretKey']);
-			$this->_updateMetadata('bucket', $parameters['bucket']);
-			$this->_updateMetadata('region', $parameters['region']);
+			if (!empty($parameters['accessKey'])) $this->_updateMetadata('accessKey', $parameters['accessKey']);
+			if (!empty($parameters['secretKey'])) $this->_updateMetadata('secretKey', $parameters['secretKey']);
+			if (!empty($parameters['bucket'])) $this->_updateMetadata('bucket', $parameters['bucket']);
+			if (!empty($parameters['region'])) $this->_updateMetadata('region', $parameters['region']);
 			return true;
 		}
 		
