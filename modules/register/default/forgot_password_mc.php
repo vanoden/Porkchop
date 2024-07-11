@@ -21,7 +21,7 @@
 				if (!empty($_REQUEST['email_address'])) {
 					$contact->getContact('email',$_REQUEST['email_address']);
 					if ($contact->error()) {
-						app_log("Error finding contact: ".$contact->error,'error',__FILE__,__LINE__);
+						app_log("Error finding contact: ".$contact->error(),'error',__FILE__,__LINE__);
 						$page->addError("Error finding contact info, please try again later");
 						return null;
 					}
@@ -29,7 +29,7 @@
 					if ($contact->person->id) {
 						$customer = new \Register\Customer($contact->person->id);
 						if ($customer->error()) {
-							app_log("Forgot Password Error: ".$customer->error,'error',__FILE__,__LINE__);
+							app_log("Forgot Password Error: ".$customer->error(),'error',__FILE__,__LINE__);
 							$page->addError("Form error");
 							return;
 						}
@@ -51,7 +51,7 @@
 						$token = new \Register\PasswordToken();
 						$token->add($customer->id);
 						if ($token->error()) {
-							app_log("Error generating password token: ".$token->error,'error',__FILE__,__LINE__);
+							app_log("Error generating password token: ".$token->error(),'error',__FILE__,__LINE__);
 							$page->addError("Error generating password token");
 							return;
 						}
@@ -117,12 +117,12 @@
 						}
 						elseif ($transport->error()) {
 							$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
-							app_log("Error sending forgot password link: ".$transport->error,'error',__FILE__,__LINE__);
+							app_log("Error sending forgot password link: ".$transport->error(),'error',__FILE__,__LINE__);
 							return;
 						}
 						else {
 							$page->addError("Error sending email, please contact us at service@spectrosinstruments.com");
-							app_log("Error sending forgot password link: ".$transport->error,'error',__FILE__,__LINE__);
+							app_log("Error sending forgot password link: ".$transport->error(),'error',__FILE__,__LINE__);
 							return;
 						}
 					}
