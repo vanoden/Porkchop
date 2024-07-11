@@ -63,38 +63,52 @@
 			return true;
 		}
 
+		/**
+		 * Update an existing S3 Repository
+		 * @param array $parameters
+		 * @return bool True if update successful
+		 */
 		public function update($parameters = array()): bool {
-
-			// create the repo, then continue to add the custom values needed for S3 only
+			// Shared update method
 			parent::update($parameters);
-		
-			if (!empty($parameters['accessKey'])) $this->_updateMetadata('accessKey', $parameters['accessKey']);
-			if (!empty($parameters['secretKey'])) $this->_updateMetadata('secretKey', $parameters['secretKey']);
-			if (!empty($parameters['bucket'])) $this->_updateMetadata('bucket', $parameters['bucket']);
-			if (!empty($parameters['region'])) $this->_updateMetadata('region', $parameters['region']);
 			return true;
 		}
-		
-		private function _path($path = null) {
-			if (isset($path)) $this->_setMetadata('path', $path);
-			return $this->getMetadata('path');
-		}
 
+		/**
+		 * Get/Set Name of S3 Bucket
+		 * @param string $bucket 
+		 * @return string 
+		 */
 		private function _bucket($bucket = null) {
 			if (isset($bucket)) $this->_setMetadata('bucket', $bucket);
 			return $this->getMetadata('bucket');
 		}
 
+		/**
+		 * Get/Set AWS Access Key
+		 * @param string $key 
+		 * @return string 
+		 */
 		public function accessKey($key = null) {
 			if (isset($key)) $this->_setMetadata('accessKey', $key);
 			return $this->getMetadata('accessKey');
 		}
 
+		/**
+		 * Get/Set AWS Secret Key
+		 * @param string $key 
+		 * @return string 
+		 */
 		public function secretKey($key = null) {
 			if (isset($key)) $this->_setMetadata('secretKey', $key);
 			return $this->getMetadata('secretKey');
 		}
 
+		/**
+		 * Get/Set AWS Region
+		 * @param string $region 
+		 * @return string 
+		 */
 		public function region($region = null) {
 			if (isset($region)) $this->_setMetadata('region', $region);
 			return $this->getMetadata('region');
@@ -189,6 +203,11 @@
 			}
 		}
 
+		/**
+		 * See if file is present on S3
+		 * @param mixed $string 
+		 * @return null|void 
+		 */
 		public function checkFile($string) {
 			if (!$this->_connected) {
 				if (!$this->connect()) {
@@ -202,28 +221,41 @@
 			));
 			print_r($result);
 		}
-		public function validAccessKey($string) {
-			// OK To be empty
-			if (empty($string)) return true;
 
-			// Must be alphanumeric 16-128 bytes
+		/********************************/
+		/* Validation Methods 			*/
+		/********************************/
+		/**
+		 * Access key must be empty or have 16-129
+		 * alphanumeric characters
+		 * @params string containing access key to check
+		 * @return bool True if valid, false if not
+		 */
+		public function validAccessKey($string) {
+			if (empty($string)) return true;
 			if (preg_match('/^\w{16,128}$/',$string)) return true;
 			else return false;
 		}
 
+		/**
+		 * Secret key must be empty or have 20+ chars of 
+		 * alphanumeric, / or + characters
+		 * @param mixed string containing secret key to check 
+		 * @return bool True if valid, false if not
+		 */
 		public function validSecretKey($string) {
-			// OK To be empty
 			if (empty($string)) return true;
-
-			// Must be alphanumeric or / or + and 20+ bytes
 			if (preg_match('/^[\w\/\+]{20,}$/',$string)) return true;
 			else return false;
 		}
 
+		/**
+		 * Validate bucket names based on naming rules from 
+		 * https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+		 * @param mixed string containing bucket name to check
+		 * @return bool True if valid, false if not
+		 */
 		public function validBucket($string) {
-			// Bucket naming rules from AWS:
-			// https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
-
 			// Bucket names cannot have 2 adjacent periods
 			if (preg_match('/\.\./',$string)) return false;
 
@@ -242,6 +274,11 @@
 			return false;
 		}
 
+		/**
+		 * Validate AWS Region Names
+		 * @param mixed $string
+		 * @return bool True if valid, false if not
+		 */
 		public function validRegion($string) {
 			if (preg_match('/^[a-z]{2}\-[a-z]+\-\d+$/',$string)) return true;
 			else return false;

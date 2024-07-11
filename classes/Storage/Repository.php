@@ -25,6 +25,10 @@
 
 		/** 
 		 * Create a new Storage Repository
+		 * Parameters must include type
+		 * Parameters may include code, name, status, default_privileges_json, override_privileges_json
+		 * code will be randomly generated if not provided
+		 * status will default to NEW if not provided
 		 * @param array $parameters
 		 * @return bool - True if successfully added
 		 */
@@ -75,6 +79,7 @@
 				(		?,?,?,?)
 			";
 
+			// Bind Parameters for Query
 			$database->AddParam($parameters['code']);
 			$database->AddParam($parameters['name']);
 			$database->AddParam($this->type);
@@ -107,6 +112,7 @@
 
 		/**
 		 * Update Currently Selected Repository Record
+		 * Parameters can include name, status, default_privileges_json, override_privileges_json
 		 * @param array $parameters
 		 * @return bool - True if successfully updated
 		 */
@@ -156,7 +162,7 @@
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-			
+
 			$database->AddParam($this->id);
 
 			// Execute Query
@@ -180,6 +186,26 @@
 				'class_method' => 'update'
 			));
 
+			// Instance specific metadata
+			foreach ($this->_metadata_keys as $key) {
+				if (!empty($parameters[$key]) && $parameters[$key] != $this->_metadata($key)) {
+					if ($this->validMetadata($key,$parameters[$key])) {
+						$this->_updateMetadata($key,$parameters[$key]);
+						$auditLog->add(array(
+							'instance_id' => $this->id,
+							'description' => 'Updated '.$this->_objectName(),
+							'class_name' => get_class($this),
+							'class_method' => 'update'
+						));
+					}
+					else {
+						$this->error("Invalid metadata value for $key");
+						return false;
+					}
+				}
+			}
+
+			// Populate Object Variables with latest data
 			return $this->details();
 		}
 

@@ -53,7 +53,7 @@
 				$page->addError("Invalid status");
 				$_REQUEST['status'] = htmlspecialchars($_REQUEST['status']);
 			}
-			
+
 			// Fetch Keys for this Repository Type
 			$metadata_keys = $repository->metadata_keys();
 			foreach ($metadata_keys as $key) {
@@ -70,7 +70,7 @@
 				if (isset($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 				$parameters['status'] = $_REQUEST['status'];
 
-				$metadata_keys = $repository->metadta_keys();
+				$metadata_keys = $repository->metadata_keys();
 				foreach ($metadata_keys as $key) {
 					$parameters[$key] = $_REQUEST[$key];
 				}
