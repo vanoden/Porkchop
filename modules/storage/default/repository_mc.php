@@ -190,6 +190,8 @@
 	}
 
 	$default_privileges = $repository->default_privileges();
+	if ($repository->id) $metadata_keys = $repository->metadata_keys();
+	else $metadata_keys = array();
 
 	$page->title("Storage Repository");
 	if ($repository->id) $page->instructions = "Update values and click Submit to update repository setting";
