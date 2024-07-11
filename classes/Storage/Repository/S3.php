@@ -203,11 +203,19 @@
 			print_r($result);
 		}
 		public function validAccessKey($string) {
+			// OK To be empty
+			if (empty($string)) return true;
+
+			// Must be alphanumeric 16-128 bytes
 			if (preg_match('/^\w{16,128}$/',$string)) return true;
 			else return false;
 		}
 
 		public function validSecretKey($string) {
+			// OK To be empty
+			if (empty($string)) return true;
+
+			// Must be alphanumeric or / or + and 20+ bytes
 			if (preg_match('/^[\w\/\+]{20,}$/',$string)) return true;
 			else return false;
 		}
