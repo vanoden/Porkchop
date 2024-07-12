@@ -510,7 +510,7 @@
 					<div class="apiMethodSetting">
 						<span class="label apiMethodSetting">Authentication Required</span>
 						<span class="value apiMethodSetting">';
-				if ($method->authentication_required) $form .= "Yes";
+				if ($method->authentication_required || $method->privilege_required) $form .= "Yes";
 				else $form .= "No";
 				$form .= '
 						</span>
