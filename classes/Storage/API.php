@@ -578,7 +578,8 @@
 							'object'			=> "repository",
 							'property'			=> "code",
 							'description'		=> "unique code to identify a repository",
-							'type'				=> 'string',
+							'type'				=> 'text',
+							'content-type'		=> 'string'
 						),
 						'type'		=> array(
 							'object'			=> "repository",
@@ -588,12 +589,13 @@
 								'local'		=> "local",
 								's3'		=> "s3"
 							),
-							'required' => true),
+							'required' => true
+						),
 						'name'		=> array(
 							'object'			=> "repository",
 							'property'			=> "name",
 							'description'		=> "Name of Repository",
-							'type'				=> "string",
+							'type'				=> "text",
 							'prompt'			=> "new repository name",
 							'required' => true
 						),
@@ -601,7 +603,7 @@
 							'object'			=> "repository",
 							'property'			=> "status",
 							'description'		=> "Status of Repository",
-							'type'				=> "string",
+							'type'				=> "text",
 							'options'			=> array(
 								'NEW'		=> "NEW",
 								'ACTIVE'	=> "ACTIVE",
@@ -618,21 +620,21 @@
 							'object'			=> "repository",
 							'property'			=> "code",
 							'description'		=> "unique code to identify a repository",
-							'type'				=> 'string',
+							'type'				=> 'text',
 							'required'			=> true
 						),
 						'name'		=> array(
 							'object'			=> "repository",
 							'property'			=> "name",
 							'description'		=> "New name of repository",
-							'type'				=> "string",
+							'type'				=> "text",
 							'prompt'			=> "new repository name"
 						),
 						'status'	=> array(
 							'object'			=> "repository",
 							'property'			=> "status",
 							'description'		=> "New status of repository",
-							'type'				=> "string",
+							'type'				=> "text",
 							'options'			=> array(
 								'[NULL]'	=> "unchanged",
 								'NEW'		=> "NEW",
