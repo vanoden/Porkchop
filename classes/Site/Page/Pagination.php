@@ -127,8 +127,12 @@
                     $string .= "<li><a href=\"".$this->firstPageLink()."\">&laquo;&laquo; First</a></li>\n";
                     $string .= "<li><a href=\"".$this->prevPageLink()."\">&laquo; Prev</a></li>\n";
                 }
+
                 $start = max(1, $this->pageNumber() - $this->numberPageLinks);
                 $end = min($this->totalPages(), $this->pageNumber() + $this->numberPageLinks);
+                
+                // pad number of page links for small pages, there should be at least numberPageLinks doubled
+                if ($end <= $this->numberPageLinks * 2) $end = $end + ($this->numberPageLinks)-$this->pageNumber() + 1;
 
                 for ($i = $start; $i <= $end; $i++) {
                     $string .= "<li";

@@ -17,7 +17,6 @@
 	    document.getElementById('removeTagId').value = id;
 	    document.getElementById('productEdit').submit();
 	}
-
 </script>
 
 <!-- Page Header -->

@@ -43,15 +43,17 @@
 	elseif (isset($_POST['login_target'])) {
 		# This is how the SHOULD come in from FORM submit
 		$target = $_POST['login_target'];
-		if (!preg_match('/^[\/\w\-\.\_]+$/',$target)) $target = '';
+		if (!preg_match('/[-\.\/\?\=\&a-zA-Z0-9]+$/',$target)) $target = '';
 		if (!isset($GLOBALS['_config']->register->auth_target)) app_log("auth_target not configured",'warning');
 		else app_log("login_target = ".$GLOBALS['_config']->register->auth_target);
 	}
-	elseif(isset($_GET['target'])) {
+	elseif(isset($_REQUEST['target'])) {
+
 		# Translate target
-		$target = urldecode($_GET['target']);
-		# Validate target
-		if (!preg_match('/^[\/\w\-\.\_]+$/',$target)) $target = '';
+		$target = urldecode($_REQUEST['target']);
+		
+		# Validate URL characters
+ 		if (!preg_match('/[-\.\/\?\=\&a-zA-Z0-9]+$/',$target)) $target = '';
 		app_log("target = ".$GLOBALS['_config']->register->auth_target);
 	}
 	elseif($GLOBALS['_config']->register->auth_target) {
@@ -59,15 +61,14 @@
 		app_log("auth_target = ".$GLOBALS['_config']->register->auth_target);
 	}
 
-	if (! preg_match('/^\//',$target))
-		$target = '/'.$target;
+	if (! preg_match('/^\//',$target)) $target = '/'.$target;
 
 	if (($GLOBALS['_SESSION_']->customer_id) and ($target != '/'))	{
 		app_log("Redirecting ".$GLOBALS['_SESSION_']->customer->code." to ".PATH.$target,'notice',__FILE__,__LINE__);
 		header("Location: ".PATH.$target);
 		exit;
 	}
-
+	
 	// Attempt to Authenticate with Temporary Token
 	$token = new \Register\PasswordToken();
 	if (isset($_REQUEST['token']) && $token->validCode($_REQUEST['token'])) {
@@ -88,9 +89,7 @@
 				app_log("Customer not found!",'notice',__FILE__,__LINE__);
 				$page->addError("Token error");
 			}
-			else {
-				$GLOBALS['_SESSION_']->assign($customer->id);
-
+			else {if (!preg_match('/^[\/\w\-\.\_]+$/',$target)) $target = '';
 				app_log("Customer ".$customer->id." logged in by token",'notice',__FILE__,__LINE__);
 				app_log("Redirecting to '/_register/reset_password'",'notice',__FILE__,__LINE__);
 				header("location: /_register/reset_password");
@@ -139,12 +138,8 @@
 						else {
 							// CAPTCHA Required and Provided
 							$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
-							if ($reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
-								// CAPTCHA Confirmed, Go ahead to sign in
-							}
-							else {
+							if (!$reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) 
 								$page->addError("CAPTCHA Failed: ".$reCAPTCHA->error());
-							}
 						}
 					}
 
