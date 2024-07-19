@@ -6,8 +6,9 @@ class Page extends \Site\Search\Definition {
     public function __construct() {
         $this->class = '\Content\MessageList';
         $this->customer_url = '/';
+        $this->customer_privilege = '';
         $this->admin_url = '/_site/content_block/';
-        $this->admin_privilege = 'content message browsing';
+        $this->admin_privilege = 'edit content messages';
     }
 
     public function search($search_string) {

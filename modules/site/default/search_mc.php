@@ -1,6 +1,7 @@
 <?php
 $page = new \Site\Page();
 $search = new \Site\Search();
+$page->requireAuth();
 
 $definitionList = new \Site\Search\DefinitionList();
 $definitionValues = $definitionList->getDefinitionList();
@@ -15,3 +16,8 @@ if (isset($_REQUEST['string']) && !empty($_REQUEST['string'])) {
         $results = $search->search($_REQUEST['string'], $_REQUEST['definitions']);
     }
 }
+
+// show the adminstrator column in the search results
+$canAdministor = false;
+$siteSearchDefinition = new Site\Search\Definition();
+foreach ($results as $result) if ($siteSearchDefinition->ifPrivilege($result->admin_privilege)) $canAdministor = true;

@@ -5,9 +5,10 @@ class Customer extends \Site\Search\Definition {
 
     public function __construct() {        
         $this->class = '\Register\CustomerList';
-        $this->customer_url = '/_register/account';
+        $this->customer_url = '/_register/account?customer_id=';
+        $this->customer_privilege = '';
         $this->admin_url = '/_register/admin_account?customer_id=';
-        $this->admin_privilege = 'customer_admin';
+        $this->admin_privilege = 'manage customers';
     }
 
     public function search($search_string) {
@@ -19,13 +20,16 @@ class Customer extends \Site\Search\Definition {
         $results = new \Site\Search\ResultList();
         $customer_list = $this->search($search_string);
         foreach ($customer_list as $customer) {
-            $result = new \Site\Search\Result();
-            $result->type = 'customer';
-            $result->summary = $customer->first_name. " " . $customer->last_name;
-            $result->customer_url = $this->customer_url;
-            $result->admin_url = $this->admin_url . $customer->id;
-            $result->admin_privilege = $this->admin_privilege;
-            $results->addResult($result);
+            if ($this->ifPrivilege($this->admin_privilege) || $this->ifBelongsToOrganization($customer->organization_id)) {
+                $result = new \Site\Search\Result();
+                $result->type = 'customer';
+                $result->summary = $customer->first_name. " " . $customer->last_name;
+                $result->customer_url = $this->customer_url . $customer->id;
+                $result->admin_url = ($this->ifPrivilege($this->admin_privilege)) ? $this->admin_url . $customer->id : "";
+                $result->admin_privilege = $this->admin_privilege;
+                $results->addResult($result);
+            }
+            
         }
         return $results->searchResults;
     }

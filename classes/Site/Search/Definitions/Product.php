@@ -5,9 +5,9 @@ class Product extends \Site\Search\Definition {
 
     public function __construct() {
         $this->class = '\Product\ItemList';
-        $this->customer_url = '/';
+        $this->customer_url = '/_product/show/';
         $this->admin_url = '/_product/edit/';
-        $this->admin_privilege = 'product_admin';
+        $this->admin_privilege = 'manage products';
     }
 
     public function search($search_string) {
