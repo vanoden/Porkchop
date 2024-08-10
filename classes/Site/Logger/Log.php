@@ -28,7 +28,7 @@
 			return date($format);
 		}
 
-		public function formatted($message,$level = 'debug',$file,$line) {
+		public function formatted($message,$level = 'debug',$file = null,$line = null) {
 			# Replace Carriage Returns
 			$message = preg_replace('/\r*\n$/',"",$message);
 	

@@ -13,7 +13,7 @@
 	// 1 byte - End of Text
 	// 2 byte - checksum
 	// 1 byte - End Terminator
-
+// [1][0][1][9][9][0][5][0][1][0][1][2][3][4][5][6][7][8][9][10][11][12][13][14][15][2][5][5][5][5][5][3][1][2][4]
 	class S4Factory Extends \BaseClass {
 		protected $_format = 's4';
 		protected $_clientId;
@@ -71,16 +71,19 @@
 				print "\n";
 				return false;
 			}
+			print "Start of text? ".ord(substr($buffer,25,1))."\n";
 			if (ord(substr($buffer,25,1)) != 2) {
 				print "Missing Start of Text. Dropping 1st character\n";
 				return false;
 			}
-			$this->_length = ord(substr($buffer,7,1)) * 256 + ord(substr($buffer,8,1));
-		
+
+			$this->_length = ord(substr($buffer,5,1)) * 256 + ord(substr($buffer,6,1));
+			print "Expecting ".$this->_length." chars of data\n";
+
 			print "Got " . strlen($buffer) . " of " . ($this->_length + $this->_meta_chars) . " bytes\n";
 	
 			// Check for a minimal complete header using terminators
-			if (preg_match('/^\x{01}.{24}\x{02}/',$buffer)) {
+			if (ord(substr($buffer,0,1)) == 1 && ord(substr($buffer,25,1)) == 2) {
 				print "Parsing Header\n";
 				if (strlen($buffer) < $this->_length + $this->_meta_chars) {
 					print "Not enough data yet for body, only ".strlen($buffer)." chars\n";
@@ -93,7 +96,7 @@
 				print "SID: [" . ord(substr($buffer,3,1)) . "][" . ord(substr($buffer,4,1)) . "]\n";
 				$this->_clientId = ord(substr($buffer,1,1)) * 256 + ord(substr($buffer,2,1));
 				$this->_serverId = ord(substr($buffer,3,1)) * 256 + ord(substr($buffer,4,1));
-				$this->_typeId = ord(substr($buffer,5,1)) * 256 + ord(substr($buffer,6,1));
+				$this->_typeId = ord(substr($buffer,7,1)) * 256 + ord(substr($buffer,8,1));
 				$session_code = array();
 				for ($i = 0; $i < 16; $i++) {
 					$int = ord(substr($buffer,$i + 9,1));

@@ -41,6 +41,24 @@
 	# Database Abstraction
 	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
 
+	# Listener Config
+	if (! isset($GLOBALS['_config']->service)) {
+		$GLOBALS['_config']->service = new \stdClass();
+		$GLOBALS['_config']->service->address = '192.168.10.111';
+		$GLOBALS['_config']->service->port = 12346;
+	}
+
+	foreach ($argv as $arg) {
+		if (preg_match('/^\-\-([\w\-\.]+)\=(.+)/',$arg,$matches)) {
+			if ($matches[1] == 'address') $GLOBALS['_config']->service->address = $matches[2];
+			elseif ($matches[1] == 'port') $GLOBALS['_config']->service->port = $matches[2];
+			else {
+				print "Option '".$matches[1]."' not recognized\n";
+				exit;
+			}
+		}
+	}
+
 	###################################################
 	### Initialize Site Instance					###
 	###################################################
@@ -112,14 +130,12 @@
 	* as it comes in. */
 	ob_implicit_flush();
 
-	$address = '192.168.10.108';
-	$port = 12346;
-
+	print "Listening at ".$GLOBALS['_config']->service->address.":".$GLOBALS['_config']->service->port."\n";
 	if (($sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) === false) {
 		echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
 	}
 
-	if (socket_bind($sock, $address, $port) === false) {
+	if (socket_bind($sock, $GLOBALS['_config']->service->address, $GLOBALS['_config']->service->port) === false) {
 		echo "socket_bind() failed: reason: " . socket_strerror(socket_last_error($sock)) . "\n";
 	}
 
@@ -133,9 +149,9 @@
 			break;
 		}
 		/* Send instructions. */
-		$msg = "\nWelcome to the PHP Test Server. \n" .
-			"To quit, type 'quit'. To shut down the server type 'shutdown'.\n";
-		socket_write($msgsock, $msg, strlen($msg));
+		//$msg = "\nWelcome to the PHP Test Server. \n" .
+		//	"To quit, type 'quit'. To shut down the server type 'shutdown'.\n";
+		//socket_write($msgsock, $msg, strlen($msg));
 
 		do {
 			if (false === ($buf = socket_read($msgsock, 2048, PHP_BINARY_READ))) {
@@ -162,6 +178,8 @@
 				print "Sensor ID: ".$request->sensorId()."\n";
 				print "Reading Value: ".$request->value()."\n";
 				print "Timestamp: ".$request->timestamp()."\n";
+				$talkback = sprintf("%b%02b%02b%02b%016b%b%02b%b",1,1,99,0,1,2,0,3,1,4);
+			socket_write($msgsock, $talkback, strlen($talkback));
 				break;
 			}
 			else {
@@ -169,7 +187,6 @@
 				print("Error parsing request: ".$factory->error()."\n");
 				break;
 			}
-			socket_write($msgsock, $talkback, strlen($talkback));
 			echo "$buf\n";
 		} while (true);
 		socket_close($msgsock);

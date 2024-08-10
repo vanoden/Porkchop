@@ -4,7 +4,7 @@
 	class ReadingRequest Extends \Document\S4\BaseClass {
 		public function parse($string): bool {
 			if (count($string) != 14) {
-				print "Invalid Reading Request: ".strlen($string)." chars\n";
+				print "Invalid Reading Request: ".count($string)." chars\n";
 				$this->error("Invalid Reading Request");
 				return false;
 			}
