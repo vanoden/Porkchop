@@ -40,6 +40,7 @@
   </div>
   <button type="submit">Search</button>
 </form>
+
 <?php
 if (!empty($results)) {
 ?>
@@ -50,8 +51,10 @@ if (!empty($results)) {
       <tr>
         <th>Type</th>
         <th>Summary</th>
-        <th>Customer URL</th>
-        <th>Admin URL</th>
+        <th>URL</th>
+        <?php if($canAdministor) { ?>
+          <th>Admin URL</th>
+        <?php } ?>
       </tr>
     </thead>
     <tbody>
@@ -60,7 +63,9 @@ if (!empty($results)) {
           <td><?= $result->type ?></td>
           <td><?= $result->summary ?></td>
           <td><a href="<?= $result->customer_url ?>"><?= $result->customer_url ?></a></td>
-          <td><a href="<?= $result->admin_url ?>"><?= $result->admin_url ?></a></td>
+          <?php if($canAdministor) { ?>
+            <td><a href="<?= $result->admin_url ?>"><?= $result->admin_url ?></a></td>
+          <?php } ?>
         </tr>
       <?php } ?>
     </tbody>

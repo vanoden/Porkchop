@@ -390,7 +390,7 @@
 		 * @param bool $isElevated
 		 * @param string $OTPRedirect, @TODO using refer_url as the TOPRedirect required value for now
 		 */		
-		function assign ($customer_id, $isElevated = false) {
+		function assign ($customer_id, $isElevated = false, $OTPRedirect = '') {
 			app_log("Assigning session ".$this->id." to customer ".$customer_id,'debug',__FILE__,__LINE__);
 			$customer = new \Register\Customer($customer_id);
 			if (! $customer->id) $this->error("Customer not found");
@@ -678,7 +678,6 @@
         }
 
         public function verifyCSRFToken($csrfToken) {
-
 			if (empty($csrfToken)) {
 				app_log("No csrfToken provided",'debug');
 				return false;

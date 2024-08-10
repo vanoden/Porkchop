@@ -3,7 +3,12 @@
 	
 	class PageList Extends \BaseListClass {
 
+		public function search($parameters = []) {
+			return $this->find($parameters);
+		}
+
 		public function find($parameters = array()) {
+
 			$this->clearError();
 			$this->resetCount();
 
@@ -37,9 +42,17 @@
 				else $database->AddParam(0);
 			}
 
+			if (isset($parameters['search']) && strlen($parameters['search'])) {
+    			$searchString = $GLOBALS['_database']->qstr($parameters['search'],get_magic_quotes_gpc());
+    			$searchString = preg_replace("/'$/", "%'", $searchString);
+                $searchString = preg_replace("/^'/", "'%", $searchString);
+    			$get_object_query .= " AND (`sitemap` LIKE " . $searchString . " OR `index` LIKE " . $searchString . " OR `view` LIKE " . $searchString . ")";
+			}
+
 			$get_object_query .= "
 					ORDER BY module,view
 			";
+
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());

@@ -24,8 +24,6 @@ class Search {
     private function searchByDefinition($definition, $search_string) {
         $class = "Site\\Search\\Definitions\\$definition";
         if (class_exists($class)) {
-            print_r( $definition);
-
             $instance = new $class();
             return $instance->summarize($search_string);
         }
