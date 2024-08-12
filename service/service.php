@@ -26,7 +26,7 @@
 	# Load Config
 	$_SERVER['HTTP_HOST'] = "localhost";
 	$_SERVER['REQUEST_URI'] ='/';
-	$_SERVER['HTTP_USER_AGENT'] = "sensor_node/0.1";
+	$_SERVER['HTTP_USER_AGENT'] = "sensor_node/0.2";
 	$_SERVER['SERVER_NAME'] = "localhost";
 
 	require '../config/config.php';
@@ -169,9 +169,9 @@
 				break 2;
 			}
 
-			$factory = new \Document\S4Factory();
-			if ($factory->parseEnvelope($buf)) {
-				$request = $factory->getRequest();
+			$s4Engine = new \Document\S4();
+			if ($s4Engine->parse($buf)) {
+				$request = $s4Engine->parse();
 
 				print "Got ".$request->typeName()."\n";
 				print "Asset ID: ".$request->assetId()."\n";
