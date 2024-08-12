@@ -1,7 +1,12 @@
 <?php
 	namespace Document\S4;
 
-	class PingRequest Extends \Document\S4\BaseClass {
+	class PingRequest Extends \Document\S4\Message {
+		public function __constructor() {
+			$this->_typeId = 1;
+			$this->_typeName = "Ping Request";
+		}
+
 		public function parse($string): bool {
 			// Parse the Data
 			$this->_assetId = ord($string[0]) * 256 + ord($string[1]);

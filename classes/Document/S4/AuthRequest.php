@@ -1,7 +1,11 @@
 <?php
 	namespace Document\S4;
 
-	class AuthRequest Extends \Document\S4Factory {
+	class AuthRequest Extends \Document\S4\Message {
+		public function __constructor() {
+			$this->_typeName = "Auth Request";
+		}
+
 		public function parse(&$string): bool {
 			if (parent::parse($string)) {
 				// Parse the Data
