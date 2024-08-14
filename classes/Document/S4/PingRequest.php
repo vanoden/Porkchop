@@ -16,8 +16,8 @@
 
 		public function build(&$string): int {
 			// Build the data
-			$length = 0;
-			return $length;
+			$string = "";
+			return strlen($string);
 		}
 
 		public function typeName(): string {

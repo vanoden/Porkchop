@@ -29,7 +29,7 @@
 	$_SERVER['HTTP_USER_AGENT'] = "sensor_node/0.2";
 	$_SERVER['SERVER_NAME'] = "localhost";
 
-	require '../config/config.php';
+	require 'config/config.php';
 
 	# Spoof Server Variables
 	$_SERVER['SERVER_NAME'] = $_config->site->hostname;
@@ -96,9 +96,7 @@
 	);
 	
 	if ($_database->ErrorMsg()) {
-		print "Error connecting to database:<br>\n";
-		print $_database->ErrorMsg();
-		$logger->writeln("Error connecting to database: ".$_database->ErrorMsg(),'error');
+		app_log("Error connecting to database: \n".$_database->ErrorMsg());
 		exit;
 	}
 	$logger->writeln("Database Initiated",'trace');
@@ -117,7 +115,7 @@
 	$_SESSION_->start();
 	$logger->writeln("Session initiated",'trace',__FILE__,__LINE__);
 
-	echo "service.php v0.0.1\n";
+	app_log("service.php v0.0.1");
 
 	// Open For Business
 	$available = true;
@@ -130,7 +128,7 @@
 	* as it comes in. */
 	ob_implicit_flush();
 
-	print "Listening at ".$GLOBALS['_config']->service->address.":".$GLOBALS['_config']->service->port."\n";
+	app_log("Listening at ".$GLOBALS['_config']->service->address.":".$GLOBALS['_config']->service->port);
 	if (($sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) === false) {
 		echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
 	}
@@ -170,10 +168,11 @@
 			}
 
 			$s4Engine = new \Document\S4();
+			$s4Engine->arrayPrint($buf);
 			if ($s4Engine->parse($buf)) {
 				$request = $s4Engine->parse();
 
-				print "Got ".$request->typeName()."\n";
+				app_log("Got ".$request->typeName());
 				print "Asset ID: ".$request->assetId()."\n";
 				print "Sensor ID: ".$request->sensorId()."\n";
 				print "Reading Value: ".$request->value()."\n";
@@ -183,8 +182,8 @@
 				break;
 			}
 			else {
-				$logger->writeln("Error parsing request: ".$factory->error(),'error');
-				print("Error parsing request: ".$factory->error()."\n");
+				$logger->writeln("Error parsing request: ".$s4Engine->error(),'error');
+				print("Error parsing request: ".$s4Engine->error()."\n");
 				break;
 			}
 			echo "$buf\n";
@@ -193,4 +192,5 @@
 	} while (true);
 
 	socket_close($sock);
+	app_log("Application exited");
 ?>
