@@ -185,6 +185,64 @@
 	$productTagList = new \Product\TagList();
 	$productTags = $productTagList->find(array("product_id" => $item->id));
 
+	// add tag to product
+	if (!empty($_REQUEST['newSearchTag']) && empty($_REQUEST['removeSearchTag'])) {
+		$searchTag = new \Site\SearchTag();
+		$searchTagList = new \Site\SearchTagList();
+		$searchTagXref = new \Site\SearchTagXref();
+
+		if (!empty($_REQUEST['newSearchTag']) && !empty($_REQUEST['newSearchTagCategory']) && $searchTag->validName($_REQUEST['newSearchTag']) && $searchTag->validName($_REQUEST['newSearchTagCategory'])) {
+
+			// Check if the tag already exists
+			$existingTag = $searchTagList->findAdvanced(array('class' => 'Product::Item', 'value' => $_REQUEST['newSearchTag']));
+
+			if (empty($existingTag)) {
+
+				// Create a new tag
+				$searchTag->add(array('class' => 'Product::Item', 'category' => $_REQUEST['newSearchTagCategory'], 'value' => $_REQUEST['newSearchTag']));
+				if ($searchTag->error()) {
+					$page->addError("Error adding product search tag");
+				} else {
+					// Create a new cross-reference
+					$searchTagXref->add(array('tag_id' => $searchTag->id, 'object_id' => $item->id));
+					if ($searchTagXref->error()) {
+						$page->addError("Error adding product tag cross-reference: " . $searchTagXref->error());
+					} else {
+						$page->appendSuccess("Product Search Tag added Successfully");
+					}
+				}
+			} else {
+				// Create a new cross-reference with the existing tag
+				$searchTagXref->add(array('tag_id' => $existingTag[0]->id, 'object_id' => $item->id));
+				if ($searchTagXref->error()) {
+					$page->addError("Error adding product tag cross-reference: " . $searchTagXref->error());
+				} else {
+					$page->appendSuccess("Product Search Tag added Successfully");
+				}
+			}
+		} else {
+			$page->addError("Value for Product Tag and Category are required");
+		}
+	}
+
+	// remove tag from product
+	if (!empty($_REQUEST['removeSearchTagId'])) {
+		$searchTagXrefItem = new \Site\SearchTagXref();
+		$searchTagXrefItem->deleteTagForObject($_REQUEST['removeSearchTagId'], "Product::Item", $item->id);
+		$page->appendSuccess("Product Search Tag removed Successfully");
+	}
+
+	// get tags for product
+	$searchTagXref = new \Site\SearchTagXrefList();
+	$searchTagXrefs = $searchTagXref->find(array("object_id" => $item->id, "class" => "Product::Item"));
+
+	$productSearchTags = array();
+	foreach ($searchTagXrefs as $searchTagXrefItem) {
+		$searchTag = new \Site\SearchTag();
+		$searchTag->load($searchTagXrefItem->tag_id);
+		$productSearchTags[] = $searchTag;
+	}
+
 	// Get Product
 	if (isset($_REQUEST['code'])) $item->get($_REQUEST['code']);
 	if ($item->error()) $page->addError("Error loading item '".$_REQUEST['code']."': ".$item->error());

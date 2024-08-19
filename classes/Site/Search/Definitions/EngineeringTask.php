@@ -2,6 +2,7 @@
 namespace Site\Search\Definitions;
 
 class EngineeringTask extends \Site\Search\Definition {
+    
     public function __construct() {
         $this->class = '\Engineering\TaskList';
         $this->customer_url = '';

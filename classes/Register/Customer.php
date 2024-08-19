@@ -2,6 +2,7 @@
 	namespace Register;
 
     class Customer extends Person {
+		
 		public $auth_method;
 		public $elevated = 0;
 

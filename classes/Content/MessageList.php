@@ -4,6 +4,7 @@
 	class MessageList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
+
             $this->clearError();
             $this->resetCount();
 
@@ -32,6 +33,7 @@
 		}
 		
 		public function search($parameters = array()) {
+
             $this->clearError();
             $this->resetCount();
 
@@ -52,6 +54,21 @@
 			    return 0;
 			}
             
+			// Join to the existing query
+			$get_contents_query .= "
+				LEFT JOIN (
+					SELECT DISTINCT(stx.object_id)
+					FROM search_tags_xref stx
+					INNER JOIN search_tags st ON stx.tag_id = st.id
+					WHERE st.class = 'Content::Message'
+					AND (
+						st.category LIKE ?
+						OR st.value LIKE ?
+					)
+				) AS search_tags_results ON p.id = search_tags_results.object_id
+			";
+			array_push($bind_params, '%'.$parameters['search'].'%','%'.$parameters['search'].'%');
+
 			$rs = $GLOBALS['_database']->Execute($get_contents_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());

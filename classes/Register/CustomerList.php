@@ -111,6 +111,7 @@
         }
     
 		public function find($parameters = [], $controls = []) {
+
 			$this->clearError();
 			$this->resetCount();
 
@@ -297,6 +298,25 @@
 				}
 			}
 
+			// Add search_tags searching
+			if (isset($parameters['search_tags']) && !empty($parameters['search_tags'])) {
+				
+				// Join to the existing query
+				$find_person_query .= "
+					LEFT JOIN (
+						SELECT DISTINCT(stx.object_id)
+						FROM search_tags_xref stx
+						INNER JOIN search_tags st ON stx.tag_id = st.id
+						WHERE st.class = 'Register::Customer'
+						AND (
+							st.category LIKE ?
+							OR st.value LIKE ?
+						)
+					) AS search_tags_results ON p.id = search_tags_results.object_id
+				";
+				array_push($bind_params, '%'.$parameters['search'].'%','%'.$parameters['search'].'%');
+			}  			
+
             if (!empty($parameters['_sort'])) $controls['sort'] = $parameters['_sort'];
             if (!empty($parameters['_limit']) && is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
             if (!empty($parameters['_offset']) && is_numeric($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
@@ -362,6 +382,8 @@
 				$this->error("Search string required");
 				return null;
 			}
+
+			// Search for customers based on basic information
 			$find_person_query = "
 				SELECT	id
 				FROM	register_users

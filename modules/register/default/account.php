@@ -102,18 +102,18 @@
 		    </li>
 		    <li id="accountFirstNameQuestion">
 			    <label for="first_name">*First Name:</label>
-			    <input type="text" name="first_name" value="<?=$customer->first_name?>" />
+			    <input type="text" name="first_name" value="<?=$customer->first_name?>" <?php if ($readOnly) echo 'disabled'; ?> />
 		    </li>
 		    <li id="accountLastNameQuestion">
 			    <label for="last_name">*Last Name:</label>
-			    <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" />
+			    <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?=$customer->last_name?>" <?php if ($readOnly) echo 'disabled'; ?> />
 		    <li id="accountOrganizationQuestion">
 			    <label for="">*Organization:</label>
 			    <span class="value registerValue"><?=$customer->organization()->name?></span>
 		    </li>
 		    <li id="accountTimeZoneQuestion">
 			    <label for="">*Time Zone:</label>
-			    <select id="timezone" name="timezone" class="value input collectionField">
+			    <select id="timezone" name="timezone" class="value input collectionField" <?php if ($readOnly) echo 'disabled'; ?>>
 				    <?php foreach (timezone_identifiers_list() as $timezone) {
 						    if (isset($customer->timezone)) $selected_timezone = $customer->timezone;
 						    else $selected_timezone = 'UTC';
@@ -143,7 +143,7 @@
 		<div class="contact_method_row tableRow">
 			<div class="tableCell">
 				<span class="hiddenDesktop value">Types: </span>
-				<select class="contact_type_value value input" name="type[<?=$contact->id?>]">
+				<select class="contact_type_value value input" name="type[<?=$contact->id?>]" <?php if ($readOnly) echo 'disabled'; ?>>
 					<?php	foreach (array_keys($contact_types) as $contact_type) { ?>
 						<option value="<?=$contact_type?>"<?php if ($contact_type == $contact->type) print " selected";?>><?=$contact_types[$contact_type]?></option>
 					<?php	} ?>
@@ -151,38 +151,38 @@
 			</div>
 			<div class="tableCell">
 				<span class="hiddenDesktop value">Description: </span>
-				<input type="text" name="description[<?=$contact->id?>]" class="value input contactDescriptionColumn" value="<?=$contact->description?>" />
+				<input type="text" name="description[<?=$contact->id?>]" class="value input contactDescriptionColumn" value="<?=$contact->description?>" <?php if ($readOnly) echo 'disabled'; ?> />
 			</div>
 			<div class="tableCell">
 				<span class="hiddenDesktop value">Address/Number: </span>
-				<input type="text" name="value[<?=$contact->id?>]" class="value input contactValueColumn" value="<?=$contact->value?>" />
+				<input type="text" name="value[<?=$contact->id?>]" class="value input contactValueColumn" value="<?=$contact->value?>" <?php if ($readOnly) echo 'disabled'; ?> />
 			</div>
 			<div class="tableCell">
 				<span class="hiddenDesktop value">Notes: </span>
-				<input type="text" name="notes[<?=$contact->id?>]" class="value input contactNotesColumn" value="<?=$contact->notes?>" />
+				<input type="text" name="notes[<?=$contact->id?>]" class="value input contactNotesColumn" value="<?=$contact->notes?>" <?php if ($readOnly) echo 'disabled'; ?> />
 			</div>
 			<div class="tableCell">	
 				<span class="hiddenDesktop value">Notify: </span>
-				<input type="checkbox" class="contact_notify" name="notify[<?=$contact->id?>]" value="1" <?php if ($contact->notify) print "checked"; ?> />
+				<input type="checkbox" class="contact_notify" name="notify[<?=$contact->id?>]" value="1" <?php if ($contact->notify) print "checked"; ?> <?php if ($readOnly) echo 'disabled'; ?> />
 			</div>
 			<div class="tableCell">
 				<span class="hiddenDesktop value">Drop: </span>
-				<input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X"  onclick="submitDelete(<?=$contact->id?>)" />
+				<input type="button" name="drop_contact[<?=$contact->id?>]" class="deleteButton" value="X"  onclick="submitDelete(<?=$contact->id?>)" <?php if ($readOnly) echo 'disabled'; ?> />
 			</div>
 		</div>
 		<?php } ?>
 		<div class="tableRow">
 			<div class="tableCell">
-				<select class="value input" name="type[0]">
+				<select class="value input" name="type[0]" <?php if ($readOnly) echo 'disabled'; ?>>
 					<option value="0">Select</option>
 					<?php foreach (array_keys($contact_types) as $contact_type) { ?>
 					<option value="<?=$contact_type?>"><?=$contact_types[$contact_type]?></option>
 					<?php } ?>
 				</select>
 			</div>
-			<div class="tableCell"><input type="text" name="description[0]" class="value input contactDescriptionColumn" /></div>
-			<div class="tableCell"><input type="text" name="value[0]" class="value input contactValueColumn" /></div>
-			<div class="tableCell"><input type="text" name="notes[0]" class="value input contactNotesColumn" /></div>
+			<div class="tableCell"><input type="text" name="description[0]" class="value input contactDescriptionColumn" <?php if ($readOnly) echo 'disabled'; ?> /></div>
+			<div class="tableCell"><input type="text" name="value[0]" class="value input contactValueColumn" <?php if ($readOnly) echo 'disabled'; ?> /></div>
+			<div class="tableCell"><input type="text" name="notes[0]" class="value input contactNotesColumn" <?php if ($readOnly) echo 'disabled'; ?> /></div>
 			<div class="tableCell"></div>
 			<div class="tableCell"></div>
 		</div><!-- END tableRow -->
@@ -190,8 +190,8 @@
 	</section>
 
 	<section class="form-group">
-		<div id="accountFormSubmit"><input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton" onclick="return submitForm();" /></div>
-		<div id="accountFormSubmit"><input type="button" name="method" value="Change Password" class="button submitButton registerSubmitButton" onclick="return passChange();" /></div>
+		<div id="accountFormSubmit"><input type="submit" name="method" value="Apply" class="button submitButton registerSubmitButton" onclick="return submitForm();" <?php if ($readOnly) echo 'disabled'; ?> /></div>
+		<div id="accountFormSubmit"><input type="button" name="method" value="Change Password" class="button submitButton registerSubmitButton" onclick="return passChange();" <?php if ($readOnly) echo 'disabled'; ?> /></div>
 	</section>
 </form>
 

@@ -8,21 +8,36 @@
 
 	$page = new \Site\Page(array("module" => 'register',"view" => 'account'));
 	
-	if (isset($GLOBALS['_SESSION_']->customer->id)) {
-		$customer_id = $GLOBALS['_SESSION_']->customer->id;
+	// Check if a customer_id is provided
+	if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id'])) {
+		$customer_id = $_REQUEST['customer_id'];
 		$customer = new \Register\Customer($customer_id);
-	}
-	else {
+	} else {
+		// If no customer_id is provided, redirect to login
 		header("location: /_register/login?target=_register/account");
 		exit;
 	}
+
+	// Check if the logged-in user is in the same organization as the customer
+	if ($GLOBALS['_SESSION_']->customer->organization()->id != $customer->organization()->id) {
+		$page->addError("You do not have permission to view this customer's account.");
+		return;
+	}
+
+	// Check if the logged-in user is the same as the customer being viewed
+	if ($GLOBALS['_SESSION_']->customer->id != $customer->id) {
+		$readOnly = true;
+	} else {
+		$readOnly = false;
+	}
+
 	app_log($GLOBALS['_SESSION_']->customer->login." accessing account of customer ".$customer_id,'notice',__FILE__,__LINE__);
 
 	#######################################
 	### Handle Actions					###
 	#######################################
 	// handle form "delete" submit
-	if (isset($_REQUEST['submit-type']) && $_REQUEST['submit-type'] == "delete-contact") {
+	if (isset($_REQUEST['submit-type']) && $_REQUEST['submit-type'] == "delete-contact" && !$readOnly) {
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 			$page->addError("Invalid Request");
 		}
@@ -35,7 +50,7 @@
 	}
 	
 	// handle form "apply" submit
-	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply" && !$readOnly) {
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 			$page->addError("Invalid Request");
 		}
@@ -207,7 +222,7 @@
 	}
 	
 	// handle send another verification email
-	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Resend Email") {
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Resend Email" && !$readOnly) {
 	
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 			$page->addError("Invalid Request");

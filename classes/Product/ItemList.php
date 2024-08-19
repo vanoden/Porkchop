@@ -2,6 +2,7 @@
 	namespace Product;
 
 	class ItemList Extends \BaseListClass {
+
         public function __construct() {
             $this->_modelName = '\Product\Item';
         }
@@ -13,10 +14,12 @@
         }
 		
 		public function search($parameters = []) {
+			if (!isset($parameters['search_tags'])) $parameters['search_tags'] = true;
 			return $this->find($parameters);
 		}
 
 		public function find($parameters = [],$controls = []) {
+
 			$this->clearError();
             $this->resetCount();
 
@@ -139,17 +142,37 @@
 				$find_product_query .= "
 				AND		r.parent_id = ?";
 				array_push($bind_params,$category_id);
-			}
-			elseif (isset($parameters['category_id'])) {
+			} elseif (isset($parameters['category_id'])) {
 				$find_product_query .= "
 				AND		r.parent_id = ?";
 				array_push($bind_params,$parameters['category_id']);
 			}
+
 			if (isset($parameters['id']) and preg_match('/^\d+$/',$parameters['id'])) {
 				$find_product_query .= "
 				AND		p.id = ?";
 				array_push($bind_params,$parameters['id']);
 			}
+						
+            // Add search_tags searching
+            if (isset($parameters['search_tags']) && !empty($parameters['search_tags'])) {
+				
+				// Join to the existing query
+                $find_product_query .= "
+                    LEFT JOIN (
+                        SELECT DISTINCT(stx.object_id)
+                        FROM search_tags_xref stx
+                        INNER JOIN search_tags st ON stx.tag_id = st.id
+                        WHERE st.class = 'Product::Item'
+                        AND (
+                            st.category LIKE ?
+                            OR st.value LIKE ?
+                        )
+                    ) AS search_tags_results ON p.id = search_tags_results.object_id
+                ";
+                array_push($bind_params, '%'.$parameters['search'].'%','%'.$parameters['search'].'%');
+            }
+
 			if (isset($parameters['_sort']) && preg_match('/^[\w\_]+$/',$parameters['_sort']))
 				$find_product_query .= "
 				ORDER BY p.".$parameters['_sort'];
