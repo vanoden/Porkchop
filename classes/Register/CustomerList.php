@@ -296,26 +296,7 @@
 					$this->error("Invalid automation");
 					return null;
 				}
-			}
-
-			// Add search_tags searching
-			if (isset($parameters['search_tags']) && !empty($parameters['search_tags'])) {
-				
-				// Join to the existing query
-				$find_person_query .= "
-					LEFT JOIN (
-						SELECT DISTINCT(stx.object_id)
-						FROM search_tags_xref stx
-						INNER JOIN search_tags st ON stx.tag_id = st.id
-						WHERE st.class = 'Register::Customer'
-						AND (
-							st.category LIKE ?
-							OR st.value LIKE ?
-						)
-					) AS search_tags_results ON p.id = search_tags_results.object_id
-				";
-				array_push($bind_params, '%'.$parameters['search'].'%','%'.$parameters['search'].'%');
-			}  			
+			}			
 
             if (!empty($parameters['_sort'])) $controls['sort'] = $parameters['_sort'];
             if (!empty($parameters['_limit']) && is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
@@ -358,7 +339,8 @@
 			return $people;
 		}
 		
-		public function search($search_string,$limit = 0,$offset = 0) {
+		public function search($search_string,$limit = 0,$offset = 0, $search_tags = false) {
+
 			$this->clearError();
 			$this->resetCount();
 
@@ -442,6 +424,38 @@
 				}
 				$this->incrementCount();
 			}
+
+			// Add search_tags searching
+			if (isset($search_tags) && !empty($search_tags)) {
+
+			    app_log("Customer Search w/Search Tags Requested",'debug',__FILE__,__LINE__);
+
+                // Customer Search w/Search Tags Requested
+			    $find_person_query = "
+					    SELECT DISTINCT(stx.object_id)
+					    FROM search_tags_xref stx
+					    INNER JOIN search_tags st ON stx.tag_id = st.id
+					    WHERE st.class = 'Register::Customer'
+					    AND (
+						    st.category LIKE '$search_string'
+						    OR st.value LIKE '$search_string'
+					    )
+			    ";
+				
+			    app_log("Search query: ".$find_person_query,'trace',__FILE__,__LINE__);
+			    $rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
+			    if (! $rs) {
+				    $this->SQLError($GLOBALS['_database']->ErrorMsg());
+				    return null;
+			    }
+			    while (list($id) = $rs->FetchRow()) {
+				    if ($count == false) {
+					    $customer = new Customer($id);
+					    array_push($people,$customer);
+				    }
+				    $this->incrementCount();
+			    }
+            }
 			return $people;
 		}
 	}

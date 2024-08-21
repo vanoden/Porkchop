@@ -49,12 +49,11 @@
                         )";
                 $search_string = $parameters['search'];
 
+				// Specified Wildcards
                 if (preg_match('/^\*/',$search_string) || preg_match('/\*$/',$search_string)) {
-                    // Specified Wildcards
                     $search_string = preg_replace('/^\*/','%',$search_string);
                     $search_string = preg_replace('/\*$/','%',$search_string);
-                }
-                else {
+                } else {
                     // Implied Wildcards
                     $search_string = '%'.$parameters['search'].'%';
                 }
@@ -76,8 +75,7 @@
 						$find_product_query .= $GLOBALS['_database']->qstr($type,get_magic_quotes_gpc());
 					}
 					$find_product_query .= ")";
-				}
-				else {
+				} else {
                     if (!$validationclass->validType($parameters["type"])) {
                         $this->error("Invalid Type: ".$parameters["type"]);
                         return null;
@@ -96,13 +94,11 @@
                     $find_product_query .= "
                     AND     p.status IN ('".implode("','",$parameters['status'])."')";
                 }
-            }
-            elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
+            } elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
 				$find_product_query .= "
 				AND		p.status = ?";
 				array_push($bind_params,strtoupper($parameters["status"]));
-			}
-			else
+			} else
 				$find_product_query .= "
 				AND		p.status = 'ACTIVE'";
 
@@ -119,8 +115,7 @@
 					}
 					$find_product_query .= "
 					AND	r.parent_id in (".join(',',$category_ids).")";
-				}
-				elseif(preg_match('/^[\w\-\_\.\s]+$/',$parameters['category_code'])) {
+				} elseif(preg_match('/^[\w\-\_\.\s]+$/',$parameters['category_code'])) {
 					list($category) = $this->find(
 						array(
 							'code'	=> $parameters['category_code']
@@ -131,7 +126,8 @@
 			}
 
 			if (isset($parameters['category'])) {
-				# Get Parent ID
+
+				// Get Parent ID
 				$_parent = new \Product\Item($parameters["category"]);
 				$category_id = $_parent->id;
 
@@ -142,6 +138,7 @@
 				$find_product_query .= "
 				AND		r.parent_id = ?";
 				array_push($bind_params,$category_id);
+
 			} elseif (isset($parameters['category_id'])) {
 				$find_product_query .= "
 				AND		r.parent_id = ?";
@@ -153,26 +150,7 @@
 				AND		p.id = ?";
 				array_push($bind_params,$parameters['id']);
 			}
-						
-            // Add search_tags searching
-            if (isset($parameters['search_tags']) && !empty($parameters['search_tags'])) {
-				
-				// Join to the existing query
-                $find_product_query .= "
-                    LEFT JOIN (
-                        SELECT DISTINCT(stx.object_id)
-                        FROM search_tags_xref stx
-                        INNER JOIN search_tags st ON stx.tag_id = st.id
-                        WHERE st.class = 'Product::Item'
-                        AND (
-                            st.category LIKE ?
-                            OR st.value LIKE ?
-                        )
-                    ) AS search_tags_results ON p.id = search_tags_results.object_id
-                ";
-                array_push($bind_params, '%'.$parameters['search'].'%','%'.$parameters['search'].'%');
-            }
-
+					
 			if (isset($parameters['_sort']) && preg_match('/^[\w\_]+$/',$parameters['_sort']))
 				$find_product_query .= "
 				ORDER BY p.".$parameters['_sort'];
@@ -202,6 +180,39 @@
                 $this->incrementCount();
 				array_push($items,$item);
 			}
+
+            // Add search_tags searching
+            if (isset($parameters['search_tags']) && !empty($parameters['search_tags'])) {
+				
+				$bind_params = array();
+				
+				// Join to the existing query
+                $find_product_query = "
+					SELECT DISTINCT(stx.object_id)
+					FROM search_tags_xref stx
+					INNER JOIN search_tags st ON stx.tag_id = st.id
+					WHERE st.class = 'Product::Item'
+					AND (
+						st.category LIKE ?
+						OR st.value LIKE ?
+					)
+                ";
+                array_push($bind_params, '%'.$parameters['search'].'%','%'.$parameters['search'].'%');
+            }
+
+			query_log($find_product_query,$bind_params);
+			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+
+			while (list($id) = $rs->FetchRow()) {
+				$item = new Item($id);
+                $this->incrementCount();
+				array_push($items,$item);
+			}
+
 			return $items;
 		}
 	}

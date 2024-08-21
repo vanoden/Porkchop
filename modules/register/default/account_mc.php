@@ -19,14 +19,16 @@
 	}
 
 	// Check if the logged-in user is in the same organization as the customer
+	$canView = true;
 	if ($GLOBALS['_SESSION_']->customer->organization()->id != $customer->organization()->id) {
 		$page->addError("You do not have permission to view this customer's account.");
-		return;
+		$canView = false;
 	}
 
 	// Check if the logged-in user is the same as the customer being viewed
-	if ($GLOBALS['_SESSION_']->customer->id != $customer->id) {
+	if ($GLOBALS['_SESSION_']->customer->id != $customer->id && $canView) {
 		$readOnly = true;
+		$page->appendSuccess("You are currrently viewing another user in your organization");
 	} else {
 		$readOnly = false;
 	}

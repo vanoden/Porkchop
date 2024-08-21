@@ -15,6 +15,7 @@ class EngineeringTask extends \Site\Search\Definition {
         $task_list = new $this->class();
         $parameters = array();
         $parameters['searchTerm'] = $search_string;
+        $parameters['search_tags'] = true;
         return $task_list->search($parameters);
     }
 
