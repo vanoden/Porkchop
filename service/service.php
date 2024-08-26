@@ -119,8 +119,10 @@
 
 	// Open For Business
 	$available = true;
-	
 
+	// Temporarily Local Session Table
+	$sessionTable = [];
+	
 	/* Allow the script to hang around waiting for connections. */
 	set_time_limit(0);
 
@@ -141,52 +143,180 @@
 		echo "socket_listen() failed: reason: " . socket_strerror(socket_last_error($sock)) . "\n";
 	}
 
+	$prevBuf = "";
+	$buffer = "";
+	$lastByteTime = 0;
 	do {
 		if (($msgsock = socket_accept($sock)) === false) {
 			echo "socket_accept() failed: reason: " . socket_strerror(socket_last_error($sock)) . "\n";
 			break;
 		}
-		/* Send instructions. */
-		//$msg = "\nWelcome to the PHP Test Server. \n" .
-		//	"To quit, type 'quit'. To shut down the server type 'shutdown'.\n";
-		//socket_write($msgsock, $msg, strlen($msg));
 
+		// Process incoming data
 		do {
-			if (false === ($buf = socket_read($msgsock, 2048, PHP_BINARY_READ))) {
+			// Leave loop on read error
+			if (false === ($incoming = socket_read($msgsock, 2048, PHP_BINARY_READ))) {
 				echo "socket_read() failed: reason: " . socket_strerror(socket_last_error($msgsock)) . "\n";
 				break 2;
 			}
-			if (!$buf = trim($buf)) {
+
+			// Leave loop if no data
+			if (empty($incoming)) {
+				if (time() - $lastByteTime > 2) {
+					app_log("Connection Timeout, clearing buffer");
+					$msg = "";
+					for ($i = 0; $i < strlen($incoming); $i ++) {
+						$msg .= "[".ord(substr($incoming,$i,1))."]";
+					}
+					app_log($msg,'trace');
+					break;
+				}
 				continue;
 			}
-			if ($buf == 'quit') {
-				break;
-			}
-			if ($buf == 'shutdown') {
-				socket_close($msgsock);
-				break 2;
+			app_log("incoming: '".$incoming,"'");
+
+			// Append received chars to buffer
+			$lastByteTime == time();
+			$buffer .= $incoming;
+
+			if (!$buffer == trim($buffer)) {
+				// Cleared some whitespace
+				continue;
 			}
 
+			// Initialize S4 Engine for parsing/building messages
 			$s4Engine = new \Document\S4();
-			$s4Engine->arrayPrint($buf);
-			if ($s4Engine->parse($buf)) {
-				$request = $s4Engine->parse();
 
-				app_log("Got ".$request->typeName());
-				print "Asset ID: ".$request->assetId()."\n";
-				print "Sensor ID: ".$request->sensorId()."\n";
-				print "Reading Value: ".$request->value()."\n";
-				print "Timestamp: ".$request->timestamp()."\n";
-				$talkback = sprintf("%b%02b%02b%02b%016b%b%02b%b",1,1,99,0,1,2,0,3,1,4);
-			socket_write($msgsock, $talkback, strlen($talkback));
+			// Debugging
+			$s4Engine->printChars($buffer);
+
+			// See if we have a full message and parse it if so
+			if ($s4Engine->parse($buffer)) {
+				app_log("Getting message");
+				$request = $s4Engine->getMessage();
+if (empty($request)) app_log("Got no message back!",'error');
+
+				// See if we have a session for this client
+				if (!empty($sessionTable[$s4Engine->sessionId()])) {
+					// Is Session Expired?
+					if ($sessionTable[$s4Engine->sessionId()]['expires'] < time()) {
+						unset($sessionTable[$s4Engine->sessionId()]);
+					}
+				}
+				if (empty($sessionTable[$s4Engine->sessionId()])) {
+					$sessionTable[$s4Engine->sessionId()] = array(
+						'client' => $s4Engine->clientId(),
+						'server' => $s4Engine->serverId(),
+						'customer_id' => 0,
+						'sequence'	=> 0,
+						'expires' => time() + 43000
+					);
+				}
+
+				app_log("Received ".$request->typeName()."!",'info');
+				$envelope = "";
+				switch($request->typeId()) {
+					case 1:
+						// Register Request
+						$response = new \Document\S4\RegisterResponse();
+						$response->serialNumber($request->serialNumber());
+						$response->modelNumber($request->modelNumber());
+						$s4Engine->setMessage($response);
+						$envSize = $s4Engine->serialize($envelope);
+						app_log("Returning $envSize byte ".$response->typeName()." to client");
+						$s4Engine->printChars($envelope);
+						$written = socket_write($msgsock, $envelope, $envSize);
+						print "Wrote $written bytes\n";
+						break;
+					case 3:
+						// Ping Request
+						$response = new \Document\S4\PingResponse();
+						$s4Engine->setMessage($response);
+						$envSize = $s4Engine->serialize($envelope);
+						socket_write($msgsock, $envelope, $envSize);
+						break;
+					case 5:
+						// Reading Post
+						app_log("Asset ID: ".$request->assetId());
+						app_log("Sensor ID: ".$request->sensorId());
+						app_log("Reading Value: ".$request->value());
+
+						// Is Session Authenticated?
+						if ($sessionTable[$s4Engine->sessionId()]['customer_id'] == 0) {
+							app_log("Unauthorized Reading Post");
+							$response = new \Document\S4\Unauthorized();
+						}
+						else {
+							$asset = new \Monitor\Asset($request->assetId());
+							if (!$asset->exists()) {
+								$response = new \Document\S4\BadRequestResponse();
+							}
+							else {
+								$sensor = new \Monitor\Sensor($request->sensorId());
+								if (!$sensor->exists()) {
+									$response = new \Document\S4\BadRequestResponse();
+								}
+								else {
+									$reading = new \Monitor\Reading();
+									$reading->assetId($asset->id());
+									$reading->sensorId($sensor->id());
+									$reading->value($request->value());
+									$reading->timestamp($request->timestamp());
+									if ($sensor->addReading($reading)) {
+										$response = new \Document\S4\Acknowledgement();
+									}
+									else {
+										$response = new \Document\S4\SystemErrorResponse();
+									}
+								}
+							}
+						}
+						$s4Engine->setMessage($response);
+						$envSize = $s4Engine->serialize($envelope);
+						app_log("Returning $envSize byte ".$response->typeName()." to client");
+						$s4Engine->printChars($envelope);
+						$written = socket_write($msgsock, $envelope, $envSize);
+						print "Wrote $written bytes\n";
+						break;
+					case 13:
+						// Auth Request
+						$customer = new \Register\Customer();
+						app_log("Authenticating Customer '".$request->login()."' with '".$request->password()."'");
+						if ($customer->authenticate($request->login(),$request->password())) {
+							app_log("Customer '".$customer->login()."' authenticated");
+							$sessionTable[$s4Engine->sessionId()]['customer_id'] = $customer->id();
+							$response = new \Document\S4\AuthResponse();
+						}
+						else {
+							app_log("Invalid Login Attempt");
+							$response = new \Document\S4\Unauthorized();
+						}
+						$s4Engine->setMessage($response);
+						$envSize = $s4Engine->serialize($envelope);
+						socket_write($msgsock, $envelope, $envSize);
+						break;
+					default:
+						app_log("Unknown request type: ".$request->typeId(),'error');
+						$response = new \Document\S4\BadRequestResponse();
+						$s4Engine->setMessage($response);
+						$envSize = $s4Engine->serialize($envelope);
+						socket_write($msgsock, $envelope, $envSize);
+						break;
+				}
+				app_log("Request processed and response sent");
 				break;
 			}
 			else {
 				$logger->writeln("Error parsing request: ".$s4Engine->error(),'error');
 				print("Error parsing request: ".$s4Engine->error()."\n");
+				$response = new \Document\S4\BadRequestResponse();
+				$s4Engine->setMessage($response);
+				$envSize = $s4Engine->serialize($envelope);
+$s4Engine->printChars($envelope);
+				socket_write($msgsock, $envelope, $envSize);
 				break;
 			}
-			echo "$buf\n";
+			echo "$buffer\n";
 		} while (true);
 		socket_close($msgsock);
 	} while (true);

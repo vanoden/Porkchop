@@ -9,28 +9,23 @@
 	 * 2 bytes - Server ID
 	 * 2 bytes - Length
 	 * 2 bytes - Type
-	 * 16 bytes - Session Code
+	 * x bytes - Session Code
 	 * 1 byte - Start of Text
 	 * n bytes - Data
 	 * 1 byte - End of Text
 	 * 2 byte - checksum
 	 * 1 byte - End Terminator
 	 * 
-	 * [1][0][1][9][9][0][5][0][1][0][1][2][3][4][5][6][7][8][9][10][11][12][13][14][15][2][5][5][5][5][5][3][1][2][4]
+	 * [1][0][1][9][9][0][5][0][1]...[2]...[3][1][2][4]
 	 */
 	class S4 Extends \BaseClass {
 		protected $_clientId = 0;
 		protected $_serverId = 0;
-		protected $_sessionCode;		// 16 Byte Session Code
+		protected $_sessionId;		// 16 Byte Session Code
 		protected $_message;			// Message contained in envelope
 		protected $_checksum;			// 2 Byte Checksum
-		protected $_meta_chars = 30;	// Number of header, footer and delimiter chars for completion checking
-
-		/**
-		 * Constructor
-		 */
-		public function __construct() {
-		}
+		protected $_meta_chars = 18;	// Number of header, footer and delimiter chars for completion checking, 14 + $_sessionCodeLen
+		protected $_sessionCodeLen = 4;	// Length of the session code
 
 		/**
 		 * Extract and parse the binary envelope if available
@@ -44,13 +39,15 @@
 			}
 
 			$byteString = "";
+			$headerLength = 9 + $this->_sessionCodeLen;
+
 			for ($i = 0; $i < strlen($buffer); $i++) {
 				$byteString .= "[".ord(substr($buffer,$i,1))."]";
 			}
 			app_log("Parsing: $byteString","trace");
-	
+
 			// Check for starting terminator
-			while (strlen($buffer) > 0 && ord(substr($buffer,0,1)) != 1) {
+			while (strlen($buffer) > 0 && (ord(substr($buffer,0,1)) != 1 || ord(substr($buffer,$headerLength,1)) != 2)) {
 				app_log("Dropping 1st character","debug");
 				$buffer = substr($buffer,1);
 			}
@@ -60,10 +57,9 @@
 			}
 
 			app_log("Got Start Terminator",'trace');
-	
-			// Check for a minimal complete packet length, including header and footer
-			// Minimum packet length is 30 bytes
-			if (strlen($buffer) < 26) {
+
+			// Check for a complete header
+			if (strlen($buffer) < $headerLength) {
 				$byteString = "";
 				$this->error("Not enough data yet for header, only ".strlen($buffer)." chars");
 				for ($i = 0; $i < strlen($buffer); $i++) {
@@ -72,42 +68,41 @@
 				app_log("Buffer: $byteString","trace");
 				return false;
 			}
-			app_log("Start of text? ".ord(substr($buffer,25,1)),'trace');
-			if (ord(substr($buffer,25,1)) != 2) {
+/*
+			app_log("Start of text? ".ord(substr($buffer,$headerLength,1)),'trace');
+			while (strlen($buffer) >= $headerLength && ord(substr($buffer,$headerLength,1)) != 2) {
 				$this->error("Missing Start of Text. Dropping 1st character");
+				$buffer = substr($buffer,1);
+			}
+			if (strlen($buffer) < $headerLength) {
+				$this->error("Not enough data yet for header, only ".strlen($buffer)." chars");
 				return false;
 			}
-
+*/
 			$contentLength = ord(substr($buffer,5,1)) * 256 + ord(substr($buffer,6,1));
 			app_log("Expecting ".$contentLength." chars of data");
 
 			app_log("Got " . strlen($buffer) . " of " . ($contentLength + $this->_meta_chars) . " bytes");
-	
+
 			// Check for a minimal complete header using terminators
-			if (ord(substr($buffer,0,1)) == 1 && ord(substr($buffer,25,1)) == 2) {
-				print "Parsing Header\n";
+			if (ord(substr($buffer,0,1)) == 1 && ord(substr($buffer,$headerLength,1)) == 2) {
 				if (strlen($buffer) < $contentLength + $this->_meta_chars) {
 					print "Not enough data yet for body, only ".strlen($buffer)." chars\n";
 					return false;
 				}
-	
+
 				app_log("SOH: ".ord(substr($buffer,0,1)),'trace');
-				app_log("SOT: ".ord(substr($buffer,25,1)),'trace');
+				app_log("SOT: ".ord(substr($buffer,$headerLength + 1,1)),'trace');
 				app_log("CID: [" . ord(substr($buffer,1,1)) . "][" . ord(substr($buffer,2,1)) . "]",'trace');
-				app_log("SID: [" . ord(substr($buffer,3,1)) . "][" . ord(substr($buffer,4,1)),'trace');
+				app_log("SID: [" . ord(substr($buffer,3,1)) . "][" . ord(substr($buffer,4,1)) . "]",'trace');
 				$clientId = ord(substr($buffer,1,1)) * 256 + ord(substr($buffer,2,1));
 				$serverId = ord(substr($buffer,3,1)) * 256 + ord(substr($buffer,4,1));
 				$typeId = ord(substr($buffer,7,1)) * 256 + ord(substr($buffer,8,1));
 				$sessionCode = array();
-				for ($i = 0; $i < 16; $i++) {
-					$int = ord(substr($buffer,$i + 9,1));
-					$int0 = number_format(($int / 16),0);
-					$int1 =  $int % 16;
-					print "[$int] $int0 $int1\n";
-					$sessionCode[$i * 2] = sprintf("%0X",$int0);
-					$sessionCode[$i * 2 + 1] = sprintf("%0X",$int1);
+				for ($i = 0; $i < $this->_sessionCodeLen; $i++) {
+					array_push($sessionCode,substr($buffer,$i + 9,1));
 				}
-				$session_code = implode('',$sessionCode);
+				$this->_sessionId = $this->sessionNum($sessionCode);
 
 				app_log("Client ID: ".$clientId,"debug");
 				app_log("Server ID: ".$serverId,"debug");
@@ -116,32 +111,47 @@
 				//app_log("Session Code: ".$sessionCode,"debug");
 
 				// Check for Terminators at end of data
-				print "End of Header: ".ord(substr($buffer,25,1))."\n";
-				print "End of Content: ".ord(substr($buffer,$contentLength + 26,1))."\n";
-				$data = [];
-				if (strlen($buffer) >= $contentLength + $this->_meta_chars && ord(substr($buffer,25,1)) == 2 && ord(substr($buffer,$contentLength + 26,1)) == 3) {
+				app_log("End of Header: ".ord(substr($buffer,$headerLength,1)));
+				app_log("End of Content: ".ord(substr($buffer,$contentLength + $headerLength + 1,1)));
+
+				$data = [];			// Array to hold incoming bytes
+				app_log("Is request complete?");
+				if (strlen($buffer) >= $contentLength + $this->_meta_chars && ord(substr($buffer,$headerLength,1)) == 2 && ord(substr($buffer,$contentLength + $headerLength + 1,1)) == 3) {
+					app_log("Message has $contentLength bytes",'debug');
+					$in = "";		// Incoming chars for debug output
 					for ($i = 0; $i < $contentLength; $i++) {
-						print $i."[".ord(substr($buffer,$i+26,1))."]";					
-						$data[$i] = substr($buffer,$i+26,1);
+						$in .= $i."[".ord(substr($buffer,$i+$headerLength + 1,1))."]";					
+						$data[$i] = substr($buffer,$i+$headerLength + 1,1);
 					}
-					print "\n";
+					app_log("Bytes: ".$in);
 					//$this->checksum(ord(substr($buffer,$length + 27,1)) * 256 + ord(substr($buffer,$length + 28,1)));
 
 					// Remove Request from the Buffer
-					$buffer = substr($buffer,$contentLength+30);
+					app_log("Take request from buffer");
+					$buffer = substr($buffer,$contentLength+$headerLength + 4); // Was 5
 
 					// Create the Message Instance and Parse the Data
+					app_log("Parse message type $typeId");
+
 					$factory = new \Document\S4Factory();
 					$this->_message = $factory->get($typeId);
 					//$this->_message->clientId($clientId);
 					//$this->_message->serverId($serverId);
 					//$message->sessionCode($sessionCode);
+					if (empty($this->_message)) {
+						app_log("Failed to create message object: ".$factory->error());
+						$this->error("Failed to create message object: ".$factory->error());
+						return false;
+					}
+					app_log("Parsing contents of ".$this->_message->typeName());
 					if ($this->_message->parse($data,$contentLength)) {
 						// Return the Message
+						app_log("Got me a message!");
 						return true;
 					}
 					else {
-						$this->error("Failed to Parse Message");
+						app_log("Failed to parse message: ".$this->_message->error(),'error');
+						$this->error("Failed to Parse Message: ".$this->_message->error());
 						return false;
 					}
 				}
@@ -157,18 +167,18 @@
 					return false;
 				}
 			}
-			elseif (preg_match('/^\x{01}(..)(..)(..)(..)(.{16})/',$buffer)) {
+			elseif (preg_match('/^\x{01}(..)(..)(..)(..)(.{'.$this->_sessionCodeLen.'})/',$buffer)) {
 				print "Header not complete\n";
 				print "Client ID: ".ord(substr($buffer,1,1)) * 256 + ord(substr($buffer,2,1))."\n";
 				print "Server ID: ".ord(substr($buffer,3,1)) * 256 + ord(substr($buffer,4,1))."\n";
 				print "Length: ".ord(substr($buffer,5,1)) * 256 + ord(substr($buffer,6,1))."\n";
 				print "Type: ".ord(substr($buffer,7,1)) * 256 + ord(substr($buffer,8,1))."\n";
 				print "Session: ";
-				for ($i = 0; $i < 16; $i++) {
+				for ($i = 0; $i < $this->_sessionCodeLen; $i++) {
 					print substr($buffer,9 + $i,1);
 				}
 				print "\n";
-				print "Terminator: ".ord(substr($buffer,25,1))."\n";
+				print "Terminator: ".ord(substr($buffer,$headerLength+1,1))."\n";
 				return false;
 			}
 			else {
@@ -177,12 +187,17 @@
 					print "[".ord(substr($buffer,$i,1))."]";
 				}
 				print "\n";
+				$this->error("Terminators not found");
 				$buffer = substr($buffer,1);
 				return false;
 			}
 		}
 
-		public function arrayPrint($string) {
+		public function printChars($string) {
+			if (empty($string)) {
+				print "Empty String\n";
+				return;
+			}
 			for ($i = 0 ; $i < strlen($string) ; $i++) {
 				print "[".ord(substr($string,$i,1))."]";
 			}
@@ -201,7 +216,14 @@
 		 * @return \Document\S4\Message if available
 		*/
 		public function getMessage(): ?\Document\S4\Message {
-			if (!empty($message) && is_object($message)) return $message;
+			if (!empty($this->_message)) {
+				if (is_object($this->_message)) return $this->_message;
+				else {
+					app_log("Not a \Document\S4\Message object",'error');
+					return null;
+				}
+			}
+			app_log("Message is empty",'error');
 			return null;
 		}
 
@@ -241,10 +263,13 @@
 			}
 			$content = "";
 			$contentLength = $this->_message->build($content);
-			print("Content[".$contentLength."]: ".$content."\n");
-
+			print "Built: ";
+			for ($i = 0; $i < $contentLength; $i++) {
+				print "[".ord($content[$i])."]";
+			}
+			print "\n";
 			// Generate the Header for the envelope
-			$header = pack("C",1) . pack("n",$this->clientId()) . pack("n",$this->serverId()) . pack("n",$contentLength) . pack("n",$this->_message->typeId()) . $this->sessionCode() . pack("C",2);
+			$header = pack("C",1) . pack("n",$this->clientId()) . pack("n",$this->serverId()) . pack("n",$contentLength) . pack("n",$this->_message->typeId()) . $this->sessionCode($this->_sessionId) . pack("C",2);
 			$string = $header . $content;
 
 			// Generate the Footer for the envelope
@@ -272,8 +297,34 @@
 		/**
 		 * Write the Session Code
 		 */
-		protected function sessionCode() {
-			return pack("CCCCCCCCCCCCCCCC",0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+		protected function sessionCode($sessionId) {
+			return pack("CCCC",0,1,2,3);
 			//return sprintf("%016b",123454321);
+		}
+
+		/**
+		 * Calculate Session ID
+		 * @param array session code bytes
+		 * @return int Session ID
+		 */
+		public function sessionNum($sessionCodeBytes): int {
+			$sessionId = 0;
+			for ($i = 0; $i < $this->_sessionCodeLen; $i++) {
+				$sessionId += ord($sessionCodeBytes[$i])*256*$i;
+			}
+			return $sessionId;
+		}
+
+		/**
+		 * Get/Set the Session ID
+		 * @param int Session ID
+		 * @return int Session ID
+		 */
+		public function sessionId($sessionId = null): int {
+			if (!is_null($sessionId)) $this->_sessionId = $sessionId;
+			if (empty($this->_sessionId)) {
+				$this->_sessionId = rand(0,3999999999);
+			}
+			return $this->_sessionId;
 		}
 	}

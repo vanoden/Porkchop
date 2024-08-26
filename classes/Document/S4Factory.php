@@ -25,15 +25,30 @@
 		 * @params string Class name
 		 * @return Document::S4::Message
 		*/
-		public function create($type) {
-			if ($type == 'PingRequest') {
+		public function create($type): ? \Document\S4\Message {
+			if ($type == 'RegisterRequest') {
+				return new \Document\S4\RegisterRequest();
+			}
+			elseif ($type == 'RegisterResponse') {
+				return new \Document\S4\RegisterResponse();
+			}
+			elseif ($type == 'PingRequest') {
 				return new \Document\S4\PingRequest();
 			}
 			elseif ($type == 'PingResponse') {
 				return new \Document\S4\PingResponse();
 			}
+			elseif ($type == 'ReadingPost') {
+				return new \Document\S4\ReadingPost();
+			}
+			elseif ($type == 'Acknowledgement') {
+				return new \Document\S4\Acknowledgement();
+			}
+			elseif ($type == "AuthRequest") {
+				return new \Document\S4\AuthRequest();
+			}
 			else {
-				error("Invalid message type");
+				$this->error("Invalid message type");
 				return null;
 			}
 		}
@@ -45,13 +60,38 @@
 		*/
 		public function get(int $typeId) {
 			if ($typeId == 1) {
+				return new \Document\S4\RegisterRequest();
+			}
+			elseif ($typeId == 2) {
+				return new \Document\S4\RegisterResponse();
+			}
+			elseif ($typeId == 3) {
 				return new \Document\S4\PingRequest();
 			}
-			if ($typeId == 2) {
+			elseif ($typeId == 4) {
 				return new \Document\S4\PingResponse();
 			}
-			elseif ($this->_typeId == 5) {
-				return new \Document\S4\ReadingRequest();
+			elseif ($typeId == 5) {
+				return new \Document\S4\ReadingPost();
+			}
+			elseif ($typeId == 7) {
+				return new \Document\S4\Acknowledgement();
+			}
+			else if ($typeId == 10) {
+				return new \Document\S4\BadRequestResponse();
+			}
+			elseif ($typeId == 13) {
+				return new \Document\S4\AuthRequest();
+			}
+			elseif ($typeId == 14) {
+				return new \Document\S4\AuthResponse();
+			}
+			elseif ($typeId == 19) {
+				return new \Document\S4\Unauthorized();
+			}
+			else {
+				$this->error("Invalid message type");
+				return null;
 			}
 		}
 

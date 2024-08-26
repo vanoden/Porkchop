@@ -2,7 +2,6 @@
 	namespace Site\Logger;
 
 	class Log Extends \BaseClass {
-		public $error = null;
 		public $level = 'debug';
 		public $connected = false;
 		public $html = false;
@@ -12,7 +11,6 @@
 			if (isset($parameters['level'])) {
 				$this->level = $parameters['level'];
 			}
-
 		}
 
 		public function caller($file,$line) {

@@ -1,9 +1,7 @@
 <?php
 	namespace Site;
 
-	class Logger {
-	
-		private $error;
+	class Logger Extends \BaseClass {
 		public $host = '';
 		public $type = 'File';
 		public $target = '';
@@ -30,9 +28,5 @@
 			} else {
 				return new \Site\Logger\Errorlog($parameters);
 			}
-		}
-
-		public function error() {
-			return $this->error;
 		}
 	}

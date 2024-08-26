@@ -1,10 +1,10 @@
 <?php
 	namespace Document\S4;
 
-	class PingResponse Extends \Document\S4\Message {
+	class Unauthorized Extends \Document\S4\Message {
 		public function __construct() {
-			$this->_typeId = 4;
-			$this->_typeName = "Ping Response";
+			$this->_typeId = 19;
+			$this->_typeName = "Unauthorized";
 		}
 
 		public function parse(&$string): bool {
@@ -12,8 +12,6 @@
 		}
 
 		public function build(&$string): int {
-			// Build the data
-			$length = 0;
-			return $length;
+			return 0;
 		}
 	}

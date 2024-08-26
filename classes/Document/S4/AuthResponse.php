@@ -2,15 +2,15 @@
 	namespace Document\S4;
 
 	/**
-	 * Response to a Ping Request
+	 * Response to a Authentication Request
 	 * @package Document\S4
 	 */
-	class Acknowledgement Extends \Document\S4\Message {
+	class AuthResponse Extends \Document\S4\Message {
 		private $_successful = false;
 
 		public function __construct() {
-			$this->_typeId = 7;
-			$this->_typeName = "Acknowledgement";
+			$this->_typeId = 14;
+			$this->_typeName = "Auth Response";
 		}
 
 		/**
@@ -25,7 +25,6 @@
 			else {
 				$this->_successful = false;
 			}
-			$this->_timestamp = $this->timestampFromBytes(array($string[1], $string[2], $string[3], $string[4]));
 			return true;
 		}
 
@@ -42,9 +41,7 @@
 			else {
 				$string[0] = 0;
 			}
-			if (empty($this->_timestamp)) $this->_timestamp = time();
-			$string = array_merge($string,$this->timestampToBytes($this->_timestamp));
-			$length = 5;
+			$length = 1;
 			return $length;
 		}
 	}

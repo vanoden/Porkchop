@@ -2,18 +2,18 @@
 	namespace Document\S4;
 
 	/**
-	 * S4 Reading Request
+	 * S4 Fault Post
 	 * Contains Datalogger Reading Information to Posting to Web Portal
 	 * @package Document\S4
 	 */
-	class ReadingRequest Extends \Document\S4\Message {
+	class FaultPost Extends \Document\S4\Message {
 		/**
 		 * Parse the Reading Request
 		 * @param mixed $string 
 		 * @return bool 
 		 */
 		public function parse($string): bool {
-			if (count($string) != 14) {
+			if (count($string) != 9) {
 				print "Invalid Reading Request: ".count($string)." chars\n";
 				$this->error("Invalid Reading Request");
 				return false;
