@@ -4,6 +4,7 @@
 	class MessageList Extends \BaseListClass {
 
 		public function find($parameters = array()) {
+
             $this->clearError();
             $this->resetCount();
 
@@ -32,6 +33,7 @@
 		}
 		
 		public function search($parameters = array()) {
+
             $this->clearError();
             $this->resetCount();
 
@@ -45,13 +47,12 @@
     			$searchString = $GLOBALS['_database']->qstr($parameters['string'],get_magic_quotes_gpc());
     			$searchString = preg_replace("/'$/", "%'", $searchString);
                 $searchString = preg_replace("/^'/", "'%", $searchString);
-
     			$get_contents_query .= " AND (`target` LIKE " . $searchString . " OR `title` LIKE " . $searchString . " OR `name` LIKE " . $searchString . " OR `content` LIKE " . $searchString . ")";
 			} else {
 			    $this->error = "Error: Search 'string' Parameter is Required.";
 			    return 0;
 			}
-            
+        
 			$rs = $GLOBALS['_database']->Execute($get_contents_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
@@ -69,6 +70,37 @@
                 $this->incrementCount();
 				array_push($messages,$message);
 			}
+
+			// Join to the existing query
+			$bind_params = array();
+			$get_contents_query = "
+				SELECT DISTINCT(stx.object_id)
+				FROM search_tags_xref stx
+				INNER JOIN search_tags st ON stx.tag_id = st.id
+				WHERE st.class = 'Content::Message'
+				AND (
+					st.category LIKE $searchString
+					OR st.value LIKE $searchString
+				)
+			";
+
+			$rs = $GLOBALS['_database']->Execute($get_contents_query);
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return 0;
+			}
+
+			while (list($id) = $rs->FetchRow()) {
+				$message = new \Content\Message($id);
+				if (!isset($parameters['is_user_search']) || empty($parameters['is_user_search'])) {
+    				unset($message->content);
+				} else {
+    				$message->content = substr(strip_tags($message->content), 0, 150) . '...';
+				}
+                $this->incrementCount();
+				array_push($messages,$message);
+			}
+
 			return $messages;
 		}
 	}

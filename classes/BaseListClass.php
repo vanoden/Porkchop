@@ -36,7 +36,7 @@ class BaseListClass extends \BaseClass {
 		
 		$this->clearError();
 		$this->resetCount();
-
+		
 		$database = new \Database\Service();
 		if (empty($this->_modelName)) {
 			$this->error("Model Name Not Set");

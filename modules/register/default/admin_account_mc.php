@@ -328,6 +328,65 @@ if (isset($_REQUEST["btnResetFailures"])) {
 	}
 }
 
+// add tag to Register Customer
+if (!empty($_REQUEST['newSearchTag']) && empty($_REQUEST['removeSearchTag'])) {
+
+	$searchTag = new \Site\SearchTag();
+	$searchTagList = new \Site\SearchTagList();
+	$searchTagXref = new \Site\SearchTagXref();
+
+	if (!empty($_REQUEST['newSearchTag']) && !empty($_REQUEST['newSearchTagCategory']) && $searchTag->validName($_REQUEST['newSearchTag']) && $searchTag->validName($_REQUEST['newSearchTagCategory'])) {
+
+		// Check if the tag already exists
+		$existingTag = $searchTagList->findAdvanced(array('class' => 'Register::Customer', 'value' => $_REQUEST['newSearchTag']));
+
+		if (empty($existingTag)) {
+
+			// Create a new tag
+			$searchTag->add(array('class' => 'Register::Customer', 'category' => $_REQUEST['newSearchTagCategory'], 'value' => $_REQUEST['newSearchTag']));
+			if ($searchTag->error()) {
+				$page->addError("Error adding Register Customer search tag");
+			} else {
+				// Create a new cross-reference
+				$searchTagXref->add(array('tag_id' => $searchTag->id, 'object_id' => $customer_id));
+				if ($searchTagXref->error()) {
+					$page->addError("Error adding Register Customer tag cross-reference: " . $searchTagXref->error());
+				} else {
+					$page->appendSuccess("Register Customer Search Tag added Successfully");
+				}
+			}
+		} else {
+			// Create a new cross-reference with the existing tag
+			$searchTagXref->add(array('tag_id' => $existingTag[0]->id, 'object_id' => $customer_id));
+			if ($searchTagXref->error()) {
+				$page->addError("Error adding Register Customer tag cross-reference: " . $searchTagXref->error());
+			} else {
+				$page->appendSuccess("Register Customer Search Tag added Successfully");
+			}
+		}
+	} else {
+		$page->addError("Value for Register Customer Tag and Category are required");
+	}
+}
+
+// remove tag from Register Customer
+if (!empty($_REQUEST['removeSearchTagId'])) {
+	$searchTagXrefItem = new \Site\SearchTagXref();
+	$searchTagXrefItem->deleteTagForObject($_REQUEST['removeSearchTagId'], "Register::Customer", $customer_id);
+	$page->appendSuccess("Register Customer Search Tag removed Successfully");
+}
+
+// get tags for Register Customer
+$searchTagXref = new \Site\SearchTagXrefList();
+$searchTagXrefs = $searchTagXref->find(array("object_id" => $customer_id, "class" => "Register::Customer"));
+
+$registerCustomerSearchTags = array();
+foreach ($searchTagXrefs as $searchTagXrefItem) {
+	$searchTag = new \Site\SearchTag();
+	$searchTag->load($searchTagXrefItem->tag_id);
+	$registerCustomerSearchTags[] = $searchTag;
+}
+
 load:
 if ($customer_id) {
 	$customer = new \Register\Customer($customer_id);

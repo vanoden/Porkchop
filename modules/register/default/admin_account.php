@@ -60,6 +60,12 @@
     var newContactSelect = document.getElementById("new-contact-select");
     newContactSelect.remove(5);
    }
+
+   // remove an organization tag by id
+   function removeSearchTagById(id) {
+     document.getElementById('removeSearchTagId').value = id;
+     document.getElementById('admin-account-form').submit();
+   }
 </script>
 
 <!-- Page Header -->
@@ -72,6 +78,7 @@
   <input type="hidden" name="target" value="<?= $target ?>" />
   <input type="hidden" name="customer_id" value="<?= $customer_id ?>" />
   <input type="hidden" name="login" value="<?= $customer->login ?>" />
+  <input type="hidden" id="removeSearchTagId" name="removeSearchTagId" value="" />
 
   <section id="form-message">
     <ul class="connectBorder infoText"><li>Make changes and click 'Apply' to complete.</li></ul>
@@ -332,6 +339,39 @@
         <?php   } ?>
     </div>
 
+   <br/><br/>
+   <h3 style="display:inline;">Customer Search Tags</h3>
+   <h4 style="display:inline;">(customer support knowledge center)</h4>
+   <div class="tableBody min-tablet">
+      <div class="tableRowHeader">
+         <div class="tableCell" style="width: 33%;">&nbsp;</div>
+         <div class="tableCell" style="width: 33%;">Category</div>
+         <div class="tableCell" style="width: 33%;">Search Tag</div>
+      </div>
+      <?php
+      foreach ($registerCustomerSearchTags as $searchTag) {
+      ?>
+         <div class="tableRow">
+            <div class="tableCell">
+               <input type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" name="removeSearchTag" value="Remove" class="button" /> 
+            </div>
+            <div class="tableCell">
+               <?= $searchTag->category ?>
+            </div>
+            <div class="tableCell">
+               <?= $searchTag->value ?>
+            </div>
+         </div>
+      <?php
+      }
+      ?>
+      <br/>
+      <div class="tableRow">
+         <div class="tableCell"><label>Category:</label><input type="text" class="" name="newSearchTagCategory" value="" placeholder="Location" /></div>
+         <div class="tableCell"><label>New Search Tag:</label><input type="text" class="" name="newSearchTag" value="" placeholder="New York" /></div>
+      </div>
+      <div><input type="submit" name="addSearchTag" value="Add Search Tag" class="button" /></div>
+   </div>
 
    <!-- entire page button submit -->
    <div id="submit-button-container" class="tableBody min-tablet">

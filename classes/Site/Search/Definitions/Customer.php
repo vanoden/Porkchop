@@ -13,7 +13,7 @@ class Customer extends \Site\Search\Definition {
 
     public function search($search_string) {
         $customer_list = new $this->class();
-        return $customer_list->search($search_string);
+        return $customer_list->search($search_string,0,0,true);
     }
 
     public function summarize($search_string) {

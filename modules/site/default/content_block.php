@@ -11,30 +11,74 @@
         plugins: 'code',
         toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | code'
 	});
-</script>
-<?=$page->showBreadCrumbs()?>
-<?=$page->showTitle()?>
-<?=$page->showMessages()?>
 
-<section class="table-group">
-  <form method="post" action="/_site/content_block">
-    <input type="hidden" name="id" value="<?=$message->id?>"/>
-    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-    <ul class="form-grid three-col">
-			<li><label for="name">Name</label><span class="value"><input class="value" type="text" name="name" id="name" value="<?=$message->name?>"/></span></li>
-			<li><label for="name">Target</label><span class="value"><input class="value input lefty" type="text" name="target" id="target" value="<?=$message->target?>"/></span></li>
-		</ul>
-    <div class="columns">
-    <?php	if ($show_add_page) { ?>
-      <span>Add As A Page? </span><input type="checkbox" name="addPage" value="1" />
-    <?php	} else { ?>
-      <a class="button" href="/<?=$message->target?>">Go To Page</a>
-      <a class="button" href="/_site/page?module=content&view=index&index=<?=$message->target?>">Edit Page Metadata</a>
-    <?php	} ?>
-    </div>
-    <div id="contentArea">
-      <textarea id="content" name="content"><?=$message->content?></textarea>
-      <input type="submit" name="Submit" value="Submit"/>
-    </div>
-  </form>
-</section>
+  	// remove a search tag by id
+	function removeSearchTagById(id) {
+		document.getElementById('removeSearchTagId').value = id;
+		document.getElementById('contentBlockEdit').submit();
+	}
+</script>
+
+<!-- Page Header -->
+<?= $page->showAdminPageInfo() ?>
+<!-- End Page Header -->
+
+<form id="contentBlockEdit" name="contentBlockEdit" method="post" action="/_site/content_block/<?= $message->target ?>">
+
+	<input type="hidden" name="id" id="id" value="<?= $message->id ?>" />
+	<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+	<input type="hidden" id="removeSearchTagId" name="removeSearchTagId" value="" />
+
+	<div class="body">
+		<div class="input-horiz" id="itemName">
+			<span class="label">Name</span>
+			<input type="text" class="value input wide_lg" name="name" id="name" value="<?= htmlspecialchars($message->name) ?>" />
+		</div>
+		<div class="input-horiz" id="itemTarget">
+			<span class="label">Target</span>
+			<input type="text" class="value input wide_lg" name="target" id="target" value="<?= htmlspecialchars($message->target) ?>" />
+		</div>
+		<div class="input-horiz" id="itemContent">
+			<span class="label align-top">Content</span>
+			<textarea class="value input wide_lg" name="content" id="content"><?= htmlspecialchars($message->content) ?></textarea>
+		</div>
+
+		<br/><br/>
+		<h3 style="display:inline;">Content Message Search Tags</h3>
+		<h4 style="display:inline;">(customer support knowledge center)</h4>
+		<div class="tableBody min-tablet">
+			<div class="tableRowHeader">
+				<div class="tableCell" style="width: 33%;">&nbsp;</div>
+				<div class="tableCell" style="width: 33%;">Category</div>
+				<div class="tableCell" style="width: 33%;">Search Tag</div>
+			</div>
+			<?php
+			foreach ($registerCustomerSearchTags as $searchTag) {
+			?>
+				<div class="tableRow">
+					<div class="tableCell">
+						<input type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" name="removeSearchTag" value="Remove" class="button" /> 
+					</div>
+					<div class="tableCell">
+						<?= $searchTag->category ?>
+					</div>
+					<div class="tableCell">
+						<?= $searchTag->value ?>
+					</div>
+				</div>
+			<?php
+			}
+			?>
+			<br/>
+			<div class="tableRow">
+				<div class="tableCell"><label>Category:</label><input type="text" class="" name="newSearchTagCategory" value="" placeholder="Content" /></div>
+				<div class="tableCell"><label>New Search Tag:</label><input type="text" class="" name="newSearchTag" value="" placeholder="About us" /></div>
+			</div>
+			<div><input type="submit" name="addSearchTag" value="Add Search Tag" class="button" /></div>
+		</div>
+
+		<div class="editSubmit button-bar floating">
+			<input type="submit" class="button" value="Update" name="updateSubmit" id="updateSubmit" />
+		</div>
+	</div>
+</form>

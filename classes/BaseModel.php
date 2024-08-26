@@ -176,7 +176,7 @@
 				'class_name' => get_class($this),
 				'class_method' => 'add'
 			));
-			
+
 			return $this->update($parameters);
 		}
 
