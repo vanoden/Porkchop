@@ -2,7 +2,7 @@
 	class BaseModel Extends \BaseClass {
 	
 		// Primary Key
-		public $id = 0;
+		public int $id = 0;
 
 		// Was data found in db or cache
 		protected $_exists = false;
@@ -138,7 +138,15 @@
 			return $this->details();
 
 		}
-		
+
+		/**
+		 * Get ID of Object
+		 * @return int
+		 */
+		public function id() {
+			return $this->id;
+		}
+
 		/**
 		 * add by params
 		 * 
