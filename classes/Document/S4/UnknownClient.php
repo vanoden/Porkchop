@@ -1,13 +1,13 @@
 <?php
 	namespace Document\S4;
 
-	class SystemErrorResponse Extends \Document\S4\Message {
+	class UnknownClient Extends \Document\S4\Message {
 		public function __construct() {
-			$this->_typeId = 20;
+			$this->_typeId = 8;
 			$this->_typeName = "System Error Response";
 		}
 
-		public function parse(array $array = null): bool {
+		public function parse(&$string): bool {
 			return true;
 		}
 
