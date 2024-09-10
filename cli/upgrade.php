@@ -76,8 +76,8 @@
 	# Get version.txt
 	if (file_exists(HTML."/version.txt")) {
 		$ver_contents = file_get_contents(HTML."/version.txt");
-		if (preg_match('/BUILD_ID\:\s(\d+)/',$ver_contents,$matches)) install_log("Build: ".$matches[1],'notice');
-		if (preg_match('/BUILD_DATE\:\s([\w\-\:\s]+)/',$ver_contents,$matches)) install_log("Date: ".$matches[1],'notice');
+		if (preg_match('/BUILD_ID\:\s(\d+)/',$ver_contents,$matches)) $site->install_log("Build: ".$matches[1],'notice');
+		if (preg_match('/BUILD_DATE\:\s([\w\-\:\s]+)/',$ver_contents,$matches)) $site->install_log("Date: ".$matches[1],'notice');
 	}
 	else $site->install_log("version.txt not found",'warn');
 
@@ -193,7 +193,7 @@
 		if ($role->error()) install_fail("Error adding role: ".$role->error());
 	}
 
-	if ($_REQUEST['log_level']) $site->log_level = $_REQUEST['log_level'];
+	if ($_REQUEST['log_level']) $site->logLevel($_REQUEST['log_level']);
 
 	$site->install_log("Starting site upgrade",'notice');
 	if (file_exists(HTML."/version.txt")) {
