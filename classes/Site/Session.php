@@ -4,7 +4,6 @@
 	class Session Extends \BaseModel {
 	
 		public $code = '';
-		public $id = 0;
 		public $order = 0;
 		public $customer;
 		public $company;
@@ -22,7 +21,7 @@
 		public $super_elevation_expires;
 		public $isMobile = false;
 		public $isRemovedAccount = false;
-		public $timezone;
+		public $timezone = 'America/New_York';
 		public $location_id;
 		public $customer_id;
 		private $csrfToken;
@@ -39,7 +38,6 @@
 		 * @return void 
 		 */
 		public function __construct($id = 0) {
-    		$this->_database = new \Database\Service();
 			$this->_tableName = 'session_sessions';
     		parent::__construct($id);
 		}
