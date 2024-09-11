@@ -2,7 +2,6 @@
 	namespace Register;
 
 	class UserAuditEvent extends \BaseModel {
-		public $id;
 		public $user_id;
 		public $admin_id;
 		public $event_date;

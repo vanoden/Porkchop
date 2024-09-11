@@ -2,8 +2,6 @@
     namespace Site;
     
     class Page Extends \BaseModel {
-    
-	    public $id;
 	    public $module = 'content';
 	    public $view = 'index';
 	    public $index = '';

@@ -18,9 +18,9 @@
 					try {
 						$class = new $class_name();
 						$class_version = $class->version();
-						if ($class->error) $this->install_fail($class->error);
+						if ($class->error()) $this->install_fail($class->error());
 						$class->upgrade();
-						if ($class->error) $this->install_fail("Upgrade from version ".$class->version().": ".$class->error);
+						if ($class->error()) $this->install_fail("Upgrade from version ".$class->version().": ".$class->error());
 						if ($class->version() != $class_version) $this->install_log("Upgraded $module_name from $class_version to ".$class->version(),'notice');
 					} catch (Exception $e) {
 						$this->install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
@@ -34,14 +34,16 @@
 				/********************************************/
 				/* Add Privileges							*/
 				/********************************************/
-				foreach ($module_data['privileges'] as $privilege_name) {
-					$this->install_log("Adding privilege ".$privilege_name);
-					$privilege = new \Register\Privilege();
-					if ($privilege->get($privilege_name)) {
-						$privilege->update(array('module' => $module_name));
-					}
-					else {
-						$privilege->add(array('name' => $privilege_name,'module' => $module_name));
+				if (!empty($module_data['privileges'])) {
+					foreach ($module_data['privileges'] as $privilege_name) {
+						$this->install_log("Adding privilege ".$privilege_name);
+						$privilege = new \Register\Privilege();
+						if ($privilege->get($privilege_name)) {
+							$privilege->update(array('module' => $module_name));
+						}
+						else {
+							$privilege->add(array('name' => $privilege_name,'module' => $module_name));
+						}
 					}
 				}
 
@@ -189,6 +191,21 @@
 			exit;
 		}
 
+		/**
+		 * Get/Set the log level - New CamelCase version
+		 * @param mixed $level 
+		 * @return string 
+		 */
+		public function logLevel($level = null) {
+			if (isset($level)) $this->_log_level = $level;
+			return $this->_log_level;
+		}
+
+		/**
+		 * Get/Set the log level
+		 * @param mixed $level 
+		 * @return string 
+		 */
 		public function log_level($level = null) {
 			if (isset($level)) $this->_log_level = $level;
 			return $this->_log_level;

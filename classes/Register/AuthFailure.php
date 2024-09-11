@@ -10,7 +10,6 @@
 		public $date;
 
 		public function __construct($id = 0) {
-			$this->_database = new \Database\Service();		
 			$this->_tableName = 'register_auth_failures';
     		parent::__construct($id);
 		}

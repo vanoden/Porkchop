@@ -3,7 +3,6 @@
 
 	class Location Extends \BaseModel {
 		private $schema_version = 1;
-		public $id;
 		public $company_id;
 		public $code;
 		public $address_1;
@@ -42,6 +41,7 @@
 				return null;
 			}
 			list($id) = $rs->FetchRow();
+			if (empty($id)) $id = 0;
 			$this->id = $id;
 			$this->details();
 		}
@@ -85,7 +85,7 @@
 				$this->exists(true);
 			}
 			else {
-				$this->id = null;
+				$this->id = 0;
 				$this->company_id = null;
 				$this->code = null;
 				$this->address_1 = null;
