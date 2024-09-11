@@ -55,19 +55,19 @@
             ";
             $bind_params = array();
 
-            if ($parameters['name']) {
+            if (!empty($parameters['name'])) {
                 $update_object_query .= ",
                 name = ?";
                 array_push($bind_params,$parameters['name']);
             }
 
-            if ($parameters['module']) {
+            if (!empty($parameters['module'])) {
                 $update_object_query .= ",
                 module = ?";
                 array_push($bind_params,$parameters['module']);
             }
 
-            if ($parameters['description']) {
+            if (!empty($parameters['description'])) {
                 $update_object_query .= ",
                 description = ?";
                 array_push($bind_params,$parameters['privilege']);
