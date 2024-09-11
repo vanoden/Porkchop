@@ -24,7 +24,7 @@ class Page extends \Site\Search\Definition {
         foreach ($page_list as $page) {
             $result = new \Site\Search\Result();
             $result->type = 'page';
-            $result->summary = $page->name. ":" . $page->title;
+            $result->summary = $page->name . !empty($page->title) ? ":" . $page->title : "";
             $result->customer_url = $this->customer_url . $page->target;
             $result->admin_url = $this->admin_url . $page->target;
             $result->admin_privilege = $this->admin_privilege;
