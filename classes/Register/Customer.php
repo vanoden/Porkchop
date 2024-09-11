@@ -2,14 +2,23 @@
 	namespace Register;
 
     class Customer extends Person {
-		
 		public $auth_method;
 		public $elevated = 0;
 
+		/**
+		 * Constructor
+		 * @param int $id 
+		 * @return void 
+		 */
 		public function __construct($id = 0) {
 			parent::__construct($id);
 		}
 
+		/**
+		 * Create a Customer Record
+		 * @param array $parameters 
+		 * @return bool 
+		 */
 		public function add($parameters = []) {
 			if (parent::add($parameters)) {
 				$this->auditRecord('REGISTERED','Customer added');
@@ -19,8 +28,12 @@
 			else return false;
 		}
 
+		/**
+		 * Update a customer record
+		 * @param array $parameters 
+		 * @return bool 
+		 */
 		public function update($parameters = []): bool {
-
             // Password must be changed per Authentication Service
 			if (isset($parameters['password'])) {
                 // Authentication Service needs login to change password
