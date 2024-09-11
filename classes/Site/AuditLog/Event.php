@@ -4,30 +4,51 @@ namespace Site\AuditLog;
 use Aws\TrustedAdvisor\TrustedAdvisorClient;
 
 class Event Extends \BaseModel {
-	
-	public $id;
-	public $event_date;
-	public $user_id;
-	public $instance_id;
-	public $class_name;
-	public $class_method;
-	public $description;
+	public $event_date;				// Datetime of the event
+	public $user_id;				// ID of the customer triggering the event
+	public $instance_id;			// ID of the instance being audited
+	public $class_name;				// Class name of the object being audited
+	public $class_method;			// Method name of the object being audited
+	public $description;			// Description of the event
 
+	/**
+	 * Constructor
+	 * @param int $id 
+	 * @return void 
+	 */
 	public function __construct($id = 0) {
 		$this->_tableName = 'site_audit_events';
 		$this->_addFields(array('id', 'event_date', 'user_id', 'instance_id', 'class_name', 'class_method', 'description'));
 		parent::__construct($id);
 	}
 
+	/**
+	 * Add an event to the audit log only if a description is provided
+	 * @param array $params 
+	 * @return bool 
+	 */
 	public function addIfDescription($params = []) {
 		app_log("Shall we log?");
 		if (empty($this->description)) return true;
 		app_log("Yes, we shall log.");
 		return $this->add($params);
 	}
+
+	/**
+	 * Add an event to the audit log
+	 * @param array $params 
+	 * @return bool 
+	 */
 	public function add($params = []) {
+		$this->clearError();
+
+		// Create a new database object
+		$database = new \Database\Service();
+
+		// By default, do not log the event
 		$log_this_event = false;
 
+		// Get the calling class
 		$callingClassName = $this->getCallingClass();
 		if (empty($callingClassName)) {
 			app_log("Calling Class is empty");
@@ -36,6 +57,7 @@ class Event Extends \BaseModel {
 		}
 		$callingClass = new $callingClassName;
 		app_log("Calling Class: $callingClassName");
+
 		// If auditEvents not set to true in class definition, check site config
 		if ($callingClass->_auditEvents) $log_this_event = true;
 
@@ -60,7 +82,7 @@ class Event Extends \BaseModel {
 		$this->class_method = !empty($params['class_method']) ? $params['class_method'] : $this->getCallingMethod();
 		if (!empty($params['description'])) $this->description = $params['description'];
 		$this->event_date = date('Y-m-d H:i:s');
-		$this->user_id = !empty($GLOBALS['_SESSION_']->customer->id) ? $GLOBALS['_SESSION_']->customer->id : null;
+		$this->user_id = !empty($GLOBALS['_SESSION_']->customer->id) ? $GLOBALS['_SESSION_']->customer->id : 0;
 
 		$query = "
 			INSERT INTO site_audit_events
@@ -68,18 +90,18 @@ class Event Extends \BaseModel {
 			VALUES (?, ?, ?, ?, ?, ?)
 		";
 
-		$bind_params = [
+		$database->AddParams(array(
 			$this->event_date,
 			$this->user_id,
 			$this->instance_id,
 			$this->class_name,
 			$this->class_method,
 			$this->description
-		];
+		));
 
-		$rs = $database->Execute($query, $bind_params);
+		$rs = $database->Execute($query);
 		if (!$rs) {
-			$this->error("SQL Error in Site\\AuditLog\\Event::add: " . $database->ErrorMsg());
+			$this->SQLError($database->ErrorMsg());
 			return false;
 		}
 
