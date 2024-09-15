@@ -3,52 +3,82 @@
 
 	class AuthFailure Extends \BaseModel {
 
-		public $ip_address;
-		public $login;
-		public $reason;
-		public $endpoint;
-		public $date;
+		public $ip_address;			// IP Address of the client that failed login attempt
+		public $login;				// Login that failed
+		public $reason;				// Reason for failure
+		public $endpoint;			// Endpoint that failure occurred at
+		public $date;				// Date of failure
 
+		/**
+		 * Constructor for AuthFailure
+		 * @param int $id 
+		 */
 		public function __construct($id = 0) {
 			$this->_tableName = 'register_auth_failures';
     		parent::__construct($id);
 		}
 
+		/**
+		 * Record an authentication failure
+		 * @param array $parameters 
+		 * @return bool 
+		 */
 		public function add($parameters = []) {
+			$this->clearError();
 
+			$database = new \Database\Service;
+
+			// Dereference parameters array
 		    list ($ip_address, $login, $reason, $endpoint) = $parameters;
-		    
-		    if (empty($ip_address)) $ip_address = '';
-		    if (empty($login)) $login = '';
+
+			// Convert IP Address to Integer
+			if (preg_match('/^(\d{1,3}\.){3}\d{1,3}$/',$ip_address)) {
+				// Convert Address to Integer
+				$ip_address = ip2long($ip_address);
+			}
+			// Cannot insert nulls
+			elseif (empty($ip_address)) $ip_address = 0;
+			if (empty($login)) $login = '';
 		    if (empty($reason)) $reason = '';
 		    if (empty($endpoint)) $endpoint = '';
-		    
-			$add_object_query = "
-				INSERT
-				INTO	register_auth_failures
-				VALUES	(null,?,?,sysdate(),?,?)
-			";
 
+			// Validate Reason
 			if (! $this->validReason($reason)) {
 				app_log("WHATS WRONG!",'warn');
 				app_log(debug_backtrace()[1]['function'],'warn');
 				app_log("Invalid auth failure reason '".$reason."'",'warn');
 				$reason = 'UNKNOWN';
 			}
-			$bind_params = array(ip2long($ip_address),$login,$reason,$endpoint);
 
-			$GLOBALS['_database']->Execute($add_object_query,$bind_params);
+			// Prepare Query
+			$add_object_query = "
+				INSERT
+				INTO	register_auth_failures
+				VALUES	(null,?,?,sysdate(),?,?)
+			";
 
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			// Bind Parameters
+			$database->AddParams(array($ip_address,$login,$reason,$endpoint));
+
+			// Execute Query
+			$database->Execute($add_object_query);
+
+			// Check for Errors
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			// Fetch New ID
+			$this->id = $database->Insert_ID();
 
 			return $this->details();
 		}
 
+		/**
+		 * Get details of an authentication failure
+		 * @return bool 
+		 */
 		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
@@ -81,6 +111,11 @@
 			return true;
 		}
 
+		/**
+		 * Validate the reason for the failure
+		 * @param string $string
+		 * @return bool
+		 */
 		public function validReason($string): bool {
 			if (in_array($string,array('NOACCOUNT','PASSEXPIRED','WRONGPASS','INACTIVE','INVALIDPASS','CSRFTOKEN','UNKNOWN'))) return true;
 			else {
