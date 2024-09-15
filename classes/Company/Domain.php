@@ -3,7 +3,6 @@
 
 	class Domain Extends \BaseModel {
 		private $schema_version = 1;
-		public $id;
 		public $status;
 		public $comments;
 		public $location_id;
@@ -193,6 +192,10 @@
 			));
 
 			return $this->details();
+		}
+
+		public function name(): string {
+			return $this->name;
 		}
 
 		public function location(): Location {

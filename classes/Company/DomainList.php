@@ -24,7 +24,7 @@
 			if (!empty($parameters['location_id'])) {
 				$location = new \Company\Location($parameters['location_id']);
 				if (! $location->id) {
-					$this->error = "Location ID not found";
+					$this->error("Location ID not found");
 					return false;
 				}
 				$find_objects_query .= "
