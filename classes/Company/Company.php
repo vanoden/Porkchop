@@ -99,6 +99,18 @@
 			return $this->details();
 		}
 
+		/**
+		 * Get the company name
+		 * @return string
+		 */
+		public function name(): string {
+			return $this->name;
+		}
+
+		/**
+		 * Get an array of locations for the company
+		 * @return array locations
+		 */
 		public function locations() {
 			$locationList = new \Company\LocationList();
 			$locations = $locationList->find();
@@ -107,6 +119,10 @@
 			return $locations;
 		}
 
+		/**
+		 * Get an array of domains for the company
+		 * @return array domains
+		 */
 		public function domains() {
 			$domainList = new \Company\DomainList();
 			$domains = $domainList->find();
