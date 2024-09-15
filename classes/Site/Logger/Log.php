@@ -40,7 +40,7 @@
 			if ((array_key_exists('_page',$GLOBALS)) and (property_exists($GLOBALS['_page'],'view'))) $view = $GLOBALS['_page']->view;
 			else $view = 'index';
 			if (array_key_exists('_SESSION_',$GLOBALS)) {
-				if (property_exists($GLOBALS['_SESSION_'],'id')) $session_id = $GLOBALS['_SESSION_']->id;
+				if (!is_null($GLOBALS['_SESSION_']) && property_exists($GLOBALS['_SESSION_'],'id')) $session_id = $GLOBALS['_SESSION_']->id;
 				else $session_id = '-';
 				if (isset($GLOBALS['_SESSION_']->customer) && is_numeric($GLOBALS['_SESSION_']->customer->id)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
 				else $customer_id = '-';
