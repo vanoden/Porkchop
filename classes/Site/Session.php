@@ -1,6 +1,9 @@
 <?php
 	namespace Site;
 
+use Detection\Exception\MobileDetectException;
+use Register\Customer;
+
 	class Session Extends \BaseModel {
 	
 		public $code = '';
@@ -47,7 +50,6 @@
 		 * @return void 
 		 */
 		public function start() {
-
 			# Fetch Company Information
 			$location = new \Company\Location();
 			$location->getByHost($_SERVER['SERVER_NAME']);
@@ -375,7 +377,20 @@
 			}
 		}
 
-		function code_in_use($request_code) {
+		/**
+		 * Get the associated customer object
+		 * @return Customer 
+		 */
+		public function customer(): \Register\Customer {
+			return $this->customer;
+		}
+
+		/**
+		 * See if Code is already in use
+		 * @param mixed $request_code 
+		 * @return int 
+		 */
+		function code_in_use(string $request_code) {
 			$session = new \Site\Session();
 			$session->get($request_code);
 			if ($session->code) return 1;
@@ -388,7 +403,7 @@
 		 * @param bool $isElevated
 		 * @param string $OTPRedirect, @TODO using refer_url as the TOPRedirect required value for now
 		 */		
-		function assign ($customer_id, $isElevated = false, $OTPRedirect = '') {
+		function assign(int $customer_id, bool $isElevated = false, $OTPRedirect = '') {
 			app_log("Assigning session ".$this->id." to customer ".$customer_id,'debug',__FILE__,__LINE__);
 			$customer = new \Register\Customer($customer_id);
 			if (! $customer->id) $this->error("Customer not found");
@@ -462,21 +477,36 @@
 			return $this->details($this->id);
 		}
 
+		/**
+		 * Grant Full, Temporary, Admin Rights for Installation
+		 * @return bool True if successfull
+		 */
 		function superElevate() {
 			return $this->update(array('super_elevation_expires' => date('Y-m-d H:i:s',time() + 900)));
 		}
 
+		/**
+		 * Check if session is super elevated
+		 * @return bool True if super elevated
+		 */
 		function superElevated() {
 			if ($this->super_elevation_expires < date('Y-m-d H:i:s')) return false;
 			app_log($this->super_elevation_expires." vs ".date('Y-m-d H:i:s'),'notice');
 			return true;
 		}
 
+		/**
+		 * Record last time session was touched
+		 */
 		function touch() {
 			$this->timestamp();
 		}
-		
-		function timestamp() {
+
+		/**
+		 * Record last time session was touched
+		 * @return int Unix timestamp
+		 */
+		function timestamp(): bool {
 			$update_session_query = "
 				UPDATE	session_sessions
 				SET		last_hit_date = sysdate()
@@ -489,9 +519,9 @@
 			);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
-			return 1;
+			return true;
 		}
 		
 		function update ($parameters = []): bool {
