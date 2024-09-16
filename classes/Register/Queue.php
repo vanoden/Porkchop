@@ -72,6 +72,10 @@
 					return null;
 				}
 				list($id) = $rs->FetchRow();
+				if (empty($id)) {
+					$this->error("No registration for ".$queuedUserId);
+					return false;
+				}
 				$this->id = $id;
 				return $this->details();
 			}
