@@ -3,7 +3,6 @@ namespace Product;
 
 class PriceAudit Extends \BaseModel {
 
-    public $id;
 	public $product_price_id;
 	public $user_id;
 	public $date_updated;
@@ -111,7 +110,7 @@ class PriceAudit Extends \BaseModel {
 			$this->date_updated = $object->date_updated;
 			$this->note = $object->note;
 		} else {
-			$this->id = null;
+			$this->id = 0;
 			$this->product_price_id = null;
 			$this->user_id = null;
 			$this->date_updated = null;

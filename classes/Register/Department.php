@@ -1,20 +1,14 @@
 <?php
 	namespace Register;
 
-	class Department {
-		public $id;
+	class Department extends \BaseModel {
 		public $name;
-		public $error;
+		public $parent_id;
+		public $manager_id;
 
 		public function __construct($id = null) {
 			# Clear Error Info
-			$this->error = '';
-
-			# Database Initialization
-			$schema = new Schema();
-			if ($schema->error) {
-				$this->error = "Failed to initialize schema: ".$schema->error;
-			}
+			$this->clearError();
 
 			if (is_numeric($id)) {
 				$this->id = $id;
@@ -29,8 +23,8 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_department_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Department::find(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return array();
 			}
 			$departments = array();
 			while (list($id) = $rs->FetchRow()) {
@@ -39,17 +33,18 @@
 			}
 			return $departments;
 		}
+
 		public function members() {
 			$adminlist = new AdminList();
 			$admins = $adminlist->find(array("department" => $this->id));
-			if ($adminlist->error)	{
-				$this->error = $adminlist->error;
+			if ($adminlist->error())	{
+				$this->error($adminlist->error());
 				return null;
 			}
 			return $admins;
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	id,
 						name,
@@ -60,8 +55,8 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Role::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			$object = $rs->FetchNextObject(false);
 			$this->id = $object->id;

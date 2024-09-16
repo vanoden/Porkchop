@@ -3,7 +3,6 @@
 
 	class Block Extends \BaseModel {
 
-		public $id;
 		public $company_id;
 		public $target;
 		public $view_order;

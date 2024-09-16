@@ -1,10 +1,8 @@
 <?php
 	namespace Register\Organization;
 
-	class Comment {
-		public $error;
-		public $id;
-		public $user;
+	class Comment extends \BaseModel {
+		public $user_id;
 		public $content;
 		public $timestamp;
 
@@ -18,17 +16,17 @@
 		public function add ($parameters = array()) {
 
 			if (! $GLOBALS['_SESSION_']->customer->can("manage organization comments")) {
-				$this->error = "Not enough privileges";
-				return null;
+				$this->error("Not enough privileges");
+				return false;
 			}
 			if (! $parameters['organization_id']) {
-				$this->error = "organization not specified";
-				return null;
+				$this->error("organization not specified");
+				return false;
 			}
 			$organization = new \Register\Organization($parameters['organization_id']);
 			if (! $organization->id) {
-				$this->error = "organization not found";
-				return null;
+				$this->error("organization not found");
+				return false;
 			}
 
 			$add_object_query = "
@@ -47,12 +45,12 @@
 			";
 			$GLOBALS['_database']->Execute(
 				$add_object_query,
-				array($organization->id,$GLOBALS['_SESSION_']->customer->id,$content)
+				array($organization->id,$GLOBALS['_SESSION_']->customer->id,$parameters["content"])
 			);
 
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Organization::Comment::add(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -69,15 +67,11 @@
 			return $this->details();
 		}
 
-		public function update ($parameters = array()) {
-
-		}
-
-		public function details () {
+		public function details (): bool {
 
 			if (! $this->id) {
 				$this->_error = "id required";
-				return null;
+				return false;
 			}
 
 			$get_object_query = "
@@ -95,16 +89,24 @@
 			);
 
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::Comment::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 
 			$object = $rs->FetchNextObject(false);
 			$this->id = $object->id;
-			$this->user = new \Register\User($this->user_id);
+			$this->user_id = $object->user_id;
 			$this->timestamp = $object->timestamp;
 			$this->content = $object->content;
 
-			return 1;
+			return true;
+		}
+
+		public function user(): ?\Register\Customer {
+			if ($this->user_id) {
+				$user = new \Register\Customer($this->user_id);
+				return $user;
+			}
+			return null;
 		}
 	}

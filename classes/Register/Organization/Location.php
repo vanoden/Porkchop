@@ -1,11 +1,9 @@
 <?php
 	namespace Register\Organization;
 
-	class Location {
+	class Location extends \BaseModel {
 	
 		private $schema_version = 15;
-		public $error;
-		public $id;
 		public $company_id;
 		public $code;
 		public $address_1;
@@ -41,8 +39,8 @@
 				array($name)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::Location::get(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
@@ -60,15 +58,15 @@
 				array($hostname)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::Location::getByHost(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
 			$this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 			$get_details_query = "
 				SELECT	*
 				FROM	register_locations
@@ -79,12 +77,12 @@
 				array($this->id)
 			);
 			if (! $rs) {
-				$this->error = "SQL Error in Register::Organization::Location::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 
 			$object = $rs->FetchNextObject(false);
-			$this->company = new \Company\Company($object->company_id);
+			$this->company_id = $object->company_id;
 			$this->code = $object->code;
 			$this->address_1 = $object->address_1;
 			$this->address_2 = $object->address_2;
@@ -98,7 +96,7 @@
 			$this->name = $object->name;
 			$this->service_contact = $object->service_contact;
 			$this->sales_contact = $object->sales_contact;
-			$this->domain = new \Company\Domain($object->domain_id);
+			$this->domain_id = $object->domain_id;
 			$this->host = $object->host;
 			return $object;
 		}
@@ -106,12 +104,12 @@
 		public function add($parameters = []) {
 
 			if (! preg_match('/^\d+$/',$parameters['company_id'])) {
-				$this->error = "company_id parameter required for Register::Organization::Location::add()";
-				return null;
+				$this->error("company_id parameter required for Register::Organization::Location::add()");
+				return false;
 			}
 			if (! preg_match('/\w/',$parameters['code'])) {
-				$this->error = "code parameter required in Register::Organization::Location::add()";
-				return null;
+				$this->error("code parameter required in Register::Organization::Location::add()");
+				return false;
 			}
 	
 			$add_object_query = "
@@ -130,8 +128,8 @@
 				array($parameters["company_id"],$parameters["code"])
 			);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Organization::Location::add(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
 			
@@ -147,11 +145,11 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 
 			if (! preg_match('/^\d+$/',$this->id)) {
-				$this->error = "Valid id required for details in Register::Organization::Location::update()";
-				return null;
+				$this->error("Valid id required for details in Register::Organization::Location::update()");
+				return false;
 			}
 
 			$bind_params = array();
@@ -181,8 +179,8 @@
 			);
 			
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error = "SQL Error in Register::Organization::Location::update(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 
 			// audit the update event

@@ -47,7 +47,14 @@
 		}
 
 		public function set($key,$value,$expires = null) {
-			if (!isset($expires)) $expires = $GLOBALS['_config']->cache->default_expire_seconds;
+			if (!isset($expires)) {
+				if (!isset($GLOBALS['_config']->cache->default_expire_seconds)) {
+					$expires = 3600;
+				}
+				else {
+					$expires = $GLOBALS['_config']->cache->default_expire_seconds;
+				}
+			}
 			
 			if ($this->_connected) {
 				if ($this->_service->set($key,$value,$expires)) return true;
