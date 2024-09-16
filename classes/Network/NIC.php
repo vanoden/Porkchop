@@ -1,15 +1,18 @@
 <?php
 	namespace Network;
 
-	class NIC {
+	class NIC extends \BaseModel {
 
-		private $_error;
-		public $id;
 		public $name;
 		public $mac_address;
 		public $type;
 		public $host;
 
+		/**
+		 * Constructor
+		 * @param int $id 
+		 * @return void 
+		 */
 		public function __construct($id = 0) {
 			if ($id > 0) {
 				$this->id = $id;
@@ -17,6 +20,11 @@
 			}
 		}
 
+		/**
+		 * Add a new network interface
+		 * @param array $parameters Parameters for the new interface
+		 * @return bool
+		 */
 		public function add($parameters = []) {
 
 			if (! isset($parameters['name'])) $this->_error = "name required for new interface";
@@ -62,7 +70,12 @@
 			return $this->update($parameters);
 		}
 
-		public function update($parameters = array()) {
+		/**
+		 * Update the network interface in the database
+		 * @param array $parameters 
+		 * @return bool 
+		 */
+		public function update($parameters = array()): bool {
 
 			$bind_params = array();
 
@@ -95,7 +108,11 @@
 			return $this->details();
 		}
 
-		public function details() {
+		/**
+		 * Get the network interface details from the database
+		 * @return bool 
+		 */
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	 *
 				FROM	network_interfaces
@@ -109,19 +126,19 @@
 				return false;
 			}
 
-			$object = $rs->FetchNextObject($false);
+			$object = $rs->FetchNextObject(false);
 			if ($object->id) {
 				$this->id = $object->id;
 				$this->name = $object->name;
 				$this->mac_address = $object->mac_address;
 				$this->type = $object->type;
-				$this->host = new Network::Host($object->host_id);
+				$this->host = new Host($object->host_id);
 			}
 			return true;
 		}
 
 		public function ip_addresses() {
-			$addressList = new AddressList();
+			$addressList = new IPAddressList();
 
 			$addresses = $addressList->find(array('interface_id' => $this->id));
 			if ($addressList->error()) {
@@ -130,9 +147,5 @@
 			}
 
 			return $addresses;
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

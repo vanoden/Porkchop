@@ -2,7 +2,6 @@
 	namespace Network;
 
 	class Subnet Extends \BaseModel {
-		public $id;
 		public $address;
 		public $size;
 		public $type;
@@ -118,7 +117,7 @@
 			return $this->details();
 		}
 
-		public function delete() {
+		public function delete(): bool {
 			
 			$database = new \Database\Service();
 			$delete_object_query = "
@@ -129,7 +128,7 @@
 			$database->AddParam($this->id);
 			$database->Execute($delete_object_query);
 			if ($database->ErrorMsg()) {
-				$this-SQLError($database->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
@@ -145,7 +144,7 @@
 			return true;
 		}
 
-		public function details() {
+		public function details(): bool {
 			$database = new \Database\Service();
 			$get_object_query = "
 				SELECT	*
