@@ -1,9 +1,13 @@
 <?php
 	namespace Build;
 
-	class Product {
-		public $id;
-		private $_error;
+	class Product extends \BaseModel {
+		public $name;
+		public $major_version;
+		public $minor_version;
+		public $workspace;
+		public $architecture;
+		public $description;
 
 		public function __construct($id = null) {
 			if (isset($id) && is_numeric($id)) {
@@ -31,7 +35,7 @@
 			";
 			$GLOBALS['_database']->Execute($add_object_query,array($parameters['name'],$parameters['architecture'],$parameters['major_version'],$parameters['minor_version']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Build::Product::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -60,7 +64,7 @@
 			return $classname;
 		}			
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			if (! isset($this->id)) {
 				$this->_error = "id required for update";
 				return false;
@@ -100,7 +104,7 @@
 
 			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Build::Product::update(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 
@@ -125,7 +129,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($name));
 			if (! $rs) {
-				$this->_error = "SQL Error in Build::Product::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -135,7 +139,7 @@
 			}
 			return false;
 		}
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	*
 				FROM	build_products
@@ -143,7 +147,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Build::Product::details(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
@@ -173,14 +177,10 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_last_query,array($this->id));
 			if (! $rs) {
-				$this->_error = "SQL Error in Build::Product::lastVersion(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
 			return new Version($id);
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

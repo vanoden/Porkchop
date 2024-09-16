@@ -1,10 +1,17 @@
 <?php
 	namespace Build;
 
-	class Version {
-
-		public $id;
-		private $_error;
+	class Version extends \BaseModel {
+		
+		public $product_id;
+		public $major_number;
+		public $minor_number;
+		public $number;
+		public $timestamp;
+		public $status;
+		public $message;
+		public $tarball;
+		public $user_id;
 
 		public function __construct($id = null) {
 			if (isset($id) && is_numeric($id)) {
@@ -22,7 +29,7 @@
 				}
 			}
 			else {
-				$this->_error = "Product id required";
+				$this->error("Product id required");
 			}
 			if (! isset($parameters['number']) || ! preg_match('/^\d.*$/',$parameters['number'])) {
 				$this->_error = "Number required";
@@ -67,7 +74,7 @@
 			return $classname;
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			if (! isset($this->id)) {
 				$this->_error = "id required for update";
 				return false;
@@ -150,7 +157,7 @@
 			}
 			return false;
 		}
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	*
 				FROM	build_versions
@@ -179,9 +186,5 @@
 				$this->id = null;
 				return false;
 			}
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}
