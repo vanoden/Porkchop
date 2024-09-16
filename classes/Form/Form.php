@@ -2,7 +2,6 @@
 	namespace Form;
 
 	class Form Extends \BaseModel {
-		public $id;
 		public $code;
 		public $title;
 		public $description;
