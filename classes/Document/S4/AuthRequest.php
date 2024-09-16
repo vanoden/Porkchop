@@ -37,10 +37,11 @@
 			return true;
 		}
 
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			// Build the data
 			$string = $this->padString($this->_login,16).$this->padString($this->_password,16);
-			return strlen($string);
+			$array = str_split($string);
+			return count($array);
 		}
 
 		public function login(string $login = null): string {

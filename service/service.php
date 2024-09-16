@@ -51,7 +51,7 @@
 	if (! isset($GLOBALS['_config']->service)) {
 		$GLOBALS['_config']->service = new \stdClass();
 		$GLOBALS['_config']->service->address = '192.168.10.111';
-		$GLOBALS['_config']->service->port = 12346;
+		$GLOBALS['_config']->service->port = 12345;
 		$GLOBALS['_config']->log_level = APPLICATION_LOG_LEVEL;
 		$GLOBALS['_config']->log_type = APPLICATION_LOG_TYPE;
 		$GLOBALS['_config']->console = false;
@@ -125,17 +125,33 @@
 	if ($_CACHE_->error()) $logger->writeln('Unable to initiate Cache client: '.$_CACHE_->error(),'error');
 	$logger->writeln("Cache Initiated",'trace',__FILE__,__LINE__);
 
-	###################################################
-	### Initialize Session							###
-	###################################################
-	$_SESSION_ = new \Site\Session();
-	$_SESSION_->start();
-	$logger->writeln("Session initiated",'trace',__FILE__,__LINE__);
-
-	app_log("service.php v0.0.1");
+	app_log("service.php v0.0.5");
 
 	// Open For Business
 	$available = true;
+
+	// Configuration From Database
+	$company = new \Company\Company(1);
+	list($location) = $company->locations();
+	print $company->name()."\n";
+	$location = new \Company\Location();
+	if (! $location->get('binary')) {
+		if (! $location->add(array(
+			'company_id' => $company->id(),
+			'code' => 'binary',
+			'name' => 'Binary Service'
+		))) {
+			app_log("Failed to add location: ".$location->error(),'error');
+			$available = false;
+		}
+	}
+	else {
+		print $location->name()."\n";
+	}
+
+	list($domain) = $company->domains();
+	$_SERVER['HTTP_HOST'] = $domain->name();
+	$_SERVER['SERVER_NAME'] = $domain->name();
 
 	// Temporarily Local Session Table
 	$sessionList = new \S4Engine\SessionList();
@@ -187,10 +203,14 @@
 			break;
 		}
 		socket_getpeername($msgsock, $addr, $port);
+		$_SERVER['REMOTE_ADDR']	= $addr;
 		app_log("-----------------Connection from $addr:$port--------------------------",'info');
 
 		// Process incoming data
 		do {
+			// Make sure _SESSION_ not carried over from previous request
+			$_SESSION_ = null;
+
 			// Leave loop on read error
 			if (false === ($incoming = socket_read($msgsock, 2048, PHP_BINARY_READ))) {
 				echo "socket_read() failed: reason: " . socket_strerror(socket_last_error($msgsock)) . "\n";
@@ -228,13 +248,13 @@
 			$s4Engine->serverId(99);
 
 			// Debugging
-			app_log($s4Engine->printChars($buffer),'info');
+			//app_log($s4Engine->printChars($buffer),'info');
 
 			//app_log("ENG IN :  TYPE: Unknown SERVER: ".$s4Engine->serverId()." CLIENTID: ".$s4Engine->clientId()." SESSIONCODE: ".$s4Engine->sessionCodeDebug(),'info');
 
 			// See if we have a full message and parse it if so
 			if ($s4Engine->parse($buffer)) {
-				app_log("Getting message");
+				//app_log("Getting message from engine");
 				$request = $s4Engine->getMessage();
 
 				if (empty($request)) {
@@ -267,6 +287,9 @@
 					app_log("Looking for session for client ".$client->id().", session code ".$s4Engine->sessionCodeDebug(),'info');
 					$session = new \S4Engine\Session();
 					if ($session->getSession($client->id(),$s4Engine->sessionCodeArray())) {
+						// Populate Global Variable for Application
+						$_SESSION_ = $session->portalSession();
+
 						app_log("Loading existing session",'info');
 						// Session code, Client Id contained in session
 						$client = $session->client();
@@ -281,6 +304,8 @@
 							socket_write($msgsock, $envelope, $envSize);
 							break;
 						}
+
+						//print_r($session->portalSession());
 					}
 					else {
 						// Create a new session
@@ -304,11 +329,11 @@
 						}
 						$session = $sessionList->addInstance(array('client_id' => $client->id()));
 					}
-					app_log("DUN:  TYPE: ".$request->typeName()." SERVER: ".$s4Engine->serverId()." CLIENTID: ".$s4Engine->session()->client()->id()." CLIENTNUM: ".$client->number()." SESSIONCODE: ".$session->codeDebug()." SESSIONNUM: ".$session->id(),'info');
+					//app_log("DUN:  TYPE: ".$request->typeName()." SERVER: ".$s4Engine->serverId()." CLIENTID: ".$s4Engine->session()->client()->id()." CLIENTNUM: ".$client->number()." SESSIONCODE: ".$session->codeDebug()." SESSIONNUM: ".$session->id(),'info');
 				}
 
 				app_log("Received ".$request->typeName()."!",'info');
-				$envelope = "";
+				$envelope = "";		// Outgoing message buffer
 
 				/****************************************/
 				/* Process the specific request			*/
@@ -323,7 +348,7 @@
 						app_log("Creating a new client",'info');
 						$client = new \S4Engine\Client();
 						if (is_null($client)) {
-							app_log("Failed to create client instance: ".$client->error(),'error');
+							app_log("Failed to create client instance",'error');
 							$response = new \Document\S4\BadRequestResponse();
 							$s4Engine->setMessage($response);
 							$envSize = $s4Engine->serialize($envelope);
@@ -335,8 +360,17 @@
 							'model_number' => $request->modelNumber(),
 						));
 						if ($client->error()) {
-							app_log("Failed to create client instance: ".$client->error(),'error');
-							$response = new \Document\S4\BadRequestResponse();
+							if ($client->errorType() == 'MySQL Unavailable') {
+								$response = new \Document\S4\SystemErrorResponse();
+								$response->success(false);
+								$envSize = $s4Engine->serialize($envelope);
+								socket_write($msgsock, $envelope, $envSize);
+								exit;
+							}
+							else {
+								$response = new \Document\S4\BadRequestResponse();
+								app_log("Failed to create client instance: ".$client->error(),'error');
+							}
 							$s4Engine->setMessage($response);
 							$envSize = $s4Engine->serialize($envelope);
 							socket_write($msgsock, $envelope, $envSize);
@@ -350,7 +384,7 @@
 						// Set Message
 						$s4Engine->setMessage($response);
 						$envSize = $s4Engine->serialize($envelope);
-						app_log("OUT:  TYPE: ".$response->typeName()."SERVER: ".$s4Engine->serverId()." CLIENTID: ".$s4Engine->session()->client()->id()." CLIENTNUM: ".$s4Engine->session()->client()->number()." SESSIONCODE: ".$session->codeDebug()." SESSIONNUM: ".$session->id(),'info');
+						//app_log("OUT:  TYPE: ".$response->typeName()."SERVER: ".$s4Engine->serverId()." CLIENTID: ".$s4Engine->session()->client()->id()." CLIENTNUM: ".$s4Engine->session()->client()->number()." SESSIONCODE: ".$session->codeDebug()." SESSIONNUM: ".$session->id(),'info');
 
 						app_log("Returning $envSize byte ".$response->typeName()." to client");
 						$s4Engine->printChars($envelope);
@@ -373,11 +407,7 @@
 						break;
 
 					case 5:			// Reading Post
-						app_log("Reading Post",'info');
-						app_log("Asset ID: ".$request->assetId(),'info');
-						app_log("Sensor ID: ".$request->sensorId(),'info');
-						app_log("Reading Value: ".$request->value(),'info');
-						app_log("Timestamp:" .$request->timestamp(),'info');
+						app_log("Reading Post: Asset ID: ".$request->assetId()." Sensor ID: ".$request->sensorId()." Value: ".$request->value()." Timestamp:" .$request->timestamp(),'info');
 
 						// Is Session Authenticated?
 						if ($session->userId() < 1) {
@@ -423,15 +453,16 @@
 						app_log("Returning $envSize byte ".$response->typeName()." to client");
 						$s4Engine->printChars($envelope);
 						$written = socket_write($msgsock, $envelope, $envSize);
-						print "Wrote $written bytes\n";
+						//print "Wrote $written bytes\n";
 						break;
 					case 13:		// Auth Request
 						$customer = new \Register\Customer();
 						app_log("Authenticating Customer '".$request->login()."' with '".$request->password()."'");
 						if ($customer->authenticate($request->login(),$request->password())) {
 							app_log("Customer '".$customer->login()."' authenticated",'info');
-							$session->userId($customer->id());
+							$session->portalSession()->assign($customer->id());
 							$response = new \Document\S4\AuthResponse();
+							$response->success(true);
 
 							// Apply Session Instance
 							//$session->add(array('client_id' => $client->id()));
@@ -439,8 +470,9 @@
 						}
 						else {
 							app_log("Invalid Login Attempt",'info');
-							$session->userId(0);
+							//$session->userId(0);
 							$response = new \Document\S4\AuthResponse();
+							$response->success(false);
 
 							// New Session Instance
 							$s4Engine->session($session);
@@ -477,7 +509,7 @@
 					break;
 				}
 
-				app_log("OUT:  TYPE: ".$response->typeName()."SERVER: ".$s4Engine->serverId()." CLIENTID: ".$s4Engine->session()->client()->id()." CLIENTNUM: ".$client->number()." SESSIONCODE: ".$s4Engine->sessionCodeString()." SESSIONNUM: ".$session->number(),'info');
+				//app_log("OUT:  TYPE: ".$response->typeName()."SERVER: ".$s4Engine->serverId()." CLIENTID: ".$s4Engine->session()->client()->id()." CLIENTNUM: ".$client->number()." SESSIONCODE: ".$s4Engine->sessionCodeString()." SESSIONNUM: ".$session->number(),'info');
 
 $s4Engine->printChars($envelope);
 				socket_write($msgsock, $envelope, $envSize);

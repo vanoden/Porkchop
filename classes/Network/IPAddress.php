@@ -64,6 +64,10 @@
 			}
 
 			list($id) = $rs->FetchRow();
+			if (empty($id)) {
+				$this->error("Address not found");
+				return false;
+			}
 			$this->id = $id;
 			return $this->details();
 		}

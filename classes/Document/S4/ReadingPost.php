@@ -21,41 +21,41 @@
 		}
 		/**
 		 * Parse the Reading Request
-		 * @param mixed $string 
+		 * @param array $array 
 		 * @return bool 
 		 */
-		public function parse($string): bool {
-			if (count($string) != 18) {
-				print "Invalid Reading Post: ".count($string)." of 14 chars\n";
-				$this->error("Invalid Reading Post: ".count($string)." of 14 chars");
+		public function parse(array $array): bool {
+			if (count($array) != 18) {
+				print "Invalid Reading Post: ".count($array)." of 14 chars\n";
+				$this->error("Invalid Reading Post: ".count($array)." of 14 chars");
 				return false;
 			}
 
 			// Parse the Data
-			app_log("Parse Reading Meta",'info');
-			$this->_assetId = ord($string[0])*256*256*256 + ord($string[1])*256*256 + ord($string[2])*256 + ord($string[3]);
-			$this->_sensorId = ord($string[4])*256*256*256 + ord($string[5])*256*256 + ord($string[6])*256 + ord($string[7]);
+			app_log("Parse Reading Meta",'trace');
+			$this->_assetId = ord($array[0])*256*256*256 + ord($array[1])*256*256 + ord($array[2])*256 + ord($array[3]);
+			$this->_sensorId = ord($array[4])*256*256*256 + ord($array[5])*256*256 + ord($array[6])*256 + ord($array[7]);
 
-			app_log("Parse Reading Timestamp",'info');
-			$this->_timestamp = $this->timestampFromBytes(array($string[8], $string[9], $string[10], $string[11]));
+			app_log("Parse Reading Timestamp",'trace');
+			$this->_timestamp = $this->timestampFromBytes(array($array[8], $array[9], $array[10], $array[11]));
 
-			app_log("Parse Reading Type",'info');
-			$this->valueType(ord($string[12]));		// Value Type 0 = Float, 1 = Int, 2 = String, 3 = Boolean
+			app_log("Parse Reading Type",'trace');
+			$this->valueType(ord($array[12]));		// Value Type 0 = Float, 1 = Int, 2 = String, 3 = Boolean
 
-			$_control = ord($string[17]);			// Control Char (Exp or Negation)
-			print "Ctrl: ".$_control."\n";
+			$_control = ord($array[17]);			// Control Char (Exp or Negation)
+			//print "Ctrl: ".$_control."\n";
 
-			$this->_value = $this->floatFromBytes(array($string[16], $string[15], $string[14], $string[13]), $_control);
-			print "Value: ".$this->_value."\n";
+			$this->_value = $this->floatFromBytes(array($array[16], $array[15], $array[14], $array[13]), $_control);
+			//print "Value: ".$this->_value."\n";
 			return true;
 		}
 
 		/**
 		 * Build the Reading Request
-		 * @param mixed $string 
+		 * @param array $array 
 		 * @return int 
 		 */
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			// Build the data
 			$meta = [];
 

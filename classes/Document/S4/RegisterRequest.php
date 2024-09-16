@@ -13,7 +13,7 @@
 			$this->_typeName = "Register Request";
 		}
 
-		public function parse($array): bool {
+		public function parse(array $array): bool {
 			// Parse the Data
 			$chars = "RegisterRequest::parse(): ";
 			$stage = 0;  // 0 = serial number, 1 = model number
@@ -33,7 +33,7 @@
 			return true;
 		}
 
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			// Build the data - There has got to be a better way!  But this works...
 			$string = "";
 			$len = strlen($this->_serialNumber);
@@ -51,6 +51,7 @@
 				$char[$i] = ord(substr($this->_modelNumber,$i,1));
 			}
 			$string .= pack($pack, ...$char);
-			return strlen($string);
+			$array = str_split($string);
+			return count($array);
 		}
 	}

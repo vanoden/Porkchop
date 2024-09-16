@@ -7,13 +7,12 @@
 			$this->_typeName = "Ping Response";
 		}
 
-		public function parse(&$string): bool {
+		public function parse(array $array): bool {
 			return true;
 		}
 
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			// Build the data
-			$length = 0;
-			return $length;
+			return 0;
 		}
 	}

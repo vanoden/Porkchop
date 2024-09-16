@@ -12,38 +12,38 @@
 		 * @param mixed $string 
 		 * @return bool 
 		 */
-		public function parse($string): bool {
-			if (count($string) != 9) {
-				print "Invalid Reading Request: ".count($string)." chars\n";
+		public function parse( array $array): bool {
+			if (count($array) != 9) {
+				print "Invalid Reading Request: ".count($array)." chars\n";
 				$this->error("Invalid Reading Request");
 				return false;
 			}
 
 			// Parse the Data
-			$this->_assetId = ord($string[0]) * 256 + ord($string[1]);
-			$this->_sensorId = ord($string[2]) * 256 + ord($string[3]);
-			$this->_valueType = ord($string[4]);
-			$_readingExponent = ord($string[9]);
+			$this->_assetId = ord($array[0]) * 256 + ord($array[1]);
+			$this->_sensorId = ord($array[2]) * 256 + ord($array[3]);
+			$this->_valueType = ord($array[4]);
+			$_readingExponent = ord($array[9]);
 			print "Exp: ".$_readingExponent."\n";
-			print ord($string[8]).":".ord($string[7]).":".ord($string[6]).":".ord($string[5])."\n";
-			print (ord($string[5]) * (256 * 256 * 256))."+";
-			print (ord($string[6]) * (256 * 256))."+";
-			print (ord($string[7]) * 256)."+";
-			print (ord($string[8]));
-			print " = ". (ord($string[5]) * (256 * 256 * 256) + ord($string[6]) * (256 * 256) + ord($string[7]) * 256 + ord($string[8]))."\n";
-			$this->_value = ord($string[5]) * (256 * 256 * 256) + ord($string[6]) * (256 * 256) + ord($string[7]) * 256 + ord($string[8]);
-			print (ord($string[13]) * (256 * 256 * 256))."+";
-			print (ord($string[12]) * (256 * 256))."+";
-			print (ord($string[11]) * 256)."+";
-			print (ord($string[10])."\n");
+			print ord($array[8]).":".ord($array[7]).":".ord($array[6]).":".ord($array[5])."\n";
+			print (ord($array[5]) * (256 * 256 * 256))."+";
+			print (ord($array[6]) * (256 * 256))."+";
+			print (ord($array[7]) * 256)."+";
+			print (ord($array[8]));
+			print " = ". (ord($array[5]) * (256 * 256 * 256) + ord($array[6]) * (256 * 256) + ord($array[7]) * 256 + ord($array[8]))."\n";
+			$this->_value = ord($array[5]) * (256 * 256 * 256) + ord($array[6]) * (256 * 256) + ord($array[7]) * 256 + ord($array[8]);
+			print (ord($array[13]) * (256 * 256 * 256))."+";
+			print (ord($array[12]) * (256 * 256))."+";
+			print (ord($array[11]) * 256)."+";
+			print (ord($array[10])."\n");
 			$this->_value -= 2147483648;
 			print "EXP: = ".pow(10, $_readingExponent)."\n";
 			$this->_value /= pow(10, $_readingExponent + 1);
 			print "Value: ".$this->_value."\n";
-			$this->_timestamp = ord($string[13]) * (256 * 256 * 256) + ord($string[12]) * (256 * 256) + ord($string[11]) * 256 + ord($string[10]);
+			$this->_timestamp = ord($array[13]) * (256 * 256 * 256) + ord($array[12]) * (256 * 256) + ord($array[11]) * 256 + ord($array[10]);
 			return true;
 		}
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			// Build the data
 			$length = 0;
 			return $length;

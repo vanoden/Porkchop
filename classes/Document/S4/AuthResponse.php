@@ -6,8 +6,6 @@
 	 * @package Document\S4
 	 */
 	class AuthResponse Extends \Document\S4\Message {
-		private $_successful = false;
-
 		public function __construct() {
 			$this->_typeId = 14;
 			$this->_typeName = "Auth Response";
@@ -15,33 +13,32 @@
 
 		/**
 		 * Parse the message content
-		 * @param mixed &$string Output variable for buffer
+		 * @param array $array Incoming buffer
 		 * @return bool True if successful
 		 */
 		public function parse(array $array = null): bool {
 			if ($array[0] == 1) {
-				$this->_successful = true;
+				$this->_success = true;
 			}
 			else {
-				$this->_successful = false;
+				$this->_success = false;
 			}
 			return true;
 		}
 
 		/**
 		 * Build the message content
-		 * @param mixed &$string Output variable for content
+		 * @param array &$array Output variable for content
 		 * @return int Length of the content
 		 */
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			// Build the data
-			if ($this->_successful) {
-				$string[0] = chr(1);
+			if ($this->_success) {
+				$array[0] = chr(1);
 			}
 			else {
-				$string[0] = chr(0);
+				$array[0] = chr(0);
 			}
-			$length = 1;
-			return $length;
+			return count($array);
 		}
 	}

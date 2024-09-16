@@ -138,11 +138,7 @@
 					$this->session()->codeArray($this->_sessionCode);
 				}
 
-				app_log("Client ID: ".$this->_clientId,"debug");
-				app_log("Server ID: ".$serverIdIn,"debug");
-				app_log("Length: ".$contentLength,"debug");
-				app_log("Type: ".$this->_typeId,"debug");
-				//app_log("Session Code: ".$sessionCode,"debug");
+				app_log("Incoming: Client ID: ".$this->_clientId." Server ID: ".$serverIdIn." Length: ".$contentLength." Type: ".$this->_typeId." Session: ".$this->session()->codeDebug(),"debug");
 
 				// Check for Terminators at end of data
 				app_log("End of Header: ".ord(substr($buffer,$headerLength,1)),'trace');
@@ -151,7 +147,6 @@
 				$data = [];			// Array to hold incoming bytes
 				app_log("Is request complete?",'trace');
 				if (strlen($buffer) >= $contentLength + $this->_meta_chars && ord(substr($buffer,$headerLength,1)) == 2 && ord(substr($buffer,$contentLength + $headerLength + 1,1)) == 3) {
-					app_log("Message has $contentLength bytes",'debug');
 					$in = "";		// Incoming chars for debug output
 					for ($i = 0; $i < $contentLength; $i++) {
 						$in .= $i."[".ord(substr($buffer,$i+$headerLength + 1,1))."]";					
@@ -176,7 +171,7 @@
 						$this->error("Failed to create message object: ".$factory->error());
 						return false;
 					}
-					app_log("Parsing contents of ".$this->_message->typeName());
+					//app_log("Parsing contents of ".$this->_message->typeName());
 					if ($this->_message->parse($data,$contentLength)) {
 						// Return the Message
 						app_log("Got me a message!");
@@ -295,7 +290,7 @@
 		 * @param string Output variable containing message content
 		 * @return int Number of chars in message
 		*/
-		public function serialize(&$string): int {
+		public function serialize(string &$string): int {
 			if(empty($this->_message)) {
 				$this->error("Message not set: use setMessage()");
 				return -1;
@@ -320,10 +315,10 @@
 			}
 			app_log($chars,'info');
 			// Generate the Header for the envelope
-			app_log("SERVERID: ".$this->serverId(),'debug');
-			app_log("CLIENTID: ".$this->session()->client()->id(),'debug');
-			app_log("CLIENTNUM: ".$this->session()->client()->number(),'debug');
-			app_log("SESSIONID: ".$this->sessionCodeString(),'debug');
+			app_log("Outgoing: Client Id: ".$this->session()->client()->id()." Server Id: ".$this->serverId()." Length: $contentLength Type: ".$this->_message->typeName()." Session: ".$this->session()->codeDebug(),'debug');
+			//app_log("CLIENTID: ".,'debug');
+			//app_log("CLIENTNUM: ".$this->session()->client()->number(),'debug');
+			//app_log("SESSIONID: ".$this->sessionCodeString(),'debug');
 			$sessionCode = $this->session()->codeArray();
 			$header = pack("C",1);										// 1 Byte Start of Text
 			$header .= pack("n",$this->session()->client()->number());	// 2 Byte Client ID
@@ -333,7 +328,8 @@
 			$header .= pack("C4", ...$sessionCode);						// 4 Byte Session Code
 			$header .= pack("C",2);										// 1 Byte Start of Text
 
-			$string = $header . $content;
+			// Combine the Header and Content
+			$string = $header . implode("",$content);
 
 			// Generate the Footer for the envelope
 			$footer = pack("C",3) . pack("n",$this->_genChecksum($string)) . pack("C",4);

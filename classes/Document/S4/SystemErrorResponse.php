@@ -11,7 +11,7 @@
 			return true;
 		}
 
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			return 0;
 		}
 	}

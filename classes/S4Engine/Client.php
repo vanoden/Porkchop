@@ -76,11 +76,6 @@
 				UPDATE	s4engine_clients
 				SET		id = id
 			";
-			if (isset($params["user_id"])) {
-				$update_object_query .= ",
-				user_id = ?";
-				$database->AddParam($params["user_id"]);
-			}
 
 			$update_object_query .= "
 				WHERE	id = ?
@@ -123,33 +118,12 @@
 				$this->_number = $object->number;
 				$this->_serialNumber = $object->serial_number;
 				$this->_modelNumber = $object->model_number;
-				if (is_null($object->user_id)) {
-					$this->userId = 0;
-				}
-				else {
-					$this->userId = $object->user_id;
-				}
 				return true;
 			}
 			else {
 				$this->error("Client not found");
 				return false;
 			}
-		}
-
-		/**
-		 * Authenticate the client using provided login and password
-		 * @param mixed $login 
-		 * @param mixed $password 
-		 * @return bool 
-		 */
-		public function authenticate($login,$password): bool {
-			$customer = new \Register\Customer();
-			if ($customer->authenticate($login,$password)) {
-				$this->userId = $customer->id();
-				return true;
-			}
-			return false;
 		}
 
 		/**
@@ -206,18 +180,6 @@
 				$this->update(array("number" => $number));
 			}
 			return $this->_number;
-		}
-
-		/**
-		 * Get/Set the User ID
-		 * @param int|null $id
-		 * @return int Register::Session customer ID
-		 */
-		public function userId(int $id = null): int {
-			if (!is_null($id)) {
-				$this->userId = $id;
-			}
-			return $this->userId;
 		}
 
 		/**

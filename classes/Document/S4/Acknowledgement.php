@@ -34,18 +34,15 @@
 		 * @param mixed &$string Output variable for content
 		 * @return int Length of the content
 		 */
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			// Build the data
 			if ($this->_success) {
-				$string[0] = chr(1);
+				$array[0] = chr(1);
 			}
 			else {
-				$string[0] = chr(0);
+				$array[0] = chr(0);
 			}
-			$length = 1;
-			//if (empty($this->_timestamp)) $this->_timestamp = time();
-			//$string = array_merge($string,$this->timestampToBytes($this->_timestamp));
-			//$length = 5;
-			return $length;
+
+			return count($array);
 		}
 	}

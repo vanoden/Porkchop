@@ -25,15 +25,16 @@
 
 		/**
 		 * Definition for parse method
-		 * @param mixed &$string
+		 * @param array $array
 		 */
 		abstract public function parse(array $array): bool;
 
 		/**
 		 * Definition for build method
-		 * @param mixed &$string
+		 * @param array &$array
+		 * @return int Number of bytes written
 		 */
-		abstract public function build(&$string): int;
+		abstract public function build(array &$array): int;
 
 		/**
 		 * Get/Set Asset ID

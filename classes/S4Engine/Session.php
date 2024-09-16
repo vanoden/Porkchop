@@ -5,10 +5,11 @@
 	 * Session Object
 	 */
 	class Session Extends \BaseModel {
-		public int $_number = 0;					// Session Number
-		public int $_startTime = 0;					// Start Time as Unix Timestamp
-		public int $_endTime = 0;					// End Time as Unix Timestamp
-		public ?\S4Engine\Client $_client = null;	// Client Object
+		public int $_number = 0;						// Session Number
+		public int $_startTime = 0;						// Start Time as Unix Timestamp
+		public int $_endTime = 0;						// End Time as Unix Timestamp
+		public int $_clientId = 0;						// Client ID
+		public int $_portalSessionId = 0;				// Portal Session ID
 
 		/**
 		 * Constructor
@@ -19,7 +20,8 @@
 			$this->id = $id;
 			if ($id > 0) return $this->details();
 			else {
-				$this->_client = new \S4Engine\Client();
+				$client = new \S4Engine\Client();
+				$this->_clientId = $client->id();
 			}
 		}
 
@@ -57,6 +59,15 @@
 				return false;
 			}
 
+			// Create Portal Session!
+			$portalSession = new \Site\Session();
+			$portalSession->start();
+			if ($portalSession->error()) {
+				$this->error("Error creating portal session: ".$portalSession->error());
+				return false;
+			}
+			$this->_portalSessionId = $portalSession->id();
+
 			// Generate a new Session Number
 			while(true) {
 				// Generate a Random Number
@@ -71,13 +82,14 @@
 
 			$add_object_query = "
 				INSERT INTO s4engine_sessions
-				(client_id,number,time_start,time_end)
-				VALUES (?,?,?,?)
+				(client_id,number,time_start,time_end,portal_id)
+				VALUES (?,?,?,?,?)
 			";
 			$database->AddParam($client->id());
 			$database->AddParam($this->_number);
 			$database->AddParam(get_mysql_date('now'));
 			$database->AddParam(get_mysql_date('+1 day'));
+			$database->AddParam($this->_portalSessionId);
 
 			if (! $database->Execute($add_object_query)) {
 				$this->error("Error adding session: ".$database->error());
@@ -177,13 +189,15 @@
 				$this->_number = $object->number;
 				$this->_startTime = strtotime($object->time_start);
 				$this->_endTime = strtotime($object->time_end);
-				$this->_client = new \S4Engine\Client($object->client_id);
+				$this->_clientId = $object->client_id;
+				$this->_portalSessionId = $object->portal_id;
 			}
 			else {
 				$this->_number = 0;
 				$this->_startTime = 0;
 				$this->_endTime = 0;
-				$this->_client = new \S4Engine\Client();
+				$this->_clientId = 0;
+				$this->_portalSessionId = 0;
 			}
 			return true;
 		}
@@ -261,19 +275,45 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		public function client(\S4Engine\Client $client = null): ?\S4Engine\Client {
 			if (!is_null($client)) {
 				app_log("Setting client for session ".$this->id().": ".$client->id(),'info');
-				$this->_client = $client;
+				$this->_clientId = $client->id();
 			}
-			$client = new \S4Engine\Client($this->_client->id());
+			$client = new \S4Engine\Client($this->_clientId);
 			return $client;
 		}
 
 		/**
-		 * Set the client for the session
+		 * Get Portal Session Details
+		 * @return \Site\Session
+		 */
+		public function portalSession(): \Site\Session {
+			$session = new \Site\Session($this->_portalSessionId);
+			return $session;
+		}
+
+		/**
+		 * Authenticate the session using provided login and password
+		 * @param mixed $login 
+		 * @param mixed $password 
+		 * @return bool 
+		 */
+		public function authenticate($login,$password): bool {
+			$customer = new \Register\Customer();
+			if ($customer->authenticate($login,$password)) {
+				app_log("Assigning customer id ".$customer->id()." to portal session ".$this->session()->id(),'info');
+				$this->session()->assign($customer->id());
+				return true;
+			}
+			return false;
+		}
+
+		/**
+		 * Get/Set the client for the session
 		 * @param \S4Engine\Client $client
 		 */
-		public function clientId(int $clientId): void {
+		public function clientId(int $clientId): int {
 			app_log("Setting client for session ".$this->id().": ".$clientId,'info');
-			$this->client()->id($clientId);
+			$this->_clientId = $clientId;
+			return $this->_clientId;
 		}
 
 		/**
@@ -281,11 +321,11 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @param int $userId
 		 * @return int
 		 */
-		public function userId(int $userId = null): int {
-			if ($userId) {
-				$this->client()->update(array('user_id' => $userId));
-			}
-			return $this->client()->userId();
+		public function userId(int $userId = null): ?int {
+			//if ($userId) {
+			//	$this->client()->update(array('user_id' => $userId));
+			//}
+			return $this->portalSession()->customer()->id();
 		}
 
 		/**
@@ -373,7 +413,7 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @return string
 		 */
 		public function keyString(): string {
-			$key = $this->_client->codeString().$this->codeString();
+			$key = $this->client()->codeString().$this->codeString();
 			return $key;
 		}
 
@@ -382,7 +422,7 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @return array
 		 */
 		public function keyArray(): array {
-			$key = array_merge($this->_client->codeArray(),$this->codeArray());
+			$key = array_merge($this->client()->codeArray(),$this->codeArray());
 			return $key;
 		}
 
@@ -391,7 +431,7 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @return string
 		 */
 		public function keyHex(): string {
-			$key = $this->_client->codeHex().$this->codeHex();
+			$key = $this->client()->codeHex().$this->codeHex();
 			return $key;
 		}
 
@@ -400,7 +440,7 @@ app_log("Getting session with client id: ".$clientId." and session code: ".$sess
 		 * @return string
 		 */
 		public function keyDebug(): string {
-			$key = $this->_client->codeDebug().$this->codeDebug();
+			$key = $this->client()->codeDebug().$this->codeDebug();
 			return $key;
 		}
 
