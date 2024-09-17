@@ -47,10 +47,16 @@
 	# Database Abstraction
 	require THIRD_PARTY.'/adodb/adodb-php/adodb.inc.php';
 
+	# Fetch IP Address of Server
+	exec('/usr/sbin/ip addr show|/usr/bin/grep "inet "|/usr/bin/grep -v 127|/usr/bin/awk \'{print $2}\'|/usr/bin/cut -d\'/\' -f1',$ips);
+
 	# Listener Config
+	if (! isset($GLOBALS['_config'])) {
+		$GLOBALS['_config'] = new \stdClass();
+	}
 	if (! isset($GLOBALS['_config']->service)) {
 		$GLOBALS['_config']->service = new \stdClass();
-		$GLOBALS['_config']->service->address = '192.168.10.111';
+		$GLOBALS['_config']->service->address = $ips[0];
 		$GLOBALS['_config']->service->port = 12345;
 		$GLOBALS['_config']->log_level = APPLICATION_LOG_LEVEL;
 		$GLOBALS['_config']->log_type = APPLICATION_LOG_TYPE;
@@ -133,7 +139,6 @@
 	// Configuration From Database
 	$company = new \Company\Company(1);
 	list($location) = $company->locations();
-	print $company->name()."\n";
 	$location = new \Company\Location();
 	if (! $location->get('binary')) {
 		if (! $location->add(array(
@@ -144,9 +149,6 @@
 			app_log("Failed to add location: ".$location->error(),'error');
 			$available = false;
 		}
-	}
-	else {
-		print $location->name()."\n";
 	}
 
 	list($domain) = $company->domains();
@@ -195,6 +197,7 @@
 	$buffer = "";		// Incoming data buffer
 	$lastByteTime = 0;	// Time of last byte received
 
+	print "Socket Server listening on ".$GLOBALS['_config']->service->address.":".$GLOBALS['_config']->service->port."\n";
 	// Main Loop
 	do {
 		// New Connection
