@@ -80,8 +80,11 @@
 			elseif ($typeId == 7) {
 				return new \Document\S4\Acknowledgement();
 			}
-			else if ($typeId == 10) {
+			elseif ($typeId == 10) {
 				return new \Document\S4\BadRequestResponse();
+			}
+			elseif ($typeId == 11) {
+				return new \Document\S4\TimeRequest();
 			}
 			elseif ($typeId == 12) {
 				return new \Document\S4\TimeResponse();
