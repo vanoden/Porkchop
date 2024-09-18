@@ -458,6 +458,12 @@
 						$written = socket_write($msgsock, $envelope, $envSize);
 						//print "Wrote $written bytes\n";
 						break;
+					case 11:		// Time Request
+						app_log("Request for current time");
+						$response = new \Document\S4\TimeResponse();
+						$response->success(true);
+						$s4Engine->session($session);
+						break;
 					case 13:		// Auth Request
 						$customer = new \Register\Customer();
 						app_log("Authenticating Customer '".$request->login()."' with '".$request->password()."'");
