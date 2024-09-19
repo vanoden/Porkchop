@@ -431,6 +431,10 @@
 									app_log("Sensor not found",'notice');
 									$response = new \Document\S4\BadRequestResponse();
 								}
+								elseif ($sensor->asset()->id() != $asset->id()) {
+									app_log("Sensor does not belong to asset",'notice');
+									$response = new \Document\S4\BadRequestResponse();
+								}
 								else {
 									app_log("Adding reading to asset ".$asset->id()." sensor ".$sensor->id(),'info');
 									$reading = new \Monitor\Reading();
@@ -463,6 +467,9 @@
 						$response = new \Document\S4\TimeResponse();
 						$response->success(true);
 						$s4Engine->session($session);
+						$s4Engine->setMessage($response);
+						$envSize = $s4Engine->serialize($envelope);
+						$written = socket_write($msgsock, $envelope, $envSize);
 						break;
 					case 13:		// Auth Request
 						$customer = new \Register\Customer();
