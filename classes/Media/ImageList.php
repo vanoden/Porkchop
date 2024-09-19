@@ -1,11 +1,11 @@
 <?php
-	namespace Media;
+namespace Media;
 
-	class ImageList extends \BaseListClass {
+class ImageList extends \Storage\FileList {
 
-		public function find($parameters = array()) {
-			$parameters['type'] = 'document';
-			$itemlist = new ItemList();
-			return $itemlist->find($parameters);
-		}
+	public function find($parameters = array()) {
+		$parameters['type'] = 'document';
+		$itemlist = new ItemList();
+		return $itemlist->find($parameters);
 	}
+}

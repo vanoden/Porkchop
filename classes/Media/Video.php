@@ -1,5 +1,5 @@
 <?php
-	namespace Media;
+namespace Media;
 
-	class Video extends Item {
-	}
+class Video extends Item {
+}

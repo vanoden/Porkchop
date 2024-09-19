@@ -2,7 +2,10 @@
 	namespace Product;
 
 	class Schema Extends \Database\BaseSchema {
+
 		public $module = 'product';
+
+		public $error;
 	
 		public function upgrade($max_version = 999) {
 			$this->clearError();
@@ -317,6 +320,57 @@
 				}
 
 				$this->setVersion(8);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			if ($this->version() < 9 && $max_version >= 9) {
+				app_log("Upgrading schema to version 9", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+				// Truncate product_images table
+				$table = new \Database\Schema\Table('product_images');
+				if (!$table->truncate()) {
+					$this->error = $table->error();
+					return false;
+				}
+
+				// Add view_order column
+				$alter_table_query = "
+					ALTER TABLE `product_images`
+					ADD COLUMN `view_order` INT(3) NOT NULL DEFAULT 999
+				";
+				if (!$this->executeSQL($alter_table_query)) {
+					$this->error("SQL Error altering product_images table in " . $this->module . "::Schema::upgrade(): " . $this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				// Drop existing foreign key
+				$drop_fk_query = "
+					ALTER TABLE `product_images`
+					DROP FOREIGN KEY `FK_IMAGE_ID`
+				";
+				if (!$this->executeSQL($drop_fk_query)) {
+					$this->error("SQL Error dropping foreign key in " . $this->module . "::Schema::upgrade(): " . $this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				// Add new foreign key
+				$add_fk_query = "
+					ALTER TABLE `product_images`
+					ADD CONSTRAINT `FK_IMAGE_ID` FOREIGN KEY (`image_id`) REFERENCES `storage_files` (`id`)
+				";
+				if (!$this->executeSQL($add_fk_query)) {
+					$this->error("SQL Error adding new foreign key in " . $this->module . "::Schema::upgrade(): " . $this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(9);
 				$GLOBALS['_database']->CommitTrans();
 			}
 

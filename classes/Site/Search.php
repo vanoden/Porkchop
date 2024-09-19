@@ -6,7 +6,6 @@ class Search {
     private $definitions = array();
 
     public function search($search_string = "", $definitions = array()) {
-
         if (empty($search_string)) return array();
         if (empty($definitions)) $definitions = $this->definitions();
         $results = array();

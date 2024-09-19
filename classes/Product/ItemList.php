@@ -18,6 +18,28 @@
 			return $this->find($parameters);
 		}
 
+		public function getAllProducts() {
+			$query = "
+				SELECT id
+				FROM product_products
+				WHERE status = 'ACTIVE'
+				ORDER BY id
+			";
+
+			$rs = $GLOBALS['_database']->Execute($query);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+
+			$productIds = array();
+			while (list($id) = $rs->FetchRow()) {
+				$productIds[] = $id;
+			}
+
+			return $productIds;
+		}
+
 		public function find($parameters = [],$controls = []) {
 
 			$this->clearError();

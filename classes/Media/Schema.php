@@ -1,20 +1,20 @@
 <?php
-	namespace Media;
+namespace Media;
 
-	class Schema Extends \Database\BaseSchema {
-		public $module = "media";
-	
-		public function upgrade() {
-			$this->error = null;
-			
-			if ($this->version() < 1) {
-				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
+class Schema extends \Database\BaseSchema {
+	public $module = "media";
 
-				# Start Transaction
-				if (!$GLOBALS['_database']->BeginTrans())
-					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+	public function upgrade() {
+		$this->error = null;
 
-				$create_table_query = "
+		if ($this->version() < 1) {
+			app_log("Upgrading schema to version 1", 'notice', __FILE__, __LINE__);
+
+			# Start Transaction
+			if (!$GLOBALS['_database']->BeginTrans())
+				app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+			$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `media_items` (
 						id				int(11) NOT NULL AUTO_INCREMENT,
 						type			enum('raw','audio','video','document','image') NOT NULL default 'raw',
@@ -28,13 +28,13 @@
 						FOREIGN KEY `FK_OWNER_ID` (`owner_id`) REFERENCES register_users (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating media_items table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
+			if (! $this->executeSQL($create_table_query)) {
+				$this->error = "SQL Error creating media_items table in " . $this->module . "::Schema::upgrade(): " . $this->error;
+				app_log($this->error, 'error');
+				return false;
+			}
 
-				$create_table_query = "
+			$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `media_metadata` (
 						`item_id`		int(11) NOT NULL,
 						`label`			varchar(100) NOT NULL,
@@ -44,13 +44,13 @@
 						FOREIGN KEY `FK_ITEM_ID` (`item_id`) REFERENCES `media_items` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating media_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
+			if (! $this->executeSQL($create_table_query)) {
+				$this->error = "SQL Error creating media_metadata table in " . $this->module . "::Schema::upgrade(): " . $this->error;
+				app_log($this->error, 'error');
+				return false;
+			}
 
-				$create_table_query = "
+			$create_table_query = "
 					CREATE TABLE IF NOT EXISTS `media_files` (
 						id				int(11) NOT NULL AUTO_INCREMENT,
 						`item_id`		int(11) NOT NULL,
@@ -69,43 +69,43 @@
 						FOREIGN KEY `FK_MEDIA_OWNER_ID` (`owner_id`) REFERENCES `register_users` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating media_metadata table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-
-				$this->setVersion(1);
-				$GLOBALS['_database']->CommitTrans();
+			if (! $this->executeSQL($create_table_query)) {
+				$this->error = "SQL Error creating media_metadata table in " . $this->module . "::Schema::upgrade(): " . $this->error;
+				app_log($this->error, 'error');
+				return false;
 			}
-			if ($this->version() < 2) {
-				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
-				# Start Transaction
-				if (! $GLOBALS['_database']->BeginTrans())
-					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+			$this->setVersion(1);
+			$GLOBALS['_database']->CommitTrans();
+		}
+		if ($this->version() < 2) {
+			app_log("Upgrading schema to version 2", 'notice', __FILE__, __LINE__);
 
-				$create_table_query = "
+			# Start Transaction
+			if (! $GLOBALS['_database']->BeginTrans())
+				app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+			$create_table_query = "
 					ALTER TABLE `media_files` ADD disposition enum('inline','attachment','form-data','signal','alert','icon','render','notification') default 'inline'
 				";
 
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error altering media_files table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-
-				$this->setVersion(2);
-				$GLOBALS['_database']->CommitTrans();
+			if (! $this->executeSQL($create_table_query)) {
+				$this->error = "SQL Error altering media_files table in " . $this->module . "::Schema::upgrade(): " . $this->error;
+				app_log($this->error, 'error');
+				return false;
 			}
-			if ($this->version() < 3) {
-				app_log("Upgrading schema to version 3",'notice',__FILE__,__LINE__);
 
-				# Start Transaction
-				if (! $GLOBALS['_database']->BeginTrans())
-					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+			$this->setVersion(2);
+			$GLOBALS['_database']->CommitTrans();
+		}
+		if ($this->version() < 3) {
+			app_log("Upgrading schema to version 3", 'notice', __FILE__, __LINE__);
 
-				$create_table_query = "
+			# Start Transaction
+			if (! $GLOBALS['_database']->BeginTrans())
+				app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+			$create_table_query = "
 					CREATE TABLE media_privileges (
 						item_id			int(11),
 						customer_id		int(11),
@@ -115,16 +115,15 @@
 					)
 				";
 
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error altering media_privileges table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
-					return false;
-				}
-
-				$this->setVersion(3);
-				$GLOBALS['_database']->CommitTrans();
+			if (! $this->executeSQL($create_table_query)) {
+				$this->error = "SQL Error altering media_privileges table in " . $this->module . "::Schema::upgrade(): " . $this->error;
+				app_log($this->error, 'error');
+				return false;
 			}
-			return true;
+
+			$this->setVersion(3);
+			$GLOBALS['_database']->CommitTrans();
 		}
+		return true;
 	}
-?>
+}

@@ -1,18 +1,34 @@
 <?php
 	namespace Product;
 
+	/**
+	 * Class Item
+	 * 
+	 * Represents a product item in the system.
+	 * 
+	 * @package Product
+	 */
 	class Item Extends \BaseModel {
 
+		/** @var string The product code */
 		public $code;
+
+		/** @var string The product name */
 		public $name;
+
+		/** @var string The product description */
 		public $description;
+
+		/** @var string The product type */
 		public $type;
+
+		/** @var string The product status */
 		public $status;
 
 		/**
 		 * Constructor
-		 * @param int $id - optional 
-		 * @return void 
+		 * 
+		 * @param int $id Optional product ID
 		 */
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
@@ -22,10 +38,9 @@
 		}
 
 		/**
-		 * Get the root product group.  This is just a placeholder for the top
-		 * level of the product hierarchy.  Returns the id of the default
-		 * product group for adding new products if a parent group isn't provided.
-		 * @return bool 
+		 * Get the root product group
+		 * 
+		 * @return bool True if successful, false otherwise
 		 */
 		public function defaultCategory() {
 			$get_category_query = "
@@ -43,12 +58,11 @@
 		}
 
 		/**
-		 * Special product update function just to change the code of a product.
-		 * The regular update method should not allow this as special privileges
-		 * and auditing are required.
-		 * @param mixed $new_code 
-		 * @param mixed $reason 
-		 * @return bool 
+		 * Change the product code
+		 * 
+		 * @param string $new_code The new product code
+		 * @param string $reason The reason for changing the code
+		 * @return bool True if successful, false otherwise
 		 */
 		public function changeCode($new_code, $reason): bool {
 			$this->clearError();
@@ -95,10 +109,10 @@
 		}
 
 		/**
-		 * Update the product with the provided parameters.  This is the standard
-		 * update method for the product class.
-		 * @param mixed $parameters 
-		 * @return bool 
+		 * Update the product with the provided parameters
+		 * 
+		 * @param array $parameters The parameters to update
+		 * @return bool True if successful, false otherwise
 		 */
 		public function update($parameters = []): bool {
 
@@ -167,9 +181,10 @@
 		}
 
 		/**
-		 * Add a new product with the provided parameters.
-		 * @param mixed $parameters 
-		 * @return bool 
+		 * Add a new product
+		 * 
+		 * @param array $parameters The parameters for the new product
+		 * @return bool|null True if successful, null if failed
 		 */
 		public function add($parameters = []) {
 			app_log("Product::Item::add()",'trace');
@@ -241,10 +256,9 @@
 		}
 
 		/**
-		 * Get all database details for the product.
-		 * Acquire from cache first if available.  Otherwise populate cache for
-		 * next access.
-		 * @return bool - True if product found
+		 * Get all database details for the product
+		 * 
+		 * @return bool True if product found, false otherwise
 		 */
 		public function details(): bool {
 			app_log("Product::Item::details()",'trace');
@@ -320,6 +334,12 @@
 			return true;
 		}
 
+		/**
+		 * Get a product by its code
+		 * 
+		 * @param string $code The product code
+		 * @return bool|null True if found, false if not found, null on error
+		 */
 		public function getByCode($code) {
 			$get_details_query = "
 				SELECT	id
@@ -339,6 +359,12 @@
 				return false;
 		}
 
+		/**
+		 * Check if the product is in a specific category
+		 * 
+		 * @param int $category_id The category ID
+		 * @return int|null 1 if in category, 0 if not, null on error
+		 */
 		public function inCategory($category_id) {
 			app_log("Product::Item::inCategory()",'trace',__FILE__,__LINE__);
 
@@ -367,6 +393,12 @@
 			return $found;
 		}
 
+		/**
+		 * Add the product to a category
+		 * 
+		 * @param int $category_id The category ID
+		 * @return bool True if successful, false otherwise
+		 */
 		public function addToCategory($category_id) {
 			# Get Parent ID
 			$category = new \Product\Item($category_id);
@@ -395,46 +427,63 @@
 			return true;
 		}
 
+		/**
+		 * Get all images associated with the product
+		 * 
+		 * @return array|null Array of Storage\File objects or null on error
+		 */
 		public function images() {
-			# Get Images From Database
-			$get_image_query = "
-				SELECT	image_id
-				FROM	product_images
-				WHERE	product_id = ?
+			$database = new \Database\Service();
+
+			$get_images_query = "
+				SELECT i.image_id, i.view_order, i.label
+				FROM product_images i
+				WHERE i.product_id = ?
+				ORDER BY i.view_order ASC
 			";
 
-			$rs = $GLOBALS['_database']->Execute($get_image_query,array($this->id));
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			$database->AddParam($this->id);
+			$rs = $database->Execute($get_images_query);
+
+			if (!$rs) {
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 
-			# Load MediaItem Class
 			$images = array();
-			while (list($image_id) = $rs->FetchRow()) {
-				$image = new \Media\Item($image_id);
-				if ($image->error()) {
-					$this->error("Could not load Media Item class: ".$image->error());
-					return null;
+			while ($row = $rs->FetchRow()) {
+				$file = new \Storage\File($row['image_id']);
+				if ($file->id) {
+					$file->view_order = $row['view_order'];
+					$file->label = $row['label'];
+					$images[] = $file;
 				}
-				array_push($images,$image);
 			}
+
 			return $images;
 		}
 
+		/**
+		 * Add an image to the product
+		 * 
+		 * @param int $image_id The image ID to add
+		 * @return int 1 if successful, 0 otherwise
+		 */
 		public function addImage($image_id) {
-			# Prepare Query to Tie Product to Category
+
+			// Prepare Query to Tie Product to Category
 			$add_image_query = "
 				INSERT
 				INTO	product_images
 				(		product_id,
-						image_id
+						image_id,
+						label
 				)
 				VALUES
-				(		?,?
-				)
+				(?,?,?)
 			";
-			$GLOBALS['_database']->Execute($add_image_query,array($this->id,$image_id));
+
+			$GLOBALS['_database']->Execute($add_image_query,array($this->id,$image_id,'product image'));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return 0;
@@ -442,6 +491,12 @@
 			return 1;
 		}
 
+		/**
+		 * Remove an image from the product
+		 * 
+		 * @param int $image_id The image ID to remove
+		 * @return int 1 if successful, 0 otherwise
+		 */
 		public function dropImage($image_id) {
 			# Prepare Query to Drop Image from Product
 			$drop_image_query = "
@@ -458,6 +513,12 @@
 			return 1;
 		}
 
+		/**
+		 * Check if the product has a specific image
+		 * 
+		 * @param int $image_id The image ID to check
+		 * @return int|null 1 if has image, 0 if not, null on error
+		 */
 		public function hasImage($image_id) {
 			# Prepare Query to Get Image
 			$get_image_query = "
@@ -476,6 +537,11 @@
 			return $found;
 		}
 
+		/**
+		 * Get all metadata for the product
+		 * 
+		 * @return array|null Array of metadata or null on error
+		 */
 		public function getMeta() {
 			$get_meta_query = "
 				SELECT	`key`,value
@@ -497,6 +563,12 @@
 			return $metadata;
 		}
 
+		/**
+		 * Get a specific metadata value for the product
+		 * 
+		 * @param string $key The metadata key
+		 * @return object|null Metadata object or null if not found
+		 */
 		public function getMetadata($key) {
 			$get_meta_query = "
 				SELECT	value
@@ -523,6 +595,13 @@
             else return null;
 		}
 
+		/**
+		 * Add or update a metadata value for the product
+		 * 
+		 * @param string $key The metadata key
+		 * @param mixed $value The metadata value
+		 * @return int|null 1 if successful, null on error
+		 */
 		public function addMeta($key,$value) {
 			$add_meta_query = "
 				REPLACE
@@ -544,12 +623,22 @@
 			return 1;
 		}
 
+		/**
+		 * Get the metadata object for the product
+		 * 
+		 * @return \Product\Item\Metadata The metadata object
+		 */
 		public function metadata() {
 			$meta = new \Product\Item\Metadata();
 			$meta->fk_id = $this->id;
 			return $meta;
 		}
 
+		/**
+		 * Get the current price of the product
+		 * 
+		 * @return \Product\Price|int|null Price object, 0 if no price, or null on error
+		 */
 		public function currentPrice() {
 			$priceList = new \Product\PriceList();
 			$prices = $priceList->find(array('product_id' => $this->id, 'status' => 'ACTIVE'));
@@ -565,6 +654,11 @@
 			}
 		}
 
+		/**
+		 * Get all prices for the product
+		 * 
+		 * @return array|null Array of prices or null on error
+		 */
 		public function prices() {
 			$priceList = new \Product\PriceList();
 			$prices = $priceList->find(array('product_id' => $this->id));
@@ -576,6 +670,12 @@
 			}
 		}
 
+		/**
+		 * Add a new price for the product
+		 * 
+		 * @param array $parameters The price parameters
+		 * @return \Product\Price|false Price object if successful, false otherwise
+		 */
 		public function addPrice($parameters = array()) {
 			if (! $GLOBALS['_SESSION_']->customer->can('edit product prices')) $this->error("Permission denied");
 			$price = new \Product\Price();
@@ -590,6 +690,12 @@
 			return false;
 		}
 
+		/**
+		 * Get the current price of the product
+		 * 
+		 * @param array $parameters Optional parameters
+		 * @return \Product\Price|null Price object or null on error
+		 */
 		public function getPrice($parameters = array()) {
 			$price = new \Product\Price();
 			if ($price->getCurrent($this->id)) return $price;
@@ -597,16 +703,34 @@
 			return null;
 		}
 
+		/**
+		 * Get the current price amount of the product
+		 * 
+		 * @param array $parameters Optional parameters
+		 * @return float|null Price amount or null on error
+		 */
         public function getPriceAmount($parameters = array()) {
 			$price = new \Product\Price();
 			return $price->getCurrent($this->id);
         }
 
+        /**
+         * Validate a product code
+         * 
+         * @param string $string The code to validate
+         * @return bool True if valid, false otherwise
+         */
         public function validCode($string): bool {
             if (preg_match('/^\w[\w\-\.\_\s]*$/',$string)) return true;
             else return false;
         }
 
+		/**
+		 * Validate a product name
+		 * 
+		 * @param string $string The name to validate
+		 * @return bool True if valid, false otherwise
+		 */
 		public function validName($string): bool {
 			if (preg_match('/^[\w\-\.\_\s\:\!]+$/', $string))
 				return true;
@@ -614,18 +738,51 @@
 				return false;
 		}	
 
+        /**
+         * Validate a product type
+         * 
+         * @param string $string The type to validate
+         * @return bool True if valid, false otherwise
+         */
         public function validType($string): bool {
             if (in_array($string,array('group','kit','inventory','unique','service'))) return true;
             else return false;
         }
 
+        /**
+         * Validate a product status
+         * 
+         * @param string $string The status to validate
+         * @return bool True if valid, false otherwise
+         */
         public function validStatus($string): bool {
             if (in_array($string,array('ACTIVE','HIDDEN','DELETED'))) return true;
             else return false;
         }
 
+		/**
+		 * Check if the product is a multi-zone product
+		 * 
+		 * @return bool True if multi-zone, false otherwise
+		 */
 		public function isMultiZone() {
 			if (preg_match("/(SF|PM|MB)400\-/",$this->code)) return true;
 			else return false;
 		}
+
+        /**
+         * Get the default storage image for the product
+         * 
+         * @return \Storage\File|null The default image file or null if not found
+         */
+        public function getDefaultStorageImage() {
+            $metadata = new \Product\Item\Metadata();
+            $defaultImageId = $metadata->getKeyById($this->id, 'default_image');
+
+            if ($defaultImageId) {
+               $file = new \Storage\File($defaultImageId);
+			   if ($file->id) return $file;
+            }
+            return null;
+        }
 	}
