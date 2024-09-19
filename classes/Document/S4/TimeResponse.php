@@ -33,7 +33,7 @@
 		 */
 		public function build(array &$array): int {
 			// Build the data: 4 Bytes Timestamp
-			$timeArray = $this->timestampToBytes($this->_timestamp);
+			$timeArray = $this->timestampToBytes(time());
 			app_log("Timestamp: ".$this->_timestamp." -> ".ord($timeArray[0]).".".ord($timeArray[1]).".".ord($timeArray[2]).".".ord($timeArray[3]));
 			$array[0] = $timeArray[0];
 			$array[1] = $timeArray[1];
