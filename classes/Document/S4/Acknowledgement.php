@@ -18,14 +18,14 @@
 		 * @param mixed &$string Output variable for buffer
 		 * @return bool True if successful
 		 */
-		public function parse(&$string): bool {
-			if ($string[0] == 1) {
+		public function parse(array $array): bool {
+			if ($array[0] == 1) {
 				$this->_successful = true;
 			}
 			else {
 				$this->_successful = false;
 			}
-			$this->_timestamp = $this->timestampFromBytes(array($string[1], $string[2], $string[3], $string[4]));
+			$this->_timestamp = $this->timestampFromBytes(array($array[1], $array[2], $array[3], $array[4]));
 			return true;
 		}
 
@@ -34,17 +34,15 @@
 		 * @param mixed &$string Output variable for content
 		 * @return int Length of the content
 		 */
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			// Build the data
-			if ($this->_successful) {
-				$string[0] = 1;
+			if ($this->_success) {
+				$array[0] = chr(1);
 			}
 			else {
-				$string[0] = 0;
+				$array[0] = chr(0);
 			}
-			if (empty($this->_timestamp)) $this->_timestamp = time();
-			$string = array_merge($string,$this->timestampToBytes($this->_timestamp));
-			$length = 5;
-			return $length;
+
+			return count($array);
 		}
 	}

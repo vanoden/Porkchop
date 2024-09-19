@@ -1,11 +1,11 @@
 <?php
 namespace Purchase;
 
-class Order {
-	private $_error;
-	public $id;
+class Order extends \BaseModel {
+	public $code;
+	public $date_created;
 
-	public function __construct($id = null) {
+	public function __construct($id = 0) {
 		if (!empty($id)) {
 			$this->id = $id;
 			$this->details();
@@ -82,7 +82,7 @@ class Order {
 		return $this->update($params);
 	}
 
-	public function update($params = array()) {
+	public function update($params = array()): bool {
 		$update_object_query = "
 				UPDATE	purchase_orders
 				SET		id = id";
@@ -104,7 +104,7 @@ class Order {
 			";
 		$rs = $GLOBALS['_database']->Execute($get_object_query, array($code));
 		if (!$rs) {
-			$this->error("SQL Error in Purchase::Order::get(): " . $GLOBALS['_database']->ErrorMsg());
+			$this->SQLError($GLOBALS['_database']->ErrorMsg());
 			return false;
 		}
 		list($result) = $rs->FetchRow();
@@ -127,7 +127,7 @@ class Order {
 		}
 	}
 
-	public function details() {
+	public function details(): bool {
 		$get_object_query = "
 				SELECT	*
 				FROM	purchase_orders
@@ -166,11 +166,5 @@ class Order {
 	public function payments($params) {
 		$paymentList = new \Purchase\Order\PaymentList();
 		return $paymentList->find($params);
-	}
-
-	public function error($error = null) {
-		if (!empty($error))
-			$this->_error = $error;
-		return $this->_error;
 	}
 }

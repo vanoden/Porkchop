@@ -3,7 +3,6 @@
 
 	class FileType extends \BaseModel {
 
-		public $id;
 		public $code;
 		public $type;
 		public $ref_id;

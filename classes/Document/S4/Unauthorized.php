@@ -7,11 +7,11 @@
 			$this->_typeName = "Unauthorized";
 		}
 
-		public function parse(&$string): bool {
+		public function parse(array $array): bool {
 			return true;
 		}
 
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			return 0;
 		}
 	}

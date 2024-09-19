@@ -1,10 +1,12 @@
 <?php
 	namespace Bench;
 
-	class Build {
-
-		private $_error;
-		public $id;
+	class Build extends \BaseModel {
+		public $product_id;
+		public $number;
+		public $timestamp;
+		public $status;
+		public $message;
 
 		public function __construct($id = 0) {
 			if (preg_match('/^\d+$/', $id) && $id > 0) {
@@ -67,7 +69,7 @@
 			return $classname;
 		}	
 
-		public function update($parameters) {
+		public function update($parameters = []): bool {
 			
 			$update_object_query = "
 				UPDATE	bench_builds
@@ -92,9 +94,10 @@
 				'class_name' => get_class($this),
 				'class_method' => 'update'
 			));
+			return $this->details();
 		}
 
-		public function details($parameters) {
+		public function details(): bool  {
 			$get_details_query = "
 				SELECT	*
 				FROM	bench_builds
@@ -102,31 +105,31 @@
 			";
 
 			$rs = $GLOBALS['_database']->Execute(
-				$get_details_query,array($id)
+				$get_details_query,array($this->id)
 			);
 
 			if (! $rs) {
-				$this->_error = "SQL Error in Bench::Build::details(): ".$GLOBALS['_database']->ErrorMsg();
-				return 0;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
 			}
 
 			if ($object = $rs->FetchNextObject(false)) {
 				$this->id = $object->id;
-				$this->product = new \Bench\Product($this->product_id);
+				$this->product_id = $object->product_id;
 				$this->number = $object->number;
 				$this->timestamp = $object->timestamp;
 				$this->status = $object->status;
 				$this->message = $object->message;
 			}
 			else {
-				$this->id = undef;
+				$this->id = 0;
 			}
 			return 1;
 		}
 
 		public function callAPI($request) {
 			$result = shell_exec($GLOBALS['_config']->service.' --uri="'.$request."'");
-			$response = \HTTP\Response();
+			$response = new \HTTP\Response();
 			$response->parse($result);
 			return $response;
 		}

@@ -1,11 +1,10 @@
 <?php
 	namespace Build;
 
-	class Repository {
-		public $id;
-		private $_error;
+	class Repository extends \BaseModel {
+		public $url;
 
-		public function __construct($id = null) {
+		public function __construct($id = 0) {
 			if (isset($id) && is_numeric($id)) {
 				$this->id = $id;
 				$this->details();
@@ -27,7 +26,7 @@
 			";
 			$GLOBALS['_database']->Execute($add_object_query,array($parameters['url']));
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->_error = "SQL Error in Build::Repository::add(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			$this->id = $GLOBALS['_database']->Insert_ID();
@@ -54,10 +53,6 @@
 			if (preg_match('/(\w[\w\_]*)$/',$class,$matches)) $classname = $matches[1];
 			else $classname = "Object";
 			return $classname;
-		}	
-
-		public function update($parameters = array()) {
-			return $this->details();
 		}
 
 		public function get($url) {
@@ -69,7 +64,7 @@
 
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($url));
 			if (! $rs) {
-				$this->_error = "SQL Error in Build::Repository::get(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
 			list($this->id) = $rs->FetchRow();
@@ -79,7 +74,7 @@
 			}
 			return false;
 		}
-		public function details() {
+		public function details(): bool {
 			$get_object_query = "
 				SELECT	*
 				FROM	build_repositories
@@ -100,9 +95,5 @@
 				$this->id = null;
 				return false;
 			}
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

@@ -11,7 +11,7 @@
 	/**
 	 * Base class for Document::S4 Messages
 	 */
-	class Message Extends \BaseClass {
+	abstract class Message Extends \BaseClass {
 		protected int $_typeId = 0;							// ID of the message type
 		protected ?int $_timestamp = null;						// Time of delivery
 		protected int $_assetId = 0;						// Asset ID to assocated message/reading with
@@ -21,10 +21,24 @@
 		protected string $_typeName = "";					// Type of message in Readable Format
 		protected $_serialNumber = "";
 		protected $_modelNumber = "";
+		protected $_success = false;
+
+		/**
+		 * Definition for parse method
+		 * @param array $array
+		 */
+		abstract public function parse(array $array): bool;
+
+		/**
+		 * Definition for build method
+		 * @param array &$array
+		 * @return int Number of bytes written
+		 */
+		abstract public function build(array &$array): int;
 
 		/**
 		 * Get/Set Asset ID
-		 * @param mixed $value
+		 * @param mixed $value|null
 		 * @return int id
 		 */
 		public function assetId(int $value = null): ?int {
@@ -36,7 +50,7 @@
 
 		/**
 		 * Get/Set Sensor ID
-		 * @param mixed $value
+		 * @param mixed $value|null
 		 * @return int id
 		 */
 		public function sensorId($value = null): ?int {
@@ -46,6 +60,11 @@
 			return $this->_sensorId;
 		}
 
+		/**
+		 * Get/Set the content of this message
+		 * @param string $string|null
+		 * @return string
+		 */
 		public function content($string = null): string {
 			if (isset($string)) {
 				$this->_value = $string;
@@ -53,6 +72,11 @@
 			return $this->_value;
 		}
 
+		/**
+		 * Get the value type of this message
+		 * @param int $typeId|null
+		 * @return ValueType
+		 */
 		public function valueType(int $typeId = null): ValueType {
 			if ($typeId !== null) {
 				switch($typeId) {
@@ -72,6 +96,10 @@
 			return $this->_valueType;
 		}
 
+		/**
+		 * Get the character representation of the value type
+		 * @return string
+		 */
 		public function valueTypeChar(): string {
 			switch ($this->_valueType) {
 				case ValueType::Float:
@@ -95,14 +123,22 @@
 		}
 
 		/**
-		 * Set the Serial Number
-		*/
+		 * Get/Set the Serial Number
+		 * @param string $value|null
+		 * @return string
+		 */
 		public function serialNumber($value = null) {
 			if ($value !== null) {
 				$this->_serialNumber = $value;
 			}
 			return $this->_serialNumber;
 		}
+
+		/**
+		 * Get/Set the Model Number
+		 * @param mixed $value|null
+		 * @return string
+		*/
 		public function modelNumber($value = null) {
 			if ($value !== null) {
 				$this->_modelNumber = $value;
@@ -138,6 +174,19 @@
 		}
 
 		/**
+		 * Get/Set the success status of this message
+		 * @param bool $value|null
+		 * @return bool
+		 */
+		public function success(bool $value = null): bool {
+			if (!is_null($value)) {
+				app_log("Setting success to $value",'info');
+				$this->_success = $value;
+			}
+			return $this->_success;
+		}
+
+		/**
 		 * Print the individual characters of a string for diagnostics
 		 * @param mixed $string
 		 */
@@ -153,12 +202,15 @@
 		 * @return float Value
 		 */
 		protected function floatFromBytes($charArray,$controlChar = 0): float {
-			$value = ord($charArray[0]) * (256 * 256 * 256) + ord($charArray[1]) * (256 * 256) + ord($charArray[2]) * 256 + ord($charArray[3]);
+			$sigFigs = 7;
+			$value = (ord($charArray[0]) * (256 * 256 * 256)) + (ord($charArray[1]) * (256 * 256)) + (ord($charArray[2]) * 256) + ord($charArray[3]);
+			$mult = pow(10,$controlChar - $sigFigs);
 			if ($controlChar > 128) {
 				$controlChar -= 128;
 				$value = -1 * $value;
 			}
-			$value /= pow(10, $controlChar);
+			$value -= 2147483648;
+			$value *= $mult;
 			return $value;
 		}
 
@@ -241,9 +293,9 @@
 		 */
 		protected function timestampToBytes(int $timestamp): array {
 			app_log("Timestamp: $timestamp");
-			$array[0] = chr($timestamp / (256 * 256 * 256));
-			$array[1] = chr($timestamp / (256 * 256));
-			$array[2] = chr($timestamp / 256);
+			$array[0] = chr(floor($timestamp / (256 * 256 * 256)));
+			$array[1] = chr(floor($timestamp / (256 * 256)));
+			$array[2] = chr(floor($timestamp / 256));
 			$array[3] = chr($timestamp % 256);
 			//$gotback = $this->timestampFromBytes($array);
 			//app_log("Got Back Timestamp: $timestamp -> ".ord($array[0]).".".ord($array[1]).".".ord($array[2]).".".ord($array[3])." -> $gotback");

@@ -7,11 +7,11 @@
 			$this->_typeName = "Bad Request Response";
 		}
 
-		public function parse(&$string): bool {
+		public function parse(array $array = null): bool {
 			return true;
 		}
 
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			return 0;
 		}
 	}

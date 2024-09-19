@@ -2,7 +2,7 @@
 	namespace Register;
 
 	class OrganizationAuditEvent extends \BaseModel {
-		public $id;
+
 		public $organization_id;
 		public $admin_id;
 		public $event_date;

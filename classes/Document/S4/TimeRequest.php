@@ -5,10 +5,10 @@
 	 * Response to a Authentication Request
 	 * @package Document\S4
 	 */
-	class AuthResponse Extends \Document\S4\Message {
+	class TimeRequest Extends \Document\S4\Message {
 		public function __construct() {
-			$this->_typeId = 14;
-			$this->_typeName = "Auth Response";
+			$this->_typeId = 11;
+			$this->_typeName = "Time Request";
 		}
 
 		/**
@@ -17,12 +17,6 @@
 		 * @return bool True if successful
 		 */
 		public function parse(array $array = null): bool {
-			if ($array[0] == 1) {
-				$this->_success = true;
-			}
-			else {
-				$this->_success = false;
-			}
 			return true;
 		}
 
@@ -32,13 +26,6 @@
 		 * @return int Length of the content
 		 */
 		public function build(array &$array): int {
-			// Build the data
-			if ($this->_success) {
-				$array[0] = chr(1);
-			}
-			else {
-				$array[0] = chr(0);
-			}
-			return count($array);
+			return 0;
 		}
 	}

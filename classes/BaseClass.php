@@ -30,6 +30,20 @@
 			return $this->_error;
 		}
 
+		/****************************************/
+		/* Recognize Special Error Types 		*/
+		/****************************************/
+		public function errorType() {
+			if (empty($this->_error)) return null;
+			if (preg_match('/MySQL server has gone away/',$this->_error)) return 'MySQL Unavailable';
+			if (preg_match('/Lost connection to MySQL server/',$this->_error)) return 'MySQL Unavailable';
+			if (preg_match('/No database selected/',$this->_error)) return 'MySQL Unavailable';
+			if (preg_match('/Table \'(\w+)\' doesn\'t exist/',$this->_error,$matches)) return 'MySQL Query Errord';
+			if (preg_match('/Unknown column \'(\w+)\' in \'(\w+)\'/',$this->_error,$matches)) return 'MySQL Query Error';
+			if (preg_match('/Duplicate entry \'(\w+)\' for key \'(\w+)\'/',$this->_error,$matches)) return 'MySQL Query Error';
+			return 'Common';
+		}
+
 		public function warn($value = null, $caller = null) {
 			if (isset($value)) {
 				if (!isset($caller)) {

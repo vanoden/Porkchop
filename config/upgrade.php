@@ -100,7 +100,10 @@
 				"items"		=> $templates['admin'],
 				"item"		=> $templates['admin']
 			)
-        )
+		),
+		"S4Engine"		=> array(
+			"schema"	=> 1
+		),
 	);
 
 	include(MODULES."/product/default/_metadata.php");

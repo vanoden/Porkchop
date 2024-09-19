@@ -2,8 +2,6 @@
 namespace Register;
 
 class Person Extends \BaseModel {
-
-    public $id;
     public $title;
     public $first_name;
     public $middle_name;    

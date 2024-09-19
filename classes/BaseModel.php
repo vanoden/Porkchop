@@ -2,7 +2,7 @@
 	class BaseModel Extends \BaseClass {
 	
 		// Primary Key
-		public $id = 0;
+		public int $id = 0;
 
 		// Was data found in db or cache
 		protected $_exists = false;
@@ -46,7 +46,9 @@
 			if ($name == 'get' && count($parameters) == 2) $this->error("Too many parameters for 'get'");
 			elseif ($name == 'get')  return $this->_getObject($parameters[0]);
 			else {
-				app_log("No function '$name' found",'warning');
+				$caller = debug_backtrace()[1];
+				$className = get_called_class();
+				app_log("$className: No function '$name' found.  Called by ".$caller["class"]."::".$caller["function"]."() Line ".$caller["line"],'warning');
 				$this->error("Invalid method '$name'"); // for ".$this->objectName());
 			}
 		}
@@ -138,7 +140,15 @@
 			return $this->details();
 
 		}
-		
+
+		/**
+		 * Get ID of Object
+		 * @return int
+		 */
+		public function id() {
+			return $this->id;
+		}
+
 		/**
 		 * add by params
 		 * 

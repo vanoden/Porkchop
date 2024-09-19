@@ -2,7 +2,6 @@
 	namespace Form;
 
 	class Question Extends \BaseModel {
-		public $id;
 		public $form_id;
 		public $type;
 		public $text;
@@ -10,7 +9,7 @@
 		public $prompt;
 		public $required;
 
-		public function __construct($id = null) {
+		public function __construct($id = 0) {
 			$this->_tableName = 'form_questions';
 			$this->_cacheKeyPrefix = $this->_tableName;
 

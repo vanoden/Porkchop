@@ -18,7 +18,11 @@
 			return $this->_handle->FetchNextObject($option_1);
 		}
 
-		public function Rows() {
+		/**
+		 * Get the number of rows in the result set
+		 * @return int 
+		 */
+		public function Rows(): int {
 			if (!isset($this->_handle)) return 0;
 			return $this->_handle->numRows();
 		}

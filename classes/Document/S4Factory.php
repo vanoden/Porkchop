@@ -47,6 +47,9 @@
 			elseif ($type == "AuthRequest") {
 				return new \Document\S4\AuthRequest();
 			}
+			elseif ($type == "TimeResponse") {
+				return new \Document\S4\TimeResponse();
+			}
 			else {
 				$this->error("Invalid message type");
 				return null;
@@ -77,8 +80,14 @@
 			elseif ($typeId == 7) {
 				return new \Document\S4\Acknowledgement();
 			}
-			else if ($typeId == 10) {
+			elseif ($typeId == 10) {
 				return new \Document\S4\BadRequestResponse();
+			}
+			elseif ($typeId == 11) {
+				return new \Document\S4\TimeRequest();
+			}
+			elseif ($typeId == 12) {
+				return new \Document\S4\TimeResponse();
 			}
 			elseif ($typeId == 13) {
 				return new \Document\S4\AuthRequest();

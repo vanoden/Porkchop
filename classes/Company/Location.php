@@ -3,7 +3,6 @@
 
 	class Location Extends \BaseModel {
 		private $schema_version = 1;
-		public $id;
 		public $company_id;
 		public $code;
 		public $address_1;
@@ -15,7 +14,7 @@
 		public $content;
 		public $order_number_sequence;
 		public $active;
-		public $name;
+		public $name = "";
 		public $service_contact;
 		public $sales_contact;
 		public $domain_id;
@@ -26,40 +25,73 @@
     		parent::__construct($id);
 		}
 
-		public function getByHost($hostname) {
+		/**
+		 * Get the location by the host name WRAPPER
+		 * @param string $hostname
+		 * @return bool
+		 */
+		public function getByHost(string $hostname): bool {
+			return $this->get($hostname);
+		}
 
+		/**
+		 * Get the location by the host name
+		 * @param string $hostname
+		 * @return bool
+		 */
+		public function get(string $hostname): bool {
+			$this->clearError();
+
+			// Connect to Database
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_object_query = "
 				SELECT	id
 				FROM	company_locations
 				WHERE	host = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($hostname)
-			);
+
+			// Bind Parameters
+			$database->AddParam($hostname);
+
+			// Execute Query
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
 			list($id) = $rs->FetchRow();
+			if (empty($id)) $id = 0;
 			$this->id = $id;
-			$this->details();
+			return $this->details();
 		}
 
+		/**
+		 * Get the location details
+		 * @return bool
+		 */
 		public function details(): bool {
+			$this->clearError();
 
+			// Connect to Database
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_details_query = "
 				SELECT	*
 				FROM	company_locations
 				WHERE	id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_details_query,
-				array($this->id)
-			);
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+
+			// Execute Query
+			$rs = $database->Execute($get_details_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
 
 			$object = $rs->FetchNextObject(false);
@@ -85,7 +117,7 @@
 				$this->exists(true);
 			}
 			else {
-				$this->id = null;
+				$this->id = 0;
 				$this->company_id = null;
 				$this->code = null;
 				$this->address_1 = null;
@@ -203,6 +235,10 @@
 			return $this->details();
 		}
 
+		public function name(): string {
+			if (!isset($this->name)) $this->name = "";
+			return $this->name;
+		}
 		public function domain() {
 			return new \Company\Domain($this->domain_id);
 		}

@@ -1,9 +1,12 @@
 <?php
 namespace Build;
 
-class Commit {
-	public $id;
-	private $_error;
+class Commit extends \BaseModel {
+	
+	public $repository_id;
+	public $hash;
+	public $timestamp;
+	public $author_id;
 
 	public function __construct($id = null) {
 		if (isset($id) && is_numeric($id)) {
@@ -36,7 +39,7 @@ class Commit {
 			";
 		$GLOBALS['_database']->Execute($add_object_query, array($repository->id, $parameters['number']));
 		if ($GLOBALS['_database']->ErrorMsg()) {
-			$this->_error = "SQL Error in Build::Commit::add(): " . $GLOBALS['_database']->ErrorMsg();
+			$this->SQLError($GLOBALS['_database']->ErrorMsg());
 			return false;
 		}
 		$this->id = $GLOBALS['_database']->Insert_ID();
@@ -65,7 +68,7 @@ class Commit {
 		return $classname;
 	}	
 
-	public function update($parameters = array()) {
+	public function update($parameters = array()): bool {
 		$update_object_query = "
 				UPDATE	build_commits
 				SET		id = id";
@@ -96,7 +99,7 @@ class Commit {
 
 		$GLOBALS['_database']->Execute($update_object_query, $bind_params);
 		if ($GLOBALS['_database']->ErrorMsg()) {
-			$this->_error = "SQL Error in Build::Commit::update(): " . $GLOBALS['_database']->ErrorMsg();
+			$this->SQLError($GLOBALS['_database']->ErrorMsg());
 			return false;
 		}
 
@@ -113,7 +116,7 @@ class Commit {
 	}
 
 	public function get($repo_id, $hash) {
-		$repository = new Repo($repo_id);
+		$repository = new \Storage\Repository($repo_id);
 		if (!$repository->id) {
 			$this->_error = "Repository not found";
 			return false;
@@ -128,7 +131,7 @@ class Commit {
 
 		$rs = $GLOBALS['_database']->Execute($get_object_query, array($repository->id, $hash));
 		if (!$rs) {
-			$this->_error = "SQL Error in Build::Commit::get(): " . $GLOBALS['_database']->ErrorMsg();
+			$this->SQLError($GLOBALS['_database']->ErrorMsg());
 			return false;
 		}
 		list($this->id) = $rs->FetchRow();
@@ -138,7 +141,7 @@ class Commit {
 		}
 		return false;
 	}
-	public function details() {
+	public function details(): bool {
 		$get_object_query = "
 				SELECT	*
 				FROM	build_commits
@@ -161,9 +164,5 @@ class Commit {
 			$this->id = null;
 			return false;
 		}
-	}
-
-	public function error() {
-		return $this->_error;
 	}
 }

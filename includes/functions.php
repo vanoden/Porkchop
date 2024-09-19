@@ -58,17 +58,24 @@
 
 		# Handle OffSets
 		if (preg_match('/(\+|\-)\s*(\d+)\s*(hour|day|week)s?/i',$date,$matches)) {
-			$offset = $matches[1];
-			$unit = $matches[2];
-			error_log("Offset: $offset Unit: $unit");
+			$operator = $matches[1];
+			$offset = $matches[2];
+			$unit = $matches[3];
 			if (strtolower($unit) == 'hour')
 				$adjust = 3600 * $offset;
 			elseif (strtolower($unit) == 'day')
 				$adjust = 86400 * $offset;
 			elseif (strtolower($unit) == 'week')
 				$adjust = 604800 * $offset;
-			$newdate = date("Y-m-d h:i:s",time() + $adjust);
-			app_log("get_mysql_date received $date, returns $newdate",'debug');
+			else
+				$adjust = 0;
+			if ($operator == "+") $newdate = date("Y-m-d h:i:s",time() + $adjust);
+			elseif ($operator == "-") $newdate = date("Y-m-d h:i:s",time() - $adjust);
+			else {
+				app_log("Invalid operator '$operator'",'error');
+				return null;
+			}
+			app_log("get_mysql_date received $date, returns $newdate",'trace');
 			return $newdate;
 		}
 

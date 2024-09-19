@@ -6,7 +6,6 @@
 
 	class Metadata Extends \BaseMetadataClass {
 
-        public $id;
 		public $template;
 		public $page_id;
 		public $key;
@@ -49,7 +48,7 @@
                     ?
                 )
             ";
-            $database->NewQuery($add_query);
+
             $database->AddParam($parameters['page_id']);
             $database->AddParam($parameters['key']);
             $database->AddParam($parameters['value']);
@@ -111,7 +110,7 @@
 
             $rs = $GLOBALS['_database']->Execute($get_object_query,array($page_id,$key));
             if (! $rs) {
-                $this->error = $GLOBALS['_database']->ErrorMsg();
+                $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return null;
             }
             list($id) = $rs->FetchRow();

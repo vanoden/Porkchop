@@ -5,10 +5,10 @@
 	 * Response to a Authentication Request
 	 * @package Document\S4
 	 */
-	class AuthResponse Extends \Document\S4\Message {
+	class TimeResponse Extends \Document\S4\Message {
 		public function __construct() {
-			$this->_typeId = 14;
-			$this->_typeName = "Auth Response";
+			$this->_typeId = 12;
+			$this->_typeName = "Time Response";
 		}
 
 		/**
@@ -32,13 +32,13 @@
 		 * @return int Length of the content
 		 */
 		public function build(array &$array): int {
-			// Build the data
-			if ($this->_success) {
-				$array[0] = chr(1);
-			}
-			else {
-				$array[0] = chr(0);
-			}
+			// Build the data: 4 Bytes Timestamp
+			$timeArray = $this->timestampToBytes(time());
+			app_log("Timestamp: ".$this->_timestamp." -> ".ord($timeArray[0]).".".ord($timeArray[1]).".".ord($timeArray[2]).".".ord($timeArray[3]));
+			$array[0] = $timeArray[0];
+			$array[1] = $timeArray[1];
+			$array[2] = $timeArray[2];
+			$array[3] = $timeArray[3];
 			return count($array);
 		}
 	}

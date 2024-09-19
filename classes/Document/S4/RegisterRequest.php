@@ -13,13 +13,13 @@
 			$this->_typeName = "Register Request";
 		}
 
-		public function parse($array): bool {
+		public function parse(array $array): bool {
 			// Parse the Data
-			print "Parse It: ";
+			$chars = "RegisterRequest::parse(): ";
 			$stage = 0;  // 0 = serial number, 1 = model number
 			for ($i = 0; $i < count($array); $i ++) {
-				print "[".ord($array[$i])."]";
-				if (ord($array[$i]) == 0 && $stage == 1) {
+				$chars .= "[".ord($array[$i])."]";
+				if (ord($array[$i]) == 0 && $stage == 0) {
 					$stage = 1;
 				}
 				elseif ($stage == 1) {
@@ -29,19 +29,29 @@
 					$this->_modelNumber .= $array[$i];
 				}
 			}
+			app_log($chars,'info');
 			return true;
 		}
 
-		public function build(&$string): int {
-			// Build the data
+		public function build(array &$array): int {
+			// Build the data - There has got to be a better way!  But this works...
 			$string = "";
-			print_r($this->_serialNumber);
-			print("\n");
-			print_r($this->_modelNumber);
-			print("\n");
-			$string = pack("C*",$this->_serialNumber);
+			$len = strlen($this->_serialNumber);
+			$pack = "C".$len;
+			$char = [];
+			for ($i = 0; $i < $len; $i ++) {
+				$char[$i] = ord(substr($this->_serialNumber,$i,1));
+			}
+			$string = pack($pack, ...$char);
 			$string .= pack("C",0);
-			$string .= pack("C*",$this->_modelNumber);
-			return strlen($string);
+			$len = strlen($this->_modelNumber);
+			$pack = "C".$len;
+			$char = [];
+			for ($i = 0; $i < $len; $i ++) {
+				$char[$i] = ord(substr($this->_modelNumber,$i,1));
+			}
+			$string .= pack($pack, ...$char);
+			$array = str_split($string);
+			return count($array);
 		}
 	}

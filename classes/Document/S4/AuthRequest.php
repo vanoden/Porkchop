@@ -12,17 +12,36 @@
 			$this->_login = "";
 		}
 
-		public function parse($string): bool {
+		public function parse(array $array): bool {
 			// Parse the Data
-			$this->_login = $string[0].$string[1].$string[2].$string[3].$string[4].$string[5].$string[6].$string[7].$string[8].$string[9].$string[10].$string[11].$string[12].$string[13].$string[14].$string[15];
-			$this->_password = $string[16].$string[17].$string[18].$string[19].$string[20].$string[21].$string[22].$string[23].$string[24].$string[25].$string[26].$string[27].$string[28].$string[29].$string[30].$string[31];
+			$this->_login = "";
+			$this->_password = "";
+			$pos = 0;
+			app_log("Parsing ".count($array)." bytes of data",'info');
+
+			while ($pos < count($array)) {
+				if (ord($array[$pos]) == 0) {
+					$pos ++;
+					break;
+				}
+				else {
+					$this->_login .= chr(ord($array[$pos])+48);
+				}
+				$pos ++;
+			}
+			while ($pos < count($array)) {
+				$this->_password .= chr(ord($array[$pos])+48);
+				$pos ++;
+			}
+			app_log("AuthRequest::parse() - Login: ".$this->_login.", Password: ".$this->_password,'info');
 			return true;
 		}
 
-		public function build(&$string): int {
+		public function build(array &$array): int {
 			// Build the data
 			$string = $this->padString($this->_login,16).$this->padString($this->_password,16);
-			return strlen($string);
+			$array = str_split($string);
+			return count($array);
 		}
 
 		public function login(string $login = null): string {

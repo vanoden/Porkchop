@@ -2,8 +2,6 @@
 	namespace Product;
 
 	class Instance extends \BaseModel {
-	
-		public $id;
 		public $code;
 		public $name;
 		public $product_id;

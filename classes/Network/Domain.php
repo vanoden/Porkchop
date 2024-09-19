@@ -1,9 +1,7 @@
 <?php
 	namespace Network;
 
-	class Domain {
-		private $_error;
-		public $id;
+	class Domain extends \BaseModel {
 		public $name;
 
 		public function __construct($id = 0) {
@@ -81,7 +79,7 @@
 			return $this->details();
 		}
 
-		public function update($parameters = array()) {
+		public function update($parameters = array()): bool {
 			$bind_params = array();
 
 			$update_object_query = "
@@ -119,7 +117,7 @@
 			return $this->details();
 		}
 
-		public function details() {
+		public function details(): bool {
 
 			$get_object_query = "
 				SELECT	 *
@@ -152,9 +150,5 @@
 			}
 
 			return $hosts;
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}
