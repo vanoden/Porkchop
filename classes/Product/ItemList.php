@@ -18,15 +18,18 @@
 			return $this->find($parameters);
 		}
 
-		public function getAllProducts() {
+		public function getAllProducts($type = 'unique') {
 			$query = "
 				SELECT id
 				FROM product_products
 				WHERE status = 'ACTIVE'
-				ORDER BY id
 			";
+			if ($type !== null) $query .= " AND type = ?";
+			$query .= " ORDER BY id";
+			$bind_params = $type !== null ? [$type] : [];
 
-			$rs = $GLOBALS['_database']->Execute($query);
+			query_log($query, $bind_params);
+			$rs = $GLOBALS['_database']->Execute($query, $bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
