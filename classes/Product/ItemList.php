@@ -18,6 +18,31 @@
 			return $this->find($parameters);
 		}
 
+		public function getAllProducts($type = 'unique') {
+			$query = "
+				SELECT id
+				FROM product_products
+				WHERE status = 'ACTIVE'
+			";
+			if ($type !== null) $query .= " AND type = ?";
+			$query .= " ORDER BY id";
+			$bind_params = $type !== null ? [$type] : [];
+
+			query_log($query, $bind_params);
+			$rs = $GLOBALS['_database']->Execute($query, $bind_params);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+
+			$productIds = array();
+			while (list($id) = $rs->FetchRow()) {
+				$productIds[] = $id;
+			}
+
+			return $productIds;
+		}
+
 		public function find($parameters = [],$controls = []) {
 
 			$this->clearError();

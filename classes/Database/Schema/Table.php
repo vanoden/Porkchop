@@ -122,6 +122,17 @@
 			return true;
 		}
 
+		public function truncate() {
+			$truncate_table_query = "
+				TRUNCATE TABLE `".$this->name."`";
+			$GLOBALS['_database']->Execute($truncate_table_query);
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			return true;
+		}		
+
 		public function constraints() {
 			$get_constraints_query = "
 				SELECT	*

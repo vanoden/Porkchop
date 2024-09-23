@@ -174,7 +174,7 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			
+
 			// get recent added row id to return update() and details()
 			$this->id = $database->Insert_ID();
 

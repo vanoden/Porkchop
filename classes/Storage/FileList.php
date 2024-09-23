@@ -2,6 +2,7 @@
 	namespace Storage;
 
 	class FileList Extends \BaseListClass {
+		
 		public function _construct() {
             $this->_modelName = '\Storage\File';
 		}
