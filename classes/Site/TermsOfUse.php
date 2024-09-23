@@ -22,7 +22,7 @@
 			";
 			$rs = $GLOBALS['_database']->Execute($get_object_query,array($code));
 			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->error($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -157,15 +157,6 @@
 		}
 
 		public function latestVersion(): TermsOfUseVersion {
-		
-			// See if Latest Version is in Cache
-			$cache = new \Cache\Item($GLOBALS['_CACHE_'], "latest_tou[".$this->id."]");
-			if ($cache->exists()) {
-				app_log("TOU Cache Returned");
-				$object = $cache->get();
-				if ($object) return $object;
-			}
-
 			// Find the Latest Version by looping through all PUBLISHED version and finding the one with the latest date
 			app_log("Finding latest version of TOU");
 			$versionList = new TermsOfUseVersionList();
@@ -188,7 +179,6 @@
 			$version = new TermsOfUseVersion($latest_id);
 			if (! $version) return new TermsOfUseVersion();
 			else {
-				$cache->set($version);
 				return $version;
 			}
 		}
