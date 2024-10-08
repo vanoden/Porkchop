@@ -337,15 +337,17 @@
 					return false;
 				}
 
-				// Add view_order column
-				$alter_table_query = "
-					ALTER TABLE `product_images`
-					ADD COLUMN `view_order` INT(3) NOT NULL DEFAULT 999
-				";
-				if (!$this->executeSQL($alter_table_query)) {
-					$this->error("SQL Error altering product_images table in " . $this->module . "::Schema::upgrade(): " . $this->error());
-					app_log($this->error(), 'error');
-					return false;
+				if (! $table->has_column("view_order")) {
+					// Add view_order column
+					$alter_table_query = "
+						ALTER TABLE `product_images`
+						ADD COLUMN `view_order` INT(3) NOT NULL DEFAULT 999
+					";
+					if (!$this->executeSQL($alter_table_query)) {
+						$this->error("SQL Error altering product_images table in " . $this->module . "::Schema::upgrade(): " . $this->error());
+						app_log($this->error(), 'error');
+						return false;
+					}
 				}
 
 				// Drop existing foreign key
