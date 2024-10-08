@@ -350,15 +350,17 @@
 					}
 				}
 
-				// Drop existing foreign key
-				$drop_fk_query = "
-					ALTER TABLE `product_images`
-					DROP FOREIGN KEY `FK_IMAGE_ID`
-				";
-				if (!$this->executeSQL($drop_fk_query)) {
-					$this->error("SQL Error dropping foreign key in " . $this->module . "::Schema::upgrade(): " . $this->error());
-					app_log($this->error(), 'error');
-					return false;
+				if ($table->has_constraint("FK_IMAGE_ID")) {
+					// Drop existing foreign key
+					$drop_fk_query = "
+						ALTER TABLE `product_images`
+						DROP FOREIGN KEY `FK_IMAGE_ID`
+					";
+					if (!$this->executeSQL($drop_fk_query)) {
+						$this->error("SQL Error dropping foreign key in " . $this->module . "::Schema::upgrade(): " . $this->error());
+						app_log($this->error(), 'error');
+						return false;
+					}
 				}
 
 				// Add new foreign key
