@@ -256,8 +256,12 @@
 	$dashboards = $dashboardlist->find();
 	$prices = $item->prices();
     $priceAudit = new \Product\PriceAuditList();
-    $auditedPrices = $priceAudit->find(array('product_id'=>$item->id));    
+    $auditedPrices = $priceAudit->find(array('product_id'=>$item->id));
 	$images = $item->images();
 
 	$page->addBreadcrumb("Products", "/_product/report");
 	if (isset($item->id)) $page->addBreadcrumb($item->code,"/_product/edit/".$item->code);
+
+	// get unique categories and tags for autocomplete
+	$searchTagList = new \Site\SearchTagList();
+	$uniqueTagsData = $searchTagList->getUniqueCategoriesAndTagsJson();

@@ -428,3 +428,7 @@ $locations = $customer->locations();
 // get customer queued status
 $queuedCustomer = new \Register\Queue(); 
 $queuedCustomer->getByQueuedLogin($customer->id);
+
+// get unique categories and tags for autocomplete
+$searchTagList = new \Site\SearchTagList();
+$uniqueTagsData = $searchTagList->getUniqueCategoriesAndTagsJson();
