@@ -294,7 +294,11 @@
 			}
 			else {
 				// Clear all attributes
-				foreach ($this as $key => $value) $this->$key = null;
+				foreach ($this as $key => $value) {
+					// Cannot nullify ID
+					if ($key == 'id') $this->$key = 0;
+					else $this->$key = null;
+				}
 				$this->exists(false);
 				$this->cached(false);
 			}
