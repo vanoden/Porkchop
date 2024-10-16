@@ -19,6 +19,15 @@
 	}
 </script>
 
+<!-- Autocomplete CSS and JS -->
+<link href="/css/autocomplete.css" type="text/css" rel="stylesheet">
+<script language="JavaScript" src="/js/autocomplete.js"></script>
+<script language="JavaScript">
+	// define existing categories and tags for autocomplete
+	var existingCategories = <?= $uniqueTagsData['categoriesJson'] ?>;
+	var existingTags = <?= $uniqueTagsData['tagsJson'] ?>;
+</script>
+
 <!-- Page Header -->
 <?= $page->showAdminPageInfo() ?>
 <!-- End Page Header -->
@@ -71,10 +80,18 @@
 			?>
 			<br/>
 			<div class="tableRow">
-				<div class="tableCell"><label>Category:</label><input type="text" class="" name="newSearchTagCategory" value="" placeholder="Content" /></div>
-				<div class="tableCell"><label>New Search Tag:</label><input type="text" class="" name="newSearchTag" value="" placeholder="About us" /></div>
-			</div>
-			<div><input type="submit" name="addSearchTag" value="Add Search Tag" class="button" /></div>
+					<div class="tableCell">
+						<label>Category:</label>
+						<input type="text" class="autocomplete" name="newSearchTagCategory" id="newSearchTagCategory" value="" placeholder="content" />
+						<ul id="categoryAutocomplete" class="autocomplete-list"></ul>
+					</div>
+					<div class="tableCell">
+						<label>New Search Tag:</label>
+						<input type="text" class="autocomplete" name="newSearchTag" id="newSearchTag" value="" placeholder="about us" />
+						<ul id="tagAutocomplete" class="autocomplete-list"></ul>
+					</div>
+				</div>
+				<div><input type="submit" name="addSearchTag" value="Add Search Tag" class="button" /></div>
 		</div>
 
 		<div class="editSubmit button-bar floating">
