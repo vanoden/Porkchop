@@ -6,9 +6,9 @@
 		public $description;
 
 		public function __construct(int $id = null) {
-			$this->_database = new \Database\Service();		
 			$this->_tableName = "register_roles";
 			$this->_tableUKColumn = 'name';
+			$this->_cacheKeyPrefix = 'register.role';
     		parent::__construct($id);
 		}
 

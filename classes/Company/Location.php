@@ -20,8 +20,14 @@
 		public $domain_id;
 		public $host;
 
+		/**
+		 * Constructor
+		 * @param int $id 
+		 * @return void 
+		 */
 		public function __construct($id = 0) {
 			$this->_tableName = 'company_locations';
+			$this->_cacheKeyPrefix = 'company.location';
     		parent::__construct($id);
 		}
 
@@ -31,6 +37,7 @@
 		 * @return bool
 		 */
 		public function getByHost(string $hostname): bool {
+app_log("Getting location for host ".$hostname,'notice',__FILE__,__LINE__);
 			return $this->get($hostname);
 		}
 
@@ -54,7 +61,7 @@
 
 			// Bind Parameters
 			$database->AddParam($hostname);
-
+app_log("Getting location for host ".$hostname,'notice',__FILE__,__LINE__);
 			// Execute Query
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
@@ -62,6 +69,7 @@
 				return false;
 			}
 			list($id) = $rs->FetchRow();
+app_log("Location ID: ".$id,'notice',__FILE__,__LINE__);
 			if (empty($id)) $id = 0;
 			$this->id = $id;
 			return $this->details();
@@ -73,6 +81,22 @@
 		 */
 		public function details(): bool {
 			$this->clearError();
+
+			if (empty($this->id)) {
+				$this->error("id required for details in Company::Location::details");
+				return false;
+			}
+
+			$cache = $this->cache();
+			$cachedData = $cache->get();
+			if (!empty($cachedData)) {
+				foreach ($cachedData as $key => $value) {
+					$this->$key = $value;
+				}
+				$this->cached(true);
+				$this->exists(true);
+				return true;
+			}
 
 			// Connect to Database
 			$database = new \Database\Service();
@@ -113,7 +137,12 @@
 				$this->sales_contact = $object->sales_contact;
 				$this->domain_id = $object->domain_id;
 				$this->host = $object->host;
-				$this->cached(true);
+
+				// Cache the data
+				$cache->set($object);
+
+				// Didn't come from cache
+				$this->cached(false);
 				$this->exists(true);
 			}
 			else {
@@ -138,7 +167,15 @@
 			return true;
 		}
 
+		/**
+		 * Add a new location
+		 * @param array $parameters 
+		 * @return bool 
+		 */
 		public function add($parameters = []) {
+			$this->clearError();
+
+			$database = new \Database\Service();
 
 			if (! preg_match('/^\d+$/',$parameters['company_id'])) {
 				$this->error("company_id parameter required");
@@ -148,28 +185,32 @@
 				$this->error("code parameter required");
 				return false;
 			}
-	
+
+			// Prepare Query
 			$add_object_query = "
 				INSERT
 				INTO	company_locations
 				(		company_id,
-						code
+						code,
+						host
 				)
 				VALUES
-				(		?,?
+				(		?,?,?
 				)
 			";
 
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array($parameters["company_id"],$parameters["code"])
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			$database->AddParam($parameters['company_id']);
+			$database->AddParam($parameters['code']);
+			$database->AddParam($parameters['code']);
 
+			$database->Execute($add_object_query);
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			$this->id = $database->Insert_ID();
+app_log("New Location ".$this->id." created for ".$this->company()->id,'notice',__FILE__,__LINE__);
 			// audit the add event
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
@@ -182,7 +223,16 @@
 			return $this->update($parameters);
 		}
 
+		/**
+		 * Update the location
+		 * @param array $parameters 
+		 * @return bool 
+		 */
 		public function update($parameters = []): bool {
+			$this->clearError();
+			$this->clearCache();
+
+			$database = new \Database\Service();
 
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid id required for details in Company::Domain::update");
@@ -194,32 +244,33 @@
 				UPDATE	company_locations
 				SET		id = id";
 
-			$bind_params = array();
 			if (isset($parameters['name'])) {
 				$update_object_query .= ",
 					name = ?";
-				array_push($bind_params,$parameters['name']);
+				$database->AddParam($parameters['name']);
 			}
 
 			if (preg_match('/^\w[\w\-\.]+$/',$parameters['host'])) {
 				$update_object_query .= ",
 					host = ?";
-				array_push($bind_params,$parameters['host']);
+				$database->AddParam($parameters['host']);
 			}
 
 			if (preg_match('/^\d+$/',$parameters['domain_id'])) {
 				$update_object_query .= ",
 					domain_id = ?";
-				array_push($bind_params,$parameters['domain_id']);
+				$database->AddParam($parameters['domain_id']);
 			}
 
 			$update_object_query .= "
 				WHERE	id = ?
 			";
-			array_push($bind_params,$this->id);
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+			$database->AddParam($this->id);
+
+			$database->Execute($update_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
@@ -235,10 +286,19 @@
 			return $this->details();
 		}
 
+		/**
+		 * Get the location name
+		 * @return string 
+		 */
 		public function name(): string {
 			if (!isset($this->name)) $this->name = "";
 			return $this->name;
 		}
+
+		/**
+		 * Get the location domain
+		 * @return \Company\Domain
+		 */
 		public function domain() {
 			return new \Company\Domain($this->domain_id);
 		}

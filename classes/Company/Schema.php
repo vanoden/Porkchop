@@ -5,7 +5,7 @@
 		public $module = "Company";
 
 		public function upgrade() {
-			$this->error = null;
+			$this->clearError();
 
 			if ($this->version() < 2) {
 				$create_companies_query = "
@@ -21,9 +21,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_companies_query)) {
-					$this->error = "SQL Error creating company_companies table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					$this->error .= $create_companies_query;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating company_companies table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -59,8 +58,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_locations_query)) {
-					$this->error = "SQL Error creating company_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating company_locations table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -83,8 +82,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_domains_query)) {
-					$this->error = "SQL Error creating company_domains table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating company_domains table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 				$this->setVersion(2);
@@ -95,11 +94,11 @@
 				# Make Sure Register Users is present
 				$user_schema = new \Register\Schema();
 				if (! $user_schema->upgrade()) {
-					$this->error = "Cannot upgrade Register Schema: ".$user_schema->error();
+					$this->error("Cannot upgrade Register Schema: ".$user_schema->error());
 					return false;
 				}
 				if ($user_schema->version() < 1) {
-					$this->error = "Cannot continue, Register Schema ver < 1";
+					$this->error("Cannot continue, Register Schema ver < 1");
 					return false;
 				}
 				$create_table_query = "
@@ -115,8 +114,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating company_departments table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating company_departments table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -130,8 +129,8 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating company_department_users table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Creating company_department_users table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -145,8 +144,8 @@
 					MODIFY COLUMN `content` text DEFAULT ''
 				";
 				if (! $this->executeSQL($update_table_query)) {
-					$this->error = "SQL Error updating company_locations table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+					$this->SQLError("Updating company_locations table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
 					return false;
 				}
 

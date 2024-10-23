@@ -3,7 +3,8 @@
 
     class Customer extends Person {
 		public $auth_method;
-		public $elevated = 0;
+		public bool $elevated = false;
+		public int $unreadMessages = 0;
 
 		/**
 		 * Constructor
@@ -89,6 +90,68 @@
 			return $this->details();
 		}
 
+		/**
+		 * Record last hit date
+		 */
+		public function recordHit() {
+			$this->clearError();
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$update_customer_query = "
+				UPDATE	register_users
+				SET		last_hit_date = now()
+				WHERE	id = ?
+			";
+			$database->AddParam($this->id);
+			$database->Execute($update_customer_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+			}
+		}
+
+		/**
+		 * Clear Auth Failures
+		 */
+		public function clearAuthFailures() {
+			$this->clearError();
+			$this->clearCache();
+
+			$database = new \Database\Service();
+			$update_customer_query = "
+				UPDATE	register_users
+				SET		auth_failures = 0
+				WHERE	id = ?
+			";
+			$database->AddParam($this->id);
+			$database->Execute($update_customer_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+			}
+		}
+
+		/**
+		 * Get/Set Organization
+		 * @param \Register\Organization|Organization ID|null $organization
+		 * @return \Register\Organization|null
+		 */
+		public function organization($organization = null): ?\Register\Organization {
+			if (!empty($organization)) {
+				if (is_numeric($organization)) {
+					$this->organization_id = $organization;
+					return new \Register\Organization($organization);
+				}
+				elseif (is_object($organization)) {
+					$this->organization_id = $organization->id;
+					return $organization;
+				}
+			}
+			if ($this->organization_id) {
+				$organization = new \Register\Organization($this->organization_id);
+				return $organization;
+			}
+			return null;
+		}
 		public function increment_auth_failures() {
 
 			if (! isset($this->id)) return false;
@@ -232,11 +295,11 @@
 			// Authenticate using service
 			if ($authenticationService->authenticate($login,$password)) {
 				app_log("'$login' authenticated successfully",'notice',__FILE__,__LINE__);
-				$this->update(array("auth_failures" => 0));
+				$this->clearAuthFailures();
 				$this->auditRecord("AUTHENTICATION_SUCCESS","Authenticated successfully");
 
 				// update last_hit_date	for user login
-				$GLOBALS['_database']->Execute("UPDATE	`register_users` SET `last_hit_date` = sysdate() WHERE	`id` = ?", array($this->id));
+				$this->recordHit();
 				
 				return true;
 			}

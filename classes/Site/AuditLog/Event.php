@@ -76,7 +76,11 @@ class Event Extends \BaseModel {
 			$this->error("Instance ID and description are required.");
 			return false;
 		}
-
+		if (empty($GLOBALS['_SESSION_']->customer->id)) {
+			$this->error("No customer ID found in session.");
+			return false;
+		}
+app_log("Herewego");
 		$this->instance_id = $params['instance_id'];
 		$this->class_name = !empty($params['class_name']) ? $params['class_name'] : $this->getCallingClass();
 		$this->class_method = !empty($params['class_method']) ? $params['class_method'] : $this->getCallingMethod();
@@ -98,7 +102,7 @@ class Event Extends \BaseModel {
 			$this->class_method,
 			$this->description
 		));
-
+$database->trace(9);
 		$rs = $database->Execute($query);
 		if (!$rs) {
 			$this->SQLError($database->ErrorMsg());

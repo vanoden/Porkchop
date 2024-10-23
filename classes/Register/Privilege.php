@@ -7,83 +7,102 @@
 		public $name;
 		public $module;
 
+		/**
+		 * Constructor
+		 */
 		public function __construct($id = 0) {
 			$this->_tableName = 'register_privileges';
 			$this->_tableUKColumn = 'name';
-		    parent::__construct($id);
+			$this->_cacheKeyPrefix = 'register.privilege';
+			parent::__construct($id);
 		}
 
+		/**
+		 * Add a new privilege
+		 * @param array $parameters 
+		 * @return bool 
+		 */
 		public function add($parameters = []) {
+			$this->clearError();
 
-            $add_object_query = "
-                INSERT
-                INTO    register_privileges
-                (       name)
-                VALUES
-                (       ? )
-            ";
+			$database = new \Database\Service();
 
-            $GLOBALS['_database']->Execute(
-                $add_object_query,
-                array($parameters["name"])
-            );
+			$add_object_query = "
+				INSERT
+				INTO    register_privileges
+				(       name)
+				VALUES
+				(       ? )
+			";
 
-            if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return false;
-            }
+			$database->AddParam($parameters['name']);
 
-            $this->id = $GLOBALS['_database']->Insert_ID();
+			$database->Execute($add_object_query);
 
-            // audit the add event
-            $auditLog = new \Site\AuditLog\Event();
-            $auditLog->add(array(
-                'instance_id' => $this->id,
-                'description' => 'Added new '.$this->_objectName(),
-                'class_name' => get_class($this),
-                'class_method' => 'add'
-            ));
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
 
-            return $this->update($parameters);
+			$this->id = $database->Insert_ID();
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
+
+			return $this->update($parameters);
 		}
 
-        public function update($parameters = []): bool {
+		/**
+		 * Update a privilege
+		 * @param array $parameters 
+		 * @return bool 
+		 */
+		public function update($parameters = []): bool {
+			$this->clearError();
+			$this->clearCache();
 
-            $update_object_query = "
-                UPDATE      register_privileges
-                SET         id = id
-            ";
-            $bind_params = array();
+			$database = new \Database\Service();
 
-            if (!empty($parameters['name'])) {
-                $update_object_query .= ",
-                name = ?";
-                array_push($bind_params,$parameters['name']);
-            }
+			$update_object_query = "
+				UPDATE      register_privileges
+				SET         id = id
+			";
 
-            if (!empty($parameters['module'])) {
-                $update_object_query .= ",
-                module = ?";
-                array_push($bind_params,$parameters['module']);
-            }
+			if (!empty($parameters['name'])) {
+				$update_object_query .= ",
+				name = ?";
+				$database->AddParam($parameters['name']);
+			}
 
-            if (!empty($parameters['description'])) {
-                $update_object_query .= ",
-                description = ?";
-                array_push($bind_params,$parameters['privilege']);
-            }
+			if (!empty($parameters['module'])) {
+				$update_object_query .= ",
+				module = ?";
+				$database->AddParam($parameters['module']);
+			}
 
-            $update_object_query .= "
-                WHERE       id = ?
-            ";
-            array_push($bind_params,$this->id);
+			if (!empty($parameters['description'])) {
+				$update_object_query .= ",
+				description = ?";
+				$database->AddParam($parameters['privilege']);
+			}
 
-            $GLOBALS['_database']->Execute($update_object_query,$bind_params);
+			$update_object_query .= "
+				WHERE       id = ?
+			";
+			$database->AddParam($this->id);
 
-            if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return false;
-            }
+			$database->Execute($update_object_query);
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
 
 			// audit the update event
 			$auditLog = new \Site\AuditLog\Event();
@@ -94,41 +113,58 @@
 				'class_method' => 'update'
 			));	
 
-            return $this->details();
-        }
+			return $this->details();
+		}
 
-        public function delete(): bool {
+		/**
+		 * Delete a privilege
+		 * @return bool 
+		 */
+		public function delete(): bool {
+			$this->clearError();
+			$this->clearCache();
+
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$delete_xref_query = "
 				DELETE
 				FROM	register_roles_privileges
 				WHERE	privilege_id = ?";
-			$GLOBALS['_database']->Execute($delete_xref_query,$this->id);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+			$database->AddParam($this->id);
+			$database->Execute($delete_xref_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-            $delete_object_query = "
-                DELETE
-                FROM    register_privileges
-                WHERE   id = ?";
-            $GLOBALS['_database']->Execute($delete_object_query,$this->id);
-            if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return false;
-            }
 
-            // audit the delete event
-            $auditLog = new \Site\AuditLog\Event();
-            $auditLog->add(array(
-                'instance_id' => $this->id,
-                'description' => 'Deleted '.$this->_objectName(),
-                'class_name' => get_class($this),
-                'class_method' => 'delete'
-            ));
+			$delete_object_query = "
+				DELETE
+				FROM    register_privileges
+				WHERE   id = ?";
+			$database->Execute($delete_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
 
-            return true;
-        }
+			// audit the delete event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Deleted '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'delete'
+			));
 
+			return true;
+		}
+
+		/**
+		 * Get Privilege Peers
+		 * @return null|array 
+		 */
 		public function peers() {
 			$get_object_query = "
 				SELECT	rur.user_id
@@ -137,7 +173,7 @@
 				WHERE	rrp.privilege_id = ?
 				AND		rrp.role_id = rur.role_id
 			";
-            $rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id));
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
@@ -150,20 +186,25 @@
 			return $people;
 		}
 
-        public function notify($message) {
-            if (! $this->id) {
-                $this->error("Privilege not found");
-                return null;
-            }
-            $members = $this->peers();
-            foreach ($members as $member) {
-                app_log("Sending notification to '".$member->code,'debug',__FILE__,__LINE__);
-                $member->notify($message);
-                if ($member->error()) {
-                    app_log("Error sending notification: ".$member->error(),'error',__FILE__,__LINE__);
-                    $this->error("Failed to send notification: ".$member->error());
-                    return false;
-                }
-            }
+		/**
+		 * Send a message to all people with this privilege
+		 * @param mixed $message 
+		 * @return null|false|void 
+		 */
+		public function notify($message) {
+			if (! $this->id) {
+				$this->error("Privilege not found");
+				return null;
+			}
+			$members = $this->peers();
+			foreach ($members as $member) {
+				app_log("Sending notification to '".$member->code,'debug',__FILE__,__LINE__);
+				$member->notify($message);
+				if ($member->error()) {
+					app_log("Error sending notification: ".$member->error(),'error',__FILE__,__LINE__);
+					$this->error("Failed to send notification: ".$member->error());
+					return false;
+				}
+			}
 		}
 	}

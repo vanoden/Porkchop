@@ -30,14 +30,19 @@
 				$siteMessagesUnread = [];
 			}
 
-			$me = $GLOBALS['_SESSION_']->customer;
-			if (!empty($me)) {
-				$me->unreadMessages = $siteMessagesUnread;
-				$me->organization = $me->organization();
+			if (empty($GLOBALS['_SESSION_'])) {
+				$me = new \Register\Customer();
+				$me->unreadMessages = 0;
 			}
 			else {
-				$me->unreadMessages = 0;
-				$me->organization = new \Register\Organization();
+				$me = $GLOBALS['_SESSION_']->customer;
+				if (!empty($me)) {
+					$me->unreadMessages = $siteMessagesUnread;
+					$me->organization = $me->organization();
+				}
+				else {
+					$me->unreadMessages = 0;
+				}
 			}
 
             $response = new \APIResponse();
