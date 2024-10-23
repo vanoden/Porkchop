@@ -39,6 +39,9 @@
 				$this->id = $id;
 				$this->details();
 			}
+			else {
+				$this->_exists = false;
+			}
 		}
 
 		// Polymorphism for Fun and Profit
@@ -487,6 +490,7 @@
 		public function exists($exists = null) {
 			if (is_bool($exists)) $this->_exists = $exists;
 			if (is_numeric($this->id) && $this->id > 0) return true;
+			else $this->_exists = false;
 			return $this->_exists;
 		}
 
@@ -500,7 +504,14 @@
 				$cache_key = $this->_cacheKeyPrefix."[" . $this->id . "]";
 				return new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 			}
-			return null;
+			else if (!empty($this->_cacheKeyPrefix)) {
+				$this->error("No ID defined for ".get_class($this));
+				return null;
+			}
+			else {
+				$this->error("No cache key defined for ".get_class($this));
+				return null;
+			}
 		}
 
 		// Clear Object from Cache
