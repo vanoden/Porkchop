@@ -112,9 +112,10 @@ exit;
 					if ($_REQUEST['work_email']) $emessage->to($_REQUEST['work_email']);
 					else $emessage->to($_REQUEST['home_email']);
 
-					$transport = \Email\Transport::Create(array('provider' => $GLOBALS['_config']->email->provider));
-					if (\Email\Transport::error()) {
-						$page->addError("Error initializing email transport: ".\Email\Transport::error());
+					$transportFactory = new \Email\Transport();
+					$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+					if ($transportFactory->error()) {
+						$page->addError("Error initializing email transport: ".$transportFactory->error());
 						return;
 					}
 

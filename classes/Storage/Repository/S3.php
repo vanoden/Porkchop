@@ -35,7 +35,7 @@
 					'credentials' => $this->credentials
 				]);
 			}
-			else {
+			else if (!empty($this->getMetadata('bucket'))) {
 				$this->client = new \Aws\S3\S3Client([
 					'region' => $this->region(),
 					'version' => 'latest'
@@ -43,7 +43,11 @@
 			}
 
 			// This fails if not in an EC2 host
-			if (!empty($this->getMetadata('bucket'))) {
+			if (empty($this->getMetadata('bucket'))) {
+				$this->_connected = false;
+				return false;
+			}
+			else {
 				try {
 					$result = $this->client->doesBucketExist($this->getMetadata('bucket'));
 				}
