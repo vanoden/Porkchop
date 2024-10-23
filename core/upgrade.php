@@ -97,7 +97,7 @@
 	###################################################
 	$site->install_log("Connecting to ".$GLOBALS['_config']->cache->mechanism." cache");
 	$_CACHE_ = \Cache\Client::connect($GLOBALS['_config']->cache->mechanism,$GLOBALS['_config']->cache);
-	if ($_CACHE_->error) $site->install_fail('Unable to initiate Cache client: '.$_CACHE_->error);
+	if ($_CACHE_->error()) $site->install_fail('Unable to initiate Cache client: '.$_CACHE_->error());
 	if ($_CACHE_->mechanism() == 'Memcache') {
 		foreach ($_CACHE_->stats() as $cache_service => $cache_stats) {
 			$site->install_log("Memcached host ".$cache_service." has ".$cache_stats['curr_items']." items");
@@ -112,10 +112,15 @@
 
 	# Upgrade Database
 	$site->install_log("Upgrading Schema");
-	foreach ($base_classes as $base_class => $version) {
-		$class_name = "\\$base_class\\Schema";
+	foreach ($modules as $class_name => $base_class) {
+		$schemaClass = "\\$class_name\\Schema";
+		if (! key_exists('schema',$base_class)) {
+			$site->install_log("No schema requirement for $class_name",'warning');
+			$requiredVersion = null;
+		}
+		else $requiredVersion = $base_class['schema'];
 		try {
-			$class = new $class_name();
+			$class = new $schemaClass();
 			$class_version = $class->version();
 			if (! $class->upgrade()) {
 				$site->install_fail("Failed to upgrade $class: ".$class->error());
@@ -124,8 +129,8 @@
 		} catch (Exception $e) {
 			$site->install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
 		}
-		$site->install_log("$base_class::Schema: version ".$class_version);
-		if ($class_version != $version) $site->install_fail("Version $version Required");
+		$site->install_log("$class_name::Schema: version ".$class_version);
+		if (!empty($requiredVersion) && $class_version != $requiredVersion) $site->install_fail("Version $requiredVersion Required");
 	}
 
 	###################################################
@@ -140,14 +145,46 @@
 	$companylist = new \Company\CompanyList();
 	list($company) = $companylist->find();
 	if (! $company->id) $site->install_fail("No company found.  You must run installer");
+	$site->install_log("Company: ".$company->name());
 	$_SESSION_->company = $company;
+
+	// Get Location
+	$location = new \Company\Location();
+	$location->get($_SERVER['SERVER_NAME']);
+	if (! $location->id) {
+		$site->install_log("Location ".$_SERVER['SERVER_NAME']." not configured.  Adding to company ".$company->id);
+		$location->add(array('company_id' => $company->id, 'code' => $_SERVER['SERVER_NAME']));
+		if (! $location->id) $site->install_fail("Error adding location");
+		else $site->install_log("Added location: ".$location->name." [".$location->id."]");
+	}
+
+	// Get Domain
+	$domain = new \Company\Domain($location->domain_id);
+	if (! $domain->exists()) {
+		$domain = new \Company\Domain();
+		$domain->get($_SERVER['SERVER_NAME']);
+		if (! $domain->id) {
+			$site->install_log("Domain ".$_SERVER['SERVER_NAME']." not configured.  Adding to location ".$location->id);
+			$domain->add(array('location_id' => $location->id, 'name' => $_SERVER['SERVER_NAME']));
+			if (! $domain->id) $site->install_fail("Error adding domain");
+			else $site->install_log("Added domain: ".$domain->name()." [".$domain->id."]");
+		}
+		else $site->install_log("Domain: ".$domain->name);
+		if ($location->domain_id != $domain->id) {
+			$location->update(array('domain_id' => $domain->id()));
+			$site->install_log("Updated location ".$location->name." with domain ".$domain->name);
+		}
+	}
+	else {
+		$site->install_log("Domain: ".$domain->id()." found");
+	}
 
 	include(BASE."/config/upgrade.php");
 	if (file_exists(BASE."/config/upgrade_local.php")) {
 		include(BASE."/config/upgrade_local.php");
 	}
 
-	if ($_REQUEST['log_level']) $site->log_level($_REQUEST['log_level']);
+	if (!empty($_REQUEST['log_level'])) $site->log_level($_REQUEST['log_level']);
 
 	$site->install_log("Starting site upgrade",'notice');
 	if (file_exists(HTML."/version.txt")) {
