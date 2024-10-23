@@ -1,8 +1,23 @@
 <?php
 	namespace Content;
 	
+	/**
+	 * MessageList Class
+	 *
+	 * This class extends BaseListClass and provides methods for finding, searching,
+	 * and retrieving Content\Message objects based on various criteria.
+	 */
 	class MessageList Extends \BaseListClass {
 
+		/** @var string|null Stores any error messages */
+		protected $error = null;
+
+		/**
+		 * Find messages based on given parameters
+		 *
+		 * @param array $parameters Search parameters
+		 * @return array|null Array of Content\Message objects or null on error
+		 */
 		public function find($parameters = array()) {
 
             $this->clearError();
@@ -32,6 +47,12 @@
 			return $messages;
 		}
 		
+		/**
+		 * Search for messages based on a search string
+		 *
+		 * @param array $parameters Search parameters
+		 * @return array|int Array of Content\Message objects or 0 on error
+		 */
 		public function search($parameters = array()) {
 
             $this->clearError();
@@ -99,6 +120,48 @@
 				}
                 $this->incrementCount();
 				array_push($messages,$message);
+			}
+
+			return $messages;
+		}
+
+		/**
+		 * Get messages by problem type and product
+		 *
+		 * @param string $problemType The type of problem
+		 * @param string $product The product code
+		 * @return array|null Array of Content\Message objects or null on error
+		 */
+		public function getByProblemAndProduct($problemType, $product) {
+			$this->clearError();
+			$this->resetCount();
+
+			$query = "
+				SELECT cm.object_id as id
+				FROM search_tags_xref cm
+				JOIN search_tags st ON cm.tag_id = st.id
+				WHERE st.class = 'Content::Message'
+				AND (
+					(st.category = 'problem_type' AND st.value = ?)
+					OR (st.category = 'product' AND st.value = ?)
+				)
+				GROUP BY cm.object_id
+				HAVING COUNT(DISTINCT st.category) >= 2
+			";
+
+			$stmt = $GLOBALS['_database']->Prepare($query);
+			$result = $GLOBALS['_database']->Execute($stmt, array($problemType, $product));
+
+			if (!$result) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+
+			$messages = array();
+			while ($row = $result->FetchRow()) {
+				$message = new \Content\Message($row['id']);
+				$this->incrementCount();
+				array_push($messages, $message);
 			}
 
 			return $messages;

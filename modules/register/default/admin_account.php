@@ -68,6 +68,15 @@
    }
 </script>
 
+<!-- Autocomplete CSS and JS -->
+<link href="/css/autocomplete.css" type="text/css" rel="stylesheet">
+<script language="JavaScript" src="/js/autocomplete.js"></script>
+<script language="JavaScript">
+	// define existing categories and tags for autocomplete
+	var existingCategories = <?= $uniqueTagsData['categoriesJson'] ?>;
+	var existingTags = <?= $uniqueTagsData['tagsJson'] ?>;
+</script>
+
 <!-- Page Header -->
 <?= $page->showAdminPageInfo() ?>
 <!-- End Page Header -->
@@ -343,35 +352,45 @@
    <h3 style="display:inline;">Customer Search Tags</h3>
    <h4 style="display:inline;">(customer support knowledge center)</h4>
    <div class="tableBody min-tablet">
-      <div class="tableRowHeader">
-         <div class="tableCell" style="width: 33%;">&nbsp;</div>
-         <div class="tableCell" style="width: 33%;">Category</div>
-         <div class="tableCell" style="width: 33%;">Search Tag</div>
-      </div>
-      <?php
-      foreach ($registerCustomerSearchTags as $searchTag) {
-      ?>
-         <div class="tableRow">
-            <div class="tableCell">
-               <input type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" name="removeSearchTag" value="Remove" class="button" /> 
-            </div>
-            <div class="tableCell">
-               <?= $searchTag->category ?>
-            </div>
-            <div class="tableCell">
-               <?= $searchTag->value ?>
-            </div>
-         </div>
-      <?php
-      }
-      ?>
-      <br/>
-      <div class="tableRow">
-         <div class="tableCell"><label>Category:</label><input type="text" class="" name="newSearchTagCategory" value="" placeholder="Location" /></div>
-         <div class="tableCell"><label>New Search Tag:</label><input type="text" class="" name="newSearchTag" value="" placeholder="New York" /></div>
-      </div>
-      <div><input type="submit" name="addSearchTag" value="Add Search Tag" class="button" /></div>
-   </div>
+				<div class="tableRowHeader">
+					<div class="tableCell" style="width: 33%;">&nbsp;</div>
+					<div class="tableCell" style="width: 33%;">Category</div>
+					<div class="tableCell" style="width: 33%;">Search Tag</div>
+				</div>
+				<?php
+				foreach ($registerCustomerSearchTags as $searchTag) {
+				?>
+					<div class="tableRow">
+						<div class="tableCell">
+							<input type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" name="removeSearchTag" value="Remove" class="button" />
+						</div>
+						<div class="tableCell">
+							<?= $searchTag->category ?>
+						</div>
+						<div class="tableCell">
+							<?= $searchTag->value ?>
+						</div>
+
+					</div>
+
+				<?php
+				}
+				?>
+				<br />
+				<div class="tableRow">
+					<div class="tableCell">
+						<label>Category:</label>
+						<input type="text" class="autocomplete" name="newSearchTagCategory" id="newSearchTagCategory" value="" placeholder="Location" />
+						<ul id="categoryAutocomplete" class="autocomplete-list"></ul>
+					</div>
+					<div class="tableCell">
+						<label>New Search Tag:</label>
+						<input type="text" class="autocomplete" name="newSearchTag" id="newSearchTag" value="" placeholder="New York" />
+						<ul id="tagAutocomplete" class="autocomplete-list"></ul>
+					</div>
+				</div>
+				<div><input type="submit" name="addSearchTag" value="Add Search Tag" class="button" /></div>
+			</div>
 
    <!-- entire page button submit -->
    <div id="submit-button-container" class="tableBody min-tablet">

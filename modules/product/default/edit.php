@@ -26,6 +26,15 @@
 	}
 </script>
 
+<!-- Autocomplete CSS and JS -->
+<link href="/css/autocomplete.css" type="text/css" rel="stylesheet">
+<script language="JavaScript" src="/js/autocomplete.js"></script>
+<script language="JavaScript">
+	// define existing categories and tags for autocomplete
+	var existingCategories = <?= $uniqueTagsData['categoriesJson'] ?>;
+	var existingTags = <?= $uniqueTagsData['tagsJson'] ?>;
+</script>
+
 <!-- Page Header -->
 <?= $page->showAdminPageInfo() ?>
 <!-- End Page Header -->
@@ -207,7 +216,7 @@
 				?>
 					<div class="tableRow">
 						<div class="tableCell">
-							<input type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" name="removeSearchTag" value="Remove" class="button" /> 
+							<input type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" name="removeSearchTag" value="Remove" class="button" />
 						</div>
 						<div class="tableCell">
 							<?= $searchTag->category ?>
@@ -215,16 +224,24 @@
 						<div class="tableCell">
 							<?= $searchTag->value ?>
 						</div>
-						
+
 					</div>
 
 				<?php
 				}
 				?>
-				<br/>
+				<br />
 				<div class="tableRow">
-					<div class="tableCell"><label>Category:</label><input type="text" class="" name="newSearchTagCategory" value="" placeholder="gas" /></div>
-					<div class="tableCell"><label>New Search Tag:</label><input type="text" class="" name="newSearchTag" value="" placeholder="sulfuryl fluoride" /></div>
+					<div class="tableCell">
+						<label>Category:</label>
+						<input type="text" class="autocomplete" name="newSearchTagCategory" id="newSearchTagCategory" value="" placeholder="gas" />
+						<ul id="categoryAutocomplete" class="autocomplete-list"></ul>
+					</div>
+					<div class="tableCell">
+						<label>New Search Tag:</label>
+						<input type="text" class="autocomplete" name="newSearchTag" id="newSearchTag" value="" placeholder="sulfuryl fluoride" />
+						<ul id="tagAutocomplete" class="autocomplete-list"></ul>
+					</div>
 				</div>
 				<div><input type="submit" name="addSearchTag" value="Add Search Tag" class="button" /></div>
 			</div>
@@ -247,7 +264,6 @@
 					</tr>
 				<?php } ?>
 			</table>
-
 			<div class="editSubmit button-bar floating">
 				<input type="submit" class="button" value="Update" name="updateSubmit" id="updateSubmit" />
 			</div>

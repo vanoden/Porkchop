@@ -25,7 +25,7 @@ if (isset($_REQUEST['id'])) {
 $show_add_page = false;
 
 // handle page submit
-if (isset($_REQUEST['Submit'])) {
+if (isset($_REQUEST['updateSubmit'])) {
 	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 		$page->addError("Invalid Request");
 	} elseif (!empty($_REQUEST['name']) && !$message->validName($_REQUEST['name'])) {
@@ -125,3 +125,7 @@ foreach ($searchTagXrefs as $searchTagXrefItem) {
 	$searchTag->load($searchTagXrefItem->tag_id);
 	$registerCustomerSearchTags[] = $searchTag;
 }
+
+// get unique categories and tags for autocomplete
+$searchTagList = new \Site\SearchTagList();
+$uniqueTagsData = $searchTagList->getUniqueCategoriesAndTagsJson();
