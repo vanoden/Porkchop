@@ -18,7 +18,7 @@
 				$counterKey = "api.".$this->_name.".".$_REQUEST["method"];
 				$counter = new \Site\Counter($counterKey);
 				$counter->increment();
-				app_log($this->_name.".".$_REQUEST['method']);
+				app_log("API: ".$this->_name.".".$_REQUEST['method']);
 			}
 			$site = new \Site();
 			$this->page = $site->page();

@@ -37,7 +37,7 @@
 			}
 			$object = $rs->FetchNextObject(false);
 			if ($rs->recordCount() > 0) {
-				app_log("Found table ".$object->TABLE_NAME);
+				app_log("Found table ".$object->TABLE_NAME,'trace');
 				//$this->name = $object->TABLE_NAME;
 				$this->type = $object->TABLE_TYPE;
 				$this->engine = $object->ENGINE;

@@ -61,7 +61,7 @@ app_log("Getting location for host ".$hostname,'notice',__FILE__,__LINE__);
 
 			// Bind Parameters
 			$database->AddParam($hostname);
-app_log("Getting location for host ".$hostname,'notice',__FILE__,__LINE__);
+
 			// Execute Query
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
@@ -69,7 +69,7 @@ app_log("Getting location for host ".$hostname,'notice',__FILE__,__LINE__);
 				return false;
 			}
 			list($id) = $rs->FetchRow();
-app_log("Location ID: ".$id,'notice',__FILE__,__LINE__);
+
 			if (empty($id)) $id = 0;
 			$this->id = $id;
 			return $this->details();

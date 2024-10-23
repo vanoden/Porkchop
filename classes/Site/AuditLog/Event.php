@@ -56,7 +56,7 @@ class Event Extends \BaseModel {
 			return true;
 		}
 		$callingClass = new $callingClassName;
-		app_log("Calling Class: $callingClassName");
+		app_log("Calling Class: $callingClassName",'trace');
 
 		// If auditEvents not set to true in class definition, check site config
 		if ($callingClass->_auditEvents) $log_this_event = true;
@@ -66,9 +66,8 @@ class Event Extends \BaseModel {
 			// if the class_name is set in $params, check if it is in the auditedClasses array
 			if (isset($params['class_name']) && in_array($params['class_name'], $GLOBALS['_config']->auditing->auditedClasses)) $log_this_event = true;
 		}
-		app_log("Logging for $callingClassName? ".$log_this_event);
+
 		if (! $log_this_event) return true;
-		app_log("Yessiree");
 
 		$database = new \Database\Service();
 		if (empty($params['instance_id']) || empty($params['description'])) {
