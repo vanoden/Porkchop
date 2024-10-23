@@ -235,6 +235,9 @@
 			exit;
 		}
 
+		/************************************************/
+		/* Record API Communication for Debugging		*/
+		/************************************************/
 		public function _store_communication() {
 			$message = "Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code;
 			if (array_key_exists('asset_code',$_REQUEST)) $message .= " for asset ".$_REQUEST['asset_code'];
