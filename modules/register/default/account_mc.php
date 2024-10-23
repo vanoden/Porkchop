@@ -1,12 +1,13 @@
 <?php
 	###################################################
-	### register_mc.php								###
+	### account_mc.php								###
 	### This program collects registration info		###
 	### for the user.								###
-	### A. Caravello 11/12/2002						###
+	### A. Caravello 10/23/2024						###
 	###################################################
-
-	$page = new \Site\Page(array("module" => 'register',"view" => 'account'));
+	$site = new \Site();
+	$page = $site->page();
+	$page->requireAuth();
 	
 	// Check if a customer_id is provided
 	if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id'])) {

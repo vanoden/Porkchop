@@ -57,7 +57,8 @@
 			$metadata_keys = $repository->metadata_keys();
 			foreach ($metadata_keys as $key) {
 				if (!$repository->validMetadata($key,$_REQUEST[$key])) {
-					$page->addError("Invalid value for $key");
+					if ($repository->error()) $page->addWarning($repository->error());
+					else $page->addWarning("Invalid value '".$_REQUEST[$key]."' for $key");
 					$_REQUEST[$key] = htmlspecialchars($_REQUEST[$key]);
 				}
 			}

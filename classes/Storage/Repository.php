@@ -149,7 +149,10 @@
 				}
 			}
 
-			if (isset($parameters['default_privileges_json'])) {
+			if ($parameters['default_privileges_json'] == "[]") {
+				$parameters['default_privileges_json'] = "";
+			}
+			else if (!empty($parameters['default_privileges_json'])) {
 				if (!json_decode($parameters['default_privileges_json'])) {
 					$this->error("Invalid default privileges JSON");
 					return false;
@@ -610,7 +613,7 @@
 				return false;
 			}
 			elseif ($key == "bucket" && ! $this->validBucket($value)) {
-				$this->error("Invalid bucket");
+				$this->error("Invalid bucket '$value'");
 				return false;
 			}
 			elseif ($key == "region" && ! $this->validRegion($value)) {
