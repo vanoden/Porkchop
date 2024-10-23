@@ -52,7 +52,7 @@ use Register\Customer;
 		public function start() {
 			# Fetch Company Information
 			$location = new \Company\Location();
-			$location->getByHost($_SERVER['SERVER_NAME']);
+			$location->get($_SERVER['SERVER_NAME']);
 			$this->location_id = $location->id;
 
 			if (! $location->id) {
@@ -76,13 +76,13 @@ use Register\Customer;
 			}
 			$this->domain_id = $domain->id;
 
-			$this->company = new \Company\Company($domain->company->id);
+			$this->company = new \Company\Company($domain->company_id);
 			if ($this->company->error()) {
 				$this->error("Error finding company: ".$this->company->error());
 				return null;
 			}
 			if (! $this->company->id) {
-				$this->error("Company '".$domain->company->id."' not found");
+				$this->error("Company '".$domain->company_id."' not found");
 				return null;
 			}
 
@@ -100,6 +100,7 @@ use Register\Customer;
 
 			# Was a 'Valid looking' Session Given
 			if (isset($request_code) && $this->validCode($request_code)) {
+				app_log("Getting session ".$request_code,'notice',__FILE__,__LINE__);
 				# Get Existing Session Information
 				$this->get($request_code);
 				if ($this->id) {
