@@ -12,7 +12,11 @@
 	if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id'])) {
 		$customer_id = $_REQUEST['customer_id'];
 		$customer = new \Register\Customer($customer_id);
-	} else {
+	}
+	elseif ($GLOBALS['_SESSION_']->customer->id) {
+		$customer = new \Register\Customer($GLOBALS['_SESSION_']->customer->id);
+	}
+	else {
 		// If no customer_id is provided, redirect to login
 		header("location: /_register/login?target=_register/account");
 		exit;
@@ -20,7 +24,7 @@
 
 	// Check if the logged-in user is in the same organization as the customer
 	$canView = true;
-	if ($GLOBALS['_SESSION_']->customer->organization()->id != $customer->organization()->id) {
+	if ($GLOBALS['_SESSION_']->customer->organization_id != $customer->organization_id) {
 		$page->addError("You do not have permission to view this customer's account.");
 		$canView = false;
 	}
