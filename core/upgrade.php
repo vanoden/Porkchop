@@ -100,7 +100,8 @@
 	if ($_CACHE_->error()) $site->install_fail('Unable to initiate Cache client: '.$_CACHE_->error());
 	if ($_CACHE_->mechanism() == 'Memcache') {
 		foreach ($_CACHE_->stats() as $cache_service => $cache_stats) {
-			$site->install_log("Memcached host ".$cache_service." has ".$cache_stats['curr_items']." items");
+			if (gettype($cache_stats) == 'array') $site->install_log("Memcached host ".$cache_service." has ".$cache_stats['curr_items']." items");
+			else $site->install_log("Memcached host ".$cache_service." is ".$cache_stats);
 		}
 	}
 
