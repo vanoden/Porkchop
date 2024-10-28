@@ -11,8 +11,7 @@
 	
 	// Check if a customer_id is provided
 	if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id'])) {
-		$customer_id = $_REQUEST['customer_id'];
-		$customer = new \Register\Customer($customer_id);
+		$customer = new \Register\Customer($_REQUEST['customer_id']);
 	}
 	elseif ($GLOBALS['_SESSION_']->customer->id) {
 		$customer = new \Register\Customer($GLOBALS['_SESSION_']->customer->id);
@@ -38,7 +37,7 @@
 		$readOnly = false;
 	}
 
-	app_log($GLOBALS['_SESSION_']->customer->login." accessing account of customer ".$customer_id,'notice',__FILE__,__LINE__);
+	app_log($GLOBALS['_SESSION_']->customer->login." accessing account of customer ".$customer->id,'notice',__FILE__,__LINE__);
 
 	#######################################
 	### Handle Actions					###
@@ -80,7 +79,7 @@
 			}
 
 			if ($customer->id) {
-				app_log("Updating customer ".$customer_id,'debug',__FILE__,__LINE__);
+				app_log("Updating customer ".$customer->id,'debug',__FILE__,__LINE__);
 
 				$customer->update($parameters);
 				
@@ -203,7 +202,7 @@
 
 					// Create Contact Record
 					$contactRecord = array(
-						"person_id"		=> $customer_id,
+						"person_id"		=> $customer->id,
 						"type"			=> $_REQUEST['type'][0],
 						"description"	=> noXSS($_REQUEST['description'][0]),
 						"value"			=> $_REQUEST['value'][0],
@@ -270,8 +269,7 @@
 	}	
 
 	load:
-	if ($customer_id) {
-		$customer = new \Register\Customer($customer_id);
+	if ($customer->id) {
 		$contacts = $customer->contacts();
 	}
 	$rolelist = new \Register\RoleList();

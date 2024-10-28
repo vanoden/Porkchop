@@ -66,7 +66,7 @@
 			    if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
 			    if ($organization->id) {
 				    app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
-				    app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
+				    //app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
 				    
 				    // Update Existing Organization
 				    $organization->update($parameters);
@@ -220,5 +220,5 @@
 	$page->title = "Organization Details";
 	$page->addBreadcrumb("Organizations", "/_register/organizations");
 	if (isset($organization->id)) {
-		$page->addBreadcrumb($organization->name);
+		$page->addBreadcrumb($organization->name,"/_register/organization?organization_id=".$organization->id);
 	}

@@ -104,26 +104,33 @@
 			return $count;
 		}
 		
-        public function count($parameters = []) {
-            if (isset($this->_count)) return $this->_count;
-            $this->find($parameters,["count" => true]);
-            return $this->_count();
-        }
-    
+		public function count($parameters = []) {
+			if (isset($this->_count)) return $this->_count;
+			$this->find($parameters,["count" => true]);
+			return $this->_count();
+		}
+	
 		public function find($parameters = [], $controls = []) {
 
 			$this->clearError();
 			$this->resetCount();
 
-			// Backward compatibility
-			if (is_bool($controls)) $controls = array('count' => $controls);
+			// Backward compatibility for sorting/limits
+			if (is_bool($controls)) $controls = array('count' => $controls); // bool was sent as second param, handle as 'count'
 			if (isset($controls['count'])) $controls['count'] = false;
-			if ($controls['count']) $ADODB_COUNTRECS = true;
+			if (array_key_exists('count',$controls) && $controls['count']) $ADODB_COUNTRECS = true;
 			if (isset($parameters['role'])) app_log("Don't use role as a filter for customers, use Register::Role::Members",'warning');
 
-            $validationclass = new \Register\Customer();
-    
-			$bind_params = array();
+			if (array_key_exists('_limit',$parameters)) $controls['limit'] = $parameters['_limit'];
+			if (array_key_exists('_sort',$parameters)) $controls['sort'] = $parameters['_sort'];
+			if (array_key_exists('_offset',$parameters)) $controls['offset'] = $parameters['_offset'];
+			if (empty($controls['offset'])) $controls['offset'] = 0;
+			if (!empty($controls["order"]) && strtolower($controls['order']) != "asc") $controls['order'] = 'DESC';
+			else $controls['order'] = 'ASC';
+
+			$validationclass = new \Register\Customer();
+
+			$database = new \Database\Service();
 
 			$find_person_query = "
 				SELECT	id
@@ -140,8 +147,8 @@
 				}
 				if (preg_match('/^\*/',$searchTerm) || preg_match('/\*$/',$searchTerm)) {
 					$searchTerm = preg_replace('/^\*/','%',$searchTerm);
-                    $searchTerm = preg_replace('/\*/','%',$searchTerm);
-                }
+					$searchTerm = preg_replace('/\*/','%',$searchTerm);
+				}
 				else
 					$searchTerm = '%'.$searchTerm.'%';
 
@@ -157,24 +164,24 @@
 			if (isset($parameters['id']) && preg_match('/^\d+$/',$parameters['id'])) {
 				$find_person_query .= "
 				AND		id = ?";
-				array_push($bind_params,$parameters['id']);
+				$database->AddParam($parameters['id']);
 			}
 			elseif (isset($parameters['id'])) {
 				$this->error("Invalid id");
 				return null;
 			}
-            if (!empty($parameters['code']) && empty($parameters['login'])) $parameters['login'] = $parameters['code'];
+			if (!empty($parameters['code']) && empty($parameters['login'])) $parameters['login'] = $parameters['code'];
 
 			if (!empty($parameters['login'])) {
-                if ($validationclass->validCode($parameters['login'])) {
-    				$find_person_query .= "
-	    			AND		login = ?";
-		    		array_push($bind_params,$parameters['login']);
-                }
-                else {
-                    $this->error("Invalid login");
-                    return null;
-                }
+				if ($validationclass->validCode($parameters['login'])) {
+					$find_person_query .= "
+					AND		login = ?";
+					$database->AddParam($parameters['login']);
+				}
+				else {
+					$this->error("Invalid login");
+					return null;
+				}
 			}
 			if (!empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
@@ -182,29 +189,29 @@
 					$find_person_query .= "
 					AND	status IN (";
 					foreach ($parameters['status'] as $status) {
-                        if ($validationclass->validStatus($status)) {
-                            if ($icount > 0) $find_person_query .= ","; 
-                            $icount ++;
-                            if (preg_match('/^[\w\-\_\.]+$/',$status))
-                            $find_person_query .= "'".$status."'";
-                        }
-                        else {
-                            $this->error("Invalid status");
-                            return null;
-                        }
+						if ($validationclass->validStatus($status)) {
+							if ($icount > 0) $find_person_query .= ","; 
+							$icount ++;
+							if (preg_match('/^[\w\-\_\.]+$/',$status))
+							$find_person_query .= "'".$status."'";
+						}
+						else {
+							$this->error("Invalid status");
+							return null;
+						}
 					}
 					$find_person_query .= ")";
 				}
 				else {
-                    if ($validationclass->validStatus($parameters['status'])) {
-                        $find_person_query .= "
-                        AND		status = ?";
-                        array_push($bind_params,$parameters['status']);
-                    }
-                    else {
-                        $this->error("Invalid status");
-                        return null;
-                    }
+					if ($validationclass->validStatus($parameters['status'])) {
+						$find_person_query .= "
+						AND		status = ?";
+						array_push($bind_params,$parameters['status']);
+					}
+					else {
+						$this->error("Invalid status");
+						return null;
+					}
 				}
 			}
 			else {
@@ -213,58 +220,58 @@
 			}
 	
 			if (isset($parameters['first_name'])) {
-                if ($validationclass->validName($parameters['first_name'])) {
-                    $find_person_query .= "
-                    AND		first_name = ?";
-                    array_push($bind_params,$parameters['first_name']);
-                }
-                else {
-                    $this->error("Invalid first name");
-                    return null;
-                }
+				if ($validationclass->validName($parameters['first_name'])) {
+					$find_person_query .= "
+					AND		first_name = ?";
+					$database->AddParam($parameters['first_name']);
+				}
+				else {
+					$this->error("Invalid first name");
+					return null;
+				}
 			}
 	
 			if (isset($parameters['last_name'])) {
-                if ($validationclass->validName($parameters['last_name'])) {
-                    $find_person_query .= "
-                    AND		last_name = ?";
-                    array_push($bind_params,$parameters['last_name']);
-                }
-                else {
-                    $this->error("Invalid last name");
-                    return null;
-                }
+				if ($validationclass->validName($parameters['last_name'])) {
+					$find_person_query .= "
+					AND		last_name = ?";
+					$database->AddParam($parameters['last_name']);
+				}
+				else {
+					$this->error("Invalid last name");
+					return null;
+				}
 			}
 	
 			if (isset($parameters['email_address'])) {
-                if ($validationclass->validEmail($parameters['email_address'])) {
-                    $find_person_query .= "
-                    AND		email_address = ?";
-                    array_push($bind_params,$parameters['email_address']);
-                }
-                else {
-                    $this->error("Invalid email address");
-                    return null;
-                }
+				if ($validationclass->validEmail($parameters['email_address'])) {
+					$find_person_query .= "
+					AND		email_address = ?";
+					$database->AddParam($parameters['email_address']);
+				}
+				else {
+					$this->error("Invalid email address");
+					return null;
+				}
 			}
 
 			if (!empty($parameters['department_id']) && is_numeric($parameters['department_id'])) {
 
 				$find_person_query .= "
 				AND		department_id = ?";
-				array_push($bind_params,$parameters['department_id']);
+				$database->AddParam($parameters['department_id']);
 			}
 
 			if (!empty($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
 
-                $organization = new \Register\Organization($parameters['organization_id']);
-                if (!$organization->exists()) {
-                    $this->error("Invalid organization");
-                    return null;
-                }
+				$organization = new \Register\Organization($parameters['organization_id']);
+				if (!$organization->exists()) {
+					$this->error("Invalid organization");
+					return null;
+				}
 				$find_person_query .= "
 				AND		organization_id = ?";
-				array_push($bind_params,$organization->id);
+				$database->AddParam($organization->id);
 			}
 			if (isset($parameters['automation'])) {
 				if (is_bool($parameters['automation'])) {
@@ -276,7 +283,7 @@
 				elseif (is_numeric($parameters['automation'])) {
 					$find_person_query .= "
 					AND		automation = ?";
-					array_push($bind_params,$parameters['automation']);
+					$database->AddParam($parameters['automation']);
 				}
 				elseif (!empty($parameters['automation'])) {
 					if ($parameters['automation'] == 'true') {
@@ -296,20 +303,18 @@
 					$this->error("Invalid automation");
 					return null;
 				}
-			}			
+			}
 
-            if (!empty($parameters['_sort'])) $controls['sort'] = $parameters['_sort'];
-            if (!empty($parameters['_limit']) && is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
-            if (!empty($parameters['_offset']) && is_numeric($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
-
-			if (isset($controls['sort']) && $controls['_sort'] == 'full_name') {
+			if (isset($controls['sort']) && $controls['sort'] == 'full_name') {
 				$find_person_query .= " ORDER BY first_name,last_name";
 			}
-            elseif (isset($controls['sort']) && $validationclass->hasField($controls['sort'])) {
-				$find_person_query .= " ORDER BY ".$controls['_sort'];
+			elseif (isset($controls['sort']) && $validationclass->hasField($controls['sort'])) {
+				$find_person_query .= " ORDER BY ".$controls['sort'];
 			}
 			else
 				$find_person_query .= " ORDER BY login";
+			if (preg_match('/^d/',$controls['order'])) $find_person_query .= " DESC";
+			else $find_person_query .= " ASC";
 
 			if (!empty($controls['limit']) && is_numeric($controls['limit'])) {
 				if (is_numeric($controls['offset']))
@@ -320,19 +325,22 @@
 					OFFSET ".$controls['limit'];
 			}
 
-			$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
+			$rs = $database->Execute($find_person_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
-				if (isset($parameters['role']) || ! $controls['count']) {
+				if (isset($parameters['role']) || ! array_key_exists('count',$controls) || ! $controls['count']) {
 					$customer = new Customer($id);
 				}
 				if (isset($parameters['role']) && ! $customer->has_role($parameters['role'])) continue;
-				if (! $controls['count']) array_push($people,$customer);
+				if (array_key_exists('count',$controls) && $controls['count']) {
+					// Don't build array
+				}
+				else array_push($people,$customer);
 				$this->incrementCount();
 			}
 
@@ -428,34 +436,34 @@
 			// Add search_tags searching
 			if (isset($search_tags) && !empty($search_tags)) {
 
-			    app_log("Customer Search w/Search Tags Requested",'debug',__FILE__,__LINE__);
+				app_log("Customer Search w/Search Tags Requested",'debug',__FILE__,__LINE__);
 
-                // Customer Search w/Search Tags Requested
-			    $find_person_query = "
-					    SELECT DISTINCT(stx.object_id)
-					    FROM search_tags_xref stx
-					    INNER JOIN search_tags st ON stx.tag_id = st.id
-					    WHERE st.class = 'Register::Customer'
-					    AND (
-						    st.category LIKE '$search_string'
-						    OR st.value LIKE '$search_string'
-					    )
-			    ";
+				// Customer Search w/Search Tags Requested
+				$find_person_query = "
+						SELECT DISTINCT(stx.object_id)
+						FROM search_tags_xref stx
+						INNER JOIN search_tags st ON stx.tag_id = st.id
+						WHERE st.class = 'Register::Customer'
+						AND (
+							st.category LIKE '$search_string'
+							OR st.value LIKE '$search_string'
+						)
+				";
 				
-			    app_log("Search query: ".$find_person_query,'trace',__FILE__,__LINE__);
-			    $rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
-			    if (! $rs) {
-				    $this->SQLError($GLOBALS['_database']->ErrorMsg());
-				    return null;
-			    }
-			    while (list($id) = $rs->FetchRow()) {
-				    if ($count == false) {
-					    $customer = new Customer($id);
-					    array_push($people,$customer);
-				    }
-				    $this->incrementCount();
-			    }
-            }
+				app_log("Search query: ".$find_person_query,'trace',__FILE__,__LINE__);
+				$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
+				if (! $rs) {
+					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+					return null;
+				}
+				while (list($id) = $rs->FetchRow()) {
+					if ($count == false) {
+						$customer = new Customer($id);
+						array_push($people,$customer);
+					}
+					$this->incrementCount();
+				}
+			}
 			return $people;
 		}
 	}

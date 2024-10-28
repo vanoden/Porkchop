@@ -2,22 +2,32 @@
 	namespace Site;
 
 	class SessionList Extends \BaseListClass{
-		public function find($parameters = array()) {
+		public function find($parameters = [], $controls = []) {
 			$this->clearError();
 			$this->resetCount();
 
-			$bind_params = array();
+			if (array_key_exists('_limit',$parameters)) $controls['limit'] = $parameters['_limit'];
+			if (array_key_exists('_sort',$parameters)) $controls['sort'] = $parameters['_sort'];
+			if (array_key_exists('_offset',$parameters)) $controls['offset'] = $parameters['_offset'];
+			if (array_key_exists('_desc',$parameters) && is_bool($parameters['_desc']) && $parameters['_desc']) $controls['order'] = 'DESC';
+			else $controls['order'] = 'ASC';
+			if (empty($controls['offset'])) $controls['offset'] = 0;
+			if (!empty($controls["order"]) && strtolower($controls['order']) != "asc") $controls['order'] = 'DESC';
+			else $controls['order'] = 'ASC';
+
+			$database = new \Database\Service();
 
 			$find_objects_query = "
 				SELECT	id
 				FROM	session_sessions
 				WHERE	company_id = ?";
-			array_push($bind_params,$GLOBALS['_SESSION_']->company->id);
 
-			if (isset($parameters['code']) and preg_match('/^\w+$/',$parameters['code'])) {
+			$database->AddParam($GLOBALS['_SESSION_']->company->id);
+
+			if (isset($parameters['code']) && preg_match('/^\w+$/',$parameters['code'])) {
 				$find_objects_query .= "
 				AND		code = ?";
-			    array_push($bind_params,$parameters['code']);
+				$database->AddParam($parameters['code']);
 			}
 
 			if (!empty($parameters['expired'])) {
@@ -29,29 +39,29 @@
 			if (isset($parameters['user_id']) && preg_match('/^\d+$/',$parameters['user_id'])) {
 				$find_objects_query .= "
 				AND		user_id = ?";
-				array_push($bind_params,$parameters['user_id']);
+				$database->AddParam($parameters['user_id']);
 			}
 			if (isset($parameters['date_start']) && get_mysql_date($parameters['date_start'])) {
 				$threshold = get_mysql_date($parameters['date_start']);
 				$find_objects_query .= "
 					AND	last_hit_date >= ?";
-				array_push($bind_params,$threshold);
+				$database->AddParam($threshold);
 			}
 
-			if (isset($parameters['_sort']) && in_array($parameters['_sort'],array('code','last_hit_date','first_hit_date'))) {
+			if (isset($controls['sort']) && in_array($controls['sort'],array('code','last_hit_date','first_hit_date'))) {
 				$find_objects_query .= "
-					ORDER BY ".$parameters['_sort'];
-				if (isset($parameters['_desc']) && $parameters['_desc'] == true) $find_objects_query .= " DESC";
+					ORDER BY ".$controls['sort'];
+				$find_objects_query .= " ".$controls['order'];
 			}
 
-			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
+			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
 				$find_objects_query .= "
-					LIMIT	0,".$parameters['_limit'];
+					LIMIT	".$controls['offset'].",".$controls['limit'];
 			}
-            query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			$objects = array();

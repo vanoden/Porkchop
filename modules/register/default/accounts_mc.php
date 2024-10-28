@@ -1,11 +1,13 @@
  <?php
-	###################################################
-	### accounts_mc.php								###
-	### This program collects registration info		###
-	### for the user.								###
-	### A. Caravello 11/12/2002						###
-	###################################################
-    $site = new \Site();
+	#######################################################
+	### accounts_mc.php									###
+	### This view lists all account associated with a	###
+	### provide set of filters.							###
+	### A. Caravello 11/12/2002							###
+	#######################################################
+
+	// Initalize the Page
+	$site = new \Site();
     $page = $site->page();
 	$page->requirePrivilege("manage customers");
 
@@ -13,12 +15,12 @@
 	$find_parameters = array();
 
 	// Customers to display at a time
-	if (is_numeric($_REQUEST['recordsPerPage']))
-		$recordsPerPage = $_REQUEST['recordsPerPage'];
-	else
-		$recordsPerPage = 20;
+	$recordsPerPage = 20;
+	$startId = 0;
 
-	if (isset($_REQUEST['start']) && ! preg_match('/^\d+$/',$_REQUEST['start'])) $_REQUEST['start'] = 0;
+	// Check for Pagination Parameters
+	if (array_key_exists('recordsPerPage',$_REQUEST) && is_numeric($_REQUEST['recordsPerPage'])) $recordsPerPage = $_REQUEST['recordsPerPage'];
+	if (array_key_exists('pagination_start_id',$_REQUEST) && is_numeric($_REQUEST['pagination_start_id'])) $startId = $_REQUEST['pagination_start_id'];
 
 	// Security - Only Register Module Operators or Managers can see other customers
 	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
@@ -44,29 +46,21 @@
 	if (isset($_REQUEST['search']) && strlen($_REQUEST['search'])) $find_parameters['_search'] = $_REQUEST['search'];
 
 	// Get Count before Pagination
-	$customerList->find($find_parameters,array('count' => true));
-	$total_customers = $customerList->count();
-
-	// Add Pagination to Query
-	$controls["limit"] = $recordsPerPage;
-	$controls["offset"] = isset($_REQUEST['pagination_start_id']) ? $_REQUEST['pagination_start_id']: 0;
-
+	$customers = $customerList->find($find_parameters,array('limit'=>$recordsPerPage,'offset'=>$startId));
     $totalRecords = $customerList->count();
-	$customers = $customerList->find($find_parameters,$controls);
 	if ($customerList->error()) $page->addError("Error finding customers: ".$customerList->error());
 
-	if (isset($_REQUEST['start']) && $_REQUEST['start'] < $recordsPerPage)
-		$prev_offset = 0;
-	else
-		$prev_offset = $_REQUEST['start'] - $recordsPerPage;
-	$next_offset = $_REQUEST['start'] + $recordsPerPage;
-	app_log("$total_customers - $recordsPerPage",'trace',__FILE__,__LINE__);
-	$last_offset = $total_customers - $recordsPerPage;
+	if ($startId < $recordsPerPage) $prev_offset = 0;
+	else $prev_offset = $_REQUEST['start'] - $recordsPerPage;
 
-	$page->title = "Accounts";
+	$next_offset = $_REQUEST['start'] + $recordsPerPage;
+	$last_offset = $totalRecords - $recordsPerPage;
 
 	// paginate results
     $pagination = new \Site\Page\Pagination();
+	$pagination->startId($startId);
     $pagination->forwardParameters(array('search','hidden','expired','blocked','deleted','sort_field','sort_direction','recordsPerPage'));
     $pagination->size($recordsPerPage);
     $pagination->count($totalRecords);
+
+	$page->title = "Accounts";

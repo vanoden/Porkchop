@@ -57,7 +57,7 @@
             return $this->size;
         }
 
-        public function startId($startId = null) {
+        public function startId(?int $startId = 0) {
             if (isset($startId) && is_numeric($startId)) $this->startId = $startId;
             if ($this->startId < 0) $this->startId = 0;
         }

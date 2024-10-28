@@ -599,12 +599,22 @@
 		}
 		
 		public function last_active() {
+			if (! $this->id) return null;
 			$sessionList = new \Site\SessionList();
-			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
+			app_log("Getting last active session for user ".$this->id);
+			$sessions = $sessionList->find(
+				[	"user_id"	=> $this->id,
+				],
+				[	"sort"	=> 'last_hit_date',
+					"order"	=> 'desc',
+					"limit"	=> 1
+				]
+			);
 			if ($sessionList->error()) {
 				$this->error("Error getting session: ".$sessionList->error());
 				return null;
 			}
+			$session = $sessions[0];
 			if (! $session) return null;
 			return $session->last_hit_date;
 		}
