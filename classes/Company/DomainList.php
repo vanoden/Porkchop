@@ -3,17 +3,22 @@
 
 	class DomainList Extends \BaseListClass {
 		public function find($parameters = array()) {
+			$this->resetCount();
+
+			// Initialize Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$find_objects_query = "
 				SELECT	id
 				FROM	company_domains
 				WHERE	id = id";
 
-			$bind_params = array();
 			if (!empty($parameters['name'])) {
 				if (preg_match('/^[\w\-\.]+$/',$parameters['name'])) {
 					$find_objects_query .= "
 					AND		domain_name = ?";
-					array_push($bind_params,$parameters['name']);
+					$database->AddParam($parameters['name']);
 				}
 				else {
 					$this->error("Invalid domain name");
@@ -29,12 +34,12 @@
 				}
 				$find_objects_query .= "
 				AND		location_id = ?";
-				array_push($bind_params,$parameters['location_id']);
+				$database->AddParam($parameters['location_id']);
 			}
 
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			

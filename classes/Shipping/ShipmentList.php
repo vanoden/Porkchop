@@ -6,12 +6,7 @@
 			$this->_modelName = '\Shipping\Shipment';
 		}
 
-		public function count($parameters = []) {
-			$this->find($parameters,array('count' => true));
-			return $this->_count;
-		}
-
-		public function find($parameters = [],$controls = []) {
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$find_objects_query = "
 				SELECT	id
 				FROM	shipping_shipments
@@ -61,8 +56,8 @@
 			if (!empty($controls['sort']) && $validationClass->hasField($controls['sort'])) {
 				$find_objects_query .= "
 					ORDER BY ".$controls['sort'];
-				if (preg_match('/^(asc|desc)$/i',$controls['direction']))
-					$find_objects_query .= " ".$controls['direction'];
+				if (preg_match('/^(asc|desc)$/i',$controls['order']))
+					$find_objects_query .= " ".$controls['order'];
 			}
 			else {
 				$find_objects_query .= "
@@ -93,5 +88,9 @@
 				$this->incrementCount();
 			}
 			return $shipments;
+		}
+		
+		public function searchAdvanced($parameters, $advanced, $controls): array {
+			return $this->findAdvanced($parameters, $advanced, $controls);
 		}
 	}

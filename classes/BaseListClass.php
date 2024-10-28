@@ -20,24 +20,120 @@ class BaseListClass extends \BaseClass {
 		$this->_count = 0;
 	}
 
+	/**
+	 * Polymorphic method for find and search
+	 * @param mixed $name 
+	 * @param mixed $parameters 
+	 * @return mixed 
+	 */
 	public function __call($name, $parameters) {
 		if ($name == "find") {
-			if (func_num_args() == 2) {
-				return $this->findAdvanced($parameters[0], $parameters[1]);
-			} else
-				return $this->findAdvanced($parameters[0], []);
-		} else {
+			if (func_num_args() == 3) {
+				return $this->findAdvanced($parameters[0], $parameters[1], $parameters[2]);
+			}
+			elseif (func_num_args() == 2) {
+				return $this->findControlled($parameters[0], $parameters[1], []);
+			}
+			else
+				return $this->findSimple($parameters[0]);
+		}
+		elseif ($name == "search") {
+			if (func_num_args() == 3) {
+				return $this->searchAdanced($parameters[0], $parameters[1], $parameters[2]);
+			}
+			elseif (func_num_args() == 2) {
+				return $this->searchControlled($parameters[0], $parameters[1]);
+			}
+			else {
+				return $this->searchSimple($parameters[0]);
+			}
+		}
+		else {
 			$this->error("Invalid method '$name'");
 			return false;
 		}
 	}
 
-	public function findAdvanced($parameters = [], $controls = []): array {
-		
+	/**
+	 * Simple search for messages based on a search string.  This method is a wrapper for searchControlled
+	 *
+	 * @param array $parameters Search parameters
+	 * @return array|int Array of Content\Message objects or 0 on error
+	 */
+	public function searchSimple($search_string): array {
+		if (! $this->validSearchString($search_string)) {
+			$this->error("Invalid Search String");
+			return array();
+		}
+		$controls = [];
+		$advanced = [];
+		return $this->searchAdvanced($search_string, $advanced, $controls);
+	}
+
+	/**
+	 * Search for messages based on a search string with controls as separate parameters
+	 * @param mixed $parameters 
+	 * @param mixed $controls 
+	 * @return array|int 
+	 */
+	public function searchControlled($search_string, $controls) {
+		if (! $this->validSearchString($search_string)) {
+			$this->error("Invalid Search String");
+			return array();
+		}
+		$advanced = [];
+		return $this->searchAdvanced($search_string, $advanced, $controls);
+	}
+
+	/**
+	 * Transfer control parameters from parameters array to controls array
+	 * @param array $parameters 
+	 * @param array $controls 
+	 * @return array
+	 */
+	public function findSimple($parameters = []) {
+		$controls = [];
+		if (!empty($parameters['_sort'])) $controls['sort'] = $parameters['_sort'];
+		$parameters['_sort'] = null;
+		if (!empty($parameters['_order'])) $controls['order'] = $parameters['_order'];
+		$parameters['_order'] = null;
+		if (!empty($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
+		$parameters['_limit'] = null;
+		if (!empty($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
+		$parameters['_offset'] = null;
+		if (!empty($parameters['_count'])) $controls['ids'] = $parameters['_count'];
+		return $this->findAdvanced($parameters, [], $controls);
+	}
+
+	public function findControlled($parameters, array $controls): array {
+		if (!empty($controls['count'])) $controls['ids'] = $controls['count'];
+		return $this->findAdvanced($parameters, [], $controls);
+	}
+
+	/**
+	 * Search for messages based on a search string
+	 * @param array $parameters Search parameters
+	 * @return array|int Array of Content\Message objects or 0 on error
+	 */
+	public function searchAdvanced($search_string, array $advanced, array $controls): array {
+		return array();
+	}
+
+	/**
+	 * Find items based on a search string
+	 * @param array $parameters 
+	 * @param array $advanced 
+	 * @param array $controls 
+	 * @return array 
+	 */
+	public function findAdvanced(array $parameters, array $advanced, array $controls): array {
 		$this->clearError();
 		$this->resetCount();
-		
+
+		// Initialize Database Service
 		$database = new \Database\Service();
+
+		// Make Sure we have specified a model
 		if (empty($this->_modelName)) {
 			$this->error("Model Name Not Set");
 			return array();
@@ -74,7 +170,8 @@ class BaseListClass extends \BaseClass {
 			if (!empty($controls['order']) && preg_match('/^(asc|desc)$/i', $controls['order'])) {
 				$find_objects_query .= " " . $controls['order'];
 			}
-		} elseif (!empty($this->_tableDefaultSortBy)) {
+		}
+		elseif (!empty($this->_tableDefaultSortBy)) {
 			$find_objects_query .= "
 					ORDER BY `" . $this->_tableDefaultSortBy . "`";
 			if (!empty($this->_tableDefaultSortOrder)) {
@@ -146,8 +243,116 @@ class BaseListClass extends \BaseClass {
 			return 1;
 	}
 
+	/**
+	 * Search Only on Tags
+	 * 
+	 */
+	public function searchTags($search_string, $controls = []): array {
+		$this->clearError();
+		$this->resetCount();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Make Sure we have specified a model
+		if (empty($this->_modelName)) {
+			$this->error("Model Name Not Set");
+			return [];
+		}
+
+		// Get Class
+		$modelClass = new $this->_modelName();
+
+		// Build Query
+		$get_objects_query = "
+			SELECT	obj.id
+			FROM	".$modelClass->_tableName." obj,
+					search_tags st,
+					search_tags_xref stx
+			WHERE	st.class = ?
+			AND		st.value = ?
+			AND		st.id = stx.tag_id
+			)
+		";
+		$database->AddParams($modelClass->_className, $search_string);
+
+		$rs = $database->Execute($get_objects_query);
+		if (! $rs) {
+			$this->SQLError($database->ErrorMsg());
+			return [];
+		}
+
+		$objects = [];
+		while (list($id) = $rs->FetchRow()) {
+			$object = new $this->_modelName($id);
+			array_push($objects, $object);
+			$this->incrementCount();
+		}
+		return $objects;
+	}
+
+	/**
+	 * Search Only on Categorized Tags
+	 * @param array $parameters
+	 * @return mixed
+	 */
+	public function searchCategorizedTags($tags, $controls = []): array {
+		$this->clearError();
+		$this->resetCount();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Make Sure we have specified a model
+		if (empty($this->_modelName)) {
+			$this->error("Model Name Not Set");
+			return [];
+		}
+
+		// Get Class
+		$modelClass = new $this->_modelName();
+
+		// Get Tag ID's
+		$tags = [];
+		$searchTagList = new \Search\TagList();
+		foreach ($tags as $tag) {
+			$tagParams = ['class' => $modelClass->_className];
+			if ($tag['category']) $tagParams['category'] = $tag['category'];
+			if ($tag['value']) $tagParams['value'] = $tag['value'];
+
+			$tagResults = $searchTagList->find($tagParams);
+			if ($tagResults) {
+				array_push($tags, $tag->id);
+			}
+		}
+
+		// Build Query
+		$get_objects_query = "
+			SELECT	obj.id
+			FROM	".$modelClass->_tableName." obj,
+					search_tags_xref stx
+			WHERE	stx.id = ?
+			AND		obj.id = stx.tag_id
+			)
+		";
+
+		$rs = $database->Execute($get_objects_query);
+		if (! $rs) {
+			$this->SQLError($database->ErrorMsg());
+			return [];
+		}
+
+		$objects = [];
+		while (list($id) = $rs->FetchRow()) {
+			$object = new $this->_modelName($id);
+			array_push($objects, $object);
+			$this->incrementCount();
+		}
+		return $objects;
+	}
+
 	public function first($parameters = array()) {
-		$objects = $this->findAdvanced($parameters, array('sort' => $this->_tableDefaultSortBy, 'order' => 'asc', 'limit' => 1));
+		$objects = $this->findAdvanced($parameters, [], array('sort' => $this->_tableDefaultSortBy, 'order' => 'asc', 'limit' => 1));
 		if ($this->error())
 			return null;
 		if (count($objects) < 1)
@@ -156,16 +361,39 @@ class BaseListClass extends \BaseClass {
 	}
 
 	public function last($parameters = array()) {
-		$objects = $this->findAdvanced($parameters, array('sort' => $this->_tableDefaultSortBy, 'order' => 'desc', 'limit' => 1));
+		$objects = $this->findAdvanced($parameters, [], array('sort' => $this->_tableDefaultSortBy, 'order' => 'desc', 'limit' => 1));
 		if ($this->error())
 			return null;
 		return end($objects);
 	}
 
+	protected function getTagIds($tags): array {
+		$modelClass = new $this->_modelName();
+
+		// Get Tag ID's
+		$tags = [];
+		$searchTagList = new \Search\TagList();
+		foreach ($tags as $tag) {
+			$tagParams = ['class' => $modelClass->_className];
+			if ($tag['category']) $tagParams['category'] = $tag['category'];
+			if ($tag['value']) $tagParams['value'] = $tag['value'];
+
+			$tagResults = $searchTagList->find($tagParams);
+			if ($tagResults) {
+				array_push($tags, $tag->id);
+			}
+		}
+		return $tags;
+	}
+
 	public function validSearchString($string) {
-		if (preg_match('/^[\w\-\.\_\s\*]*$/', $string))
-			return true;
-		else
-			return false;
+		if (preg_match('/^[\w\-\.\_\s\*]{3,64}$/', $string)) return true;
+		else return false;
+	}
+
+	public function setWildCards($string) {
+		$string = preg_replace('/\*/', '%', $string);
+		$string = preg_replace('/\?/', '_', $string);
+		return $string;
 	}
 }

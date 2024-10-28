@@ -110,23 +110,11 @@
 			return $this->_count();
 		}
 	
-		public function find($parameters = [], $controls = []) {
-
+		public function findAdvanced(array $parameters, array $advanced, array $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
-			// Backward compatibility for sorting/limits
-			if (is_bool($controls)) $controls = array('count' => $controls); // bool was sent as second param, handle as 'count'
-			if (isset($controls['count'])) $controls['count'] = false;
-			if (array_key_exists('count',$controls) && $controls['count']) $ADODB_COUNTRECS = true;
 			if (isset($parameters['role'])) app_log("Don't use role as a filter for customers, use Register::Role::Members",'warning');
-
-			if (array_key_exists('_limit',$parameters)) $controls['limit'] = $parameters['_limit'];
-			if (array_key_exists('_sort',$parameters)) $controls['sort'] = $parameters['_sort'];
-			if (array_key_exists('_offset',$parameters)) $controls['offset'] = $parameters['_offset'];
-			if (empty($controls['offset'])) $controls['offset'] = 0;
-			if (!empty($controls["order"]) && strtolower($controls['order']) != "asc") $controls['order'] = 'DESC';
-			else $controls['order'] = 'ASC';
 
 			$validationclass = new \Register\Customer();
 
@@ -333,7 +321,7 @@
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
-				if (isset($parameters['role']) || ! array_key_exists('count',$controls) || ! $controls['count']) {
+				if (isset($parameters['role']) || ! array_key_exists('ids',$controls) || ! $controls['ids']) {
 					$customer = new Customer($id);
 				}
 				if (isset($parameters['role']) && ! $customer->has_role($parameters['role'])) continue;
@@ -347,37 +335,47 @@
 			return $people;
 		}
 		
-		public function search($search_string,$limit = 0,$offset = 0, $search_tags = false) {
-
+		public function searchAdvanced($search_string, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
-			if (is_bool($limit) && $limit == true) $count = true;
-			else $count = false;
-
-			$bind_params = array();
+			// Initialize Database Service
+			$database = new \Database\Service();
 
 			app_log("Customer Search Requested",'debug',__FILE__,__LINE__);
-
-			if (! preg_match('/^[\w\-\.\_\s\*]{3,64}$/',$search_string)) {
-				$this->error("Invalid search string");
-				return null;
-			}
-			if (preg_match('/\*/',$search_string))
-				$search_string = preg_replace('/\*/','%',$search_string);
-			else
-				$search_string = '%'.$search_string.'%';
 
 			if (empty($search_string)) {
 				$this->error("Search string required");
 				return null;
 			}
 
+			if (! $this->validSearchString($search_string)) {
+				$this->error("Invalid search string");
+				return null;
+			}
+			$parameters['string'] = $search_string;
+
 			// Search for customers based on basic information
 			$find_person_query = "
 				SELECT	id
-				FROM	register_users
-				WHERE	id = id
+				FROM	register_users";
+
+			if (isset($advanced['tags'])) {
+				$tagList = new \Search\TagList();
+				$tagIds = $tagList->find(['tags' => $advanced['tags']]);
+				$find_person_query .= "
+					WHERE	id IN (
+						SELECT	object_id
+						FROM	search_tags_xref
+						WHERE	tag_id IN (".implode(',',$tagIds).")
+					)";
+			}
+			else {
+				$find_person_query .= "
+				WHERE	id = id";
+			}
+
+			$find_person_query .= "
 				AND		(	login LIKE '$search_string'
 					OR		first_name LIKE '$search_string'
 					OR		last_name LIKE '$search_string'
@@ -385,6 +383,7 @@
 					OR		last_name LIKE '$search_string'
 				)
 			";
+
 			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					$icount = 0;
@@ -409,13 +408,13 @@
 				AND		status not in ('EXPIRED','HIDDEN','DELETED')";
 			}
 
-			if ($count == false && $limit > 0 && preg_match('/^\d+$/',$limit)) {
-				if (preg_match('/^\d+$/',$offset))
+			if ($controls['ids'] == false && $controls['limit'] > 0 && preg_match('/^\d+$/',$controls['limit'])) {
+				if (preg_match('/^\d+$/',$controls['offset']))
 					$find_person_query .= "
-					LIMIT	$offset,$limit";
+					LIMIT	".$controls['offset'].",".$controls['limit'];
 				else
 					$find_person_query .= "
-					LIMIT	$limit";
+					LIMIT	".$controls['limit'];
 			}
 			app_log("Search query: ".$find_person_query,'trace',__FILE__,__LINE__);
 			$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
@@ -426,44 +425,13 @@
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
-				if ($count == false) {
+				if ($controls['ids'] == false) {
 					$customer = new Customer($id);
 					array_push($people,$customer);
 				}
 				$this->incrementCount();
 			}
 
-			// Add search_tags searching
-			if (isset($search_tags) && !empty($search_tags)) {
-
-				app_log("Customer Search w/Search Tags Requested",'debug',__FILE__,__LINE__);
-
-				// Customer Search w/Search Tags Requested
-				$find_person_query = "
-						SELECT DISTINCT(stx.object_id)
-						FROM search_tags_xref stx
-						INNER JOIN search_tags st ON stx.tag_id = st.id
-						WHERE st.class = 'Register::Customer'
-						AND (
-							st.category LIKE '$search_string'
-							OR st.value LIKE '$search_string'
-						)
-				";
-				
-				app_log("Search query: ".$find_person_query,'trace',__FILE__,__LINE__);
-				$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
-				if (! $rs) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
-					return null;
-				}
-				while (list($id) = $rs->FetchRow()) {
-					if ($count == false) {
-						$customer = new Customer($id);
-						array_push($people,$customer);
-					}
-					$this->incrementCount();
-				}
-			}
 			return $people;
 		}
 	}

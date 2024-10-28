@@ -6,23 +6,21 @@
             $this->_modelName = '\Register\Organization';
         }
 
-		public function search($parameters = [], $controls = []) {		
-			app_log("Register::OrganizationList::search()",'trace',__FILE__,__LINE__);
+		public function searchAdvanced($search_string, $advanced = [], $controls = []): array {
 			$this->clearError();
 			$this->resetCount();
 
-            // Backwards Compatibility
-            if (is_bool($controls)) {
-                $controls = array('id' => $controls);
-            }
-            elseif (! is_array($controls)) {
-                $this->error("Invalid controls");
-                return null;
-            }
+			if (! $this->validSearchString($search_string)) {
+				$this->error("Invalid search string");
+				return array();
+			}
 
+			return $this->findAdvanced(['search_string' => $search_string], $advanced, $controls);
+
+			// Initialize Database Service
 			$database = new \Database\Service();
 	
-            $validationClass = new \Register\Organization();
+            $validationClass = new $this->_modelName();
 
 			$get_organizations_query = "
 				SELECT	ro.id
@@ -30,10 +28,32 @@
 			";
 
 			// add searched Tag Join
-			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag']))
-                $get_organizations_query .= " INNER JOIN register_tags rt ON rt.register_id = ro.id ";
+			if (!empty($search_string)) {
+				if (!$this->validSearchString($search_string)) {
+					app_log("Invalid search string: '$search_string'",'info');
+					$this->error("Invalid search string '".$search_string."'");
+					return null;
+				}
 
-			$string = $parameters['string'];
+				$get_organizations_query .= ",
+				INNER JOIN  search_tags st
+				ON 			st.class = 'Register::Organization'
+				INNER JOIN	search_tags_xref stx ON stx.object_id = ro.id
+				AND 		stx.tag_id = st.id
+				WHERE	(
+								ro.name = ?
+							OR 	ro.code = ?
+							OR	(
+									st.category = ?
+								AND st.value = ?
+							)
+				)";
+				$database->AddParam($search_string);
+				$database->AddParam($search_string);
+				$database->AddParam($advanced['tag']['type']);
+				$database->AddParam($advanced['tag']['string']);
+			}
+
 			if (! empty($string)) {
 				if (!$this->validSearchString($string)) {
 					app_log("Invalid search string: '$string'",'info');
@@ -60,9 +80,9 @@
 					WHERE	ro.id = ro.id";
 			}
 			
-			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) {
+			if (!empty($search_string)) {
 				$get_organizations_query .= " AND rt.name = ? ";
-				$database->AddParam($parameters['searchedTag']);
+				$database->AddParam($search_string);
 				$get_organizations_query .= " AND rt.type = 'ORGANIZATION' ";
 			}
 
@@ -99,9 +119,6 @@
 				$get_organizations_query .= "
 				AND		ro.is_reseller = ".$parameters['is_reseller'];
 
-            if (! preg_match('/^desc$/i',$controls['direction'])) $controls['direction'] = 'ASC';
-            if (is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
-            if (is_numeric($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
 
             if (isset($controls['sort'])) {
                 if (!$validationClass->hasField($controls['sort'])) {
@@ -111,11 +128,11 @@
                 switch($controls['sort']) {
                     case 'status':
                         $get_organizations_query .= "
-                        ORDER BY ro.status ".$controls['direction'];
+                        ORDER BY ro.status ".$controls['order'];
                         break;
                     default:
                         $get_organizations_query .= "
-                        ORDER BY ro.name ".$controls['direction'];
+                        ORDER BY ro.name ".$controls['order'];
                         break;
                 }
             }
@@ -153,36 +170,32 @@
 			return $organizations;
 		}
 
-		public function find($parameters = [],$controls = []) {
+		public function findAdvanced($parameters = [], $advanced = [], $controls = []): array {
 			$this->clearError();
 			$this->resetCount();
-			app_log("Register::OrganizationList::find()",'trace',__FILE__,__LINE__);
 
-            if (is_bool($controls)) {
-                $controls = array('id' => $controls);
-            }
-            elseif (! is_array($controls)) {
-                $this->error("Invalid controls");
-                return null;
-            }
+            $validationClass = new $this->_modelName();
 
-            $validationClass = new \Register\Organization();
+			// Initialize Database Service
+			$database = new \Database\Service();
 
+			// Build Query
 			$get_organizations_query = "
 				SELECT	ro.id
 				FROM	register_organizations ro
 			";
-			
-			$bind_params = array();
 
-			// add searched Tag Join
-			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) $get_organizations_query .= " INNER JOIN register_tags rt ON rt.register_id = ro.id ";
-			$get_organizations_query .= " WHERE	ro.id = ro.id ";
-			
-			if (isset($parameters['searchedTag']) && !empty($parameters['searchedTag'])) {
-				$get_organizations_query .= " AND rt.name = ? ";
-				array_push($bind_params,$parameters['searchedTag']);
-				$get_organizations_query .= " AND rt.type = 'ORGANIZATION' ";
+			// Apply Tags Filter if specified
+			if (isset($advanced['tags']) && !empty($advanced['tags'])) {
+				$tagIds = $this->getTagIds($advanced['tags']);
+				$get_organizations_query .= ",
+								search_tags_xref stx
+					WHERE		stx.object_id = ro.id
+					AND			stx.tag_id IN (".implode(',',$tagIds).")";
+			}
+			else {
+				$get_organizations_query .= "
+					WHERE		ro.id = ro.id";
 			}
 			
 			if (!empty($parameters['name'])) {
@@ -192,7 +205,7 @@
 				} else {
 					$get_organizations_query .= "
 					AND		ro.name = ?";
-					array_push($bind_params,$parameters['name']);
+					$database->AddParam($parameters['name']);
 				}
 			}
 
@@ -203,7 +216,7 @@
                 }
 				$get_organizations_query .= "
 				AND		ro.code = ?";
-				array_push($bind_params,$parameters['code']);
+				$database->AddParam($parameters['code']);
 			}
 
 			if (!empty($parameters['status']) && is_array($parameters['status'])) {
@@ -229,7 +242,7 @@
                 }
 				$get_organizations_query .= "
 				AND		ro.status = ?";
-				array_push($bind_params,$parameters['status']);
+				$database->AddParam($parameters['status']);
 			} else
 				$get_organizations_query .= "
 				AND		ro.status IN ('NEW','ACTIVE')";
@@ -237,14 +250,8 @@
 			if (isset($parameters['reseller_id']) && is_numeric($parameters['reseller_id'])) {
 				$get_organizations_query .= "
 				AND		ro.reseller_id = ?";
-				array_push($bind_params,$parameters['reseller_id']);
+				$database->AddParam($parameters['reseller_id']);
 			}
-
-			$controls['direction'] = (isset($controls['direction']) && preg_match('/^desc$/i',$controls['direction'])) ? $controls['direction'] : 'ASC';
-
-            if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
-
-            if (isset($parameters['_offset']) && is_numeric($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
 
             if (isset($controls['sort'])) {
 
@@ -256,16 +263,17 @@
 				switch($controls['sort']) {
 					case 'status':
 						$get_organizations_query .= "
-						ORDER BY ro.status ".$controls['direction'];
+						ORDER BY ro.status ".$controls['order'];
 						break;
 					default:
 						$get_organizations_query .= "
-						ORDER BY ro.name ".$controls['direction'];
+						ORDER BY ro.name ".$controls['order'];
 						break;
 				}
-			} else {
+			}
+			else {
 				$get_organizations_query .= "
-				ORDER BY ro.name ".$controls['direction'];
+				ORDER BY ro.name ".$controls['order'];
 			}
 
 			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
@@ -274,9 +282,8 @@
                 if (is_numeric($controls['offset'])) $get_organizations_query .= "
                     OFFSET ".$controls['offset'];
 			}
-			
-			query_log($get_organizations_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($get_organizations_query,$bind_params);
+
+			$rs = $database->Execute($get_organizations_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
@@ -294,24 +301,6 @@
 				$this->incrementCount();
 			}
 			
-			return $organizations;
-		}
-		
-		public function findArray($parameters = array()) {
-			$this->clearError();
-			$this->resetCount();
-			app_log("Register::OrganizationList::findArray()",'trace',__FILE__,__LINE__);
-
-			$objects = $this->find($parameters);
-
-			$organizations = array();
-			foreach ($objects as $object) {
-				$organization = array();
-				$organization['id'] = $object->id;
-				$organization['name'] = $object->name;
-				$this->incrementCount();
-				array_push($organizations,$organization);
-			}
 			return $organizations;
 		}
 		

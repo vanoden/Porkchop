@@ -1,27 +1,30 @@
 <?php
 	namespace Geography;
 
-	class AdminList {
-		private $_error;
-		private $_count = 0;
+	class AdminList Extends \BaseListClass {
+		public function find ($parameters = []) {
+			$this->clearError();
+			$this->resetCount();
 
-		public function find ($parameters) {
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$find_objects_query = "
 				SELECT	id
 				FROM	geography_provinces
 				WHERE	id = id
 			";
 
-			$bind_params = array();
 			if (isset($parameters['country_id'])) {
 				$find_objects_query .= "
 				AND		country_id = ?";
-				array_push($bind_params,$parameters['country_id']);
+				$database->AddParam($parameters['country_id']);
 			}
 
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->_error = "SQL Error in Geography::AdminList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 

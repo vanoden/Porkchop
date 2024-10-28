@@ -3,19 +3,14 @@
 
 	class ItemList Extends \BaseListClass {
 
-        public function __construct() {
-            $this->_modelName = '\Product\Item';
-        }
+		public function __construct() {
+			$this->_modelName = '\Product\Item';
+		}
 
-        public function count($parameters = []) {
-            if (!empty($this->_count)) return $this->_count;
-            $this->_count = count($this->find($parameters));
-            return $this->_count;
-        }
-		
-		public function search($parameters = []) {
-			if (!isset($parameters['search_tags'])) $parameters['search_tags'] = true;
-			return $this->find($parameters);
+		public function count($parameters = []) {
+			if (!empty($this->_count)) return $this->_count;
+			$this->_count = count($this->find($parameters));
+			return $this->_count;
 		}
 
 		public function getAllProducts($type = 'unique') {
@@ -43,13 +38,12 @@
 			return $productIds;
 		}
 
-		public function find($parameters = [],$controls = []) {
-
+		public function findAdvanced($parameters = [], $controls = [], $advanced = []): array {
 			$this->clearError();
-            $this->resetCount();
+			$this->resetCount();
 
-            // For Validation
-            $validationclass = new \Product\Item();
+			// For Validation
+			$validationclass = new \Product\Item();
 
 			$find_product_query = "
 				SELECT	DISTINCT(p.id)
@@ -61,29 +55,29 @@
 
 			$bind_params = array();
 
-            if (!empty($parameters['search'])) {
-                if (!$validationclass->validSearch($parameters['search']) ) {
-                    $this->error("Invalid Search String");
-                    return null;
-                }
-                $find_product_query .= "
-                AND     (
-                            p.code LIKE ?
-                            OR p.name LIKE ?
-                            OR p.description LIKE ?
-                        )";
-                $search_string = $parameters['search'];
+			if (!empty($parameters['search'])) {
+				if (!$validationclass->validSearch($parameters['search']) ) {
+					$this->error("Invalid Search String");
+					return null;
+				}
+				$find_product_query .= "
+				AND     (
+							p.code LIKE ?
+							OR p.name LIKE ?
+							OR p.description LIKE ?
+						)";
+				$search_string = $parameters['search'];
 
 				// Specified Wildcards
-                if (preg_match('/^\*/',$search_string) || preg_match('/\*$/',$search_string)) {
-                    $search_string = preg_replace('/^\*/','%',$search_string);
-                    $search_string = preg_replace('/\*$/','%',$search_string);
-                } else {
-                    // Implied Wildcards
-                    $search_string = '%'.$parameters['search'].'%';
-                }
-                array_push($bind_params,$search_string,$search_string,$search_string);
-            }
+				if (preg_match('/^\*/',$search_string) || preg_match('/\*$/',$search_string)) {
+					$search_string = preg_replace('/^\*/','%',$search_string);
+					$search_string = preg_replace('/\*$/','%',$search_string);
+				} else {
+					// Implied Wildcards
+					$search_string = '%'.$parameters['search'].'%';
+				}
+				array_push($bind_params,$search_string,$search_string,$search_string);
+			}
 			# Filter on Given Parameters
 			if (isset($parameters['type'])) {
 				if (is_array($parameters['type'])) {
@@ -91,35 +85,35 @@
 					AND		p.type in (";
 					$count = 0;
 					foreach ($parameters['type'] as $type) {
-                        if (!$validationclass->validType($type)) {
-                            $this->error("Invalid Type: ".$type);
-                            return null;
-                        }
+						if (!$validationclass->validType($type)) {
+							$this->error("Invalid Type: ".$type);
+							return null;
+						}
 						if ($count) $find_product_query .= ",";
 						$count ++;
 						$find_product_query .= $GLOBALS['_database']->qstr($type,get_magic_quotes_gpc());
 					}
 					$find_product_query .= ")";
 				} else {
-                    if (!$validationclass->validType($parameters["type"])) {
-                        $this->error("Invalid Type: ".$parameters["type"]);
-                        return null;
-                    }
+					if (!$validationclass->validType($parameters["type"])) {
+						$this->error("Invalid Type: ".$parameters["type"]);
+						return null;
+					}
 					$find_product_query .= "
 					AND		p.type = ?";
 					array_push($bind_params,$parameters["type"]);
 				}
 			}
 			if (isset($parameters['status']) && is_array($parameters['status'])) {
-                foreach ($parameters['status'] as $status) {
-                    if (! $validationclass->validStatus($status)) {
-                        $this->error("Invalid Status: ".$status);
-                        return null;
-                    }
-                    $find_product_query .= "
-                    AND     p.status IN ('".implode("','",$parameters['status'])."')";
-                }
-            } elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
+				foreach ($parameters['status'] as $status) {
+					if (! $validationclass->validStatus($status)) {
+						$this->error("Invalid Status: ".$status);
+						return null;
+					}
+					$find_product_query .= "
+					AND     p.status IN ('".implode("','",$parameters['status'])."')";
+				}
+			} elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
 				$find_product_query .= "
 				AND		p.status = ?";
 				array_push($bind_params,strtoupper($parameters["status"]));
@@ -180,17 +174,17 @@
 				$find_product_query .= "
 				ORDER BY p.".$parameters['_sort'];
 			else	
-			    $find_product_query .= "
+				$find_product_query .= "
 				ORDER BY p.id";
 
-            if (isset($controls['limit']) && is_numeric($controls['limit'])) {
-                $find_product_query .= "
-                LIMIT   ".$controls['limit'];
-                if (isset($controls['offset']) && is_numeric($controls['offset'])) {
-                    $find_product_query .= "
-                    OFFSET  ".$controls['offset'];
-                }
-            }
+			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
+				$find_product_query .= "
+				LIMIT   ".$controls['limit'];
+				if (isset($controls['offset']) && is_numeric($controls['offset'])) {
+					$find_product_query .= "
+					OFFSET  ".$controls['offset'];
+				}
+			}
 
 			query_log($find_product_query,$bind_params);
 			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
@@ -202,17 +196,28 @@
 			$items = array();
 			while (list($id) = $rs->FetchRow()) {
 				$item = new Item($id);
-                $this->incrementCount();
+				$this->incrementCount();
 				array_push($items,$item);
 			}
+			return $items;
+		}
 
-            // Add search_tags searching
-            if (isset($parameters['search_tags']) && !empty($parameters['search_tags'])) {
-				
-				$bind_params = array();
-				
-				// Join to the existing query
-                $find_product_query = "
+		/**
+		 * Search for messages based on a search string
+		 *
+		 * @param array $parameters Search parameters
+		 * @return array|int Array of Content\Message objects or 0 on error
+		 */
+		public function searchAdvanced($parameters, $advanced, $controls) {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Add search_tags searching
+			if (!empty($parameters['search']) && !empty($advanced['categories'])) {
+				$find_product_query = "
 					SELECT DISTINCT(stx.object_id)
 					FROM search_tags_xref stx
 					INNER JOIN search_tags st ON stx.tag_id = st.id
@@ -221,20 +226,40 @@
 						st.category LIKE ?
 						OR st.value LIKE ?
 					)
-                ";
-                array_push($bind_params, '%'.$parameters['search'].'%','%'.$parameters['search'].'%');
-            }
+				";
+				$database->AddParams('%'.$advanced['categories'].'%','%'.$parameters['search'].'%');
+			}
+			elseif (!empty($parameters['search_tags'])) {
+				// Join to the existing query
+				$find_product_query = "
+					SELECT DISTINCT(stx.object_id)
+					FROM search_tags_xref stx
+					INNER JOIN search_tags st ON stx.tag_id = st.id
+					WHERE st.class = 'Product::Item'
+					AND st.value LIKE ?
+				";
+				$database->AddParams('%'.$parameters['search'].'%','%'.$parameters['search'].'%');
+			}
+			else {
+				$find_product_query = "
+					SELECT DISTINCT(p.id)
+					FROM product_products p
+					LEFT OUTER JOIN
+							product_relations r
+					ON		p.id = r.product_id
+					WHERE	p.status != 'DELETED'
+				";
+			}
 
-			query_log($find_product_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
+			$rs = $database->Execute($find_product_query);
 			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 
 			while (list($id) = $rs->FetchRow()) {
 				$item = new Item($id);
-                $this->incrementCount();
+				$this->incrementCount();
 				array_push($items,$item);
 			}
 
