@@ -89,7 +89,7 @@ app_log("Getting location for host ".$hostname,'notice',__FILE__,__LINE__);
 
 			$cache = $this->cache();
 			$cachedData = $cache->get();
-			if (!empty($cachedData)) {
+			if (!empty($cachedData) && !empty($cachedData->id) && !empty($cachedData->name)) {
 				foreach ($cachedData as $key => $value) {
 					$this->$key = $value;
 				}
@@ -268,6 +268,7 @@ app_log("New Location ".$this->id." created for ".$this->company()->id,'notice',
 
 			$database->AddParam($this->id);
 
+			$database->trace(9);
 			$database->Execute($update_object_query);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
@@ -301,5 +302,13 @@ app_log("New Location ".$this->id." created for ".$this->company()->id,'notice',
 		 */
 		public function domain() {
 			return new \Company\Domain($this->domain_id);
+		}
+
+		/**
+		 * Get the Company
+		 * @return \Company\Company
+		 */
+		public function company() {
+			return new \Company\Company($this->company_id);
 		}
 	}

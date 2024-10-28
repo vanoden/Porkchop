@@ -182,17 +182,6 @@
 			return new \Register\Person($user_id);
 		}
 
-		public function validAddress($string) {	    	
-			if (empty($string)) return true;
-			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
-			else return false;
-		}
-
-		public function validCity($string) {
-			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
-			else return false;
-		}
-
         public function HTMLBlockFormat() {
             $address = "";
             if (!empty($this->address_1)) $address = $this->address_1."<br />\n";

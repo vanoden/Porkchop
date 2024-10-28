@@ -12,7 +12,7 @@
 	);
 	if (!empty($_REQUEST['sort_field'])) {
 		$controls['sort'] = $_REQUEST['sort_field'];
-		$controls['direction'] = $_REQUEST['sort_direction'];
+		$controls['order'] = $_REQUEST['sort_direction'];
 	}
 	$totalRecords = $shipmentList->count($parameters);
 	$shipments = $shipmentList->find($parameters,$controls);

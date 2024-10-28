@@ -17,7 +17,7 @@
 		###################################################
 		function findMenus() {
 			# Default StyleSheet
-			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'navigation.menu.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'navigation.menu.xsl';
 
 			# Initiate Page List
 			$menu_list = new \Navigation\MenuList();
@@ -26,12 +26,14 @@
 			$parameters = array();
 			$menus = $menu_list->find($parameters);
 
+			$response = new \APIResponse();
+
 			# Error Handling
-			if ($menu_list->error) $this->error($menu_list->error);
+			if ($menu_list->error()) $this->error($menu_list->error());
 			else{
-				$this->response->menu = $menus;
-				$this->response->count = $menu_list->count();
-				$this->response->success = 1;
+				$response->addElement('menu',$menus);
+				$response->addElement('count',$menu_list->count());
+				$response->success(true);
 			}
 
 			# Send Response
@@ -44,16 +46,18 @@
 		###################################################
 		function getMenu() {
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.menu.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'navigation.menu.xsl';
 
 			$parameters = array();
+
+			$response = new \APIResponse();
 
 			if (!empty($_REQUEST['code'])) {
 				$menu = new \Navigation\Menu();
 				if ($menu->get($_REQUEST['code'])) {
-					$this->response->request = $_REQUEST;
-					$this->response->menu = $menu;
-					$this->response->success = 1;
+					$response->AddElement('request',$_REQUEST);
+					$response->AddElement('menu',$menu);
+					$response->success(true);
 				}
 				elseif ($menu->error()) {
 					$this->error($menu->error());
@@ -65,8 +69,7 @@
 			else $this->error("menu code required");
 
 			# Send Response
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response->print();
 		}
 
 		###################################################
@@ -76,7 +79,7 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.menu.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'navigation.menu.xsl';
 
 			$parameters = array();
 
@@ -88,17 +91,17 @@
 
 			$parameters['code'] = $_REQUEST['code'];
 			$parameters['title'] = $_REQUEST['title'];
+			$response = new \APIResponse();
 			if ($menu->add($parameters)) {
-				$response->menu = $menu;
-				$response->success = 1;
+				$response->AddElement('menu',$menu);
+				$response->success(true);
 			}
 			else {
 				$this->error($menu->error());
 			}
 
 			# Send Response
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response->print();
 		}
 
 		###################################################
@@ -106,7 +109,7 @@
 		###################################################
 		function findItems() {
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
 
 			$parameters = array();
 			$itemlist = new \Navigation\ItemList();
@@ -130,17 +133,17 @@
 				else $this->error("Invalid target");
 			}
 
+			$response = new \APIResponse();
 			$items = $itemlist->find($parameters);
 			if ($itemlist->error()) $this->error($itemlist->error());
 			else {
-				$this->response->item = $items;
-				$this->response->count = $itemlist->count();
-				$this->response->success = 1;
+				$response->AddElement('item',$items);
+				$response->AddElement('count',$itemlist->count());
+				$response->success(true);
 			}
 
 			# Send Response
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response->print();
 		}
 
 		###################################################
@@ -165,18 +168,18 @@
 			$parameters['description'] = $_REQUEST['description'];
 			$parameters['view_order'] = $_REQUEST['view_order'];
 
+			$response = new \APIResponse();
 			$item = new \Navigation\Item();
 			if ($item->add($parameters)) {
-				$response->item = $item;
-				$response->success = 1;
+				$response->AddElement('item',$item);
+				$response->success(true);
 			}
 			elseif ($item->error()) {
 				$this->error($item->error());
 			}
 
 			# Send Response
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response->print();
 		}
 
 		###################################################
@@ -186,7 +189,7 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
 
 			$parameters = array();
 
@@ -198,7 +201,7 @@
 			}
 			if (! isset($_REQUEST['id'])) $this->error("id required");
 			$item = new \Navigation\Item($_REQUEST['id']);
-			if ($item->error) $this->error($item->error);
+			if ($item->error()) $this->error($item->error());
 
 			if (! $item->id) $this->error("Item not found");
 
@@ -208,18 +211,16 @@
 			$parameters['description'] = $_REQUEST['description'];
 			$parameters['view_order'] = $_REQUEST['view_order'];
 
+			$response = new \APIResponse();
 			if ($item->update($parameters)) {
-				$this->response->request = $_REQUEST;
-				$this->response->item = $item;
-				$this->response->success = 1;
+				$response->AddElement('item',$item);
 			}
 			elseif ($item->error()) {
 				$this->error($item->error());
 			}
 
 			# Send Response
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response->print();
 		}
 
 		###################################################
@@ -233,12 +234,11 @@
 			$menu = new \Navigation\Menu();
 			if (! $menu->get($_REQUEST['code'])) $this->error("menu not found");
 
-			$this->response->item = $menu->cascade();
-			$this->response->success = 1;
+			$response = new \APIResponse();
+			$response->AddElement('item',$menu->cascade());
 
 			# Send Response
-			api_log($this->response);
-			print $this->formatOutput($this->response);
+			$response->print();
 		}
 
 		public function _methods() {

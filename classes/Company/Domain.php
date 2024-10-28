@@ -182,9 +182,10 @@
 		public function details(): bool {
 			$this->clearError();
 
+			// Implement Object Cache
 			$cache = $this->cache();
 			$cachedData = $cache->get();
-			if (!empty($cachedData)) {
+			if (!empty($cachedData) && !empty($cachedData->name)) {
 				foreach ($cachedData as $key => $value) {
 					$this->$key = $value;
 				}
@@ -193,6 +194,7 @@
 				return true;
 			}
 
+			// Initialize Database
 			$database = new \Database\Service();
 
 			// Prepare Query
@@ -220,6 +222,7 @@
 				$this->registrar = $object->register;
 				$this->company_id = $object->company_id;
 				$cache->set($object);
+				$this->cached(false);
 				$this->exists(true);
 				return true;
 			}

@@ -123,6 +123,18 @@
             else return false;
         }
 
+		// Validate an Address Line
+		public function validAddressLine($string): bool {
+			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
+			else return false;
+		}
+
+		// Validate a City Name
+		public function validCity($string): bool {
+			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
+			else return false;
+		}
+
 		public function getError() {
 			return $this->_error;
         }		

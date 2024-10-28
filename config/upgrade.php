@@ -14,7 +14,10 @@
 			"schema"	=> 4,
 			"templates"	=> array(
 				"configuration"	=> $templates['admin'],
-				"domains"		=> $templates['admin']
+				"domains"		=> $templates['admin'],
+				"domain"		=> $templates['admin'],
+				"locations"		=> $templates['admin'],
+				"location"		=> $templates['admin'],
 			)
 		),
 		"Site"			=> array(
