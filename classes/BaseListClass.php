@@ -28,20 +28,20 @@ class BaseListClass extends \BaseClass {
 	 */
 	public function __call($name, $parameters) {
 		if ($name == "find") {
-			if (func_num_args() == 3) {
+			if (count($parameters) == 3) {
 				return $this->findAdvanced($parameters[0], $parameters[1], $parameters[2]);
 			}
-			elseif (func_num_args() == 2) {
+			elseif (count($parameters) == 2) {
 				return $this->findControlled($parameters[0], $parameters[1], []);
 			}
 			else
 				return $this->findSimple($parameters[0]);
 		}
 		elseif ($name == "search") {
-			if (func_num_args() == 3) {
+			if (count($parameters) == 3) {
 				return $this->searchAdanced($parameters[0], $parameters[1], $parameters[2]);
 			}
-			elseif (func_num_args() == 2) {
+			elseif (count($parameters) == 2) {
 				return $this->searchControlled($parameters[0], $parameters[1]);
 			}
 			else {
