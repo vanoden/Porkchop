@@ -2,18 +2,26 @@
 	namespace Register;
 	
 	class QueueList Extends \BaseListClass {
-		public function find($parameters = array()) {
+		public function __construct() {
+			$this->_modelName = '\Register\Queue';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
-			$bind_params = array();
+			// Initialize Database Service
+			$database = new \Database\Service();
 
+			// Build Query
 			$get_queued_contacts_query = "
 				SELECT	id
 				FROM	register_queue
 				WHERE	id = id
 			";
-			
+
+			// Add Parameters
+			$validationClass = new $this->_modelName;
             if (!empty($parameters['searchAll']))
 	            $get_queued_contacts_query .= " AND	" . $this->columnSearch($parameters['searchAll'], array('name', 'address', 'city', 'state', 'zip', 'phone', 'cell', 'code', 'notes', 'product_id', 'serial_number'));			
 			
@@ -51,7 +59,7 @@
 				else {
 					$get_queued_contacts_query .= "
 					AND	status = ?";
-					array_push($bind_params,$parameters['status']);
+					$database->AddParam($parameters['status']);
 				}
             }
 
@@ -61,17 +69,16 @@
             if (!empty($parameters['dateEnd'])) 
                 $get_queued_contacts_query .= " AND	`date_created` < '" . date("Y-m-d H:i:s", strtotime($parameters['dateEnd'])) . "'";
 
-			query_log($get_queued_contacts_query,array(),true);
-
-			$rs = $GLOBALS['_database']->Execute($get_queued_contacts_query, $bind_params);
+			// Execute Query
+			$rs = $database->Execute($get_queued_contacts_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return [];
 			}
 			// get list of contacts for UI
 			$queuedContacts = array();
 			while (list($id) = $rs->FetchRow()) {
-				$contact = new \Register\Queue($id);
+				$contact = new $this->_modelName($id);
 				$this->incrementCount();
 				array_push($queuedContacts,$contact);
 			}

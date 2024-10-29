@@ -2,47 +2,82 @@
 	namespace Register\Organization;
 
 	class OwnedProductList Extends \BaseListClass {
-        public function find($parameters = array()) {
+		public function __construct() {
+			$this->_modelName = '\Register\Organization\OwnedProduct';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
-            $get_objects_query = "
-                SELECT  organization_id,product_id
-                FROM    register_organization_products
-                WHERE   product_id = product_id
-            ";
-            if (preg_match('/^\d+$/',$parameters['product_id']))
-                $get_objects_query .= "
-                AND     product_id = ".$parameters['product_id'];
+			// Initialize Database Service
+			$database = new \Database\Service();
 
-            if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) {
-                if (preg_match('/^\d+/',$GLOBALS['_customer']->organization->id))
-                    $parameters['organization_id'] = $GLOBALS['_customer']->organization->id;
-                else
-                    $parameters['organization_id'] = 0;
-            }
-            if (preg_match('/^\d+$/',$parameters['organization_id']))
-                $get_objects_query .= "
-                AND     organization_id = ".$parameters['organization_id'];
+			// Build Query
+			$get_objects_query = "
+				SELECT  organization_id,product_id
+				FROM    register_organization_products
+				WHERE   product_id = product_id
+			";
 
-            $rs = $GLOBALS['_database']->Execute($get_objects_query);
-            if (! $rs) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return null;
-            }
+			// Add Parameters
+			$validationClass = new $this->_modelName;
+			if (!empty($parameters['product_id']) && is_numeric($parameters['product_id'])) {
+				$product = new \Product\Item($parameters['product_id']);
+				if ($product->exists()) {
+					$get_objects_query .= "
+						AND     product_id = ?
+					";
+					$database->AddParam($parameters['product_id']);
+				}
+				else {
+					$this->setError('Invalid product_id');
+					return [];
+				}
+			}
 
-            $objects = array();
+			if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) {
+				$parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization->id;
+				$get_objects_query .= "
+					AND     organization_id = ?";
+				$database->AddParam($parameters['organization_id']);
+			}
+			elseif (is_numeric($GLOBALS['_customer']->organization->id)) {
+				$organization = new \Register\Organization($GLOBALS['_customer']->organization->id);
+				if ($organization->exists()) {
+					$get_objects_query .= "
+						AND     organization_id = ?
+					";
+					$database->AddParam($GLOBALS['_customer']->organization->id);
+				}
+				else {
+					$this->setError('Invalid organization_id');
+					return [];
+				}
+			}
 
-            while (list($organization_id,$product_id) = $rs->FetchRow()) {
-                $orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
-                $object = $orgProduct;
-                if ($this->error()) {
-                    $this->error("Error getting details for OrganizationOwnedProduct: ".$this->error());
-                    return null;
-                }
-                array_push($objects,$object);
-            }
+			// Limit Clause
+			$get_objects_query .= $this->limitClause($controls);
 
-            return $objects;
-        }
+			// Execute Query
+			$rs = $database->Execute($get_objects_query);
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+
+			$objects = array();
+
+			while (list($organization_id,$product_id) = $rs->FetchRow()) {
+				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
+				$object = $orgProduct;
+				if ($this->error()) {
+					$this->error("Error getting details for OrganizationOwnedProduct: ".$this->error());
+					return null;
+				}
+				array_push($objects,$object);
+			}
+
+			return $objects;
+		}
 	}

@@ -2,51 +2,84 @@
 namespace Product;
 
 class PriceList Extends \BaseListClass {
-	public function find($parameters = null) {
-		$bind_params = array();
+	public function __construct() {
+		$this->_modelName = '\Product\Price';
+	}
 
-		$get_prices_query = "
+	public function findAdvanced($parameters, $advanced, $controls): array {
+		$this->clearError();
+		$this->resetCount();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Build Query
+		$get_objects_query = "
 			SELECT	id
 			FROM	product_prices
 			WHERE	id = id";
 
-		if (isset($parameters["product_id"])) {
-			$get_prices_query .= "
-			AND		product_id = ?";
-			array_push($bind_params,$parameters['product_id']);
+		// Add Parameters
+		$validationClass = new $this->_modelName();
+		if (isset($parameters["product_id"]) && is_numeric($parameters["product_id"])) {
+			$product = new \Product\Item($parameters['product_id']);
+			if ($product->exists()) {
+				$get_objects_query .= "
+				AND		product_id = ?
+				";
+				$database->AddParam($parameters['product_id']);
+			}
+			else {
+				$this->error("Product not found");
+				return false;
+			}
 		}
 		if (isset($parameters["date_price"])) {
-			$date = get_mysql_date($parameters['date_price']);
-			$get_prices_query .= "
-			AND		date_active <= ?";
-			array_push($bind_params,$date);
+			if ($validationClass->validDate($parameters["date_price"])) {
+				$date = get_mysql_date($parameters['date_price']);
+				$get_objects_query .= "
+				AND		date_active <= ?";
+				$database->AddParam($date);
+			}
+			else {
+				$this->error("Invalid date");
+				return false;
+			}
 		}
-		if (isset($parameters["status"])) {
-			$get_prices_query .= "
-			AND		status = ?
-			";
-			array_push($bind_params,$parameters['status']);
+		if (isset($parameters["status"]) && !empty($parameters["status"])) {
+			if ($validationClass->validStatus($parameters["status"])) {
+				$get_objects_query .= "
+				AND		status = ?
+				";
+				$database->AddParam($parameters['status']);
+			}
+			else {
+				$this->error("Invalid status");
+				return false;
+			}
 		}
 
-		$get_prices_query .= "
+		$get_objects_query .= "
 			ORDER BY date_active DESC, status";
 
-		query_log($get_prices_query);
+		// Limit Clause
+		$get_objects_query .= $this->limitClause($controls);
 
-		$rs = $GLOBALS['_database']->Execute($get_prices_query,$bind_params);
+		// Execute Query
+		$rs = $database->Execute($get_objects_query);
 
-		if ($GLOBALS['_database']->ErrorMsg()) {
-			$this->SQLError($GLOBALS['_database']->ErrorMsg());
-			return null;
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
+			return [];
 		}
 
-		$prices = array();
+		$objects = array();
 		while (list($id) = $rs->FetchRow()) {
-			$price = new Price($id);
+			$object = new $this->_modelName($id);
 			$this->incrementCount();
-			array_push($prices,$price);
+			array_push($objects,$object);
 		}
 
-		return $prices;
+		return $objects;
 	}
 }

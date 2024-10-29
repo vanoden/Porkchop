@@ -2,44 +2,71 @@
 	namespace Register;
 
 	class PrivilegeList Extends \BaseListClass {
-		public function find($parameters = array()) {
+		public function __construct() {
+			$this->_modelName = '\Register\Privilege';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$find_objects_query = "
 				SELECT  rp.id
 				FROM    register_privileges rp
 				WHERE   id = id
 			";
 
-            $bind_params = array();
-
-			if (isset($parameters['name'])) {
-				$find_objects_query .= "
-				AND		name = ?";
-				array_push($bind_params,$parameters['name']);
+			// Add Parameters
+			$validationClass = new $this->_modelName;
+			if (!empty($parameters['name'])) {
+				if ($validationClass->validName($parameters['name'])) {
+					$find_objects_query .= "
+					AND		name = ?";
+					$database->AddParam($parameters['name']);
+				}
+				else {
+					$this->error("Invalid name");
+					return [];
+				}
 			}
 
-			if (isset($parameters['module'])) {
-				$find_objects_query .= "
-				AND		module = ?";
-				array_push($bind_params,$parameters['module']);
+			if (!empty($parameters['module'])) {
+				if ($validationClass->validModule($parameters['module'])) {
+					$find_objects_query .= "
+					AND		module = ?";
+					$database->AddParam($parameters['module']);
+				}
+				else {
+					$this->error("Invalid module");
+					return [];
+				}
 			}
 
-			if (isset($parameters['_sort'])) {
-				if ($parameters['_sort'] == 'module') $find_objects_query .= "ORDER BY `module`";
+			// Order Clause
+			if (isset($controls['sort'])) {
+				if ($controls['sort'] == 'module') $find_objects_query .= "ORDER BY `module`";
 			}
 			else $find_objects_query .= "ORDER BY `name`";
 
-			query_log($find_objects_query);
-            $rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
+            $rs = $database->Execute($find_objects_query);
             if (! $rs) {
-                $this->_error = "SQL Error in Register::PrivilegeList::find(): ".$GLOBALS['_database']->ErrorMsg();
-                return null;
+                $this->SQLError($database->ErrorMsg());
+                return [];
             }
 
             $objects = array();
             while (list($id) = $rs->FetchRow()) {
-                $object = new \Register\Privilege($id);
+                $object = new $this->_modelName($id);
                 array_push($objects,$object);
-                $this->_count ++;
+                $this->incrementCount();
             }
             return $objects;
 		}

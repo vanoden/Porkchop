@@ -103,6 +103,11 @@ class BaseListClass extends \BaseClass {
 		$parameters['_offset'] = null;
 		if (!empty($parameters['_count'])) $controls['ids'] = $parameters['_count'];
 		if (!empty($parameters['_sort_desc'])) $controls['order'] = $parameters['_sort_desc'];
+		if (!empty($parameters['_sort_order'])) $controls['order'] = $parameters['_sort_order'];
+		if (empty($controls['order'])) $controls['order'] = 'ASC';
+		if (empty($controls['offset'])) $controls['offset'] = 0;
+		if (!empty($parameters['recursive'])) $controls['recursive'] = $parameters['recursive'];
+		if (!empty($parameters['_flat']) && $parameters['_flat']) $controls['ids'] == true;
 		return $this->findAdvanced($parameters, [], $controls);
 	}
 
@@ -209,6 +214,26 @@ class BaseListClass extends \BaseClass {
 		}
 
 		return $objects;
+	}
+
+	/**
+	 * Generate limit clause for SQL
+	 * @param array $controls
+	 * @return string
+	 */
+	public function limitClause($controls) {
+		$limit = "";
+		if (!empty($controls['limit'])) {
+			if (is_numeric($controls['limit'])) {
+				if (!empty($controls['offset'])) {
+					if (is_numeric($controls['offset'])) {
+						$limit = "LIMIT " . $controls['offset'] . "," . $controls['limit'];
+					}
+				}
+				$limit = "LIMIT " . $controls['limit'];
+			}
+		}
+		return $limit;
 	}
 
 	// Return Incremented Line Number

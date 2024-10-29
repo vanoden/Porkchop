@@ -2,31 +2,48 @@
 namespace Product;
 
 class PriceAuditList Extends \BaseListClass {
+	public function __construct() {
+		$this->_modelName = '\Product\PriceAudit';
+	}
 
-	public function find($parameters = null) {
-		$bind_params = array();
+	public function findAdvanced($parameters, $advanced, $controls): array {
+		$this->clearError();
+		$this->resetCount();
 
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Build Query
 		$get_price_audit_query = "
 			SELECT	ppa.id
 			FROM	product_prices_audit ppa
 			INNER   JOIN product_prices pp ON pp.id = ppa.product_price_id
 			WHERE	ppa.id = ppa.id";
 
+		// Add Parameters
+		$validationClass = new $this->_modelName();
 		if (isset($parameters["date_updated"])) {
 			$date = get_mysql_date($parameters['date_updated']);
 			$get_price_audit_query .= "
 			AND		ppa.date_updated <= ?";
-			array_push($bind_params,$date);
+			$database->AddParams($date);
 		}
 		
-		if (isset($parameters["product_id"])) {
-			$get_price_audit_query .= "
-			AND		pp.product_id = ?
-			";
-			array_push($bind_params,$parameters['product_id']);
+		if (isset($parameters["product_id"]) && is_numeric($parameters["product_id"])) {
+			$product = new \Product\Item($parameters['product_id']);
+			if ($product->exists()) {
+				$get_price_audit_query .= "
+				AND		pp.product_id = ?
+				";
+				$database->AddParam($parameters['product_id']);
+			}
+			else {
+				$this->error("Product not found");
+				return false;
+			}
 		}
 
-		if (isset($parameters["user_id"])) {
+		if (isset($parameters["user_id"]) && is_numeric($parameters["user_id"])) {
 			$user = new \Register\Customer($parameters['user_id']);
 			if (!$user->id) {
                 $this->error("User not found");
@@ -35,24 +52,31 @@ class PriceAuditList Extends \BaseListClass {
 			$get_price_audit_query .= "
 			AND		ppa.user_id = ?
 			";
-			array_push($bind_params,$parameters['user_id']);
+			$database->AddParam($parameters['user_id']);
 		}
 
-		if (isset($parameters["product_price_id"])) {
+		if (isset($parameters["product_price_id"]) && is_numeric($parameters["product_price_id"])) {
+			$product_price = new \Product\Price($parameters['product_price_id']);
+			if (!$product_price->exists()) {
+				$this->error("Product Price not found");
+				return false;
+			}
 			$get_price_audit_query .= "
 			AND		ppa.product_price_id = ?";
-			array_push($bind_params,$parameters['product_price_id']);
+			$database->AddParam($parameters['product_price_id']);
 		}
 
 		$get_price_audit_query .= "
 			ORDER BY ppa.date_updated DESC";
-		query_log($get_price_audit_query);
 
-		$rs = $GLOBALS['_database']->Execute($get_price_audit_query,$bind_params);
+		// Limit Clause
+		$get_price_audit_query .= $this->limitClause($controls);
+		
+		$rs = $database->Execute($get_price_audit_query);
 
-		if ($GLOBALS['_database']->ErrorMsg()) {
-			$this->SQLError($GLOBALS['_database']->ErrorMsg());
-			return null;
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
+			return [];
 		}
 
 		$priceAudits = array();

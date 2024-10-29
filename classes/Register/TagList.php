@@ -2,58 +2,79 @@
 	namespace Register;
 
 	class TagList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Register\Tag';
+		}
 
-		public function find($parameters = array()) {
-		
-			app_log("Register::TagList::find()",'trace',__FILE__,__LINE__);
-			$this->resetCount();
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
-			
-			$this->error = null;
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$get_tags_query = "
 				SELECT	id, name
 				FROM	register_tags
 				WHERE	id = id
 			";
 
-			$bind_params = array();
-			if (isset($parameters['type']) && !empty($parameters['type'])) {
-				$get_tags_query .= "
-				AND     type = ?";
-				array_push($bind_params,$parameters['type']);
+			// Add Parameters
+			$validationClass = new $this->_modelName;
+			if (!empty($parameters['type'])) {
+				if ($validationClass->validType($parameters['type'])) {
+					$get_tags_query .= "
+						AND		type = ?
+					";
+					$database->AddParam($parameters['type']);
+				}
+				else {
+					$this->setError('Invalid type');
+					return [];
+				}	
 			}
-			if (isset($parameters['register_id']) && !empty($parameters['register_id'])) {
+			if (!empty($parameters['register_id']) && is_numeric($parameters['register_id'])) {
 				$get_tags_query .= "
 				AND     register_id = ?";
-				array_push($bind_params,$parameters['register_id']);
+				$database->AddParam($parameters['register_id']);
 			}
-			if (isset($parameters['name']) && !empty($parameters['name'])) {
-				$get_tags_query .= "
-				AND     name = ?";
-				array_push($bind_params,$parameters['name']);
+			if (!empty($parameters['name'])) {
+				if ($validationClass->validName($parameters['name'])) {
+					$get_tags_query .= "
+						AND		name = ?
+					";
+					$database->AddParam($parameters['name']);
+				}
+				else {
+					$this->setError('Invalid name');
+					return [];
+				}
 			}			
-			if (isset($parameters['id']) && !empty($parameters['id'])) {
+			if (!empty($parameters['id']) && is_numeric($parameters['id'])) {
 				$get_tags_query .= "
 				AND     id = ?";
-				array_push($bind_params,$parameters['id']);
+				$database->AddParam($parameters['id']);
 			}
 
-			query_log($get_tags_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($get_tags_query,$bind_params);
+			// Limit Clause
+			$get_tags_query .= $this->limitClause($controls);
+
+			// Execute Query
+			$rs = $database->Execute($get_tags_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 			
-			$regsterTags = array();
+			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-			    $regsterTag = new \Register\Tag($id);
-			    $regsterTag->details();
+			    $object = new $this->_modelName($id);
 			    $this->incrementCount();
-			    array_push($regsterTags,$regsterTag);
+			    array_push($objects,$object);
 			}
 			
-			return $regsterTags;
+			return $objects;
 		}
 		
 		public function getDistinct() {

@@ -2,37 +2,77 @@
 	namespace Product;
 
 	class RelationshipList Extends \BaseListClass {
-		public function find($parameters) {
-			$bind_params = array();
+		public function __construct() {
+			$this->_modelName = '\Product\Relationship';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$find_objects_query = "
 				SELECT	parent_id,
 						product_id child_id
 				FROM	product_relations
 				WHERE	product_id = product_id
 			";
-			if (preg_match('/^\d+$/',$parameters['parent_id'])) {
-				$find_objects_query .= "
-				AND		parent_id = ?";
-				array_push($bind_params,$parameters['parent_id']);
+
+			// Add Parameters
+			$validationClass = new $this->_modelName();
+			if (!empty($parameters['parent_id']) && is_numeric($parameters['parent_id'])) {
+				$parent = new \Product\Item($parameters['parent_id']);
+				if ($parent->exists()) {
+					$find_objects_query .= "
+					AND		parent_id = ?
+					";
+					$database->AddParam($parameters['parent_id']);
+				}
+				else {
+					$this->error("Parent not found");
+					return false;
+				}
 			}
-			if ($parameters['child_id']) {
-				$find_objects_query .= "
-				AND		child_id = ?";
-				array_push($bind_params,$parameters['child_id']);
+			if (!empty($parameters['child_id']) && is_numeric($parameters['child_id'])) {
+				$child = new \Product\Item($parameters['child_id']);
+				if ($child->exists()) {
+					$find_objects_query .= "
+					AND		child_id = ?
+					";
+					$database->AddParam($parameters['child_id']);
+				}
+				else {
+					$this->error("Child not found");
+					return false;
+				}
 			}
+
+			// Order Clause
 			$find_objects_query .= "
 				ORDER BY view_order
 			";
 
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
+
 			$objects = array();
 			while(list($parent_id,$child_id) = $rs->FetchRow()) {
-				$object = $this->get($parent_id,$child_id);
-				if ($this->error) return null;
+				$object = new $this->_modelName();
+				$object->get($parent_id,$child_id);
+				if ($object->error()) {
+					$this->error($object->error());
+					return null;
+				}
 				$this->incrementCount();
 				array_push($objects,$object);
 			}

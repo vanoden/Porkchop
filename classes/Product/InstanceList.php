@@ -2,11 +2,19 @@
 	namespace Product;
 
 	class InstanceList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Product\Instance';
+		}
+
 		# Return a list of hubs
-		public function find($parameters = '',$recursive = true) {
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$find_objects_query = "
 				SELECT	ma.asset_id
 				FROM	monitor_assets AS ma
@@ -17,65 +25,86 @@
 				ON		ma.organization_id = ro.id
 				WHERE	pi.id = pi.id
 			";
-			$bind_params = array();
+
+			// Add Parameters
+			$validationClass = new $this->_modelName();
+
 			if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 				if (isset($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
+					$organization = new \Register\Organization($parameters['organization_id']);
+					if ($organization->error()) {
+						$this->error("Error loading organization: ".$organization->error());
+						return false;
+					}
+					if (! $organization->exists()) {
+						$this->error("Organization not found");
+						return false;
+					}
 					$find_objects_query .= "
 					AND	ma.organization_id = ?";
-					array_push($bind_params,$parameters['organization_id']);
+					$database->AddParam($parameters['organization_id']);
 				}
 			}
-			elseif (is_numeric($GLOBALS['_SESSION_']->customer->organization()->id)) {
+			elseif (isset($GLOBALS['_SESSION_']->customer->organization()->id)) {
 				$find_objects_query .= "
 					AND	ma.organization_id = ?";
-				array_push($bind_params,$GLOBALS['_SESSION_']->customer->organization()->id);
+				$database->AddParam($GLOBALS['_SESSION_']->customer->organization()->id);
 			}
 			else {
 				$this->error("Customer must belong to an organization");
 				return null;
 			}
 
-			if (isset($parameters['id']) && preg_match('/^\d+$/',$parameters['id'])) {
-				$find_objects_query .= "
-				AND		asset_id = ?";
-				array_push($bind_parms,$parameters['id']);
+			if (isset($parameters['id']) && is_numeric($parameters['id'])) {
+				$product = new \Product\Item($parameters['id']);
+				if ($product->exists()) {
+					$find_objects_query .= "
+					AND	asset_id = ?";
+					$database->AddParam($parameters['id']);
+				}
+				else {
+					$this->error("Product not found");
+					return false;
+				}
 			}
-			if (isset($parameters['code']) && preg_match('/^[\w\-\.\_\s]+$/',$parameters['code'])) {
+			if (isset($parameters['code']) && $validationClass->validCode($parameters['code'])) {
 				$find_objects_query .= "
 				AND		asset_code = ?";
-				array_push($bind_params,$parameters['code']);
-				app_log("Getting instances with code '".$parameters['code']."'",'debug',__FILE__,__LINE__);
+				$database->AddParam($parameters['code']);
 			}
-			if (isset($parameters['product_id']) && preg_match('/^\d+$/',$parameters['product_id'])) {
+			if (isset($parameters['product_id']) && is_numeric($parameters['product_id'])) {
 				$find_objects_query .= "
 				AND		pi.id = ?";
-				array_push($bind_params,$parameters['product_id']);
+				$database->AddParam($parameters['product_id']);
 			}
 			if (isset($parameters['product_code'])) {
-				$find_objects_query .= "
-				AND		pi.code = ?";
-				array_push($bind_params,$parameters['product_code']);
+				$product = new \Product\Item();
+				if ($product->validCode($parameters['product_code'])) {
+					$find_objects_query .= "
+					AND		pi.code = ?";
+					$database->AddParam($parameters['product_code']);
+				}
+				else {
+					$this->error("Invalid product code");
+					return false;
+				}
 			}
 
-            if (!is_array($parameters)) {
-                $parameters = array();
-                $parameters['_sort_order'] = 'ASC';
-            }
-			if (isset($parameters['_sort_order']) && $parameters['_sort_order'] != 'DESC') $parameters['_sort_order'] = 'ASC';
-			if (array_key_exists("_sort",$parameters)) {
-				if($parameters['_sort'] == 'organization') {
+			// Order Clause
+			if (array_key_exists("sort",$controls)) {
+				if ($controls['sort'] == 'organization') {
 					$find_objects_query .= "
-					ORDER BY ro.name ".$parameters['_sort_order']."
+					ORDER BY ro.name ".$controls['order']."
 					";
 				}
-				elseif($parameters['_sort'] == 'product') {
+				elseif($controls['sort'] == 'product') {
 					$find_objects_query .= "
-					ORDER BY pi.code ".$parameters['_sort_order']."
+					ORDER BY pi.code ".$controls['order']."
 					";
 				}
 				else
 					$find_objects_query .= "
-					ORDER BY asset_code ".$parameters['_sort_order']."
+					ORDER BY asset_code ".$controls['order']."
 					";
 			}
 			else {
@@ -83,28 +112,21 @@
 				ORDER BY asset_code ASC";
 			}
 
-			if (isset($parameters['_limit']) and preg_match('/^\d+$/',$parameters['_limit'])) {
-				if (preg_match('/^\d+$/',$parameters['_offset']))
-					$find_objects_query .= "
-					LIMIT	".$parameters['_offset'].",".$parameters['_limit'];
-				else
-					$find_objects_query .= "
-					LIMIT	".$parameters['_limit'];
-			}
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
 
-			query_log($find_objects_query);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				app_log(preg_replace("/(\n|\r)/","",preg_replace("/\t/"," ",$find_objects_query)),'debug',__FILE__,__LINE__);
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				if ($recursive) {
+				if ($controls['recursive']) {
 					app_log("Adding instance $id to InstanceList",'trace',__FILE__,__LINE__);
-					if (isset($parameters['_flat']) && $parameters['_flat']) {
-						$object = new Instance($id,$parameters['_flat']);
+					if (isset($controls['flat']) && $controls['flat']) {
+						$object = new Instance($id,$controls['flat']);
 					}
 					else {
 						$object = new Instance($id);

@@ -63,6 +63,9 @@
 				}
 			}
 
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());

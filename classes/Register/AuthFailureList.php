@@ -2,51 +2,64 @@
 	namespace Register;
 
 	class AuthFailureList Extends \BaseListClass {
-		public function find($parameters = array()) {
+		public function __construct() {
+			$this->_modelName = '\Register\AuthFailure';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$find_objects_query = "
 				SELECT	id
 				FROM	register_auth_failures
 				WHERE	id = id";
 
-			$bind_params = array();
+			// Add Parameters
+			$validationClass = new $this->_modelName;
+			if (isset($parameters['ip_address'])) {
+				if (filter_var($parameters['ip_address'], FILTER_VALIDATE_IP)) {
+					$find_objects_query .= "
+					AND		ip_address = ?";
+					$database->AddParam(ip2long($parameters['ip_address']));
+				}
+				else {
+					$this->error("Invalid ip address");
+					return false;
+				}
+			}
 
-			if (isset($parameters['ip_address']) && filter_var($parameters['ip_address'], FILTER_VALIDATE_IP)) {
-				$find_objects_query .= "
-				AND		ip_address = ?";
-				array_push($bind_params,ip2long($parameters['ip_address']));
-			}
-			elseif (isset($parameters['ip_address'])) {
-				$this->error("Invalid ip address");
-				return null;
-			}
 			if (isset($parameters['login']) && preg_match('/^[\w\-\.\_\@]{2,100}$/',$parameters['login'])) {
 				$find_objects_query .= "
 				AND		login = ?";
-				array_push($bind_params,$parameters['login']);
+				$database->AddParam($parameters['login']);
 			}
 			elseif (isset($parameters['login'])) {
 				$this->error("Invalid login");
 				return null;
 			}
 
+			// Order Clause
 			$find_objects_query .= "
 				ORDER BY date_fail DESC";
 
-			if (isset($parameters['_limit']) && is_numeric($parameters['_limit'])) {
-				$find_objects_query .= "
-				LIMIT ".$parameters['_limit'];
-			}
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
 
-			query_log($find_objects_query,$bind_params,true);
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				$object = new \Register\AuthFailure($id);
+				$object = new $this->_modelName($id);
 				array_push($objects,$object);
 			}
 			return $objects;

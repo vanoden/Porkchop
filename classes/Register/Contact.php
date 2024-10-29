@@ -19,7 +19,6 @@
 		);
 
 		public function __construct(int $id = 0) {
-			$this->_database = new \Database\Service();		
 			$this->_tableName = 'register_contacts';
 			$this->_tableUKColumn = null;
     		parent::__construct($id);
@@ -33,23 +32,28 @@
 		}
 
 		public function getContact($type,$value): bool {
+			$this->clearError();
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$get_object_query = "
 				SELECT	id
 				FROM	register_contacts
 				WHERE	type = ?
 				AND		value = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array(
-					$type,
-					$value
-				)
-			);
+
+			// Add Parameters
+			$database->AddParam($type);
+			$database->AddParam($value);
+
+			// Execute Query
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database_']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
