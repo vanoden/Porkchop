@@ -46,7 +46,7 @@
 				}
 				else {
 					$this->error("Invalid name");
-					return false;
+					return [];
 				}
 			}
 
@@ -55,9 +55,10 @@
 					$find_objects_query .= "
 						AND sf.repository_id = ?";
 					$database->AddParam($parameters['repository_id']);
-				} else {
+				}
+				else {
 					$this->error("Invalid repository ID");
-					return false;
+					return [];
 				}
 			}
 
@@ -70,7 +71,7 @@
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return false;
+				return [];
 			}
 			
 			$files = array();

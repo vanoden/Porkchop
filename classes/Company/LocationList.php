@@ -28,7 +28,7 @@
 				}
 				else {
 					$this->error("Invalid company_id");
-					return null;
+					return [];
 				}
 			}
 			if (!empty($parameters['domain_id'])) {

@@ -29,7 +29,7 @@
 				}
 				else {
 					$this->error("Invalid ip address");
-					return false;
+					return [];
 				}
 			}
 
@@ -40,7 +40,7 @@
 			}
 			elseif (isset($parameters['login'])) {
 				$this->error("Invalid login");
-				return null;
+				return [];
 			}
 
 			// Order Clause
@@ -54,7 +54,7 @@
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			$objects = array();

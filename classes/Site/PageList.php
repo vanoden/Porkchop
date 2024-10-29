@@ -56,12 +56,13 @@
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return [];
 			}
 			$pages = array();
 			while(list($id) = $rs->FetchRow()) {
 				$page = new \Site\Page($id);
 				array_push($pages,$page);
+				$this->incrementCount();
 			}
 			return $pages;
 		}

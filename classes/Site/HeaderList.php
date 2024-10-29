@@ -39,7 +39,7 @@
 			while (list($id) = $rs->FetchRow()) {
 				$object = new $this->_modelName($id);
 				array_push($objects,$object);
-				$this->_count ++;
+				$this->incrementCount();
 			}
 			return $objects;
         }

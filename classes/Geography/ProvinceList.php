@@ -38,7 +38,7 @@ class ProvinceList Extends \BaseListClass {
 		$rs = $database->Execute($find_objects_query, $parameters);
 		if (! $rs) {
 			$this->SQLError($database->ErrorMsg());
-			return null;
+			return [];
 		}
 
 		$provinces = array ();

@@ -18,12 +18,6 @@ class EventList extends \BaseListClass {
 		// Dereference Working Class
 		$workingClass = new $this->_modelName;
 
-		$customer_id = isset($params['customer_id']) ? $params['customer_id'] : null;
-		$class_name = isset($params['class_name']) ? $params['class_name'] : null;
-		$instance_id = isset($params['instance_id']) ? $params['instance_id'] : null;
-		$change_type = isset($params['change_type']) ? $params['change_type'] : null;
-		$description = isset($params['description']) ? $params['description'] : null;
-
 		// Build Query
 		$find_objects_query = "
 			SELECT 	`".$workingClass->_tableIdColumn()."`

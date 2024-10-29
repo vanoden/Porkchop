@@ -30,7 +30,7 @@
 				}
 				else {
 					$this->error("Invalid type");
-					return false;
+					return [];
 				}
 			}			
 
@@ -48,12 +48,12 @@
 					}
 					else {
 						$this->error("Invalid user id");
-						return false;
+						return [];
 					}
 				}
 				else {
 					$this->error("Invalid user id");
-					return null;
+					return [];
 				}
 			}
 
@@ -68,7 +68,7 @@
 				}
 				else {
 					$this->error("Invalid value for notify");
-					return null;
+					return [];
 				}
 			}
 
@@ -77,7 +77,7 @@
 				if ($this->validSearchString($parameters['searchTerm'])) $get_contacts_query .= " AND value LIKE '%" . $parameters['searchTerm'] . "%'";
 				else {
 					$this->error("Invalid search term");
-					return false;
+					return [];
 				}
 			}
 

@@ -33,7 +33,7 @@
 				}
 				else {
 					$this->error("Parent not found");
-					return false;
+					return [];
 				}
 			}
 			if (!empty($parameters['child_id']) && is_numeric($parameters['child_id'])) {
@@ -46,7 +46,7 @@
 				}
 				else {
 					$this->error("Child not found");
-					return false;
+					return [];
 				}
 			}
 
@@ -71,7 +71,7 @@
 				$object->get($parent_id,$child_id);
 				if ($object->error()) {
 					$this->error($object->error());
-					return null;
+					return [];
 				}
 				$this->incrementCount();
 				array_push($objects,$object);

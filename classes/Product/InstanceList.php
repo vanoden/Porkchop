@@ -52,7 +52,7 @@
 			}
 			else {
 				$this->error("Customer must belong to an organization");
-				return null;
+				return [];
 			}
 
 			if (isset($parameters['id']) && is_numeric($parameters['id'])) {
@@ -64,7 +64,7 @@
 				}
 				else {
 					$this->error("Product not found");
-					return false;
+					return [];
 				}
 			}
 			if (isset($parameters['code']) && $validationClass->validCode($parameters['code'])) {
@@ -86,7 +86,7 @@
 				}
 				else {
 					$this->error("Invalid product code");
-					return false;
+					return [];
 				}
 			}
 

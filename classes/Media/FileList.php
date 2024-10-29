@@ -22,7 +22,7 @@ class FileList extends \BaseListClass {
 			";
 
 		// Add Parameters
-		if (preg_match('/^\d+$/', $parameters['item_id'])) {
+		if (!empty($parameters['item_id']) && is_numeric($parameters['item_id'])) {
 			$get_code_query .= "
 				AND		item_id = ?";
 			$database->AddParam($parameters['item_id']);

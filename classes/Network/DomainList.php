@@ -37,7 +37,7 @@
 
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			$objects = array();

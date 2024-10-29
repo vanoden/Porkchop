@@ -197,7 +197,7 @@
 			if (!empty($parameters['code'])) {
                 if (! $workingClass->validCode($parameters['code'])) {
                     $this->error("Invalid code");
-                    return null;
+                    return [];
                 }
 				$get_organizations_query .= "
 				AND		ro.code = ?";
@@ -211,7 +211,7 @@
 				foreach ($parameters['status'] as $status) {
                     if (! $workingClass->validStatus($status)) {
                         $this->error("Invalid status");
-                        return null;
+                        return [];
                     }
 					if ($icount > 0) $get_organizations_query .= ","; 
 					$icount ++;
@@ -223,7 +223,7 @@
             elseif (!empty($parameters['status'])) {
                 if (! $workingClass($parameters['status'])) {
                     $this->error("Invalid status");
-                    return null;
+                    return [];
                 }
 				$get_organizations_query .= "
 				AND		ro.status = ?";
@@ -242,7 +242,7 @@
             if (isset($controls['sort'])) {
                 if (!$workingClass->hasField($controls['sort'])) {
                     $this->error("Invalid sort field");
-                    return null;
+                    return [];
                 }
 
 				switch($controls['sort']) {
@@ -269,7 +269,7 @@
 			$rs = $database->Execute($get_organizations_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			$organizations = array();

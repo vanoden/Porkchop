@@ -29,7 +29,7 @@
 				}
 				else {
 					$this->error("Invalid user id");
-					return false;
+					return [];
 				}
 			}
 			if (!empty($parameters['code'])) {
@@ -40,7 +40,7 @@
 				}
 				else {
 					$this->error("Invalid code");
-					return false;
+					return [];
 				}
 			}
 			if (!empty($parameters['status'])) {
@@ -58,7 +58,7 @@
 					}
 					else {
 						$this->error("Invalid status");
-						return false;
+						return [];
 					}
 				}
 				else {
@@ -69,7 +69,7 @@
 					}
 					else {
 						$this->error("Invalid status");
-						return false;
+						return [];
 					}
 				}
 			}
@@ -86,7 +86,7 @@
 				}
 				else {
 					$this->error("Invalid first name");
-					return false;
+					return [];
 				}
 			}
 	
@@ -98,7 +98,7 @@
 				}
 				else {
 					$this->error("Invalid last name");
-					return false;
+					return [];
 				}
 			}
 
@@ -111,7 +111,7 @@
 				}
 				else {
 					$this->error("Invalid department id");
-					return false;
+					return [];
 				}
 			}
 
@@ -124,7 +124,7 @@
 				}
 				else {
 					$this->error("Invalid organization id");
-					return false;
+					return [];
 				}
 			}
 
@@ -142,7 +142,7 @@
 			$rs = $database->Execute($find_person_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			$people = array();

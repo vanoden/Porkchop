@@ -45,7 +45,7 @@
 			$rs = $database->Execute($get_items_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return [];
 			}
 			$items = array();
 			while(list($id) = $rs->FetchRow()) {

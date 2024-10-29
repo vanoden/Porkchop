@@ -34,7 +34,7 @@
 			$rs = $GLOBALS['_database']->Execute($get_contents_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			$messages = array();

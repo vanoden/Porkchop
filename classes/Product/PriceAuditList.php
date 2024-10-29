@@ -39,7 +39,7 @@ class PriceAuditList Extends \BaseListClass {
 			}
 			else {
 				$this->error("Product not found");
-				return false;
+				return [];
 			}
 		}
 
@@ -47,7 +47,7 @@ class PriceAuditList Extends \BaseListClass {
 			$user = new \Register\Customer($parameters['user_id']);
 			if (!$user->id) {
                 $this->error("User not found");
-                return false;
+                return [];
 			}
 			$get_price_audit_query .= "
 			AND		ppa.user_id = ?
@@ -59,7 +59,7 @@ class PriceAuditList Extends \BaseListClass {
 			$product_price = new \Product\Price($parameters['product_price_id']);
 			if (!$product_price->exists()) {
 				$this->error("Product Price not found");
-				return false;
+				return [];
 			}
 			$get_price_audit_query .= "
 			AND		ppa.product_price_id = ?";
