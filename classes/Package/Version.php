@@ -348,4 +348,8 @@
 		public function version() {
 			return sprintf("%0d.%0d.%0d",$this->major,$this->minor,$this->build);
 		}
+
+		public function validStatus($string): bool {
+			return preg_match('/^(NEW|PUBLISHED|HIDDEN)$/',$string);
+		}
 	}

@@ -3,11 +3,11 @@
 	
 	class PageList Extends \BaseListClass {
 
-		public function search($parameters = []) {
-			return $this->find($parameters);
+		public function searchAdvanced($parameters,$advanced,$controls): array {
+			return $this->findAdvanced($parameters,$advanced,$controls);
 		}
 
-		public function find($parameters = array()) {
+		public function findAdvanced($parameters,$advanced,$controls): array {
 
 			$this->clearError();
 			$this->resetCount();

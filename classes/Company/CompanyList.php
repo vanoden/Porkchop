@@ -2,16 +2,28 @@
 	namespace Company;
 
 	class CompanyList Extends \BaseListClass {
-		public function find($parameters = array()) {
+		public function __construct() {
+			$this->_modelName = 'Company\Company';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build the query
 			$find_objects_query = "
 				SELECT	id
 				FROM	company_companies
 				WHERE	id = id";
-			
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+
+			// Execute the query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 			
 			$objects = array();

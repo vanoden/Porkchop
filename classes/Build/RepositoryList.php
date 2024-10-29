@@ -1,38 +1,32 @@
 <?php
 	namespace Build;
 
-	class RepositoryList {
-		private $_error;
-		private $_count;
+	class RepositoryList Extends \BaseListClass {
+		public function __contruct() {
+			$this->_modelName = 'Build\Repository';
+		}
 
-		public function find($parameters = array()) {
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$database = new \Database\Service();
+
+			// Build the query
 			$find_objects_query = "
 				SELECT	id
 				FROM	build_repositories
 				WHERE	id = id";
-			
-			$bind_params = array();
 
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->_error = "SQL Error in Build::RepositoryList::find(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 
 			$repositories = array();
 			while (list($id) = $rs->FetchRow()) {
 				$repository = new Repository($id);
 				array_push($repositories,$repository);
-				$this->_count ++;
+				$this->incrementCount();
 			}
 			return $repositories;
-		}
-
-		public function count() {
-			return $this->_count;
-		}
-
-		public function error() {
-			return $this->_error;
 		}
 	}

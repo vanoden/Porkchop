@@ -2,13 +2,25 @@
 	namespace Company;
 
 	class LocationList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = 'Company\Location';
+		}
 
-		public function find($parameters = array()) {
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build the query
 			$find_objects_query = "
 				SELECT	id
 				FROM	company_locations
 				WHERE	id = id
 			";
+
+			// Add Parameters
 			if (!empty($parameters['company_id'])) {
 				if (preg_match('/^\d+$/',$parameters['company_id'])) {
 					$find_objects_query .= "
@@ -26,14 +38,15 @@
 				}
 				else {
 					$this->error("Invalid domain_id");
-					return null;
+					return [];
 				}
 			}
 
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			// Execute the query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {

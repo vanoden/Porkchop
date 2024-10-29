@@ -2,7 +2,12 @@
 	namespace Company;
 
 	class DomainList Extends \BaseListClass {
-		public function find($parameters = array()) {
+		public function __construct() {
+			$this->_modelName = 'Company\Domain';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
 			$this->resetCount();
 
 			// Initialize Service

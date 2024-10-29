@@ -1,45 +1,61 @@
 <?php
 	namespace Package;
 
-	class VersionList {
-		public $error;
-		public $count = 0;
+	class VersionList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Package\Version';
+		}
 
-		public function find($parameters) {
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$find_objects_query = "
 				SELECT	id
 				FROM	package_versions
 				WHERE	id = id
 			";
 
-			if (isset($parameters['package_id']) and preg_match('/^\d+$/',$parameters['package_id']))
-				$find_objects_query .= "
-				AND		package_id = ".$GLOBALS['_database']->qstr($parameters['package_id'],get_magic_quotes_gpc());
+			// Add Parameters
+			$validationClass = new $this->_modelName();
 
-			if (isset($parameters['major']) and preg_match('/^\d+$/',$parameters['major']))
+			if (isset($parameters['package_id']) && is_numeric($parameters['package_id'])) {
 				$find_objects_query .= "
-				AND		major = ".$GLOBALS['_database']->qstr($parameters['major'],get_magic_quotes_gpc());
-
-			if (isset($parameters['minor']) and preg_match('/^\d+$/',$parameters['minor']))
+				AND		package_id = ?";
+				$database->AddParam($parameters['package_id']);
+			}
+			if (isset($parameters['major']) && is_numeric($parameters['major'])) {
 				$find_objects_query .= "
-				AND		minor = ".$GLOBALS['_database']->qstr($parameters['minor'],get_magic_quotes_gpc());
-
-			if (isset($parameters['build']) and preg_match('/^\d+$/',$parameters['build']))
+				AND		major = ?";
+				$database->AddParam($parameters['major']);
+			}
+			if (isset($parameters['minor']) && is_numeric($parameters['minor'])) {
 				$find_objects_query .= "
-				AND		build = ".$GLOBALS['_database']->qstr($parameters['build'],get_magic_quotes_gpc());
-
-			if (isset($parameters['status']) and preg_match('/^(NEW|PUBLISHED|HIDDEN)$/',$parameters['status']))
+				AND		minor = ?";
+				$database->AddParam($parameters['minor']);
+			}
+			if (isset($parameters['build']) && is_numeric($parameters['build'])) {
 				$find_objects_query .= "
-				AND		status = ".$GLOBALS['_database']->qstr($parameters['status'],get_magic_quotes_gpc());
-
-			if (isset($parameters['_sort']) and preg_match('/^(status|date_created|date_published)$/',$parameters['_sort'])) {
+				AND		build = ?";
+				$database->AddParam($parameters['build']);
+			}
+			if (isset($parameters['status']) && $validationClass->validStatus($parameters['status'])) {
 				$find_objects_query .= "
-					ORDER BY ".$parameters['_sort'];
+				AND		status = ?";
+				$database->AddParam($parameters['status']);
+			}
+			if (isset($controls['sort']) && preg_match('/^(status|date_created|date_published)$/',$controls['sort'])) {
+				$find_objects_query .= "
+					ORDER BY ".$controls['sort'];
 				if (isset($parameters['_sort_desc'])) {
 					$find_objects_query .= " DESC";
 				}
 			}
-			elseif (isset($parameters['_sort']) and $parameters['_sort'] == 'version') {
+			elseif (isset($controls['sort']) && $controls['sort'] == 'version') {
 				$find_objects_query .= "
 					ORDER BY major,minor,build";
 				if (isset($parameters['_sort_desc'])) {
@@ -49,14 +65,14 @@
 
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Package::PackageList::find(): ".$GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
 				$version = new Version($id);
 				array_push($objects,$version);
-				$this->count ++;
+				$this->incrementCount();
 			}
 			return $objects;
 		}

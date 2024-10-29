@@ -1,60 +1,53 @@
 <?php
 namespace Geography;
 
-class ProvinceList {
-	private $_error;
-	private $_count = 0;
+class ProvinceList Extends \BaseListClass {
+	public function __construct() {
+		$this->_modelName = 'Geography\Province';
+	}
 	
 	/**
 	 * search provinces by parameters
 	 * 
 	 * @param array $parameters
+	 * @param array $advanced
+	 * @param array $controls
 	 * @return NULL|array
 	 */
-	public function find($parameters) {
+	public function findAdvanced($parameters, $advanced, $controls): array {
+		$this->clearError();
+		$this->resetCount();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Build the query
 		$find_objects_query = "
 				SELECT	id
 				FROM	geography_provinces
 				WHERE	id = id
 			";
 
-		$bind_params = array ();
-
-		if (isset ( $parameters ['country_id'] )) {
+		// Add Parameters
+		if (isset($parameters['country_id'])) {
 			$find_objects_query .= "
 				AND		country_id = ?";
-			array_push ( $bind_params, $parameters ['country_id'] );
+			$database->AddParam($parameters['country_id']);
 		}
 
-		$rs = $GLOBALS ['_database']->Execute ( $find_objects_query, $parameters );
+		$rs = $database->Execute($find_objects_query, $parameters);
 		if (! $rs) {
-			$this->_error = "SQL Error in Geography::ProvinceList::find(): " . $GLOBALS ['_database']->ErrorMsg ();
+			$this->SQLError($database->ErrorMsg());
 			return null;
 		}
 
 		$provinces = array ();
-		while ( list ( $id ) = $rs->FetchRow () ) {
-			$province = new Province ( $id );
+		while (list($id) = $rs->FetchRow()) {
+			$province = new Province($id);
 			$province->id = $id;
-			array_push ( $provinces, $province );
-			$this->_count ++;
+			array_push($provinces, $province);
+			$this->incrementCount();
 		}
 		return $provinces;
-	}
-	
-	/**
-	 * get count of provinces located
-	 * @return number
-	 */
-	public function count() {
-		return $this->_count;
-	}
-	
-	/**
-	 * get current error
-	 * @return string
-	 */
-	public function error() {
-		return $this->_error;
 	}
 }

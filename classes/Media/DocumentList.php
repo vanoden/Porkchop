@@ -3,9 +3,9 @@ namespace Media;
 
 class DocumentList extends \BaseListClass {
 
-	public function find($parameters = array()) {
+	public function findAdvanced($parameters, $advanced, $controls): array {
 		$parameters['type'] = 'document';
 		$itemlist = new ItemList();
-		return $itemlist->find($parameters);
+		return $itemlist->find($parameters, $advanced, $controls);
 	}
 }

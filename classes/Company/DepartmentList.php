@@ -1,26 +1,37 @@
 <?php
 	namespace Company;
 
-	class DepartmentList {
-		public $count;
-		public $error;
+	class DepartmentList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = 'Company\Department';
+		}
 
-		public function find($parameters = array()) {
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build the query
 			$find_objects_query = "
 				SELECT	id
 				FROM	company_departments
 				WHERE	id = id
 			";
 
-			$rs = $GLOBALS['_database']->Execute($find_objects_query);
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->error = "Error finding departments: ".$GLOBALS['_database']->ErrorMsg();
-				return undef;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
+
 			$objects = array();
 			while(list($id) = $rs->FetchRow()) {
 				$object = new Department($id);
-				push($objects,$object);
+				array_push($objects,$object);
+				$this->incrementCount();
 			}
+			return $objects;
 		}
 	}

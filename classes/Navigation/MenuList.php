@@ -2,24 +2,34 @@
 	namespace Navigation;
 
 	class MenuList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Navigation\Menu';
+		}
 
-		public function find($parameters = array()) {
+		public function findAdvanced($parameters,$advanced,$controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build the Query
 			$get_menus_query = "
                 SELECT  id
                 FROM    navigation_menus
                 WHERE   id = id
             ";
-			$bind_params = array();
 
+			// Add Parameters
             if (isset($parameters["title"])) {
 				$get_menus_query .= "
                 AND     title = ?";
-				array_push($bind_params,$parameters["title"]);
+				$database->AddParam($parameters["title"]);
 			}
-			query_log($get_menus_query,$bind_params);
-            $rs = $GLOBALS['_database']->Execute($get_menus_query,$bind_params);
+
+			$rs = $database->Execute($get_menus_query);
             if (! $rs) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
+                $this->SQLError($database->ErrorMsg());
                 return null;
             }
             $menus = array();

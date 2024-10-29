@@ -2,8 +2,18 @@
 namespace Media;
 
 class ItemList extends \BaseListClass {
+	public function __construct() {
+		$this->_modelName = '\Media\Item';
+	}
 
-	public function find($parameters = array()) {
+	public function findAdvanced($parameters, $advanced, $controls): array {
+		$this->clearError();
+		$this->resetCount();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Build the Query
 		$find_object_query = "
 				SELECT	distinct(m.item_id)
 				FROM	media_metadata m,
@@ -11,29 +21,33 @@ class ItemList extends \BaseListClass {
 				WHERE	m.item_id = i.id
 				AND		i.deleted = 0
 			";
-		$bind_params = array();
+
+		// Add Parameters
 		foreach ($parameters as $label => $value) {
 			if (! preg_match('/^[\w\-\.\_]+$/', $label)) {
-				$this->error = "Invalid parameter name in Media::ItemList::find()";
+				$this->error("Invalid parameter name in Media::ItemList::find()");
 				return null;
 			}
 			if ($label == "type") {
 				$find_object_query .= "
 					AND	i.type = ?";
-				array_push($bind_params, $value);
-			} else {
+				$database->AddParam($value);
+			}
+			else {
 				$find_object_query .= "
 					AND (	m.label = ?
 						AND m.value = ?";
-				array_push($bind_params, $label, $value);
+				$database->AddParams($label, $value);
 			}
 		}
-		query_log($find_object_query, $bind_params);
-		$rs = $GLOBALS['_database']->Execute($find_object_query, $bind_params);
-		if ($GLOBALS['_database']->ErrorMsg()) {
-			$this->error = "SQL Error in Media::ItemList::find(): " . $GLOBALS['_database']->ErrorMsg();
+
+		// Execute the Query
+		$rs = $database->Execute($find_object_query);
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
 			return null;
 		}
+
 		$objects = array();
 		while (list($id) = $rs->FetchRow()) {
 			$object = new \Media\Item($id);
@@ -41,7 +55,9 @@ class ItemList extends \BaseListClass {
 			if ($privileges['read']) {
 				app_log("Adding " . $object->id . " to array", 'debug', __FILE__, __LINE__);
 				array_push($objects, $object);
-			} else {
+				$this->incrementCount();
+			}
+			else {
 				app_log("Hiding " . $object->id . " lacking privileges", 'debug', __FILE__, __LINE__);
 			}
 		}

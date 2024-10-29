@@ -2,10 +2,9 @@
 namespace Media;
 
 class ImageList extends \Storage\FileList {
-
-	public function find($parameters = array()) {
+	public function findAdvanced($parameters, $advanced, $controls): array {
 		$parameters['type'] = 'document';
 		$itemlist = new ItemList();
-		return $itemlist->find($parameters);
+		return $itemlist->find($parameters, $advanced, $controls);
 	}
 }

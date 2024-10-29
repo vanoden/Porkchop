@@ -102,6 +102,7 @@ class BaseListClass extends \BaseClass {
 		if (!empty($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
 		$parameters['_offset'] = null;
 		if (!empty($parameters['_count'])) $controls['ids'] = $parameters['_count'];
+		if (!empty($parameters['_sort_desc'])) $controls['order'] = $parameters['_sort_desc'];
 		return $this->findAdvanced($parameters, [], $controls);
 	}
 
