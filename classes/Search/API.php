@@ -18,21 +18,20 @@
 		public function findTags() {
 			$parameters = [];
 
-			if ($_REQUEST['class']) $parameters['class'] = $_REQUEST['class'];
-			if ($_REQUEST['category']) $parameters['category'] = $_REQUEST['category'];
-			if ($_REQUEST['value']) $parameters['value'] = $_REQUEST['value'];
-
 			// Validate Input Parameters
 			$validationClass = new \Search\Tag();
-			if (! $validationClass->validClass($parameters['class'])) {
-				$this->error("Invalid Class");
-			}
-			if (! $validationClass->validCategory($parameters['category'])) {
-				$this->error("Invalid Category");
-			}
-			if (! $validationClass->validValue($parameters['value'])) {
-				$this->error("Invalid Value");
-			}
+
+			if (!empty($_REQUEST['class']))
+				if ( $validationClass->validClass($_REQUEST['class'])) $this->error("Invalid Class");
+				else $parameters['class'] = $_REQUEST['class'];
+
+			if (!empty($_REQUEST['category']))
+				if (! $validationClass->validCategory($_REQUEST['category'])) $this->error("Invalid Category");
+				else $parameters['category'] = $_REQUEST['category'];
+
+			if (!empty($_REQUEST['value'])) 
+				if (! $validationClass->validValue($_REQUEST['value'])) $this->error("Invalid Value");
+				else $parameters['value'] = $_REQUEST['value'];
 
 			$tagList = new \Search\TagList();
 			$tags = $tagList->find($parameters);
@@ -78,6 +77,87 @@
 			else {
 				$this->error($tag->error());
 			}
+		}
+
+		/**
+		 * Add a tag to an object
+		 * @return void
+		 */
+		public function addTagObject() {
+			$this->requirePrivilege('manage tags');
+
+			$parameters = [];
+
+			// Validate Input Parameters
+			$validationClass = new \Search\Tag();
+			if (! $validationClass->validClass($_REQUEST['class']))	$this->error("Invalid Class");
+			else $parameters['class'] = $_REQUEST['class'];
+
+			if (! $validationClass->validCategory($_REQUEST['category'])) $this->error("Invalid Category");
+			else $parameters['category'] = $_REQUEST['category'];
+
+			if (! $validationClass->validValue($_REQUEST['value'])) $this->error("Invalid Value");
+			else $parameters['value'] = $_REQUEST['value'];
+
+			if (empty($_REQUEST['id'])) $this->error("Object ID Required");
+			elseif (is_numeric($_REQUEST['id'])) $parameters['id'] = $_REQUEST['id'];
+			else $this->error("Invalid Object ID");
+
+			$classString = $validationClass->_class($parameters['class']);
+			$object = new $classString($_REQUEST['id']);
+
+			if (! $object->id) $this->error("Invalid Object ID");
+
+			$tag = new \Search\Tag();
+			if ($tag->add($parameters)) {
+				$response = new \APIResponse();
+				$response->AddElement('tag',$tag);
+				$response->print();
+			}
+			else {
+				$this->error($tag->error());
+			}
+		}
+
+		/**
+		 * Find objects matching specific criteria
+		 * @return void
+		 */
+		public function findTagObjects() {
+			$parameters = [];
+
+			// Validate Input Parameters
+			$validationClass = new \Search\Tag();
+			if (!empty($_REQUEST['class']) && ! $validationClass->validClass($_REQUEST['class'])) {
+				$this->error("Invalid Class");
+			}
+			elseif (!empty($_REQUEST['class'])) $parameters['class'] = $_REQUEST['class'];
+			if (!empty($_REQUEST['category']) && ! $validationClass->validCategory($_REQUEST['category'])) {
+				$this->error("Invalid Category");
+			}
+			elseif (!empty($_REQUEST['category'])) $parameters['category'] = $_REQUEST['category'];
+			if (!empty($_REQUEST['value']) && ! $validationClass->validValue($_REQUEST['value'])) {
+				$this->error("Invalid Value");
+			}
+			elseif (!empty($_REQUEST['value'])) $parameters['value'] = $_REQUEST['value'];
+
+			$tagList = new \Search\TagList();
+			$tags = $tagList->find($parameters);
+			if ($tagList->error()) {
+				$this->error($tagList->error());
+			}
+
+			$objects = [];
+			foreach ($tags as $tag) {
+				$classString = $validationClass->_class($tag->class);
+				$object = new $classString($tag->id);
+				$object->class = $tag->class;
+				if ($object->id) array_push($objects,$object);
+			}
+
+			$response = new \APIResponse();
+			if (count($tags) > 0) $response->AddElement('object',$objects);
+			$response->print();
 		}
 
 		/**

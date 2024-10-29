@@ -208,7 +208,7 @@
 		 * @param array $parameters Search parameters
 		 * @return array|int Array of Content\Message objects or 0 on error
 		 */
-		public function searchAdvanced($parameters, $advanced, $controls) {
+		public function searchAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
 

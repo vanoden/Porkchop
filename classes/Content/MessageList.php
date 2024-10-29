@@ -18,8 +18,7 @@
 		 * @param array $parameters Search parameters
 		 * @return array|null Array of Content\Message objects or null on error
 		 */
-		public function find($parameters = array()) {
-
+		public function findAdvanced($parameters, $advanced, $controls): array {
             $this->clearError();
             $this->resetCount();
 
@@ -46,19 +45,19 @@
 			}
 			return $messages;
 		}
-		
+
 		/**
 		 * Search for messages based on a search string
 		 *
 		 * @param array $parameters Search parameters
 		 * @return array|int Array of Content\Message objects or 0 on error
 		 */
-		public function search($parameters = array()) {
-
+		public function searchAdvanced($parameters, $advanced, $controls): array {
             $this->clearError();
             $this->resetCount();
 
-			$this->error = NULL;
+			$database = new \Database\Service();
+
 			$get_contents_query = "
 				SELECT	id
 				FROM	content_messages
@@ -74,9 +73,9 @@
 			    return 0;
 			}
         
-			$rs = $GLOBALS['_database']->Execute($get_contents_query);
+			$rs = $database->Execute($get_contents_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return 0;
 			}
 
@@ -93,7 +92,6 @@
 			}
 
 			// Join to the existing query
-			$bind_params = array();
 			$get_contents_query = "
 				SELECT DISTINCT(stx.object_id)
 				FROM search_tags_xref stx

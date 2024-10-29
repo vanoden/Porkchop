@@ -159,6 +159,25 @@
 		 */
 		public function add($parameters = []) {
 			$database = new \Database\Service();
+
+			if (empty($this->_tableName)) {
+				$trace = debug_backtrace()[1];
+				$this->error("No table name defined for class");
+				app_log("No table name defined for ".get_class($this)." called from ".$trace['class']."::".$trace['function']." in ".$trace['file']." line ".$trace['line'],'error');
+				return false;
+			}
+			if (! preg_match('/^[a-z0-9_]+$/',$this->_tableName)) {
+				$trace = debug_backtrace()[1];
+				$this->error("Invalid table name defined for class");
+				app_log("Invalid table name defined for ".get_class($this)." called from ".$trace['class']."::".$trace['function']." in ".$trace['file']." line ".$trace['line'],'error');
+				return false;
+			}
+			if (! $database->has_table($this->_tableName)) {
+				$trace = debug_backtrace()[1];
+				$this->error("Table ".$this->_tableName." does not exist");
+				app_log("Table does not exist for ".get_class($this)." called from ".$trace['class']."::".$trace['function']." in ".$trace['file']." line ".$trace['line'],'error');
+				return false;
+			}
 	
 			$addQuery = "INSERT INTO `$this->_tableName` ";
 			$bindFields = array();

@@ -36,6 +36,17 @@
 		}
 
 		/**
+		 * Does Schema have specified table?
+		 * @param string $table_name
+		 * @return bool
+		 */
+		public function has_table($table_name) {
+			$database = new \Database\Schema();
+			$table = $database->table($table_name);
+			return $table->load();
+		}
+
+		/**
 		 * Prepare a Query for Execution
 		 * @param mixed $query
 		 */
