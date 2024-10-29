@@ -2,41 +2,62 @@
 	namespace Site;
 
 	class HitList Extends \BaseListClass {
-		function find($parameters = array()) {
+		public function __construct() {
+			$this->_modelName = '\Site\Hit';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
 			$find_objects_query = "
-				SELECT	id
-				FROM	session_hits
-				WHERE	id = id
-			";
+				SELECT	`".$workingClass->_tableIdColumn()."`
+				FROM	`".$workingClass->_tableName()."`
+				WHERE	`".$workingClass->_tableIdColumn()."` = `".$workingClass->_tableIdColumn()."`";
 
-			$bind_params = array();
-
-			if ($parameters['session_id']) {
-				$find_objects_query .= "
-					AND	session_id = ?";
-				array_push($bind_params,$parameters['session_id']);
+			// Add Parameters
+			if (!empty($parameters['session_id']) && is_numeric($parameters['session_id'])) {
+				$session = new \Site\Session($parameters['session_id']);
+				if ($session->exists()) {
+					$find_objects_query .= "
+					AND		session_id = ?";
+					$database->AddParam($parameters['session_id']);
+				}
+				else {
+					$this->error("Session not found");
+					return [];
+				}
 			}
 
+			// Order Clause
 			$find_objects_query .= "
 				ORDER BY id desc
 			";
-			if (preg_match('/^\d+$/',$parameters['_limit']))
-				$find_objects_query .= "
-					limit ".$parameters['_limit'];
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
-			$hits = array();
+
+			// Build Results
+			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				$hit = new Hit($id);
-				array_push($hits,$hit);
-				$this->incrementCount();
+				$object = new $this->_modelName($id);
+				array_push($objects,$object);
+				$this->_count ++;
 			}
-			return $hits;
+			return $objects;
 		}
 	}

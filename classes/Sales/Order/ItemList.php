@@ -1,65 +1,89 @@
 <?php
 	namespace Sales\Order;
 
-	class ItemList {
-	
-		private $_count = 0;
-		private $_error;
+	class ItemList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Sales\Order\Item';
+		}
 
-		public function find($parameters = array()) {
-			$bind_params = array();
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
 
-			$find_item_query = "
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
+			$find_objects_query = "
 				SELECT	id
 				FROM	sales_order_items
-				WHERE	order_id = order_id
+				WHERE	id = id
 			";
 
-			if (!empty($parameters['order_id'])) {
-				$find_item_query .= "
-				AND		order_id = ?";
-				array_push($bind_params,$parameters['order_id']);
+			// Add Parameters
+			$validationClass = new $this->_modelName;
+			if (!empty($parameters['order_id']) && is_numeric($parameters['order_id'])) {
+				$order = new $this->_modelName($parameters['order_id']);
+				if ($order->exists()) {
+					$find_objects_query .= "
+						AND		order_id = ?
+					";
+					$database->AddParam($parameters['order_id']);
+				}
+				else {
+					$this->error('Order not found');
+					return [];
+				}
 			}
 			if (!empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
-					$statii = "";
+					$statii = [];
 					foreach ($parameters['status'] as $status) {
-						if (preg_match('/^\w+$/',$status)) {
-							if (strlen($statii) > 0) $statii .= ",";
-							$statii .= "'$status'";
+						if ($validationClass->validStatus($status)) {
+							array_push($statii, $status);
 						}
 					}
-					$find_item_query .= "
-					AND	status in (".$statii.")";
+					$find_objects_query .= "
+					AND	status in (".implode(',',$statii).")";
+				}
+				elseif ($validationClass->validStatus($parameters['status'])) {
+					$find_objects_query .= "
+					AND		status = ?";
+					$database->AddParam($parameters['status']);
 				}
 				else {
-					$find_item_query .= "
-					AND		status = ?";
-					array_push($bind_params,$parameters['status']);
+					$this->error('Invalid status');
+					return [];
 				}
 			}
 
-			$find_item_query .= "
+			// Order Clause
+			$find_objects_query .= "
 				ORDER BY order_id, line_number
 			";
 
-			$rs = $GLOBALS['_database']->Execute($find_item_query,$bind_params);
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->error("SQL Error in Sales::Order::ItemList(): ".$GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
-			$items = array();
-			while (list($id) = $rs->FetchRow()) {
-				$item = new \Sales\Order\Item($id);
-				array_push($items,$item);
-				$this->_count ++;
+
+			// Build Results
+			$objects = array();
+			while (list($organization_id,$product_id) = $rs->FetchRow()) {
+				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
+				$object = $orgProduct;
+				if ($this->error()) {
+					$this->error("Error getting details for ".$this->_modelName.": ".$this->error());
+					return [];
+				}
+				array_push($objects,$object);
 			}
-			return $items;
-		}
-		public function count() {
-			return $this->_count;
-		}
-		public function error() {
-			return $this->_error;
+
+			return $objects;
 		}
 	}

@@ -28,30 +28,14 @@
 			";
 
 			// add searched Tag Join
-			if (!empty($search_string)) {
-				if (!$this->validSearchString($search_string)) {
-					app_log("Invalid search string: '$search_string'",'info');
-					$this->error("Invalid search string '".$search_string."'");
-					return null;
-				}
-
+			if (!empty($advanced['tag'])) {
 				$get_organizations_query .= ",
-				INNER JOIN  search_tags st
-				ON 			st.class = 'Register::Organization'
-				INNER JOIN	search_tags_xref stx ON stx.object_id = ro.id
-				AND 		stx.tag_id = st.id
-				WHERE	(
-								ro.name = ?
-							OR 	ro.code = ?
-							OR	(
-									st.category = ?
-								AND st.value = ?
-							)
-				)";
-				$database->AddParam($search_string);
-				$database->AddParam($search_string);
-				$database->AddParam($advanced['tag']['type']);
-				$database->AddParam($advanced['tag']['string']);
+						search_tags_xref stx
+				WHERE	stx.tag_id IN (".implode(',',$this->getTagIds($advanced['tag'])).")";
+			}
+			else {
+				$get_organizations_query .= "
+				WHERE	ro.id = ro.id";
 			}
 
 			if (! empty($string)) {
@@ -170,14 +154,15 @@
 			return $organizations;
 		}
 
-		public function findAdvanced($parameters = [], $advanced = [], $controls = []): array {
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
-            $validationClass = new $this->_modelName();
-
 			// Initialize Database Service
 			$database = new \Database\Service();
+
+			// Dereference Working Class
+            $workingClass = new $this->_modelName();
 
 			// Build Query
 			$get_organizations_query = "
@@ -197,9 +182,9 @@
 				$get_organizations_query .= "
 					WHERE		ro.id = ro.id";
 			}
-			
+
 			if (!empty($parameters['name'])) {
-				if (isset($parameters['_like']) && in_array("name",$parameters['_like'])) {
+				if (isset($controls['like']) && in_array("name",$controls['like'])) {
 					$get_organizations_query .= "
 					AND		ro.name like '%".preg_replace('/[^\w\-\.\_\s]/','',$parameters['name'])."%'";
 				} else {
@@ -210,7 +195,7 @@
 			}
 
 			if (!empty($parameters['code'])) {
-                if (! $validationClass->validCode($parameters['code'])) {
+                if (! $workingClass->validCode($parameters['code'])) {
                     $this->error("Invalid code");
                     return null;
                 }
@@ -224,7 +209,7 @@
 				$get_organizations_query .= "
 				AND	ro.status IN (";
 				foreach ($parameters['status'] as $status) {
-                    if (! $validationClass->validStatus($status)) {
+                    if (! $workingClass->validStatus($status)) {
                         $this->error("Invalid status");
                         return null;
                     }
@@ -236,14 +221,15 @@
 				$get_organizations_query .= ")";
 			}
             elseif (!empty($parameters['status'])) {
-                if (! $validationClass($parameters['status'])) {
+                if (! $workingClass($parameters['status'])) {
                     $this->error("Invalid status");
                     return null;
                 }
 				$get_organizations_query .= "
 				AND		ro.status = ?";
 				$database->AddParam($parameters['status']);
-			} else
+			}
+			else
 				$get_organizations_query .= "
 				AND		ro.status IN ('NEW','ACTIVE')";
 
@@ -254,8 +240,7 @@
 			}
 
             if (isset($controls['sort'])) {
-
-                if (!$validationClass->hasField($controls['sort'])) {
+                if (!$workingClass->hasField($controls['sort'])) {
                     $this->error("Invalid sort field");
                     return null;
                 }
@@ -273,22 +258,20 @@
 			}
 			else {
 				$get_organizations_query .= "
-				ORDER BY ro.name ".$controls['order'];
+				ORDER BY ro.name ";
+				if (isset($controls['order']) && !empty($controls['order'])) $get_organizations_query .= $controls['order'];
 			}
 
-			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
-                $get_organizations_query .= "
-                    LIMIT ".$controls['limit'];
-                if (is_numeric($controls['offset'])) $get_organizations_query .= "
-                    OFFSET ".$controls['offset'];
-			}
+			// Limit Clause
+			$get_organizations_query .= $this->limitClause($controls);
 
+			// Execute Query
 			$rs = $database->Execute($get_organizations_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
-			
+
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {
 				if (isset($controls['id']) || isset($controls['count'])) {

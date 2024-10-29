@@ -22,14 +22,8 @@
 	// Initialize Parameter Array
 	$find_parameters = array();
 	if (isset($_REQUEST['name'])) {
-		if ($organizationlist->validSearchString($_REQUEST['name'])) {
-			$find_parameters['string'] = $_REQUEST['name'];
-			$find_parameters['_like'] = array('name');
-		}
-		else {
-			$page->addError("Invalid search string");
-			$_REQUEST['name'] = noXSS($_REQUEST['name']);
-		}
+		$find_parameters['name'] = $_REQUEST['name'];
+		$controls['like'] = array('name');
 	}
 
 	$find_parameters['status'] = array('NEW','ACTIVE');
@@ -39,7 +33,7 @@
 	if (!empty($_REQUEST['searchedTag'])) $find_parameters['searchedTag'] = $_REQUEST['searchedTag'];
 
 	// Get Count before Pagination
-	$organizationlist->search($find_parameters,['count' => true]);
+	$organizationlist->find($find_parameters,['count' => true]);
 	$total_organizations = $organizationlist->count($find_parameters);
 	if ($organizationlist->error()) $page->addError($organizationlist->error());
 
@@ -48,7 +42,7 @@
 	$controls["offset"] = isset($_REQUEST['pagination_start_id']) ? $_REQUEST['pagination_start_id']: 0;
 
 	// Get Records
-	$organizations = $organizationlist->search($find_parameters,$controls);
+	$organizations = $organizationlist->find($find_parameters,$controls);
 	if ($organizationlist->error()) $page->addError("Error finding organizations: ".$organizationlist->error());
 
     // get tags for organization
@@ -56,12 +50,12 @@
     $organizationTags = $registerTagList->getDistinct();
 	if ($registerTagList->error()) $page->addError($registerTagList->error());
 
-	if (is_array($organizations) && $next_offset > count($organizations)) $next_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) + count($organizations);
+	//if (is_array($organizations) && $next_offset > count($organizations)) $next_offset = (isset($_REQUEST['start']) ? $_REQUEST['start'] : 0) + count($organizations);
 
 	$page->title("Organizations");
 	$page->instructions = "Fill in the search field.  Use * for a wildcard.  Or click an organization code to see details.";
     $page->addBreadcrumb("Customer");
-    $page->addBreadcrumb("Organizations");
+    $page->addBreadcrumb("Organizations","/_register/organizations");
 
     $pagination = new \Site\Page\Pagination();
     $pagination->forwardParameters(array('hidden','deleted','expired','name','searchedTag','recordsPerPage'));

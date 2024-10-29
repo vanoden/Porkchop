@@ -1,17 +1,23 @@
 <?php
 	namespace Site;
 
-	class SiteMessagesList {
-	
-		private $_count = 0;
-		private $_error;
+	class SiteMessagesList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Site\SiteMessage';
+		}
 
-		public function find($parameters = array()) {
-	
-			app_log("Site::SiteMessagesList::find()",'trace',__FILE__,__LINE__);
-			
-			$this->_error = null;
-			$get_site_messages_query = "
+		public function findAdvanced(array $parameters, array $advanced, array $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
+			$find_objects_query = "
 				SELECT	sm.id
 				FROM	site_messages sm
 				LEFT JOIN site_message_deliveries smd
@@ -19,76 +25,91 @@
 				WHERE	sm.id = sm.id 
 			";
 
-			$bind_params = array();
-			if (isset($parameters['user_created'])) {
-				$get_site_messages_query .= "
-				AND sm.user_created = ?";
-				array_push($bind_params,$parameters['user_created']);
+			// Add Parameters
+			if (!empty($parameters['user_created']) && is_numeric($parameters['user_created'])) {
+				$user = new \Register\Person($parameters['user_created']);
+				if ($user->exists()) {
+					$find_objects_query .= "
+					AND		sm.user_created = ?";
+					$database->AddParam($parameters['user_created']);
+				}
+				else {
+					$this->error("User not found");
+					return [];
+				}
 			}
 
-			if (isset($parameters['recipient_id'])) {
-				$get_site_messages_query .= "
-				AND sm.recipient_id = ?";
-				array_push($bind_params,$parameters['recipient_id']);
+			if (!empty($parameters['recipient_id']) && is_numeric($parameters['recipient_id'])) {
+				$user = new \Register\Person($parameters['recipient_id']);
+				if ($user->exists()) {
+					$find_objects_query .= "
+					AND		smd.recipient_id = ?";
+					$database->AddParam($parameters['recipient_id']);
+				}
+				else {
+					$this->error("User not found");
+					return [];
+				}
 			}
 
 			if (isset($parameters['acknowledged']) && $parameters['acknowledged'] == 'read') {
-				$get_site_messages_query .= "
+				$find_objects_query .= "
 				AND smd.date_acknowledged is NOT NULL";
-			} else if (isset($parameters['acknowledged']) && $parameters['acknowledged'] == 'unread') {
-				$get_site_messages_query .= "
+			}
+			else if (isset($parameters['acknowledged']) && $parameters['acknowledged'] == 'unread') {
+				$find_objects_query .= "
 				AND smd.date_acknowledged is NULL";
 			}
-			
-			query_log($get_site_messages_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
+
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->_error = "SQL Error in Site::SiteMessagesList::find(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 
-			$siteMessages = array();
+			// Build Results
+			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-			    $siteMessage = new \Site\SiteMessage($id);
-			    $siteMessage->details();
-			    $this->_count ++;
-			    array_push($siteMessages,$siteMessage);
+			    $object = new $this->_modelName($id);
+			    array_push($objects,$object);
+			    $this->incrementCount();
 			}
-			
-			return $siteMessages;
+			return $objects;
 		}
 		
 		public function getUnreadForUserId ($userId) {
-		
-			app_log("Site::SiteMessagesList::getUnreadForUserId()",'trace',__FILE__,__LINE__);
-			
-			$this->_error = null;
-			$get_site_messages_query = "
+			$this->clearError();
+			$this->resetCount();
+	
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
+			$find_objects_query = "
 				SELECT	count(sm.id) as total_messages
 				FROM	site_messages sm
 				WHERE	sm.id = sm.id
 			";			
 
-			$bind_params = array();
 			if (isset($parameters['user_created'])) {
-				$get_site_messages_query .= "
+				$find_objects_query .= "
 				AND user_created = ?";
 				array_push($bind_params,$userId);
 			}
 
-			query_log($get_site_messages_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->_error = "SQL Error in Site::SiteMessagesList::getUnreadForUserId(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 			
 			$totalMessages = 0;
 			while (list($row) = $rs->FetchRow()) {
 			    $totalMessages = $row;
 			};			
-			$this->_error = null;
-			$get_site_messages_query = "
+
+			$find_objects_query = "
 				SELECT	sm.id
 				FROM	site_messages sm
 				LEFT JOIN site_message_deliveries smd
@@ -97,31 +118,27 @@
 				AND smd.date_acknowledged == NULL
 			";			
 
-			$bind_params = array();
-			if (isset($parameters['user_created'])) {
-				$get_site_messages_query .= "
-				AND user_created = ?";
-				array_push($bind_params,$userId);
+			if (isset($parameters['user_created']) && is_numeric($parameters['user_created'])) {
+				$user = new \Register\Person($parameters['user_created']);
+				if ($user->exists()) {
+					$find_objects_query .= "
+					AND user_created = ?";
+					$database->AddParam($userId);
+				}
+				else {
+					$this->error("User not found");
+					return [];
+				}
 			}
 
-			query_log($get_site_messages_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($get_site_messages_query,$bind_params);
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->_error = "SQL Error in Site::SiteMessagesList::getUnreadForUserId(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 
 			$acknowledgedMessages = 0;
 			while (list($id) = $rs->FetchRow()) $acknowledgedMessages ++;	
 			return $totalMessages - $acknowledgedMessages;		
 		}
-		
-        
-        public function error() {
-            return $this->_error;
-        }
-
-        public function count() {
-            return $this->_count;
-        }
 	}

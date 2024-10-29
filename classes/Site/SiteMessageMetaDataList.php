@@ -1,87 +1,110 @@
 <?php
 	namespace Site;
 
-	class SiteMessageMetaDataList {
-	
-		private $_count = 0;
-		private $_error;
+	class SiteMessageMetaDataList Extends \BaseMetadataListClass {
+		public function __construct() {
+			$this->_modelName = '\Site\SiteMessageMetaData';
+		}
 
         public function getListByItemId($itemId) {
-                
-            app_log("Site::SiteMessageMetaDataList::getListByItemId()",'trace',__FILE__,__LINE__);
-            $this->error = null;
-            $bind_params = array();
-            
-            if (!isset($itemId) || empty($itemId) || !is_numeric($itemId)) {
-                $this->error = "SQL Error in Site::SiteMessageMetaDataList::getListByItemId: missing itemId";
-                return null;
-            }
-            
-			$get_site_messages_metadata_query = "
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
+			$find_objects_query = "
 				SELECT	`item_id`, `label`, `value`
 				FROM	`site_messages_metadata`
 				WHERE	`item_id` = ?
 			";
-            array_push($bind_params,$itemId);
-			query_log($get_site_messages_metadata_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($get_site_messages_metadata_query,$bind_params);
+
+			$database->AddParam($itemId);
+
+			if (!isset($itemId) || empty($itemId) || !is_numeric($itemId)) {
+                $this->error("missing itemId");
+                return [];
+            }
+
+			// Execute Query
+			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SiteMessageMetaDataList::getListByItemId: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
-			
-			$siteMessages = array();
-			while ($siteMessage = $rs->FetchRow()) array_push($siteMessages,array('item_id' => $siteMessage['item_id'], 'label' => $siteMessage['label'], 'value' => $siteMessage['value']));		
-			return $siteMessages;
+
+			// Build Results
+			$objects = [];
+			while ($siteMessage = $rs->FetchRow()) {
+				$object = new $this->_modelName();
+				$object->set('item_id', $siteMessage['item_id']);
+				$object->set('label', $siteMessage['label']);
+				$object->set('value', $siteMessage['value']);
+				array_push($objects,$object);
+				$this->incrementCount();
+			}
+			return $objects;
         }
 
-		public function find($parameters = array()) {
-	
-			app_log("Site::SiteMessageMetaDataList::find()",'trace',__FILE__,__LINE__);
-			
-			$this->error = null;
-			$get_site_messages_metadata_query = "
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
+			$find_objects_query = "
 				SELECT	`item_id`, `label`
 				FROM	`site_messages_metadata`
 				WHERE	`item_id` = `item_id`
 			";			
 
-			$bind_params = array();
-			if (isset($parameters['label'])) {
-				$get_site_messages_metadata_query .= "
-				AND `label` = ?";
-				array_push($bind_params,$parameters['label']);
+			// Add Parameters
+			if (!empty($parameters['label'])) {
+				if ($workingClass->validLabel($parameters['label'])) {
+					$find_objects_query .= "
+					AND		`label` = ?";
+					$database->AddParam($parameters['label']);
+				}
+				else {
+					$this->error("Invalid label");
+					return [];
+				}
 			}
 
-			if (isset($parameters['item_id'])) {
-				$get_site_messages_metadata_query .= "
+			if (isset($parameters['item_id']) && is_numeric($parameters['item_id'])) {
+				$find_objects_query .= "
 				AND `item_id` = ?";
-				array_push($bind_params,$parameters['item_id']);
+				$database->AddParam($parameters['item_id']);
 			}
 
-			query_log($get_site_messages_metadata_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($get_site_messages_metadata_query,$bind_params);
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->error = "SQL Error in Site::SiteMessageMetaDataList::find: ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
-			
-			$siteMessages = array();
+
+			// Build Results
+			$objects = array();
 			while (list($id, $label) = $rs->FetchRow()) {
 			    if (!isset($siteMessages[$label])) $siteMessages[$label] = array();
-			    $siteMessage = new \Site\SiteMessageMetaData($id, $label);
-			    $siteMessage->details();			    
-			    $this->count ++;
-			    array_push($siteMessages[$label],$siteMessage);
+			    $object = new \Site\SiteMessageMetaData($id, $label);
+			    $object->details();			    
+			    $this->incrementCount();
+			    array_push($objects[$label],$object);
 			}
-			return $siteMessages;
-		}		
-        
-        public function error() {
-            return $this->_error;
-        }
-
-        public function count() {
-            return $this->_count;
-        }
+			return $objects;
+		}
 	}

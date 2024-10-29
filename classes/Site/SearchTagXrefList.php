@@ -6,43 +6,52 @@
 			$this->_modelName = '\Site\SearchTagXref';
 		}
 
-		public function find($parameters = array()) {
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
+			// Initialize Database Service
 			$database = new \Database\Service();
 
-			$get_objects_query = "
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
+			$find_objects_query = "
 				SELECT	stx.id
 				FROM	search_tags_xref stx
 				INNER JOIN search_tags st ON stx.tag_id = st.id
 				WHERE	stx.id = stx.id
 			";			
 
+			// Add Parameters
 			if (isset($parameters['class'])) {
-				$get_objects_query .= "
+				$find_objects_query .= "
 				AND st.class = ?";
 				$database->AddParam($parameters['class']);
 			}
 
 			if (isset($parameters['object_id'])) {
-				$get_objects_query .= "
+				$find_objects_query .= "
 				AND stx.object_id = ?";
 				$database->AddParam($parameters['object_id']);
 			}
 
-			$rs = $database->Execute($get_objects_query);
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
-			
-			$xrefs = array();
+
+			$objects = [];
 			while (list($id) = $rs->FetchRow()) {
-			    $xref = new \Site\SearchTagXref($id);
+			    $object = new $this->_modelName($id);
 			    $this->incrementCount();
-			    array_push($xrefs,$xref);
+			    array_push($objects,$object);
 			}
-			return $xrefs;
+			return $objects;
 		}
 	}

@@ -66,14 +66,14 @@
 				return null;
 			}
 
+			// Build Results
 			$objects = array();
-
 			while (list($organization_id,$product_id) = $rs->FetchRow()) {
 				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
 				$object = $orgProduct;
 				if ($this->error()) {
-					$this->error("Error getting details for OrganizationOwnedProduct: ".$this->error());
-					return null;
+					$this->error("Error getting details for ".$this->_modelName.": ".$this->error());
+					return [];
 				}
 				array_push($objects,$object);
 			}

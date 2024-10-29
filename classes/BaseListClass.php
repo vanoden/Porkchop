@@ -34,8 +34,12 @@ class BaseListClass extends \BaseClass {
 			elseif (count($parameters) == 2) {
 				return $this->findControlled($parameters[0], $parameters[1], []);
 			}
-			else
+			elseif (count($parameters) == 1) {
 				return $this->findSimple($parameters[0]);
+			}
+			else {
+				return $this->findSimple([]);
+			}
 		}
 		elseif ($name == "search") {
 			if (count($parameters) == 3) {
@@ -113,6 +117,8 @@ class BaseListClass extends \BaseClass {
 
 	public function findControlled($parameters, array $controls): array {
 		if (!empty($controls['count'])) $controls['ids'] = $controls['count'];
+		if (!empty($controls['showCachedObjects'])) $controls['showCachedObjects'] = $controls['showCachedObjects'];
+		else $controls['showCachedObjects'] = true;
 		return $this->findAdvanced($parameters, [], $controls);
 	}
 
@@ -227,10 +233,10 @@ class BaseListClass extends \BaseClass {
 			if (is_numeric($controls['limit'])) {
 				if (!empty($controls['offset'])) {
 					if (is_numeric($controls['offset'])) {
-						$limit = "LIMIT " . $controls['offset'] . "," . $controls['limit'];
+						$limit = " LIMIT " . $controls['offset'] . "," . $controls['limit'];
 					}
 				}
-				$limit = "LIMIT " . $controls['limit'];
+				$limit = " LIMIT " . $controls['limit'];
 			}
 		}
 		return $limit;
@@ -413,6 +419,10 @@ class BaseListClass extends \BaseClass {
 	}
 
 	public function validSearchString($string) {
+		if (is_array($string)) {
+			print_r(debug_backtrace());
+			exit;
+		}
 		if (preg_match('/^[\w\-\.\_\s\*]{3,64}$/', $string)) return true;
 		else return false;
 	}

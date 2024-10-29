@@ -1,16 +1,22 @@
 <?php
     namespace Site;
 	class CounterList Extends \BaseListClass {
-		public function find($parameters = array('showCacheObjects' => true)) {
+		public function __construct() {
+			$this->_modelName = '\Site\Counter';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
+
 			$names = $GLOBALS['_CACHE_']->counters();
-			$counters = array();
+
+			$objects = array();
 			foreach ($names as $name) {
-				$counter = new \Site\Counter($name);
-				array_push($counters,$counter);
+				$object = new \Site\Counter($name);
+				array_push($objects,$object);
 				$this->incrementCount();
 			}
-			return $counters;
+			return $objects;
 		}
 	}

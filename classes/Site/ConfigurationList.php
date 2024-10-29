@@ -2,48 +2,73 @@
 	namespace Site;
 		
 	class ConfigurationList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Site\Configuration';
+		}
 
-		public function find($parameters = array()) {
-            $this->clearError();
-            $this->resetCount();
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
 
+			// Initialize Database Service
 			$database = new \Database\Service();
-			$database->debug = 'log';
 
-			// Prepare Query
-			$get_object_query = "
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
+			$find_objects_query = "
 				SELECT	`key`
 				FROM	site_configurations
 				WHERE	`key` = `key`
 			";
 			
 			if (!empty($parameters['key'])) {
-				$get_object_query .= "
+				if ($workingClass->validCode($parameters['key'])) {
+					$find_objects_query .= "
 					AND `key` = ?";
-				$database->AddParam($parameters['key']);
+					$database->AddParam($parameters['key']);
+				}
+				else {
+					$this->error("Invalid key");
+					return [];
+				}
 			}
 
 			if (!empty($parameters['value'])) {
-				$get_object_query .= "
+				if ($workingClass->validateValue($parameters['value'])) {
+					$find_objects_query .= "
 					AND `value` = ?";
-				$database->AddParam($parameters['value']);
+					$database->AddParam($parameters['value']);
+				}
+				else {
+					$this->error("Invalid value");
+					return [];
+				}
 			}
-		
-			$get_object_query .= "
+
+			// Order Clause
+			$find_objects_query .= "
 					ORDER BY `key`
 			";
-			
-			$rs = $database->Execute($get_object_query);
+	
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
-			$pages = array();
+
+			// Build Results
+			$objects = [];
 			while(list($id) = $rs->FetchRow()) {
-				$page = new \Site\Configuration($id);
+				$object = new $this->_modelName($id);
 				$this->incrementCount();
-				array_push($pages,$page);
+				array_push($objects,$object);
 			}
-			return $pages;
+			return $objects;
 		}
 	}

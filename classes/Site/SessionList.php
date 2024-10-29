@@ -2,45 +2,60 @@
 	namespace Site;
 
 	class SessionList Extends \BaseListClass{
-		public function find($parameters = [], $controls = []) {
+		public function __construct() {
+			$this->_modelName = '\Site\Session';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
-			if (array_key_exists('_limit',$parameters)) $controls['limit'] = $parameters['_limit'];
-			if (array_key_exists('_sort',$parameters)) $controls['sort'] = $parameters['_sort'];
-			if (array_key_exists('_offset',$parameters)) $controls['offset'] = $parameters['_offset'];
-			if (array_key_exists('_desc',$parameters) && is_bool($parameters['_desc']) && $parameters['_desc']) $controls['order'] = 'DESC';
-			else $controls['order'] = 'ASC';
-			if (empty($controls['offset'])) $controls['offset'] = 0;
-			if (!empty($controls["order"]) && strtolower($controls['order']) != "asc") $controls['order'] = 'DESC';
-			else $controls['order'] = 'ASC';
-
+			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
 			$find_objects_query = "
-				SELECT	id
-				FROM	session_sessions
+				SELECT	`".$workingClass->_tableIdColumn()."`
+				FROM	`".$workingClass->_tableName()."`
 				WHERE	company_id = ?";
 
 			$database->AddParam($GLOBALS['_SESSION_']->company->id);
 
-			if (isset($parameters['code']) && preg_match('/^\w+$/',$parameters['code'])) {
-				$find_objects_query .= "
-				AND		code = ?";
-				$database->AddParam($parameters['code']);
+			// Add Parameters
+			if (!empty($parameters['code'])) {
+				if ($workingClass->validCode($parameters['code'])) {
+					$find_objects_query .= "
+					AND		code = ?";
+					$database->AddParam($parameters['code']);
+				}
+				else {
+					$this->error("Invalid code");
+					return [];
+				}
 			}
 
-			if (!empty($parameters['expired'])) {
+			if (!empty($parameters['expired']) && is_bool($parameters['expired']) && $parameters['expired']) {
 				$find_objects_query .= "
 				AND		last_hit_date < sysdate() - 86400
 				";
 			}
 
-			if (isset($parameters['user_id']) && preg_match('/^\d+$/',$parameters['user_id'])) {
-				$find_objects_query .= "
-				AND		user_id = ?";
-				$database->AddParam($parameters['user_id']);
+			if (!empty($parameters['user_id']) && is_numeric($parameters['user_id'])) {
+				$user = new \Register\Person($parameters['user_id']);
+				if ($user->exists()) {
+					$find_objects_query .= "
+					AND		user_id = ?";
+					$database->AddParam($parameters['user_id']);
+				}
+				else {
+					$this->error("User not found");
+					return [];
+				}
 			}
+
 			if (isset($parameters['date_start']) && get_mysql_date($parameters['date_start'])) {
 				$threshold = get_mysql_date($parameters['date_start']);
 				$find_objects_query .= "
@@ -48,25 +63,27 @@
 				$database->AddParam($threshold);
 			}
 
+			// Order Clause
 			if (isset($controls['sort']) && in_array($controls['sort'],array('code','last_hit_date','first_hit_date'))) {
 				$find_objects_query .= "
 					ORDER BY ".$controls['sort'];
 				$find_objects_query .= " ".$controls['order'];
 			}
 
-			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
-				$find_objects_query .= "
-					LIMIT	".$controls['offset'].",".$controls['limit'];
-			}
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
 
+			// Execute Query
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return [];
 			}
-			$objects = array();
+
+			// Build Results
+			$objects = [];
 			while (list($id) = $rs->FetchRow()) {
-				$object = new \Site\Session($id);
+				$object = new $this->_modelName($id);
 				array_push($objects,$object);
 				$this->incrementCount();
 			}

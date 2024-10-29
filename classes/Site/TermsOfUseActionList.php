@@ -6,10 +6,11 @@ class TermsOfUseActionList extends \BaseListClass {
 		$this->_modelName = '\Site\TermsOfUseAction';
 	}
 
-	public function find($params = [], $controls = []): array {
-	
-		if (isset($params['tou_id'])) {
-			
+	public function findAdvanced($parameters, $advanced, $controls): array {
+		$this->clearError();
+		$this->resetCount();
+		
+		if (isset($params['tou_id']) && is_numeric($params['tou_id'])) {
 			$tou = new \Site\TermsOfUse($params['tou_id']);
 			if ($tou->error()) {
 				$this->error($tou->error());
@@ -41,6 +42,6 @@ class TermsOfUseActionList extends \BaseListClass {
 			}
 		}
 
-		return parent::find($params, $controls);
+		return parent::find($parameters, $advanced, $controls);
 	}
 }

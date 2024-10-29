@@ -1,44 +1,51 @@
 <?php
 	namespace Shipping;
 
-	class PackageList {
-		private $_error;
-		private $_count = 0;
+	class PackageList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Shipping\Package';
+		}
 
-		public function find($parameters = array()) {
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
 			$find_objects_query = "
-				SELECT	id
-				FROM	shipping_packages
-				WHERE	id = id";
+				SELECT	`".$workingClass->_tableIdColumn()."`
+				FROM	`".$workingClass->_tableName()."`
+				WHERE	`".$workingClass->_tableIdColumn()."` = `".$workingClass->_tableIdColumn()."`";
 
-			$bind_params = array();
-
-			if (isset($parameters['shipment_id']) && !empty($parameters['shipment_id'])) {
+			// Add Parameters
+			if (!empty($parameters['shipment_id']) && is_numeric($parameters['shipment_id'])) {
 				$find_objects_query .= "
 				AND		shipment_id = ?";
-				array_push($bind_params,$parameters['shipment_id']);
+				$database->AddParam($parameters['shipment_id']);
 			}
 
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->_error = "SQL Error in Shipping::PackageList::find(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 
-			$packages = array();
+			// Build Results
+			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				$package = new \Shipping\Package($id);
-				array_push($packages,$package);
+				$object = new $this->_modelName($id);
+				array_push($objects,$object);
 				$this->_count ++;
 			}
-			return $packages;
-		}
-
-		public function error() {
-			return $this->_error;
-		}
-
-		public function count() {
-			return $this->_count;
+			return $objects;
 		}
 	}
