@@ -111,7 +111,8 @@ class BaseListClass extends \BaseClass {
 		if (empty($controls['order'])) $controls['order'] = 'ASC';
 		if (empty($controls['offset'])) $controls['offset'] = 0;
 		if (!empty($parameters['recursive'])) $controls['recursive'] = $parameters['recursive'];
-		if (!empty($parameters['_flat']) && $parameters['_flat']) $controls['ids'] == true;
+		if (!empty($parameters['_flat']) && $parameters['_flat']) $controls['ids'] = true;
+		else ($controls['ids'] = false);
 		return $this->findAdvanced($parameters, [], $controls);
 	}
 
