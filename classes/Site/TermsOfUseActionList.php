@@ -42,6 +42,6 @@ class TermsOfUseActionList extends \BaseListClass {
 			}
 		}
 
-		return parent::find($parameters, $advanced, $controls);
+		return parent::findAdvanced($parameters, $advanced, $controls);
 	}
 }
