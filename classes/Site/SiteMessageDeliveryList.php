@@ -2,12 +2,21 @@
 	namespace Site;
 
 	class SiteMessageDeliveryList Extends \BaseListClass {
-		public function find($parameters = array()) {
+		public function __construct() {
+			$this->_modelName = '\Site\SiteMessageDelivery';
+		}
+
+		public function findAdvanced(array $parameters, array $advanced, array $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
+			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
 			$get_objects_query = "
 				SELECT	smd.id
 				FROM	site_message_deliveries smd,
@@ -15,17 +24,34 @@
 				WHERE	smd.message_id = sm.id
 			";			
 
-			if (isset($parameters['user_id'])) {
-				$get_objects_query .= "
-				AND smd.user_id = ?";
-				$database->AddParam($parameters['user_id']);
+			// Add Parameters
+			if (!empty($parameters['user_id']) && is_numeric($parameters['user_id'])) {
+				$user = new \Register\Person($parameters['user_id']);
+				if ($user->exists()) {
+					$get_objects_query .= "
+					AND		smd.user_id = ?";
+					$database->AddParam($parameters['user_id']);
+				}
+				else {
+					$this->error("User not found");
+					return [];
+				}
 			}
-			if (isset($parameters['user_created'])) {
-				$get_objects_query .= "
-				AND sm.user_created = ?";
-				$database->AddParam($parameters['user_created']);
+
+			if (!empty($parameters['user_created']) && is_numeric($parameters['user_created'])) {
+				$user = new \Register\Person($parameters['user_created']);
+				if ($user->exists()) {
+					$get_objects_query .= "
+					AND		sm.user_created = ?";
+					$database->AddParam($parameters['user_created']);
+				}
+				else {
+					$this->error("User not found");
+					return [];
+				}
 			}
-			if (isset($parameters['viewed'])) {
+
+			if (isset($parameters['viewed']) && is_bool($parameters['viewed'])) {
 				if ($parameters['viewed'] == false) {
 					$get_objects_query .= "
 					AND	date_viewed IS NULL
@@ -37,7 +63,8 @@
 					";
 				}
 			}
-			if (isset($parameters['acknowledged'])) {
+
+			if (isset($parameters['acknowledged']) && is_bool($parameters['acknowledged'])) {
 				if ($parameters['acknowledged'] == false) {
 					$get_objects_query .= "
 					AND	date_acknowledged IS NULL
@@ -50,18 +77,23 @@
 				}
 			}
 
+			// Limit Clause
+			$get_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
 			$rs = $database->Execute($get_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
-			
-			$deliveries = array();
+
+			// Build Results
+			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-			    $delivery = new \Site\SiteMessageDelivery($id);
+			    $object = new $this->_modelName($id);
 			    $this->incrementCount();
-			    array_push($deliveries,$delivery);
+			    array_push($objects,$object);
 			}
-			return $deliveries;
+			return $objects;
 		}
 	}

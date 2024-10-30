@@ -1,14 +1,18 @@
 <?php
 	namespace Site;
 
-	class ModuleList {
-		private $_error;
-		private $_count = 0;
+	class ModuleList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Site\Module';
+		}
 
-		public function find($parameters = array()) {
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
 			if (! is_dir(MODULES)) {
-				$this->_error = "No modules patch defined";
-				return null;
+				$this->error("No modules patch defined");
+				return [];
 			}
 
 			# Get Modules From MODULE folder
@@ -23,31 +27,23 @@
 						$module = new Module();
 						if ($module->get($module_name)) {
 							array_push($modules,$module);
-							$this->_count ++;
+							$this->incrementCount();
 						}
-						elseif ($module->error) {
-							$this->_error = $module->error;
-							return null;
+						elseif ($module->error()) {
+							$this->error($module->error());
+							return [];
 						}
 						else {
-							$this->_error = "Unhandled exception";
-							return null;
+							$this->error("Unhandled exception");
+							return [];
 						}
 					}
 				}
 				return $modules;
 			}
 			else {
-				$this->error = "Error in Site::Module::find(): Cannot view modules data";
-				return null;
+				$this->error("Cannot view modules data");
+				return [];
 			}
-		}
-
-		public function error() {
-			return $this->_error;
-		}
-
-		public function count() {
-			return $this->_count;
 		}
 	}

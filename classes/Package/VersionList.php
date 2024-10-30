@@ -69,7 +69,7 @@
 			$rs = $GLOBALS['_database']->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return false;
+				return [];
 			}
 			$objects = array();
 			while (list($id) = $rs->FetchRow()) {

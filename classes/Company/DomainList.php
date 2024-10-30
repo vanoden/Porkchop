@@ -27,7 +27,7 @@
 				}
 				else {
 					$this->error("Invalid domain name");
-					return false;
+					return [];
 				}
 			}
 
@@ -35,7 +35,7 @@
 				$location = new \Company\Location($parameters['location_id']);
 				if (! $location->id) {
 					$this->error("Location ID not found");
-					return false;
+					return [];
 				}
 				$find_objects_query .= "
 				AND		location_id = ?";
@@ -45,7 +45,7 @@
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return false;
+				return [];
 			}
 			
 			$objects = array();

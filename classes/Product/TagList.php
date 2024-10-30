@@ -32,7 +32,7 @@
 				}
 				else {
 					$this->error("Product not found");
-					return false;
+					return [];
 				}
 			}
 			if (!empty($parameters['name'])) {
@@ -43,7 +43,7 @@
 				}
 				else {
 					$this->error("Invalid name");
-					return false;
+					return [];
 				}
 			}
 			if (!empty($parameters['id']) && is_numeric($parameters['id'])) {

@@ -1,55 +1,63 @@
 <?php
 	namespace Site;
 
-	class CountersWatchedList {
-	
-		private $_count = 0;
-		private $_error;
+	class CountersWatchedList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Site\CounterWatched';
+		}
 
-		public function find($parameters = array()) {
-	
-			app_log("Site::CountersWatchedList::find()",'trace',__FILE__,__LINE__);
-			
-			$this->error = null;
-			$get_objects_query = "
+		public function findAdvanced(array $parameters, array $advanced, array $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
+			$find_objects_query = "
 				SELECT	*
 				FROM	counters_watched 
 				WHERE	`key` not like '%[%]'
 			";			
-			
-			$bind_params = array();
-			if (isset($parameters['key'])) {
-				$get_objects_query .= "
-				AND key = ?";
-				array_push($bind_params,$parameters['key']);
-			}
-			if (isset($parameters['notes'])) {
-				$get_objects_query .= "
-				AND notes = ?";
-				array_push($bind_params,$parameters['notes']);
-			}
-			
-			query_log($get_objects_query,$bind_params,true);
-			$rs = $GLOBALS['_database']->Execute($get_objects_query,$bind_params);
-			if (! $rs) {
-				$this->error = "SQL Error in Site::CountersWatchedList::find(): ".$GLOBALS['_database']->ErrorMsg();
-				return null;
-			}
-			
-			$counters = array();
-			while (list($id) = $rs->FetchRow()) {
-			    $delivery = new \Site\CounterWatched($id);
-			    $this->_count ++;
-			    array_push($counters,$delivery);
-			}
-			return $counters;
-		}
-        
-        public function error() {
-            return $this->_error;
-        }
 
-        public function count() {
-            return $this->_count;
-        }
+			// Add Parameters
+			if (!empty($parameters['key'])) {
+				if ($workingClass->validCode($parameters['key'])) {
+					$find_objects_query .= "
+					AND = ?";
+					$database->AddParam($parameters['key']);
+				}
+				else {
+					$this->error("Invalid key");
+					return [];
+				}
+			}
+			if (!empty($parameters['notes'])) {
+				$find_objects_query .= "
+				AND notes = ?";
+				$database->AddParam($parameters['notes']);
+			}
+	
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
+			}
+
+			// Build Results
+			$objects = [];
+			while(list($id) = $rs->FetchRow()) {
+				$object = new $this->_modelName($id);
+				$this->incrementCount();
+				array_push($objects,$object);
+			}
+			return $objects;
+		}
 	}

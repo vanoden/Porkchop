@@ -31,7 +31,7 @@ class PriceList Extends \BaseListClass {
 			}
 			else {
 				$this->error("Product not found");
-				return false;
+				return [];
 			}
 		}
 		if (isset($parameters["date_price"])) {
@@ -43,7 +43,7 @@ class PriceList Extends \BaseListClass {
 			}
 			else {
 				$this->error("Invalid date");
-				return false;
+				return [];
 			}
 		}
 		if (isset($parameters["status"]) && !empty($parameters["status"])) {
@@ -55,7 +55,7 @@ class PriceList Extends \BaseListClass {
 			}
 			else {
 				$this->error("Invalid status");
-				return false;
+				return [];
 			}
 		}
 

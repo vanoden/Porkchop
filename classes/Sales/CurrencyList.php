@@ -1,40 +1,48 @@
 <?php
 	namespace Sales;
 
-	class CurrencyList {
-		public $_count;
-		public $_error;
+	class CurrencyList Extends \BaseListClass {
+		public function __construct() {
+			$this->_modelName = '\Sales\Currency';
+		}
 
-		public function find($parameters = array()) {
+		public function findAdvanced(array $parameters, array $advanced, array $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$find_objects_query = "
 				SELECT	id
 				FROM	sales_currencies
 				WHERE	id = id
 			";
 
-			$bind_params = array();
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
 
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->error("SQL Error in Sales::CurrencyList::find(): ".$GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return [];
 			}
+
+			// Build Results
 			$objects = array();
-			while (list($id) = $rs->FetchRow()) {
-				$object = new \Sales\Currency($id);
+			while (list($organization_id,$product_id) = $rs->FetchRow()) {
+				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
+				$object = $orgProduct;
+				if ($this->error()) {
+					$this->error("Error getting details for ".$this->_modelName.": ".$this->error());
+					return [];
+				}
 				array_push($objects,$object);
-				$this->_count ++;
 			}
+
 			return $objects;
-		}
-
-		public function error($message = null) {
-			if (!empty($message)) $this->_error = $message;
-			return $this->_error;
-		}
-
-		public function count() {
-			return $this->_count;
 		}
 	}
 ?>

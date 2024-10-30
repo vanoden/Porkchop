@@ -2,29 +2,27 @@
 	namespace Site;
 
 	class TermsOfUseVersionList Extends \BaseListClass {
-	
 		public function __construct() {
 			$this->_modelName = '\Site\TermsOfUseVersion';
 		}
 
-		public function find($params = [],$controls = []): array {
-
-			if (isset($params['tou_id'])) {
-				$tou = new \Site\TermsOfUse($params['tou_id']);
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			if (isset($parameters['tou_id'])) {
+				$tou = new \Site\TermsOfUse($parameters['tou_id']);
 				if (empty($tou->id)) {
 					$this->error("Terms Of Use Record Not Found");
 					return array();
 				}
 			}
 
-			if (isset($params['status'])) {
+			if (isset($parameters['status'])) {
 				$tou = new \Site\TermsOfUse();
-				if (!$tou->validStatus($params['status'])) {
-					$this->error("Invalid Status '".$params['status']."'");
+				if (!$tou->validStatus($parameters['status'])) {
+					$this->error("Invalid Status '".$parameters['status']."'");
 					return array();
 				}
 			}
-			$objects = parent::find($params,$controls);
+			$objects = parent::findAdvanced($parameters,$advanced,$controls);
 			if (parent::error()) {
 				$this->error(parent::error());
 			}

@@ -31,7 +31,7 @@ class LeaseList Extends \BaseListClass {
 			}
 			else {
 				$this->error("Invalid mac address");
-				return null;
+				return [];
 			}
 		}
 		if (isset($parameters["ip_address"])) {
@@ -41,7 +41,7 @@ class LeaseList Extends \BaseListClass {
 				$database->AddParam($parameters['ip_address']);
 			}else {
 				$this->error("Invalid ip address");
-				return null;
+				return [];
 			}
 		}
 		if (isset($parameters["hostname"])) {
@@ -52,14 +52,14 @@ class LeaseList Extends \BaseListClass {
 			}
 			else {
 				$this->error("Invalid hostname");
-				return null;
+				return [];
 			}
 		}
 
 		$rs = $database->Execute($find_objects_query);
 		if (!$rs) {
 			$this->SQLError($database->ErrorMsg());
-			return null;
+			return [];
 		}
 		$objects = array();
 		while (list($mac_address) = $rs->FetchRow()) {

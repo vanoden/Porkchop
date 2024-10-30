@@ -2,41 +2,56 @@
 	namespace Storage;
 
 	class DirectoryList Extends \BaseListClass {
-        public function __construct ($id = 0) {
+        public function __construct() {
             $this->_modelName = '\Storage\Directory';
         }
 
-		public function find($parameters = [], $controls = []) {
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
 			if (! isset($parameters['repository_id'])) {
 				$this->error("Repository ID Required");
 				return null;
 			}
 
-            $bind_params = array();
-			$get_dirs_query = "
+			// Build Query
+			$find_objects_query = "
 				SELECT	DISTINCT path
 				FROM	storage_files
 				WHERE	id = id";
 
-			if ($parameters['path']) {
-				$regex = "^".$parameters['path']."[^\/]+";
-				$get_dirs_query .= "
-				AND		path != ?
-				AND		path REGEXP ?";
-				array_push($bind_params,$parameters['path'],$regex);
+			// Add Parameters
+			if (!empty($parameters['path'])) {
+				if ($workingClass->validPath($parameters['path'])) {
+					$regex = "^".$parameters['path']."[^\/]+";
+					$find_objects_query .= "
+					AND		path != ?
+					AND		path REGEXP ?";
+					$database->AddParam($parameters['path']);
+					$database->AddParam($regex);
+				}
+				else {
+					$this->error("Invalid Path");
+					return [];
+				}
 			}
-			
-			$get_dirs_query .= "
+			$find_objects_query .= "
 				AND		repository_id = ?
 			";
-			array_push($bind_params,$parameters['repository_id']);
-			query_log($get_dirs_query,$bind_params,true);
+			$database->AddParam($parameters['repository_id']);
             app_log("Getting directories for ".$parameters['repository_id']." in ".$parameters['path'],"info");
 
-			$rs = $GLOBALS['_database']->Execute($get_dirs_query,$bind_params);
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			$directories = array();

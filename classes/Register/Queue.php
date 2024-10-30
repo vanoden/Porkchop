@@ -54,6 +54,10 @@
 				return false;
 			}
 			list($id) = $rs->FetchRow();
+			if (empty($id)) {
+				$this->warn("No registration for ".$login);
+				return false;
+			}
 			$this->id = $id;
 			return $this->details();
 		}

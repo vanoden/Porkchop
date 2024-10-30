@@ -87,7 +87,7 @@
 					foreach ($parameters['type'] as $type) {
 						if (!$validationclass->validType($type)) {
 							$this->error("Invalid Type: ".$type);
-							return null;
+							return [];
 						}
 						if ($count) $find_product_query .= ",";
 						$count ++;
@@ -97,7 +97,7 @@
 				} else {
 					if (!$validationclass->validType($parameters["type"])) {
 						$this->error("Invalid Type: ".$parameters["type"]);
-						return null;
+						return [];
 					}
 					$find_product_query .= "
 					AND		p.type = ?";
@@ -108,7 +108,7 @@
 				foreach ($parameters['status'] as $status) {
 					if (! $validationclass->validStatus($status)) {
 						$this->error("Invalid Status: ".$status);
-						return null;
+						return [];
 					}
 					$find_product_query .= "
 					AND     p.status IN ('".implode("','",$parameters['status'])."')";
@@ -152,7 +152,7 @@
 
 				if (! $category_id) {
 					$this->error("Invalid Category");
-					return null;
+					return [];
 				}
 				$find_product_query .= "
 				AND		r.parent_id = ?";
@@ -190,7 +190,7 @@
 			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			$items = array();

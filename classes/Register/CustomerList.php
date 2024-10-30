@@ -156,7 +156,7 @@
 			}
 			elseif (isset($parameters['id'])) {
 				$this->error("Invalid id");
-				return null;
+				return [];
 			}
 			if (!empty($parameters['code']) && empty($parameters['login'])) $parameters['login'] = $parameters['code'];
 
@@ -168,7 +168,7 @@
 				}
 				else {
 					$this->error("Invalid login");
-					return null;
+					return [];
 				}
 			}
 			if (!empty($parameters['status'])) {
@@ -185,7 +185,7 @@
 						}
 						else {
 							$this->error("Invalid status");
-							return null;
+							return [];
 						}
 					}
 					$find_person_query .= ")";
@@ -198,7 +198,7 @@
 					}
 					else {
 						$this->error("Invalid status");
-						return null;
+						return [];
 					}
 				}
 			}
@@ -215,7 +215,7 @@
 				}
 				else {
 					$this->error("Invalid first name");
-					return null;
+					return [];
 				}
 			}
 	
@@ -227,7 +227,7 @@
 				}
 				else {
 					$this->error("Invalid last name");
-					return null;
+					return [];
 				}
 			}
 	
@@ -239,7 +239,7 @@
 				}
 				else {
 					$this->error("Invalid email address");
-					return null;
+					return [];
 				}
 			}
 
@@ -255,7 +255,7 @@
 				$organization = new \Register\Organization($parameters['organization_id']);
 				if (!$organization->exists()) {
 					$this->error("Invalid organization");
-					return null;
+					return [];
 				}
 				$find_person_query .= "
 				AND		organization_id = ?";
@@ -284,12 +284,12 @@
 					}
 					else {
 						$this->error("Invalid automation");
-						return null;
+						return [];
 					}
 				}
 				else {
 					$this->error("Invalid automation");
-					return null;
+					return [];
 				}
 			}
 
@@ -316,7 +316,7 @@
 			$rs = $database->Execute($find_person_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			$people = array();

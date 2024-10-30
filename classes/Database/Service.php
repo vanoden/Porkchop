@@ -160,6 +160,14 @@
 		}
 
 		/**
+		 * Get the number of rows affected by the last query
+		 * @return int 
+		 */
+		public function affected_rows() {
+			return $this->_connection->Affected_Rows();
+		}
+
+		/**
 		 * Get the MySQL Database Version
 		 * @return int 
 		 */

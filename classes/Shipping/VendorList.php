@@ -2,35 +2,57 @@
 	namespace Shipping;
 
 	class VendorList Extends \BaseListClass {
-		public function find($parameters = array()) {
+		public function __construct() {
+			$this->_modelName = '\Shipping\Vendor';
+		}
+
+		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
 			$find_objects_query = "
-				SELECT	id
-				FROM	shipping_vendors
-				WHERE	id = id";
+				SELECT	`".$workingClass->_tableIdColumn()."`
+				FROM	`".$workingClass->_tableName()."`
+				WHERE	`".$workingClass->_tableIdColumn()."` = `".$workingClass->_tableIdColumn()."`";
 
-			$bind_params = array();
-
-			if (isset($parameters['shipment_id'])) {
-				$find_objects_query .= "
-				AND		shipment_id = ?";
-				array_push($bind_params,$parameters['shipment_id']);
+			// Add Parameters
+			if (!empty($parameters['shipment_id']) && is_numeric($parameters['shipment_id'])) {
+				$shipment = new \Shipping\Shipment($parameters['shipment_id']);
+				if ($shipment->exists()) {
+					$find_objects_query .= "
+					AND		shipment_id = ?";
+					$database->AddParam($parameters['shipment_id']);
+				}
+				else {
+					$this->error("Shipment not found");
+					return [];
+				}
 			}
 
-			$rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
 
-			$vendors = array();
+			// Build Results
+			$objects = array();
 			while (list($id) = $rs->FetchRow()) {
-				$vendor = new \Shipping\Vendor($id);
-				array_push($vendors,$vendor);
-				$this->incrementCount();
+				$object = new $this->_modelName($id);
+				array_push($objects,$object);
+				$this->_count ++;
 			}
-			return $vendors;
+			return $objects;
 		}
 	}

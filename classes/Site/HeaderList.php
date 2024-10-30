@@ -2,26 +2,46 @@
     namespace Site;
 
     class HeaderList Extends \BaseListClass {
-        public function find($params = []) {
-            $find_objects_query = "
-                SELECT  id
-                FROM    site_headers
-            ";
-            $bind_params = array();
+		public function __construct() {
+			$this->_modelName = '\Site\Header';
+		}
 
-            $rs = $GLOBALS['_database']->Execute($find_objects_query,$bind_params);
-            if (! $rs) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return null;
-            }
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
 
-            $array = array();
-            while (list($id) = $rs->FetchRow()) {
-                $this->_count ++;
-                $header = new \Site\Header($id);
-                array_push($array,$header);
-            }
-            return $array;
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Dereference Working Class
+			$workingClass = new $this->_modelName;
+
+			// Build Query
+			$find_objects_query = "
+				SELECT	`".$workingClass->_tableIdColumn()."`
+				FROM	`".$workingClass->_tableName()."`
+				WHERE	`".$workingClass->_tableIdColumn()."` = `".$workingClass->_tableIdColumn()."`";
+
+			// Add Parameters
+
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
+
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
+			}
+
+			// Build Results
+			$objects = array();
+			while (list($id) = $rs->FetchRow()) {
+				$object = new $this->_modelName($id);
+				array_push($objects,$object);
+				$this->incrementCount();
+			}
+			return $objects;
         }
     }
 ?>

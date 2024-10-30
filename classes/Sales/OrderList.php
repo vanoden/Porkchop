@@ -2,95 +2,119 @@
 	namespace Sales;
 
 	class OrderList Extends \BaseListClass {
-
 		public function __construct() {
 			$this->_modelName = '\Sales\Order';
 			$this->_tableDefaultSortBy = 'date_event';
 		}
 
-        public function count($parameters = []) {
-            if (!empty($this->_count)) return $this->_count;
-            $this->_count = count($this->find($parameters));
-            return $this->_count;
-        }
+		public function findAdvanced($parameters, $advanced, $controls): array {
+			$this->clearError();
+			$this->resetCount();
 
-		public function find($parameters = [],$controls = []) {
+			// Initialize Database Service
+			$database = new \Database\Service();
 
-			$bind_params = array();
-			$find_order_query = "
-				SELECT id
-				FROM sales_orders
-				WHERE id = id
+			// Build Query
+			$find_objects_query = "
+				SELECT	id
+				FROM	sales_orders
+				WHERE	id = id
 			";
-			
-			if (!empty($parameters['id'])) {
-				$find_order_query .= "
-					AND id = ?";
-				array_push($bind_params, $parameters['id']);
+
+			// Add Parameters
+			$validationClass = new $this->_modelName;
+			if (!empty($parameters['id']) && is_numeric($parameters['id'])) {
+				$order = new $this->_modelName($parameters['id']);
+				if ($order->exists()) {
+					$find_objects_query .= "
+						AND		id = ?
+					";
+					$database->AddParam($parameters['id']);
+				}
+				else {
+					$this->error('Order not found');
+					return [];
+				}
 			}
 			
-			if (!empty($parameters['customer_id'])) {
-				$find_order_query .= "
-					AND customer_id = ?";
-				array_push($bind_params, $parameters['customer_id']);
+			if (!empty($parameters['customer_id']) && is_numeric($parameters['customer_id'])) {
+				$customer = new \Register\Customer($parameters['customer_id']);
+				if ($customer->exists()) {
+					$find_objects_query .= "
+						AND		customer_id = ?
+					";
+					$database->AddParam($parameters['customer_id']);
+				}
+				else {
+					$this->error('Customer not found');
+					return [];
+				}
 			}
 			
-			if (isset($parameters['status'])) {
+			if (!empty($parameters['status'])) {
 				if (is_array($parameters['status'])) {
 					if (count($parameters['status']) > 0) {
-						$statii = "";
+						$statii = [];
 						foreach ($parameters['status'] as $status) {
-							if (preg_match('/^\w+$/',$status)) {
-								if (strlen($statii) > 0) $statii .= ",";
-								$statii .= "'$status'";
+							if ($validationClass->validStatus($status)) {
+								array_push($statii, $status);
+							}
+							else {
+								$this->error('Invalid status');
+								return [];
 							}
 						}
-						$find_order_query .= "
-							AND status in (".$statii.")";
+						$find_objects_query .= "
+							AND status in (".implode(',',$statii).")";
 					}
 					else {
-						$find_order_query .= "
+						$find_objects_query .= "
 							AND id != id";
 					}
 				}
 				elseif (!empty($parameters['status'])) {
-					$find_order_query .= "
-						AND status = ?";
-					array_push($bind_params, $parameters['status']);
+					if ($validationClass->validStatus($parameters['status'])) {
+						$find_objects_query .= "
+							AND status = ?";
+						$database->AddParam($parameters['status']);
+					}
+					else {
+						$this->error('Invalid status');
+						return [];
+					}
 				}
 			}
-			
+
 			// apply the order and sort direction
-			if (!empty($parameters['order_by']) && !empty($parameters['sort_direction'])) {
+			if (!empty($controls['sort']) && !empty($controls['order'])) {
 				$order_by_clause = " ORDER BY ";
-				$sort_direction_clause = " `" . $parameters['sort_direction'] . "` " . strtoupper($parameters['order_by']);
-				$find_order_query .= $order_by_clause . $sort_direction_clause;
+				$sort_direction_clause = " `" . $controls['sort'] . "` " . strtoupper($controls['order']);
+				$find_objects_query .= $order_by_clause . $sort_direction_clause;
 			}
 
-            if (isset($controls['limit']) && is_numeric($controls['limit'])) {
-                $find_order_query .= "
-                LIMIT   ".$controls['limit'];
-                if (isset($controls['offset']) && is_numeric($controls['offset'])) {
-                    $find_order_query .= "
-                    OFFSET  ".$controls['offset'];
-                }
-            }
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($controls);
 
-			query_log($find_order_query,$bind_params,true);
-			$rs = $GLOBALS['_database']->Execute($find_order_query,$bind_params);
+			// Execute Query
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->error("SQL Error in Sales::OrderList(): ".$GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			$orders = array();
-			while (list($id) = $rs->FetchRow()) {
-				app_log("Adding order $id");
-				$order = new \Sales\Order($id);
-				array_push($orders,$order);
-				$this->_count ++;
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return [];
 			}
 
-			return $orders;
+			// Build Results
+			$objects = array();
+			while (list($organization_id,$product_id) = $rs->FetchRow()) {
+				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
+				$object = $orgProduct;
+				if ($this->error()) {
+					$this->error("Error getting details for ".$this->_modelName.": ".$this->error());
+					return [];
+				}
+				array_push($objects,$object);
+			}
+
+			return $objects;
 		}
 
 	}

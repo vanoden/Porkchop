@@ -39,11 +39,39 @@
 			}
 		}
 
+		/**
+		 * Add a new product instance
+		 * @param array $parameters
+		 * @return bool
+		 */
 		public function add($parameters = []) {
-
 			$this->clearError();
 
-			# See If Existing Unit Present
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Validate input
+			if (! $this->validCode($parameters['code'])) {
+				$this->error("Invalid code");
+				return false;
+			}
+			$product = new \Product\Item($parameters['product_id']);
+			if (! $product->exists()) {
+				$this->error("Product not found");
+				return false;
+			}
+			$organization = new \Register\Organization($parameters['organization_id']);
+			if (! $organization->exists()) {
+				$this->error("Organization not found");
+				return false;
+			}
+			$company = new \Company\Company($GLOBALS['_SESSION_']->company->id);
+			if (! $company->exists()) {
+				$this->error("Company not found");
+				return false;
+			}
+
+			// See If Existing Unit Present
 			$exists = new \Product\Instance();
 			if ($exists->getWithProduct($parameters["code"],$parameters['product_id'])) {
 				$this->error("Product with code ".$parameters['code']." already exists");
@@ -62,20 +90,20 @@
 				VALUES
 				(	?,?,?,?)
 			";
-			$GLOBALS['_database']->Execute(
-				$add_object_query,
-				array(
-					$parameters['code'],
-					$parameters['product_id'],
-					$parameters['organization_id'],
-					$GLOBALS['_SESSION_']->company->id
-				)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+			// Add Parameters
+			$database->AddParam($parameters['code']);
+			$database->AddParam($parameters['product_id']);
+			$database->AddParam($parameters['organization_id']);
+			$database->AddParam($GLOBALS['_SESSION_']->company->id);
+
+			$database->Execute($add_object_query);
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			$this->id = $database->Insert_ID();
 
 			// audit the add event
 			$auditLog = new \Site\AuditLog\Event();
@@ -122,11 +150,15 @@
 
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
 			list($id) = $rs->FetchRow();
+			if (empty($id)) {
+				$this->warn("Product Instance not found");
+				return false;
+			}
 			$this->id = $id;
 			return $this->details();
 		}
@@ -191,6 +223,9 @@
 		 */
 		public function update($parameters = []): bool {
 			$this->clearError();
+			$this->clearCache();
+
+			// Initialize Database Service
 			$database = new \Database\Service();
 
 			if (! is_numeric($this->id)) {

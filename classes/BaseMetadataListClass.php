@@ -1,11 +1,5 @@
 <?php
-	namespace Shipping;
-
-	class PackageList Extends \BaseListClass {
-		public function __construct() {
-			$this->_modelName = '\Shipping\Package';
-		}
-
+	class BaseMetadataListClass Extends \BaseListClass {
 		public function findAdvanced($parameters, $advanced, $controls): array {
 			$this->clearError();
 			$this->resetCount();
@@ -20,31 +14,32 @@
 			$find_objects_query = "
 				SELECT	`".$workingClass->_tableIdColumn()."`
 				FROM	`".$workingClass->_tableName()."`
-				WHERE	`".$workingClass->_tableIdColumn()."` = `".$workingClass->_tableIdColumn()."`";
+				WHERE	`".$workingClass->_tableIdColumn()."` = `".$workingClass->_tableIdColumn()."`
+			";
 
 			// Add Parameters
-			if (!empty($parameters['shipment_id']) && is_numeric($parameters['shipment_id'])) {
+			if (!empty($parameters['key'])) {
 				$find_objects_query .= "
-				AND		shipment_id = ?";
-				$database->AddParam($parameters['shipment_id']);
+				AND		`key` = ?";
+				$database->AddParam($parameters['key']);
 			}
 
-			// Limit Clause
-			$find_objects_query .= $this->limitClause($controls);
+			if (!empty($parameters['object_id'])) {
+				$find_objects_query .= "
+				AND		`object_id` = ?";
+				$database->AddParam($parameters['object_id']);
+			}
 
-			// Execute Query
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				return [];
 			}
-
-			// Build Results
-			$objects = array();
-			while (list($id) = $rs->FetchRow()) {
-				$object = new $this->_modelName($id);
+			$objects = [];
+			while(list($id) = $rs->FetchRow()) {
+				$object = new \Site\Page\Metadata($id);
 				array_push($objects,$object);
-				$this->_count ++;
+				$this->incrementCount();
 			}
 			return $objects;
 		}
