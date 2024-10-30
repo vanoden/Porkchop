@@ -141,7 +141,7 @@
 				WHERE st.class = 'Content::Message'
 				AND (
 					(st.category = 'problem_type' AND st.value = ?)
-					OR (st.category = 'product' AND st.value = ?)
+					OR (st.category = 'product_code' AND st.value = ?)
 				)
 				GROUP BY cm.object_id
 				HAVING COUNT(DISTINCT st.category) >= 2

@@ -45,7 +45,7 @@ class ItemList extends \BaseListClass {
 		$rs = $database->Execute($find_object_query);
 		if ($database->ErrorMsg()) {
 			$this->SQLError($database->ErrorMsg());
-			return null;
+			return [];
 		}
 
 		$objects = array();

@@ -77,7 +77,7 @@ if (!empty($_REQUEST['newSearchTag']) && empty($_REQUEST['removeSearchTag'])) {
 	if (!empty($_REQUEST['newSearchTag']) && !empty($_REQUEST['newSearchTagCategory']) && $searchTag->validName($_REQUEST['newSearchTag']) && $searchTag->validName($_REQUEST['newSearchTagCategory'])) {
 
 		// Check if the tag already exists
-		$existingTag = $searchTagList->findAdvanced(array('class' => 'Content::Message', 'value' => $_REQUEST['newSearchTag']));
+		$existingTag = $searchTagList->find(array('class' => 'Content::Message', 'value' => $_REQUEST['newSearchTag']));
 
 		if (empty($existingTag)) {
 
