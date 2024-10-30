@@ -200,8 +200,9 @@ class Order extends \BaseModel {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			list($this->id) = $rs->FetchRow();
-			if ($this->id) {
+			list($id) = $rs->FetchRow();
+			if ($id) {
+				$this->id = $id;
 				return $this->details();
 			}
 			else {

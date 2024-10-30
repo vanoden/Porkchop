@@ -9,12 +9,12 @@
 <form action="/_sales/orders" method="post">
 
   <div id="search_container">
-    <div><input type="checkbox" name="new" value="1"<?php if ($_REQUEST['new']) print " checked"; ?> /><label>New</label></div>
-    <div><input type="checkbox" name="quote" value="1"<?php if ($_REQUEST['quote']) print " checked"; ?> /><label>Quote</label></div>
-    <div><input type="checkbox" name="cancelled" value="1"<?php if ($_REQUEST['cancelled']) print " checked"; ?> /><label>Cancelled</label></div>
-    <div><input type="checkbox" name="approved" value="1"<?php if ($_REQUEST['approved']) print " checked"; ?> /><label>Approved</label></div>
-    <div><input type="checkbox" name="accepted" value="1"<?php if ($_REQUEST['accepted']) print " checked"; ?> /><label>Accepted</label></div>
-    <div><input type="checkbox" name="complete" value="1"<?php if ($_REQUEST['complete']) print " checked"; ?>/><label>Complete</label></div>
+    <div><input type="checkbox" name="new" value="1"<?php if (isset($_REQUEST['new']) && $_REQUEST['new']) print " checked"; ?> /><label>New</label></div>
+    <div><input type="checkbox" name="quote" value="1"<?php if (isset($_REQUEST['quote']) && $_REQUEST['quote']) print " checked"; ?> /><label>Quote</label></div>
+    <div><input type="checkbox" name="cancelled" value="1"<?php if (isset($_REQUEST['cancelled']) && $_REQUEST['cancelled']) print " checked"; ?> /><label>Cancelled</label></div>
+    <div><input type="checkbox" name="approved" value="1"<?php if (isset($_REQUEST['approved']) && $_REQUEST['approved']) print " checked"; ?> /><label>Approved</label></div>
+    <div><input type="checkbox" name="accepted" value="1"<?php if (isset($_REQUEST['accepted']) && $_REQUEST['accepted']) print " checked"; ?> /><label>Accepted</label></div>
+    <div><input type="checkbox" name="complete" value="1"<?php if (isset($_REQUEST['complete']) && $_REQUEST['complete']) print " checked"; ?>/><label>Complete</label></div>
     <input type="submit" name="btn_submit" class="button" value="Apply Filter" />
   </div>
 
@@ -22,17 +22,17 @@
 
     <div class="tableRowHeader">
       <div class="tableCell" style="width: 15%;">
-      <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=code&order_by=<?php echo $sort_direction === 'code' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Code</a>
+      <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=code&order_by=<?php echo $controls['sort'] === 'code' && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Code</a>
       </div>
       <div class="tableCell" style="width: 15%;">Created</div>
       <div class="tableCell" style="width: 20%;">
-        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=customer_id&order_by=<?php echo $sort_direction === 'customer_id' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Customer</a>
+        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=customer_id&order_by=<?php echo $controls['sort'] === 'customer_id' && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Customer</a>
       </div>
       <div class="tableCell" style="width: 20%;">
-        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=salesperson_id&order_by=<?php echo $sort_direction === 'salesperson_id' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Sales Agent</a>
+        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=salesperson_id&order_by=<?php echo $controls['sort'] === 'salesperson_id' && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Sales Agent</a>
       </div>
       <div class="tableCell" style="width: 15%;">
-        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=status&order_by=<?php echo $sort_direction === 'status' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Status</a>
+        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=status&order_by=<?php echo $controls['sort'] === 'status' && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Status</a>
       </div>
       <div class="tableCell" style="width: 15%;">Amount</div>
     </div>

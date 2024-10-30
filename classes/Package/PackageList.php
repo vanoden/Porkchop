@@ -28,10 +28,20 @@
 				AND		code = ?";
 				$database->AddParam($parameters['code']);
 			}
-			if (isset($parameters['name']) and $validationClass->validName($parameters['name'])) {
-				$find_objects_query .= "
-				AND		name = ?";
-				$database->AddParam($parameters['name']);
+			if (isset($parameters['name']))
+				// Handle Wildcards
+				if (preg_match('/[\*\?]/',$parameters['name']) && preg_match('/^[\*\?\w\-\.\s]+$/',$parameters['name'])) {
+					$parameters['name'] = str_replace('*','%',$parameters['name']);
+					$parameters['name'] = str_replace('?','_',$parameters['name']);
+					$find_objects_query .= "
+					AND	name LIKE ?";
+					$database->AddParam($parameters['name']);
+				}
+				// Handle Exact Match
+				elseif ($validationClass->validName($parameters['name'])) {
+					$find_objects_query .= "
+					AND		name = ?";
+					$database->AddParam($parameters['name']);
 			}
 			if (isset($parameters['repository_id']) && is_numeric($parameters['repository_id'])) {
 				$find_objects_query .= "

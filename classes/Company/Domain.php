@@ -253,4 +253,13 @@
 		public function location(): Location {
 			return new Location($this->location_id);
 		}
+
+		public function validDomainName($string): bool {
+			if (preg_match('/^\w[\w\.\-]+$/',$string)) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
 	}

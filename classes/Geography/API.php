@@ -24,11 +24,10 @@
 			if (isset($_REQUEST['abbreviation'])) $parameters['abbreviation'] = $_REQUEST['abbreviation'];
 			if (! $country->add($parameters)) $this->error("Error adding country: ".$country->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->country = $country;
-	
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->AddElement('country',$country);
+			$response->print();
 		}
 	
 		###################################################
@@ -39,19 +38,17 @@
 
 			$country = new \Geography\Country();
 			$country->get($_REQUEST['code']);
-			if ($country->error) $this->error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
+			if ($country->error()) $this->error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
 			if (! $country->id) $this->error("Request not found");
 	
 			$parameters = array();
-			$country->update(
-				$parameters
-			);
-			if ($country->error) $this->error("Error updating country: ".$country->error(),'error',__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->country = $country;
-	
-			print $this->formatOutput($response);
+			$country->update($parameters);
+
+			if ($country->error()) $this->error("Error updating country: ".$country->error(),'error',__FILE__,__LINE__);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->AddElement('country',$country);
+			$response->print();
 		}
 	
 		###################################################
@@ -69,11 +66,10 @@
 			else {
 				$this->error("Not enough parameters");
 			}
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->country = $country;
-	
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->AddElement('country',$country);
+			$response->print();
 		}
 	
 		###################################################
@@ -86,14 +82,14 @@
 			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 			
 			$countries = $countryList->find($parameters);
-			if ($countryList->error) $this->error("Error finding countries: ".$countryList->error);
+			if ($countryList->error()) $this->error("Error finding countries: ".$countryList->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->country = $countries;
-	
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->AddElement('country',$countries);
+			$response->print();
 		}
+
 		###################################################
 		### Add a Province or State						###
 		###################################################
@@ -111,11 +107,10 @@
 			$parameters['country_id'] = $country->id;
 			if (! $province->add($parameters)) $this->error("Error adding province: ".$province->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->province = $province;
-	
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->AddElement('province',$province);
+			$response->print();
 		}
 	
 		###################################################
@@ -124,21 +119,21 @@
 		public function updateProvince() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-			$country = new \Geography\Country();
-			$country->get($_REQUEST['code']);
-			if ($country->error) $this->error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
-			if (! $country->id) $this->error("Request not found");
+			$province = new \Geography\Province();
+			$province->get($_REQUEST['code']);
+			if ($province->error()) $this->error("Error finding province: ".$province->error(),'error',__FILE__,__LINE__);
+			if (! $province->id) $this->error("Province not found");
 	
 			$parameters = array();
-			$country->update(
+			$province->update(
 				$parameters
 			);
-			if ($country->error) $this->error("Error updating country: ".$country->error(),'error',__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->country = $country;
+			if ($province->error()) $this->error("Error updating country: ".$province->error(),'error',__FILE__,__LINE__);
 	
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->AddElement('province',$province);
+			$response->print();
 		}
 	
 		###################################################
@@ -161,11 +156,10 @@
 				$this->error("Not enough parameters");
 			}
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->province = $province;
-	
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->AddElement('province',$province);
+			$response->print();
 		}
 	
 		###################################################
@@ -175,8 +169,8 @@
 			$provinceList = new \Geography\ProvinceList();
 			
 			$parameters = array();
-			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
-			if ($_REQUEST['country_name']) {
+			if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+			if (!empty($_REQUEST['country_name'])) {
 				$country = new \Geography\Country();
 				if (! $country->get($_REQUEST['country_name'])) $this->error("Country not found");
 				$parameters['country_id'] = $country->id;
@@ -185,15 +179,15 @@
 				$country = new \Geography\Country($_REQUEST['country_id']);
 				$parameters['country_id'] = $country->id;
 			}
+			if ($_REQUEST['name']) $parameters['name'] = $_REQUEST['name'];
 			
 			$provinces = $provinceList->find($parameters);
-			if ($provinceList->error) $this->error("Error finding provinces: ".$provinceList->error());
+			if ($provinceList->error()) $this->error("Error finding provinces: ".$provinceList->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->province = $provinces;
-	
-			print $this->formatOutput($response,$_REQUEST['_format']);
+			$response = new \APIResponse();
+			$response->success(true);
+			$response->AddElement('province',$provinces);
+			$response->print();
 		}
 
 		public function _methods() {
@@ -224,6 +218,7 @@
 				'findProvinces'		=> array(
 					'country_id'	=> array(),
 					'country_name'	=> array(),
+					'name'			=> array(),
 				),
 			);
 		}

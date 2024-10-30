@@ -21,6 +21,9 @@ class ProvinceList Extends \BaseListClass {
 		// Initialize Database Service
 		$database = new \Database\Service();
 
+		// Initialize Working Class
+		$workingClass = new $this->_modelName();
+
 		// Build the query
 		$find_objects_query = "
 				SELECT	id
@@ -35,7 +38,28 @@ class ProvinceList Extends \BaseListClass {
 			$database->AddParam($parameters['country_id']);
 		}
 
-		$rs = $database->Execute($find_objects_query, $parameters);
+		if ($parameters['name']) {
+			// Handle Wildcards
+			if (preg_match('/[\*\?]/',$parameters['name']) && preg_match('/^[\*\?\w\-\.\s]+$/',$parameters['name'])) {
+				$parameters['name'] = str_replace('*','%',$parameters['name']);
+				$parameters['name'] = str_replace('?','_',$parameters['name']);
+				$find_objects_query .= "
+				AND	name LIKE ?";
+				$database->AddParam($parameters['name']);
+			}
+			// Handle Exact Match
+			elseif ($workingClass->validName($parameters['name'])) {
+				$find_objects_query .= "
+				AND	name = ?";
+				$database->AddParam($parameters['name']);
+			}
+			else {
+				$this->error("Invalid Name");
+				return [];
+			}
+		}
+
+		$rs = $database->Execute($find_objects_query);
 		if (! $rs) {
 			$this->SQLError($database->ErrorMsg());
 			return [];

@@ -14,15 +14,17 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Initialize Working Class
+			$workingClass = new $this->_modelName;
+
 			// Build Query
 			$find_objects_query = "
-				SELECT	id
-				FROM	sales_orders
-				WHERE	id = id
+				SELECT	`".$workingClass->_tableIDColumn()."`
+				FROM	`".$workingClass->_tableName()."`
+				WHERE	`".$workingClass->_tableIDColumn()."` = `".$workingClass->_tableIDColumn()."`
 			";
 
 			// Add Parameters
-			$validationClass = new $this->_modelName;
 			if (!empty($parameters['id']) && is_numeric($parameters['id'])) {
 				$order = new $this->_modelName($parameters['id']);
 				if ($order->exists()) {
@@ -56,7 +58,7 @@
 					if (count($parameters['status']) > 0) {
 						$statii = [];
 						foreach ($parameters['status'] as $status) {
-							if ($validationClass->validStatus($status)) {
+							if ($workingClass->validStatus($status)) {
 								array_push($statii, $status);
 							}
 							else {
@@ -65,7 +67,7 @@
 							}
 						}
 						$find_objects_query .= "
-							AND status in (".implode(',',$statii).")";
+							AND status in ('".implode("','",$statii)."')";
 					}
 					else {
 						$find_objects_query .= "
@@ -73,7 +75,7 @@
 					}
 				}
 				elseif (!empty($parameters['status'])) {
-					if ($validationClass->validStatus($parameters['status'])) {
+					if ($workingClass->validStatus($parameters['status'])) {
 						$find_objects_query .= "
 							AND status = ?";
 						$database->AddParam($parameters['status']);

@@ -2,7 +2,6 @@
 	namespace Geography;
 
 	class Admin extends \BaseModel {
-
 		public $country_id;
 		public $name;
 		public $abbreviation;
@@ -139,8 +138,9 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			list($this->id) = $rs->FetchRow();
-			if ($this->id > 0) {
+			list($id) = $rs->FetchRow();
+			if ($id > 0) {
+				$this->id = $id;
 				app_log("Found province ".$this->id);
 				return $this->details();
 			}

@@ -96,23 +96,29 @@ class BaseListClass extends \BaseClass {
 	 * @return array
 	 */
 	public function findSimple($parameters = []) {
-		$controls = [];
+		// Initialize controls array with defaults
+		$controls = [
+			'order'		=> 'ASC',
+			'ids'		=> false,
+			'offset'	=> 0
+		];
+
+		// Transfer control parameters from parameters array to controls array
 		if (!empty($parameters['_sort'])) $controls['sort'] = $parameters['_sort'];
-		$parameters['_sort'] = null;
+		unset($parameters['_sort']);
 		if (!empty($parameters['_order'])) $controls['order'] = $parameters['_order'];
-		$parameters['_order'] = null;
+		unset($parameters['_order']);
 		if (!empty($parameters['_limit'])) $controls['limit'] = $parameters['_limit'];
-		$parameters['_limit'] = null;
+		unset($parameters['_limit']);
 		if (!empty($parameters['_offset'])) $controls['offset'] = $parameters['_offset'];
-		$parameters['_offset'] = null;
-		if (!empty($parameters['_count'])) $controls['ids'] = $parameters['_count'];
-		if (!empty($parameters['_sort_desc'])) $controls['order'] = $parameters['_sort_desc'];
-		if (!empty($parameters['_sort_order'])) $controls['order'] = $parameters['_sort_order'];
-		if (empty($controls['order'])) $controls['order'] = 'ASC';
-		if (empty($controls['offset'])) $controls['offset'] = 0;
+		unset($parameters['_offset']);
 		if (!empty($parameters['recursive'])) $controls['recursive'] = $parameters['recursive'];
+
+		// Other Backwards Compatibility
+		if (!empty($parameters['_count'])) $controls['ids'] = $parameters['_count'];
+		if (!empty($parameters['_sort_desc'])) $controls['order'] = 'DESC';
+		if (!empty($parameters['_sort_order'])) $controls['order'] = $parameters['_sort_order'];
 		if (!empty($parameters['_flat']) && $parameters['_flat']) $controls['ids'] = true;
-		else ($controls['ids'] = false);
 		return $this->findAdvanced($parameters, [], $controls);
 	}
 

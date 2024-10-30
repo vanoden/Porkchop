@@ -13,6 +13,9 @@
 			// Initialize Service
 			$database = new \Database\Service();
 
+			// Initialize Working Class
+			$workingClass = new $this->_modelName();
+
 			// Build Query
 			$find_objects_query = "
 				SELECT	id
@@ -20,9 +23,18 @@
 				WHERE	id = id";
 
 			if (!empty($parameters['name'])) {
-				if (preg_match('/^[\w\-\.]+$/',$parameters['name'])) {
+				// Handle Wildcards
+				if (preg_match('/[\*\?]/',$parameters['name']) && preg_match('/^[\*\?\w\-\.\s]+$/',$parameters['name'])) {
+					$parameters['name'] = str_replace('*','%',$parameters['name']);
+					$parameters['name'] = str_replace('?','_',$parameters['name']);
 					$find_objects_query .= "
-					AND		domain_name = ?";
+					AND	domain_name LIKE ?";
+					$database->AddParam($parameters['name']);
+				}
+				// Handle Exact Match
+				elseif ($workingClass->validDomainName($parameters['name'])) {
+					$find_objects_query .= "
+					AND	domain_name = ?";
 					$database->AddParam($parameters['name']);
 				}
 				else {

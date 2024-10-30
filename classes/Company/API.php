@@ -167,10 +167,15 @@
 		public function findDomains() {
 			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) $this->deny();
 
-			$companyList = new \Company\CompanyList();
-			list($company) = $companyList->find();
+			$parameters = [];
+			if (!empty($_REQUEST['code'])) $parameters['code'] = $_REQUEST['code'];
+			if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
+			if (!empty($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+			if (!empty($_REQUEST['location_id'])) $parameters['location_id'] = $_REQUEST['location_id'];
+			if (!empty($_REQUEST['registrar'])) $parameters['registrar'] = $_REQUEST['registrar'];
 
-			$domains = $company->domains();
+			$domainList = new \Company\DomainList();
+			$domains = $domainList->find($parameters);
 
 			$response = new \APIResponse();
 			$response->addElement('domain',$domains);
