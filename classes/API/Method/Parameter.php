@@ -14,7 +14,10 @@
 		public $default = null;
 		public $format = null;
 		public $parameter_type = 'string';
-		public $validation_regex = null;
+		public $validation_method = null;
+		public $regex = null;
+		public $hidden = false;
+		public $deprecated = false;
 
 		public function __construct($parameters = []) {
 			foreach ($parameters as $name => $value) {
@@ -42,7 +45,19 @@
 				elseif ($name == "default") $this->default = $value;
 				elseif ($name == "format") $this->format = $value;
 				elseif ($name == "parameter_type") $this->parameter_type = $value;
-				elseif ($name == "validation_regex") $this->validation_regex = $value;
+				elseif ($name == "regex") $this->regex = $value;
+				elseif ($name == "validation_method") $this->validation_method = $value;
+				elseif ($name == "hidden") 
+					if (is_bool($value)) $this->hidden = $value;
+					elseif ($value == "false") $this->hidden = false;
+					else $this->hidden = true;
+				elseif ($name == "deprecated")
+					if (is_bool($value)) $this->deprecated = $value;
+					elseif ($value == "false") $this->deprecated = false;
+					else $this->deprecated = true;
+				else {
+					$this->error("Invalid Parameter: ".$name);
+				}
 			}
 		}
 	}
