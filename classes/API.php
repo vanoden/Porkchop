@@ -239,6 +239,7 @@
 		/* Record API Communication for Debugging		*/
 		/************************************************/
 		public function _store_communication() {
+			if (!array_key_exists('method',$_REQUEST)) return;
 			$message = "Method ".$_REQUEST['method']." called by user ".$GLOBALS['_SESSION_']->customer->code;
 			if (array_key_exists('asset_code',$_REQUEST)) $message .= " for asset ".$_REQUEST['asset_code'];
 			app_log($message,'debug',__FILE__,__LINE__);
@@ -322,11 +323,52 @@
 				}
 			}
 
+			//print_r($method['parameters']);
 			// Enforce Individual Parameter Requirements
-			foreach ($method as $param => $options) {
+			foreach ($method['parameters'] as $param => $options) {
+				//print_r($param."\n");
 				if (isset($options['required']) && $options['required']) {
+					//print_r("\trequired\n");
 					if (empty($_REQUEST[$param])) {
 						$this->incompleteRequest("Missing required parameter: $param");
+					}
+				}
+				// Enforce Parameter Type Requirements
+				if (!empty($_REQUEST[$param]) && isset($options['content-type'])) {
+					//print_r("\t".$options['content-type']."\n");
+					if ($options['content-type'] == 'int' && ! is_numeric($_REQUEST[$param])) {
+						$this->invalidRequest("Invalid $param value");
+					}
+					elseif ($options['content-type'] == 'boolean') {
+						if ($_REQUEST[$param] == 1) $_REQUEST[$param] = 'true';
+						elseif ($_REQUEST[$param] == 0) $_REQUEST[$param] = 'false';
+						if ($_REQUEST[$param] != 'true' && $_REQUEST[$param] != 'false') {
+							$this->invalidRequest("Invalid $param value");
+						}
+					}
+				}
+				// Enforce Parameter Regex Requirements
+				if (!empty($_REQUEST[$param]) && isset($options['regex'])) {
+					//print_r("\tRegex: ".$options['regex']."\n");
+					if (! preg_match($options['regex'],$_REQUEST[$param])) {
+						$this->invalidRequest("Invalid $param value");
+					}
+				}
+
+				// Enforce Parameter Validation Method Requirements
+				if (!empty($_REQUEST[$param]) && isset($options['validation_method'])) {
+					$validation_method = $options['validation_method'];
+					if (preg_match("/(.*)\:\:([\w\_\-]+)\(\)/",$validation_method,$matches)) {
+						$validation_method = $matches[2];
+						$validation_class_name = '\\'.str_replace('::','\\',$matches[1]);
+						$validation_class = new $validation_class_name();
+						//print_r("\tValidation: ".$validation_class_name."->".$validation_method."(".$_REQUEST[$param].")\n");
+						if (! $validation_class->$validation_method($_REQUEST[$param])) {
+							$this->invalidRequest("Invalid $param value");
+						}
+					}
+					else {
+						$this->error("Validation method not found");
 					}
 				}
 			}
@@ -546,10 +588,14 @@
 				// Add Parameters
 				$parameters = $method->parameters();
 				foreach ($parameters as $name => $parameter) {
+					// Skip Hidden Parameters
+					if ($parameter->hidden) continue;
+
 					// Formatting for Required Fields
 					if ($parameter->required) $required_class = ' required';
 					elseif (!empty($parameter->requirement_group)) $required_class = ' required-group-'.$parameter->requirement_group;
 					else $required_class = '';
+					if ($parameter->deprecated) $required_class .= ' deprecated';
 
 					// Initialize Default Value
 					$default = $parameter->default;
