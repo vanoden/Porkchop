@@ -197,6 +197,34 @@
 			$response->print();
 		}
 	
+		/**
+		 * Find messages matching specific criteria
+		 * @return void
+		 */
+		public function findMessages() {
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'site.messages.xsl';
+	
+			# Initiate Product Object
+			$message_list = new \Site\SiteMessagesList();
+	
+			# Find Matching Threads
+			$messages = $message_list->find(
+				array (
+					'send_user_id'		=> $_REQUEST['send_user_id'],
+					'receive_user_id'	=> $_REQUEST['receive_user_id'],
+					'acknowledged'		=> $_REQUEST['acknowledged']
+				)
+			);
+	
+			# Error Handling
+			if ($message_list->error()) $this->error($message_list->error());
+
+			$response = new \APIResponse();
+			$response->addElement('message',$messages);
+			$response->print();
+		}
+
 		###################################################
 		### Get Metadata for current view				###
 		###################################################
@@ -999,6 +1027,15 @@
                  'removeSiteMessage'	=> array(
                     'id' => array('required' => true)
 			    ),
+				'findSiteMessages'	=> array(
+					'description'	=> 'Find site messages',
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'send_user_id'		=> array(),
+						'receive_user_id'	=> array(),
+						'acknowledged'		=> array(),
+					]
+				),
 				'getSiteMessage'	=> array(
 					'id'	=> array('required' => true)
 				),
