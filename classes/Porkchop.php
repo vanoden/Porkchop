@@ -168,4 +168,12 @@
 				return false;
 			}
 		}
+
+		function validDate($date) {
+			if (get_mysql_date($date)) return true;
+			else {
+				app_log("Invalid date format: '$date'",'info');
+				return false;
+			}
+		}
 	}
