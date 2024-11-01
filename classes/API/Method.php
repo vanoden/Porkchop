@@ -27,7 +27,10 @@
 					if (is_bool($parameters['token_required'])) $this->token_required = $parameters['token_required'];
 					elseif ($parameters['token_required'] == 'false') $this->token_required = false;
 				}
-				if (isset($parameters['privilege_required'])) $this->privilege_required = $parameters['privilege_required'];
+				if (isset($parameters['privilege_required'])) {
+					$this->privilege_required = $parameters['privilege_required'];
+					if (!empty($parameters['privilege_required'])) $this->authentication_required = true;
+				}
 				if (isset($parameters['return_element'])) $this->return_element = $parameters['return_element'];
 				if (isset($parameters['return_type'])) $this->return_type = $parameters['return_type'];
 				if (isset($parameters['return_mime_type'])) $this->return_mime_type = $parameters['return_mime_type'];

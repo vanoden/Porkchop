@@ -14,7 +14,7 @@
 			$database = new \Database\Service();
 
 			// Build the query
-			$find_object_query = "
+			$find_objects_query = "
 				SELECT	id
 				FROM	contact_events
 				WHERE	id = id
@@ -24,7 +24,7 @@
 			$validationClass = new $this->_modelName();
 
 			if ($validationClass->validStatus($parameters['status'])) {
-				$find_object_query = "
+				$find_objects_query .= "
 				AND		status = ?";
 				$database->AddParam($parameters['status']);
 			}
@@ -34,11 +34,11 @@
 			}
 	
 			// Order Clause
-			$find_object_query .= "
+			$find_objects_query .= "
 				ORDER BY date_event";
 
 			// Execute the query
-			$rs = $database->Execute($find_object_query);
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				return [];

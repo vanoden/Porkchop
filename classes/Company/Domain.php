@@ -255,11 +255,10 @@
 		}
 
 		public function validDomainName($string): bool {
-			if (preg_match('/^\w[\w\.\-]+$/',$string)) {
-				return true;
-			}
-			else {
-				return false;
-			}
+			return $this->validHostname($string);
+		}
+
+		public function validRegistrar($string): bool {
+			return $this->validName($string);
 		}
 	}

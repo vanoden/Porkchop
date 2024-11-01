@@ -304,10 +304,10 @@
 
 			// Method Requirements
 			$method = $api->_methods()[$function_name];
-			if (isset($method['required_privilege'])) {
-				$this->requirePrivilege($method['required_privilege']);
+			if (isset($method['privilege_required'])) {
+				$this->requirePrivilege($method['privilege_required']);
 			}
-			if (isset($method['auth_required']) && $method['auth_required']) {
+			if (isset($method['authentication_required']) && $method['authentication_required']) {
 				$this->requireAuth();
 			}
 			if (isset($method['token_required']) && $method['token_required']) {

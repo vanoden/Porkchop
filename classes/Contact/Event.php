@@ -6,6 +6,7 @@
 		public function __construct($id = 0) {
 			app_log("Initializing Contact Module",'debug',__FILE__,__LINE__);
 			$this->_tableName = 'contact_events';
+			$this->_addStatus(array('NEW','OPEN','CLOSED'));
 			parent::__construct($id);
 		}
 

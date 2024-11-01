@@ -21,18 +21,14 @@
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'company.xsl';
 
 			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) $this->deny();
-			# Initiate Company List
-			$companylist = new \Company\CompanyList();
-			
-			list($company) = $companylist->find();
+
+			$company = $GLOBALS['_SESSION_']->company;
+			if (! $company->exists()) $this->notFound();
 	
 			# Error Handling
-			if ($companylist->error) $this->error($companylist->error);
-			else{
-				$response = new \APIResponse();
-				$response->addElement('customer',$company);
-				$response->print();
-			}
+			$response = new \APIResponse();
+			$response->addElement('customer',$company);
+			$response->print();
 		}
 	
 		###################################################
@@ -45,10 +41,10 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			if (! $GLOBALS['_SESSION_']->customer->can('configure site')) $this->deny();
-	
+
 			# Initiate Company Object
-			$companylist = new \Company\CompanyList();
-			list($company) = $companylist->find();
+			$company = $GLOBALS['_SESSION_']->company;
+			if (! $company->exists()) $this->notFound();
 	
 			# Update Company
 			if ($company->update(
@@ -60,15 +56,15 @@
 				$response = new \APIResponse();
 				$response->addElement('company',$company);
 			}
-			else if ($company->error) {
-				$this->error($company->error);
+			else if ($company->error()) {
+				$this->error($company->error());
 			}
 			else{
 				$this->error("Unhandled exception");
 			}
 
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		public function findLocations() {
@@ -222,44 +218,132 @@
 		public function _methods() {
 			return array(
 				'ping'	=> array(),
-				'getcompany'	=> array(),
+				'getcompany'	=> array(
+					'description'	=> 'Get details of company to which the site belongs',
+					'privilege_required'	=> 'configure site',
+					'parameters'	=> []
+				),
 				'updateCompany'	=> array(
-					'name'		=> array(),
-					'status'	=> array(),
+					'description'	=> 'Update details of company to which the site belongs',
+					'authentication_required'	=> true,
+					'token_required' 			=> true,
+					'privilege_required'		=> 'manage company',
+					'return_element'			=> 'company',
+					'return_type'				=> 'Company::Company',
+					'parameters'				=> array(
+						'name'		=> array(
+							'required'	=> true
+						),
+						'status'	=> array(),
+					)
 				),
 				'findLocations'	=> array(
+					'description'	=> 'Get locations associated with this company.',
+					'privilege_required'	=> 'configure site',
+					'parameters'	=> []
 				),
 				'addLocation'	=> array(
-					'code'	=> array(),
-					'name'	=> array(),
-					'host'	=> array(),
-					'domain_id'	=> array()
+					'description'	=> 'Add a location to the sites company',
+					'privilege_required'	=> 'configure site',
+					'token_required'	=> true,
+					'parameters'		=> array(
+						'code'	=> array(
+							'description'	=> 'Unique identifier for company location.  Can be auto-generated',
+							'validation_method'	=> 'Company::Location::validCode()'
+						),
+						'name'	=> array(
+							'description'	=> 'Name of company location',
+							'validation_method'	=> 'Company::Location::validName()',
+							'required'		=> true
+						),
+						'host'	=> array(
+							'description'	=> 'Hostname for location - used for website locations',
+							'regex'			=> '/^[\w\-\.\_\:]+$/'
+						),
+						'domain_id'	=> array(
+							'description'	=> 'Domain name associated with website',
+							'validation_method'	=> 'Company::Domain::validHostname()',
+						)
+					)
 				),
 				'updateLocation'	=> array(
-					'code'	=> array('required' => true),
-					'name'	=> array(),
-					'host'	=> array(),
-					'domain_id'	=> array(),
-					'domain_code'	=> array()
+					'description'	=> 'Update company location details',
+					'privilege_required'	=> 'configure site',
+					'token_required'		=> true,
+					'parameters'	=> array(
+						'code'	=> array(
+							'required' => true,
+							'validation_method'	=> 'Company::Location::validCode()'
+						),
+						'name'	=> array(
+							'validation_method'	=> 'Company::Location::validName()'
+						),
+						'host'	=> array(
+							'validation_method'	=> 'Company::Location::validHostname()'
+						),
+						'domain_id'	=> array(
+							'content-type'	=> 'int'
+						),
+						'domain_code'	=> array(
+							'validation_method'	=> 'Company::Location::validHostname()'
+						)
+					)
 				),
 				'findDomains'	=> array(
-					'code'					=> array(),
-					'status'				=> array(),
-					'name'					=> array(),
-					'location_id'			=> array(),
-					'registrar'				=> array()
+					'description'	=> 'List matching domains',
+					'privilege_required'	=> 'configure site',
+					'parameters'	=> array(
+						'code'					=> array(
+							'validation_method'	=> 'Company::Domain::validCode()'
+						),
+						'status'				=> array(
+							'validation_method' => 'Company::Domain::validStatus()'
+						),
+						'name'					=> array(
+							'validation_method'	=> 'Company::Domain::validName()'
+						),
+						'location_id'			=> array(
+							'content-type'	=> 'int'
+						),
+						'registrar'				=> array(
+							'validation_method'	=> 'Company::Domain::validRegistrar()'
+						)
+					)
 				),
 				'addDomain'	=> array(
-					'code'					=> array(),
-					'status'				=> array(),
-					'comments'				=> array(),
-					'name'					=> array(),
-					'date_registered'		=> array(),
-					'date_created'			=> array(),
-					'date_expires'			=> array(),
-					'registration_period'	=> array(),
-					'location_id'			=> array(),
-					'registrar'				=> array()
+					'description'	=> 'Add domain to company',
+					'privilege_required'	=> 'configure site',
+					'token_required'		=> true,
+					'parameters'	=> array(
+						'code'					=> array(
+							'validation_method'	=> 'Company::Domain::validCode()'
+						),
+						'status'				=> array(
+							'validation_method'	=> 'Company::Domain::validStatus()'
+						),
+						'comments'				=> array(),
+						'name'					=> array(
+							'validation_method'	=> 'Company::Domain::validName()'
+						),
+						'date_registered'		=> array(
+							'validation_method'	=> 'Porkchop::validDate()'
+						),
+						'date_created'			=> array(
+							'validation_method'	=> 'Porkchop::validDate()'
+						),
+						'date_expires'			=> array(
+							'validation_method'	=> 'Porkchop::validDate()'
+						),
+						'registration_period'	=> array(
+							'content-type'	=> 'int'
+						),
+						'location_id'			=> array(
+							'content-type'	=> 'int'
+						),
+						'registrar'				=> array(
+							'validation_method'	=> 'Company::Domain::validRegistrar()'
+						)
+					)
 				),
 			);
 		}

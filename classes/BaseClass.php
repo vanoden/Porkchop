@@ -95,44 +95,49 @@
 		/********************************************/
 		// Standard 'code' field validation
 		public function validCode($string): bool {
-			if (preg_match('/^\w[\w\-\.\_\s]*$/',$string)) return true;
-			else return false;
+			return (preg_match('/^\w[\w\-\.\_\s]*$/',$string));
 		}
 
 		// Standard 'name' field validation
 		public function validName($string): bool {
-			if (preg_match('/\w[\w\-\.\_\s\,\!\?\(\)]*$/',$string)) return true;
-			else return false;
+			return (preg_match('/\w[\w\-\.\_\s\,\!\?\(\)]*$/',$string));
 		}
 
 		// Standard 'status' field validation
 		public function validStatus($string): bool {
-			if (in_array($string,$this->_statii)) return true;
-			else return false;
+			return (in_array($string,$this->_statii));
 		}
 
 		// Standard 'type' field validation
 		public function validType($string): bool {
-			if (in_array($string,$this->_types)) return true;
-			else return false;
+			return (in_array($string,$this->_types));
 		}
 
         // Standard 'search' field validation
         public function validSearch($string): bool {
-            if (preg_match('/^[\*\w\-\_\.\s]*$/',$string)) return true;
-            else return false;
+            return (preg_match('/^[\*\w\-\_\.\s]*$/',$string));
         }
 
 		// Validate an Address Line
 		public function validAddressLine($string): bool {
-			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
-			else return false;
+			return (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string)));
 		}
 
 		// Validate a City Name
 		public function validCity($string): bool {
-			if (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string))) return true;
-			else return false;
+			return (preg_match('/^[\w? :.-|\'\)]+$/',urldecode($string)));
+		}
+
+		// Validate a Hostname
+		public function validHostname($string): bool {
+			return (preg_match('/^\w[\w\.\-]*$/', $string));
+		}
+
+		public function safeString($string): bool {
+			if (preg_match('/\&\#/',$string)) return false;
+			if (preg_match('/\&\w+\;/',$string)) return false;
+			if (preg_match('/\<script',$string)) return false;
+			return (preg_match('/^[^\%\<\>]+$/',$string));
 		}
 
 		public function getError() {
