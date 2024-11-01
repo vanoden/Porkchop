@@ -18,6 +18,8 @@
 		public $regex = null;
 		public $hidden = false;
 		public $deprecated = false;
+		public $allow_wildcards = false;
+		public $show_controls = false;
 
 		public function __construct($parameters = []) {
 			foreach ($parameters as $name => $value) {
@@ -55,6 +57,11 @@
 					if (is_bool($value)) $this->deprecated = $value;
 					elseif ($value == "false") $this->deprecated = false;
 					else $this->deprecated = true;
+				elseif ($name == "allow_wildcards") {
+					if (is_bool($value)) $this->allow_wildcards = $value;
+					elseif ($value == "false") $this->allow_wildcards = false;
+					else $this->allow_wildcards = true;
+				}
 				else {
 					$this->error("Invalid Parameter: ".$name);
 				}

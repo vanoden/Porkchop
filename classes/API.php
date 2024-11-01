@@ -326,17 +326,23 @@
 			//print_r($method['parameters']);
 			// Enforce Individual Parameter Requirements
 			foreach ($method['parameters'] as $param => $options) {
+				$value = $_REQUEST[$param];
+				// Temporarily remove wildcards for validation checks
+				if (isset($options['allow_wildcards']) && $options['allow_wildcards']) {
+					$value = str_replace('*','',$value);
+					$value = str_replace('?','',$value);
+				}
 				//print_r($param."\n");
 				if (isset($options['required']) && $options['required']) {
 					//print_r("\trequired\n");
-					if (empty($_REQUEST[$param])) {
+					if (empty($value)) {
 						$this->incompleteRequest("Missing required parameter: $param");
 					}
 				}
 				// Enforce Parameter Type Requirements
-				if (!empty($_REQUEST[$param]) && isset($options['content-type'])) {
+				if (!empty($value) && isset($options['content-type'])) {
 					//print_r("\t".$options['content-type']."\n");
-					if ($options['content-type'] == 'int' && ! is_numeric($_REQUEST[$param])) {
+					if ($options['content-type'] == 'int' && ! is_numeric($value)) {
 						$this->invalidRequest("Invalid $param value");
 					}
 					elseif ($options['content-type'] == 'boolean') {
@@ -349,6 +355,7 @@
 				}
 				// Enforce Parameter Regex Requirements
 				if (!empty($_REQUEST[$param]) && isset($options['regex'])) {
+					// NOTE: Use original values for Regex
 					//print_r("\tRegex: ".$options['regex']."\n");
 					if (! preg_match($options['regex'],$_REQUEST[$param])) {
 						$this->invalidRequest("Invalid $param value");
@@ -356,14 +363,14 @@
 				}
 
 				// Enforce Parameter Validation Method Requirements
-				if (!empty($_REQUEST[$param]) && isset($options['validation_method'])) {
+				if (!empty($value) && isset($options['validation_method'])) {
 					$validation_method = $options['validation_method'];
 					if (preg_match("/(.*)\:\:([\w\_\-]+)\(\)/",$validation_method,$matches)) {
 						$validation_method = $matches[2];
 						$validation_class_name = '\\'.str_replace('::','\\',$matches[1]);
 						$validation_class = new $validation_class_name();
 						//print_r("\tValidation: ".$validation_class_name."->".$validation_method."(".$_REQUEST[$param].")\n");
-						if (! $validation_class->$validation_method($_REQUEST[$param])) {
+						if (! $validation_class->$validation_method($value)) {
 							$this->invalidRequest("Invalid $param value");
 						}
 					}
@@ -485,7 +492,9 @@
 			$counter->increment();
 		}
 
-		// Build HTML Form for API Methods
+		/**
+		 * Build HTML Form for API Methods
+		 */
 		public function _form() {
 			$api_name = "\\".ucfirst($this->module)."\\API";
 			$api = new $api_name();
@@ -500,6 +509,8 @@
 			$token = $GLOBALS['_SESSION_']->getCSRFToken();
 			foreach ($methods as $form_name => $settings) {
 				$method = new \API\Method($settings);
+
+				if ($method->hidden) continue;
 
 				// See if method has file inputs
 				$has_file_inputs = false;
@@ -520,7 +531,8 @@
 				$form .= $t.$t.'<input type="hidden" name="csrfToken" value="'.$token.'">'.$cr;
 				$form .= $t.$t.'<input type="hidden" name="method" value="'.$form_name.'" />'.$cr;
 				$form .= $t.$t.'<div class="apiMethod" onMouseOver="frameAPIFormBorder(this)" onMouseOut="unframeAPIFormBorder(this)">'.$cr;
-				$form .= $t.$t.'<div class="h3 apiMethodTitle">'.$form_name.'</div>'.$cr;
+				if ($method->deprecated) $form .= $t.$t.'<div class="h3 apiMethodTitle apiMethodDeprecated">'.$form_name." - deprecated!".'</div>'.$cr;
+				else $form .= $t.$t.'<div class="h3 apiMethodTitle">'.$form_name.'</div>'.$cr;
 
 				// Show Method Description if provided
 				if ($method->description) {
@@ -609,11 +621,16 @@
 					// Populate Form Helper Values
 					if (!empty($parameter->object)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_object" value="'.addslashes($parameter->object).'"/>'.$cr;
 					if (!empty($parameter->property)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_property" value="'.addslashes($parameter->property).'"/>'.$cr;
+					if ($parameter->deprecated) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_deprecated" value="'.addslashes($parameter->deprecated).'"/>'.$cr;
+					if ($parameter->allow_wildcards) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_allow_wildcards" value="'.addslashes('yes').'"/>'.$cr;
 					if (!empty($parameter->type)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_type" value="'.addslashes($parameter->type).'"/>'.$cr;
 					if (!empty($parameter->description)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_description" value="'.addslashes($parameter->description).'"/>'.$cr;
 					if ($parameter->required) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_required" value="'.addslashes($parameter->required).'"/>'.$cr;
 					if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_prompt" value="'.addslashes($parameter->prompt).'"/>'.$cr;
 					if (!empty($parameter->default)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_default" value="'.addslashes($parameter->default).'"/>'.$cr;
+					if (!empty($parameter->content_type)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_content_type" value="'.addslashes($parameter->content_type).'"/>'.$cr;
+					if (!empty($parameter->regex))$form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_regex" value="'.addslashes($parameter->regex).'"/>'.$cr;
+					if (!empty($parameter->validation_method))$form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_validation_method" value="'.addslashes($parameter->validation_method).'"/>'.$cr;
 
 					// Textarea Input
 					if ($parameter->type == "textarea") {
@@ -633,6 +650,15 @@
 						if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" placeholder="'.$parameter->prompt.'" class="value input apiInput'.$required_class.'" value="'.$default.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()" />'.$cr;
 						else $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput'.$required_class.'" value="'.$default.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()" />'.$cr;
 					}
+					$form .= $t.$t.$t.'</div>'.$cr;
+				}
+				if ($method->show_controls) {
+					$form .= $t.$t.$t.'<hr class="apiMethodControls"/>'.$cr;
+					$form .= $t.$t.$t.'<div class="apiMethodControls">'.$cr;
+					$form .= $t.$t.$t.$t.'<span class="label apiLabel">limit</span><input type="text" name="_limit" placeholder="Max Records" value="" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.$t.'<span class="label apiLabel">offset</span><input type="text" name="_offset" placeholder="First Record" value="" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.$t.'<span class="label apiLabel">sort</span><input type="text" name="_sort" value="" placeholder="Sort Field" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.$t.'<span class="label apiLabel">direction</span><input type="text" name="_direction" placeholder="ASC or DESC" value="" class="value input"/>'.$cr;
 					$form .= $t.$t.$t.'</div>'.$cr;
 				}
 				$form .= $t.$t.$t.'<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>'.$cr;

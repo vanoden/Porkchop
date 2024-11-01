@@ -207,4 +207,14 @@
 				}
 			}
 		}
+
+		/**
+		 * Validate Module Name
+		 * @param string Name of module
+		 * @return bool True if valid
+		 */
+		public function validModule($string) {
+			$validationClass = new \Site\Module();
+			return $validationClass->validName($string);
+		}
 	}

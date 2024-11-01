@@ -339,6 +339,12 @@
 			}
 		}
 
+		public function validPassword($string) {
+			$strength = $this->password_strength($string);
+			if ($strength >= $GLOBALS['_config']->register->minimum_password_strength) return true;
+			else return false;
+		}
+
 		public function password_strength($string) {
 			# Initial score on length alone
 			$password_strength = strlen($string);

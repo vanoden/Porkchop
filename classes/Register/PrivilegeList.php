@@ -13,6 +13,9 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Dereference Working Class
+			$workingClass = new $this->_modelName();
+
 			// Build Query
 			$find_objects_query = "
 				SELECT  rp.id
@@ -21,9 +24,17 @@
 			";
 
 			// Add Parameters
-			$validationClass = new $this->_modelName;
 			if (!empty($parameters['name'])) {
-				if ($validationClass->validName($parameters['name'])) {
+				// Handle Wildcards
+				if (preg_match('/[\*\?]/',$parameters['name']) && preg_match('/^[\*\?\w\-\.\s]+$/',$parameters['name'])) {
+					$parameters['name'] = str_replace('*','%',$parameters['name']);
+					$parameters['name'] = str_replace('?','_',$parameters['name']);
+					$find_objects_query .= "
+					AND	name LIKE ?";
+					$database->AddParam($parameters['name']);
+				}
+				// Handle Exact Match
+				elseif ($workingClass->validName($parameters['name'])) {
 					$find_objects_query .= "
 					AND		name = ?";
 					$database->AddParam($parameters['name']);
@@ -35,7 +46,7 @@
 			}
 
 			if (!empty($parameters['module'])) {
-				if ($validationClass->validModule($parameters['module'])) {
+				if ($workingClass->validModule($parameters['module'])) {
 					$find_objects_query .= "
 					AND		module = ?";
 					$database->AddParam($parameters['module']);
@@ -48,9 +59,11 @@
 
 			// Order Clause
 			if (isset($controls['sort'])) {
-				if ($controls['sort'] == 'module') $find_objects_query .= "ORDER BY `module`";
+				if ($controls['sort'] == 'module') $find_objects_query .= "
+				ORDER BY `module`";
 			}
-			else $find_objects_query .= "ORDER BY `name`";
+			else $find_objects_query .= "
+				ORDER BY `name`";
 
 			// Limit Clause
 			$find_objects_query .= $this->limitClause($controls);

@@ -3,12 +3,15 @@
 
 	class Method Extends \BaseClass {
 		public $description = '';
+		public $deprecated = false;
+		public $hidden = false;
 		public $authentication_required = true;
 		public $privilege_required = null;
 		public $token_required = false;
 		public $return_element;
 		public $return_type;
 		public $return_mime_type = 'application/xml';
+		public $show_controls = false;
 		private $_parameters = [];
 
 		public function __construct($parameters = []) {
@@ -28,6 +31,18 @@
 				if (isset($parameters['return_element'])) $this->return_element = $parameters['return_element'];
 				if (isset($parameters['return_type'])) $this->return_type = $parameters['return_type'];
 				if (isset($parameters['return_mime_type'])) $this->return_mime_type = $parameters['return_mime_type'];
+				if (isset($parameters['show_controls'])) {
+					if (is_bool($parameters['show_controls'])) $this->show_controls = $parameters['show_controls'];
+					elseif ($parameters['show_controls'] == 'true') $this->show_controls = true;
+				}
+				if (isset($parameters['deprecated'])) {
+					if (is_bool($parameters['deprecated'])) $this->deprecated = $parameters['deprecated'];
+					elseif ($parameters['deprecated'] == 'true') $this->deprecated = true;
+				}
+				if (isset($parameters['hidden'])) {
+					if (is_bool($parameters['hidden'])) $this->hidden = $parameters['hidden'];
+					elseif ($parameters['hidden'] == 'true') $this->hidden = true;
+				}
 
 				$this->parameters($parameters['parameters']);
 			}

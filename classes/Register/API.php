@@ -1142,8 +1142,13 @@
 
         public function findPrivileges() {
 			$this->requirePrivilege("manage customers");
+
+			$parameters = [];
+			if (!empty($_REQUEST['module'])) $parameters['module'] = $_REQUEST['module'];
+			if (!empty($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
+
             $privilegeList = new \Register\PrivilegeList();
-            $privileges = $privilegeList->find();
+            $privileges = $privilegeList->find($parameters);
 			if ($privilegeList->error()) $this->error($privilegeList->error());
 
 			$response = new \APIResponse();
@@ -1282,33 +1287,86 @@
 					'return_element' => 'success',
 					'return_type' => 'boolean',
 					'parameters' 	=> array(
-						'login'			=> array('required' => true, 'prompt' => 'Customer Login'),
-						'password'		=> array('required' => true, 'prompt' => 'Customer Password')
+						'login'			=> array(
+							'required' => true,
+							'prompt' => 'Customer Login',
+							'validation_method' => 'Register::Customer::validLogin()'
+						),
+						'password'		=> array(
+							'required' => true,
+							'prompt' => 'Customer Password',
+							'validation_method' => 'Register::Customer::validPassword()'
+						)
 					)
 				),
 				'getCustomer'	=> array(
 					'description'	=> 'Get information about a customer',
 					'authentication_required'	=> true,
 					'privilege_required' => '[CONDITIONAL]',
+					'return_element' => 'customer',
+					'return_type' => 'Register::Customer',
 					'parameters'	=> array(
-						'code' 	=> array('required' => true, 'prompt' => 'Customer Login')
+						'code' 	=> array(
+							'required' => true,
+							'prompt' => 'Customer Login',
+							'validation_method' => 'Register::Customer::validLogin()'
+						)
 					)
 				),
 				'updateCustomer'	=> array(
 					'description'	=> 'Change customer information. Empty fields will not be changed.',
 					'authentication_required'	=> true,
-					'token_required' => true,
+					'token_required' 			=> true,
 					'privilege_required' => '[CONDITIONAL]',
+					'return_element' => 'customer',
+					'return_type' => 'Register::Customer',
 					'parameters'	=> array(
-						'code'			=> array('required' => true, 'prompt' => 'Customer Login'),
-						'organization_code'	=> array('prompt' => 'Organization Code'),
-						'first_name'	=> array(),
-						'last_name'		=> array(),
-						'password'  	=> array(),
-						'automation'	=> array(
-							'options' => array('','true','false')
+						'id'			=> array(
+							'decription'	=> 'Customer ID',
+							'requirement_group'	=> 0,
+							'prompt' => 'Customer ID',
+							'content-type' => 'int',
 						),
-						'timezone'		=> array()
+						'code'			=> array(
+							'description'	=> 'Customer Login',
+							'requirement_group'	=> 1,
+							'prompt' => 'Customer Login',
+							'validation_method' => 'Register::Customer::validLogin()'
+						),
+						'organization_code'	=> array(
+							'description'	=> 'Organization Code',
+							'prompt' => 'Organization Code',
+							'validation_method'	=> 'Register::Organization::validCode()'
+						),
+						'first_name'	=> array(
+							'description'	=> 'Customer First Name',
+							'prompt' => 'Customer First Name',
+							'validation_method' => 'Register::Customer::validFirstName()'
+						),
+						'last_name'		=> array(
+							'description'	=> 'Customer Last Name',
+							'prompt' => 'Customer Last Name',
+							'validation_method' => 'Register::Customer::validLastName()'
+						),
+						'password'  	=> array(
+							'description'	=> 'Customer Password',
+							'prompt' => 'Customer Password',
+							'validation_method' => 'Register::Customer::validPassword()'
+						),
+						'automation'	=> array(
+							'description'	=> 'Human or Machine.  True for machine.',
+							'type'			=> 'radio',
+							'options' => array(
+								'',
+								'true',
+								'false'
+							)
+						),
+						'timezone'		=> array(
+							'description'	=> 'Customer Timezone.  See https://www.php.net/manual/en/timezones.php for valid list.',
+							'prompt' => 'Customer Timezone',
+							'validation_method' => 'Porkchop::validTimezone()'
+						)
 					)
 				),
 				'findCustomers'	=> array(
@@ -1316,27 +1374,105 @@
 					'authentication_required'	=> true,
 					'token_required' => false,
 					'privilege_required' => '[CONDITIONAL]',
+					'return_element' => 'customer',
+					'return_type' => 'Register::Customer',
+					'show_controls'	=> true,
 					'parameters'	=> array(
-						'organization_code'	=> array('prompt' => 'Organization Code'),
-						'login'		=> array('prompt' => 'Customer Login'),
-						'first_name'	=> array('prompt' => 'Customer First Name'),
-						'last_name'		=> array('prompt' => 'Customer Last Name'),
-						'automation'	=> array(
-							'options' => array('','true','false')
+						'organization_code'	=> array(
+							'description'	=> 'Organization Code',
+							'prompt' => 'Organization Code',
+							'validation_method'	=> 'Register::Organization::validCode()'
 						),
-						'limit'		=> array(),
-						'offset'	=> array()
+						'login'		=> array(
+							'description'		=> 'Customer Login',
+							'prompt' 			=> 'Customer Login',
+							'validation_method' => 'Register::Customer::validLogin()'
+						),
+						'first_name'	=> array(
+							'description'			=> 'Customer First Name',
+							'prompt' 				=> 'Customer First Name',
+							'allow_wildcards'		=> true,
+							'validation_method' 	=> 'Register::Customer::validFirstName()'
+						),
+						'last_name'		=> array(
+							'description'			=> 'Customer Last Name',
+							'prompt' 				=> 'Customer Last Name',
+							'allow_wildcards'		=> true,
+							'validation_method' => 'Register::Customer::validLastName()'
+						),
+						'automation'	=> array(
+							'description'	=> 'Human or Machine.  True for machine.',
+							'content-type'	=> 'boolean',
+							'options' => array(
+								'','true','false')
+						)
 					)
 				),
 				'findOrganizations'	=> array(
-					'organization_code'	=> array(),
-					'organization_id' => array()
+					'description'	=> 'Find Organizations matching provided criteria',
+					'authentication_required'	=> true,
+					'return_element'	=> "organization",
+					'return_type'		=> "Register::Organization",
+					'parameters'		=> array(
+						'id' =>		array(
+							'description'	=> 'Organization ID',
+							'prompt'		=> 'Organization ID',
+							'content-type'	=> 'int',
+						),
+						'organization_code'	=> array(
+							'deprecated'	=> true,
+							'hidden'		=> true,
+							'description'	=> 'Organization Code',
+							'prompt'		=> 'Organization Code',
+							'validation_method'	=> 'Register::Organization::validCode()'
+						),
+						'code'	=> array(
+							'description'	=> 'Organization Code',
+							'prompt'		=> 'Organization Code',
+							'validation_method'	=> 'Register::Organization::validCode()'
+						),
+						'organization_id' => array(
+							'deprecated'	=> true,
+							'hidden'		=> true,
+							'description'	=> 'Organization ID',
+							'prompt'		=> 'Organization ID',
+							'content-type'	=> 'int',
+						),
+						'name'	=> array(
+							'description'	=> 'Organization Name',
+							'prompt'		=> 'Organization Name',
+							'validation_method'	=> 'Register::Organization::validName()',
+							'allow_wildcards'	=> true
+						)
+					)
 				),
 				'findOrganizationOwnedProducts'	=> array(
-					'organization_code'	=> array(),
-					'organization_id' => array(),
-					'product_code'	=> array(),
-					'product_id' => array()
+					'description'		=> 'Find assignable products and services associated with this organization',
+					'authentication_required'	=> true,
+					'return_element'		=> 'product',
+					'return_type'			=> 'Product::Item',
+					'parameters'			=> array(
+						'organization_code'	=> array(
+							'description'	=> 'Organization Code',
+							'prompt'		=> 'Organization Code',
+							'validation_method'	=> 'Register::Organization::validCode()'
+						),
+						'organization_id' => array(
+							'description'	=> 'Organization ID',
+							'prompt'		=> 'Organization ID',
+							'content-type'	=> 'int'
+						),
+						'product_code'	=> array(
+							'description'	=> 'Product Code/Sku',
+							'prompt'		=> 'Product Code/Sku',
+							'validation_method'	=> 'Product::Item::validCode',
+						),
+						'product_id' => array(
+							'description'	=> 'Product ID',
+							'prompt'		=> 'Product ID',
+							'content-type'	=> 'int'
+						)
+					)
 				),
 				'findRoles'	    => array(
 					'description'	=> 'List all roles',
@@ -1348,23 +1484,99 @@
 					'parameters'	=> array()
 				),
 				'findRoleMembers'	=> array(
-					'code'	=> array('required' => true)
+					'description'	=> 'Find Members Granted This Role',
+					'authentication_required'	=> true,
+					'privilege_required'	=> 'manage customers',
+					'return_element'	=> 'customer',
+					'return_type'		=> 'Register::Customer',
+					'parameters'	=> array(
+						'code'	=> array(
+							'description'	=> 'Role Name',
+							'prompt'		=> 'Role Name',
+							'required'		=> true,
+							'validation_method'	=> 'Register::Role::validCode()'
+						)
+					)
 				),
 				'addRoleMember'	=> array(
-					'login'		=> array('required' => true),
-					'name'		=> array('required' => true)
+					'description'	=> 'Grant a role to an account',
+					'authentication_required'	=> true,
+					'privilege_required'	=> 'manage customers',
+					'return_element'	=> 'success',
+					'parameters' => array(
+						'login'		=> array(
+							'description'	=> 'Customer login',
+							'prompt'		=> 'Customer login',
+							'required' => true,
+							'validation_method'	=> 'Register::Customer::validCode()'
+						),
+						'name'		=> array(
+							'decription'	=> 'Role name',
+							'prompt'		=> 'Role name',
+							'required' => true,
+							'validation_method'	=> 'Register::Role::validCode()'
+						)
+					),
 				),
-				'findPrivileges'	=> array(),
+				'findPrivileges'	=> array(
+					'description'	=> 'Get list of privileges',
+					'authentication_required'	=> true,
+					'return_element'	=> 'privilege',
+					'return_type'		=> 'Register::Privilege',
+					'parameters'	=> array(
+						'module'	=> array(
+							'description'	=> 'Module with which privilege is associated',
+							'prompt'		=> 'Privilege Module',
+							'validation_method'	=> 'Site::Module::validCode()'
+						),
+						'name'		=> array(
+							'description'	=> 'Name of privilege',
+							'prompt'	=> 'Name of privilege',
+							'validation_method' => 'Register::Privilege::validCode()',
+							'allow_wildcards'	=> true
+						)
+					)
+				),
 				'findPrivilegePeers'	=> array(
-					'privilege_name'	=> array('required' => true)
+					'description'	=> 'Get list of customers who have a privilege through their roles',
+					'authentication_required'	=> true,
+					'return_element'	=> 'customer',
+					'return_type'		=> 'Register::Customer',
+					'parameters'		=> array(
+						'privilege_name'	=> array(
+							'description'	=> 'Name of privilege',
+							'prompt'		=> 'Name of privilege',
+							'required' => true,
+							'validation_method'	=> 'Register::Privilege::validCode()'
+						)
+					)
 				),
 				'findPendingRegistrations' => array(
-					'status'	=> array(
-						'options' => $queue->statii()
+					'description'	=> 'Get list of queued customer registrations',
+					'authentication_required'	=> true,
+					'privilege_required'	=> 'manage customers',
+					'return_element'	=> 'registration',
+					'return_type'		=> 'Register::Queue',
+					'parameters'	=> array(
+						'status'	=> array(
+							'options' => $queue->statii()
+						)
 					)
 				),
 				'getPendingRegistration' => array(
-					'login'	=> array('required' => true)
+					'description'	=> 'Get status of a customer\'s registration',
+					'authentication_required'	=> true,
+					'privilege_required' => 'manage customers',
+					'return_element'	=> 'registration',
+					'return_type'		=> 'Register::Queue',
+					'parameters'	=> array(
+						'login'	=> array(
+							'description'	=> 'Customer login',
+							'prompt'		=> 'Customer login',
+							'required' => true,
+							'validation_method'	=> 'Register::Customer::validCode()'
+						)
+					)
 				),
 				'acceptTermsOfUse'	=> array(
 					'description' => 'Decline a terms of use agreement',

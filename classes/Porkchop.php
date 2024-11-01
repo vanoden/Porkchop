@@ -161,7 +161,12 @@
 			return $string;
 		}
 
-		function validEmail($email) {
+		/**
+		 * Check if a string is a valid email address
+		 * @param mixed $email Email Address
+		 * @return bool True if valid email address
+		 */
+		function validEmail($email): bool {
 			if (preg_match("/^[\w\-\_\.\+]+@[\w\-\_\.]+\.[a-z]{2,}$/",strtolower($email))) return true;
 			else {
 				app_log("Invalid email address: '$email'",'info');
@@ -169,10 +174,29 @@
 			}
 		}
 
-		function validDate($date) {
+		/**
+		 * Check if a date is valid
+		 * Note: valid means it can be processed by get_mysql_date() in the include/function.php file
+		 * @param mixed $date 
+		 * @return bool True if valid date
+		 */
+		function validDate($date): bool {
 			if (get_mysql_date($date)) return true;
 			else {
 				app_log("Invalid date format: '$date'",'info');
+				return false;
+			}
+		}
+
+		/**
+		 * Check if a timezone is valid
+		 * @param mixed $tz Time Zone String
+		 * @return bool True if valid timezone
+		 */
+		function validTimeZone($tz): bool {
+			if (in_array($tz,timezone_identifiers_list())) return true;
+			else {
+				app_log("Invalid timezone",'info');
 				return false;
 			}
 		}

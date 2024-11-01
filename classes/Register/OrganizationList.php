@@ -22,19 +22,19 @@
 	
             $validationClass = new $this->_modelName();
 
-			$get_organizations_query = "
+			$find_objects_query = "
 				SELECT	ro.id
 				FROM	register_organizations ro
 			";
 
 			// add searched Tag Join
 			if (!empty($advanced['tag'])) {
-				$get_organizations_query .= ",
+				$find_objects_query .= ",
 						search_tags_xref stx
 				WHERE	stx.tag_id IN (".implode(',',$this->getTagIds($advanced['tag'])).")";
 			}
 			else {
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				WHERE	ro.id = ro.id";
 			}
 
@@ -56,51 +56,51 @@
 					$string = '%'.$string.'%';
 				}
 
-				$get_organizations_query .= "
+				$find_objects_query .= "
 					WHERE ro.name like '$string'";
 			}
 			else {
-				$get_organizations_query .= "
+				$find_objects_query .= "
 					WHERE	ro.id = ro.id";
 			}
 			
 			if (!empty($search_string)) {
-				$get_organizations_query .= " AND rt.name = ? ";
+				$find_objects_query .= " AND rt.name = ? ";
 				$database->AddParam($search_string);
-				$get_organizations_query .= " AND rt.type = 'ORGANIZATION' ";
+				$find_objects_query .= " AND rt.type = 'ORGANIZATION' ";
 			}
 
 			if (isset($parameters['status']) && is_array($parameters['status'])) {
 				$icount = 0;
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				AND	status IN (";
 				foreach ($parameters['status'] as $status) {
                     if (!$validationClass->validStatus($status)) {
                         $this->error("Invalid status");
                         return null;
                     }
-					if ($icount > 0) $get_organizations_query .= ","; 
+					if ($icount > 0) $find_objects_query .= ","; 
 					$icount ++;
 					if (preg_match('/^[\w\-\_\.]+$/',$status))
-					$get_organizations_query .= "'".$status."'";
+					$find_objects_query .= "'".$status."'";
 				}
-				$get_organizations_query .= ")";
+				$find_objects_query .= ")";
 			}
 			elseif (isset($parameters['status'])) {
                 if (!$validationClass->validStatus($parameters['status'])) {
                     $this->error("Invalid status");
                     return null;
                 }
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				AND		ro.status = ?";
 				$database->AddParam($parameters['status']);
 			}
 			else
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				AND		ro.status IN ('NEW','ACTIVE','EXPIRED')";
 
 			if (is_numeric($parameters['is_reseller'])) 
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				AND		ro.is_reseller = ".$parameters['is_reseller'];
 
 
@@ -111,30 +111,30 @@
                 }
                 switch($controls['sort']) {
                     case 'status':
-                        $get_organizations_query .= "
+                        $find_objects_query .= "
                         ORDER BY ro.status ".$controls['order'];
                         break;
                     default:
-                        $get_organizations_query .= "
+                        $find_objects_query .= "
                         ORDER BY ro.name ".$controls['order'];
                         break;
                 }
             }
             else {
-    			$get_organizations_query .= "
+    			$find_objects_query .= "
 	    			ORDER BY ro.name
 		    	";
             }
 
 			if (is_numeric($controls['limit'])) {
-				$get_organizations_query .= "
+				$find_objects_query .= "
                     LIMIT ".$controls['limit'];
                 if (is_numeric($controls['offset']))
-					$get_organizations_query .= "
+					$find_objects_query .= "
 					OFFSET	".$controls['offset'];
 			}
 
-			$rs = $database->Execute($get_organizations_query);
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				return null;
@@ -165,7 +165,7 @@
             $workingClass = new $this->_modelName();
 
 			// Build Query
-			$get_organizations_query = "
+			$find_objects_query = "
 				SELECT	ro.id
 				FROM	register_organizations ro
 			";
@@ -173,24 +173,34 @@
 			// Apply Tags Filter if specified
 			if (isset($advanced['tags']) && !empty($advanced['tags'])) {
 				$tagIds = $this->getTagIds($advanced['tags']);
-				$get_organizations_query .= ",
+				$find_objects_query .= ",
 								search_tags_xref stx
 					WHERE		stx.object_id = ro.id
 					AND			stx.tag_id IN (".implode(',',$tagIds).")";
 			}
 			else {
-				$get_organizations_query .= "
+				$find_objects_query .= "
 					WHERE		ro.id = ro.id";
 			}
 
 			if (!empty($parameters['name'])) {
-				if (isset($controls['like']) && in_array("name",$controls['like'])) {
-					$get_organizations_query .= "
-					AND		ro.name like '%".preg_replace('/[^\w\-\.\_\s]/','',$parameters['name'])."%'";
-				} else {
-					$get_organizations_query .= "
+				// Handle Wildcards
+				if (preg_match('/[\*\?]/',$parameters['name']) && preg_match('/^[\*\?\w\-\.\s]+$/',$parameters['name'])) {
+					$parameters['name'] = str_replace('*','%',$parameters['name']);
+					$parameters['name'] = str_replace('?','_',$parameters['name']);
+					$find_objects_query .= "
+					AND	name LIKE ?";
+					$database->AddParam($parameters['name']);
+				}
+				// Handle Exact Match
+				elseif ($workingClass->validName($parameters['name'])) {
+					$find_objects_query .= "
 					AND		ro.name = ?";
 					$database->AddParam($parameters['name']);
+				}
+				else {
+					$this->error("Invalid name");
+					return [];
 				}
 			}
 
@@ -199,42 +209,42 @@
                     $this->error("Invalid code");
                     return [];
                 }
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				AND		ro.code = ?";
 				$database->AddParam($parameters['code']);
 			}
 
 			if (!empty($parameters['status']) && is_array($parameters['status'])) {
 				$icount = 0;
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				AND	ro.status IN (";
 				foreach ($parameters['status'] as $status) {
                     if (! $workingClass->validStatus($status)) {
                         $this->error("Invalid status");
                         return [];
                     }
-					if ($icount > 0) $get_organizations_query .= ","; 
+					if ($icount > 0) $find_objects_query .= ","; 
 					$icount ++;
 					if (preg_match('/^[\w\-\_\.]+$/',$status))
-					$get_organizations_query .= "'".$status."'";
+					$find_objects_query .= "'".$status."'";
 				}
-				$get_organizations_query .= ")";
+				$find_objects_query .= ")";
 			}
             elseif (!empty($parameters['status'])) {
                 if (! $workingClass($parameters['status'])) {
                     $this->error("Invalid status");
                     return [];
                 }
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				AND		ro.status = ?";
 				$database->AddParam($parameters['status']);
 			}
 			else
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				AND		ro.status IN ('NEW','ACTIVE')";
 
 			if (isset($parameters['reseller_id']) && is_numeric($parameters['reseller_id'])) {
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				AND		ro.reseller_id = ?";
 				$database->AddParam($parameters['reseller_id']);
 			}
@@ -247,26 +257,26 @@
 
 				switch($controls['sort']) {
 					case 'status':
-						$get_organizations_query .= "
+						$find_objects_query .= "
 						ORDER BY ro.status ".$controls['order'];
 						break;
 					default:
-						$get_organizations_query .= "
+						$find_objects_query .= "
 						ORDER BY ro.name ".$controls['order'];
 						break;
 				}
 			}
 			else {
-				$get_organizations_query .= "
+				$find_objects_query .= "
 				ORDER BY ro.name ";
-				if (isset($controls['order']) && !empty($controls['order'])) $get_organizations_query .= $controls['order'];
+				if (isset($controls['order']) && !empty($controls['order'])) $find_objects_query .= $controls['order'];
 			}
 
 			// Limit Clause
-			$get_organizations_query .= $this->limitClause($controls);
+			$find_objects_query .= $this->limitClause($controls);
 
 			// Execute Query
-			$rs = $database->Execute($get_organizations_query);
+			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return [];
