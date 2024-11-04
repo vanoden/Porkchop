@@ -20,15 +20,14 @@
 			$vendorList = new \Shipping\VendorList();
 			
 			$parameters = array();
+			if (!empty($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 			
 			$vendors = $vendorList->find($parameters);
-			if ($vendorList->error) $this->app_error("Error finding vendors: ".$vendorList->error);
+			if ($vendorList->error()) $this->error("Error finding vendors: ".$vendorList->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->vendors = $vendors;
-
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->AddElement('vendor',$vendors);
+			$response->print();
 		}
 
 		###################################################
@@ -44,13 +43,11 @@
 			$parameters['account_number'] = $_REQUEST['account_number'];
 
 			$vendor->add($parameters);
-			if ($vendor->error) $this->app_error("Error adding vendor: ".$vendor->error);
+			if ($vendor->error()) $this->app_error("Error adding vendor: ".$vendor->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->vendor = $vendor;
-
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->AddElement('vendor',$vendor);
+			$response->print();
 		}
 
 		###################################################
@@ -61,101 +58,90 @@
 
 			$vendor = new \Shipping\Vendor();
 			$vendor->get($_REQUEST['name']);
-			if ($vendor->error) $this->app_error("Error finding vendor: ".$vendor->error,'error',__FILE__,__LINE__);
-			if (! $vendor->id) $this->error("Vendor ".$_REQUEST['name']." not found");
+			if ($vendor->error()) $this->error("Error finding vendor: ".$vendor->error());
+			if (! $vendor->id) $this->notFound("Vendor ".$_REQUEST['name']." not found");
 
 			$parameters = array();
 			$parameters['account_number'] = $_REQUEST['account_number'];
 			$vendor->update($parameters);
 
-			if ($vendor->error) $this->app_error("Error updating vendor: ".$vendor->error,'error',__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->vendor = $vendor;
-
-			print $this->formatOutput($response);
+			if ($vendor->error()) $this->app_error("Error updating vendor: ".$vendor->error());
+			$response = new \APIResponse();
+			$response->AddElement('vendor',$vendor);
+			$response->print();
 		}
 
 		###################################################
 		### Get a Specific Vendor						###
 		###################################################
 		public function getVendor() {
-			$response = new \HTTP\Response();
 			$vendor = new \Shipping\Vendor();
 			if ($vendor->get($_REQUEST['name'])) {
-				$response->success = 1;
-				$response->vendor = $vendor;
+				$response = new \APIResponse();
+				$response->AddElement('vendor',$vendor);
+				$response->print();
 			}
-			else {
+			elseif ($vendor->error()) {
 				$this->error("Error finding vendor: ".$vendor->error(),'error');
 			}
-
-			print $this->formatOutput($response);
+			else $this->notFound("Vendor ".$_REQUEST['name']." not found");
 		}
 
 		###################################################
 		### Add a Shipment								###
 		###################################################
 		public function addShipment() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 			$parameters = array();
 			$send_location = new \Register\Location($_REQUEST['send_location_id']);
 			if ($send_location->id) $parameters['send_location_id'] = $send_location->id;
-			else $this->error("Sending location not found");
+			else $this->invalidRequest("Sending location not found");
 
 			$receive_location = new \Register\Location($_REQUEST['receive_location_id']);
 			if ($receive_location->id) $parameters['receive_location_id'] = $receive_location->id;
-			else $this->error("Receiving location not found");
+			else $this->invalidRequest("Receiving location not found");
 
 			$send_customer = new \Register\Customer($_REQUEST['send_customer_id']);
 			if ($send_customer->id) $parameters['send_customer_id'] = $send_customer->id;
-			else $this->error("Sending Customer not found");
+			else $this->invalidRequest("Sending Customer not found");
 
 			$receive_customer = new \Register\Customer($_REQUEST['receive_customer_id']);
 			if ($receive_customer->id) $parameters['receive_customer_id'] = $_REQUEST['receive_customer_id'];
-			else $this->error("Receiving Customer not found");
+			else $this->invalidRequest("Receiving Customer not found");
 
 			$vendor = new \Shipping\Vendor($_REQUEST['vendor_id']);
 			if ($vendor->id) $parameters['vendor_id'] = $_REQUEST['vendor_id'];
 
 			if (isset($_REQUEST['document_number'])) $parameters['document_number'] = $_REQUEST['document_number'];
-			else $this->error("Document number required");
+			else $this->incompleteRequest("Document number required");
 
 			if (!empty($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
 
 			$shipment = new \Shipping\Shipment();
 			$shipment->add($parameters);
-			if ($shipment->error()) error("Error adding shipment: ".$shipment->error());
+			if ($shipment->error()) $this->error("Error adding shipment: ".$shipment->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->shipment = $shipment;
-
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->AddElement('shipment',$shipment);
+			$response->print();
 		}
 
 		###################################################
 		### Update a Shipment							###
 		###################################################
 		public function updateShipment() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 			$shipment = new \Shipping\Shipment();
 			$shipment->get($_REQUEST['code']);
-			if ($shipment->error) $this->app_error("Error finding shipment: ".$shipment->error,'error',__FILE__,__LINE__);
-			if (! $shipment->id) $this->error("Request not found");
+			if ($shipment->error()) $this->app_error("Error finding shipment: ".$shipment->error());
+			if (! $shipment->id) $this->notFound("Request not found");
 
 			$parameters = array();
 			$shipment->update(
 				$parameters
 			);
-			if ($shipment->error) $this->app_error("Error updating shipment: ".$shipment->error,'error',__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->shipment = $shipment;
-
-			print $this->formatOutput($response);
+			if ($shipment->error()) $this->app_error("Error updating shipment: ".$shipment->error(),'error',__FILE__,__LINE__);
+			$response = new \APIResponse();
+			$response->AddElement('shipment',$shipment);
+			$response->print();
 		}
 
 		###################################################
@@ -165,12 +151,10 @@
 			$shipment = new \Shipping\Shipment();
 			$shipment->get($_REQUEST['code']);
 
-			if ($shipment->error) $this->error("Error getting shipment: ".$shipment->error);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->shipment = $shipment;
-
-			print $this->formatOutput($response);
+			if ($shipment->error()) $this->error("Error getting shipment: ".$shipment->error());
+			$response = new \APIResponse();
+			$response->AddElement('shipment',$shipment);
+			$response->print();
 		}
 
 		###################################################
@@ -183,56 +167,46 @@
 			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 			
 			$shipments = $shipmentList->find($parameters);
-			if ($shipmentList->error) $this->app_error("Error finding shipments: ".$shipmentList->error);
+			if ($shipmentList->error()) $this->app_error("Error finding shipments: ".$shipmentList->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->shipment = $shipments;
-
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->AddElement('shipment',$shipments);
+			$response->print();
 		}
 
 		###################################################
 		### Add a Package to a Shipment					###
 		###################################################
 		public function addPackage() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 			$parameters = array();
 			$shipment = new \Shipping\Shipment($_REQUEST['shipment_id']);
 			if ($shipment->id) $parameters['shipment_id'] = $shipment->id;
 			else $this->error("Shipment not found");
 
-			$package = $shipment->addPackage();
+			$package = $shipment->addPackage($parameters);
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->package = $package;
-
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->AddElement('package',$package);
+			$response->print();
 		}
 
 		###################################################
 		### Update a Package							###
 		###################################################
 		public function updatePackage() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 			$shipment = new \Shipping\Shipment($_REQUEST['shipment_id']);
 			$package = $shipment->package($_REQUEST['id']);
-			if ($shipment->error) $this->app_error("Error finding package: ".$shipment->error,'error',__FILE__,__LINE__);
+			if ($shipment->error()) $this->app_error("Error finding package: ".$shipment->error());
 			if (! $shipment->id) $this->error("Request not found");
 
 			$parameters = array();
 			$shipment->update(
 				$parameters
 			);
-			if ($shipment->error) $this->app_error("Error updating shipment: ".$shipment->error,'error',__FILE__,__LINE__);
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->shipment = $shipment;
-
-			print $this->formatOutput($response);
+			if ($shipment->error()) $this->app_error("Error updating shipment: ".$shipment->error(),'error',__FILE__,__LINE__);
+			$response = new \APIResponse();
+			$response->AddElement('shipment',$shipment);
+			$response->print();
 		}
 
 		###################################################
@@ -245,12 +219,203 @@
 			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 			
 			$packages = $packageList->find($parameters);
-			if ($packageList->error) $this->app_error("Error finding shipments: ".$packageList->error);
+			if ($packageList->error()) $this->app_error("Error finding shipments: ".$packageList->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->package = $packages;
+			$response = new \APIResponse();
+			$response->AddElement('package',$packages);
+			$response->print();
+		}
 
-			print $this->formatOutput($response);
+		public function _methods() {
+			return array(
+				'findVendors' => array(
+					'description'	=> 'Find matching Vendors',
+					'return_element'	=> 'vendor',
+					'return_type'	=> 'array',
+					'parameters'	=> array(
+						'name' => array(
+							'description' => 'Name of Vendor',
+							'validation_method' => 'Shipping::Vendor::validName()',
+							'allow_wildcards' => true,
+						),
+					),
+				),
+				'addVendor' => array(
+					'description'	=> 'Add a Vendor',
+					'token_required'	=> true,
+					'privilege_required'	=> 'shipping manager',
+					'return_element'	=> 'vendor',
+					'return_type'	=> 'object',
+					'parameters'	=> array(
+						'name' => array(
+							'description' => 'Name of Vendor',
+							'validation_method' => 'Shipping::Vendor::validName()',
+						),
+						'account_number' => array(
+							'description' => 'Account Number',
+							'validation_method' => 'Shipping::Vendor::validAccountNumber()',
+						),
+					),
+				),
+				'updateVendor' => array(
+					'description'	=> 'Update a Vendor',
+					'token_required'	=> true,
+					'privilege_required'	=> 'shipping manager',
+					'return_element'	=> 'vendor',
+					'return_type'	=> 'object',
+					'parameters'	=> array(
+						'name' => array(
+							'description' => 'Name of Vendor',
+							'validation_method' => 'Shipping::Vendor::validName()',
+						),
+						'account_number' => array(
+							'description' => 'Account Number',
+							'validation_method' => 'Shipping::Vendor::validAccountNumber()',
+						),
+					),
+				),
+				'getVendor' => array(
+					'description'	=> 'Get details regarding specified Vendor',
+					'return_element'	=> 'vendor',
+					'return_type'	=> 'object',
+					'parameters'	=> array(
+						'name' => array(
+							'description' => 'Name of Vendor',
+							'validation_method' => 'Shipping::Vendor::validName()',
+						),
+					),
+				),
+				'addShipment' => array(
+					'description'	=> 'Add a Shipment',
+					'token_required'	=> true,
+					'privilege_required'	=> 'shipping manager',
+					'return_element'	=> 'shipment',
+					'return_type'	=> 'object',
+					'parameters'	=> array(
+						'send_location_id' => array(
+							'description' => 'Sending Location ID',
+							'validation_method' => 'Register::Location::validID()',
+						),
+						'receive_location_id' => array(
+							'description' => 'Receiving Location ID',
+							'validation_method' => 'Register::Location::validID()',
+						),
+						'send_customer_id' => array(
+							'description' => 'Sending Customer ID',
+							'validation_method' => 'Register::Customer::validID()',
+						),
+						'receive_customer_id' => array(
+							'description' => 'Receiving Customer ID',
+							'validation_method' => 'Register::Customer::validID()',
+						),
+						'vendor_id' => array(
+							'description' => 'Vendor ID',
+							'validation_method' => 'Shipping::Vendor::validID()',
+						),
+						'document_number' => array(
+							'description' => 'Document Number',
+							'validation_method' => 'Shipping::Shipment::validDocumentNumber()',
+						),
+						'status' => array(
+							'description' => 'Status',
+							'validation_method' => 'Shipping::Shipment::validStatus()',
+						),
+					)
+				),
+				'updateShipment' => array(
+					'description'	=> 'Update a Shipment',
+					'token_required'	=> true,
+					'privilege_required'	=> 'shipping manager',
+					'return_element'	=> 'shipment',
+					'return_type'	=> 'object',
+					'parameters'	=> array(
+						'code' => array(
+							'description' => 'Shipment Code',
+							'required' => true,
+							'validation_method' => 'Shipping::Shipment::validCode()',
+						),
+						'status' => array(
+							'description' => 'Status',
+							'validation_method' => 'Shipping::Shipment::validStatus()',
+						),
+					),
+				),
+				'getShipment' => array(
+					'description'	=> 'Get details regarding specified Shipment',
+					'return_element'	=> 'shipment',
+					'return_type'	=> 'object',
+					'parameters'	=> array(
+						'code' => array(
+							'description' => 'Shipment Code',
+							'required' => true,
+							'validation_method' => 'Shipping::Shipment::validCode()',
+						),
+					),
+				),
+				'findShipments' => array(
+					'description'	=> 'Search for shipments',
+					'return_element'	=> 'shipment',
+					'return_type'	=> 'array',
+					'parameters'	=> array(
+						'status' => array(
+							'description' => 'Status',
+							'validation_method' => 'Shipping::Shipment::validStatus()',
+						),
+					),
+				),
+				'addPackage' => array(
+					'description'	=> 'Add a Package to a Shipment',
+					'token_required'	=> true,
+					'privilege_required'	=> '[CONDITIONAL]',
+					'return_element'	=> 'package',
+					'return_type'	=> 'object',
+					'parameters'	=> array(
+						'shipment_id' => array(
+							'description' => 'Shipment ID',
+							'required' => true,
+							'content-type' => 'int',
+						),
+						'package_id'	=> array(
+							'description' => 'Package ID',
+							'required' => true,
+							'content-type' => 'int',
+						),
+					),
+				),
+				'updatePackage' => array(
+					'description'	=> 'Update a Package',
+					'token_required'	=> true,
+					'privilege_required'	=> '[CONDITIONAL]',
+					'return_element'	=> 'package',
+					'return_type'	=> 'object',
+					'parameters'	=> array(
+						'shipment_id' => array(
+							'description' => 'Shipment ID',
+							'required' => true,
+							'content-type' => 'int',
+						),
+						'package_id'	=> array(
+							'description' => 'Package ID',
+							'required' => true,
+							'content-type' => 'int',
+						),
+						'status'	=> array(
+							'description' => 'Status',
+							'validation_method' => 'Shipping::Package::validStatus()',
+						)
+					),
+				),
+				'findPackages' => array(
+					'description'	=> 'Search for packages',
+					'return_element'	=> 'package',
+					'return_type'	=> 'array',
+					'parameters'	=> array(
+						'status' => array(
+							'description' => 'Status',
+							'validation_method' => 'Shipping::Package::validStatus()',
+						),
+					),
+				),
+			);
 		}
 	}

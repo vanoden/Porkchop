@@ -27,4 +27,13 @@
 			
 			return parent::add($parameters);
 		}
+
+		/**
+		 * Validate Account Number
+		 * @params string $account_number
+		 * @return bool
+		 */
+		public function validAccountNumber($account_number): bool {
+			return $this->validCode($account_number);
+		}
 	}
