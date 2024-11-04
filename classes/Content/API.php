@@ -14,110 +14,81 @@
 		}
 
 		###################################################
-		### Get A Filtered List of Messages				###
+		### Get A Filtered List of Blocks				###
 		###################################################
-		public function findMessages() {
-			# Default StyleSheet
-			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'content.message.xsl';
-			$response = new \HTTP\Response();
-
+		public function findBlocks() {
 			# Initiate Product Object
-			$message_list = new \Content\MessageList();
+			$block_list = new \Content\BlockList();
 
 			# Find Matching Threads
 			$parameters = array();
 			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
 			if (isset($_REQUEST['options'])) $parameters['options'] = $_REQUEST['options'];
-			$messages = $message_list->find($parameters);
+			$blocks = $block_list->find($parameters);
 
 			# Error Handling
-			if ($message_list->error) $this->error($message_list->error);
+			if ($block_list->error()) $this->error($block_list->error());
 			else{
-				$response->message = $messages;
-				$response->success = 1;
+				$response = new \APIResponse();
+				$response->AddElement('block',$blocks);
+				$response->print();
 			}
-
-			api_log('content',$_REQUEST,$response);
-
-			# Send Response
-			print $this->formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 		}
 		
 		###################################################
-		### Search for Messages         s				###
+		### Search for Blocks         				###
 		###################################################
-		public function searchMessages() {
-		
-			# Default StyleSheet
-			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'content.message.xsl';
-			$response = new \HTTP\Response();
-
+		public function searchBlocks() {
 			# Initiate Product Object
-			$message_list = new \Content\MessageList();
+			$block_list = new \Content\BlockList();
 
 			# Find Matching Threads
 			$parameters = array();
 			
 			if (isset($_REQUEST['string'])) $parameters['string'] = $_REQUEST['string'];
-			$messages = $message_list->search($parameters);
+			$blocks = $block_list->search($parameters);
 
 			# Error Handling
-			if ($message_list->error) $this->error($message_list->error);
+			if ($block_list->error()) $this->error($block_list->error());
 			else {
-				$response->message = $messages;
-				$response->success = 1;
+				$response = new \APIResponse();
+				$response->AddElement('block',$blocks);
+				$response->print();
 			}
-
-			api_log('content',$_REQUEST,$response);
-
-			# Send Response
-			print $this->formatOutput($response);
 		}
 		
 		###################################################
-		### Get Details regarding Specified Message		###
+		### Get Details regarding Specified Block		###
 		###################################################
-		public function getMessage() {
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
-
+		public function getBlock() {
 			# Initiate Product Object
-			$message = new \Content\Message($_REQUEST['id']);
+			$block = new \Content\Block($_REQUEST['id']);
 			if (! isset($_REQUEST['id'])) {
-				if (! $_REQUEST['target']) $_REQUEST['target'] = '';
+				if (isset($_REQUEST['code']) && $_REQUEST['code']) $_REQUEST['target'] = $_REQUEST['code'];
+				if (empty($_REQUEST['target'])) $_REQUEST['target'] = '';
 
 				# Find Matching Threads
-				$message->get($_REQUEST['target']);
+				$block->get($_REQUEST['target']);
 			}
 
 			# Error Handling
-			if ($message->error) $this->error($message->error);
+			if ($block->error()) $this->error($block->error());
 			else{
-				$this->response->request = $_REQUEST;
-				$this->response->message = $message;
-				$this->response->success = 1;
+				$response = new \APIResponse();
+				$response->AddElement('block',$block);
+				$response->print();
 			}
-
-			api_log('content',$_REQUEST,$this->response);
-
-			# Send Response
-			print $this->formatOutput($this->response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 		}
+
 		###################################################
 		### Get Details regarding Specified Product		###
 		###################################################
-		public function addMessage() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
-			$response = new \HTTP\Response();
-
+		public function addBlock() {
 			# Initiate Product Object
-			$content = new \Content\Message();
+			$content = new \Content\Block();
 
 			# Find Matching Threads
-			$message = $content->add(
+			$block = $content->add(
 				array (
 					'name'			=> $_REQUEST['name'],
 					'target'		=> $_REQUEST['target'],
@@ -127,38 +98,29 @@
 			);
 
 			# Error Handling
-			if ($content->error) $this->error($content->error);
+			if ($content->error()) $this->error($content->error());
 			else{
-				$response->message = $message;
-				$response->success = 1;
+				$response = new \APIResponse();
+				$response->AddElement('block',$block);
+				$response->print();
 			}
-
-			api_log('content',$_REQUEST,$response);
-
-			# Send Response
-			print $this->formatOutput($response);
 		}
-		###################################################
-		### Update Specified Message					###
-		###################################################
-		public function updateMessage() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-			# Default StyleSheet
-			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'content.message.xsl';
-			$response = new \HTTP\Response();
-
+		###################################################
+		### Update Specified Block					###
+		###################################################
+		public function updateBlock() {
 			# Initiate Product Object
-			$message = new \Content\Message();
+			$block = new \Content\Block();
 			if (isset($_REQUEST['id']) && $_REQUEST['id']) {
-				$message->id = $_REQUEST['id'];
-				if (! $message->details()) $this->error("Message id ".$_REQUEST['id']." not found");
+				$block->id = $_REQUEST['id'];
+				if (! $block->details()) $this->error("Block id ".$_REQUEST['id']." not found");
 			}
 			elseif (isset($_REQUEST['target']) && $_REQUEST['target']) {
-				if (! $message->get($_REQUEST['target'])) $this->error("Message '".$_REQUEST['target']."' not found");
+				if (! $block->get($_REQUEST['target'])) $this->error("Block '".$_REQUEST['target']."' not found");
 			}
-			else $this->error("Must provide message id or target");
-			if (! $message->id) $this->error("Message '".$_REQUEST['id']."' not found");
+			else $this->error("Must provide block id or target");
+			if (! $block->id) $this->error("Block '".$_REQUEST['id']."' not found");
 
 			$parameters = array();
 			if (isset($_REQUEST['name'])) $parameters['name'] = $_REQUEST['name'];
@@ -166,185 +128,38 @@
 			if (isset($_REQUEST['content'])) $parameters['content'] = $_REQUEST['content'];
 
 			# Find Matching Threads
-			$message->update($parameters);
+			$block->update($parameters);
 
 			# Error Handling
-			if ($message->error) $this->error($message->error);
+			if ($block->error()) $this->error($block->error());
 			else{
-				$response->message = $message;
-				$response->success = 1;
+				$response = new \APIResponse();
+				$response->AddElement('block',$block);
+				$response->print();
 			}
-
-			api_log('content',$_REQUEST,$response);
-			# Send Response
-			print $this->formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
 		}
-		###################################################
-		### Purge Cache of Specified Message			###
-		###################################################
-		public function purgeMessage() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.message.xsl';
-
+		###################################################
+		### Purge Cache of Specified Block			###
+		###################################################
+		public function purgeBlock() {
 			# Initiate Product Object
-			$message = new Message();
+			$block = new Block();
 
-			# Get Message
-			if (! $message->get($_REQUEST['target'])) {
-				$this->app_error($message->error,__FILE__,__LINE__);
-				$this->error("Application error");
-			}
-			if (! $message->id)
-			$this->error("Unable to find matching message");
+			# Get Block
+			if (! $block->get($_REQUEST['target'])) $this->error($block->error());
 
-			# Purge Cache for message
-			$message->purge_cache($message->id);
+			if (! $block->exists())
+			$this->error("Unable to find matching block");
+
+			# Purge Cache for block
+			$block->purge_cache($block->id);
 
 			# Error Handling
-			if ($message->error) $this->error($message->error);
+			if ($block->error()) $this->error($block->error());
 			else{
-				$this->response->message = "Success";
-				$this->response->success = 1;
-			}
-
-			api_log('content',$_REQUEST,$this->response);
-			# Send Response
-			print $this->formatOutput($this->response); #,array("stylesheet" => $_REQUEST["stylesheet"])
-		}
-
-		###################################################
-		### Get Metadata for current view				###
-		###################################################
-		public function getMetadata() {
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
-			$response = new \HTTP\Response();
-
-			# Initiate Metadata Object
-			$_metadata = new \Site\Page\Metadata();
-
-			# Find Matching Views
-			$metadata = $_metadata->get(
-				$_REQUEST['module'],
-				$_REQUEST['view'],
-				$_REQUEST['index']
-			);
-
-			# Error Handling
-			if ($_metadata->error) $this->error($_metadata->error);
-			else{
-				$response->metadata = $metadata;
-				$response->success = 1;
-			}
-
-			# Send Response
-			api_log('content',$_REQUEST,$response);
-			print $this->formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
-		}
-		###################################################
-		### Get Metadata for current view				###
-		###################################################
-		public function findMetadata() {
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
-			$response = new \HTTP\Response();
-
-			# Initiate Metadata Object
-			$metadataList = new \Site\Page\MetadataList();
-
-			# Find Matching Views
-			$metadata = $metadataList->find(
-				array (
-					'id'		=> $_REQUEST['id'],
-					'module'	=> $_REQUEST['module'],
-					'view'		=> $_REQUEST['view'],
-					'index'		=> $_REQUEST['index'],
-				)
-			);
-
-			# Error Handling
-			if ($metadataList->error) $this->error($metadataList->error);
-			else{
-				$response->metadata = $metadata;
-				$response->success = 1;
-			}
-
-			# Send Response
-			api_log('content',$_REQUEST,$response);
-			print $this->formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
-		}
-		###################################################
-		### Add Page Metadata							###
-		###################################################
-		public function addMetadata() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
-			if (! $GLOBALS['_SESSION_']->customer->can('edit page metadata'));
-
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.metadata.xsl';
-			$response = new \HTTP\Response();
-
-			# Initiate Metadata Object
-			$page = new \Site\Page();
-
-			# Find Matching Threads
-			$page->setMetadata($_REQUEST['key'], $_REQUEST['value']);
-
-			# Error Handling
-			if ($page->error) $this->error($page->error);
-			else{
-				$response->success = 1;
-			}
-
-			# Send Response
-			api_log('content',$_REQUEST,$response);
-			print $this->formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
-		}
-		###################################################
-		### Update Page Metadata						###
-		###################################################
-		public function updateMetadata() {
-			return $this->addMetadata();
-		}
-
-		###################################################
-		### Get Details regarding Specified Product		###
-		###################################################
-		public function findNavigationItems() {
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
-			$response = new \HTTP\Response();
-
-			# Initiate Product Object
-			$menuList = new \Navigation\MenuList();
-
-			# Find Matching Threads
-			$items = $menuList->find(
-				array (
-					'id'			=> $_REQUEST['id'],
-					'parent_id'		=> $_REQUEST['parent_id'],
-				)
-			);
-
-			# Error Handling
-			if ($menuList->error) $this->error($menuList->error);
-			else{
-				$response->item = $items;
-				$response->success = 1;
-			}
-
-			# Send Response
-			api_log('content',$_REQUEST,$response);
-			print $this->formatOutput($response); #,array("stylesheet" => $_REQUEST["stylesheet"])
-		}
-
-		protected function confirm_customer() {
-			if (! $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
-				$this->error = "You do not have permissions for this task.";
-				return 0;
+				$response = new \APIResponse();
+				$response->print();
 			}
 		}
 
@@ -352,84 +167,125 @@
 			return array(
 				'ping'			=> array(),
 				'parse'			=> array(
-					'string'	=> array(),
+					'description'	=> 'Parse a content block',
+					'parameters'	=> array(
+						'string'	=> array(
+							'required' => true,
+							'validation_method' => 'Content::Block::safeString()'
+						)
+					)
 				),
-				'findMessages'	=> array(
-					'name'		=> array(),
-					'options'	=> array(),
+				'findBlocks'	=> array(
+					'description'	=> 'Find matching content blocks',
+					'parameters'	=> array(
+						'name'		=> array(),
+						'options'	=> array(),
+					),
 				),
-				'searchMessages'	=> array(
-					'string'		=> array(),
+				'searchBlocks'	=> array(
+					'description'	=> 'Search for content blocks',
+					'parameters'	=> array(
+						'string'		=> array(
+							'required' => true,
+							'validation_method' => 'Content::Block::safeString()'
+						),
+					)
 				),
-				'getMessage'	=> array(
-					'target'	=> array('required' => true),
+				'getBlock'	=> array(
+					'description'	=> 'Get details regarding specified content block',
+					'parameters'	=> array(
+						'target'	=> array(
+							'required' => true,
+							'validation_method' => 'Content::Messsage::validCode()'
+						),
+						'code'	=> array(
+							'required' => true,
+							'validation_method' => 'Content::Block::validCode()'
+						),
+					),
 				),
-				'addMessage'	=> array(
-					'target'	=> array('required' => true),
-					'name'		=> array(),
-					'title'		=> array(),
-					'content'	=> array('required' => true,'type' => 'textarea'),
-					'custom_1'	=> array(),
-					'custom_2'	=> array(),
-					'custom_3'	=> array(),
+				'addBlock'	=> array(
+					'description'	=> 'Add a new block',
+					'token_required'	=> true,
+					'privilege_required'	=> 'edit content blocks',
+					'parameters'	=> array(
+						'target'	=> array(
+							'required' => true,
+							'validation_method' => 'Content::Block::validTarget()',
+						),
+						'name'		=> array(
+							'required' => true,
+							'validation_method' => 'Content::Block::validName()',
+						),
+						'title'		=> array(
+							'required' => true,
+							'validation_method' => 'Content::Block::validName()',
+						),
+						'content'	=> array(
+							'required' => true,
+							'type' => 'textarea',
+							'validation_method' => 'Content::Block::validContent()',
+						),
+						'custom_1'	=> array(
+							'validation_method' => 'Content::Block::validName()',
+						),
+						'custom_2'	=> array(
+							'validation_method' => 'Content::Block::validName()',
+						),
+						'custom_3'	=> array(
+							'validation_method' => 'Content::Block::validName()',
+						),
+					),
 				),
-				'updateMessage'	=> array(
-					'id'		=> array(),
-					'target'	=> array(),
-					'name'		=> array(),
-					'title'		=> array(),
-					'content'	=> array('type' => 'textarea'),
-					'custom_1'	=> array(),
-					'custom_2'	=> array(),
-					'custom_3'	=> array(),
+				'updateBlock'	=> array(
+					'description'	=> 'Update a block',
+					'token_required'	=> true,
+					'privilege_required'	=> 'edit content blocks',
+					'parameters'	=> array(
+						'id'		=> array(
+							'requirement_group' => 0,
+							'content-type'	=> 'int',
+							'hidden'	=> true,
+						),
+						'target'	=> array(
+							'requirement_group' => 1,
+							'validation_method' => 'Content::Block::validTarget()',
+						),
+						'name'		=> array(
+							'validation_method' => 'Content::Block::validName()',
+						),
+						'title'		=> array(
+							'validation_method' => 'Content::Block::validName()',
+						),
+						'content'	=> array(
+							'type' => 'textarea',
+							'validation_method' => 'Content::Block::validContent()',
+						),
+						'custom_1'	=> array(
+							'validation_method' => 'Content::Block::validName()',
+						),
+						'custom_2'	=> array(
+							'validation_method' => 'Content::Block::validName()',
+						),
+						'custom_3'	=> array(
+							'validation_method' => 'Content::Block::validName()',
+						),
+					),
 				),
-				'purgeMessage'	=> array(
-					'target'	=> array(),
-				),
-				'getMetadata'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
-				),
-				'findMetadata'	=> array(
-					'id'	=> array('required' => true),
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
-				),
-				'addMetadata'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
-					'format'	=> array(),
-					'content'	=> array(),
-				),
-				'updateMetadata'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
-					'format'	=> array(),
-					'content'	=> array(),
-				),
-				'setPageMetadata'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'key'		=> array(),
-					'value'		=> array(),
-				),
-				'findNavigationMenus'	=> array(
-					'id'		=> array(),
-					'parent_id'	=> array()
-				),
-				'setConfiguration'	=> array(
-					'key'		=> array('required' => true),
-					'value'		=> array('required' => true),
-				),
-				'getConfiguration'	=> array(
-					'key'		=> array('required' => true),
-				),
-				'deleteConfiguration'	=> array(
-					'key'		=> array('required' => true),
+				'purgeBlock'	=> array(
+					'description'	=> 'Purge the cache for a block',
+					'token_required'	=> true,
+					'privilege_required'	=> 'edit content blocks',
+					'parameters'	=> array(
+						'id'		=> array(
+							'required' => true,
+							'content-type'	=> 'int',
+						),
+						'target'	=> array(
+							'required' => true,
+							'validation_method' => 'Content::Block::validTarget()',
+						),
+					),
 				),
 			);
 		}

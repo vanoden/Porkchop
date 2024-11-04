@@ -15,8 +15,6 @@
 		### Add a Country								###
 		###################################################
 		public function addCountry() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 			$country = new \Geography\Country();
 	
 			$parameters = array();
@@ -34,8 +32,6 @@
 		### Update a Country							###
 		###################################################
 		public function updateCountry() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 			$country = new \Geography\Country();
 			$country->get($_REQUEST['code']);
 			if ($country->error()) $this->error("Error finding country: ".$country->error(),'error',__FILE__,__LINE__);
@@ -64,8 +60,11 @@
 				$country = new \Geography\Country($_REQUEST['id']);
 			}
 			else {
-				$this->error("Not enough parameters");
+				$this->incompleteRequest("Not enough parameters");
 			}
+
+			if (! $country->exists()) $this->notFound();
+
 			$response = new \APIResponse();
 			$response->success(true);
 			$response->AddElement('country',$country);
@@ -77,7 +76,7 @@
 		###################################################
 		public function findCountries() {
 			$countryList = new \Geography\CountryList();
-			
+
 			$parameters = array();
 			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 			
@@ -94,8 +93,6 @@
 		### Add a Province or State						###
 		###################################################
 		public function addProvince() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 			$country = new \Geography\Country($_REQUEST['country_id']);
 			if (! $country->id) $this->error("Country not found");
 	
@@ -153,9 +150,11 @@
 				if (! $province->id) $this->error("Province not found");
 			}
 			else {
-				$this->error("Not enough parameters");
+				$this->incompleteRequest("Not enough parameters");
 			}
 	
+			if (! $province->exists()) $this->notFound();
+
 			$response = new \APIResponse();
 			$response->success(true);
 			$response->AddElement('province',$province);
@@ -194,31 +193,174 @@
 			return array(
 				'ping'	=> array(),
 				'addCountry'	=> array(
-					'name'		=> array('required' => true),
-					'abbreviation'	=> array(),
+					'description'	=> 'Add a country',
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage geographical data',
+					'return_element'	=> 'country',
+					'return_type'	=> 'Geography::Country',
+					'parameters'	=> array(
+						'name'			=> array(
+							'description'	=> 'Name of country',
+							'validation_method'	=> 'Geography::Country::validName()',
+							'required' => true
+						),
+						'abbreviation'	=> array(
+							'description'	=> 'Abbreviation of country',
+							'validation_method'	=> 'Geography::Country::validCode()',
+						),
+					),
 				),
 				'updateCountry'	=> array(
+					'description'	=> 'Update a country',
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage geographical data',
+					'return_element'	=> 'country',
+					'return_type'	=> 'Geography::Country',
+					'parameters'	=> array(
+						'code'			=> array(
+							'description'	=> 'Country code',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'required' => true
+						),
+						'name'			=> array(
+							'description'	=> 'Name of country',
+							'validation_method'	=> 'Geography::Country::validName()',
+						),
+						'abbreviation'	=> array(
+							'description'	=> 'Abbreviation of country',
+							'validation_method'	=> 'Geography::Country::validCode()',
+						),
+					),
 				),
 				'getCountry'	=> array(
-					'name'	=> array('required' => true),
+					'description'	=> 'Get details regarding specified country',
+					'return_element'	=> 'country',
+					'return_type'	=> 'Geography::Country',
+					'parameters'	=> array(
+						'id'	=> array(
+							'description'	=> 'Country ID',
+							'requirement_group'	=> 0,
+							'validation_method'	=> 'Geography::Country::validCode()',
+						),
+						'name'	=> array(
+							'description'	=> 'Country Name',
+							'requirement_group'	=> 1,
+							'validation_method'	=> 'Geography::Country::validName()',
+						),
+						'abbreviation' => array(
+							'description'	=> 'Country Abbreviation',
+							'requirement_group'	=> 2,
+							'validation_method'	=> 'Geography::Country::validCode()',
+						),
+					)
 				),
 				'findCountries'	=> array(
+					'description'	=> 'Find countries matching specified criteria',
+					'return_element'	=> 'country',
+					'return_type'	=> 'Geography::Country',
+					'parameters'	=> array(
+						'name'	=> array(
+							'description'	=> 'Country Name',
+							'validation_method'	=> 'Geography::Country::validName()',
+							'allow_wildcards'	=> true,
+						),
+						'abbreviation'	=> array(
+							'description'	=> 'Country Abbreviation',
+							'validation_method'	=> 'Geography::Country::validCode()',
+						)
+					),
 				),
 				'addProvince'	=> array(
-					'country_id'	=> array('required' => true),
-					'name'			=> array('required' => true),
-					'abbreviation'	=> array('required' => true),
+					'description'	=> 'Add a province or state',
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage geographical data',
+					'return_element'	=> 'province',
+					'return_type'	=> 'Geography::Province',
+					'parameters'	=> array(
+						'country_id'	=> array(
+							'description'	=> 'Country ID',
+							'validation_method'	=> 'Geography::Country::validCode()',
+							'required' => true
+						),
+						'name'			=> array(
+							'description'	=> 'Name of province',
+							'validation_method'	=> 'Geography::Province::validName()',
+							'required' => true
+						),
+						'abbreviation'	=> array(
+							'description'	=> 'Abbreviation of province',
+							'validation_method'	=> 'Geography::Province::validCode()',
+						),
+					),
 				),
 				'updateProvince'	=> array(
+					'description'	=> 'Update a province or state',
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage geographical data',
+					'return_element'	=> 'province',
+					'return_type'	=> 'Geography::Province',
+					'parameters'	=> array(
+						'code'			=> array(
+							'description'	=> 'Province code',
+							'validation_method'	=> 'Geography::Province::validCode()',
+							'required' => true
+						),
+						'name'			=> array(
+							'description'	=> 'Name of province',
+							'validation_method'	=> 'Geography::Province::validName()',
+						),
+						'abbreviation'	=> array(
+							'description'	=> 'Abbreviation of province',
+							'validation_method'	=> 'Geography::Province::validCode()',
+						),
+					),
 				),
 				'getProvince'		=> array(
-					'country_id'	=> array('required' => true),
-					'name'			=> array('required' => true)
+					'description'	=> 'Get details regarding specified province',
+					'return_element'	=> 'province',
+					'return_type'	=> 'Geography::Province',
+					'parameters'	=> array(
+						'id'	=> array(
+							'description'	=> 'Province ID',
+							'requirement_group'	=> 0,
+							'validation_method'	=> 'Geography::Province::validCode()',
+						),
+						'name'	=> array(
+							'description'	=> 'Province Name',
+							'requirement_group'	=> 1,
+							'validation_method'	=> 'Geography::Province::validName()',
+						),
+						'abbreviation' => array(
+							'description'	=> 'Province Abbreviation',
+							'requirement_group'	=> 2,
+							'validation_method'	=> 'Geography::Province::validCode()',
+						),
+					)
 				),
 				'findProvinces'		=> array(
-					'country_id'	=> array(),
-					'country_name'	=> array(),
-					'name'			=> array(),
+					'description'	=> 'Find provinces or states matching specified criteria',
+					'return_element'	=> 'province',
+					'return_type'	=> 'Geography::Province',
+					'parameters'	=> array(
+						'name'	=> array(
+							'description'	=> 'Province Name',
+							'validation_method'	=> 'Geography::Province::validName()',
+							'allow_wildcards'	=> true,
+						),
+						'abbreviation'	=> array(
+							'description'	=> 'Province Abbreviation',
+							'validation_method'	=> 'Geography::Province::validCode()',
+						),
+						'country_id'	=> array(
+							'description'	=> 'Country ID',
+							'validation_method'	=> 'Geography::Country::validCode()',
+						),
+						'country_name'	=> array(
+							'description'	=> 'Country Name',
+							'validation_method'	=> 'Geography::Country::validName()',
+							'allow_wildcards'	=> true,
+						),
+					),
 				),
 			);
 		}

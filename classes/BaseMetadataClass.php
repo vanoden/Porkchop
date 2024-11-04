@@ -321,11 +321,16 @@ class BaseMetadataClass extends \BaseClass {
      * @param string $string The key to validate
      * @return bool True if valid, false otherwise
      */
-    public function validKey($string) {
+    public function validKey($string): bool {
         if (preg_match('/\.\./',$string)) return false;
         elseif (preg_match('/^\w[\w\-\.\_]*$/',$string)) return true;
         else return false;
     }
+
+	public function validFormat($string): bool {
+		if (preg_match('/^(application|text|image|audio|video|multipart|message|model|font|example|chemical|image|audio|video)\/([\w\-\.\_]+)$',$string)) return true;
+		else return false;
+	}
 
     /**
      * Get the value of a specific key for a given ID

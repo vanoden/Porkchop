@@ -16,10 +16,6 @@
 		### Query Domain List							###
 		###################################################
 		public function findDomains() {
-			# Default StyleSheet
-			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'network.domain.xsl';
-			$response = new \HTTP\Response();
-	
 			# Initiate Domain List
 			$domainList = new \Network\DomainList();
 	
@@ -31,73 +27,50 @@
 			# Error Handling
 			if ($domainList->error()) $this->error($domainList->error());
 			else{
-				$response->domain = $domains;
-				$response->success = 1;
+				$response = new \APIResponse();
+				$response->AddElement('domain',$domains);
+				$response->print();
 			}
-	
-			api_log('network',$_REQUEST,$response);
-	
-			# Send Response
-			print $this->formatOutput($response);
 		}
 		###################################################
 		### Get Details regarding Specified Domain		###
 		###################################################
 		public function getDomain() {
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'network.domain.xsl';
-			$response = new \HTTP\Response();
-	
 			# Initiate Domain Object
 			$domain = new \Network\Domain();
 			if (! isset($_REQUEST['name'])) $this->error("name required");
 	
-			$domain->get($_REQUEST['name']);
-	
-			# Error Handling
-			if ($domain->error()) $this->error($domain->error());
-			elseif ($domain->id) {
-				$response->domain = $domain;
-				$response->success = 1;
-			}
-			else {
-				$response->success = 0;
-				$response->error = "Domain not found";
-			}
-	
-			api_log('network',$_REQUEST,$response);
-	
-			# Send Response
-			print $this->formatOutput($response);
+			if ($domain->get($_REQUEST['name'])) {
+				$response = new \APIResponse();
+				$response->AddElement('domain',$domain);
+				$response->print();
+			}	
+			elseif ($domain->error()) $this->error($domain->error());
+			else $this->notFound("Domain not found");
 		}
+
 		###################################################
 		### Create Domain Record						###
 		###################################################
 		public function addDomain() {
 			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'network.domain.xsl';
-			if (! $_REQUEST['name']) $this->error("name required");
+			if (! $_REQUEST['name']) $this->incompleteRequest("name required");
 	
 			$domain = new \Network\Domain();
 			$domain->get($_REQUEST['name']);
-			if ($domain->id) $this->error("Domain already exists");
+			if ($domain->id) $this->invalidRequest("Domain already exists");
 			$domain->add(array('name' => $_REQUEST['name']));
-			if ($domain->error) $this->error("Error adding domain: ".$domain->error());
+			if ($domain->error()) $this->error("Error adding domain: ".$domain->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->domain = $domain;
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->AddElement('domain',$domain);
+			$response->print();
 		}
 	
 		###################################################
 		### Query Host List								###
 		###################################################
 		public function findHosts() {
-			# Default StyleSheet
-			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'network.host.xsl';
-			$response = new \HTTP\Response();
-	
 			# Initiate Host List
 			$hostList = new \Network\HostList();
 	
@@ -120,23 +93,15 @@
 			# Error Handling
 			if ($hostList->error()) $this->error($hostList->error());
 			else{
-				$response->host = $hosts;
-				$response->success = 1;
+				$response = new \APIResponse();
+				$response->AddElement('host',$hosts);
+				$response->print();
 			}
-	
-			api_log('network',$_REQUEST,$response);
-	
-			# Send Response
-			print $this->formatOutput($response);
 		}
 		###################################################
 		### Get Details regarding Specified Host		###
 		###################################################
 		public function getHost() {
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'network.host.xsl';
-			$response = new \HTTP\Response();
-	
 			# Initiate Host Object
 			$host = new \Network\Host();
 	
@@ -147,8 +112,11 @@
 			if (! isset($_REQUEST['domain_name'])) $this->error('domain name or fully qualified host name required');
 			if (! isset($_REQUEST['name'])) $this->error('name required');
 			$domain = new \Network\Domain();
-			$domain->get($_REQUEST['domain_name']);
-			if (! $domain->id) $this->error('Domain not found');
+			if ($domain->get($_REQUEST['domain_name'])) {
+				// Ok
+			}
+			elseif ($domain->error()) $this->error($domain->error());
+			else $this->error('Domain not found');
 	
 			# Get Host
 			$host->get($domain->id,$_REQUEST['name']);
@@ -156,18 +124,11 @@
 			# Error Handling
 			if ($host->error()) $this->error($host->error());
 			elseif ($host->id) {
-				$response->host = $host;
-				$response->success = 1;
+				$response = new \APIResponse();
+				$response->AddElement('host',$host);
+				$response->print();
 			}
-			else {
-				$response->success = 0;
-				$response->error = "Host not found";
-			}
-	
-			api_log('network',$_REQUEST,$response);
-	
-			# Send Response
-			print $this->formatOutput($response);
+			else $this->notFound("Host not found");
 		}
 		###################################################
 		### Create Host Record							###
@@ -176,6 +137,7 @@
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'network.host.xsl';
 	
+			$host = new \Network\Host();
 			if (preg_match('/^([\w\-]+)\.(.*)$/',$_REQUEST['name'],$matches)) {
 				$_REQUEST['name'] = $matches[1];
 				$_REQUEST['domain_name'] = $matches[2];
@@ -198,20 +160,15 @@
 			);
 			if ($host->error()) $this->error("Error adding host: ".$host->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->host = $host;
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->AddElement('host',$host);
+			$response->print();
 		}
 	
 		###################################################
 		### Query Adapter List							###
 		###################################################
 		public function findAdapters() {
-			# Default StyleSheet
-			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'network.adapter.xsl';
-			$response = new \HTTP\Response();
-	
 			# Initiate Adapter List
 			$adapterList = new \Network\AdapterList();
 	
@@ -248,14 +205,10 @@
 			# Error Handling
 			if ($adapterList->error()) $this->error($adapterList->error());
 			else{
-				$response->adapter = $adapters;
-				$response->success = 1;
+				$response = new \APIResponse();
+				$response->AddElement('adapter',$adapters);
+				$response->print();
 			}
-	
-			api_log('network',$_REQUEST,$response);
-	
-			# Send Response
-			print $this->formatOutput($response);
 		}
 		###################################################
 		### Get Details regarding Specified Adapter	###

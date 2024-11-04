@@ -480,15 +480,13 @@
 			$response->print();
 		}
         
-        public function addSiteMessageMetaData() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
+        public function addSiteMessageMetaData() {=
 	        $siteMessageMetaData = new \Site\SiteMessageMetaData();
 	        $response = new \HTTP\Response();
             $success = $siteMessageMetaData->add(
                  array(
                   'item_id' => $_REQUEST['item_id'],
-                  'label' => $_REQUEST['label'],
+                  'label' => $_REQUEST['key'],
                   'value' => $_REQUEST['value']
                  )
              );
@@ -500,8 +498,6 @@
 	    }
 	            
         public function editSiteMessageMetaData() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
 	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->find(array('item_id' => $_REQUEST['item_id'], 'label' => $_REQUEST['label']));
 	        $response = new \HTTP\Response();
@@ -510,7 +506,7 @@
                 $success = $siteMessageMetaData->update(
                      array(
                       'item_id' => $_REQUEST['item_id'],
-                      'label' => $_REQUEST['label'],
+                      'label' => $_REQUEST['key'],
                       'value' => $_REQUEST['value']
                      )
                 );
@@ -523,8 +519,6 @@
         }
         
         public function removeSiteMessageMetaData() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
 	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
 	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->find(array('item_id' => $_REQUEST['item_id'], 'label' => $_REQUEST['label']));
 	        $response = new \HTTP\Response();
@@ -943,137 +937,396 @@
 			return array(
 				'ping'			=> array(),
 				'findPages'	=> array(
-					'name'		=> array(),
-					'module'	=> array(),
-					'options'	=> array(),
+					'description'	=> 'Find site pages matching criteria',
+					'parameters'	=> array(
+						'name'		=> array(
+							'description'	=> 'Name of the page',
+							'validation_method'	=> 'Site::Page::validName()',
+						),
+						'module'	=> array(
+							'description'	=> 'Module of the page',
+							'validation_method'	=> 'Site::Module::validCode()',
+						),
+						'searchString'	=> array(
+							'description'	=> 'Search string for content matching',
+							'validation_method'	=> 'Site::Page::validSearchString()',
+						),
+					)
 				),
 				'getPage'	=> array(
-					'module'	=> array(),
-					'view'		=> array(),
-					'index'		=> array(),
-					'target'	=> array(),
+					'description'	=> 'Get specified site page',
+					'parameters'	=> array(
+						'module'	=> array(
+							'description'	=> 'Module of the page',
+							'required'	=> true,
+							'validation_method'	=> 'Site::Module::validCode()',
+						),
+						'view'		=> array(
+							'description'	=> 'View of the page',
+							'required'	=> true,
+							'validation_method'	=> 'Site::Page::validView()',
+						),
+						'index'		=> array(
+							'description'	=> 'Index of the page',
+							'validation_method'	=> 'Site::Page::validIndex()',
+						),
+					)
 				),
 				'addPage'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
+					'description'	=> 'Add a new site page',
+					'token_required'	=> true,
+					'privilege_required'	=> 'edit site pages',
+					'parameters'	=> array(
+						'module'	=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Module::validCode()',
+						),
+						'view'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Page::validView()',
+						),
+						'index'		=> array(
+							'validation_method'	=> 'Site::Page::validIndex()',
+						),
+					)
 				),
 				'deletePage'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array('required' => true),
-				),
-				'addMessage'	=> array(
-					'name'		=> array('required' => true),
-					'title'		=> array(),
-					'content'	=> array(),
-				),
-				'updateMessage'	=> array(
-					'id'		=> array('required' => true),
-					'name'		=> array(),
-					'title'		=> array(),
-					'content'	=> array(),
-				),
-				'purgeMessage'	=> array(
-					'target'	=> array(),
+					'description'	=> 'Delete a site page',
+					'token_required'	=> true,
+					'privilege_required'	=> 'edit site pages',
+					'parameters'	=> array(
+						'module'	=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Module::validCode()',
+						),
+						'view'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Page::validView()',
+						),
+						'index'		=> array(
+							'validation_method'	=> 'Site::Page::validIndex()',
+						),
+					)
 				),
 				'getPageMetadata'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
+					'description'	=> 'Get metadata for a site page',
+					'parameters'	=> array(
+						'module'	=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Module::validCode()',
+						),
+						'view'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Page::validView()',
+						),
+						'index'		=> array(
+							'validation_method'	=> 'Site::Page::validIndex()',
+						),
+						'key'		=> array(
+							'validation_method'	=> 'Site::Page::validMetadataKey()',
+						),
+					)
 				),
 				'findPageMetadata'	=> array(
-					'id'	=> array('required' => true),
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
+					'description'	=> 'Find metadata for site pages',
+					'parameters'	=> array(
+						'id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'module'	=> array(
+							'validation_method'	=> 'Site::Module::validCode()',
+						),
+						'view'		=> array(
+							'validation_method'	=> 'Site::Page::validView()',
+						),
+						'index'		=> array(
+							'validation_method'	=> 'Site::Page::validIndex()',
+						),
+						'key'		=> array(
+							'validation_method'	=> 'Site::Page::Metadata::validKey()',
+						),
+					),
 				),
 				'setPageMetadata'	=> array(
-					'module'	=> array('required' => true),
-					'view'		=> array('required' => true),
-					'index'		=> array(),
-					'key'		=> array(),
-					'value'		=> array(),
+					'description'	=> 'Set metadata for a site page',
+					'token_required'	=> true,
+					'privilege_required'	=> 'edit site pages',
+					'parameters'	=> array(
+						'module'	=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Module::validCode()',
+						),
+						'view'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Page::validView()',
+						),
+						'index'		=> array(
+							'validation_method'	=> 'Site::Page::validIndex()',
+						),
+						'key'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Page::Metadata::validKey()',
+						),
+						'value'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Page::Metadata::validValue()',
+						),
+					)
 				),
 				'findNavigationMenus'	=> array(
-					'id'		=> array(),
-					'parent_id'	=> array()
+					'description'	=> 'Find navigation menus',
+					'parameters'	=> array(
+						'id'		=> array(
+							'content-type'	=> 'int',
+						),
+						'parent_id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'code'		=> array(
+							'validation_method'	=> 'Site::Navigation::Menu::validCode()',
+						),
+					)
 				),
 				'setConfiguration'	=> array(
-					'key'		=> array('required' => true),
-					'value'		=> array('required' => true),
+					'description'	=> 'Set site configuration',
+					'token_required'	=> true,
+					'privilege_required'	=> 'configure site',
+					'parameters'	=> array(
+						'key'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Configuration::validKey()',
+						),
+						'value'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Configuration::validValue()',
+						),
+					)
 				),
 				'getConfiguration'	=> array(
-					'key'		=> array('required' => true),
+					'description'	=> 'Get site configuration',
+					'privilege_required'	=> 'configure site',
+					'parameters'	=> array(
+						'key'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Configuration::validKey()',
+						),
+					)
 				),
 				'deleteConfiguration'	=> array(
-					'key'		=> array('required' => true),
+					'description'	=> 'Delete site configuration',
+					'token_required'	=> true,
+					'privilege_required'	=> 'configure site',
+					'parameters'	=> array(
+						'key'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Configuration::validKey()',
+						),
+					)
 				),
 				'addSiteMessage'	=> array(
-                    'user_created' => array('required' => true),
-                    'date_created' => array('required' => true),
-                    'important' => array('required' => true),
-                    'content' => array('required' => true),
-                    'parent_id' => array(),                    
+					'description'	=> 'Add in-site message',
+					'token_required'	=> true,
+					'authentication_required'	=> true,
+					'parameters'	=> array(
+						'user_created'	=> array(
+							'content-type'	=> 'int',
+						),
+						'date_created'	=> array(
+							'validation_method'	=> 'Porkchop::validDate()',
+						),
+						'important'		=> array(
+							'content-type'	=> 'bool',
+						),
+						'content'		=> array(
+							'validation_method'	=> 'Site::Message::validContent()',
+						),
+						'parent_id'		=> array(
+							'content-type'	=> 'int',
+						),
+					),
                  ),   
 				'editSiteMessage'	=> array(
-                    'id' => array('required' => true),
-                    'user_created' => array('required' => true),
-                    'date_created' => array('required' => true),
-                    'important' => array('required' => true),
-                    'content' => array('required' => true),
-                    'parent_id' => array(),
+					'description'	=> 'Edit in-site message',
+					'token_required'	=> true,
+					'authentication_required'	=> true,
+					'parameters'	=> array(
+						'id'			=> array(
+							'content-type'	=> 'int',
+						),
+						'user_created'	=> array(
+							'content-type'	=> 'int',
+						),
+						'date_created'	=> array(
+							'validation_method'	=> 'Porkchop::validDate()',
+						),
+						'important'		=> array(
+							'content-type'	=> 'bool',
+						),
+						'content'		=> array(
+							'validation_method'	=> 'Site::Message::validContent()',
+						),
+						'parent_id'		=> array(
+							'content-type'	=> 'int',
+						),
+					),
                  ), 
                  'removeSiteMessage'	=> array(
-                    'id' => array('required' => true)
+					'description'	=> 'Remove in-site message',
+					'token_required'	=> true,
+					'authentication_required'	=> true,
+					'parameters'	=> array(
+						'id'	=> array(
+							'content-type'	=> 'int',
+						),
+					),
 			    ),
 				'findSiteMessages'	=> array(
 					'description'	=> 'Find site messages',
 					'authentication_required'	=> true,
 					'parameters'	=> [
-						'send_user_id'		=> array(),
-						'receive_user_id'	=> array(),
-						'acknowledged'		=> array(),
+						'send_user_id'		=> array(
+							'content-type'	=> 'int',
+						),
+						'receive_user_id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'acknowledged'		=> array(
+							'content-type'	=> 'bool',
+						),
 					]
 				),
 				'getSiteMessage'	=> array(
-					'id'	=> array('required' => true)
+					'description'	=> 'Get site message',
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'id'	=> array(
+							'content-type'	=> 'int',
+						),
+					]
 				),
 				'addSiteMessageDelivery'	=> array(
-                    'message_id' => array('required' => true),
-                    'user_id' => array('required' => true),
-                    'date_viewed' => array('required' => true),
-                    'date_acknowledged' => array('required' => true)
+					'description'	=> 'Add site message delivery',
+					'token_required'	=> true,
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'message_id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'user_id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'date_viewed'	=> array(
+							'validation_method'	=> 'Porkchop::validDate()',
+						),
+						'date_acknowledged'	=> array(
+							'validation_method'	=> 'Porkchop::validDate()',
+						),
+					]
                 ),   
 				'editSiteMessageDelivery'	=> array(
-                    'id' => array('required' => true),
-                    'message_id' => array('required' => true),
-                    'user_id' => array('required' => true),
-                    'date_viewed' => array('required' => true),
-                    'date_acknowledged' => array('required' => true)
+					'description'	=> 'Edit site message delivery',
+					'token_required'	=> true,
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'message_id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'user_id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'date_viewed'	=> array(
+							'validation_method'	=> 'Porkchop::validDate()',
+						),
+						'date_acknowledged'	=> array(
+							'validation_method'	=> 'Porkchop::validDate()',
+						),
+					]
                 ), 
 				'getSiteMessageMetaDataListByItemId'	=> array(
-					'item_id'	=> array('required' => true)
+					'description'	=> 'Get metadata for a site message',
+					'parameters'	=> [
+						'item_id'	=> array(
+							'content-type'	=> 'int',
+						),
+					]
 				),
                 'removeSiteMessageDelivery'	=> array(
-                    'id' => array('required' => true)
+					'description'	=> 'Remove site message delivery',
+					'token_required'	=> true,
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'id'	=> array(
+							'content-type'	=> 'int',
+							'required'	=> true,
+						),
+					]
 			    ),
 				'findSiteMessageDeliveries'	=> array(
-					'user_created'	=> array(),
-					'user_delivered'	=> array(),
-					'viewed'			=> array(),
-					'acknowledged'		=> array(),
+					'description'	=> 'Find site message deliveries',
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'from'	=> array(
+							'content-type'	=> 'int',
+						),
+						'to'	=> array(
+							'content-type'	=> 'int',
+						),
+						'user_id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'message_id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'viewed'	=> array(
+							'content-type'	=> 'bool',
+						),
+						'acknowledged'	=> array(
+							'content-type'	=> 'bool',
+						),
+					]
 				),
-				'mySiteMessageCount' => array(),
+				'mySiteMessageCount' => array(
+					'description'	=> 'Get count of site messages for current user',
+					'authentication_required'	=> true,
+				),
 				'addSiteMessageMetaData'	=> array(
-                    'item_id' => array('required' => true),
-                    'label' => array('required' => true),
-                    'value' => array('required' => true),
+					'description'	=> 'Add metadata to a site message',
+					'token_required'	=> true,
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'item_id'	=> array(
+							'required'	=> true,
+							'content-type'	=> 'int',
+						),
+						'key'	=> array(
+							'required'	=> true,
+							'validation_method'	=> 'Site::Message::Metadata::validKey()',
+						),
+						'value'	=> array(
+							'validation_method'	=> 'Site::Message::Metadata::validValue()',
+						),
+					]
                 ), 
 				'editSiteMessageMetaData'	=> array(
-                    'item_id' => array('required' => true),
-                    'label' => array('required' => true),
-                    'value' => array('required' => true),
+					'description'	=> 'Edit metadata for a site message',
+					'token_required'	=> true,
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'item_id'	=> array(
+							'required'	=> true,
+							'content-type'	=> 'int',
+						),
+						'key'	=> array(
+							'required'	=> true,
+							'validation_method'	=> 'Site::Message::Metadata::validKey()',
+						),
+						'value'	=> array(
+							'validation_method'	=> 'Site::Message::Metadata::validValue()',
+						),
+					]
                 ), 
                 'removeSiteMessageMetaData'	=> array(
                     'item_id' => array('required' => true)
