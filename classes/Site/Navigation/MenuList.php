@@ -1,9 +1,9 @@
 <?php
-	namespace Navigation;
+	namespace Site\Navigation;
 
 	class MenuList Extends \BaseListClass {
 		public function __construct() {
-			$this->_modelName = '\Navigation\Menu';
+			$this->_modelName = '\Site\Navigation\Menu';
 		}
 
 		public function findAdvanced($parameters,$advanced,$controls): array {

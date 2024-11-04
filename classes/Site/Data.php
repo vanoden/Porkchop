@@ -17,8 +17,8 @@
 		protected $mappedClasses = array (
 		    "marketingContent"          => "\Site\Page",
 		    "marketingContentMetaData"  => "\Site\Page\Metadata",
-            "navigation"                => "\Navigation\Menu",
-            "navigationItems"           => "\Navigation\Item",
+            "navigation"                => "\Site\Navigation\Menu",
+            "navigationItems"           => "\Site\Navigation\Item",
             "configurations"            => "\Site\Configuration",
             "termsOfUse"                => "\Site\TermsOfUse",
             "termsOfUseVersions"        => "\Site\TermsOfUseVersion",

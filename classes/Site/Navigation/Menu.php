@@ -1,6 +1,6 @@
 <?php
 
-    namespace Navigation;
+    namespace Site\Navigation;
 
     class Menu Extends \BaseModel {
 
@@ -18,15 +18,29 @@
 		 * @param $code, code of navigation menu
 		 */
 		public function getByCode($code) {
+			$this->clearError();
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build the Query
 			$get_object_query = "
 				SELECT	id
 				FROM	navigation_menus
 				WHERE	code = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($code));
+
+			// Add Parameters
+			if (! $this->validCode($code)) {
+				$this->error("Invalid Code");
+				return false;
+			}
+			$this->AddParam($code);
+
+			// Execute the Query
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -137,7 +151,7 @@
 	    public function items($parent_id = 0) {
 		    if (! preg_match("/^\d+$/", $parent_id )) $parent_id = 0;
 
-		    $itemlist = new \Navigation\ItemList();
+		    $itemlist = new \Site\Navigation\ItemList();
 		    $items = $itemlist->find(array('menu_id' => $this->id, 'parent_id' => $parent_id));
 		    if ($itemlist->error()) {
 			    $this->error($itemlist->error());

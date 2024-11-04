@@ -301,12 +301,8 @@
 		### Get List of Site Navigation Menus			###
 		###################################################
 		public function findNavigationMenus() {
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
-			$response = new \HTTP\Response();
-	
 			# Initiate Product Object
-			$menulist = new \Navigation\MenuList();
+			$menulist = new \Site\Navigation\MenuList();
 	
 			# Find Matching Threads
 			$menus = $menulist->find(
@@ -323,27 +319,196 @@
 			$response->addElement('menu',$menus);
 			$response->print();
 		}
-		
+
 		###################################################
-		### Get Items from a Site Navigation Menu		###
+		### Get Menu									###
 		###################################################
-		public function findNavigationItems() {
-			# Default StyleSheet
-			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'content.navigationitems.xsl';
-			$response = new \HTTP\Response();
-	
-			# Get Menu
-			$menu = new \Navigation\Menu();
-			if (! $menu->get($_REQUEST['code'])) error("Menu not found");
-	
-			# Find Matching Threads
-			$items = $menu->items();
-	
-			# Error Handling
-			if ($menu->error()) $this->error($menu->error());
+		function getNavigationMenu() {
+			$parameters = array();
 
 			$response = new \APIResponse();
-			$response->addElement('item',$items);
+
+			if (!empty($_REQUEST['code'])) {
+				$menu = new \Site\Navigation\Menu();
+				if ($menu->get($_REQUEST['code'])) {
+					$response->AddElement('request',$_REQUEST);
+					$response->AddElement('menu',$menu);
+					$response->success(true);
+				}
+				elseif ($menu->error()) {
+					$this->error($menu->error());
+				}
+				else {
+					$this->error("Menu not found");
+				}
+			}
+			else $this->error("menu code required");
+
+			# Send Response
+			$response->print();
+		}
+
+		###################################################
+		### Add Menu									###
+		###################################################
+		function addNavigationMenu() {
+			$parameters = array();
+
+			$menu = new \Site\Navigation\Menu();
+
+			if (! isset($_REQUEST['code'])) $this->error("code required");
+			if (! $menu->validCode($_REQUEST['code'])) $this->error("Invalid Code");
+			if (! $menu->validTitle($_REQUEST['title'])) $this->error("Invalid Title");
+
+			$parameters['code'] = $_REQUEST['code'];
+			$parameters['title'] = $_REQUEST['title'];
+			$response = new \APIResponse();
+			if ($menu->add($parameters)) {
+				$response->AddElement('menu',$menu);
+				$response->success(true);
+			}
+			else {
+				$this->error($menu->error());
+			}
+
+			# Send Response
+			$response->print();
+		}
+
+		###################################################
+		### Get Menu Items								###
+		###################################################
+		function findNavigationItems() {
+			$parameters = array();
+			$itemlist = new \Site\Navigation\ItemList();
+
+			if (!empty($_REQUEST['menu_code'])) {
+				$menu = new \Site\Navigation\Menu();
+				if ($menu->get($_REQUEST['menu_code'])) {
+					$parameters['menu_id'] = $menu->id;
+					if (isset($_REQUEST['parent_id'])) {
+						$parameters['parent_id'] = $_REQUEST['parent_id'];
+					}
+				}
+				elseif ($menu->error()) {
+					$this->error($menu->error());
+				}
+				else {
+					$this->invalidRequest("Menu '".$_REQUEST['menu_code']."' not found");
+				}
+			}
+			if (!empty($_REQUEST['target'])) {
+				$item = new \Site\Navigation\Item();
+				if ($item->validTarget($_REQUEST['target']))
+					$parameters['target'] = $_REQUEST['target'];
+				else $this->error("Invalid target");
+			}
+
+			$response = new \APIResponse();
+			$items = $itemlist->find($parameters);
+			if ($itemlist->error()) $this->error($itemlist->error());
+			else {
+				$response->AddElement('item',$items);
+				$response->AddElement('count',$itemlist->count());
+				$response->success(true);
+			}
+
+			# Send Response
+			$response->print();
+		}
+
+		###################################################
+		### Add Menu Item								###
+		###################################################
+		function addNavigationItem() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
+			# Default StyleSheet
+			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
+
+			$parameters = array();
+
+			if (! isset($_REQUEST['menu_code'])) $this->error("menu_code required");
+			$menu = new \Site\Navigation\Menu();
+			if (! $menu->get($_REQUEST['menu_code'])) $this->error("Menu not found");
+
+			$parameters['menu_id'] = $menu->id;	
+			$parameters['title'] = $_REQUEST['title'];
+			$parameters['target'] = $_REQUEST['target'];
+			$parameters['alt'] = $_REQUEST['alt'];
+			$parameters['description'] = $_REQUEST['description'];
+			$parameters['view_order'] = $_REQUEST['view_order'];
+
+			$response = new \APIResponse();
+			$item = new \Site\Navigation\Item();
+			if ($item->add($parameters)) {
+				$response->AddElement('item',$item);
+				$response->success(true);
+			}
+			elseif ($item->error()) {
+				$this->error($item->error());
+			}
+
+			# Send Response
+			$response->print();
+		}
+
+		###################################################
+		### Update Menu Item							###
+		###################################################
+		function updateNavigationItem() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
+			# Default StyleSheet
+			if (empty($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'navigation.item.xsl';
+
+			$parameters = array();
+
+			if (!empty($_REQUEST['title']) && !empty($_REQUEST['menu_code'])) {
+				$menu = new \Site\Navigation\Menu();
+				$item = $menu->item($_REQUEST['title']);
+				if ($item->exists()) $_REQUEST['id'] = $item->id;
+				else $this->error("Item not found");
+			}
+			if (! isset($_REQUEST['id'])) $this->error("id required");
+			$item = new \Site\Navigation\Item($_REQUEST['id']);
+			if ($item->error()) $this->error($item->error());
+
+			if (! $item->id) $this->error("Item not found");
+
+			$parameters['title'] = $_REQUEST['title'];
+			$parameters['target'] = $_REQUEST['target'];
+			$parameters['alt'] = $_REQUEST['alt'];
+			$parameters['description'] = $_REQUEST['description'];
+			$parameters['view_order'] = $_REQUEST['view_order'];
+
+			$response = new \APIResponse();
+			if ($item->update($parameters)) {
+				$response->AddElement('item',$item);
+			}
+			elseif ($item->error()) {
+				$this->error($item->error());
+			}
+
+			# Send Response
+			$response->print();
+		}
+
+		###################################################
+		### Dump Menu Data for Javascript				###
+		###################################################
+		function navigationMenuObject() {
+			$response = new \HTTP\Response();
+
+			if (empty($_REQUEST['code'])) $this->error("menu code required");
+
+			$menu = new \Site\Navigation\Menu();
+			if (! $menu->get($_REQUEST['code'])) $this->error("menu not found");
+
+			$response = new \APIResponse();
+			$response->AddElement('item',$menu->cascade());
+
+			# Send Response
 			$response->print();
 		}
 		
@@ -480,7 +645,7 @@
 			$response->print();
 		}
         
-        public function addSiteMessageMetaData() {=
+        public function addSiteMessageMetaData() {
 	        $siteMessageMetaData = new \Site\SiteMessageMetaData();
 	        $response = new \HTTP\Response();
             $success = $siteMessageMetaData->add(
@@ -1087,6 +1252,121 @@
 						),
 					)
 				),
+				'getNavigationMenu'	=> array(
+					'description'	=> 'Get navigation menu',
+					'return_element'	=> 'menu',
+					'return_type'	=> 'Site::Navigation::Menu',
+					'parameters'	=> array(
+						'code'		=> array(
+							'description'	=> 'Code of the menu',
+							'required' => true,
+							'validation_method'	=> 'Site::Navigation::Menu::validCode()',
+						)
+					)
+				),
+				'addNavigationMenu'	=> array(
+					'description'	=> 'Add navigation menu',
+					'token_required'	=> true,
+					'privilege_required'	=> 'edit site navigation',
+					'return_element'	=> 'menu',
+					'return_type'	=> 'Site::Navigation::Menu',
+					'parameters'	=> array(
+						'code'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Navigation::Menu::validCode()',
+						),
+						'title'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Navigation::Menu::validTitle()',
+						),
+						'parent_id'	=> array(
+							'content-type'	=> 'int',
+						),
+						'target'	=> array(
+							'validation_method'	=> 'Site::Navigation::Menu::validTarget()',
+						),
+					)
+				),
+				'findNavigationItems'	=> array(
+					'description'	=> 'Find navigation items',
+					'return_element'	=> 'item',
+					'return_type'	=> 'Site::Navigation::Item',
+					'parameters'	=> array(
+						'id'		=> array(
+							'content-type'	=> 'int',
+						),
+						'menu_code'		=> array(
+							'validation_method'	=> 'Site::Navigation::Item::validMenuCode()',
+						),
+						'parent_id'		=> array(
+							'content-type'	=> 'int',
+						),
+						'target'		=> array(
+							'validation_method'	=> 'Site::Navigation::Item::validTarget()',
+						),
+					)
+				),
+				'addNavigationItem'	=> array(
+					'description'	=> 'Add navigation item',
+					'token_required'	=> true,
+					'privilege_required'	=> 'edit site navigation',
+					'return_element'	=> 'item',
+					'return_type'	=> 'Site::Navigation::Item',
+					'parameters'	=> array(
+						'menu_code'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Navigation::Item::validMenuCode()',
+						),
+						'title'			=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Navigation::Item::validTitle()',
+						),
+						'target'		=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Navigation::Item::validTarget()',
+						),
+						'alt'			=> array(
+							'validation_method'	=> 'Site::Nagiagtion::Item::safeString()',
+						),
+						'description'	=> array(
+							'validation_method'	=> 'Site::Navigation::Item::safeString()',
+						),
+						'view_order'	=> array(
+							'content-type' => 'int'
+						),
+					)
+				),
+				'updateNavigationItem'	=> array(
+					'description'	=> 'Update navigation item',
+					'token_required'	=> true,
+					'privilege_required'	=> 'edit site navigation',
+					'return_element'	=> 'item',
+					'return_type'	=> 'Site::Navigation::Item',
+					'parameters'	=> array(
+						'id'			=> array(
+							'required' => true,
+							'content-type'	=> 'int',
+						),
+						'menu_code'		=> array(
+							'validation_method'	=> 'Site::Navigation::Item::validMenuCode()',
+						),
+						'title'			=> array(
+							'validation_method'	=> 'Site::Navigation::Item::validTitle()',
+						),
+						'target'		=> array(
+							'validation_method'	=> 'Site::Navigation::Item::validTarget()',
+						),
+						'alt'			=> array(
+							'validation_method'	=> 'Site::Navigation::Item::safeString()',
+						),
+						'description'	=> array(
+							'validation_method'	=> 'Site::Navigation::Item::safeString()',
+						),
+						'view_order'	=> array(
+							'content-type' => 'int'
+						),
+					)
+				),
 				'setConfiguration'	=> array(
 					'description'	=> 'Set site configuration',
 					'token_required'	=> true,
@@ -1144,7 +1424,7 @@
 							'content-type'	=> 'int',
 						),
 					),
-                 ),   
+                ),   
 				'editSiteMessage'	=> array(
 					'description'	=> 'Edit in-site message',
 					'token_required'	=> true,
@@ -1169,7 +1449,7 @@
 							'content-type'	=> 'int',
 						),
 					),
-                 ), 
+                ), 
                  'removeSiteMessage'	=> array(
 					'description'	=> 'Remove in-site message',
 					'token_required'	=> true,

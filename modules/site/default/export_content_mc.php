@@ -31,12 +31,12 @@
 
     		// Navigation Selected
 		    if (in_array('Navigation', $_REQUEST['content'])) {
-                $menuList = new \Navigation\MenuList();
+                $menuList = new \Site\Navigation\MenuList();
                 $menus = $menuList->find();
                 if ($menuList->error()) $page->addError($menuList->error());
                 
                 // get sub menu items for JSON data
-                $navigationItemList = new \Navigation\ItemList();
+                $navigationItemList = new \Site\Navigation\ItemList();
                 foreach ($menus as $menu) $navigationItems[] = $navigationItemList->find(array('menu_id'=>$menu->id));
                 $siteData->setNavigationItems(array('menus' => $menus, 'navigationItems' => $navigationItems));
 		    }

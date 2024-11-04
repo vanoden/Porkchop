@@ -1,5 +1,5 @@
 <?php
-	namespace Navigation;
+	namespace Site\Navigation;
 
 	class Item Extends \BaseModel {
 
@@ -31,15 +31,31 @@
 		 * @param $target, target of navigation item
 		 */
 		public function getByTarget( $target ) {
+			$this->clearError();
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_object_query = "
 				SELECT	id
 				FROM	navigation_menu_items
 				WHERE	target = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_object_query,array($target));
+
+			// Add Parameters
+			if ($this->validTarget($target)) {
+				$this->AddParam($target);
+			}
+			else {
+				$this->error("Invalid Target");
+				return false;
+			}
+
+			// Execute Query
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -92,7 +108,12 @@
 		}
 
 		public function getByParentIdViewOrderMenuId($parent_id,$view_order,$menu_id) {
+			$this-> clearError();
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			if (!empty($view_order)) {
 				$get_object_query = "
 					SELECT	id
@@ -101,7 +122,7 @@
 					AND		view_order = ?
 					AND		menu_id = ?
 				";
-				$rs = $GLOBALS['_database']->Execute($get_object_query,array($parent_id,$view_order,$menu_id));
+				$database->AddParams($parent_id,$view_order,$menu_id);
 			} else {
 				$get_object_query = "
 					SELECT	id
@@ -109,11 +130,14 @@
 					WHERE	parent_id = ?
 					AND		menu_id = ?
 				";
-				$rs = $GLOBALS['_database']->Execute($get_object_query,array($parent_id,$menu_id));
+				$database->AddParams($parent_id,$menu_id);
 			}
 
+			// Execute Query
+			$rs = $database->Execute($get_object_query);
+
 			if (! $rs) {
-				$this->error = $GLOBALS['_database']->ErrorMsg();
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			list($id) = $rs->FetchRow();
@@ -273,7 +297,7 @@
 		}
 
 		public function menu() {
-			return new \Navigation\Menu($this->menu_id);
+			return new \Site\Navigation\Menu($this->menu_id);
 		}
 
 		public function hasChildren() {
@@ -297,18 +321,22 @@
 		}
 
 		public function children() {
-			$itemList = new \Navigation\ItemList();
+			$itemList = new \Site\Navigation\ItemList();
 			$items = $itemList->find(array('parent_id' => $this->id));
 			return $items;
 		}
 
-		public function validTitle($string) {
+		public function validTitle($string): bool {
 			return $this->validName($string);
 		}
 
-		public function validTarget($string) {
+		public function validTarget($string): bool {
 			if (preg_match('/\.\./',$string)) return false;
 			if (preg_match('/\<\>/',$string)) return false;
 			return true;
+		}
+
+		public function validMenuCode($string): bool {
+			return $this->validCode($string);
 		}
 	}

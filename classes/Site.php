@@ -106,7 +106,7 @@
 
 		public function populateMenus($menus = array()) {
 			foreach ($menus as $code => $menu) {
-				$nav_menu = new \Navigation\Menu();
+				$nav_menu = new \Site\Navigation\Menu();
 				if ($nav_menu->get($code)) {
 					$this->install_log("Menu $code found");
 				}
@@ -117,7 +117,7 @@
 					$this->install_fail("Error adding menu $code: ".$nav_menu->error());
 				}
 				foreach ($menu["items"] as $item) {
-					$nav_item = new \Navigation\Item();
+					$nav_item = new \Site\Navigation\Item();
 					if ($nav_item->getItem($nav_menu->id,$item["title"])) {
 						$nav_item->update(
 							array(
@@ -145,7 +145,7 @@
 						$this->install_fail("Error adding menu item ".$item["title"].": ".$nav_item->error());
 					}
 					foreach ($item['items'] as $subitem) {
-						$subnav_item = new \Navigation\Item();
+						$subnav_item = new \Site\Navigation\Item();
 						if ($subnav_item->getItem($nav_menu->id,$subitem["title"],$nav_item)) {
 							$subnav_item->update(
 								array(

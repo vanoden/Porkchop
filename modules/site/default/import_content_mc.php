@@ -62,7 +62,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 		if (in_array('Navigation', $_REQUEST['content'])) {
 			if ($jsonData['navigation']) {
 				foreach ($jsonData['navigation'] as $navigation) {
-					$navigationMenu = new \Navigation\Menu();
+					$navigationMenu = new \Site\Navigation\Menu();
 					$navigationMenu->getByCode($navigation['menuItem']['code']);
 
 					// if key exists, update (only if overwrite), else add
@@ -88,7 +88,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 
 					// create/update navigation menu items
 					foreach ($navigation['navigationItems'] as $navigationItem) {
-						$navigationMenuItem = new \Navigation\Item();
+						$navigationMenuItem = new \Site\Navigation\Item();
 						$navigationMenuItem->getByParentIdViewOrderMenuId($navigationItem['parent_id'], $navigationItem['view_order'], $navigationMenu->id);
 						$navigationItemData = array(
 							'menu_id' => $navigationMenu->id,

@@ -7,24 +7,24 @@
             $page->addError("Invalid Token");
         }
         else {
-			$ditem = new \Navigation\Item($_REQUEST['delete']);
+			$ditem = new \Site\Navigation\Item($_REQUEST['delete']);
 			$ditem->delete();
 		}
 	}
 
 	// Form Inputs
 	if ($_REQUEST['parent_id']) {
-		$parent = new \Navigation\Item($_REQUEST['parent_id']);
+		$parent = new \Site\Navigation\Item($_REQUEST['parent_id']);
 		$items = $parent->children();
 		$menu = $parent->menu();
 	}
 	elseif ($_REQUEST['menu_id']) {
-		$menu = new \Navigation\Menu($_REQUEST['menu_id']);
+		$menu = new \Site\Navigation\Menu($_REQUEST['menu_id']);
 		$items = $menu->items();
 	}
 	elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
 		$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
-		$menu = new \Navigation\Menu();
+		$menu = new \Site\Navigation\Menu();
 		$menu->get($code);
 		$items = $menu->items();
 	}
@@ -34,7 +34,7 @@
 	if (isset($parent)) {
 		$page->addBreadcrumb($menu->title,"/_navigation/items/".$menu->code);
 		if ($parent->parent_id) {
-			$grandparent = new \Navigation\Item($parent->parent_id);
+			$grandparent = new \Site\Navigation\Item($parent->parent_id);
 			$page->addBreadcrumb($grandparent->title, "/_navigation/items?parent_id=".$grandparent->id);
 		}
 		$page->addBreadcrumb($parent->title);

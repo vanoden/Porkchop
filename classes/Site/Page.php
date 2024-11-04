@@ -607,7 +607,7 @@
 				    if ($this->getMetadata($parameter["field"])) $buffer = $this->getMetadata($parameter["field"]);
 			    }
 				elseif ($property == "navigation") {
-					$menu = new \Navigation\Menu();
+					$menu = new \Site\Navigation\Menu();
 					if ($menu->get($parameter["name"])) {
 						$buffer .= $menu->asHTML($parameter['name']);
 					}
@@ -659,7 +659,7 @@
 			elseif ($object == "navigation") {
 			    if ($property == "menu") {
 				    if ($parameter['code']) {
-					    $menu = new \Navigation\Menu ();
+					    $menu = new \Site\Navigation\Menu ();
 					    if ($menu->get($parameter['code'])) {
 							if (!empty($parameter['version']) && $parameter['version'] == 'v2') {
 								$buffer .= $menu->asHTMLV2($parameter);

@@ -566,10 +566,60 @@
 			}
 
 			if ($this->version() < 23) {
-				app_log("Upgrading ".$this->module." schema to version 22",'notice',__FILE__,__LINE__);
+				app_log("Upgrading ".$this->module." schema to version 23",'notice',__FILE__,__LINE__);
 
 				// MOVED TO SEARCH SCHEMA
 				$this->setVersion(23);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 24) {
+				app_log("Upgrading schema to version 24",'notice',__FILE__,__LINE__);
+
+				# Start Transaction
+				if (! $GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+                    CREATE TABLE IF NOT EXISTS `navigation_menus` (
+                      `id` int(5) NOT NULL AUTO_INCREMENT,
+                      `code` varchar(100) NOT NULL,
+                      `title` varchar(100) NOT NULL DEFAULT '',
+                      PRIMARY KEY (`id`),
+                      UNIQUE KEY `uk_code` (`code`)
+                    )
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->SQLError("create navigation_menus table: ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$create_table_query = "
+                    CREATE TABLE IF NOT EXISTS `navigation_menu_items` (
+                      `id` int(8) NOT NULL AUTO_INCREMENT,
+                      `menu_id` int(11) NOT NULL DEFAULT '0',
+                      `title` varchar(100) NOT NULL DEFAULT '',
+                      `target` varchar(200) NOT NULL DEFAULT '',
+                      `view_order` int(3) DEFAULT NULL,
+                      `alt` varchar(255),
+					  `description` text,
+                      `parent_id` int(5) NOT NULL DEFAULT '0',
+                      `external` int(1) NOT NULL DEFAULT '0',
+                      `ssl` int(11) NOT NULL DEFAULT '0',
+					  `required_role_id` int(11) DEFAULT NULL,
+                      PRIMARY KEY (`id`),
+                      KEY `parent_id` (`parent_id`),
+                      KEY `view_order` (`view_order`),
+                      FOREIGN KEY `fk_menu_id` (`menu_id`) REFERENCES `navigation_menus` (`id`)
+                    )
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->SQLError("create navigation_menu_items table: ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(24);
 				$GLOBALS['_database']->CommitTrans();
 			}
 

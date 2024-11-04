@@ -228,7 +228,7 @@
 	}
 
 	print "Update Navigation Schema\n";
-	$schema = new \Navigation\Schema();
+	$schema = new \Site\Navigation\Schema();
 	if (! $schema->upgrade()) {
 		print "Navigation schema upgrade failed: ".$schema->error()."\n";
 	}

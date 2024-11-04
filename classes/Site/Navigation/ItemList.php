@@ -1,9 +1,9 @@
 <?php
-	namespace Navigation;
+	namespace Site\Navigation;
 
 	class ItemList Extends \BaseListClass {
 		public function __construct() {
-			$this->_modelName = '\Navigation\Item';
+			$this->_modelName = '\Site\Navigation\Item';
 		}
 
 		public function findAdvanced($parameters,$advanced,$controls): array {
