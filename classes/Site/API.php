@@ -1120,6 +1120,7 @@
 				),
 				'getPage'	=> array(
 					'description'	=> 'Get specified site page',
+					'url'			=> '/api/site/getPage',
 					'parameters'	=> array(
 						'module'	=> array(
 							'description'	=> 'Module of the page',
@@ -1254,6 +1255,7 @@
 				),
 				'getNavigationMenu'	=> array(
 					'description'	=> 'Get navigation menu',
+					'url'	=> '/api/site/getNavigationMenu',
 					'return_element'	=> 'menu',
 					'return_type'	=> 'Site::Navigation::Menu',
 					'parameters'	=> array(
@@ -1635,7 +1637,10 @@
 				'cancelTermsOfUseVersion' => array(
 					'version_id'	=> array('required')
 				),
-				'timestamp' => array(),
+				'timestamp' => array(
+					'description'	=> 'Get current timestamp',
+					'url'	=> '/api/site/timestamp',
+				),
                 'search'	=> array(
                     'string' => array('required' => true)
 			    ),

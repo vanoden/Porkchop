@@ -304,7 +304,7 @@
 
 			// Method Requirements
 			$method = $api->_methods()[$function_name];
-			if (isset($method['privilege_required'])) {
+			if (isset($method['privilege_required']) && !(preg_match('/^\[\w+\]$/',$method['privilege_required']))) {
 				$this->requirePrivilege($method['privilege_required']);
 			}
 			if (isset($method['authentication_required']) && $method['authentication_required']) {
@@ -537,6 +537,13 @@
 				// Show Method Description if provided
 				if ($method->description) {
 					$form .= $t.$t.'<span class="apiMethodDescription">'.$method->description.'</span>'.$cr;
+				}
+				if ($method->url) {
+					$form .= $t.$t.'
+					<div class="apiMethodSetting">
+						<span class="label apiMethodSetting">URL</span>
+						<span class="value apiMethodSetting">'.$method->url.'</span>
+					</div>'.$cr;
 				}
 
 				// Show Method Return Info if provided
