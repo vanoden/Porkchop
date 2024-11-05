@@ -100,7 +100,7 @@
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
             # Initiate Product Object
-            if ($_REQUEST["login"] and (! $_REQUEST["code"])) $_REQUEST['code'] = $_REQUEST['login'];
+            if ($_REQUEST["login"] && (! $_REQUEST["code"])) $_REQUEST['code'] = $_REQUEST['login'];
             $customer = new \Register\Customer();
             $customer->get($_REQUEST["code"]);
 
@@ -1309,7 +1309,12 @@
 					'return_type' => 'Register::Customer',
 					'parameters'	=> array(
 						'code' 	=> array(
-							'required' => true,
+							'requirement_group' => 1,
+							'prompt' => 'Customer Login',
+							'validation_method' => 'Register::Customer::validLogin()'
+						),
+						'login'	=> array(
+							'requirement_group' => 0,
 							'prompt' => 'Customer Login',
 							'validation_method' => 'Register::Customer::validLogin()'
 						)
