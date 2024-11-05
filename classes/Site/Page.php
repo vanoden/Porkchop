@@ -2,22 +2,21 @@
     namespace Site;
     
     class Page Extends \BaseModel {
-	    public $module = 'content';
-	    public $view = 'index';
-	    public $index = '';
-	    public $style = 'default';
-	    public $auth_required = false;
-	    public $ssl_required;
-		public $method;
-	    public $error;
-	    public $uri;
-	    public $title;
+	    public string $module = 'content';
+	    public string $view = 'index';
+	    public string $index = '';
+	    public string $style = 'default';
+	    public bool $auth_required = false;
+	    public bool $ssl_required;
+		public string $method;
+	    public string $uri;
+	    public string $title;
 	    public $metadata;
-	    public $template;
-	    public $success;
-		public $instructions;
-		public $tou_id;
-		public $sitemap;
+	    public string $template;
+	    public bool $success;
+		public string $instructions;
+		public ?int $tou_id;
+		public string $sitemap;
 		private $_breadcrumbs = array();
 	    private $_errors = array();
 		private $_warnings = array();
@@ -261,7 +260,7 @@
 		    $GLOBALS ['_database']->Execute ( $add_object_query, array ($this->module, $this->view, $this->index ) );
 		    if ($GLOBALS ['_database']->ErrorMsg ()) {
 			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
-				app_log($this->error,'error');
+				app_log($this->error(),'error');
 			    return false;
 		    }
 		    $this->id = $GLOBALS ['_database']->Insert_ID ();
@@ -766,8 +765,8 @@
 				    elseif ($GLOBALS['_REQUEST_']->query_vars) $id = $GLOBALS['_REQUEST_']->query_vars;
 
 				    $product = new \Product\Item( $id );
-				    if ($parameter ["format"] == "thumbnail") {
-					    if ($product->type->group) {
+				    if ($parameter["format"] == "thumbnail") {
+					    if ($product->type()->group) {
 						    $buffer .= "<div id=\"product[" . $parameter ["id"] . "]\" class=\"product_thumbnail\">\n";
 						    $buffer .= "\t<a href=\"/_product/thumbnail/" . $product->id . "\" class=\"product_thumbnail_name\">" . $product->name . "</a>\n";
 						    $buffer .= "\t<div class=\"product_thumbnail_description\">" . $product->description . "</div>\n";
@@ -879,11 +878,11 @@
 			    if ($property == "events") {
 				    $eventlist = new \News\EventList();
 				    if ($eventlist->error()) {
-					    $this->error = "Error fetching events: " . $eventlist->error();
+					    $this->error("Error fetching events: " . $eventlist->error());
 				    } else {
 					    $events = $eventlist->find ( array ('feed_id' => $parameter ['id'] ) );
 					    if ($eventlist->error()) {
-						    $this->error = "Error fetching events: " . $eventlist->error();
+						    $this->error("Error fetching events: " . $eventlist->error());
 					    } else if (count ( $events )) {
 						    foreach ( $events as $event ) {
 								$greenbar = '';
@@ -987,7 +986,7 @@
 		    $metadataList = new \Site\Page\MetadataList();
 			$metaArray = $metadataList->find(array('page_id' => $this->id));
 		    if ($metadataList->error()) {
-				$this->error = $metadataList->error();
+				$this->error($metadataList->error());
 			    return null;
 		    }
 		    return $metaArray;
@@ -1091,7 +1090,7 @@
 
 		// Return the serialized error string
 	    public function errorString($delimiter = "<br>\n") {
-		    if (isset ( $this->error )) array_push ( $this->_errors, $this->error );
+		    if (isset ( $this->error )) array_push ( $this->_errors, $this->error());
 		    $error_string = '';
 		    foreach ( $this->_errors as $error ) {
 			    if (strlen ( $error_string )) $error_string .= $delimiter;
@@ -1115,7 +1114,7 @@
 		// Return the number of errors in the array
 	    public function errorCount() {
 		    if (empty ( $this->_errors )) $this->_errors = array();
-		    if (! empty ( $this->error )) array_push ($this->_errors, $this->error);
+		    if (! empty ( $this->error )) array_push ($this->_errors, $this->error());
 		    return count ( $this->_errors );
 	    }
 

@@ -52,9 +52,15 @@
 			$page = new \Site\Page();
 			if (isset($_REQUEST['module'])) $page->getPage($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index']);
 			elseif (isset($_REQUEST['target'])) $page->getPage('content','index',$_REQUEST['target']);
+			else {
+				print_r($GLOBALS['_REQUEST_']->query_vars);
+				$_REQUEST['module'] = $GLOBALS['_REQUEST_']->query_vars[0];
+				$_REQUEST['view'] = $GLOBALS['_REQUEST_']->query_vars[1];
+				$_REQUEST['index'] = $GLOBALS['_REQUEST_']->query_vars[2];
+			}
 
 			# Error Handling
-			if ($page->error) error($page->error);
+			if ($page->error()) error($page->error());
 			if (!$page->exists()) $this->notFound("Page not found");
 
 			$response = new \APIResponse();
@@ -1120,7 +1126,9 @@
 				),
 				'getPage'	=> array(
 					'description'	=> 'Get specified site page',
-					'url'			=> '/api/site/getPage',
+					'path'			=> '/api/site/getPage/{module}/{view}/{index}',
+					'return_element'	=> 'page',
+					'return_type'	=> 'Site::Page',
 					'parameters'	=> array(
 						'module'	=> array(
 							'description'	=> 'Module of the page',
@@ -1140,6 +1148,9 @@
 				),
 				'addPage'	=> array(
 					'description'	=> 'Add a new site page',
+					'path'	=> '/api/site/addPage',
+					'return_element'	=> 'page',
+					'return_type'	=> 'Site::Page',
 					'token_required'	=> true,
 					'privilege_required'	=> 'edit site pages',
 					'parameters'	=> array(
@@ -1480,6 +1491,9 @@
 				'getSiteMessage'	=> array(
 					'description'	=> 'Get site message',
 					'authentication_required'	=> true,
+					'path'	=> '/api/site/getSiteMessage/{id}',
+					'return_element'	=> 'message',
+					'return_type'	=> 'Site::SiteMessage',
 					'parameters'	=> [
 						'id'	=> array(
 							'content-type'	=> 'int',
@@ -1639,25 +1653,71 @@
 				),
 				'timestamp' => array(
 					'description'	=> 'Get current timestamp',
-					'url'	=> '/api/site/timestamp',
+					'path'	=> '/api/site/timestamp',
+					'return_element'	=> 'timestamp',
+					'return_type'	=> 'int'
 				),
                 'search'	=> array(
                     'string' => array('required' => true)
 			    ),
-			    'getAllSiteCounters' => array(),
+			    'getAllSiteCounters' => array(
+					'description'	=> 'Get all site counters',
+					'authentication_required'	=> true,
+					'path'	=> '/api/site/getAllSiteCounters',
+					'return_element'	=> 'counter',
+					'return_type'	=> 'Site::Counter'
+				),
 			    'setAllSiteCounters' => array(),
                 'incrementSiteCounter' => array(
                     'name'  => array('required' => true),
                 ),
 				'getSiteCounter' => array(
-					'name'	=> array('required' => true)
+					'description'	=> 'Get the value of a site counter',
+					'authentication_required'	=> true,
+					'path'	=> '/api/site/getSiteCounter/{name}',
+					'return_element'	=> 'counter',
+					'return_type'	=> 'Site::Counter',
+					'parameters'	=> [
+						'name'	=> array(
+							'description'	=> 'Name of the counter',
+							'required' => true,
+							'validation_method'	=> 'Site::Counter::validName()',
+						)
+					]
 				),
                 'addSiteHeader' => array(
-                    'name'  => array('required' => true),
-                    'value' => array('required' => true)
+					'description'	=> 'Add a new site header',
+					'authentication_required'	=> true,
+					'privilege_required'	=> 'manage site headers',
+					'path'	=> '/api/site/addSiteHeader',
+					'return_element'	=> 'header',
+					'return_type'	=> 'Site::Header',
+					'parameters'	=> [
+	                    'name'  => array(
+							'description'	=> 'Name of the header',
+							'required' => true,
+							'validation_method'	=> 'Site::Header::validName()',
+						),
+	                    'value' => array(
+							'description'	=> 'Value of the header',
+							'required' => true,
+							'validation_method'	=> 'Site::Header::validValue()',
+						)
+					]
                 ),
                 'getSiteHeader' => array(
-                    'name'  => array('required' => true)
+					'description'	=> 'Get the value of a site header',
+					'authentication_required'	=> true,
+					'path'	=> '/api/site/getSiteHeader/{name}',
+					'return_element'	=> 'header',
+					'return_type'	=> 'Site::Header',
+					'parameters'	=> [
+	                    'name'  => array(
+							'description'	=> 'Name of the header',
+							'required' => true,
+							'validation_method'	=> 'Site::Header::validName()',
+						)
+					]
                 ),
                 'updateSiteHeader' => array(
                     'name'  => array('required' => true),
