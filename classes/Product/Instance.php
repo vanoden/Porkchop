@@ -2,12 +2,12 @@
 	namespace Product;
 
 	class Instance extends \BaseModel {
-		public $code;
-		public $name;
-		public $product_id;
+		public string $code = "";
+		public string $name;
+		public int $product_id;
 		public $organization;
-		public $organization_id;
-        public $asset_code;
+		public int $organization_id;
+        public string $asset_code;
 
 		/**
 		 * Constructor

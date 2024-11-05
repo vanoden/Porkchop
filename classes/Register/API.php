@@ -119,7 +119,7 @@
             elseif ($customer->error()) $this->error($customer->error());
             else{
                 $response = new \APIResponse();
-				if ($customer->cached()) $customer->_cached = 1;
+				if ($customer->cached()) $customer->_cached = true;
                 $response->addElement('customer',$customer);
                 $response->success = 1;
             }
@@ -1275,7 +1275,7 @@
 				),
 				'me'	=> array(
 					'description' => 'Get information about the authenticated user',
-					'url' => '/api/register/me',
+					'path' => '/api/register/me',
 					'parameters' => array(),
 					'authentication_required' => false,
 					'return_element' => 'customer',
@@ -1302,7 +1302,7 @@
 				),
 				'getCustomer'	=> array(
 					'description'	=> 'Get information about a customer',
-					'url' => '/api/register/getCustomer',
+					'path' => '/api/register/getCustomer/{code}',
 					'authentication_required'	=> true,
 					'privilege_required' => '[CONDITIONAL]',
 					'return_element' => 'customer',
@@ -1378,7 +1378,7 @@
 				),
 				'findCustomers'	=> array(
 					'description'	=> 'Change customer information',
-					'url' => '/api/register/findCustomers',
+					'path' => '/api/register/findCustomers',
 					'authentication_required'	=> true,
 					'token_required' => false,
 					'privilege_required' => '[CONDITIONAL]',
@@ -1418,7 +1418,7 @@
 				),
 				'findOrganizations'	=> array(
 					'description'	=> 'Find Organizations matching provided criteria',
-					'url'	=> '/api/register/findOrganizations',
+					'path'	=> '/api/register/findOrganizations',
 					'authentication_required'	=> true,
 					'return_element'	=> "organization",
 					'return_type'		=> "Register::Organization",
@@ -1457,7 +1457,7 @@
 				),
 				'findOrganizationOwnedProducts'	=> array(
 					'description'		=> 'Find assignable products and services associated with this organization',
-					'url'				=> '/api/register/findOrganizationOwnedProducts',
+					'path'				=> '/api/register/findOrganizationOwnedProducts',
 					'authentication_required'	=> true,
 					'return_element'		=> 'product',
 					'return_type'			=> 'Product::Item',
@@ -1486,7 +1486,7 @@
 				),
 				'findRoles'	    => array(
 					'description'	=> 'List all roles',
-					'url'			=> '/api/register/findRoles',
+					'path'			=> '/api/register/findRoles',
 					'authentication_required' => true,
 					'privilege_required' => 'manage customers',
 					'return_element' => 'role',

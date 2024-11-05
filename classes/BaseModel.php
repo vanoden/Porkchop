@@ -8,7 +8,7 @@
 		protected $_exists = false;
 
 		// Did data come from cache?
-		public $_cached = false;
+		public bool $_cached = false;
 
 		// Name of Table Holding This Class
 		protected $_tableName;
@@ -542,8 +542,8 @@
 		// Don't check cache, just see if data came from cache!
 		public function cached($cached = null) {
 			if (is_bool($cached)) {
-				if ($cached) $this->_cached = 1;
-				else $this->_cached = 0;
+				if ($cached) $this->_cached = true;
+				else $this->_cached = false;
 			}
 			elseif(is_numeric($cached)) {
 				$this->_cached = $cached;

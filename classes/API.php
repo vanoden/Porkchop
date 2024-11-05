@@ -538,11 +538,11 @@
 				if ($method->description) {
 					$form .= $t.$t.'<span class="apiMethodDescription">'.$method->description.'</span>'.$cr;
 				}
-				if ($method->url) {
+				if ($method->verb) {
 					$form .= $t.$t.'
 					<div class="apiMethodSetting">
 						<span class="label apiMethodSetting">URL</span>
-						<span class="value apiMethodSetting">'.$method->url.'</span>
+						<span class="value apiMethodSetting">'.$method->verb.'</span>
 					</div>'.$cr;
 				}
 
@@ -673,5 +673,109 @@
 				$form .= $t.'</form>'.$cr;
 			}
 			return $form;
+		}
+
+		/**
+		 * Build Definition Document
+		 */
+		public function definition() {
+			$api_name = "\\".ucfirst($this->module)."\\API";
+			$api = new $api_name();
+			$methods = $api->_methods();
+			$definition_object = array();
+			$components = array();
+			$definition_object['openapi'] = "3.0.0";
+			$definition_object['info'] = array(
+				"title" => $this->module." API",
+				"version" => $api->_version,
+				"description" => $api->_release,
+			);
+			$definition_object['servers'] = array(
+				array(
+					"url" => "https://".$_SERVER['HTTP_HOST']."/api/".$api->_name,
+				),
+			);
+			$definition_object['paths'] = array();
+			foreach ($methods as $form_name => $settings) {
+				if (!empty($settings['path'])) {
+					$class_name = "\\".str_replace('::','\\',$settings['return_type']);
+					$class = new \ReflectionClass($class_name);
+					$definition_object['paths'][$settings['path']] = array();
+					if (!array_key_exists($settings['return_type'],$components)) {
+						$properties = get_class_vars("\\".str_replace('::','\\',$settings['return_type']));
+						unset($properties['_cached']);
+						foreach ($properties as $key => $value) {
+							$property = new \ReflectionProperty($class_name,$key);
+							if ($property->hasType()) {
+								$type = $property->getType();
+								$properties[$key] = array(
+									"type" => $type->__toString(),
+								);
+							}
+							else {
+								$properties[$key] = array(
+								);
+							}
+						}
+						$components[$settings['return_type']] = array(
+							"type" => "object",
+							"properties" => $properties,
+						);
+					}
+					if (empty($settings['verb'])) {
+						if (preg_match('/^get/i',$form_name)) $settings['verb'] = 'get';
+						else $settings['verb'] = 'post';
+					}
+					else ($settings['verb'] = strtolower($settings['verb']));
+					if ($settings['verb'] == 'get') {
+						$definition_object['paths'][$settings['path']]['get'] = array(
+							"summary" => $settings['description'],
+							"operationId" => $form_name,
+							"parameters" => array(),
+							"responses" => array(
+								"200" => array(
+									"description" => "Successful Operation",
+									"content"	=> array(
+										"application/xml" => array(
+											"schema" => array(
+												"type" => "array",
+												"items" => array(
+													"\$ref" => "#/components/schemas/".$settings['return_type'],
+												),
+											),
+										),
+									),
+								),
+							),
+						);
+					}
+					elseif ($settings['verb'] == 'post') {
+						$definition_object['paths'][$settings['path']]['post'] = array (
+							"summary" => $settings['description'],
+							"operationId" => $form_name,
+							"requestBody" => array(
+								"content" => array(
+									"application/json" => array(
+										"schema" => array(
+											"type" => "object",
+											"properties" => array(),
+										),
+									),
+								),
+							),
+							"responses" => array(
+								"200" => array(
+									"description" => "Successful Operation",
+								),
+							),
+						);
+					}
+				}
+			}
+			$definition_object['components'] = array(
+				"schemas" => $components,
+			);
+			header('Content-Type: text/plain');
+			print yaml_emit($definition_object);
 		}
 	}

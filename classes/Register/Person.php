@@ -2,25 +2,24 @@
 namespace Register;
 
 class Person Extends \BaseModel {
-    public $title;
-    public $first_name;
-    public $middle_name;    
-    public $last_name;
+    public string $code = "";
+    public string $title;
+    public string $first_name;
+    public string $middle_name;    
+    public string $last_name;
     public $location;
-    public $organization_id;
-    public $department_id;
-    public $login;
-    public $code;
-    public $message;
-    public $department;
-    public $_cached = 0;
-    public $status;
-    public $automation;
-    public $password_age;
-	public $auth_failures;
-    public $timezone;
-    public $auth_method;
-    public $time_based_password = 0;
+    public int $organization_id;
+    public int $department_id;
+    public string $login;
+    public string $message;
+    public string $department;
+    public string $status;
+    public bool $automation;
+    public int $password_age;
+	public int $auth_failures;
+    public string $timezone;
+    public string $auth_method;
+    public int $time_based_password = 0;
     protected $_settings = array( "date_format" => "US" );
 	protected $_database;
 

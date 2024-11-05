@@ -3,7 +3,8 @@
 
 	class Method Extends \BaseClass {
 		public $description = '';
-		public $url = '';
+		public $verb = 'GET';
+		public $path = '';
 		public $deprecated = false;
 		public $hidden = false;
 		public $authentication_required = true;
@@ -19,7 +20,8 @@
 			// See if definition is old version or new
 			if (isset($parameters['parameters'])) {
 				// New definition
-				if (isset($parameters['url'])) $this->url = $parameters['url'];
+				if (isset($parameters['path'])) $this->path = $parameters['path'];
+				if (isset($parameters['verb'])) $this->verb = $parameters['verb'];
 				if (isset($parameters['description'])) $this->description = $parameters['description'];
 				if (isset($parameters['authentication_required'])) {
 					if (is_bool($parameters['authentication_required'])) $this->authentication_required = $parameters['authentication_required'];

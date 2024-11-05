@@ -2,7 +2,6 @@
 	namespace Register;
 
     class Customer extends Person {
-		public $auth_method;
 		public bool $elevated = false;
 		public int $unreadMessages = 0;
 

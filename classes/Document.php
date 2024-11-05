@@ -19,6 +19,10 @@
 				$this->_content = $this->_jsonout($object);
 				return;
 			}
+			elseif ($this->type == 'yaml') {
+				$this->_content = yaml_emit($object);
+				return;
+			}
 			else {
 				$this->error("Invalid document type");
 				return null;

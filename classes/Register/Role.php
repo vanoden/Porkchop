@@ -2,8 +2,8 @@
 	namespace Register;
 	class Role Extends \BaseModel {
 
-		public $name;
-		public $description;
+		public string $name;
+		public string $description;
 
 		public function __construct(int $id = null) {
 			$this->_tableName = "register_roles";

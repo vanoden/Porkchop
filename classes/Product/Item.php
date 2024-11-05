@@ -11,19 +11,19 @@
 	class Item Extends \BaseModel {
 
 		/** @var string The product code */
-		public $code;
+		public string $code = "";
 
 		/** @var string The product name */
-		public $name;
+		public string $name;
 
 		/** @var string The product description */
-		public $description;
+		public string $description;
 
 		/** @var string The product type */
-		public $type;
+		public string $type;
 
 		/** @var string The product status */
-		public $status;
+		public string $status;
 
 		/**
 		 * Constructor

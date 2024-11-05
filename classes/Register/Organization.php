@@ -3,19 +3,18 @@
 
 	class Organization Extends \BaseModel {
 
-		public $name;
-		public $code;
-		public $status;
-		public $is_reseller;
+		public string $name;
+		public string $code;
+		public string $status;
+		public bool $is_reseller;
 		public $reseller;
-		public $assigned_reseller_id;
-		public $notes;
-		public $_cached;
-		public $password_expiration_days;
-		public $default_billing_location_id;
-		public $default_shipping_location_id;
-		public $website_url;
-		private $_nocache = false;
+		public int $assigned_reseller_id;
+		public string $notes;
+		public int $password_expiration_days;
+		public int $default_billing_location_id;
+		public int $default_shipping_location_id;
+		public string $website_url;
+		private bool $_nocache = false;
 		private $database;
 
 		public function __construct($id = null,$options = array()) {
@@ -178,7 +177,7 @@
 			
 			// Cached Organization Object, Yay!
 			if ((! $this->_nocache) and ($this->id) and ($organization = $cache_item->get())) {
-				$organization->_cached = 1;
+				$organization->_cached = true;
 				$this->id = $organization->id;
 				$this->name = $organization->name;
 				$this->code = $organization->code;
