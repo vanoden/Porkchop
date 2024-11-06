@@ -3,17 +3,17 @@
 
 	class Organization Extends \BaseModel {
 
-		public string $name;
-		public string $code;
-		public string $status;
-		public bool $is_reseller;
+		public string $name = "";
+		public ?string $code;
+		public string $status = 'NEW';
+		public bool $is_reseller = false;
 		public $reseller;
-		public int $assigned_reseller_id;
-		public string $notes;
-		public int $password_expiration_days;
-		public int $default_billing_location_id;
-		public int $default_shipping_location_id;
-		public string $website_url;
+		public string $notes = "";
+		public ?int $assigned_reseller_id;
+		public ?int $password_expiration_days;
+		public ?int $default_billing_location_id;
+		public ?int $default_shipping_location_id;
+		public string $website_url = "";
 		private bool $_nocache = false;
 		private $database;
 

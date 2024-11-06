@@ -276,8 +276,9 @@
 					foreach ($fromCache as $key => $value) {
 						if (property_exists($this,$key)) {
 							$property = new \ReflectionProperty($this, $key);
+							if (is_null($property->getType())) continue;
 							$property_type = $property->getType();
-							if ($property_type->allowsNull() && is_null($value)) $this->$key = null;
+							if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) $this->$key = null;
 							elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
 							elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
 							elseif (gettype($this->$key) == "string") $this->$key = strval($value);
@@ -315,6 +316,7 @@
 				foreach ($object as $key => $value) {
 					if (property_exists($this,$key)) {
 						$property = new \ReflectionProperty($this, $key);
+						if (is_null($property->getType())) continue;
 						$property_type = $property->getType();
 						if ($property_type->allowsNull() && is_null($value)) $this->$key = null;
 						elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
