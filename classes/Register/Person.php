@@ -5,7 +5,7 @@ class Person Extends \BaseModel {
     public string $code = "";
     public string $title = "";
     public string $first_name = "";
-    public ?string $middle_name = "";
+    public string $middle_name = "";
     public string $last_name = "";
     public $location;
     public int $organization_id;
@@ -13,7 +13,7 @@ class Person Extends \BaseModel {
     public string $login;
     public string $message = "";
     public string $department;
-    public string $status;
+    public string $status = "NEW";
     public bool $automation = false;
     public int $password_age;
 	public int $auth_failures;
