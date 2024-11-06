@@ -1,7 +1,7 @@
 <?php
 	class APIResponse Extends \HTTP\Response {
 		protected $_data = array();
-		public $success = true;
+		public bool $success = true;
 
 		public function success(bool $value = null): bool {
 			if (isset($value)) $this->success = $value;

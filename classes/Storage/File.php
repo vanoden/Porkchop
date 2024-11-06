@@ -13,7 +13,7 @@ class File extends \BaseModel {
 	public $display_name;				// Name to be displayed in UI
 	public $description;				// Description of file
 	public $date_created;				// Date file was uploaded/created
-	public $success;
+	public bool $success = true;
 	public $uri;
 	public $read_protect;
 	public $write_protect;

@@ -3,8 +3,8 @@
 
 	class Country extends \BaseModel {
 
-		public $name;
-		public $abbreviation;
+		public string $name = "";
+		public string $abbreviation = "";
 
 		public function __construct(int $id = 0) {
 			$this->_tableName = "geography_countries";

@@ -3,11 +3,11 @@
 
 	class Company Extends \BaseModel {
 
-		public $login;
-		public $name;
+		public string $login = "";
+		public string $name = "";
 		public $primary_domain;
-		public $status;
-		public $deleted;
+		public string $status = 'ACTIVE';
+		public bool $deleted = false;
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'company_companies';
