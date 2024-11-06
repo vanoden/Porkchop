@@ -215,7 +215,8 @@
 		// Get Object by ID
 		public function load($id): bool {
 			$this->clearError();
-			$this->id = $id;
+			if (!empty($id)) $this->id = $id;
+			else return false;
 			return $this->details();
 		}
 

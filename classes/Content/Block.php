@@ -3,16 +3,15 @@
 
 	class Block Extends \BaseModel {
 
-		public $company_id;
-		public $target;
-		public $view_order;
-		public $active;
-		public $deleted;
-		public $title;
-		public $menu_id;
-		public $name;		
-		public $content;
-		public $cached = 0;
+		public ?int $company_id = null;
+		public string $target = "";
+		public int $view_order = 0;
+		public bool $active = true;
+		public bool $deleted = false;
+		public string $title = "";
+		public ?int $menu_id = null;
+		public string $name = "";		
+		public string $content = "";
 
         public function __construct($id = 0) {
 			$this->_tableName = 'content_messages';
