@@ -277,6 +277,8 @@
 				$this->code = $product->code;
 				$this->status = $product->status;
 				$this->type = $product->type;
+				if (empty($product->description)) $product->description = '';
+				else $this->description = $product->description;
 				$this->description = $product->description;
 				$this->cached($product->_cached);
 				$this->exists(true);
