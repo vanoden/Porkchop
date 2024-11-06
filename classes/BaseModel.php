@@ -308,6 +308,7 @@
 					if (property_exists($this,$key)) {
 						if (gettype($this->$key) == "integer") $this->$key = intval($value);
 						elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
+						elseif (gettype($this->$key) == "string") $this->$key = strval($value);
 						else $this->$key = $value;
 					}
 				}
