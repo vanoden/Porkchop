@@ -2,14 +2,13 @@
 namespace Register;
 
 class Person Extends \BaseModel {
-    public string $code = "";
-    public string $title = "";
-    public string $first_name = "";
-    public string $middle_name = "";
-    public string $last_name = "";
-    public $location;
-    public ?int $organization_id;
-    public ?int $department_id;
+    public string $code = "";				// Alias for login
+    public string $title = "";				// Title
+    public string $first_name = "";			// First Name
+    public string $middle_name = "";		// Middle Name
+    public string $last_name = "";			// Last Name
+    public ?int $organization_id = null;	// Organization ID
+    public ?int $department_id = null;
     public string $login = "";
     public string $message = "";
     public string $department;
@@ -23,17 +22,18 @@ class Person Extends \BaseModel {
     protected $_settings = array( "date_format" => "US" );
 	protected $_database;
 
-    public function __construct($id = null) {
+	/**
+	 * Constructor
+	 * @param mixed $id 
+	 * @return void 
+	 */
+    public function __construct($id = 0) {
     	$this->_database = new \Database\Service();
 		$this->_tableName = 'register_users';
 		$this->_tableUKColumn = 'login';
 		$this->_cacheKeyPrefix = 'customer';
 		$this->_auditEvents = true;
         $this->_aliasField('login','code');
-
-        // Clear Error Info
-        $this->clearError();
-
 		$this->_addStatus(array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED","BLOCKED"));
 
         // Find Person if id given
