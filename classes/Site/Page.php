@@ -13,7 +13,7 @@
 	    public string $title = "";
 	    public $metadata;
 	    public string $template = "";
-	    public bool $success = false;
+	    public ?string $success = null;
 		public string $instructions = "";
 		public ?int $tou_id = null;
 		public string $sitemap = "";

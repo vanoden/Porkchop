@@ -236,7 +236,7 @@
                 $this->password_expiration_days = $object->password_expiration_days;
                 $this->default_billing_location_id = $object->default_billing_location_id;
                 $this->default_shipping_location_id = $object->default_shipping_location_id;
-				$this->website_url = $object->website_url;
+				if (!empty($object->website_url)) $this->website_url = $object->website_url;
 				$this->is_reseller = boolval($object->is_reseller);
 				$this->notes = $object->notes;
 			}

@@ -715,8 +715,10 @@
 								$property = new \ReflectionProperty($class_name,$key);
 								if ($property->hasType()) {
 									$type = $property->getType();
+									$typeString = $type->__toString();
+									$typeString = str_replace('?','',$typeString);
 									$properties[$key] = array(
-										"type" => $type->__toString(),
+										"type" => $typeString,
 									);
 								}
 								else {
