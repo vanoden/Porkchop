@@ -14,16 +14,16 @@
 		public string $code = "";
 
 		/** @var string The product name */
-		public string $name;
+		public string $name = "";
 
 		/** @var string The product description */
-		public string $description;
+		public string $description = "";
 
 		/** @var string The product type */
-		public string $type;
+		public string $type = "";
 
 		/** @var string The product status */
-		public string $status;
+		public string $status = "ACTIVE";
 
 		/**
 		 * Constructor
