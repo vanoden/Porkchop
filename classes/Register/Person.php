@@ -8,8 +8,8 @@ class Person Extends \BaseModel {
     public string $middle_name = "";
     public string $last_name = "";
     public $location;
-    public int $organization_id;
-    public int $department_id;
+    public ?int $organization_id;
+    public ?int $department_id;
     public string $login = "";
     public string $message = "";
     public string $department;
