@@ -268,11 +268,12 @@
 			$cache_key = "product[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 
-			if (($this->id) and ($product = $cache_item->get())) {
+			if (($this->id) && ($product = $cache_item->get())) {
 				// Object found in cache, populate properties from cache
 				$product->_cached = true;
 				$this->id = $product->id;
-				$this->name = $product->name;
+				if (empty($product->name)) $product->name = '';
+				else $this->name = $product->name;
 				$this->code = $product->code;
 				$this->status = $product->status;
 				$this->type = $product->type;
