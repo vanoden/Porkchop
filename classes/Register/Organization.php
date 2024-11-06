@@ -237,8 +237,10 @@
                 $this->default_billing_location_id = $object->default_billing_location_id;
                 $this->default_shipping_location_id = $object->default_shipping_location_id;
 				if (!empty($object->website_url)) $this->website_url = $object->website_url;
+				else $this->website_url = "";
 				$this->is_reseller = boolval($object->is_reseller);
-				$this->notes = $object->notes;
+				if (!empty($object->notes)) $this->notes = $object->notes;
+				else $this->notes = "";
 			}
 			else {
 				$this->id = null;
