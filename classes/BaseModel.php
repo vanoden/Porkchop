@@ -305,7 +305,11 @@
 			if (is_object($object) && $object->$column > 0) {
 				// Collect all attributes from response record
 				foreach ($object as $key => $value) {
-					if (property_exists($this,$key)) $this->$key = $value;
+					if (property_exists($this,$key)) {
+						if (gettype($this->$key) == "integer") $this->$key = intval($value);
+						elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
+						else $this->$key = $value;
+					}
 				}
 				$this->exists(true);
 				$this->cached(false);
