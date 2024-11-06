@@ -274,7 +274,13 @@
 				$fromCache = $cache->get();
 				if (!empty($fromCache)) {
 					foreach ($fromCache as $key => $value) {
-						if (property_exists($this,$key)) $this->$key = $value;
+						if (property_exists($this,$key)) {
+							$property = new \ReflectionProperty($this, $key);
+							if ($property->allowsNull() && is_null($value)) $this->$key = null;
+							elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
+							elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
+							elseif (gettype($this->$key) == "string") $this->$key = strval($value);
+							else $this->$key = $value;
 					}
 					$this->cached(true);
 					$this->exists(true);
@@ -306,7 +312,9 @@
 				// Collect all attributes from response record
 				foreach ($object as $key => $value) {
 					if (property_exists($this,$key)) {
-						if (gettype($this->$key) == "integer") $this->$key = intval($value);
+						$property = new \ReflectionProperty($this, $key);
+						if ($property->allowsNull() && is_null($value)) $this->$key = null;
+						elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
 						elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
 						elseif (gettype($this->$key) == "string") $this->$key = strval($value);
 						else $this->$key = $value;
