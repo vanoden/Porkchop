@@ -183,7 +183,8 @@
 				$this->code = $organization->code;
 				$this->status = $organization->status;
 				$this->is_reseller = boolval($organization->is_reseller);
-				$this->notes = $organization->notes;
+				if (!empty($organization->notes)) $this->notes = $organization->notes;
+				else $this->notes = "";
 				$this->password_expiration_days = $organization->password_expiration_days;
 				$this->default_billing_location_id = $organization->default_billing_location_id;
 				$this->default_shipping_location_id = $organization->default_shipping_location_id;
