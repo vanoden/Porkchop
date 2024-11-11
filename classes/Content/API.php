@@ -80,6 +80,9 @@
 			}
 		}
 
+		public function getMessage() {
+			$this->getBlock();
+		}
 		###################################################
 		### Get Details regarding Specified Product		###
 		###################################################
@@ -204,6 +207,21 @@
 						),
 					),
 				),
+				'getMessage'	=> array(
+					'decription'	=> 'Get details regarding specified content block',
+					'deprecated'	=> true,
+					'hidden'	=> true,
+					'parameters'	=> array(
+						'target'	=> array(
+							'required' => true,
+							'validation_method' => 'Content::Block::validCode()'
+						),
+						'code'	=> array(
+							'required' => true,
+							'validation_method' => 'Content::Block::validCode()'
+						),
+					)
+					),
 				'addBlock'	=> array(
 					'description'	=> 'Add a new block',
 					'token_required'	=> true,

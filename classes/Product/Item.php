@@ -317,14 +317,23 @@
 
 			// Grab the object and populate properties
 			$object = $rs->FetchNextObject(false);
-
-			$this->id = $object->id;
-			$this->code = $object->code;
-			$this->name = $object->name;
-			$this->status = $object->status;
-			$this->description = $object->description;
-			$this->type = $object->type;
-			$this->exists(true);
+			if ($object->id) {
+				$this->id = $object->id;
+				$this->code = $object->code;
+				$this->name = strval($object->name);
+				$this->status = $object->status;
+				$this->description = strval($object->description);
+				$this->type = $object->type;
+				$this->exists(true);
+			}
+			else {
+				$this->exists(false);
+				$this->id = 0;
+				$this->name = "";
+				$this->code = "";
+				$this->description = "";
+				return false;
+			}
 
 			// Cache Product Object
 			app_log("Setting cache key ".$cache_key);

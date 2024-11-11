@@ -30,7 +30,7 @@
 		protected $_cacheKeyPrefix;
 
 		// Should we always audit events for this class?
-		protected $_auditEvents = false;
+		protected static $_auditEvents = false;
 
 		// Load object base on ID if given
 		public function __construct($id = 0) {
@@ -317,13 +317,20 @@
 				foreach ($object as $key => $value) {
 					if (property_exists($this,$key)) {
 						$property = new \ReflectionProperty($this, $key);
-						if (is_null($property->getType())) continue;
 						$property_type = $property->getType();
-						if ($property_type->allowsNull() && is_null($value)) $this->$key = null;
+						if (is_null($property_type)) {
+							app_log("Setting nullkey ".$this->$key." to ".strval($value));
+							$this->$key = strval($value);
+						}
+						elseif ($property_type->allowsNull() && is_null($value)) $this->$key = null;
 						elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
+						elseif (gettype($this->$key) == "?integer") $this->$key = intval($value);
 						elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
 						elseif (gettype($this->$key) == "string") $this->$key = strval($value);
 						else $this->$key = $value;
+					}
+					else {
+						app_log("Property $key not found in ".get_class($this)." object",'warning');
 					}
 				}
 				$this->exists(true);

@@ -323,9 +323,9 @@
 				}
 			}
 
-			//print_r($method['parameters']);
 			// Enforce Individual Parameter Requirements
 			foreach ($method['parameters'] as $param => $options) {
+				if (!array_key_exists($param,$_REQUEST)) continue;
 				$value = $_REQUEST[$param];
 				// Temporarily remove wildcards for validation checks
 				if (isset($options['allow_wildcards']) && $options['allow_wildcards']) {
