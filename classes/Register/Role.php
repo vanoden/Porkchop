@@ -2,22 +2,30 @@
 	namespace Register;
 	class Role Extends \BaseModel {
 
-		public string $name = "";
-		public string $description = "";
+		public string $name = "";			// Name of the role
+		public string $description = "";	// Description of the role
 
 		public function __construct(int $id = null) {
 			$this->_tableName = "register_roles";
 			$this->_tableUKColumn = 'name';
 			$this->_cacheKeyPrefix = 'register.role';
-    		parent::__construct($id);
+			$this->_addFields('name', 'description');
+			parent::__construct($id);
 		}
 
-        public function add($parameters = []) {
+		/**
+		 * Add a new role
+		 * @param array $parameters 
+		 * @return bool True if add successful
+		 */
+		public function add($parameters = []): bool {
+			$this->clearError();
 
-            if (!$this->validName($parameters['name'])) {
-                $this->error("Failed to add role, invalid name");
-                return null;
-            }
+			// Validate Input
+			if (!$this->validName($parameters['name'])) {
+				$this->error("Failed to add role, invalid name");
+				return false;
+			}
 			$current_role = new Role();
 			$current_role->get($parameters['name']);
 			if ($current_role->id) {
@@ -25,60 +33,88 @@
 				return false;
 			}
 
-            $add_object_query = "
-                INSERT
-                INTO    register_roles
-                (       name)
-                VALUES
-                (       ?)
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
+			$add_object_query = "
+				INSERT
+				INTO    register_roles
+				(       name)
+				VALUES
+				(       ?)
 				ON DUPLICATE KEY UPDATE
 						name = name
-            ";
-            $GLOBALS['_database']->execute(
-				$add_object_query,
-				array(
-					$parameters['name']
-				)
-			);
-            if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			";
 
-            // audit the add event
-            $auditLog = new \Site\AuditLog\Event();
-            $auditLog->add(array(
-                'instance_id' => $this->id,
-                'description' => 'Added new '.$this->_objectName(),
-                'class_name' => get_class($this),
-                'class_method' => 'add'
-            ));
+			// Add Parameters
+			$database->AddParam($parameters['name']);
+
+			// Execute Query
+			$database->execute($add_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			$id = $database->Insert_ID();
+			if (! $id) {
+				$this->error("Failed to get new role id");
+				return false;
+			}
+			$this->id = $id;
+
+			// audit the add event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Added new '.$this->_objectName(),
+				'class_name' => get_class($this),
+				'class_method' => 'add'
+			));
 
 			return $this->update($parameters);
-        }
+		}
 
+		/**
+		 * Update a role
+		 * @param array $parameters 
+		 * @return bool True if updated successful
+		 */
 		public function update($parameters = []): bool {
+			$this->clearError();
+
+			// Validate Input
+			if (!$this->safeString($parameters['description'])) {
+				$this->error("Failed to update role, invalid description");
+				return false;
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$update_object_query = "
 				UPDATE	register_roles
 				SET		id = id";
 
-			$bind_params = array();
+			// Add Parameters
 			if (isset($parameters['description'])) {
 				$update_object_query .= ",
 						description = ?";
-				array_push($bind_params,$parameters['description']);
+				$database->AddParam($parameters['description']);
 			}
 
 			$update_object_query .= "
 				WHERE	id = ?";
-			array_push($bind_params,$this->id);
+			$database->AddParam($this->id);
 
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
+			// Execute Query
+			$database->Execute($update_object_query);
 
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+			// Check for Errors
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
 
 			// audit the update event
@@ -192,15 +228,15 @@
 		}
 		
 		public function addPrivilege($new_privilege) {
-            if (is_numeric($new_privilege))
-                $privilege = new \Register\Privilege($new_privilege);
-            else {
-    			$privilege = new \Register\Privilege();
-			    if (! $privilege->get($new_privilege)) {
-                    $this->error("Can't get privilege $new_privilege");
-                    return false;
-                }
-            }
+			if (is_numeric($new_privilege))
+				$privilege = new \Register\Privilege($new_privilege);
+			else {
+				$privilege = new \Register\Privilege();
+				if (! $privilege->get($new_privilege)) {
+					$this->error("Can't get privilege $new_privilege");
+					return false;
+				}
+			}
 			$add_privilege_query = "
 				INSERT	INTO	register_roles_privileges
 				VALUES  (?,?)
@@ -213,53 +249,97 @@
 			else return true;
 		}
 
-        public function dropPrivilege($privilege_id) {
-            $drop_privilege_query = "
-                DELETE
-                FROM    register_roles_privileges
-                WHERE   role_id = ?
-                AND     privilege_id = ?
-            ";
-            $GLOBALS['_database']->Execute($drop_privilege_query,array($this->id,$privilege_id));
-            if ($GLOBALS['_database']->ErrorMsg()) {
-                $this->SQLError($GLOBALS['_database']->ErrorMsg());
-                return false;
-            }
-            return true;
-        }
+		/**
+		 * Drop a privilege from a role
+		 * @param mixed $privilege_id 
+		 * @return bool 
+		 */
+		public function dropPrivilege($privilege_id) {
+			$this->clearError();
 
-		public function privileges() {
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
+			$drop_privilege_query = "
+				DELETE
+				FROM    register_roles_privileges
+				WHERE   role_id = ?
+				AND     privilege_id = ?
+			";
+
+			// Add Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($privilege_id);
+
+			// Execute Query
+			$database->Execute($drop_privilege_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			return true;
+		}
+
+		/**
+		 * Get the privileges for a role
+		 * @return array 
+		 */
+		public function privileges(): array {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$get_privileges_query = "
 				SELECT	privilege_id
 				FROM	register_roles_privileges
 				WHERE	role_id = ?
 			";
-			query_log($get_privileges_query,array($this->id));
-			$rs = $GLOBALS['_database']->Execute($get_privileges_query,array($this->id));
+
+			// Add Parameters
+			$database->AddParam($this->id);
+
+			// Execute Query
+			$rs = $database->Execute($get_privileges_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				$this->SQLError($database->ErrorMsg());
+				return [];
 			}
-			app_log($rs->recordCount()." rows returned");
+
+			// Assemble Results
 			$privileges = array();
 			while(list($id) = $rs->FetchRow()) {
-				app_log("Getting privilege $id");
 				$privilege = new \Register\Privilege($id);
 				array_push($privileges,$privilege);
 			}
 			return $privileges;
 		}
-		
-		public function has_privilege($param) {
-            if (is_numeric($param)) {
-                $privilege = new \Register\Privilege($param);
-            }
-            else {
-       			$privilege = new \Register\Privilege();
-	    		if (! $privilege->get($param)) {
-                    return false;
-                }
-            }
+
+		/**
+		 * Check if a role has a privilege
+		 * @param $param
+		 * @return bool
+		 */
+		public function has_privilege($param): bool {
+			$this->clearError();
+
+			// Validate Input
+			if (is_numeric($param)) {
+				$privilege = new \Register\Privilege($param);
+			}
+			else {
+	   			$privilege = new \Register\Privilege();
+				if (! $privilege->get($param)) {
+					return false;
+				}
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$get_privilege_query = "
 				SELECT	1
 				FROM	register_roles_privileges
@@ -267,12 +347,18 @@
 				AND		privilege_id = ?
 			";
 
-			$rs = $GLOBALS['_database']->Execute($get_privilege_query,array($this->id,$privilege->id));
+			// Add Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($privilege->id);
 
+			// Execute Query
+			$rs = $database->Execute($get_privilege_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+
+			// Assemble Results
 			list($found) = $rs->FetchRow();
 			if ($found == 1) {
 				return true;
@@ -282,44 +368,44 @@
 			}
 		}
 
-        /**
-         * check if a user is in a role by name
-         *
-         * @param $user_id
-         * @param $role_id
-         */
-        public function checkIfUserInRole($user_id, $role_id) {
-            $checkIfUserInRole = "
-            SELECT * FROM `register_roles` rr
-                INNER JOIN register_users_roles rur ON rr.id = rur.role_id
-                WHERE rur.user_id = ? AND rr.id = ?;
+		/**
+		 * check if a user is in a role by name
+		 *
+		 * @param $user_id
+		 * @param $role_id
+		 */
+		public function checkIfUserInRole($user_id, $role_id) {
+			$checkIfUserInRole = "
+			SELECT * FROM `register_roles` rr
+				INNER JOIN register_users_roles rur ON rr.id = rur.role_id
+				WHERE rur.user_id = ? AND rr.id = ?;
 
 			";
-            $rs = $GLOBALS['_database']->Execute($checkIfUserInRole,array($user_id, $role_id));
+			$rs = $GLOBALS['_database']->Execute($checkIfUserInRole,array($user_id, $role_id));
 			list($id) = $rs->FetchRow();
 			if (!empty($id)) {
 				return true;
 			} else {
 				return false;
 			}
-        }
+		}
 
-        /**
-         * get roles that a group of users are in by user_id
-         *
-         * @param array $userIds, array of user ids to check
-         */
-        public function getRolesforUsers($userIds = array()) {
-            $getRolesforUsersQuery = "
-                SELECT DISTINCT(name) FROM `register_users_roles` rur
-                INNER JOIN `register_roles` rr on rur.role_id = rr.id
-                WHERE user_id IN (?);
+		/**
+		 * get roles that a group of users are in by user_id
+		 *
+		 * @param array $userIds, array of user ids to check
+		 */
+		public function getRolesforUsers($userIds = array()) {
+			$getRolesforUsersQuery = "
+				SELECT DISTINCT(name) FROM `register_users_roles` rur
+				INNER JOIN `register_roles` rr on rur.role_id = rr.id
+				WHERE user_id IN (?);
 			";
-            $rs = $GLOBALS['_database']->Execute($getRolesforUsersQuery,array(implode(",", $userIds)));
-            $rolesList = array();        
+			$rs = $GLOBALS['_database']->Execute($getRolesforUsersQuery,array(implode(",", $userIds)));
+			$rolesList = array();        
 			while(list($name) = $rs->FetchRow()) array_push($rolesList,$name);     
-            return $rolesList;
-        }
+			return $rolesList;
+		}
 
 		public function validName($string): bool {
 			if (preg_match('/^\w[\w\-\_\s]*$/',$string)) return true;
