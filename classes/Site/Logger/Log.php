@@ -64,7 +64,8 @@
 
 		public function compares ($level = "debug") {
 			# Filter on log level
-			if ($this->level == "trace") return true;
+			if ($this->level == "trace2") return true;
+			elseif ($this->level == "trace"		&& in_array($level,array('trace','debug','info','notice','warning','error','critical','alert','emergency'))) return true;
 			elseif ($this->level == "debug"		&& in_array($level,array('debug','info','notice','warning','error','critical','alert','emergency'))) return true;
 			elseif ($this->level == "info"		&& in_array($level,array('info','notice','warning','error','critical','alert','emergency'))) return true;
 			elseif ($this->level == "notice"	&& in_array($level,array('notice','warning','error','critical','alert','emergency'))) return true;
