@@ -56,11 +56,7 @@ class Event Extends \BaseModel {
 			return true;
 		}
 
-		if (property_exists($callingClassName, '_auditEvents')) {
-			app_log("Audit Events property exists");
-			app_log($callingClassName::$_auditEvents);
-		}
-		else return true;
+		if (!property_exists($callingClassName, '_auditEvents')) return true;
 
 		// if no classes set to be audited, return true
 		if (!empty($GLOBALS['_config']->auditing->auditedClasses) && is_array($GLOBALS['_config']->auditing->auditedClasses)) {
