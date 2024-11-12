@@ -3,7 +3,10 @@
 
 	class ReCAPTCHA Extends \BaseClass {	
 		public function test($customer,$response) {
-			if (isset($GLOBALS['_config']->captcha->bypass_key) && isset($_REQUEST['captcha_bypass_key']) && ($GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key'])) return true;
+			if (isset($GLOBALS['_config']->captcha->bypass_key) && isset($_REQUEST['captcha_bypass_key']) && ($GLOBALS['_config']->captcha->bypass_key == $_REQUEST['captcha_bypass_key'])) {
+				app_log("Bypassed CAPTCHA!",'notice');
+				return true;
+			}
 
 			# Check reCAPTCHA
 			$url = "https://www.google.com/recaptcha/api/siteverify";
