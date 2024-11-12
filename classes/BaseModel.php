@@ -268,9 +268,13 @@
 		// Load Object Attributes from Cache or Database
 		public function details(): bool {
 			$this->clearError();
+
+			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Initialize Cache Service
 			$cache = $this->cache();
+
 			if (isset($cache) && !empty($this->_cacheKeyPrefix)) {
 				$fromCache = $cache->get();
 				if (!empty($fromCache)) {
@@ -281,6 +285,7 @@
 							$property_type = $property->getType();
 							if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) $this->$key = null;
 							elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
+							elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
 							elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
 							elseif (gettype($this->$key) == "string") $this->$key = strval($value);
 							else $this->$key = $value;
@@ -325,6 +330,7 @@
 						elseif ($property_type->allowsNull() && is_null($value)) $this->$key = null;
 						elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
 						elseif (gettype($this->$key) == "?integer") $this->$key = intval($value);
+						elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
 						elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
 						elseif (gettype($this->$key) == "string") $this->$key = strval($value);
 						else $this->$key = $value;
@@ -554,7 +560,7 @@
 				return null;
 			}
 			else {
-				//$this->error("No cache key defined for ".get_class($this));
+				$this->debug("No cache key defined for ".get_class($this));
 				return null;
 			}
 		}
