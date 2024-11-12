@@ -100,7 +100,7 @@ use Register\Customer;
 
 			# Was a 'Valid looking' Session Given
 			if (isset($request_code) && $this->validCode($request_code)) {
-				app_log("Getting session ".$request_code,'notice',__FILE__,__LINE__);
+				app_log("Getting session ".$request_code,'debug',__FILE__,__LINE__);
 				# Get Existing Session Information
 				$this->get($request_code);
 				if ($this->id) {

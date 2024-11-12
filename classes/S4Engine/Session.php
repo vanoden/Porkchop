@@ -220,7 +220,7 @@
 			";
 			$database->AddParam($clientId);
 			$database->AddParam($sessionCode[0]*256*256*256+$sessionCode[1]*256*256+$sessionCode[2]*256+$sessionCode[3]);
-app_log("Getting session with client id: ".$clientId." and session code: ".$sessionCode[0]*256*256*256+$sessionCode[1]*256*256+$sessionCode[2]*256+$sessionCode[3],'info');
+app_log("Getting session with client id: ".$clientId." and session code: ".$sessionCode[0]*256*256*256+$sessionCode[1]*256*256+$sessionCode[2]*256+$sessionCode[3],'trace');
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->error("Error getting session: ".$database->error());
