@@ -1622,7 +1622,21 @@
 					'parameters' => array(
 						'login' => array('required' => true)
 					),
-				)
+				),
+				'getPasswordResetURL' => array(
+					'description' => 'Get URL for password reset',
+					'authentication_required' => true,
+					'privilege_required' => 'manage customers',
+					'return_element' => 'url',
+					'return_type' => 'string',
+					'parameters' => array(
+						'login' => array(
+							'required' => true,
+							'prompt' => 'Customer Login',
+							'validation_method' => 'Register::Customer::validCode()'
+						)
+					)
+				),
 			);
 		}
 	}

@@ -36,7 +36,7 @@
 			$database->Execute($add_object_query);
 
 			if ($database->ErrorMsg()) {
-				$this->SQLError($database>ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 

@@ -244,14 +244,24 @@
 			return false;
 		}
 
-		// Check login and password against configured authentication mechanism
-		function authenticate ($login, $password) {
+		/**
+		 * Check login and password against configured authentication mechanism
+		 * @param string $login
+		 * @param string $password
+		 * @return bool
+		 */
+		function authenticate ($login, $password): bool {
+			$this->clearError();
 
+			// Validate Input
 			if (! $this->validLogin($login)) {
 				$failure = new \Register\AuthFailure();
 				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'INVALIDLOGIN',$_SERVER['PHP_SELF']));
 				return false;
 			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
 
 			// Get Authentication Method
 			$get_user_query = "
@@ -259,23 +269,25 @@
 				FROM	register_users
 				WHERE	login = ?
 			";
-			
-			$rs = $GLOBALS['_database']->Execute(
-				$get_user_query,
-				array($login)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+
+			// Add Parameters
+			$database->AddParam($login);
+
+			// Execute Query
+			$rs = $database->Execute($get_user_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
 			}
 
-			list($id,$this->auth_method,$status) = $rs->fields;
+			list($id,$auth_method,$status,$password_age) = $rs->fields();
 			if (! $id) {
 				app_log("Auth denied because no account found matching '$login'",'notice',__FILE__,__LINE__);
 				$failure = new \Register\AuthFailure();
 				$failure->add(array($_SERVER['REMOTE_ADDR'],$login,'NOACCOUNT',$_SERVER['PHP_SELF']));
 				return false;
 			}
+			if (!empty($auth_method)) $this->auth_method = $auth_method;
 
 			// check if they have an expired password for organzation rules
 			$this->get($login);		
@@ -311,8 +323,8 @@
 					app_log("Blocking customer '".$this->login."' after ".$this->auth_failures()." auth failures.  The last attempt was from '".$_SERVER['remote_ip']."'");
 					$this->block();
 					$this->auditRecord("AUTHENTICATION_FAILURE","Blocked after ".$this->auth_failures()." failures");
-					return false;
 				}
+				return false;
 			}
 		}
 

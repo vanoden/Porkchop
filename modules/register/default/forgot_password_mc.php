@@ -1,5 +1,6 @@
 <?php
-	$page = new \Site\Page();
+	$site = new \Site();
+	$page = $site->page();
 
 	if (empty($_REQUEST['g-captcha-response'])) $_REQUEST['g-captcha-response'] = '';
 	if (empty($_REQUEST['csrfToken'])) $_REQUEST['csrfToken'] = '';
@@ -9,12 +10,17 @@
 		$customer = new \Register\Customer();
 		// CAPTCHA Required and Provided
 		$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
-		if (true) { //$reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
+		if ($reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
 			app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
 
-            if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-                $page->addError("Invalid Request");
-            }
+			if (!isset($_POST['csrfToken']) or !strlen($_POST['csrfToken'])) {
+				$page->addError("Invalid Request");
+				app_log("Invalid Request: CSRF Token not send by browser",'notice');
+			}
+			elseif (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+				$page->addError("Invalid Request");
+				app_log("Invalid Request: ".$_POST['csrfToken']." ne ".$GLOBALS['_SESSION_']->getCSRFToken(),'notice');
+			}
 			elseif (valid_email($_REQUEST['email_address'])) {
 				# Get User Info From Database
 				$contact = new \Register\Contact();
@@ -59,6 +65,14 @@
 						$recovery_url = "http";
 						if ($GLOBALS['_config']->site->https) $recovery_url = "https";
 						$recovery_url .= "://".$GLOBALS['_config']->site->hostname."/_register/reset_password?token=".$token->code;
+
+						// Audit the Add Password Token Event
+						$audit = new \Site\AuditLog\Event();
+						$audit->add(array(
+							'instance_id' => $customer->id,
+							'class_name' => 'Register\Customer',
+							'description' => 'Password Recovery Token Created'
+						));
 
 						###############################################
 						### Password Found, Generate Recovery Email	###
