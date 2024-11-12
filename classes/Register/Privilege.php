@@ -3,9 +3,9 @@
 
 	class Privilege Extends \BaseModel {
 
-		public $description;
-		public $name;
-		public $module;
+		public string $description = "";
+		public string $name = "";
+		public string $module = "";
 
 		/**
 		 * Constructor
