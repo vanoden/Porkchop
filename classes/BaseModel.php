@@ -276,7 +276,7 @@
 			if (!empty($this->_cacheKeyPrefix)) {
 				$cache = $this->cache();
 
-				if (isset($cache) && !empty($this->_cacheKeyPrefix)) {
+				if (isset($cache)) {
 					$fromCache = $cache->get();
 					if (!empty($fromCache)) {
 						foreach ($fromCache as $key => $value) {
@@ -317,6 +317,7 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+
 			$object = $rs->FetchNextObject(false);
 			$column = $this->_tableIDColumn;
 			if (is_object($object) && $object->$column > 0) {
@@ -353,6 +354,10 @@
 				foreach ($this as $key => $value) {
 					// Cannot nullify ID
 					if ($key == 'id') $this->$key = 0;
+					if (gettype($this->$key) == "integer") $this->$key = 0;
+					elseif (gettype($this->$key) == "float") $this->$key = 0.0;
+					elseif (gettype($this->$key) == "boolean") $this->$key = false;
+					elseif (gettype($this->$key) == "string") $this->$key = '';
 					else $this->$key = null;
 				}
 				$this->exists(false);
