@@ -273,32 +273,34 @@
 			$database = new \Database\Service();
 
 			// Initialize Cache Service
-			$cache = $this->cache();
+			if (!empty($this->_cacheKeyPrefix)) {
+				$cache = $this->cache();
 
-			if (isset($cache) && !empty($this->_cacheKeyPrefix)) {
-				$fromCache = $cache->get();
-				if (!empty($fromCache)) {
-					foreach ($fromCache as $key => $value) {
-						if (property_exists($this,$key)) {
-							$property = new \ReflectionProperty($this, $key);
-							if (is_null($property->getType())) continue;
-							$property_type = $property->getType();
-							if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) $this->$key = null;
-							elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
-							elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
-							elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
-							elseif (gettype($this->$key) == "string") $this->$key = strval($value);
-							else $this->$key = $value;
+				if (isset($cache) && !empty($this->_cacheKeyPrefix)) {
+					$fromCache = $cache->get();
+					if (!empty($fromCache)) {
+						foreach ($fromCache as $key => $value) {
+							if (property_exists($this,$key)) {
+								$property = new \ReflectionProperty($this, $key);
+								if (is_null($property->getType())) continue;
+								$property_type = $property->getType();
+								if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) $this->$key = null;
+								elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
+								elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
+								elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
+								elseif (gettype($this->$key) == "string") $this->$key = strval($value);
+								else $this->$key = $value;
+							}
 						}
+						$this->cached(true);
+						$this->exists(true);
+						foreach ($this->_aliasFields as $alias => $real) {
+							// Cached values might have alias instead of real field name
+							if (isset($this->$alias) && !isset($this->$real)) continue;
+							$this->$alias = $this->$real;
+						}
+						return true;
 					}
-					$this->cached(true);
-					$this->exists(true);
-					foreach ($this->_aliasFields as $alias => $real) {
-						// Cached values might have alias instead of real field name
-						if (isset($this->$alias) && !isset($this->$real)) continue;
-						$this->$alias = $this->$real;
-					}
-					return true;
 				}
 			}
 
@@ -324,7 +326,7 @@
 						$property = new \ReflectionProperty($this, $key);
 						$property_type = $property->getType();
 						if (is_null($property_type)) {
-							app_log("Setting nullkey ".$this->$key." to ".strval($value));
+							app_log("Setting key ".$this->$key." of unspecified type to ".strval($value));
 							$this->$key = strval($value);
 						}
 						elseif ($property_type->allowsNull() && is_null($value)) $this->$key = null;
@@ -556,11 +558,11 @@
 				return new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 			}
 			else if (!empty($this->_cacheKeyPrefix)) {
-				$this->error("No ID defined for ".get_class($this));
+				$this->debug("No ID defined for ".get_class($this));
 				return null;
 			}
 			else {
-				$this->error("No cache key defined for ".get_class($this));
+				$this->debug("No cache key defined for ".get_class($this));
 				return null;
 			}
 		}
