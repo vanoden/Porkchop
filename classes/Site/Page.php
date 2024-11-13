@@ -717,7 +717,7 @@
 					else {
 						app_log("Found message ".$block->id);
 					}
-				    if ($block->cached) {
+				    if ($block->cached()) {
 						app_log("Loading from cache");
 					    header("X-Object-Cached: true" );
 				    }

@@ -44,7 +44,7 @@
 				$this->id = $id;
 			}
 			else {
-				$this->error("Message not found");
+				$this->error("Message '".$target."' not found");
 				return false;
 			}
 			return $this->details();

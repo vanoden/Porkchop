@@ -328,7 +328,12 @@
 			}
 		}
 
-		public function changePassword($password) {
+		/**
+		 * Change the customer's password
+		 * @param mixed $password 
+		 * @return bool 
+		 */
+		public function changePassword($password): bool {
 
 			if (isset($GLOBALS['_config']->register->minimum_password_strength) && $this->password_strength($password) < $GLOBALS['_config']->register->minimum_password_strength) {
 				$this->error("Password needs more complexity");
@@ -818,7 +823,7 @@
 			if (empty($admin_id)) $admin_id = $this->id;
 
 			if ($audit->validClass($type) == false) {
-				$this->error("Invalid audit class: ".$type);
+				app_log("Invalid audit class: ".$type,'error');
 				return false;
 			}
 
@@ -831,7 +836,7 @@
 			));
 			
 			if ($audit->error()) {
-				$this->error($audit->error());
+				app_log($audit->error(),'error');
 				return false;
 			}
 			return true;

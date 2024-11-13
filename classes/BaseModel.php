@@ -560,7 +560,7 @@
 				return null;
 			}
 			else {
-				$this->debug("No cache key defined for ".get_class($this));
+				$this->error("No cache key defined for ".get_class($this));
 				return null;
 			}
 		}
