@@ -20,7 +20,7 @@
 			$database = new \Database\Service();
 
 			// Dereference Working Class
-			$workingClass = new $this->_modelName();
+			$workingClass = new \Storage\File();
 
 			// Build Query
 			$find_objects_query = "
@@ -31,18 +31,24 @@
 			";
 			
 			// if we're looking for a specific type of file upload with a reference id
-            if (isset($parameters['type']) && strlen($parameters['type']) && !empty($parameters['ref_id'])) {
-                $find_objects_query .= "
-				AND sfm.key = ? AND sfm.value = ?";
-				$database->AddParam($parameters['type']);
-				$database->AddParam($parameters['ref_id']);
+            if (!empty($parameters['type']) && !empty($parameters['ref_id'])) {
+				if ($workingClass->validType($parameters['type'])) {
+	                $find_objects_query .= "
+					AND sfm.key = ? AND sfm.value = ?";
+					$database->AddParam($parameters['type']);
+					$database->AddParam($parameters['ref_id']);
+				}
+				else {
+					$this->error("Invalid type");
+					return [];
+				}
             }
 
-			if (isset($parameters['name']) && strlen($parameters['name'])) {
-				if (preg_match('/^[\w\-\_.\s]+$/',$parameters['name'])) {
+			if (!empty($parameters['name'])) {
+				if ($workingClass->validName($parameters['name'])) {
 					$find_objects_query .= "
 						AND sf.name = ?";
-						$database->AddParam($parameters['name']);
+					$database->AddParam($parameters['name']);
 				}
 				else {
 					$this->error("Invalid name");
@@ -51,10 +57,17 @@
 			}
 
 			if (isset($parameters['repository_id'])) {
-				if (preg_match('/^\d+$/',$parameters['repository_id'])) {
-					$find_objects_query .= "
-						AND sf.repository_id = ?";
-					$database->AddParam($parameters['repository_id']);
+				if (is_numeric($parameters['repository_id'])) {
+					$repository = new \Storage\Repository($parameters['repository_id']);
+					if ($repository->exists()) {
+						$find_objects_query .= "
+							AND sf.repository_id = ?";
+						$database->AddParam($parameters['repository_id']);
+					}
+					else {
+						$this->error("Repository not found");
+						return [];
+					}
 				}
 				else {
 					$this->error("Invalid repository ID");
@@ -62,18 +75,26 @@
 				}
 			}
 
-			if (isset($parameters['path'])) {
-				$find_objects_query .= "
-					AND sf.path = ?";
-				$database->AddParam($parameters['path']);
+			if (!empty($parameters['path'])) {
+				if ($workingClass->validPath($parameters['path'])) {
+					$find_objects_query .= "
+						AND sf.path = ?";
+					$database->AddParam($parameters['path']);
+				}
+				else {
+					$this->error("Invalid path");
+					return [];
+				}
 			}
 
+			// Execute Query
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				return [];
 			}
-			
+
+			// Assemble Results
 			$files = array();
 			while(list($id) = $rs->FetchRow()) {
 				$file = new File($id);

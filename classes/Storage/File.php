@@ -44,7 +44,7 @@ class File extends \BaseModel {
 	 * @param array $parameters - Array of parameters to add to the table
 	 * @return bool - True if successful, False if not
 	 */
-	public function add($parameters = []) {
+	public function add($parameters = []): bool {
 		// Clear any previous errors
 		$this->clearError();
 
