@@ -9,10 +9,10 @@
 		public bool $is_reseller = false;
 		public $reseller;
 		public string $notes = "";
-		public ?int $assigned_reseller_id;
-		public ?int $password_expiration_days;
-		public ?int $default_billing_location_id;
-		public ?int $default_shipping_location_id;
+		public ?int $assigned_reseller_id = null;
+		public ?int $password_expiration_days = null;
+		public ?int $default_billing_location_id = null;
+		public ?int $default_shipping_location_id = null;
 		public string $website_url = "";
 		private bool $_nocache = false;
 		private $database;
