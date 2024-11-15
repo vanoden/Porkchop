@@ -2,15 +2,15 @@
 	namespace Storage;
 
 	class Repository Extends \BaseModel {
-		public $name;						// Name of Repository
-		public $type;						// Type of Repository - S3, Local, etc.
-		public $code;						// Unique Code for Repository
-		public $status;						// Status of Repository - NEW, ACTIVE, DISABLED
-		public $endpoint;					// Endpoint for Repository
-		public $secretKey;					// Secret Key for AWS Repository
-		public $accessKey;					// Access Key for AWS Repository
-		public $default_privileges_json;	// JSON string representing default privileges
-		public $override_privileges_json;	// JSON string representing override privileges
+		public string $name = "";						// Name of Repository
+		public string $type = "";						// Type of Repository - S3, Local, etc.
+		public ?string $code = null;					// Unique Code for Repository
+		public string $status = 'NEW';					// Status of Repository - NEW, ACTIVE, DISABLED
+		public string $endpoint = "";					// Endpoint for Repository
+		public string $secretKey = "";					// Secret Key for AWS Repository
+		public string $accessKey = "";					// Access Key for AWS Repository
+		public string $default_privileges_json = "";	// JSON string representing default privileges
+		public string $override_privileges_json = "";	// JSON string representing override privileges
 		protected $_metadata_keys = [];		// Array of metadata keys
 
 		/**
@@ -237,12 +237,23 @@
 
 			// Fetch Record From Database as Object
 			$object = $rs->FetchNextObject(false);
-			$this->name = $object->name;
-			$this->type = $object->type;
-			$this->code = $object->code;
-			$this->status = $object->status;
-			$this->default_privileges_json = $object->default_privileges;
-			$this->override_privileges_json = $object->override_privileges;
+			if ($object->id) {
+				$this->name = strval($object->name);
+				$this->type = strval($object->type);
+				$this->code = $object->code;
+				$this->status = strval($object->status);
+				$this->default_privileges_json = strval($object->default_privileges);
+				$this->override_privileges_json = strval($object->override_privileges);
+			}
+			else {
+				$this->id = 0;
+				$this->name = "";
+				$this->type = "";
+				$this->code = null;
+				$this->status = "";
+				$this->default_privileges_json = "";
+				$this->override_privileges_json = "";
+			}
 			return true;
 		}
 

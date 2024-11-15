@@ -14,7 +14,7 @@
 			$database = new \Database\Service();
 
 			// Initialize Working Class
-			$workingClass = new $this->_modelName();
+			$workingClass = new \Storage\Repository();
 
 			// Build Query
 			$find_objects_query = "

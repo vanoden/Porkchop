@@ -99,7 +99,7 @@
 		public function details(): bool {
 			parent::details();
 			$this->path = $this->_path();
-			$this->endpoint = $this->_endpoint();
+			$this->endpoint = strval($this->_endpoint());
 			return true;
 		}
 
