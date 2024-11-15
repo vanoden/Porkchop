@@ -149,7 +149,7 @@
 				if (strlen($buffer) >= $contentLength + $this->_meta_chars && ord(substr($buffer,$headerLength,1)) == 2 && ord(substr($buffer,$contentLength + $headerLength + 1,1)) == 3) {
 					$in = "";		// Incoming chars for debug output
 					for ($i = 0; $i < $contentLength; $i++) {
-						$in .= $i."[".ord(substr($buffer,$i+$headerLength + 1,1))."]";					
+						$in .= "[".ord(substr($buffer,$i+$headerLength + 1,1))."]";					
 						$data[$i] = substr($buffer,$i+$headerLength + 1,1);
 					}
 					app_log("Bytes: ".$in);
@@ -336,11 +336,11 @@
 			//$footer = sprintf("%b%02b%b",3, $this->_genChecksum($string),4);
 			$string .= $footer;
 
-			$chars = "Entire Content: ";
+			$chars = "Outgoing Envelope: ";
 			for ($i = 0; $i < strlen($string); $i++) {
 				$chars .= "[".ord(substr($string,$i,1))."]";
 			}
-			app_log($chars,'info');
+			app_log($chars,'debug');
 
 			return strlen($string);
 		}
