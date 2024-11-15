@@ -133,6 +133,26 @@
 			return (preg_match('/^\w[\w\.\-]*$/', $string));
 		}
 
+		// Validate a URL
+		public function validURL($string): bool {
+			define('URL_FORMAT', 
+			'/^(https?):\/\/'.                                         // protocol
+			'(([a-z0-9$_\.\+!\*\'\(\),;\?&=-]|%[0-9a-f]{2})+'.         // username
+			'(:([a-z0-9$_\.\+!\*\'\(\),;\?&=-]|%[0-9a-f]{2})+)?'.      // password
+			'@)?(?#'.                                                  // auth requires @
+			')((([a-z0-9]\.|[a-z0-9][a-z0-9-]*[a-z0-9]\.)*'.                      // domain segments AND
+			'[a-z][a-z0-9-]*[a-z0-9]'.                                 // top level domain  OR
+			'|((\d|[1-9]\d|1\d{2}|2[0-4][0-9]|25[0-5])\.){3}'.
+			'(\d|[1-9]\d|1\d{2}|2[0-4][0-9]|25[0-5])'.                 // IP address
+			')(:\d+)?'.                                                // port
+			')(((\/+([a-z0-9$_\.\+!\*\'\(\),;:@&=-]|%[0-9a-f]{2})*)*'. // path
+			'(\?([a-z0-9$_\.\+!\*\'\(\),;:@&=-]|%[0-9a-f]{2})*)'.      // query string
+			'?)?)?'.                                                   // path and query string optional
+			'(#([a-z0-9$_\.\+!\*\'\(\),;:@&=-]|%[0-9a-f]{2})*)?'.      // fragment
+			'$/i');
+			return (preg_match(URL_FORMAT, $string));
+		}
+
 		public function safeString($string): bool {
 			$string = urldecode($string);
 			if (preg_match('/(&#*\w+)[\x00-\x20]+;/u',$string)) return false;
