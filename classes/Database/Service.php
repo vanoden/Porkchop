@@ -119,6 +119,30 @@
 		}
 
 		/**
+		 * Begin a Transaction
+		 * @return bool
+		 */
+		public function BeginTrans() {
+			return $this->_connection->BeginTrans();
+		}
+
+		/**
+		 * Commit a Transaction
+		 * @return bool
+		 */
+		public function CommitTrans() {
+			return $this->_connection->CommitTrans();
+		}
+
+		/**
+		 * Rollback a Transaction
+		 * @return bool
+		 */
+		public function RollbackTrans() {
+			return $this->_connection->RollbackTrans();
+		}
+
+		/**
 		 * Set the database debug level
 		 * @param string $level - Optional, defaults to null
 		 * @return int
