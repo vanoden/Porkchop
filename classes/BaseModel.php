@@ -224,6 +224,7 @@
 		/* Get Object Record Using Unique Code		*/
 		/********************************************/
 		public function _getObject(string $code): bool {
+			
 			// Clear Errors
 			$this->clearError();
 
@@ -262,6 +263,32 @@
 				$parts = explode("\\",$cls);
 				$this->warn($parts[1]." not found");
 				return false;
+			}
+		}
+
+		// Get Cached Object
+		public function getCachedObject($fromCache) {
+			if (!empty($fromCache)) {
+				foreach ($fromCache as $key => $value) {
+					if (property_exists($this,$key)) {
+						$property = new \ReflectionProperty($this, $key);
+						if (is_null($property->getType())) continue;
+						$property_type = $property->getType();
+						if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) $this->$key = null;
+						elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
+						elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
+						elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
+						elseif (gettype($this->$key) == "string") $this->$key = strval($value);
+						else $this->$key = $value;
+					}
+				}
+				$this->cached(true);
+				$this->exists(true);
+				foreach ($this->_aliasFields as $alias => $real) {
+					// Cached values might have alias instead of real field name
+					if (isset($this->$alias) && !isset($this->$real)) continue;
+					$this->$alias = $this->$real;
+				}
 			}
 		}
 
