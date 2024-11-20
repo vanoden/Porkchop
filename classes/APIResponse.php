@@ -2,6 +2,7 @@
 	class APIResponse Extends \HTTP\Response {
 		protected $_data = array();
 		public bool $success = true;
+		protected $_stylesheet = null;
 
 		public function success(bool $value = null): bool {
 			if (isset($value)) $this->success = $value;
@@ -10,6 +11,10 @@
 
 		public function data(array $data) {
 			$this->_data = $data;
+		}
+
+		public function stylesheet($string) {
+			$this->_stylesheet = $string;
 		}
 
 		public function addElement($name,$object) {
@@ -46,6 +51,9 @@
 			}
 
 			$document = new \Document($format);
+			if (!empty($this->_stylesheet)) {
+				$document->stylesheet($this->_stylesheet);
+			}
 			$document->prepare($data);
 			$comm->update(json_encode($document));
 			if (isset($GLOBALS['_config']->site->force_content_length) && $GLOBALS['_config']->site->force_content_length == true) {

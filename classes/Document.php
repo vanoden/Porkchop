@@ -1,12 +1,17 @@
 <?php
 	class Document Extends \BaseClass {
 		public $type;
-		public $stylesheet;
+		public $_stylesheet;
 		private $_content;
 		private $_data;
 
 		public function __construct($type = 'xml') {
 			$this->type = $type;
+		}
+
+		public function stylesheet($string) {
+			$this->_stylesheet = $string;
+			return $this->_stylesheet;
 		}
 
 		public function prepare($object) {
@@ -56,8 +61,8 @@
 			if ($xml->serialize($object)) {
 				//error_log("Returning ".$xml->getSerializedData());
 				$output = $xml->getSerializedData();
-				if ($this->stylesheet) {
-					$output = '<?xml-stylesheet type="text/xsl" href="'.$this->stylesheet.'"?>'."\n".$output;
+				if (!empty($this->_stylesheet)) {
+					$output = '<?xml-stylesheet type="text/xsl" href="'.$this->_stylesheet.'"?>'."\n".$output;
 				}
 				return $output;
 			}
