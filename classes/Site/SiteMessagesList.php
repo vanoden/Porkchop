@@ -2,11 +2,25 @@
 	namespace Site;
 
 	class SiteMessagesList Extends \BaseListClass {
+		
 		public function __construct() {
 			$this->_modelName = '\Site\SiteMessage';
 		}
 
+		/**
+		 * Finds messages based on advanced search parameters.
+		 *
+		 * @param array $parameters An associative array of search parameters, which may include:
+		 *                         - user_created: The ID of the user who created the message.
+		 *                         - recipient_id: The ID of the recipient of the message.
+		 *                         - acknowledged: A string indicating whether to filter by read ('read') or unread ('unread') messages.
+		 * @param array $advanced   An array for advanced search options (currently unused).
+		 * @param array $controls   An array for control options (currently unused).
+		 * 
+		 * @return array An array of SiteMessage objects that match the search criteria.
+		 */
 		public function findAdvanced(array $parameters, array $advanced, array $controls): array {
+			
 			$this->clearError();
 			$this->resetCount();
 
@@ -43,7 +57,7 @@
 				$user = new \Register\Person($parameters['recipient_id']);
 				if ($user->exists()) {
 					$find_objects_query .= "
-					AND		smd.recipient_id = ?";
+					AND		sm.recipient_id = ?";
 					$database->AddParam($parameters['recipient_id']);
 				}
 				else {
