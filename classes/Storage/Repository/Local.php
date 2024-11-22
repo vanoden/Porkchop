@@ -10,14 +10,14 @@
 			parent::__construct($id);
 		}
 
-		public function add($parameters = []) {
-			app_log("Creating local repository ".$parameters['name'],'notice');
+		public function add($parameters = []): bool {
+			app_log("Creating local repository ".$parameters['name']." in ".$parameters['path'],'notice');
 			if (! isset($parameters['path'])) {
 				$this->error("Path required");
 				return false;
 			}
 			elseif (! is_dir($parameters['path'])) {
-				$this->error("Path doesn't exist");
+				$this->error("Path '".$parameters['path']."' doesn't exist");
 				return false;
 			}
 			elseif (! is_writable($parameters['path'])) {
@@ -33,12 +33,14 @@
 					app_log("Path set to ".$parameters['path'],'notice');
 					$this->path = $this->_path();
 					return true;
-				} else {
+				}
+				else {
 					app_log("Failed to set path: ".$this->error(),'error');
 					$this->error("Failed to add path to metadata: ".parent::error());
 					return false;
 				}
-			} else {
+			}
+			else {
 				app_log("Parent add returned false: ".$this->error(),'error');
 				return false;
 			}
@@ -47,7 +49,7 @@
 		public function connect() {
 			$path = $this->getMetadata('path');
 			if (is_dir($path)) return true;
-			$this->error($path." doesn't exist or is not a directory");
+			$this->error("Path '$path' doesn't exist or is not a directory");
 			return false;
 		}
 

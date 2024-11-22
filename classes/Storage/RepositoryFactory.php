@@ -27,7 +27,7 @@
 				return false;
 			}
             else {
-				$this->error("Unsupported Repository Type");
+				$this->error("Unsupported Repository Type '$type'");
 				return false;
 			}
 		}
@@ -48,7 +48,7 @@
 				return false;
 			}
 			
-			if ($repository->type == "Local") {
+			if ($repository->type == "local") {
 				return new Repository\Local($repository->id);
             }
             else if ($repository->type == "s3") {
@@ -75,7 +75,7 @@
 				return null;
 			}
 			
-			if ($repository->type == "Local") {
+			if ($repository->type == "local") {
 				return new Repository\Local($repository->id);
 			} else if ($repository->type == "s3") {
 				return new Repository\S3($repository->id);
@@ -100,7 +100,7 @@
 				return false;
 			}
 		
-			if ($repository->type == "Local") {
+			if ($repository->type == "local") {
 				return new Repository\Local($repository->id);
 			}
             else if ($repository->type == "s3") {

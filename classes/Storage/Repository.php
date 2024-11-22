@@ -592,7 +592,7 @@
 			// Access for Organization
 			$privilege = $privileges->privilege('o',$organization_id);
 			if ($privilege->write) return true;
-	
+
 			// Access for Roles
 			$roles = $user->roles();
 			foreach ($roles as $role) {

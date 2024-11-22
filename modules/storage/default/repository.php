@@ -4,8 +4,15 @@
         var selectedValue = type.value;
         if (selectedValue == 's3') {
             document.getElementById('s3Settings').style.display = 'block';
-        } else {
+			document.getElementById('localSettings').style.display = 'none';
+        }
+		else if (selectedValue == 'local') {
+			document.getElementById('localSettings').style.display = 'block';
+			document.getElementById('s3Settings').style.display = 'none';
+		}
+		else {
             document.getElementById('s3Settings').style.display = 'none';
+			document.getElementById('localSettings').style.display = 'none';
         }
     }
 	function updateIds(typeElem,entityElemName) {
@@ -79,19 +86,6 @@
         <input type="text" name="name" class="value input wide_xl" value="<?=$form['name']?>" />
     </div>
     <div class="container">
-        <span class="label">Type</span>
-    <?php	 if ($repository->id) { ?>
-        <span class="value"><?=$repository->type?></span>
-    <?php	 } else { ?>
-        <select id="type" name="type" class="value input wide_xl" onchange="getValue(this)">
-            <option value="Local" <?php	if ($form['type'] == "local") print " selected"; ?>>Local</option>
-            <option value="s3" <?php	if ($form['type'] == "s3") print " selected"; ?>>Amazon S3</option>
-            <option value="Drive" <?php	if ($form['type'] == "Drive") print " selected"; ?>>Google Drive</option>
-            <option value="DropBox" <?php	if ($form['type'] == "DropBox") print " selected"; ?>>DropBox</option>
-        </select>
-    <?php	 } ?>
-    </div>
-    <div class="container">
         <span class="label">Status</span>
         <select id="status" name="status" class="value input wide_xl">
             <option value="NEW"<?php	if ($form['status'] == "NEW") print " selected"; ?>>NEW</option>
@@ -99,8 +93,27 @@
             <option value="DISABLED"<?php	if ($form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
         </select>
     </div>
-    
-    <div id="s3Settings"<?php if (count($metadata_keys) < 1) { print "style=\"display:none;\""; } ?>>
+    <div class="container">
+        <span class="label">Type</span>
+    <?php	 if ($repository->id) { ?>
+        <span class="value"><?=$repository->type?></span>
+    <?php	 } else { ?>
+        <select id="type" name="type" class="value input wide_xl" onchange="getValue(this)">
+            <option value="local" <?php	if ($form['type'] == "local") print " selected"; ?>>Local</option>
+            <option value="s3" <?php	if ($form['type'] == "s3") print " selected"; ?>>Amazon S3</option>
+            <option value="drive" <?php	if ($form['type'] == "drive") print " selected"; ?>>Google Drive</option>
+            <option value="dropBox" <?php	if ($form['type'] == "dropBox") print " selected"; ?>>DropBox</option>
+        </select>
+    <?php	 } ?>
+    </div>
+
+	<div id="localSettings"<?php if (!empty($repository->id) && $repository->type != 'local') { print "style=\"display:none;\""; } ?>>
+		<div class="container" style="margin: 10px; padding: 20px; border:dashed 1px gray; display: inline-table;">
+			<span class="label">Path</span>
+			<input type="text" name="path" class="value input wide_xl" value="<?=$form['path']?>" />
+		</div>
+	</div>
+    <div id="s3Settings"<?php if (!empty($repository->id) && $repository->type != 's3') { print "style=\"display:none;\""; } ?>>
         <div class="container" style="margin: 10px; padding: 20px; border:dashed 1px gray; display: inline-table;">
 <?php	foreach($metadata_keys as $key) { ?>
             <span class="label"><?=ucfirst($key)?></span>

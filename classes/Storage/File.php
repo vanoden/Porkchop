@@ -220,8 +220,9 @@ class File extends \BaseModel {
 			$this->timestamp = strtotime($this->timestamp);
 			$this->_repository_id = $object->repository_id;
 			$this->access_privilege_json = $object->access_privileges;
-		} else {
-			$this->id = null;
+		}
+		else {
+			$this->id = 0;
 			$this->code = null;
 		}
 

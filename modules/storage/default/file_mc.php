@@ -131,7 +131,8 @@ if ($file->id) {
 
 // Only those who can write to the repository can edit this file
 $repository = $file->repository();
-if (!isset($repository) && $repository->writable($GLOBALS['_SESSION_']->customer->id)) {
+if (empty($repository) || !$repository->writable($GLOBALS['_SESSION_']->customer->id)) {
+	print_r($repository);
 	$page->addError("Permission Denied");
 	return 403;
 }

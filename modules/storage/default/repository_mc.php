@@ -84,6 +84,9 @@
 				else {
 					$repository = $factory->create($_REQUEST['type']);
 					if ($factory->error()) $page->addError($factory->error());
+					if ($_REQUEST['type'] == 'local') {
+						$parameters['path'] = $_REQUEST['path'];
+					}
 					$repository->add($parameters);           
 					$page->success = "Repository created";
 				}
