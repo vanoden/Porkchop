@@ -333,8 +333,8 @@ class File extends \BaseModel {
 
 		// Fetch first column of result row as file id
 		list($file_id) = $rs->FetchRow();
-		$this->id = $file_id;
-		if (!empty($this->id)) {
+		if (!empty($file_id)) {
+			$this->id = $file_id;
 			// Get Details from Database
 			$this->details();
 
