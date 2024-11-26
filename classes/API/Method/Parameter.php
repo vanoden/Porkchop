@@ -20,6 +20,7 @@
 		public $deprecated = false;
 		public $allow_wildcards = false;
 		public $show_controls = false;
+		public $content_type = null;
 
 		public function __construct($parameters = []) {
 			foreach ($parameters as $name => $value) {
@@ -61,6 +62,28 @@
 					if (is_bool($value)) $this->allow_wildcards = $value;
 					elseif ($value == "false") $this->allow_wildcards = false;
 					else $this->allow_wildcards = true;
+				}
+				elseif ($name == "content-type") {
+					switch($value) {
+						case "int":
+							$this->content_type = "int";
+							break;
+						case "string":
+							$this->content_type = "string";
+							break;
+						case "boolean":
+							$this->content_type = "boolean";
+							break;
+						case "bool":
+							$this->content_type = "boolean";
+							break;
+						case "float":
+							$this->content_type = "float";
+							break;
+						default:
+							$this->content_type = "text";
+							break;
+					}
 				}
 				else {
 					$this->error("Invalid Parameter: ".$name);
