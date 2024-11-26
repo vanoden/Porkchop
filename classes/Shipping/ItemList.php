@@ -69,6 +69,7 @@
 						AND		product_id = ?
 					";
 					$database->AddParam($parameters['product_id']);
+					$product_id = $product->id;
 				}
 				else {
 					$this->error('Product not found');
@@ -89,6 +90,10 @@
 			// Build Results
 			$objects = array();
 			while (list($organization_id,$product_id) = $rs->FetchRow()) {
+				if (empty($product_id)) {
+					app_log("Product ID is empty for organization ID: $organization_id",app::LOG_LEVEL_ERROR);
+					continue;
+				}
 				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
 				$object = $orgProduct;
 				if ($this->error()) {
