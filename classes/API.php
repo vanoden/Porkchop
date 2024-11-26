@@ -226,7 +226,7 @@
 		/************************************************/
 		public function invalidRequest($message = null) {
 			if (empty($message)) $message = "Invalid Request";
-			app_log("Invalid Request for ".class_name($this)." method ".$_REQUEST['method'].": ".$message,'error',__FILE__,__LINE__);
+			app_log("Invalid Request for ".get_class($this)." method ".$_REQUEST['method'].": ".$message,'error',__FILE__,__LINE__);
 			$_REQUEST["stylesheet"] = '';
 			$response = new \APIResponse();
 			$response->code(400);
