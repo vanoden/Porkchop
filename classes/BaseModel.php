@@ -305,21 +305,33 @@
 				if (isset($cache)) {
 					$fromCache = $cache->get();
 					if (!empty($fromCache)) {
+						// Populate Properties from Cache
 						foreach ($fromCache as $key => $value) {
 							if (property_exists($this,$key)) {
+								// Get the Variable Type to write the value appropriately
 								$property = new \ReflectionProperty($this, $key);
-//								if (is_null($property->getType())) continue;
 								$property_type = $property->getType();
+
+								// Variable type is not set
 								if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) $this->$key = null;
+
+								// Variable type is set
 								elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
 								elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
 								elseif (gettype($this->$key) == "boolean") $this->$key = boolval($value);
 								elseif (gettype($this->$key) == "string") $this->$key = strval($value);
+
+								// Variable type is set, but none of the above
 								else $this->$key = $value;
 							}
 						}
+						// Let them know the value is cached
 						$this->cached(true);
+
+						// Let them know we found the record
 						$this->exists(true);
+
+						// Populate the alias fields
 						foreach ($this->_aliasFields as $alias => $real) {
 							// Cached values might have alias instead of real field name
 							if (isset($this->$alias) && !isset($this->$real)) continue;
@@ -330,20 +342,26 @@
 				}
 			}
 
+			// Build the Query
 			$get_object_query = "
 				SELECT	*
 				FROM	`$this->_tableName`
 				WHERE	`$this->_tableIDColumn` = ?
 			";
 
+			// Add Query Parameters
 			$database->AddParam($this->id);
+
+			// Execute The Query
 			$rs = $database->Execute($get_object_query);
 
+			// Check for SQL Errors
 			if (!$rs) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
+			// Fetch results and populate properties from database
 			$object = $rs->FetchNextObject(false);
 			$column = $this->_tableIDColumn;
 			if (is_object($object) && $object->$column > 0) {
