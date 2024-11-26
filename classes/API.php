@@ -336,7 +336,7 @@
 				//print_r($param."\n");
 				if (isset($options['required']) && $options['required']) {
 					//print_r("\trequired\n");
-					if (empty($value)) {
+					if (!isset($value)) {
 						$this->incompleteRequest("Missing required parameter: $param");
 					}
 				}
