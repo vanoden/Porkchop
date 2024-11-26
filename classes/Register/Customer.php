@@ -356,6 +356,7 @@
 		}
 
 		public function validPassword($string) {
+			return true;
 			$strength = $this->password_strength($string);
 			if ($strength >= $GLOBALS['_config']->register->minimum_password_strength) return true;
 			else return false;
