@@ -176,6 +176,15 @@
 			return (preg_match('/^[^\%\<\>]+$/',$string));
 		}
 
+		public function _clone() {
+			$obj = new \stdClass();
+			foreach (get_object_vars($this) as $key => $value) {
+				if (preg_match('/^_/',$key)) continue;
+				$obj->$key = $value;
+			}
+			return $obj;
+		}
+
 		public function getError() {
 			return $this->_error;
         }		
