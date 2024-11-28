@@ -91,7 +91,7 @@
 			$objects = array();
 			while (list($organization_id,$product_id) = $rs->FetchRow()) {
 				if (empty($product_id)) {
-					app_log("Product ID is empty for organization ID: $organization_id",app::LOG_LEVEL_ERROR);
+					app_log("Product ID is empty for organization ID: $organization_id");
 					continue;
 				}
 				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
