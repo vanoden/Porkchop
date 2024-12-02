@@ -18,6 +18,9 @@
 			$this->_tableName = "monitor_assets";
 			$this->_tableIDColumn = "asset_id";
 			$this->_tableUKColumn = null;
+			$this->_metaTableName = "monitor_asset_metadata";
+			$this->_tableMetaFKColumn = "asset_id";
+			$this->_tableMetaKeyColumn = "key";
             $this->_aliasField("asset_code","code");
 			$this->_auditEvents = true;
     		parent::__construct($id);
@@ -405,114 +408,6 @@
 
 		public function track() {
 			$this->clearError();
-		}
-	
-		public function setMetadata($key,$value) {    
-			app_log("Setting metadata '$key' to '$value' for '".$this->code."'",'debug',__FILE__,__LINE__);
-			$set_object_query = "
-				INSERT
-				INTO	monitor_asset_metadata
-				(asset_id,`key`,value)
-				VALUES	(?,?,?)
-				ON DUPLICATE KEY UPDATE
-				VALUE = ?
-			";
-			$GLOBALS['_database']->Execute(
-				$set_object_query,
-				array($this->id,$key,$value,$value)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			return 1;
-		}
-		
-		public function deleteMetadata($key) {
-			
-			app_log("Removing metadata '$key' for '".$this->code."'",'debug',__FILE__,__LINE__);
-			$set_object_query = "
-				DELETE
-				FROM	monitor_asset_metadata
-				WHERE `asset_id` = ? AND `key` = ?
-			";
-			$GLOBALS['_database']->Execute(
-				$set_object_query,
-				array($this->id,$key)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-
-			// audit the delete event
-			$auditLog = new \Site\AuditLog\Event();
-			$auditLog->add(array(
-				'instance_id' => $this->id,
-				'description' => 'Deleted '.$this->_objectName(),
-				'class_name' => get_class($this),
-				'class_method' => 'deleteMetadata'
-			));	
-
-			return 1;
-		}
-		
-		public function allMetadata() {
-			$get_object_query = "
-				SELECT	`key`,value
-				FROM	monitor_asset_metadata
-				WHERE	asset_id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			$array = array();
-			while (list($label,$value) = $rs->FetchRow()) {
-				$array[$label] = $value;
-			}
-			return $array;
-		}
-		
-		public function getAllMetadata() {
-			$get_value_query = "
-				SELECT	value
-				FROM	monitor_asset_metadata
-				WHERE	asset_id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_value_query,
-				array($this->id)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($value) = $rs->FetchRow();
-			return $value;
-		}		
-		
-		public function getMetadata($key) {
-			$get_value_query = "
-				SELECT	value
-				FROM	monitor_asset_metadata
-				WHERE	asset_id = ?
-				AND		`key` = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_value_query,
-				array($this->id,$key)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($value) = $rs->FetchRow();
-			return $value;
 		}
 
 		public function getTickets($parameters = array()) {

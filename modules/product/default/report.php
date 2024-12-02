@@ -48,11 +48,11 @@ foreach ($products as $product) {
         <div class="tableCell codeValue<?=$greenbar?>"><a href="/_product/edit/<?=$product->code?>"><?=$product->code?></a></div>
 		<div class="tableCell smallValue<?=$greenbar?>"><?=isset($product->type) ? $product->type : ''?></div>
 		<div class="tableCell smallValue<?=$greenbar?>"><?=isset($product->status) ? $product->status : ''?></div>
-		<div class="tableCell nameValue<?=$greenbar?>"><?=$product->getMetadata('name')->value?></div>
-		<div class="tableCell descValue<?=$greenbar?>"><?=$product->getMetadata('short_description')->value?></div>
+		<div class="tableCell nameValue<?=$greenbar?>"><?=$product->getMetadata('name')?></div>
+		<div class="tableCell descValue<?=$greenbar?>"><?=$product->getMetadata('short_description')?></div>
 		<div class="tableCell smallValue<?=$greenbar?>"><input type="button" name="btn_show_<?=$product->id?>" onclick="showMeta(<?=$product->id?>)" value="Show" /></div>
 		<script language="JavaScript">
-			metadata[<?=$product->id?>] = "<?php foreach (get_object_vars($product) as $key => $value) { print "$key=$value\\n"; } ?>";
+			metadata[<?=$product->id?>] = "<?php $metadata = $product->getAllMetadata(); foreach ($metadata as $key => $value) { print "$key=$value\\n"; } ?>";
 		</script>
 		<div class="tableCell descValue<?=$greenbar?>"><a href="/_spectros/admin_asset_sensors?product_id=<?=$product->id?>">View/Edit</a></div>
 	</div>

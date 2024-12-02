@@ -304,6 +304,10 @@
 			}
 
 			// Method Requirements
+			if (!array_key_exists($function_name,$api->_methods())) {
+				$this->notFound("Method '$function_name' not found in ".$this->module." API");
+			}
+
 			$method = $api->_methods()[$function_name];
 			if (isset($method['privilege_required']) && !(preg_match('/^\[\w+\]$/',$method['privilege_required']))) {
 				$this->requirePrivilege($method['privilege_required']);
@@ -325,6 +329,9 @@
 			}
 
 			// Enforce Individual Parameter Requirements
+			if (!isset($method['parameters'])) {
+				$method['parameters'] = array();
+			}
 			foreach ($method['parameters'] as $param => $options) {
 				if (!array_key_exists($param,$_REQUEST)) continue;
 				$value = $_REQUEST[$param];

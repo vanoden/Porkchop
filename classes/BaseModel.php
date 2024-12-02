@@ -29,10 +29,18 @@
 		// Name for Cache Key - id appended in square brackets
 		protected $_cacheKeyPrefix;
 
+		// Metadata Table Info
+		protected $_metaTableName;
+		protected $_tableMetaFKColumn = 'instance_id';
+		protected $_tableMetaKeyColumn = 'key';
+
 		// Should we always audit events for this class?
 		protected static $_auditEvents = false;
 
-		// Load object base on ID if given
+		/**
+		 * Load object base on ID if given
+		 * @param int $id
+		 */
 		public function __construct($id = 0) {
 			if (empty($this->_tableName)) app_log("Class ".get_called_class()." constructed w/o table name!",'notice');
 			if (is_numeric($id) && $id > 0) {
@@ -44,10 +52,19 @@
 			}
 		}
 
-		// Polymorphism for Fun and Profit
+		/**
+		 * Polymorphism for Fun and Profit
+		 * @param string $name
+		 * @param array $parameters
+		 * @return mixed
+		 */
 		public function __call($name,$parameters) {
 			if ($name == 'get' && count($parameters) == 2) $this->error("Too many parameters for 'get'");
 			elseif ($name == 'get')  return $this->_getObject($parameters[0]);
+			elseif ($name == 'setMetadata') {
+				if (gettype($parameters[0]) == 'object') return $this->setMetadataObject($parameters[0], $parameters[1]);
+				else return $this->setMetadataScalar($parameters[0],$parameters[1]);
+			}
 			else {
 				$caller = debug_backtrace()[1];
 				$className = get_called_class();
@@ -56,17 +73,27 @@
 			}
 		}
 
+		/**
+		 * Return the name of the table
+		 * @return string Name of table
+		 */
 		public function _tableName(){
 			return $this->_tableName;
 		}
+
+		/**
+		 * Return the name of the table
+		 * @return string Name of Primary Key ID Column
+		 */
 		public function _tableIDColumn() {
 			return $this->_tableIDColumn;
 		}
 
-		/************************************************/
-		/* Return List of Object Fields					*/
-		/* Auto-populate if not provided by constructor	*/
-		/************************************************/
+		/**
+		 * Return List of Object Fields
+		 * Auto-populate if not provided by constructor
+		 * @return array Names of fields in object
+		 */
 		public function _fields() {
 			if (count($this->_fields) < 1) {
 				$properties = get_object_vars($this);
@@ -78,9 +105,16 @@
 			}
 			return $this->_fields;
 		}
-		public function hasField($name) {
+
+		/**
+		 * Does the table have specified field?
+		 * @param string $name
+		 * @return bool
+		*/
+		public function hasField($name): bool {
 			return in_array($name,$this->_fields);
 		}
+	
 		/**
 		 * update by params
 		 * 
@@ -212,7 +246,11 @@
 			return $this->update($parameters);
 		}
 
-		// Get Object by ID
+		/**
+		 * Get Object by ID
+		 * @param int $id
+		 * @return bool True if object found
+		 */
 		public function load($id): bool {
 			$this->clearError();
 			if (!empty($id)) $this->id = $id;
@@ -220,14 +258,17 @@
 			return $this->details();
 		}
 
-		/********************************************/
-		/* Get Object Record Using Unique Code		*/
-		/********************************************/
+		/**
+		 * Get Object Record Using Unique Code
+		 * @param string $code
+		 * @return bool True if object found
+		*/
 		public function _getObject(string $code): bool {
 			
 			// Clear Errors
 			$this->clearError();
 
+			// Initialize Database Service
 			$database = new \Database\Service();
 			if (gettype($this->_tableUKColumn) == 'NULL') {
 				$trace = debug_backtrace()[1];
@@ -266,14 +307,23 @@
 			}
 		}
 
-		// Get Cached Object
+		/**
+		 * Get Cached Object
+		 * @param array $fromCache
+		 */
 		public function getCachedObject($fromCache) {
+			// Is there a cached version of object?
 			if (!empty($fromCache)) {
+				// Loop through and populate properties from cache
 				foreach ($fromCache as $key => $value) {
+					// Only if property exists
 					if (property_exists($this,$key)) {
+						// Get Property Type
 						$property = new \ReflectionProperty($this, $key);
 						if (is_null($property->getType())) continue;
 						$property_type = $property->getType();
+
+						// Set the value based on type
 						if (!is_null($property_type) && $property_type->allowsNull() && is_null($value)) $this->$key = null;
 						elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
 						elseif (gettype($this->$key) == "float") $this->$key = floatval($value);
@@ -282,8 +332,13 @@
 						else $this->$key = $value;
 					}
 				}
+				// Let them know the values came from cache
 				$this->cached(true);
+
+				// Let them know the object exists
 				$this->exists(true);
+
+				// Populate the alias fields
 				foreach ($this->_aliasFields as $alias => $real) {
 					// Cached values might have alias instead of real field name
 					if (isset($this->$alias) && !isset($this->$real)) continue;
@@ -292,7 +347,10 @@
 			}
 		}
 
-		// Load Object Attributes from Cache or Database
+		/**
+		 * Load Object Attributes from Cache or Database
+		 * @return bool True if object found
+		 */
 		public function details(): bool {
 			$this->clearError();
 
@@ -410,7 +468,10 @@
 			return true;
 		}
 
-		// Delete a record from the database using current ID
+		/** 
+		 * Delete a record from the database using current ID
+		 * @return bool True if object deleted
+		 */
 		public function delete(): bool {
 			// Clear Errors
 			$this->clearError();
@@ -452,7 +513,12 @@
 
 			return true;
 		}
-		
+
+		/**
+		 * Delete a record from the database using a key
+		 * @param string $keyName
+		 * @return bool True if object deleted
+		 */
 		public function deleteByKey($keyName) {
 		
 			// Clear Errors
@@ -541,9 +607,12 @@
 			$this->_aliasFields[$alias] = $real;
 		}
 
-		/********************************************/
-		/* Get Object Record Using Unique Code		*/
-		/********************************************/
+		/**
+		 * Get Object Record Using Unique Code
+		 * and return true if found, false if not
+		 * @param string $code
+		 * @return bool True if object found
+		 */
 		protected function _ukExists(string $code): bool {
 			
 			// Clear Errors
@@ -632,6 +701,419 @@
 				$this->_cached = $cached;
 			}
 			return $this->_cached;
+		}
+
+		/**
+		 * Set Metadata Value for Key
+		 * @param string $key
+		 * @param string $value
+		 * @return bool True if set
+		 */
+		public function setMetadataScalar(string $key, string $value): bool {
+			$this->clearError();
+			if (! isset($value)) return $this->unsetMetadata($key);
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$set_metadata_query = "
+				INSERT INTO `$this->_metaTableName`
+				(
+					`$this->_tableMetaFKColumn`,
+					`$this->_tableMetaKeyColumn`,
+					`value`
+				)
+				VALUES
+				(
+					?,
+					?,
+					?
+				)
+				ON DUPLICATE KEY UPDATE
+					`value` = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($key);
+			$database->AddParam($value);
+			$database->AddParam($value);
+
+			// Execute Query
+			$rs = $database->Execute($set_metadata_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			return true;
+		}
+
+		/**
+		 * Set Metadata Object
+		 * @param string $key
+		 * @param stdClass $value
+		 * @return bool True if set
+		 */
+		public function setMetadataObject(string $key, stdClass $value): bool {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$set_metadata_query = "
+				INSERT INTO `$this->_metaTableName`
+				(
+					`$this->_tableMetaFKColumn`,
+					`$this->_tableMetaKeyColumn`,
+					`value`
+				)
+				VALUES
+				(
+					?,
+					?,
+					?
+				)
+				ON DUPLICATE KEY UPDATE
+					`value` = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($key);
+			$database->AddParam(json_encode($value));
+			$database->AddParam(json_encode($value));
+
+			// Execute Query
+			$rs = $database->Execute($set_metadata_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			return true;
+		}
+
+		/**
+		 * Unset Metadata Value for Key
+		 * @param string $key
+		 * @return bool True if unset
+		 */
+		public function unsetMetadata(string $key): bool {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$unset_metadata_query = "
+				DELETE FROM `$this->_metaTableName`
+				WHERE `$this->_tableMetaFKColumn` = ?
+				AND `$this->_tableMetaKeyColumn` = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($key);
+
+			// Execute Query
+			$rs = $database->Execute($unset_metadata_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			// audit the delete event
+			$auditLog = new \Site\AuditLog\Event();
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => 'Deleted metadata key $key from '.$this->_objectName().' id '.$this->id,
+				'class_name' => get_class($this),
+				'class_method' => 'deleteMetadata'
+			));	
+
+			return true;
+		}
+
+		/**
+		 * Get All Metadata Keys for Object
+		 * @return array
+		 */
+		public function getMetadataKeys(): array {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$get_metadata_keys_query = "
+				SELECT	`$this->_tableMetaKeyColumn`
+				FROM	`$this->_metaTableName`
+				GROUP BY `$this->_tableMetaKeyColumn`
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+
+			// Execute Query
+			$rs = $database->Execute($get_metadata_keys_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			// Fetch Results
+			$keys = array();
+			while (list($key) = $rs->FetchRow()) {
+				array_push($keys, strval($key));
+			}
+
+			return $keys;
+		}
+
+		/**
+		 * Get All Metadata Keys defined for this Instance
+		 * @return array
+		 */
+		public function getInstanceMetadataKeys(): array {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$get_metadata_keys_query = "
+				SELECT	`$this->_tableMetaKeyColumn`
+				FROM	`$this->_metaTableName`
+				WHERE	`$this->_tableMetaFKColumn` = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+
+			// Execute Query
+			$rs = $database->Execute($get_metadata_keys_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			// Fetch Results
+			$keys = array();
+			while (list($key) = $rs->FetchRow()) {
+				array_push($keys, strval($key));
+			}
+
+			return $keys;
+		}
+
+		/**
+		 * Get Metadata Value for Key
+		 * @param key
+		 * @return string
+		 */
+		public function getMetadata(string $key): string {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$get_metadata_query = "
+				SELECT	`value`
+				FROM	`$this->_metaTableName`
+				WHERE	`$this->_tableMetaFKColumn` = ?
+				AND		`$this->_tableMetaKeyColumn` = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($key);
+
+			// Execute Query
+			$rs = $database->Execute($get_metadata_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			// Fetch Results
+			list($value) = $rs->FetchRow();
+			return strval($value);
+		}
+
+		/**
+		 * Get Metadata Value for Key as Integer
+		 * @param key
+		 * @return int
+		 */
+		public function getMetadataInt(string $key): int {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$get_metadata_query = "
+				SELECT	`value`
+				FROM	`$this->_metaTableName`
+				WHERE	`$this->_tableMetaFKColumn` = ?
+				AND		`$this->_tableMetaKeyColumn` = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($key);
+
+			// Execute Query
+			$rs = $database->Execute($get_metadata_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			// Fetch Results
+			list($value) = $rs->FetchRow();
+			return intval($value);
+		}
+
+		/**
+		 * Get Metadata Value for Key as Float
+		 * @param key
+		 * @return float
+		 */
+		public function getMetadataFloat(string $key): float {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$get_metadata_query = "
+				SELECT	`value`
+				FROM	`$this->_metaTableName`
+				WHERE	`$this->_tableMetaFKColumn` = ?
+				AND		`$this->_tableMetaKeyColumn` = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($key);
+
+			// Execute Query
+			$rs = $database->Execute($get_metadata_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			// Fetch Results
+			list($value) = $rs->FetchRow();
+			return floatval($value);
+		}
+
+		/**
+		 * Get Metadata Value for Key as Boolean
+		 * @param key
+		 * @return bool
+		 */
+		public function getMetadataBool(string $key): bool {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$get_metadata_query = "
+				SELECT	`value`
+				FROM	`$this->_metaTableName`
+				WHERE	`$this->_tableMetaFKColumn` = ?
+				AND		`$this->_tableMetaKeyColumn` = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($key);
+
+			// Execute Query
+			$rs = $database->Execute($get_metadata_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			// Fetch Results
+			list($value) = $rs->FetchRow();
+			return boolval($value);
+		}
+
+		/**
+		 * Get Metadata Record as Object
+		 * @param key
+		 * @return object
+		 */
+		public function getMetadataObject(string $key): object {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$get_metadata_query = "
+				SELECT	`value`
+				FROM	`$this->_metaTableName`
+				WHERE	`$this->_tableMetaFKColumn` = ?
+				AND		`$this->_tableMetaKeyColumn` = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($key);
+
+			// Execute Query
+			$rs = $database->Execute($get_metadata_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			// Fetch Results
+			list($value) = $rs->FetchRow();
+			return json_decode($value);
+		}
+
+		public function getAllMetadata() {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$get_metadata_query = "
+				SELECT	`$this->_tableMetaKeyColumn`, `value`
+				FROM	`$this->_metaTableName`
+				WHERE	`$this->_tableMetaFKColumn` = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+
+			// Execute Query
+			$rs = $database->Execute($get_metadata_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			// Fetch Results
+			$metadata = array();
+			while (list($key, $value) = $rs->FetchRow()) {
+				$metadata[$key] = $value;
+			}
+
+			return $metadata;
 		}
 
 		public function getError() {

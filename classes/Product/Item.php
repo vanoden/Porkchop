@@ -33,6 +33,9 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
             $this->_addStatus(array('ACTIVE','HIDDEN','DELETED'));
+			$this->_metaTableName = 'product_metadata';
+			$this->_tableMetaFKColumn = 'product_id';
+			$this->_tableMetaKeyColumn = 'key';
 			$this->_auditEvents = true;
     		parent::__construct($id);
 		}
@@ -547,103 +550,6 @@
 			list($found) = $rs->FetchRow();
 			if (! $found) $found = 0;
 			return $found;
-		}
-
-		/**
-		 * Get all metadata for the product
-		 * 
-		 * @return array|null Array of metadata or null on error
-		 */
-		public function getMeta() {
-			$get_meta_query = "
-				SELECT	`key`,value
-				FROM	product_metadata
-				WHERE	product_id = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_meta_query,
-				array($this->id)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			$metadata = array();
-			while (list($label,$value) = $rs->FetchRow()) {
-				$metadata[$label] = $value;
-			}
-			return $metadata;
-		}
-
-		/**
-		 * Get a specific metadata value for the product
-		 * 
-		 * @param string $key The metadata key
-		 * @return object|null Metadata object or null if not found
-		 */
-		public function getMetadata($key) {
-			$get_meta_query = "
-				SELECT	value
-				FROM	product_metadata
-				WHERE	product_id = ?
-				AND		`key` = ?
-			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_meta_query,
-				array($this->id,$key)
-			);
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($value) = $rs->FetchRow();
-            if (!empty($value)) {
-    			return (object) array(
-				    'product_id'	=> $this->id,
-				    'key'			=> $key,
-				    'value'			=> $value
-			    );
-            }
-            else return null;
-		}
-
-		/**
-		 * Add or update a metadata value for the product
-		 * 
-		 * @param string $key The metadata key
-		 * @param mixed $value The metadata value
-		 * @return int|null 1 if successful, null on error
-		 */
-		public function addMeta($key,$value) {
-			$add_meta_query = "
-				REPLACE
-				INTO	product_metadata
-				(		product_id,`key`,value)
-				VALUES
-				(		?,?,?)
-			";
-			$GLOBALS['_database']->Execute(
-				$add_meta_query,
-				array(
-					$this->id,$key,$value
-				)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			return 1;
-		}
-
-		/**
-		 * Get the metadata object for the product
-		 * 
-		 * @return \Product\Item\Metadata The metadata object
-		 */
-		public function metadata() {
-			$meta = new \Product\Item\Metadata();
-			$meta->fk_id = $this->id;
-			return $meta;
 		}
 
 		/**

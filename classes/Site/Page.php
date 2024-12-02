@@ -24,6 +24,10 @@
 	    public function __construct() {
 			$this->_tableName = "page_pages";
 			$this->_tableUKColumn = null;
+			$this->_cacheKeyPrefix = "site.page";
+			$this->_metaTableName = "page_metadata";
+			$this->_tableMetaFKColumn = "page_id";
+			$this->_tableMetaKeyColumn = "key";
             parent::__construct();
             
 		    $args = func_get_args();
@@ -65,6 +69,7 @@
 	    public function applyStyle() {
 		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS ['_config']->style [$this->module()];
 	    }
+
 	    public function requireAuth() {
 			if ($this->module == 'register' && $this->view == 'login') return true;
 		    if (! $GLOBALS ['_SESSION_']->customer->id > 0) {
@@ -80,6 +85,7 @@
 				exit;
 			}
 	    }
+
 	    public function requireSuperElevation() {
 		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
 				$counter = new \Site\Counter("auth_redirect");
@@ -88,6 +94,7 @@
                 exit;
 		    }
 	    }
+
 	    public function requireRole($role) {	 
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
@@ -238,7 +245,18 @@
 			parent::add($parameters);
 		}
 
+		/**
+		 * Add a page by module, view, and index
+		 * @param string $module
+		 * @param string $view
+		 * @param string $index
+		 * @return bool True if successful
+		 */
 	    public function add($module = '', $view = '', $index = '') {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
 
 		    // Apply optional parameters
 		    if ($module) {
@@ -249,21 +267,27 @@
 			    }
 		    }
 
+			// Prepare Query to Add Page
 		    $add_object_query = "
-				    INSERT
-				    INTO	page_pages
-				    (		module,view,`index`
-				    )
-				    VALUES
-				    (		?,?,?)
-			    ";
-		    $GLOBALS ['_database']->Execute ( $add_object_query, array ($this->module, $this->view, $this->index ) );
-		    if ($GLOBALS ['_database']->ErrorMsg ()) {
-			    $this->SQLError($GLOBALS ['_database']->ErrorMsg());
-				app_log($this->error(),'error');
+			    INSERT
+			    INTO	page_pages
+			    (		module,view,`index`
+			    )
+			    VALUES
+			    (		?,?,?)
+		    ";
+
+			// Bind Parameters
+			$database->AddParam($this->module);
+			$database->AddParam($this->view);
+			$database->AddParam($this->index);
+
+		    $database->Execute($add_object_query);
+		    if ($database->ErrorMsg()) {
+			    $this->SQLError($database->ErrorMsg());
 			    return false;
 		    }
-		    $this->id = $GLOBALS ['_database']->Insert_ID ();
+		    $this->id = $database->Insert_ID();
 			
             // audit the add event
             $auditLog = new \Site\AuditLog\Event();
@@ -274,15 +298,23 @@
                 'class_method' => 'add'
             ));
 
-		    app_log ( "Added page id " . $this->id );
+		    app_log("Added page id ".$this->id);
 		    return $this->details();
 	    }
 
+		/**
+		 * Update a page by raw data parameters
+		 * @param array $parameters
+		 * @return bool True if successful
+		 */
 		public function update($parameters = []): bool {
 
 			$this->clearError();
+
+			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Prepare Query to Update Page
 			$update_object_query = "
 				UPDATE	`$this->_tableName`
 				SET		`$this->_tableIDColumn` = `$this->_tableIDColumn`
@@ -309,8 +341,8 @@
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
-			} else {
-
+			}
+			else {
 				// audit the update event
 				$auditLog = new \Site\AuditLog\Event();
 				$auditLog->add(array(
@@ -324,8 +356,11 @@
 			} 
 		}
 
+		/**
+		 * Delete a page
+		 * @return bool 
+		 */
 		public function delete(): bool {
-
 			// Delete Content Block for Page
 			if (!empty($this->index)) {
 				$block = new \Content\Message();
@@ -362,54 +397,71 @@
 			return true;
 		}
 
+		/**
+		 * Get Page Details
+		 * @return bool 
+		 */
 	    public function details(): bool {
-			$database = new \Database\Service();
-			$schema = new \Database\Schema();
-			$table = $schema->table('page_pages');
-			if ($table->has_column('tou_id')) {
-				$get_details_query = "
-						SELECT	id,
-								module,
-								view,
-								tou_id,
-								`index` idx,
-								sitemap
-						FROM	page_pages
-						WHERE	id = ?
-					";
+			$this->clearError();
+
+			$cache = $this->cache();
+			$cachedData = $cache->get();
+	
+			if (!empty($cachedData)) {
+				foreach ($cachedData as $key => $value) {
+					$this->$key = $value;
+				}
+				$this->cached(true);
+				$this->exists(true);
 			}
 			else {
+				// Initialize Database Service
+				$database = new \Database\Service();
+
+				// Prepare Query to Get Page Details
 				$get_details_query = "
-						SELECT	id,
-								module,
-								view,
-								tou_id,
-								`index` idx,
-								0 sitemap
-						FROM	page_pages
-						WHERE	id = ?
-					";
+					SELECT	id,
+							module,
+							view,
+							tou_id,
+							`index`,
+							sitemap
+					FROM	page_pages
+					WHERE	id = ?
+				";
+
+				// Bind Parameters
+				$database->AddParam($this->id);
+
+				// Execute Query
+				$rs = $database->Execute($get_details_query);
+				if (! $rs) {
+					$this->SQLError($database->ErrorMsg());
+					return false;
+				}
+				$object = $rs->FetchNextObject(false);
+				if (gettype($object) == 'object') {
+					$this->module = $object->module;
+					$this->view = $object->view;
+					$this->tou_id = $object->tou_id;
+					$this->index = $object->index;
+					if ($object->sitemap == 1) $this->sitemap = true;
+					else $this->sitemap = false;
+					$this->exists(true);
+					$cache->set($object);
+				}
+				else {
+					$this->module = "";
+					$this->view = "";
+					$this->index = "";
+					$this->tou_id = null;
+					$this->sitemap = false;
+					$this->exists(false);
+				}
 			}
-			$database->AddParam($this->id);
-		    $rs = $database->Execute($get_details_query);
-		    if (! $rs) {
-			    $this->SQLError($database->ErrorMsg());
-			    return false;
-		    }
-		    $object = $rs->FetchNextObject(false);
-		    if (gettype($object) == 'object') {
-			    $this->module = $object->module;
-			    $this->view = $object->view;
-				$this->tou_id = $object->tou_id;
-			    $this->index = $object->idx;
-				if ($object->sitemap == 1) $this->sitemap = true;
-				else $this->sitemap = false;
-		    }
-			else {
-			    // Just Let The Defaults Go
-		    }
-		    if (isset ( $GLOBALS ['_config']->style [$this->module] )) {
-			    $this->style = $GLOBALS ['_config']->style [$this->module];
+
+		    if (isset($GLOBALS['_config']->style[$this->module] )) {
+			    $this->style = $GLOBALS['_config']->style[$this->module];
 		    }
 
 			// Intranet style site, No public content
@@ -981,58 +1033,6 @@
 			    exit ();
 		    }
 	    }
-	    
-	    public function allMetadata() {
-		    $metadataList = new \Site\Page\MetadataList();
-			$metaArray = $metadataList->find(array('page_id' => $this->id));
-		    if ($metadataList->error()) {
-				$this->error($metadataList->error());
-			    return null;
-		    }
-		    return $metaArray;
-	    }
-	    
-		public function getMetadata($key) {
-			$metadata = new \Site\Page\Metadata($this->id,$key);
-			if ($metadata->get()) {
-				return $metadata->value;
-			}
-			else {
-				return null;
-			}
-		}
-
-	    public function setMetadata($key, $value) {
-		    if (! isset ( $this->id )) {
-			    $this->addError("No page id");
-			    return false;
-		    }
-		    if (! isset ( $key )) {
-			    $this->addError("Invalid key name in Site::Page::setMetadata()");
-			    return false;
-		    }
-
-		    $metadata = new \Site\Page\Metadata($this->id,$key);
-		    if ($metadata->set($value)) return true;
-			else {
-				$this->addError($metadata->error());
-				return false;
-			}
-	    }
-	    
-	    public function unsetMetadata($key) {
-			$metadata = new \Site\Page\Metadata();
-            $metadata->get($this->id,$key);
-		    return $metadata->drop();
-	    }
-
-		public function purgeMetadata() {
-			$metadataList = new \Site\Page\MetadataList();
-			$metadata = $metadataList->find('page_id',$this->id);
-			foreach ($metadata as $record) {
-				$record->drop();
-			}
-		}
 
 		// Return the Terms of Use object for this page
 		public function tou() {

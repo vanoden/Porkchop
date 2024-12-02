@@ -1273,6 +1273,12 @@
 					'return_element' => 'message',
 					'return_type' => 'string'
 				),
+				'csrfToken'	=> array(
+					'description' => 'Get a CSRF Token',
+					'authentication_required' => false,
+					'parameters' => array(),
+					'return_element' => 'token'
+				),
 				'me'	=> array(
 					'description' => 'Get information about the authenticated user',
 					'path' => '/api/register/me',

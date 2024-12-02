@@ -25,7 +25,7 @@
 			";			
 
 			// Add Parameters
-			if (isset($parameters['class'])) {
+			if (isset($parameters['class']) && !empty($parameters['class'])) {
 				$find_objects_query .= "
 				AND st.class = ?";
 				$database->AddParam($parameters['class']);
@@ -40,12 +40,14 @@
 			// Limit Clause
 			$find_objects_query .= $this->limitClause($controls);
 
+			// Execute Query
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				return [];
 			}
 
+			// Assemble Results
 			$objects = [];
 			while (list($id) = $rs->FetchRow()) {
 			    $object = new $this->_modelName($id);

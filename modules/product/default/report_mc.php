@@ -27,13 +27,18 @@
         if (!empty($_REQUEST['status_deleted'])) {
             $parameters['status'][] = 'DELETED';
         }
-    } else {
+    }
+	else {
         $_REQUEST['status_active'] = true;
         $_REQUEST['status_hidden'] = false;
         $_REQUEST['status_deleted'] = false;
+		$_REQUEST['product_type'] = '';
+		$_REQUEST['search'] = '';
     }
+
 	$productlist = new \Product\ItemList();
     $totalRecords = $productlist->count($parameters);
+	if (!isset($_REQUEST['pagination_start_id'])) $_REQUEST['pagination_start_id'] = 0;
 	$products = $productlist->find($parameters,['limit' => $recordsPerPage,'offset' => $_REQUEST['pagination_start_id']]);
 	if ($productlist->error()) $page->addError($productlist->error());
 

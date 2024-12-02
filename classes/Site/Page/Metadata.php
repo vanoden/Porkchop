@@ -99,7 +99,7 @@
             }
             return true;
         }		
-		
+
         public function getByPageIdKey($page_id,$key) {
             $get_object_query = "
                 SELECT	id
