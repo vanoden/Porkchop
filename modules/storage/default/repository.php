@@ -81,32 +81,26 @@
 <form name="repositoryForm" action="/_storage/repository" method="post">
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="id" value="<?=$repository->id?>" />
-    <div class="container">
-        <span class="label">Name</span>
-        <input type="text" name="name" class="value input wide_xl" value="<?=$form['name']?>" />
-    </div>
-    <div class="container">
-        <span class="label">Status</span>
-        <select id="status" name="status" class="value input wide_xl">
-            <option value="NEW"<?php	if ($form['status'] == "NEW") print " selected"; ?>>NEW</option>
-            <option value="ACTIVE"<?php	if ($form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
-            <option value="DISABLED"<?php	if ($form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
-        </select>
-    </div>
-    <div class="container">
-        <span class="label">Type</span>
-    <?php	 if ($repository->id) { ?>
-        <span class="value"><?=$repository->type?></span>
-    <?php	 } else { ?>
-        <select id="type" name="type" class="value input wide_xl" onchange="getValue(this)">
-            <option value="local" <?php	if ($form['type'] == "local") print " selected"; ?>>Local</option>
-            <option value="s3" <?php	if ($form['type'] == "s3") print " selected"; ?>>Amazon S3</option>
-            <option value="drive" <?php	if ($form['type'] == "drive") print " selected"; ?>>Google Drive</option>
-            <option value="dropBox" <?php	if ($form['type'] == "dropBox") print " selected"; ?>>DropBox</option>
-        </select>
-    <?php	 } ?>
-    </div>
-
+    <h3>Name</h3>
+    <input type="text" name="name" class="value input wide_xl" value="<?=$form['name']?>" />
+    <h3>Status</h3>
+    <select id="status" name="status" class="value input wide_xl">
+        <option value="NEW"<?php	if ($form['status'] == "NEW") print " selected"; ?>>NEW</option>
+        <option value="ACTIVE"<?php	if ($form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
+        <option value="DISABLED"<?php	if ($form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
+    </select>
+    <h3>Type</h3>
+<?php	 if ($repository->id) { ?>
+    <span class="value"><?=$repository->type?></span>
+<?php	 } else { ?>
+    <select id="type" name="type" class="value input wide_xl" onchange="getValue(this)">
+        <option value="local" <?php	if ($form['type'] == "local") print " selected"; ?>>Local</option>
+        <option value="s3" <?php	if ($form['type'] == "s3") print " selected"; ?>>Amazon S3</option>
+        <option value="drive" <?php	if ($form['type'] == "drive") print " selected"; ?>>Google Drive</option>
+        <option value="dropBox" <?php	if ($form['type'] == "dropBox") print " selected"; ?>>DropBox</option>
+    </select>
+<?php	 } ?>
+	<h3>Configuration</h3>
 	<div id="localSettings"<?php if (!empty($repository->id) && $repository->type != 'local') { print "style=\"display:none;\""; } ?>>
 		<div class="container" style="margin: 10px; padding: 20px; border:dashed 1px gray; display: inline-table;">
 			<span class="label">Path</span>
@@ -121,6 +115,7 @@
 <?php	} ?>
         </div>
     </div>
+	<h3>Privileges</h3>
 	<div class="tableBody clean min-tablet">
 		<div class="tableRowHeader">
         	<div class="tableCell" style="width: 25%;">Type</div>

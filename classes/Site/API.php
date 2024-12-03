@@ -262,7 +262,7 @@
 			if (!$page->getPage($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) $this->notFound();
 
 			# Initiate Metadata Object
-			$metadata = $page->allMetadata();
+			$metadata = $page->getAllMetadata();
 
 			$response = new \APIResponse();
 			$response->addElement('metadata',$metadata);
@@ -294,7 +294,7 @@
 	
 			$page = new \Site\Page();
 			if (!$page->getPage($_REQUEST['module'],$_REQUEST['view'],$_REQUEST['index'])) $this->notFound();
-			if (!$metadata = $page->getMetadata($_REQUEST['key'])) $this->app_error($metadata->error());
+			if (!$metadata = $page->getAllMetadata($_REQUEST['key'])) $this->app_error($page->error());
 			if (!$page->purgeMetadata()) $this->error($page->errorString());
 
 

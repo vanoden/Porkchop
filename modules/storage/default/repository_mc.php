@@ -54,7 +54,7 @@
 			}
 
 			// Fetch Keys for this Repository Type
-			$metadata_keys = $repository->metadata_keys();
+			$metadata_keys = $repository->getMetadataKeys();
 			foreach ($metadata_keys as $key) {
 				if (!$repository->validMetadata($key,$_REQUEST[$key])) {
 					if ($repository->error()) $page->addWarning($repository->error());
@@ -70,7 +70,7 @@
 				if (isset($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 				$parameters['status'] = $_REQUEST['status'];
 
-				$metadata_keys = $repository->metadata_keys();
+				$metadata_keys = $repository->getMetadataKeys();
 				foreach ($metadata_keys as $key) {
 					$parameters[$key] = $_REQUEST[$key];
 				}
@@ -147,9 +147,9 @@
 					$form['name'] = $repository->name;
 					$form['type'] = $repository->type;
 					$form['status'] = $repository->status;
-					$form['path'] = $repository->_metadata('path');
+					$form['path'] = $repository->getMetadata('path');
 					foreach ($metadata_keys as $key) {
-						$form[$key] = $repository->_metadata($key);
+						$form[$key] = $repository->getMetadata($key);
 					}
 				}
 			}
@@ -158,7 +158,7 @@
 				$form['name'] = $_REQUEST['name'];
 				$form['type'] = $_REQUEST['type'];
 				$form['status'] = $_REQUEST['status'];
-				$metadata_keys = $repository->metadata_keys();
+				$metadata_keys = $repository->getMetedataKeys();
 				foreach ($metadata_keys as $key) {
 					$form[$key] = $_REQUEST[$key];
 				}
@@ -172,9 +172,9 @@
 			$form['name'] = $repository->name;
 			$form['type'] = $repository->type;
 			$form['status'] = $repository->status;
-			$metadata_keys = $repository->metadata_keys();
+			$metadata_keys = $repository->getMetadataKeys();
 			foreach ($metadata_keys as $key) {
-				$form[$key] = $repository->_metadata($key);
+				$form[$key] = $repository->getMetadata($key);
 			}
 			$default_privileges = $repository->default_privileges();
 			$override_privileges = $repository->override_privileges();
@@ -186,14 +186,14 @@
 		$form['name'] = $_REQUEST['name'];
 		$form['type'] = $_REQUEST['type'];
 		$form['status'] = $_REQUEST['status'];
-		$metadata_keys = $repository->metadata_keys();
+		$metadata_keys = $repository->getMetadataKeys();
 		foreach ($metadata_keys as $key) {
 			$form[$key] = $_REQUEST[$key];
 		}
 	}
 
 	$default_privileges = $repository->default_privileges();
-	if ($repository->id) $metadata_keys = $repository->metadata_keys();
+	if ($repository->id) $metadata_keys = $repository->getMetadataKeys();
 	else $metadata_keys = array();
 
 	$page->title("Storage Repository");

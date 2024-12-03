@@ -11,7 +11,6 @@
 		public string $accessKey = "";					// Access Key for AWS Repository
 		public string $default_privileges_json = "";	// JSON string representing default privileges
 		public string $override_privileges_json = "";	// JSON string representing override privileges
-		protected $_metadata_keys = [];		// Array of metadata keys
 
 		/**
 		 * Class Constructor
@@ -20,6 +19,10 @@
 		 */
 		public function __construct($id = 0) {
 			$this->_tableName = 'storage_repositories';
+			$this->_metaTableName = 'storage_repository_metadata';
+			$this->_tableMetaFKColumn = 'repository_id';
+			$this->_tableMetaKeyColumn = 'key';
+			$this->_metadataKeys(array('path','accessKey','secretKey','bucket','region','endpoint'));
 			parent::__construct($id);
 		}
 
@@ -190,10 +193,11 @@
 			));
 
 			// Instance specific metadata
-			foreach ($this->_metadata_keys as $key) {
-				if (!empty($parameters[$key]) && $parameters[$key] != $this->_metadata($key)) {
+			$keys = $this->_metadataKeys();
+			foreach ($keys as $key) {
+				if (!empty($parameters[$key]) && $parameters[$key] != $this->getMetadata($key)) {
 					if ($this->validMetadata($key,$parameters[$key])) {
-						$this->_updateMetadata($key,$parameters[$key]);
+						$this->setMetadata($key,$parameters[$key]);
 						$auditLog->add(array(
 							'instance_id' => $this->id,
 							'description' => 'Updated '.$this->_objectName(),
@@ -401,92 +405,6 @@
 			return $directorylist->find(array('repository_id' => $this->id,'path' => $path));
 		}
 
-		/**
-		 * Update Repository Metadata - Wrapper for _setMetadata as it does the same thing
-		 * @param string key - Identifer
-		 * @param string value - Content
-		 */
-		public function _updateMetadata($key, $value) {
-			return $this->_setMetadata($key,$value);
-		}
-
-		/**
-		 * Set Repository Metadata
-		 * @param string key - Identifer
-		 * @param string value - Content
-		 */
-		public function _setMetadata($key,$value) {
-			// Clear Existing Errors
-			$this->clearError();
-
-			// Prepare Query
-			$database = new \Database\Service();
-			$set_object_query = "
-				INSERT
-				INTO	storage_repository_metadata
-				(repository_id,`key`,value)
-				VALUES	(?,?,?)
-				ON DUPLICATE KEY UPDATE
-				value = ?
-			";
-			$database->AddParam($this->id);
-			$database->AddParam($key);
-			$database->AddParam($value);
-			$database->AddParam($value);
-
-			// Execute Query
-			$database->Execute($set_object_query);
-
-			// Check for errors
-			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMsg());
-				return false;
-			}
-			return true;
-		}
-
-		/**
-		 * Get value associated with specified key from repository metadata
-		 * @param mixed $key 
-		 * @return mixed
-		 */
-		public function _metadata($key) {
-			// Clear Existing Errors
-			$this->clearError();
-
-			// Prepare Query
-			$database = new \Database\Service();
-			$get_value_query = "
-				SELECT	value
-				FROM	storage_repository_metadata
-				WHERE	repository_id = ?
-				AND		`key` = ?
-			";
-			$database->AddParam($this->id);
-			$database->AddParam($key);
-
-			// Execute Query
-			$rs = $database->Execute($get_value_query);
-
-			// Check for errors
-			if (! $rs) {
-				$this->SQLError($database->ErrorMsg());
-				return null;
-			}
-			list($value) = $rs->FetchRow();
-			return $value;
-		}
-
-		/**
-		 * Get value associated with specified key from repository metadata
-		 * Deprecated - Use _metadata instead
-		 * @param mixed $key 
-		 * @return mixed
-		 */
-		public function getMetadata($key) {
-			return $this->_metadata($key);
-		}
-
 		public function getFileFromPath($path) {
 			$file = new \Storage\File();
 			return $file->fromPath($this->id,$path);
@@ -502,13 +420,6 @@
 			return $privileges->fromJSON($this->override_privileges_json);
 		}
 
-		/**
-		 * Return list of metadata keys for specific repo type
-		 * @return array
-		 */
-		public function metadata_keys() {
-			return $this->_metadata_keys;
-		}
 		/************************************/
 		/* Repository Privileges			*/
 		/************************************/
@@ -607,7 +518,7 @@
 		/* Validation Functions             */
 		/************************************/
 		public function validMetadata($key,$value) {
-			if (! in_array($key,$this->_metadata_keys)) {
+			if (! in_array($key,$this->_metadataKeys())) {
 				$this->error("Invalid metadata key");
 				return false;
 			}

@@ -53,7 +53,7 @@
 		        $view = $editPage->view;
 		        $index = $editPage->index;
 		        if (! strlen($index)) $index = '[null]';
-		        $metadata = $editPage->allMetadata();
+		        $metadata = $editPage->getAllMetadata();
 	        }
 			else {
 		        $page->addError("Page ".$_REQUEST['module']."/".$_REQUEST['view']." index ".$_REQUEST['index']." not found");
@@ -65,7 +65,7 @@
 		$view = $editPage->view;
 		$index = $editPage->index;
 		if (! strlen($index)) $index = '[null]';
-		$metadata = $editPage->allMetadata();
+		$metadata = $editPage->getAllMetadata();
 	}
 
     $bc_view = ucfirst($editPage->module)."::".ucfirst($editPage->view);

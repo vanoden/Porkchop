@@ -95,12 +95,11 @@ elseif (isset($_REQUEST['updateSubmit'])) {
 			$meta_fields = array("name", "short_description", "description", "model", "emperical_formula", "sensitivity", "measure_range", "accuracy", "manual_id", "datalogger", "spec_table_image", "default_dashboard_id");
 			foreach ($meta_fields as $meta_field) {
 				if (isset($_REQUEST[$meta_field])) {
-					$metadata = $item->metadata();
-					$metadata->get($meta_field);
+					$current = $item->getMetadata($meta_field);
 					$value = trim($_REQUEST[$meta_field]);
-					if ($metadata->value != $value) {
-						$metadata->set($value);
-						if ($metadata->error()) $page->addError("Error setting " . $meta_field . ": " . $metadata->error());
+					if ($current != $value) {
+						$item->setMetadata($meta_field,$value);
+						if ($item->error()) $page->addError("Error setting " . $meta_field . ": " . $item->error());
 						else $page->appendSuccess("Updated '" . $meta_field . "'");
 					}
 				}

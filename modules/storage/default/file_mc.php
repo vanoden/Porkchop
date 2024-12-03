@@ -41,7 +41,8 @@ if ($page->errorCount() < 1) {
 	elseif (isset($_REQUEST['btn_submit']) && !empty($_REQUEST['btn_submit'])) {
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 			$page->addError("Invalid Request");
-		} else {
+		}
+		else {
 			if ($_REQUEST['btn_submit'] == 'Update') {
 				if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 					$page->addError("Invalid Token");
@@ -132,7 +133,6 @@ if ($file->id) {
 // Only those who can write to the repository can edit this file
 $repository = $file->repository();
 if (empty($repository) || !$repository->writable($GLOBALS['_SESSION_']->customer->id)) {
-	print_r($repository);
 	$page->addError("Permission Denied");
 	return 403;
 }

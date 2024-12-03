@@ -21,7 +21,8 @@
 				option.value = customers[i].id;
 				elem.form.perm_id.add(option);
 			}
-		} else if (elem.value == 'o') {
+		}
+		else if (elem.value == 'o') {
 			console.log("Populating organizations list");
 			var organizationlist = Object.create(OrganizationList);
 			var organizations = organizationlist.find();
@@ -33,7 +34,8 @@
 				option.value = organizations[i].id;
 				elem.form.perm_id.add(option);
 			}
-		} else if (elem.value == 'r') {
+		}
+		else if (elem.value == 'r') {
 			console.log("Populating roles list");
 			var rolelist = Object.create(RoleList);
 			var roles = rolelist.find();
@@ -52,7 +54,7 @@
 	<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
 	<input type="hidden" name="id" value="<?= $file->id ?>">
 	<h3>File Details</h3>
-	<div class="inline-block" style="width: 420px; float: left;">
+	<div class="inline-block" style="width: 100%; float: left;">
 		<div class="container fileDetailContainer">
 			<span class="label">Code</span>
 			<span class="value"><?= $file->code ?>
@@ -94,8 +96,9 @@
 			<span class="value"><?= $file->downloadURI() ?></span>
 		</div>
 		<?php if ($file->mime_type == "image/jpeg" || $file->mime_type == "image/png" || $file->mime_type == "image/gif") { ?>
+			<h3>Preview</h3>
 			<div id="image_preview" style="float: left">
-				<img src="<?= $file->downloadURI() ?>" id="image_preview" style="max-width: 300px; max-height: 300px;" />
+				<img src="<?= $file->downloadURI() ?>" id="image_preview" style="max-width: 300px; max-height: 300px; border: 1px solid black" />
 			</div>
 		<?php   } ?>
 		<h3>Permissions</h3>

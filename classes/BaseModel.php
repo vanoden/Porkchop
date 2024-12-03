@@ -25,6 +25,7 @@
 		// field names for columns in database tables
 		protected $_fields = array();
 		protected $_aliasFields = array();
+		protected $_metadataKeys = array();
 
 		// Name for Cache Key - id appended in square brackets
 		protected $_cacheKeyPrefix;
@@ -365,6 +366,9 @@
 					if (!empty($fromCache)) {
 						// Populate Properties from Cache
 						foreach ($fromCache as $key => $value) {
+							foreach ($this->_aliasFields as $alias => $real) {
+								if ($key == $real) $key = $alias;
+							}
 							if (property_exists($this,$key)) {
 								// Get the Variable Type to write the value appropriately
 								$property = new \ReflectionProperty($this, $key);
@@ -389,12 +393,6 @@
 						// Let them know we found the record
 						$this->exists(true);
 
-						// Populate the alias fields
-						foreach ($this->_aliasFields as $alias => $real) {
-							// Cached values might have alias instead of real field name
-							if (isset($this->$alias) && !isset($this->$real)) continue;
-							$this->$alias = $this->$real;
-						}
 						return true;
 					}
 				}
@@ -425,6 +423,9 @@
 			if (is_object($object) && $object->$column > 0) {
 				// Collect all attributes from response record
 				foreach ($object as $key => $value) {
+					foreach ($this->_aliasFields as $alias => $real) {
+						if ($key == $real) $key = $alias;
+					}
 					if (property_exists($this,$key)) {
 						$property = new \ReflectionProperty($this, $key);
 						$property_type = $property->getType();
@@ -447,9 +448,6 @@
 				$this->exists(true);
 				$this->cached(false);
 				if (!empty($this->_cacheKeyPrefix)) $cache->set($object);
-				foreach ($this->_aliasFields as $alias => $real) {
-					$this->$alias = $this->$real;
-				}
 			}
 			else {
 				// Clear all attributes
@@ -605,6 +603,19 @@
 
 		protected function _aliasField($real,$alias) {
 			$this->_aliasFields[$alias] = $real;
+		}
+
+		protected function _metadataKeys($keys = null, $value = null) {
+			if (is_array($keys)) {
+				foreach ($keys as $key) {
+					$this->_metadataKeys[$key] = '';
+				}
+			}
+			elseif (!empty($keys)) {
+				if (!empty($value)) $this->_metadataKeys[$keys] = $value;
+				else $this->_metadataKeys[$keys] = '';
+			}
+			return $this->_metadataKeys;
 		}
 
 		/**
@@ -865,12 +876,11 @@
 			}
 
 			// Fetch Results
-			$keys = array();
+			$keys = $this->_metadataKeys();
 			while (list($key) = $rs->FetchRow()) {
 				array_push($keys, strval($key));
 			}
-
-			return $keys;
+			return array_keys($keys);
 		}
 
 		/**
@@ -901,7 +911,7 @@
 			}
 
 			// Fetch Results
-			$keys = array();
+			$keys = $this->_metadataKeys();
 			while (list($key) = $rs->FetchRow()) {
 				array_push($keys, strval($key));
 			}
@@ -1108,7 +1118,7 @@
 			}
 
 			// Fetch Results
-			$metadata = array();
+			$metadata = $this->_metadataKeys();
 			while (list($key, $value) = $rs->FetchRow()) {
 				$metadata[$key] = $value;
 			}

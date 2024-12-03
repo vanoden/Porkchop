@@ -18,7 +18,7 @@
 		
 		public function __construct($id = null) {
 			$this->type = 's3';
-			$this->_metadata_keys = ["accessKey","secretKey","bucket","region"];
+			$this->_metadataKeys(array("accessKey","secretKey","bucket","region"));
 			parent::__construct($id);
 		}
 
@@ -84,7 +84,7 @@
 		 * @return string 
 		 */
 		private function _bucket($bucket = null) {
-			if (isset($bucket)) $this->_setMetadata('bucket', $bucket);
+			if (isset($bucket)) $this->setMetadata('bucket', $bucket);
 			return $this->getMetadata('bucket');
 		}
 
@@ -94,7 +94,7 @@
 		 * @return string 
 		 */
 		public function accessKey($key = null) {
-			if (isset($key)) $this->_setMetadata('accessKey', $key);
+			if (isset($key)) $this->setMetadata('accessKey', $key);
 			return $this->getMetadata('accessKey');
 		}
 
@@ -104,7 +104,7 @@
 		 * @return string 
 		 */
 		public function secretKey($key = null) {
-			if (isset($key)) $this->_setMetadata('secretKey', $key);
+			if (isset($key)) $this->setMetadata('secretKey', $key);
 			return $this->getMetadata('secretKey');
 		}
 
@@ -114,7 +114,7 @@
 		 * @return string 
 		 */
 		public function region($region = null) {
-			if (isset($region)) $this->_setMetadata('region', $region);
+			if (isset($region)) $this->setMetadata('region', $region);
 			return $this->getMetadata('region');
 		}
 

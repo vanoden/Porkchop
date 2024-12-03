@@ -63,7 +63,7 @@
 		</div>
 		<div class="input-horiz" id="itemName">
 			<span class="label">Name</span>
-			<input type="text" class="value input wide_lg" name="name" id="name" value="<?= htmlspecialchars($item->metadata()->getValue('name')) ?>" />
+			<input type="text" class="value input wide_lg" name="name" id="name" value="<?= htmlspecialchars($item->getMetadata('name')) ?>" />
 		</div>
 		<div class="input-horiz" id="itemStatus">
 			<span class="label">Status</span>
@@ -76,42 +76,42 @@
 		</div>
 		<div class="input-horiz" id="itemShortDescription">
 			<span class="label align-top">Short Description</span>
-			<textarea class="value input wide_lg" name="short_description" id="short_description"><?= htmlspecialchars($item->metadata()->getValue('short_description')) ?></textarea>
+			<textarea class="value input wide_lg" name="short_description" id="short_description"><?= htmlspecialchars($item->getMetadata('short_description')) ?></textarea>
 		</div>
 		<div class="input-horiz" id="itemDescription">
 			<span class="label align-top">Description</span>
-			<textarea class="value input wide_lg" name="description" id="description"><?= htmlspecialchars($item->metadata()->getValue('description')) ?></textarea>
+			<textarea class="value input wide_lg" name="description" id="description"><?= htmlspecialchars($item->getMetadata('description')) ?></textarea>
 		</div>
 		<div class="input-horiz" id="itemModel">
 			<span class="label">Model</span>
-			<input type="text" class="value input wide_md" name="model" id="model" value="<?= htmlspecialchars($item->metadata()->getValue('model')) ?>" />
+			<input type="text" class="value input wide_md" name="model" id="model" value="<?= htmlspecialchars($item->getMetadata('model')) ?>" />
 		</div>
 		<div class="input-horiz" id="itemEmpericalFormula">
 			<span class="label">Empirical Formula</span>
-			<input type="text" class="value input wide_md" name="empirical_formula" id="empirical_formula" value="<?= htmlspecialchars($item->metadata()->getValue('empirical_formula')) ?>" />
+			<input type="text" class="value input wide_md" name="empirical_formula" id="empirical_formula" value="<?= htmlspecialchars($item->getMetadata('empirical_formula')) ?>" />
 		</div>
 		<div class="input-horiz">
 			<span class="label">Sensitivity</span>
-			<input type="text" class="value input wide_md" name="sensitivity" id="sensitivity" value="<?= htmlspecialchars($item->metadata()->getValue('sensitivity')) ?>" />
+			<input type="text" class="value input wide_md" name="sensitivity" id="sensitivity" value="<?= htmlspecialchars($item->getMetadata('sensitivity')) ?>" />
 		</div>
 		<div class="input-horiz">
 			<span class="label">Measure Range</span>
-			<input type="text" class="value input wide_md" name="measure_range" id="measure_range" value="<?= htmlspecialchars($item->metadata()->getValue('measure_range')) ?>" />
+			<input type="text" class="value input wide_md" name="measure_range" id="measure_range" value="<?= htmlspecialchars($item->getMetadata('measure_range')) ?>" />
 		</div>
 		<div class="input-horiz">
 			<span class="label">Datalogger</span>
-			<input type="text" class="value input wide_md" name="datalogger" id="datalogger" value="<?= htmlspecialchars($item->metadata()->getValue('datalogger')) ?>" />
+			<input type="text" class="value input wide_md" name="datalogger" id="datalogger" value="<?= htmlspecialchars($item->getMetadata('datalogger')) ?>" />
 		</div>
 		<div class="input-horiz">
 			<span class="label">Accuracy</span>
-			<input type="text" class="value input wide_md" name="accuracy" id="accuracy" value="<?= htmlspecialchars($item->metadata()->getValue('accuracy')) ?>" />
+			<input type="text" class="value input wide_md" name="accuracy" id="accuracy" value="<?= htmlspecialchars($item->getMetadata('accuracy')) ?>" />
 		</div>
 		<div class="input-horiz">
 			<span class="label">Default Dashboard</span>
 			<select class="value input wide_md" name="default_dashboard_id" id="default_dashboard_id">
 				<?php $default_dashboard = $item->getMetadata('default_dashboard_id');
 				foreach ($dashboards as $dashboard) { ?>
-		        	<option value="<?=$dashboard->id?>"<?php if ($default_dashboard->value == $dashboard->id) { print " selected"; } ?>><?=$dashboard->name?></option>
+		        	<option value="<?=$dashboard->id?>"<?php if ($default_dashboard == $dashboard->id) { print " selected"; } ?>><?=$dashboard->name?></option>
 				<?php } ?>
 			</select>
 		</div>

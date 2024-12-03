@@ -604,18 +604,6 @@ class File extends \BaseModel {
 		return false;
 	}
 
-	public function setMetaData($key, $value) {
-		$metadata = new \Storage\FileMetadata($this->id);
-		$metadata->add($key, $value);
-		return true;
-	}
-
-	public function getMetadata($key) {
-		$metadata = new \Storage\FileMetadata($this->id);
-		$metadata->get($this->id, $key);
-		return $metadata;
-	}
-
 	/**
 	 * Upload a file to the repository
 	 * @param array $parameters - Array of parameters to upload the file

@@ -35,6 +35,7 @@
 					foreach ($data as $entity_type => $privs) {
 						$read = false;
 						$write = false;
+						$authSet = false;
 
 						// Handle 'All' privileges
 						if ($entity_type == 'a') {

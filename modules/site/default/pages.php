@@ -15,7 +15,7 @@
 		  <div class="tableCell"><strong>Terms of Use Required</strong></div>
 	  </div>
     <?php	foreach ($pages as $page) {
-		  $metadata = $page->allMetadata(); ?>
+		  $metadata = $page->getAllMetadata(); ?>
 	  <div class="tableRow">
 		  <div class="tableCell">
         <label for="module" class="hiddenDesktop">Module</label>

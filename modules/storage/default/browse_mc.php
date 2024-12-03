@@ -12,8 +12,8 @@
 	// Load Requested Repository
     $repoFactory = new \Storage\RepositoryFactory();
     $repository = $repoFactory->get($_REQUEST['code']);
-    if ($repository->error()) {
-        $page->addError($repository->error());
+    if ($repoFactory->error()) {
+        $page->addError($repoFactory->error());
     }
 	elseif(! $repository->id) {
         $page->addError("Repository not found");

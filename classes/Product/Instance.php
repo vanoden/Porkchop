@@ -22,6 +22,7 @@
 			$this->_tableMetaFKColumn = "asset_id";
 			$this->_tableMetaKeyColumn = "key";
             $this->_aliasField("asset_code","code");
+			$this->_aliasField("asset_name","name");
 			$this->_auditEvents = true;
     		parent::__construct($id);
 		}
@@ -260,22 +261,23 @@
 						asset_code = ?";
 				$database->AddParam($parameters['code']);
 			}
-			if (isset($parameters['name'])) {
+			if (isset($parameters['asset_name'])) {
 				$update_object_query .= ",
 						asset_name = ?";
-				$database->AddParam($parameters['name']);
+				$database->AddParam($parameters['asset_name']);
 			}
-			if (is_numeric($parameters['product_id'])) {
+			if (isset($parameters['product_id']) && is_numeric($parameters['product_id'])) {
 				$update_object_query .= ",
 						product_id = ?";
 				$database->AddParam($parameters['product_id']);
 			}
-			if (is_numeric($parameters['organization_id'])) {
+			if (isset($parameters['organization_id']) && is_numeric($parameters['organization_id'])) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage product instances')) {
 					$update_object_query .= ",
 						organization_id = ?";
 					$database->AddParam($parameters['organization_id']);
-				} else {
+				}
+				else {
 					$this->error("Insufficient privileges for update");
 					return false;
 				}
@@ -402,6 +404,10 @@
 			else return false;
 		}
 
+		/**
+		 * Get the organization associated with this product instance
+		 * @return \Register\Organization
+		 */
 		public function organization() {
 			return new \Register\Organization($this->organization_id);
 		}
@@ -410,6 +416,11 @@
 			$this->clearError();
 		}
 
+		/**
+		 * Get the tickets associated with this product instance
+		 * @param array $parameters 
+		 * @return mixed 
+		 */
 		public function getTickets($parameters = array()) {
 			$ticketList = new \Support\Request\ItemList();
 			$parameters['product_code']	= $this->product()->code;
@@ -417,6 +428,11 @@
 			return $ticketList->find($parameters);
 		}
 
+		/**
+		 * Get the last ticket for this product instance
+		 * @param array $parameters
+		 * @return array
+		 */
 		public function lastTicket($parameters = array()) {
 			$ticketList = new \Support\Request\ItemList();
 			$parameters['product_code']	= $this->product()->code;
@@ -424,7 +440,23 @@
 			return $ticketList->last($parameters);
 		}
 
+		/**
+		 * Get the product associated with this instance
+		 * @return Item
+		 */
 		public function product() {
 			return new \Product\Item($this->product_id);
+		}
+
+		/**
+		 * See if string is a valid name
+		 * @param mixed $string String to check
+		 * @return bool True if valid
+		 */
+		public function validName($string): bool {
+			if (preg_match('/^[\w\-\.\_\s\:\!]+$/', $string))
+				return true;
+			else
+				return false;
 		}
 	}

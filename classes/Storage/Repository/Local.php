@@ -6,7 +6,7 @@
 
 		public function __construct($id = null) {
 			$this->type = 'Local';
-			$this->_metadata_keys = ["path","endpoint"];
+			$this->_metadataKeys(array("path","endpoint"));
 			parent::__construct($id);
 		}
 
@@ -68,34 +68,12 @@
 				
 				$this->_setMetadata('path',$path);
 			}
-			return $this->_metadata('path');
+			return $this->getMetadata('path');
 		}
 
 		public function _endpoint($string = null) {
 			if (isset($string)) $this->_setMetadata('endpoint',$string);
-			return $this->_metadata('endpoint');
-		}
-
-		public function setMetadata($key,$value) {
-			if ($key == 'path') {
-				return $this->_path($value);
-			} else if ($key == 'endpoint') {
-				return $this->_endpoint($value);
-			} else {
-				$this->error("Invalid key");
-				return false;
-			}
-		}
-
-		public function metadata($key) {
-			if ($key == 'path') {
-				return $this->_path();
-			} else if ($key == 'endpoint') {
-				return $this->_endpoint();
-			} else {
-				$this->error("Invalid key");
-				return false;
-			}
+			return $this->getMetadata('endpoint');
 		}
 
 		public function details(): bool {

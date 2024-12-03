@@ -30,7 +30,6 @@
 			}
 			$this->_name = $name;
 			$this->_path = MODULES."/".$this->_name."/".$this->style();
-			$this->getMetadata();
 
 			return true;
 		}
@@ -61,30 +60,29 @@
 				return null;
 			}
 		}
-		public function getMetadata() {
-			$metadata = new \stdClass();
-			$path = $this->_path."/metadata.xml";
-			if (is_file($path)) {
-				require_once 'XML/Unserializer.php';
-				$options = array(
-					XML_SERIALIZER_OPTION_RETURN_RESULT => true,
-					XML_SERIALIZER_OPTION_MODE          => 'simplexml',
-				);
-				$xml = new \XML_Unserializer($options);
-				if ($xml->unserialize($path,true,$options)) {
-					$this->_metadata = (object) $xml->getUnserializedData();
-				}
-        	}
-			return true;
-		}
+
+		/**
+		 * Get the name of the module
+		 * @return mixed
+		 */
 		public function name() {
 			return $this->_name;
 		}
+
+		/**
+		 * Get the description of the module
+		 * @return mixed
+		 */
 		public function description() {
 			if (isset($this->_metadata->description)) return $this->_metadata->description;
 			return null;
 		}
 
+		/**
+		 * See If Name is Valid for a Module
+		 * @param mixed $string Name
+		 * @return bool True if valid name
+		 */
 		public function validName($string): bool {
 			return $this->validCode($string);
 		}
