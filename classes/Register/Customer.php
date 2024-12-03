@@ -37,8 +37,8 @@
             // Password must be changed per Authentication Service
 			if (isset($parameters['password'])) {
                 // Authentication Service needs login to change password
-                if (empty($this->login)) $this->login = $parameters["login"];
-                if (empty($this->login)) {
+                if (empty($this->code)) $this->code = $parameters["login"];
+                if (empty($this->code)) {
                     $this->error("Login required to change password");
                     return false;
                 }
@@ -344,7 +344,7 @@
 			$authenticationFactory = new \Register\AuthenticationService\Factory();
 			$authenticationService = $authenticationFactory->service($this->auth_method);
 
-			if ($authenticationService->changePassword($this->login,$password)) {
+			if ($authenticationService->changePassword($this->code,$password)) {
 				$this->resetAuthFailures();
 				$this->auditRecord('PASSWORD_CHANGED','Password changed');
 				return true;
