@@ -85,7 +85,7 @@
 			else {
 	            $queuedCustomer->update(array('status' => 'APPROVED'));
 	            $queuedCustomer->syncLiveAccount();
-	            $page->success = "Registration complete for ".$customer->login;
+	            $page->success = "Registration complete for ".$customer->code;
 			}
         }
 	}	
@@ -134,7 +134,7 @@
             $customer->update(array('validation_key'=>$validation_key));
         
             // create the verify account email
-            $verify_url = $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->login;
+            $verify_url = $_config->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->code;
             if ($_config->site->https) $verify_url = "https://$verify_url";
             else $verify_url = "http://$verify_url";
             $template = new \Content\Template\Shell (

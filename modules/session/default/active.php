@@ -25,13 +25,13 @@
 	<td class="label activeScriptLabel">Script</td>
 </tr>
 <?php
-	$_user = new RegisterPerson();
+	$_user = new \Register\Person();
 	foreach ($sessions as $session) {
     	if (! $greenbar) $greenbar = 'greenbar'; else $greenbar = '';
 		list($hit) = $_session->last_hit($session->id);
 		$user = $_user->details($session->customer_id);
 ?>
-<tr><td class="value <?=$greenbar?>"><?=$user->login?></td>
+<tr><td class="value <?=$greenbar?>"><?=$_user->code?></td>
 	<td class="value <?=$greenbar?>"><?=$hit->remote_ip?></td>
 	<td class="value <?=$greenbar?>"><?=$session->first_hit_date?></td>
 	<td class="value <?=$greenbar?>"><?=$session->last_hit_date?></td>

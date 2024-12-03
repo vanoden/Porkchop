@@ -96,7 +96,7 @@
 
 			$count = 0;
 			while($record = $people->FetchNextObject(false)) {
-				app_log("Expiring ".$record->login."' [".$record->id."]",'notice');
+				app_log("Expiring ".$record->code."' [".$record->id."]",'notice');
 				$customer = new Customer($record->id);
 				$customer->update(array("status" => "EXPIRED"));
 				$count ++;

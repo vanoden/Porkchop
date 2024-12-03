@@ -122,7 +122,7 @@
 							)
 						);
 						if ($customer->error()) app_log("Error adding Email Address'".$_REQUEST['email_address']."': ".$customer->error(),'error',__FILE__,__LINE__);
-						else app_log("Added address '".$_REQUEST['email_address']."' for customer ".$customer->login,'info');
+						else app_log("Added address '".$_REQUEST['email_address']."' for customer ".$customer->code,'info');
 					}
 					else app_log("No email address provided",'warning');
 
@@ -137,7 +137,7 @@
 						);
 
 						if ($customer->error()) app_log("Error adding Phone Number '".$_REQUEST['phone_number']."': ".$customer->error(),'error',__FILE__,__LINE__);
-						else app_log("Added phone '".$_REQUEST['phone_number']."' for customer ".$customer->login,'info');
+						else app_log("Added phone '".$_REQUEST['phone_number']."' for customer ".$customer->code,'info');
 					}
 					else app_log("No phone number provided",'warning');
 
@@ -287,7 +287,7 @@
 						'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
 						'CUSTOMER.LAST_NAME'	=> $customer->last_name,
 						'EMAIL'					=> $customer->notify_email(),
-						'CUSTOMER.LOGIN'		=> $customer->login,
+						'CUSTOMER.LOGIN'		=> $customer->code,
 						'SITE.LINK'				=> 'http://'.$_config->site->hostname.'/_register/pending_customers'
 					)
 				);

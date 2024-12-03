@@ -86,7 +86,7 @@
   <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
   <input type="hidden" name="target" value="<?= $target ?>" />
   <input type="hidden" name="customer_id" value="<?= $customer_id ?>" />
-  <input type="hidden" name="login" value="<?= $customer->login ?>" />
+  <input type="hidden" name="login" value="<?= $customer->code ?>" />
   <input type="hidden" id="removeSearchTagId" name="removeSearchTagId" value="" />
 
   <section id="form-message">
@@ -102,7 +102,7 @@
       <div class="tableCell" style="width: 20%;">Type</div>
   </div>
   <div class="tableRow" style="background: var(--color-light-one);">
-      <div class="tableCell" style="width: 50%;">Login: <span class="value"><?= $customer->login ?></span></div>
+      <div class="tableCell" style="width: 50%;">Login: <span class="value"><?= $customer->code ?></span></div>
       <div class="tableCell" style="width: 50%;">Type:
         <select name="automation" class="value input">
           <option value="0" <?php if ($customer->human()) print " selected"; ?>>Human</option>

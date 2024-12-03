@@ -22,7 +22,7 @@ elseif (preg_match('/^[\w\-\.\_]+$/', $GLOBALS['_REQUEST_']->query_vars_array[0]
 } else
 	$customer_id = $GLOBALS['_SESSION_']->customer->id;
 
-app_log($GLOBALS['_SESSION_']->customer->login . " accessing account of customer " . $customer_id, 'notice', __FILE__, __LINE__);
+app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer " . $customer_id, 'notice', __FILE__, __LINE__);
 
 #######################################
 ## Handle Actions					###
@@ -54,7 +54,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Resend Email") {
 		$customer->update(array('validation_key'=>$validation_key));
 
 		// create the verify account email
-		$verify_url = $GLOBALS['_config']->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->login;
+		$verify_url = $GLOBALS['_config']->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->code;
 		if ($GLOBALS['_config']->site->https) $verify_url = "https://$verify_url";
 		else $verify_url = "http://$verify_url";
 
@@ -338,7 +338,7 @@ if (!empty($_REQUEST['newSearchTag']) && empty($_REQUEST['removeSearchTag'])) {
 	if (!empty($_REQUEST['newSearchTag']) && !empty($_REQUEST['newSearchTagCategory']) && $searchTag->validName($_REQUEST['newSearchTag']) && $searchTag->validName($_REQUEST['newSearchTagCategory'])) {
 
 		// Check if the tag already exists
-		$existingTag = $searchTagList->findAdvanced(array('class' => 'Register::Customer', 'value' => $_REQUEST['newSearchTag']));
+		$existingTag = $searchTagList->find(array('class' => 'Register::Customer', 'value' => $_REQUEST['newSearchTag']));
 
 		if (empty($existingTag)) {
 

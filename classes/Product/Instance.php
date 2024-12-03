@@ -350,7 +350,7 @@
 			// Check the users authorization - Should really be done in the interface
 			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
 				$this->error("You do not have permissions for this task.");
-				app_log($GLOBALS['_SESSION_']->customer->login." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
+				app_log($GLOBALS['_SESSION_']->customer->code." failed to update products because not product manager role",'notice',__FILE__,__LINE__);
 				app_log(print_r($GLOBALS['_SESSION_'],true),'debug',__FILE__,__LINE__);
 				return false;
 			}

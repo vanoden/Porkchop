@@ -240,7 +240,7 @@
 	  <div class="tableCell">
 		  <?=$registerCustomer->first_name?> <?=$registerCustomer->last_name?>
 		  <br/>
-		  <strong>Login:</strong> <i><?=$registerCustomer->login?></i>
+		  <strong>Login:</strong> <i><?=$registerCustomer->code?></i>
 	  </div>
 	  <div class="tableCell">
 		  <div id="customer_status_form_<?=$queuedCustomer->id?>" class="hidden customer_status_form">

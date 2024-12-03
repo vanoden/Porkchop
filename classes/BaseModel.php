@@ -1126,6 +1126,39 @@
 			return $metadata;
 		}
 
+		public function searchMeta($key, $value = '') {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$get_results_query = "
+				SELECT	`".$this->_tableMetaFKColumn."`
+				FROM	".$this->_metaTableName."
+				WHERE	`".$this->_tableMetaKeyColumn."` = ?";
+			$database->AddParam($key);
+
+			if (!empty($value)) {
+				$get_results_query .= "
+					AND		value = ?";
+				$database->AddParam($value);
+			}
+	
+			$rs = $database->Execute($get_results_query);
+			if (!$rs) {
+				$this->SQLError($database->ErrorMsg());
+				return [];
+			}
+			$objects = array();
+			$class = get_class();
+			while (list($id) = $rs->FetchRow()) {
+				$object = new $class($id);
+				array_push($objects, $object);
+			}
+			return $objects;
+		}	
+
 		public function getError() {
 			return $this->_error;
 		}	

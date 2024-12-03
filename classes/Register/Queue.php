@@ -177,7 +177,7 @@
 
 			// update to have the queued login match the 'approved' organization
 			$customer = new \Register\Customer($this->register_user_id);
-			app_log("Assigning customer ".$customer->login." to organization ".$organization->name);
+			app_log("Assigning customer ".$customer->code." to organization ".$organization->name);
 			$customer->update(array('organization_id' => $organization->id));
 			
 			// they've entered a product, add a support_request record with customer id, date entry and request items for each item entered
@@ -338,7 +338,7 @@
 
 		public function getVerificationURL() {
 			$customer = new \Register\Customer($this->id);
-			return "/_register/validate?login=".$customer->login."&validation_key=".$customer->validationKey();
+			return "/_register/validate?login=".$customer->code."&validation_key=".$customer->validationKey();
 		}
 
 		/**

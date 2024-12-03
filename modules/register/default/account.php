@@ -103,7 +103,7 @@ if ($canView) {
 				</li>
 				<li id="accountLoginQuestion">
 					<label for="user_name">Login:</label>
-					<span class="value"><?= $customer->login ?></span>
+					<span class="value"><?= $customer->code ?></span>
 				</li>
 				<li id="accountFirstNameQuestion">
 					<label for="first_name">*First Name:</label>

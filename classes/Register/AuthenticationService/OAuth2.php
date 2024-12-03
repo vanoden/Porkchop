@@ -102,7 +102,7 @@
 		}
 
 		public function changePassword($login,$password) {
-			app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$this->login,'info');
+			app_log($GLOBALS['_SESSION_']->customer->code." changing password for ".$this->code,'info');
 
 			$this->error("OAuth2 password change not supported");	
 			return false;

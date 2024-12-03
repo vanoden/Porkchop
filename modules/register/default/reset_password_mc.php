@@ -53,8 +53,8 @@
 		elseif (! $GLOBALS['_SESSION_']->superElevated()) {
 			// Check current password
 			$checkUser = new \Register\Customer();
-			if (! $checkUser->authenticate($GLOBALS['_SESSION_']->customer->login,$_REQUEST['currentPassword'])) {
-				app_log("SuperElevation failed: user ".$GLOBALS['_SESSION_']->customer->login." pass ".$_REQUEST['current_password'],"warn");
+			if (! $checkUser->authenticate($GLOBALS['_SESSION_']->customer->code,$_REQUEST['currentPassword'])) {
+				app_log("SuperElevation failed: user ".$GLOBALS['_SESSION_']->customer->code." pass ".$_REQUEST['current_password'],"warn");
 				$page->addError("Current password check failed");
 				return;
 			}

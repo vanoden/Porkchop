@@ -140,7 +140,7 @@
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 # Can Update Anyone
             }
-            elseif ($GLOBALS['_SESSION_']->customer->login = $_REQUEST['code']) {
+            elseif ($GLOBALS['_SESSION_']->customer->code = $_REQUEST['code']) {
                 # Can Update Yourself
             }
             else {
@@ -1226,7 +1226,7 @@
 			if (! $person->get($_REQUEST['login'])) $this->notFound("Registration not found");
 
 			$response = new \APIResponse();
-			$response->addElement('url',"/_register/new_customer?method=verify&login=".$person->login."&access=".$person->validationKey());
+			$response->addElement('url',"/_register/new_customer?method=verify&login=".$person->code."&access=".$person->validationKey());
 			if ($person->error()) $this->error($person->error());
 			$response->print();
         }
@@ -1241,7 +1241,7 @@
 			if (! $person->get($_REQUEST['login'])) $this->notFound("Registration not found");
 
 			$response = new \APIResponse();
-			$response->addElement('url',"/_register/validate?login=".$person->login."&validation_key=".$person->validationKey());
+			$response->addElement('url',"/_register/validate?login=".$person->code."&validation_key=".$person->validationKey());
 			if ($person->error()) $this->error($person->error());
 			$response->print();
         }

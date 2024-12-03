@@ -37,7 +37,7 @@
 		$readOnly = false;
 	}
 
-	app_log($GLOBALS['_SESSION_']->customer->login." accessing account of customer ".$customer->id,'notice',__FILE__,__LINE__);
+	app_log($GLOBALS['_SESSION_']->customer->code." accessing account of customer ".$customer->id,'notice',__FILE__,__LINE__);
 
 	#######################################
 	### Handle Actions					###
@@ -238,7 +238,7 @@
 			$customer->update(array('validation_key'=>$validation_key));
 
 			// create the verify account email
-			$verify_url = $GLOBALS['_config']->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->login;
+			$verify_url = $GLOBALS['_config']->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->code;
 			if ($GLOBALS['_config']->site->https) $verify_url = "https://$verify_url";
 			else $verify_url = "http://$verify_url";
 

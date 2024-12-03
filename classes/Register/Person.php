@@ -32,6 +32,9 @@ class Person Extends \BaseModel {
 		$this->_tableName = 'register_users';
 		$this->_tableUKColumn = 'login';
 		$this->_cacheKeyPrefix = 'customer';
+		$this->_metaTableName = 'register_user_metadata';
+		$this->_tableMetaFKColumn = 'user_id';
+		$this->_tableMetaKeyColumn = 'key';
 		$this->_auditEvents = true;
         $this->_aliasField('login','code');
 		$this->_addStatus(array("NEW","ACTIVE","EXPIRED","HIDDEN","DELETED","BLOCKED"));
@@ -51,7 +54,7 @@ class Person Extends \BaseModel {
 			if (strlen($full_name)) $full_name .= " ";
 			$full_name .= $this->last_name;
 		}
-		if (!strlen($full_name)) $full_name = $this->login;
+		if (!strlen($full_name)) $full_name = $this->code;
 		if (!strlen($full_name)) $full_name = '[empty]';
 		return $full_name;
 	}
@@ -162,7 +165,7 @@ class Person Extends \BaseModel {
 			array_push($bind_params,$parameters['last_name']);
 			$auditEvent->appendDescription("Last Name changed to ".$parameters['last_name']);
 		}
-		if (isset($parameters['login']) and !empty($parameters['login']) && $parameters['login'] != $this->login) {
+		if (isset($parameters['login']) and !empty($parameters['login']) && $parameters['login'] != $this->code) {
 			if (!$this->validLogin($parameters['login'])) {
 				$this->error("Invalid login");
 				return false;
@@ -266,108 +269,6 @@ class Person Extends \BaseModel {
 
     public function organization() {
         return new \Register\Organization($this->organization_id);
-    }
-    
-	public function getMeta($id = 0) {
-		if (!$id) $id = $this->id;
-		$get_meta_query = "
-			SELECT	`key`,value
-			FROM	register_person_metadata
-			WHERE	person_id = ?
-		";
-		$rs = $GLOBALS['_database']->Execute($get_meta_query, array($id));
-		if (!$rs) {
-			$this->SQLError($GLOBALS['_database']->ErrorMsg());
-			return null;
-		}
-		$metadata = array();
-		while (list($label, $value) = $rs->FetchRow()) {
-			$metadata[$label] = $value;
-		}
-		return $metadata;
-	}
-    
-    public function setMeta($arg1, $arg2, $arg3 = 0) {
-        if (func_num_args() == 3) {
-            $id = $arg1;
-            $key = $arg2;
-            $value = $arg3;
-        }
-        else {
-            $id = $this->id;
-            $key = $arg1;
-            $value = $arg2;
-        }
-        if (!$id) {
-            $this->error("No person_id for metadata");
-            return null;
-        }
-        $add_meta_query = "
-				REPLACE
-				INTO	register_person_metadata
-				(		person_id,`key`,value)
-				VALUES
-				(		?,?,?)
-			";
-        $GLOBALS['_database']->Execute($add_meta_query, array(
-            $id,
-            $key,
-            $value
-        ));
-        if ($GLOBALS['_database']->ErrorMsg()) {
-            $this->SQLError($GLOBALS['_database']->ErrorMsg());
-            return null;
-        }
-        return 1;
-    }
-    
-    public function metadata($key) {
-		$bind_params = array();
-
-        $get_results_query = "
-				SELECT	value
-				FROM	register_person_metadata
-				WHERE	`person_id` = ?
-				AND	`key` = ?";
-
-		array_push($bind_params,$this->id);
-		array_push($bind_params,$key);
-
-        $rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
-        if (!$rs) {
-            $this->SQLError($GLOBALS['_database']->ErrorMsg());
-            return null;
-        }
-        list($value) = $rs->FetchRow();
-		return htmlspecialchars($value);
-    }
- 
-    public function searchMeta($key, $value = '') {
-		$bind_params = array();
-		$get_results_query = "
-			SELECT	person_id
-			FROM	register_person_metadata
-			WHERE	`key` = ?";
-		array_push($bind_params,$key);
-
-		if ($value) {
-			$get_results_query .= "
-				AND		value = ?";
-			array_push($bind_params,$value);
-		}
-
-		$rs = $GLOBALS['_database']->Execute($get_results_query,$bind_params);
-		if (!$rs) {
-			$this->SQLError($GLOBALS['_database']->ErrorMsg());
-			return null;
-		}
-		$objects = array();
-		while (list($id) = $rs->FetchRow()) {
-            $person = new Person($id);
-			if ($person->status == 'DELETED') continue;
-			array_push($objects, $person);
-		}
-		return $objects;
     }
 
     # Process Email Verification Request
@@ -517,7 +418,7 @@ class Person Extends \BaseModel {
     }
 
 	public function block() {
-		app_log("Blocking customer '".$this->login."'",'INFO');
+		app_log("Blocking customer '".$this->code."'",'INFO');
 		return $this->update(array('status' => 'BLOCKED'));
 	}
 

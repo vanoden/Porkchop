@@ -101,7 +101,7 @@
 					break;
 				case 'u':
 					$entity = new \Register\Customer($this->entity_id);
-					return $entity->login;
+					return $entity->code;
 					break;
 				case 'r':
 					$entity = new \Register\Role($this->entity_id);

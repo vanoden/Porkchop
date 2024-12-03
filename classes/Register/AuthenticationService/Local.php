@@ -74,7 +74,7 @@
 		}
 
 		public function changePassword($login,$password) {
-			app_log($GLOBALS['_SESSION_']->customer->login." changing password for ".$login,'info');
+			app_log($GLOBALS['_SESSION_']->customer->code." changing password for ".$login,'info');
 	
 			$customer = new \Register\Customer();
 			if (! $customer->get($login)) {

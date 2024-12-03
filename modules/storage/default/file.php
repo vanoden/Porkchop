@@ -89,7 +89,7 @@
 		</div>
 		<div class="container fileDetailContainer">
 			<span class="label">Owner</span>
-			<span class="value"><?= $file->owner()->login ?></span>
+			<span class="value"><?= $file->owner()->code ?></span>
 		</div>
 		<div class="container fileDetailContainer">
 			<span class="label">Download URI</span>

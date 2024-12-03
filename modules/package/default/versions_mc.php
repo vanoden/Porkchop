@@ -20,7 +20,7 @@
         }
         else {
             $version = new \Package\Version($_REQUEST['version_id']);
-            app_log($GLOBALS['_SESSION_']->customer->login." publishing version ".$version->version()." of ".$version->package->name,'notice');
+            app_log($GLOBALS['_SESSION_']->customer->code." publishing version ".$version->version()." of ".$version->package->name,'notice');
             $version->publish();
             if ($version->error) $page->addError($version->error);
         }
