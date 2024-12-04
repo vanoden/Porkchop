@@ -752,8 +752,8 @@
 			$database->AddParam($value);
 
 			// Execute Query
-			$rs = $database->Execute($set_metadata_query);
-			if (! $rs) {
+			$database->Execute($set_metadata_query);
+			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
@@ -798,8 +798,8 @@
 			$database->AddParam(json_encode($value));
 
 			// Execute Query
-			$rs = $database->Execute($set_metadata_query);
-			if (! $rs) {
+			$database->Execute($set_metadata_query);
+			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}

@@ -60,6 +60,7 @@
 
 		public function __call($name, $arguments) {
 			if ($name == "get") return $this->getPage($arguments[0],$arguments[1],$arguments[2]);
+			else if ($name == "setMetadata") return $this->setMetadataScalar($arguments[0],$arguments[1]);
 			else $this->error("Method '$name' not found");
 		}
 

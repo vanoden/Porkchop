@@ -47,11 +47,11 @@
 		    <div class="tableCell">Actions</div>
 	    </div>
     <?php	$idx = 0;
-	    foreach ($metadata as $record) { 
+	    foreach ($metadata as $key => $value) {
     ?>
 	    <div class="tableRow">
-		    <div class="tableCell"><?=$record->key?><input id="key_<?=$idx?>" type="hidden" name="key_<?=$idx?>" value="<?=$record->key?>" /></div>
-		    <div class="tableCell"><input id="value_<?=$idx?>" type="text" name="value_<?=$idx?>" value="<?=$record->value?>" /></div>
+		    <div class="tableCell"><?=$key?><input id="key_<?=$idx?>" type="hidden" name="key_<?=$idx?>" value="<?=$key?>" /></div>
+		    <div class="tableCell"><input id="value_<?=$idx?>" type="text" name="value_<?=$idx?>" value="<?=$value?>" /></div>
 		    <div class="tableCell">
 			    <input type="button" name="update_<?=$idx?>" value="Update" class="button" onclick="updateMeta('<?=$idx?>');" />
 			    <input type="button" name="drop_<?=$idx?>" value="Drop" class="button" onclick="dropMeta('<?=$idx?>');" />

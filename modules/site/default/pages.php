@@ -46,11 +46,11 @@
         <label for="Metadata" class="hiddenDesktop">Metadata</label>
         <span>
         <?php	$first = true;
-          foreach ($metadata as $data) {
+          foreach ($metadata as $key => $data) {
             if (! $first) print ",";
             $first = false;
         ?>
-        <?=$data->key?> = <?=$data->value?>
+        <?=$key?> = <?=$data?>
         <?php	} ?>
         </span>
 		  </div>
