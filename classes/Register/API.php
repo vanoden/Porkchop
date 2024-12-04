@@ -1422,6 +1422,20 @@
 						)
 					)
 				),
+				'getOrganization' => array(
+					'description'	=> 'Get information about an organization',
+					'path'			=> '/api/register/getOrganization/{code}',
+					'authentication_required'	=> true,
+					'return_element'	=> 'organization',
+					'return_type'		=> 'Register::Organization',
+					'parameters'	=> array(
+						'code'	=> array(
+							'description'	=> 'Organization Code',
+							'prompt'		=> 'Organization Code',
+							'validation_method'	=> 'Register::Organization::validCode()'
+						)
+					)
+				),
 				'findOrganizations'	=> array(
 					'description'	=> 'Find Organizations matching provided criteria',
 					'path'	=> '/api/register/findOrganizations',
