@@ -1629,6 +1629,16 @@
 						'login' => array('required' => true)
 					),
 				),
+				'checkPasswordStrength' => array(
+					'description' => 'Check if a password meets minimum strength requirements',
+					'authentication_required' => false,
+					'token_required' => false,
+					'return_type' => 'integer',
+					'return_mime_type' => 'plain/text',
+					'parameters' => array(
+						'password' => array('required' => true)
+					),
+				),
 				'getPasswordResetURL' => array(
 					'description' => 'Get URL for password reset',
 					'authentication_required' => true,
