@@ -6,7 +6,7 @@
  * It includes methods for getting, setting, and managing metadata values.
  */
 class BaseMetadataClass extends \BaseClass {
-    
+
     /** @var int The ID of the metadata entry */
     public $id;
 

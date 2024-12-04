@@ -9,7 +9,6 @@ class Person Extends \BaseModel {
     public string $last_name = "";			// Last Name
     public ?int $organization_id = null;	// Organization ID
     public ?int $department_id = null;		// Department ID
-    public string $login = "";				
     public string $message = "";
     public string $department;
     public string $status = "NEW";

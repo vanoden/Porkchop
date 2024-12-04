@@ -362,6 +362,11 @@
 			else return false;
 		}
 
+		/**
+		 * How complex is the password?
+		 * @param string $string Password to check
+		 * @return int Complexity score
+		 */
 		public function password_strength($string) {
 			# Initial score on length alone
 			$password_strength = strlen($string);
@@ -378,7 +383,10 @@
 			return $password_strength;
 		}
 
-		// See How Many Auth Failures the account has
+		/**
+		 * See How Many Auth Failures the account has
+		 * @return int 
+		 */
 		public function auth_failures() {
 			$get_failures_query = "
 				SELECT	auth_failures
