@@ -3,12 +3,14 @@
 		"name"	=> "[null]"
 	);
 
+	// Commonly used template files
 	$templates = array(
 		"default"	=> "default.html",
 		"support"	=> "support.html",
 		"admin"		=> "admin.html"
 	);
 
+	// Configuration for each standard Porkchop module
 	$modules = array(
 		"Company"		=> array(
 			"schema"	=> 4,
@@ -109,10 +111,13 @@
 		),
 	);
 
+	// Additional modules
 	include(MODULES."/product/default/_metadata.php");
 	include(MODULES."/sales/default/_metadata.php");
 	include(MODULES."/network/default/_metadata.php");
 	include(MODULES."/storage/default/_metadata.php");
 
 	$menus = array();
+
+	// Common shipping vendors
 	$shipping_vendors = array('Aramex','Australia Post','Bombino','Blue Dart','Canada Post','DB Schenker','Delhivery','DHL','DPD','DTDC','FedEx','Hermes','Nippon','OnTrac Logistics','Parcelforce','PostNL','Purolator','Royal Mail','Spee-dee Delivery','Startrack','TNT','UPS','USPS','Yodel','ZTO Express');
