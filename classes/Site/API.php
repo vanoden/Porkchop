@@ -554,92 +554,92 @@
 			$response->print();
 		}
 		
-        public function addSiteMessage() {
+		public function addSiteMessage() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-	        $siteMessage = new \Site\SiteMessage();
-	        $response = new \HTTP\Response();
+			$siteMessage = new \Site\SiteMessage();
+			$response = new \HTTP\Response();
 
 			if (empty($_REQUEST['user_created'])) $_REQUEST['user_created'] = $GLOBALS['_SESSION_']->customer->id;
 			if (empty($_REQUEST['date_created'])) $_REQUEST['date_created'] = get_mysql_date('now');
 			if (empty($_REQUEST['important'])) $_REQUEST['important'] = 0;
-            if (empty($_REQUEST['subject'])) $_REQUEST['subject'] = '';
+			if (empty($_REQUEST['subject'])) $_REQUEST['subject'] = '';
 			if (empty($_REQUEST['parent_id'])) $_REQUEST['parent_id'] = 0;
 
-            $success = $siteMessage->add(
-                 array(
-                  'user_created' => $_REQUEST['user_created'],
-                  'date_created' => $_REQUEST['date_created'],
-                  'important' => $_REQUEST['important'],
-                  'subject' => $_REQUEST['subject'],
-                  'content' => $_REQUEST['content'],
-                  'parent_id' => $_REQUEST['parent_id']
-                 )
-             );
-            if (!$success) $this->error("Site Message could not be added: ".$siteMessage->error());
+			$success = $siteMessage->add(
+				 array(
+				  'user_created' => $_REQUEST['user_created'],
+				  'date_created' => $_REQUEST['date_created'],
+				  'important' => $_REQUEST['important'],
+				  'subject' => $_REQUEST['subject'],
+				  'content' => $_REQUEST['content'],
+				  'parent_id' => $_REQUEST['parent_id']
+				 )
+			 );
+			if (!$success) $this->error("Site Message could not be added: ".$siteMessage->error());
 
 			$response = new \APIResponse();
 			$response->addElement('id',$siteMessage->id);
-        	$response->print();
-	    }
-	    
-        public function editSiteMessage() {
+			$response->print();
+		}
+		
+		public function editSiteMessage() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-	        $siteMessage = new \Site\SiteMessage($_REQUEST['id']);
+			$siteMessage = new \Site\SiteMessage($_REQUEST['id']);
 
-            $success = $siteMessage->update(
-                 array(
-                  'id' => $_REQUEST['id'],
-                  'user_created' => $_REQUEST['user_created'],
-                  'date_created' => $_REQUEST['date_created'],
-                  'important' => $_REQUEST['important'],
-                  'subject' => $_REQUEST['subject'],
-                  'content' => $_REQUEST['content'],
-                  'parent_id' => $_REQUEST['parent_id']
-                 )
-            );            
-            if (!$success) $this->error("Site Message could not be edited");
+			$success = $siteMessage->update(
+				 array(
+				  'id' => $_REQUEST['id'],
+				  'user_created' => $_REQUEST['user_created'],
+				  'date_created' => $_REQUEST['date_created'],
+				  'important' => $_REQUEST['important'],
+				  'subject' => $_REQUEST['subject'],
+				  'content' => $_REQUEST['content'],
+				  'parent_id' => $_REQUEST['parent_id']
+				 )
+			);            
+			if (!$success) $this->error("Site Message could not be edited");
 
 			$response = new \APIResponse();
-        	$response->print();
-        }
-        
-        public function removeSiteMessage() {
+			$response->print();
+		}
+		
+		public function removeSiteMessage() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            $siteMessage = new \Site\SiteMessage($_REQUEST['id']);
-	        $response = new \HTTP\Response();
-            $success = $siteMessage->delete();
-            if (!$success) $this->error("Site Message could not be deleted");
+			$siteMessage = new \Site\SiteMessage($_REQUEST['id']);
+			$response = new \HTTP\Response();
+			$success = $siteMessage->delete();
+			if (!$success) $this->error("Site Message could not be deleted");
 
 			$response = new \APIResponse();
-        	$response->print();  
-        }
-        
-        public function acknowledgeSiteMessageByUserId() {
+			$response->print();  
+		}
+		
+		public function acknowledgeSiteMessageByUserId() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            $siteMessages = new \Site\SiteMessagesList();
-            $siteMessagesList = $siteMessages->find(array('user_created' => $_REQUEST['user_created']));
-            foreach ($siteMessagesList as $siteMessage) {
+			$siteMessages = new \Site\SiteMessagesList();
+			$siteMessagesList = $siteMessages->find(array('user_created' => $_REQUEST['user_created']));
+			foreach ($siteMessagesList as $siteMessage) {
 				$siteMessage->acknowledge();
 				 if ($siteMessage->error()) $this->error($siteMessage->error());
-            }        
+			}        
 
 			$response = new \APIResponse();
-        	$response->print();
-	    }
+			$response->print();
+		}
 
-        public function acknowledgeSiteMessage() {
+		public function acknowledgeSiteMessage() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-            $siteMessageDelivery = new \Site\SiteMessageDelivery();
-            if (! $siteMessageDelivery->get($_REQUEST['message_id'],$GLOBALS['_SESSION_']->customer->id)) $this->error("Message not found");
-            if (! $siteMessageDelivery->acknowledge()) $this->error($siteMessageDelivery->error());
+			$siteMessageDelivery = new \Site\SiteMessageDelivery();
+			if (! $siteMessageDelivery->get($_REQUEST['message_id'],$GLOBALS['_SESSION_']->customer->id)) $this->error("Message not found");
+			if (! $siteMessageDelivery->acknowledge()) $this->error($siteMessageDelivery->error());
 
-            $response = new \APIResponse();
-        	$response->print();
-        }
+			$response = new \APIResponse();
+			$response->print();
+		}
 
 		public function getSiteMessage() {
 			$siteMessage = new \Site\SiteMessage($_REQUEST['id']);
@@ -650,76 +650,64 @@
 			$response->addElement('message',$siteMessage);
 			$response->print();
 		}
-        
-        public function addSiteMessageMetaData() {
-	        $siteMessageMetaData = new \Site\SiteMessageMetaData();
-	        $response = new \HTTP\Response();
-            $success = $siteMessageMetaData->add(
-                 array(
-                  'item_id' => $_REQUEST['item_id'],
-                  'label' => $_REQUEST['key'],
-                  'value' => $_REQUEST['value']
-                 )
-             );
-            if (!$success) $this->error("Site Message MetaData could not be added: ".$siteMessageMetaData->error());
+
+		/**
+		 * Add a metadata record for a site message
+		 * @return void 
+		 */
+		public function addSiteMessageMetaData() {
+			$siteMessage = new \Site\SiteMessage($_REQUEST['message_id']);
+			if (! $siteMessage->exists()) $this->notFound();
+			if ($siteMessage->user_created != $GLOBALS['_SESSION_']->customer->id) $this->deny();
+
+			$response = new \HTTP\Response();
+			$success = $siteMessage->setMetadata($_REQUEST['key'],$_REQUEST['value']);
+			if (!$success) $this->error("Site Message MetaData could not be added: ".$siteMessage->error());
+
+			// Just Return Success
+			$response = new \APIResponse();
+			$response->print();
+		}
+
+		/**
+		 * Edit a metadata record for a site message
+		 * @return void 
+		 */
+		public function editSiteMessageMetaData() {
+			$siteMessage = new \Site\SiteMessage($_REQUEST['message_id']);
+			if(! $siteMessage->setMetadata($_REQUEST['key'],$_REQUEST['value'])) $this->error("Site Message MetaData could not be edited");
 
 			$response = new \APIResponse();
-			$response->addElement('id',$siteMessageMetaData->item_id);
-        	$response->print();
-	    }
-	            
-        public function editSiteMessageMetaData() {
-	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
-	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->find(array('item_id' => $_REQUEST['item_id'], 'label' => $_REQUEST['label']));
-	        $response = new \HTTP\Response();
-	        $isSuccessful = false;
-	        foreach ($siteMessageMetaDataListArray as $siteMessageMetaData) {
-                $success = $siteMessageMetaData->update(
-                     array(
-                      'item_id' => $_REQUEST['item_id'],
-                      'label' => $_REQUEST['key'],
-                      'value' => $_REQUEST['value']
-                     )
-                );
-                if (!$success) $isSuccessful = false;
-	        }
-            if (!$isSuccessful) $this->error("Site Message MetaData could not be edited");
+			$response->print();
+		}
+		
+		/**
+		 * Remove a metadata record for a site message
+		 * @return void
+		 */
+		public function removeSiteMessageMetaData() {
+			$siteMessage = new \Site\SiteMessage($_REQUEST['item_id']);
+			if (!$siteMessage->unsetMetadata($_REQUEST['label'])) $this->error("Site Message MetaData could not be deleted");
 
 			$response = new \APIResponse();
-        	$response->print();
-        }
-        
-        public function removeSiteMessageMetaData() {
-	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
-	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->find(array('item_id' => $_REQUEST['item_id'], 'label' => $_REQUEST['label']));
-	        $response = new \HTTP\Response();
-	        $isSuccessful = false;
-	        foreach ($siteMessageMetaDataListArray as $siteMessageMetaData) {
-                $success = $siteMessageMetaData->delete();
-                if (!$success) $isSuccessful = false;
-	        }
-            if (!$isSuccessful) $this->error("Site Message MetaData could not be deleted");
+			$response->print();  
+		}
+
+		public function getSiteMessageMetaDataListByItemId () {
+			$siteMessage = new \Site\SiteMessage($_REQUEST['item_id']);
+			$metadata = $siteMessage->getAllMetadata();
+			
+			if (!$siteMessage->exists()) $this->notFound("Site Message MetaData List could not be found for item_id: " . $_REQUEST['item_id']);
 
 			$response = new \APIResponse();
-        	$response->print();  
-        }
+			$response->addElement('message',$siteMessage);
+			$response->print();
+		}
 
-        public function getSiteMessageMetaDataListByItemId () {
-	        $SiteMessageMetaDataList = new \Site\SiteMessageMetaDataList();
-	        $siteMessageMetaDataListArray = $SiteMessageMetaDataList->getListByItemId($_REQUEST['item_id']);
-	        $response = new \HTTP\Response();
-	        
-            if (empty($siteMessageMetaDataListArray)) $this->notFound("Site Message MetaData List could not be found for item_id: " . $_REQUEST['item_id']);
-
-			$response = new \APIResponse();
-			$response->addElement('message',$siteMessageMetaDataListArray);
-        	$response->print();
-        }
-
-        public function addSiteMessageDelivery() {
+		public function addSiteMessageDelivery() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-	        $siteMessageDelivery = new \Site\SiteMessageDelivery();
+			$siteMessageDelivery = new \Site\SiteMessageDelivery();
 
 			$params = array();
 			if (isset($_REQUEST['to'])) {
@@ -755,47 +743,47 @@
 				$this->error("message_id required");
 			}
 
-	        $response = new \HTTP\Response();
-            $success = $siteMessageDelivery->add($params);
+			$response = new \HTTP\Response();
+			$success = $siteMessageDelivery->add($params);
 
-            if (!$success) $this->error("Site Message could not be added: ".$siteMessageDelivery->error());
+			if (!$success) $this->error("Site Message could not be added: ".$siteMessageDelivery->error());
 
 			$response = new \APIResponse();
 			$response->addElement('id',$siteMessageDelivery->id);
-        	$response->print();
-	    }
+			$response->print();
+		}
 
-        public function editSiteMessageDelivery() {
+		public function editSiteMessageDelivery() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            $siteMessageDelivery = new \Site\SiteMessageDelivery($_REQUEST['id']);            
-	        $response = new \HTTP\Response();
-            $success = $siteMessageDelivery->update(
-                 array(
-                  'id' => $_REQUEST['id'],
-                  'message_id' => $_REQUEST['message_id'],
-                  'user_id' => $_REQUEST['user_id'],
-                  'date_viewed' => $_REQUEST['date_viewed'],
-                  'date_acknowledged' => $_REQUEST['date_acknowledged']
-                 )
-            );
-            if (!$success) $this->error("Site Message could not be edited");
+			$siteMessageDelivery = new \Site\SiteMessageDelivery($_REQUEST['id']);            
+			$response = new \HTTP\Response();
+			$success = $siteMessageDelivery->update(
+				 array(
+				  'id' => $_REQUEST['id'],
+				  'message_id' => $_REQUEST['message_id'],
+				  'user_id' => $_REQUEST['user_id'],
+				  'date_viewed' => $_REQUEST['date_viewed'],
+				  'date_acknowledged' => $_REQUEST['date_acknowledged']
+				 )
+			);
+			if (!$success) $this->error("Site Message could not be edited");
 
 			$response = new \APIResponse();
-        	$response->print();
-        }
-        
-        public function removeSiteMessageDelivery() {
+			$response->print();
+		}
+		
+		public function removeSiteMessageDelivery() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            $siteMessageDelivery = new \Site\SiteMessageDelivery($_REQUEST['id']);  
-	        $response = new \HTTP\Response();
-            $success = $siteMessageDelivery->delete();
-            if (!$success) $this->error("Site Message could not be deleted");
+			$siteMessageDelivery = new \Site\SiteMessageDelivery($_REQUEST['id']);  
+			$response = new \HTTP\Response();
+			$success = $siteMessageDelivery->delete();
+			if (!$success) $this->error("Site Message could not be deleted");
 
 			$response = new \APIResponse();
-        	$response->print();  
-        }
+			$response->print();  
+		}
 
 		public function findSiteMessageDeliveries() {
 			$deliveryList = new \Site\SiteMessageDeliveryList();
@@ -868,29 +856,33 @@
 		}
  
 		public function search() {
-	        $messageList = new \Content\MessageList();
-	        $messages = $messageList->search(array('string'=>$_REQUEST['string'], 'is_user_search' => true));
+			$messageList = new \Content\MessageList();
+			$messages = $messageList->search(array('string'=>$_REQUEST['string'], 'is_user_search' => true));
 
 			$response = new \APIResponse();
-	        $response->addElement('count',count($messages));
+			$response->addElement('count',count($messages));
 			$response->print();
 		}
 		
-        public function getAllSiteCounters() {
-            $response = new \HTTP\Response();
-            $counters = array();
-            $existingKeys = $GLOBALS['_CACHE_']->counters();
+		public function getAllSiteCounters() {
+			$response = new \HTTP\Response();
+			$counters = array();
+			$existingKeys = $GLOBALS['_CACHE_']->counters();
 
-            // foreach key that doesn't contain a bracket, add to the response of what can be watched as a public site counter
-            foreach ($existingKeys as $key) {
-                //if (preg_match('/^counter/', $key))
+			// foreach key that doesn't contain a bracket, add to the response of what can be watched as a public site counter
+			foreach ($existingKeys as $key) {
+				//if (preg_match('/^counter/', $key))
 				array_push($counters,$key);
-            }
+			}
 			$response = new \APIResponse();
 			$response->addElement('counter',$counters);
 			$response->print();
 		}
 
+		/**
+		 * Get a specific counter for the site
+		 * @return void 
+		 */
 		public function getSiteCounter() {
 			if (! preg_match('/^\w[\w\-\.\_]*$/',$_REQUEST['name'])) error("Invalid counter name");
 
@@ -904,83 +896,92 @@
 			$response->print();
 		}
 
+		/**
+		 * Get all counters for the site
+		 * @return void 
+		 */
 		public function setAllSiteCounters() {
-            $existingKeys = $GLOBALS['_CACHE_']->keys();
-            $siteCounterWatched = new \Site\CounterWatched();
+			$existingKeys = $GLOBALS['_CACHE_']->keys();
+			$siteCounterWatched = new \Site\CounterWatched();
 
-            // foreach key that doesn't contain a bracket, insert to the counters watched table
-            foreach ($existingKeys as $key) {
-                if (!preg_match('/\[|\]/', $key)) $siteCounterWatched->add(array('key' => $key, 'notes' => 'added via API:setAllSiteCounters()'));
-            }
-            $response = new \APIResponse();
+			// foreach key that doesn't contain a bracket, insert to the counters watched table
+			foreach ($existingKeys as $key) {
+				if (!preg_match('/\[|\]/', $key)) $siteCounterWatched->add(array('key' => $key, 'notes' => 'added via API:setAllSiteCounters()'));
+			}
+			$response = new \APIResponse();
 			$response->addElement('keys',$GLOBALS['_CACHE_']->keys());
 			$response->print();
 		}
-        public function incrementSiteCounter() {
+
+		/**
+		 * Increment a specific counter for the site
+		 * @return void 
+		 */
+		public function incrementSiteCounter() {
 			if (! preg_match('/^\w[\w\-\.\_]*$/',$_REQUEST['name'])) error("Invalid counter name");
 
 			$counter = new \Site\Counter($_REQUEST['name']);
-            if ($counter->increment()) {
-                $response = new \APIResponse();
+			if ($counter->increment()) {
+				$response = new \APIResponse();
 				$cntr = new \stdClass();
-                $cntr->name = $counter->code();
-                $cntr->value = $counter->value();
+				$cntr->name = $counter->code();
+				$cntr->value = $counter->value();
 				$response->addElement('counter',$cntr);
-            }
-            else {
-                $this->error($counter->error());
-            }
+			}
+			else {
+				$this->error($counter->error());
+			}
 
 			$response->print();
-        }
+		}
 
-        public function addSiteHeader() {
+		public function addSiteHeader() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            $this->requirePrivilege('manage site headers');
-            $header = new \Site\Header();
-            $parameters = array(
-                "name"  => $_REQUEST['name'],
-                "value" => $_REQUEST['value']
-            );
+			$this->requirePrivilege('manage site headers');
+			$header = new \Site\Header();
+			$parameters = array(
+				"name"  => $_REQUEST['name'],
+				"value" => $_REQUEST['value']
+			);
 
-            $header->add($parameters);
-            $response = new \APIResponse();
-            $response->addElement('header',$header);
-            $response->print();
-        }
+			$header->add($parameters);
+			$response = new \APIResponse();
+			$response->addElement('header',$header);
+			$response->print();
+		}
 
-        public function getSiteHeader() {
-            $header = new \Site\Header();
-            if (!$header->get($_REQUEST['name'])) $this->error($header->error());
+		public function getSiteHeader() {
+			$header = new \Site\Header();
+			if (!$header->get($_REQUEST['name'])) $this->error($header->error());
 
-            $response = new \APIResponse();
-            $response->addElement('header',$header);
-            $response->print();
-        }
+			$response = new \APIResponse();
+			$response->addElement('header',$header);
+			$response->print();
+		}
 
-        public function updateSiteHeader() {
+		public function updateSiteHeader() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-            $this->requirePrivilege('manage site headers');
-            $header = new \Site\Header();
-            if (!$header->get($_REQUEST['name'])) $this->error($header->error());
-            $header->update(array("value" => $_REQUEST['value']));
+			$this->requirePrivilege('manage site headers');
+			$header = new \Site\Header();
+			if (!$header->get($_REQUEST['name'])) $this->error($header->error());
+			$header->update(array("value" => $_REQUEST['value']));
 
-            $response = new \APIResponse();
-            $response->addElement('header',$header);
-            $response->print();
-        }
+			$response = new \APIResponse();
+			$response->addElement('header',$header);
+			$response->print();
+		}
 
-        public function findSiteHeaders() {
-            $headerList = new \Site\HeaderList();
-            $headers = $headerList->find();
-            if ($headerList->error()) error($headerList->error());
+		public function findSiteHeaders() {
+			$headerList = new \Site\HeaderList();
+			$headers = $headerList->find();
+			if ($headerList->error()) error($headerList->error());
 
-            $response = new \APIResponse();
-            $response->addElement('header',$headers);
-            $response->print();
-        }
+			$response = new \APIResponse();
+			$response->addElement('header',$headers);
+			$response->print();
+		}
 
 		public function getSiteStatus() {
 			$this->requirePrivilege("monitor site status");
@@ -1028,7 +1029,7 @@
 			$response->addElement('cache',$cache);
 			$response->addElement('database',$db);
 			$response->addElement('apache',$apache);
-            $response->print();
+			$response->print();
 		}
 
 		public function getNodeHealth() {
@@ -1054,7 +1055,7 @@
 			
 			$response->addElement('cache',$cacheStatus);
 			$response->addElement('database',$databaseStatus);
-            $response->print();
+			$response->print();
 		}
 
 		public function getTOULatestVersion() {
@@ -1339,7 +1340,7 @@
 							'validation_method'	=> 'Site::Navigation::Item::validTarget()',
 						),
 						'alt'			=> array(
-							'validation_method'	=> 'Site::Nagiagtion::Item::safeString()',
+							'validation_method'	=> 'Site::Navigation::Item::safeString()',
 						),
 						'description'	=> array(
 							'validation_method'	=> 'Site::Navigation::Item::safeString()',
@@ -1437,7 +1438,7 @@
 							'content-type'	=> 'int',
 						),
 					),
-                ),   
+				),   
 				'editSiteMessage'	=> array(
 					'description'	=> 'Edit in-site message',
 					'token_required'	=> true,
@@ -1462,8 +1463,8 @@
 							'content-type'	=> 'int',
 						),
 					),
-                ), 
-                 'removeSiteMessage'	=> array(
+				), 
+				 'removeSiteMessage'	=> array(
 					'description'	=> 'Remove in-site message',
 					'token_required'	=> true,
 					'authentication_required'	=> true,
@@ -1472,7 +1473,7 @@
 							'content-type'	=> 'int',
 						),
 					),
-			    ),
+				),
 				'findSiteMessages'	=> array(
 					'description'	=> 'Find site messages',
 					'authentication_required'	=> true,
@@ -1518,7 +1519,7 @@
 							'validation_method'	=> 'Porkchop::validDate()',
 						),
 					]
-                ),   
+				),   
 				'editSiteMessageDelivery'	=> array(
 					'description'	=> 'Edit site message delivery',
 					'token_required'	=> true,
@@ -1540,7 +1541,7 @@
 							'validation_method'	=> 'Porkchop::validDate()',
 						),
 					]
-                ), 
+				), 
 				'getSiteMessageMetaDataListByItemId'	=> array(
 					'description'	=> 'Get metadata for a site message',
 					'parameters'	=> [
@@ -1549,7 +1550,7 @@
 						),
 					]
 				),
-                'removeSiteMessageDelivery'	=> array(
+				'removeSiteMessageDelivery'	=> array(
 					'description'	=> 'Remove site message delivery',
 					'token_required'	=> true,
 					'authentication_required'	=> true,
@@ -1559,7 +1560,7 @@
 							'required'	=> true,
 						),
 					]
-			    ),
+				),
 				'findSiteMessageDeliveries'	=> array(
 					'description'	=> 'Find site message deliveries',
 					'authentication_required'	=> true,
@@ -1605,7 +1606,7 @@
 							'validation_method'	=> 'Site::Message::Metadata::validValue()',
 						),
 					]
-                ), 
+				), 
 				'editSiteMessageMetaData'	=> array(
 					'description'	=> 'Edit metadata for a site message',
 					'token_required'	=> true,
@@ -1623,13 +1624,13 @@
 							'validation_method'	=> 'Site::Message::Metadata::validValue()',
 						),
 					]
-                ), 
-                'removeSiteMessageMetaData'	=> array(
-                    'item_id' => array('required' => true)
-			    ),
-                'acknowledgeSiteMessageByUserId'	=> array(
-                    'user_created' => array('required' => true)
-			    ),
+				), 
+				'removeSiteMessageMetaData'	=> array(
+					'item_id' => array('required' => true)
+				),
+				'acknowledgeSiteMessageByUserId'	=> array(
+					'user_created' => array('required' => true)
+				),
 				'addTermsOfUse' => array(
 					'code'	=> array(),
 					'name'	=> array('required' => true),
@@ -1657,20 +1658,20 @@
 					'return_element'	=> 'timestamp',
 					'return_type'	=> 'int'
 				),
-                'search'	=> array(
-                    'string' => array('required' => true)
-			    ),
-			    'getAllSiteCounters' => array(
+				'search'	=> array(
+					'string' => array('required' => true)
+				),
+				'getAllSiteCounters' => array(
 					'description'	=> 'Get all site counters',
 					'authentication_required'	=> true,
 					'path'	=> '/api/site/getAllSiteCounters',
 					'return_element'	=> 'counter',
 					'return_type'	=> 'Site::Counter'
 				),
-			    'setAllSiteCounters' => array(),
-                'incrementSiteCounter' => array(
-                    'name'  => array('required' => true),
-                ),
+				'setAllSiteCounters' => array(),
+				'incrementSiteCounter' => array(
+					'name'  => array('required' => true),
+				),
 				'getSiteCounter' => array(
 					'description'	=> 'Get the value of a site counter',
 					'authentication_required'	=> true,
@@ -1685,7 +1686,7 @@
 						)
 					]
 				),
-                'addSiteHeader' => array(
+				'addSiteHeader' => array(
 					'description'	=> 'Add a new site header',
 					'authentication_required'	=> true,
 					'privilege_required'	=> 'manage site headers',
@@ -1693,39 +1694,39 @@
 					'return_element'	=> 'header',
 					'return_type'	=> 'Site::Header',
 					'parameters'	=> [
-	                    'name'  => array(
+						'name'  => array(
 							'description'	=> 'Name of the header',
 							'required' => true,
 							'validation_method'	=> 'Site::Header::validName()',
 						),
-	                    'value' => array(
+						'value' => array(
 							'description'	=> 'Value of the header',
 							'required' => true,
 							'validation_method'	=> 'Site::Header::validValue()',
 						)
 					]
-                ),
-                'getSiteHeader' => array(
+				),
+				'getSiteHeader' => array(
 					'description'	=> 'Get the value of a site header',
 					'authentication_required'	=> true,
 					'path'	=> '/api/site/getSiteHeader/{name}',
 					'return_element'	=> 'header',
 					'return_type'	=> 'Site::Header',
 					'parameters'	=> [
-	                    'name'  => array(
+						'name'  => array(
 							'description'	=> 'Name of the header',
 							'required' => true,
 							'validation_method'	=> 'Site::Header::validName()',
 						)
 					]
-                ),
-                'updateSiteHeader' => array(
-                    'name'  => array('required' => true),
-                    'value' => array('required' => true)
-                ),
-                'findSiteHeaders' => array(
-                    'name'  => array('required' => true),
-                    'value' => array('required' => true)
+				),
+				'updateSiteHeader' => array(
+					'name'  => array('required' => true),
+					'value' => array('required' => true)
+				),
+				'findSiteHeaders' => array(
+					'name'  => array('required' => true),
+					'value' => array('required' => true)
 				),
 				'getSiteStatus' => array(),
 				'getNodeHealth' => array(),
