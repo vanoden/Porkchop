@@ -18,6 +18,18 @@ class Person Extends \BaseModel {
     public string $timezone = "America/New_York";
     public string $auth_method = "local";
     public int $time_based_password = 0;
+	public $opt_in = false;
+	public $date_created;
+	public $date_updated;
+	public $date_expires;
+	public $unsubscribe_key;
+	public $validation_key;
+	public $custom_metadata;
+	public $notes;
+	public $default_billing_location_id;
+	public $default_shipping_location_id;
+	public $last_hit_date;
+
     protected $_settings = array( "date_format" => "US" );
 	protected $_database;
 
