@@ -997,6 +997,14 @@
 			$counter_500 = new \Site\Counter("return500");
 			$auth_failed_counter = new \Site\Counter("auth_failed");
 			$auth_blocked_counter = new \Site\Counter("auth_blocked");
+			$moduleSiteCounter = new \Site\Counter("module.site");
+			$moduleMonitorCounter = new \Site\Counter("module.monitor");
+			$moduleSupportCounter = new \Site\Counter("module.support");
+			$moduleContentCounter = new \Site\Counter("module.content");
+			$moduleEngineeringCounter = new \Site\Counter("module.engineering");
+			$moduleRegisterCounter = new \Site\Counter("module.register");
+			$moduleProductCounter = new \Site\Counter("module.product");
+			$moduleSalesCounter = new \Site\Counter("module.sales");
 
 			$counter = new \stdClass();
 			$counter->connections = $connection_counter->get();
@@ -1007,6 +1015,14 @@
 			$counter->code_500 = $counter_500->get();
 			$counter->auth_failed = $auth_failed_counter->get();
 			$counter->auth_blocked = $auth_blocked_counter->get();
+			$counter->module_site = $moduleSiteCounter->get();
+			$counter->module_monitor = $moduleMonitorCounter->get();
+			$counter->module_support = $moduleSupportCounter->get();
+			$counter->module_content = $moduleContentCounter->get();
+			$counter->module_engineering = $moduleEngineeringCounter->get();
+			$counter->module_register = $moduleRegisterCounter->get();
+			$counter->module_product = $moduleProductCounter->get();
+			$counter->module_sales = $moduleSalesCounter->get();
 			$cache = $cache->stats();
 			$db = new \stdClass();
 			$db->version = $database->version();

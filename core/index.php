@@ -153,7 +153,7 @@
 	$page->getPage($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
 	if ($page->error()) {
 		print "Error: ".$page->error();
-		$logger->writeln("Error initializing page: ".$page->error,'error',__FILE__,__LINE__);
+		$logger->writeln("Error initializing page: ".$page->error(),'error',__FILE__,__LINE__);
 		exit;
 	}
 
@@ -179,8 +179,12 @@
 		}
 	}
 
-	// Site Counter
+	// Site Counters
 	$counter = new \Site\Counter("site.connections");
+	$counter->increment();
+	$counter = new \Site\Counter("module.".$page->module);
+	$counter->increment();
+	$counter = new \Site\Counter("view.".$page->module.".".$page->view);
 	$counter->increment();
 
 	print $page->load_template();

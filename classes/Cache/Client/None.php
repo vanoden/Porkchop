@@ -1,10 +1,9 @@
 <?php
 	namespace Cache\Client;
 
-	class None {
+	class None Extends Base {
 		private $_path;
 		private $_connected;
-		public $error;
 
 		public function __construct($properties) {
 		}
@@ -47,9 +46,5 @@
 
 		public function flush() {
 			return true;
-		}
-
-		public function error() {
-			return null;
 		}
 	}
