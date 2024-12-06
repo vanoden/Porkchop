@@ -350,15 +350,18 @@
 				// Enforce Parameter Type Requirements
 				if (!empty($value) && isset($options['content-type'])) {
 					//print_r("\t".$options['content-type']."\n");
-					if ($options['content-type'] == 'int' && ! is_numeric($value)) {
+					if (in_array($options['content-type'],['int','integer','float']) && ! is_numeric($value)) {
 						$this->invalidRequest("Invalid $param value");
 					}
-					elseif ($options['content-type'] == 'boolean') {
+					elseif (in_array($options['content-type'],['bool','boolean'])) {
 						if ($_REQUEST[$param] == 1) $_REQUEST[$param] = 'true';
 						elseif ($_REQUEST[$param] == 0) $_REQUEST[$param] = 'false';
 						if ($_REQUEST[$param] != 'true' && $_REQUEST[$param] != 'false') {
 							$this->invalidRequest("Invalid $param value");
 						}
+					}
+					elseif (in_array($options['content-type'],['date','datetime'])) {
+						if (! get_mysql_date($value)) $this->invalidRequest("Invalid $param value");
 					}
 				}
 				// Enforce Parameter Regex Requirements
