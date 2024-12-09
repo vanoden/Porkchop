@@ -6,8 +6,8 @@
 
 		public function __construct() {
 			$this->_name = 'site';
-			$this->_version = '0.1.1';
-			$this->_release = '2020-01-17';
+			$this->_version = '0.1.2';
+			$this->_release = '2024-12-06';
 			$this->_schema = new \Site\Schema();
 			parent::__construct();
 		}
@@ -997,6 +997,8 @@
 			$counter_500 = new \Site\Counter("return500");
 			$auth_failed_counter = new \Site\Counter("auth_failed");
 			$auth_blocked_counter = new \Site\Counter("auth_blocked");
+
+			// Module Counters
 			$moduleSiteCounter = new \Site\Counter("module.site");
 			$moduleMonitorCounter = new \Site\Counter("module.monitor");
 			$moduleSupportCounter = new \Site\Counter("module.support");
@@ -1005,6 +1007,7 @@
 			$moduleRegisterCounter = new \Site\Counter("module.register");
 			$moduleProductCounter = new \Site\Counter("module.product");
 			$moduleSalesCounter = new \Site\Counter("module.sales");
+			$moduleGeographyCounter = new \Site\Counter("module.geography");
 
 			$counter = new \stdClass();
 			$counter->connections = $connection_counter->get();
@@ -1023,7 +1026,10 @@
 			$counter->module_register = $moduleRegisterCounter->get();
 			$counter->module_product = $moduleProductCounter->get();
 			$counter->module_sales = $moduleSalesCounter->get();
+			$counter->module_geography = $moduleGeographyCounter->get();
+
 			$cache = $cache->stats();
+
 			$db = new \stdClass();
 			$db->version = $database->version();
 			$db->uptime = $database->global('uptime');
@@ -1060,6 +1066,8 @@
 			if (empty($database->version())) {
 				$databaseStatus = 'error';
 				$response->code(500);
+				$counter = new \Site\Counter("response500");
+				$counter->increment();
 			}
 
 			// check the cache
