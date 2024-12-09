@@ -221,7 +221,7 @@
 							'validation_method' => 'Content::Block::validCode()'
 						),
 					)
-					),
+				),
 				'addBlock'	=> array(
 					'description'	=> 'Add a new block',
 					'token_required'	=> true,
