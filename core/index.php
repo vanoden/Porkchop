@@ -104,6 +104,7 @@
 	if (preg_match('/(GPTBot|SemrushBot|AhrefsBot|MJ12bot|ZoominfoBot|DotBot|MauiBot)/i',$_REQUEST_->user_agent)) {
 		$logger->writeln("Search Engine Bot Detected: ".$_REQUEST_->user_agent,'info');
 		$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info');
+		header("HTTP/1.1 403 Forbidden");
 		exit;
 	}
 
