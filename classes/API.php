@@ -139,6 +139,8 @@
 			$response = new \APIResponse();
 			if (preg_match('/SQL\sError/',$message)) {
 				$response->code(500);
+				$counter = new \Site\Counter("response500");
+				$counter->increment();
 				$message = "Application Data Error";
 			}
 
