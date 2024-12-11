@@ -9,6 +9,7 @@
 		public $notes;
 		public $description;
 		public $notify;
+		public $public;
 
 		public $types = array(
 			'phone'		=> "Phone Number",
@@ -73,17 +74,20 @@
 			}
 
 			if (! isset($parameters['notify'])) $parameters['notify'] = 0;
+			if (! isset($parameters['public'])) $parameters['public'] = 0;
+
 			$add_contact_query = "
 				INSERT
 				INTO	register_contacts
 				(		person_id,
 						type,
 						value,
-						notify
+						notify,
+						public
 				)
 				VALUES
 				(		
-				    ?,?,?,?
+				    ?,?,?,?,?
 				)
 			";
 
@@ -91,7 +95,7 @@
 			$database->AddParam($parameters['type']);
 			$database->AddParam($parameters['value']);
 			$database->AddParam($parameters['notify']);
-
+			$database->AddParam($parameters['public']);
 			$database->Execute($add_contact_query);
 			
 			if ($database->ErrorMsg()) {
@@ -141,6 +145,12 @@
 				$update_contact_query .= ",
 						notify = ?";
 				if ($parameters['notify']) $database->AddParam(1);
+				else $database->AddParam(0);
+			}
+			if (isset($parameters['public'])){
+				$update_contact_query .= ",
+						public = ?";
+				if ($parameters['public']) $database->AddParam(1);
 				else $database->AddParam(0);
 			}
 			if (isset($parameters['value'])) {
@@ -210,6 +220,7 @@
 						notes,
 						description,
 						notify,
+						public,
 						person_id
 				FROM	register_contacts
 				WHERE 	id = ?
@@ -231,6 +242,8 @@
 				$this->description = $contact->description;
 				if ($contact->notify == 1) $this->notify = true;
 				else $this->notify = false;
+				if ($contact->public == 1) $this->public = true;
+				else $this->public = false;
 				$this->person = new \Register\Person($contact->person_id);
 			}
 			else {
@@ -239,6 +252,8 @@
 				$this->value = null;
 				$this->notes = null;
 				$this->description = null;
+				$this->notify = null;
+				$this->public = null;
 				$this->person = null;
 			}
 			return true;

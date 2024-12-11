@@ -325,10 +325,11 @@
 					$customer = new Customer($id);
 				}
 				if (isset($parameters['role']) && ! $customer->has_role($parameters['role'])) continue;
-				if (array_key_exists('count',$controls) && $controls['count']) {
-					// Don't build array
-				}
+
+				// Don't build array if count is requested
+				if (array_key_exists('count', $controls) && isset($controls['count']) && !empty($controls['count'])) {}
 				else array_push($people,$customer);
+
 				$this->incrementCount();
 			}
 
