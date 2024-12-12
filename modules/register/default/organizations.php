@@ -35,7 +35,7 @@
 		<?php	} ?>
 		</select>
 	</div>
-	<div><label>Records per page:</label><input type="text" name="recordsPerPage" class="value input" style="width: 45px" value="<?=$recordsPerPage?>" /></div>
+	<div><label>Records per page:</label><input type="text" name="<?=$pagination->sizeElemName?>" class="value input" style="width: 45px" value="<?=$pagination->size()?>" /></div>
 	<button id="searchOrganizationButton" name="btn_search" onclick="submitSearch(0)">Search</button>
 </div>
 

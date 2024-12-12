@@ -32,7 +32,7 @@
 	    <div><input type="checkbox" name="blocked" value="1" <?php if (isset($_REQUEST['blocked'])) print "checked"; ?> /><label>Blocked</label></div>
 	    <div><input type="checkbox" name="deleted" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><label>Deleted</label></div>
 	    <div><input type="hidden" id="start" name="start" value="0"></div>
-        <div><label>Records per page:</label><input type="text" name="recordsPerPage" class="value input" style="width: 45px" value="<?=$recordsPerPage?>" /></div>
+        <div><label>Records per page:</label><input type="text" name="<?=$pagination->sizeElemName?>" class="value input" style="width: 45px" value="<?=$pagination->size()?>" /></div>
       <button id="searchOrganizationButton" name="btn_search" onclick="submitSearch(0)">Search</button>
     </div>
 </form>
@@ -50,12 +50,20 @@
     if (! $page->errorCount()) {
     foreach ($customers as $customer) { 
         if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
+		if (!empty($customer->organization_id)) {
+			$organization_id = $customer->organization_id;
+			$organization_name = $customer->organization()->name;
+		}
+		else {
+			$organization_id = 0;
+			$organization_name = "";
+		}
   ?>
   <div class="tableRow">
     <div class="tableCell"><label for="customer" class="hiddenDesktop">Login</label><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
     <div class="tableCell"><label for="first" class="hiddenDesktop">First Name</label><?=htmlspecialchars($customer->first_name)?></div>
     <div class="tableCell"><label for="last" class="hiddenDesktop">Last Name</label><?=htmlspecialchars($customer->last_name)?></div>
-    <div class="tableCell"><label for="organization" class="hiddenDesktop">Organization</label><a href="/_register/organization?organization_id=<?=$customer->organization()->id?>"><?=$customer->organization()->name?></a></div>
+    <div class="tableCell"><label for="organization" class="hiddenDesktop">Organization</label><a href="/_register/organization?organization_id=<?=$organization_id?>"><?=$organization_name?></a></div>
     <div class="tableCell"><label for="status" class="hiddenDesktop">Status</label><?=htmlspecialchars($customer->status)?></div>
     <div class="tableCell"><label for="activity" class="hiddenDesktop">Last Active</label><?=$customer->last_active()?></div>
   </div>

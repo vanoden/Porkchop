@@ -3,8 +3,11 @@
 	$page = $site->page();
 	$page->requirePrivilege('manage products');
 
-    $recordsPerPage = 15;
     $parameters = [];
+
+	// paginate results
+    $pagination = new \Site\Page\Pagination();
+    $pagination->forwardParameters(array('search','product_type','status_active','status_hidden','status_deleted','sort_field','sort_direction'));
 
     // For Validation
     $product = new \Product\Item();
@@ -39,14 +42,10 @@
 	$productlist = new \Product\ItemList();
     $totalRecords = $productlist->count($parameters);
 	if (!isset($_REQUEST['pagination_start_id'])) $_REQUEST['pagination_start_id'] = 0;
-	$products = $productlist->find($parameters,['limit' => $recordsPerPage,'offset' => $_REQUEST['pagination_start_id']]);
+	$products = $productlist->find($parameters,['limit' => $pagination->size(), 'offset' => $pagination->startId()]);
 	if ($productlist->error()) $page->addError($productlist->error());
 
     $page->title("Products");
     $page->addBreadcrumb("Products");
 
-	// paginate results
-    $pagination = new \Site\Page\Pagination();
-    $pagination->forwardParameters(array('search','product_type','status_active','status_hidden','status_deleted','sort_field','sort_direction'));
-    $pagination->size($recordsPerPage);
     $pagination->count($totalRecords);

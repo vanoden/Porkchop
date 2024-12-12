@@ -14,13 +14,9 @@
 	// Initialize Parameter Array
 	$find_parameters = array();
 
-	// Customers to display at a time
-	$recordsPerPage = 20;
-	$startId = 0;
-
-	// Check for Pagination Parameters
-	if (array_key_exists('recordsPerPage',$_REQUEST) && is_numeric($_REQUEST['recordsPerPage'])) $recordsPerPage = $_REQUEST['recordsPerPage'];
-	if (array_key_exists('pagination_start_id',$_REQUEST) && is_numeric($_REQUEST['pagination_start_id'])) $startId = $_REQUEST['pagination_start_id'];
+	// Configure Pagination - See https://sites.google.com/rootseven.com/porkchop/content-management-system/pagination
+    $pagination = new \Site\Page\Pagination();
+    $pagination->forwardParameters(array('search','hidden','expired','blocked','deleted','sort_field','sort_direction'));
 
 	// Security - Only Register Module Operators or Managers can see other customers
 	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
@@ -46,21 +42,11 @@
 	if (isset($_REQUEST['search']) && strlen($_REQUEST['search'])) $find_parameters['_search'] = $_REQUEST['search'];
 
 	// Get Count before Pagination
-	$customers = $customerList->find($find_parameters,array('limit'=>$recordsPerPage,'offset'=>$startId));
-    $totalRecords = $customerList->count();
-	if ($customerList->error()) $page->addError("Error finding customers: ".$customerList->error());
-
-	if ($startId < $recordsPerPage) $prev_offset = 0;
-	else $prev_offset = $_REQUEST['start'] - $recordsPerPage;
-
-	$next_offset = $_REQUEST['start'] + $recordsPerPage;
-	$last_offset = $totalRecords - $recordsPerPage;
-
-	// paginate results
-    $pagination = new \Site\Page\Pagination();
-	$pagination->startId($startId);
-    $pagination->forwardParameters(array('search','hidden','expired','blocked','deleted','sort_field','sort_direction','recordsPerPage'));
-    $pagination->size($recordsPerPage);
+	$customerList->find($find_parameters,['ids' => true]);
+	$totalRecords = $customerList->count();
     $pagination->count($totalRecords);
+
+	$customers = $customerList->find($find_parameters,['limit'=>$pagination->size(),'offset'=>$pagination->startId]);
+	if ($customerList->error()) $page->addError("Error finding customers: ".$customerList->error());
 
 	$page->title = "Accounts";
