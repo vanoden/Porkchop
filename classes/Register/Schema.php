@@ -1258,6 +1258,43 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			// add public column to register_contacts table
+			if ($this->version() < 37) {
+				app_log("Upgrading schema to version 37", 'notice', __FILE__, __LINE__);
+				$alter_table_query = "
+					ALTER TABLE `register_contacts` ADD COLUMN `public` tinyint(1) NOT NULL default 0
+				";
+
+				// Start Transaction 
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_contacts table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(37);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			// 	register_users = public|private add schema version 38
+			if ($this->version() < 38) {
+				app_log("Upgrading schema to version 38", 'notice', __FILE__, __LINE__);
+				$alter_table_query = "
+					ALTER TABLE `register_users` ADD COLUMN `profile` enum('public','private') NOT NULL default 'private'
+				";
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_users table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(38);
+				$GLOBALS['_database']->CommitTrans();
+			}		
+
 			return true;
 		}
 	}

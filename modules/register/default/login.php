@@ -11,7 +11,7 @@
 		<li><?=$page->errorString()?></li>
 	</ul>
 </section>
-<?php	} ?>
+<?php	} ?>    
 
 <section id="form-message">
 	<ul class="connectBorder infoText">
