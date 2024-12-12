@@ -139,7 +139,7 @@
 				$current = 0;
 			}
 			elseif (! preg_match('/^_/',$key)) $this->incrementStat("incr_hits");
-			$current ++;
+			elseif (!is_bool($current)) $current ++;
 			if ($this->set($key,$current)) {
 				return $this->get($key);
 			}
