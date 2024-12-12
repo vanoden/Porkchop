@@ -251,7 +251,7 @@ class BaseListClass extends \BaseClass {
 						$limit = " LIMIT " . $controls['offset'] . "," . $controls['limit'];
 					}
 				}
-				$limit = " LIMIT " . $controls['limit'];
+				else $limit = " LIMIT " . $controls['limit'];
 			}
 		}
 		return $limit;
