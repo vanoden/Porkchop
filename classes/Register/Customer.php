@@ -645,8 +645,8 @@
 				$this->error("Error getting session: ".$sessionList->error());
 				return null;
 			}
-			$session = $sessions[0];
-			if (! $session) return null;
+			if (count($sessions) > 0) $session = $sessions[0];
+			else return null;
 			return $session->last_hit_date;
 		}
 		
