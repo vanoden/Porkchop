@@ -301,7 +301,7 @@
 			}
 			else
 				$find_person_query .= " ORDER BY login";
-			if (preg_match('/^d/',$controls['order'])) $find_person_query .= " DESC";
+			if (!empty($controls['order'])) $find_person_query .= " DESC";
 			else $find_person_query .= " ASC";
 
 			if (!empty($controls['limit']) && is_numeric($controls['limit'])) {
@@ -328,7 +328,7 @@
 				if (array_key_exists('count',$controls) && $controls['count']) {
 					// Don't build array
 				}
-				else array_push($people,$customer);
+				elseif (!empty($customer)) array_push($people,$customer);
 				$this->incrementCount();
 			}
 
