@@ -37,15 +37,11 @@
 			if (isset($GLOBALS['_config']->email->username)) $transport->username($GLOBALS['_config']->email->username);
 			if (isset($GLOBALS['_config']->email->password)) $transport->password($GLOBALS['_config']->email->password);
 			if (isset($GLOBALS['_config']->email->token)) $transport->token($GLOBALS['_config']->email->token);
-			if (! $transport->deliver($email)) {
-				$this->error($transport->error(),__FILE__,__LINE__);
-			}
-			else {
-				$this->response->success = 1;
-				$this->response->result = $transport->result;
-			}
+			if (! $transport->deliver($email)) $this->error($transport->error(),__FILE__,__LINE__);
 
-			print $this->formatOutput($this->response);
+			$response = new \APIResponse();
+			$response->AddElement('result',$transport->result());
+			$response->print();
 		}
 
 		###################################################
@@ -54,10 +50,11 @@
 		public function findQueueMessages() {
 			$queue = new \Email\Queue();
 			$messages = $queue->messages();
-			$this->response->success = 1;
-			$this->response->message = $messages;
-			
-			print $this->formatOutput($this->response);
+
+			$response = new \APIResponse();
+			$response->success = 1;
+			$response->addElement('message',$messages);
+			$response->print();
 		}
 
 		###################################################
@@ -66,23 +63,28 @@
 		public function nextUnsent() {
 			$queue = new \Email\Queue();
 			$message = $queue->takeNextUnsent();
-			$this->response->success = 1;
+
+			$response = new \APIResponse();
+
 			if (is_numeric($message->id) && $message->id > 0) {
 				app_log("Returning message ".$message->id,'notice');
-				$this->response->message = $message;
+				$response->addElement('message',$message);
+				$response->print();
 			}
 			else {
 				app_log("No message returned",'notice');
-				unset($this->response->message);
+				$response->success(false);
+				$response->error("No message found");
+				$response->print();
 			}
-
-			print $this->formatOutput($this->response);
 		}
 
 		###################################################
 		### Record Delivery Outcome						###
 		###################################################
 		public function deliveryEvent() {
+			$response = new \APIResponse();
+
 			$message = new \Email\Queue\Message($_REQUEST['id']);
 			if (! $message->id) $this->error("Message not found");
 			if ($message->recordEvent(
@@ -91,22 +93,27 @@
 				$_REQUEST['host'],
 				$_REQUEST['response']
 			)) {
-				$this->response->success = 1;
+				$response->success(true);
 			}
 			else {
-				$this->response->success = 0;
-				$this->response->error = $message->error();
+				$response->success(false);
+				$response->error($message->error());
 			}
-			print $this->formatOutput($this->response);
+			$response->print();
 		}
 
 		public function _methods() {
 			return array(
+				'ping'	=> array(),
 				'sendEmail'			=> array(
-					'to'	=> array('required' => true),
-					'from'	=> array('required' => true),
-					'subject'	=> array(),
-					'body'		=> array()
+					'description'	=> 'Send an email',
+					'privilege_required'	=> 'send email',
+					'parameters'	=> array(
+						'to'		=> array('required' => true),
+						'from'		=> array('required' => true),
+						'subject'	=> array(),
+						'body'		=> array()
+					)
 				),
 				'findQueueMessages'	=> array(),
 				'nextUnsent'	=> array(),

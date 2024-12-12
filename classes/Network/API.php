@@ -216,7 +216,7 @@
 		public function getAdapter() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'network.adapter.xsl';
-			$response = new \HTTP\Response();
+			$response = new \APIResponse();
 	
 			# Initiate Adapter Object
 			$adapter = new \Network\Adapter();
@@ -231,7 +231,7 @@
 				}
 				if (isset($_REQUEST['domain_name'])) {
 					$domain = new \Network\Domain();
-					if ($domain->get($parameters['domain_name'])) {
+					if ($domain->get($_REQUEST['domain_name'])) {
 						$parameters['domain_id'] = $domain->id;
 					}
 					else {
@@ -256,19 +256,18 @@
 			# Error Handling
 			if ($adapter->error()) $this->error($adapter->error());
 			elseif ($adapter->id) {
-				$response->adapter = $adapter;
-				$response->success = 1;
+				$response->addElement('adapter', $adapter);
 			}
 			else {
-				$response->success = 0;
-				$response->error = "Adapter not found";
+				$response->error("Adapter not found");
 			}
 	
 			api_log('network',$_REQUEST,$response);
 	
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
+
 		###################################################
 		### Create Adapter Record						###
 		###################################################
@@ -313,10 +312,9 @@
 			);
 			if ($adapter->error()) $this->error("Error adding adapter: ".$adapter->error());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->adapter = $adapter;
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->addElement('adapter',$adapter);
+			$response->print();
 		}
 	
 		###################################################
@@ -325,10 +323,10 @@
 		public function findAddresses() {
 			# Default StyleSheet
 			if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'network.address.xsl';
-			$response = new \HTTP\Response();
+			$response = new \APIResponse();
 	
 			# Initiate Address List
-			$addressList = new \Network\AddressList();
+			$addressList = new \Network\IPAddressList();
 	
 			# Find Matching Addresses
 			$parameters = array();
@@ -371,45 +369,41 @@
 	
 			# Error Handling
 			if ($addressList->error()) $this->error($addressList->error());
-			else{
-				$response->address = $addresses;
-				$response->success = 1;
-			}
+			else $response->addElement('address',$addresses);
 	
 			api_log('network',$_REQUEST,$response);
 	
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
+
 		###################################################
 		### Get Details regarding Specified IP Address	###
 		###################################################
 		public function getAddress() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'network.address.xsl';
-			$response = new \HTTP\Response();
-	
+			$response = new \APIResponse();
+
 			# Initiate Domain Object
 			$address = new \Network\IPAddress();
 			if (! isset($_REQUEST['address'])) $this->error("address required");
-	
+
 			$address->get($_REQUEST['address']);
-	
+
 			# Error Handling
 			if ($address->error()) $this->error($address->error());
 			elseif ($address->id) {
-				$response->address = $address;
-				$response->success = 1;
+				$response->addElement('address', $address);
 			}
 			else {
-				$response->success = 0;
-				$response->error = "Address not found";
+				$this->error("Address not found");
 			}
-	
+
 			api_log('network',$_REQUEST,$response);
-	
+
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
 		###################################################
 		### Create Address Record						###
@@ -492,10 +486,9 @@
 				$this->error("Error adding adapter: ".$address->error());
 			}
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->address = $address;
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->addElement('address', $address);
+			$response->print();
 		}
 
 		public function addSubnet() {
@@ -511,80 +504,165 @@
 				$this->error($subnet->error());
 			}
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->subnet = $subnet;
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->addElement('subnet',$subnet);
+			$response->print();
 		}
 
 		public function _methods() {
 			return array(
 				'ping'	=> array(),
 				'findDomains'	=> array(
-					'name'		=> array()
+					'description'	=> 'Find domains',
+					'privilege_required'	=> 'network admin',
+					'return_element'		=> 'domain',
+					'return_type'			=> 'Network::Domain',
+					'parameters'	=> array(
+						'name'		=> array()
+					)
 				),
 				'getDomain'	=> array(
-					'name'		=> array('required' => true)
+					'description'	=> 'Get domain details',
+					'privilege_required'	=> 'network admin',
+					'return_element'		=> 'domain',
+					'return_type'			=> 'Network::Domain',
+					'parameters'	=> array(
+						'name'		=> array('required' => true)
+					)
 				),
 				'addDomain'	=> array(
-					'name'		=> array('required' => true)
+					'description'	=> 'Add a domain',
+					'privilege_required'	=> 'network admin',
+					'token_required'		=> true,
+					'return_element'		=> 'domain',
+					'return_type'			=> 'Network::Domain',
+					'parameter'				=> array(
+						'name'		=> array('required' => true)
+					)
 				),
 				'findHosts'		=> array(
-					'domain_id'		=> array(),
-					'name'			=> array(),
-					'os_name'		=> array(),
-					'os_version'	=>array(),
+					'description'	=> 'Find hosts',
+					'privilege_required' => 'network admin',
+					'return_element'		=> 'host',
+					'return_type'			=> 'Network::Host',
+					'parameters'	=> array(
+						'domain_name'	=> array(),
+						'name'			=> array(),
+						'os_name'		=> array(),
+						'os_version'	=>array(),
+					)
 				),
 				'getHost'	=> array(
-					'domain_name'	=> array(),
-					'name'			=> array(),
+					'description'	=> 'Get host details',
+					'privilege_required'	=> 'network admin',
+					'return_element'		=> 'host',
+					'return_type'			=> 'Network::Host',
+					'parameters'	=> array(
+						'domain_name'	=> array(),
+						'name'			=> array()
+					)
 				),
 				'addHost'	=> array(
-					'domain_name'	=> array('required' => true),
-					'name'			=> array('required'	=> true),
-					'os_name'		=> array(),
-					'os_version'	=>array(),
+					'description'	=> 'Add a host',
+					'privilege_required'	=> 'network admin',
+					'token_required'		=> true,
+					'return_element'		=> 'host',
+					'return_type'			=> 'Network::Host',
+					'parameters'			=> array(
+						'domain_name'	=> array('required' => true),
+						'name'			=> array('required'	=> true),
+						'os_name'		=> array(),
+						'os_version'	=>array(),
+					)
 				),
 				'findAdapters'	=> array(
-					'domain_name'	=> array(),
-					'host_name'		=> array(),
-					'name'			=> array(),
-					'type'			=>array(),
+					'description'	=> 'Find adapters',
+					'privilege_required' => 'network admin',
+					'return_element'		=> 'adapter',
+					'return_type'			=> 'Network::Adapter',
+					'parameters'	=> array(
+						'domain_name'	=> array(),
+						'host_name'		=> array(),
+						'name'			=> array(),
+						'type'			=>array(),
+					)
 				),
 				'getAdapter'	=> array(
-					'domain_name'	=> array(),
-					'host_name'		=> array(),
-					'name'			=> array(),
-					'mac_address'	=> array(),
+					'description'	=> 'Get adapter details',
+					'privilege_required'	=> 'network admin',
+					'return_element'		=> 'adapter',
+					'return_type'			=> 'Network::Adapter',
+					'parameters'	=> array(
+						'domain_name'	=> array(),
+						'host_name'		=> array(),
+						'name'			=> array(),
+						'mac_address'	=> array()
+					)
 				),
 				'addAdapter'	=> array(
-					'domain_name'	=> array('required' => true),
-					'host_name'		=> array('required'	=> true),
-					'name'			=> array(),
-					'mac_address'	=> array(),
-					'type'			=> array(),
+					'description'	=> 'Add an adapter',
+					'privilege_required'	=> 'network admin',
+					'token_required'		=> true,
+					'return_element'		=> 'adapter',
+					'return_type'			=> 'Network::Adapter',
+					'parameters'	=> array(
+						'domain_name'	=> array('required' => true),
+						'host_name'		=> array('required'	=> true),
+						'name'			=> array(),
+						'mac_address'	=> array(),
+						'type'			=> array(),
+					)
 				),
 				'findAddresses'	=> array(
-					'domain_name'	=> array(),
-					'host_name'		=> array(),
-					'adapter_name'	=> array(),
-					'type'			=>array(),
+					'description'	=> 'Find addresses',
+					'privilege_required' => 'network admin',
+					'return_element'		=> 'address',
+					'return_type'			=> 'Network::IPAddress',
+					'parameters'	=> array(
+						'domain_name'	=> array(),
+						'host_name'		=> array(),
+						'adapter_name'	=> array(),
+						'type'			=>array(),
+					)
 				),
 				'getAddress'	=> array(
-					'address'	=> array('required' => true),
+					'description'	=> 'Get address details',
+					'privilege_required'	=> 'network admin',
+					'return_element'		=> 'address',
+					'return_type'			=> 'Network::IPAddress',
+					'parameters'	=> array(
+						'address'	=> array('required' => true),
+					)
 				),
 				'addAddress'	=> array(
-					'domain_name'	=> array('required' => true),
-					'host_name'		=> array('required'	=> true),
-					'adapter_name'	=> array(),
-					'address'		=> array(),
-					'subnet_id'		=> array(),
-					'type'			=> array(),
+					'description'	=> 'Add an address',
+					'privilege_required'	=> 'network admin',
+					'token_required'		=> true,
+					'return_element'		=> 'address',
+					'return_type'			=> 'Network::IPAddress',
+					'parameters'	=> array(
+						'domain_name'	=> array(
+							'required' => true
+						),
+						'host_name'		=> array(
+							'required'	=> true
+						),
+						'adapter_name'	=> array(),
+						'address'		=> array(),
+						'type'			=> array(),
+					)
 				),
 				'addSubnet'	=> array(
-					'address'		=> array(),
-					'subnet_id'		=> array(),
-					'type'			=> array(),
+					'description'	=> 'Add a subnet',
+					'privilege_required'	=> 'network admin',
+					'token_required'		=> true,
+					'return_element'		=> 'subnet',
+					'return_type'			=> 'Network::Subnet',
+					'parameters'	=> array(
+						'address'		=> array(),
+						'subnet_id'		=> array(),
+						'type'			=> array(),
+					)
 				),
 			);
 		}
