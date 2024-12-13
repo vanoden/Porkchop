@@ -71,7 +71,6 @@ class Event Extends \BaseModel {
 			return false;
 		}
 		if (empty($GLOBALS['_SESSION_']->customer->id)) {
-			$this->error("No customer ID found in session.");
 			return false;
 		}
 
