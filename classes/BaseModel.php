@@ -605,11 +605,18 @@
 			$this->_aliasFields[$alias] = $real;
 		}
 
+		/**
+		 * Add Keys to Metadata Keys Array - Generally called by class constructor with a suggested list of keys for the class
+		 * @param mixed $keys
+		 * @return void
+		 */
 		protected function _addMetadataKeys($keys) {
 			if (is_array($keys)) {
-				foreach ($keys as $key) array_push($this->_metadataKeys,$key);
+				foreach ($keys as $key) {
+					if (!in_array($key, $this->_metadataKeys)) array_push($this->_metadataKeys,$key);
+				}
 			}
-			else array_push($this->_metadataKeys,$keys);
+			elseif (!in_array($keys,$this->_metadataKeys)) array_push($this->_metadataKeys,$keys);
 		}
 
 		protected function _metadataKeys($keys = null, $value = null) {
@@ -666,13 +673,13 @@
 			else array_push($this->_statii,$param);
 		}
 
+		public function statii() {
+			return $this->_statii;
+		}
+
 		public function _addTypes($param) {
 			if (is_array($param)) $this->_types = array_merge($this->_types,$param);
 			else array_push($this->_types,$param);
-		}
-
-		public function statii() {
-			return $this->_statii;
 		}
 
 		public function exists($exists = null) {
@@ -855,6 +862,17 @@
 		}
 
 		/**
+		 * Get Implied Key - Only those set in the object
+		 * @return array
+		 */
+		public function getImpliedMetadataKeys(): array {
+			$this->clearError();
+
+			// Fetch Results
+			return $this->_metadataKeys();
+		}
+
+		/**
 		 * Get All Metadata Keys for Object
 		 * @return array
 		 */
@@ -872,7 +890,7 @@
 			";
 
 			// Bind Parameters
-			$database->AddParam($this->id);
+			//$database->AddParam($this->id);
 
 			// Execute Query
 			$rs = $database->Execute($get_metadata_keys_query);

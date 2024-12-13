@@ -111,4 +111,17 @@
 				return false;
 			}
 		}
+
+		/**
+		 * Get a List of Repository Types
+		 * @return array
+		 */
+		public function types() {
+			return array(
+				'local'	=> 'Local',
+				's3'	=> 'Amazon S3',
+				'google' => 'Google Drive',
+				'dropbox' => 'DropBox'
+			);
+		}
 	}
