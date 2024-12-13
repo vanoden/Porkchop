@@ -605,15 +605,21 @@
 			$this->_aliasFields[$alias] = $real;
 		}
 
+		protected function _addMetadataKeys($keys) {
+			if (is_array($keys)) {
+				foreach ($keys as $key) array_push($this->_metadataKeys,$key);
+			}
+			else array_push($this->_metadataKeys,$keys);
+		}
+
 		protected function _metadataKeys($keys = null, $value = null) {
 			if (is_array($keys)) {
 				foreach ($keys as $key) {
-					$this->_metadataKeys[$key] = '';
+					array_push($this->_metadataKeys,$key);
 				}
 			}
 			elseif (!empty($keys)) {
-				if (!empty($value)) $this->_metadataKeys[$keys] = $value;
-				else $this->_metadataKeys[$keys] = '';
+				array_push($this->_metadataKeys,$keys);
 			}
 			return $this->_metadataKeys;
 		}
@@ -880,7 +886,7 @@
 			while (list($key) = $rs->FetchRow()) {
 				array_push($keys, strval($key));
 			}
-			return array_keys($keys);
+			return $keys;
 		}
 
 		/**
@@ -913,7 +919,7 @@
 			// Fetch Results
 			$keys = $this->_metadataKeys();
 			while (list($key) = $rs->FetchRow()) {
-				array_push($keys, strval($key));
+				$keys[strval($key)] = "";
 			}
 
 			return $keys;
@@ -1094,7 +1100,11 @@
 			return json_decode($value);
 		}
 
-		public function getAllMetadata() {
+		/**
+		 * Get All Metadata for Object as a Key/Value Array
+		 * @return array 
+		 */
+		public function getAllMetadata(): array {
 			$this->clearError();
 
 			// Initialize Database Service
@@ -1114,7 +1124,7 @@
 			$rs = $database->Execute($get_metadata_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return false;
+				return [];
 			}
 
 			// Fetch Results
@@ -1126,8 +1136,22 @@
 			return $metadata;
 		}
 
-		public function searchMeta($key, $value = '') {
+		/**
+		 * Get Metadata for Object as a Key/Value Array
+		 * @return array 
+		 */
+		public function searchMeta($key, $value): array {
 			$this->clearError();
+
+			// Validata Input
+			if (!preg_match('/^[\w_\-\.]+$/',$key)) {
+				$this->error("Invalid key search string");
+				return [];
+			}
+			if (!preg_match('/^[\w_\-\.]+$/',$value)) {
+				$this->error("Invalid value search string");
+				return [];
+			}
 
 			// Initialize Database Service
 			$database = new \Database\Service();
@@ -1136,14 +1160,11 @@
 			$get_results_query = "
 				SELECT	`".$this->_tableMetaFKColumn."`
 				FROM	".$this->_metaTableName."
-				WHERE	`".$this->_tableMetaKeyColumn."` = ?";
-			$database->AddParam($key);
+				WHERE	`".$this->_tableMetaKeyColumn."` = ?
+				AND		value like '%?%'";
 
-			if (!empty($value)) {
-				$get_results_query .= "
-					AND		value = ?";
-				$database->AddParam($value);
-			}
+			$database->AddParam($key);
+			$database->AddParam($value);
 	
 			$rs = $database->Execute($get_results_query);
 			if (!$rs) {
