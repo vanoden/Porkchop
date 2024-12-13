@@ -18,7 +18,7 @@
 		
 		public function __construct($id = null) {
 			$this->type = 's3';
-			$this->_metadataKeys(array("accessKey","secretKey","bucket","region"));
+			$this->_addMetadataKeys(array("accessKey","secretKey","bucket","region"));
 			parent::__construct($id);
 		}
 
