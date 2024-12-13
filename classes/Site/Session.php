@@ -359,7 +359,7 @@ use Register\Customer;
 				$this->refer_url = $session->refer_url;
 				$this->oauth2_state = $session->oauth2_state;
 
-				require_once THIRD_PARTY.'/psr/simple-cache/src/CacheInterface.php';
+				require_once THIRD_PARTY.'/psr/cache/src/CacheItemInterface.php';
                 require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/src/MobileDetect.php';
 				require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/src/Cache/Cache.php';
 				require_once THIRD_PARTY.'/mobiledetect/mobiledetectlib/src/Cache/CacheItem.php';	
