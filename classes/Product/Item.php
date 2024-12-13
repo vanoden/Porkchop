@@ -694,12 +694,11 @@
          * @return \Storage\File|null The default image file or null if not found
          */
         public function getDefaultStorageImage() {
-            $defaultImageId = $this->getMetadata('default_image');
-
-            if ($defaultImageId) {
-               $file = new \Storage\File($defaultImageId);
-			   if ($file->id) return $file;
-            }
-            return null;
+			$defaultImageId = $this->getMetadata('default_image');
+			if ($defaultImageId) {
+				$file = new \Storage\File($defaultImageId);
+				if ($file->id) return $file;
+			}
+			return null;
         }
 	}

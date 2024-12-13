@@ -130,10 +130,7 @@
 
 		public function increment($key) {
 			$current = $this->get($key);
-			if ($this->error()) {
-				print_r($this->error());
-				return null;
-			}
+			if ($this->error()) return null;
 			if (! isset($current)) {
 				if (! preg_match('/^_/',$key)) $this->incrementStat("incr_misses");
 				$current = 0;
