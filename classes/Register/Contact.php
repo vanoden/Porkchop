@@ -213,6 +213,18 @@
 		}
 		
 		public function details(): bool {
+			$this->clearError();
+
+			if (empty($this->id)) {
+				$this->error("ID required for details method");
+				print_r("HAAAY!");
+				return false;
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
 			$get_object_query = "
 				SELECT	id,
 						type,
@@ -225,12 +237,13 @@
 				FROM	register_contacts
 				WHERE 	id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_object_query,
-				array($this->id)
-			);
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+
+			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			$contact = $rs->FetchNextObject(false);
