@@ -321,7 +321,6 @@
 					if (property_exists($this,$key)) {
 						// Get Property Type
 						$property = new \ReflectionProperty($this, $key);
-						if (is_null($property->getType())) continue;
 						$property_type = $property->getType();
 
 						// Set the value based on type
