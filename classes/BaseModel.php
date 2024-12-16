@@ -303,7 +303,7 @@
 			else {
 				$cls = get_called_class();
 				$parts = explode("\\",$cls);
-				$this->warn($parts[1]." not found");
+				$this->warn($parts[1]." '.".$code."' not found");
 				return false;
 			}
 		}
@@ -902,7 +902,7 @@
 			// Fetch Results
 			$keys = $this->_metadataKeys();
 			while (list($key) = $rs->FetchRow()) {
-				array_push($keys, strval($key));
+				if (!in_array(strval($key), $keys))	array_push($keys, strval($key));
 			}
 			return $keys;
 		}
@@ -937,7 +937,7 @@
 			// Fetch Results
 			$keys = $this->_metadataKeys();
 			while (list($key) = $rs->FetchRow()) {
-				$keys[strval($key)] = "";
+				if (!in_array(strval($key), $keys))	array_push($keys, strval($key));
 			}
 
 			return $keys;
