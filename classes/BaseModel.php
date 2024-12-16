@@ -600,6 +600,13 @@
 			}
 		}
 
+		/**
+		 * Add a field alias.  This allows standardization of field names where older tables may have different names for the same field.
+		 * Used primarily for unique keys such as code, name, etc.
+		 * @param mixed $real - Real field name in database
+		 * @param mixed $alias - Alias field name in object
+		 * @return void
+		 */
 		protected function _aliasField($real,$alias) {
 			$this->_aliasFields[$alias] = $real;
 		}
@@ -618,6 +625,12 @@
 			elseif (!in_array($keys,$this->_metadataKeys)) array_push($this->_metadataKeys,$keys);
 		}
 
+		/**
+		 * Return array of keys for metadata
+		 * @param mixed $keys
+		 * @param mixed $value
+		 * @return array
+		 */
 		protected function _metadataKeys($keys = null, $value = null) {
 			if (is_array($keys)) {
 				foreach ($keys as $key) {
@@ -667,20 +680,39 @@
 			}
 		}
 
+		/**
+		 * Add a status to the list of valid statii for this object
+		 * @param mixed $param
+		 * @return void
+		 */
 		public function _addStatus($param) {
 			if (is_array($param)) $this->_statii = array_merge($this->_statii,$param);
 			else array_push($this->_statii,$param);
 		}
 
+		/**
+		 * Return array of valid statii for this object
+		 * @return array 
+		 */
 		public function statii() {
 			return $this->_statii;
 		}
 
+		/**
+		 * Add a type to the list of valid types for this object
+		 * @param mixed $param 
+		 * @return void 
+		 */
 		public function _addTypes($param) {
 			if (is_array($param)) $this->_types = array_merge($this->_types,$param);
 			else array_push($this->_types,$param);
 		}
 
+		/**
+		 * Get/Set existance of instance.  Was the record found in the database?
+		 * @param mixed $exists Tell the object if it exists
+		 * @return bool Tell us if the object exists
+		 */
 		public function exists($exists = null) {
 			if (is_bool($exists)) $this->_exists = $exists;
 			if (is_numeric($this->id) && $this->id > 0) return true;
@@ -708,13 +740,20 @@
 			}
 		}
 
-		// Clear Object from Cache
+		/**
+		 * Clear Object from Cache
+		 * @return void
+		 */
 		public function clearCache() {
 			$cache = $this->cache();
 			if ($cache) $cache->delete();
 		}
 
-		// Don't check cache, just see if data came from cache!
+		/**
+		 * Don't check cache, just see if data came from cache!
+		 * @param bool $cached
+		 * @return bool
+		 */
 		public function cached($cached = null) {
 			if (is_bool($cached)) {
 				if ($cached) $this->_cached = true;
@@ -735,7 +774,6 @@
 		public function setMetadataScalar(string $key, string $value): bool {
 			$this->clearError();
 			if (! isset($value)) return $this->unsetMetadata($key);
-
 			// Initialize Database Service
 			$database = new \Database\Service();
 
@@ -887,9 +925,6 @@
 				FROM	`$this->_metaTableName`
 				GROUP BY `$this->_tableMetaKeyColumn`
 			";
-
-			// Bind Parameters
-			//$database->AddParam($this->id);
 
 			// Execute Query
 			$rs = $database->Execute($get_metadata_keys_query);
