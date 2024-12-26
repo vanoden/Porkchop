@@ -1295,6 +1295,22 @@
 				$GLOBALS['_database']->CommitTrans();
 			}		
 
+			if ($this->version() < 39) {
+				app_log("Upgrading schema to version 39", 'notice', __FILE__, __LINE__);
+				$alter_table_query = "
+					ALTER TABLE `register_auth_failures` MODIFY COLUMN `ip_address` int unsigned NOT NULL
+				";
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_users table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(39);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}
