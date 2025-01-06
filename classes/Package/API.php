@@ -216,17 +216,17 @@
 		###################################################
 		public function findVersions() {
 			$versionlist = new \Package\VersionList();
-			if ($versionlist->error) $this->app_error("Error initializing version list: ".$versionlist->error,__FILE__,__LINE__);
+			if ($versionlist->error()) $this->app_error("Error initializing version list: ".$versionlist->error(),__FILE__,__LINE__);
 	
 			$parameters = array();
 			if (isset($_REQUEST['major']) and strlen($_REQUEST['major'])) $parameters['major'] = $_REQUEST['major'];
 			if (isset($_REQUEST['minor']) and strlen($_REQUEST['minor'])) $parameters['minor'] = $_REQUEST['minor'];
 			if (isset($_REQUEST['build']) and strlen($_REQUEST['build'])) $parameters['build'] = $_REQUEST['build'];
 			if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
-		
+
 			$versions = $versionlist->find($parameters);
 	
-			if ($versionlist->error) $this->app_error("Error finding versions: ".$versionlist->error,__FILE__,__LINE__);
+			if ($versionlist->error()) $this->app_error("Error finding versions: ".$versionlist->error(),__FILE__,__LINE__);
 
 			$response = new \APIResponse();
 			$response->addElement('version',$versions);
@@ -260,7 +260,7 @@
 			$package->get($_REQUEST['package_code']);
 			if ($package->error()) $this->app_error("Error finding package: ".$package->error(),__FILE__,__LINE__);
 			if (! $package->id) $this->error("Package not found");
-	
+
 			$version = $package->latestVersion();
 			if ($package->error()) $this->app_error("Error finding version: ".$package->error(),__FILE__,__LINE__);
 			if (! $version->id) $this->error("Version not found");
@@ -294,30 +294,66 @@
 			return array(
 				'ping'	=> array(),
 				'addPackage'	=> array(
-					'code'			=> array('required' => true),
-					'name'			=> array('required' => true),
-					'description'	=> array(),
-					'license'		=> array(),
-					'platform'		=> array(),
-					'repository_code'	=> array('required' => true),
-					'status'		=> array()
+					'description'	=> 'Add a new package',
+					'privilege_required'	=> 'manage packages',
+					'token_required'	=> true,
+					'return_element'	=> 'package',
+					'return_type'		=> 'Package::Package',
+					'parameters'		=> array(
+						'code'			=> array(
+							'required' => true,
+							'validation_method' => 'Package::Package::validCode()',
+						),
+						'name'			=> array(
+							'required' => true,
+							'validation_method' => 'Package::Package::validName()',
+						),
+						'description'	=> array(),
+						'license'		=> array(),
+						'platform'		=> array(),
+						'repository_code'	=> array(
+							'required' => true,
+							'validation_method' => 'Storage::Repository::validCode()',
+						),
+						'status'		=> array()
+					)
 				),
 				'updatePackage'	=> array(
-					'code'			=> array('required' => true),
-					'name'			=> array(),
-					'description'	=> array(),
-					'license'		=> array(),
-					'platform'		=> array(),
-					'status'		=> array(),
+					'description'	=> 'Update an existing package',
+					'privilege_required'	=> 'manage packages',
+					'token_required'	=> true,
+					'return_element'	=> 'package',
+					'return_type'		=> 'Package::Package',
+					'parameters'		=> array(
+						'code'			=> array('required' => true),
+						'name'			=> array(),
+						'description'	=> array(),
+						'license'		=> array(),
+						'platform'		=> array(),
+						'status'		=> array(),
+						'repository_code'	=> array()
+					)
 				),
 				'getPackage'	=> array(
-					'code'	=> array('required' => true),
+					'description'	=> 'Get a package by code',
+					'privilege_required'	=> 'use package module',
+					'return_element'	=> 'package',
+					'return_type'		=> 'Package::Package',
+					'parameters'		=> array(
+						'code'	=> array('required' => true),
+					)
 				),
 				'findPackages'	=> array(
-					'name'			=> array(),
-					'platform'		=> array(),
-					'repository_code'	=> array(),
-					'status'		=> array(),
+					'description'	=> 'Find matching packages',
+					'privilege_required'	=> 'use package module',
+					'return_element'	=> 'package',
+					'return_type'		=> 'Package::Package',
+					'parameters'		=> array(
+						'name'			=> array(),
+						'platform'		=> array(),
+						'repository_code'	=> array(),
+						'status'		=> array(),
+					)
 				),
 				'addVersion'	=> array(
 					'package_code'	=> array('required' => true),

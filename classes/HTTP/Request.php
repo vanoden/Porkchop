@@ -48,6 +48,7 @@
 			if (isset($uri)) $this->_uri = $uri;
 			return $this->_uri;
 		}
+
 		public function url($url = null) {
 			if (isset($url)) {
 				if (preg_match('/^(https?)\:\/\/([\w\.\-]+)\:(\d+)(\/[^\?]*)\?(.*)$/',$url,$matches)) {
@@ -145,6 +146,9 @@
 		}
 
 		public function deconstruct() {
+			# Store User Agent
+			$this->user_agent = $_SERVER['HTTP_USER_AGENT'];
+
 			# Strip Path from URI
 			$this->_uri = preg_replace('@^'.PATH.'@','',$_SERVER['REQUEST_URI']);
 

@@ -22,7 +22,7 @@
 			$this->_metaTableName = 'storage_repository_metadata';
 			$this->_tableMetaFKColumn = 'repository_id';
 			$this->_tableMetaKeyColumn = 'key';
-			$this->_metadataKeys(array('path','accessKey','secretKey','bucket','region','endpoint'));
+			$this->_addTypes('s3','local','drive','dropBox');
 			parent::__construct($id);
 		}
 

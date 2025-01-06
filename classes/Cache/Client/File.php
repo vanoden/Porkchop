@@ -116,6 +116,9 @@
 					if (! preg_match('/^_/',$key)) $this->incrementStat("get_hits");
 					return $value;
 				}
+				elseif (filesize($filename) == 0) {
+					unlink ($filename);
+				}
 				else {
 					$this->error("Cannot open cache file '$filename'");
 				}
@@ -133,7 +136,7 @@
 				$current = 0;
 			}
 			elseif (! preg_match('/^_/',$key)) $this->incrementStat("incr_hits");
-			$current ++;
+			elseif (!is_bool($current)) $current ++;
 			if ($this->set($key,$current)) {
 				return $this->get($key);
 			}

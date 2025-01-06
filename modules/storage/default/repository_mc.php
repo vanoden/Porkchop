@@ -32,6 +32,8 @@
 		$repository = $factory->create('local');
 	}
 
+	$repository_types = $factory->types();
+
 	// Handle Form Submission
 	if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 		// Confirm CSRF Token
@@ -179,6 +181,11 @@
 			$default_privileges = $repository->default_privileges();
 			$override_privileges = $repository->override_privileges();
 		}
+		else {
+			$form['type'] = 'local';
+			$form['status'] = 'NEW';
+			$form['code'] = '';
+		}
 	}
 	// Repopulate Form with Request Data
 	elseif (!empty($_REQUEST['name'])) {
@@ -192,9 +199,16 @@
 		}
 	}
 
+	// Array of Type Metadata Keys
+	foreach ($repository_types as $type => $name) {
+		$repo = $factory->create($type);
+		if (empty($repo)) continue;
+		$keys = $repo->getImpliedMetadataKeys();
+		$metadata_keys[$type] = $keys;
+	}
+
+	// Get Default Privileges for Repository
 	$default_privileges = $repository->default_privileges();
-	if ($repository->id) $metadata_keys = $repository->getMetadataKeys();
-	else $metadata_keys = array();
 
 	$page->title("Storage Repository");
 	if ($repository->id) $page->instructions = "Update values and click Submit to update repository setting";

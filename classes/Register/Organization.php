@@ -4,7 +4,7 @@
 	class Organization Extends \BaseModel {
 
 		public string $name = "";
-		public ?string $code;
+		public ?string $code = null;
 		public string $status = 'NEW';
 		public bool $is_reseller = false;
 		public $reseller;

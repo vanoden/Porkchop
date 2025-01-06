@@ -37,7 +37,6 @@
 		 * @return bool
 		 */
 		public function getByHost(string $hostname): bool {
-app_log("Getting location for host ".$hostname,'notice',__FILE__,__LINE__);
 			return $this->get($hostname);
 		}
 
@@ -137,6 +136,13 @@ app_log("Getting location for host ".$hostname,'notice',__FILE__,__LINE__);
 				$this->sales_contact = $object->sales_contact;
 				$this->domain_id = $object->domain_id;
 				$this->host = $object->host;
+
+				$object->phone_code = null;
+				$object->phone_pre = null;
+				$object->phone_post = null;
+				$object->fax_code = null;
+				$object->fax_pre = null;
+				$object->fax_post = null;
 
 				// Cache the data
 				$cache->set($object);

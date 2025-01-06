@@ -18,6 +18,19 @@ class Person Extends \BaseModel {
     public string $timezone = "America/New_York";
     public string $auth_method = "local";
     public int $time_based_password = 0;
+	public $opt_in = false;
+	public $date_created;
+	public $date_updated;
+	public $date_expires;
+	public $unsubscribe_key;
+	public $validation_key;
+	public $custom_metadata;
+	public $notes;
+	public $default_billing_location_id;
+	public $default_shipping_location_id;
+	public $last_hit_date;
+	public $profile;
+
     protected $_settings = array( "date_format" => "US" );
 	protected $_database;
 
@@ -214,6 +227,13 @@ class Person Extends \BaseModel {
 			validation_key = ?";
 			array_push($bind_params,$parameters['validation_key']);
 			$auditEvent->appendDescription("Validation Key changed");
+		}
+
+		if (isset($parameters['profile']) && $parameters['profile'] != $this->profile) {
+			$update_customer_query .= ",
+			profile = ?";
+			array_push($bind_params,$parameters['profile']);
+			$auditEvent->appendDescription("Profile changed to ".$parameters['profile']);
 		}
 
         if (isset($parameters['automation']) && is_bool($parameters['automation']) && $parameters['automation'] != $this->automation) {

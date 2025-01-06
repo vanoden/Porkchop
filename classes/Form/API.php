@@ -38,7 +38,7 @@
 			api_log('content',$_REQUEST,$response);
 
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
 		
 		###################################################
@@ -60,10 +60,8 @@
 			}
 			else $this->error("Page not found");
 	
-			api_log('content',$_REQUEST,$response);
-	
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		###################################################
@@ -98,7 +96,7 @@
 			$response = new \APIResponse();
 			$response->success(true);
 			$response->addElement('form',$form);
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		###################################################
@@ -141,7 +139,7 @@
 			$response = new \APIResponse();
 			$response->success(true);
 			$response->addElement('form',$form);
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		###################################################
@@ -166,7 +164,7 @@
 		
 			$response = new \APIResponse();
 			$response->success = 1;
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		###################################################
@@ -226,7 +224,7 @@
 			api_log('form',$_REQUEST,$response);
 	
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
 		
 		###################################################
@@ -278,7 +276,7 @@
 	
 			api_log('form',$_REQUEST,$response);
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
 		
 		###################################################
@@ -312,7 +310,7 @@
 
 			api_log('form',$_REQUEST,$response);
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		###################################################
@@ -346,7 +344,7 @@
 	
 			# Send Response
 			api_log('form',$_REQUEST,$response);
-			print $this->formatOutput($response);
+			$response->print();
 
 		}
 
@@ -392,7 +390,7 @@
 	
 			# Send Response
 			api_log('form',$_REQUEST,$response);
-			print $this->formatOutput($response);
+			$response->print();
 		}
 		
 		###################################################
@@ -429,9 +427,8 @@
 				$response->success(true);
 			}
 	
-			api_log('form',$_REQUEST,$response);
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
 		
 		###################################################
@@ -463,7 +460,7 @@
 			api_log('form',$_REQUEST,$response);
 
 			# Send Response
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		public function _methods() {
@@ -472,44 +469,97 @@
 				'findForms'	=> array(
 				),
 				'addForm'	=> array(
-					"title"		=> array('required' => true),
-					"code"		=> array(),
-					'instructions'	=> array(),
-					"action"	=> array('required' => true)
+					'description'	=> 'Add a form',
+					'privilege_required'	=> 'manage forms',
+					'token_required'	=> true,
+					'return_element'	=> 'form',
+					'return_type'		=> 'Form::Form',
+					'parameters'	=> array(
+						"title"		=> array('required' => true),
+						"code"		=> array(),
+						'instructions'	=> array(),
+						"action"	=> array('required' => true)
+					)
 				),
 				'getForm'	=> array(
-					'code'		=> array(),
-					'id'		=> array()
+					'description'	=> 'Get details regarding a form',
+					'privilege_required'	=> 'manage forms',
+					'return_element'	=> 'form',
+					'return_type'		=> 'Form::Form',
+					'parameters'	=> array(
+						'code'		=> array(
+							'requirement_group'	=> 0,
+							'validation_method'	=> 'Form::Form::validCode()'
+						),
+						'id'		=> array(
+							'requirement_group'	=> 1,
+							'content-type'	=> 'integer'
+						)
+					)
 				),
 				'updateForm'	=> array(
-					"title"		=> array('required' => true),
-					"code"		=> array(),
-					'instructions'	=> array(),
-					'method'	=> array(
-						'required',
-						'options' => array(
-							'get','post'
-						)
-					),
-					"action"	=> array('required' => true)
+					'description'	=> 'Update a form',
+					'privilege_required'	=> 'manage forms',
+					'token_required'	=> true,
+					'return_element'	=> 'form',
+					'return_type'		=> 'Form::Form',
+					'parameters'	=> array(
+						'title'		=> array('required' => true),
+						'code'		=> array(
+							'validation_method'	=> 'Form::Form::validCode()'
+						),
+						'instructions'	=> array(
+							'validation_method'	=> 'Form::Form::safeString()'
+						),
+						'method'	=> array(
+							'options' => array(
+								'get','post'
+							)
+						),
+						'action'	=> array()
+					)
 				),
 				'findQuestions'	=> array(
-					'form_code'		=> array(),
-					'form_id'		=> array()
+					'description'	=> 'Find questions for a form',
+					'privilege_required'	=> 'manage forms',
+					'return_element'	=> 'question',
+					'return_type'		=> 'Form::Question',
+					'parameters'	=> array(
+						'form_code'		=> array(
+							'requirement_group'	=> 0,
+							'validation_method'	=> 'Form::Form::validCode()'
+						),
+						'form_id'		=> array(
+							'requirement_group'	=> 1,
+							'content-type'	=> 'integer'
+						)
+					)
 				),
 				'addQuestion'	=> array(
-					'form_code'		=> array(),
-					'form_id'		=> array(),
-					'name'			=> array(),
-					'text'		=> array(),
-					'validation_pattern'	=> array(),
-					'sort_order'	=> array(),
-					'example'		=> array(),
-					'required'		=> array(
-						'options'	=> array('yes','no'),
-					),
-					'help'			=> array(),
-					'type'			=> array(
+					'description'	=> 'Add a question to a form',
+					'privilege_required'	=> 'manage forms',
+					'token_required'	=> true,
+					'return_element'	=> 'question',
+					'return_type'		=> 'Form::Question',
+					'parameters'		=> array(
+						'form_code'		=> array(
+							'requirement_group'	=> 0,
+							'validation_method'	=> 'Form::Form::validCode()'
+						),
+						'form_id'		=> array(
+							'requirement_group'	=> 1,
+							'content-type'	=> 'integer'
+						),
+						'name'			=> array('required' => true),
+						'text'		=> array('required' => true),
+						'validation_pattern'	=> array(),
+						'sort_order'	=> array(),
+						'example'		=> array(),
+						'required'		=> array(
+							'options'	=> array('yes','no'),
+						),
+						'help'			=> array(),
+						'type'			=> array(
 							'required' => true,
 							'options'	=> array(
 								'hidden',
@@ -519,20 +569,27 @@
 								'textarea',
 								'submit'
 							)
+						)
 					)
 				),
 				'updateQuestion'	=> array(
-					'id'		=> array('required' => true),
-					'name'			=> array(),
-					'text'		=> array(),
-					'validation_pattern'	=> array(),
-					'sort_order'	=> array(),
-					'example'		=> array(),
-					'required'		=> array(
-						'options'	=> array('yes','no'),
-					),
-					'help'			=> array(),
-					'type'			=> array(
+					'description'	=> 'Update a question',
+					'privilege_required'	=> 'manage forms',
+					'token_required'	=> true,
+					'return_element'	=> 'question',
+					'return_type'		=> 'Form::Question',
+					'parameters'		=> array(
+						'id'		=> array('required' => true),
+						'name'			=> array(),
+						'text'		=> array(),
+						'validation_pattern'	=> array(),
+						'sort_order'	=> array(),
+						'example'		=> array(),
+						'required'		=> array(
+							'options'	=> array('yes','no'),
+						),
+						'help'			=> array(),
+						'type'			=> array(
 							'required' => true,
 							'options'	=> array(
 								'hidden',
@@ -542,28 +599,73 @@
 								'textarea',
 								'submit'
 							)
+						)
 					)
 				),
 				'dropQuestion'	=> array(
-					'id'		=> array('required' => true)
+					'description'	=> 'Delete a question',
+					'privilege_required'	=> 'manage forms',
+					'parameters'	=> array(
+						'id'		=> array(
+							'required' => true,
+							'content-type'	=> 'integer'
+						)
+					)
 				),
 				'findQuestionOptions'	=> array(
-					'question_id'		=> array('required' => true)
+					'description'	=> 'Find options for a question',
+					'privilege_required'	=> 'manage forms',
+					'return_element'	=> 'option',
+					'return_type'		=> 'Form::Question::Option',
+					'parameters'	=> array(
+						'question_id'		=> array(
+							'required' 		=> true,
+							'content-type'	=> 'integer'
+						)
+					)
 				),
 				'addQuestionOption'	=> array(
-					'question_id'	=> array('required'),
-					'text'			=> array('required'),
-					'value'			=> array('required'),
-					'sort_order'	=> array()
+					'description'	=> 'Add an option to a question',
+					'privilege_required'	=> 'manage forms',
+					'token_required'	=> true,
+					'return_element'	=> 'option',
+					'return_type'		=> 'Form::Question::Option',
+					'parameters'		=> array(
+						'question_id'		=> array(
+							'required' 		=> true,
+							'content-type'	=> 'integer'
+						),
+						'text'			=> array('required' => true),
+						'value'			=> array('required' => true),
+						'sort_order'	=> array()
+					)
 				),
 				'updateQuestionOption'	=> array(
-					'id'			=> array('required'),
-					'text'			=> array('required'),
-					'value'			=> array('required'),
-					'sort_order'	=> array()
+					'description'	=> 'Update an option',
+					'privilege_required'	=> 'manage forms',
+					'token_required'	=> true,
+					'return_element'	=> 'option',
+					'return_type'		=> 'Form::Question::Option',
+					'parameters'		=> array(
+						'id'			=> array(
+							'required' => true,
+							'content-type'	=> 'integer'
+						),
+						'text'			=> array(),
+						'value'			=> array(),
+						'sort_order'	=> array()
+					)
 				),
 				'dropQuestionOption'	=> array(
-					'id'			=> array('required')
+					'description'	=> 'Delete an option',
+					'privilege_required'	=> 'manage forms',
+					'token_required'	=> true,
+					'parameters'	=> array(
+						'id'			=> array(
+							'required' => true,
+							'content-type'	=> 'integer'
+						)
+					)
 				)
 			);		
 		}

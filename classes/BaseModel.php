@@ -303,7 +303,7 @@
 			else {
 				$cls = get_called_class();
 				$parts = explode("\\",$cls);
-				$this->warn($parts[1]." not found");
+				$this->warn($parts[1]." '.".$code."' not found");
 				return false;
 			}
 		}
@@ -321,7 +321,6 @@
 					if (property_exists($this,$key)) {
 						// Get Property Type
 						$property = new \ReflectionProperty($this, $key);
-						if (is_null($property->getType())) continue;
 						$property_type = $property->getType();
 
 						// Set the value based on type
@@ -601,19 +600,45 @@
 			}
 		}
 
+		/**
+		 * Add a field alias.  This allows standardization of field names where older tables may have different names for the same field.
+		 * Used primarily for unique keys such as code, name, etc.
+		 * @param mixed $real - Real field name in database
+		 * @param mixed $alias - Alias field name in object
+		 * @return void
+		 */
 		protected function _aliasField($real,$alias) {
 			$this->_aliasFields[$alias] = $real;
 		}
 
+		/**
+		 * Add Keys to Metadata Keys Array - Generally called by class constructor with a suggested list of keys for the class
+		 * @param mixed $keys
+		 * @return void
+		 */
+		protected function _addMetadataKeys($keys) {
+			if (is_array($keys)) {
+				foreach ($keys as $key) {
+					if (!in_array($key, $this->_metadataKeys)) array_push($this->_metadataKeys,$key);
+				}
+			}
+			elseif (!in_array($keys,$this->_metadataKeys)) array_push($this->_metadataKeys,$keys);
+		}
+
+		/**
+		 * Return array of keys for metadata
+		 * @param mixed $keys
+		 * @param mixed $value
+		 * @return array
+		 */
 		protected function _metadataKeys($keys = null, $value = null) {
 			if (is_array($keys)) {
 				foreach ($keys as $key) {
-					$this->_metadataKeys[$key] = '';
+					array_push($this->_metadataKeys,$key);
 				}
 			}
 			elseif (!empty($keys)) {
-				if (!empty($value)) $this->_metadataKeys[$keys] = $value;
-				else $this->_metadataKeys[$keys] = '';
+				array_push($this->_metadataKeys,$keys);
 			}
 			return $this->_metadataKeys;
 		}
@@ -655,20 +680,39 @@
 			}
 		}
 
+		/**
+		 * Add a status to the list of valid statii for this object
+		 * @param mixed $param
+		 * @return void
+		 */
 		public function _addStatus($param) {
 			if (is_array($param)) $this->_statii = array_merge($this->_statii,$param);
 			else array_push($this->_statii,$param);
 		}
 
+		/**
+		 * Return array of valid statii for this object
+		 * @return array 
+		 */
+		public function statii() {
+			return $this->_statii;
+		}
+
+		/**
+		 * Add a type to the list of valid types for this object
+		 * @param mixed $param 
+		 * @return void 
+		 */
 		public function _addTypes($param) {
 			if (is_array($param)) $this->_types = array_merge($this->_types,$param);
 			else array_push($this->_types,$param);
 		}
 
-		public function statii() {
-			return $this->_statii;
-		}
-
+		/**
+		 * Get/Set existance of instance.  Was the record found in the database?
+		 * @param mixed $exists Tell the object if it exists
+		 * @return bool Tell us if the object exists
+		 */
 		public function exists($exists = null) {
 			if (is_bool($exists)) $this->_exists = $exists;
 			if (is_numeric($this->id) && $this->id > 0) return true;
@@ -696,13 +740,20 @@
 			}
 		}
 
-		// Clear Object from Cache
+		/**
+		 * Clear Object from Cache
+		 * @return void
+		 */
 		public function clearCache() {
 			$cache = $this->cache();
 			if ($cache) $cache->delete();
 		}
 
-		// Don't check cache, just see if data came from cache!
+		/**
+		 * Don't check cache, just see if data came from cache!
+		 * @param bool $cached
+		 * @return bool
+		 */
 		public function cached($cached = null) {
 			if (is_bool($cached)) {
 				if ($cached) $this->_cached = true;
@@ -723,7 +774,6 @@
 		public function setMetadataScalar(string $key, string $value): bool {
 			$this->clearError();
 			if (! isset($value)) return $this->unsetMetadata($key);
-
 			// Initialize Database Service
 			$database = new \Database\Service();
 
@@ -849,6 +899,17 @@
 		}
 
 		/**
+		 * Get Implied Key - Only those set in the object
+		 * @return array
+		 */
+		public function getImpliedMetadataKeys(): array {
+			$this->clearError();
+
+			// Fetch Results
+			return $this->_metadataKeys();
+		}
+
+		/**
 		 * Get All Metadata Keys for Object
 		 * @return array
 		 */
@@ -865,9 +926,6 @@
 				GROUP BY `$this->_tableMetaKeyColumn`
 			";
 
-			// Bind Parameters
-			$database->AddParam($this->id);
-
 			// Execute Query
 			$rs = $database->Execute($get_metadata_keys_query);
 			if (! $rs) {
@@ -878,9 +936,9 @@
 			// Fetch Results
 			$keys = $this->_metadataKeys();
 			while (list($key) = $rs->FetchRow()) {
-				array_push($keys, strval($key));
+				if (!in_array(strval($key), $keys))	array_push($keys, strval($key));
 			}
-			return array_keys($keys);
+			return $keys;
 		}
 
 		/**
@@ -913,7 +971,7 @@
 			// Fetch Results
 			$keys = $this->_metadataKeys();
 			while (list($key) = $rs->FetchRow()) {
-				array_push($keys, strval($key));
+				if (!in_array(strval($key), $keys))	array_push($keys, strval($key));
 			}
 
 			return $keys;
@@ -1094,7 +1152,11 @@
 			return json_decode($value);
 		}
 
-		public function getAllMetadata() {
+		/**
+		 * Get All Metadata for Object as a Key/Value Array
+		 * @return array 
+		 */
+		public function getAllMetadata(): array {
 			$this->clearError();
 
 			// Initialize Database Service
@@ -1114,7 +1176,7 @@
 			$rs = $database->Execute($get_metadata_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return false;
+				return [];
 			}
 
 			// Fetch Results
@@ -1126,8 +1188,22 @@
 			return $metadata;
 		}
 
-		public function searchMeta($key, $value = '') {
+		/**
+		 * Get Metadata for Object as a Key/Value Array
+		 * @return array 
+		 */
+		public function searchMeta($key, $value): array {
 			$this->clearError();
+
+			// Validata Input
+			if (!preg_match('/^[\w_\-\.]+$/',$key)) {
+				$this->error("Invalid key search string");
+				return [];
+			}
+			if (!preg_match('/^[\w_\-\.]+$/',$value)) {
+				$this->error("Invalid value search string");
+				return [];
+			}
 
 			// Initialize Database Service
 			$database = new \Database\Service();
@@ -1136,14 +1212,11 @@
 			$get_results_query = "
 				SELECT	`".$this->_tableMetaFKColumn."`
 				FROM	".$this->_metaTableName."
-				WHERE	`".$this->_tableMetaKeyColumn."` = ?";
-			$database->AddParam($key);
+				WHERE	`".$this->_tableMetaKeyColumn."` = ?
+				AND		value like '%?%'";
 
-			if (!empty($value)) {
-				$get_results_query .= "
-					AND		value = ?";
-				$database->AddParam($value);
-			}
+			$database->AddParam($key);
+			$database->AddParam($value);
 	
 			$rs = $database->Execute($get_results_query);
 			if (!$rs) {

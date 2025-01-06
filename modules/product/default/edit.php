@@ -126,7 +126,7 @@
 		<div class="input-horiz">
 			<span class="label">Spec Table</span>
 			<select class="value input wide_md" name="spec_table_image" id="spec_table_image">
-				<option value="Select"></option>
+				<option value=""></option>
 				<?php foreach ($tables as $table) { ?>
 			        <option value="<?=$table->id?>"<?php if ($item->spec_table_image == $table->id) { print " selected"; } ?>><?=$table->name?></option>
 				<?php } ?>

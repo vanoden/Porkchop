@@ -87,6 +87,27 @@
 		exit;
 	}
 
+
+	###################################################
+	### Parse Request								###
+	###################################################
+	$_REQUEST_ = new \HTTP\Request();
+	$_REQUEST_->deconstruct();
+	
+	# Identify Remote IP.  User X-Forwarded-For if local address
+	if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) and preg_match('/^(192\.168|172\.16|10|127\.)\./',$_SERVER['REMOTE_ADDR'])) $_REQUEST_->client_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+	else $_REQUEST_->client_ip = $_SERVER['REMOTE_ADDR'];
+
+	###################################################
+	### Traffic Management							###
+	###################################################
+	if (preg_match('/(GPTBot|SemrushBot|AhrefsBot|MJ12bot|ZoominfoBot|DotBot|MauiBot)/i',$_REQUEST_->user_agent)) {
+		$logger->writeln("Search Engine Bot Detected: ".$_REQUEST_->user_agent,'info');
+		$logger->writeln("Request from ".$_REQUEST_->client_ip." aka '".$_REQUEST_->user_agent."' Risk Score: ".$_REQUEST_->riskLevel(),'info');
+		header("HTTP/1.1 403 Forbidden");
+		exit;
+	}
+
 	###################################################
 	### Connect to Database							###
 	###################################################
@@ -123,18 +144,6 @@
 	$logger->writeln("Session initiated",'trace',__FILE__,__LINE__);
 
 	###################################################
-	### Parse Request								###
-	###################################################
-	$_REQUEST_ = new \HTTP\Request();
-	$_REQUEST_->deconstruct();
-	
-	# Identify Remote IP.  User X-Forwarded-For if local address
-	if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) and preg_match('/^(192\.168|172\.16|10|127\.)\./',$_SERVER['REMOTE_ADDR'])) $_REQUEST_->client_ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-	else $_REQUEST_->client_ip = $_SERVER['REMOTE_ADDR'];
-
-	$_REQUEST_->user_agent = $_SERVER['HTTP_USER_AGENT'];
-
-	###################################################
 	### Build Dynamic Page							###
 	###################################################
 	# Don't Cache this Page
@@ -153,7 +162,7 @@
 	$page->getPage($_REQUEST_->module,$_REQUEST_->view,$_REQUEST_->index);
 	if ($page->error()) {
 		print "Error: ".$page->error();
-		$logger->writeln("Error initializing page: ".$page->error,'error',__FILE__,__LINE__);
+		$logger->writeln("Error initializing page: ".$page->error(),'error',__FILE__,__LINE__);
 		exit;
 	}
 
@@ -179,8 +188,12 @@
 		}
 	}
 
-	// Site Counter
+	// Site Counters
 	$counter = new \Site\Counter("site.connections");
+	$counter->increment();
+	$counter = new \Site\Counter("module.".$page->module);
+	$counter->increment();
+	$counter = new \Site\Counter("view.".$page->module.".".$page->view);
 	$counter->increment();
 
 	print $page->load_template();

@@ -307,7 +307,7 @@
 				),
 				array(
 					"title"			=> "Dashboard",
-					"target"		=> "/_spectros/outstanding_requests",
+					"target"		=> "/_spectros/outstanding_requests",    
 					"view_order"	=> 50,
 					"alt"			=> "Personal Dashboard",
 					"description"	=> "Personal Dashboard"

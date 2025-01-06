@@ -93,13 +93,16 @@
 	
 			if ($product->error()) $this->error("Error getting product: ".$product->error());
 
+			$responseObj = $product->_clone();
+			if ($product->exists()) {
+				$responseObj->metadata = $product->getAllMetadata();
+			}
+
 			$response = new \APIResponse();
-			$response->addElement('item',$product);
+			$response->addElement('item',$responseObj);
 			$response->print();
-	
-			print $this->formatOutput($response);
 		}
-	
+
 		###################################################
 		### Find matching Product						###
 		###################################################

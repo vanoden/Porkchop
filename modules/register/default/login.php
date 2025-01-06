@@ -11,7 +11,7 @@
 		<li><?=$page->errorString()?></li>
 	</ul>
 </section>
-<?php	} ?>
+<?php	} ?>    
 
 <section id="form-message">
   <h1 class="pageSect_full">Log In to Your Account</h1>

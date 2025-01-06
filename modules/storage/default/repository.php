@@ -94,27 +94,23 @@
     <span class="value"><?=$repository->type?></span>
 <?php	 } else { ?>
     <select id="type" name="type" class="value input wide_xl" onchange="getValue(this)">
-        <option value="local" <?php	if ($form['type'] == "local") print " selected"; ?>>Local</option>
-        <option value="s3" <?php	if ($form['type'] == "s3") print " selected"; ?>>Amazon S3</option>
-        <option value="drive" <?php	if ($form['type'] == "drive") print " selected"; ?>>Google Drive</option>
-        <option value="dropBox" <?php	if ($form['type'] == "dropBox") print " selected"; ?>>DropBox</option>
-    </select>
-<?php	 } ?>
+<?php	foreach($repository_types as $type => $name) { ?>
+        <option value="<?=$type?>" <?php	if ($form['type'] == "<?=$type?>") print " selected"; ?>><?=$type?></option>
+<?php	 	} ?>
+	</select>
+<?php	} ?>
 	<h3>Configuration</h3>
-	<div id="localSettings"<?php if (!empty($repository->id) && $repository->type != 'local') { print "style=\"display:none;\""; } ?>>
-		<div class="container" style="margin: 10px; padding: 20px; border:dashed 1px gray; display: inline-table;">
-			<span class="label">Path</span>
-			<input type="text" name="path" class="value input wide_xl" value="<?=$form['path']?>" />
-		</div>
-	</div>
-    <div id="s3Settings"<?php if (!empty($repository->id) && $repository->type != 's3') { print "style=\"display:none;\""; } ?>>
+<?php	foreach ($repository_types as $type => $name) { ?>
+    <div id="<?=$type?>Settings"<?php if ($form['type'] != $type) { print "style=\"display:none;\""; } ?>>
+		<h4><?=$name?></h4>
         <div class="container" style="margin: 10px; padding: 20px; border:dashed 1px gray; display: inline-table;">
-<?php	foreach($metadata_keys as $key) { ?>
+<?php	foreach($metadata_keys[$type] as $key) { ?>
             <span class="label"><?=ucfirst($key)?></span>
             <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" name="<?=$key?>" class="value input wide_xl" value="<?=$form[$key]?>" />
 <?php	} ?>
         </div>
     </div>
+<?php	} ?>
 	<h3>Privileges</h3>
 	<div class="tableBody clean min-tablet">
 		<div class="tableRowHeader">

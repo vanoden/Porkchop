@@ -8,12 +8,9 @@
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage customers');
 
-	// Customers to display at a time
-	if (isset($_REQUEST['recordsPerPage']) && preg_match('/^\d+$/',$_REQUEST['recordsPerPage']))
-		$recordsPerPage = $_REQUEST['recordsPerPage'];
-	else
-		$recordsPerPage = 20;
-	if (is_numeric($_REQUEST['start'])) $_REQUEST['start'] = 0;
+	# Configure Pagination
+    $pagination = new \Site\Page\Pagination();
+    $pagination->forwardParameters(array('hidden','deleted','expired','name','searchedTag'));
 
 	// Security - Only Register Module Operators or Managers can see other customers
 	$organizationlist = new \Register\OrganizationList();
@@ -33,13 +30,13 @@
 	if (!empty($_REQUEST['searchedTag'])) $find_parameters['searchedTag'] = $_REQUEST['searchedTag'];
 
 	// Get Count before Pagination
-	$organizationlist->find($find_parameters,['count' => true]);
+	$organizationlist->find($find_parameters,['ids' => true]);
 	$total_organizations = $organizationlist->count($find_parameters);
 	if ($organizationlist->error()) $page->addError($organizationlist->error());
 
 	// Add Pagination to Query
-	$controls["limit"] = $recordsPerPage;
-	$controls["offset"] = isset($_REQUEST['pagination_start_id']) ? $_REQUEST['pagination_start_id']: 0;
+	$controls["limit"] = $pagination->size();
+	$controls["offset"] = $pagination->startId();
 
 	// Get Records
 	$organizations = $organizationlist->find($find_parameters,$controls);
@@ -57,7 +54,4 @@
     $page->addBreadcrumb("Customer");
     $page->addBreadcrumb("Organizations","/_register/organizations");
 
-    $pagination = new \Site\Page\Pagination();
-    $pagination->forwardParameters(array('hidden','deleted','expired','name','searchedTag','recordsPerPage'));
-    $pagination->size($recordsPerPage);
     $pagination->count($total_organizations);

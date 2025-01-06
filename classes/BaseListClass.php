@@ -103,6 +103,14 @@ class BaseListClass extends \BaseClass {
 			'offset'	=> 0
 		];
 
+		// Control Parameters
+		// sort - Sort by column
+		// order - ASC or DESC
+		// limit - Limit the number of records returned
+		// offset - Start at a specific record
+		// ids - Return only the ID's
+		// recursive - Include recursive objects
+
 		// Transfer control parameters from parameters array to controls array
 		if (!empty($parameters['_sort'])) $controls['sort'] = $parameters['_sort'];
 		unset($parameters['_sort']);
@@ -243,7 +251,7 @@ class BaseListClass extends \BaseClass {
 						$limit = " LIMIT " . $controls['offset'] . "," . $controls['limit'];
 					}
 				}
-				$limit = " LIMIT " . $controls['limit'];
+				else $limit = " LIMIT " . $controls['limit'];
 			}
 		}
 		return $limit;
