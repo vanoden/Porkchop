@@ -184,7 +184,7 @@ function getProvinces() {
         <section id="form-message">
 			<ul class="connectBorder errorText"><?=$page->errorString()?></ul>
 		</section>
-		<h3>Your account could not be verified</h3>
+		<h2>Your account could not be verified</h2>
         <h5>Please check your <strong>spam / other</strong> mail folders in case you still need to find the correct verification link.</h5>
         <form name="register" action="/_register/new_customer" method="POST">
             <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
@@ -197,9 +197,8 @@ function getProvinces() {
   } else {
   ?>
 
-<h2>New Customer Registration</h2>
-
 <section id="form-message">
+<h1 class="pageSect_full">New Customer Registration</h1>
   <ul class="connectBorder infoText">
     <li>Fill out all required information to apply. You will recieve an email to confirm your provided email address is correct. You will also receive an email verify your account has been created.</li>
   </ul>
@@ -216,7 +215,7 @@ function getProvinces() {
       </section>
     <?php	} ?>
 
-    <h3>Company/Organization Name:</h3>
+    <h2>Company/Organization Name:</h2>
     <ul id="registerCompanyName" class="form-grid connectBorder">
       <li>
         <input type="text" class="value registerValue long-field" name="organization_name" value="<?=!empty($_REQUEST['organization_name']) ? $_REQUEST['organization_name'] : "" ?>" placeholder="Company LLC" maxlength="50" required /></li>
@@ -224,13 +223,17 @@ function getProvinces() {
         <input id="is_reseller_checkbox" type="checkbox" name="reseller" value="yes" style="display: inline;" onChange="checkReseller();">Are you a reseller? (wish sell our products and services)</li>
     </ul>
 
-    <h3>Register your Product</h3>
+    <h2>Register your Product</h2>
     <section>
-      <ul id="serial_number_message" class="connectBorder errorText" style="display: none"><li>Serial number not found in our system</li></ul>
+      <ul id="serial_number_message" class="connectBorder errorText" style="display: none">
+        <li>Serial number not found in our system</li>
+      </ul>
     </section>
 
     <section>
-      <ul id="serial_number_message_ok" class="connectBorder progressText" style="display: none"><li>Serial number has been found</li></ul>
+      <ul id="serial_number_message_ok" class="connectBorder progressText" style="display: none">
+        <li>Serial number has been found</li>
+      </ul>
     </section>
 
     <ul class="form-grid four-col connectBorder">
@@ -252,7 +255,7 @@ function getProvinces() {
       </li>
     </ul>
 
-    <h3>Business Address</h3>
+    <h2>Business Address</h2>
     <ul class="form-grid four-col connectBorder">
       <li>
         <label for="country_id">Country</label>
@@ -284,7 +287,7 @@ function getProvinces() {
       </li>
     </ul>
 
-    <h3>Contact Info</h3>
+    <h2>Contact Info</h2>
     <ul class="form-grid four-col connectBorder">
       <li>
         <label for="firstname">First Name:</label>
@@ -337,8 +340,8 @@ function getProvinces() {
       }
       ?>
       <div class="g-recaptcha" data-sitekey="<?=$GLOBALS['_config']->captcha->public_key?>"></div>
-      <input type="submit" class="button" onclick="return submitForm();" value="Apply" style="height: 35px; width: 90px;">
-      <a class="button secondary" href="/_register/login">Cancel</a>
+      <input type="submit" class="button" onclick="return submitForm();" value="Apply">
+      <a class="button btn-secondary" href="/_register/login">Cancel</a>
     </div>
   </form>
 </section>
