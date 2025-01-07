@@ -31,3 +31,4 @@ third_party/composer.sha384sum
 .DS_Store
 third_party/composer-setup.php
 docker-compose-lamp
+.codegpt

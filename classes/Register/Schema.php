@@ -148,10 +148,10 @@
 			if ($this->version() < 2) {
 				app_log("Upgrading schema to version 2", 'notice', __FILE__, __LINE__);
 
-				// Start Transaction 
+				# Start Transaction 
 				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
 
-				// Requires Product Schema
+				# Requires Product Schema
 				$product_schema = new \Product\Schema;
 				if (! $product_schema->upgrade(1)) {
 					$this->error = "Error upgrading product schema: ".$product_schema->error();
@@ -591,7 +591,7 @@
 			if ($this->version() < 15) {
 				app_log("Upgrading schema to version 15",'notice',__FILE__,__LINE__);
 					
-				// Start Transaction
+				# Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$drop_table_query = "
@@ -698,7 +698,7 @@
 			if ($this->version() < 16) {
 				app_log("Upgrading schema to version 16",'notice',__FILE__,__LINE__);
 					
-				// Start Transaction
+				# Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$table = new \Database\Schema\Table('register_locations');
@@ -772,7 +772,7 @@
 			if ($this->version() < 18) {
 				app_log("Upgrading schema to version 18",'notice',__FILE__,__LINE__);
 					
-				// Start Transaction
+				# Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$table = new \Database\Schema\Table('register_organization_locations');
@@ -821,7 +821,7 @@
 	
 				app_log("Upgrading schema to version 19",'notice',__FILE__,__LINE__);
 	
-				// Start Transaction 
+				# Start Transaction 
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 			
 				$alter_table_query = "
@@ -843,7 +843,7 @@
 	
 				app_log("Upgrading schema to version 20",'notice',__FILE__,__LINE__);
 	
-				// Start Transaction 
+				# Start Transaction 
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 			
 				$alter_table_query = "
@@ -865,7 +865,7 @@
 			if ($this->version() < 21) {
 				app_log("Upgrading schema to version 21",'notice',__FILE__,__LINE__);
 
-				// Start Transaction 
+				# Start Transaction 
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 			
 				$create_table_query = "
@@ -981,13 +981,13 @@
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 			
 				$create_table_query = "
-                    CREATE TABLE if not exists `register_tags` (
-                      `id` int NOT NULL AUTO_INCREMENT,
-                      `type` enum('ORGANIZATION','USER','CONTACT','LOCATION') NOT NULL DEFAULT 'ORGANIZATION',
-                      `register_id` int DEFAULT NULL,
-                      `name` varchar(255) NOT NULL,
-                      PRIMARY KEY (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+						CREATE TABLE if not exists `register_tags` (
+						  `id` int NOT NULL AUTO_INCREMENT,
+						  `type` enum('ORGANIZATION','USER','CONTACT','LOCATION') NOT NULL DEFAULT 'ORGANIZATION',
+						  `register_id` int DEFAULT NULL,
+						  `name` varchar(255) NOT NULL,
+						  PRIMARY KEY (`id`)
+						) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 				";
 	
 				$GLOBALS['_database']->Execute($create_table_query);
@@ -1001,14 +1001,14 @@
 				$this->setVersion(26);
 				$GLOBALS['_database']->CommitTrans();
 				
-				// add new calbrator role
+				# add new calbrator role
 				$this->addRoles(array('calibrator' => 'can calibrate customer devices'));			
 			}
 
             if ($this->version() < 27) {
 				app_log("Upgrading schema to version 27",'notice',__FILE__,__LINE__);
 
-				// Start Transaction
+				# Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$table = new \Database\Schema\Table('register_organizations');
@@ -1156,7 +1156,7 @@
 
 			if ($this->version() < 32) {
 
-				// Add website_url column to register_organizations table
+				# Add website_url column to register_organizations table
 				app_log("Upgrading schema to version 32", 'notice', __FILE__, __LINE__);
 				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
 				$alter_table_query = "
@@ -1175,7 +1175,7 @@
 
 			if ($this->version() < 33) {
 
-				// Add last_hit_date column to register_users table
+				# Add last_hit_date column to register_users table
 				app_log("Upgrading schema to version 33", 'notice', __FILE__, __LINE__);
 				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
 				$alter_table_query = "
@@ -1194,7 +1194,7 @@
 
 			if ($this->version() < 34) {
 				
-				// Add event_class enum RESET_KEY_GENERATED to register_user_audit table
+				# Add event_class enum RESET_KEY_GENERATED to register_user_audit table
 				app_log("Upgrading schema to version 34", 'notice', __FILE__, __LINE__);
 				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
 
@@ -1216,7 +1216,7 @@
 
 			if ($this->version() < 35) {
 				
-				// Add event_class enum RESET_KEY_GENERATED to register_user_audit table
+				# Add event_class enum RESET_KEY_GENERATED to register_user_audit table
 				app_log("Upgrading schema to version 35", 'notice', __FILE__, __LINE__);
 				if (!$GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
 
@@ -1239,7 +1239,7 @@
 			if ($this->version() < 36) {
 				app_log("Upgrading schema to version 36", 'notice', __FILE__, __LINE__);
 				
-				// Start Transaction 
+				# Start Transaction 
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 				
 				$alter_table_query = "
@@ -1258,14 +1258,14 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
-			// add public column to register_contacts table
+			# add public column to register_contacts table
 			if ($this->version() < 37) {
 				app_log("Upgrading schema to version 37", 'notice', __FILE__, __LINE__);
 				$alter_table_query = "
 					ALTER TABLE `register_contacts` ADD COLUMN `public` tinyint(1) NOT NULL default 0
 				";
 
-				// Start Transaction 
+				# Start Transaction 
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 				$GLOBALS['_database']->Execute($alter_table_query);
 				if ($GLOBALS['_database']->ErrorMsg()) {
@@ -1278,7 +1278,7 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
-			// 	register_users = public|private add schema version 38
+			# 	register_users = public|private add schema version 38
 			if ($this->version() < 38) {
 				app_log("Upgrading schema to version 38", 'notice', __FILE__, __LINE__);
 				$alter_table_query = "
@@ -1308,6 +1308,27 @@
 					return null;
 				}
 				$this->setVersion(39);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
+			if ($this->version() < 40) {
+				app_log("Upgrading schema to version 40", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction 
+				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `register_users` ADD COLUMN `secret_key` varchar(255) NOT NULL
+				";
+
+				$GLOBALS['_database']->Execute($alter_table_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->error = "SQL Error altering register_users table in Register::Schema::upgrade(): " . $GLOBALS['_database']->ErrorMsg();
+					app_log($this->error, 'error', __FILE__, __LINE__);
+					$GLOBALS['_database']->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(40);
 				$GLOBALS['_database']->CommitTrans();
 			}
 

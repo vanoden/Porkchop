@@ -30,6 +30,7 @@ class Person Extends \BaseModel {
 	public $default_shipping_location_id;
 	public $last_hit_date;
 	public $profile;
+    public string $secret_key = "";
 
     protected $_settings = array( "date_format" => "US" );
 	protected $_database;
@@ -87,6 +88,7 @@ class Person Extends \BaseModel {
         if (!isset($parameters['status'])) $parameters['status'] = 'NEW';
         if (!isset($parameters['date_expires'])) $parameters['date_expires'] = '2038-01-01 00:00:00';
         if (!isset($parameters['validation_key'])) $parameters['validation_key'] = NULL;
+        if (!isset($parameters['secret_key'])) $parameters['secret_key'] = '';
 
 		sanitize($parameters['login']);
 
@@ -101,12 +103,14 @@ class Person Extends \BaseModel {
 					status,
 					login,
 					timezone,
-					validation_key
+					validation_key,
+					secret_key
 				)
 				VALUES
 				(
 					sysdate(),
 					sysdate(),
+					?,
 					?,
 					?,
 					?,
@@ -120,7 +124,8 @@ class Person Extends \BaseModel {
             $parameters['status'],
             $parameters['login'],
             $parameters['timezone'],
-            $parameters['validation_key']
+            $parameters['validation_key'],
+            $parameters['secret_key']
         ));
         if ($GLOBALS['_database']->ErrorMsg()) {
             $this->SQLError($GLOBALS['_database']->ErrorMsg());
@@ -248,7 +253,7 @@ class Person Extends \BaseModel {
 			$auditEvent->appendDescription("Automation changed to ".$parameters['automation']);
         }
 
-        if (isset($parameters['time_based_password']) && is_bool($parameters['time_based_password']) && $parameters['time_based_password'] != $this->time_based_password) {
+        if (isset($parameters['time_based_password']) && $parameters['time_based_password'] != $this->time_based_password) {
             if ($parameters['time_based_password']) {
                 $update_customer_query .= ",
                 time_based_password = 1";
@@ -257,6 +262,13 @@ class Person Extends \BaseModel {
                 time_based_password = 0";
             }
         }
+
+		if (isset($parameters['secret_key']) && $parameters['secret_key'] != $this->secret_key) {
+			$update_customer_query .= ",
+			secret_key = ?";
+			array_push($bind_params,$parameters['secret_key']);
+			$auditEvent->appendDescription("Secret Key updated");
+		}
 
 		$update_customer_query .= "
 			WHERE	id = ?
