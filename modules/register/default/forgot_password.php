@@ -1,8 +1,5 @@
 <script src="https://www.google.com/recaptcha/api.js"></script>
 
-
-<span class="title">Forgot Password</span>
-
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">
 	<ul class="connectBorder errorText">
@@ -19,6 +16,7 @@
 <?php	} ?>
 
 <section>
+<h1 class="pageSect_full">Forgot Password</h1>
 	<ul class="connectBorder infoText">
 		<li>Enter the email associated with your account. If that address exists in our system, instructions will be sent to it to reset your password.</li>
 	</ul>
