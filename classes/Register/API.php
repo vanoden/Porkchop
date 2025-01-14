@@ -41,7 +41,7 @@
 					$me->organization = $me->organization();
 				}
 				else {
-					$me->unreadMessages = 0;
+					//$me->unreadMessages = 0;
 				}
 			}
 
