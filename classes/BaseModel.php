@@ -36,7 +36,8 @@
 		protected $_tableMetaKeyColumn = 'key';
 
 		// Should we always audit events for this class?
-		protected static $_auditEvents = false;
+		//protected static $_auditEvents = false;
+		protected $_auditEvents = false;
 
 		/**
 		 * Load object base on ID if given
