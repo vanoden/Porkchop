@@ -18,21 +18,24 @@
 			if ($name == "get") return $this->getDelivery($parameters[0],$parameters[1]);
 		}
 
-        public function getDelivery($message_id,$user_id) {
+        public function getDelivery($message_id, $user_id) {
             $get_object_query = "
                 SELECT  id
                 FROM    site_message_deliveries
                 WHERE   message_id = ?
                 AND     user_id = ?
             ";
-            $rs = $GLOBALS['_database']->Execute($get_object_query,array($message_id,$user_id));
-            if (! $rs) {
+            $rs = $GLOBALS['_database']->Execute($get_object_query, array($message_id, $user_id));
+            if (!$rs) {
                 $this->SQLError($GLOBALS['_database']->ErrorMsg());
                 return false;
             }
-            list($this->id) = $rs->FetchRow();
-			if (!empty($this->id)) return $this->details();
-			return false;
+            $row = $rs->FetchRow();
+            if ($row && isset($row['id'])) {
+                $this->id = (int)$row['id'];
+                return $this->details();
+            }
+            return false;
         }
 
 		public function message() {

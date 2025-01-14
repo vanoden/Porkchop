@@ -7,10 +7,8 @@
     .form-grid li {flex-direction: row;}
   }
 </style>
-
-<h2>Thank you</h2>
-
 <section>
+<h2 class="pageSect_full">Thank you</h2>
   <ul class="form-grid sub_2col">
     <li>
       <img src="/img/icons/icon_portal_email.png" class="icon_story">

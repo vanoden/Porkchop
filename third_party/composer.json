@@ -18,7 +18,8 @@
         "amphp/socket": "^2.3",
         "amphp/byte-stream": "^2.1",
         "psr/simple-cache": "2.0",
-        "psr/cache": "^3.0"
+        "psr/cache": "^3.0",
+        "endroid/qr-code": "^6.0"
     },
     "config": {
         "allow-plugins": {

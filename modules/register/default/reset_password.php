@@ -5,7 +5,9 @@
         margin:0;
     }
 </style>
-<span class="title">Password Reset</span>
+<section>
+    <h1 class="pageSect_full">Password Reset</h1>
+</section>
 <?php	if ($page->success) { ?>
 <section id="form-message">
 	<ul class="connectBorder progressText">
@@ -28,7 +30,7 @@
 <?php }	?>
 <?php if ($_REQUEST['status'] == "complete") { ?>
 <section id="reg_complete" class="body">
-	<p>Your password has been updated.  Please <a href="/_register/login">log back in</a>.</p>
+	<p class="pageSect_full">Your password has been updated.  Please <a href="/_register/login">log back in</a>.</p>
 </section>
 <?php return; } ?>
 <section id="reg_form" class="body">
