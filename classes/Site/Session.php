@@ -52,7 +52,7 @@ use Register\Customer;
 		public function start() {
 			# Fetch Company Information
 			$location = new \Company\Location();
-			$location->get($_SERVER['SERVER_NAME']);
+			$location->getByHost($_SERVER['SERVER_NAME']);
 			$this->location_id = $location->id;
 
 			if (! $location->id) {
@@ -216,6 +216,11 @@ use Register\Customer;
 		 * @return object 
 		 */
 		function create() {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
 			$new_code = '';
 			while (! $new_code) {
 
@@ -258,22 +263,23 @@ use Register\Customer;
 						?
 				)
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$query,
-				array($new_code,
-					  $this->customer->id,
-					  $this->company->id,
-					  $this->refer_url,
-					  $_SERVER['HTTP_USER_AGENT'],
-					  $this->prev_session,
-					  $this->email_id
-				)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+			// Bind Parameters
+			$database->AddParam($new_code);
+			$database->AddParam($this->customer->id);
+			$database->AddParam($this->company->id);
+			$database->AddParam($this->refer_url);
+			$database->AddParam($_SERVER['HTTP_USER_AGENT']);
+			$database->AddParam($this->prev_session);
+			$database->AddParam($this->email_id);
+
+			// Execute Query
+			$database->Execute($query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			$this->id = $database->Insert_ID();
 
 			# Set Session Cookie
 			if (setcookie($this->cookie_name, $new_code, $this->cookie_expires,$this->cookie_path,$_SERVER['SERVER_NAME'],false,true)) {
@@ -290,7 +296,8 @@ use Register\Customer;
 		 * @return bool 
 		 */
 		function details(): bool {
-		
+			$this->clearError();
+
 			# Name For Xcache Variable
 			$cache_key = "session[".$this->id."]";
 
@@ -321,6 +328,10 @@ use Register\Customer;
 				}
 			}
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_session_query = "
 				SELECT	id,
 						code,
@@ -336,12 +347,14 @@ use Register\Customer;
 				FROM	session_sessions
 				WHERE	id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute(
-				$get_session_query,
-				array($this->id)
-			);
+
+			// Bind Parameters
+			$database->AddParam($this->id);
+
+			// Execute Query
+			$rs = $database->Execute($get_session_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			if ($rs->RecordCount()) {
@@ -377,6 +390,7 @@ use Register\Customer;
 				if ($session->id) $cache->set($session,600);
 				return true;
 			}
+			return false;
 		}
 
 		/**
