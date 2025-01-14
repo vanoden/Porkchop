@@ -444,7 +444,8 @@
 			if (! API_LOG) return false;
 			$log = "";
 			$module = $GLOBALS['_REQUEST_']->module;
-			$login = $GLOBALS['_SESSION_']->customer->code;
+			if (!empty($GLOBALS['_SESSION_']->customer)) $login = $GLOBALS['_SESSION_']->customer->code;
+			else $login = "";
 			$method = $_REQUEST['method'];
 			$host = $GLOBALS['_REQUEST_']->client_ip;
 			$response = new \APIResponse();
