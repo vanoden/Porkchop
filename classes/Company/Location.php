@@ -37,15 +37,6 @@
 		 * @return bool
 		 */
 		public function getByHost(string $hostname): bool {
-			return $this->get($hostname);
-		}
-
-		/**
-		 * Get the location by the host name
-		 * @param string $hostname
-		 * @return bool
-		 */
-		public function get(string $hostname): bool {
 			$this->clearError();
 
 			// Connect to Database
@@ -75,6 +66,44 @@
 		}
 
 		/**
+		 * Get the location by the host name
+		 * @param string $code
+		 * @return bool
+		 */
+		public function get(string $code): bool {
+			$this->clearError();
+
+			// Connect to Database
+			$database = new \Database\Service();
+
+			// Prepare Query
+			$get_object_query = "
+				SELECT	id
+				FROM	company_locations
+				WHERE	code = ?
+			";
+
+			// Bind Parameters
+			$database->AddParam($code);
+
+			// Execute Query
+			$rs = $database->Execute($get_object_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			list($id) = $rs->FetchRow();
+
+			if (empty($id)) {
+				$this->error("Location not found for code ".$code);
+				app_log("Location not found for code ".$code,'notice',__FILE__,__LINE__);
+				return false;
+			}
+			$this->id = $id;
+			return $this->details();
+		}
+
+		/**
 		 * Get the location details
 		 * @return bool
 		 */
@@ -90,7 +119,7 @@
 			$cachedData = $cache->get();
 			if (!empty($cachedData) && !empty($cachedData->id) && !empty($cachedData->name)) {
 				foreach ($cachedData as $key => $value) {
-					$this->$key = $value;
+					if (property_exists($this, $key)) $this->$key = $value;
 				}
 				$this->cached(true);
 				$this->exists(true);
