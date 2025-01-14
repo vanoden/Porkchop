@@ -5,8 +5,8 @@ use Aws\TrustedAdvisor\TrustedAdvisorClient;
 
 class Event Extends \BaseModel {
 	public $event_date;				// Datetime of the event
-	public $user_id;				// ID of the customer triggering the event
-	public $instance_id;			// ID of the instance being audited
+	public ?int $user_id;				// ID of the customer triggering the event
+	public ?int $instance_id;			// ID of the instance being audited
 	public $class_name;				// Class name of the object being audited
 	public $class_method;			// Method name of the object being audited
 	public $description;			// Description of the event
@@ -56,7 +56,7 @@ class Event Extends \BaseModel {
 			return true;
 		}
 
-		if (!property_exists($callingClassName, '_auditEvents')) return true;
+		if (! property_exists($callingClassName, '_auditEvents')) return true;
 
 		// if no classes set to be audited, return true
 		if (!empty($GLOBALS['_config']->auditing->auditedClasses) && is_array($GLOBALS['_config']->auditing->auditedClasses)) {
@@ -71,6 +71,7 @@ class Event Extends \BaseModel {
 			return false;
 		}
 		if (empty($GLOBALS['_SESSION_']->customer->id)) {
+			$this->error("No customer ID found in session.");
 			return false;
 		}
 
