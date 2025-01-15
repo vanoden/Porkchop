@@ -93,8 +93,10 @@
 		 * @return Repository|NULL
          */
 		public function get($code) {
+
 			$repository = new Repository();
 			$repository->get($code);
+
 			if (! $repository->id) {
 				$this->error("Repository not found");
 				return false;
