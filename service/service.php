@@ -67,7 +67,52 @@
 		if (preg_match('/^\-\-([\w\-\.]+)\=(.+)/',$arg,$matches)) {
 			if ($matches[1] == 'address') $GLOBALS['_config']->service->address = $matches[2];
 			elseif ($matches[1] == 'port') $GLOBALS['_config']->service->port = $matches[2];
-			elseif ($matches[1] == 'log-level') $GLOBALS['_config']->log_level = $matches[2];
+			elseif ($matches[1] == 'log-level') {
+				if (preg_match('/^(\d+)$/',$matches[2])) {
+					switch($matches[2]) {
+						case 9:
+							$GLOBALS['_config']->log_level = 'trace2';
+							break;
+						case 8:
+							$GLOBALS['_config']->log_level = 'trace';
+							break;
+						case 7:
+							$GLOBALS['_config']->log_level = 'debug';
+							break;
+						case 6:
+							$GLOBALS['_config']->log_level = 'info';
+							break;
+						case 5:
+							$GLOBALS['_config']->log_level = 'notice';
+							break;
+						case 4:
+							$GLOBALS['_config']->log_level = 'warning';
+							break;
+						case 3:
+							$GLOBALS['_config']->log_level = 'error';
+							break;
+						case 2:
+							$GLOBALS['_config']->log_level = 'critical';
+							break;
+						case 1:
+							$GLOBALS['_config']->log_level = 'alert';
+							break;
+						case 0:
+							$GLOBALS['_config']->log_level = 'emergency';
+							break;
+						default:
+							$GLOBALS['_config']->log_level = APPLICATION_LOG_LEVEL;
+							break;
+					}
+				}
+				elseif (preg_match('/^(trace2|trace|debug|info|notice|warning|error|critical|alert|emergency)$/i',$matches[2])) {
+					$GLOBALS['_config']->log_level = $matches[2];
+				}
+				else {
+					print "Log level ".$matches[2]." not recognized\n";
+					exit;
+				}
+			}
 			else {
 				print "Option '".$matches[1]."' not recognized\n";
 				exit;
@@ -197,7 +242,7 @@
 	$buffer = "";		// Incoming data buffer
 	$lastByteTime = 0;	// Time of last byte received
 
-	print "Socket Server listening on ".$GLOBALS['_config']->service->address.":".$GLOBALS['_config']->service->port."\n";
+	app_log("Socket Server listening on ".$GLOBALS['_config']->service->address.":".$GLOBALS['_config']->service->port);
 	// Main Loop
 	do {
 		// New Connection
@@ -343,6 +388,7 @@
 				/****************************************/
 				switch($request->typeId()) {
 					case 1:			// Register Request
+						app_log("Register Request: Serial Number: ".$request->serialNumber()." Model Number: ".$request->modelNumber(),'info');
 						$response = new \Document\S4\RegisterResponse();
 						$response->serialNumber($request->serialNumber());
 						$response->modelNumber($request->modelNumber());
@@ -379,11 +425,24 @@
 							socket_write($msgsock, $envelope, $envSize);
 							break;
 						}
+						// Create a new session
+						app_log("Creating a session",'debug');
 						$session = $sessionList->addInstance(array('client_id' => $client->id()));
+						if ($session->error()) {
+							app_log("Failed to create session instance: ".$session->error(),'error');
+							$response = new \Document\S4\BadRequestResponse();
+							$s4Engine->setMessage($response);
+							$envSize = $s4Engine->serialize($envelope);
+							socket_write($msgsock, $envelope, $envSize);
+							break;
+						}
+						else {
+							//app_log(print_r($session,true),'info');
+						}
 
 						// Apply Session To Engine
 						$s4Engine->session($session);
-						
+
 						// Set Message
 						$s4Engine->setMessage($response);
 						$envSize = $s4Engine->serialize($envelope);

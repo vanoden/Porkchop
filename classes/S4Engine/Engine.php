@@ -91,21 +91,23 @@
 					return false;
 				}
 
-				app_log("SOH: ".ord(substr($buffer,0,1)),'trace');
-				app_log("SOT: ".ord(substr($buffer,$headerLength + 1,1)),'trace');
-				app_log("CID: [" . ord(substr($buffer,1,1)) . "][" . ord(substr($buffer,2,1)) . "]",'trace');
-				app_log("SID: [" . ord(substr($buffer,3,1)) . "][" . ord(substr($buffer,4,1)) . "]",'trace');
+				app_log("SOH: ".ord(substr($buffer,0,1))." SOT: ".ord(substr($buffer,$headerLength + 1,1))." CID: [" . ord(substr($buffer,1,1)) . "][" . ord(substr($buffer,2,1)) . "] SID: [" . ord(substr($buffer,3,1)) . "][" . ord(substr($buffer,4,1)) . "]",'trace');
 				$this->_clientId = ord(substr($buffer,1,1)) * 256 + ord(substr($buffer,2,1));
 				$this->_typeId = ord(substr($buffer,7,1)) * 256 + ord(substr($buffer,8,1));
 				$this->_sessionCode = [];
 				for ($i = 0; $i < $this->_sessionCodeLen; $i++) {
 					array_push($this->_sessionCode,ord(substr($buffer,$i + 9,1)));
 				}
+
+				// Initialize Client Object
 				$client = new \S4Engine\Client();
 				$client->codeString(chr(floor($this->_clientId / 256)).chr(floor($this->_clientId % 256)));
+
+				// Initialize Session Object with Client
 				$session = new \S4Engine\Session();
 				$session->client($client);
 
+				// Fetch Incoming Server ID
 				$serverIdIn = ord(substr($buffer,3,1)) * 256 + ord(substr($buffer,4,1));
 				if ($this->serverId() == 0) {
 					// Client Node, set the server id to that of the answering server
@@ -141,8 +143,7 @@
 				app_log("Incoming: Client ID: ".$this->_clientId." Server ID: ".$serverIdIn." Length: ".$contentLength." Type: ".$this->_typeId." Session: ".$this->session()->codeDebug(),"debug");
 
 				// Check for Terminators at end of data
-				app_log("End of Header: ".ord(substr($buffer,$headerLength,1)),'trace');
-				app_log("End of Content: ".ord(substr($buffer,$contentLength + $headerLength + 1,1)),'trace');
+				app_log("EOH: ".ord(substr($buffer,$headerLength,1)). "EOC: ".ord(substr($buffer,$contentLength + $headerLength + 1,1)),'trace');
 
 				$data = [];			// Array to hold incoming bytes
 				app_log("Is request complete?",'trace');

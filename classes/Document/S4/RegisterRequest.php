@@ -17,19 +17,22 @@
 			// Parse the Data
 			$chars = "RegisterRequest::parse(): ";
 			$stage = 0;  // 0 = serial number, 1 = model number
+			$realchars = "";
 			for ($i = 0; $i < count($array); $i ++) {
 				$chars .= "[".ord($array[$i])."]";
+				$realchars .= $array[$i];
 				if (ord($array[$i]) == 0 && $stage == 0) {
 					$stage = 1;
 				}
 				elseif ($stage == 1) {
-					$this->_serialNumber .= $array[$i];
+					$this->_modelNumber .= $array[$i];
 				}
 				else {
-					$this->_modelNumber .= $array[$i];
+					$this->_serialNumber .= $array[$i];
 				}
 			}
 			app_log($chars,'info');
+			//app_log($realchars,'info');
 			return true;
 		}
 
