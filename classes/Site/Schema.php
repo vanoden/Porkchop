@@ -623,6 +623,30 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			if ($this->version() < 25) {
+				app_log("Upgrading ".$this->module." schema to version 25",'notice',__FILE__,__LINE__);
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `object_images` (
+					  `object_id` int NOT NULL,
+					  `object_type` varchar(50) NOT NULL,
+					  `image_id` int NOT NULL,
+					  `label` varchar(100) NOT NULL,
+					  `view_order` int NOT NULL DEFAULT '999',
+					  PRIMARY KEY (`object_id`, `object_type`, `image_id`),
+					  KEY `FK_IMAGE_ID` (`image_id`),
+					  CONSTRAINT `object_images_ibfk_1` FOREIGN KEY (`image_id`) REFERENCES `storage_files` (`id`),
+					  CONSTRAINT `object_images_ibfk_2` FOREIGN KEY (`image_id`) REFERENCES `media_items` (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+				";
+				if (! $this->executeSQL($create_table_query)) {
+					$this->SQLError("Creating object_images table: ".$this->error());
+					return false;
+				}
+
+				$this->setVersion(25);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}

@@ -112,6 +112,7 @@ if ($page->errorCount() < 1) {
 					}
 				}
 			}
+			
 			// Compile new privilege JSON
 			if (!isset($_REQUEST['privilege'])) $_REQUEST['privilege'] = array();
 			$privilegeList = new \Resource\PrivilegeList($file->privilegeList());
