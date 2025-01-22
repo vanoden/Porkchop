@@ -634,8 +634,7 @@
 					  `view_order` int NOT NULL DEFAULT '999',
 					  PRIMARY KEY (`object_id`, `object_type`, `image_id`),
 					  KEY `FK_IMAGE_ID` (`image_id`),
-					  CONSTRAINT `object_images_ibfk_1` FOREIGN KEY (`image_id`) REFERENCES `storage_files` (`id`),
-					  CONSTRAINT `object_images_ibfk_2` FOREIGN KEY (`image_id`) REFERENCES `media_items` (`id`)
+					  CONSTRAINT `object_images_ibfk_1` FOREIGN KEY (`image_id`) REFERENCES `storage_files` (`id`)
 					) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 				";
 				if (! $this->executeSQL($create_table_query)) {

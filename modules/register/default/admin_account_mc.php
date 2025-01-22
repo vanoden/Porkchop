@@ -10,6 +10,12 @@ $page = new \Site\Page(array("module" => 'register', "view" => 'account'));
 $page->requirePrivilege('manage customers');
 $customer = new \Register\Customer();
 
+$factory = new \Storage\RepositoryFactory();
+$repository = new \Storage\Repository();
+$site_config = new \Site\Configuration();
+$site_config->get('product_images');
+if (!empty($site_config->value)) $repository = $factory->get($site_config->value);
+
 if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id']))
 	$customer_id = $_REQUEST['customer_id'];
 elseif (preg_match('/^[\w\-\.\_]+$/', $GLOBALS['_REQUEST_']->query_vars_array[0])) {
@@ -125,6 +131,9 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 			// time_based_password required or not
 			$parameters['time_based_password'] = 0;
 			if (isset($_REQUEST["time_based_password"]) && !empty($_REQUEST["time_based_password"])) $parameters['time_based_password'] = 1;
+
+			// profile visibility
+			if (isset($_REQUEST["profile"])) $parameters["profile"] = $_REQUEST["profile"];
 
 			if ($customer_id) {
 				app_log("Updating customer " . $customer_id, 'debug', __FILE__, __LINE__);
@@ -315,6 +324,46 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 		$page->success = 'Your changes have been saved';
 	}
 }
+
+if (isset($_REQUEST['customer_id'])) $customer = new \Register\Customer($_REQUEST['customer_id']);
+
+$image = new \Media\Image();
+if ($_REQUEST['new_image_code']) {
+	$image->get($_REQUEST['new_image_code']);
+	$customer->addImage($image->id, 'Register\Customer');
+}
+
+if ($_REQUEST['deleteImage']) {
+	$image->get($_REQUEST['deleteImage']);
+	$customer->dropImage($image->id, 'Register\Customer');
+}
+
+if (isset($_REQUEST['updateImage']) && $_REQUEST['updateImage'] == 'true') {
+	$defaultImageId = $_REQUEST['default_image_id'];
+	$customer->setMetadataScalar('default_image', $defaultImageId);
+	if ($customer->error()) {
+		$page->addError("Error setting default image: " . $customer->error());
+	} else {
+		$page->appendSuccess('Default image updated successfully.', 'success');
+	}
+}
+				
+// File Upload Form Submitted
+if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
+	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+		$page->addError("Invalid Token");
+	} else {
+		$page->requirePrivilege('upload storage files');
+		
+		$imageUploaded = $customer->uploadImage($_FILES['uploadFile'], '', 'spectros_user_image', $_REQUEST['repository_id'], 'Register\Customer');
+		if ($imageUploaded) {
+			$page->success = "File uploaded";
+		} else {
+			$page->addError("Error uploading file: " . $customer->error());
+		}
+	}
+}  
+$customerImages = $customer->images('Register\Customer');
 
 if (isset($_REQUEST["btnResetFailures"])) {
 

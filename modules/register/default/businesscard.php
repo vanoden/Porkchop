@@ -15,7 +15,7 @@
             <h2>About our company</h2>
             <p><?= $customer->organization()->name ?></p>
         </div>
-        <a class="vcard-button" href="/business_card?vcard=show">Add to Contacts</a>
+        <a class="vcard-button" href="/_register/businessvcard/<?= $customer->code ?>">Add to Contacts</a>
         <ul class="vcard-contact">
             <?php foreach ($contacts as $contact) : ?>
                 <?php if ($contact->public) : // Check if the contact is public ?>
