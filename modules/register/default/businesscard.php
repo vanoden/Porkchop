@@ -22,8 +22,8 @@
                     <li>
                       <a href="<?= $contact->type === 'phone' ? 'tel:' . $contact->value : ($contact->type === 'sms' ? 'sms:' . $contact->value : ($contact->type === 'email' ? 'mailto:' . $contact->value : '#')) ?>">
                         <img class="vcard-icon" src="/img/vcard/icon_vcard-<?= $contact->type ?>.png" alt="<?= $contact->type ?>">
-                            <!-- <?= htmlspecialchars($contact->value) ?> -->
                         </a>
+                        <h3><?= htmlspecialchars($contact->description) ?></h3>
                     </li>
                 <?php endif; ?>
             <?php endforeach; ?>
