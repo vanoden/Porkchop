@@ -83,6 +83,7 @@
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 				header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				$GLOBALS ['_SESSION_']->refer_url = null;
 				exit;
 			}
 	    }

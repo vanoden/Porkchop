@@ -18,7 +18,7 @@
             <h2>About our company</h2>
             <p>Spectros Instruments is a lorem ipsum dolor sit amet consectetur. In vitae ultricies in sed. Leo tellus orci eget quam tristique. Varius cursus faucibus ac pharetra elit. Imperdiet blandit ut amet mauris gravida.</p>
         </div>
-        <a class="vcard-button" href="/business_card?vcard=show">Add to Contacts</a>
+         <a class="vcard-button" href="/_register/businessvcard/<?= $customer->code ?>">Add to Contacts</a>
         <ul class="vcard-contact">
             <?php foreach ($contacts as $contact) : ?>
                 <?php if ($contact->public) : // Check if the contact is public ?>

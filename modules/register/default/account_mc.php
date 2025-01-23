@@ -75,6 +75,10 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply" && !$readOnly) 
 		}
 		if (isset($_REQUEST["profile"])) $parameters["profile"] = $_REQUEST["profile"];
 
+		// time_based_password required or not
+		$parameters['time_based_password'] = 0;
+		if (isset($_REQUEST["time_based_password"]) && !empty($_REQUEST["time_based_password"])) $parameters['time_based_password'] = 1;
+
 		if ($customer->id) {
 
 			app_log("Updating customer " . $customer->id, 'debug', __FILE__, __LINE__);
@@ -92,7 +96,6 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply" && !$readOnly) 
 				$page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
 				goto load;
 			}
-			
 		} else {
 
 			### THIS NEVER HAPPENS ###
