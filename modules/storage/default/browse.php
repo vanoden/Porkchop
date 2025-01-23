@@ -1,4 +1,3 @@
-
 <?=$page->showAdminPageInfo()?><div class="tableBody min-tablet">
 <h3>Directories</h3>
 <div class="tableBody min-tablet">
@@ -43,7 +42,7 @@
 ?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_storage/file?id=<?=$file->id?>"><?=$file->name()?></a></div>
-		<div class="tableCell"><a href="/_storage/downloadfile?id=<?=$file->id?>">Download</a>&nbsp;<a href="/_storage/browse?method=deleteFile?file_id=<?=$file->id?>">Delete</a></div>
+		<div class="tableCell"><a href="/_storage/downloadfile?id=<?=$file->id?>">Download</a>&nbsp;<a href="/_storage/browse?method=deleteFile&file_id=<?=$file->id?>&code=<?=$repository->code?>">Delete</a></div>
 		<div class="tableCell"><?=$file->mime_type?></div>
 		<div class="tableCell"><?=$file->size?></div>
 		<div class="tableCell"><?=$file->date_created?></div>

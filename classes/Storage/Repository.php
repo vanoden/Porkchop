@@ -380,7 +380,19 @@
 		 */
 		public function deleteFileFromDb($file_id) {
 			$file = new \Storage\File($file_id);
+			
 			if ($file->exists()) {
+				
+				// First delete any references in object_images table
+				$database = new \Database\Service();
+				$delete_refs_query = "DELETE FROM object_images WHERE image_id = ?";
+				$database->AddParam($file_id);
+				$database->Execute($delete_refs_query);
+
+				if ($database->ErrorMsg()) {
+					$this->error("Error removing image references: " . $database->ErrorMsg());
+					return false;
+				}				
 				if ($file->delete()) {
 					return true;
 				}

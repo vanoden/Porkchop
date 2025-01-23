@@ -1355,6 +1355,7 @@ class BaseModel extends \BaseClass {
 	 * @return bool True if upload and association are successful, false otherwise
 	 */
 	public function uploadImage(array $fileData, string $path = '', string $label = '', int $repository_id, $object_type = null): bool {
+
 		$this->clearError();
 
 		if (! preg_match('/^\//', $path)) $path = '/' . $path;
