@@ -72,7 +72,15 @@
 			else {
 				if (! preg_match('/^_/',$key)) $this->incrementStat("cmd_set");
 				$path = $this->_path;
-				if ($fh = fopen($path."/".$key,'w')) {
+				if (!is_dir($path)) {
+					$this->_error = "Cache Directory Doesn't Exists";
+					return false;
+				}
+				elseif (!is_writable($path)) {
+					$this->_error = "Cache Directory Not Writable";
+					return false;
+				}
+				elseif ($fh = fopen($path."/".$key,'w')) {
 					$string = serialize($value);
 					fwrite($fh,$string);
 					fclose($fh);
