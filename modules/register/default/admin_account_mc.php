@@ -13,7 +13,7 @@ $customer = new \Register\Customer();
 $factory = new \Storage\RepositoryFactory();
 $repository = new \Storage\Repository();
 $site_config = new \Site\Configuration();
-$site_config->get('product_images');
+$site_config->get('website_images');
 if (!empty($site_config->value)) $repository = $factory->get($site_config->value);
 
 if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id']))
