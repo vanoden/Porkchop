@@ -36,5 +36,22 @@ if ($customer->profile !== 'public') {
 	exit;
 }
 
+// Get profile image information
+$profileImage = array(
+    'src' => '/img/_global/icon_myaccount.svg',
+    'alt' => 'personal profile photo'
+);
+
+$defaultImageId = $customer->getMetadata('default_image');
+if ($defaultImageId) {
+    $defaultImage = new \Storage\File($defaultImageId);
+    if ($defaultImage->id) {
+        $profileImage = array(
+            'src' => "/_storage/downloadfile?file_id=" . $defaultImageId,
+            'alt' => htmlspecialchars($customer->first_name . ' ' . $customer->last_name) . "'s profile photo"
+        );
+    }
+}
+
 // Get the list of user contacts
 $contacts = $customer->contacts();

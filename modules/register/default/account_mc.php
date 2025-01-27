@@ -41,6 +41,51 @@ app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer 
 ### Handle Actions					###
 #######################################
 
+$factory = new \Storage\RepositoryFactory();
+$repository = new \Storage\Repository();
+$site_config = new \Site\Configuration();
+$site_config->get('website_images');
+if (!empty($site_config->value)) $repository = $factory->get($site_config->value);
+
+$image = new \Media\Image();
+if ($_REQUEST['new_image_code']) {
+	$image->get($_REQUEST['new_image_code']);
+	$customer->addImage($image->id, 'Register\Customer');
+}
+
+if ($_REQUEST['deleteImage']) {
+	$image->get($_REQUEST['deleteImage']);
+	$customer->dropImage($image->id, 'Register\Customer');
+}
+
+if (isset($_REQUEST['updateImage']) && $_REQUEST['updateImage'] == 'true') {
+	$defaultImageId = $_REQUEST['default_image_id'];
+	$customer->setMetadataScalar('default_image', $defaultImageId);
+	if ($customer->error()) {
+		$page->addError("Error setting default image: " . $customer->error());
+	} else {
+		$page->appendSuccess('Default image updated successfully.', 'success');
+	}
+}
+
+// File Upload Form Submitted
+if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
+	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+		$page->addError("Invalid Token");
+	} else {
+		$page->requirePrivilege('upload storage files');
+
+		$imageUploaded = $customer->uploadImage($_FILES['uploadFile'], '', 'spectros_product_image', $_REQUEST['repository_id'], 'Register\Customer');
+		if ($imageUploaded) {
+			$page->success = "File uploaded";
+		} else {
+			$page->addError("Error uploading file: " . $customer->error());
+		}
+	}
+}
+
+$customerImages = $customer->images('Register\Customer');
+
 // handle form "delete" submit
 if (isset($_REQUEST['submit-type']) && $_REQUEST['submit-type'] == "delete-contact" && !$readOnly) {
 	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {

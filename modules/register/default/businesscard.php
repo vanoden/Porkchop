@@ -9,7 +9,7 @@
 <?php    } else {    ?>
     <section class="vcard">
         <img class="vcard-logo" src="/img/vcard/logo_spectros.png" alt="Spectros Instruments logo">
-        <img class="vcard-profile" src="/img/_global/icon_myaccount.svg" alt="personal profile photo">
+        <img class="vcard-profile" src="<?= $profileImage['src'] ?>" alt="<?= $profileImage['alt'] ?>">
         <div>
           <h1><?= $customer->first_name . ' ' . $customer->last_name ?></h1>
           <h2 class="name-title">Job Title Goes Here</h2>
