@@ -139,6 +139,11 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				app_log("Updating customer " . $customer_id, 'debug', __FILE__, __LINE__);
 				$customer = new \Register\Customer($customer_id);
 				$customer->update($parameters);
+
+				// set the job title and description
+				$customer->setMetadataScalar('job_title', $_REQUEST['job_title']);
+				$customer->setMetadataScalar('job_description', $_REQUEST['job_description']);
+
 				if ($customer->error()) {
 					app_log("Error updating customer: " . $customer->error(), 'error', __FILE__, __LINE__);
 					$page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");

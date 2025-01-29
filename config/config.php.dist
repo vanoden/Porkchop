@@ -14,6 +14,7 @@
 	define ( 'APPLICATION_LOG_LEVEL', 'debug');
 	define ( 'ENVIROMENT', 'QA'); // 'DEV' / 'QA' / 'PRODUCTION'
 	define ( 'QA_CAPTCHA_BYPASS', 'GZdWHjJJk9xHJXHFPeu4gZs6YDfcEXyb');
+	define ( 'USE_OTP', true); // enable OTP optionsfor login
 	
 	# Initialize config
 	$_config = new stdClass();

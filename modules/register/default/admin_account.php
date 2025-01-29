@@ -153,9 +153,11 @@
         }
         ?>
       </div>
-      <div class="tableCell" style="width: 50%;">Time Based Password [Google Authenticator]
-        <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?>>
-      </div>
+      <?php if (USE_OTP) { ?>
+        <div class="tableCell" style="width: 50%;">Time Based Password [Google Authenticator]
+          <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?>>
+        </div>
+      <?php } ?>
     </div>
     <div class="tableRow">
       <div class="tableCell">
@@ -225,6 +227,18 @@
           <?php } ?>
         </select>
       </div>
+    </div>
+    <div class="tableRow">
+      <div class="tableCell">
+        <label for="job_title">Job Title:</label>
+        <input type="text" name="job_title" class="value input" value="<?= htmlentities($customer->getMetadata('job_title')) ?>" />
+      </div>
+      <div class="tableCell">
+        <label for="job_description">Job Description:</label>
+        <textarea name="job_description" style="max-height: 50px; min-height: 50px;" class="value input wide_100per"><?= htmlentities($customer->getMetadata('job_description')) ?></textarea>
+      </div>
+      <div class="tableCell"></div>
+      <div class="tableCell"></div>
     </div>
   </section>
 

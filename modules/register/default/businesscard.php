@@ -12,11 +12,13 @@
         <img class="vcard-profile" src="<?= $profileImage['src'] ?>" alt="<?= $profileImage['alt'] ?>">
         <div>
           <h1><?= $customer->first_name . ' ' . $customer->last_name ?></h1>
-          <h2 class="name-title">Job Title Goes Here</h2>
+          <h2 class="name-title"><?= htmlentities($customer->getMetadata('job_title')) ?></h2>
+          <p class="name-description"><?= htmlentities($customer->getMetadata('job_description')) ?></p>
         </div>
         <div class="about-us">
-            <h2>About our company</h2>
-            <p>Spectros Instruments is a lorem ipsum dolor sit amet consectetur. In vitae ultricies in sed. Leo tellus orci eget quam tristique. Varius cursus faucibus ac pharetra elit. Imperdiet blandit ut amet mauris gravida.</p>
+            <h2><?= $organization->name ?></h2>
+            <p><?= $organization->notes ?></p>
+            <a href="<?= $organization->website_url ?>"><?= $organization->website_url ?></a>
         </div>
          <a class="vcard-button" href="/_register/businessvcard/<?= $customer->code ?>">Add to Contacts</a>
         <ul class="vcard-contact">
