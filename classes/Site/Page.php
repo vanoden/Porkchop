@@ -82,7 +82,8 @@
 			if (!empty($GLOBALS ['_SESSION_']->refer_url)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-				header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				if ($GLOBALS['_config']->use_otp) header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				$GLOBALS ['_SESSION_']->refer_url = null;
 				exit;
 			}
 	    }

@@ -9,16 +9,18 @@
 <?php    } else {    ?>
     <section class="vcard">
         <img class="vcard-logo" src="/img/vcard/logo_spectros.png" alt="Spectros Instruments logo">
-        <img class="vcard-profile" src="/img/_global/icon_myaccount.svg" alt="personal profile photo">
+        <img class="vcard-profile" src="<?= $profileImage['src'] ?>" alt="<?= $profileImage['alt'] ?>">
         <div>
           <h1><?= $customer->first_name . ' ' . $customer->last_name ?></h1>
-          <h2 class="name-title">Job Title Goes Here</h2>
+          <h2 class="name-title"><?= htmlentities($customer->getMetadata('job_title')) ?></h2>
+          <p class="name-description"><?= htmlentities($customer->getMetadata('job_description')) ?></p>
         </div>
         <div class="about-us">
-            <h2>About our company</h2>
-            <p>Spectros Instruments is a lorem ipsum dolor sit amet consectetur. In vitae ultricies in sed. Leo tellus orci eget quam tristique. Varius cursus faucibus ac pharetra elit. Imperdiet blandit ut amet mauris gravida.</p>
+            <h2><?= $organization->name ?></h2>
+            <p><?= $organization->notes ?></p>
+            <a href="<?= $organization->website_url ?>"><?= $organization->website_url ?></a>
         </div>
-        <a class="vcard-button" href="/business_card?vcard=show">Add to Contacts</a>
+         <a class="vcard-button" href="/_register/businessvcard/<?= $customer->code ?>">Add to Contacts</a>
         <ul class="vcard-contact">
             <?php foreach ($contacts as $contact) : ?>
                 <?php if ($contact->public) : // Check if the contact is public ?>

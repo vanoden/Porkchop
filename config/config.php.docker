@@ -17,6 +17,7 @@
 	define ( 'SPECTROS_LOCATION_ID', 1);
 	define ( 'SPECTROS_VENDOR_ID', 0);
         define ( 'IS_DOCKER_DEVELOPMENT', 1);
+        define ( 'USE_OTP', true); // enable OTP optionsfor login
 	
         # Initialize config object
         $_config = new stdClass();
