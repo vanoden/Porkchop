@@ -25,12 +25,12 @@
 					break;
 				}
 				else {
-					$this->_login .= chr(ord($array[$pos])+48);
+					$this->_login .= ord($array[$pos]);
 				}
 				$pos ++;
 			}
 			while ($pos < count($array)) {
-				$this->_password .= chr(ord($array[$pos])+48);
+				$this->_password .= ord($array[$pos]);
 				$pos ++;
 			}
 			app_log("AuthRequest::parse() - Login: ".$this->_login.", Password: ".$this->_password,'info');
