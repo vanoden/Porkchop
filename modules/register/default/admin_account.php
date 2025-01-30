@@ -153,7 +153,7 @@
         }
         ?>
       </div>
-      <?php if (USE_OTP) { ?>
+      <?php if (defined('USE_OTP') && USE_OTP) { ?>
         <div class="tableCell" style="width: 50%;">Time Based Password [Google Authenticator]
           <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?>>
         </div>
