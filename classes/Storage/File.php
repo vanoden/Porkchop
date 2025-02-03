@@ -384,12 +384,22 @@ class File extends \BaseModel {
 	}
 
 	/**
+	 * DEPRECATED - Use validMimeType()
 	 * Check if the file type is valid and supported
 	 * @param string mime type of file
 	 * @return bool
 	 */
 	private function _valid_type($name) {
-		if (preg_match('/^(image|application|text|video)\/(png|jpg|jpeg|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip|pdf|octet\-stream|mp4|vcard)$/', $name)) return true;
+		return $this->validMimeType($name);
+	}
+
+	/**
+	 * Validate the MIME type of the file
+	 * @param string $mime_type - MIME type of the file
+	 * @return bool - True if valid, False if not
+	 */
+	public function validMimeType($mime_type) {
+		if (preg_match('/^(image|application|text|video)\/(png|jpg|jpeg|gif|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip|pdf|octet\-stream|mp4|vcard)$/', $mime_type)) return true;
 		return false;
 	}
 
@@ -684,8 +694,7 @@ class File extends \BaseModel {
 
 							// add file type refrence for this file to be a part of the support/engineering ticket
 							if (isset($parameters['type']) && isset($parameters['ref_id'])) {
-								$fileMetaData = new \Storage\FileMetadata($this->id);
-								$fileMetaData->add(array('file_id' => $this->id, 'key' => $parameters['type'], 'value' => $parameters['ref_id']));
+								$this->addMetadata($parameters['type'], $parameters['ref_id']);
 							}
 						}
 					} catch (\Exception $e) {

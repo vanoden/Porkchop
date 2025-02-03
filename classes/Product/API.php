@@ -332,12 +332,21 @@
 			if (! preg_match('/^[\w\-\_\.\:\(\)]+$/',$_REQUEST['code']))
 			 $this->error("code required to add instance");
 	
-			if (isset($_REQUEST['organization'])) {
+			if (isset($_REQUEST['organization_id'])) {
 				if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 					$organization = new \Register\Organization($_REQUEST['organization_id']);
 				}
 				else {
-				 $this->error("No permissions to see other organizations data");
+					$this->error("No permissions to see other organizations data");
+				}
+			}
+			elseif (isset($_REQUEST['organization_code'])) {
+				if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
+					$organization = new \Register\Organization();
+					$organization->get($_REQUEST['organization_code']);
+				}
+				else {
+					$this->error("No permissions to see other organizations data");
 				}
 			}
 			else {
@@ -348,12 +357,8 @@
 			$product->get($_REQUEST['product_code']);
 			if ($product->error()) {
 				$this->app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
-			 $this->error("No product found matching '".$_REQUEST['product_code']."'");
+				$this->error("No product found matching '".$_REQUEST['product_code']."'");
 			}
-	
-			$organization = new \Register\Organization($_REQUEST['organization_id']);
-			if ($organization->error()) $this->app_error("Error finding organization: ".$organization->error(),__FILE__,__LINE__);
-			if (! $organization->id) $this->error("No organization found matching '".$_REQUEST['organization']);
 	
 			$instance = new \Product\Instance();
 			if ($instance->error()) $this->app_error("Error initializing instance: ".$instance->error(),__FILE__,__LINE__);
@@ -581,6 +586,7 @@
 		}
 	
 		public function _methods() {
+			$validationClass = new \Product\Item();
 			return array(
 				'ping'			=> array(),
 				'findItems'	=> array(
@@ -595,75 +601,302 @@
 					)
 				),
 				'getItem'	=> array(
-					'code'	=> array(),
+					'description'		=> 'Get a product by code or id',
+					'authentication_required' => false,
+					'return_type'		=> 'Product::Item',
+					'return_element'	=> 'item',
+					'parameters'		=> array(
+						'id'		=> array(
+							'requirement_group'	=> 1,
+							'description'	=> 'Product ID',
+							'hidden'		=> true,
+							'content_type'	=> 'integer'
+						),
+						'code'		=> array(
+							'requirement_group'	=> 2,
+							'description'	=> 'Product Item Code or Sku',
+							'validation_method'	=> 'Product::Item::validCode()'
+						),
+					)
 				),
 				'addItem'	=> array(
-					'code'		=> array('required' => true),
-					'name'		=> array('required' => true),
-					'status'	=> array('default' => 'ACTIVE'),
-					'type'		=> array('required' => true),
+					'description'		=> 'Add a new product',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage products',
+					'parameters'		=> array(
+						'code'			=> array(
+							'required' => true,
+							'description' => 'Unique Product Item Code or Sku',
+							'validation_method' => 'Product::Item::validCode()',
+						),
+						'name'			=> array(
+							'required' => true,
+							'description' => 'Product Name',
+							'validation_method'	=> 'Product::Item::validName()'
+						),
+						'type'			=> array(
+							'required' => true,
+							'description' => 'Product Type',
+							'options' => $validationClass->types()
+						),
+						'description'	=> array(
+							'description' => 'Product Description',
+							'validation_method'	=> 'Product::Item::safeString()'
+						),
+						'status'		=> array(
+							'default' => 'ACTIVE',
+							'options' =>$validationClass->statuses()
+						),
+					),
 				),
 				'changeInstanceCode'	=> array(
 					'description' => 'Change the serial number of a product instance',
 					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage products',
 					'parameters' => array(
-						'code'		=> array('required' => true),
-						'new_code'	=> array('required' => true),
-						'product_code'	=> array('required' => true),
-						'reason'	=> array('required' => true),
+						'code'		=> array(
+							'required' => true,
+							'description' => 'Current serial number',
+							'validation_method' => 'Product::Instance::validCode()'
+						),
+						'new_code'	=> array(
+							'required' => true,
+							'description' => 'New serial number',
+							'validation_method' => 'Product::Instance::validCode()'
+						),
+						'product_code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'reason'	=> array(
+							'required' => true,
+							'description' => 'Reason for change',
+							'validation_method' => 'Product::Instance::safeString()'
+						),
 					),
 					'return_type' => 'bool'
 				),
 				'updateItem'	=> array(
-					'code'		=> array('required' => true),
-					'name'		=> array(),
-					'status'	=> array(),
-					'type'		=> array(),
+					'description'	=> 'Update an existing product',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage products',
+					'parameters'	=> array(
+						'code'		=> array(
+							'required' => true,
+							'description' => 'Product Item Code or Sku',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'name'		=> array(
+							'description' => 'New Product Name',
+							'validation_method'	=> 'Product::Item::validName()'
+						),
+						'status'	=> array(
+							'description' => 'New Product Status',
+							'options' => $validationClass->statuses()
+						),
+						'type'		=> array(
+							'description' => 'New Product Type',
+							'options' => $validationClass->types()
+						),
+					)
 				),
                 'addPrice'      => array(
-                    'product_code'  => array('required' => true),
-                    'amount'        => array('required' => true),
-                    'date_active'   => array('default' => get_mysql_date(time())),
-                    'status'        => array('required' => true,'default' => 'ACTIVE','options' => array('INACTIVE','ACTIVE')),
+					'description'		=> 'Add a price to a product',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required' => 'manage products',
+					'parameters'	=> array(
+	                    'product_code'  => array('required' => true),
+	                    'amount'        => array('required' => true),
+	                    'date_active'   => array(
+							'required' => false,
+							'default' => get_mysql_date(time()),
+							'validation_method'	=> 'Product::Item::validDate()',
+						),
+	                    'status'        => array(
+							'description' => 'Price Status',
+							'options' => $validationClass->statuses()
+						),
+	                    'status'        => array(
+							'required' => true,
+							'default' => 'ACTIVE',
+							'options' => $validationClass->statuses()
+						),
+					)
                 ),
 				'getPrice'		=> array(
-					'product_code'	=> array('required' => true)
+					'description'		=> 'Get the price of a product',
+					'authentication_required' => false,
+					'parameters'	=> array(
+						'product_code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+					)
 				),
 				'findRelationships'	=> array(
-					'parent_code'	=> array('required' => true),
-					'child_code'	=> array('required' => true),
+					'description'		=> 'Find relationships between products',
+					'authentication_required' => false,
+					'parameters'		=> array(
+						'parent_code'	=> array(
+							'description' => 'Parent Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'child_code'	=> array(
+							'description' => 'Child Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+					)
 				),
 				'addRelationship'	=> array(
-					'parent_code'	=> array('required' => true),
-					'child_code'	=> array('required' => true),
+					'description'		=> 'Add a relationship between products',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required' => 'manage products',
+					'parameters'		=> array(
+						'parent_code'	=> array(
+							'required' => true,
+							'description' => 'Parent Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'child_code'	=> array(
+							'required' => true,
+							'description' => 'Child Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+					)
 				),
 				'getRelationship'	=> array(
-					'parent_code'	=> array('required' => true),
-					'child_code'	=> array('required' => true),
+					'description'		=> 'Get a relationship between products',
+					'authentication_required' => false,
+					'parameters'		=> array(
+						'parent_code'	=> array(
+							'description' => 'Parent Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'child_code'	=> array(
+							'description' => 'Child Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+					)
 				),
 				'findGroupItems'	=> array(
-					'code'			=> array('required' => true)
+					'description'		=> 'Find items in a product group',
+					'authentication_required' => false,
+					'parameters'		=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Product Group Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+					)
 				),
 				'getInstance'	=> array(
-					'code'		=> array('required' => true),
+					'description'		=> 'Get a product instance by code or id',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'parameters'	=> array(
+						'id'		=> array(
+							'requirement_group'	=> 1,
+							'description'	=> 'Product Instance ID',
+							'hidden'		=> true,
+							'content_type'	=> 'integer'
+						),
+						'code'		=> array(
+							'requirement_group'	=> 2,
+							'description'	=> 'Product Instance Code or Serial Number',
+							'validation_method'	=> 'Product::Instance::validCode()'
+						),
+						'product_id'	=> array(
+							'description'	=> 'Product ID',
+							'content_type'	=> 'integer'
+						),
+					)
 				),
 				'addInstance'	=> array(
-					'code'		=> array('required' => true),
-					'product_code'	=> array(),
-					'name'		=> array(),
-					'organization_id'	=> array(),
+					'description'		=> 'Add a new product instance',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage product instances',
+					'parameters'		=> array(
+						'code'			=> array(
+							'required' => true,
+							'description' => 'Product Instance Code or Serial Number',
+							'validation_method' => 'Product::Instance::validCode()'
+						),
+						'product_code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'organization_id'	=> array(
+							'requirement_group'	=> 1,
+							'description' => 'Organization ID',
+							'content_type'	=> 'integer',
+							'hidden'		=> true
+						),
+						'organization_code'	=> array(
+							'requirement_group' => 2,
+							'description' => 'Organization Code',
+							'validation_method' => 'Register::Organization::validCode()'
+						),
+						'name'			=> array(
+							'description' => 'Product Instance Name',
+							'validation_method'	=> 'Product::Instance::safeString()'
+						),
+					)
 				),
 				'updateInstance'	=> array(
-					'code'		=> array('required'	=> true),
-					'product_code'	=> array(),
-					'name'		=> array(),
-					'organization_id'	=> array(),
+					'description'		=> 'Update an existing product instance',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage product instances',
+					'parameters'	=> array(
+						'code'		=> array(
+							'required' => true,
+							'description' => 'Product Instance Code or Serial Number',
+							'validation_method' => 'Product::Instance::validCode()'
+						),
+						'product_code'	=> array(
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'name'		=> array(
+							'description' => 'Product Instance Name',
+							'validation_method'	=> 'Product::Instance::validName()'
+						),
+						'organization'	=> array(
+							'description' => 'Organization Code',
+							'validation_method' => 'Register::Organization::validCode()'
+						)
+					)
 				),
 				'findInstances'	=> array(
-					'code'		=> array(),
-					'product_code'	=> array(),
-					'organization_code'	=> array(),
-					'name'		=> array(),
+					'description'		=> 'Find product instances matching criteria',
+					'authentication_required' => true,
+					'parameters'		=> array(
+						'code'		=> array(
+							'description'	=> 'Product Instance Code or Serial Number',
+							'validation_method' => 'Product::Instance::validCode()'
+						),
+						'name'		=> array(
+							'description'	=> 'Product Instance Name',
+							'validation_method'	=> 'Product::Instance::validName()'
+						),
+						'product_code'	=> array(
+							'description'	=> 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'organization_code'	=> array(
+							'description'	=> 'Organization Code',
+							'validation_method' => 'Register::Organization::validCode()'
+						),
+					)
 				),
 			);
 		}
