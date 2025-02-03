@@ -90,6 +90,14 @@
 			$this->_error = null;
 		}
 
+		public function types() {
+			return $this->_types;
+		}
+
+		public function statuses() {
+			return $this->_statii;
+		}
+
 		/********************************************/
 		/* Reusable Validation Routines				*/
 		/********************************************/
