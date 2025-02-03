@@ -208,6 +208,7 @@
 			elseif ($module == "static") {
 				// Override module and view - somehow being overridden elsewhere
 				$this->module = $module;
+				$view = preg_replace('/\.\./','',$view);
 				$this->view = $view;
 				return true;
 			}
@@ -530,7 +531,6 @@
 
 		public function load_template() {
             $this->loadSiteHeaders();
-
 			if ($this->module() == 'static') {
 				return $this->parse(file_get_contents(HTML."/".$this->view));
 			}
