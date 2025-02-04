@@ -42,8 +42,8 @@
 			elseif (func_num_args() == 1 && gettype($args [0] ) == "array") {
 			    if (isset($args[0]['method'])) {
 				    $this->method = $args[0]['method'];
-				    $this->view = $args[0]['view'];
-				    if ($args[0]['index']) $this->index = $args[0]['index'];
+					if ($this->validView($args[0]['view'])) $this->view = $args[0]['view'];
+					if ($this->validIndex($args[0]['index'])) $this->index = $args[0]['index'];
 			    }
 		    }
 			elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string" && isset( $args[2])) {
@@ -206,11 +206,17 @@
 			    return $this->details();
 		    }
 			elseif ($module == "static") {
-				// Override module and view - somehow being overridden elsewhere
-				$this->module = $module;
-				$view = preg_replace('/\.\./','',$view);
-				$this->view = $view;
-				return true;
+				// No Special Characters in static path
+				if ($this->validView($view)) {
+					// Store module and view
+					$this->module = $module;
+					$this->view = $view;
+					return true;
+				}
+				else {
+					app_log("Request for $module::$view view, not adding page: Invalid characters in static path",'notice');
+					return false;
+				}
 			}
 			elseif ($module == "content" && $view == "index") {
 				$message = new \Content\Message();
@@ -264,7 +270,7 @@
 		    // Apply optional parameters
 		    if ($module) {
 			    $this->module = $module;
-			    if ($view) {
+			    if ($view && $this->validView($view)) {
 				    $this->view = $view;
 				    if ($index) $this->index = $index;
 			    }
@@ -1253,9 +1259,23 @@
 			else return false;
 		}
 
+		/**
+		 * Validate view from path - Remember this could be used in static file serving
+		 * @param mixed $string 
+		 * @return false 
+		 */
 		public function validView($string) {
-			if (preg_match('/^\w[\w]*$/',$string)) return true;
-			else return false;
+			// No Directory Traversal
+			if (preg_match('/\.\./', $string)) return false;
+
+			// Make Sure Only Ok Characters in Filename
+			if (! preg_match('/^\w[\w\-\.\_]*$/',$string)) return false;
+
+			// Make Sure Static File is in Docroot
+			if (! file_exists(HTML."/".$string)) return false;
+
+			// Nope, No good
+			return false;
 		}
 
 		public function validIndex($string) {
