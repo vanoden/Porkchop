@@ -568,11 +568,11 @@
 				if ($method->description) {
 					$form .= $t.$t.'<span class="apiMethodDescription">'.$method->description.'</span>'.$cr;
 				}
-				if ($method->verb) {
+				if (!empty($method->path)) {
 					$form .= $t.$t.'
 					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">URL</span>
-						<span class="value apiMethodSetting">'.$method->verb.'</span>
+						<span class="label apiMethodSetting">URI</span>
+						<span class="value apiMethodSetting">'.$method->path.'</span>
 					</div>'.$cr;
 				}
 
@@ -817,5 +817,50 @@
 			);
 			header('Content-Type: text/plain');
 			print yaml_emit($definition_object);
+		}
+
+		public function export() {
+			$api_name = "\\".ucfirst($this->module)."\\API";
+			$api = new $api_name();
+			$methods = $api->_methods();
+			header('Content-Type: text/csv');
+			header('Content-disposition: attachment;filename='.$api->_name.'.csv');
+			print("Method,Description,Return Type,Return MIME Type,Authentication Required,Token Required,Privilege Required,Role Required,Deprecated,Path,Verb\n");
+			foreach ($methods as $form_name => $settings) {
+				$record = array(
+					"method" => $form_name,
+					"description" => '"'.$settings['description'].'"',
+					"return_type" => $settings['return_type'],
+					"return_mime_type" => $settings['return_mime_type'],
+					"authentication_required" => $settings['authentication_required'],
+					"token_required" => $settings['token_required'],
+					"privilege_required" => $settings['privilege_required'],
+					"role_required" => $settings['role_required'],
+					"deprecated" => $settings['deprecated'],
+					"path" => $settings['path'],
+					"verb" => $settings['verb'],
+				);
+				print implode(',',$record)."\n";
+			}
+			exit;
+		}
+	}
+
+	if(!function_exists('str_putcsv'))
+	{
+		function str_putcsv($input, $delimiter = ',', $enclosure = '"')
+		{
+			// Open a memory "file" for read/write...
+			$fp = fopen('php://temp', 'r+');
+			// ... write the $input array to the "file" using fputcsv()...
+			fputcsv($fp, $input, $delimiter, $enclosure);
+			// ... rewind the "file" so we can read what we just wrote...
+			rewind($fp);
+			// ... read the entire line into a variable...
+			$data = fread($fp, 1048576);
+			// ... close the "file"...
+			fclose($fp);
+			// ... and return the $data to the caller, with the trailing newline from fgets() removed.
+			return rtrim($data, "\n");
 		}
 	}
