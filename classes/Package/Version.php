@@ -15,13 +15,11 @@
 		private $extension;
 
 		public function __construct($id = 0) {
-			if ($id > 0) {
-				$this->id = $id;
-				return $this->details();
-			}
+			$this->_tableName = 'package_versions';
+			$this->_addStatus(array('NEW','PUBLISHED','HIDDEN'));
 		}
 
-		public function add($parameters = []) {
+		public function add($parameters = []): bool {
 
 			if (! $GLOBALS['_SESSION_']->customer->can('manage packages')) {
 				$this->error = "Not permitted to manage packages";
