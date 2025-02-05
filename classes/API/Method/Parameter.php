@@ -9,6 +9,7 @@
 		public $type = 'text';
 		public $required = false;
 		public $requirement_group = null;
+		public $read_only = false;
 		public $prompt = '';
 		public $options = [];
 		public $default = null;
@@ -21,6 +22,7 @@
 		public $allow_wildcards = false;
 		public $show_controls = false;
 		public $content_type = null;
+		public $verb = 'POST';
 
 		public function __construct($parameters = []) {
 			foreach ($parameters as $name => $value) {
@@ -50,6 +52,9 @@
 				elseif ($name == "parameter_type") $this->parameter_type = $value;
 				elseif ($name == "regex") $this->regex = $value;
 				elseif ($name == "validation_method") $this->validation_method = $value;
+				elseif ($name == "verb") 
+					if ($value == "GET") $this->verb = $value;
+					else $this->verb = "POST";
 				elseif ($name == "hidden") 
 					if (is_bool($value)) $this->hidden = $value;
 					elseif ($value == "false") $this->hidden = false;
@@ -62,6 +67,11 @@
 					if (is_bool($value)) $this->allow_wildcards = $value;
 					elseif ($value == "false") $this->allow_wildcards = false;
 					else $this->allow_wildcards = true;
+				}
+				elseif ($name = "read_only") {
+					if (is_bool($value)) $this->read_only = $value;
+					elseif ($value == "true") $this->read_only = true;
+					else $this->read_only = false;
 				}
 				elseif ($name == "content-type") {
 					switch($value) {
