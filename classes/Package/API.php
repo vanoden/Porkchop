@@ -291,8 +291,27 @@
 		}
 		
 		public function _methods() {
+			$package = new \Package\Package();
+			$version = new \Package\Version();
 			return array(
-				'ping'	=> array(),
+				'ping'	=> array(
+					'description'	=> 'Ping the Package API',
+					'authentication_required'	=> false,
+					'path'			=> '/api/package/ping',
+					'parameters'	=> array()
+				),
+				'definition'	=> array(
+					'description'	=> 'Get the definition of the Package API',
+					'authentication_required'	=> false,
+					'path'			=> '/api/package/definition',
+					'parameters'	=> array()
+				),
+				'export'	=> array(
+					'description'	=> 'Export the definition of the Package API',
+					'authentication_required'	=> false,
+					'path'			=> '/api/package/export',
+					'parameters'	=> array()
+				),
 				'addPackage'	=> array(
 					'description'	=> 'Add a new package',
 					'privilege_required'	=> 'manage packages',
@@ -308,14 +327,23 @@
 							'required' => true,
 							'validation_method' => 'Package::Package::validName()',
 						),
-						'description'	=> array(),
-						'license'		=> array(),
-						'platform'		=> array(),
+						'description'	=> array(
+							'validation_method' => 'Package::Package::safeString()',
+						),
+						'license'		=> array(
+							'validation_method' => 'Package::Package::safeString()',
+						),
+						'platform'		=> array(
+							'validation_method' => 'Package::Package::safeString()',
+						),
 						'repository_code'	=> array(
 							'required' => true,
 							'validation_method' => 'Storage::Repository::validCode()',
 						),
-						'status'		=> array()
+						'status'		=> array(
+							'description' => 'Status of the package',
+							'options'	=> $package->statuses()
+						)
 					)
 				),
 				'updatePackage'	=> array(
@@ -325,22 +353,50 @@
 					'return_element'	=> 'package',
 					'return_type'		=> 'Package::Package',
 					'parameters'		=> array(
-						'code'			=> array('required' => true),
-						'name'			=> array(),
-						'description'	=> array(),
-						'license'		=> array(),
-						'platform'		=> array(),
-						'status'		=> array(),
-						'repository_code'	=> array()
+						'code'			=> array(
+							'required' => true,
+							'read_only' => true,
+							'description' => 'Unique code for package',
+							'validation_method' => 'Package::Package::validCode()',
+						),
+						'name'			=> array(
+							'description' => 'Name of the package',
+							'validation_method' => 'Package::Package::validName()',
+						),
+						'description'	=> array(
+							'description' => 'Description of the package',
+							'validation_method' => 'Package::Package::safeString()',
+						),
+						'license'		=> array(
+							'description' => 'License of the package',
+							'validation_method' => 'Package::Package::safeString()',
+						),
+						'platform'		=> array(
+							'description' => 'Platform of the package',
+							'validation_method' => 'Package::Package::safeString()',
+						),
+						'status'		=> array(
+							'description' => 'Status of the package',
+							'options'	=> $package->statuses()
+						),
+						'repository_code'	=> array(
+							'description' => 'Repository code',
+							'validation_method' => 'Storage::Repository::validCode()',
+						)
 					)
 				),
 				'getPackage'	=> array(
-					'description'	=> 'Get a package by code',
+					'description'			=> 'Get a package by code',
 					'privilege_required'	=> 'use package module',
-					'return_element'	=> 'package',
-					'return_type'		=> 'Package::Package',
-					'parameters'		=> array(
-						'code'	=> array('required' => true),
+					'return_element'		=> 'package',
+					'return_type'			=> 'Package::Package',
+					'path'					=>	'/api/package/getPackage/{code}',
+					'parameters'			=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Unique code for package',
+							'validation_method' => 'Package::Package::validCode()',
+						),
 					)
 				),
 				'findPackages'	=> array(
@@ -349,42 +405,158 @@
 					'return_element'	=> 'package',
 					'return_type'		=> 'Package::Package',
 					'parameters'		=> array(
-						'name'			=> array(),
-						'platform'		=> array(),
-						'repository_code'	=> array(),
-						'status'		=> array(),
+						'name'			=> array(
+							'description' => 'Name of the package',
+							'validation_method' => 'Package::Package::validName()',
+						),
+						'platform'		=> array(
+							'description' => 'Platform of the package',
+							'validation_method' => 'Package::Package::safeString()',
+						),
+						'repository_code'	=> array(
+							'description' => 'Repository code',
+							'validation_method' => 'Storage::Repository::validCode()',
+						),
+						'status'		=> array(
+							'description' => 'Status of the package',
+							'options'	=> $package->statuses()
+						)
 					)
 				),
 				'addVersion'	=> array(
-					'package_code'	=> array('required' => true),
-					'major'			=> array('required' => true),
-					'minor'			=> array('required' => true),
-					'build'			=> array('required' => true),
-					'status'		=> array(),
-					'file'			=> array('type'	=> 'file', 'required' => true)
+					'description'	=> 'Add a new version of the package',
+					'privilege_required'	=> 'manage packages',
+					'token_required'	=> true,
+					'return_element'	=> 'version',
+					'return_type'		=> 'Package::Version',
+					'parameters'	=> array(
+						'package_code'	=> array(
+							'required' => true,
+							'validation_method' => 'Package::Package::validCode()',
+							'description' => 'Unique code for package version',
+						),
+						'major'			=> array(
+							'required' => true,
+							'description' => 'Major version number',
+							'content_type' => 'integer',
+						),
+						'minor'			=> array(
+							'required' => true,
+							'description' => 'Minor version number',
+							'content_type' => 'integer',
+						),
+						'build'			=> array(
+							'required' => true,
+							'description' => 'Build number',
+							'content_type' => 'integer',
+						),
+						'status'		=> array(
+							'description' => 'Status of the version',
+							'options'	=> $version->statuses(),
+							'validation_method' => 'Package::Version::validStatus()',
+						),
+						'file'			=> array('type'	=> 'file', 'required' => true)
+					)
 				),
 				'updateVersion'	=> array(
-					'package_code'	=> array('required' => true),
-					'status'		=> array()
+					'description'	=> 'Update an existing version of the package',
+					'privilege_required'	=> 'manage packages',
+					'token_required'	=> true,
+					'return_element'	=> 'version',
+					'return_type'		=> 'Package::Version',
+					'parameters'	=> array(
+						'status'		=> array(
+							'description' => 'Status of the version',
+							'options'	=> $version->statuses(),
+							'validation_method' => 'Package::Version::validStatus()',
+						),
+						'package_code'	=> array(
+							'required' => true,
+							'read_only' => true,
+							'validation_method' => 'Package::Package::validCode()',
+						),
+					)
 				),
 				'findVersions'	=> array(
-					'package_code'	=> array(),
-					'major'			=> array(),
-					'minor'			=> array(),
-					'build'			=> array(),
-					'status'		=> array()
+					'description'			=> 'Find matching versions',
+					'privilege_required'	=> 'manage packages',
+					'return_element'		=> 'version',
+					'return_type'			=> 'Package::Version',
+					'parameters'			=> array(
+						'package_code'	=> array(
+							'validation_method' => 'Package::Package::validCode()',
+							'description' => 'Unique code for package version',
+						),
+						'major'			=> array(
+							'description' => 'Major version number',
+							'content_type' => 'integer',
+						),
+						'minor'			=> array(
+							'description' => 'Minor version number',
+							'content_type' => 'integer',
+						),
+						'build'			=> array(
+							'description' => 'Build number',
+							'content_type' => 'integer',
+						),
+						'status'		=> array(
+							'description' => 'Status of the version',
+							'options'	=> $version->statuses(),
+							'validation_method' => 'Package::Version::validStatus()',
+						),
+					)
 				),
 				'downloadVersion'	=> array(
-					'package_code'	=> array('required' => true),
-					'major'			=> array('required' => true),
-					'minor'			=> array('required' => true),
-					'build'			=> array('required' => true),
+					'description'	=> 'Download a version of the package',
+					'privilege_required'	=> 'use package module',
+					'path'	=> '/api/package/downloadVersion/{package_code}/{major}/{minor}/{build}',
+					'parameters'	=> array(
+						'package_code'	=> array(
+							'required' => true,
+							'validation_method' => 'Package::Package::validCode()',
+							'read_only' => true,
+						),
+						'major'			=> array(
+							'required' => true,
+							'content_type' => 'integer',
+						),
+						'minor'			=> array(
+							'required' => true,	
+							'content_type' => 'integer',
+						),
+						'build'			=> array(
+							'required' => true,
+							'content_type' => 'integer',
+						),
+					)
 				),
 				'latestVersion'	=> array(
-					'package_code'	=> array('required' => true),
+					'description'	=> 'Get the latest published version of the package',
+					'privilege_required'	=> 'use package module',
+					'return_element'	=> 'version',
+					'return_type'		=> 'Package::Version',
+					'path'				=> '/api/package/latestVersion/{package_code}',
+					'parameters'	=> array(
+						'package_code'	=> array(
+							'required' => true,
+							'validation_method' => 'Package::Package::validCode()',
+							'read_only' => true,
+						),
+					)
 				),
 				'downloadLatestVersion'	=> array(
-					'package_code'	=> array('required' => true),
+					'description'	=> 'Download the latest published version of the package',
+					'privilege_required'	=> 'use package module',
+					'verb'	=> 'GET',
+					'path'	=> '/api/package/downloadLatestVersion/{package_code}',
+					'parameters'	=> array(
+						'package_code'	=> array(
+							'required' => true,
+							'read_only' => true,
+							'validation_method' => 'Package::Package::validCode()',
+							'description'	=> 'Unique code for package to download',
+						)
+					)
 				),
 			);
 		}
