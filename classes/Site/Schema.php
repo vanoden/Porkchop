@@ -646,6 +646,25 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			if ($this->version() < 26) {
+				app_log("Upgrading ".$this->module." schema to version 26",'notice',__FILE__,__LINE__);
+				
+				$table = new \Database\Schema\Table('object_images');
+				if ($table->has_constraint("object_images_ibfk_2")) {
+					$drop_constraint_query = "
+						ALTER TABLE `object_images` 
+						DROP FOREIGN KEY `object_images_ibfk_2`
+					";
+					if (! $this->executeSQL($drop_constraint_query)) {
+						$this->SQLError("Dropping old foreign key constraint from object_images table: ".$this->error());
+						return false;
+					}
+				}
+
+				$this->setVersion(26);
+				$GLOBALS['_database']->CommitTrans();
+			}
+
 			return true;
 		}
 	}
