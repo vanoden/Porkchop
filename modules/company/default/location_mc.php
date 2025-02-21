@@ -2,92 +2,82 @@
 	$page = new \Site\Page();
 	$page->requirePrivilege("configure site");
 
-	$location = new \Company\Location();
+	$domain = new \Company\Domain();
 	if (isset($_REQUEST['id'])) {
-		$location = new \Company\Location($_REQUEST['id']);
+		$domain = new \Company\Domain($_REQUEST['id']);
 	}
-	else if (isset($_REQUEST['name']) && ! $location->get($_REQUEST["name"])) {
-		$page->addError("Location not found");
+	else if (isset($_REQUEST['name']) && ! $domain->get($_REQUEST["name"])) {
+		$page->addError("Hostname not found");
 	}
 
 	$companyList = new \Company\CompanyList();
 	$companies = $companyList->find();
 
-	$domainList = new \Company\DomainList();
-	$domains = $domainList->find();
-
-	$stateList = new \Geography\AdminList();
-	$states = $stateList->find();
+	$locationList = new \Company\LocationList();
+	$locations = $locationList->find();
 
 	if (isset($_REQUEST['btn_submit'])) {
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 			$page->addError("Invalid Token");
 		}
 		else {
-			// Sanitize inputs
-			$request = [
-				'name' => $location->sanitize($_REQUEST['name'], 'text'),
-				'address_1' => $location->sanitize($_REQUEST['address_1'], 'address'),
-				'address_2' => $location->sanitize($_REQUEST['address_2'], 'address'),
-				'city' => $location->sanitize($_REQUEST['city'], 'text'),
-				'state_id' => $location->sanitize($_REQUEST['state_id'], 'integer'),
-				'company_id' => $location->sanitize($_REQUEST['company_id'], 'integer'),
-				'domain_id' => $location->sanitize($_REQUEST['domain_id'], 'integer'),
-			];
-
-			$company = new \Company\Company($request['company_id']);
-			$domain = new \Company\Domain($request['domain_id']);
-			if ($domain->error()) $page->addError($domain->error());
+			$company = new \Company\Company($_REQUEST['company_id']);
+			$location = new \Company\Location($_REQUEST['location_id']);
+			if ($location->error()) $page->addError($location->error());
 
 			if (empty($company->id)) {
 				$page->addError("Company not found");
-				$request['company_id'] = null;
+				$_REQUEST['company_id'] = null;
 			}
-			elseif (empty($domain->id)) {
-				$page->addError("Domain not found");
-				$request['domain_id'] = null;
+			elseif (empty($location->id)) {
+				$page->addError("Location not found");
+				$_REQUEST['location_id'] = null;
 			}
-			elseif (! empty($request['address_1']) && ! $location->validAddressLine($request['address_1'])) {
-				$page->addError("Invalid Address Line 1");
-				$request['address_1'] = null;
+			elseif (! filter_var($_REQUEST["domain_name"],FILTER_VALIDATE_DOMAIN,array(FILTER_NULL_ON_FAILURE))) {
+				$page->addError("Invalid domain name");
+				$_REQUEST['domain_name'] = null;
 			}
-			elseif (!empty($request["address_2"]) && ! $location->validAddressLine($request["address_2"])) {
-				$page->addError("Invalid Address Line 2");
-				$request['address_2'] = null;
+			elseif (! empty($_REQUEST['domain_registrar']) && ! preg_match("/^\w[\w\-\.]+$/",$_REQUEST['domain_registrar'])) {
+				$page->addError("Invalid domain registrar name");
+				$_REQUEST['domain_registrar'] = null;
 			}
-			elseif (!empty($request["city"]) && ! $location->validCity($request["city"])) {
-				$page->addError("Invalid City Name");
-				$request['city'] = null;
+			elseif (!empty($_REQUEST["date_registered"]) && ! get_mysql_date($_REQUEST["date_registered"])) {
+				$page->addError("Invalid date registered");
+				$_REQUEST['date_registered'] = null;
+			}
+			elseif (!empty($_REQUEST["date_expires"]) && ! get_mysql_date($_REQUEST["date_expires"])) {
+				$page->addError("Invalid date expires");
+				$_REQUEST['date_expires'] = null;
 			}
 			else {
 				$parameters = array(
-					"name"			=> $request["name"],
-					"address_1"		=> $request["address_1"],
-					"address_2" 	=> $request["address_2"],
-					"city"			=> $request["city"],
-					"state_id"		=> $request["state_id"],
-					"company_id"	=> $request["company_id"],
-					"domain_id"		=> $request["domain_id"],
+					"name"	=> $_REQUEST["domain_name"],
+					"registrar"	=> $_REQUEST["domain_registrar"],
+					"date_registered" => $_REQUEST["date_registered"],
+					"date_expires"	=> $_REQUEST["date_expires"],
+					"company_id" => $_REQUEST["company_id"],
+					"location_id" => $_REQUEST["location_id"],
 				);
 
 				if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
-					if (! $location->update($parameters)) $page->addError("Error updating domain");
-					else $page->success = "Location ".$location->id." Updated!";
+					if (! $domain->update($parameters)) $page->addError("Error updating domain");
+					else $page->success = "Updated!";
 				}
 				else {
-					if (! $location->add($parameters)) $page->addError("Error adding location");
+					if (! $domain->add($parameters)) $page->addError("Error adding domain");
 					else $page->success = "Added!";
 				}
 			}
 		}
 	}
 
-	if (empty($location->name)) $location->name = "[null]";
+	if (empty($domain->name)) $domain->name = "[null]";
 
-	$page->title("Location");
+	$page->title("Domain");
 
-	$page->AddBreadCrumb("Locations","/_company/locations");
-	$page->AddBreadCrumb($location->name,"/_company/location?id=".$location->id);
+	$page->AddBreadCrumb("Company");
+	$page->AddBreadCrumb("Domains","/_company/domains");
+	$page->AddBreadCrumb($domain->name,"/_company/domain?id=".$domain->id);
 
-	if ($location->id) $name = $location->name;
-	else $name = "New Location";
+	if ($domain->id) $domain_name = $domain->name;
+	else $domain_name = "New Domain";
