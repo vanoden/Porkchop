@@ -24,39 +24,50 @@
 			$page->addError("Invalid Token");
 		}
 		else {
-			$company = new \Company\Company($_REQUEST['company_id']);
-			$domain = new \Company\Domain($_REQUEST['domain_id']);
+			// Sanitize inputs
+			$request = [
+				'name' => $location->sanitize($_REQUEST['name'], 'text'),
+				'address_1' => $location->sanitize($_REQUEST['address_1'], 'address'),
+				'address_2' => $location->sanitize($_REQUEST['address_2'], 'address'),
+				'city' => $location->sanitize($_REQUEST['city'], 'text'),
+				'state_id' => $location->sanitize($_REQUEST['state_id'], 'integer'),
+				'company_id' => $location->sanitize($_REQUEST['company_id'], 'integer'),
+				'domain_id' => $location->sanitize($_REQUEST['domain_id'], 'integer'),
+			];
+
+			$company = new \Company\Company($request['company_id']);
+			$domain = new \Company\Domain($request['domain_id']);
 			if ($domain->error()) $page->addError($domain->error());
 
 			if (empty($company->id)) {
 				$page->addError("Company not found");
-				$_REQUEST['company_id'] = null;
+				$request['company_id'] = null;
 			}
 			elseif (empty($domain->id)) {
 				$page->addError("Domain not found");
-				$_REQUEST['domain_id'] = null;
+				$request['domain_id'] = null;
 			}
-			elseif (! empty($_REQUEST['address_1']) && ! $this->validAddressLine($_REQUEST['address_1'])) {
+			elseif (! empty($request['address_1']) && ! $location->validAddressLine($request['address_1'])) {
 				$page->addError("Invalid Address Line 1");
-				$_REQUEST['domain_registrar'] = null;
+				$request['address_1'] = null;
 			}
-			elseif (!empty($_REQUEST["address_2"]) && ! $this->validAddressLine($_REQUEST["address_2"])) {
+			elseif (!empty($request["address_2"]) && ! $location->validAddressLine($request["address_2"])) {
 				$page->addError("Invalid Address Line 2");
-				$_REQUEST['date_registered'] = null;
+				$request['address_2'] = null;
 			}
-			elseif (!empty($_REQUEST["city"]) && ! $this->validCity($_REQUEST["city"])) {
+			elseif (!empty($request["city"]) && ! $location->validCity($request["city"])) {
 				$page->addError("Invalid City Name");
-				$_REQUEST['date_expires'] = null;
+				$request['city'] = null;
 			}
 			else {
 				$parameters = array(
-					"name"			=> $_REQUEST["name"],
-					"address_1"		=> $_REQUEST["address_1"],
-					"address_2" 	=> $_REQUEST["address_2"],
-					"city"			=> $_REQUEST["city"],
-					"state_id"		=> $_REQUEST["state_id"],
-					"company_id"	=> $_REQUEST["company_id"],
-					"domain_id"		=> $_REQUEST["domain_id"],
+					"name"			=> $request["name"],
+					"address_1"		=> $request["address_1"],
+					"address_2" 	=> $request["address_2"],
+					"city"			=> $request["city"],
+					"state_id"		=> $request["state_id"],
+					"company_id"	=> $request["company_id"],
+					"domain_id"		=> $request["domain_id"],
 				);
 
 				if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {

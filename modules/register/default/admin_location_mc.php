@@ -11,53 +11,62 @@ if (isset($_REQUEST['btn_submit'])) {
 	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 		$page->addError("Invalid Request");
 	} else {
-		$province = new \Geography\Province($_REQUEST['province_id']);
-		if (!$province->id) {
-			$page->addError("Province '" . $_REQUEST['province_id'] . "' not found");
-		} else {
+		// Sanitize inputs
+		$request = [
+			'name' => $location->sanitize($_REQUEST['name'], 'text'),
+			'address_1' => $location->sanitize($_REQUEST['address_1'], 'address'),
+			'address_2' => $location->sanitize($_REQUEST['address_2'], 'address'),
+			'city' => $location->sanitize($_REQUEST['city'], 'text'),
+			'zip_code' => $location->sanitize($_REQUEST['zip_code'], 'text'),
+			'province_id' => $location->sanitize($_REQUEST['province_id'], 'integer'),
+		];
 
-			if (empty($_REQUEST['zip_code']))
+		$province = new \Geography\Province($request['province_id']);
+		if (!$province->id) {
+			$page->addError("Province '" . $request['province_id'] . "' not found");
+		} else {
+			if (empty($request['zip_code']))
 				$page->addError("Zip Code required");
-			elseif (!preg_match('/^[\w\-\.]+$/', $_REQUEST['zip_code']))
+			elseif (!preg_match('/^[\w\-\.]+$/', $request['zip_code']))
 				$page->addError("Invalid Zip Code");
 			elseif (!$province->id)
-				$page->addError("Province '" . $_REQUEST['province_id'] . "' not found");
-			elseif (!$location->validName($_REQUEST['name']))
+				$page->addError("Province '" . $request['province_id'] . "' not found");
+			elseif (!$location->validName($request['name']))
 				$page->addError("Invalid name");
-			elseif (!$location->validAddress($_REQUEST['address_1']))
+			elseif (!$location->validAddressLine($request['address_1']))
 				$page->addError("Invalid address");
-			elseif (!$location->validAddress($_REQUEST['address_2']))
+			elseif (!empty($request['address_2']) && !$location->validAddressLine($request['address_2']))
 				$page->addError("Invalid address");
-			elseif (!$location->validCity($_REQUEST['city']))
+			elseif (!$location->validCity($request['city']))
 				$page->addError("Invalid city");
 			else {
 				$parameters = array();
 				if ($location->id > 0) {
-					if ($_REQUEST['name'] != $location->name)
-						$parameters['name'] = $_REQUEST['name'];
-					if ($_REQUEST['address_1'] != $location->address_1)
-						$parameters['address_1'] = $_REQUEST['address_1'];
-					if ($_REQUEST['address_2'] != $location->address_2)
-						$parameters['address_2'] = $_REQUEST['address_2'];
-					if (isset($_REQUEST['city']) && $_REQUEST['city'] != $location->city)
-						$parameters['city'] = $_REQUEST['city'];
-					if ($_REQUEST['province_id'] != $location->province_id)
-						$parameters['province_id'] = $_REQUEST['province_id'];
-					if ($_REQUEST['zip_code'] != $location->zip_code)
-						$parameters['zip_code'] = $_REQUEST['zip_code'];
+					if ($request['name'] != $location->name)
+						$parameters['name'] = $request['name'];
+					if ($request['address_1'] != $location->address_1)
+						$parameters['address_1'] = $request['address_1'];
+					if ($request['address_2'] != $location->address_2)
+						$parameters['address_2'] = $request['address_2'];
+					if (isset($request['city']) && $request['city'] != $location->city)
+						$parameters['city'] = $request['city'];
+					if ($request['province_id'] != $location->province_id)
+						$parameters['province_id'] = $request['province_id'];
+					if ($request['zip_code'] != $location->zip_code)
+						$parameters['zip_code'] = $request['zip_code'];
 
 					$location->update($parameters);
 					if ($location->error())
 						$page->addError("Error updating location " . $location->id . ": " . $location->error());
 				} else {
-					$parameters['name'] = $_REQUEST['name'];
-					$parameters['address_1'] = $_REQUEST['address_1'];
-					$parameters['address_2'] = $_REQUEST['address_2'];
-					if (isset($_REQUEST['city']))
-						$parameters['city'] = $_REQUEST['city'];
-					$parameters['province_id'] = $_REQUEST['province_id'];
-					$parameters['zip_code'] = $_REQUEST['zip_code'];
-					app_log("Adding location " . $parameters['name'] . " in province " . $_REQUEST['province_id']);
+					$parameters['name'] = $request['name'];
+					$parameters['address_1'] = $request['address_1'];
+					$parameters['address_2'] = $request['address_2'];
+					if (isset($request['city']))
+						$parameters['city'] = $request['city'];
+					$parameters['province_id'] = $request['province_id'];
+					$parameters['zip_code'] = $request['zip_code'];
+					app_log("Adding location " . $parameters['name'] . " in province " . $request['province_id']);
 
 					if (!$location->add($parameters)) {
 						if ($location->error()) {
