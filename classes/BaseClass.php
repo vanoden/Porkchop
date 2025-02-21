@@ -35,7 +35,14 @@ class BaseClass {
 		'username' => '/[^a-zA-Z0-9_\-\.@]/u',
 		'password' => '/[^a-zA-Z0-9\-_!@#$%^&*()+=]/u',
 		'ip_address' => '/[^0-9\.]/u',
-		'mac_address' => '/[^0-9a-fA-F\:]/u'
+		'mac_address' => '/[^0-9a-fA-F\:]/u',
+		'mac_address_format' => '/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/',
+		'search' => '/^[\*\w\-\_\.\s]*$/',
+		'address_line' => '/^[\w? :.-|\'\)]+$/',
+		'city_name' => '/^[\w? :.-|\'\)]+$/',
+		'hostname' => '/^\w[\w\.\-]*$/',
+		'code' => '/^\w[\w\-\.\_\s]*$/',
+		'name' => '/\w[\w\-\.\_\s\,\!\?\(\)]*$/'
 	];
 
 	/********************************************/
@@ -129,7 +136,7 @@ class BaseClass {
 	/********************************************/
 	// Standard 'code' field validation
 	public function validCode($string): bool {
-		return (preg_match('/^\w[\w\-\.\_\s]*$/', $string));
+		return (preg_match($this->_patterns['code'], $string));
 	}
 
 	/**
@@ -202,7 +209,7 @@ class BaseClass {
 
 	// Standard 'name' field validation
 	public function validName($string): bool {
-		return (preg_match('/\w[\w\-\.\_\s\,\!\?\(\)]*$/', $string));
+		return (preg_match($this->_patterns['name'], $string));
 	}
 
 	// Standard 'status' field validation
@@ -217,22 +224,22 @@ class BaseClass {
 
 	// Standard 'search' field validation
 	public function validSearch($string): bool {
-		return (preg_match('/^[\*\w\-\_\.\s]*$/', $string));
+		return (preg_match($this->_patterns['search'], $string));
 	}
 
 	// Validate an Address Line
 	public function validAddressLine($string): bool {
-		return (preg_match('/^[\w? :.-|\'\)]+$/', urldecode($string)));
+		return (preg_match($this->_patterns['address_line'], urldecode($string)));
 	}
 
 	// Validate a City Name
 	public function validCity($string): bool {
-		return (preg_match('/^[\w? :.-|\'\)]+$/', urldecode($string)));
+		return (preg_match($this->_patterns['city_name'], urldecode($string)));
 	}
 
 	// Validate a Hostname
 	public function validHostname($string): bool {
-		return (preg_match('/^\w[\w\.\-]*$/', $string));
+		return (preg_match($this->_patterns['hostname'], $string));
 	}
 
 	// Validate a URL
@@ -243,7 +250,7 @@ class BaseClass {
 				'(([a-z0-9$_\.\+!\*\'\(\),;\?&=-]|%[0-9a-f]{2})+' .         // username
 				'(:([a-z0-9$_\.\+!\*\'\(\),;\?&=-]|%[0-9a-f]{2})+)?' .      // password
 				'@)?(?#' .                                                  // auth requires @
-				')((([a-z0-9]\.|[a-z0-9][a-z0-9-]*[a-z0-9]\.)*' .                      // domain segments AND
+				')((([a-z0-9]\.|[a-z0-9][a-z0-9-]*[a-z0-9]\.)*' .           // domain segments AND
 				'[a-z][a-z0-9-]*[a-z0-9]' .                                 // top level domain  OR
 				'|((\d|[1-9]\d|1\d{2}|2[0-4][0-9]|25[0-5])\.){3}' .
 				'(\d|[1-9]\d|1\d{2}|2[0-4][0-9]|25[0-5])' .                 // IP address
@@ -257,7 +264,101 @@ class BaseClass {
 		return (preg_match(URL_FORMAT, $string));
 	}
 
+	// Pattern-based validation functions
+	public function validText($string): bool {
+		return !preg_match($this->_patterns['text'], $string);
+	}
+
+	public function validAlpha($string): bool {
+		return !preg_match($this->_patterns['alpha'], $string);
+	}
+
+	public function validAlphanumeric($string): bool {
+		return !preg_match($this->_patterns['alphanumeric'], $string);
+	}
+
+	public function validPhone($string): bool {
+		return !preg_match($this->_patterns['phone'], $string);
+	}
+
+	public function validEmail($string): bool {
+		if (preg_match($this->_patterns['email'], $string)) return false;
+		return filter_var($string, FILTER_VALIDATE_EMAIL) !== false;
+	}
+
+	public function validWebsite($string): bool {
+		if (preg_match($this->_patterns['website'], $string)) return false;
+		return filter_var($string, FILTER_VALIDATE_URL) !== false;
+	}
+
+	public function validAddress($string): bool {
+		return !preg_match($this->_patterns['address'], $string);
+	}
+
+	public function validInteger($string): bool {
+		return !preg_match($this->_patterns['integer'], $string);
+	}
+
+	public function validDecimal($string): bool {
+		return !preg_match($this->_patterns['decimal'], $string);
+	}
+
+	public function validPrice($string): bool {
+		$string = str_replace(',', '', $string);
+		return !preg_match($this->_patterns['price'], $string);
+	}
+
+	public function validPercentage($string): bool {
+		$string = str_replace('%', '', $string);
+		return !preg_match($this->_patterns['percentage'], $string);
+	}
+
+	public function validDate($string): bool {
+		if (preg_match($this->_patterns['date'], $string)) return false;
+		$date = date_parse($string);
+		return $date['error_count'] === 0;
+	}
+
+	public function validTime($string): bool {
+		if (preg_match($this->_patterns['time'], $string)) return false;
+		$time = date_parse($string);
+		return $time['error_count'] === 0;
+	}
+
+	public function validDatetime($string): bool {
+		if (preg_match($this->_patterns['datetime'], $string)) return false;
+		$datetime = date_parse($string);
+		return $datetime['error_count'] === 0;
+	}
+
+	public function validFilename($string): bool {
+		return !preg_match($this->_patterns['filename'], $string);
+	}
+
+	public function validPath($string): bool {
+		return !preg_match($this->_patterns['path'], $string);
+	}
+
+	public function validUsername($string): bool {
+		return !preg_match($this->_patterns['username'], $string);
+	}
+
+	public function validPassword($string): bool {
+		return !preg_match($this->_patterns['password'], $string);
+	}
+
+	public function validIPAddress($string): bool {
+		if (preg_match($this->_patterns['ip_address'], $string)) return false;
+		return filter_var($string, FILTER_VALIDATE_IP) !== false;
+	}
+
+	public function validMACAddress($string): bool {
+		if (preg_match($this->_patterns['mac_address'], $string)) return false;
+		return preg_match($this->_patterns['mac_address_format'], $string);
+	}
+
 	public function safeString($string): bool {
+		
 		$string = urldecode($string);
 		if (preg_match('/(&#*\w+)[\x00-\x20]+;/u', $string)) return false;
 		if (preg_match('/(&#x*[0-9A-F]+);*/iu', $string)) return false;
