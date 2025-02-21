@@ -1,72 +1,63 @@
 <?php
 $page = new \Site\Page();
 $page->requirePrivilege('manage customer locations');
+$location = new \Register\Location($_REQUEST['id']);
+if (isset($_REQUEST['organization_id']))
+	$organization = new \Register\Organization($_REQUEST['organization_id']);
+if (isset($_REQUEST['user_id']))
+	$user = new \Register\Person($_REQUEST['user_id']);
 
-$input = new \Site\Input();
-
-$location = new \Register\Location($input->request('id', 'integer'));
-
-if ($input->request('organization_id'))
-	$organization = new \Register\Organization($input->request('organization_id', 'integer'));
-if ($input->request('user_id'))
-	$user = new \Register\Person($input->request('user_id', 'integer'));
-
-if ($input->request('btn_submit')) {
-	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($input->post('csrfToken', 'alphanumeric'))) {
+if (isset($_REQUEST['btn_submit'])) {
+	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 		$page->addError("Invalid Request");
 	} else {
-		$province = new \Geography\Province($input->request('province_id', 'integer'));
+		$province = new \Geography\Province($_REQUEST['province_id']);
 		if (!$province->id) {
-			$page->addError("Province '" . $input->request('province_id') . "' not found");
+			$page->addError("Province '" . $_REQUEST['province_id'] . "' not found");
 		} else {
-			$zip_code = $input->request('zip_code', 'zip');
-			$name = $input->request('name', 'name');
-			$address1 = $input->request('address_1', 'address');
-			$address2 = $input->request('address_2', 'address');
-			$city = $input->request('city', 'city');
 
-			if (empty($zip_code))
+			if (empty($_REQUEST['zip_code']))
 				$page->addError("Zip Code required");
-			elseif (!preg_match('/^[\w\-\.]+$/', $zip_code))
+			elseif (!preg_match('/^[\w\-\.]+$/', $_REQUEST['zip_code']))
 				$page->addError("Invalid Zip Code");
 			elseif (!$province->id)
-				$page->addError("Province '" . $input->request('province_id') . "' not found");
-			elseif (!$location->validName($name))
+				$page->addError("Province '" . $_REQUEST['province_id'] . "' not found");
+			elseif (!$location->validName($_REQUEST['name']))
 				$page->addError("Invalid name");
-			elseif (!$location->validAddress($address1))
+			elseif (!$location->validAddress($_REQUEST['address_1']))
 				$page->addError("Invalid address");
-			elseif (!$location->validAddress($address2))
+			elseif (!$location->validAddress($_REQUEST['address_2']))
 				$page->addError("Invalid address");
-			elseif (!$location->validCity($city))
+			elseif (!$location->validCity($_REQUEST['city']))
 				$page->addError("Invalid city");
 			else {
 				$parameters = array();
 				if ($location->id > 0) {
-					if ($name != $location->name)
-						$parameters['name'] = $name;
-					if ($address1 != $location->address_1)
-						$parameters['address_1'] = $address1;
-					if ($address2 != $location->address_2)
-						$parameters['address_2'] = $address2;
-					if (isset($city) && $city != $location->city)
-						$parameters['city'] = $city;
-					if ($input->request('province_id', 'integer') != $location->province_id)
-						$parameters['province_id'] = $input->request('province_id', 'integer');
-					if ($zip_code != $location->zip_code)
-						$parameters['zip_code'] = $zip_code;
+					if ($_REQUEST['name'] != $location->name)
+						$parameters['name'] = $_REQUEST['name'];
+					if ($_REQUEST['address_1'] != $location->address_1)
+						$parameters['address_1'] = $_REQUEST['address_1'];
+					if ($_REQUEST['address_2'] != $location->address_2)
+						$parameters['address_2'] = $_REQUEST['address_2'];
+					if (isset($_REQUEST['city']) && $_REQUEST['city'] != $location->city)
+						$parameters['city'] = $_REQUEST['city'];
+					if ($_REQUEST['province_id'] != $location->province_id)
+						$parameters['province_id'] = $_REQUEST['province_id'];
+					if ($_REQUEST['zip_code'] != $location->zip_code)
+						$parameters['zip_code'] = $_REQUEST['zip_code'];
 
 					$location->update($parameters);
 					if ($location->error())
 						$page->addError("Error updating location " . $location->id . ": " . $location->error());
 				} else {
-					$parameters['name'] = $name;
-					$parameters['address_1'] = $address1;
-					$parameters['address_2'] = $address2;
-					if (isset($city))
-						$parameters['city'] = $city;
-					$parameters['province_id'] = $input->request('province_id', 'integer');
-					$parameters['zip_code'] = $zip_code;
-					app_log("Adding location " . $parameters['name'] . " in province " . $input->request('province_id'));
+					$parameters['name'] = $_REQUEST['name'];
+					$parameters['address_1'] = $_REQUEST['address_1'];
+					$parameters['address_2'] = $_REQUEST['address_2'];
+					if (isset($_REQUEST['city']))
+						$parameters['city'] = $_REQUEST['city'];
+					$parameters['province_id'] = $_REQUEST['province_id'];
+					$parameters['zip_code'] = $_REQUEST['zip_code'];
+					app_log("Adding location " . $parameters['name'] . " in province " . $_REQUEST['province_id']);
 
 					if (!$location->add($parameters)) {
 						if ($location->error()) {
@@ -78,24 +69,12 @@ if ($input->request('btn_submit')) {
 				}
 
 				// apply any default billing or shipping set
-				$default_billing = $input->request('default_billing');
-				$default_shipping = $input->request('default_shipping');
-				if ($default_billing || $default_shipping) {
-					$location->applyDefaultBillingAndShippingAddresses(
-						$input->request('organization_id', 'integer'),
-						$location->id,
-						$default_billing,
-						$default_shipping
-					);
-				}
-
+				if (isset($_REQUEST['default_billing']) || isset($_REQUEST['default_shipping']))
+					$location->applyDefaultBillingAndShippingAddresses($_REQUEST['organization_id'], $location->id, isset($_REQUEST['default_billing']), isset($_REQUEST['default_shipping']));
 				if ($page->errorCount() < 1) {
-					$org_id = $input->request('organization_id', 'integer');
-					$user_id = $input->request('user_id', 'integer');
-
-					if ($org_id && !$location->associateOrganization($org_id))
+					if (isset($_REQUEST['organization_id']) && !$location->associateOrganization($_REQUEST['organization_id']))
 						$page->addError("Error associating organization: " . $location->error());
-					if ($user_id && !$location->associateUser($user_id))
+					if (isset($_REQUEST['user_id']) && !$location->associateUser($_REQUEST['user_id']))
 						$page->addError("Error associating user: " . $location->error());
 					if (!$page->errorCount())
 						$page->success = "Changes saved";
@@ -108,7 +87,7 @@ if ($input->request('btn_submit')) {
 $world = new \Geography\World();
 $countries = $world->countries();
 
-if ($input->request('id')) {
+if ($_REQUEST['id']) {
 	$selected_province = $location->province();
 	$selected_country = $selected_province->country();
 	$provinces = $selected_country->provinces();
