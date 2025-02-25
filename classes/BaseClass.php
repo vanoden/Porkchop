@@ -1,4 +1,7 @@
 <?php
+/**
+ * Base class providing common functionality for error handling, validation, and sanitization
+ */
 class BaseClass {
 
 	// Error Message
@@ -16,31 +19,15 @@ class BaseClass {
 	 * Validation patterns for different input types
 	 */
 	protected $_patterns = [
-		'text' => '/[^a-zA-Z0-9\s\-_\.]/u',
-		'alpha' => '/[^a-zA-Z]/u',
-		'alphanumeric' => '/[^a-zA-Z0-9]/u',
 		'phone' => '/[^0-9\+\-\(\)\s]/u',
-		'email' => '/[^a-zA-Z0-9\@\.\-_]/u',
-		'website' => '/[^a-zA-Z0-9\:\-\_\.\/?&=@]/u',
 		'address' => '/[^a-zA-Z0-9\s\-\.,#\']/u',
-		'integer' => '/[^0-9\-]/u',
-		'decimal' => '/[^0-9\-\.]/u',
 		'price' => '/[^0-9\.\,]/u',
 		'percentage' => '/[^0-9\-\.%]/u',
-		'date' => '/[^0-9\-\/]/u',
-		'time' => '/[^0-9\:apmAPM\s]/u',
 		'datetime' => '/[^0-9\-\/\:\s]/u',
-		'filename' => '/[^a-zA-Z0-9\-_\.]/u',
-		'path' => '/[^a-zA-Z0-9\-_\.\/]/u',
-		'username' => '/[^a-zA-Z0-9_\-\.@]/u',
-		'password' => '/[^a-zA-Z0-9\-_!@#$%^&*()+=]/u',
-		'ip_address' => '/[^0-9\.]/u',
-		'mac_address' => '/[^0-9a-fA-F\:]/u',
 		'mac_address_format' => '/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/',
 		'search' => '/^[\*\w\-\_\.\s]*$/',
 		'address_line' => '/^[\w? :.-|\'\)]+$/',
 		'city_name' => '/^[\w? :.-|\'\)]+$/',
-		'hostname' => '/^\w[\w\.\-]*$/',
 		'code' => '/^\w[\w\-\.\_\s]*$/',
 		'name' => '/\w[\w\-\.\_\s\,\!\?\(\)]*$/'
 	];
@@ -48,6 +35,13 @@ class BaseClass {
 	/********************************************/
 	/* Reusable Error Handling Routines			*/
 	/********************************************/
+	/**
+	 * Set or get the error message
+	 * 
+	 * @param string|null $value The error message to set, or null to get current error
+	 * @param array|null $caller The caller information array, or null to get from debug_backtrace
+	 * @return string|null The current error message
+	 */
 	public function error($value = null, $caller = null) {
 		if (isset($value)) {
 			if (!isset($caller)) {
@@ -66,6 +60,11 @@ class BaseClass {
 	/****************************************/
 	/* Recognize Special Error Types 		*/
 	/****************************************/
+	/**
+	 * Determine the type of error based on the error message pattern
+	 * 
+	 * @return string|null The error type ('MySQL Unavailable', 'MySQL Query Error', 'Common') or null if no error
+	 */
 	public function errorType() {
 		if (empty($this->_error)) return null;
 		if (preg_match('/MySQL server has gone away/', $this->_error)) return 'MySQL Unavailable';
@@ -77,6 +76,13 @@ class BaseClass {
 		return 'Common';
 	}
 
+	/**
+	 * Set or get the warning message
+	 * 
+	 * @param string|null $value The warning message to set, or null to get current warning
+	 * @param array|null $caller The caller information array, or null to get from debug_backtrace
+	 * @return string|null The current warning message
+	 */
 	public function warn($value = null, $caller = null) {
 		if (isset($value)) {
 			if (!isset($caller)) {
@@ -92,6 +98,11 @@ class BaseClass {
 		return $this->_warning;
 	}
 
+	/**
+	 * Get the object name from the caller class
+	 * 
+	 * @return string The extracted class name or "Object" if not found
+	 */
 	public function _objectName() {
 		if (!isset($caller)) {
 			$trace = debug_backtrace();
@@ -108,6 +119,14 @@ class BaseClass {
 	/* SQL Errors - Identified and Formatted	*/
 	/* for filtering and reporting				*/
 	/********************************************/
+	/**
+	 * Handle SQL errors with proper formatting and logging
+	 * 
+	 * @param string $message The error message, empty to get from global database
+	 * @param string|null $query The SQL query that caused the error
+	 * @param array|null $bind_params The bind parameters used in the query
+	 * @return string The formatted error message
+	 */
 	public function SQLError($message = '', $query = null, $bind_params = null) {
 		if (empty($message)) $message = $GLOBALS['_database']->ErrorMsg();
 		$trace = debug_backtrace();
@@ -119,14 +138,27 @@ class BaseClass {
 		return $this->error("SQL Error in " . $classname . "::" . $method . "(): " . $message, $caller);
 	}
 
+	/**
+	 * Clear the current error message
+	 */
 	public function clearError() {
 		$this->_error = null;
 	}
 
+	/**
+	 * Get the list of valid types
+	 * 
+	 * @return array Array of valid types
+	 */
 	public function types() {
 		return $this->_types;
 	}
 
+	/**
+	 * Get the list of valid statuses
+	 * 
+	 * @return array Array of valid statuses
+	 */
 	public function statuses() {
 		return $this->_statii;
 	}
@@ -134,16 +166,25 @@ class BaseClass {
 	/********************************************/
 	/* Reusable Validation Routines				*/
 	/********************************************/
-	// Standard 'code' field validation
+	/**
+	 * Validate a code string against the code pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validCode($string): bool {
 		return (preg_match($this->_patterns['code'], $string));
 	}
 
 	/**
-	 * Sanitize a value based on a pattern type
+	 * Sanitize a value based on a specified type
+	 * 
+	 * @param mixed $value The value to sanitize
+	 * @param string $type The type of sanitization to apply
+	 * @return mixed The sanitized value
 	 */
 	public function sanitize($value, string $type): mixed {
-		if (!isset($this->_patterns[$type])) {
+		if (!isset($this->_patterns[$type]) && !in_array($type, ['text', 'alpha', 'alphanumeric', 'email', 'website', 'integer', 'decimal', 'ip_address', 'mac_address', 'filename', 'path', 'username', 'password'])) {
 			$this->error("Unknown type '{$type}' for sanitization");
 			return $value;
 		}
@@ -169,30 +210,40 @@ class BaseClass {
 				break;
 		}
 
-		// Apply regex pattern
-		$value = preg_replace($this->_patterns[$type], '', $value);
-
-		// Post-processing validation
+		// Apply validation based on type
 		switch ($type) {
+			case 'text':
+				return ctype_print($value) ? $value : '';
+			case 'alpha':
+				return ctype_alpha($value) ? $value : '';
+			case 'alphanumeric':
+				return ctype_alnum($value) ? $value : '';
+			case 'integer':
+				return filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+			case 'decimal':
+				return filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 			case 'email':
-				if (!filter_var($value, FILTER_VALIDATE_EMAIL))
-					$this->error("Invalid email format");
-				break;
+				return filter_var($value, FILTER_SANITIZE_EMAIL);
 			case 'website':
-				if (!filter_var($value, FILTER_VALIDATE_URL))
-					$this->error("Invalid URL format");
-				break;
+				return filter_var($value, FILTER_SANITIZE_URL);
 			case 'ip_address':
-				if (!filter_var($value, FILTER_VALIDATE_IP))
-					$this->error("Invalid IP address format");
-				break;
+				return filter_var($value, FILTER_VALIDATE_IP) ? $value : '';
+			case 'filename':
+			case 'path':
+			case 'username':
+			case 'password':
+				return filter_var($value, FILTER_SANITIZE_STRING);
+			default:
+				// Use existing regex patterns for remaining types
+				return preg_replace($this->_patterns[$type], '', $value);
 		}
-
-		return $value;
 	}
 
 	/**
-	 * Clean data for XSS
+	 * Clean data to prevent XSS attacks
+	 * 
+	 * @param mixed $data The data to clean
+	 * @return mixed The cleaned data
 	 */
 	protected function cleanXSS($data): mixed {
 		if (is_array($data)) {
@@ -207,42 +258,82 @@ class BaseClass {
 		return $data;
 	}
 
-	// Standard 'name' field validation
+	/**
+	 * Validate a name string against the name pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validName($string): bool {
 		return (preg_match($this->_patterns['name'], $string));
 	}
 
-	// Standard 'status' field validation
+	/**
+	 * Validate a status string against the allowed statuses
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validStatus($string): bool {
 		return (in_array($string, $this->_statii));
 	}
 
-	// Standard 'type' field validation
+	/**
+	 * Validate a type string against the allowed types
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validType($string): bool {
 		return (in_array($string, $this->_types));
 	}
 
-	// Standard 'search' field validation
+	/**
+	 * Validate a search string against the search pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validSearch($string): bool {
 		return (preg_match($this->_patterns['search'], $string));
 	}
 
-	// Validate an Address Line
+	/**
+	 * Validate an address line against the address line pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validAddressLine($string): bool {
 		return (preg_match($this->_patterns['address_line'], urldecode($string)));
 	}
 
-	// Validate a City Name
+	/**
+	 * Validate a city name against the city name pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validCity($string): bool {
 		return (preg_match($this->_patterns['city_name'], urldecode($string)));
 	}
 
-	// Validate a Hostname
+	/**
+	 * Validate a hostname against the hostname pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validHostname($string): bool {
 		return (preg_match($this->_patterns['hostname'], $string));
 	}
 
-	// Validate a URL
+	/**
+	 * Validate a URL string against the URL format pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validURL($string): bool {
 		define(
 			'URL_FORMAT',
@@ -264,99 +355,200 @@ class BaseClass {
 		return (preg_match(URL_FORMAT, $string));
 	}
 
-	// Pattern-based validation functions
+	/**
+	 * Validate a text string using ctype_print
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validText($string): bool {
-		return !preg_match($this->_patterns['text'], $string);
+		return ctype_print($string);
 	}
 
+	/**
+	 * Validate an alphabetic string using ctype_alpha
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validAlpha($string): bool {
-		return !preg_match($this->_patterns['alpha'], $string);
+		return ctype_alpha($string);
 	}
 
+	/**
+	 * Validate an alphanumeric string using ctype_alnum
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validAlphanumeric($string): bool {
-		return !preg_match($this->_patterns['alphanumeric'], $string);
+		return ctype_alnum($string);
 	}
 
+	/**
+	 * Validate a phone number against the phone pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validPhone($string): bool {
 		return !preg_match($this->_patterns['phone'], $string);
 	}
 
+	/**
+	 * Validate an email address using PHP's filter_var
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validEmail($string): bool {
-		if (preg_match($this->_patterns['email'], $string)) return false;
 		return filter_var($string, FILTER_VALIDATE_EMAIL) !== false;
 	}
 
+	/**
+	 * Validate a website URL using PHP's filter_var
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validWebsite($string): bool {
-		if (preg_match($this->_patterns['website'], $string)) return false;
 		return filter_var($string, FILTER_VALIDATE_URL) !== false;
 	}
 
+	/**
+	 * Validate an address against the address pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validAddress($string): bool {
 		return !preg_match($this->_patterns['address'], $string);
 	}
 
+	/**
+	 * Validate an integer using PHP's filter_var
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validInteger($string): bool {
-		return !preg_match($this->_patterns['integer'], $string);
+		return is_numeric($string) && filter_var($string, FILTER_VALIDATE_INT) !== false;
 	}
 
+	/**
+	 * Validate a decimal number using PHP's filter_var
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validDecimal($string): bool {
-		return !preg_match($this->_patterns['decimal'], $string);
+		return is_numeric($string) && filter_var($string, FILTER_VALIDATE_FLOAT) !== false;
 	}
 
+	/**
+	 * Validate a price against the price pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validPrice($string): bool {
 		$string = str_replace(',', '', $string);
 		return !preg_match($this->_patterns['price'], $string);
 	}
 
+	/**
+	 * Validate a percentage against the percentage pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validPercentage($string): bool {
 		$string = str_replace('%', '', $string);
 		return !preg_match($this->_patterns['percentage'], $string);
 	}
 
+	/**
+	 * Validate a date string using PHP's date_parse
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validDate($string): bool {
 		if (preg_match($this->_patterns['date'], $string)) return false;
 		$date = date_parse($string);
 		return $date['error_count'] === 0;
 	}
 
+	/**
+	 * Validate a time string using PHP's date_parse
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validTime($string): bool {
 		if (preg_match($this->_patterns['time'], $string)) return false;
 		$time = date_parse($string);
 		return $time['error_count'] === 0;
 	}
 
+	/**
+	 * Validate a datetime string using PHP's date_parse
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validDatetime($string): bool {
 		if (preg_match($this->_patterns['datetime'], $string)) return false;
 		$datetime = date_parse($string);
 		return $datetime['error_count'] === 0;
 	}
 
+	/**
+	 * Validate a filename against the filename pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validFilename($string): bool {
 		return !preg_match($this->_patterns['filename'], $string);
 	}
 
-	public function validPath($string): bool {
-		return !preg_match($this->_patterns['path'], $string);
-	}
-
+	/**
+	 * Validate a username against the username pattern
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validUsername($string): bool {
 		return !preg_match($this->_patterns['username'], $string);
 	}
 
-	public function validPassword($string): bool {
-		return !preg_match($this->_patterns['password'], $string);
-	}
-
+	/**
+	 * Validate an IP address using PHP's filter_var
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validIPAddress($string): bool {
-		if (preg_match($this->_patterns['ip_address'], $string)) return false;
 		return filter_var($string, FILTER_VALIDATE_IP) !== false;
 	}
 
+	/**
+	 * Validate a MAC address using PHP's filter_var
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validMACAddress($string): bool {
-		if (preg_match($this->_patterns['mac_address'], $string)) return false;
-		return preg_match($this->_patterns['mac_address_format'], $string);
+		return filter_var($string, FILTER_VALIDATE_MAC) !== false;
 	}
 
+	/**
+	 * Validate a string for potential security threats
+	 * 
+	 * @param string $string The string to validate
+	 * @return bool True if safe, false otherwise
+	 */
 	public function safeString($string): bool {
 		
 		$string = urldecode($string);
@@ -381,6 +573,11 @@ class BaseClass {
 		return (preg_match('/^[^\%\<\>]+$/', $string));
 	}
 
+	/**
+	 * Create a clone of the object without protected properties
+	 * 
+	 * @return stdClass A new object containing only public properties
+	 */
 	public function _clone() {
 		$obj = new \stdClass();
 		foreach (get_object_vars($this) as $key => $value) {
@@ -390,6 +587,11 @@ class BaseClass {
 		return $obj;
 	}
 
+	/**
+	 * Get the current error message
+	 * 
+	 * @return string|null The current error message
+	 */
 	public function getError() {
 		return $this->_error;
 	}
