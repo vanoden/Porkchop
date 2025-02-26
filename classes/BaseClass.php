@@ -232,7 +232,7 @@ class BaseClass {
 			case 'path':
 			case 'username':
 			case 'password':
-				return filter_var($value, FILTER_SANITIZE_STRING);
+				return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 			default:
 				// Use existing regex patterns for remaining types
 				return preg_replace($this->_patterns[$type], '', $value);
@@ -501,16 +501,6 @@ class BaseClass {
 		if (preg_match($this->_patterns['datetime'], $string)) return false;
 		$datetime = date_parse($string);
 		return $datetime['error_count'] === 0;
-	}
-
-	/**
-	 * Validate a filename against the filename pattern
-	 * 
-	 * @param string $string The string to validate
-	 * @return bool True if valid, false otherwise
-	 */
-	public function validFilename($string): bool {
-		return !preg_match($this->_patterns['filename'], $string);
 	}
 
 	/**
