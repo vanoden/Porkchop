@@ -15,7 +15,7 @@
 
 			// Build Query
 			$find_objects_query = "
-				SELECT	id
+				SELECT	id, product_id
 				FROM	shipping_items
 				WHERE	id = id";
 
