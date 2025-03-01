@@ -34,3 +34,8 @@
 	else {
 		$page->instructions = "Enter an RMA number to find the shipment";
 	}
+
+	// Always return false if there was a validation error
+	if ($validation_error) {
+		return false;
+	}

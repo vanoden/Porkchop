@@ -1,6 +1,7 @@
 <?php
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage shipments');
+
 	$shipment = new \Shipping\Shipment($_REQUEST['id']);
 
 	if (preg_match('/^RMA(\d+)$/',$shipment->document_number,$matches)) {

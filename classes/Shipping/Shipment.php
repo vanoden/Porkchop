@@ -205,4 +205,82 @@
         public function close() {
             return $this->update(array('status' => 'CLOSED'));
         }
+
+        /**
+         * Parse the document number and get the associated RMA object if applicable
+         * 
+         * @return \Support\Request\Item\RMA|null RMA object or null if document number is not for an RMA
+         */
+        public function getRma() {
+            if (empty($this->document_number)) return null;
+            
+            if (preg_match('/^RMA(\d+)$/', $this->document_number, $matches)) {
+                $rma_id = $matches[1] * 1;
+                $rma = new \Support\Request\Item\RMA($rma_id);
+                return $rma->exists() ? $rma : null;
+            }
+            elseif (preg_match('/^TCKT(\d+)$/', $this->document_number, $matches)) {
+                $ticket_id = $matches[1] * 1;
+                $ticket = new \Support\Request\Item($ticket_id);
+                $rmas = $ticket->rmas();
+                return !empty($rmas) ? $rmas[0] : null;
+            }
+            
+            return null;
+        }
+        
+        /**
+         * Parse the document number and get the associated ticket object if applicable
+         * 
+         * @return \Support\Request\Item|null Ticket object or null if document number is not for a ticket or RMA
+         */
+        public function getTicket() {
+            if (empty($this->document_number)) return null;
+            
+            if (preg_match('/^RMA(\d+)$/', $this->document_number, $matches)) {
+                $rma_id = $matches[1] * 1;
+                $rma = new \Support\Request\Item\RMA($rma_id);
+                return $rma->exists() ? $rma->item() : null;
+            }
+            elseif (preg_match('/^TCKT(\d+)$/', $this->document_number, $matches)) {
+                $ticket_id = $matches[1] * 1;
+                $ticket = new \Support\Request\Item($ticket_id);
+                return $ticket->exists() ? $ticket : null;
+            }
+            
+            return null;
+        }
+        
+        /**
+         * Parse the document number and get the associated object details
+         * 
+         * @return array|null Associative array with type, id, and link for the document or null if document number is empty
+         */
+        public function getDocumentObject() {
+            if (empty($this->document_number)) return null;
+            
+            $result = [
+                'type' => null,
+                'id' => null,
+                'link' => null
+            ];
+            
+            if (preg_match('/^RMA(\d+)$/', $this->document_number, $matches)) {
+                $result['type'] = 'rma';
+                $result['id'] = $matches[1] * 1;
+                $result['link'] = "/_support/admin_rma?id={$result['id']}";
+            }
+            elseif (preg_match('/^TCKT(\d+)$/', $this->document_number, $matches)) {
+                $result['type'] = 'ticket';
+                $result['id'] = $matches[1] * 1;
+                $result['link'] = "/_support/request_item?id={$result['id']}";
+            }
+            elseif (preg_match('/^PO(\d+)$/', $this->document_number, $matches)) {
+                $result['type'] = 'purchase_order';
+                $result['id'] = $matches[1] * 1;
+                $result['link'] = "/_sales/purchase_order?id={$result['id']}";
+            }
+            
+            return $result;
+        }
 	}
