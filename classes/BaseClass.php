@@ -287,53 +287,6 @@ class BaseClass {
 	}
 
 	/**
-	 * Check data for potential XSS attacks
-	 * 
-	 * @param mixed $data The data to check
-	 * @return bool|mixed Returns false if XSS detected, otherwise returns the original data
-	 */
-	protected function checkXSS($data) {
-		if (is_array($data)) {
-			foreach ($data as $key => $value) {
-				$result = $this->checkXSS($value);
-				if ($result === false) return false;
-			}
-			return $data;
-		}
-
-		if (!is_string($data)) {
-			return $data;
-		}
-
-		// Decode URL to catch encoded attacks
-		$string = urldecode($data);
-		
-		// Check for common XSS patterns
-		if (preg_match('/(&#*\w+)[\x00-\x20]+;/u', $string)) return false;
-		if (preg_match('/(&#x*[0-9A-F]+);*/iu', $string)) return false;
-
-		if (preg_match('/(\<|&lt;)\s*(script|iframe|object|embed|applet|meta|link)/i', $string)) return false;
-
-		// javascript protocol
-		if (preg_match('#([a-z]*)[\x00-\x20]*=[\x00-\x20]*([`\'"]*)[\x00-\x20]*j[\x00-\x20]*a[\x00-\x20]*v[\x00-\x20]*a[\x00-\x20]*s[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i[\x00-\x20]*p[\x00-\x20]*t[\x00-\x20]*:#iu', $string)) return false;
-		// vbscript protocol
-		if (preg_match('#([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*v[\x00-\x20]*b[\x00-\x20]*s[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i[\x00-\x20]*p[\x00-\x20]*t[\x00-\x20]*:#iu', $string)) return false;
-		// mozbinding protocol
-		if (preg_match('#([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*-moz-binding[\x00-\x20]*:#u', $string)) return false;
-		// Attribute starting with "on" or "data" or "xmlns"
-		if (preg_match('#(<[^>]+?[\x00-\x20"\'])(?:on|xmlns|data)[^>]*+>#iu', $string)) return false;
-		// Non alpha-numeric characters in attribute names
-		if (preg_match('/[^\w\"\']=/', $string)) return false;
-		// javascript: in inline events
-		if (preg_match('/alert\(/i', $string)) return false;
-		
-		// Reject any string with <, >, or % characters
-		if (!preg_match('/^[^\%\<\>]+$/', $string)) return false;
-
-		return $data;
-	}
-
-	/**
 	 * Validate a name string against the name pattern
 	 * 
 	 * @param string $string The string to validate
