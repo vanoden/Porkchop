@@ -259,6 +259,53 @@ class BaseClass {
 	}
 
 	/**
+	 * Check data for potential XSS attacks
+	 * 
+	 * @param mixed $data The data to check
+	 * @return bool|mixed Returns false if XSS detected, otherwise returns the original data
+	 */
+	protected function checkXSS($data) {
+		if (is_array($data)) {
+			foreach ($data as $key => $value) {
+				$result = $this->checkXSS($value);
+				if ($result === false) return false;
+			}
+			return $data;
+		}
+
+		if (!is_string($data)) {
+			return $data;
+		}
+
+		// Decode URL to catch encoded attacks
+		$string = urldecode($data);
+		
+		// Check for common XSS patterns
+		if (preg_match('/(&#*\w+)[\x00-\x20]+;/u', $string)) return false;
+		if (preg_match('/(&#x*[0-9A-F]+);*/iu', $string)) return false;
+
+		if (preg_match('/(\<|&lt;)\s*(script|iframe|object|embed|applet|meta|link)/i', $string)) return false;
+
+		// javascript protocol
+		if (preg_match('#([a-z]*)[\x00-\x20]*=[\x00-\x20]*([`\'"]*)[\x00-\x20]*j[\x00-\x20]*a[\x00-\x20]*v[\x00-\x20]*a[\x00-\x20]*s[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i[\x00-\x20]*p[\x00-\x20]*t[\x00-\x20]*:#iu', $string)) return false;
+		// vbscript protocol
+		if (preg_match('#([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*v[\x00-\x20]*b[\x00-\x20]*s[\x00-\x20]*c[\x00-\x20]*r[\x00-\x20]*i[\x00-\x20]*p[\x00-\x20]*t[\x00-\x20]*:#iu', $string)) return false;
+		// mozbinding protocol
+		if (preg_match('#([a-z]*)[\x00-\x20]*=([\'"]*)[\x00-\x20]*-moz-binding[\x00-\x20]*:#u', $string)) return false;
+		// Attribute starting with "on" or "data" or "xmlns"
+		if (preg_match('#(<[^>]+?[\x00-\x20"\'])(?:on|xmlns|data)[^>]*+>#iu', $string)) return false;
+		// Non alpha-numeric characters in attribute names
+		if (preg_match('/[^\w\"\']=/', $string)) return false;
+		// javascript: in inline events
+		if (preg_match('/alert\(/i', $string)) return false;
+		
+		// Reject any string with <, >, or % characters
+		if (!preg_match('/^[^\%\<\>]+$/', $string)) return false;
+
+		return $data;
+	}
+
+	/**
 	 * Validate a name string against the name pattern
 	 * 
 	 * @param string $string The string to validate
@@ -595,4 +642,469 @@ class BaseClass {
 	public function getError() {
 		return $this->_error;
 	}
+
+    /********************************************/
+    /* Input handling methods                   */
+    /********************************************/
+    
+    /**
+     * Get a value from $_GET with validation and sanitization
+     * Returns false if the value doesn't match the specified type
+     * 
+     * @param string $key The key to retrieve
+     * @param string|null $type Type for validation and sanitization (see BaseClass::sanitize)
+     * @param mixed $default Default value if key not found
+     * @return mixed The sanitized value, default value, or false if validation fails
+     */
+    public function get(string $key, ?string $type = null, $default = null) {
+        if (!isset($_GET[$key])) {
+            return $default;
+        }
+        
+        $value = $_GET[$key];
+        
+        // Check for XSS attacks
+        $checkedValue = $this->checkXSS($value);
+        if ($checkedValue === false) {
+            return false; // XSS detected, reject the input
+        }
+        
+        // If type is specified, validate the input against that type
+        if ($type !== null) {
+            // Check if the value is valid for the specified type
+            $validationMethod = 'valid' . ucfirst($type);
+            
+            // If we have a specific validation method for this type
+            if (method_exists($this, $validationMethod)) {
+                if (!$this->$validationMethod($value)) {
+                    return false; // Validation failed, return false
+                }
+            } else {
+                // For types without specific validation methods, 
+                // check if it passes sanitization without changing
+                $sanitized = $this->sanitize($value, $type);
+                
+                // For arrays, we need to check if any values were removed during sanitization
+                if (is_array($value) && is_array($sanitized)) {
+                    $flattened_original = $this->flattenArray($value);
+                    $flattened_sanitized = $this->flattenArray($sanitized);
+                    
+                    if (count($flattened_original) !== count($flattened_sanitized)) {
+                        return false; // Some values were removed during sanitization
+                    }
+                } 
+                // For strings, check if the sanitized value is different from the original
+                elseif (is_string($value) && $value !== $sanitized) {
+                    return false; // Sanitization changed the value, indicating it wasn't valid
+                }
+                
+                $value = $sanitized;
+            }
+        }
+        
+        return $value;
+    }
+    
+    /**
+     * Get a value from $_POST with validation and sanitization
+     * Returns false if the value doesn't match the specified type
+     * 
+     * @param string $key The key to retrieve
+     * @param string|null $type Type for validation and sanitization (see BaseClass::sanitize)
+     * @param mixed $default Default value if key not found
+     * @return mixed The sanitized value, default value, or false if validation fails
+     */
+    public function post(string $key, ?string $type = null, $default = null) {
+        if (!isset($_POST[$key])) {
+            return $default;
+        }
+        
+        $value = $_POST[$key];
+        
+        // Check for XSS attacks
+        $checkedValue = $this->checkXSS($value);
+        if ($checkedValue === false) {
+            return false; // XSS detected, reject the input
+        }
+        
+        // If type is specified, validate the input against that type
+        if ($type !== null) {
+            // Check if the value is valid for the specified type
+            $validationMethod = 'valid' . ucfirst($type);
+            
+            // If we have a specific validation method for this type
+            if (method_exists($this, $validationMethod)) {
+                if (!$this->$validationMethod($value)) {
+                    return false; // Validation failed, return false
+                }
+            } else {
+                // For types without specific validation methods, 
+                // check if it passes sanitization without changing
+                $sanitized = $this->sanitize($value, $type);
+                
+                // For arrays, we need to check if any values were removed during sanitization
+                if (is_array($value) && is_array($sanitized)) {
+                    $flattened_original = $this->flattenArray($value);
+                    $flattened_sanitized = $this->flattenArray($sanitized);
+                    
+                    if (count($flattened_original) !== count($flattened_sanitized)) {
+                        return false; // Some values were removed during sanitization
+                    }
+                } 
+                // For strings, check if the sanitized value is different from the original
+                elseif (is_string($value) && $value !== $sanitized) {
+                    return false; // Sanitization changed the value, indicating it wasn't valid
+                }
+                
+                $value = $sanitized;
+            }
+        }
+        
+        return $value;
+    }
+    
+    /**
+     * Get a value from $_REQUEST with validation and sanitization
+     * Returns false if the value doesn't match the specified type
+     * 
+     * @param string $key The key to retrieve
+     * @param string|null $type Type for validation and sanitization (see BaseClass::sanitize)
+     * @param mixed $default Default value if key not found
+     * @return mixed The sanitized value, default value, or false if validation fails
+     */
+    public function request(string $key, ?string $type = null, $default = null) {
+        if (!isset($_REQUEST[$key])) {
+            return $default;
+        }
+        
+        $value = $_REQUEST[$key];
+        
+        // Check for XSS attacks
+        $checkedValue = $this->checkXSS($value);
+        if ($checkedValue === false) {
+            return false; // XSS detected, reject the input
+        }
+        
+        // If type is specified, validate the input against that type
+        if ($type !== null) {
+            // Check if the value is valid for the specified type
+            $validationMethod = 'valid' . ucfirst($type);
+            
+            // If we have a specific validation method for this type
+            if (method_exists($this, $validationMethod)) {
+                if (!$this->$validationMethod($value)) {
+                    return false; // Validation failed, return false
+                }
+            } else {
+                // For types without specific validation methods, 
+                // check if it passes sanitization without changing
+                $sanitized = $this->sanitize($value, $type);
+                
+                // For arrays, we need to check if any values were removed during sanitization
+                if (is_array($value) && is_array($sanitized)) {
+                    $flattened_original = $this->flattenArray($value);
+                    $flattened_sanitized = $this->flattenArray($sanitized);
+                    
+                    if (count($flattened_original) !== count($flattened_sanitized)) {
+                        return false; // Some values were removed during sanitization
+                    }
+                } 
+                // For strings, check if the sanitized value is different from the original
+                elseif (is_string($value) && $value !== $sanitized) {
+                    return false; // Sanitization changed the value, indicating it wasn't valid
+                }
+                
+                $value = $sanitized;
+            }
+        }
+        
+        return $value;
+    }
+    
+    /**
+     * Flatten a multi-dimensional array into a single-dimensional array
+     * Used for comparing arrays before and after sanitization
+     * 
+     * @param array $array The array to flatten
+     * @return array The flattened array
+     */
+    private function flattenArray(array $array): array {
+        $result = [];
+        
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $result = array_merge($result, $this->flattenArray($value));
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Validates and retrieves an input parameter, handling error reporting if validation fails
+     * 
+     * @param string $key The key to retrieve
+     * @param string $type Type for validation and sanitization (see BaseClass::sanitize)
+     * @param string $source Source of input ('get', 'post', or 'request')
+     * @param object|null $errorHandler Object that has an addError method (like Page)
+     * @param string|null $errorMessage Custom error message (optional)
+     * @param mixed $default Default value if key not found
+     * @return mixed The sanitized value, default value, or false if validation fails
+     */
+    public function validateInput(string $key, string $type, string $source = 'request', ?object $errorHandler = null, ?string $errorMessage = null, mixed $default = null) {
+        
+        // Determine which method to use based on source
+        $method = strtolower($source);
+        if (!in_array($method, ['get', 'post', 'request'])) $method = 'request';
+        
+        // Get the value from the specified source
+        $value = $this->$method($key, $type, $default);
+        
+        // Check if validation failed
+        if ($value === false) {
+            // Handle the error if an error handler is provided
+            if ($errorHandler !== null && method_exists($errorHandler, 'addError')) {
+                $message = $errorMessage ?? "Invalid {$key} format";
+                $errorHandler->addError($message);
+            }
+        }
+        
+        return $value;
+    }
+    
+    /**
+     * Get a file from $_FILES with validation
+     * 
+     * @param string $key The key to retrieve
+     * @return array|null The file data or null if not found/invalid
+     */
+    public function file(string $key) {
+        if (!isset($_FILES[$key]) || empty($_FILES[$key]['name'])) return null;
+        return $_FILES[$key];
+    }
+    
+    /**
+     * Check if a file was uploaded successfully
+     * 
+     * @param string $key The key to check
+     * @return bool True if file exists and has no upload errors
+     */
+    public function hasValidFile(string $key): bool {
+        if (!isset($_FILES[$key]) || empty($_FILES[$key]['name'])) return false;
+        return ($_FILES[$key]['error'] === UPLOAD_ERR_OK);
+    }
+    
+    /**
+     * Get multiple values from $_GET with optional sanitization
+     * 
+     * @param array $keys Keys to retrieve
+     * @param string|null $type Type for sanitization
+     * @return array Array of sanitized values
+     */
+    public function getMultiple(array $keys, ?string $type = null): array {
+        $result = [];
+        foreach ($keys as $key) $result[$key] = $this->get($key, $type);
+        return $result;
+    }
+    
+    /**
+     * Get multiple values from $_POST with optional sanitization
+     * 
+     * @param array $keys Keys to retrieve
+     * @param string|null $type Type for sanitization
+     * @return array Array of sanitized values
+     */
+    public function postMultiple(array $keys, ?string $type = null): array {
+        $result = [];
+        foreach ($keys as $key) $result[$key] = $this->post($key, $type);        
+        return $result;
+    }
+    
+    /**
+     * Check if a GET parameter exists
+     * 
+     * @param string $key The key to check
+     * @return bool True if key exists
+     */
+    public function hasGet(string $key): bool {
+        return isset($_GET[$key]);
+    }
+    
+    /**
+     * Check if a POST parameter exists
+     * 
+     * @param string $key The key to check
+     * @return bool True if key exists
+     */
+    public function hasPost(string $key): bool {
+        return isset($_POST[$key]);
+    }
+    
+    /**
+     * Check if a REQUEST parameter exists
+     * 
+     * @param string $key The key to check
+     * @return bool True if key exists
+     */
+    public function hasRequest(string $key): bool {
+        return isset($_REQUEST[$key]);
+    }
+    
+    /**
+     * Get all GET parameters with optional sanitization
+     * 
+     * @param string|null $type Type for sanitization
+     * @return array Array of sanitized GET parameters
+     */
+    public function getAllGet(?string $type = null): array {
+        $data = $_GET;
+        $result = $this->checkXSS($data);
+        if ($result === false) {
+            return []; // Return empty array if XSS detected
+        }
+        
+        if ($type !== null) {
+            return $this->sanitize($data, $type);
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Get all POST parameters with optional sanitization
+     * 
+     * @param string|null $type Type for sanitization
+     * @return array Array of sanitized POST parameters
+     */
+    public function getAllPost(?string $type = null): array {
+        $data = $_POST;
+        $result = $this->checkXSS($data);
+        if ($result === false) {
+            return []; // Return empty array if XSS detected
+        }
+        
+        if ($type !== null) {
+            return $this->sanitize($data, $type);
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Get all REQUEST parameters with optional sanitization
+     * 
+     * @param string|null $type Type for sanitization
+     * @return array Array of sanitized REQUEST parameters
+     */
+    public function getAllRequest(?string $type = null): array {
+        $data = $_REQUEST;
+        $result = $this->checkXSS($data);
+        if ($result === false) {
+            return []; // Return empty array if XSS detected
+        }
+        
+        if ($type !== null) {
+            return $this->sanitize($data, $type);
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Validate uploaded file type against allowed MIME types
+     * 
+     * @param string $key The file input key
+     * @param array $allowedMimeTypes Array of allowed MIME types
+     * @return bool True if file type is allowed
+     */
+    public function isValidFileType(string $key, array $allowedMimeTypes): bool {
+        if (!$this->hasValidFile($key)) return false;
+        $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($fileInfo, $_FILES[$key]['tmp_name']);
+        finfo_close($fileInfo);
+        
+        return in_array($mimeType, $allowedMimeTypes);
+    }
+    
+    /**
+     * Validate uploaded file size against maximum size
+     * 
+     * @param string $key The file input key
+     * @param int $maxSize Maximum file size in bytes
+     * @return bool True if file size is within limit
+     */
+    public function isValidFileSize(string $key, int $maxSize): bool {
+        if (!$this->hasValidFile($key)) return false;
+        return ($_FILES[$key]['size'] <= $maxSize);
+    }
+    
+    /**
+     * Get the request method (GET, POST, etc.)
+     * 
+     * @return string The request method
+     */
+    public function getMethod(): string {
+        return $_SERVER['REQUEST_METHOD'];
+    }
+    
+    /**
+     * Check if the request is a POST request
+     * 
+     * @return bool True if POST request
+     */
+    public function isPost(): bool {
+        return $this->getMethod() === 'POST';
+    }
+    
+    /**
+     * Check if the request is a GET request
+     * 
+     * @return bool True if GET request
+     */
+    public function isGet(): bool {
+        return $this->getMethod() === 'GET';
+    }
+    
+    /**
+     * Get JSON data from request body
+     * 
+     * @param bool $assoc Whether to return as associative array
+     * @return mixed Decoded JSON data or null on error
+     */
+    public function getJson(bool $assoc = true) {
+        $input = file_get_contents('php://input');
+        if (empty($input)) return null;
+        
+        $data = json_decode($input, $assoc);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->error("JSON error: " . json_last_error_msg());
+            return null;
+        }
+        
+        // Check for XSS in the JSON data
+        $result = $this->checkXSS($data);
+        if ($result === false) {
+            $this->error("JSON data contains potentially malicious content");
+            return null;
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Get client IP address
+     * 
+     * @return string Client IP address
+     */
+    public function getIpAddress(): string {
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ip = filter_var($_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP);
+            if ($ip !== false) return $ip;
+        }
+        if (isset($_SERVER['REMOTE_ADDR'])) return filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) ?: '';
+        return '';
+    }
 }
