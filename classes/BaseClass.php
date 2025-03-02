@@ -637,7 +637,7 @@ class BaseClass {
      * @param mixed $default Default value if key not found
      * @return mixed The sanitized value, default value, or false if validation fails
      */
-    public function get(string $key, ?string $type = null, $default = null) {
+    public function getInput(string $key, ?string $type = null, $default = null) {
         if (!isset($_GET[$key])) {
             return $default;
         }
@@ -695,7 +695,7 @@ class BaseClass {
      * @param mixed $default Default value if key not found
      * @return mixed The sanitized value, default value, or false if validation fails
      */
-    public function post(string $key, ?string $type = null, $default = null) {
+    public function postInput(string $key, ?string $type = null, $default = null) {
         if (!isset($_POST[$key])) {
             return $default;
         }
@@ -753,7 +753,7 @@ class BaseClass {
      * @param mixed $default Default value if key not found
      * @return mixed The sanitized value, default value, or false if validation fails
      */
-    public function request(string $key, ?string $type = null, $default = null) {
+    public function requestInput(string $key, ?string $type = null, $default = null) {
         if (!isset($_REQUEST[$key])) {
             return $default;
         }
@@ -838,7 +838,11 @@ class BaseClass {
         
         // Determine which method to use based on source
         $method = strtolower($source);
-        if (!in_array($method, ['get', 'post', 'request'])) $method = 'request';
+        if ($method === 'get') {
+            $method = 'getInput'; // Use getInput for GET parameters
+        } else if (!in_array($method, ['post', 'request'])) {
+            $method = 'request';
+        }
         
         // Get the value from the specified source
         $value = $this->$method($key, $type, $default);
@@ -861,7 +865,7 @@ class BaseClass {
      * @param string $key The key to retrieve
      * @return array|null The file data or null if not found/invalid
      */
-    public function file(string $key) {
+    public function fileInput(string $key) {
         if (!isset($_FILES[$key]) || empty($_FILES[$key]['name'])) return null;
         return $_FILES[$key];
     }
@@ -886,7 +890,7 @@ class BaseClass {
      */
     public function getMultiple(array $keys, ?string $type = null): array {
         $result = [];
-        foreach ($keys as $key) $result[$key] = $this->get($key, $type);
+        foreach ($keys as $key) $result[$key] = $this->getInput($key, $type);
         return $result;
     }
     
