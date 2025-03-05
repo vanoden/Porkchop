@@ -2,6 +2,7 @@
 	namespace Shipping;
 
 	class ItemList Extends \BaseListClass {
+
 		public function __construct() {
 			$this->_modelName = '\Shipping\Item';
 		}
@@ -90,12 +91,13 @@
 			// Build Results
 			$objects = array();
 			while (list($organization_id,$product_id) = $rs->FetchRow()) {
+
 				if (empty($product_id)) {
 					app_log("Product ID is empty for organization ID: $organization_id");
 					continue;
 				}
-				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
-				$object = $orgProduct;
+				$product = new \Product\Item($product_id);
+				$object = $product;
 				if ($this->error()) {
 					$this->error("Error getting details for ".$this->_modelName.": ".$this->error());
 					return [];

@@ -903,7 +903,7 @@ class BaseClass {
      */
     public function postMultiple(array $keys, ?string $type = null): array {
         $result = [];
-        foreach ($keys as $key) $result[$key] = $this->post($key, $type);        
+        foreach ($keys as $key) $result[$key] = $this->postInput($key, $type);        
         return $result;
     }
     
