@@ -1,21 +1,56 @@
 <?php
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage shipments');
-	$input = new Input();
+	$can_proceed = true;
+
 	$recordsPerPage = 20;
 
-	// Initialize shipment list and use new validation method
 	$shipmentList = new \Shipping\ShipmentList();
 	$parameters = [];
-	$controls = [];
-	
-	// Let the ShipmentList class handle all parameter validation
-	$validation_passed = $shipmentList->validateInputParameters($input, $page, $parameters, $controls, $recordsPerPage);
-	
-	// Get shipments based on validated parameters
-	$totalRecords = $shipmentList->count($parameters);
-	$shipments = $shipmentList->find($parameters, $controls);
-	if ($shipmentList->error()) $page->addError($shipmentList->error());
+
+	// Validate pagination_start_id
+	if (!empty($_REQUEST['pagination_start_id'])) {
+		if (!$shipmentList->validInteger($_REQUEST['pagination_start_id'])) {
+			$page->addError("Invalid pagination start ID");
+			$can_proceed = false;
+		}
+	}
+
+	$controls = array(
+		'limit' => $recordsPerPage,
+		'offset' => $_REQUEST['pagination_start_id'] ?? 0
+	);
+
+	// Validate sort parameters if provided
+	if (!empty($_REQUEST['sort_field'])) {
+		if (!$shipmentList->validText($_REQUEST['sort_field'])) {
+			$page->addError("Invalid sort field");
+			$can_proceed = false;
+		} else {
+			$controls['sort'] = $_REQUEST['sort_field'];
+			
+			// Validate sort direction
+			if (!empty($_REQUEST['sort_direction'])) {
+				if (!$shipmentList->validText($_REQUEST['sort_direction']) || 
+					!in_array(strtoupper($_REQUEST['sort_direction']), ['ASC', 'DESC'])) {
+					$page->addError("Invalid sort direction");
+					$can_proceed = false;
+				} else {
+					$controls['order'] = strtoupper($_REQUEST['sort_direction']);
+				}
+			} else {
+				$controls['order'] = 'ASC';
+			}
+		}
+	}
+
+	if ($can_proceed) {
+		$totalRecords = $shipmentList->count($parameters);
+		$shipments = $shipmentList->find($parameters, $controls);
+		if ($shipmentList->error()) {
+			$page->addError($shipmentList->error());
+		}
+	}
 
 	$page->title("Shipments");
 	$page->addBreadcrumb('Shipping');
@@ -23,11 +58,6 @@
 
 	// paginate results
     $pagination = new \Site\Page\Pagination();
-    
-    // Use the validated forward parameters from the ShipmentList class
-    if (isset($parameters['forward_params']) && is_array($parameters['forward_params'])) {
-        $pagination->forwardParameters($parameters['forward_params']);
-    }
-    
+    $pagination->forwardParameters(array('sort_field','sort_direction','filtered'));
     $pagination->size($recordsPerPage);
-    $pagination->count($totalRecords);
+    $pagination->count($totalRecords ?? 0);
