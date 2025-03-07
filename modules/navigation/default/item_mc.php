@@ -1,80 +1,137 @@
 <?php
 	$page = new \Site\Page();
 	$page->requirePrivilege("manage navigation menus");
+	$can_proceed = true;
 
+	// Create navigation item object for validation
+	$navItem = new \Site\Navigation\Item();
+
+	// Validate item identification
 	if (!empty($_REQUEST['id'])) {
-		$item = new \Site\Navigation\Item($_REQUEST['id']);
-	}
-	elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
+		if (!$navItem->validInteger($_REQUEST['id'])) {
+			$page->addError("Invalid item ID format");
+			$can_proceed = false;
+		} else {
+			$item = new \Site\Navigation\Item($_REQUEST['id']);
+		}
+	} elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
 		$_REQUEST['id'] = $GLOBALS['_REQUEST_']->query_vars_array[0];
-		$item = new \Site\Navigation\Item($_REQUEST['id']);
-	}
-
-	$menu = new \Site\Navigation\Menu($_REQUEST['menu_id']);
-	if (! $menu->exists()) {
-		$page->addError("Menu not found");
-	}
-	$parent = new \Site\Navigation\Item($_REQUEST['parent_id']);
-
-	if (isset($_REQUEST['btn_submit'])) {
-		if (!isset($item)) $item = new \Site\Navigation\Item();
-        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
-            $page->addError("Invalid Token");
-        }
-        elseif(!$item->validCode($_REQUEST['title'])) {
-            $page->addError("Invalid title");
-        }
-        else {
-            $parameters = array(
-                "title"			=> noXSS($_REQUEST['title']),
-                "target"		=> noXSS($_REQUEST['target']),
-                "alt"			=> noXSS($_REQUEST['alt']),
-				"required_role_id"	=> $_REQUEST['required_role_id'],
-                "view_order"	=> filter_var($_REQUEST['view_order'],FILTER_VALIDATE_INT),
-                "description"	=> noXSS($_REQUEST['description'])
-            );
-            if ($item->id > 0) {
-                app_log("Updating menu $id");
-                $item->update($parameters);
-				if ($item->error()) $page->addError($item->error());
-				else $page->success = "Item Updated";
-            }
-            elseif(strlen($_REQUEST['title']) > 0) {
-                app_log("Adding new menu '$title'");
-				$parameters['menu_id'] = $menu->id;
-				$parameters['parent_id'] = $parent->id;
-
-                $item = new \Site\Navigation\Item();
-                $item->add($parameters);
-				if ($item->error()) $page->addError($item->error());
-				else $page->success = "Item Added";
-            }
-            if ($item->error()) {
-                $page->addError($item->error());
-            }
-        }
-    }
-	elseif (isset($_REQUEST['btn_delete'])) {
-        if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
-            $page->addError("Invalid Token");
-        }
-        else {
-			$item->delete();
+		if (!$navItem->validInteger($_REQUEST['id'])) {
+			$page->addError("Invalid item ID format");
+			$can_proceed = false;
+		} else {
+			$item = new \Site\Navigation\Item($_REQUEST['id']);
 		}
 	}
 
+	// Validate menu
+	if ($can_proceed) {
+		if (!empty($_REQUEST['menu_id'])) {
+			if (!$navItem->validInteger($_REQUEST['menu_id'])) {
+				$page->addError("Invalid menu ID format");
+				$can_proceed = false;
+			} else {
+				$menu = new \Site\Navigation\Menu($_REQUEST['menu_id']);
+				if (!$menu->exists()) {
+					$page->addError("Menu not found");
+					$can_proceed = false;
+				}
+			}
+		}
+	}
+
+	// Validate parent item if provided
+	if ($can_proceed && !empty($_REQUEST['parent_id'])) {
+		if (!$navItem->validInteger($_REQUEST['parent_id'])) {
+			$page->addError("Invalid parent ID format");
+			$can_proceed = false;
+		} else {
+			$parent = new \Site\Navigation\Item($_REQUEST['parent_id']);
+		}
+	}
+
+	// Handle form submission
+	if ($can_proceed && isset($_REQUEST['btn_submit'])) {
+		if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'] ?? '')) {
+			$page->addError("Invalid Request");
+			$can_proceed = false;
+		}
+		
+		if ($can_proceed) {
+			if (!isset($item)) {
+				$item = new \Site\Navigation\Item();
+			}
+			
+			if (empty($_REQUEST['title']) || !$navItem->validCode($_REQUEST['title'])) {
+				$page->addError("Invalid title");
+				$can_proceed = false;
+			}
+			
+			if ($can_proceed) {
+				$parameters = array(
+					"title" => noXSS($_REQUEST['title']),
+					"target" => noXSS($_REQUEST['target'] ?? ''),
+					"alt" => noXSS($_REQUEST['alt'] ?? ''),
+					"required_role_id" => $_REQUEST['required_role_id'] ?? null,
+					"view_order" => filter_var($_REQUEST['view_order'] ?? 0, FILTER_VALIDATE_INT),
+					"description" => noXSS($_REQUEST['description'] ?? '')
+				);
+				
+				if ($item->id > 0) {
+					app_log("Updating menu " . $item->id);
+					$item->update($parameters);
+					if ($item->error()) {
+						$page->addError($item->error());
+					} else {
+						$page->appendSuccess("Item Updated");
+					}
+				} elseif (strlen($_REQUEST['title']) > 0) {
+					app_log("Adding new menu '" . $_REQUEST['title'] . "'");
+					$parameters['menu_id'] = $menu->id;
+					$parameters['parent_id'] = $parent->id ?? null;
+					
+					$item = new \Site\Navigation\Item();
+					$item->add($parameters);
+					if ($item->error()) {
+						$page->addError($item->error());
+					} else {
+						$page->appendSuccess("Item Added");
+					}
+				}
+			}
+		}
+	} elseif ($can_proceed && isset($_REQUEST['btn_delete'])) {
+		if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'] ?? '')) {
+			$page->addError("Invalid Request");
+			$can_proceed = false;
+		}
+		
+		if ($can_proceed) {
+			$item->delete();
+			if ($item->error()) {
+				$page->addError($item->error());
+			} else {
+				$page->appendSuccess("Item Deleted");
+			}
+		}
+	}
+
+	// Load roles for dropdown
 	$roleList = new \Register\RoleList();
 	$roles = $roleList->find();
 
 	$page->title("Menu Item Details");
 	$page->addBreadcrumb("Menus", "/_navigation/menus");
 	if (isset($parent)) {
-		$page->addBreadcrumb($menu->title,"/_navigation/items/".$menu->code);
+		$page->addBreadcrumb($menu->title, "/_navigation/items/" . $menu->code);
 		if ($parent->parent_id) {
 			$grandparent = new \Site\Navigation\Item($parent->parent_id);
-			$page->addBreadcrumb($grandparent->title, "/_navigation/items?parent_id=".$grandparent->id);
+			$page->addBreadcrumb($grandparent->title, "/_navigation/items?parent_id=" . $grandparent->id);
 		}
-		$page->addBreadcrumb($parent->title,"/_navigation/items?parent_id=".$parent->id);
+		$page->addBreadcrumb($parent->title, "/_navigation/items?parent_id=" . $parent->id);
 	}
-	if ($item->id) $page->addBreadcrumb($item->title);
-	else $page->addBreadcrumb('New Menu Item');
+	if (isset($item) && $item->id) {
+		$page->addBreadcrumb($item->title);
+	} else {
+		$page->addBreadcrumb('New Menu Item');
+	}
