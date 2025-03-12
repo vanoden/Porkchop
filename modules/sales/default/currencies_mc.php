@@ -2,31 +2,49 @@
 	$site = new \Site();
 	$page = $site->page();
 	$page->requirePrivilege('edit currencies');
+	$can_proceed = true;
 
 	// Handle User Input
 	foreach ($_REQUEST['currency_name'] as $currency_id => $currency_name) {
 		$currency_symbol = $_REQUEST['currency_symbol'][$currency_id];
 
-		$currency = new \Sales\Currency($currency_id);
-		if (! $currency->exists()) {
-			$page->addError("Currency not found");
-		}
-		else {
-			$parameters = [];
-			if ($currency_name != $currency->name) $parameters['name'] = $currency_name;
-			if ($currency_symbol != $currency->symbol) $parameters['symbol'] = $currency_symbol;
-			if (count($parameters) > 0) {
-				if ($currency->update($parameters)) $page->appendSuccess("Updated currency $currency_name");
-				else $page->addError("Error updating currency: ".$currency->error());
+		$currency = new \Sales\Currency();
+		if ($currency->validInteger($currency_id)) {
+			$currency = new \Sales\Currency($currency_id);
+			if (!$currency->exists()) {
+				$page->addError("Currency not found");
+				$can_proceed = false;
+			} else {
+				$parameters = [];
+				if ($currency_name != $currency->name) {
+					$parameters['name'] = $currency_name;
+				}
+				if ($currency_symbol != $currency->symbol) {
+					$parameters['symbol'] = $currency_symbol;
+				}
+				if (count($parameters) > 0) {
+					if ($currency->update($parameters)) {
+						$page->appendSuccess("Updated currency $currency_name");
+					} else {
+						$page->addError("Error updating currency: " . $currency->error());
+						$can_proceed = false;
+					}
+				}
 			}
+		} else {
+			$page->addError("Invalid currency ID");
+			$can_proceed = false;
 		}
 	}
 
-	if (!empty($_REQUEST['new_currency_name'])) {
+	if ($can_proceed && !empty($_REQUEST['new_currency_name'])) {
 		$currency = new \Sales\Currency();
 		$currency->add(array('name' => $_REQUEST['new_currency_name'], 'symbol' => $_REQUEST['new_currency_symbol']));
-		if ($currency->error()) $page->addError("Error adding currency: ".$currency->error());
-		else $page->appendSuccess("Added currency ".$currency->name);
+		if ($currency->error()) {
+			$page->addError("Error adding currency: " . $currency->error());
+		} else {
+			$page->appendSuccess("Added currency " . $currency->name);
+		}
 	}
 
 	// Load Page Data
