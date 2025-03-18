@@ -229,7 +229,7 @@
 				else return false;
 			}
 			else {
-				// See if view exists...we should create it if it does
+				// See if view exists...we should create it if it doesn't
 				$file_path = MODULES."/".$module;
 				if (isset($GLOBALS['_config']->style[$module])) $file_path .= "/".$GLOBALS['_config']->style[$module];
 				else $file_path .= "/default";
@@ -263,19 +263,19 @@
 		 */
 	    public function add($module = '', $view = '', $index = '') {
 			$this->clearError();
-
+app_log("Request to add page ".$module."::".$view."::".$index,'notice');
 			// Initialize Database Service
 			$database = new \Database\Service();
 
 		    // Apply optional parameters
-		    if ($module) {
+		    if (!empty($module) && $this->validModule($module)) {
 			    $this->module = $module;
-			    if ($view && $this->validView($view)) {
+			    if (!empty($view) && $this->validView($view)) {
 				    $this->view = $view;
-				    if ($index) $this->index = $index;
+				    if (!empty($index) && $this->validIndex($index)) $this->index = $index;
 			    }
 		    }
-
+app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice');
 			// Prepare Query to Add Page
 		    $add_object_query = "
 			    INSERT
@@ -1272,10 +1272,10 @@
 			if (! preg_match('/^\w[\w\-\.\_]*$/',$string)) return false;
 
 			// Make Sure Static File is in Docroot
-			if (! file_exists(HTML."/".$string)) return false;
+			if ($this->module == 'static' && ! file_exists(HTML."/".$string)) return false;
 
-			// Nope, No good
-			return false;
+			// Ok to go
+			return true;
 		}
 
 		public function validIndex($string) {
