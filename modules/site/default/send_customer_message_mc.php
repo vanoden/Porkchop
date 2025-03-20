@@ -1,105 +1,179 @@
 <?php
 $page = new \Site\Page();
 $page->requireAuth();
+$can_proceed = true;
 
-// loop through each parameter, validate and sanitize
-$request_params = ['organization', 'subject', 'content', 'customer', 'role'];
-foreach($request_params as $param) {
-    if(isset($_REQUEST[$param])) {
-        if ($param == "subject" || $param == "content") $_REQUEST[$param] = filter_var($_REQUEST[$param], FILTER_SANITIZE_STRING);
-        if ($param == "organization" || $param == "customer" || $param == "role") {
-            if (!$_REQUEST[$param] == "All") $_REQUEST[$param] = filter_var($_REQUEST[$param], FILTER_SANITIZE_NUMBER_INT);
-        }
-    }
-}
+// Initialize validation objects
+$siteMessage = new \Site\SiteMessage();
 
-// Security - Only Register Module Operators or Managers can see other customers
-$organizationlist = new \Register\OrganizationList();
-$organization = new \Register\Organization();
-
-// Initialize Parameter Array
+// Initialize Parameter Array for organizations
 $find_parameters = array();
 $find_parameters['status'] = array('NEW', 'ACTIVE');
 
-// Get Count before Pagination
+// Get organizations
+$organizationlist = new \Register\OrganizationList();
 $organizationlist->search($find_parameters, ['count' => true]);
-if ($organizationlist->error()) $page->addError($organizationlist->error());
+if ($organizationlist->error()) {
+    $page->addError($organizationlist->error());
+    $can_proceed = false;
+}
 
 // Get Records
 $organizations = $organizationlist->search($find_parameters);
-if ($organizationlist->error()) $page->addError("Error finding organizations: " . $organizationlist->error());
+if ($organizationlist->error()) {
+    $page->addError("Error finding organizations: " . $organizationlist->error());
+    $can_proceed = false;
+}
 
-// customer list in organization
+// Get default customer list
 $customerList = new \Register\CustomerList();
-$customersSendTo = $customers = $customerList->find(array('automation' => 0));
-if (isset($_REQUEST['organization']) && !empty($_REQUEST['organization'])) $customersSendTo = $customers = $customerList->find(array('organization_id' => $_REQUEST['organization'], 'automation' => 0));
+$customers = $customerList->find(array('automation' => 0));
+$customersSendTo = $customers;
 
-// get all the roles that belong to this organization
+// Validate organization_id if provided
+$organization_id = $_REQUEST['organization'] ?? null;
+if (!empty($organization_id) && $organization_id !== 'All') {
+    if (!$siteMessage->validInteger($organization_id)) {
+        $page->addError("Invalid organization ID format");
+        $can_proceed = false;
+    } else {
+        $customersSendTo = $customers = $customerList->find(array('organization_id' => $organization_id, 'automation' => 0));
+    }
+}
+
+// Get all roles
 $registerRolesList = new \Register\RoleList();
 $registerRole = new \Register\Role();
 $userRoles = $registerRolesList->find();
 
-// process sending user messages
-if (isset($_REQUEST['method']) && $_REQUEST['method'] == 'submit') {
-
-    // Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
-    if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-        $page->addError("Invalid request");
-    } else {
-
-        // create new message
-        $siteMessage = new \Site\SiteMessage();
-        $siteMessageDetails = array('user_created' => $GLOBALS['_SESSION_']->customer->id, 'subject' => $_REQUEST['subject'], 'content' => $_REQUEST['content']);
+// Process message submission
+$method = $_REQUEST['method'] ?? '';
+if ($can_proceed && $method == 'submit') {
+    // Validate CSRF Token
+    $csrfToken = $_POST['csrfToken'] ?? '';
+    if (!$GLOBALS['_SESSION_']->verifyCSRFToken($csrfToken)) {
+        $page->addError("Invalid request token");
+        $can_proceed = false;
+    }
+    
+    // Validate required fields
+    $subject = $_REQUEST['subject'] ?? '';
+    $content = $_REQUEST['content'] ?? '';
+    $selectSendTo = $_REQUEST['selectSendTo'] ?? [];
+    
+    if (empty($subject)) {
+        $page->addError("Subject is required");
+        $can_proceed = false;
+    } elseif (!$siteMessage->validText($subject)) {
+        $page->addError("Invalid subject format");
+        $can_proceed = false;
+    }
+    
+    if (empty($content)) {
+        $page->addError("Message content is required");
+        $can_proceed = false;
+    } elseif (!$siteMessage->validText($content)) {
+        $page->addError("Invalid message content format");
+        $can_proceed = false;
+    }
+    
+    if (empty($selectSendTo)) {
+        $page->addError("Please select at least one recipient type (role or customer)");
+        $can_proceed = false;
+    }
+    
+    // Validate customer_id if provided
+    $customer_id = $_REQUEST['customer'] ?? 'All';
+    if ($customer_id !== 'All' && !$siteMessage->validInteger($customer_id)) {
+        $page->addError("Invalid customer ID format");
+        $can_proceed = false;
+    }
+    
+    // Validate role_id if provided
+    $role_id = $_REQUEST['role'] ?? 'All';
+    if ($role_id !== 'All' && !$siteMessage->validInteger($role_id)) {
+        $page->addError("Invalid role ID format");
+        $can_proceed = false;
+    }
+    
+    if ($can_proceed) {
+        // Create message details
+        $siteMessageDetails = array(
+            'user_created' => $GLOBALS['_SESSION_']->customer->id,
+            'subject' => $subject,
+            'content' => $content,
+            'important' => !empty($_REQUEST['important']) ? 1 : 0
+        );
+        
         $siteMessageDelivery = new \Site\SiteMessageDelivery();
-
-        // apply important flag or not
-        $siteMessageDetails['important'] = 0;
-        if (!empty($_REQUEST['important'])) $siteMessageDetails['important'] = 1;
-
-        // if selectSendTo contains 'role' , else contains 'customer' else if contains both
-        if (count($_REQUEST['selectSendTo']) > 1) {
-
-            if ($_REQUEST['customer'] != "All") {
-                $customer = new \Register\Customer($_REQUEST['customer']);
-                $customersSendTo = array($customer);
+        
+        // Filter recipients based on selection
+        if (count($selectSendTo) > 1) {
+            // Both role and customer selected
+            if ($customer_id != "All") {
+                $customer = new \Register\Customer($customer_id);
+                if (!$customer->id) {
+                    $page->addError("Selected customer not found");
+                    $can_proceed = false;
+                } else {
+                    $customersSendTo = array($customer);
+                }
             }
 
-            if ($_REQUEST['role'] != "All") {
+            if ($can_proceed && $role_id != "All") {
                 $customersInRole = array();
                 foreach ($customersSendTo as $customer) {
-                    $inRole = $registerRole->checkIfUserInRole($customer->id, $_REQUEST['role']);
+                    $inRole = $registerRole->checkIfUserInRole($customer->id, $role_id);
                     if ($inRole) $customersInRole[] = $customer;
                 }
                 $customersSendTo = $customersInRole;
             }
-
         } else {
-
-            if (in_array('role', $_REQUEST['selectSendTo'])) {
-                if ($_REQUEST['role'] != "All") {
+            // Either role or customer selected
+            if (in_array('role', $selectSendTo)) {
+                if ($role_id != "All") {
                     $customersInRole = array();
                     foreach ($customersSendTo as $customer) {
-                        $inRole = $registerRole->checkIfUserInRole($customer->id, $_REQUEST['role']);
+                        $inRole = $registerRole->checkIfUserInRole($customer->id, $role_id);
                         if ($inRole) $customersInRole[] = $customer;
                     }
                     $customersSendTo = $customersInRole;
                 }
-            } else {
-                if ($_REQUEST['customer'] != "All") {
+            } else if (in_array('customer', $selectSendTo)) {
+                if ($customer_id != "All") {
                     $customer = new \Register\Customer();
-                    $customer->get($_REQUEST['customer']);
-                    $customersSendTo = array($customer);
+                    $customer->get($customer_id);
+                    if (!$customer->id) {
+                        $page->addError("Selected customer not found");
+                        $can_proceed = false;
+                    } else {
+                        $customersSendTo = array($customer);
+                    }
+                }
+            }
+        }
+        
+        if ($can_proceed) {
+            if (empty($customersSendTo)) {
+                $page->addError("No customers found to send message to.");
+                $can_proceed = false;
+            } else {
+                // Create new message for each customer
+                $success_count = 0;
+                foreach ($customersSendTo as $customer) {
+                    $siteMessageDetails['recipient_id'] = $customer->id;
+                    $result = $siteMessage->add($siteMessageDetails);
+                    if ($result) {
+                        $success_count++;
+                    } else if ($siteMessage->error()) {
+                        $page->addError("Error sending to " . $customer->full_name() . ": " . $siteMessage->error());
+                    }
+                }
+                
+                if ($success_count > 0) {
+                    $page->appendSuccess("Message sent to " . $success_count . " customers");
                 }
             }
         }
     }
-    if (empty($customersSendTo)) $page->addError("No customers found to send message to.");
-
-    // create new message for each customer filtered
-    foreach ($customersSendTo as $customer) {
-        $siteMessageDetails['recipient_id'] = $customer->id;
-        $siteMessage->add($siteMessageDetails);
-    }
-
-    $page->appendSuccess("Message sent to " . count($customersSendTo) . " customers");
 }

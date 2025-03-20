@@ -9,15 +9,29 @@
 		"version"	=> "0.1.1",
 		"release"	=> "2016-12-05",
 	);
+	
+	$can_proceed = true;
+	
+	// Initialize object for validation
+	$eventItem = new \Event\Item();
 
 	app_log("Request: ".print_r($_REQUEST,true),'debug',__FILE__,__LINE__);
 
 	# Call Requested Event
-	if ($_REQUEST["method"]) {
-		# Call the Specified Method
-		$function_name = $_REQUEST["method"];
-		$function_name($api);
-		exit;
+	$method = $_REQUEST["method"] ?? null;
+	if (!empty($method)) {
+		if (!$eventItem->validText($method)) {
+			error("Invalid method format");
+			$can_proceed = false;
+		} elseif (!function_exists($method)) {
+			error("Method not found: $method");
+			$can_proceed = false;
+		} else {
+			# Call the Specified Method
+			$function_name = $method;
+			$function_name($api);
+			exit;
+		}
 	}
 
 	###################################################
@@ -26,7 +40,7 @@
 	function ping($api) {
 		$response = new \HTTP\Response();
 		$response->header->session = $GLOBALS['_SESSION_']->code;
-		$response->header->method = $_REQUEST["method"];
+		$response->header->method = $_REQUEST["method"] ?? 'ping';
 		$response->header->date = system_time();
 		$response->message = "PING RESPONSE";
 		$response->api = $api;
@@ -41,26 +55,41 @@
 	### Add an Action Event							###
 	###################################################
 	function addEventItem() {
-		# Record Event
-		$event = new \Event\Item();
-		$event->add(
-			"MonitorAsset",
-			[	"code"  => uniqid(),
-				"timestamp" => date("c"),
-				"user"  => $GLOBALS['_SESSION_']->customer->code,
-				"description"   => "Test Event Created",
-			]
-		);
-		if ($event->error) {
-			app_log("Failed to add change to history: ".$event->error,'error',__FILE__,__LINE__);
+		$can_proceed = true;
+		$eventItem = new \Event\Item();
+		
+		$description = $_REQUEST["description"] ?? "Event Created";
+		if (!$eventItem->validText($description)) {
+			error("Invalid description format");
+			$can_proceed = false;
 		}
+		
+		if ($can_proceed) {
+			# Record Event
+			$event = new \Event\Item();
+			$event->add(
+				"MonitorAsset",
+				[	"code"  => uniqid(),
+					"timestamp" => date("c"),
+					"user"  => $GLOBALS['_SESSION_']->customer->code,
+					"description" => $description,
+				]
+			);
+			if ($event->error) {
+				app_log("Failed to add change to history: ".$event->error,'error',__FILE__,__LINE__);
+				error("Failed to add event: ".$event->error);
+				$can_proceed = false;
+			}
+			
+			if ($can_proceed) {
+				$response = new \HTTP\Response();
+				$response->success = 1;
+				$response->role = $result ?? null;
 
-		$response = new \HTTP\Response();
-		$response->success = 1;
-		$response->role = $result;
-
-		header('Content-Type: application/xml');
-		print XMLout($response);
+				header('Content-Type: application/xml');
+				print XMLout($response);
+			}
+		}
 	}
 
 	###################################################
@@ -120,11 +149,10 @@
 	### Convert Object to XML						###
 	###################################################
 	function formatOutput($object) {
-		if (isset($_REQUEST['_format']) && $_REQUEST['_format'] == 'json') {
-			$format = 'json';
+		$format = $_REQUEST['_format'] ?? 'xml';
+		if ($format == 'json') {
 			header('Content-Type: application/json');
-		}
-		else {
+		} else {
 			$format = 'xml';
 			header('Content-Type: application/xml');
 		}

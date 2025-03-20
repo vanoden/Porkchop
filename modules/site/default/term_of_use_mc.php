@@ -2,30 +2,77 @@
 	$site = new \Site();
 	$page = $site->page();
 	$page->requirePrivilege('manage terms of use');
+	$can_proceed = true;
 
+	// Initialize terms of use object for validation
 	$tou = new \Site\TermsOfUse();
-	if (isset($_REQUEST['id']) && !empty($_REQUEST['id'])) {
-		$tou = new \Site\TermsOfUse($_REQUEST['id']);
-		if (!$tou->exists()) {
-			$page->addError("Requested Terms of Use Agreement not found");
-			http_response_code(404);
+	
+	// Validate ID if provided
+	$id = $_REQUEST['id'] ?? null;
+	if (!empty($id)) {
+		if (!$tou->validInteger($id)) {
+			$page->addError("Invalid terms of use ID format");
+			$can_proceed = false;
+		} else {
+			$tou = new \Site\TermsOfUse($id);
+			if (!$tou->exists()) {
+				$page->addError("Requested Terms of Use Agreement not found");
+				http_response_code(404);
+				$can_proceed = false;
+			}
 		}
 	}
 
-	if (!empty($_REQUEST['btn_submit'])) {
-		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+	// Handle form submission
+	$btn_submit = $_REQUEST['btn_submit'] ?? null;
+	if ($can_proceed && !empty($btn_submit)) {
+		// Validate CSRF Token
+		$csrfToken = $_REQUEST['csrfToken'] ?? '';
+		if (!$GLOBALS['_SESSION_']->verifyCSRFToken($csrfToken)) {
 			$page->addError("Invalid Token");
+			$can_proceed = false;
 		}
-		elseif ($tou->id)
-			if (! $tou->update(array('name' => $_REQUEST['name'], 'description' => $_REQUEST['description'])))
-				$page->addError("Could not update Terms of Use: ".$tou->error());
-			else
-				$page->appendSuccess("Terms of Use record updated");
-		else
-			if (! $tou->add(array('name' => $_REQUEST['name'], 'description' => $_REQUEST['description'])))
-				$page->addError("Could not add Terms of Use: ".$tou->error());
-			else
-				$page->appendSuccess("Terms of Use record created");
+		
+		// Validate form fields
+		$name = $_REQUEST['name'] ?? '';
+		$description = $_REQUEST['description'] ?? '';
+		
+		if (empty($name)) {
+			$page->addError("Name is required");
+			$can_proceed = false;
+		} elseif (!$tou->validText($name)) {
+			$page->addError("Invalid name format");
+			$can_proceed = false;
+		}
+		
+		if (empty($description)) {
+			$page->addError("Description is required");
+			$can_proceed = false;
+		} elseif (!$tou->validText($description)) {
+			$page->addError("Invalid description format");
+			$can_proceed = false;
+		}
+		
+		if ($can_proceed) {
+			$parameters = array(
+				'name' => $name,
+				'description' => $description
+			);
+			
+			if ($tou->id) {
+				if (!$tou->update($parameters)) {
+					$page->addError("Could not update Terms of Use: ".$tou->error());
+				} else {
+					$page->appendSuccess("Terms of Use record updated");
+				}
+			} else {
+				if (!$tou->add($parameters)) {
+					$page->addError("Could not add Terms of Use: ".$tou->error());
+				} else {
+					$page->appendSuccess("Terms of Use record created");
+				}
+			}
+		}
 	}
 
 	if ($tou->id) $page->instructions = "Update values and click Submit to update this Terms of Use record";
