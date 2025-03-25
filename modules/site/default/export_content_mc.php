@@ -5,6 +5,9 @@
 	$page->addBreadCrumb("Export Settings","/_site/export_content");
 	$page->instructions = "Select the settings you would like to export to a JSON formatted file.";
 	
+	$request = new \HTTP\Request();
+	$can_proceed = true;
+	
 	/** 
 	 * is checked check for checkboxes
 	 *
@@ -16,24 +19,32 @@
 	
 	// content requested to export form submitted
 	$siteData = new \Site\Data();
-	if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
-		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+	$content = $_REQUEST['content'] ?? null;
+	if (is_array($content) && !empty($content)) {
+		$csrfToken = $_REQUEST['csrfToken'] ?? null;
+		if (!$GLOBALS['_SESSION_']->verifyCSRFToken($csrfToken)) {
 			$page->addError("Invalid Token");
+			$can_proceed = false;
 		} else {
-
 		    // Configurations Selected
-		    if (in_array('Configurations', $_REQUEST['content'])) {
+		    if (in_array('Configurations', $content)) {
                 $siteConfigurations = new \Site\ConfigurationList();
                 $configurations = $siteConfigurations->find();
-                if ($siteConfigurations->error()) $page->addError($siteConfigurations->error());
+                if ($siteConfigurations->error()) {
+                	$page->addError($siteConfigurations->error());
+                	$can_proceed = false;
+                }
                 $siteData->setConfigurations($configurations); 
 		    }    
 
     		// Navigation Selected
-		    if (in_array('Navigation', $_REQUEST['content'])) {
+		    if (in_array('Navigation', $content)) {
                 $menuList = new \Site\Navigation\MenuList();
                 $menus = $menuList->find();
-                if ($menuList->error()) $page->addError($menuList->error());
+                if ($menuList->error()) {
+                	$page->addError($menuList->error());
+                	$can_proceed = false;
+                }
                 
                 // get sub menu items for JSON data
                 $navigationItemList = new \Site\Navigation\ItemList();
@@ -42,10 +53,13 @@
 		    }
 
     	    // Terms of Use Selected
-		    if (in_array('Terms', $_REQUEST['content'])) {
+		    if (in_array('Terms', $content)) {
                 $termsOfUseList = new \Site\TermsOfUseList();
                 $termsOfUse = $termsOfUseList->find();
-                if ($termsOfUseList->error()) $page->addError($termsOfUseList->error());
+                if ($termsOfUseList->error()) {
+                	$page->addError($termsOfUseList->error());
+                	$can_proceed = false;
+                }
                 
                 // get sub terms of use items for JSON data
                 $termsOfUseVersionList = new \Site\TermsOfUseVersionList();
@@ -56,15 +70,14 @@
 		    }
 
             // Marketing content Selected
-		    if (in_array('Marketing', $_REQUEST['content'])) {
-
+		    if (in_array('Marketing', $content)) {
                 // get pages
                 $pagelist = new \Site\PageList();
                 $pages = $pagelist->find(array('module'=>'content', 'view'=>'index'));
                 
-                // get page metadata
-                $pageMetaDataList = new \Site\Page\MetadataList();
-                $pageMetaData = $pageMetaDataList->find();
+                // NOTE: Page metadata functionality appears to be disabled or missing
+                // The class \Site\Page\MetadataList or \Site\Page\MetaDataList does not exist
+                $pageMetaData = array();
 
                 // get all the HTML content blocks for pages
                 $contentBlocks = array();

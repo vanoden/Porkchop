@@ -13,8 +13,12 @@
 	/* Validate Form Data					*/
 	/****************************************/
 	// Get the order from Post or Get Vars
-	if (isset($_REQUEST['order_id'])) {
-		$order = new \Sales\Order($_REQUEST['order_id']);
+	$can_proceed = true;
+	
+	$request = new \HTTP\Request();
+	$order_id = $_REQUEST['order_id'] ?? null;
+	if ($request->validInteger($order_id)) {
+		$order = new \Sales\Order($order_id);
 	}
 	elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 		$order = new \Sales\Order();
@@ -26,36 +30,41 @@
 
 	// Load Each of the necessary objects
 	$form = array();
-	if (!empty($_REQUEST['organization_id'])) {
-		$organization = new \Register\Organization($_REQUEST['organization_id']);
+	$organization_id = $_REQUEST['organization_id'] ?? null;
+	if ($request->validInteger($organization_id)) {
+		$organization = new \Register\Organization($organization_id);
 		$parameters['organization_id'] = $organization->id;
 		$form['organization_id'] = $organization->id;
 	}
 	else $organization = $order->organization();
 
-	if (!empty($_REQUEST['customer_id'])) {
-		$customer = new \Register\Customer($_REQUEST['customer_id']);
+	$customer_id = $_REQUEST['customer_id'] ?? null;
+	if ($request->validInteger($customer_id)) {
+		$customer = new \Register\Customer($customer_id);
 		$parameters['customer_id'] = $customer->id;
 		$form['customer_id'] = $customer->id;
 	}
 	else $customer = $order->customer();
 
-	if (!empty($_REQUEST['shipping_location'])) {
-		$shipping_location = new \Register\Location($_REQUEST['shipping_location']);
+	$shipping_location = $_REQUEST['shipping_location'] ?? null;
+	if ($request->validInteger($shipping_location)) {
+		$shipping_location = new \Register\Location($shipping_location);
 		$parameters['shipping_location_id'] = $shipping_location->id;
 		$form['shipping_location_id'] = $shipping_location->id;
 	}
 	else $shipping_location = $order->shipping_location();
 
-	if (!empty($_REQUEST['billing_location'])) {
-		$billing_location = new \Register\Location($_REQUEST['billing_location']);
+	$billing_location = $_REQUEST['billing_location'] ?? null;
+	if ($request->validInteger($billing_location)) {
+		$billing_location = new \Register\Location($billing_location);
 		$parameters['billing_location_id'] = $billing_location->id;
 		$form['billing_location_id'] = $billing_location->id;
 	}
 	else $billing_location = $order->billing_location();
 
-	if (!empty($_REQUEST['shipping_vendor_id'])) {
-		$shipping_vendor = new \Shipping\Vendor($_REQUEST['shipping_vendor_id']);
+	$shipping_vendor_id = $_REQUEST['shipping_vendor_id'] ?? null;
+	if ($request->validInteger($shipping_vendor_id)) {
+		$shipping_vendor = new \Shipping\Vendor($shipping_vendor_id);
 		$parameters['shipping_vendor_id'] = $shipping_vendor->id;
 		$form['shipping_vendor_id'] = $shipping_vendor->id;
 	}
@@ -92,20 +101,30 @@
 			foreach ($_REQUEST['items'] as $item_id => $one) {
 				$item_params = array();
 				$item = $order->getItem($item_id);
-				if ($_REQUEST['description'][$item_id] != $item->description) $item_params['description'] = $_REQUEST['description'][$item_id];
-				if ($_REQUEST['price'][$item_id] != $item->unit_price) $item_params['unit_price'] = $_REQUEST['price'][$item_id];
+				
+				$description = $_REQUEST['description'][$item_id] ?? null;
+				if ($request->validText($description) && $description != $item->description) 
+					$item_params['description'] = $description;
+				
+				$price = $_REQUEST['price'][$item_id] ?? null;
+				if ($request->validDecimal($price) && $price != $item->unit_price) 
+					$item_params['unit_price'] = $price;
+				
 				if ($item->product()->type != 'unique') {
-					if ($_REQUEST['quantity'][$item_id] != $item->quantity) {
-						if ($_REQUEST['quantity'][$item_id] <= 0) {
+					$quantity = $_REQUEST['quantity'][$item_id] ?? null;
+					if ($request->validInteger($quantity) && $quantity != $item->quantity) {
+						if ($quantity <= 0) {
 							$order->dropItem($item_id);
 							$page->appendSuccess("Dropped item ".$item_id);
 							continue;
 						}
-						else $item_params['quantity'] = $_REQUEST['quantity'][$item_id];
+						else $item_params['quantity'] = $quantity;
 					}
 				}
 				else {
-				if ($_REQUEST['serial_number'][$item_id] != $item->serial_number) $item_params['serial_number'] = $_REQUEST['serial_number'][$item_id];
+					$serial_number = $_REQUEST['serial_number'][$item_id] ?? null;
+					if ($request->validText($serial_number) && $serial_number != $item->serial_number) 
+						$item_params['serial_number'] = $serial_number;
 				}
 				if (count($item_params)) {
 					if ($item->update($item_params)) {
@@ -113,15 +132,20 @@
 					}
 					else {
 						$page->addError("Cannot update order item: ".$item->error());
+						$can_proceed = false;
 					}
 				}
 			}
 		}
 
 		// Add a new Item
-		if ($_REQUEST['new_item']) {
-			$product = new \Product\Item($_REQUEST['new_item']);
-			if (!$product->exists()) $page->addError("Product not found");
+		$new_item = $_REQUEST['new_item'] ?? null;
+		if ($request->validInteger($new_item)) {
+			$product = new \Product\Item($new_item);
+			if (!$product->exists()) {
+				$page->addError("Product not found");
+				$can_proceed = false;
+			}
 			elseif ($product->type != 'unique') {
 				// Don't want numerous lines of same product
 				// unless it's a Unique product.
@@ -129,10 +153,16 @@
 				$line = $order->productLine($product->id);
 				if (!empty($line)) {
 					// Update the existing line
+					$product_id_quantity = $_REQUEST['product_id'][$item_id] ?? 0;
+					if (!$request->validInteger($product_id_quantity)) $product_id_quantity = 0;
+					
 					$line->update(array(
-						'quantity'	=> $line->quantity + $_REQUEST['product_id'][$item_id]
+						'quantity'	=> $line->quantity + $product_id_quantity
 					));
-					if ($line->error()) $page->addError($line->error());
+					if ($line->error()) {
+						$page->addError($line->error());
+						$can_proceed = false;
+					}
 					else $page->appendSuccess("Incremented quantity of ".$product->code);
 				}
 				else {
@@ -143,7 +173,10 @@
 						'quantity'		=> 1,
 						'unit_price'	=> $product->currentPrice()->amount
 					));
-					if ($order->error()) $page->addError($order->error());
+					if ($order->error()) {
+						$page->addError($order->error());
+						$can_proceed = false;
+					}
 					else $page->appendSuccess("Added ".$product->code);
 				}
 			}
@@ -155,54 +188,62 @@
 					'quantity'		=> 1,
 					'unit_price'	=> $product->currentPrice()->amount
 				));
-				if ($order->error()) $page->addError($order->error());
+				if ($order->error()) {
+					$page->addError($order->error());
+					$can_proceed = false;
+				}
 				else $page->appendSuccess("Added ".$product->code);
 			}
 		}
 
 		// remove item from order
-		if (!empty($_REQUEST['remove_item'])) {
-			$order->appendSuccess("Removing item ".$_REQUEST['remove_item']);
-			$order->dropItem($_REQUEST['remove_item']);
+		$remove_item = $_REQUEST['remove_item'] ?? null;
+		if ($request->validInteger($remove_item)) {
+			$order->appendSuccess("Removing item ".$remove_item);
+			$order->dropItem($remove_item);
 		}
 	}
 
 	/********************************************/
 	/* Update Order Status Per Footer Buttons	*/
 	/********************************************/
-	if (isset($_REQUEST['btn_submit'])) {
+	$btn_submit = $_REQUEST['btn_submit'] ?? null;
+	if ($request->validText($btn_submit)) {
 		if ($page->errorCount() > 0) {
 			$page->addError("Not updating order status");
+			$can_proceed = false;
 		}
-		if (preg_match('/Save/',$_REQUEST['btn_submit'])) {
-			header("Location: /_sales/orders");
-
-		}
-		elseif (preg_match('/Quote/',$_REQUEST['btn_submit'])) {
-			if ($order->quote()) {
+		
+		if ($can_proceed) {
+			if (preg_match('/Save/',$btn_submit)) {
 				header("Location: /_sales/orders");
-				exit;
 			}
-			else {
-				$page->addError($order->error());
+			elseif (preg_match('/Quote/',$btn_submit)) {
+				if ($order->quote()) {
+					header("Location: /_sales/orders");
+					exit;
+				}
+				else {
+					$page->addError($order->error());
+				}
 			}
-		}
-		elseif (preg_match('/Approve/',$_REQUEST['btn_submit'])) {
-			if ($order->approve()) {
-				header("Location: /_sales/orders");
-				exit;
+			elseif (preg_match('/Approve/',$btn_submit)) {
+				if ($order->approve()) {
+					header("Location: /_sales/orders");
+					exit;
+				}
+				else {
+					$page->addError($order->error());
+				}
 			}
-			else {
-				$page->addError($order->error());
-			}
-		}
-		elseif (preg_match('/Cancel/',$_REQUEST['btn_submit'])) {
-			if ($order->cancel()) {
-				header("Location: /_sales/orders");
-				exit;
-			}
-			else {
-				$page->addError($order->error());
+			elseif (preg_match('/Cancel/',$btn_submit)) {
+				if ($order->cancel()) {
+					header("Location: /_sales/orders");
+					exit;
+				}
+				else {
+					$page->addError($order->error());
+				}
 			}
 		}
 	}
