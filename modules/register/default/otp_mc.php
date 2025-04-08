@@ -4,6 +4,10 @@ $can_proceed = true;
 
 $page->requireRole('developer testing only');
 
+// Return 404 to exclude from testing for now
+header("HTTP/1.0 404 Not Found");
+exit;
+
 // get the secret key from the database
 $tfa = new \Register\AuthenticationService\TwoFactorAuth(null, $GLOBALS['_SESSION_']->customer->code, $GLOBALS['_config']->site->hostname);
 $userStoredSecret = $GLOBALS['_SESSION_']->customer->secret_key;

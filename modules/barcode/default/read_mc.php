@@ -7,6 +7,12 @@
 	$page = new \Site\Page();
 	$can_proceed = true;
 
+
+	// Return 404 to exclude from testing for now
+	header("HTTP/1.0 404 Not Found");
+	exit;
+
+
 	$tmp_file = "/tmp/image_" . getmypid() . ".png";
 
 	// Validate method

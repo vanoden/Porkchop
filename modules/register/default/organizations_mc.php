@@ -23,10 +23,19 @@
 		$controls['like'] = array('name');
 	}
 
-	$find_parameters['status'] = array('NEW','ACTIVE');
-	if (!empty($_REQUEST['deleted'])) array_push($find_parameters['status'],'DELETED');
-	if (!empty($_REQUEST['expired'])) array_push($find_parameters['status'],'EXPIRED');
-	if (!empty($_REQUEST['hidden'])) array_push($find_parameters['status'],'HIDDEN');
+	// Initialize status array based on checkboxes
+	$find_parameters['status'] = array();
+	
+	// If no filters are selected, show only NEW and ACTIVE by default
+	if (empty($_REQUEST['deleted']) && empty($_REQUEST['expired']) && empty($_REQUEST['hidden'])) {
+		$find_parameters['status'] = array('NEW', 'ACTIVE');
+	} else {
+		// Only add the statuses that are checked
+		if (isset($_REQUEST['deleted']) && $_REQUEST['deleted'] == 1) array_push($find_parameters['status'], 'DELETED');
+		if (isset($_REQUEST['expired']) && $_REQUEST['expired'] == 1) array_push($find_parameters['status'], 'EXPIRED');
+		if (isset($_REQUEST['hidden']) && $_REQUEST['hidden'] == 1) array_push($find_parameters['status'], 'HIDDEN');
+	}
+	
 	if (!empty($_REQUEST['searchedTag'])) $find_parameters['searchedTag'] = $_REQUEST['searchedTag'];
 
 	// Get Count before Pagination

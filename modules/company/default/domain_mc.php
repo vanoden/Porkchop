@@ -5,20 +5,21 @@
 	// Initialize domain object and validate parameters
 	$domain = new \Company\Domain();
 	
-	// Validate and load by id or name
-	if ($domain->validInteger($_REQUEST['id'] ?? null)) {
-		$domain = new \Company\Domain($_REQUEST['id']);
-	} else {
-		$page->addError("Invalid domain ID"); 
-		$_REQUEST['id'] = null;
-	}
-	
-	// Validate hostname
-	if ($domain->validHostname($_REQUEST['name'] ?? null)) {
-		if (!$domain->get($_REQUEST["name"])) $page->addError("Hostname not found");
-	} else {
-		$page->addError("Invalid hostname format");
-		$_REQUEST['name'] = null;
+	// Validate and load by id or name, but not both
+	if (!empty($_REQUEST['id'])) {
+		if ($domain->validInteger($_REQUEST['id'])) {
+			$domain = new \Company\Domain($_REQUEST['id']);
+		} else {
+			$page->addError("Invalid domain ID"); 
+			$_REQUEST['id'] = null;
+		}
+	} elseif (!empty($_REQUEST['name'])) {
+		if ($domain->validHostname($_REQUEST['name'])) {
+			if (!$domain->get($_REQUEST["name"])) $page->addError("Hostname not found");
+		} else {
+			$page->addError("Invalid hostname format");
+			$_REQUEST['name'] = null;
+		}
 	}
 
 	$companyList = new \Company\CompanyList();
