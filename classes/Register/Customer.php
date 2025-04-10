@@ -4,6 +4,7 @@
     class Customer extends Person {
 		public bool $elevated = false;
 		public int $unreadMessages = 0;
+		protected string $password = '';
 
 		/**
 		 * Constructor
