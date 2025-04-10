@@ -1,16 +1,15 @@
 <?php
-	$page = new \Site\Page();
-	$page->requirePrivilege("configure site");
+$page = new \Site\Page();
+$page->requirePrivilege("configure site");
+$domain = new \Company\Domain();
 
-	$domain = new \Company\Domain();
-	
-	// Validate and load by id or name
-	if ($domain->validInteger($_REQUEST['id'] ?? null)) {
-		$domain = new \Company\Domain($_REQUEST['id']);
-	} else  {
-		$page->addError("Invalid domain ID"); 
-		$_REQUEST['id'] = null;
-	
+// Validate and load by id or name
+if ($domain->validInteger($_REQUEST['id'] ?? null)) {
+	$domain = new \Company\Domain($_REQUEST['id']);
+} else {
+	$page->addError("Invalid domain ID");
+	$_REQUEST['id'] = null;
+
 	// Validate hostname
 	if ($domain->validHostname($_REQUEST['name'] ?? null)) {
 		if (!$domain->get($_REQUEST["name"])) $page->addError("Hostname not found");
@@ -28,8 +27,7 @@
 	if ($_REQUEST['btn_submit'] ?? null) {
 		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'] ?? '')) {
 			$page->addError("Invalid Token");
-		}
-		else {
+		} else {
 			// Validate company_id
 			$validCompanyId = false;
 			$company = new \Company\Company();
@@ -40,7 +38,7 @@
 				$page->addError("Invalid company ID");
 				$_REQUEST['company_id'] = null;
 			}
-			
+
 			// Validate location_id
 			$validLocationId = false;
 			$location = new \Company\Location();
@@ -58,8 +56,7 @@
 				if (!($company->id ?? null)) {
 					$page->addError("Company not found");
 					$_REQUEST['company_id'] = null;
-				}
-				elseif (!($location->id ?? null)) {
+				} elseif (!($location->id ?? null)) {
 					$page->addError("Location not found");
 					$_REQUEST['location_id'] = null;
 				}
@@ -82,8 +79,7 @@
 				elseif (!$domain->validDate($_REQUEST["date_expires"] ?? null)) {
 					$page->addError("Invalid date expires");
 					$_REQUEST['date_expires'] = null;
-				}
-				else {
+				} else {
 					$parameters = array(
 						"name"	=> $_REQUEST["domain_name"] ?? null,
 						"registrar"	=> $_REQUEST["domain_registrar"] ?? null,
@@ -113,8 +109,9 @@
 	$page->title("Domain");
 
 	$page->AddBreadCrumb("Company");
-	$page->AddBreadCrumb("Domains","/_company/domains");
-	$page->AddBreadCrumb($domain->name,"/_company/domain?id=".$domain->id);
+	$page->AddBreadCrumb("Domains", "/_company/domains");
+	$page->AddBreadCrumb($domain->name, "/_company/domain?id=" . $domain->id);
 
 	if ($domain->id ?? null) $domain_name = $domain->name;
 	else $domain_name = "New Domain";
+}

@@ -42,9 +42,9 @@
 
 	// Validate parent item if provided
 	if ($can_proceed && !empty($_REQUEST['parent_id'])) {
-		if (!$navItem->validInteger($_REQUEST['parent_id'])) {
-			$page->addError("Invalid parent ID format");
-			$can_proceed = false;
+		if (!$navItem->validInteger($_REQUEST['parent_id']) || $_REQUEST['parent_id'] === 'undefined') {
+			// If parent_id is invalid or 'undefined', treat it as null
+			$_REQUEST['parent_id'] = null;
 		} else {
 			$parent = new \Site\Navigation\Item($_REQUEST['parent_id']);
 		}

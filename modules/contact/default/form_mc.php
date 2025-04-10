@@ -5,6 +5,29 @@
 	if (isset($_REQUEST['btn_submit'])) {
 		app_log('Contact form submitted by '.$_REQUEST['first_name'].' '.$_REQUEST['last_name'].' <'.$_REQUEST['email_address'].'>','notice',__FILE__,__LINE__);
 
+		# Validate required fields
+		$required_fields = [
+			'first_name', 'last_name', 'title', 'organization', 
+			'address_1', 'address_2', 'city', 'state', 
+			'zip_code', 'country', 'phone', 'email_address', 
+			'email_address_confirm'
+		];
+		
+		foreach ($required_fields as $field) {
+			if (empty($_REQUEST[$field])) {
+				$page->addError("The field " . ucwords(str_replace('_', ' ', $field)) . " is required.");
+			}
+		}
+		
+		# Validate email addresses
+		if (!empty($_REQUEST['email_address']) && !empty($_REQUEST['email_address_confirm'])) {
+			if ($_REQUEST['email_address'] !== $_REQUEST['email_address_confirm']) {
+				$page->addError("Email addresses do not match.");
+			} elseif (!filter_var($_REQUEST['email_address'], FILTER_VALIDATE_EMAIL)) {
+				$page->addError("Please enter a valid email address.");
+			}
+		}
+
 		# Check reCAPTCHA
 		$url = "http://www.google.com/recaptcha/api/verify";
 		$data = array(
@@ -35,14 +58,14 @@
 
 			# Store Data
 			$event = new \Contact\Event();
-			if ($event->error) {
-				app_log("Error initializing ContactEvent: ".$event->error,'error',__FILE__,__LINE__);
+			if ($event->error()) {
+				app_log("Error initializing ContactEvent: ".$event->error(),'error',__FILE__,__LINE__);
 				$page->addError("Sorry, there was an error submitting the contact form.  Please call.");
 			}
 			else {
 				$event->add($_REQUEST);
-				if ($event->error) {
-					app_log("Error submitting ContactEvent: ".$event->error,'error',__FILE__,__LINE__);
+				if ($event->error()) {
+					app_log("Error submitting ContactEvent: ".$event->error(),'error',__FILE__,__LINE__);
 					$page->addError("Sorry, there was an error submitting the contact form.  Please call.");
 				} else {
 					app_log("Contact Form Submitted: ".print_r($form_data,true),'notice',__FILE__,__LINE__);
@@ -71,7 +94,7 @@
 			}
 		} else {
 			app_log("reCaptcha failed: $result",'notice',__FILE__,__LINE__);
-			print "Error submitting form: ".$result;
+			$page->addError("Error submitting form: ".$result);
 		}
 	}
 	else

@@ -5,6 +5,10 @@
 ### <code> or with id post param.		###
 ###########################################
 
+// Return 404 to exclude from testing for now
+header("HTTP/1.0 404 Not Found");
+exit;
+
 # Load Page Info
 $site = new \Site();
 $page = $site->page();

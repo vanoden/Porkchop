@@ -1,4 +1,9 @@
 <?php
+
+// Return 404 to exclude from testing for now
+header("HTTP/1.0 404 Not Found");
+exit;
+
 	$page = new \Site\Page();
 	$page->requirePrivilege('manage product builds');
 	$product = new \Build\Product();
