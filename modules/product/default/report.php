@@ -24,9 +24,9 @@
             <option value="kit"<?php if ($_REQUEST['product_type'] == "kit") { print " selected"; } ?>>Kit</option>
             <option value="note"<?php if ($_REQUEST['product_type'] == "note") { print " selected"; } ?>>Note</option>
         </select>
-        <input type="checkbox" name="status_active" value="1" <?php if ($_REQUEST['status_active'] == 1) { print "checked"; } ?>/><label>Active</label>
-        <input type="checkbox" name="status_hidden" value="1" <?php if ($_REQUEST['status_hidden'] == 1) { print "checked"; } ?>/><label>Hidden</label>
-        <input type="checkbox" name="status_deleted" value="1" <?php if ($_REQUEST['status_deleted'] == 1) { print "checked"; } ?>/><label>Deleted</label>
+        <input type="checkbox" name="status_active" value="true" <?php if ($_REQUEST['status_active'] == 'true') { print "checked"; } ?>/><label>Active</label>
+        <input type="checkbox" name="status_hidden" value="true" <?php if ($_REQUEST['status_hidden'] == 'true') { print "checked"; } ?>/><label>Hidden</label>
+        <input type="checkbox" name="status_deleted" value="true" <?php if ($_REQUEST['status_deleted'] == 'true') { print "checked"; } ?>/><label>Deleted</label>
         <input type="submit" name="btn_search" value="Search" />
     </form>
 </div>
