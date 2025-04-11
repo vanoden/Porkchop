@@ -917,7 +917,7 @@ class BaseModel extends \BaseClass {
 		$rs = $database->Execute($get_metadata_keys_query);
 		if (! $rs) {
 			$this->SQLError($database->ErrorMsg());
-			return false;
+			return [];
 		}
 
 		// Fetch Results
@@ -952,7 +952,7 @@ class BaseModel extends \BaseClass {
 		$rs = $database->Execute($get_metadata_keys_query);
 		if (! $rs) {
 			$this->SQLError($database->ErrorMsg());
-			return false;
+			return [];
 		}
 
 		// Fetch Results
@@ -1131,7 +1131,7 @@ class BaseModel extends \BaseClass {
 		$rs = $database->Execute($get_metadata_query);
 		if (! $rs) {
 			$this->SQLError($database->ErrorMsg());
-			return false;
+			return new \stdClass();
 		}
 
 		// Fetch Results
@@ -1173,6 +1173,35 @@ class BaseModel extends \BaseClass {
 		}
 
 		return $metadata;
+	}
+
+	/** @method public dropAllMetadata()
+	 * Drop all metadata for this object
+	 * @return bool True if successful
+	 */
+	public function dropAllMetadata(): bool {
+		$this->clearError();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Prepare Query
+		$drop_metadata_query = "
+				DELETE FROM `$this->_metaTableName`
+				WHERE `$this->_tableMetaFKColumn` = ?
+			";
+
+		// Bind Parameters
+		$database->AddParam($this->id);
+
+		// Execute Query
+		$rs = $database->Execute($drop_metadata_query);
+		if (! $rs) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
