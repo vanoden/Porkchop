@@ -1383,7 +1383,7 @@ class BaseModel extends \BaseClass {
 	 * @param string $label Optional label for the image
 	 * @return bool True if upload and association are successful, false otherwise
 	 */
-	public function uploadImage(array $fileData, string $path = '', string $label = '', int $repository_id, $object_type = null): bool {
+	public function uploadImage(array $fileData, int $repository_id, string $path = '', string $label = '', $object_type = null): bool {
 
 		$this->clearError();
 

@@ -176,12 +176,18 @@
 		}
 
 		public function lastVersion() {
+			
+			if (!isset($this->id) || !is_numeric($this->id)) {
+				$this->_error = "Invalid product ID";
+				return null;
+			}
+
 			$get_object_query = "
 				SELECT  id
 				FROM    build_versions
 				WHERE   product_id = ?
 				AND     status = 'PUBLISHED'
-				ORDER BY major DESC, minor DESC, build DESC
+				ORDER BY number DESC
 			";
 			$rs = $GLOBALS['_database']->Execute(
 				$get_object_query,

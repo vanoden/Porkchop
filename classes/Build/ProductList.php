@@ -5,7 +5,7 @@
 		private $_error;
 		private $_count = 0;
 
-		public function find ($parameters) {
+		public function find ($parameters = null) {
 			$find_objects_query = "
 				SELECT	id
 				FROM	build_products

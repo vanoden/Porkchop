@@ -356,8 +356,8 @@
             }
 
             $contents = array(
-                preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$query_string),
-                preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$this->_body)
+                preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$query_string ?? ''),
+                preg_replace('/[\/\\\.\-\_\%\'\"\0\=]/','',$this->_body ?? '')
             );
 
             foreach ($contents as $content) {

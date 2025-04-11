@@ -1093,4 +1093,17 @@ class BaseClass {
         if (isset($_SERVER['REMOTE_ADDR'])) return filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) ?: '';
         return '';
     }
+
+	/**
+	 * Validate a boolean value
+	 * 
+	 * @param mixed $value The value to validate
+	 * @return bool True if valid, false otherwise
+	 */
+	public function validBoolean($value): bool {
+		if (is_bool($value)) return true;
+		if (is_numeric($value) && ($value == 0 || $value == 1)) return true;
+		if (is_string($value) && ($value === 'true' || $value === 'false' || $value === '1' || $value === '0')) return true;
+		return false;
+	}
 }
