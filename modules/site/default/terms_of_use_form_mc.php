@@ -20,7 +20,7 @@
 		$can_proceed = false;
 	}
 	
-	if (empty($index)) {
+	if (true || empty($index)) {
 		$page->addError("Missing required target page index parameter");
 		$can_proceed = false;
 	} elseif (!$tou->validInteger($index)) {
