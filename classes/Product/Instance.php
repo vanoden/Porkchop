@@ -36,7 +36,13 @@
 		 */
 		public function __call($name,$parameters) {
 			if ($name == 'get' && count($parameters) == 2) return $this->getWithProduct($parameters[0],$parameters[1]);
-			elseif ($name == 'get') return $this->getSimple($parameters[0]);
+			elseif ($name == 'get') {
+				if (empty($parameters[0])) {
+					$this->error("Code parameter cannot be null");
+					return false;
+				}
+				return $this->getSimple($parameters[0]);
+			}
 			else {
 				$this->error("Invalid method called");
 				return false;

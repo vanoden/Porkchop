@@ -7,6 +7,7 @@
         }
 
 		public function searchAdvanced($search_string, $advanced = [], $controls = []): array {
+			
 			$this->clearError();
 			$this->resetCount();
 

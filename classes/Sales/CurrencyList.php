@@ -32,9 +32,8 @@
 
 			// Build Results
 			$objects = array();
-			while (list($organization_id,$product_id) = $rs->FetchRow()) {
-				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
-				$object = $orgProduct;
+			while (list($id) = $rs->FetchRow()) {
+				$object = new \Sales\Currency($id);
 				if ($this->error()) {
 					$this->error("Error getting details for ".$this->_modelName.": ".$this->error());
 					return [];

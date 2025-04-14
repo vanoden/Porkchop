@@ -12,7 +12,7 @@ $find_parameters['status'] = array('NEW', 'ACTIVE');
 
 // Get organizations
 $organizationlist = new \Register\OrganizationList();
-$organizationlist->search($find_parameters, ['count' => true]);
+$organizationlist->searchAdvanced($find_parameters, ['count' => true]);
 if ($organizationlist->error()) {
     $page->addError($organizationlist->error());
     $can_proceed = false;
