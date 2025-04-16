@@ -170,7 +170,7 @@
 			$page->addError("Error finding human members: ".$organization->error());
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
-		
+
 		$automationMembers = $organization->members('automation', $status);
 		if ($organization->error()) {
 			$page->addError("Error finding automation members: ".$organization->error());
