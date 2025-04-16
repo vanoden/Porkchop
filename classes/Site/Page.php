@@ -1248,7 +1248,8 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 				elseif ($this->view() == 'admin.html') {
 					// Don't let people see admin template directly.
 					// Not an actual risk, but SecureWorks called it out.
-					$this->notFound();
+					http_response_code(404);
+					exit;
 				}
 			}
 		}
