@@ -377,13 +377,17 @@
 			}
 
 			$find_person_query .= "
-				AND		(	login LIKE '$search_string'
-					OR		first_name LIKE '$search_string'
-					OR		last_name LIKE '$search_string'
-					OR		middle_name LIKE '$search_string'
-					OR		last_name LIKE '$search_string'
+				AND		(	login LIKE ?
+					OR		first_name LIKE ?
+					OR		last_name LIKE ?
+					OR		middle_name LIKE ?
+					OR		last_name LIKE ?
 				)
 			";
+			$bind_params = array();
+			for ($i = 0; $i < 5; $i++) {
+				array_push($bind_params, $search_string);
+			}
 
 			if (isset($parameters['status'])) {
 				if (is_array($parameters['status'])) {
