@@ -1221,6 +1221,10 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 			return "/_".$this->module()."/".$this->view()."/".$this->index();
 		}
 
+		/** @method public function rewrite()
+		 * Rewrite old and producted URI's to new ones
+		 * @return void
+		 */
 		public function rewrite() {
 			if ($this->module() == 'static') {
 				if ($this->view() == 'index.html') {
@@ -1240,6 +1244,11 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 				}
 				elseif ($this->view() == 'distributors.html') {
 					$this->getPage('content','index','distributors');
+				}
+				elseif ($this->view() == 'admin.html') {
+					// Don't let people see admin template directly.
+					// Not an actual risk, but SecureWorks called it out.
+					$this->notFound();
 				}
 			}
 		}
