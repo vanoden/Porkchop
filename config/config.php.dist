@@ -19,6 +19,9 @@
 	# Initialize config
 	$_config = new stdClass();
 
+	# Service Configuation
+	$_config->php_error_reporting = null;   // Default to server configuration
+
 	# Site Configurations
 	$_config->site = new stdClass();
 	$_config->site->name = "Porkchop";

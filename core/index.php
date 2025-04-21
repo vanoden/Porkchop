@@ -31,7 +31,6 @@
      *  7.4.0	This function has been deprecated.
      *  5.4.0	Always returns FALSE because the magic quotes feature was removed from PHP.
      */
-    # error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
     if (!function_exists('get_magic_quotes_gpc')) {
         function get_magic_quotes_gpc() {
             return FALSE;
@@ -47,20 +46,16 @@
     // ignore all the isset warnings for now
     if (PHP_VERSION_ID > 70000) error_reporting(~E_DEPRECATED & ~E_NOTICE);
 
-	//error_reporting(E_ALL);
-	//ini_set('display_errors', 1);
-
-	error_reporting(0);
-
-
-
 	define("MODE","http");
 	###################################################
 	### Load Dependencies							###
 	###################################################
 	# Load Config
 	require '../config/config.php';
-	
+
+	# See If Error Reporting Configured
+	if (!empty($GLOBALS['_config']->php_error_reporting)) error_reporting($GLOBALS['_config']->php_error_reporting);
+
 	# General Utilities
 	require INCLUDES.'/functions.php';
 	spl_autoload_register('load_class');
