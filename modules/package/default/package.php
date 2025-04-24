@@ -39,7 +39,7 @@
     </div>
     <div class="container">
         <span class="label">Description</span>
-        <textarea name="description" class="value input wide_xl"><?=$package->description?></textarea>
+        <textarea name="description" class="value input wide_xl"><?=strip_tags($package->description)?></textarea>
     </div>
     <div class="container">
         <span class="label">Platform</span>

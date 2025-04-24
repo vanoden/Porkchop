@@ -134,7 +134,7 @@
 			<?php	} else { ?> 
 			  <div class="tableCell"><input type="text" name="serial_number[<?=$item->id?>]" value="<?=$item->serial_number?>" onchange="update(this)" /></div>
 			<?php	} ?>
-			<div class="tableCell"><textarea style="max-height: 35px;" name="description[<?=$item->id?>]" onchange="update()"><?=$item->description?></textarea></div>
+			<div class="tableCell"><textarea style="max-height: 35px;" name="description[<?=$item->id?>]" onchange="update()"><?=strip_tags($item->description)?></textarea></div>
 		  <?php	if ($item->product()->type == 'unique') { ?>
 			  <div class="tableCell"><span class="value" style="text-align: right"><?=number_format($item->quantity,0)?></div>
 		  <?php	} else { ?>

@@ -160,7 +160,7 @@
                 <div id="message-subject-<?=$siteMessage->id?>" class="message-content"><?=$siteMessage->subject?></div>
             </div>
             <div class="message-text">
-                <div id="message-text-<?=$siteMessage->id?>" class="message-content"><?=$siteMessage->content?></div>
+                <div id="message-text-<?=$siteMessage->id?>" class="message-content"><?= strip_tags($siteMessage->content) ?></div>
             </div>
           </div>
         </div>

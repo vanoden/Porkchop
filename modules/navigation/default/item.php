@@ -26,7 +26,7 @@
 	<td><input type="text" name="view_order" class="value input" style="width: 80px; text-align: right" value="<?=$item->view_order?>" /></td>
 </tr>
 <tr><th colspan="6">Description</th></tr>
-<tr><td colspan="6"><textarea name="description" class="value input" style="width: 100%"><?=$item->description?></textarea></td></tr>
+<tr><td colspan="6"><textarea name="description" class="value input" style="width: 100%"><?=strip_tags($item->description)?></textarea></td></tr>
 <tr><td colspan="6"><input type="submit" class="button" name="btn_delete" value="Delete"/>
 					<input type="submit" class="button" name="btn_submit" value="Submit" />
 </table>

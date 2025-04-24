@@ -43,7 +43,7 @@
 			<li><label for="name">Version Status</label><span class="value"><?= $version->status ?></span></li>
 		</ul>
 		<div id="contentArea">
-			<textarea id="content" name="content"><?= $version->content ?></textarea>
+			<textarea id="content" name="content"><?= strip_slashes($version->content) ?></textarea>
 			<?php if ($version->status == 'NEW') { ?>
 				<input type="submit" name="btn_submit" value="Submit" />
 			<?php	} ?>

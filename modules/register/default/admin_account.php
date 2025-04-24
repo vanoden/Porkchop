@@ -338,7 +338,7 @@
       <div class="tableRow">
         <div class="tableCell"><input type="checkbox" name="role[<?= $role->id ?>]" value="1" <?php if ($customer->has_role($role->name)) print " CHECKED"; ?> /></div>
         <div class="tableCell"><?= $role->name ?></div>
-        <div class="tableCell"><?= $role->description ?></div>
+        <div class="tableCell"><?= strip_tags($role->description) ?></div>
       </div>
     <?php } ?>
   </div>
@@ -389,7 +389,7 @@
         <div class="tableRow">
           <div class="tableCell"><?= $term->code ?></div>
           <div class="tableCell"><?= $term->name ?></div>
-          <div class="tableCell"><?= $term->description ?></div>
+          <div class="tableCell"><?= strip_tags($term->description) ?></div>
           <div class="tableCell">
             <?php
             $mostRecentAction = $termsOfUseActionList->find(array('user_id' => $customer->id, 'version_id' => $term->id, 'sort' => 'date_action', 'order' => 'DESC', 'limit' => 1));

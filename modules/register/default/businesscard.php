@@ -17,7 +17,7 @@
         </div>
         <div class="about-us">
             <h2><?= $organization->name ?></h2>
-            <p><?= $organization->notes ?></p>
+            <p><?= strip_slashes($organization->notes) ?></p>
             <a href="<?= $organization->website_url ?>"><?= $organization->website_url ?></a>
         </div>
          <a class="vcard-button" href="/_register/businessvcard/<?= $customer->code ?>">Add to Contacts</a>

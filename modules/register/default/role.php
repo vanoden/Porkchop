@@ -26,7 +26,7 @@ function checkUncheck(isChecked) {
 
   <div>
     <label>Description</label>
-    <input type="text" name="description" value="<?=$role->description?>" />
+    <input type="text" name="description" value="<?=strip_tags($role->description)?>" />
     <input type="hidden" name="id" value="<?=$role->id?>">
   </div>
 

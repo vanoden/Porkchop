@@ -215,7 +215,7 @@
 								</div>
 								<div class="tableCell">
 									<span class="hiddenDesktop value">Description: </span>
-									<input type="text" name="description[<?= $contact->id ?>]" class="value input contactDescriptionColumn" value="<?= $contact->description ?>" <?php if ($readOnly) echo 'disabled'; ?> />
+									<input type="text" name="description[<?= $contact->id ?>]" class="value input contactDescriptionColumn" value="<?= strip_tags($contact->description) ?>" <?php if ($readOnly) echo 'disabled'; ?> />
 								</div>
 								<div class="tableCell">
 									<span class="hiddenDesktop value">Address/Number: </span>
@@ -223,7 +223,7 @@
 								</div>
 								<div class="tableCell">
 									<span class="hiddenDesktop value">Notes: </span>
-									<input type="text" name="notes[<?= $contact->id ?>]" class="value input contactNotesColumn" value="<?= $contact->notes ?>" <?php if ($readOnly) echo 'disabled'; ?> />
+									<input type="text" name="notes[<?= $contact->id ?>]" class="value input contactNotesColumn" value="<?= strip_slashed($contact->notes) ?>" <?php if ($readOnly) echo 'disabled'; ?> />
 								</div>
 								<div class="tableCell">
 									<span class="hiddenDesktop value">Notify: </span>

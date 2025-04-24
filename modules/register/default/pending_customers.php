@@ -287,7 +287,7 @@
 		  <div id="customer_notes_form_<?=$queuedCustomer->id?>" class="hidden customer_notes_form">
         <form method="POST" action="/_register/pending_customers?search=<?=$_REQUEST['search']?>">
           <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-          <input type="text" name="notes" value="<?=$queuedCustomer->notes?>"/><br/>
+          <input type="text" name="notes" value="<?=strip_tags($queuedCustomer->notes)?>"/><br/>
           <input type="hidden" name="action" value="updateNotes"/>
           <input type="hidden" name="id" value="<?=$queuedCustomer->id?>"/>
           <button type="submit">Save</button>
@@ -295,7 +295,7 @@
         </form>
 		  </div>
 		  <div id="customer_notes_edit_links_<?=$queuedCustomer->id?>" class="customer_notes_edit_links">
-		    <?=$queuedCustomer->notes?> <br/><br/>
+		    <?=strip_tags($queuedCustomer->notes)?> <br/><br/>
 			  <?php if ($queuedCustomer->notes) { ?>
 			    <a class="small-text cursor-pointer" onclick="editNote(<?=$queuedCustomer->id?>)"><i class="fa fa-pencil-square" aria-hidden="true"></i> Edit Note</a>
 			  <?php } else { ?>

@@ -21,7 +21,7 @@
 </div>
 <div class="container">
 	<span class="label">Description</span>
-	<textarea name="description" class="value"><?=$product->description?></textarea>
+	<textarea name="description" class="value"><?=strip_tags($product->description)?></textarea>
 </div>
 <div class="container">
 	<span class="label">Major Version</span>

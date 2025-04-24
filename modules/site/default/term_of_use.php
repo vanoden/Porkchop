@@ -24,7 +24,7 @@
 		<div class="tableCell">Description</div>
 	</div>
 	<div class="tableRow">
-		<div class="tableCell"><input type="text" name="description" class="value input" value="<?=$tou->description?>" /></div>
+		<div class="tableCell"><input type="text" name="description" class="value input" value="<?=strip_tags($tou->description)?>" /></div>
 	</div>
 	<div class="tableRow">
 		<div class="tableCell">

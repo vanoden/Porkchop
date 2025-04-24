@@ -10,7 +10,7 @@
 	<span class="label">Title</span>
 	<input type="text" name="title" value="<?=$form->title?>" />
 	<span class="label">Description</span>
-	<input type="text" name="description" value="<?=$form->description?>" />
+	<input type="text" name="description" value="<?=strip_tags($form->description)?>" />
 	<span class="label">Action</span>
 	<input type="text" name="action" value="<?=$form->action?>" />
 	<span class="label">Method</span>
@@ -42,7 +42,7 @@
 					<option value="hidden"<?php if ($question->type == "hidden") print " selected";?>>Hidden</option>
 				</select>
 			</div>
-			<div class="tableCell"><input type="text" name="text[<?=$question->id?>]" value="<?=$question->text?>" /></div>
+			<div class="tableCell"><input type="text" name="text[<?=$question->id?>]" value="<?=strip_tags($question->text)?>" /></div>
 			<div class="tableCell"><input type="text" name="prompt[<?=$question->id?>]" value="<?=$question->prompt?>" /></div>
 			<div class="tableCell"><input type="checkbox" name="required[<?=$question->id?>]" value="1"<?php if ($question->required) print " checked";?> /></div>
 		</div>

@@ -10,7 +10,7 @@
 <?php	foreach ($termsOfUse as $tou) { ?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_site/term_of_use?id=<?=$tou->id?>"><?=$tou->name?></a></div>
-		<div class="tableCell"><?=$tou->description?></div>
+		<div class="tableCell"><?=strip_tags($tou->description)?></div>
 		<div class="tableCell"><?=$tou->latestVersion()->id ?: 'none'?></div>
 	</div>
 <?php	} ?>

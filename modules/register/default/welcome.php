@@ -18,6 +18,6 @@
 <?php	foreach ($items as $item) { ?>
 <div class="welcome_menu_item">
 	<a href="<?=$item->target?>" class="welcome_menu_label"><?=$item->title?></a>
-	<span class="welcome_menu_description"><?=$item->description?></span>
+	<span class="welcome_menu_description"><?=strip_tags($item->description)?></span>
 </div>
 <?php	} ?>

@@ -100,7 +100,7 @@
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <textarea name="notes" class="wide_lg"><?=$organization->notes?></textarea>
+			    <textarea name="notes" class="wide_lg"><?=strip_tags($organization->notes)?></textarea>
 		    </div>
 	    </div>
     </div>
