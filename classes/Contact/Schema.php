@@ -2,16 +2,20 @@
 	namespace Contact;
 
 	class Schema Extends \Database\BaseSchema {
-		public $module = "Contact";
+		public function __construct() {
+			$this->module = "Contact";
+			parent::__construct();
+		}
 
 		public function upgrade() {
-			$this->error = null;
+			$this->clearError();
+			$database = new \Database\Service();
 
 			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
-				if (! $GLOBALS['_database']->BeginTrans())
+				if (! $database->BeginTrans())
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$create_table_query = "
@@ -23,23 +27,20 @@
 					  PRIMARY KEY (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating contact_events table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Error creating contact_events table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
 				$this->setVersion(1);
-				$GLOBALS['_database']->CommitTrans();
+				$database->CommitTrans();
 			}
 			if ($this->version() < 2) {
 				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 				$this->setVersion(2);
 			}
 
-			$this->addRoles(array(
-				'contact admin'	=> 'Can view contact request, notified of requests'
-			));
 			return true;
 		}
 	}
