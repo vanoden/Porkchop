@@ -71,7 +71,11 @@ class Event Extends \BaseModel {
 			return false;
 		}
 		if (empty($GLOBALS['_SESSION_']->customer->id)) {
-			$this->error("No customer ID found in session.");
+			if ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") {
+				// Allow install.php to run without a customer ID
+				return true;
+			}
+			$this->error("No customer ID found in session.  Cannot log event.");
 			return false;
 		}
 
