@@ -170,7 +170,7 @@
 
 			$database = new \Database\Service();
 
-		    if (strlen ( $index ) < 1) $index = null;
+		    if (empty($index) || strlen($index) < 1) $index = null;
 
 		    // Prepare Query
 		    $get_object_query = "
