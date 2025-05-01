@@ -107,13 +107,14 @@ class BaseClass {
 	public function _objectName() {
 		if (!isset($caller)) {
 			$trace = debug_backtrace();
-			if (count($trace) < 3) return "Object";
+			if (count($trace) < 3) return "NULL";
 			$caller = $trace[2];
 		}
 
 		$class = isset($caller['class']) ? $caller['class'] : null;
+		if (empty($class)) return "NULL";
 		if (preg_match('/(\w[\w\_]*)$/', $class, $matches)) $classname = $matches[1];
-		else $classname = "Object";
+		else $classname = "NULL";
 		return $classname;
 	}
 
