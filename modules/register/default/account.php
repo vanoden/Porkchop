@@ -223,7 +223,7 @@
 								</div>
 								<div class="tableCell">
 									<span class="hiddenDesktop value">Notes: </span>
-									<input type="text" name="notes[<?= $contact->id ?>]" class="value input contactNotesColumn" value="<?= strip_slashed($contact->notes) ?>" <?php if ($readOnly) echo 'disabled'; ?> />
+									<input type="text" name="notes[<?= $contact->id ?>]" class="value input contactNotesColumn" value="<?= strip_tags($contact->notes) ?>" <?php if ($readOnly) echo 'disabled'; ?> />
 								</div>
 								<div class="tableCell">
 									<span class="hiddenDesktop value">Notify: </span>
