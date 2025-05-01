@@ -73,8 +73,15 @@
 			return true;
 		}
 
+		/** @method public changePassword(login,password)
+		 * Change the password for the user with the given login
+		 * @param string $login
+		 * @param string $password
+		 * @return bool True on success, false on failure
+		 */
 		public function changePassword($login,$password) {
-			app_log($GLOBALS['_SESSION_']->customer->code." changing password for ".$login,'info');
+			if ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") app_log("Installer setting password for $login",'info');
+			else app_log($GLOBALS['_SESSION_']->customer->code." changing password for ".$login,'info');
 	
 			$customer = new \Register\Customer();
 			if (! $customer->get($login)) {
