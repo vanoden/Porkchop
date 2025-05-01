@@ -6,6 +6,7 @@
 
 		public function __construct($parameters) {
 			$this->syslog = true;
+			$this->type = 'Syslog';
 			parent::__construct($parameters);
 		}
 

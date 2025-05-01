@@ -7,6 +7,7 @@
 			if (isset($parameters['html']) && $parameters['html']) {
 				$this->html = true;
 			}
+			$this->type = 'Screen';
 			parent::__construct($parameters);
 		}
 
