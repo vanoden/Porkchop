@@ -2,16 +2,20 @@
 	namespace Geography;
 
 	class Schema Extends \Database\BaseSchema {
-		public $module = "Geography";
+		public function __construct($parameters = array()) {
+			$this->module = "Geography";
+			parent::__construct($parameters);
+		}
 
 		public function upgrade() {
-			$this->error = null;
+			$this->clearError();
+			$database = new \Database\Service();
 
 			if ($this->version() < 1) {
 				app_log("Upgrading schema to version 1",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
-				if (! $GLOBALS['_database']->BeginTrans())
+				if (! $database->BeginTrans())
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				# Geography Countries
@@ -26,9 +30,9 @@
 						UNIQUE KEY `uk_abbrev` (`abbreviation`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating geography_countries table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Error creating geography_countries table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -48,14 +52,14 @@
 						FOREIGN KEY `fk_country` (`country_id`) REFERENCES `geography_countries` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating geography_provinces table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Error creating geography_provinces table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
 				$this->setVersion(1);
-				$GLOBALS['_database']->CommitTrans();
+				$database->CommitTrans();
 			}
 			return true;
 		}

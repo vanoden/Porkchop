@@ -2,10 +2,14 @@
 	namespace Email;
 
 	class Schema Extends \Database\BaseSchema {
-		public $module = "Email";
-		
+		public function __construct() {
+			$this->module = "Email";
+			parent::__construct();
+		}
+
 		public function upgrade() {
-			$this->error = null;
+			$this->clearError();
+			$database = new \Database\Service();
 
 			if ($this->version() < 2) {
 				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
@@ -29,9 +33,9 @@
 						INDEX `idx_to` (`to`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating email_messages table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Error creating email_messages table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -49,14 +53,14 @@
 						INDEX `idx_code` (`response_code`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating email_history table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Error creating email_history table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
 				$this->setVersion(2);
-				$GLOBALS['_database']->CommitTrans();
+				$database->CommitTrans();
 			}
 
 			$this->addRoles(array(
