@@ -94,7 +94,14 @@
 			}
 			if (is_array($bind_params)) $this->_params = array_merge($this->_params,$bind_params);
 			if ($this->debug == 'log' && $this->_trace_level > 0) query_log($query,$this->_params,true);
-			elseif ($this->debug == 'screen' && $this->_trace_level > 0) print "<pre>$query</pre>";
+			elseif ($this->debug == 'screen' && $this->_trace_level > 0) {
+				print "<pre>$query</pre>";
+				$count = 0;
+				foreach ($this->_params as $param) {
+					print "<pre>param[$count] = $param</pre>";
+					$count ++;
+				}
+			}
 
 			// Execute Query
 			try {
