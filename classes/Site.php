@@ -25,6 +25,7 @@
 					} catch (Exception $e) {
 						$this->install_fail("Cannot upgrade schema '".$class_name."': ".$e->getMessage());
 					}
+					$class_version = $class->version();
 					$this->install_log("$module_name::Schema: version ".$class_version);
 					if (isset($module_data['schema']) && $module_data['schema'] != $class_version) {
 						$this->install_fail($module_name." Schema version ".$class_version." doesn't match required version ".$module_data['schema']);
@@ -75,8 +76,8 @@
 				/********************************************/
 				foreach ($module_data['templates'] as $view => $template) {
 					$page = new \Site\Page(strtolower($module_name),$view);
-					if ($page->error) {
-						$this->install_fail("Error loading view '$view' for module '$module_name': ".$page->error);
+					if ($page->errorCount()) {
+						$this->install_fail("Error loading view '$view' for module '$module_name': ".$page->errorString());
 					}
 					if (! $page->id) {
 						try {
@@ -85,7 +86,7 @@
 							$this->install_fail("Cannot add view: ".$e->getMessage());
 						}
 						if (! $page->id) {
-							$this->install_log("Cannot find view '$view' for module '$module_name': ".$page->error,"warn");
+							$this->install_log("Cannot find view '$view' for module '$module_name': ".$page->errorString(),"warn");
 							continue;
 						};
 					}
@@ -93,8 +94,8 @@
 						//$this->install_log($page->metadata->template." vs $template");
 						$this->install_log("Add template '$template' to $module_name::$view");
 						$page->setMetadata("template",$template);
-						if ($page->error) {
-							$this->install_fail("Could not add metadata to page: ".$page->error);
+						if ($page->errorCount()) {
+							$this->install_fail("Could not add metadata to page: ".$page->errorString());
 						}
 					}
 					else {
@@ -180,10 +181,14 @@
 
 		public function install_log($message = '',$level = 'info') {
 			if (! $this->log_display($level)) return;
-			print date('Y/m/d H:i:s');
-			print " [$level]";
-			print ": $message<br>\n";
-			flush();
+			app_log($message,$level);
+			if (false) {
+				print date('Y/m/d H:i:s');
+				print " [".getmypid()."]";
+				print " [$level]";
+				print ": $message<br>\n";
+				flush();
+			}
 		}
 	
 		public function install_fail($message) {
