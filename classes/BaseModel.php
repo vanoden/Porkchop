@@ -720,10 +720,10 @@ class BaseModel extends \BaseClass {
 			$cache_key = $this->_cacheKeyPrefix . "[" . $this->id . "]";
 			return new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 		} else if (!empty($this->_cacheKeyPrefix)) {
-			$this->debug("No ID defined for " . get_class($this));
+			app_log("No ID defined for " . get_class($this),'warning');
 			return null;
 		} else {
-			$this->debug("No cache key defined for " . get_class($this));
+			app_log("No cache key defined for " . get_class($this),'warning');
 			return null;
 		}
 	}
