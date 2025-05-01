@@ -1340,15 +1340,30 @@
 				# Start Transaction 
 				if (! $database->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-				$alter_table_query = "
-					ALTER TABLE `register_organization_products` DROP CONSTRAINT `fk_orgproduct_organization`
-				";
-				$database->Execute($alter_table_query);
-				if ($database->ErrorMsg()) {
-					$this->SQLError("Error altering register_users table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-					app_log($this->error(), 'error', __FILE__, __LINE__);
-					$database->RollbackTrans();
-					return null;
+				$table = new \Database\Schema\Table('register_organization_products');
+				if ($table->has_constraint('fk_orgproduct_organization')) {
+					$alter_table_query = "
+						ALTER TABLE `register_organization_products` DROP CONSTRAINT `fk_orgproduct_organization`
+					";
+					$database->Execute($alter_table_query);
+					if ($database->ErrorMsg()) {
+						$this->SQLError("Error altering register_users table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+						app_log($this->error(), 'error', __FILE__, __LINE__);
+						$database->RollbackTrans();
+						return null;
+					}
+				}
+				if ($table->has_constraint('fk_orgproduct_product')) {
+					$alter_table_query = "
+						ALTER TABLE `register_organization_products` DROP CONSTRAINT `fk_orgproduct_product`
+					";
+					$database->Execute($alter_table_query);
+					if ($database->ErrorMsg()) {
+						$this->SQLError("Error altering register_users table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+						app_log($this->error(), 'error', __FILE__, __LINE__);
+						$database->RollbackTrans();
+						return null;
+					}
 				}
 
 				$alter_table_query = "
