@@ -1367,17 +1367,6 @@
 				}
 
 				$alter_table_query = "
-					ALTER TABLE `register_organization_products` DROP FOREIGN KEY `fk_orgproduct_product`
-				";
-				$database->Execute($alter_table_query);
-				if ($database->ErrorMsg()) {
-					$this->SQLError("Error altering register_users table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-					app_log($this->error(), 'error', __FILE__, __LINE__);
-					$database->RollbackTrans();
-					return null;
-				}
-
-				$alter_table_query = "
 					ALTER TABLE `register_organization_products` DROP PRIMARY KEY
 				";
 
