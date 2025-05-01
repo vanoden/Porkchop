@@ -1,5 +1,5 @@
 <?php
-/**
+/** @class BaseClass
  * Base class providing common functionality for error handling, validation, and sanitization
  */
 class BaseClass {
@@ -107,6 +107,7 @@ class BaseClass {
 	public function _objectName() {
 		if (!isset($caller)) {
 			$trace = debug_backtrace();
+			if (count($trace) < 3) return "Object";
 			$caller = $trace[2];
 		}
 
