@@ -2,17 +2,20 @@
 	namespace Package;
 
 	class Schema Extends \Database\BaseSchema {
-		public $module = "Package";
+		public function __construct($parameters = array()) {
+			$this->module = "Package";
+			parent::__construct($parameters);
+		}
 
 		public function upgrade() {
-			$this->error = null;
-			$current_schema_version = $this->version();
+			$this->clearError();
+			$database = new \Database\Service();
 
 			if ($this->version() < 2) {
 				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
 				# Start Transaction
-				if (! $GLOBALS['_database']->BeginTrans())
+				if (! $database->BeginTrans())
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$create_table_query = "
@@ -33,9 +36,9 @@
 						FOREIGN KEY `fk_package_repo_id` (`repository_id`) REFERENCES `storage_repositories` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating package_packages table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Error creating package_packages table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
@@ -55,14 +58,14 @@
 						FOREIGN KEY `fk_package_version_user` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
-				if (! $this->executeSQL($create_table_query)) {
-					$this->error = "SQL Error creating package_versions table in ".$this->module."::Schema::upgrade(): ".$this->error;
-					app_log($this->error, 'error');
+				if (! $database->ErrorMsg($create_table_query)) {
+					$this->SQLError("Error creating package_versions table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error');
 					return false;
 				}
 
 				$this->setVersion(2);
-				$GLOBALS['_database']->CommitTrans();
+				$database->CommitTrans();
 			}
 			
 			return true;

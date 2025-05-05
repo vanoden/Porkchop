@@ -131,7 +131,7 @@
 				return false;
 			}
 			return true;
-		}		
+		}
 
 		public function constraints() {
 			$get_constraints_query = "
@@ -159,6 +159,38 @@
 				array_push($constraints,$constraint);
 			}
 			return $constraints;
+		}
+
+		public function constraint($name) {
+			$get_constraint_query = "
+				SELECT	*
+				FROM	information_schema.table_constraints
+				WHERE	table_schema = ?
+				AND		table_name = ?
+				AND		constraint_name = ?";
+
+			$rs = $GLOBALS['_database']->Execute($get_constraint_query,array($GLOBALS['_config']->database->schema,$this->name,$name));
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			if ($rs->recordCount() > 0) {
+				$object = $rs->FetchNextObject(false);
+				app_log("Found constraint ".$object->CONSTRAINT_NAME);
+				$constraint = new \Database\Schema\Table\Constraint();
+				$constraint->schema = $object->CONSTRAINT_SCHEMA;
+				$constraint->name = $object->CONSTRAINT_NAME;
+				$constraint->table = $object->TABLE_NAME;
+				$constraint->type = $object->CONSTRAINT_TYPE;
+				if ($constraint->type == 'PRIMARY KEY' && !empty($this->auto_increment_id)) $constraint->auto_increment = true;
+				else $constraint->auto_increment = false;
+				return $constraint;
+			}
+			return null;
+		}
+
+		public function primary_key() {
+			return $this->constraint('PRIMARY');
 		}
 
 		public function has_constraint($name) {

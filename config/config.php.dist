@@ -12,10 +12,7 @@
 	define ( 'APPLICATION_LOG_TYPE', 'File' );
 	define ( 'APPLICATION_LOG', '/var/log/apache2/application.log');
 	define ( 'APPLICATION_LOG_LEVEL', 'debug');
-	define ( 'ENVIROMENT', 'QA'); // 'DEV' / 'QA' / 'PRODUCTION'
-	define ( 'QA_CAPTCHA_BYPASS', 'GZdWHjJJk9xHJXHFPeu4gZs6YDfcEXyb');
-	define ( 'USE_OTP', true); // enable OTP optionsfor login
-	
+
 	# Initialize config
 	$_config = new stdClass();
 
@@ -28,14 +25,25 @@
 	$_config->site->https = false;
 	$_config->site->hostname = $_SERVER['SERVER_NAME'];
 	$_config->site->default_template = "index.html";
+	$_config->site->default_index = "home";
 	$_config->site->support_email = 'service@domainname.com';
 
-	# Mail Server
-	$_config->smtp_server = 'smtp.domainname.com';
+	# Session
+	$_config->session = new stdClass();
+	$_config->session->cookie = 'session_code';
+	$_config->session->domain = 'CHANGEME';
+	$_config->session->expires = 86400;
+
+	# Mail Server (SMTP)
+	$_config->email = new stdClass();
+	$_config->email->provider = "CHANGEME";
+	$_config->email->hostname = "CHANGEME";
+	$_config->email->token = "CHANGEME";
 
 	# Cache Mechanism (file, memcache, xcache)
 	$_config->cache = new stdClass();
-	$_config->cache->mechanism   = "xcache";
+	$_config->cache->mechanism   = "file";
+	$_config->cache->path = "/var/lib/porkchop/cache";
 	$_config->cache->default_expire_seconds   = 360;
 	
 	# Database
@@ -55,14 +63,9 @@
 	# Site Auditing Setup
 	$_config->auditing = new stdClass();
 	$_config->auditing->auditedClasses =  array(
-			"Monitor\\Dashboard",
-			"Monitor\\SensorDefinition",
 			"Register\\Customer",
 			"Register\\Privilege",
 			"Register\\Role",
 			"Register\\Tag",
-			"Sales\\Order",
-			"Sales\\Order\\Event",
 			"Site\\Page",
-			"Support\\Request\\Item"
 	);

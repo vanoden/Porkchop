@@ -111,11 +111,13 @@
 				$database->AddParam($parameters['name']);
 			}
 
+			/* There is no 'active' field in the database
 			if (isset($parameters['active']) && preg_match('/^(0|1)$/',$parameters['active'])) {
 				$update_object_query .= ",
 						active = ?";
 				$database->AddParam($parameters['active']);
 			}
+			*/
 
 			if (isset($parameters['status']) && preg_match('/^\d+$/',$parameters['status'])) {
 				$update_object_query .= ",

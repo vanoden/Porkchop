@@ -474,7 +474,10 @@
                 $log = fopen(API_LOG."/".$module.".log",'a');
             else
                 $log = fopen(API_LOG,'a');
-
+			if (!$log) {
+				app_log("Unable to open API log file: ".API_LOG,"error",__FILE__,__LINE__);
+				return false;
+			}
 			fwrite($log,"[".date('m/d/Y H:i:s')."] $host $module $login $method $status $elapsed\n");
 			fwrite($log,"_REQUEST: ".print_r($_REQUEST,true));
 			fwrite($log,"_RESPONSE: ".print_r($response,true));

@@ -146,6 +146,8 @@
 	###################################################
 	### Initialize Common Objects					###
 	###################################################
+	//print "Porkchop CMS Installation Log<br>";
+	//print "<table><tr><th>Time</th><th>Process</th><th>Level</th><th>Message</th></tr>";
 	$site->install_log("Porkchop CMS Install Starting");
 	$site->install_log("Connecting to database server");
 

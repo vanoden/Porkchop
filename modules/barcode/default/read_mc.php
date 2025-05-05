@@ -7,12 +7,7 @@
 	$page = new \Site\Page();
 	$can_proceed = true;
 
-
-	// Return 404 to exclude from testing for now
-	header("HTTP/1.0 404 Not Found");
-	exit;
-
-
+	// Temporary file for image processing
 	$tmp_file = "/tmp/image_" . getmypid() . ".png";
 
 	// Validate method
@@ -61,6 +56,7 @@
 				
 				// Process Image
 				$zbarcode = new \Service\ZBarCode();
+				$response = new \APIResponse();
 				if ($zbarcode->readBarCode($tmp_file)) {
 					// Done with Uploaded File
 					unlink($tmp_file);
@@ -71,13 +67,11 @@
 					);
 					
 					// Build Response
-					$response = new \HTTP\Response();
 					$response->success = 1;
-					$response->barcode = $barcode;
+					$response->addElement("barcode",$barcode);
 				} else {
-					$response = new \HTTP\Response();
 					$response->success = 0;
-					$response->error = $zbarcode->error();
+					$response->error($zbarcode->error());
 					error_log($zbarcode->error());
 				}
 				

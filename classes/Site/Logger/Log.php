@@ -6,6 +6,7 @@
 		public $connected = false;
 		public $html = false;
 		public $syslog = false;
+		public $type = 'File';
 
 		public function __construct($parameters = []) {
 			if (isset($parameters['level'])) {
@@ -74,6 +75,27 @@
 			elseif ($this->level == "critical"	&& in_array($level,array('critical','alert','emergency'))) return true;
 			elseif ($this->level == "alert"		&& in_array($level,array('alert','emergency'))) return true;
 			elseif ($this->level == "emergency"	&& in_array($level,array('emergency'))) return true;
+			return false;
+		}
+
+
+		public function level($level = null): string {
+			if (isset($level)) {
+				if (! $this->validLevel($level)) {
+					throw new \Exception("Invalid log level: ".$level);
+				}
+				$this->level = $level;
+			}
+			return $this->level;
+		}
+
+		public function validLevel($level): bool {
+			if (is_string($level)) {
+				$level = strtolower($level);
+				if (in_array($level, array('debug', 'info', 'notice', 'warning', 'error', 'critical', 'alert', 'emergency'))) {
+					return true;
+				}
+			}
 			return false;
 		}
 	}
