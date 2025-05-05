@@ -1341,54 +1341,19 @@
 				if (! $database->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$table = new \Database\Schema\Table('register_organization_products');
-				if ($table->has_constraint('fk_orgproduct_organization')) {
-					app_log("Found and dropping fk_orgproduct_organization constraint");
-					$alter_table_query = "
-						ALTER TABLE `register_organization_products` DROP CONSTRAINT `fk_orgproduct_organization`
-					";
-					$database->Execute($alter_table_query);
-					if ($database->ErrorMsg()) {
-						$this->SQLError("Error altering register_organization_products table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-						app_log($this->error(), 'error', __FILE__, __LINE__);
-						$database->RollbackTrans();
-						return null;
-					}
-				}
-				if ($table->has_constraint('fk_orgproduct_product')) {
-					app_log("Found and dropping fk_orgproduct_product constraint");
-					$alter_table_query = "
-						ALTER TABLE `register_organization_products` DROP CONSTRAINT `fk_orgproduct_product`
-					";
-					$database->Execute($alter_table_query);
-					if ($database->ErrorMsg()) {
-						$this->SQLError("Error altering register_organization_products table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-						app_log($this->error(), 'error', __FILE__, __LINE__);
-						$database->RollbackTrans();
-						return null;
-					}
-				}
-
-				// See if Primary Key Has Old Columns
-				$constraint = $table->constraint("PRIMARY");
-				if ($constraint) {
-					$columns = $constraint->columns();
-					if (count($columns) == 2 && in_array('organization_id', $columns) && in_array('product_id', $columns)) {
-						app_log("Found and dropping primary key from register_organization_products");
-						$alter_table_query = "
-							ALTER TABLE `register_organization_products` DROP PRIMARY KEY
-						";
-
-						$database->Execute($alter_table_query);
-						if ($database->ErrorMsg()) {
-							$this->SQLError("Error altering register_organization_products table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-							app_log($this->error(), 'error', __FILE__, __LINE__);
-							$database->RollbackTrans();
-							return null;
-						}
-					}
-				}
 
 				if (! $table->has_column('id')) {
+					$constraints = $table->constraints();
+					foreach ($constraints as $constraint) {
+						if ($constraint->type != 'PRIMARY KEY') {
+							app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table);
+							if (!$constraint->drop()) {
+								$this->SQLError("Error dropping constraint '".$constraint->name."': ".$constraint->error());
+								return false;
+							}
+						}
+					}
+
 					app_log("Adding id column to register_organization_products");
 					$alter_table_query = "
 						ALTER TABLE `register_organization_products` ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST
