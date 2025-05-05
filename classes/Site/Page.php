@@ -82,7 +82,13 @@
 			if (!empty($GLOBALS ['_SESSION_']->refer_url)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-				if ($GLOBALS['_config']->use_otp) header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				if (defined('USE_OTP') && USE_OTP) {
+					// Check if TOTP is required and not yet completed
+					if ($GLOBALS['_SESSION_']->customer->time_based_password && !$GLOBALS['_SESSION_']->otp_verified) {
+						header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+						exit;
+					}
+				}
 				$GLOBALS ['_SESSION_']->refer_url = null;
 				exit;
 			}
@@ -98,6 +104,7 @@
 	    }
 
 	    public function requireRole($role) {	 
+		    $this->requireAuth();
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
 		    }
@@ -119,6 +126,7 @@
 	    }
 
         public function requirePrivilege($privilege) {
+		$this->requireAuth();
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
@@ -127,15 +135,15 @@
             elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit;
 		    }
             else {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
 			    header('location: /_register/permission_denied' );
-			    exit;
-		    }
+                exit;
+			}
         }
 
 		public function requireOrganization() {
