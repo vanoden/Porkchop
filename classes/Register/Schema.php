@@ -1345,12 +1345,10 @@
 				if (! $table->has_column('id')) {
 					$constraints = $table->constraints();
 					foreach ($constraints as $constraint) {
-						if ($constraint->type != 'PRIMARY KEY') {
-							app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table);
-							if (!$constraint->drop()) {
-								$this->SQLError("Error dropping constraint '".$constraint->name."': ".$constraint->error());
-								return false;
-							}
+						app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table);
+						if (!$constraint->drop()) {
+							$this->SQLError("Error dropping constraint '".$constraint->name."': ".$constraint->error());
+							return false;
 						}
 					}
 
