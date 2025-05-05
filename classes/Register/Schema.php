@@ -1348,6 +1348,7 @@
 						app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table);
 						if (!$constraint->drop()) {
 							$this->SQLError("Error dropping constraint '".$constraint->name."': ".$constraint->error());
+							app_log("Error dropping constraint '".$constraint->name."': ".$constraint->error());
 							return false;
 						}
 					}
