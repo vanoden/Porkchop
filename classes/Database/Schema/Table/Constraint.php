@@ -40,6 +40,16 @@
 					return false;
 				}
 			}
+			elseif ($this->type == 'PRIMARY KEY') {
+				$drop_constraint_query = "
+					ALTER TABLE `".$this->schema."`.`".$this->table."` DROP PRIMARY KEY";
+
+				$GLOBALS['_database']->Execute($drop_constraint_query);
+				if ($GLOBALS['_database']->ErrorMsg()) {
+					$this->_error = "SQL Error dropping PRIMARY KEY `".$this->name."` from ".$this->table." in Database::Table::Constraint::drop(): ".$GLOBALS['_database']->ErrorMsg().": $drop_constraint_query";
+					return false;
+				}
+			}
 			else {
 				$drop_constraint_query = "
 					ALTER TABLE `".$this->schema."`.`$this->`".$this->table."` DROP INDEX `".$this->name."`";

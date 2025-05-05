@@ -1351,6 +1351,7 @@
 							app_log("Error dropping constraint '".$constraint->name."': ".$constraint->error());
 							return false;
 						}
+						app_log("Contraint ".$constraint->name." dropped");
 					}
 
 					app_log("Adding id column to register_organization_products");
