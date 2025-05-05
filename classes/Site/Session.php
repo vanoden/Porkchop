@@ -551,7 +551,7 @@ use Register\Customer;
 			# Make Sure User Has Privileges to view other sessions
 			if ($GLOBALS['_SESSION_']->id != $this->id && ! $GLOBALS['_SESSION_']->customer->can('manage sessions')) {
 				$this->error("No privileges to change session");
-				return null;
+				return false;
 			}
 
 			$ok_params = array(
@@ -584,7 +584,7 @@ use Register\Customer;
 			$rs = $GLOBALS['_database']->Execute($update_session_query,$bind_params);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return false;
 			}
 
 			// audit the update event

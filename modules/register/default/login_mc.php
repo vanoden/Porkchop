@@ -173,6 +173,7 @@
 						}
 						$GLOBALS['_SESSION_']->assign($customer->id, false, $OTPRedirect);
 						$GLOBALS['_SESSION_']->touch();
+						$GLOBALS['_SESSION_']->update(array('otp_verified' => false));
 						$customer->update(array("status" => "ACTIVE", "auth_failures" => 0));
 
 						app_log("Customer ".$customer->id." logged in",'debug',__FILE__,__LINE__);
