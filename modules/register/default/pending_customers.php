@@ -10,7 +10,7 @@
 
     // check if the organization already exists for button states
     function checkExisting(id, orgName) {
-        $.get("/_register/api?method=searchOrganizationsByName&term=" + orgName, function(data) {
+        $.get("/_register/api?method=findOrganizations&name=" + orgName + "*", function(data) {
             if (data.length > 0) {
                 document.getElementById(id + "_assign_button").disabled = false;
                 document.getElementById(id + "_new_button").disabled = true;
@@ -26,7 +26,7 @@
     
         // autocomplete textbox
         $(".organization").autocomplete({
-            source: "/_register/api?method=searchOrganizationsByName",
+            source: "/_register/api?method=findOrganizations",
             minLength: 2,
             select: function(event, ui) {
                 var id = $(this)[0].id
