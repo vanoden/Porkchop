@@ -10,20 +10,72 @@
 
     // check if the organization already exists for button states
     function checkExisting(id, orgName) {
-        $.get("/_register/api?method=findOrganizations&name=" + orgName + "*", function(data) {
-            if (data.length > 0) {
-                document.getElementById(id + "_assign_button").disabled = false;
-                document.getElementById(id + "_new_button").disabled = true;
-            } else {
-                document.getElementById(id + "_assign_button").disabled = true;
-                document.getElementById(id + "_new_button").disabled = false;
-            }
-        });
-    };
-    
+		var id = parseInt(id.split("_")[1]);
+
+		// Wildcard search
+		orgName = orgName+'*';
+		var OrgList = Object.create(OrganizationList);
+		var organizations = OrgList.find({name: orgName});
+
+		console.log("OrgID: " + id);
+		var orgListElem = document.getElementById("organization_list_" + id);
+		console.log("OrgList: " + orgListElem);
+
+		while (orgListElem.firstChild) {
+			orgListElem.removeChild(orgListElem.firstChild);
+		}
+
+		if (organizations.length > 0) {
+			var found = false;
+			for (var i = 0; i < organizations.length; i++) {
+				var org = organizations[i];
+				if (typeof(org.name) !== 'undefined') {
+					console.log("Adding: " + org.name);
+					found = true;
+					var option = document.createElement("option");
+					option.value = org.name;
+					orgListElem.appendChild(option);
+				}
+				else {
+					console.log("No name for org: " + org.id);
+				}
+			}
+			if (found) {
+				document.getElementById("organization_"+id + "_assign_button").disabled = false;
+				document.getElementById("organization_"+id + "_new_button").disabled = true;
+			}
+			else {
+				document.getElementById("organization_"+id + "_assign_button").disabled = true;
+				document.getElementById("organization_"+id + "_new_button").disabled = false;
+			}
+		}
+		else {
+			document.getElementById("organization_"+id + "_assign_button").disabled = true;
+			document.getElementById("organization_"+id + "_new_button").disabled = false;
+		}        
+	};
+
+	document.addEventListener("DOMContentLoaded", function() {
+		// Check if the organization already exists for button states
+		var elements = document.getElementsByClassName("organization");
+		for (let i = 0; i < elements.length; i++) {
+			var element = elements[i];
+			var id = element.id;
+			var orgName = element.value;
+			checkExisting(id, orgName+"*");
+		}
+	});
+
+	document.addEventListener("keyup", function(event) {
+		if (event.target.classList.contains("organization")) {
+			var id = event.target.id;
+			var orgName = event.target.value;
+			checkExisting(id, orgName);
+		}
+	});
+/*
     // page load apply button status, setup up autocomplete
     $(function() {
-    
         // autocomplete textbox
         $(".organization").autocomplete({
             source: "/_register/api?method=findOrganizations",
@@ -41,10 +93,12 @@
         });
 
         // if change the field, then keep the button disable sync'd
-        $(".organization").keyup(function() {            
+        $(".organization").keyup(function() {      
+			console.log(      
             checkExisting($(this)[0].id, $(this).val())
         });
     });
+*/
 </script>
 <style>
   .strong-text {
@@ -139,40 +193,7 @@
    }
 </script>
 
-<!-- Page Header -->
-<?= $page->showTitle() ?>
-<?=$page->showBreadcrumbs()?>
-<?=$page->showMessages()?>
-<!-- End Page Header -->
-
-<form action="/_register/pending_customers" method="post" autocomplete="off">
-  <div id="search_container">
-    <div><label>Start </label><input type="text" id="dateStart" name="dateStart" placeholder="choose date" value="<?=isset($_REQUEST['fromDate']) ? $_REQUEST['fromDate'] : ''?>" /></div>
-    <div><label>End </label><input type="text" id="dateEnd" name="dateEnd" placeholder="choose date" value="<?=isset($_REQUEST['toDate']) ? $_REQUEST['toDate'] : ''?>" /></div>
-    <div>
-      <?php foreach ($possibleStatii as $possibleStatus) { ?>
-        <input type="checkbox" name="<?=$possibleStatus?>" value="<?=$possibleStatus?>"
-        <?php
-          if (isset($_REQUEST[$possibleStatus]) && $_REQUEST[$possibleStatus] == $possibleStatus) print " checked"; 
-        ?> /><?=$possibleStatus?>
-      <?php } ?>
-    </div>
-    <input type="submit" name="btn_submit" class="button" value="Filter" />
-  </div>
-</form>
-
-<?php
-  if ($page->success) {
-?>
-  <h3 class="success-message"><i class="fa fa-check-square-o" aria-hidden="true"></i> Customer Updated</h3>
-<?php
-  }
-  if ($page->error) {
-  ?>
-  <h4 class="error-message"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Error has occurred updating customer</h4>
-<?php
-}
-?>
+<?=$page->showAdminPageInfo()?>
 
 <h3>Pending Customers
    <?=isset($page->isSearchResults) ? "[Found Customers: ". count($queuedCustomersList)."]" : "";?>
@@ -207,7 +228,9 @@
         ?>
         <div>
           <label for="organization">Match Organization: </label>
-          <input class="organization" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?=$queuedCustomer->name?>"/><br>
+          <input list="organization_list_<?=$queuedCustomer->id?>" class="organization" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?=$queuedCustomer->name?>"/>
+		  <datalist id="organization_list_<?=$queuedCustomer->id?>"></datalist>
+		  <br>
           <input type="image" class="icon-button" src="/img/icons/icon_cust_add-existing.svg" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" disabled="disabled"/> 
           <input type="image" class="icon-button" src="/img/icons/icon_cust_add-new.svg" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" title="Assign customer to new organization" disabled="disabled"/> 
           <input type="image" class="icon-button" src="/img/icons/icon_cust_deny.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" title="Deny customer creation" />
