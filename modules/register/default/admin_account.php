@@ -250,7 +250,7 @@
     <div class="tableRowHeader">
       <div class="tableCell" style="width: 20%;">Type</div>
       <div class="tableCell" style="width: 25%;">Description</div>
-      <div class="tableCell" style="width: 30%;">Address/Number</div>
+      <div class="tableCell" style="width: 30%;">Address/Number or Email etc.</div>
       <div class="tableCell" style="width: 15%;">Notes</div>
       <div class="tableCell" style="width: 5%;">Notify</div>
       <div class="tableCell" style="width: 5%;">Drop</div>

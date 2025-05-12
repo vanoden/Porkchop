@@ -125,9 +125,14 @@
 					WHERE	id = ?
 				";
 			}
-			$GLOBALS['_database']->Execute($update_password_query,array($password,$customer->id));
+			$rs = $GLOBALS['_database']->Execute($update_password_query,array($password,$customer->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			// Check if any rows were actually updated
+			if ($GLOBALS['_database']->Affected_Rows() == 0) {
+				$this->error("No rows were updated");
 				return false;
 			}
 			return true;

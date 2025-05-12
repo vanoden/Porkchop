@@ -346,11 +346,10 @@
 				$this->error("Password needs more complexity");
 				return false;
 			}
-
 			// Load Specified Authentication Service
 			$authenticationFactory = new \Register\AuthenticationService\Factory();
 			$authenticationService = $authenticationFactory->service($this->auth_method);
-
+			
 			if ($authenticationService->changePassword($this->code,$password)) {
 				$this->resetAuthFailures();
 				$this->auditRecord('PASSWORD_CHANGED','Password changed');

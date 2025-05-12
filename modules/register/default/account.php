@@ -197,7 +197,7 @@
 						<div class="tableRowHeader">
 							<div class="tableCell">Types</div>
 							<div class="tableCell">Description</div>
-							<div class="tableCell">Address/Number</div>
+							<div class="tableCell">Address/Number or Email</div>
 							<div class="tableCell">Notes</div>
 							<div class="tableCell">Notify</div>
 							<div class="tableCell">Public</div>
