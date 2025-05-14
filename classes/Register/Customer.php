@@ -829,13 +829,17 @@
 			return true;
 		}
 
-		public function auditRecord($type,$notes,$admin_id = null) {
+		/**
+		 * Audit Record
+		 * @param string $type
+		 * @param string $notes
+		 * @param int $customer_id, used only for empty session
+		 * @return bool
+		 */
+		public function auditRecord($type, $notes, $customer_id = null) {
 
 			$audit = new \Register\UserAuditEvent();
-			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
-
-			// New Registration by customer
-			if (empty($admin_id)) $admin_id = $this->id;
+			if (!empty($GLOBALS['_SESSION_']->customer->id)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
 
 			if ($audit->validClass($type) == false) {
 				app_log("Invalid audit class: ".$type,'error');
@@ -844,7 +848,7 @@
 
 			$audit->add(array(
 				'user_id'		=> $this->id,
-				'admin_id'		=> $admin_id,
+				'admin_id'		=> $customer_id,
 				'event_date'	=> date('Y-m-d H:i:s'),
 				'event_class'	=> $type,
 				'event_notes'	=> $notes

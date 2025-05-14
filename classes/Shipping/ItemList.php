@@ -85,19 +85,18 @@
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			// Build Results
 			$objects = array();
-			while (list($organization_id,$product_id) = $rs->FetchRow()) {
-
-				if (empty($product_id)) {
-					app_log("Product ID is empty for organization ID: $organization_id");
+			while (list($shipping_item_id,$product_id) = $rs->FetchRow()) {
+				if (empty($shipping_item_id)) {
+					app_log("Shipping Item ID is empty for shipping item ID: $shipping_item_id");
 					continue;
 				}
-				$product = new \Product\Item($product_id);
-				$object = $product;
+				$shipping_item = new \Shipping\Item($shipping_item_id);
+				$object = $shipping_item;
 				if ($this->error()) {
 					$this->error("Error getting details for ".$this->_modelName.": ".$this->error());
 					return [];

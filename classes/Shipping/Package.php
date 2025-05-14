@@ -165,7 +165,7 @@
 		public function items() {
 			if (empty($this->id)) return array();
 			$itemList = new \Shipping\ItemList();
-			return $itemList->find(array('package_id' => $this->id));
+			return $itemList->findAdvanced(array('package_id' => $this->id), [], []);
 		}
 
 		public function ship($params = array()) {
