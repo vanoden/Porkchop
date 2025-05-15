@@ -22,7 +22,7 @@
 		 */
 		public function add($parameters = []) {
 			if (parent::add($parameters)) {
-				$this->auditRecord('REGISTERED','Customer added');
+				$this->auditRecord('REGISTRATION_SUBMITTED','Customer added', $this->id);
 				$this->changePassword($parameters['password']);
 				return true;
 			}
@@ -837,9 +837,9 @@
 		 * @return bool
 		 */
 		public function auditRecord($type, $notes, $customer_id = null) {
-
 			$audit = new \Register\UserAuditEvent();
 			if (!empty($GLOBALS['_SESSION_']->customer->id)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
+			if (!empty($this->id) && empty($customer_id)) $customer_id = $this->id;
 
 			if ($audit->validClass($type) == false) {
 				app_log("Invalid audit class: ".$type,'error');

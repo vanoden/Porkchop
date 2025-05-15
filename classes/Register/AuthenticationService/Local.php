@@ -132,7 +132,8 @@
 			}
 			// Check if any rows were actually updated
 			if ($GLOBALS['_database']->Affected_Rows() == 0) {
-				$this->error("No rows were updated");
+                // @TODO during register process it audits the original password itself being changed
+				//$this->error("No rows were updated");
 				return false;
 			}
 			return true;
