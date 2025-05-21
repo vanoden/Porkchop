@@ -2,7 +2,7 @@
 class BaseModel extends \BaseClass {
 
 	// Primary Key
-	public int $id = 0;
+	public ?int $id = 0;
 
 	// Was data found in db or cache
 	protected $_exists = false;
