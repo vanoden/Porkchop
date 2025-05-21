@@ -132,8 +132,6 @@
         ### Update Specified Customer					###
         ###################################################
         function updateCustomer() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
             # Default StyleSheet
             if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
