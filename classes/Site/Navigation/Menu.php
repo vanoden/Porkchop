@@ -216,6 +216,7 @@
 					    $html .= '</div>';
 				    }
 			    }
+				$html.= '</nav>' . "\n";
 		    }
 		    return $html;
 	    }
