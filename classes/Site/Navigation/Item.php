@@ -263,14 +263,14 @@
 					$this->error("Menu not found");
 					return false;
 				}
-				$update_object_query .= "
+				$update_object_query .= ",
 					menu_id = ?";
 				$database->AddParam($parameters['menu_id']);
 			}
 
 			if (isset($parameters['title'])) {
 				if ($this->validTitle($parameters['title'])) {
-					$update_object_query .= "
+					$update_object_query .= ",
 					title = ?";
 					$database->AddParam($parameters['title']);
 				}
@@ -282,7 +282,7 @@
 
 			if (isset($parameters['target'])) {
 				if ($this->validTarget($parameters['target'])) {
-					$update_object_query .= "
+					$update_object_query .= ",
 						target = ?";
 					$database->AddParam($parameters['target']);
 				}
@@ -310,7 +310,7 @@
 			}
 			if (isset($parameters['alt'])) {
 				if ($this->safeString($parameters['alt'])) {
-					$update_object_query .= "
+					$update_object_query .= ",
 						alt = ?";
 					$database->AddParam($parameters['alt']);
 				}
@@ -332,7 +332,7 @@
 			}
 			if (isset($parameters['view_order'])) {
 				if (is_numeric($parameters['view_order'])) {
-					$update_object_query .= "
+					$update_object_query .= ",
 						view_order = ?";
 					$database->AddParam($parameters['view_order']);
 				}
