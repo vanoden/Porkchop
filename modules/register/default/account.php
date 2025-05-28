@@ -265,6 +265,13 @@
 					</div>
 				</section>
 
+				<?php if ($customer->profile == "public") { ?>
+				<!-- Business Card Preview Link -->
+				<div style="margin: 20px 0;">
+					<a href="/_register/businesscard?customer_id=<?= $customer->id ?>" class="button" target="_blank">Preview Business Card</a>
+				</div>
+				<?php } ?>
+
 				<?php if (!$readOnly) { ?>
 					<!-- Two-Factor Authentication Section -->
 					<?php if (defined('USE_OTP') && USE_OTP) { ?>

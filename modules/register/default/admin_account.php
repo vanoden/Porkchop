@@ -82,6 +82,7 @@
     document.getElementById('new-value').style.display = "block";
     document.getElementById('new-notes').style.display = "block";
     document.getElementById('new-notify').style.display = "block";
+    document.getElementById('new-public').style.display = "block";
     var newContactSelect = document.getElementById("new-contact-select");
     newContactSelect.remove(5);
   }
@@ -250,9 +251,10 @@
     <div class="tableRowHeader">
       <div class="tableCell" style="width: 20%;">Type</div>
       <div class="tableCell" style="width: 25%;">Description</div>
-      <div class="tableCell" style="width: 30%;">Address/Number or Email etc.</div>
-      <div class="tableCell" style="width: 15%;">Notes</div>
+      <div class="tableCell" style="width: 25%;">Address/Number or Email etc.</div>
+      <div class="tableCell" style="width: 10%;">Notes</div>
       <div class="tableCell" style="width: 5%;">Notify</div>
+      <div class="tableCell" style="width: 5%;">Public</div>
       <div class="tableCell" style="width: 5%;">Drop</div>
     </div>
     <?php foreach ($contacts as $contact) { ?>
@@ -269,6 +271,7 @@
         <div class="tableCell"><input type="text" name="value[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->value) ?>" /></div>
         <div class="tableCell"><input type="text" name="notes[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->notes) ?>" /></div>
         <div class="tableCell"><input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> /></div>
+        <div class="tableCell"><input type="checkbox" name="public[<?= $contact->id ?>]" value="1" <?php if ($contact->public) print "checked"; ?> /></div>
         <div class="tableCell"><img style="max-width: 18px; cursor:pointer;" name="drop_contact[<?= $contact->id ?>]" class="icon-button" src="/img/icons/icon_tools_trash_active.svg" onclick="submitDelete(<?= $contact->id ?>)" /></div>
       </div>
       <!-- New contact entry -->
@@ -287,10 +290,18 @@
       <div class="tableCell"><br /><input type="text" id="new-value" name="value[0]" class="value wide_100per" style="display:none;" /></div>
       <div class="tableCell"><br /><input type="text" id="new-notes" name="notes[0]" class="value wide_100per" style="display:none;" /></div>
       <div class="tableCell"><br /><input type="checkbox" id="new-notify" name="notify[0]" value="1" style="display:none;" /></div>
+      <div class="tableCell"><br /><input type="checkbox" id="new-public" name="public[0]" value="1" style="display:none;" /></div>
       <div class="tableCell"></div>
     </div>
   </div>
   <!--	END Methods of Contact -->
+
+  <?php if ($customer->profile == "public") { ?>
+  <!-- Business Card Preview Link -->
+  <div style="margin: 20px 0;">
+    <a href="/_register/businesscard?customer_id=<?= $customer_id ?>" class="button" target="_blank">Preview Business Card</a>
+  </div>
+  <?php } ?>
 
   <!-- ============================================== -->
   <!-- CHANGE PASSWORD -->

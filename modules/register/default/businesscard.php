@@ -17,7 +17,7 @@
         </div>
         <div class="about-us">
             <h2><?= $organization->name ?></h2>
-            <p><?= strip_slashes($organization->notes) ?></p>
+            <p><?= stripslashes($organization->notes) ?></p>
             <a href="<?= $organization->website_url ?>"><?= $organization->website_url ?></a>
         </div>
          <a class="vcard-button" href="/_register/businessvcard/<?= $customer->code ?>">Add to Contacts</a>
@@ -25,10 +25,34 @@
             <?php foreach ($contacts as $contact) : ?>
                 <?php if ($contact->public) : // Check if the contact is public ?>
                     <li>
-                      <a href="<?= $contact->type === 'phone' ? 'tel:' . $contact->value : ($contact->type === 'sms' ? 'sms:' . $contact->value : ($contact->type === 'email' ? 'mailto:' . $contact->value : '#')) ?>">
+                      <?php
+                      // Determine the appropriate href for each contact type
+                      $href = '#';
+                      switch($contact->type) {
+                          case 'phone':
+                              $href = 'tel:' . $contact->value;
+                              break;
+                          case 'email':
+                              $href = 'mailto:' . $contact->value;
+                              break;
+                          case 'sms':
+                              $href = 'sms:' . $contact->value;
+                              break;
+                          case 'facebook':
+                              $href = $contact->value; // Direct link to Facebook profile
+                              break;
+                          case 'insite':
+                              $href = '#'; // Website message handled via site functionality
+                              break;
+                          default:
+                              $href = $contact->value; // Default to the value itself for other types
+                      }
+                      ?>
+                      <a href="<?= $href ?>">
                         <img class="vcard-icon" src="/img/vcard/icon_vcard-<?= $contact->type ?>.png" alt="<?= $contact->type ?>">
                         </a>
                         <h3><?= htmlspecialchars($contact->description) ?></h3>
+                        <p><?= htmlspecialchars($contact->value) ?></p>
                     </li>
                 <?php endif; ?>
             <?php endforeach; ?>
