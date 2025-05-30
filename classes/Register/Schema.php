@@ -1410,6 +1410,28 @@
 				$this->setVersion(41);
 				$database->CommitTrans();
 			}
+			
+			if ($this->version() < 42) {
+				app_log("Upgrading schema to version 42", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction 
+				if (! $database->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `register_roles` ADD COLUMN `time_based_password` tinyint(1) NOT NULL DEFAULT 0
+				";
+
+				$database->Execute($alter_table_query);
+				if ($database->ErrorMsg()) {
+					$this->SQLError("Error altering register_roles table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(42);
+				$database->CommitTrans();
+			}
+			
 			return true;
 		}
 	}

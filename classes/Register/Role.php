@@ -4,12 +4,13 @@
 
 		public string $name = "";			// Name of the role
 		public string $description = "";	// Description of the role
+		public int $time_based_password = 0;    // Whether this role requires 2FA
 
 		public function __construct(int $id = null) {
 			$this->_tableName = "register_roles";
 			$this->_tableUKColumn = 'name';
 			$this->_cacheKeyPrefix = 'register.role';
-			$this->_addFields('name', 'description');
+			$this->_addFields('name', 'description', 'time_based_password');
 			parent::__construct($id);
 		}
 
@@ -84,7 +85,7 @@
 			$this->clearError();
 
 			// Validate Input
-			if (!$this->safeString($parameters['description'])) {
+			if (isset($parameters['description']) && !$this->safeString($parameters['description'])) {
 				$this->error("Failed to update role, invalid description");
 				return false;
 			}
@@ -102,6 +103,12 @@
 				$update_object_query .= ",
 						description = ?";
 				$database->AddParam($parameters['description']);
+			}
+			
+			if (isset($parameters['time_based_password'])) {
+				$update_object_query .= ",
+						time_based_password = ?";
+				$database->AddParam($parameters['time_based_password'] ? 1 : 0);
 			}
 
 			$update_object_query .= "

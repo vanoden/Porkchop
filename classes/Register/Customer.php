@@ -215,6 +215,17 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return null;
 			}
+			
+			// Check if the role requires 2FA
+			if (defined('USE_OTP') && USE_OTP) {
+				$role = new \Register\Role($role_id);
+				if ($role->id && !empty($role->time_based_password) && empty($this->time_based_password)) {
+					// Enable 2FA for this user
+					$this->update(['time_based_password' => 1]);
+					app_log("Enabling 2FA for user ".$this->id." due to role requirement from role ".$role->name, 'notice', __FILE__, __LINE__);
+				}
+			}
+			
 			$this->auditRecord('ROLE_ADDED','Role '.$role_id.' added');
 			return 1;
 		}

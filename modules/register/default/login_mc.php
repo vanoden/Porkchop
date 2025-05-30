@@ -165,6 +165,25 @@
 						// populate the final target after the user logs in
 						if (empty($target) || !isset($target)) $target = "/_register/account";
 						
+						// Check if any of the user's roles require 2FA
+						if (defined('USE_OTP') && USE_OTP) {
+							$requiresOTP = false;
+							$userRoles = $customer->roles();
+							
+							foreach ($userRoles as $role) {
+								if (!empty($role->time_based_password)) {
+									$requiresOTP = true;
+									break;
+								}
+							}
+							
+							// If a role requires 2FA but the user doesn't have it enabled, enable it
+							if ($requiresOTP && empty($customer->time_based_password)) {
+								$customer->update(array('time_based_password' => 1));
+								app_log("Enabling 2FA for user ".$customer->id." due to role requirement", 'notice', __FILE__, __LINE__);
+							}
+						}
+						
 						// Check for Time Based Password redirect, saving the final redirect once the OTP is verified
 						$OTPRedirect = '';
 						if ($customer->time_based_password) {
