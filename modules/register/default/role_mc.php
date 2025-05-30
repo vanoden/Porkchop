@@ -20,7 +20,8 @@
 				else {
                     $role->add(array(
 	                    "name" => $_REQUEST['name'],
-	                    "description" => noXSS(trim($_REQUEST['description']))
+	                    "description" => noXSS(trim($_REQUEST['description'])),
+                        "time_based_password" => isset($_REQUEST['time_based_password']) ? 1 : 0
                     ));
                 }
 			}
@@ -41,7 +42,12 @@
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
             $page->addError("Invalid Request");
         } else {
-		    if ($role->update( array( 'description'	=> noXSS(trim($_REQUEST['description'] ))))) {
+            $updateParams = array(
+                'description' => noXSS(trim($_REQUEST['description'])),
+                'time_based_password' => isset($_REQUEST['time_based_password']) ? 1 : 0
+            );
+            
+		    if ($role->update($updateParams)) {
 			    $page->appendSuccess("Role Updated");
 		    }
 			else {
