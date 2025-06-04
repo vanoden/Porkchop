@@ -205,28 +205,19 @@
 
 			$GLOBALS['_database']->Execute(
 				$add_role_query,
-				array(
-					$this->id,
-					$role_id
-				)
+				array($this->id,$role_id)
 			);
-			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return 0;
 			}
-			
-			// Check if the role requires 2FA
-			if (defined('USE_OTP') && USE_OTP) {
-				$role = new \Register\Role($role_id);
-				if ($role->id && !empty($role->time_based_password) && empty($this->time_based_password)) {
-					// Enable 2FA for this user
-					$this->update(['time_based_password' => 1]);
-					app_log("Enabling 2FA for user ".$this->id." due to role requirement from role ".$role->name, 'notice', __FILE__, __LINE__);
-				}
-			}
-			
-			$this->auditRecord('ROLE_ADDED','Role '.$role_id.' added');
+
+			# Bust Cache
+			$cache_key = "customer[" . $this->id . "]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+			$cache->delete();
+
+			$this->auditRecord('ROLE_ADDED','Role has been added: '.$role_id);
 			return 1;
 		}
 
@@ -883,5 +874,267 @@
 			else {
 				return $sessions;
 			}
+		}
+
+		/**
+		 * Determines if this customer requires OTP authentication
+		 * Checks organization, roles, and user settings in order
+		 * @return bool True if OTP is required
+		 */
+		public function requiresOTP(): bool {
+			app_log("DEBUG: requiresOTP() called for customer ID: ".$this->id, 'debug', __FILE__, __LINE__);
+
+			// If USE_OTP is not defined or false, return false immediately
+			if (!defined('USE_OTP') || !USE_OTP) {
+				return false;
+			}
+		
+			// Check organization setting
+			$organization = $this->organization();
+			if ($organization && !empty($organization->time_based_password)) {
+				return true;
+			}
+			
+			// Check role settings
+			$userRoles = $this->roles();
+			foreach ($userRoles as $role) {
+				if (!empty($role->time_based_password)) {
+					return true;
+				}
+			}
+
+			// Check user setting
+			if (!empty($this->time_based_password)) {
+				return true;
+			}
+			
+			return false;
+		}
+
+		/**
+		 * Generate and send OTP recovery token
+		 * @param string $email_address Email to send recovery to
+		 * @return bool True if successful
+		 */
+		public function sendOTPRecovery($email_address): bool {
+			$this->clearError();
+
+			// Generate recovery token
+			$token = $this->generateOTPRecoveryToken();
+			if (!$token) {
+				return false;
+			}
+
+			// Build recovery URL
+			$recovery_url = "http";
+			if ($GLOBALS['_config']->site->https) $recovery_url = "https";
+			$recovery_url .= "://" . $GLOBALS['_config']->site->hostname . "/_register/otp?recovery_token=" . $token;
+
+			// Prepare email template
+			$template_content = "
+			<html>
+			<head>
+				<style>
+					body { font-family: Arial, sans-serif; }
+					.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+					.header { background-color: #f8f9fa; padding: 20px; text-align: center; }
+					.content { padding: 20px; }
+					.button { 
+						display: inline-block; 
+						padding: 12px 24px; 
+						background-color: #007bff; 
+						color: white; 
+						text-decoration: none; 
+						border-radius: 4px; 
+						margin: 20px 0;
+					}
+				</style>
+			</head>
+			<body>
+				<div class='container'>
+					<div class='header'>
+						<h2>Two-Factor Authentication Recovery</h2>
+					</div>
+					<div class='content'>
+						<p>We received a request to recover your two-factor authentication setup. If you did not make this request, you can safely ignore this email.</p>
+						
+						<p>To reset your 2FA setup, click the link below or copy and paste it into your browser:</p>
+						
+						<p><a href='{$recovery_url}' class='button'>Reset 2FA Setup</a></p>
+						
+						<p>Or copy this link: {$recovery_url}</p>
+						
+						<p>This link will expire in 24 hours for security reasons.</p>
+						
+						<p>If you continue to have problems, please contact our support team.</p>
+					</div>
+				</div>
+			</body>
+			</html>";
+
+			// Create and send email
+			$message = new \Email\Message();
+			$message->html(true);
+			$message->to($email_address);
+			$message->from($GLOBALS['_config']->register->forgot_password->from ?? 'no-reply@' . $GLOBALS['_config']->site->hostname);
+			$message->subject("Two-Factor Authentication Recovery");
+			$message->body($template_content);
+
+			$transportFactory = new \Email\Transport();
+			$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+			
+			if (!$transport) {
+				$this->error("Error initializing email transport");
+				return false;
+			}
+
+			if ($transport->error()) {
+				$this->error("Error initializing email transport: " . $transport->error());
+				return false;
+			}
+
+			$transport->hostname($GLOBALS['_config']->email->hostname);
+			$transport->token($GLOBALS['_config']->email->token);
+
+			if ($transport->deliver($message)) {
+				$this->auditRecord('OTP_RECOVERY_REQUESTED', 'OTP recovery email sent to: ' . $email_address);
+				return true;
+			}
+			else {
+				$this->error("Error sending recovery email: " . ($transport->error() ?: "Unknown error"));
+				return false;
+			}
+		}
+
+		/**
+		 * Generate OTP recovery token
+		 * @return string|false Recovery token or false on error
+		 */
+		public function generateOTPRecoveryToken() {
+			$this->clearError();
+
+			if (!$this->id) {
+				$this->error("Customer not identified");
+				return false;
+			}
+
+			// Generate secure random token
+			$token = hash('sha256', random_bytes(32) . microtime() . $this->id);
+
+			// Set expiration (24 hours from now)
+			$expires = date('Y-m-d H:i:s', strtotime('+1 day'));
+
+			// Insert recovery token
+			$insert_query = "
+				INSERT INTO register_otp_recovery 
+				(user_id, recovery_token, date_created, date_expires, used)
+				VALUES (?, ?, NOW(), ?, 0)
+				ON DUPLICATE KEY UPDATE 
+					recovery_token = VALUES(recovery_token),
+					date_created = VALUES(date_created),
+					date_expires = VALUES(date_expires),
+					used = 0
+			";
+
+			$GLOBALS['_database']->Execute($insert_query, array($this->id, $token, $expires));
+
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			return $token;
+		}
+
+		/**
+		 * Verify and consume OTP recovery token
+		 * @param string $token Recovery token
+		 * @return bool True if valid and consumed
+		 */
+		public function verifyOTPRecoveryToken($token): bool {
+			$this->clearError();
+
+			if (empty($token)) {
+				$this->error("Recovery token required");
+				return false;
+			}
+
+			// Find valid, unused token
+			$select_query = "
+				SELECT user_id 
+				FROM register_otp_recovery 
+				WHERE recovery_token = ? 
+				AND date_expires > NOW() 
+				AND used = 0
+			";
+
+			$rs = $GLOBALS['_database']->Execute($select_query, array($token));
+
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			if (!$rs || $rs->RecordCount() == 0) {
+				$this->error("Invalid or expired recovery token");
+				return false;
+			}
+
+			list($user_id) = $rs->FetchRow();
+
+			// Mark token as used
+			$update_query = "
+				UPDATE register_otp_recovery 
+				SET used = 1 
+				WHERE recovery_token = ?
+			";
+
+			$GLOBALS['_database']->Execute($update_query, array($token));
+
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			// Load customer if not already loaded
+			if ($this->id != $user_id) {
+				$customer = new \Register\Customer($user_id);
+				if ($customer->error()) {
+					$this->error($customer->error());
+					return false;
+				}
+				$this->id = $customer->id;
+				$this->details();
+			}
+
+			$this->auditRecord('OTP_RESET', 'OTP recovery token used to reset 2FA');
+			return true;
+		}
+
+		/**
+		 * Reset user's OTP setup (clear secret key)
+		 * @return bool True if successful
+		 */
+		public function resetOTPSetup(): bool {
+			$this->clearError();
+
+			if (!$this->id) {
+				$this->error("Customer not identified");
+				return false;
+			}
+
+			// Clear the secret key
+			$result = $this->update(array('secret_key' => ''));
+
+			if ($result) {
+				$this->auditRecord('OTP_RESET', 'OTP setup reset - secret key cleared');
+				
+				// Clear cache
+				$cache_key = "customer[" . $this->id . "]";
+				$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+				$cache->delete();
+			}
+
+			return $result;
 		}
     }

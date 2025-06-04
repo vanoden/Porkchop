@@ -104,6 +104,7 @@
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
 		$customer = new \Register\Customer();
 		if ($customer->validLogin($_REQUEST['login'])) {
+
 			if ($customer->get($_REQUEST['login'])) {
 				if ( !$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 					$page->addError("Invalid Request");
@@ -165,35 +166,31 @@
 						// populate the final target after the user logs in
 						if (empty($target) || !isset($target)) $target = "/_register/account";
 						
-						// Check if any of the user's roles require 2FA
-						if (defined('USE_OTP') && USE_OTP) {
-							$requiresOTP = false;
-							$userRoles = $customer->roles();
-							
-							foreach ($userRoles as $role) {
-								if (!empty($role->time_based_password)) {
-									$requiresOTP = true;
-									break;
-								}
-							}
-							
-							// If a role requires 2FA but the user doesn't have it enabled, enable it
-							if ($requiresOTP && empty($customer->time_based_password)) {
-								$customer->update(array('time_based_password' => 1));
-								app_log("Enabling 2FA for user ".$customer->id." due to role requirement", 'notice', __FILE__, __LINE__);
-							}
-						}
+						// Check if user requires OTP
+						app_log("DEBUG: About to call requiresOTP() for customer ID: ".$customer->id, 'debug', __FILE__, __LINE__);
+						$otpRequired = $customer->requiresOTP();
+						app_log("DEBUG: requiresOTP() returned ".($otpRequired ? 'true' : 'false')." for customer ID: ".$customer->id, 'debug', __FILE__, __LINE__);
 						
-						// Check for Time Based Password redirect, saving the final redirect once the OTP is verified
-						$OTPRedirect = '';
-						if ($customer->time_based_password) {
+						if ($otpRequired) {
+							// Save the final target in the session for after OTP verification
 							$OTPRedirect = $target;
 							$target = "/_register/otp";
+
+							// Assign the customer to the session and store the redirect target
+							$GLOBALS['_SESSION_']->assign($customer->id, false, $OTPRedirect);
+							$GLOBALS['_SESSION_']->touch();
+							$GLOBALS['_SESSION_']->update(array('otp_verified' => false));
+
+							// Optionally update customer status/auth_failures
+							$customer->update(array("status" => "ACTIVE", "auth_failures" => 0));
+
+							// Redirect to OTP verification page
+							header("Location: $target");
+							exit;
 						}
-						$GLOBALS['_SESSION_']->assign($customer->id, false, $OTPRedirect);
-						$GLOBALS['_SESSION_']->touch();
-						$GLOBALS['_SESSION_']->update(array('otp_verified' => false));
-						$customer->update(array("status" => "ACTIVE", "auth_failures" => 0));
+
+						# Update the Session
+						$_SESSION_->login($customer->login);
 
 						app_log("Customer ".$customer->id." logged in",'debug',__FILE__,__LINE__);
 						app_log("login_target = $target",'debug',__FILE__,__LINE__);

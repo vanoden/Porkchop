@@ -54,7 +54,7 @@
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return [];
+				return false;
 			}
 			list($id) = $rs->FetchRow();
 			$this->id = $id;
@@ -217,7 +217,6 @@
 
 			if (empty($this->id)) {
 				$this->error("ID required for details method");
-				print_r("HAAAY!");
 				return false;
 			}
 

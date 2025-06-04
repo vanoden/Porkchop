@@ -1432,6 +1432,129 @@
 				$database->CommitTrans();
 			}
 			
+			if ($this->version() < 43) {
+				app_log("Upgrading schema to version 43", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction 
+				if (! $database->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `register_organizations` ADD COLUMN `time_based_password` tinyint(1) NOT NULL DEFAULT 0
+				";
+
+				$database->Execute($alter_table_query);
+				if ($database->ErrorMsg()) {
+					$this->SQLError("Error altering register_organizations table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(43);
+				$database->CommitTrans();
+			}
+			
+			if ($this->version() < 44) {
+				app_log("Upgrading schema to version 44", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction 
+				if (! $database->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `register_otp_recovery` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`user_id` int(11) NOT NULL,
+						`recovery_token` varchar(64) NOT NULL,
+						`date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						`date_expires` datetime NOT NULL,
+						`used` tinyint(1) NOT NULL DEFAULT 0,
+						PRIMARY KEY (`id`),
+						UNIQUE KEY `uk_recovery_token` (`recovery_token`),
+						FOREIGN KEY `fk_recovery_user` (`user_id`) REFERENCES `register_users` (`id`)
+					)
+				";
+
+				$database->Execute($create_table_query);
+				if ($database->ErrorMsg()) {
+					$this->SQLError("Error creating register_otp_recovery table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(44);
+				$database->CommitTrans();
+			}
+			
+			if ($this->version() < 45) {
+				app_log("Upgrading schema to version 45", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction 
+				if (! $database->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `register_backup_codes` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`user_id` int(11) NOT NULL,
+						`code` varchar(10) NOT NULL,
+						`date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						`date_used` datetime DEFAULT NULL,
+						`used` tinyint(1) NOT NULL DEFAULT 0,
+						PRIMARY KEY (`id`),
+						FOREIGN KEY `fk_backup_user` (`user_id`) REFERENCES `register_users` (`id`)
+					)
+				";
+
+				$database->Execute($create_table_query);
+				if ($database->ErrorMsg()) {
+					$this->SQLError("Error creating register_backup_codes table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(45);
+				$database->CommitTrans();
+			}
+			
+			if ($this->version() < 46) {
+				app_log("Upgrading schema to version 46", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction 
+				if (! $database->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `register_user_audit` 
+					MODIFY COLUMN `event_class` ENUM(
+						'REGISTRATION_SUBMITTED',
+						'REGISTRATION_APPROVED',
+						'REGISTRATION_DISCARDED',
+						'AUTHENTICATION_SUCCESS',
+						'AUTHENTICATION_FAILURE',
+						'PASSWORD_CHANGED',
+						'PASSWORD_RECOVERY_REQUESTED',
+						'ORGANIZATION_CHANGED',
+						'ROLE_ADDED',
+						'ROLE_REMOVED',
+						'STATUS_CHANGED',
+						'RESET_KEY_GENERATED',
+						'USER_UPDATED',
+						'OTP_ENABLED',
+						'OTP_DISABLED',
+						'OTP_VERIFIED',
+						'OTP_RECOVERY_REQUESTED',
+						'OTP_RESET'
+					)
+				";
+
+				$database->Execute($alter_table_query);
+				if ($database->ErrorMsg()) {
+					$this->SQLError("Error altering register_user_audit table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(46);
+				$database->CommitTrans();
+			}
+			
 			return true;
 		}
 	}

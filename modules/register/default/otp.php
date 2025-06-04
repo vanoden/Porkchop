@@ -43,16 +43,20 @@
             <input type="submit" value="Submit" />
 
             <div style="margin: 20px 0;">
-                    <p>Don't have Google Authenticator?</p>
-                    <div style="display: flex; gap: 10px; justify-content: center;">
-                        <a href="https://apps.apple.com/us/app/google-authenticator/id388497605" target="_blank" style="text-decoration: none;">
-                            <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us" alt="Download on the App Store" style="height: 40px;">
-                        </a>
-                        <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" style="text-decoration: none;">
-                            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" style="height: 57px; margin-top: -8px;">
-                        </a>
-                    </div>
+                <p>Don't have Google Authenticator?</p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <a href="https://apps.apple.com/us/app/google-authenticator/id388497605" target="_blank" style="text-decoration: none;">
+                        <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us" alt="Download on the App Store" style="height: 40px;">
+                    </a>
+                    <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" style="text-decoration: none;">
+                        <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" style="height: 57px; margin-top: -8px;">
+                    </a>
                 </div>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <p><a href="/_register/recover_otp" style="color: #666; text-decoration: underline;">Can't access your authenticator? Recover 2FA setup</a></p>
+            </div>
 
         </form>
     </div>

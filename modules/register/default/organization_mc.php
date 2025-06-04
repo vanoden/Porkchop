@@ -62,8 +62,10 @@
 				    "notes"					    => noXSS(trim($_REQUEST['notes'])),
 				    "password_expiration_days"	=> $_REQUEST['password_expiration_days'],
 					"website_url"				=> $_REQUEST['website_url'],
+					"time_based_password"		=> $_REQUEST['time_based_password'],
 			    );
 			    if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
+			    if (! $_REQUEST['time_based_password']) $parameters['time_based_password'] = 0;
 			    if ($organization->id) {
 				    app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
 				    //app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
