@@ -34,7 +34,7 @@
 	</div>
 	<div class="editItem" id="itemDescription">
 		<span class="label">Description</span>
-		<textarea class="value input" name="description" id="description"><?=$item->description?></textarea>
+		<textarea class="value input" name="description" id="description"><?=strip_tags($item->description)?></textarea>
 	</div>
 	<div class="editSubmit">
 		<input type="submit" class="button" value="Submit" name="submit" id="submit"/>

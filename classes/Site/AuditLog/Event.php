@@ -66,12 +66,17 @@ class Event Extends \BaseModel {
 
 		$database = new \Database\Service();
 		if (empty($params['instance_id']) || empty($params['description'])) {
-			//print_r($params);
 			$this->error("Instance ID and description are required.");
 			return false;
 		}
 		if (empty($GLOBALS['_SESSION_']->customer->id)) {
-			$this->error("No customer ID found in session.");
+			if ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") {
+				// Allow install.php to run without a customer ID
+				return true;
+			}
+			app_log("Rejected audit event - No customer ID. Params: " . print_r($params, true));
+			app_log(print_r($params, true));
+			$this->error("No customer ID found in session.  Cannot log event.");
 			return false;
 		}
 

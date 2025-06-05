@@ -278,7 +278,7 @@ class Person Extends \BaseModel {
         $GLOBALS['_database']->Execute($update_customer_query,$bind_params);
         if ($GLOBALS['_database']->ErrorMsg()) {
             $this->SQLError($GLOBALS['_database']->ErrorMsg());
-            return null;
+            return false;
         }
 
         // Bust Cache

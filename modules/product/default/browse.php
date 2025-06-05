@@ -20,7 +20,7 @@
 	    <div class="productParent">
 		    <div class="productParentContent">
 			    <div class="label productParentLabel"><?=$parent->name?></div>
-			    <div class="value parentDescription"><?=$parent->description?></div>
+			    <div class="value parentDescription"><?=strip_tags($parent->description)?></div>
                 <?php if ($GLOBALS['_SESSION_']->customer->can('manage products')) { ?>
 			        <div class="productEdit"><a href="/_product/edit/<?=$parent->code?>">Edit</a></div>
                 <?php } ?>

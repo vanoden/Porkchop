@@ -82,6 +82,7 @@
     document.getElementById('new-value').style.display = "block";
     document.getElementById('new-notes').style.display = "block";
     document.getElementById('new-notify').style.display = "block";
+    document.getElementById('new-public').style.display = "block";
     var newContactSelect = document.getElementById("new-contact-select");
     newContactSelect.remove(5);
   }
@@ -153,9 +154,11 @@
         }
         ?>
       </div>
-      <div class="tableCell" style="width: 50%;">Time Based Password [Google Authenticator]
-        <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?>>
-      </div>
+      <?php if (defined('USE_OTP') && USE_OTP) { ?>
+        <div class="tableCell" style="width: 50%;">Time Based Password [Google Authenticator]
+          <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?>>
+        </div>
+      <?php } ?>
     </div>
     <div class="tableRow">
       <div class="tableCell">
@@ -226,6 +229,18 @@
         </select>
       </div>
     </div>
+    <div class="tableRow">
+      <div class="tableCell">
+        <label for="job_title">Job Title:</label>
+        <input type="text" name="job_title" class="value input" value="<?= htmlentities($customer->getMetadata('job_title')) ?>" />
+      </div>
+      <div class="tableCell">
+        <label for="job_description">Job Description:</label>
+        <textarea name="job_description" style="max-height: 50px; min-height: 50px;" class="value input wide_100per"><?= htmlentities($customer->getMetadata('job_description')) ?></textarea>
+      </div>
+      <div class="tableCell"></div>
+      <div class="tableCell"></div>
+    </div>
   </section>
 
   <!-- ============================================== -->
@@ -236,9 +251,10 @@
     <div class="tableRowHeader">
       <div class="tableCell" style="width: 20%;">Type</div>
       <div class="tableCell" style="width: 25%;">Description</div>
-      <div class="tableCell" style="width: 30%;">Address/Number</div>
-      <div class="tableCell" style="width: 15%;">Notes</div>
+      <div class="tableCell" style="width: 25%;">Address/Number or Email etc.</div>
+      <div class="tableCell" style="width: 10%;">Notes</div>
       <div class="tableCell" style="width: 5%;">Notify</div>
+      <div class="tableCell" style="width: 5%;">Public</div>
       <div class="tableCell" style="width: 5%;">Drop</div>
     </div>
     <?php foreach ($contacts as $contact) { ?>
@@ -255,6 +271,7 @@
         <div class="tableCell"><input type="text" name="value[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->value) ?>" /></div>
         <div class="tableCell"><input type="text" name="notes[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->notes) ?>" /></div>
         <div class="tableCell"><input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> /></div>
+        <div class="tableCell"><input type="checkbox" name="public[<?= $contact->id ?>]" value="1" <?php if ($contact->public) print "checked"; ?> /></div>
         <div class="tableCell"><img style="max-width: 18px; cursor:pointer;" name="drop_contact[<?= $contact->id ?>]" class="icon-button" src="/img/icons/icon_tools_trash_active.svg" onclick="submitDelete(<?= $contact->id ?>)" /></div>
       </div>
       <!-- New contact entry -->
@@ -273,10 +290,18 @@
       <div class="tableCell"><br /><input type="text" id="new-value" name="value[0]" class="value wide_100per" style="display:none;" /></div>
       <div class="tableCell"><br /><input type="text" id="new-notes" name="notes[0]" class="value wide_100per" style="display:none;" /></div>
       <div class="tableCell"><br /><input type="checkbox" id="new-notify" name="notify[0]" value="1" style="display:none;" /></div>
+      <div class="tableCell"><br /><input type="checkbox" id="new-public" name="public[0]" value="1" style="display:none;" /></div>
       <div class="tableCell"></div>
     </div>
   </div>
   <!--	END Methods of Contact -->
+
+  <?php if ($customer->profile == "public") { ?>
+  <!-- Business Card Preview Link -->
+  <div style="margin: 20px 0;">
+    <a href="/_register/businesscard?customer_id=<?= $customer_id ?>" class="button" target="_blank">Preview Business Card</a>
+  </div>
+  <?php } ?>
 
   <!-- ============================================== -->
   <!-- CHANGE PASSWORD -->
@@ -324,7 +349,7 @@
       <div class="tableRow">
         <div class="tableCell"><input type="checkbox" name="role[<?= $role->id ?>]" value="1" <?php if ($customer->has_role($role->name)) print " CHECKED"; ?> /></div>
         <div class="tableCell"><?= $role->name ?></div>
-        <div class="tableCell"><?= $role->description ?></div>
+        <div class="tableCell"><?= strip_tags($role->description) ?></div>
       </div>
     <?php } ?>
   </div>
@@ -375,7 +400,7 @@
         <div class="tableRow">
           <div class="tableCell"><?= $term->code ?></div>
           <div class="tableCell"><?= $term->name ?></div>
-          <div class="tableCell"><?= $term->description ?></div>
+          <div class="tableCell"><?= strip_tags($term->description) ?></div>
           <div class="tableCell">
             <?php
             $mostRecentAction = $termsOfUseActionList->find(array('user_id' => $customer->id, 'version_id' => $term->id, 'sort' => 'date_action', 'order' => 'DESC', 'limit' => 1));

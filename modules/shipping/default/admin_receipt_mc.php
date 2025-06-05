@@ -1,36 +1,47 @@
 <?php
-	$site = new \Site();
-	$page = $site->page();
+$site = new \Site();
+$page = $site->page();
+$can_proceed = true;
 
-	if (!empty($_REQUEST['rma_number'])) {
-		if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
-			$page->addError("Invalid Request");
-		}
-		else {
-			if (preg_match('/\d+/',$_REQUEST['rma_number'])) {
-				$rma_id = $_REQUEST['rma_number'];
-			}
-			elseif (preg_match('/^RMA(\d+)/i',$_REQUEST['rma_number'],$matches)) {
-				$rma_id = $matches[1];
-			}
-			
+// Create RMA object for validation
+$rma = new \Support\Request\Item\RMA();
+
+if (!empty($_REQUEST['rma_number'])) {
+	// Validate CSRF token
+	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
+		$page->addError("Invalid Request");
+		$can_proceed = false;
+	} else {
+		// Validate RMA number format
+		$rma_number = $_REQUEST['rma_number'];
+		$rma_id = $rma->extractRmaId($rma_number);
+
+		if ($rma_id === null) {
+			$page->addError("Invalid RMA number format");
+			$can_proceed = false;
+		} else {
 			$rma = new \Support\Request\Item\RMA($rma_id);
 			if (!$rma->exists()) {
 				$page->addError('RMA not found');
-			}
-			else {
+				$can_proceed = false;
+			} else {
 				$shipment = $rma->shipment();
 				if (!$shipment->exists()) {
 					$page->addError('There is no shipment for this RMA.<br>The customer must be contacted for shipping information.');
-				}
-				else {
-					$page->success = "Found RMA ".$rma->number();
+					$can_proceed = false;
+				} else {
+					$page->success = "Found RMA " . $rma->number();
 					header('Location: /_shipping/admin_shipment?id=' . $shipment->id);
 					exit;
 				}
 			}
 		}
 	}
-	else {
-		$page->instructions = "Enter an RMA number to find the shipment";
-	}
+} else {
+	$page->instructions = "Enter an RMA number to find the shipment";
+}
+
+// Always return false if there was a validation error
+if ($validation_error) {
+	return false;
+}

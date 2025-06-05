@@ -4,6 +4,7 @@
     class Customer extends Person {
 		public bool $elevated = false;
 		public int $unreadMessages = 0;
+		protected string $password = '';
 
 		/**
 		 * Constructor
@@ -21,7 +22,7 @@
 		 */
 		public function add($parameters = []) {
 			if (parent::add($parameters)) {
-				$this->auditRecord('REGISTERED','Customer added');
+				$this->auditRecord('REGISTRATION_SUBMITTED','Customer added', $this->id);
 				$this->changePassword($parameters['password']);
 				return true;
 			}
@@ -54,10 +55,13 @@
 				}
 			}
 
-			if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) $this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$this->organization()->name." to ".$parameters['organization_id']);
-			if (!empty($parameters['status']) && $this->status != $parameters['status']) $this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
-			if (!empty($parameters['first_name']) && $this->first_name != $parameters['first_name'] || !empty($parameters['last_name']) && $this->last_name != $parameters['last_name'])  $this->auditRecord("USER_UPDATED","Customer Name changed from " . $this->first_name . " " . $this->last_name . " to " . $parameters['first_name'] . " " . $parameters['last_name']);
-			if (isset($parameters['profile_visibility']) && $this->profile != $parameters['profile_visibility']) $this->auditRecord("PROFILE_VISIBILITY_CHANGED","Profile visibility changed from ".$this->profile." to ".$parameters['profile_visibility']);
+			if ($_SERVER["SCRIPT_FILENAME"] == BASE."/core/install.php") app_log("Installer updating new admin account",'info');
+			else {
+				if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) $this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$this->organization()->name." to ".$parameters['organization_id']);
+				if (!empty($parameters['status']) && $this->status != $parameters['status']) $this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
+				if (!empty($parameters['first_name']) && $this->first_name != $parameters['first_name'] || !empty($parameters['last_name']) && $this->last_name != $parameters['last_name'])  $this->auditRecord("USER_UPDATED","Customer Name changed from " . $this->first_name . " " . $this->last_name . " to " . $parameters['first_name'] . " " . $parameters['last_name']);
+				if (isset($parameters['profile_visibility']) && $this->profile != $parameters['profile_visibility']) $this->auditRecord("PROFILE_VISIBILITY_CHANGED","Profile visibility changed from ".$this->profile." to ".$parameters['profile_visibility']);
+			}
 
 			parent::update($parameters);
 			if ($this->error()) return false;
@@ -201,17 +205,19 @@
 
 			$GLOBALS['_database']->Execute(
 				$add_role_query,
-				array(
-					$this->id,
-					$role_id
-				)
+				array($this->id,$role_id)
 			);
-			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return 0;
 			}
-			$this->auditRecord('ROLE_ADDED','Role '.$role_id.' added');
+
+			# Bust Cache
+			$cache_key = "customer[" . $this->id . "]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+			$cache->delete();
+
+			$this->auditRecord('ROLE_ADDED','Role has been added: '.$role_id);
 			return 1;
 		}
 
@@ -342,11 +348,10 @@
 				$this->error("Password needs more complexity");
 				return false;
 			}
-
 			// Load Specified Authentication Service
 			$authenticationFactory = new \Register\AuthenticationService\Factory();
 			$authenticationService = $authenticationFactory->service($this->auth_method);
-
+			
 			if ($authenticationService->changePassword($this->code,$password)) {
 				$this->resetAuthFailures();
 				$this->auditRecord('PASSWORD_CHANGED','Password changed');
@@ -826,13 +831,17 @@
 			return true;
 		}
 
-		public function auditRecord($type,$notes,$admin_id = null) {
-
+		/**
+		 * Audit Record
+		 * @param string $type
+		 * @param string $notes
+		 * @param int $customer_id, used only for empty session
+		 * @return bool
+		 */
+		public function auditRecord($type, $notes, $customer_id = null) {
 			$audit = new \Register\UserAuditEvent();
-			if (!isset($admin_id) && isset($GLOBALS['_SESSION_']->customer->id)) $admin_id = $GLOBALS['_SESSION_']->customer->id;
-
-			// New Registration by customer
-			if (empty($admin_id)) $admin_id = $this->id;
+			if (!empty($GLOBALS['_SESSION_']->customer->id)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
+			if (!empty($this->id) && empty($customer_id)) $customer_id = $this->id;
 
 			if ($audit->validClass($type) == false) {
 				app_log("Invalid audit class: ".$type,'error');
@@ -841,7 +850,7 @@
 
 			$audit->add(array(
 				'user_id'		=> $this->id,
-				'admin_id'		=> $admin_id,
+				'admin_id'		=> $customer_id,
 				'event_date'	=> date('Y-m-d H:i:s'),
 				'event_class'	=> $type,
 				'event_notes'	=> $notes
@@ -865,5 +874,267 @@
 			else {
 				return $sessions;
 			}
+		}
+
+		/**
+		 * Determines if this customer requires OTP authentication
+		 * Checks organization, roles, and user settings in order
+		 * @return bool True if OTP is required
+		 */
+		public function requiresOTP(): bool {
+			app_log("DEBUG: requiresOTP() called for customer ID: ".$this->id, 'debug', __FILE__, __LINE__);
+
+			// If USE_OTP is not defined or false, return false immediately
+			if (!defined('USE_OTP') || !USE_OTP) {
+				return false;
+			}
+		
+			// Check organization setting
+			$organization = $this->organization();
+			if ($organization && !empty($organization->time_based_password)) {
+				return true;
+			}
+			
+			// Check role settings
+			$userRoles = $this->roles();
+			foreach ($userRoles as $role) {
+				if (!empty($role->time_based_password)) {
+					return true;
+				}
+			}
+
+			// Check user setting
+			if (!empty($this->time_based_password)) {
+				return true;
+			}
+			
+			return false;
+		}
+
+		/**
+		 * Generate and send OTP recovery token
+		 * @param string $email_address Email to send recovery to
+		 * @return bool True if successful
+		 */
+		public function sendOTPRecovery($email_address): bool {
+			$this->clearError();
+
+			// Generate recovery token
+			$token = $this->generateOTPRecoveryToken();
+			if (!$token) {
+				return false;
+			}
+
+			// Build recovery URL
+			$recovery_url = "http";
+			if ($GLOBALS['_config']->site->https) $recovery_url = "https";
+			$recovery_url .= "://" . $GLOBALS['_config']->site->hostname . "/_register/otp?recovery_token=" . $token;
+
+			// Prepare email template
+			$template_content = "
+			<html>
+			<head>
+				<style>
+					body { font-family: Arial, sans-serif; }
+					.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+					.header { background-color: #f8f9fa; padding: 20px; text-align: center; }
+					.content { padding: 20px; }
+					.button { 
+						display: inline-block; 
+						padding: 12px 24px; 
+						background-color: #007bff; 
+						color: white; 
+						text-decoration: none; 
+						border-radius: 4px; 
+						margin: 20px 0;
+					}
+				</style>
+			</head>
+			<body>
+				<div class='container'>
+					<div class='header'>
+						<h2>Two-Factor Authentication Recovery</h2>
+					</div>
+					<div class='content'>
+						<p>We received a request to recover your two-factor authentication setup. If you did not make this request, you can safely ignore this email.</p>
+						
+						<p>To reset your 2FA setup, click the link below or copy and paste it into your browser:</p>
+						
+						<p><a href='{$recovery_url}' class='button'>Reset 2FA Setup</a></p>
+						
+						<p>Or copy this link: {$recovery_url}</p>
+						
+						<p>This link will expire in 24 hours for security reasons.</p>
+						
+						<p>If you continue to have problems, please contact our support team.</p>
+					</div>
+				</div>
+			</body>
+			</html>";
+
+			// Create and send email
+			$message = new \Email\Message();
+			$message->html(true);
+			$message->to($email_address);
+			$message->from($GLOBALS['_config']->register->forgot_password->from ?? 'no-reply@' . $GLOBALS['_config']->site->hostname);
+			$message->subject("Two-Factor Authentication Recovery");
+			$message->body($template_content);
+
+			$transportFactory = new \Email\Transport();
+			$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+			
+			if (!$transport) {
+				$this->error("Error initializing email transport");
+				return false;
+			}
+
+			if ($transport->error()) {
+				$this->error("Error initializing email transport: " . $transport->error());
+				return false;
+			}
+
+			$transport->hostname($GLOBALS['_config']->email->hostname);
+			$transport->token($GLOBALS['_config']->email->token);
+
+			if ($transport->deliver($message)) {
+				$this->auditRecord('OTP_RECOVERY_REQUESTED', 'OTP recovery email sent to: ' . $email_address);
+				return true;
+			}
+			else {
+				$this->error("Error sending recovery email: " . ($transport->error() ?: "Unknown error"));
+				return false;
+			}
+		}
+
+		/**
+		 * Generate OTP recovery token
+		 * @return string|false Recovery token or false on error
+		 */
+		public function generateOTPRecoveryToken() {
+			$this->clearError();
+
+			if (!$this->id) {
+				$this->error("Customer not identified");
+				return false;
+			}
+
+			// Generate secure random token
+			$token = hash('sha256', random_bytes(32) . microtime() . $this->id);
+
+			// Set expiration (24 hours from now)
+			$expires = date('Y-m-d H:i:s', strtotime('+1 day'));
+
+			// Insert recovery token
+			$insert_query = "
+				INSERT INTO register_otp_recovery 
+				(user_id, recovery_token, date_created, date_expires, used)
+				VALUES (?, ?, NOW(), ?, 0)
+				ON DUPLICATE KEY UPDATE 
+					recovery_token = VALUES(recovery_token),
+					date_created = VALUES(date_created),
+					date_expires = VALUES(date_expires),
+					used = 0
+			";
+
+			$GLOBALS['_database']->Execute($insert_query, array($this->id, $token, $expires));
+
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			return $token;
+		}
+
+		/**
+		 * Verify and consume OTP recovery token
+		 * @param string $token Recovery token
+		 * @return bool True if valid and consumed
+		 */
+		public function verifyOTPRecoveryToken($token): bool {
+			$this->clearError();
+
+			if (empty($token)) {
+				$this->error("Recovery token required");
+				return false;
+			}
+
+			// Find valid, unused token
+			$select_query = "
+				SELECT user_id 
+				FROM register_otp_recovery 
+				WHERE recovery_token = ? 
+				AND date_expires > NOW() 
+				AND used = 0
+			";
+
+			$rs = $GLOBALS['_database']->Execute($select_query, array($token));
+
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			if (!$rs || $rs->RecordCount() == 0) {
+				$this->error("Invalid or expired recovery token");
+				return false;
+			}
+
+			list($user_id) = $rs->FetchRow();
+
+			// Mark token as used
+			$update_query = "
+				UPDATE register_otp_recovery 
+				SET used = 1 
+				WHERE recovery_token = ?
+			";
+
+			$GLOBALS['_database']->Execute($update_query, array($token));
+
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			// Load customer if not already loaded
+			if ($this->id != $user_id) {
+				$customer = new \Register\Customer($user_id);
+				if ($customer->error()) {
+					$this->error($customer->error());
+					return false;
+				}
+				$this->id = $customer->id;
+				$this->details();
+			}
+
+			$this->auditRecord('OTP_RESET', 'OTP recovery token used to reset 2FA');
+			return true;
+		}
+
+		/**
+		 * Reset user's OTP setup (clear secret key)
+		 * @return bool True if successful
+		 */
+		public function resetOTPSetup(): bool {
+			$this->clearError();
+
+			if (!$this->id) {
+				$this->error("Customer not identified");
+				return false;
+			}
+
+			// Clear the secret key
+			$result = $this->update(array('secret_key' => ''));
+
+			if ($result) {
+				$this->auditRecord('OTP_RESET', 'OTP setup reset - secret key cleared');
+				
+				// Clear cache
+				$cache_key = "customer[" . $this->id . "]";
+				$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+				$cache->delete();
+			}
+
+			return $result;
 		}
     }

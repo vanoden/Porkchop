@@ -2,10 +2,10 @@
 	namespace Product;
 
 	class Schema Extends \Database\BaseSchema {
-
-		public $module = 'product';
-
-		public $error;
+		public function __construct() {
+			$this->module = 'product';
+			parent::__construct();
+		}
 	
 		public function upgrade($max_version = 999) {
 			$this->clearError();
@@ -30,7 +30,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error("SQL Error creating product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Error creating product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}
@@ -52,7 +52,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error("SQL Error creating product_images table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Error creating product_images table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}
@@ -143,7 +143,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error("SQL Error creating product_vendor_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Error creating product_vendor_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}
@@ -158,7 +158,7 @@
 					ADD		`total_cost`		decimal(10,2) NOT NULL DEFAULT 0
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error("SQL Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}
@@ -192,7 +192,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error("SQL Error creating product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Error creating product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}
@@ -220,7 +220,7 @@
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error("SQL Error creating product_instances table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Error creating product_instances table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}
@@ -240,7 +240,7 @@
 					MODIFY COLUMN id int(11) NOT NULL AUTO_INCREMENT
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error("SQL Error altering product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Error altering product_prices table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}
@@ -268,7 +268,7 @@
 					)
 				"; 
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error("SQL Error creating product_prices_audit table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Error creating product_prices_audit table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}
@@ -288,7 +288,7 @@
 					MODIFY COLUMN `type` enum('group','kit','inventory','unique','service') DEFAULT 'inventory'
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->error("SQL Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}
@@ -314,7 +314,7 @@
 				";
 
 				if (! $this->executeSQL($create_table_query)) {
-					$this->error("SQL Error creating product_tags table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Error creating product_tags table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}
@@ -333,7 +333,7 @@
 				// Truncate product_images table
 				$table = new \Database\Schema\Table('product_images');
 				if (!$table->truncate()) {
-					$this->error = $table->error();
+					$this->error($table->error());
 					return false;
 				}
 
@@ -344,7 +344,7 @@
 						ADD COLUMN `view_order` INT(3) NOT NULL DEFAULT 999
 					";
 					if (!$this->executeSQL($alter_table_query)) {
-						$this->error("SQL Error altering product_images table in " . $this->module . "::Schema::upgrade(): " . $this->error());
+						$this->SQLError("Error altering product_images table in " . $this->module . "::Schema::upgrade(): " . $this->error());
 						app_log($this->error(), 'error');
 						return false;
 					}
@@ -357,7 +357,7 @@
 						DROP FOREIGN KEY `FK_IMAGE_ID`
 					";
 					if (!$this->executeSQL($drop_fk_query)) {
-						$this->error("SQL Error dropping foreign key in " . $this->module . "::Schema::upgrade(): " . $this->error());
+						$this->SQLError("Error dropping foreign key in " . $this->module . "::Schema::upgrade(): " . $this->error());
 						app_log($this->error(), 'error');
 						return false;
 					}
@@ -369,7 +369,7 @@
 					ADD CONSTRAINT `FK_IMAGE_ID` FOREIGN KEY (`image_id`) REFERENCES `storage_files` (`id`)
 				";
 				if (!$this->executeSQL($add_fk_query)) {
-					$this->error("SQL Error adding new foreign key in " . $this->module . "::Schema::upgrade(): " . $this->error());
+					$this->SQLError("Error adding new foreign key in " . $this->module . "::Schema::upgrade(): " . $this->error());
 					app_log($this->error(), 'error');
 					return false;
 				}

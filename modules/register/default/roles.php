@@ -15,7 +15,7 @@
 <?php	foreach ($roles as $role) { ?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_register/role/<?=$role->name?>"><?=$role->name?></a></div>
-		<div class="tableCell"><?=$role->description?></div>
+		<div class="tableCell"><?=strip_tags($role->description)?></div>
 		<div class="tableCell" style="text-align: center;"><a href="/_register/roles?remove_id=<?=$role->id?>"><img src="/img/icons/icon_tools_trash_active.svg" style="cursor: pointer; width: 20px; border: none;" alt="delete role"></a></div>
 	</div>
 <?php	} ?>

@@ -15,6 +15,9 @@
 
 		public function parse(array $array): bool {
 			// Parse the Data
+			$this->_modelNumber = "";
+			$this->_serialNumber = "";
+
 			$chars = "RegisterRequest::parse(): ";
 			$stage = 0;  // 0 = serial number, 1 = model number
 			$realchars = "";

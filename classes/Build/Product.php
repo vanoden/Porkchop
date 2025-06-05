@@ -2,6 +2,7 @@
 	namespace Build;
 
 	class Product extends \BaseModel {
+		
 		public $name;
 		public $major_version;
 		public $minor_version;
@@ -11,7 +12,7 @@
 
 		public function __construct($id = null) {
 			if (isset($id) && is_numeric($id)) {
-				$this->id = $id;
+				$this->id = (int)$id;
 				$this->details();
 			}
 		}
@@ -132,7 +133,14 @@
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			list($this->id) = $rs->FetchRow();
+
+			$row = $rs->FetchRow();
+			if (!$row) {
+				$this->id = 0;
+				return false;
+			}
+
+			$this->id = (int)$row[0];
 			if ($this->id > 0) {
 				app_log("Found product ".$this->id);
 				return $this->details();
@@ -162,25 +170,82 @@
 				return true;
 			}
 			else {
-				$this->id = null;
+				$this->id = 0;
 				return false;
 			}
 		}
 
 		public function lastVersion() {
-			$get_last_query = "
-				SELECT	id
-				FROM	build_versions
-				WHERE	product_id = ?
-				ORDER BY `timestamp` DESC
-				LIMIT	1
-			";
-			$rs = $GLOBALS['_database']->Execute($get_last_query,array($this->id));
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			
+			if (!isset($this->id) || !is_numeric($this->id)) {
+				$this->_error = "Invalid product ID";
 				return null;
 			}
-			list($id) = $rs->FetchRow();
-			return new Version($id);
+
+			$get_object_query = "
+				SELECT  id
+				FROM    build_versions
+				WHERE   product_id = ?
+				AND     status = 'PUBLISHED'
+				ORDER BY number DESC
+			";
+			$rs = $GLOBALS['_database']->Execute(
+				$get_object_query,
+				array($this->id)
+			);
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			$row = $rs->FetchRow();
+			if (!$row) {
+				return false;
+			}
+			$version_id = (int)$row[0];
+			return new Version($version_id);
+		}
+
+		/**
+		 * Validate a product name
+		 * 
+		 * @param string $string The name to validate
+		 * @return bool True if valid, false otherwise
+		 */
+		public function validName($string): bool {
+			if (preg_match('/^[\w\-\.\_\s\:\!]+$/', $string))
+				return true;
+			else
+				return false;
+		}
+
+		/**
+		 * Validate a product code
+		 * 
+		 * @param string $string The code to validate
+		 * @return bool True if valid, false otherwise
+		 */
+		public function validCode($string): bool {
+			if (preg_match('/^\w[\w\-\.\_\s]*$/',$string)) return true;
+			else return false;
+		}
+
+		/**
+		 * Validate a text string
+		 * 
+		 * @param string $string The text to validate
+		 * @return bool True if valid, false otherwise
+		 */
+		public function validText($string): bool {
+			return ctype_print($string);
+		}
+
+		/**
+		 * Validate an integer
+		 * 
+		 * @param string $string The integer to validate
+		 * @return bool True if valid, false otherwise
+		 */
+		public function validInteger($string): bool {
+			return is_numeric($string) && filter_var($string, FILTER_VALIDATE_INT) !== false;
 		}
 	}

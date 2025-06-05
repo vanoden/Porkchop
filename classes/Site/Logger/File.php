@@ -6,6 +6,7 @@
 		private $fh;
 
 		public function __construct($parameters) {
+			$this->type = 'File';
 			if (isset($parameters['path'])) {
 				$this->path = $parameters['path'];
 			}
@@ -27,12 +28,12 @@
 			}
 			catch (\Exception $e) {
 				$this->connected = false;
-				$this->error = $e->getMessage();
+				$this->error($e->getMessage());
 				return false;
 			}
 
 			if (!$this->fh) {
-				$this->error = join("\n",error_get_last());
+				$this->error(join("\n",error_get_last()));
 				return false;
 			}
 			$this->connected = true;

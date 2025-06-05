@@ -42,8 +42,8 @@
 			elseif (func_num_args() == 1 && gettype($args [0] ) == "array") {
 			    if (isset($args[0]['method'])) {
 				    $this->method = $args[0]['method'];
-				    $this->view = $args[0]['view'];
-				    if ($args[0]['index']) $this->index = $args[0]['index'];
+					if ($this->validView($args[0]['view'])) $this->view = $args[0]['view'];
+					if ($this->validIndex($args[0]['index'])) $this->index = $args[0]['index'];
 			    }
 		    }
 			elseif (func_num_args() == 2 && gettype( $args[0] ) == "string" && gettype( $args[1] ) == "string" && isset( $args[2])) {
@@ -82,7 +82,13 @@
 			if (!empty($GLOBALS ['_SESSION_']->refer_url)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-				header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				if (defined('USE_OTP') && USE_OTP) {
+					// Check if TOTP is required and not yet completed
+					if ($GLOBALS['_SESSION_']->customer->time_based_password && !$GLOBALS['_SESSION_']->otp_verified) {
+						header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+						exit;
+					}
+				}
 				$GLOBALS ['_SESSION_']->refer_url = null;
 				exit;
 			}
@@ -98,6 +104,7 @@
 	    }
 
 	    public function requireRole($role) {	 
+		    $this->requireAuth();
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
 		    }
@@ -119,6 +126,7 @@
 	    }
 
         public function requirePrivilege($privilege) {
+		$this->requireAuth();
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
@@ -127,15 +135,15 @@
             elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
 			    exit;
 		    }
             else {
 				$counter = new \Site\Counter("permission_denied");
 				$counter->increment();
 			    header('location: /_register/permission_denied' );
-			    exit;
-		    }
+                exit;
+			}
         }
 
 		public function requireOrganization() {
@@ -170,7 +178,7 @@
 
 			$database = new \Database\Service();
 
-		    if (strlen ( $index ) < 1) $index = null;
+		    if (empty($index) || strlen($index) < 1) $index = null;
 
 		    // Prepare Query
 		    $get_object_query = "
@@ -206,10 +214,17 @@
 			    return $this->details();
 		    }
 			elseif ($module == "static") {
-				// Override module and view - somehow being overridden elsewhere
-				$this->module = $module;
-				$this->view = $view;
-				return true;
+				// No Special Characters in static path
+				if ($this->validView($view)) {
+					// Store module and view
+					$this->module = $module;
+					$this->view = $view;
+					return true;
+				}
+				else {
+					app_log("Request for $module::$view view, not adding page: Invalid characters in static path",'notice');
+					return false;
+				}
 			}
 			elseif ($module == "content" && $view == "index") {
 				$message = new \Content\Message();
@@ -222,7 +237,7 @@
 				else return false;
 			}
 			else {
-				// See if view exists...we should create it if it does
+				// See if view exists...we should create it if it doesn't
 				$file_path = MODULES."/".$module;
 				if (isset($GLOBALS['_config']->style[$module])) $file_path .= "/".$GLOBALS['_config']->style[$module];
 				else $file_path .= "/default";
@@ -256,19 +271,19 @@
 		 */
 	    public function add($module = '', $view = '', $index = '') {
 			$this->clearError();
-
+app_log("Request to add page ".$module."::".$view."::".$index,'notice');
 			// Initialize Database Service
 			$database = new \Database\Service();
 
 		    // Apply optional parameters
-		    if ($module) {
+		    if (!empty($module) && $this->validModule($module)) {
 			    $this->module = $module;
-			    if ($view) {
+			    if (!empty($view) && $this->validView($view)) {
 				    $this->view = $view;
-				    if ($index) $this->index = $index;
+				    if (!empty($index) && $this->validIndex($index)) $this->index = $index;
 			    }
 		    }
-
+app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice');
 			// Prepare Query to Add Page
 		    $add_object_query = "
 			    INSERT
@@ -530,7 +545,6 @@
 
 		public function load_template() {
             $this->loadSiteHeaders();
-
 			if ($this->module() == 'static') {
 				return $this->parse(file_get_contents(HTML."/".$this->view));
 			}
@@ -1215,6 +1229,10 @@
 			return "/_".$this->module()."/".$this->view()."/".$this->index();
 		}
 
+		/** @method public function rewrite()
+		 * Rewrite old and producted URI's to new ones
+		 * @return void
+		 */
 		public function rewrite() {
 			if ($this->module() == 'static') {
 				if ($this->view() == 'index.html') {
@@ -1235,6 +1253,12 @@
 				elseif ($this->view() == 'distributors.html') {
 					$this->getPage('content','index','distributors');
 				}
+				elseif ($this->view() == 'admin.html') {
+					// Don't let people see admin template directly.
+					// Not an actual risk, but SecureWorks called it out.
+					http_response_code(404);
+					exit;
+				}
 			}
 		}
 
@@ -1253,9 +1277,23 @@
 			else return false;
 		}
 
+		/**
+		 * Validate view from path - Remember this could be used in static file serving
+		 * @param mixed $string 
+		 * @return false 
+		 */
 		public function validView($string) {
-			if (preg_match('/^\w[\w]*$/',$string)) return true;
-			else return false;
+			// No Directory Traversal
+			if (preg_match('/\.\./', $string)) return false;
+
+			// Make Sure Only Ok Characters in Filename
+			if (! preg_match('/^\w[\w\-\.\_]*$/',$string)) return false;
+
+			// Make Sure Static File is in Docroot
+			if ($this->module == 'static' && ! file_exists(HTML."/".$string)) return false;
+
+			// Ok to go
+			return true;
 		}
 
 		public function validIndex($string) {

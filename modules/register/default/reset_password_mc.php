@@ -19,8 +19,7 @@
 		if ($token->error) {
 			app_log("Error in password recovery: ".$token->error,'error',__FILE__,__LINE__);
 			$page->addError("Error in password recovery.  Admins have been notified.  Please try again later.");
-		}
-		elseif ($customer_id > 0) {
+		} elseif ($customer_id > 0) {
 			$GLOBALS['_SESSION_']->superElevate();
 			// Grab Customer Instance
 			$customer = new \Register\Customer($customer_id);
@@ -31,15 +30,12 @@
 			elseif(! $customer->id) {
 				app_log("Customer not found!",'notice',__FILE__,__LINE__);
 				$page->addError("Token error");
-			}
-			else {
-			
+			} else {
                 // assign a super elevated user session for password reset
 				$GLOBALS['_SESSION_']->assign($customer->id, true);
 				app_log("Customer ".$customer->id." logged in by token",'notice',__FILE__,__LINE__);
 			}
-		}
-		else {
+		} else {
 			$page->addError("Sorry, your recovery token was not recognized or has expired");
 			app_log("Customer not found for token ".$_REQUEST['token'],'info');
 		}
@@ -49,8 +45,7 @@
 			$page->addError("Invalid Request");
 			app_log("csrfToken missing or invalid",'info');
 			return;
-		}
-		elseif (! $GLOBALS['_SESSION_']->superElevated()) {
+		} elseif (! $GLOBALS['_SESSION_']->superElevated()) {
 			// Check current password
 			$checkUser = new \Register\Customer();
 			if (! $checkUser->authenticate($GLOBALS['_SESSION_']->customer->code,$_REQUEST['currentPassword'])) {

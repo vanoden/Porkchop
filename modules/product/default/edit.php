@@ -260,7 +260,7 @@
 							<?= $customer->first_name ?> <?= $customer->last_name ?>
 						</td>
 						<td class="value"><?= $priceAudit->date_updated ?></td>
-						<td class="value"><?= $priceAudit->note ?></td>
+						<td class="value"><?= strip_slashes($priceAudit->note) ?></td>
 					</tr>
 				<?php } ?>
 			</table>

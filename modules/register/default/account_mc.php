@@ -133,8 +133,10 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply" && !$readOnly) 
 			if (isset($parameters["password"])) {
 				if ($customer->status == 'EXPIRED') $customer->update(array('status' => 'ACTIVE'));
 			}
-
 			if (isset($parameters["profile"])) $customer->update(array('profile' => $parameters["profile"]));
+			
+			$customer->setMetadataScalar('job_title', (string)$_REQUEST['job_title']);
+			$customer->setMetadataScalar('job_description', (string)$_REQUEST['job_description']);
 
 			if ($customer->error()) {
 				app_log("Error updating customer: " . $customer->error(), 'error', __FILE__, __LINE__);

@@ -29,7 +29,7 @@
 			$reCAPTCHA = new \GoogleAPI\ReCAPTCHA();
 			if ($reCAPTCHA->test($customer,$_REQUEST['g-recaptcha-response'])) {
 				app_log('ReCAPTCHA OK','debug',__FILE__,__LINE__);
-				$captcha_ok = true;
+			$captcha_ok = true;
 			}
 			else {
 				$captcha_ok = false;

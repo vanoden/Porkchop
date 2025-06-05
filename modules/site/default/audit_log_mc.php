@@ -5,40 +5,51 @@
 
 	$parameters = array();
 	$parameters['status'] = array();
+	$can_proceed = true;
 
+	$request = new \HTTP\Request();
 	$auditClass = new \Site\AuditLog();
 	$classList = $auditClass->classes();
 
 	// extract sort and order parameters from request
-	$sort_direction = isset($_REQUEST['sort_by']) ? $_REQUEST['sort_by'] : '';
-	$order_by = isset($_REQUEST['order_by']) ? $_REQUEST['order_by'] : 'desc';
+	$sort_direction = $_REQUEST['sort_by'] ?? '';
+	$order_by = $_REQUEST['order_by'] ?? 'desc';
 	$parameters['order_by'] = $order_by;
 	$parameters['sort_direction']= $sort_direction;
 
 	// get audits based on current search
-	if (!empty($_REQUEST['btn_submit'])) {
-		if (empty($_REQUEST['class_name'])) {
+	$btn_submit = $_REQUEST['btn_submit'] ?? null;
+	if ($request->validText($btn_submit)) {
+		$class_name = $_REQUEST['class_name'] ?? null;
+		if (empty($class_name)) {
 			$page->addError("Please select a class to view audit logs.");
+			$can_proceed = false;
 		}
-		elseif (!class_exists($_REQUEST['class_name'])) {
+		elseif (!class_exists($class_name)) {
 			$page->addError("Class does not exist.");
+			$can_proceed = false;
 		}
 		else {
-			$parameters['class_name'] = $_REQUEST['class_name'];
-			$class = new $_REQUEST['class_name'];
-			if (empty($_REQUEST['code'])) {
+			$parameters['class_name'] = $class_name;
+			$class = new $class_name();
+			$code = $_REQUEST['code'] ?? null;
+			if (empty($code)) {
 				$page->addError("Please enter an instance code");
+				$can_proceed = false;
 			}
-			elseif (!$class->validCode($_REQUEST['code'])) {
+			elseif (!$class->validCode($code)) {
 				$page->addError("Invalid instance code.");
+				$can_proceed = false;
 			}
-			elseif (!$class->get($_REQUEST['code'])) {
+			elseif (!$class->get($code)) {
 				$page->addError("Instance does not exist.");
+				$can_proceed = false;
 			}
 			else {
 				$parameters['instance_id'] = $class->id;
 
-				if (!isset($_REQUEST['pagination_start_id'])) $_REQUEST['pagination_start_id'] = 0;
+				$pagination_start_id = $_REQUEST['pagination_start_id'] ?? 0;
+				if (!$request->validInteger($pagination_start_id)) $pagination_start_id = 0;
 
 				// find audits
 				$auditList = new \Site\AuditLog\EventList();
@@ -52,16 +63,18 @@
 				$auditsCurrentPage = array_slice($audits, $offset, $recordsPerPage);
 				$totalPages = ceil($totalResults / $recordsPerPage);
 
-				if (!isset($_REQUEST['start'])) $_REQUEST['start'] = 0;
-				if ($_REQUEST['start'] < $recordsPerPage)
+				$start = $_REQUEST['start'] ?? 0;
+				if (!$request->validInteger($start)) $start = 0;
+				
+				if ($start < $recordsPerPage)
 					$prev_offset = 0;
 				else
-					$prev_offset = $_REQUEST['start'] - $recordsPerPage;
+					$prev_offset = $start - $recordsPerPage;
 					
-				$next_offset = $_REQUEST['start'] + $recordsPerPage;
+				$next_offset = $start + $recordsPerPage;
 				$last_offset = $totalResults - $recordsPerPage;
 
-				if ($next_offset > $totalResults) $next_offset = $_REQUEST['pagination_start_id'] + $totalResults;
+				if ($next_offset > $totalResults) $next_offset = $pagination_start_id + $totalResults;
 
 				$pagination = new \Site\Page\Pagination();
 				$pagination->forwardParameters(array('add','update','delete','btn_submit','sort_by','order_by'));

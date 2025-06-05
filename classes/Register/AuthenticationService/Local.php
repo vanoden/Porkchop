@@ -73,8 +73,15 @@
 			return true;
 		}
 
+		/** @method public changePassword(login,password)
+		 * Change the password for the user with the given login
+		 * @param string $login
+		 * @param string $password
+		 * @return bool True on success, false on failure
+		 */
 		public function changePassword($login,$password) {
-			app_log($GLOBALS['_SESSION_']->customer->code." changing password for ".$login,'info');
+			if ($_SERVER['SCRIPT_FILENAME'] == BASE."/core/install.php") app_log("Installer setting password for $login",'info');
+			else app_log($GLOBALS['_SESSION_']->customer->code." changing password for ".$login,'info');
 	
 			$customer = new \Register\Customer();
 			if (! $customer->get($login)) {
@@ -118,9 +125,15 @@
 					WHERE	id = ?
 				";
 			}
-			$GLOBALS['_database']->Execute($update_password_query,array($password,$customer->id));
+			$rs = $GLOBALS['_database']->Execute($update_password_query,array($password,$customer->id));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+			// Check if any rows were actually updated
+			if ($GLOBALS['_database']->Affected_Rows() == 0) {
+                // @TODO during register process it audits the original password itself being changed
+				//$this->error("No rows were updated");
 				return false;
 			}
 			return true;

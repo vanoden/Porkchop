@@ -314,6 +314,9 @@
 			if (isset($method['privilege_required']) && !(preg_match('/^\[\w+\]$/',$method['privilege_required']))) {
 				$this->requirePrivilege($method['privilege_required']);
 			}
+			if (isset($method['role_required']) && !(preg_match('/^\[\w+\]$/',$method['role_required']))) {
+				$this->requireRole($method['role_required']);
+			}
 			if (isset($method['authentication_required']) && $method['authentication_required']) {
 				$this->requireAuth();
 			}
@@ -350,20 +353,33 @@
 					}
 				}
 				// Enforce Parameter Type Requirements
-				if (!empty($value) && isset($options['content-type'])) {
-					//print_r("\t".$options['content-type']."\n");
-					if (in_array($options['content-type'],['int','integer','float']) && ! is_numeric($value)) {
+				if (!empty($value) && (isset($options['content-type']) || isset($options['content_type']))) {
+					// Because I was stupid and used content-type instead of content_type at first
+					if (isset($options['content-type']) && !isset($options['content_type'])) $options['content_type'] = $options['content-type'];
+					if (in_array($options['content_type'],['int','integer','float']) && ! is_numeric($value)) {
 						$this->invalidRequest("Invalid $param value");
 					}
-					elseif (in_array($options['content-type'],['bool','boolean'])) {
+					elseif (in_array($options['content_type'],['bool','boolean'])) {
 						if ($_REQUEST[$param] == 1) $_REQUEST[$param] = 'true';
 						elseif ($_REQUEST[$param] == 0) $_REQUEST[$param] = 'false';
 						if ($_REQUEST[$param] != 'true' && $_REQUEST[$param] != 'false') {
 							$this->invalidRequest("Invalid $param value");
 						}
 					}
-					elseif (in_array($options['content-type'],['date','datetime'])) {
+					elseif (in_array($options['content_type'],['date','datetime'])) {
 						if (! get_mysql_date($value)) $this->invalidRequest("Invalid $param value");
+					}
+					elseif ($options['content_type'] == 'email') {
+						if (! filter_var($value,FILTER_VALIDATE_EMAIL)) $this->invalidRequest("Invalid $param value");
+					}
+					elseif ($options['content_type'] == 'url') {
+						if (! filter_var($value,FILTER_VALIDATE_URL)) $this->invalidRequest("Invalid $param value");
+					}
+					elseif ($options['content_type'] == 'phone') {
+						if (! preg_match('/^\d{10,11}$/',$value)) $this->invalidRequest("Invalid $param value");
+					}
+					elseif ($options['content_type'] == 'file') {
+						if (! preg_match('/^[\w\-\_\.]+$/',$value)) $this->invalidRequest("Invalid $param value");
 					}
 				}
 				// Enforce Parameter Regex Requirements
@@ -458,7 +474,10 @@
                 $log = fopen(API_LOG."/".$module.".log",'a');
             else
                 $log = fopen(API_LOG,'a');
-
+			if (!$log) {
+				app_log("Unable to open API log file: ".API_LOG,"error",__FILE__,__LINE__);
+				return false;
+			}
 			fwrite($log,"[".date('m/d/Y H:i:s')."] $host $module $login $method $status $elapsed\n");
 			fwrite($log,"_REQUEST: ".print_r($_REQUEST,true));
 			fwrite($log,"_RESPONSE: ".print_r($response,true));
@@ -552,11 +571,11 @@
 				if ($method->description) {
 					$form .= $t.$t.'<span class="apiMethodDescription">'.$method->description.'</span>'.$cr;
 				}
-				if ($method->verb) {
+				if (!empty($method->path)) {
 					$form .= $t.$t.'
 					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">URL</span>
-						<span class="value apiMethodSetting">'.$method->verb.'</span>
+						<span class="label apiMethodSetting">URI</span>
+						<span class="value apiMethodSetting">'.$method->path.'</span>
 					</div>'.$cr;
 				}
 
@@ -801,5 +820,50 @@
 			);
 			header('Content-Type: text/plain');
 			print yaml_emit($definition_object);
+		}
+
+		public function export() {
+			$api_name = "\\".ucfirst($this->module)."\\API";
+			$api = new $api_name();
+			$methods = $api->_methods();
+			header('Content-Type: text/csv');
+			header('Content-disposition: attachment;filename='.$api->_name.'.csv');
+			print("Method,Description,Return Type,Return MIME Type,Authentication Required,Token Required,Privilege Required,Role Required,Deprecated,Path,Verb\n");
+			foreach ($methods as $form_name => $settings) {
+				$record = array(
+					"method" => $form_name,
+					"description" => '"'.$settings['description'].'"',
+					"return_type" => $settings['return_type'],
+					"return_mime_type" => $settings['return_mime_type'],
+					"authentication_required" => $settings['authentication_required'],
+					"token_required" => $settings['token_required'],
+					"privilege_required" => $settings['privilege_required'],
+					"role_required" => $settings['role_required'],
+					"deprecated" => $settings['deprecated'],
+					"path" => $settings['path'],
+					"verb" => $settings['verb'],
+				);
+				print implode(',',$record)."\n";
+			}
+			exit;
+		}
+	}
+
+	if(!function_exists('str_putcsv'))
+	{
+		function str_putcsv($input, $delimiter = ',', $enclosure = '"')
+		{
+			// Open a memory "file" for read/write...
+			$fp = fopen('php://temp', 'r+');
+			// ... write the $input array to the "file" using fputcsv()...
+			fputcsv($fp, $input, $delimiter, $enclosure);
+			// ... rewind the "file" so we can read what we just wrote...
+			rewind($fp);
+			// ... read the entire line into a variable...
+			$data = fread($fp, 1048576);
+			// ... close the "file"...
+			fclose($fp);
+			// ... and return the $data to the caller, with the trailing newline from fgets() removed.
+			return rtrim($data, "\n");
 		}
 	}

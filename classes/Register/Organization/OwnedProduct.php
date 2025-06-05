@@ -4,10 +4,11 @@
 use Register\Organization;
 
 	class OwnedProduct Extends \BaseClass {
-		private int $id = 0;
-		private int $organization_id;
-		private int $product_id;
-		private int $quantity;
+
+		protected int $id = 0;
+		protected int $organization_id;
+		public int $product_id;
+		protected int $quantity;
 
 		/**
 		 * Constructor

@@ -1,5 +1,5 @@
 <?php
-	define ( 'BASE', '/var/www/SpectrosWWW/' );
+	define ( 'BASE', '/home/khinds/Dropbox/Current-Projects/SpectrosInstruments.com/Workspace-Sites/SpectrosWWW/' );
 	define ( 'ENV', '' );
 	define ( 'PATH', '' );
 	define ( 'HTML', BASE.'/html' );
@@ -8,7 +8,7 @@
 	define ( 'THIRD_PARTY', BASE.'/third_party/vendor' );
 	define ( 'RESOURCES', BASE.'/resources' );
 	define ( 'CLASS_PATH', BASE.'/classes' );
-	define ( 'API_LOG', '/var/log/apache2');
+	define ( 'API_LOG', '/var/log/apache2/SpectrosWWW/log');
 	define ( 'APPLICATION_LOG', '/var/log/apache2/SpectrosWWW/application.log');
 	define ( 'APPLICATION_LOG_LEVEL', 'debug');
 	define ( 'APPLICATION_LOG_TYPE', 'file');
@@ -16,8 +16,9 @@
 	define ( 'REPORTS',BASE.'/reports' );	
 	define ( 'SPECTROS_LOCATION_ID', 1);
 	define ( 'SPECTROS_VENDOR_ID', 0);
-        define ( 'IS_DOCKER_DEVELOPMENT', 1);
-        define ( 'USE_OTP', true); // enable OTP optionsfor login
+    define ( 'ENVIROMENT', 'QA'); // 'DEV' / 'QA' / 'PRODUCTION'
+	define ( 'QA_CAPTCHA_BYPASS', 'GZdWHjJJk9xHJXHFPeu4gZs6YDfcEXyb');
+	
 	
         # Initialize config object
         $_config = new stdClass();
@@ -26,14 +27,14 @@
         $_config->site = new stdClass();
         $_config->site->name = "SpectrosWWW";
         $_config->site->https = false;
-        $_config->site->hostname = "localhost";
+        $_config->site->hostname = "kevin.spectrosinstruments.com";
         $_config->site->default_template = "default.html";
         $_config->site->support_email = 'service@spectrosinstruments.com';
 
         # Session Info
         $_config->session = new stdClass();
         $_config->session->cookie = 'spectros_session_code';
-        $_config->session->domain = 'localhost';
+        $_config->session->domain = 'kevin.spectrosinstruments.com';
         $_config->session->expires = 86400;
 
         # Mail Server (SMTP)
@@ -44,17 +45,17 @@
 
         # Cache Mechanism (memcache or xcache)
         $_config->cache = new stdClass();
-        $_config->cache->mechanism = "memcache";
+        $_config->cache->mechanism = "memcached";
 
         # Database
         $_config->database = new stdClass();
         $_config->database->driver              = 'mysqli';
-        $_config->database->schema              = 'spectros';
+        $_config->database->schema              = 'spectros_2022';
         $_config->database->master = (object) array(
-                'hostname'      => 'localhost',
-                'username'      => "spectros",
-                'password'      => "spectros",
-                'port'          => "8082"
+                'hostname'      => '127.0.0.1',
+                'username'      => "khinds",
+                'password'      => "M03e151%",
+                'port'          => "3306"
         );
 
         # ElasticSearch
@@ -144,18 +145,3 @@
                 "contact"       => "spectros",
                 "event"         => "spectros"
        );
-
-        # Site Auditing Setup
-        $_config->auditing = new stdClass();
-        $_config->auditing->auditedClasses =  array(
-                "Monitor\\Dashboard",
-                "Monitor\\SensorDefinition",
-                "Register\\Customer",
-                "Register\\Privilege",
-                "Register\\Role",
-                "Register\\Tag",
-                "Sales\\Order",
-                "Sales\\Order\\Event",
-                "Site\\Page",
-                "Support\\Request\\Item"
-        );

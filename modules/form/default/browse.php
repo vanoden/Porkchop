@@ -13,7 +13,7 @@
 <?php	foreach ($forms as $form) { ?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_form/edit/<?=$form->code?>"><?=$form->title?></a></div>
-		<div class="tableCell"><?=$form->description?></div>
+		<div class="tableCell"><?= strip_tags($form->description) ?></div>
 		<div class="tableCell"><?=$form->action?></div>
 		<div class="tableCell"><?=$form->method?></div>
 	</div>

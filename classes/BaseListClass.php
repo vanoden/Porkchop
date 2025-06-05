@@ -435,8 +435,8 @@ class BaseListClass extends \BaseClass {
 
 	public function validSearchString($string) {
 		if (is_array($string)) {
-			print_r(debug_backtrace());
-			exit;
+			$this->error("Invalid search string");
+			return false;
 		}
 		if (preg_match('/^[\w\-\.\_\s\*]{3,64}$/', $string)) return true;
 		else return false;

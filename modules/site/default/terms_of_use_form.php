@@ -4,6 +4,7 @@
 <?=$latest_version->content?>
 <p>To view the requested contact, you must accept the above Terms of Use.</p>
 <form method="post">
+<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <input type="hidden" name="target_uri" value="<?=$target_page->uri()?>" />
 <input type="hidden" name="module" value="<?=$target_page->module()?>" />
 <input type="hidden" name="view" value="<?=$target_page->view()?>" />

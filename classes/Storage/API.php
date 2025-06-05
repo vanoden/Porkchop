@@ -134,8 +134,8 @@
 			if ($repository->error()) $this->app_error("Error finding repository: ".$repository->error(),__FILE__,__LINE__);
 			if (! $repository->id) $this->error("Repository '".$_REQUEST['code']."' not found");
 
-			$metadata = new \Storage\Repository\Metadata($repository->id,$_REQUEST['key']);
-			if ($metadata->error()) $this->app_error("Error getting metadata: ".$metadata->error(),__FILE__,__LINE__);
+			$metadata = $repository->getMetadata($_REQUEST['key']);
+			if ($repository->error()) $this->app_error("Error getting metadata: ".$repository->error(),__FILE__,__LINE__);
 
 			$response = new \APIResponse();
 			$response->addElement('metadata',$metadata);
@@ -521,7 +521,7 @@
 			if (! $file->id) $this->error("File '".$_REQUEST['code']."' not found");
 
 			$metadata = $file->getMetadata($_REQUEST['key']);
-			if ($metadata->error()) $this->app_error("Error getting metadata: ".$metadata->error(),__FILE__,__LINE__);
+			if ($file->error()) $this->app_error("Error getting metadata: ".$file->error(),__FILE__,__LINE__);
 
 			$response = new \APIResponse();
 			$response->addElement('metadata',$metadata);
@@ -681,79 +681,272 @@
 					)
 				),
 				'setRepositoryMetadata' => array(
-					'code'		=> array('required' => true),
-					'key'		=> array('required' => true),
-					'value'		=> array('required' => true)
+					'description'	=> "Set metadata for a repository",
+					'authentication_required'	=> true,
+					'token_required'			=> true,
+					'parameters'	=> array(
+						'code'		=> array(
+							'object'			=> "repository",
+							'property'			=> "code",
+							'type'				=> "string",
+							'description'		=> "Unique code for repository",
+							'required'			=> true
+						),
+						'key'		=> array(
+							'object'			=> "metadata",
+							'property'			=> "key",
+							'type'				=> "string",
+							'description'		=> "Key for metadata",
+							'required'			=> true
+						),
+						'value'		=> array(
+							'object'			=> "metadata",
+							'property'			=> "value",
+							'type'				=> "string",
+							'description'		=> "Value for metadata",
+							'required'			=> true
+						)
+					)
 				),
 				'getRepositoryMetadata' => array(
-					'code'		=> array('required' => true),
-					'key'		=> array('required' => true)
+					'description'	=> "Get metadata for a repository",
+					'authentication_required'	=> true,
+					'parameters'	=> array(
+						'code'		=> array(
+							'object'			=> "repository",
+							'property'			=> "code",
+							'type'				=> "string",
+							'description'		=> "Unique code for repository",
+							'required'			=> true
+						),
+						'key'		=> array(
+							'object'			=> "metadata",
+							'property'			=> "key",
+							'type'				=> "string",
+							'description'		=> "Key for metadata",
+							'required'			=> true
+						)
+					)
 				),
 				'addFile' => array(
-					'repository_code'	=> array('required' => true),
-					'name'		=> array(),
-					'mime_type'	=> array(),
-					'file'		=> array('type' => 'file'),
+					'description'	=> "Add a new file to a repository",
+					'authentication_required'	=> true,
+					'token_required'			=> true,
+					'parameters'		=> array(
+						'repository_code'	=> array(
+							'required' => true,
+							'description' => "Unique code for repository",
+							'validation_method' => "Storage::Repository::validCode()"
+						),
+						'name'		=> array(
+							'description'	=> "Name of file",
+							'required'		=> false,
+							'validation_method' => "Storage::File::validName()"
+						),
+						'mime_type'	=> array(
+							'description'	=> "MIME type of file",
+							'required'		=> false,
+							'validation_method' => "Storage::File::validMimeType()"
+						),
+						'file'		=> array(
+							'description' => "File to upload",
+							'required' => true,
+							'content_type'	=> "file",
+							'type'			=> "file"
+						),
+					)
 				),
 				'updateFile' => array(
-					'code'		=> array('required' => true),
-					'name'		=> array(),
-					'status'	=> array()
+					'description'	=> "Update an existing file",
+					'authentication_required'	=> true,
+					'token_required'			=> true,
+					'parameters'	=> array(
+						'code'		=> array(
+							'description'	=> "Unique code for file",
+							'required' => true,
+							'validation_method' => "Storage::File::validCode()"
+						),
+						'name'		=> array(
+							'description'	=> "New name for file",
+							'required' => false,
+							'validation_method' => "Storage::File::validName()"
+						),
+						'status'	=> array(
+							'description'	=> "New status for file",
+							'required' => false,
+							'validation_method' => "Storage::File::validStatus()"
+						)
+					)
 				),
 				'getFilePrivileges' => array(
-					'code'			=> array(
-						'object'			=> "file",
-						'property'			=> "code",
-						'type'				=> "string",
-						'description'		=> "Unique code for repository",
-						'requirement_group' => 0
-					),
-					'id'			=> array(
-						'object'			=> "file",
-						'property'			=> "id",
-						'type'				=> "int",
-						'description'		=> "Unique id for repository",
-						'requirement_group' => 1),
-					'repository_code'	=> array(
-						'object'			=> "repository",
-						'requirement_group' => 2),
-					'path'			=> array('requirement_group' => 2),
-					'name'			=> array('requirement_group' => 2)
+					'description'	=> "Get privileges for a file",
+					'authentication_required'	=> false,
+					'parameters'	=> array(
+						'code'			=> array(
+							'description'		=> "Unique code for repository",
+							'validation_method'	=> "Storage::File::validCode()",
+							'requirement_group' => 0
+						),
+						'id'			=> array(
+							'content_type'		=> "integer",
+							'description'		=> "Unique id for repository",
+							'requirement_group' => 1
+						),
+						'repository_code'	=> array(
+							'requirement_group' => 2,
+							'description'	=> "Unique code for repository",
+							'validation_method' => "Storage::Repository::validCode()"
+						),
+						'path'			=> array(
+							'description'	=> "Path to file",
+							'requirement_group' => 2,
+							'validation_method' => "Storage::File::validPath()"
+						),
+						'name'			=> array(
+							'description'	=> "Name of file",
+							'requirement_group' => 2,
+							'validation_method' => "Storage::File::validName()"
+						)
+					)
 				),
 				'readPermitted' => array(
-					'user_code'	=> array(),
-					'file_code'	=> array('required' => true)
+					'description'	=> "Check if user is permitted to read a file",
+					'authentication_required'	=> false,
+					'parameters'	=> array(
+						'user_code'	=> array(
+							'description'	=> "Unique code for user",
+							'validation_method'	=> 'Register::Customer::validCode()'
+						),
+						'file_code'	=> array(
+							'description'	=> "Unique code for file",
+							'validation_method'	=> 'Storage::File::validCode()',
+							'required' => true
+						)
+					)
 				),
 				'writePermitted' => array(
-					'user_code'	=> array(),
-					'file_code'	=> array('required' => true)
+					'description'	=> "Check if user is permitted to write to a file",
+					'authentication_required'	=> false,
+					'parameters'	=> array(
+						'user_code'	=> array(
+							'description'	=> "Unique code for user",
+							'validation_method'	=> 'Register::Customer::validCode()'
+						),
+						'file_code'	=> array(
+							'description'	=> "Unique code for file",
+							'validation_method'	=> 'Storage::File::validCode()',
+							'required' => true
+						)
+					)
 				),
 				'updateFilePrivileges' => array(
-					'file_code'			=> array('required' => true),
-					'entity_type'		=> array('required' => true,'options' => array('organization','user','role','all')),
-					'entity_id'		=> array(),
-					'mask'			=> array('required' => true)
+					'description'	=> "Update privileges for a file",
+					'authentication_required'	=> true,
+					'token_required'			=> true,
+					'parameters'		=> array(
+						'file_code'			=> array(
+							'description'		=> "Unique code for file",
+							'validation_method'	=> 'Storage::File::validCode()',
+							'required' => true
+						),
+						'entity_type'		=> array(
+							'required' => true,
+							'options' => array('organization','user','role','all')
+						),
+						'entity_id'		=> array(
+							'content_type'	=> "integer",
+							'description'	=> "Unique id for entity"
+						),
+						'mask'			=> array(
+							'required' => true
+						)
+					)
 				),
 				'deleteFile' => array(
-					'code'		=> array('required' => true),
+					'description'	=> "Delete a file",
+					'authentication_required'	=> true,
+					'token_required'			=> true,
+					'parameters'	=> array(
+						'code'		=> array(
+							'description'	=> "Unique code for file",
+							'validation_method'	=> 'Storage::File::validCode()',
+							'required' => true
+						)
+					)
 				),
 				'findFiles'	=> array(
-					'code'		=> array(),
-					'name'		=> array(),
-					'status'	=> array(),
-					'repository_code'	=> array(),
+					'description'	=> 'Find matching files',
+					'parameters'	=> array(
+						'code'		=> array(
+							'description'	=> "Unique code for file",
+							'validation_method'	=> 'Storage::File::validCode()'
+						),
+						'name'		=> array(
+							'description'	=> "Name of file",
+							'validation_method'	=> 'Storage::File::validName()'
+						),
+						'status'	=> array(
+							'description'	=> "Status of file",
+							'options'		=> array(
+								'[NULL]'	=> 'any',
+								'NEW'		=> "NEW",
+								'ACTIVE'	=> "ACTIVE",
+								'INACTIVE'	=> "INACTIVE"
+							)
+						),
+						'repository_code'	=> array(
+							'description'	=> "Unique code for repository",
+							'validation_method'	=> 'Storage::Repository::validCode()'
+						)
+					)
 				),
 				'setFileMetadata' => array(
-					'code'		=> array('required' => true),
-					'key'		=> array('required' => true),
-					'value'		=> array('required' => true)
+					'description'	=> "Set metadata for a file",
+					'authentication_required'	=> true,
+					'token_required'			=> true,
+					'parameters'		=> array(
+						'code'		=> array(
+							'description'	=> "Unique code for file",
+							'required' => true,
+							'validation_method'	=> 'Storage::File::validCode()'
+						),
+						'key'		=> array(
+							'description'	=> "Key for metadata",
+							'required' => true,
+							'validation'	=> "Storage::File::validMetadataKey()"
+						),
+						'value'		=> array(
+							'description'	=> "Value for metadata",
+							'required' => true,
+							'validation'	=> "Storage::File::safeString()"
+						)
+					)
 				),
 				'getFileMetadata' => array(
-					'code'		=> array('required' => true),
-					'key'		=> array('required' => true)
+					'description'	=> "Get metadata for a file",
+					'authentication_required'	=> true,
+					'parameters'		=> array(
+						'code'		=> array(
+							'description'	=> "Unique code for file",
+							'required' => true,
+							'validation_method'	=> 'Storage::File::validCode()'
+						),
+						'key'		=> array(
+							'description'	=> "Key for metadata",
+							'required' => true,
+							'validation'	=> "Storage::File::validMetadataKey()"
+						)
+					)
 				),
 				'downloadFile' => array(
-					'code'		=> array('required' => true)
+					'description'	=> "Download a file",
+					'parameters'	=> array(
+						'code'		=> array(
+							'description'	=> "Unique code for file",
+							'required' => true,
+							'validation_method'	=> 'Storage::File::validCode()'
+						)
+					)
 				)
 			);
 		}

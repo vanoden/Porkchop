@@ -7,6 +7,7 @@
         }
 
 		public function searchAdvanced($search_string, $advanced = [], $controls = []): array {
+			
 			$this->clearError();
 			$this->resetCount();
 
@@ -42,7 +43,7 @@
 				if (!$this->validSearchString($string)) {
 					app_log("Invalid search string: '$string'",'info');
 					$this->error("Invalid search string '".$string."'");
-					return null;
+					return [];
 				}
 				else {
 					$string = str_replace("'","\'",$string);
@@ -77,7 +78,7 @@
 				foreach ($parameters['status'] as $status) {
                     if (!$validationClass->validStatus($status)) {
                         $this->error("Invalid status");
-                        return null;
+                        return [];
                     }
 					if ($icount > 0) $find_objects_query .= ","; 
 					$icount ++;
@@ -89,7 +90,7 @@
 			elseif (isset($parameters['status'])) {
                 if (!$validationClass->validStatus($parameters['status'])) {
                     $this->error("Invalid status");
-                    return null;
+                    return [];
                 }
 				$find_objects_query .= "
 				AND		ro.status = ?";
@@ -107,7 +108,7 @@
             if (isset($controls['sort'])) {
                 if (!$validationClass->hasField($controls['sort'])) {
                     $this->error("Invalid sort field");
-                    return null;
+                    return [];
                 }
                 switch($controls['sort']) {
                     case 'status':
@@ -137,7 +138,7 @@
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return [];
 			}
 			$organizations = array();
 			while (list($id) = $rs->FetchRow()) {

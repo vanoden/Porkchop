@@ -5,6 +5,7 @@
 		private $host;
 
 		public function __construct($parameters) {
+			$this->type = 'Errorlog';
 			parent::__construct($parameters);
 		}
 

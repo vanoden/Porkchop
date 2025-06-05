@@ -26,9 +26,17 @@ function checkUncheck(isChecked) {
 
   <div>
     <label>Description</label>
-    <input type="text" name="description" value="<?=$role->description?>" />
+    <input type="text" name="description" value="<?=strip_tags($role->description)?>" />
     <input type="hidden" name="id" value="<?=$role->id?>">
   </div>
+
+  <?php if (defined('USE_OTP') && USE_OTP) { ?>
+  <div>
+    <label>Require Two-Factor Authentication</label>
+    <input type="checkbox" name="time_based_password" value="1" <?php if (!empty($role->time_based_password)) echo "checked"; ?>>
+    <span class="note">If enabled, all users with this role will be required to use two-factor authentication</span>
+  </div>
+  <?php } ?>
 
   <div id="rolePrivilegesContainer">
 

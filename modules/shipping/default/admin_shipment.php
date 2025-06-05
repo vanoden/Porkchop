@@ -94,7 +94,7 @@
 		        <div class="tableCell"><?=$item->quantity?></div>
 		        <div class="tableCell"><?=$item->product()->code?></div>
 		        <div class="tableCell"><?=$item->serial_number?></div>
-		        <div class="tableCell"><?=$item->description?></div>
+		        <div class="tableCell"><?=strip_tags($item->description)?></div>
                 <div class="tableCell">
         <?php   if ($package->status == "READY") { ?>
                 N/A

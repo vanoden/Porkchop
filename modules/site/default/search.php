@@ -61,7 +61,7 @@ if (!empty($results)) {
       <?php foreach ($results as $result) { ?>
         <tr>
           <td><?= $result->type ?></td>
-          <td><?= $result->summary ?></td>
+          <td><?= strip_tags($result->summary) ?></td>
           <td><a href="<?= $result->customer_url ?>"><?= $result->customer_url ?></a></td>
           <?php if($canAdministor) { ?>
             <td><a href="<?= $result->admin_url ?>"><?= $result->admin_url ?></a></td>

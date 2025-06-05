@@ -34,9 +34,16 @@
 		}
 
 		public function formContent() {
-			$string  = '<form method="get" action="'.$this->categories[$_REQUEST['category']]['uri'].'">';
-			$string .= '<input type="text" name="'.$this->categories[$_REQUEST['category']]['inputName'].'" value="'.$this->previous_string.'" />';
-			$string .= '<input type="submit" name="'.$this->categories[$_REQUEST['category']]['submitName'].'" value="Search" />';
+			if (!$this->validString($_REQUEST['category'] ?? null) || !isset($this->categories[$_REQUEST['category']])) {
+				// Default to customer if category is invalid
+				$category = 'customer';
+			} else {
+				$category = $_REQUEST['category'];
+			}
+			
+			$string  = '<form method="get" action="'.$this->categories[$category]['uri'].'">';
+			$string .= '<input type="text" name="'.$this->categories[$category]['inputName'].'" value="'.$this->previous_string.'" />';
+			$string .= '<input type="submit" name="'.$this->categories[$category]['submitName'].'" value="Search" />';
 			$string .= '</form>';
 			return $string;
 		}

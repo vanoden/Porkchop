@@ -48,7 +48,7 @@
         <div class="tableCell"><?=$audit->class_method?></div>
         <div class="tableCell"><?=$audit->instance_id?></div>
         <div class="tableCell"><?=$audit->class_name?></div>
-        <div class="tableCell"><?=$audit->description?></div>
+        <div class="tableCell"><?=strip_tags($audit->description)?></div>
     </div>
     <?php } ?>
   </div>

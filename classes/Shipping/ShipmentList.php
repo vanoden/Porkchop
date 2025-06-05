@@ -2,6 +2,7 @@
 	namespace Shipping;
 
 	class ShipmentList Extends \BaseListClass {
+	
 		public function __construct() {
 			$this->_modelName = '\Shipping\Shipment';
 		}

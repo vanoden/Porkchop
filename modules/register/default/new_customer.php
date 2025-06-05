@@ -245,7 +245,7 @@ function getProvinces() {
         <select id="product_id" name="product_id" class="value input collectionField" style="display: block" onchange="document.getElementById('serial_number_message').style.display = 'none';">
           <option value="" <?php	if (isset($selectedProduct) && $product==$selectedProduct) print " selected"; ?>>---</option>
           <?php	foreach ($productsAvailable as $product) { ?>
-            <option value="<?=$product->id?>"<?php	if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=$product->description?></option>
+            <option value="<?=$product->id?>"<?php	if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=strip_tags($product->description)?></option>
           <?php	} ?>
         </select>
       </li>

@@ -9,8 +9,11 @@
 	if ($_REQUEST['button_submit']) {
 		foreach ($pages as $edit_page) {
 			$page_id = $edit_page->id;
-			if ($_REQUEST['tou_id'][$page_id] > 0) $tou_id = $_REQUEST['tou_id'][$page_id] > 0;
-			else $tou_id = 0;
+			if (isset($_REQUEST['tou_id'][$page_id]) && $_REQUEST['tou_id'][$page_id] > 0) {
+				$tou_id = $_REQUEST['tou_id'][$page_id];
+			} else {
+				$tou_id = 0;
+			}
 			if (isset($_REQUEST['sitemap'][$page_id]) && is_numeric($_REQUEST['sitemap'][$page_id]) && $_REQUEST["sitemap"][$page_id] == 1) $sitemap = true;
 			else $sitemap = false;
 

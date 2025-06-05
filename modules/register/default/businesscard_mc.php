@@ -55,3 +55,6 @@ if ($defaultImageId) {
 
 // Get the list of user contacts
 $contacts = $customer->contacts();
+
+// get the organization
+$organization = $customer->organization();

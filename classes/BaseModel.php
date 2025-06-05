@@ -2,7 +2,7 @@
 class BaseModel extends \BaseClass {
 
 	// Primary Key
-	public int $id = 0;
+	public ?int $id = 0;
 
 	// Was data found in db or cache
 	protected $_exists = false;
@@ -368,7 +368,7 @@ class BaseModel extends \BaseClass {
 							$property = new \ReflectionProperty($this, $key);
 							$property_type = $property->getType();
 							if (is_null($property_type)) {
-								app_log("Setting key " . $this->$key . " of unspecified type to " . strval($value));
+								app_log("Setting key " . $key . " of unspecified type to " . strval($value),'trace');
 								$this->$key = strval($value);
 							} elseif ($property_type->allowsNull() && is_null($value)) $this->$key = null;
 							elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
@@ -424,7 +424,7 @@ class BaseModel extends \BaseClass {
 					$property = new \ReflectionProperty($this, $key);
 					$property_type = $property->getType();
 					if (is_null($property_type)) {
-						app_log("Setting key " . $this->$key . " of unspecified type to " . strval($value));
+						app_log("Setting key " . $key . " of unspecified type to " . strval($value),'trace');
 						$this->$key = strval($value);
 					} elseif ($property_type->allowsNull() && is_null($value)) $this->$key = null;
 					elseif (gettype($this->$key) == "integer") $this->$key = intval($value);
@@ -720,10 +720,10 @@ class BaseModel extends \BaseClass {
 			$cache_key = $this->_cacheKeyPrefix . "[" . $this->id . "]";
 			return new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 		} else if (!empty($this->_cacheKeyPrefix)) {
-			$this->debug("No ID defined for " . get_class($this));
+			app_log("No ID defined for " . get_class($this),'warning');
 			return null;
 		} else {
-			$this->debug("No cache key defined for " . get_class($this));
+			app_log("No cache key defined for " . get_class($this),'warning');
 			return null;
 		}
 	}
@@ -917,7 +917,7 @@ class BaseModel extends \BaseClass {
 		$rs = $database->Execute($get_metadata_keys_query);
 		if (! $rs) {
 			$this->SQLError($database->ErrorMsg());
-			return false;
+			return [];
 		}
 
 		// Fetch Results
@@ -952,7 +952,7 @@ class BaseModel extends \BaseClass {
 		$rs = $database->Execute($get_metadata_keys_query);
 		if (! $rs) {
 			$this->SQLError($database->ErrorMsg());
-			return false;
+			return [];
 		}
 
 		// Fetch Results
@@ -1131,7 +1131,7 @@ class BaseModel extends \BaseClass {
 		$rs = $database->Execute($get_metadata_query);
 		if (! $rs) {
 			$this->SQLError($database->ErrorMsg());
-			return false;
+			return new \stdClass();
 		}
 
 		// Fetch Results
@@ -1173,6 +1173,35 @@ class BaseModel extends \BaseClass {
 		}
 
 		return $metadata;
+	}
+
+	/** @method public dropAllMetadata()
+	 * Drop all metadata for this object
+	 * @return bool True if successful
+	 */
+	public function dropAllMetadata(): bool {
+		$this->clearError();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Prepare Query
+		$drop_metadata_query = "
+				DELETE FROM `$this->_metaTableName`
+				WHERE `$this->_tableMetaFKColumn` = ?
+			";
+
+		// Bind Parameters
+		$database->AddParam($this->id);
+
+		// Execute Query
+		$rs = $database->Execute($drop_metadata_query);
+		if (! $rs) {
+			$this->SQLError($database->ErrorMsg());
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -1354,7 +1383,7 @@ class BaseModel extends \BaseClass {
 	 * @param string $label Optional label for the image
 	 * @return bool True if upload and association are successful, false otherwise
 	 */
-	public function uploadImage(array $fileData, string $path = '', string $label = '', int $repository_id, $object_type = null): bool {
+	public function uploadImage(array $fileData, int $repository_id, string $path = '', string $label = '', $object_type = null): bool {
 
 		$this->clearError();
 
@@ -1402,6 +1431,14 @@ class BaseModel extends \BaseClass {
 			return false;
 		}
 
+		return true;
+	}
+
+	public function validMetadataKey($key) {
+		if (!preg_match('/^[\w_\-\.\s\:]+$/', $key)) {
+			$this->error("Invalid metadata key");
+			return false;
+		}
 		return true;
 	}
 }

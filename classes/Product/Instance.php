@@ -36,7 +36,17 @@
 		 */
 		public function __call($name,$parameters) {
 			if ($name == 'get' && count($parameters) == 2) return $this->getWithProduct($parameters[0],$parameters[1]);
-			elseif ($name == 'get') return $this->getSimple($parameters[0]);
+			elseif ($name == 'get') {
+				if (empty($parameters[0])) {
+					$this->error("Code parameter cannot be null");
+					return false;
+				}
+				return $this->getSimple($parameters[0]);
+			}
+			elseif ($name == 'setMetadata') {
+				if (gettype($parameters[0]) == 'object') return $this->setMetadataObject($parameters[0], $parameters[1]);
+				else return $this->setMetadataScalar($parameters[0], $parameters[1]);
+			}
 			else {
 				$this->error("Invalid method called");
 				return false;

@@ -33,6 +33,7 @@
 		public function __construct($id = 0) {
 			$this->_tableName = 'product_products';
             $this->_addStatus(array('ACTIVE','HIDDEN','DELETED'));
+			$this->_addTypes(array('group','kit','inventory','unique','service'));
 			$this->_metaTableName = 'product_metadata';
 			$this->_tableMetaFKColumn = 'product_id';
 			$this->_tableMetaKeyColumn = 'key';

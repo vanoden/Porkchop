@@ -5,6 +5,9 @@ $page->requirePrivilege('configure site');
 $page->addBreadCrumb("Import Settings", "/_site/import_content");
 $page->instructions = "Select the settings you would like to export to a JSON formatted file.";
 
+$request = new \HTTP\Request();
+$can_proceed = true;
+
 /** 
  * is checked check for checkboxes
  *
@@ -17,19 +20,26 @@ function isChecked($name = "") {
 
 // content requested to export form submitted
 $siteData = new \Site\Data();
-if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
-	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+$content = $_REQUEST['content'] ?? null;
+if (is_array($content) && !empty($content)) {
+	$csrfToken = $_REQUEST['csrfToken'] ?? null;
+	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($csrfToken)) {
 		$page->addError("Invalid Token");
+		$can_proceed = false;
 	} else {
-
 		// get JSON data and overwrite flag
-		$jsonData = json_decode($_REQUEST['jsonData'], true);
-		$overwrite = ($_REQUEST['overwrite'] == 'true') ? true : false;
+		$jsonData = json_decode($_REQUEST['jsonData'] ?? '{}', true);
+		$overwrite = ($_REQUEST['overwrite'] ?? '') == 'true' ? true : false;
 
 		// Configurations Selected
-		if (in_array('Configurations', $_REQUEST['content'])) {
-			if ($jsonData['configurations']) {
+		if (in_array('Configurations', $content) && $can_proceed) {
+			if (isset($jsonData['configurations']) && is_array($jsonData['configurations'])) {
 				foreach ($jsonData['configurations'] as $configuration) {
+					if (!isset($configuration['key']) || !$request->validText($configuration['key'])) {
+						$page->addError("Invalid configuration key");
+						$can_proceed = false;
+						continue;
+					}
 
 					$siteConfiguration = new \Site\Configuration();
 					$siteConfigurationValue = $siteConfiguration->getByKey($configuration['key']);
@@ -40,6 +50,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 							$isUpdated = $siteConfiguration->update(array('value' => $configuration['value']));
 							if (!$isUpdated) {
 								$page->addError("<strong>Error Updating Site Configuration: </strong>" . $siteConfiguration->getError() . "<br/><strong> Key: </strong>" . $configuration['key'] . " <strong>Name: </strong> " . $configuration['value'] . "<br/>");
+								$can_proceed = false;
 							} else {
 								$page->appendSuccess("Updated Site Configuration: " . $configuration['key'] . " - " . $configuration['value']);
 							}
@@ -50,6 +61,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 						$addedSiteConfiguration = $siteConfiguration->add(array('key' => $configuration['key'], 'value' => $configuration['value']));
 						if (!$addedSiteConfiguration) {
 							$page->addError("<strong>Error Adding Site Configuration: </strong>" . $siteConfiguration->getError() . "<br/><strong> Key: </strong>" . $configuration['key'] . " <strong>Name: </strong> " . $configuration['value'] . "<br/>");
+							$can_proceed = false;
 						} else {
 							$page->appendSuccess("Added Site Configuration: " . $configuration['key'] . " - " . $configuration['value']);
 						}
@@ -59,8 +71,8 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 		}
 
 		// Navigation Selected
-		if (in_array('Navigation', $_REQUEST['content'])) {
-			if ($jsonData['navigation']) {
+		if (in_array('Navigation', $content) && $can_proceed) {
+			if (isset($jsonData['navigation']) && is_array($jsonData['navigation'])) {
 				foreach ($jsonData['navigation'] as $navigation) {
 					$navigationMenu = new \Site\Navigation\Menu();
 					$navigationMenu->getByCode($navigation['menuItem']['code']);
@@ -71,6 +83,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 							$isUpdated = $navigationMenu->update(array('title' => $navigation['menuItem']['title']));
 							if (!$isUpdated) {
 								$page->addError("<strong>Error Updating Navigation Menu: </strong>" . $navigationMenu->getError() . "<br/><strong> Code: </strong>" . $navigation['menuItem']['code'] . " <strong>Title: </strong> " . $navigation['menuItem']['title'] . "<br/>");
+								$can_proceed = false;
 							} else {
 								$page->appendSuccess("Updated Navigation Menu: " . $navigation['menuItem']['code'] . " - " . $navigation['menuItem']['title']);
 							}
@@ -81,6 +94,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 						$addedNavigationMenu = $navigationMenu->add(array('code' => $navigation['menuItem']['code'], 'title' => $navigation['menuItem']['title']));
 						if (!$addedNavigationMenu) {
 							$page->addError("<strong>Error Adding Navigation Menu: </strong>" . $navigationMenu->getError() . "<br/><strong> Code: </strong>" . $navigation['menuItem']['code'] . " <strong>Title: </strong> " . $navigation['menuItem']['title'] . "<br/>");
+							$can_proceed = false;
 						} else {
 							$page->appendSuccess("Added Navigation Menu: " . $navigation['menuItem']['code'] . " - " . $navigation['menuItem']['title']);
 						}
@@ -106,6 +120,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 								$isUpdated = $navigationMenuItem->update($navigationItemData);
 								if (!$isUpdated) {
 									$page->addError("<strong>Error Updating Navigation Menu Item: </strong>" . $navigationMenuItem->getError() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['url'] . "<br/>");
+									$can_proceed = false;
 								} else {
 									$page->appendSuccess("Updated Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
 								}
@@ -116,6 +131,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 							$addedNavigationMenuItem = $navigationMenuItem->add($navigationItemData);
 							if (!$addedNavigationMenuItem) {
 								$page->addError("<strong>Error Adding Navigation Menu Item: </strong>" . $navigationMenuItem->getError() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['target'] . "<br/>");
+								$can_proceed = false;
 							} else {
 								$page->appendSuccess("Added Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
 							}
@@ -126,10 +142,14 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 		}
 
 		// Terms of Use Selected
-		if (in_array('Terms', $_REQUEST['content'])) {
-
-			if ($jsonData['termsOfUse']) {
+		if (in_array('Terms', $content) && $can_proceed) {
+			if (isset($jsonData['termsOfUse']) && is_array($jsonData['termsOfUse'])) {
 				foreach ($jsonData['termsOfUse'] as $term) {
+					if (!isset($term['termsOfUseItem']['code']) || !$request->validText($term['termsOfUseItem']['code'])) {
+						$page->addError("Invalid terms of use code");
+						$can_proceed = false;
+						continue;
+					}
 
 					$termsOfUse = new \Site\TermsOfUse();
 					$termsOfUse->getByCode($term['termsOfUseItem']['code']);
@@ -144,6 +164,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 							$isUpdated = $termsOfUse->update($termsOfUseItemData);
 							if (!$isUpdated) {
 								$page->addError("<strong>Error Updating Terms of Use: </strong>" . $termsOfUse->getError() . "<br/><strong> Code: </strong>" . $term['termsOfUseItem']['code'] . " <strong>Name: </strong> " . $term['termsOfUseItem']['name'] . "<br/>");
+								$can_proceed = false;
 							} else {
 								$page->appendSuccess("Updated Terms of Use: " . $term['termsOfUseItem']['code'] . " - " . $term['termsOfUseItem']['name']);
 							}
@@ -154,6 +175,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 						$addedTermOfUse = $termsOfUse->add($termsOfUseItemData);
 						if (!$addedTermOfUse) {
 							$page->addError("<strong>Error Adding Terms of Use: </strong>" . $termsOfUse->getError() . "<br/><strong> Code: </strong>" . $term['termsOfUseItem']['code'] . " <strong>Name: </strong> " . $term['termsOfUseItem']['name'] . "<br/>");
+							$can_proceed = false;
 						} else {
 							$page->appendSuccess("Added Terms of Use: " . $term['termsOfUseItem']['code'] . " - " . $term['termsOfUseItem']['name']);
 						}
@@ -162,6 +184,11 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 					// create/update terms of use versions
 					foreach ($term['termsOfUseVersions'] as $termsOfUseVersions) {
 						foreach ($termsOfUseVersions as $termsOfUseVersion) {
+							if (!isset($termsOfUseVersion['version_number']) || !$request->validText($termsOfUseVersion['version_number'])) {
+								$page->addError("Invalid terms of use version number");
+								$can_proceed = false;
+								continue;
+							}
 
 							$termsOfUseVersionItem = new \Site\TermsOfUseVersion();
 							$termsOfUseVersionItem->getByTermsOfUseIdVersionNumber($termsOfUse->id, $termsOfUseVersion['version_number']);
@@ -177,6 +204,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 									$isUpdated = $termsOfUseVersionItem->update($termsOfUseVersionData);
 									if (!$isUpdated) {
 										$page->addError("<strong>Error Updating Terms of Use Version: </strong>" . $termsOfUseVersionItem->getError() . "<br/><strong> Version Number: </strong>" . $termsOfUseVersion['version_number'] . " <strong>Status: </strong> " . $termsOfUseVersion['status'] . "<br/>");
+										$can_proceed = false;
 									} else {
 										$page->appendSuccess("Updated Terms of Use Version: " . $termsOfUseVersion['version_number'] . " - " . $termsOfUseVersion['status']);
 									}
@@ -187,6 +215,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 								$addedTermOfUseVersion = $termsOfUseVersionItem->add($termsOfUseVersionData);
 								if (!$addedTermOfUseVersion) {
 									$page->addError("<strong>Error Adding Terms of Use Version: </strong>" . $termsOfUseVersionItem->getError() . "<br/><strong> Version Number: </strong>" . $termsOfUseVersion['version_number'] . " <strong>Status: </strong> " . $termsOfUseVersion['status'] . "<br/>");
+									$can_proceed = false;
 								} else {
 									$page->appendSuccess("Added Terms of Use Version: " . $termsOfUseVersion['version_number'] . " - " . $termsOfUseVersion['status']);
 								}
@@ -198,10 +227,25 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 		}
 
 		// Marketing content Selected
-		if (in_array('Marketing', $_REQUEST['content'])) {
-			if ($jsonData['marketingContent']) {
+		if (in_array('Marketing', $content) && $can_proceed) {
+			if (isset($jsonData['marketingContent']) && is_array($jsonData['marketingContent'])) {
 				foreach ($jsonData['marketingContent'] as $currentPageImport) {
 					foreach ($currentPageImport as $marketingCurrentPageKey => $marketingCurrentPage) {
+						if (!isset($marketingCurrentPage['module']) || !$request->validText($marketingCurrentPage['module'])) {
+							$page->addError("Invalid marketing page module");
+							$can_proceed = false;
+							continue;
+						}
+						if (!isset($marketingCurrentPage['view']) || !$request->validText($marketingCurrentPage['view'])) {
+							$page->addError("Invalid marketing page view");
+							$can_proceed = false;
+							continue;
+						}
+						if (!isset($marketingCurrentPage['index']) || !$request->validText($marketingCurrentPage['index'])) {
+							$page->addError("Invalid marketing page index");
+							$can_proceed = false;
+							continue;
+						}
 
 						// get page in question
 						$marketingPage = new \Site\Page();
@@ -224,6 +268,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 										$isUpdated = $marketingPage->update($marketingPageData);
 										if (!$isUpdated) {
 											$page->addError("<strong>Error Updating Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $marketingCurrentPage['module'] . " <strong>View: </strong> " . $marketingCurrentPage['view'] . "<br/>");
+											$can_proceed = false;
 										} else {
 											$page->appendSuccess("Updated Marketing Page: " . $marketingCurrentPage['module'] . " - " . $marketingCurrentPage['view']);
 										}
@@ -234,6 +279,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 									$addedMarketingPage = $marketingPage->add($marketingPageData);
 									if (!$addedMarketingPage) {
 										$page->addError("<strong>Error Adding Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $marketingCurrentPage['module'] . " <strong>View: </strong> " . $marketingCurrentPage['view'] . "<br/>");
+										$can_proceed = false;
 									} else {
 										$page->appendSuccess("Added Marketing Page: " . $marketingCurrentPage['module'] . " - " . $marketingCurrentPage['view']);
 									}
@@ -244,6 +290,12 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 						// page_metadata upsert
 						if ($marketingCurrentPageKey == 'pageMetaData') {
 							foreach ($marketingCurrentPage as $pageMetaData) {
+								if (!isset($pageMetaData['key']) || !$request->validText($pageMetaData['key'])) {
+									$page->addError("Invalid marketing page meta data key");
+									$can_proceed = false;
+									continue;
+								}
+
 								$marketingPageMetaData = new \Site\Page\MetaData();
 								$marketingPageMetaData->getByPageIdKey($marketingPage->id, $pageMetaData['key']);
 								$marketingPageMetaDataData = array(
@@ -257,6 +309,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 										$isUpdated = $marketingPageMetaData->update($marketingPageMetaDataData);
 										if (!$isUpdated) {
 											$page->addError("<strong>Error Updating Marketing Page Meta Data: </strong>" . $marketingPageMetaData->getError() . "<br/><strong> Key: </strong>" . $pageMetaData['key'] . " <strong>Value: </strong> " . $pageMetaData['value'] . "<br/>");
+											$can_proceed = false;
 										} else {
 											$page->appendSuccess("Updated Marketing Page Meta Data: " . $pageMetaData['key'] . " - " . $pageMetaData['value']);
 										}
@@ -267,6 +320,7 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 									$addedMarketingPageMetaData = $marketingPageMetaData->addByParameters($marketingPageMetaDataData);
 									if (!$addedMarketingPageMetaData) {
 										$page->addError("<strong>Error Adding Marketing Page Meta Data: </strong>" . $marketingPageMetaData->getError() . "<br/><strong> Key: </strong>" . $pageMetaData['key'] . " <strong>Value: </strong> " . $pageMetaData['value'] . "<br/>");
+										$can_proceed = false;
 									} else {
 										$page->appendSuccess("Added Marketing Page Meta Data: " . $pageMetaData['key'] . " - " . $pageMetaData['value']);
 									}
@@ -276,45 +330,58 @@ if (isset($_REQUEST['content']) && !empty($_REQUEST['content'])) {
 
 						// content_messages upsert
 						if ($marketingCurrentPageKey == 'contentBlocks') {
-
 							foreach ($marketingCurrentPage as $contentBlock) {
+								if (!isset($contentBlock['company_id']) || !$request->validText($contentBlock['company_id'])) {
+									$page->addError("Invalid marketing content block company ID");
+									$can_proceed = false;
+									continue;
+								}
+								if (!isset($contentBlock['target']) || !$request->validText($contentBlock['target'])) {
+									$page->addError("Invalid marketing content block target");
+									$can_proceed = false;
+									continue;
+								}
+								if (!isset($contentBlock['deleted']) || !$request->validText($contentBlock['deleted'])) {
+									$page->addError("Invalid marketing content block deleted");
+									$can_proceed = false;
+									continue;
+								}
 
-								if (isset($contentBlock['company_id']) && isset($contentBlock['target']) && isset($contentBlock['deleted'])) {
+								$marketingContentBlock = new \Content\Message();
+								$marketingContentBlock->getByCompanyIdTargetDeleted($contentBlock['company_id'], $contentBlock['target'], $contentBlock['deleted']);
 
-									$marketingContentBlock = new \Content\Message();
-									$marketingContentBlock->getByCompanyIdTargetDeleted($contentBlock['company_id'], $contentBlock['target'], $contentBlock['deleted']);
+								$contentBlockData = array(
+									'company_id' => $contentBlock['company_id'],
+									'target' => $contentBlock['target'],
+									'view_order' => $contentBlock['view_order'],
+									'active' => $contentBlock['active'],
+									'deleted' => $contentBlock['deleted'],
+									'title' => $contentBlock['title'],
+									'menu_id' => $contentBlock['menu_id'],
+									'name' => $contentBlock['name'],
+									'content' => $contentBlock['content'],
+									'cached' => $contentBlock['cached']
+								);
 
-									$contentBlockData = array(
-										'company_id' => $contentBlock['company_id'],
-										'target' => $contentBlock['target'],
-										'view_order' => $contentBlock['view_order'],
-										'active' => $contentBlock['active'],
-										'deleted' => $contentBlock['deleted'],
-										'title' => $contentBlock['title'],
-										'menu_id' => $contentBlock['menu_id'],
-										'name' => $contentBlock['name'],
-										'content' => $contentBlock['content'],
-										'cached' => $contentBlock['cached']
-									);
-
-									if ($marketingContentBlock->id) {
-										if ($overwrite) {
-											$isUpdated = $marketingContentBlock->update($contentBlockData);
-											if (!$isUpdated) {
-												$page->addError("<br/><u>Error Updating Marketing Content Block: </u>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . strip_tags($contentBlock['content']) . "<br/>");
-											} else {
-												$page->appendSuccess("<br/><u>Updated Marketing Content Block: </u><br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
-											}
+								if ($marketingContentBlock->id) {
+									if ($overwrite) {
+										$isUpdated = $marketingContentBlock->update($contentBlockData);
+										if (!$isUpdated) {
+											$page->addError("<br/><u>Error Updating Marketing Content Block: </u>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . strip_tags($contentBlock['content']) . "<br/>");
+											$can_proceed = false;
 										} else {
-											$page->appendSuccess("<br/><u>Skipped Marketing Content Block: </u><br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
+											$page->appendSuccess("<br/><u>Updated Marketing Content Block: </u><br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
 										}
 									} else {
-										$addedMarketingContentBlock = $marketingContentBlock->add($contentBlockData);
-										if (!$addedMarketingContentBlock) {
-											$page->addError("<br/><u>Error Adding Marketing Content Block: </u>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . strip_tags($contentBlock['content']) . "<br/>");
-										} else {
-											$page->appendSuccess("<br/><u>Added Marketing Content Block:</u> <br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
-										}
+										$page->appendSuccess("<br/><u>Skipped Marketing Content Block: </u><br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
+									}
+								} else {
+									$addedMarketingContentBlock = $marketingContentBlock->add($contentBlockData);
+									if (!$addedMarketingContentBlock) {
+										$page->addError("<br/><u>Error Adding Marketing Content Block: </u>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . strip_tags($contentBlock['content']) . "<br/>");
+										$can_proceed = false;
+									} else {
+										$page->appendSuccess("<br/><u>Added Marketing Content Block:</u> <br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
 									}
 								}
 							}

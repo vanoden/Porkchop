@@ -25,12 +25,12 @@
 					break;
 				}
 				else {
-					$this->_login .= chr(ord($array[$pos])+48);
+					$this->_login .= chr(ord($array[$pos]));
 				}
 				$pos ++;
 			}
 			while ($pos < count($array)) {
-				$this->_password .= chr(ord($array[$pos])+48);
+				$this->_password .= chr(ord($array[$pos]));
 				$pos ++;
 			}
 			app_log("AuthRequest::parse() - Login: ".$this->_login.", Password: ".$this->_password,'info');
@@ -44,21 +44,21 @@
 			return count($array);
 		}
 
-		public function login(string $login = null): string {
+		public function login(?string $login = null): string {
 			if (isset($login)) {
 				$this->_login = $login;
 			}
 			return $this->_login;
 		}
 
-		public function password(string $password = null): string {
+		public function password(?string $password = null): string {
 			if (isset($password)) {
 				$this->_password = $password;
 			}
 			return $this->_password;
 		}
 
-		public function userId(): ?\Register\Customer {
+		public function userId(): ?int {
 			$customer = new \Register\Customer();
 			if ($customer->authenticate($this->_login, $this->_password)) {
 				return $customer->id;

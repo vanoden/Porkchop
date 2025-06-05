@@ -1,4 +1,4 @@
- <?php
+<?php
 	#######################################################
 	### accounts_mc.php									###
 	### This view lists all account associated with a	###
@@ -34,11 +34,18 @@
 		$_REQUEST['search'] = null;
 	}
 
-	$find_parameters['status'] = array('NEW','ACTIVE');
-	if (isset($_REQUEST['deleted']) && $_REQUEST['deleted'] == 1) array_push($find_parameters['status'],'DELETED');
-	if (isset($_REQUEST['expired']) && $expired['deleted'] == 1) array_push($find_parameters['status'],'EXPIRED');
-	if (isset($_REQUEST['hidden']) && $_REQUEST['hidden'] == 1) array_push($find_parameters['status'],'HIDDEN');
-	if (isset($_REQUEST['blocked']) && $_REQUEST['blocked'] == 1) array_push($find_parameters['status'],'BLOCKED');
+	$find_parameters['status'] = array();
+	
+	// If no filters are selected, show only NEW and ACTIVE by default
+	if (empty($_REQUEST['deleted']) && empty($_REQUEST['expired']) && empty($_REQUEST['hidden']) && empty($_REQUEST['blocked'])) {
+		$find_parameters['status'] = array('NEW', 'ACTIVE');
+	} else {
+		// Only add the statuses that are checked
+		if (isset($_REQUEST['deleted']) && $_REQUEST['deleted'] == 1) array_push($find_parameters['status'], 'DELETED');
+		if (isset($_REQUEST['expired']) && $_REQUEST['expired'] == 1) array_push($find_parameters['status'], 'EXPIRED');
+		if (isset($_REQUEST['hidden']) && $_REQUEST['hidden'] == 1) array_push($find_parameters['status'], 'HIDDEN');
+		if (isset($_REQUEST['blocked']) && $_REQUEST['blocked'] == 1) array_push($find_parameters['status'], 'BLOCKED');
+	}
 	if (isset($_REQUEST['search']) && strlen($_REQUEST['search'])) $find_parameters['_search'] = $_REQUEST['search'];
 
 	// Get Count before Pagination
