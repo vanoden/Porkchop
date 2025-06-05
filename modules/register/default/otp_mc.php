@@ -7,19 +7,9 @@ $recovery_token = $_REQUEST['recovery_token'] ?? null;
 if (!empty($recovery_token)) {
   $customer = new \Register\Customer();
   if ($customer->verifyOTPRecoveryToken($recovery_token)) {
-    // Valid recovery token - reset OTP setup
-    if ($customer->resetOTPSetup()) {
-      $page->appendSuccess("Your two-factor authentication has been reset. You can now set up 2FA again with a new QR code.");
-      
-      // Set the customer in session for the reset process
-      $GLOBALS['_SESSION_']->assign($customer->id, true);
-      
-      // Clear any existing secret to force new setup
-      $userStoredSecret = '';
-    } else {
-      $page->addError("Error resetting 2FA setup: " . $customer->error());
-      $can_proceed = false;
-    }
+    // Valid recovery token - redirect to reset_otp page
+    header("Location: /_register/reset_otp");
+    exit;
   } else {
     $page->addError("Invalid or expired recovery token");
     $can_proceed = false;

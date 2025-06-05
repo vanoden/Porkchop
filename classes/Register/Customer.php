@@ -882,6 +882,7 @@
 		 * @return bool True if OTP is required
 		 */
 		public function requiresOTP(): bool {
+			
 			app_log("DEBUG: requiresOTP() called for customer ID: ".$this->id, 'debug', __FILE__, __LINE__);
 
 			// If USE_OTP is not defined or false, return false immediately
@@ -942,8 +943,8 @@
 					.button { 
 						display: inline-block; 
 						padding: 12px 24px; 
-						background-color: #007bff; 
-						color: white; 
+						background-color: #007bff !important; 
+						color: white !important; 
 						text-decoration: none; 
 						border-radius: 4px; 
 						margin: 20px 0;
@@ -1107,7 +1108,14 @@
 				$this->details();
 			}
 
-			$this->auditRecord('OTP_RESET', 'OTP recovery token used to reset 2FA');
+			// Clear the user's secret_key (reset 2FA setup)
+			$result = $this->update(array('secret_key' => ''));
+			if (!$result) {
+				$this->error("Failed to clear secret key during OTP recovery");
+				return false;
+			}
+
+			$this->auditRecord('OTP_RESET', 'OTP recovery token used to reset 2FA and secret key cleared');
 			return true;
 		}
 

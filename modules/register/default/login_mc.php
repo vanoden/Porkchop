@@ -104,7 +104,6 @@
 		app_log("Auth by login/password",'debug',__FILE__,__LINE__);
 		$customer = new \Register\Customer();
 		if ($customer->validLogin($_REQUEST['login'])) {
-
 			if ($customer->get($_REQUEST['login'])) {
 				if ( !$GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 					$page->addError("Invalid Request");

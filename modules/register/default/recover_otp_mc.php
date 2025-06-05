@@ -21,15 +21,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     else {
         // Look up user by email
         $contact = new \Register\Contact();
-        $contact->getContact('email', $email_address);
-        
+        $contact->getSingleContact('email', $email_address);
+        $contact->getPerson();
+        if (is_object($contact->person) && $contact->person->id) {
+            $customer = new \Register\Customer($contact->person->id);
+        } else {
+            $customer = null;
+        }
+
         if ($contact->error()) {
             app_log("Error finding contact: " . $contact->error(), 'error', __FILE__, __LINE__);
             $page->addError("Error processing request, please try again later");
         }
-        elseif ($contact->person && $contact->person->id) {
-            $customer = new \Register\Customer($contact->person->id);
-            
+        elseif ($contact->person && $contact->person->id && $customer) {
             if ($customer->error()) {
                 app_log("Error loading customer: " . $customer->error(), 'error', __FILE__, __LINE__);
                 $page->addError("Error processing request, please try again later");
@@ -47,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             else {
-
                 // Valid customer with 2FA - send recovery email
                 $result = $customer->sendOTPRecovery($email_address);
                 

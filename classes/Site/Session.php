@@ -424,6 +424,10 @@ use Register\Customer;
 			$customer = new \Register\Customer($customer_id);
 			if (! $customer->id) $this->error("Customer not found");
 
+			// Set customer_id and customer object in the session
+			$this->customer_id = $customer->id;
+			$this->customer = $customer;
+
 			$cache_key = "session[".$this->id."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			$cache->delete();
@@ -722,6 +726,7 @@ use Register\Customer;
 		}
 
 		public function verifyCSRFToken($csrfToken) {
+
 			if (empty($csrfToken)) {
 				app_log("No csrfToken provided",'debug');
 				return false;
