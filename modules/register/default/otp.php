@@ -57,6 +57,7 @@
             <?php if (!$showQRCode) { ?>
                 <div style="margin: 20px 0;">
                     <p><a href="/_register/recover_otp" style="color: #666; text-decoration: underline;">Can't access your authenticator? Recover 2FA setup</a></p>
+                    <p><a href="/_register/backup_code" style="color: #666; text-decoration: underline;">Use a backup code</a></p>
                 </div>
             <?php } ?>
 

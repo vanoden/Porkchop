@@ -454,10 +454,37 @@ foreach ($searchTagXrefs as $searchTagXrefItem) {
 	$registerCustomerSearchTags[] = $searchTag;
 }
 
+if (isset($_REQUEST['generate_backup_codes'])) {
+    if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+        $page->addError("Invalid request");
+    } else {
+        $customer = new \Register\Customer($customer_id);
+        // Remove all existing backup codes
+        $customer->deleteAllBackupCodes();
+        // Generate 6 new codes
+        $generatedBackupCodes = $customer->generateBackupCodes(6);
+        if (!$generatedBackupCodes) {
+            if ($customer->error()) {
+                $page->addError($customer->error());
+            } else {
+                $page->addError("Failed to generate backup codes.");
+            }
+        } else {
+            $page->appendSuccess("Backup codes generated successfully.");
+        }
+    }
+}
+
 load:
 if ($customer_id) {
 	$customer = new \Register\Customer($customer_id);
 	$contacts = $customer->contacts();
+	// Fetch all backup codes for this user using the customer object
+	if (method_exists($customer, 'getAllBackupCodes')) {
+		$allBackupCodes = $customer->getAllBackupCodes();
+	} else {
+		$allBackupCodes = array();
+	}
 }
 $rolelist = new \Register\RoleList();
 $all_roles = $rolelist->find();

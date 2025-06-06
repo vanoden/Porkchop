@@ -931,47 +931,19 @@
 			if ($GLOBALS['_config']->site->https) $recovery_url = "https";
 			$recovery_url .= "://" . $GLOBALS['_config']->site->hostname . "/_register/otp?recovery_token=" . $token;
 
-			// Prepare email template
-			$template_content = "
-			<html>
-			<head>
-				<style>
-					body { font-family: Arial, sans-serif; }
-					.container { max-width: 600px; margin: 0 auto; padding: 20px; }
-					.header { background-color: #f8f9fa; padding: 20px; text-align: center; }
-					.content { padding: 20px; }
-					.button { 
-						display: inline-block; 
-						padding: 12px 24px; 
-						background-color: #007bff !important; 
-						color: white !important; 
-						text-decoration: none; 
-						border-radius: 4px; 
-						margin: 20px 0;
-					}
-				</style>
-			</head>
-			<body>
-				<div class='container'>
-					<div class='header'>
-						<h2>Two-Factor Authentication Recovery</h2>
-					</div>
-					<div class='content'>
-						<p>We received a request to recover your two-factor authentication setup. If you did not make this request, you can safely ignore this email.</p>
-						
-						<p>To reset your 2FA setup, click the link below or copy and paste it into your browser:</p>
-						
-						<p><a href='{$recovery_url}' class='button'>Reset 2FA Setup</a></p>
-						
-						<p>Or copy this link: {$recovery_url}</p>
-						
-						<p>This link will expire in 24 hours for security reasons.</p>
-						
-						<p>If you continue to have problems, please contact our support team.</p>
-					</div>
-				</div>
-			</body>
-			</html>";
+			// Prepare email template using the template system and config path
+			$template_path = isset($GLOBALS['_config']->register->otp_recovery->template)
+				? $GLOBALS['_config']->register->otp_recovery->template
+				: null;
+			if (!$template_path || !file_exists($template_path)) {
+				$this->error("OTP recovery email template not found");
+				return false;
+			}
+			$template_content = file_get_contents($template_path);
+			$notice_template = new \Content\Template\Shell();
+			$notice_template->content($template_content);
+			$notice_template->addParam('RECOVERY.URL', $recovery_url);
+			$notice_template->addParam('RECOVERY.LINK', $recovery_url);
 
 			// Create and send email
 			$message = new \Email\Message();
@@ -979,7 +951,7 @@
 			$message->to($email_address);
 			$message->from($GLOBALS['_config']->register->forgot_password->from ?? 'no-reply@' . $GLOBALS['_config']->site->hostname);
 			$message->subject("Two-Factor Authentication Recovery");
-			$message->body($template_content);
+			$message->body($notice_template->output());
 
 			$transportFactory = new \Email\Transport();
 			$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
@@ -1144,5 +1116,105 @@
 			}
 
 			return $result;
+		}
+
+		/**
+		 * Attempt to login with a backup code
+		 * @param string $code
+		 * @return int|false user_id if valid, false if not
+		 */
+		public static function loginWithBackupCode($code) {
+			$db = $GLOBALS['_database'];
+			$query = "SELECT user_id, id FROM register_backup_codes WHERE code = ? AND used = 0 LIMIT 1";
+			$rs = $db->Execute($query, array($code));
+			if ($db->ErrorMsg()) {
+				return false;
+			} elseif ($rs && $row = $rs->FetchRow()) {
+				list($user_id, $code_id) = $row;
+				// Mark code as used
+				$update = $db->Execute("UPDATE register_backup_codes SET used = 1 WHERE id = ?", array($code_id));
+				// Clear the user's secret_key so they can reset TOTP
+				$db->Execute("UPDATE register_users SET secret_key = '' WHERE id = ?", array($user_id));
+				return $user_id;
+			}
+			return false;
+		}
+
+		/**
+		 * Delete all backup codes for this user
+		 */
+		public function deleteAllBackupCodes() {
+			$db = $GLOBALS['_database'];
+			$query = "DELETE FROM register_backup_codes WHERE user_id = ?";
+			$db->Execute($query, array($this->id));
+		}
+
+		/**
+		 * Generate and save new backup codes for this user
+		 * @param int $count
+		 * @return array|false
+		 */
+		public function generateBackupCodes($count = 6) {
+			$codes = array();
+			$db = $GLOBALS['_database'];
+
+			// Get user's primary email
+			$email = $this->notify_email();
+			if (empty($email)) {
+				$this->error('Generate Backup Codes: email address not found for user [must also be set to notify]');
+				return false;
+			}
+
+			for ($i = 0; $i < $count; $i++) {
+				$code = strtoupper(bin2hex(random_bytes(4)));
+				$codes[] = $code;
+				$db->Execute("INSERT INTO register_backup_codes (user_id, code, used) VALUES (?, ?, 0)", array($this->id, $code));
+			}
+
+			// Send backup codes email using config template path
+			$template_path = isset($GLOBALS['_config']->register->backup_codes->template)
+				? $GLOBALS['_config']->register->backup_codes->template
+				: null;
+			if ($template_path && file_exists($template_path)) {
+				$template_content = file_get_contents($template_path);
+				$notice_template = new \Content\Template\Shell();
+				$notice_template->content($template_content);
+				$notice_template->addParam('BACKUP.CODES', implode('<br>', array_map('htmlentities', $codes)));
+				$notice_template->addParam('USER.NAME', $this->full_name());
+				$notice_template->addParam('SITE.NAME', $GLOBALS['_config']->site->hostname);
+
+				if ($email) {
+					$message = new \Email\Message();
+					$message->html(true);
+					$message->to($email);
+					$message->from($GLOBALS['_config']->register->forgot_password->from ?? 'no-reply@' . $GLOBALS['_config']->site->hostname);
+					$message->subject("Your New Backup Codes");
+					$message->body($notice_template->output());
+					$transportFactory = new \Email\Transport();
+					$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+					if ($transport) {
+						$transport->hostname($GLOBALS['_config']->email->hostname);
+						$transport->token($GLOBALS['_config']->email->token);
+						$transport->deliver($message);
+					}
+				}
+			}
+			return $codes;
+		}
+
+		/**
+		 * Get all backup codes for this user
+		 * @return array
+		 */
+		public function getAllBackupCodes() {
+			$db = $GLOBALS['_database'];
+			$rs = $db->Execute("SELECT code, used FROM register_backup_codes WHERE user_id = ? ORDER BY id ASC", array($this->id));
+			$codes = array();
+			if ($rs) {
+				while ($row = $rs->FetchRow()) {
+					$codes[] = array('code' => $row[0], 'used' => $row[1]);
+				}
+			}
+			return $codes;
 		}
     }

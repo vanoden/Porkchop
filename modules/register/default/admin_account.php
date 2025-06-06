@@ -524,6 +524,50 @@
     </div>
   </div>
 
+  <!-- Backup Codes Section -->
+  <h3>Backup Codes</h3>
+  <div class="tableBody min-tablet">
+    <form method="post" action="/_register/admin_account?customer_id=<?= $customer_id ?>">
+      <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+      <input type="hidden" name="generate_backup_codes" value="1">
+      <p><strong>Generate 6 backup codes for this user. Generating new codes will erase all previous backup codes.</strong></p>
+      <input type="submit" class="button" value="Generate Backup Codes">
+    </form>
+    <?php if (isset($generatedBackupCodes) && is_array($generatedBackupCodes)) { ?>
+      <div class="backup-codes-list" style="margin-top: 10px;">
+        <p><strong>Backup Codes (save these in a safe place):</strong></p>
+        <ul style="font-size: 1.2em; letter-spacing: 2px;">
+          <?php foreach ($generatedBackupCodes as $code) { ?>
+            <li><?= htmlentities($code) ?></li>
+          <?php } ?>
+        </ul>
+      </div>
+    <?php } ?>
+    <?php if (isset($allBackupCodes) && count($allBackupCodes) > 0) { ?>
+      <div class="backup-codes-list" style="margin-top: 10px;">
+        <p><strong>Current Backup Codes:</strong></p>
+        <table style="width: 100%; max-width: 400px; border-collapse: collapse;">
+          <tr><th>Code</th><th>Status</th></tr>
+          <?php foreach ($allBackupCodes as $bcode) { ?>
+            <tr>
+              <td style="padding: 4px 8px; font-family: monospace; font-size: 1.1em;">
+                <?= htmlentities($bcode['code']) ?>
+              </td>
+              <td style="padding: 4px 8px;">
+                <?php if ($bcode['used']) { ?>
+                  <span style="color: #b00; font-weight: bold;">Used</span>
+                <?php } else { ?>
+                  <span style="color: #080; font-weight: bold;">Unused</span>
+                <?php } ?>
+              </td>
+            </tr>
+          <?php } ?>
+        </table>
+      </div>
+    <?php } ?>
+  </div>
+  <!-- End Backup Codes Section -->
+
   <!-- entire page button submit -->
   <div id="submit-button-container" class="tableBody min-tablet">
     <div class="tableRow button-bar">
