@@ -25,22 +25,30 @@ if (!empty($recovery_token)) {
 }
 
 if ($can_proceed) {
-  // get the secret key from the database
-  $tfa = new \Register\AuthenticationService\TwoFactorAuth(null, $GLOBALS['_SESSION_']->customer->code, $GLOBALS['_config']->site->hostname);
-  $userStoredSecret = $GLOBALS['_SESSION_']->customer->secret_key;
 
-  // First time setup if no secret 2FA key is found
+  // get the secret key from the database
+  $customerId = $GLOBALS['_SESSION_']->customer->id;
+  $customer = new \Register\Customer($customerId);
+  $tfa = new \Register\AuthenticationService\TwoFactorAuth(null, $customer->code, $GLOBALS['_config']->site->hostname);
+  $userStoredSecret = $customer->secret_key;
+  
+
+  // Show QR code if no secret 2FA key is found
+  $showQRCode = false;
   if (empty($userStoredSecret)) {
     $secret = $tfa->getSecret();
-    $GLOBALS['_SESSION_']->customer->update(array('secret_key' => $secret));
     $userStoredSecret = $secret;
+    $customer->update(array('secret_key' => $userStoredSecret));
+    $showQRCode = true;
+  } else {
+    $showQRCode = false;
   }
+
 
   // Verification
   $isVerified = false;
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $userSubmittedCode = $_POST['verification_code'] ?? null;
-    
     // Validate the verification code
     if (empty($userSubmittedCode)) {
       $page->addError("No code submitted.");
@@ -53,15 +61,12 @@ if ($can_proceed) {
       if ($tfa->verifyCode($userSubmittedCode)) {
         $page->appendSuccess("Verification successful, please wait...");
         $isVerified = true;
-        
         // Update session state only
         $GLOBALS['_SESSION_']->update(array('otp_verified' => true));
-        
         // Clear the refer_url to allow access to the target page
         $GLOBALS['_SESSION_']->update(array('refer_url' => null));
-        
         // Audit successful OTP verification
-        $GLOBALS['_SESSION_']->customer->auditRecord('OTP_VERIFIED', 'OTP code verified successfully');
+        $customer->auditRecord('OTP_VERIFIED', 'OTP code verified successfully');
       } else {
         $page->addError("Invalid code");
         $can_proceed = false;
@@ -69,10 +74,8 @@ if ($can_proceed) {
     }
   }
 
-  // Generate QR code as data URI for img tag
-  if ($can_proceed) {
-    $qrCodeData = $tfa->getQRCodeImage($GLOBALS['_SESSION_']->customer->code);
-  }
+  // Generate QR code as data URI for img tag (always generate if needed for template)
+  $qrCodeData = $tfa->getQRCodeImage($customer->code);
 
   // Save the target URL in the session if a new one is provided
   $target = $_REQUEST['target'] ?? null;

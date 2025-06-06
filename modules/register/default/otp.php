@@ -10,7 +10,7 @@
     #otp_mc {
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: baseline;
         height: 100vh;
     }
 
@@ -23,7 +23,7 @@
     <div>
         <form id="otp_form" action="/_register/otp" method="post">
             <h1>Two Factor Authentication</h1>
-            <?php if (!$userStoredSecret) { ?>
+            <?php if ($showQRCode) { ?>
                 <p>Scan the picture to get the 6 digit code</p>
                 <img src="<?= $qrCodeData ?>" alt="Scan this QR code" style="width: 200px; height: 200px;">
             <?php } else { ?>
@@ -54,9 +54,11 @@
                 </div>
             </div>
 
-            <div style="margin: 20px 0;">
-                <p><a href="/_register/recover_otp" style="color: #666; text-decoration: underline;">Can't access your authenticator? Recover 2FA setup</a></p>
-            </div>
+            <?php if (!$showQRCode) { ?>
+                <div style="margin: 20px 0;">
+                    <p><a href="/_register/recover_otp" style="color: #666; text-decoration: underline;">Can't access your authenticator? Recover 2FA setup</a></p>
+                </div>
+            <?php } ?>
 
         </form>
     </div>
