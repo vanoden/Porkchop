@@ -156,7 +156,23 @@
       </div>
       <?php if (defined('USE_OTP') && USE_OTP) { ?>
         <div class="tableCell" style="width: 50%;">Time Based Password [Google Authenticator]
-          <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?>>
+          <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?> <?php 
+            $roles = $customer->roles();
+            $requiresTOTP = false;
+            $rolesRequiringTOTP = [];
+            foreach ($roles as $role) {
+              if ($role->time_based_password) {
+                $requiresTOTP = true;
+                $rolesRequiringTOTP[] = $role->name;
+              }
+            }
+            if ($requiresTOTP || $customer->organization()->time_based_password) echo "disabled checked"; 
+          ?>>
+          <?php if ($requiresTOTP) { ?>
+            <div class="note"><em>TOTP is required by the following roles: <?= implode(', ', $rolesRequiringTOTP) ?></em></div>
+          <?php } elseif ($customer->organization()->time_based_password) { ?>
+            <div class="note"><em>TOTP is required by the organization: <?= $customer->organization()->name ?></em></div>
+          <?php } ?>
         </div>
       <?php } ?>
     </div>

@@ -61,30 +61,43 @@
             if (! isset($_REQUEST["stylesheet"])) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
             # Initiate Product Object
-			$checkCustomer = new \Register\Customer();
-			if (! $checkCustomer->validLogin($_REQUEST['login'])) $this->invalidRequest("valid login required");
-			$checkCustomer->get($_REQUEST['login']);
-			if ($checkCustomer->status == 'BLOCKED') $this->auth_failed("blocked_account","Your account has been blocked");
-			if ($checkCustomer->status == 'EXPIRED') $this->auth_failed("expired_account","Your account has expired.  Please use 'forgot password' on the website to restore.");
-			if ($checkCustomer->auth_failures() >= 3) $this->auth_failed("too_many_failures","Too many auth failures.  Please use 'forget password' on the website to restore");
+            $checkCustomer = new \Register\Customer();
+            if (! $checkCustomer->validLogin($_REQUEST['login'])) $this->invalidRequest("valid login required");
+            $checkCustomer->get($_REQUEST['login']);
+            if ($checkCustomer->status == 'BLOCKED') $this->auth_failed("blocked_account","Your account has been blocked");
+            if ($checkCustomer->status == 'EXPIRED') $this->auth_failed("expired_account","Your account has expired.  Please use 'forgot password' on the website to restore.");
+            if ($checkCustomer->auth_failures() >= 3) $this->auth_failed("too_many_failures","Too many auth failures.  Please use 'forget password' on the website to restore");
 
             $customer = new \Register\Customer();
-            $result = $customer->authenticate($_REQUEST["login"],$_REQUEST["password"]);
+            $result = $customer->authenticate($_REQUEST["login"], $_REQUEST["password"]);
             if ($customer->error()) $this->error($customer->error());
-
             if ($result && $customer->isActive()) {
+                // Create session first
                 app_log("Assigning session ".$GLOBALS['_SESSION_']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
                 $GLOBALS['_SESSION_']->assign($customer->id);
+                $GLOBALS['_SESSION_']->touch();
+                $GLOBALS['_SESSION_']->update(array('otp_verified' => false));
+
+                // Then check if TOTP is required
+                if ($customer->requiresOTP()) {
+                    $response = new \APIResponse();
+                    $response->success(false);
+                    $response->addElement('error', "TOTP code is required for this account.");
+                    $response->addElement('reason', "totp_required");
+                    $response->addElement('requires_otp', true);
+                    $response->print();
+                    exit;
+                }
             }
-			elseif ($result) {
-				$this->auth_failed("inactive_account","This account is not active");
-			}
+            elseif ($result) {
+                $this->auth_failed("inactive_account","This account is not active");
+            }
             else {
-				$this->auth_failed("incorrect_password","Invalid login password combination");
+                $this->auth_failed("incorrect_password","Invalid login password combination");
             }
 
-			$response = new \APIResponse();
-			$response->success(true);
+            $response = new \APIResponse();
+            $response->success(true);
 
             # Send Response
             $response->print();

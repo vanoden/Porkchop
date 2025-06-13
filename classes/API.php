@@ -62,7 +62,18 @@
 		/* Return Error unless User Authenticated	*/
 		/********************************************/
 		public function requireAuth() {
-			if (! $GLOBALS['_SESSION_']->authenticated()) $this->deny();
+			if (! $GLOBALS['_SESSION_']->authenticated()) {
+				$this->deny();
+			}
+
+			// Check if OTP is required and not verified
+			if (isset($GLOBALS['_SESSION_']->customer) && 
+				$GLOBALS['_SESSION_']->customer->requiresOTP() && 
+				(!isset($GLOBALS['_SESSION_']->otp_verified) || !$GLOBALS['_SESSION_']->otp_verified)) {
+				$this->auth_failed("otp_required", "TOTP verification required");
+				header('location: /_register/otp?target=' . urlencode($_SERVER['REQUEST_URI']));
+				exit;
+			}
 		}
 
 		/********************************************/
