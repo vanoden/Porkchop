@@ -152,6 +152,8 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				if ($_REQUEST['password']) {
 					if (!$customer->changePassword($_REQUEST["password"])) {
 						$page->addError("Password needs more complexity");
+					} else {
+						$page->appendSuccess("Password changed successfully.");
 					}
 				}
 
@@ -339,7 +341,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				}
 			}
 		}
-		$page->success = 'Your changes have been saved';
+		$page->appendSuccess('Your changes have been saved');
 	}
 }
 
@@ -455,6 +457,7 @@ foreach ($searchTagXrefs as $searchTagXrefItem) {
 }
 
 if (isset($_REQUEST['generate_backup_codes'])) {
+    // Only process if the Generate Backup Codes button was clicked (not the Apply button)
     if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
         $page->addError("Invalid request");
     } else {

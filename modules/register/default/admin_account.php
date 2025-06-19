@@ -34,20 +34,23 @@
 
   // submit form
   function submitForm() {
-
     // make sure that all the notify contacts have a 'description' value populated
     var contactTable = document.getElementById("contact-main-table");
+    if (!contactTable) return true; // If no contact table exists, continue with form submission
+    
     var notifyChecked = contactTable.getElementsByTagName("input");
     for (var i = 0; i < notifyChecked.length; i++) {
       if (notifyChecked[i].checked) {
         var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
-        if (matches[0]) {
-          contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[', '').replace(']', '') + "]");
-          contactDescriptionField[0].style.border = "";
-          if (!contactDescriptionField[0].value) {
-            alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
-            contactDescriptionField[0].style.border = "3px solid red";
-            return false;
+        if (matches && matches[0]) { // Add null check here
+          var contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[', '').replace(']', '') + "]");
+          if (contactDescriptionField && contactDescriptionField[0]) { // Add null check for contactDescriptionField
+            contactDescriptionField[0].style.border = "";
+            if (!contactDescriptionField[0].value) {
+              alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
+              contactDescriptionField[0].style.border = "3px solid red";
+              return false;
+            }
           }
         }
       }
@@ -543,12 +546,8 @@
   <!-- Backup Codes Section -->
   <h3>Backup Codes</h3>
   <div class="tableBody min-tablet">
-    <form method="post" action="/_register/admin_account?customer_id=<?= $customer_id ?>">
-      <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
-      <input type="hidden" name="generate_backup_codes" value="1">
-      <p><strong>Generate 6 backup codes for this user. Generating new codes will erase all previous backup codes.</strong></p>
-      <input type="submit" class="button" value="Generate Backup Codes">
-    </form>
+    <p><strong>Generate 6 backup codes for this user. Generating new codes will erase all previous backup codes.</strong></p>
+    <input type="submit" class="button" name="generate_backup_codes" value="Generate Backup Codes">
     <?php if (isset($generatedBackupCodes) && is_array($generatedBackupCodes)) { ?>
       <div class="backup-codes-list" style="margin-top: 10px;">
         <p><strong>Backup Codes (save these in a safe place):</strong></p>

@@ -189,7 +189,7 @@
 						}
 
 						# Update the Session
-						$_SESSION_->login($customer->login);
+						$GLOBALS['_SESSION_']->assign($customer->id);
 
 						app_log("Customer ".$customer->id." logged in",'debug',__FILE__,__LINE__);
 						app_log("login_target = $target",'debug',__FILE__,__LINE__);

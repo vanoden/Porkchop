@@ -1273,7 +1273,196 @@
 			if ($person->error()) $this->error($person->error());
 			$response->print();
         }
-		
+
+
+        /**
+         * Setup TOTP for the current user
+         * POST /totp/setup
+         */
+        public function setupTOTP() {
+            $this->requirePrivilege("time-based password administrator");
+
+            if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
+            if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
+
+            // Check if TOTP is already set up
+            $customer = new \Register\Customer($_REQUEST['customer_id']);
+            if ($customer->error()) $this->error($customer->error());
+            if (!$customer->id) $this->notFound("Customer not found");
+
+            if (!empty($customer->secret_key)) {
+                $this->invalidRequest("TOTP is already set up for this account");
+            }
+
+            // Create new TOTP instance
+            $tfa = new \Register\AuthenticationService\TwoFactorAuth(
+                null, 
+                $customer->code,
+                $GLOBALS['_config']->site->hostname
+            );
+
+            // Generate new secret and store it
+            $secret = $tfa->getSecret();
+            $result = $customer->update(array(
+                'secret_key' => $secret,
+                'time_based_password' => 1
+            ));
+            if (!$result) $this->error("Failed to store TOTP secret");
+
+            // Generate QR code
+            $qrCode = $tfa->getQRCodeImage();
+
+            // Generate backup codes
+            $customer->deleteAllBackupCodes();
+            $backupCodes = $customer->generateBackupCodes();
+
+            // Audit the setup
+            $customer->auditRecord('OTP_SETUP', 'TOTP setup initiated via API', $GLOBALS['_SESSION_']->customer->id);
+
+            $response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('secret', $secret);
+            $response->addElement('qr_code', $qrCode);
+            $response->addElement('backup_codes', $backupCodes);
+            $response->print();
+        }
+
+        /**
+         * Verify TOTP code
+         * POST /totp/verify
+         */
+        public function verifyTOTP() {
+            $this->requirePrivilege("time-based password administrator");
+
+            if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
+            if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
+            if (empty($_REQUEST['code'])) $this->incompleteRequest("code required");
+            if (!preg_match('/^[0-9]{6}$/', $_REQUEST['code'])) $this->invalidRequest("Invalid code format");
+
+            $customer = new \Register\Customer($_REQUEST['customer_id']);
+            if ($customer->error()) $this->error($customer->error());
+            if (!$customer->id) $this->notFound("Customer not found");
+
+            if (empty($customer->secret_key)) {
+                $this->invalidRequest("TOTP is not set up for this account");
+            }
+
+            // Get stored secret and verify code
+            $tfa = new \Register\AuthenticationService\TwoFactorAuth(
+                $customer->secret_key,
+                $customer->code,
+                $GLOBALS['_config']->site->hostname
+            );
+
+            if ($tfa->verifyCode($_REQUEST['code'])) {
+                // Update session state if verifying for current user
+                if ($customer->id == $GLOBALS['_SESSION_']->customer->id) {
+                    $GLOBALS['_SESSION_']->update(array('otp_verified' => true));
+                }
+                
+                // Audit successful verification
+                $customer->auditRecord('OTP_VERIFIED', 'TOTP code verified via API', $GLOBALS['_SESSION_']->customer->id);
+
+                $response = new \APIResponse();
+                $response->success(true);
+                $response->print();
+            }
+            else {
+                $this->auth_failed("invalid_code", "Invalid verification code");
+            }
+        }
+
+        /**
+         * Get backup codes for the current user
+         * GET /totp/backup-codes
+         */
+        public function getBackupCodes() {
+            $this->requirePrivilege("time-based password administrator");
+
+            if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
+            if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
+
+            $customer = new \Register\Customer($_REQUEST['customer_id']);
+            if ($customer->error()) $this->error($customer->error());
+            if (!$customer->id) $this->notFound("Customer not found");
+
+            if (empty($customer->secret_key)) {
+                $this->invalidRequest("TOTP is not set up for this account");
+            }
+
+            $codes = $customer->getAllBackupCodes();
+            if ($customer->error()) $this->error($customer->error());
+
+            // Audit the backup codes access
+            $customer->auditRecord('OTP_BACKUP_CODES_ACCESSED', 'Backup codes retrieved via API', $GLOBALS['_SESSION_']->customer->id);
+
+            $response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('backup_codes', $codes);
+            $response->print();
+        }
+
+        /**
+         * Reset TOTP setup for the current user
+         * POST /totp/reset
+         */
+        public function resetTOTP() {
+            $this->requirePrivilege("time-based password administrator");
+
+            if (empty($_REQUEST['customer_id'])) $this->incompleteRequest("customer_id required");
+            if (!is_numeric($_REQUEST['customer_id'])) $this->invalidRequest("Invalid customer_id format");
+
+            $customer = new \Register\Customer($_REQUEST['customer_id']);
+            if ($customer->error()) $this->error($customer->error());
+            if (!$customer->id) $this->notFound("Customer not found");
+
+            if (empty($customer->secret_key)) {
+                $this->invalidRequest("TOTP is not set up for this account");
+            }
+
+            // Check if TOTP is required by role or organization
+            if ($customer->requiresOTP()) {
+                $roles = $customer->roles();
+                $requiresTOTP = false;
+                $rolesRequiringTOTP = [];
+                foreach ($roles as $role) {
+                    if ($role->time_based_password) {
+                        $requiresTOTP = true;
+                        $rolesRequiringTOTP[] = $role->name;
+                    }
+                }
+                
+                if ($requiresTOTP) {
+                    $this->deny("Cannot disable TOTP - required by roles: " . implode(", ", $rolesRequiringTOTP));
+                }
+                elseif ($customer->organization()->time_based_password) {
+                    $this->deny("Cannot disable TOTP - required by organization: " . $customer->organization()->name);
+                }
+            }
+
+            // Reset TOTP setup
+            if (!$customer->resetOTPSetup()) {
+                $this->error($customer->error() ?: "Failed to reset TOTP setup");
+            }
+
+            // Clear session OTP verification if resetting current user
+            if ($customer->id == $GLOBALS['_SESSION_']->customer->id) {
+                $GLOBALS['_SESSION_']->update(array('otp_verified' => false));
+            }
+
+            // Generate new backup codes
+            $customer->deleteAllBackupCodes();
+            $newCodes = $customer->generateBackupCodes();
+
+            // Audit the reset
+            $customer->auditRecord('OTP_RESET', 'TOTP configuration reset via API', $GLOBALS['_SESSION_']->customer->id);
+
+            $response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('backup_codes', $newCodes);
+            $response->print();
+        }
+
 		public function _methods() {
 			$queue = new \Register\Queue();
 			return array(
@@ -1675,6 +1864,72 @@
 							'required' => true,
 							'prompt' => 'Customer Login',
 							'validation_method' => 'Register::Customer::validCode()'
+						)
+					)
+				),
+				'setupTOTP' => array(
+					'description' => 'Setup TOTP for a customer',
+					'authentication_required' => true,
+					'token_required' => false,
+					'return_element' => 'success',
+					'return_type' => 'boolean',
+					'parameters' => array(
+						'customer_id' => array(
+							'required' => true,
+							'type' => 'integer',
+							'description' => 'ID of the customer to set up TOTP for',
+							'validation_method' => 'is_numeric'
+						)
+					)
+				),
+				'verifyTOTP' => array(
+					'description' => 'Verify TOTP code for a customer',
+					'authentication_required' => true,
+					'token_required' => false,
+					'return_element' => 'success',
+					'return_type' => 'boolean',
+					'parameters' => array(
+						'customer_id' => array(
+							'required' => true,
+							'type' => 'integer',
+							'description' => 'ID of the customer to verify TOTP for',
+							'validation_method' => 'is_numeric'
+						),
+						'code' => array(
+							'required' => true,
+							'type' => 'string',
+							'description' => '6-digit TOTP code',
+							'validation_method' => 'preg_match("/^[0-9]{6}$/")'
+						)
+					)
+				),
+				'getBackupCodes' => array(
+					'description' => 'Get backup codes for a customer',
+					'authentication_required' => true,
+					'token_required' => false,
+					'return_element' => 'backup_codes',
+					'return_type' => 'array',
+					'parameters' => array(
+						'customer_id' => array(
+							'required' => true,
+							'type' => 'integer',
+							'description' => 'ID of the customer to get backup codes for',
+							'validation_method' => 'is_numeric'
+						)
+					)
+				),
+				'resetTOTP' => array(
+					'description' => 'Reset TOTP setup for a customer',
+					'authentication_required' => true,
+					'token_required' => false,
+					'return_element' => 'success',
+					'return_type' => 'boolean',
+					'parameters' => array(
+						'customer_id' => array(
+							'required' => true,
+							'type' => 'integer',
+							'description' => 'ID of the customer to reset TOTP for',
+							'validation_method' => 'is_numeric'
 						)
 					)
 				),
