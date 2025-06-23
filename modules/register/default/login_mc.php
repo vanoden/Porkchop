@@ -178,7 +178,7 @@
 							// Assign the customer to the session and store the redirect target
 							$GLOBALS['_SESSION_']->assign($customer->id, false, $OTPRedirect);
 							$GLOBALS['_SESSION_']->touch();
-							$GLOBALS['_SESSION_']->update(array('otp_verified' => false));
+							$GLOBALS['_SESSION_']->setOTPVerified(false);
 
 							// Optionally update customer status/auth_failures
 							$customer->update(array("status" => "ACTIVE", "auth_failures" => 0));
@@ -190,6 +190,9 @@
 
 						# Update the Session
 						$GLOBALS['_SESSION_']->assign($customer->id);
+						
+						# Mark OTP as verified since TOTP is not required
+						$GLOBALS['_SESSION_']->setOTPVerified(true);
 
 						app_log("Customer ".$customer->id." logged in",'debug',__FILE__,__LINE__);
 						app_log("login_target = $target",'debug',__FILE__,__LINE__);

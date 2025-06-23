@@ -27,13 +27,14 @@ use Register\Customer;
 		public $timezone = 'America/New_York';
 		public $location_id;
 		public $customer_id;
-		private $csrfToken;
-		private $cookie_name;
-		private $cookie_domain;
-		private $cookie_expires;
-		private $cookie_path;
-		private $elevated = false;
-		private $oauth2_state = null;
+			private $csrfToken;
+	private $otpVerified = null;
+	private $cookie_name;
+	private $cookie_domain;
+	private $cookie_expires;
+	private $cookie_path;
+	private $elevated = false;
+	private $oauth2_state = null;
 		
 		/**
 		 * Constructor
@@ -323,6 +324,11 @@ use Register\Customer;
 						$cache->set($session,600);
 					}
 					$this->csrfToken = $session->csrfToken;
+					
+					// Handle OTP verification status from cache
+					if (isset($session->otpVerified)) {
+						$this->otpVerified = $session->otpVerified;
+					}
 					$this->cached(true);
 					return true;
 				}
@@ -386,6 +392,10 @@ use Register\Customer;
 
 				$session->csrfToken = $this->generateCSRFToken();
 				$this->csrfToken = $session->csrfToken;
+				
+				// Initialize OTP verification status
+				$session->otpVerified = null;
+				$this->otpVerified = null;
 
 				if ($session->id) $cache->set($session,600);
 				return true;
@@ -750,9 +760,48 @@ use Register\Customer;
 			return $token;
 		}
 		
-		public function getCSRFToken() {
-			return $this->csrfToken;
+			public function getCSRFToken() {
+		return $this->csrfToken;
+	}
+
+	/**
+	 * Set OTP verification status in cache
+	 * @param bool $verified
+	 * @return bool
+	 */
+	public function setOTPVerified(bool $verified): bool {
+		$this->otpVerified = $verified;
+		
+		// Update cache
+		$cache_key = "session[".$this->id."]";
+		$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+		$session = $cache->get();
+		
+		if ($session) {
+			$session->otpVerified = $verified;
+			$cache->set($session, 600);
+			return true;
 		}
+		
+		return false;
+	}
+
+	/**
+	 * Get OTP verification status from cache
+	 * @return bool|null
+	 */
+	public function getOTPVerified(): ?bool {
+		return $this->otpVerified;
+	}
+
+	/**
+	 * Check if OTP is verified (returns true if null - no OTP required)
+	 * @return bool
+	 */
+	public function isOTPVerified(): bool {
+		// If OTP verification is null, assume no OTP required (verified)
+		return $this->otpVerified !== false;
+	}
 
 		public function location() {
 			return new \Company\Location($this->location_id);
