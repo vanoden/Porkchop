@@ -195,7 +195,7 @@
 			// Instance specific metadata
 			$keys = $this->_metadataKeys();
 			foreach ($keys as $key) {
-				if (!empty($parameters[$key]) && $parameters[$key] != $this->getMetadata($key)) {
+				if (isset($parameters[$key]) && $parameters[$key] != $this->getMetadata($key)) {
 					if ($this->validMetadata($key,$parameters[$key])) {
 						$this->setMetadata($key,$parameters[$key]);
 						$auditLog->add(array(
@@ -570,7 +570,7 @@
 			return false;
 		}
 		public function validType($string): bool {
-			if (preg_match('/^(Local|s3|Drive|DropBox)$/i',$string)) return true;
+			if (preg_match('/^(Local|s3|google|Drive|DropBox)$/i',$string)) return true;
 			return false;
 		}
 		public function validPath($string) {
