@@ -58,9 +58,9 @@ use Register\Organization;
 				UPDATE
 						quantity = quantity + ?
 			";
-			print_r("Adding ".$parameters["quantity"]." of product ".$this->product_id." for organization ".$this->organization_id."<br>\n");
+			//print_r("Adding ".$parameters["quantity"]." of product ".$this->product_id." for organization ".$this->organization_id."<br>\n");
 			app_log("Adding ".$parameters["quantity"]." of product ".$this->product_id." for organization ".$this->organization_id,'notice',__FILE__,__LINE__);
-			$database->trace(9);
+			//$database->trace(9);
 			$database->AddParam($organization->id);
 			$database->AddParam($product->id);
 			$database->AddParam($parameters['quantity']);
