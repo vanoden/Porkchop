@@ -1105,6 +1105,42 @@
 			print $porkchop->uuid();
 		}
 
+		###################################################
+		### Purge Expired Sessions						###
+		###################################################
+		public function purgeExpiredSessions() {
+			if (!$this->validCSRFToken()) $this->error("Invalid Request");
+
+			// Require administrator privileges for session management
+			$this->requirePrivilege('manage sessions');
+
+			// Get parameters
+			$parameters = [];
+			if (!empty($_REQUEST['last_hit_date'])) {
+				$parameters['last_hit_date'] = $_REQUEST['last_hit_date'];
+			}
+			if (!empty($_REQUEST['max_records']) && is_numeric($_REQUEST['max_records'])) {
+				$parameters['max_records'] = intval($_REQUEST['max_records']);
+			}
+			if (!empty($_REQUEST['user_login'])) {
+				$parameters['user_login'] = $_REQUEST['user_login'];
+			}
+
+			// Execute purge
+			$sessionList = new \Site\SessionList();
+			$result = $sessionList->purgeExpired($parameters);
+
+			if (!$result['success']) {
+				$this->error($result['error'] ?? 'Failed to purge sessions');
+				return;
+			}
+
+			$response = new \APIResponse();
+			$response->addElement('success', 1);
+			$response->addElement('count', $result['count']);
+			$response->print();
+		}
+
 		public function getSiteAuditEvents() {
 			$auditList = new \Site\AuditLog\EventList();
 
@@ -1763,6 +1799,29 @@
 					'parameters'	=> [
 						'class'	=> array('required'),
 						'code'	=> array('required')
+					]
+				),
+				'purgeExpiredSessions'	=> array(
+					'description'				=> 'Purge expired sessions from the database',
+					'token_required'			=> true,
+					'authentication_required'	=> true,
+					'privilege_required'		=> 'manage sessions',
+					'path'						=> '/api/site/purgeExpiredSessions',
+					'return_element'			=> 'result',
+					'return_type'				=> 'array',
+					'parameters'				=> [
+						'last_hit_date'	=> array(
+							'description'	=> 'Delete only records with last_hit_date before this date (defaults to 6 months ago, never less than 48 hours)',
+							'content-type'	=> 'datetime',
+						),
+						'max_records'	=> array(
+							'description'	=> 'Delete no more than this number of records',
+							'content-type'	=> 'int',
+						),
+						'user_login'	=> array(
+							'description'	=> 'Delete only records for the specified account',
+							'content-type'	=> 'string',
+						)
 					]
 				),
 			);		

@@ -265,15 +265,38 @@
 					</div>
 				</section>
 
+				<?php if ($customer->profile == "public") { ?>
+				<!-- Business Card Preview Link -->
+				<div style="margin: 20px 0;">
+					<a href="/_register/businesscard?customer_id=<?= $customer->id ?>" class="button" target="_blank">Preview Business Card</a>
+				</div>
+				<?php } ?>
+
 				<?php if (!$readOnly) { ?>
 					<!-- Two-Factor Authentication Section -->
 					<?php if (defined('USE_OTP') && USE_OTP) { ?>
-						<section class="form-group two-factor">
+						<section class="form-group two-factor pageSect_full">
 							<h5>Time Based Password [Google Authenticator]</h5>
 							<div class="checkbox-group">
-								<input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?>>
+								<input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?> <?php 
+									$roles = $customer->roles();
+									$requiresTOTP = false;
+									$rolesRequiringTOTP = [];
+									foreach ($roles as $role) {
+										if ($role->time_based_password) {
+											$requiresTOTP = true;
+											$rolesRequiringTOTP[] = $role->name;
+										}
+									}
+									if ($requiresTOTP || $customer->organization()->time_based_password) echo "disabled checked"; 
+								?>>
 								<label for="time_based_password">Enable Two-Factor Authentication</label>
 							</div>
+							<?php if ($requiresTOTP) { ?>
+								<div class="note pageSect_half"><em>TOTP is required by the following roles: <?= implode(', ', $rolesRequiringTOTP) ?></em></div>
+							<?php } elseif ($customer->organization()->time_based_password) { ?>
+								<div class="note pageSect_half"><em>TOTP is required by the organization: <?= $customer->organization()->name ?></em></div>
+							<?php } ?>
 						</section>
 					<?php } ?>
 

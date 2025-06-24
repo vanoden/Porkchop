@@ -275,6 +275,7 @@
 			$path = $caller['file'];
 			$line = $caller['line'];
 		}
+
 		if (!empty($GLOBALS['logger'])) $GLOBALS['logger']->writeln($message,$level,$path,$line);
 	}
 	

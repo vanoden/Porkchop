@@ -34,20 +34,23 @@
 
   // submit form
   function submitForm() {
-
     // make sure that all the notify contacts have a 'description' value populated
     var contactTable = document.getElementById("contact-main-table");
+    if (!contactTable) return true; // If no contact table exists, continue with form submission
+    
     var notifyChecked = contactTable.getElementsByTagName("input");
     for (var i = 0; i < notifyChecked.length; i++) {
       if (notifyChecked[i].checked) {
         var matches = notifyChecked[i].name.match(/\[[0-9]+\]/);
-        if (matches[0]) {
-          contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[', '').replace(']', '') + "]");
-          contactDescriptionField[0].style.border = "";
-          if (!contactDescriptionField[0].value) {
-            alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
-            contactDescriptionField[0].style.border = "3px solid red";
-            return false;
+        if (matches && matches[0]) { // Add null check here
+          var contactDescriptionField = document.getElementsByName("description[" + matches[0].replace('[', '').replace(']', '') + "]");
+          if (contactDescriptionField && contactDescriptionField[0]) { // Add null check for contactDescriptionField
+            contactDescriptionField[0].style.border = "";
+            if (!contactDescriptionField[0].value) {
+              alert("Please enter a 'Description' value for all notify (checked) Methods of Contact");
+              contactDescriptionField[0].style.border = "3px solid red";
+              return false;
+            }
           }
         }
       }
@@ -82,6 +85,7 @@
     document.getElementById('new-value').style.display = "block";
     document.getElementById('new-notes').style.display = "block";
     document.getElementById('new-notify').style.display = "block";
+    document.getElementById('new-public').style.display = "block";
     var newContactSelect = document.getElementById("new-contact-select");
     newContactSelect.remove(5);
   }
@@ -155,7 +159,23 @@
       </div>
       <?php if (defined('USE_OTP') && USE_OTP) { ?>
         <div class="tableCell" style="width: 50%;">Time Based Password [Google Authenticator]
-          <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?>>
+          <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?> <?php 
+            $roles = $customer->roles();
+            $requiresTOTP = false;
+            $rolesRequiringTOTP = [];
+            foreach ($roles as $role) {
+              if ($role->time_based_password) {
+                $requiresTOTP = true;
+                $rolesRequiringTOTP[] = $role->name;
+              }
+            }
+            if ($requiresTOTP || $customer->organization()->time_based_password) echo "disabled checked"; 
+          ?>>
+          <?php if ($requiresTOTP) { ?>
+            <div class="note"><em>TOTP is required by the following roles: <?= implode(', ', $rolesRequiringTOTP) ?></em></div>
+          <?php } elseif ($customer->organization()->time_based_password) { ?>
+            <div class="note"><em>TOTP is required by the organization: <?= $customer->organization()->name ?></em></div>
+          <?php } ?>
         </div>
       <?php } ?>
     </div>
@@ -250,9 +270,10 @@
     <div class="tableRowHeader">
       <div class="tableCell" style="width: 20%;">Type</div>
       <div class="tableCell" style="width: 25%;">Description</div>
-      <div class="tableCell" style="width: 30%;">Address/Number or Email etc.</div>
-      <div class="tableCell" style="width: 15%;">Notes</div>
+      <div class="tableCell" style="width: 25%;">Address/Number or Email etc.</div>
+      <div class="tableCell" style="width: 10%;">Notes</div>
       <div class="tableCell" style="width: 5%;">Notify</div>
+      <div class="tableCell" style="width: 5%;">Public</div>
       <div class="tableCell" style="width: 5%;">Drop</div>
     </div>
     <?php foreach ($contacts as $contact) { ?>
@@ -269,6 +290,7 @@
         <div class="tableCell"><input type="text" name="value[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->value) ?>" /></div>
         <div class="tableCell"><input type="text" name="notes[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->notes) ?>" /></div>
         <div class="tableCell"><input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> /></div>
+        <div class="tableCell"><input type="checkbox" name="public[<?= $contact->id ?>]" value="1" <?php if ($contact->public) print "checked"; ?> /></div>
         <div class="tableCell"><img style="max-width: 18px; cursor:pointer;" name="drop_contact[<?= $contact->id ?>]" class="icon-button" src="/img/icons/icon_tools_trash_active.svg" onclick="submitDelete(<?= $contact->id ?>)" /></div>
       </div>
       <!-- New contact entry -->
@@ -287,10 +309,18 @@
       <div class="tableCell"><br /><input type="text" id="new-value" name="value[0]" class="value wide_100per" style="display:none;" /></div>
       <div class="tableCell"><br /><input type="text" id="new-notes" name="notes[0]" class="value wide_100per" style="display:none;" /></div>
       <div class="tableCell"><br /><input type="checkbox" id="new-notify" name="notify[0]" value="1" style="display:none;" /></div>
+      <div class="tableCell"><br /><input type="checkbox" id="new-public" name="public[0]" value="1" style="display:none;" /></div>
       <div class="tableCell"></div>
     </div>
   </div>
   <!--	END Methods of Contact -->
+
+  <?php if ($customer->profile == "public") { ?>
+  <!-- Business Card Preview Link -->
+  <div style="margin: 20px 0;">
+    <a href="/_register/businesscard?customer_id=<?= $customer_id ?>" class="button" target="_blank">Preview Business Card</a>
+  </div>
+  <?php } ?>
 
   <!-- ============================================== -->
   <!-- CHANGE PASSWORD -->
@@ -512,6 +542,46 @@
       ?>
     </div>
   </div>
+
+  <!-- Backup Codes Section -->
+  <h3>Backup Codes</h3>
+  <div class="tableBody min-tablet">
+    <p><strong>Generate 6 backup codes for this user. Generating new codes will erase all previous backup codes.</strong></p>
+    <input type="submit" class="button" name="generate_backup_codes" value="Generate Backup Codes">
+    <?php if (isset($generatedBackupCodes) && is_array($generatedBackupCodes)) { ?>
+      <div class="backup-codes-list" style="margin-top: 10px;">
+        <p><strong>Backup Codes (save these in a safe place):</strong></p>
+        <ul style="font-size: 1.2em; letter-spacing: 2px;">
+          <?php foreach ($generatedBackupCodes as $code) { ?>
+            <li><?= htmlentities($code) ?></li>
+          <?php } ?>
+        </ul>
+      </div>
+    <?php } ?>
+    <?php if (isset($allBackupCodes) && count($allBackupCodes) > 0) { ?>
+      <div class="backup-codes-list" style="margin-top: 10px;">
+        <p><strong>Current Backup Codes:</strong></p>
+        <table style="width: 100%; max-width: 400px; border-collapse: collapse;">
+          <tr><th>Code</th><th>Status</th></tr>
+          <?php foreach ($allBackupCodes as $bcode) { ?>
+            <tr>
+              <td style="padding: 4px 8px; font-family: monospace; font-size: 1.1em;">
+                <?= htmlentities($bcode['code']) ?>
+              </td>
+              <td style="padding: 4px 8px;">
+                <?php if ($bcode['used']) { ?>
+                  <span style="color: #b00; font-weight: bold;">Used</span>
+                <?php } else { ?>
+                  <span style="color: #080; font-weight: bold;">Unused</span>
+                <?php } ?>
+              </td>
+            </tr>
+          <?php } ?>
+        </table>
+      </div>
+    <?php } ?>
+  </div>
+  <!-- End Backup Codes Section -->
 
   <!-- entire page button submit -->
   <div id="submit-button-container" class="tableBody min-tablet">

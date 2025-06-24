@@ -96,6 +96,17 @@
     </div>
     <div class="tableBody">
 	    <div class="tableRowHeader">
+		    <div class="tableCell" style="width: 100%;">Require Two-Factor Authentication</div>
+	    </div> <!-- end row header -->
+	    <div class="tableRow">
+		    <div class="tableCell">
+			    <input name="time_based_password" type="checkbox" value="1" <?php if($organization->time_based_password) print " checked"?> />
+			    <label for="time_based_password">Require two-factor authentication for all users in this organization</label>
+		    </div>
+	    </div>
+    </div>
+    <div class="tableBody">
+	    <div class="tableRowHeader">
 		    <div class="tableCell" style="width: 100%;">Notes</div>
 	    </div> <!-- end row header -->
 	    <div class="tableRow">

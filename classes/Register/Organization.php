@@ -14,6 +14,7 @@
 		public ?int $default_billing_location_id = null;
 		public ?int $default_shipping_location_id = null;
 		public string $website_url = "";
+		public int $time_based_password = 0;
 		private bool $_nocache = false;
 		private $database;
 
@@ -130,6 +131,11 @@
 						website_url = ?";
 				array_push($bind_params,$parameters['website_url']);
 			}
+			if (isset($parameters['time_based_password']) && is_numeric($parameters['time_based_password'])) {
+				$update_object_query .= ",
+						time_based_password = ?";
+				array_push($bind_params,$parameters['time_based_password']);
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?
@@ -190,6 +196,7 @@
 				$this->default_shipping_location_id = $organization->default_shipping_location_id;
 				if (!empty($organization->website_url)) $this->website_url = $organization->website_url;
 				else $this->website_url = "";
+				$this->time_based_password = $organization->time_based_password;
 				$this->cached(true);
 				$this->exists(true);
 
@@ -215,7 +222,8 @@
 						password_expiration_days,
 				        default_billing_location_id,
 				        default_shipping_location_id,
-						website_url
+						website_url,
+						time_based_password
 				FROM	register_organizations
 				WHERE	id = ?
 			";
@@ -242,6 +250,7 @@
 				$this->is_reseller = boolval($object->is_reseller);
 				if (!empty($object->notes)) $this->notes = $object->notes;
 				else $this->notes = "";
+				$this->time_based_password = $object->time_based_password;
 			}
 			else {
 				$this->id = null;

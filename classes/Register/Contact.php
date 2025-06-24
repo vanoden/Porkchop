@@ -51,12 +51,47 @@
 			$database->AddParam($value);
 
 			// Execute Query
+			$rs = $database->Execute($get_object_query);		
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			list($id) = $rs->FetchRow();
+			$this->id = $id;
+			return $this->details();
+		}
+		
+		public function getSingleContact($type, $value): bool {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Build Query
+			$get_object_query = "
+				SELECT id
+				FROM register_contacts
+				WHERE type = ?
+				AND value = ?
+				LIMIT 1
+			";
+
+			// Add Parameters
+			$database->AddParam($type);
+			$database->AddParam($value);
+
+			// Execute Query
 			$rs = $database->Execute($get_object_query);
 			if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
-				return [];
+				return false;
 			}
-			list($id) = $rs->FetchRow();
+			$row = $rs->FetchRow();
+			if (!$row) {
+				$this->id = null;
+				return false;
+			}
+			list($id) = $row;
 			$this->id = $id;
 			return $this->details();
 		}
@@ -217,7 +252,6 @@
 
 			if (empty($this->id)) {
 				$this->error("ID required for details method");
-				print_r("HAAAY!");
 				return false;
 			}
 
@@ -315,6 +349,46 @@
 			
 			if ($audit->error()) {
 				$this->error($audit->error());
+				return false;
+			}
+			return true;
+		}
+
+		public function getPerson(): bool {
+			$this->clearError();
+			if (empty($this->id)) {
+				$this->error("ID required for getPerson method");
+				return false;
+			}
+			// Initialize Database Service
+			$database = new \Database\Service();
+			// Get person_id for this contact
+			$get_person_id_query = "
+				SELECT person_id
+				FROM register_contacts
+				WHERE id = ?
+				LIMIT 1
+			";
+			$database->AddParam($this->id);
+			$rs = $database->Execute($get_person_id_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			$row = $rs->FetchRow();
+			if (!$row) {
+				$this->person = null;
+				return false;
+			}
+			list($person_id) = $row;
+			if (empty($person_id)) {
+				$this->person = null;
+				return false;
+			}
+			$this->person = new \Register\Person($person_id);
+			if ($this->person->error() || !$this->person->id) {
+				$this->error("Could not load person for contact");
+				$this->person = null;
 				return false;
 			}
 			return true;

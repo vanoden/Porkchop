@@ -79,19 +79,24 @@
 			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
                 exit;
 		    }
-			if (!empty($GLOBALS ['_SESSION_']->refer_url)) {
-				$counter = new \Site\Counter("auth_redirect");
-				$counter->increment();
-				if (defined('USE_OTP') && USE_OTP) {
-					// Check if TOTP is required and not yet completed
-					if ($GLOBALS['_SESSION_']->customer->time_based_password && !$GLOBALS['_SESSION_']->otp_verified) {
-						header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
-						exit;
-					}
-				}
-				$GLOBALS ['_SESSION_']->refer_url = null;
-				exit;
-			}
+
+		    // Check if OTP is required and not verified
+		    if (defined('USE_OTP') && USE_OTP) {
+			    if ($GLOBALS['_SESSION_']->customer->requiresOTP() && 
+				    (!isset($GLOBALS['_SESSION_']->otp_verified) || !$GLOBALS['_SESSION_']->otp_verified)) {
+				    $counter = new \Site\Counter("auth_redirect");
+				    $counter->increment();
+				    header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				    exit;
+			    }
+		    }
+
+		    if (!empty($GLOBALS ['_SESSION_']->refer_url)) {
+			    $counter = new \Site\Counter("auth_redirect");
+			    $counter->increment();
+			    $GLOBALS ['_SESSION_']->refer_url = null;
+			    exit;
+		    }
 	    }
 
 	    public function requireSuperElevation() {

@@ -60,7 +60,13 @@ class BaseModel extends \BaseClass {
 	 */
 	public function __call($name, $parameters) {
 		if ($name == 'get' && count($parameters) == 2) $this->error("Too many parameters for 'get'");
-		elseif ($name == 'get')  return $this->_getObject($parameters[0]);
+		elseif ($name == 'get')  {
+			if (!isset($parameters[0]) || $parameters[0] === null || $parameters[0] === '') {
+				$this->error("No value provided to get()");
+				return false;
+			}
+			return $this->_getObject($parameters[0]);
+		}
 		elseif ($name == 'setMetadata') {
 			if (gettype($parameters[0]) == 'object') return $this->setMetadataObject($parameters[0], $parameters[1]);
 			else return $this->setMetadataScalar($parameters[0], $parameters[1]);

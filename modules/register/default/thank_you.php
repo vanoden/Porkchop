@@ -15,12 +15,7 @@
 </section>
 <?php	} ?>
 
-<div style="text-align:center">
-    <p>
-        <h3>
-            Thank you for registering with <?=$company->name?>
-        </h3>    
-    	<h6>You will <strong>receive an email</strong> soon to confirm your email address is valid.</h6>
-    	<h6>Please check your <strong>spam / other</strong> mail folder if you have <u>trouble finding it in your inbox</u>.</h6>
-    </p>
+<div style="grid-column: 2/-2; padding: 2rem 0;">
+  <h1>Thank you for registering with <?=$company->name?></h1>    
+  <p>You will receive an email soon to confirm your email address is valid. Please check your spam / other mail folder if you have trouble finding it in your inbox.</p>
 </div>

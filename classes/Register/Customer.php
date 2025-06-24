@@ -205,17 +205,19 @@
 
 			$GLOBALS['_database']->Execute(
 				$add_role_query,
-				array(
-					$this->id,
-					$role_id
-				)
+				array($this->id,$role_id)
 			);
-			
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return 0;
 			}
-			$this->auditRecord('ROLE_ADDED','Role '.$role_id.' added');
+
+			# Bust Cache
+			$cache_key = "customer[" . $this->id . "]";
+			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+			$cache->delete();
+
+			$this->auditRecord('ROLE_ADDED','Role has been added: '.$role_id);
 			return 1;
 		}
 
@@ -872,5 +874,347 @@
 			else {
 				return $sessions;
 			}
+		}
+
+		/**
+		 * Determines if this customer requires OTP authentication
+		 * Checks organization, roles, and user settings in order
+		 * @return bool True if OTP is required
+		 */
+		public function requiresOTP(): bool {
+			
+			app_log("DEBUG: requiresOTP() called for customer ID: ".$this->id, 'debug', __FILE__, __LINE__);
+
+			// If USE_OTP is not defined or false, return false immediately
+			if (!defined('USE_OTP') || !USE_OTP) {
+				return false;
+			}
+		
+			// Check organization setting
+			$organization = $this->organization();
+			if ($organization && !empty($organization->time_based_password)) {
+				return true;
+			}
+			
+			// Check role settings
+			$userRoles = $this->roles();
+			foreach ($userRoles as $role) {
+				if (!empty($role->time_based_password)) {
+					return true;
+				}
+			}
+
+			// Check user setting
+			if (!empty($this->time_based_password)) {
+				return true;
+			}
+			
+			return false;
+		}
+
+		/**
+		 * Generate and send OTP recovery token
+		 * @param string $email_address Email to send recovery to
+		 * @return bool True if successful
+		 */
+		public function sendOTPRecovery($email_address): bool {
+			$this->clearError();
+
+			// Generate recovery token
+			$token = $this->generateOTPRecoveryToken();
+			if (!$token) {
+				return false;
+			}
+
+			// Build recovery URL
+			$recovery_url = "http";
+			if ($GLOBALS['_config']->site->https) $recovery_url = "https";
+			$recovery_url .= "://" . $GLOBALS['_config']->site->hostname . "/_register/otp?recovery_token=" . $token;
+
+			// Prepare email template using the template system and config path
+			$template_path = isset($GLOBALS['_config']->register->otp_recovery->template)
+				? $GLOBALS['_config']->register->otp_recovery->template
+				: null;
+			if (!$template_path || !file_exists($template_path)) {
+				$this->error("OTP recovery email template not found");
+				return false;
+			}
+			$template_content = file_get_contents($template_path);
+			$notice_template = new \Content\Template\Shell();
+			$notice_template->content($template_content);
+			$notice_template->addParam('RECOVERY.URL', $recovery_url);
+			$notice_template->addParam('RECOVERY.LINK', $recovery_url);
+
+			// Create and send email
+			$message = new \Email\Message();
+			$message->html(true);
+			$message->to($email_address);
+			$message->from($GLOBALS['_config']->register->forgot_password->from ?? 'no-reply@' . $GLOBALS['_config']->site->hostname);
+			$message->subject("Two-Factor Authentication Recovery");
+			$message->body($notice_template->output());
+
+			$transportFactory = new \Email\Transport();
+			$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+			
+			if (!$transport) {
+				$this->error("Error initializing email transport");
+				return false;
+			}
+
+			if ($transport->error()) {
+				$this->error("Error initializing email transport: " . $transport->error());
+				return false;
+			}
+
+			$transport->hostname($GLOBALS['_config']->email->hostname);
+			$transport->token($GLOBALS['_config']->email->token);
+
+			if ($transport->deliver($message)) {
+				$this->auditRecord('OTP_RECOVERY_REQUESTED', 'OTP recovery email sent to: ' . $email_address);
+				return true;
+			}
+			else {
+				$this->error("Error sending recovery email: " . ($transport->error() ?: "Unknown error"));
+				return false;
+			}
+		}
+
+		/**
+		 * Generate OTP recovery token
+		 * @return string|false Recovery token or false on error
+		 */
+		public function generateOTPRecoveryToken() {
+			$this->clearError();
+
+			if (!$this->id) {
+				$this->error("Customer not identified");
+				return false;
+			}
+
+			// Generate secure random token
+			$token = hash('sha256', random_bytes(32) . microtime() . $this->id);
+
+			// Set expiration (24 hours from now)
+			$expires = date('Y-m-d H:i:s', strtotime('+1 day'));
+
+			// Insert recovery token
+			$insert_query = "
+				INSERT INTO register_otp_recovery 
+				(user_id, recovery_token, date_created, date_expires, used)
+				VALUES (?, ?, NOW(), ?, 0)
+				ON DUPLICATE KEY UPDATE 
+					recovery_token = VALUES(recovery_token),
+					date_created = VALUES(date_created),
+					date_expires = VALUES(date_expires),
+					used = 0
+			";
+
+			$GLOBALS['_database']->Execute($insert_query, array($this->id, $token, $expires));
+
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			return $token;
+		}
+
+		/**
+		 * Verify and consume OTP recovery token
+		 * @param string $token Recovery token
+		 * @return bool True if valid and consumed
+		 */
+		public function verifyOTPRecoveryToken($token): bool {
+			$this->clearError();
+
+			if (empty($token)) {
+				$this->error("Recovery token required");
+				return false;
+			}
+
+			// Find valid, unused token
+			$select_query = "
+				SELECT user_id 
+				FROM register_otp_recovery 
+				WHERE recovery_token = ? 
+				AND date_expires > NOW() 
+				AND used = 0
+			";
+
+			$rs = $GLOBALS['_database']->Execute($select_query, array($token));
+
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			if (!$rs || $rs->RecordCount() == 0) {
+				$this->error("Invalid or expired recovery token");
+				return false;
+			}
+
+			list($user_id) = $rs->FetchRow();
+
+			// Mark token as used
+			$update_query = "
+				UPDATE register_otp_recovery 
+				SET used = 1 
+				WHERE recovery_token = ?
+			";
+
+			$GLOBALS['_database']->Execute($update_query, array($token));
+
+			if ($GLOBALS['_database']->ErrorMsg()) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return false;
+			}
+
+			// Load customer if not already loaded
+			if ($this->id != $user_id) {
+				$customer = new \Register\Customer($user_id);
+				if ($customer->error()) {
+					$this->error($customer->error());
+					return false;
+				}
+				$this->id = $customer->id;
+				$this->details();
+			}
+
+			// Clear the user's secret_key (reset 2FA setup)
+			$result = $this->update(array('secret_key' => ''));
+			if (!$result) {
+				$this->error("Failed to clear secret key during OTP recovery");
+				return false;
+			}
+
+			$this->auditRecord('OTP_RESET', 'OTP recovery token used to reset 2FA and secret key cleared');
+			return true;
+		}
+
+		/**
+		 * Reset user's OTP setup (clear secret key)
+		 * @return bool True if successful
+		 */
+		public function resetOTPSetup(): bool {
+			$this->clearError();
+
+			if (!$this->id) {
+				$this->error("Customer not identified");
+				return false;
+			}
+
+			// Clear the secret key
+			$result = $this->update(array('secret_key' => ''));
+
+			if ($result) {
+				$this->auditRecord('OTP_RESET', 'OTP setup reset - secret key cleared');
+				
+				// Clear cache
+				$cache_key = "customer[" . $this->id . "]";
+				$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+				$cache->delete();
+			}
+
+			return $result;
+		}
+
+		/**
+		 * Attempt to login with a backup code
+		 * @param string $code
+		 * @return int|false user_id if valid, false if not
+		 */
+		public static function loginWithBackupCode($code) {
+			$db = $GLOBALS['_database'];
+			$query = "SELECT user_id, id FROM register_backup_codes WHERE code = ? AND used = 0 LIMIT 1";
+			$rs = $db->Execute($query, array($code));
+			if ($db->ErrorMsg()) {
+				return false;
+			} elseif ($rs && $row = $rs->FetchRow()) {
+				list($user_id, $code_id) = $row;
+				// Mark code as used
+				$update = $db->Execute("UPDATE register_backup_codes SET used = 1 WHERE id = ?", array($code_id));
+				// Clear the user's secret_key so they can reset TOTP
+				$db->Execute("UPDATE register_users SET secret_key = '' WHERE id = ?", array($user_id));
+				return $user_id;
+			}
+			return false;
+		}
+
+		/**
+		 * Delete all backup codes for this user
+		 */
+		public function deleteAllBackupCodes() {
+			$db = $GLOBALS['_database'];
+			$query = "DELETE FROM register_backup_codes WHERE user_id = ?";
+			$db->Execute($query, array($this->id));
+		}
+
+		/**
+		 * Generate and save new backup codes for this user
+		 * @param int $count
+		 * @return array|false
+		 */
+		public function generateBackupCodes($count = 6) {
+			$codes = array();
+			$db = $GLOBALS['_database'];
+
+			// Get user's primary email
+			$email = $this->notify_email();
+			if (empty($email)) {
+				$this->error('Generate Backup Codes: email address not found for user [must also be set to notify]');
+				return false;
+			}
+
+			for ($i = 0; $i < $count; $i++) {
+				$code = strtoupper(bin2hex(random_bytes(4)));
+				$codes[] = $code;
+				$db->Execute("INSERT INTO register_backup_codes (user_id, code, used) VALUES (?, ?, 0)", array($this->id, $code));
+			}
+
+			// Send backup codes email using config template path
+			$template_path = isset($GLOBALS['_config']->register->backup_codes->template)
+				? $GLOBALS['_config']->register->backup_codes->template
+				: null;
+			if ($template_path && file_exists($template_path)) {
+				$template_content = file_get_contents($template_path);
+				$notice_template = new \Content\Template\Shell();
+				$notice_template->content($template_content);
+				$notice_template->addParam('BACKUP.CODES', implode('<br>', array_map('htmlentities', $codes)));
+				$notice_template->addParam('USER.NAME', $this->full_name());
+				$notice_template->addParam('SITE.NAME', $GLOBALS['_config']->site->hostname);
+
+				if ($email) {
+					$message = new \Email\Message();
+					$message->html(true);
+					$message->to($email);
+					$message->from($GLOBALS['_config']->register->forgot_password->from ?? 'no-reply@' . $GLOBALS['_config']->site->hostname);
+					$message->subject("Your New Backup Codes");
+					$message->body($notice_template->output());
+					$transportFactory = new \Email\Transport();
+					$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+					if ($transport) {
+						$transport->hostname($GLOBALS['_config']->email->hostname);
+						$transport->token($GLOBALS['_config']->email->token);
+						$transport->deliver($message);
+					}
+				}
+			}
+			return $codes;
+		}
+
+		/**
+		 * Get all backup codes for this user
+		 * @return array
+		 */
+		public function getAllBackupCodes() {
+			$db = $GLOBALS['_database'];
+			$rs = $db->Execute("SELECT code, used FROM register_backup_codes WHERE user_id = ? ORDER BY id ASC", array($this->id));
+			$codes = array();
+			if ($rs) {
+				while ($row = $rs->FetchRow()) {
+					$codes[] = array('code' => $row[0], 'used' => $row[1]);
+				}
+			}
+			return $codes;
 		}
     }

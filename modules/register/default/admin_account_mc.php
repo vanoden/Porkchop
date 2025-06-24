@@ -152,6 +152,8 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				if ($_REQUEST['password']) {
 					if (!$customer->changePassword($_REQUEST["password"])) {
 						$page->addError("Password needs more complexity");
+					} else {
+						$page->appendSuccess("Password changed successfully.");
 					}
 				}
 
@@ -236,6 +238,11 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 					else
 						$notify = false;
 
+					if (isset($_REQUEST['public'][$contact_id]))
+						$public = true;
+					else
+						$public = false;
+
 					if (!$contact->validType($_REQUEST['type'][$contact_id]))
 						$page->addError("Invalid contact type");
 					elseif (!$contact->validValue($_REQUEST['type'][$contact_id], $_REQUEST['value'][$contact_id]))
@@ -248,7 +255,8 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 							"description" => noXSS(trim($_REQUEST['description'][$contact_id])),
 							"value" => $_REQUEST['value'][$contact_id],
 							"notes" => noXSS(trim($_REQUEST['notes'][$contact_id])),
-							"notify" => $notify
+							"notify" => $notify,
+							"public" => $public
 						);
 						
 						$noChanges = (
@@ -256,7 +264,8 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 							$contact->description == $contactRecord['description'] &&
 							$contact->value == $contactRecord['value'] &&
 							$contact->notes == $contactRecord['notes'] &&
-							$contact->notify == $contactRecord['notify']
+							$contact->notify == $contactRecord['notify'] &&
+							$contact->public == $contactRecord['public']
 						);
 						if (!$noChanges) $contact->auditRecord("USER_UPDATED","Customer Contact updated: " . implode(", ", $contactRecord), $customer_id);	
 
@@ -274,6 +283,11 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				else
 					$notify = false;
 
+				if (isset($_REQUEST['public'][0]))
+					$public = true;
+				else
+					$public = false;
+
 				$contact = new \Register\Contact($contact_id);
 				if ($contact->error()) {
 					$page->addError($contact->error());
@@ -290,7 +304,8 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 							"description" => noXSS(trim($_REQUEST['description'][0])),
 							"value" => $_REQUEST['value'][0],
 							"notes" => noXSS(trim($_REQUEST['notes'][0])),
-							"notify" => $notify
+							"notify" => $notify,
+							"public" => $public
 						);
 						$customer->addContact($contactRecord);
 						$contact->auditRecord("USER_UPDATED","Customer Contact added: " . implode(", ", $contactRecord), $customer_id);
@@ -326,7 +341,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				}
 			}
 		}
-		$page->success = 'Your changes have been saved';
+		$page->appendSuccess('Your changes have been saved');
 	}
 }
 
@@ -441,10 +456,38 @@ foreach ($searchTagXrefs as $searchTagXrefItem) {
 	$registerCustomerSearchTags[] = $searchTag;
 }
 
+if (isset($_REQUEST['generate_backup_codes'])) {
+    // Only process if the Generate Backup Codes button was clicked (not the Apply button)
+    if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+        $page->addError("Invalid request");
+    } else {
+        $customer = new \Register\Customer($customer_id);
+        // Remove all existing backup codes
+        $customer->deleteAllBackupCodes();
+        // Generate 6 new codes
+        $generatedBackupCodes = $customer->generateBackupCodes(6);
+        if (!$generatedBackupCodes) {
+            if ($customer->error()) {
+                $page->addError($customer->error());
+            } else {
+                $page->addError("Failed to generate backup codes.");
+            }
+        } else {
+            $page->appendSuccess("Backup codes generated successfully.");
+        }
+    }
+}
+
 load:
 if ($customer_id) {
 	$customer = new \Register\Customer($customer_id);
 	$contacts = $customer->contacts();
+	// Fetch all backup codes for this user using the customer object
+	if (method_exists($customer, 'getAllBackupCodes')) {
+		$allBackupCodes = $customer->getAllBackupCodes();
+	} else {
+		$allBackupCodes = array();
+	}
 }
 $rolelist = new \Register\RoleList();
 $all_roles = $rolelist->find();
