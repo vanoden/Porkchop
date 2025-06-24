@@ -14,7 +14,7 @@
 		public ?int $default_billing_location_id = null;
 		public ?int $default_shipping_location_id = null;
 		public string $website_url = "";
-		public int $time_based_password = 0;
+		public ?int $time_based_password = 0;
 		private bool $_nocache = false;
 		private $database;
 

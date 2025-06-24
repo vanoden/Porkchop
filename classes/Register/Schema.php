@@ -1403,8 +1403,25 @@
 					$alter_table_query = "
 						ALTER TABLE `register_organization_products` ADD CONSTRAINT `fk_orgproduct_product` FOREIGN KEY (`product_id`) REFERENCES `product_products` (`id`)
 					";
+					$database->Execute($alter_table_query);
+					if ($database->ErrorMsg()) {
+						$this->SQLError("Error altering register_organization_products table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+						app_log($this->error(), 'error', __FILE__, __LINE__);
+						$database->RollbackTrans();
+						return null;
+					}
 				} else {
 					app_log("Adding fk_orgproduct_product constraint to register_organization_products");
+				}
+
+				$alter_table_query = "
+					alter table register_organization_products add unique `uk_organization_products` (`organization_id`,`product_id`)";
+				$database->Execute($alter_table_query);
+				if ($database->ErrorMsg()) {
+					$this->SQLError("Error altering register_organization_products table in Register::Schema::upgrade(): " . $database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
 				}
 
 				$this->setVersion(41);
