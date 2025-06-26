@@ -75,12 +75,20 @@
 				return null;
 			}
 			
-			if ($repository->type == "local") {
-				return new Repository\Local($repository->id);
-			} else if ($repository->type == "s3") {
-				return new Repository\S3($repository->id);
+			$type = $repository->type;
+			
+			if ($type == "local") {
+				$newRepository = new Repository\Local();
+				$newRepository->id = $id;
+				$newRepository->details();
+				return $newRepository;
+			} else if ($type == "s3") {
+				$newRepository = new Repository\S3();
+				$newRepository->id = $id;
+				$newRepository->details();
+				return $newRepository;
 			} else {
-				app_log("Unsupported Repository Type: ".$repository->type,'warning');
+				app_log("Unsupported Repository Type: ".$type,'warning');
 				$this->error("Unsupported Repository Type");
 				return null;
 			}

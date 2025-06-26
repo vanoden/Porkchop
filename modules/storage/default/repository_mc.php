@@ -64,7 +64,7 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 		}
 
 		// Fetch Keys for this Repository Type
-		$metadata_keys = $repository->getMetadataKeys();
+		$metadata_keys = $repository->getImpliedMetadataKeys();
 		foreach ($metadata_keys as $key) {
 			// Skip validation for empty accessKey and secretKey on S3 repositories (IAM role support)
 			if ($repository->type == 's3' && ($key == 'accessKey' || $key == 'secretKey') && empty($_REQUEST[$key])) continue;
@@ -82,7 +82,7 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			if (isset($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 			$parameters['status'] = $_REQUEST['status'];
 
-			$metadata_keys = $repository->getMetadataKeys();
+			$metadata_keys = $repository->getImpliedMetadataKeys();
 			foreach ($metadata_keys as $key) {
 				$parameters[$key] = $_REQUEST[$key];
 			}
@@ -146,15 +146,29 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 				foreach ($metadata_keys as $key) $form[$key] = $_REQUEST[$key];
 			} else {
 
-				// Test Connection
+				// Test Connection (only if we have required information)
 				$should_test_connection = true;
-				if ($repository->type == 's3' && empty($repository->getMetadata('bucket'))) {
-					$should_test_connection = false;
-					$page->addWarning("S3 bucket name is required for connection testing");
+				$connection_message = "";
+				
+				if ($repository->type == 's3') {
+					$bucket = $repository->getMetadata('bucket');
+					app_log("S3 Repository after reload - bucket metadata: '" . $bucket . "'", 'debug');
+					app_log("S3 Repository after reload - all metadata keys: " . print_r($repository->getImpliedMetadataKeys(), true), 'debug');
+					if (empty($bucket)) {
+						$should_test_connection = false;
+						$connection_message = "Connection test skipped - bucket name not provided";
+					}
 				}
 				
-				if ($should_test_connection && $repository->connect()) $page->appendSuccess("Connection tested");
-				else if ($should_test_connection) $page->addWarning("Connection test failed: " . $repository->error());
+				if ($should_test_connection) {
+					if ($repository->connect()) {
+						$page->appendSuccess("Connection tested successfully");
+					} else {
+						$page->addWarning("Connection test failed: " . $repository->error());
+					}
+				} else if (!empty($connection_message)) {
+					$page->appendSuccess($connection_message);
+				}
 
 				// Populate Form Fields
 				$form['code'] = $repository->code;
@@ -162,6 +176,7 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 				$form['type'] = $repository->type;
 				$form['status'] = $repository->status;
 				$form['path'] = $repository->getMetadata('path');
+				$metadata_keys = $repository->getMetadataKeys();
 				foreach ($metadata_keys as $key) {
 					$form[$key] = $repository->getMetadata($key);
 				}
@@ -171,7 +186,7 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			$form['name'] = $_REQUEST['name'];
 			$form['type'] = $_REQUEST['type'];
 			$form['status'] = $_REQUEST['status'];
-			$metadata_keys = $repository->getMetadataKeys();
+			$metadata_keys = $repository->getImpliedMetadataKeys();
 			foreach ($metadata_keys as $key) {
 				$form[$key] = $_REQUEST[$key];
 			}
@@ -207,7 +222,7 @@ elseif (!empty($_REQUEST['name'])) {
 	$form['name'] = $_REQUEST['name'];
 	$form['type'] = $_REQUEST['type'];
 	$form['status'] = $_REQUEST['status'];
-	$metadata_keys = $repository->getMetadataKeys();
+	$metadata_keys = $repository->getImpliedMetadataKeys();
 	foreach ($metadata_keys as $key) {
 		$form[$key] = $_REQUEST[$key];
 	}
