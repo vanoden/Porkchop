@@ -5,6 +5,7 @@
 		public $name;
 
 		public function __construct($id = 0) {
+            $this->_tableName = 'network_domains';
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();

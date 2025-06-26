@@ -17,6 +17,7 @@
 		 * @return void 
 		 */
 		public function __construct(int $id = 0) {
+			$this->_tableName = 's4engine_sessions';
 			$this->id = $id;
 			if ($id > 0) return $this->details();
 			else {

@@ -6,10 +6,12 @@
 		private $_name;
 		private $_path;
 		private $_metadata;
+		private $_tableName;
 
-		public function __construct() {
+		public function __construct($id = 0) {
+			$this->_tableName = 'site_modules';
+			parent::__construct($id);
 			$this->_metadata = new \stdClass();
-    		parent::__construct();			
 		}
 
 		public function import_metadata($module) {

@@ -22,6 +22,7 @@
 		public $host;
 
 		public function __construct($id = 0) {
+            $this->_tableName = 'register_locations';
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();

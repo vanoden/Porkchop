@@ -9,6 +9,7 @@ class Commit extends \BaseModel {
 	public $author_id;
 
 	public function __construct($id = null) {
+		$this->_tableName = 'build_commits';
 		if (isset($id) && is_numeric($id)) {
 			$this->id = $id;
 			$this->details();

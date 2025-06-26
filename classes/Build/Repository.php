@@ -5,6 +5,7 @@
 		public $url;
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'build_repositories';
 			if (isset($id) && is_numeric($id)) {
 				$this->id = $id;
 				$this->details();

@@ -7,6 +7,11 @@
 		public $type;
 		public $description;
 
+		public function __construct($id = 0) {
+			$this->_tableName = 'network_subnets';
+			parent::__construct($id);
+		}
+
 		public function add($params = array()) {
 
 			$database = new \Database\Service();

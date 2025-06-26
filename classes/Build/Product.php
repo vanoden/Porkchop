@@ -11,6 +11,7 @@
 		public $description;
 
 		public function __construct($id = null) {
+			$this->_tableName = 'build_products';
 			if (isset($id) && is_numeric($id)) {
 				$this->id = (int)$id;
 				$this->details();

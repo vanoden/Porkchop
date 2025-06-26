@@ -14,6 +14,7 @@
 		 * @return void 
 		 */
 		public function __construct($id = 0) {
+            $this->_tableName = 'network_interfaces';
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();

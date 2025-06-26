@@ -43,7 +43,25 @@ class BaseModel extends \BaseClass {
 	 * @param int $id
 	 */
 	public function __construct($id = 0) {
-		if (empty($this->_tableName)) app_log("Class " . get_called_class() . " constructed w/o table name!", 'notice');
+		if (empty($this->_tableName)) {
+			$calledClass = get_called_class();
+			$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+			$callerInfo = '';
+			
+			// Get caller information from the backtrace
+			if (isset($backtrace[1])) {
+				$caller = $backtrace[1];
+				$callerInfo = " called from " . 
+					(isset($caller['class']) ? $caller['class'] : 'unknown class') . "::" . 
+					(isset($caller['function']) ? $caller['function'] : 'unknown function') . 
+					"() in " . 
+					(isset($caller['file']) ? basename($caller['file']) : 'unknown file') . 
+					" line " . 
+					(isset($caller['line']) ? $caller['line'] : 'unknown');
+			}
+			
+			app_log("Class " . $calledClass . " constructed w/o table name!" . $callerInfo, 'notice');
+		}
 		if (is_numeric($id) && $id > 0) {
 			$this->id = $id;
 			$this->details();
