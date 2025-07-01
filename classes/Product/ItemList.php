@@ -42,10 +42,13 @@
 			$this->clearError();
 			$this->resetCount();
 
+			// Initialize Database Service
+			$database = new \Database\Service();
+	
 			// For Validation
 			$validationclass = new \Product\Item();
 
-			$find_product_query = "
+			$find_objects_query = "
 				SELECT	DISTINCT(p.id)
 				FROM	product_products p
 				LEFT OUTER JOIN
@@ -58,9 +61,9 @@
 			if (!empty($parameters['search'])) {
 				if (!$validationclass->validSearch($parameters['search']) ) {
 					$this->error("Invalid Search String");
-					return null;
+					return [];
 				}
-				$find_product_query .= "
+				$find_objects_query .= "
 				AND     (
 							p.code LIKE ?
 							OR p.name LIKE ?
@@ -76,12 +79,12 @@
 					// Implied Wildcards
 					$search_string = '%'.$parameters['search'].'%';
 				}
-				array_push($bind_params,$search_string,$search_string,$search_string);
+				$database->AddParams($search_string,$search_string,$search_string);
 			}
 			# Filter on Given Parameters
 			if (isset($parameters['type'])) {
 				if (is_array($parameters['type'])) {
-					$find_product_query .= "
+					$find_objects_query .= "
 					AND		p.type in (";
 					$count = 0;
 					foreach ($parameters['type'] as $type) {
@@ -89,19 +92,20 @@
 							$this->error("Invalid Type: ".$type);
 							return [];
 						}
-						if ($count) $find_product_query .= ",";
+						if ($count) $find_objects_query .= ",";
 						$count ++;
-						$find_product_query .= $GLOBALS['_database']->qstr($type,get_magic_quotes_gpc());
+						$find_objects_query .= "'".$type."'";
 					}
-					$find_product_query .= ")";
-				} else {
+					$find_objects_query .= ")";
+				}
+				else {
 					if (!$validationclass->validType($parameters["type"])) {
 						$this->error("Invalid Type: ".$parameters["type"]);
 						return [];
 					}
-					$find_product_query .= "
+					$find_objects_query .= "
 					AND		p.type = ?";
-					array_push($bind_params,$parameters["type"]);
+					$database->AddParam($parameters["type"]);
 				}
 			}
 			if (isset($parameters['status']) && is_array($parameters['status'])) {
@@ -110,15 +114,17 @@
 						$this->error("Invalid Status: ".$status);
 						return [];
 					}
-					$find_product_query .= "
+					$find_objects_query .= "
 					AND     p.status IN ('".implode("','",$parameters['status'])."')";
 				}
-			} elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
-				$find_product_query .= "
+			}
+			elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
+				$find_objects_query .= "
 				AND		p.status = ?";
-				array_push($bind_params,strtoupper($parameters["status"]));
-			} else
-				$find_product_query .= "
+				$database->AddParam(strtoupper($parameters["status"]));
+			}
+			else
+				$find_objects_query .= "
 				AND		p.status = 'ACTIVE'";
 
 			if (isset($parameters['category_code'])) {
@@ -132,9 +138,10 @@
 						);
 						array_push($category_ids,$category->id);
 					}
-					$find_product_query .= "
+					$find_objects_query .= "
 					AND	r.parent_id in (".join(',',$category_ids).")";
-				} elseif(preg_match('/^[\w\-\_\.\s]+$/',$parameters['category_code'])) {
+				}
+				elseif(preg_match('/^[\w\-\_\.\s]+$/',$parameters['category_code'])) {
 					list($category) = $this->find(
 						array(
 							'code'	=> $parameters['category_code']
@@ -154,42 +161,75 @@
 					$this->error("Invalid Category");
 					return [];
 				}
-				$find_product_query .= "
+				$find_objects_query .= "
 				AND		r.parent_id = ?";
-				array_push($bind_params,$category_id);
+				$database->AddParam($category_id);
 
 			} elseif (isset($parameters['category_id'])) {
-				$find_product_query .= "
+				$find_objects_query .= "
 				AND		r.parent_id = ?";
-				array_push($bind_params,$parameters['category_id']);
+				$database->AddParam($parameters['category_id']);
 			}
 
 			if (isset($parameters['id']) and preg_match('/^\d+$/',$parameters['id'])) {
-				$find_product_query .= "
+				$find_objects_query .= "
 				AND		p.id = ?";
-				array_push($bind_params,$parameters['id']);
-			}
-					
-			if (isset($parameters['_sort']) && preg_match('/^[\w\_]+$/',$parameters['_sort']))
-				$find_product_query .= "
-				ORDER BY p.".$parameters['_sort'];
-			else	
-				$find_product_query .= "
-				ORDER BY p.id";
-
-			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
-				$find_product_query .= "
-				LIMIT   ".$controls['limit'];
-				if (isset($controls['offset']) && is_numeric($controls['offset'])) {
-					$find_product_query .= "
-					OFFSET  ".$controls['offset'];
-				}
+				$database->AddParam($parameters['id']);
 			}
 
-			query_log($find_product_query,$bind_params);
-			$rs = $GLOBALS['_database']->Execute($find_product_query,$bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			// Order Clause
+			switch ($controls['sort']) {
+				case 'name':
+					$find_objects_query .= "
+						ORDER BY p.name";
+					break;
+				case 'date_added':
+					$find_objects_query .= "
+						ORDER BY p.date_added";
+					break;
+				case 'code':
+					$find_objects_query .= "
+						ORDER BY p.code";
+					break;
+				case 'type':
+					$find_objects_query .= "
+						ORDER BY p.type";
+					break;
+				case 'status':
+					$find_objects_query .= "
+						ORDER BY p.status";
+					break;
+				case 'category':
+					$find_objects_query .= "
+						ORDER BY r.parent_id";
+					break;
+				case 'id':
+					$find_objects_query .= "
+						ORDER BY p.id";
+					break;
+				case 'price':
+					$find_objects_query .= "
+						ORDER BY p.price";
+					break;
+				case 'quantity':
+					$find_objects_query .= "
+						ORDER BY p.quantity";
+					break;
+				case 'sku':
+					$find_objects_query .= "
+						ORDER BY p.sku";
+					break;
+				default:
+					$find_objects_query .= "
+						ORDER BY p.code";
+			}
+
+			// Limit Clause
+			$find_objects_query .= $this->limitClause($parameters);
+
+			$rs = $database->Execute($find_objects_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return [];
 			}
 
@@ -252,9 +292,9 @@
 			}
 
 			$rs = $database->Execute($find_product_query);
-			if ($GLOBALS['_database']->ErrorMsg()) {
+			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			while (list($id) = $rs->FetchRow()) {
