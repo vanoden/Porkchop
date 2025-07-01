@@ -9,6 +9,7 @@
 		public $message;
 
 		public function __construct($id = 0) {
+            $this->_tableName = 'bench_builds';
 			if (preg_match('/^\d+$/', $id) && $id > 0) {
 				$this->id = $id;
 				$this->details();

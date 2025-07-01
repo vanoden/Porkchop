@@ -23,14 +23,24 @@
 			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->create($_REQUEST['type']);
 			if ($factory->error()) $this->error("Error adding repository: ".$factory->error());
-			$repository->add(
-				array(
-					'code'				=> $_REQUEST['code'],
-					'name'				=> $_REQUEST['name'],
-					'status'			=> $_REQUEST['status'],
-					'path'				=> $_REQUEST['path']
-				)
+			
+			// Build parameters array
+			$parameters = array(
+				'code'				=> $_REQUEST['code'],
+				'name'				=> $_REQUEST['name'],
+				'status'			=> $_REQUEST['status'],
+				'type'				=> $_REQUEST['type']
 			);
+			
+			// Add repository type-specific metadata
+			$metadata_keys = $repository->getMetadataKeys();
+			foreach ($metadata_keys as $key) {
+				if (isset($_REQUEST[$key])) {
+					$parameters[$key] = $_REQUEST[$key];
+				}
+			}
+			
+			$repository->add($parameters);
 			if ($repository->error()) $this->error("Error adding repository: ".$repository->error());
 
 			$response = new \APIResponse();

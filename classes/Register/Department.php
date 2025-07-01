@@ -7,6 +7,7 @@
 		public $manager_id;
 
 		public function __construct($id = null) {
+			$this->_tableName = 'register_departments';
 			# Clear Error Info
 			$this->clearError();
 

@@ -95,6 +95,21 @@
     document.getElementById('removeSearchTagId').value = id;
     document.getElementById('admin-account-form').submit();
   }
+
+  // Prevent form submission on Enter key press
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('admin-account-form').addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        // Allow Enter in textareas
+        if (event.target.tagName.toLowerCase() === 'textarea') {
+          return true;
+        }
+        // Prevent default form submission
+        event.preventDefault();
+        return false;
+      }
+    });
+  });
 </script>
 
 <!-- Autocomplete CSS and JS -->

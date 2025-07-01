@@ -7,6 +7,7 @@
 		public $timestamp;
 
 		public function __construct($id = 0) {
+			$this->_tableName = 'register_organization_comments';
 			if ($id > 0) {
 				$this->id = $id;
 				$this->details();

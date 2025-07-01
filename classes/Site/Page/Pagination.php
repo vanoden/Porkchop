@@ -25,6 +25,7 @@
 		 * @return void
 		 */
 		public function __construct($uri = null, $size = null, $count = null, $startId = null) {
+			$this->_tableName = 'site_pagination';
 			$this->baseURI = $uri;
 			if (empty($this->baseURI)) $this->baseURI = $_SERVER['SCRIPT_URI'];
 

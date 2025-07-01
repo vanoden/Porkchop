@@ -23,6 +23,8 @@ if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
 } elseif ($repository->validType($_REQUEST['type'])) {
 	// POST/GET Variable with Repository Type
 	$repository = $factory->create($_REQUEST['type']);
+	// If factory returns false (unsupported type), fall back to base repository
+	if (!$repository) $repository = new \Storage\Repository();
 } else {
 	// Default to Local Repository
 	$repository = $factory->create('local');
@@ -50,9 +52,22 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			$_REQUEST['status'] = htmlspecialchars($_REQUEST['status']);
 		}
 
+		// For new repositories, create the proper repository type before validation
+		if (empty($repository->id) && !empty($_REQUEST['type']) && $repository->validType($_REQUEST['type'])) {
+			$repository = $factory->create($_REQUEST['type']);
+			if ($factory->error()) $page->addError($factory->error());
+			// If factory returns false (unsupported type), fall back to base repository
+			if (!$repository) {
+				$page->addError("Repository type '" . $_REQUEST['type'] . "' is not supported");
+				$repository = new \Storage\Repository();
+			}
+		}
+
 		// Fetch Keys for this Repository Type
-		$metadata_keys = $repository->getMetadataKeys();
+		$metadata_keys = $repository->getImpliedMetadataKeys();
 		foreach ($metadata_keys as $key) {
+			// Skip validation for empty accessKey and secretKey on S3 repositories (IAM role support)
+			if ($repository->type == 's3' && ($key == 'accessKey' || $key == 'secretKey') && empty($_REQUEST[$key])) continue;
 			if (!$repository->validMetadata($key, $_REQUEST[$key])) {
 				if ($repository->error()) $page->addWarning($repository->error());
 				else $page->addWarning("Invalid value '" . $_REQUEST[$key] . "' for $key");
@@ -67,9 +82,15 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			if (isset($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
 			$parameters['status'] = $_REQUEST['status'];
 
-			$metadata_keys = $repository->getMetadataKeys();
+			$metadata_keys = $repository->getImpliedMetadataKeys();
 			foreach ($metadata_keys as $key) {
 				$parameters[$key] = $_REQUEST[$key];
+			}
+			
+			// Debug logging for S3 repositories
+			if ($_REQUEST['type'] == 's3') {
+				app_log("S3 Repository creation - bucket parameter: '" . $_REQUEST['bucket'] . "'", 'debug');
+				app_log("S3 Repository creation - all metadata: " . print_r($parameters, true), 'debug');
 			}
 
 			// Update record if id is set
@@ -79,13 +100,22 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			}
 			// Create new record
 			else {
-				$repository = $factory->create($_REQUEST['type']);
-				if ($factory->error()) $page->addError($factory->error());
-				if ($_REQUEST['type'] == 'local') {
-					$parameters['path'] = $_REQUEST['path'];
+				// Only create repository object if not already created during validation
+				if ($repository->id || get_class($repository) == 'Storage\Repository') {
+					$repository = $factory->create($_REQUEST['type']);
+					if ($factory->error()) $page->addError($factory->error());
+					// If factory returns false (unsupported type), fall back to base repository
+					if (!$repository) {
+						$page->addError("Repository type '" . $_REQUEST['type'] . "' is not supported");
+						$repository = new \Storage\Repository();
+					}
 				}
+				if ($_REQUEST['type'] == 'local') $parameters['path'] = $_REQUEST['path'];
 				$repository->add($parameters);
 				$page->success = "Repository created";
+				
+				// Reload the repository to ensure all metadata is properly loaded
+				if (!$repository->error() && $repository->id) $repository = $factory->load($repository->id);
 			}
 			/********************************************/
 			/* Update Privileges						*/
@@ -101,9 +131,7 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			$privilegeList->grant($_REQUEST['new_privilege_entity_type'], $_REQUEST['new_privilege_entity_id'], $_REQUEST['new_privilege_read'], $_REQUEST['new_privilege_write']);
 			// Update Repository Record with Updated Privileges
 			$privilege_json = $privilegeList->toJSON();
-			if (!$repository->update(array('default_privileges_json' => $privilege_json))) {
-				$page->addError("Error updating privileges: " . $repository->error() . "\n");
-			}
+			if (!$repository->update(array('default_privileges_json' => $privilege_json))) $page->addError("Error updating privileges: " . $repository->error() . "\n");
 
 			// Set record values
 			if ($repository->error()) {
@@ -118,11 +146,28 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 				foreach ($metadata_keys as $key) $form[$key] = $_REQUEST[$key];
 			} else {
 
-				// Test Connection
-				if ($repository->connect()) {
-					$page->appendSuccess("Connection tested");
-				} else {
-					$page->addError("Connection failed: " . $repository->error());
+				// Test Connection (only if we have required information)
+				$should_test_connection = true;
+				$connection_message = "";
+				
+				if ($repository->type == 's3') {
+					$bucket = $repository->getMetadata('bucket');
+					app_log("S3 Repository after reload - bucket metadata: '" . $bucket . "'", 'debug');
+					app_log("S3 Repository after reload - all metadata keys: " . print_r($repository->getImpliedMetadataKeys(), true), 'debug');
+					if (empty($bucket)) {
+						$should_test_connection = false;
+						$connection_message = "Connection test skipped - bucket name not provided";
+					}
+				}
+				
+				if ($should_test_connection) {
+					if ($repository->connect()) {
+						$page->appendSuccess("Connection tested successfully");
+					} else {
+						$page->addWarning("Connection test failed: " . $repository->error());
+					}
+				} else if (!empty($connection_message)) {
+					$page->appendSuccess($connection_message);
 				}
 
 				// Populate Form Fields
@@ -131,6 +176,7 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 				$form['type'] = $repository->type;
 				$form['status'] = $repository->status;
 				$form['path'] = $repository->getMetadata('path');
+				$metadata_keys = $repository->getMetadataKeys();
 				foreach ($metadata_keys as $key) {
 					$form[$key] = $repository->getMetadata($key);
 				}
@@ -140,7 +186,7 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			$form['name'] = $_REQUEST['name'];
 			$form['type'] = $_REQUEST['type'];
 			$form['status'] = $_REQUEST['status'];
-			$metadata_keys = $repository->getMetedataKeys();
+			$metadata_keys = $repository->getImpliedMetadataKeys();
 			foreach ($metadata_keys as $key) {
 				$form[$key] = $_REQUEST[$key];
 			}
@@ -176,7 +222,7 @@ elseif (!empty($_REQUEST['name'])) {
 	$form['name'] = $_REQUEST['name'];
 	$form['type'] = $_REQUEST['type'];
 	$form['status'] = $_REQUEST['status'];
-	$metadata_keys = $repository->getMetadataKeys();
+	$metadata_keys = $repository->getImpliedMetadataKeys();
 	foreach ($metadata_keys as $key) {
 		$form[$key] = $_REQUEST[$key];
 	}

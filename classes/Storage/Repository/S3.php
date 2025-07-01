@@ -25,42 +25,50 @@
 		public function connect() {
 			$this->configuration = new \Site\Configuration();
 
-			if (!empty($this->accessKey())) {
+			// Try to get bucket metadata - if it doesn't exist, we can't connect
+			if (empty($this->getMetadata('bucket'))) {
+				$this->error("Bucket name is required");
+				$this->_connected = false;
+				return false;
+			}
+
+			if (!empty($this->accessKey()) && !empty($this->secretKey())) {
+				// Use explicit credentials if provided
 				$this->credentials = new \Aws\Credentials\CredentialProvider($this->accessKey(), $this->secretKey());
 
 				// Instantiate the S3 client with your AWS credentials
 				$this->client = new \Aws\S3\S3Client( [
-					'region' => $this->region(),
+					'region' => $this->region() ?: 'us-east-1',
 					'version' => 'latest',
 					'credentials' => $this->credentials
 				]);
 			}
-			else if (!empty($this->getMetadata('bucket'))) {
+			else {
+				// Use IAM roles or instance profile authentication
 				$this->client = new \Aws\S3\S3Client([
-					'region' => $this->region(),
+					'region' => $this->region() ?: 'us-east-1',
 					'version' => 'latest'
 				]);
 			}
 
-			// This fails if not in an EC2 host
-			if (empty($this->getMetadata('bucket'))) {
+			// Test the connection by checking if bucket exists
+			try {
+				$result = $this->client->doesBucketExist($this->getMetadata('bucket'));
+				if (!$result) {
+					$this->error("Bucket '" . $this->getMetadata('bucket') . "' does not exist or is not accessible");
+					$this->_connected = false;
+					return false;
+				}
+			}
+			catch (\Aws\S3\Exception\S3Exception $e) {
+				$this->error($e->getMessage());
 				$this->_connected = false;
 				return false;
 			}
-			else {
-				try {
-					$result = $this->client->doesBucketExist($this->getMetadata('bucket'));
-				}
-				catch (\Aws\S3\Exception\S3Exception $e) {
-					$this->error($e->getMessage());
-					$this->_connected = false;
-					return false;
-				}
-				catch (\Exception $e) {
-					$this->error($e->getMessage());
-					$this->_connected = false;
-					return false;
-				}
+			catch (\Exception $e) {
+				$this->error($e->getMessage());
+				$this->_connected = false;
+				return false;
 			}
 
 			$this->_connected = true;
@@ -260,6 +268,12 @@
 		 * @return bool True if valid, false if not
 		 */
 		public function validBucket($string) {
+			// Bucket name is required for S3 repositories
+			if (empty($string)) {
+				$this->error("Bucket name is required for S3 repositories");
+				return false;
+			}
+			
 			// Bucket names cannot have 2 adjacent periods
 			if (preg_match('/\.\./',$string)) return false;
 
@@ -284,6 +298,8 @@
 		 * @return bool True if valid, false if not
 		 */
 		public function validRegion($string) {
+			// Allow empty region - AWS SDK will use default region
+			if (empty($string)) return true;
 			if (preg_match('/^[a-z]{2}\-[a-z]+\-\d+$/',$string)) return true;
 			else return false;
 		}

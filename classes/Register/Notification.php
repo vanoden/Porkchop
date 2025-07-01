@@ -3,6 +3,11 @@
 
 	class Notification Extends \BaseModel {
 	
+		public function __construct($id = 0) {
+			$this->_tableName = 'register_notifications';
+			parent::__construct($id);
+		}
+
 		public function add($params = array()) {
 
 			$add_notification_query = "

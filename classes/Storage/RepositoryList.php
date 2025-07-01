@@ -2,7 +2,7 @@
 	namespace Storage;
 
 	class RepositoryList Extends \BaseListClass {
-		public function _construct() {
+		public function __construct() {
             $this->_modelName = '\Storage\Repository';
 		}
 
@@ -46,8 +46,15 @@
 					return [];
 				}
 			}
-			$find_objects_query .= "
+			if (!empty($parameters['status'])) {
+				$find_objects_query .= "
+				AND		status = ?";
+				$database->AddParam($parameters['status']);
+			} else {
+				// Exclude DISABLED repositories by default
+				$find_objects_query .= "
 				AND		status != 'DISABLED'";
+			}
 
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {

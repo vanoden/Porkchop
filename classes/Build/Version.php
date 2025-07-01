@@ -14,6 +14,7 @@
 		public $user_id;
 
 		public function __construct($id = null) {
+			$this->_tableName = 'build_versions';
 			if (isset($id) && is_numeric($id)) {
 				$this->id = $id;
 				$this->details();

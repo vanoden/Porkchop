@@ -6,6 +6,7 @@ class Order extends \BaseModel {
 	public $date_created;
 
 	public function __construct($id = 0) {
+		$this->_tableName = 'purchase_orders';
 		if (!empty($id)) {
 			$this->id = $id;
 			$this->details();
