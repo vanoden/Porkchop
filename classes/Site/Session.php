@@ -758,8 +758,9 @@ use Register\Customer;
 		 * @return bool True if authenticated, false otherwise
 		 */
 		public function authenticated() {
-			if (defined('USE_OTP') && USE_OTP && $this->otpVerified === false) {
+			if (defined('USE_OTP') && USE_OTP && isset($this->customer->id) && $this->customer->id > 0 && $this->otpVerified === false) {
 				// If OTP is required and not verified, return false
+				app_log("Customer logged in but OTP not verified, returning false",'debug',__FILE__,__LINE__);
 				return false;
 			}
 			if (isset($this->customer->id) && $this->customer->id > 0) return true;

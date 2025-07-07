@@ -68,24 +68,23 @@
 		    return $this->getPage($GLOBALS['_REQUEST_']->module, $GLOBALS['_REQUEST_']->view, $GLOBALS['_REQUEST_']->index );
 	    }
 	    public function applyStyle() {
-		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS ['_config']->style [$this->module()];
+		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS['_config']->style[$this->module()];
 	    }
 
-	    public function requireAuth() {
+		/** @method requireAuth()
+		 * Check if the user is authenticated.  If not, redirect to the login page.
+		 */
+	    public function requireAuth(): bool {
 			if ($this->module == 'register' && $this->view == 'login') return true;
 		    if (! $GLOBALS['_SESSION_']->authenticated()) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
-			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+				app_log("User not authenticated, redirecting to login page",'info');
+			    header('location: /_register/login?target='.urlencode($_SERVER['REQUEST_URI']));
                 exit;
+				return false;	// Never gets here ;-)
 		    }
-
-		    if (!empty($GLOBALS ['_SESSION_']->refer_url)) {
-			    $counter = new \Site\Counter("auth_redirect");
-			    $counter->increment();
-			    $GLOBALS ['_SESSION_']->refer_url = null;
-			    exit;
-		    }
+			return true;
 	    }
 
 	    public function requireSuperElevation() {
