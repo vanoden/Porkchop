@@ -1165,6 +1165,27 @@
 			$response->print();
 		}
 
+		/** @method sendSlackMessage
+		 * Sends a message to a Slack channel
+		 * @param string $channel The Slack channel to send the message to
+		 * @param string $message The message to send
+		 * @return bool Returns true on success, throws an exception on failure
+		 */
+		public function sendSlackMessage() {
+			//print_r($_REQUEST);
+			//exit;
+			$channel = $_REQUEST["channel"];
+			$message = $_REQUEST["message"];
+			$sender = $_REQUEST["sender"] ?? "Web Portal";
+			$client = new \Slack\Client();
+			$result = $client->send($channel, $message, $sender);
+			$response = new \APIResponse();
+			if (!$result) {
+				$response->error($client->error());
+			}
+			$response->print();
+		}
+
 		public function _methods() {
 			return array(
 				'ping'			=> array(),
@@ -1823,6 +1844,25 @@
 							'content-type'	=> 'string',
 						)
 					]
+				),
+				'sendSlackMessage' => array(
+					'description'	=> 'Send a message to a Slack channel',
+					'token_required'	=> false,
+					'privilege_required'	=> 'send slack messages',
+					'parameters'	=> array(
+						'channel' => array(
+							'required' => true,
+							'validation_method' => 'Slack::Client::validChannel()',
+						),
+						'message' => array(
+							'required' => true,
+							'validation_method' => 'Slack::Client::validMessage()',
+						),
+						'sender' => array(
+							'required' => false,
+							'validation_method' => 'Slack::Client::validSender()',
+						),
+					)
 				),
 			);		
 		}
