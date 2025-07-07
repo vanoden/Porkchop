@@ -571,4 +571,8 @@ class Person Extends \BaseModel {
 	public function icon() {
 		return new \Register\PersonIcon($this->id);
 	}
+
+	public function otp_secret_key() {
+		return $this->secret_key;
+	}
 }

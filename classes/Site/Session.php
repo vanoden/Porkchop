@@ -761,6 +761,9 @@ use Register\Customer;
 			if (defined('USE_OTP') && USE_OTP && isset($this->customer->id) && $this->customer->id > 0 && $this->otpVerified === false) {
 				// If OTP is required and not verified, return false
 				app_log("Customer logged in but OTP not verified, returning false",'debug',__FILE__,__LINE__);
+				// Let's just bounce them to the OTP verification page
+				header("Location: /_otp/verify?redirect=".urlencode($_SERVER['REQUEST_URI']));
+				exit;
 				return false;
 			}
 			if (isset($this->customer->id) && $this->customer->id > 0) return true;
