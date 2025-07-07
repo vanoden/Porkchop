@@ -29,22 +29,31 @@ class Client Extends \BaseClass {
 			'text' => $message
 		];
 
+		// Create HTTP Request
 		$request = new \HTTP\Request();
 		$request->url($url);
 		$request->addHeader('Content-Type', 'application/json; charset=utf-8');
 		$request->addHeader('Authorization', 'Bearer ' . $this->token);
 		$request->body(json_encode($data));
 
+		// Send The Request to Slack
 		$client = new \HTTP\Client();
 		if ($client->connect($service)) {
 			$response = $client->post($request);
-			// Handle the response
-			if ($response->error()) {
+			// Check for Client Error
+			if ($client->error()) {
+				$this->error("Error connecting to Slack: ".$client->error());
+				return false;
+			}
+			// Check for Response Error
+			elseif ($response->error()) {
 				$this->error("Error sending message: ".$response->error());
 				return false;
 			}
+			// Check for Valid Response
 			elseif (preg_match('/application\/json/',$response->header("content-type"))) {
 				$object = json_decode($response->content());
+				// Check for Success Element
 				if ($object->success == 1) {
 					return true;
 				}
@@ -53,11 +62,13 @@ class Client Extends \BaseClass {
 					return false;
 				}
 			}
+			// Not a Valid Slack Response
 			else {
 				$this->error("Unexpected response format: ".$response->header("content-type"));
 				return false;
 			}
 		}
+		// Unable to connect to Slack
 		else {
 			$this->error("Cannot connect to host: ".$client->error());
 			return false;
