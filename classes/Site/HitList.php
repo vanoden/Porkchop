@@ -4,6 +4,7 @@
 	class HitList Extends \BaseListClass {
 		public function __construct() {
 			$this->_modelName = '\Site\Hit';
+			$this->_tableDefaultSortBy = 'date_hit';
 		}
 
 		public function findAdvanced($parameters, $advanced, $controls): array {
@@ -59,5 +60,18 @@
 				$this->_incrementCount();
 			}
 			return $objects;
+		}
+
+		public function first($parameters = [], $controls = []): ?\Site\Hit {
+			$controls['sort'] = 'date_hit';
+			$controls['order'] = 'asc';
+			$objects = parent::first($parameters, $controls);
+			return !empty($objects) ? $objects[0] : null;
+		}
+		public function last($parameters = [], $controls = []): ?\Site\Hit {
+			$controls['sort'] = 'date_hit';
+			$controls['order'] = 'desc';
+			$objects = parent::last($parameters, $controls);
+			return !empty($objects) ? $objects[0] : null;
 		}
 	}
