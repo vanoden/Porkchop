@@ -6,11 +6,12 @@
 		public string $description = "";	// Description of the role
 		public int $time_based_password = 0;    // Whether this role requires 2FA
 
-		public function __construct(int $id = null) {
+		public function __construct(?int $id = 0) {
 			$this->_tableName = "register_roles";
 			$this->_tableUKColumn = 'name';
 			$this->_cacheKeyPrefix = 'register.role';
 			$this->_addFields('name', 'description', 'time_based_password');
+			$this->_auditEvents = true;
 			parent::__construct($id);
 		}
 
@@ -93,6 +94,11 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
+			// Get Current Settings for Comparison
+			$current_details = new Role($this->id);
+
+			$update_description = "";
+
 			// Build Query
 			$update_object_query = "
 				UPDATE	register_roles
@@ -100,15 +106,27 @@
 
 			// Add Parameters
 			if (isset($parameters['description'])) {
-				$update_object_query .= ",
+				if ($parameters['description'] != $current_details->description) {
+					$update_object_query .= ",
 						description = ?";
-				$database->AddParam($parameters['description']);
+					$database->AddParam($parameters['description']);
+					$update_description = 'Changed '.$this->name.' description to "'.$parameters['description'].'"';
+				}
 			}
 			
 			if (isset($parameters['time_based_password'])) {
-				$update_object_query .= ",
-						time_based_password = ?";
-				$database->AddParam($parameters['time_based_password'] ? 1 : 0);
+				if ($parameters['time_based_password'] != $current_details->time_based_password) {
+					$update_object_query .= ",
+							time_based_password = ?";
+					$database->AddParam($parameters['time_based_password'] ? 1 : 0);
+
+					$update_description = 'Changed '.$this->name.' time_based_password to "'.($parameters['time_based_password'] ? 'true' : 'false').'"';
+				}
+			}
+
+			if (empty($update_description)) {
+				$this->warn("No changes made to role");
+				return true;
 			}
 
 			$update_object_query .= "
@@ -124,15 +142,17 @@
 				return false;
 			}
 
-			// audit the update event
+			$this->clearCache();
+
+			// Prepare For Audit Log Records
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
 				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
+				'description' => $update_description,
 				'class_name' => get_class($this),
 				'class_method' => 'update'
-			));		
-					
+			));	
+
 			return $this->details();
 		}
 		
