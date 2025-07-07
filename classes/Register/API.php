@@ -1290,7 +1290,7 @@
             if ($customer->error()) $this->error($customer->error());
             if (!$customer->id) $this->notFound("Customer not found");
 
-            if (!empty($customer->secret_key)) {
+            if (!empty($customer->otp_secret_key())) {
                 $this->invalidRequest("TOTP is already set up for this account");
             }
 
@@ -1343,13 +1343,13 @@
             if ($customer->error()) $this->error($customer->error());
             if (!$customer->id) $this->notFound("Customer not found");
 
-            if (empty($customer->secret_key)) {
+            if (empty($customer->otp_secret_key())) {
                 $this->invalidRequest("TOTP is not set up for this account");
             }
 
             // Get stored secret and verify code
             $tfa = new \Register\AuthenticationService\TwoFactorAuth(
-                $customer->secret_key,
+                $customer->otp_secret_key(),
                 $customer->code,
                 $GLOBALS['_config']->site->hostname
             );
@@ -1386,7 +1386,7 @@
             if ($customer->error()) $this->error($customer->error());
             if (!$customer->id) $this->notFound("Customer not found");
 
-            if (empty($customer->secret_key)) {
+            if (empty($customer->otp_secret_key())) {
                 $this->invalidRequest("TOTP is not set up for this account");
             }
 
@@ -1416,7 +1416,7 @@
             if ($customer->error()) $this->error($customer->error());
             if (!$customer->id) $this->notFound("Customer not found");
 
-            if (empty($customer->secret_key)) {
+            if (empty($customer->otp_secret_key())) {
                 $this->invalidRequest("TOTP is not set up for this account");
             }
 

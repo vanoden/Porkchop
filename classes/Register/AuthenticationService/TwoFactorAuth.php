@@ -27,7 +27,7 @@ class TwoFactorAuth {
 
         // Set parameters for Google Authenticator compatibility
         $this->totp->setDigits(6);
-        $this->totp->setPeriod(300);
+        $this->totp->setPeriod(30);
 
         // Set label and issuer if provided
         if ($this->username) {

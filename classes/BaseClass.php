@@ -25,7 +25,11 @@ class BaseClass {
 		'address' => '/[^a-zA-Z0-9\s\-\.,#\']/u',
 		'price' => '/[^0-9\.\,]/u',
 		'percentage' => '/[^0-9\-\.%]/u',
+		'date' => '/[^0-9\-\/\s]/u',
+		'time' => '/[^0-9\:\s]/u',
 		'datetime' => '/[^0-9\-\/\:\s]/u',
+		'filename' => '/[^a-zA-Z0-9\-\_\.]/u',
+		'username' => '/[^a-zA-Z0-9\-\_\.]/u',
 		'mac_address_format' => '/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/',
 		'search' => '/^[\*\w\-\_\.\s]*$/',
 		'address_line' => '/^[\w? :.-|\'\)]+$/',
@@ -517,7 +521,8 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validDate($string): bool {
-		if (preg_match($this->_patterns['date'], $string)) return false;
+		if (empty($string)) return false;
+		if (isset($this->_patterns['date']) && preg_match($this->_patterns['date'], $string)) return false;
 		$date = date_parse($string);
 		return $date['error_count'] === 0;
 	}
@@ -529,7 +534,8 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validTime($string): bool {
-		if (preg_match($this->_patterns['time'], $string)) return false;
+		if (empty($string)) return false;
+		if (isset($this->_patterns['time']) && preg_match($this->_patterns['time'], $string)) return false;
 		$time = date_parse($string);
 		return $time['error_count'] === 0;
 	}
@@ -541,7 +547,8 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validDatetime($string): bool {
-		if (preg_match($this->_patterns['datetime'], $string)) return false;
+		if (empty($string)) return false;
+		if (isset($this->_patterns['datetime']) && preg_match($this->_patterns['datetime'], $string)) return false;
 		$datetime = date_parse($string);
 		return $datetime['error_count'] === 0;
 	}
@@ -553,7 +560,8 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validFilename($string): bool {
-		return !preg_match($this->_patterns['filename'], $string);
+		if (empty($string)) return false;
+		return !(isset($this->_patterns['filename']) && preg_match($this->_patterns['filename'], $string));
 	}
 
 	/**
@@ -563,7 +571,8 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validUsername($string): bool {
-		return !preg_match($this->_patterns['username'], $string);
+		if (empty($string)) return false;
+		return !(isset($this->_patterns['username']) && preg_match($this->_patterns['username'], $string));
 	}
 
 	/**
