@@ -8,9 +8,8 @@
 		$role = new \Register\Role($_REQUEST['id']);
 		if (! $role->id) $page->addError("Role &quot;".$_REQUEST['id']."&quot; not found");
 	}
-
 	/** Add New Role **/	
-	if (! $role->id && isset($_REQUEST['name']) && $role->validName($_REQUEST['name'])) {
+	elseif (! $role->id && isset($_REQUEST['name']) && $role->validName($_REQUEST['name'])) {
     	$role = new \Register\Role();
     	$role->get($_REQUEST['name']);
 		if (! $role->id) {
@@ -43,7 +42,8 @@
     if ($role->id && isset($_REQUEST['btn_submit'])) {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
             $page->addError("Invalid Request");
-        } else {
+        }
+		else {
             $updateParams = array(
                 'description' => noXSS(trim($_REQUEST['description'])),
                 'time_based_password' => isset($_REQUEST['time_based_password']) ? 1 : 0
