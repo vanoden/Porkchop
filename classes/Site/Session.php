@@ -849,8 +849,6 @@ use Register\Customer;
 		 */
 		public function verifyCSRFToken($csrfToken) {
 
-			return true;
-
 			if (empty($csrfToken)) {
 				app_log("No csrfToken provided",'debug');
 				return false;
