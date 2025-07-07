@@ -171,12 +171,19 @@
 						
 			return $this->details();
 		}
-		
-		public function details(): bool {
 
+		/** @method details()
+		 * Get the details for this Organization
+		 * @return bool
+		 */
+		public function details(): bool {
 			app_log("Register::Organization::details()[".$this->id."]",'trace',__FILE__,__LINE__);
-			$database = new \Database\Service();
+
+			// Clear any previous errors
 			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
 
 			$cache_key = "organization[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -196,7 +203,7 @@
 				$this->default_shipping_location_id = $organization->default_shipping_location_id;
 				if (!empty($organization->website_url)) $this->website_url = $organization->website_url;
 				else $this->website_url = "";
-				$this->time_based_password = $organization->time_based_password;
+				if (isset($organization->time_based_password)) $this->time_based_password = $organization->time_based_password;
 				$this->cached(true);
 				$this->exists(true);
 
@@ -227,7 +234,7 @@
 				FROM	register_organizations
 				WHERE	id = ?
 			";
-			query_log($get_details_query);
+
 			$rs = $database->Execute(
 				$get_details_query,
 				array($this->id)
