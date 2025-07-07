@@ -9,6 +9,8 @@ class BaseClass {
 
 	private $_warning;
 
+	private $_lastMessage;
+
 	// Possible statuses in enum status table for validation (where applicable)
 	protected $_statii = array();
 
@@ -97,6 +99,16 @@ class BaseClass {
 			app_log(get_called_class() . "::" . $method . "(): " . $this->_warning, 'warn');
 		}
 		return $this->_warning;
+	}
+
+	/**
+	 * Get or set the last message
+	 */
+	public function lastMessage($value = null) {
+		if (isset($value)) {
+			$this->_lastMessage = $value;
+		}
+		return $this->_lastMessage;
 	}
 
 	/**
