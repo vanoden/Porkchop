@@ -30,7 +30,7 @@ class Person Extends \BaseModel {
 	public $default_shipping_location_id;
 	public $last_hit_date;
 	public $profile;
-    public string $secret_key = "";
+    protected string $secret_key = "";
 
     protected $_settings = array( "date_format" => "US" );
 	protected $_database;
@@ -60,6 +60,11 @@ class Person Extends \BaseModel {
         $this->id = $id;
     }
 
+	/** @method full_name
+	 * Returns the first and last name concatenated, or just one if only one is set.
+	 * If neither is set, returns the code or '[empty]' if code is also empty.
+	 * @return string
+	 */
 	public function full_name() {
 		$full_name = '';
 		if (strlen($this->first_name)) $full_name .= $this->first_name;
@@ -71,7 +76,12 @@ class Person Extends \BaseModel {
 		if (!strlen($full_name)) $full_name = '[empty]';
 		return $full_name;
 	}
-    
+
+	/** @method add(parameters)
+	 * Adds a new user to the database.
+	 * @param array $parameters
+	 * @return bool
+	 */
     public function add($parameters = []) {
 
 		$this->clearError();
@@ -146,7 +156,14 @@ class Person Extends \BaseModel {
         return $this->update($parameters);
     }
 
+	/** @method update(parameters)
+	 * Updates an existing user in the database.
+	 * @param array $parameters
+	 * @return bool
+	*/
     public function update($parameters = []): bool {
+		// Clear any previous errors
+		$this->clearError();
 
         if (!$this->id) {
             $this->error("User ID Required for Update");
@@ -298,11 +315,19 @@ class Person Extends \BaseModel {
         return $this->details();
     }
 
+	/** @method organization()
+	 * Returns the Organization object associated with this person.
+	 * @return \Register\Organization
+	 */
     public function organization() {
         return new \Register\Organization($this->organization_id);
     }
 
-    # Process Email Verification Request
+    /** @method verify_email(key)
+	 * Process Email Verification Request
+	 * @param string $validation_key
+	 * @return bool|\Register\Person
+	 */
     function verify_email($validation_key) {
 
         if (!$this->id) return false;
