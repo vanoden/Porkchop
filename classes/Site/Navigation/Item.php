@@ -96,7 +96,7 @@
 
 			// Add Parameters
 			if (isset($parameters['menu_id'])) {
-				$this->AddParam($parameters['menu_id']);
+				$database->AddParam($parameters['menu_id']);
 			}
 			else {
 				$this->error("Menu ID not found");
@@ -104,7 +104,7 @@
 			}
 			if (isset($parameters['title'])) {
 				if ($this->validTitle($parameters['title'])) {
-					$this->AddParam($parameters['title']);
+					$database->AddParam($parameters['title']);
 				}
 				else {
 					$this->error("Invalid Title");
@@ -308,7 +308,7 @@
 					$database->AddParam($parameters['parent_id']);
 				}
 			}
-			if (isset($parameters['alt'])) {
+			if (!empty($parameters['alt'])) {
 				if ($this->safeString($parameters['alt'])) {
 					$update_object_query .= ",
 						alt = ?";
@@ -330,7 +330,7 @@
 					return false;
 				}
 			}
-			if (isset($parameters['view_order'])) {
+			if (!empty($parameters['view_order'])) {
 				if (is_numeric($parameters['view_order'])) {
 					$update_object_query .= ",
 						view_order = ?";
