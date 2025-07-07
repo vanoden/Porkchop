@@ -6,7 +6,6 @@
 		private $_name;
 		private $_path;
 		private $_metadata;
-		private $_tableName;
 
 		public function __construct($id = 0) {
 			$this->_tableName = 'site_modules';
