@@ -11,15 +11,18 @@
 		if (!$navItem->validInteger($_REQUEST['id'])) {
 			$page->addError("Invalid item ID format");
 			$can_proceed = false;
-		} else {
+		}
+		else {
 			$item = new \Site\Navigation\Item($_REQUEST['id']);
 		}
-	} elseif ($GLOBALS['_REQUEST_']->query_vars_array[0]) {
-		$_REQUEST['id'] = $GLOBALS['_REQUEST_']->query_vars_array[0];
-		if (!$navItem->validInteger($_REQUEST['id'])) {
+	}
+	elseif (preg_match('/^[0-9]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0],$matches)) {
+		$_REQUEST['id'] = $matches[1];
+		if (!empty($_REQUEST['id']) && !$navItem->validInteger($_REQUEST['id'])) {
 			$page->addError("Invalid item ID format");
 			$can_proceed = false;
-		} else {
+		}
+		else {
 			$item = new \Site\Navigation\Item($_REQUEST['id']);
 		}
 	}
