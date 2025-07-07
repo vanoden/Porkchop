@@ -1,0 +1,38 @@
+[
+  {
+    "code": "spectros_dev",
+    "name": "Spectros Instruments - Development",
+    "description": "Development instance of Spectros Instruments",
+    "address": "123 Test Street",
+    "city": "Development City",
+    "state": "QA",
+    "zip": "12345",
+    "country": "US",
+    "phone": "555-123-4567",
+    "status": "ACTIVE"
+  },
+  {
+    "code": "acme_corp",
+    "name": "ACME Corporation",
+    "description": "Test customer company",
+    "address": "456 Customer Ave",
+    "city": "Test Town",
+    "state": "TX",
+    "zip": "67890",
+    "country": "US", 
+    "phone": "555-987-6543",
+    "status": "ACTIVE"
+  },
+  {
+    "code": "beta_industries",
+    "name": "Beta Industries LLC",
+    "description": "Another test customer",
+    "address": "789 Industrial Blvd",
+    "city": "Factory City",
+    "state": "MI",
+    "zip": "54321",
+    "country": "US",
+    "phone": "555-555-1234",
+    "status": "ACTIVE"
+  }
+] 

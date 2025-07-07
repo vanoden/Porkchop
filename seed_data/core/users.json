@@ -1,0 +1,52 @@
+[
+  {
+    "login": "admin_test",
+    "password": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "first_name": "Admin",
+    "last_name": "User",
+    "email": "admin@spectrostest.com",
+    "status": "ACTIVE",
+    "role": "administrator",
+    "organization_id": 1
+  },
+  {
+    "login": "manager_test", 
+    "password": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "first_name": "Manager",
+    "last_name": "Smith",
+    "email": "manager@spectrostest.com",
+    "status": "ACTIVE",
+    "role": "manager",
+    "organization_id": 1
+  },
+  {
+    "login": "customer1",
+    "password": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@acmecorp.com",
+    "status": "ACTIVE",
+    "role": "customer",
+    "organization_id": 2
+  },
+  {
+    "login": "customer2",
+    "password": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "first_name": "Jane",
+    "last_name": "Wilson",
+    "email": "jane.wilson@betaindustries.com",
+    "status": "ACTIVE", 
+    "role": "customer",
+    "organization_id": 3
+  },
+  {
+    "login": "technician1",
+    "password": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "first_name": "Mike",
+    "last_name": "Tech",
+    "email": "mike.tech@spectrostest.com",
+    "status": "ACTIVE",
+    "role": "technician",
+    "organization_id": 1
+  }
+] 

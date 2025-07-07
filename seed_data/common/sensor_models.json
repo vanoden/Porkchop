@@ -1,0 +1,80 @@
+[
+  {
+    "code": "TEMP-001",
+    "name": "Temperature Sensor Model T1",
+    "description": "High-precision temperature sensor for environmental monitoring",
+    "manufacturer": "Spectros Instruments",
+    "sensor_type": "temperature",
+    "unit": "°C",
+    "range_min": -40,
+    "range_max": 85,
+    "accuracy": 0.1,
+    "resolution": 0.01,
+    "status": "ACTIVE"
+  },
+  {
+    "code": "HUMID-001",
+    "name": "Humidity Sensor Model H1",
+    "description": "Relative humidity sensor with temperature compensation",
+    "manufacturer": "Spectros Instruments", 
+    "sensor_type": "humidity",
+    "unit": "%RH",
+    "range_min": 0,
+    "range_max": 100,
+    "accuracy": 2.0,
+    "resolution": 0.1,
+    "status": "ACTIVE"
+  },
+  {
+    "code": "PRESS-001",
+    "name": "Pressure Sensor Model P1",
+    "description": "Absolute pressure sensor for barometric measurements",
+    "manufacturer": "Spectros Instruments",
+    "sensor_type": "pressure",
+    "unit": "kPa",
+    "range_min": 50,
+    "range_max": 110,
+    "accuracy": 0.5,
+    "resolution": 0.01,
+    "status": "ACTIVE"
+  },
+  {
+    "code": "LIGHT-001",
+    "name": "Light Sensor Model L1",
+    "description": "Ambient light sensor for photometric applications",
+    "manufacturer": "Spectros Instruments",
+    "sensor_type": "light",
+    "unit": "lux",
+    "range_min": 0,
+    "range_max": 100000,
+    "accuracy": 5.0,
+    "resolution": 1,
+    "status": "ACTIVE"
+  },
+  {
+    "code": "CO2-001",
+    "name": "CO2 Sensor Model C1",
+    "description": "Carbon dioxide sensor for air quality monitoring",
+    "manufacturer": "Spectros Instruments",
+    "sensor_type": "gas",
+    "unit": "ppm",
+    "range_min": 0,
+    "range_max": 5000,
+    "accuracy": 50,
+    "resolution": 1,
+    "status": "ACTIVE"
+  },
+  {
+    "code": "pH-001",
+    "name": "pH Sensor Model pH1",
+    "description": "Digital pH sensor for water quality monitoring",
+    "manufacturer": "Spectros Instruments",
+    "sensor_type": "ph",
+    "unit": "pH",
+    "range_min": 0,
+    "range_max": 14,
+    "accuracy": 0.1,
+    "resolution": 0.01,
+    "status": "ACTIVE"
+  }
+] 
