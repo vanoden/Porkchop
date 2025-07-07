@@ -73,22 +73,11 @@
 
 	    public function requireAuth() {
 			if ($this->module == 'register' && $this->view == 'login') return true;
-		    if (! $GLOBALS ['_SESSION_']->customer->id > 0) {
+		    if (! $GLOBALS['_SESSION_']->authenticated()) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
 			    header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
                 exit;
-		    }
-
-		    // Check if OTP is required and not verified
-		    if (defined('USE_OTP') && USE_OTP) {
-			    if ($GLOBALS['_SESSION_']->customer->requiresOTP() && 
-				    (!isset($GLOBALS['_SESSION_']->otp_verified) || !$GLOBALS['_SESSION_']->otp_verified)) {
-				    $counter = new \Site\Counter("auth_redirect");
-				    $counter->increment();
-				    header('location: /_register/otp?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
-				    exit;
-			    }
 		    }
 
 		    if (!empty($GLOBALS ['_SESSION_']->refer_url)) {

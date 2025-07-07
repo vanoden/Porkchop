@@ -55,10 +55,7 @@ use Register\Customer;
 			// Clear Previous Errors
 			$this->clearError();
 
-			// Initialize Database Service
-			$database = new \Database\Service();
-
-			// Fetch Company Information
+			// Get Site Location Matching Server Name
 			$location = new \Company\Location();
 			$location->getByHost($_SERVER['SERVER_NAME']);
 			$this->location_id = $location->id;
@@ -68,11 +65,13 @@ use Register\Customer;
 				return null;
 			}
 
+			// Get Domain ID for Location
 			if (! $location->domain()->id) {
 				$this->error("No domain assigned to location '".$location->id."'");
 				return null;
 			}
 
+			// Get Domain Object using Location's Domain ID
 			$domain = new \Company\Domain($location->domain()->id);
 			if ($domain->error()) {
 				$this->error("Error finding domain: ".$domain->error());
@@ -84,6 +83,7 @@ use Register\Customer;
 			}
 			$this->domain_id = $domain->id;
 
+			// Get Site Company (Multi-Tenancy) from Domain
 			$this->company = new \Company\Company($domain->company_id);
 			if ($this->company->error()) {
 				$this->error("Error finding company: ".$this->company->error());
@@ -94,7 +94,7 @@ use Register\Customer;
 				return null;
 			}
 
-			# Cookie Parameters
+			// Cookie Parameters
 			if (isset($GLOBALS['_config']->session->domain)) $this->cookie_domain = $GLOBALS['_config']->session->domain;
 			else $this->cookie_domain = $domain;
 			if (isset($GLOBALS['_config']->session->cookie) && is_string($GLOBALS['_config']->session->cookie)) $this->cookie_name = $GLOBALS['_config']->session->cookie;
@@ -103,10 +103,10 @@ use Register\Customer;
 			else $this->cookie_expires = time() + 36000;
 			$this->cookie_path = "/";
 
-			# Store Code from Cookie
+			// Store Code from Cookie
 			if (isset($_COOKIE[$this->cookie_name])) $request_code = $_COOKIE[$this->cookie_name];
 
-			# Was a 'Valid looking' Session Given
+			// Was a 'Valid looking' Session Given
 			if (isset($request_code) && $this->validCode($request_code)) {
 				app_log("Getting session ".$request_code,'debug',__FILE__,__LINE__);
 				# Get Existing Session Information
@@ -128,7 +128,7 @@ use Register\Customer;
 			$this->clearError();
 
 			if (! $this->id) {
-				# Create New Session
+				// Create New Session
 				$this->create();
 			}
 
@@ -758,6 +758,10 @@ use Register\Customer;
 		 * @return bool True if authenticated, false otherwise
 		 */
 		public function authenticated() {
+			if (defined('USE_OTP') && USE_OTP && $this->otpVerified === false) {
+				// If OTP is required and not verified, return false
+				return false;
+			}
 			if (isset($this->customer->id) && $this->customer->id > 0) return true;
 			else return false;
 		}
