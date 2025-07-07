@@ -2,15 +2,15 @@
 	namespace HTTP;
 
 	class Request Extends \BaseClass {
-		public $module;
-		public $view;
-		public $index;
-		public $query_vars_array = array();
-		public $client_ip;
-		public $user_agent;
-		public $timer;
-		public $url;
-		public $query_vars;
+		public $module;						// Porkchop Module
+		public $view;						// View within the module
+		public $index;						// Index within the view
+		public $query_vars_array = array();	// Query variables
+		public $client_ip;					// Client IP address
+		public $user_agent;					// User-Agent string
+		public $timer;						// Request timer
+		public $url;						// Full request URL
+		public $query_vars;					// Query variables
 		private $_protocol;
 		private $_method = 'GET';
 		private $_host;
@@ -22,33 +22,86 @@
 		private $_parameters = array();
 		private $_headers = array();
 
+		/** @constructor
+		 * Initializes the HTTP request
+		 * @param array $parameters Optional parameters to set initial values for host, method, body, and uri
+		 */
 		public function __construct($parameters = array()) {
 			$this->timer = microtime();
 			if (isset($parameters['host'])) $this->host($parameters['host']);
 			if (isset($parameters['method'])) $this->method($parameters['method']);
 			if (isset($parameters['body'])) $this->body($parameters['body']);
 			if (isset($parameters['uri'])) $this->uri($parameters['uri']);
+			$this->_headers = array(
+				"User-Agent" => $_SERVER['HTTP_USER_AGENT'] ?? 'Porkchop/1.0',
+				"Accept" => "*/*"
+			);
 		}
 
+		/** @method refererURI()
+		 * Returns the referer URI from the HTTP request headers
+		 * @return string|null The referer URI or null if not available
+		 */
 		public function refererURI() {
 			app_log("Referer: ".$_SERVER['HTTP_REFERER']);
 			if (preg_match('/^https?\:\/\/[\w\-\.]+(\/.*)/',$_SERVER['HTTP_REFERER'],$matches)) return $matches[1];
 			return null;
 		}
+
+		/** @method addHeader(string $key, string $value)
+		 * Adds a header to the request
+		 * @param string $key The header key
+		 * @param string $value The header value
+		 */
+		public function addHeader($key,$value) {
+			if (strtolower($key) == "content-type") $this->_content_type = $value;
+			$this->_headers[$key] = $value;
+		}
+
+		/** @method contentType(type = null)
+		 * Sets or gets the content type for the request
+		 * @param string $type The content type to set, or null to get the current content type
+		 * @return string The current content type
+		 */
+		public function contentType($type = null) {
+			if (isset($type)) $this->_content_type = $type;
+			return $this->_content_type;
+		}
+
+		/** @method addParam(string $key, string $value)
+		 * Adds a parameter to the request
+		 * @param string $key The parameter key
+		 * @param string $value The parameter value
+		 */
 		public function addParam($key,$value) {
 			$this->_parameters[$key] = $value;
 		}
-		
+
+		/** @method host(string $host = null)
+		 * Sets or gets the host for the request
+		 * @param string $host The host to set, or null to get the current host
+		 * @return string The current host
+		 */
 		public function host($host = null) {
 			if (isset($host)) $this->_host = $host;
 			return $this->_host;
 		}
 
+		/** @method uri(string $uri = null)
+		 * Sets or gets the URI for the request
+		 * @param string $uri The URI to set, or null to get the current URI
+		 * @return string The current URI
+		 */
 		public function uri($uri = null) {
 			if (isset($uri)) $this->_uri = $uri;
 			return $this->_uri;
 		}
 
+		/** @method url(string $url = null)
+		 * Sets or gets the full URL for the request
+		 * @param string $url The URL to set, or null to get the current URL
+		 * @return string The current URL
+		 */
 		public function url($url = null) {
 			if (isset($url)) {
 				if (preg_match('/^(https?)\:\/\/([\w\.\-]+)\:(\d+)(\/[^\?]*)\?(.*)$/',$url,$matches)) {
@@ -91,6 +144,12 @@
 			if ($this->_query_string) $url .= "?".$this->_query_string;
 			return $url;
 		}
+
+		/** @method serialize(array $parameters = array())
+		 * Serializes the request into a string format
+		 * @param array $parameters Optional parameters to set host, method, body, and uri
+		 * @return string|null The serialized request string or null on error
+		 */
 		public function serialize($parameters = array()) {
 			$this->clearError();
 
@@ -122,7 +181,7 @@
 				$this->error("Invalid HTTP method '".$this->_method."'");
 				return null;
 			}
-			else if (strlen($this->_body)) {
+			elseif (strlen($this->_body)) {
 				$this->_method = 'POST';
 				$this->_content_type = "application/x-www-form-urlencoded";
 			}
@@ -135,9 +194,13 @@
 					$this->_content_type = "application/x-www-form-urlencoded";
 				}
 			}
-			$string = $this->_method." ".$this->_uri." HTTP/1.0\r\n";
+
+			$string = $this->_method." ".$this->url()." HTTP/1.1\r\n";
 			$string .= "Host: ".$this->_host."\r\n";
-			if (isset($this->_content_type)) $string .= "Content-Type: ".$this->_content_type."\r\n";
+			foreach ($this->_headers as $header => $value) {
+				$string .= $header.": ".$value."\r\n";
+			}
+			#if (isset($this->_content_type)) $string .= "Content-Type: ".$this->_content_type."\r\n";
 			if (strlen($this->_body)) $string .= "Content-Length: ".strlen($this->_body)."\r\n";
 			$string .= "\r\n";
 			$string .= $this->_body;
@@ -145,6 +208,10 @@
 			return $string;
 		}
 
+		/** @method deconstruct()
+		 * Deconstructs the HTTP request from the server variables
+		 * Parses the URI, identifies module, view, index, and query variables
+		 */
 		public function deconstruct() {
 			# Store User Agent
 			$this->user_agent = $_SERVER['HTTP_USER_AGENT'];
@@ -279,12 +346,25 @@
 			}
 			$this->_body = file_get_contents('php://input');
 		}
-		
-		public function body() {
+
+		/** @method body(string $body = null)
+		 * Sets or gets the body of the request
+		 * @param string $body The body to set, or null to get the current body
+		 * @return string The current body
+		 */
+		public function body($content = null): string|null {
+			if (isset($content)) {
+				$this->_body = $content;
+			}
 			return $this->_body;
 		}
-		
-		public function method($method = null) {
+
+		/** @method method(string $method = null)
+		 * Sets or gets the HTTP method for the request
+		 * @param string $method The method to set, or null to get the current method
+		 * @return string The current HTTP method
+		 */
+		public function method($method = null): string|null {
 			if (isset($method)) {
 				$method = strtoupper($method);
 				if (in_array($method,array('POST','GET','HEAD','OPTIONS'))) {
@@ -298,15 +378,29 @@
 
 			return $this->_method;
 		}
+
+		/** @method parameters()
+		 * Returns all parameters from the request
+		 * @return array An associative array of parameters
+		 */
 		public function parameters() {
 			foreach ($_POST as $label => $value) $this->_parameters[$label] = $value;
 			return $this->_parameters;
 		}
 
+		/** @method parameter(string $key)
+		 * Returns a specific parameter from the request
+		 * @param string $key The key of the parameter to retrieve
+		 * @return mixed The value of the parameter or null if not found
+		 */
 		public function parameter($key) {
 			return $this->_parameters[$key];
 		}
 
+		/** @method riskLevel()
+		 * Calculates the risk level of the request based on various factors
+		 * @return int The calculated risk level
+		 */
         public function riskLevel() {
             $risk_level = 0;
             $uri = $this->_uri;

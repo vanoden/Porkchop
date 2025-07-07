@@ -1,9 +1,8 @@
 <?php
 	namespace HTTP;
 
-	class Response {
-		protected $_error;
-		protected $_code = 200;
+	class Response Extends \BaseClass {
+		protected $_code;
 		protected $_status;
 		protected $_headers = array();
 		protected $_content;
@@ -14,6 +13,10 @@
 		}
 		
 		public function parse($string) {
+			if (empty($string)) {
+				$this->error("Response is empty");
+				return false;
+			}
 			$section = 'status';
 			while(list($line,$string) = preg_split('/\r?\n/',$string,2)) {
 				if ($section == 'status') {
@@ -23,7 +26,10 @@
 						$section = 'headers';
 					}
 					else {
-						$this->_error = "Can't find status line";
+						$this->error("Can't find status line");
+						print_r("Response: ");
+						print_r($string);
+						exit;
 						return false;
 					}
 				}
@@ -68,10 +74,5 @@
 		
 		public function cookies() {
 			return $this->_cookies;
-		}
-
-		public function error($string = null) {
-			if (isset($string)) $this->_error = $string;
-			return $this->_error;
 		}
 	}
