@@ -525,6 +525,8 @@ $locations = $customer->locations();
 // get customer queued status
 $queuedCustomer = new \Register\Queue(); 
 $queuedCustomer->getByQueuedLogin($customer->id);
+if (!empty($queuedCustomer->status)) $registration_status = $queuedCustomer->status;
+else $registration_status = "COMPLETE";
 
 // get unique categories and tags for autocomplete
 $searchTagList = new \Site\SearchTagList();
