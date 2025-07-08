@@ -91,7 +91,10 @@ class BaseModel extends \BaseClass {
 		} else {
 			$caller = debug_backtrace()[1];
 			$className = get_called_class();
-			app_log("$className: No function '$name' found.  Called by " . $caller["class"] . "::" . $caller["function"] . "() Line " . $caller["line"], 'warning');
+			$callerClass = $caller["class"] ?? 'unknown';
+			$callerFunction = $caller["function"] ?? 'unknown';
+			$callerLine = $caller["line"] ?? 0;
+			app_log("$className: No function '$name' found.  Called by " . $callerClass . "::" . $callerFunction . "() Line " . $callerLine, 'warning');
 			$this->error("Invalid method '$name'"); // for ".$this->objectName());
 		}
 	}
@@ -219,19 +222,31 @@ class BaseModel extends \BaseClass {
 		if (empty($this->_tableName)) {
 			$trace = debug_backtrace()[1];
 			$this->error("No table name defined for class");
-			app_log("No table name defined for " . get_class($this) . " called from " . $trace['class'] . "::" . $trace['function'] . " in " . $trace['file'] . " line " . $trace['line'], 'error');
+			$traceClass = $trace['class'] ?? 'unknown';
+			$traceFunction = $trace['function'] ?? 'unknown';
+			$traceFile = $trace['file'] ?? 'unknown';
+			$traceLine = $trace['line'] ?? 0;
+			app_log("No table name defined for " . get_class($this) . " called from " . $traceClass . "::" . $traceFunction . " in " . $traceFile . " line " . $traceLine, 'error');
 			return false;
 		}
 		if (! preg_match('/^[a-z0-9_]+$/', $this->_tableName)) {
 			$trace = debug_backtrace()[1];
 			$this->error("Invalid table name defined for class");
-			app_log("Invalid table name defined for " . get_class($this) . " called from " . $trace['class'] . "::" . $trace['function'] . " in " . $trace['file'] . " line " . $trace['line'], 'error');
+			$traceClass = $trace['class'] ?? 'unknown';
+			$traceFunction = $trace['function'] ?? 'unknown';
+			$traceFile = $trace['file'] ?? 'unknown';
+			$traceLine = $trace['line'] ?? 0;
+			app_log("Invalid table name defined for " . get_class($this) . " called from " . $traceClass . "::" . $traceFunction . " in " . $traceFile . " line " . $traceLine, 'error');
 			return false;
 		}
 		if (! $database->has_table($this->_tableName)) {
 			$trace = debug_backtrace()[1];
 			$this->error("Table " . $this->_tableName . " does not exist");
-			app_log("Table does not exist for " . get_class($this) . " called from " . $trace['class'] . "::" . $trace['function'] . " in " . $trace['file'] . " line " . $trace['line'], 'error');
+			$traceClass = $trace['class'] ?? 'unknown';
+			$traceFunction = $trace['function'] ?? 'unknown';
+			$traceFile = $trace['file'] ?? 'unknown';
+			$traceLine = $trace['line'] ?? 0;
+			app_log("Table does not exist for " . get_class($this) . " called from " . $traceClass . "::" . $traceFunction . " in " . $traceFile . " line " . $traceLine, 'error');
 			return false;
 		}
 
@@ -293,7 +308,7 @@ class BaseModel extends \BaseClass {
 		$database = new \Database\Service();
 		if (gettype($this->_tableUKColumn) == 'NULL') {
 			$trace = debug_backtrace()[1];
-			$this->error("No surrogate key defined for " . get_class($this) . " called from " . $trace['class'] . "::" . $trace['function'] . " in " . $trace['file'] . " line " . $trace['line']);
+			$this->error("No surrogate key defined for " . get_class($this) . " called from " . ($trace['class'] ?? 'unknown') . "::" . ($trace['function'] ?? 'unknown') . " in " . ($trace['file'] ?? 'unknown') . " line " . ($trace['line'] ?? 0));
 			error_log($this->error());
 			return false;
 		}

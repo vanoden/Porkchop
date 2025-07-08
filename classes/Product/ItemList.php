@@ -178,7 +178,7 @@
 			}
 
 			// Order Clause
-			switch ($controls['sort']) {
+			switch ($controls['sort'] ?? '') {
 				case 'name':
 					$find_objects_query .= "
 						ORDER BY p.name";

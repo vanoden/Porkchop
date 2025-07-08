@@ -29,18 +29,20 @@ if ($can_proceed) {
 	// get the secret key from the database
 	$customerId = $GLOBALS['_SESSION_']->customer->id;
 	$customer = new \Register\Customer($customerId);
-	$tfa = new \Register\AuthenticationService\TwoFactorAuth(null, $customer->code, $GLOBALS['_config']->site->hostname);
-	$userStoredSecret = $customer->secret_key();
+	$userStoredSecret = $customer->otp_secret_key();
   
 	// Show QR code if no secret 2FA key is found
 	$showQRCode = false;
 	if (empty($userStoredSecret)) {
-		$secret = $tfa->getSecret();
-		$userStoredSecret = $secret;
+		// Create new TOTP instance with new secret
+		$tfa = new \Register\AuthenticationService\TwoFactorAuth(null, $customer->code, $GLOBALS['_config']->site->hostname);
+		$userStoredSecret = $tfa->getSecret();
 		$customer->update(array('secret_key' => $userStoredSecret));
 		$showQRCode = true;
 	}
 	else {
+		// Create TOTP instance with existing secret
+		$tfa = new \Register\AuthenticationService\TwoFactorAuth($userStoredSecret, $customer->code, $GLOBALS['_config']->site->hostname);
 		$showQRCode = false;
 	}
 
@@ -58,7 +60,6 @@ if ($can_proceed) {
 			$can_proceed = false;
 	    }
 		else {
-			$tfa->setSecret($userStoredSecret);
 			if ($tfa->verifyCode($userSubmittedCode)) {
 				$page->appendSuccess("Verification successful, please wait...");
 				$isVerified = true;
@@ -71,6 +72,11 @@ if ($can_proceed) {
 
 				// Audit successful OTP verification
 				$customer->auditRecord('OTP_VERIFIED', 'OTP code verified successfully');
+				
+				// Redirect to target or default page
+				$target = $GLOBALS['_SESSION_']->refer_url ?? '/_register/account';
+				header("Location: " . $target);
+				exit;
 			}
 			else {
 				$page->addError("Invalid code");
@@ -80,7 +86,7 @@ if ($can_proceed) {
   	}
 
 	// Generate QR code as data URI for img tag (always generate if needed for template)
-	$qrCodeData = $tfa->getQRCodeImage($customer->code);
+	$qrCodeData = $tfa->getQRCodeImage();
 
 	// Save the target URL in the session if a new one is provided
 	$target = $_REQUEST['target'] ?? null;

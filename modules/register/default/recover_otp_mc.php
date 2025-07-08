@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: /_register/otp_recovery_sent");
                 exit;
             }
-            elseif (empty($customer->secret_key)) {
+            elseif (empty($customer->otp_secret_key())) {
                 // User doesn't have 2FA enabled - redirect to success page
                 app_log("OTP recovery requested for customer without 2FA: " . $customer->code, 'notice', __FILE__, __LINE__);
                 header("Location: /_register/otp_recovery_sent");
