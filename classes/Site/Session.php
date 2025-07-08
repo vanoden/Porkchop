@@ -358,6 +358,9 @@ use Register\Customer;
 					// Handle OTP verification status from cache
 					if (isset($session->otpVerified)) {
 						$this->otpVerified = $session->otpVerified;
+						app_log("OTP verification status loaded from cache: " . ($this->otpVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__);
+					} else {
+						app_log("No OTP verification status found in cache", 'debug', __FILE__, __LINE__);
 					}
 					$this->cached(true);
 					return true;
@@ -423,9 +426,16 @@ use Register\Customer;
 				$session->csrfToken = $this->generateCSRFToken();
 				$this->csrfToken = $session->csrfToken;
 				
-				// Initialize OTP verification status
-				$session->otpVerified = null;
-				$this->otpVerified = null;
+				// Initialize OTP verification status based on user requirements
+				if (defined('USE_OTP') && USE_OTP && $this->customer && $this->customer->id > 0) {
+					// If user requires OTP, default to not verified
+					$session->otpVerified = false;
+					$this->otpVerified = false;
+				} else {
+					// If user doesn't require OTP, default to verified
+					$session->otpVerified = true;
+					$this->otpVerified = true;
+				}
 
 				if ($session->id) $cache->set($session,600);
 				return true;
@@ -790,12 +800,10 @@ use Register\Customer;
 		 */
 		public function authenticated(): bool {
 			if (defined('USE_OTP') && USE_OTP && isset($this->customer->id) && $this->customer->id > 0 && $this->otpVerified === false) {
-				// If OTP is required and not verified, return false
-				app_log("Customer logged in but OTP not verified, returning false",'debug',__FILE__,__LINE__);
-				// Let's just bounce them to the OTP verification page
-				header("Location: /_otp/verify?redirect=".urlencode($_SERVER['REQUEST_URI']));
+				// If OTP is required and not verified, redirect to OTP page
+				app_log("Customer logged in but OTP not verified, redirecting to OTP page",'debug',__FILE__,__LINE__);
+				header("Location: /_register/otp?target=".urlencode($_SERVER['REQUEST_URI']));
 				exit;
-				return false;
 			}
 			if (isset($this->customer->id) && $this->customer->id > 0) return true;
 			else return false;

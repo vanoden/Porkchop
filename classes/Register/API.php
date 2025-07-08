@@ -76,7 +76,7 @@
                 app_log("Assigning session ".$GLOBALS['_SESSION_']->id." to customer ".$customer->id,'debug',__FILE__,__LINE__);
                 $GLOBALS['_SESSION_']->assign($customer->id);
                 $GLOBALS['_SESSION_']->touch();
-                $GLOBALS['_SESSION_']->update(array('otp_verified' => false));
+                $GLOBALS['_SESSION_']->setOTPVerified(false);
 
                 // Then check if TOTP is required
                 if ($customer->requiresOTP()) {
@@ -1357,7 +1357,7 @@
             if ($tfa->verifyCode($_REQUEST['code'])) {
                 // Update session state if verifying for current user
                 if ($customer->id == $GLOBALS['_SESSION_']->customer->id) {
-                    $GLOBALS['_SESSION_']->update(array('otp_verified' => true));
+                    $GLOBALS['_SESSION_']->setOTPVerified(true);
                 }
                 
                 // Audit successful verification
@@ -1447,7 +1447,7 @@
 
             // Clear session OTP verification if resetting current user
             if ($customer->id == $GLOBALS['_SESSION_']->customer->id) {
-                $GLOBALS['_SESSION_']->update(array('otp_verified' => false));
+                $GLOBALS['_SESSION_']->setOTPVerified(false);
             }
 
             // Generate new backup codes

@@ -46,6 +46,8 @@
         # Cache Mechanism (memcache or xcache)
         $_config->cache = new stdClass();
         $_config->cache->mechanism = "memcached";
+        $_config->cache->hostname = "127.0.0.1";
+        $_config->cache->port = "11211";
 
         # Database
         $_config->database = new stdClass();
