@@ -29,7 +29,7 @@
 			else return false;
 		}
 
-		/**
+		/** @method update(parameters)
 		 * Update a customer record
 		 * @param array $parameters 
 		 * @return bool 
@@ -96,7 +96,7 @@
 			return $this->details();
 		}
 
-		/**
+		/** @method recordHit()
 		 * Record last hit date
 		 */
 		public function recordHit() {
@@ -116,7 +116,7 @@
 			}
 		}
 
-		/**
+		/** @method clearAuthFailures()
 		 * Clear Auth Failures
 		 */
 		public function clearAuthFailures() {
@@ -136,7 +136,7 @@
 			}
 		}
 
-		/**
+		/** @method organization(organization)
 		 * Get/Set Organization
 		 * @param \Register\Organization|Organization ID|null $organization
 		 * @return \Register\Organization|null
@@ -158,26 +158,49 @@
 			}
 			return null;
 		}
-		public function increment_auth_failures() {
 
+		/** @method increment_auth_failures()
+		 * Count auth failures
+		 */
+		public function increment_auth_failures() {
+			// Clear Errors
+			$this->clearError();
+
+			// Check if ID is set
 			if (! isset($this->id)) return false;
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$update_customer_query = "
 				UPDATE	register_users
 				SET		auth_failures = auth_failures + 1
 				WHERE	id = ?";
-			$GLOBALS['_database']->Execute($update_customer_query,array($this->id));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->error("SQL Error in Register::Customer::increment_auth_failures(): ".$GLOBALS['_database']->ErrorMsg());
+
+			// Add Parameters
+			$database->AddParam($this->id);
+
+			// Execute Query
+			$database->Execute($update_customer_query);
+
+			// Check for Errors
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 
-			# Bust Cache
+			// Bust Cache
 			$cache_key = "customer[" . $this->id . "]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 			$cache->delete();
 			return $this->details();
 		}
 
+		/** @method add_role(role_id)
+		 * Add a Role to the Customer
+		 * @param string $role_id The ID of the role to add
+		 */
 		function add_role ($role_id) {
 		
 			if ($GLOBALS['_SESSION_']->elevated()) {
@@ -221,6 +244,10 @@
 			return 1;
 		}
 
+		/** @method drop_role(role_id)
+		 * Remove a Role from the Customer
+		 * @param string $role_id The ID of the role to remove
+		 */
 		function drop_role($role_id) {
 			$drop_role_query = "
 				DELETE
@@ -243,17 +270,25 @@
 			return true;
 		}
 
+		/** @method isActive()
+		 * Check if the customer is active
+		 * @return bool True if active, otherwise false
+		 */
 		function isActive() {
 			if (in_array($this->status,array('NEW','ACTIVE'))) return true;
 			return false;
 		}
 
+		/** @method isBlocked()
+		 * Check if the customer is blocked
+		 * @return bool True if blocked, otherwise false
+		 */
 		function isBlocked() {
 			if (is_string($this->status) && $this->status == "BLOCKED") return true;
 			return false;
 		}
 
-		/**
+		/** @method authenticate(login, password)
 		 * Check login and password against configured authentication mechanism
 		 * @param string $login
 		 * @param string $password
@@ -337,7 +372,7 @@
 			}
 		}
 
-		/**
+		/** @method changePassword(password)
 		 * Change the customer's password
 		 * @param mixed $password 
 		 * @return bool 
@@ -363,14 +398,17 @@
 			}
 		}
 
-		public function validPassword($string) {
-			return true;
+		/** @method validLogin(string)
+		 * Check if the password is valid
+		 * @param string $string The password to check
+		 * @return bool True if valid, otherwise false
+		 */
+		public function validPassword($string): bool {
 			$strength = $this->password_strength($string);
-			if ($strength >= $GLOBALS['_config']->register->minimum_password_strength) return true;
-			else return false;
+			return $strength >= $GLOBALS['_config']->register->minimum_password_strength;
 		}
 
-		/**
+		/** @method password_strength(string)
 		 * How complex is the password?
 		 * @param string $string Password to check
 		 * @return int Complexity score
@@ -391,7 +429,7 @@
 			return $password_strength;
 		}
 
-		/**
+		/** @method auth_failures()
 		 * See How Many Auth Failures the account has
 		 * @return int 
 		 */
@@ -410,16 +448,25 @@
 			return $count;
 		}
 
+		/** @method resetAuthFailures()
+		 * Reset the number of authentication failures
+		 * @return bool True if successful, otherwise false
+		 */
 		public function resetAuthFailures() {
 			return $this->update(array("auth_failures" => 0));
 		}
 
-		// Personal Inventory (Online Products)
+		/** @method products(product)
+		 * Get List of Purchased Products
+		 * @param string $product Optional SKU to filter by
+		 * @return array List of purchased products
+		 */
 		public function products($product='') {
-			###############################################
-			## Get List of Purchased Products			###
-			###############################################
-			$bind_params = array();
+			// Clear Errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
 
 			// Prepare Query
 			$get_products_query = "
@@ -440,34 +487,45 @@
 				OR		pt.group_flag = 1)
 				AND		cp.void_flag = 0
 			";
-			array_push($bind_params,$this->id);
+			// Add Parameters
+			$database->AddParam($this->id);
 
 			// Conditional
 			if (isset($product) && $product) {
 				$get_products_query .= "
 				AND p.sku = ?";
-				array_push($bind_params,$product);
+				$database->AddParam($product);
 			}
 
 			// Execute Query
-			$rs = $GLOBALS['_database']->Execute($get_products_query,$bind_params);
+			$rs = $database->Execute($get_products_query);
 			if ($rs->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return 0;
 			}
 			$products = array();
-			while ($record = $rs->FetchRow()) {
-				$product = new \Product\Item($product['id']);
+			while ($results = $rs->FetchRow()) {
+				$product = new \Product\Item($results['id']);
 				array_push($products,$product);
 			}
 			return $products;
 		}
 
+		/** @method can(privilege_name)
+		 * Check if the user has a specific privilege
+		 * @param string $privilege_name The name of the privilege to check
+		 * @return bool True if user has the privilege, otherwise false
+		 */
 		public function can($privilege_name): bool {
 			if ($GLOBALS['_SESSION_']->elevated()) return true;
 			return $this->has_privilege($privilege_name);
 		}
 
+		/** @method has_role(role_name)
+		 * See If a User has been granted a Role
+		 * @param string $role_name The name of the role to check
+		 * @return bool True if user has the role, otherwise false
+		 */
 		public function has_role($role_name) {
 			$this->clearError();
 			$role = new \Register\Role();
@@ -478,7 +536,9 @@
 			return $this->has_role_id($role->id);
 		}
 
-		// See If a User has been granted a Role
+		/** @method has_role_id(role_id)
+		 * See If a User has been granted a Role
+		 */
 		public function has_role_id($role_id) {
 			$this->clearError();
 
@@ -511,8 +571,12 @@
 			}
 		}
 
+		/** @method has_privilege(privilege name)
+		 * Check if customer has specified privilege
+		 * @param string Privilege Name
+		 * @return bool True if customer has privilege, otherwise false
+		 */
 		public function has_privilege($privilege_name) {
-
 			$this->clearError();
 			$database = new \Database\Service();
 			$privilege = new \Register\Privilege();
@@ -547,46 +611,33 @@
 			else return false;
 		}
 		
-		// Get all users that have been granted a Role
-		public function have_role($id) {
-		
-			// Check Role Query
-			$check_role_query = "
-				SELECT	user_id
-				FROM	register_roles
-				WHERE	role_id = ?
-				;
-			";
-
-			$rs = $GLOBALS['_database']->Execute(
-				$check_role_query,
-				array($id)
-			);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+		/** @method notify_role_members(role_id, message)
+		 * Send notification to Members in a Role
+		 */
+		public function notify_role_members($role_id,$message) {
+			$role = new \Register\Role($role_id);
+			if (! $role->id) {
+				$this->error("Role not found");
 				return false;
 			}
-			
-			$customers = array();
-			while(list($user_id) = $rs->FetchRow()) {
-				$details = $this->details($user_id);
-				array_push($customers,$details);
-			}
-			return $customers;
-		}
-		
-		// Notify Members in a Role
-		public function notify_role_members($role_id,$message) {
-			$members = $this->have_role($role_id);
+			$members = $role->members();
 			foreach ($members as $member) {
 				$this->notify($member->id,$message);
 			}
+			return true;
 		}
 
-		// Get List of User Roles
+		/** @method roles()
+		 * Get List of User Roles
+		 */
 		public function roles() {
-		
-			// Get Roles Query
+			// Clear previous errors
+			$this->clearError();
+	
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query
 			$get_roles_query = "
 				SELECT	r.id
 				FROM	register_roles r
@@ -595,13 +646,15 @@
 				WHERE	rur.user_id = ?
 			";
 
-			$rs = $GLOBALS['_database']->Execute(
-				$get_roles_query,
-				array($this->id)
+			// Add Parameters
+			$database->AddParam($this->id);
+
+			$rs = $database->Execute(
+				$get_roles_query
 			);
-			
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 
@@ -613,34 +666,28 @@
 			
 			return $roles;
 		}
-		
-		public function role_id($name) {
-		
-			// Get Role Query
-			$get_role_query = "
-				SELECT	id
-				FROM	register_roles
-				WHERE	name = ?";
-	
-			$rs = $GLOBALS['_database']->Execute($get_role_query,array($name));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return 0;
-			}
 
-			list($id) = $rs->FetchRow();			
-			return $id;
-		}
-		
+		/** @method expire()
+		 * Expire the Customer by changing their status to EXPIRED
+		 */
 		public function expire() {
 			$this->update($this->id,array("status" => 'EXPIRED'));
 			return true;
 		}
-		
+
+		/** @method last_active()
+		 * Get the last active date of the user
+		 * @return string|null Last active date or null if no sessions found
+		 */
 		public function last_active() {
+			// Clear previous errors
+			$this->clearError();
+
+			// If no user ID, return null
 			if (! $this->id) return null;
+
+			// Initialize Session List
 			$sessionList = new \Site\SessionList();
-			app_log("Getting last active session for user ".$this->id);
 			$sessions = $sessionList->find(
 				[	"user_id"	=> $this->id,
 				],
@@ -657,7 +704,11 @@
 			else return null;
 			return $session->last_hit_date;
 		}
-		
+
+		/** @method is_super_elevated()
+		 * Check if the user has a super elevated session
+		 * @return bool True if super elevated, otherwise false
+		 */
 		public function is_super_elevated() {
 			$sessionList = new \Site\SessionList();
 			list($session) = $sessionList->find(array("user_id" => $this->id,"_sort" => 'last_hit_date',"_desc" => true,'_limit' => 1));
@@ -668,7 +719,12 @@
 			if (! $session) return false;
 			return time() < strtotime($session->super_elevation_expires);
 		}
-		
+
+		/** @method contacts()
+		 * Get a list of contacts for the customer
+		 * @param array $params Optional parameters to filter contacts
+		 * @return \Register\ContactList|null List of contacts or null on error
+		 */
 		public function contacts($params = array()) {
 			$contactList = new \Register\ContactList();
 			$parameters = array(
@@ -686,6 +742,10 @@
 			}
 		}
 
+		/** @method notify_email()
+		 * Get the primary email address for notifications
+		 * @return string|null Email address or null if not found
+		 */
 		public function notify_email() {
 			$contactList = new \Register\ContactList();
 			$parameters = array(
@@ -696,7 +756,12 @@
 			list($contact) = $contactList->find($parameters);
 			return $contact->value;
 		}
-				
+
+		/** @method locations()
+		 * Get a list of locations associated with the customer
+		 * @param array $parameters Optional parameters for location retrieval
+		 * @return \Register\Location[]|null List of locations or null on error
+		 */
 		public function locations($parameters = array()) {
 			$get_locations_query = "
 				SELECT	rol.location_id
@@ -721,6 +786,10 @@
 			return $locations;
 		}
 
+		/** @method randomPassword()
+		 * Generate a random password
+		 * @return string Random password
+		 */
 		public function randomPassword() {
 			$pass = "";
 			$chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890?|@!*&%#';
@@ -732,6 +801,10 @@
 			return $pass; //turn the array into a string
 		}
 
+		/** @method validationKey()
+		 * Get the validation key for the user
+		 * @return string|null Validation key or null on error
+		 */
 		public function validationKey() {
 			$database = new \Database\Service();
 			$get_key_query = "
@@ -749,29 +822,18 @@
 			return $key;
 		}
 
+		/** @method login()
+		 * Get the login code for the user
+		 * @return string Login code
+		 */
 		public function login() {
 			return $this->code;
 		}
 
-		public function getByLogin($login) {
-			$get_user_query = "
-				SELECT	id
-				FROM	register_users
-				WHERE	login = ?
-			";
-
-			$rs = $GLOBALS['_database']->Execute($get_user_query,array($login));
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($id) = $rs->FetchRow();
-			if ($id) {
-				$this->id = $id;
-				return $this->details();
-			} else return null;
-		}
-
+		/** @method resetKey()
+		 * Get the password reset key for the user
+		 * @return string|null Password reset key or null on error
+		 */
 		public function resetKey() {
 			$token = new \Register\PasswordToken();
 			$key = $token->getKey($this->id);
@@ -782,6 +844,11 @@
 			return $key;
 		}
 
+		/** @method acceptedTOU(tou_id)
+		 * Check if the user has accepted the Terms of Use
+		 * @param int $tou_id The ID of the Terms of Use
+		 * @return bool True if accepted, false otherwise
+		 */
 		public function acceptedTOU($tou_id) {
 			$tou = new \Site\TermsOfUse($tou_id);
 			$latest_version = $tou->latestVersion();
@@ -809,6 +876,11 @@
 			return false;
 		}
 
+		/** @method acceptTOU(version_id)
+		 * Accept the Terms of Use for the user
+		 * @param int $version_id The ID of the Terms of Use version
+		 * @return bool True if accepted, false on error
+		 */
 		public function acceptTOU($version_id) {
 			$version = new \Site\TermsOfUseVersion($version_id);
 			$version->addAction($this->id,'ACCEPTED');
@@ -820,6 +892,11 @@
 			return true;
 		}
 
+		/** @method declineTOU(version_id)
+		 * Decline the Terms of Use for the user
+		 * @param int $version_id The ID of the Terms of Use version
+		 * @return bool True if declined, false on error
+		 */
 		public function declineTOU($version_id) {
 			$version = new \Site\TermsOfUseVersion($version_id);
 			$version->addAction($this->id,'DECLINED');
@@ -831,7 +908,7 @@
 			return true;
 		}
 
-		/**
+		/** @method auditRecord(type, notes, customer_id)
 		 * Audit Record
 		 * @param string $type
 		 * @param string $notes
@@ -863,6 +940,11 @@
 			return true;
 		}
 
+		/** @method sessions(parameters)
+		 * Get a list of sessions for the customer
+		 * @param array $parameters Optional parameters to filter sessions
+		 * @return \Site\SessionList|null List of sessions or null on error
+		 */
 		public function sessions($parameters = array()) {
 			$sessionList = new \Site\SessionList();
 			$parameters['user_id'] = $this->id;
@@ -876,7 +958,7 @@
 			}
 		}
 
-		/**
+		/** @method requiresOTP()
 		 * Determines if this customer requires OTP authentication
 		 * Checks organization, roles, and user settings in order
 		 * @return bool True if OTP is required
@@ -912,7 +994,7 @@
 			return false;
 		}
 
-		/**
+		/** @method sendOTPRecovery(email_address)
 		 * Generate and send OTP recovery token
 		 * @param string $email_address Email to send recovery to
 		 * @return bool True if successful
@@ -979,7 +1061,7 @@
 			}
 		}
 
-		/**
+		/** @method generateOTPRecoveryToken()
 		 * Generate OTP recovery token
 		 * @return string|false Recovery token or false on error
 		 */
@@ -1019,7 +1101,7 @@
 			return $token;
 		}
 
-		/**
+		/** @method verifyOTPRecoveryToken(token)
 		 * Verify and consume OTP recovery token
 		 * @param string $token Recovery token
 		 * @return bool True if valid and consumed
@@ -1091,7 +1173,7 @@
 			return true;
 		}
 
-		/**
+		/** @method resetOTPSetup()
 		 * Reset user's OTP setup (clear secret key)
 		 * @return bool True if successful
 		 */
@@ -1118,7 +1200,7 @@
 			return $result;
 		}
 
-		/**
+		/**	 * Generate a new backup code for the user
 		 * Attempt to login with a backup code
 		 * @param string $code
 		 * @return int|false user_id if valid, false if not
@@ -1140,7 +1222,7 @@
 			return false;
 		}
 
-		/**
+		/** @method deleteAllBackupCodes()
 		 * Delete all backup codes for this user
 		 */
 		public function deleteAllBackupCodes() {
@@ -1149,7 +1231,7 @@
 			$db->Execute($query, array($this->id));
 		}
 
-		/**
+		/** @method generateBackupCodes(count)
 		 * Generate and save new backup codes for this user
 		 * @param int $count
 		 * @return array|false
@@ -1202,7 +1284,7 @@
 			return $codes;
 		}
 
-		/**
+		/** @method getAllBackupCodes()
 		 * Get all backup codes for this user
 		 * @return array
 		 */
