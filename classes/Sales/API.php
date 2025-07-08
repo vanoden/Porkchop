@@ -58,11 +58,11 @@
 			}
             if (isset($_REQUEST['customer_order_number'])) $parameters['customer_order_number'] = $_REQUEST['customer_order_number'];
 			if (! $order->add($parameters)) $this->error("Error adding order: ".$order->error());
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->order = $order;
 
-			print $this->formatOutput($response);
+			// Return the order
+			$response = new \APIResponse();
+			$response->AddElement("order",$order);
+			$response->print();
 		}
 
 		###################################################
@@ -94,11 +94,10 @@
 				$this->error("Error updating order: ".$order->error());
 			}
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->order = $order;
-
-			print $this->formatOutput($response);
+			// Return Response
+			$response = new \APIResponse();
+			$response->AddElement("order", $order);
+			$response->print();
 		}
 
 		###################################################
@@ -126,11 +125,10 @@
 				$this->error("Error updating order: ".$order->error());
 			}
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->order = $order;
-
-			print $this->formatOutput($response);
+			// Return Response
+			$response = new \APIResponse();
+			$response->AddElement("order", $order);
+			$response->print();
 		}
 
 		###################################################
@@ -149,11 +147,10 @@
 			}
             else $this->error("Permission denied");
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->order = $order;
-
-			print $this->formatOutput($response);
+			// Return Response
+			$response = new \APIResponse();
+			$response->AddElement("order", $order);
+			$response->print();
 		}
 	
 		###################################################
@@ -165,11 +162,10 @@
 			if (! $order->get($_REQUEST['code'])) $this->error("Error getting order: ".$order->error());
 			if (! $GLOBALS['_SESSION_']->customer->can('browse sales orders') && $GLOBALS['_SESSION_']->customer->id != $order->customer_id) $this->error("Permission denied");
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->order = $order;
-	
-			print $this->formatOutput($response);
+			// Return Response
+			$response = new \APIResponse();
+			$response->AddElement("order", $order);
+			$response->print();
 		}
 	
 		###################################################
@@ -180,7 +176,7 @@
 
 			$parameters = array();
 			if (isset($_REQUEST['status'])) $parameters['status'] = $_REQUEST['status'];
-            if (! $GLOBALS['_SESSION_']->customer->id) $this->error("Permission Denied");
+            if (! $GLOBALS['_SESSION_']->authenticated()) $this->error("Permission Denied");
 			elseif (! $GLOBALS['_SESSION_']->customer->can('browse sales orders')) {
                 $parameters['customer_id'] = $GLOBALS['_SESSION_']->customer->id;
                 $parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
@@ -204,13 +200,13 @@
             }
 
 			$orders = $orderList->find($parameters);
-			if ($orderList->error) $this->app_error("Error finding orders: ".$orderList->error());
+			if ($orderList->error()) $this->app_error("Error finding orders: ".$orderList->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->order = $orders;
+			$response = new \APIResponse();
+			$response->AddElement("success", 1);
+			$response->AddElement("orders", $orders);
 
-			print $this->formatOutput($response);
+			$response->print();
 		}
 
 		###################################################
@@ -251,11 +247,11 @@
 			if (! $order->addItem($parameters)) $this->error("Error adding order item: ".$order->error());
 			$item = new \Sales\Order\Item($order->lastItemID());
 	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->item = $item;
-	
-			print $this->formatOutput($response);
+			// Return Response
+			$response = new \APIResponse();
+			$response->AddElement("success", 1);
+			$response->AddElement("item", $item);
+			$response->print();
 		}
 	
 		###################################################
@@ -278,13 +274,13 @@
 			if ($_REQUEST['description']) $parameters['description'] = $_REQUEST['description'];
 	
 			$item->update($parameters);
-			if ($item->error) $this->app_error("Error updating item: ".$item->error(),'error');
-	
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->item = $item;
-	
-			print $this->formatOutput($response);
+			if ($item->error()) $this->app_error("Error updating item: ".$item->error(),'error');
+
+			$response = new \APIResponse();
+			$response->AddElement("success", 1);
+			$response->AddElement("item", $item);
+
+			$response->print();
 		}
 	
 		###################################################
@@ -298,13 +294,11 @@
 				error("Error finding order: ".$order->error());
 			}
 			if (! $order->dropItem($_REQUEST['line'])) {
-				if ($order->error) $this->error("Item not found");
+				if ($order->error()) $this->error("Item not found");
 			}
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->print();
 		}
 
 		###################################################
@@ -321,11 +315,10 @@
 			$items = $itemList->find($parameters);
 			if ($itemList->error()) error("Error finding items: ".$itemList->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->item = $items;
-
-			print $this->formatOutput($response);
+			// Return Response
+			$response = new \APIResponse();
+			$response->AddElement("items", $items);
+			$response->print();
 		}
 
 		###################################################
@@ -345,11 +338,9 @@
 	
 			if (! $currency->add($parameters)) $this->error("Error adding currency: ".$currency->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->currency = $currency;
-
-			print $this->formatOutput($response);
+			$response = new \APIResponse();
+			$response->AddElement("currency", $currency);
+			$response->print();
 		}
 
 		###################################################
@@ -369,11 +360,10 @@
 	
 			if (! $currency->update($parameters)) $this->error("Error updating currency: ".$currency->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->currency = $currency;
-
-			print $this->formatOutput($response);
+			// Return Response
+			$response = new \APIResponse();
+			$response->AddElement("currency", $currency);
+			$response->print();
 		}
 
 		###################################################
@@ -385,11 +375,10 @@
 			$currency = new \Sales\Currency();
 			if (! $currency->get($_REQUEST['name'])) $this->error("Currency not found");
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->currency = $currency;
-
-			print $this->formatOutput($response);
+			// Return Response
+			$response = new \APIResponse();
+			$response->AddElement("currency", $currency);
+			$response->print();
 		}
 
 		###################################################
@@ -403,11 +392,10 @@
 			$currencies = $currencyList->find($parameters);
 			if ($currencyList->error()) $this->error("Error finding currencies: ".$currencyList->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->currency = $currencies;
-
-			print $this->formatOutput($response);
+			// Return Response
+			$response = new \APIResponse();
+			$response->AddElement("currencies", $currencies);
+			$response->print();
 		}
 
 		###################################################
@@ -429,11 +417,10 @@
 			$events = $eventList->find($parameters);
 			if ($eventList->error()) $this->error("Error finding events: ".$eventList->error());
 
-			$response = new \HTTP\Response();
-			$response->success = 1;
-			$response->event = $events;
-
-			print $this->formatOutput($response);
+			// Return Response
+			$response = new \APIResponse();
+			$response->AddElement("events", $events);
+			$response->print();
 		}
 
         ###################################################
