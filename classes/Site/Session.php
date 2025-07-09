@@ -802,7 +802,7 @@ use Register\Customer;
 		 * @return bool True if authenticated, false otherwise
 		 */
 		public function authenticated(): bool {
-			if (defined('USE_OTP') && USE_OTP && isset($this->customer->id) && $this->customer->id > 0 && $this->otpVerified === false) {
+			if (defined('USE_OTP') && USE_OTP && isset($this->customer->id) && $this->customer->requires_otp() && $this->customer->id > 0 && $this->otpVerified === false) {
 				// If OTP is required and not verified, redirect to OTP page
 				app_log("Customer logged in but OTP not verified, redirecting to OTP page",'debug',__FILE__,__LINE__);
 				header("Location: /_register/otp?target=".urlencode($_SERVER['REQUEST_URI']));
