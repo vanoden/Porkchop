@@ -40,7 +40,7 @@
     <?php	if (isset($_REQUEST['organization_id'])) { ?>
     <div class="container">
 	    <span class="label">Organization</span>
-	    <a href="/_register/organization/<?=$organization->code?>" class="value"><?=$organization->name?></a>
+	    <a href="/_register/admin_organization/<?=$organization->code?>" class="value"><?=$organization->name?></a>
 	    <input type="hidden" name="organization_id" value="<?=$organization->id?>" />
     </div>
     <?php	}

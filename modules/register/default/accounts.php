@@ -63,7 +63,7 @@
     <div class="tableCell"><label for="customer" class="hiddenDesktop">Login</label><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
     <div class="tableCell"><label for="first" class="hiddenDesktop">First Name</label><?=htmlspecialchars($customer->first_name)?></div>
     <div class="tableCell"><label for="last" class="hiddenDesktop">Last Name</label><?=htmlspecialchars($customer->last_name)?></div>
-    <div class="tableCell"><label for="organization" class="hiddenDesktop">Organization</label><a href="/_register/organization?organization_id=<?=$organization_id?>"><?=$organization_name?></a></div>
+    <div class="tableCell"><label for="organization" class="hiddenDesktop">Organization</label><a href="/_register/admin_organization?organization_id=<?=$organization_id?>"><?=$organization_name?></a></div>
     <div class="tableCell"><label for="status" class="hiddenDesktop">Status</label><?=htmlspecialchars($customer->status)?></div>
     <div class="tableCell"><label for="activity" class="hiddenDesktop">Last Active</label><?=$customer->last_active()?></div>
   </div>

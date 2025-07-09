@@ -20,13 +20,13 @@
 	
 	function showHidden() {
 		var organization_id = document.forms[0].organization_id.value;
-		window.location.href = "/_register/organization?organization_id="+organization_id+"&showAllUsers=<?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? '0' : '1'?>";
+		window.location.href = "/_register/admin_organization?organization_id="+organization_id+"&showAllUsers=<?=(isset($_REQUEST['showAllUsers']) && !empty($_REQUEST['showAllUsers'])) ? '0' : '1'?>";
 		return true;
 	}
 	
 	function submitDefaultLocation(type, value) {
 		var organization_id = document.forms[0].organization_id.value;
-		window.location.href = "/_register/organization?organization_id="+organization_id+"&" + type + "=" + value;
+		window.location.href = "/_register/admin_organization?organization_id="+organization_id+"&" + type + "=" + value;
 		return true;
 	}
 	

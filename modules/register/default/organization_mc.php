@@ -222,5 +222,5 @@
 	$page->title = "Organization Details";
 	$page->addBreadcrumb("Organizations", "/_register/organizations");
 	if (isset($organization->id)) {
-		$page->addBreadcrumb($organization->name,"/_register/organization?organization_id=".$organization->id);
+		$page->addBreadcrumb($organization->name,"/_register/admin_organization?organization_id=".$organization->id);
 	}

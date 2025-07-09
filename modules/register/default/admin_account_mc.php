@@ -511,7 +511,7 @@ if (!isset($target)) $target = '';
 $page->title = "Customer Account Details";
 $page->addBreadcrumb("Organizations", "/_register/organizations");
 $organization = $customer->organization();
-if (isset($organization->id)) $page->addBreadcrumb($organization->name, "/_register/organization?id=" . $organization->id);
+if (isset($organization->id)) $page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
 if (isset($customer->id)) $page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);
 
 // terms of use user history list

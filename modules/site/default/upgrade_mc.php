@@ -420,8 +420,8 @@
 	    install_log("Add new template settings");
 	    foreach ($module_data['templates'] as $view => $template) {
 	        $page = new \Site\Page(strtolower($module_name),$view);
-	        if ($page->error) {
-	            install_fail("Error loading view '$view' for module '$module_name': ".$page->error);
+	        if ($page->error()) {
+	            install_fail("Error loading view '$view' for module '$module_name': ".$page->error());
 	        }
 	        if (! $page->id) {
 	            try {
@@ -430,7 +430,7 @@
 	                install_fail("Cannot add view: ".$e->getMessage());
 	            }
 				if (! $page->id) {
-					install_log("Cannot find view '$view' for module '$module_name': ".$page->error,"warn");
+					install_log("Cannot find view '$view' for module '$module_name': ".$page->error(),"warn");
 					continue;
 				};
 			}
@@ -438,8 +438,8 @@
 			if ($page->metadata->template != $template) {
 				install_log("Add template '$template' to $module_name::$view");
 				$page->setMetadata("template",$template);
-				if ($page->error) {
-					install_fail("Could not add metadata to page: ".$page->error);
+				if ($page->error()) {
+					install_fail("Could not add metadata to page: ".$page->error());
 				}
 			}
 			else {
@@ -447,7 +447,7 @@
 			}
 		}
 	}
-	
+
 	foreach ($menus as $code => $menu) {
 		$nav_menu = new \Site\Navigation\Menu();
 		if ($nav_menu->get($code)) {
