@@ -25,7 +25,7 @@
 				$_REQUEST['index'] = null;
 			}
 			elseif ($editPage->getPage($_REQUEST['module'],$_REQUEST['view'],$index)) {
-				if ($_REQUEST['key'] == "template" && !$page->validTemplate($_REQUEST['value'])) {
+				if ($_REQUEST['key'] == "template" && !$page->validTemplate($_REQUEST['value']) && $_REQUEST['todo'] != 'drop') {
 					$page->addError("Invalid template name");
 					return;
 				}
