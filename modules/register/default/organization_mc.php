@@ -6,30 +6,9 @@
 	### A. Caravello 11/12/2002						###
 	###################################################
 	$page = new \Site\Page();
-	$page->requirePrivilege('manage customers');
-	
-	if (!empty($_REQUEST['id']) && empty($_REQUEST['organization_id'])) $_REQUEST['organization_id'] = $_REQUEST['id'];
+	$page->requireOrganization();
 
-	# Security - Only Register Module Operators or Managers can see other customers
-	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
-		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
-			$organization = new \Register\Organization($_REQUEST['organization_id']);
-			if ($organization->error()) $page->addError("Unable to load organization: ".$organization->error());
-		}
-		elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
-			$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
-			$organization = new \Register\Organization();
-			if ($organization->validCode($code)) {
-				$organization->get($code);
-				if (! $organization->id) $page->addError("Organization not found");
-			}
-			else {
-				$page->addError("Invalid organization code");
-			}
-		}
-		else $organization = new \Register\Organization();
-	}
-	else $organization = $GLOBALS['_SESSION_']->customer->organization();
+	$organization = $GLOBALS['_SESSION_']->customer()->organization();
 
     // handle form submit
 	if (!empty($_REQUEST['method'])) {
@@ -38,130 +17,27 @@
 	    }
 		else {
             $page->appendSuccess($_REQUEST['method']);
-		    if (! $_REQUEST['name']) {
-			    $page->addError("Name required");
-		    }
-			elseif (!$organization->validName($_REQUEST['name'])) {
-				$page->addError("Invalid name");
-			}
-			elseif (!$organization->validStatus($_REQUEST['status'])) {
-			    $page->addError("Invalid status");
-		    }
-			elseif (!empty($_REQUEST['code']) && !$organization->validCode($_REQUEST['code'])) {
-			    $page->addError("Invalid code");
+		    if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
+		    $parameters = array(
+			    "password_expiration_days"	=> $_REQUEST['password_expiration_days'],
+				"website_url"				=> $_REQUEST['website_url'],
+				"time_based_password"		=> $_REQUEST['time_based_password'],
+		    );
+		    if (! $_REQUEST['time_based_password']) $parameters['time_based_password'] = 0;
+		    app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
+				    
+		    // Update Existing Organization
+		    $organization->update($parameters);
+
+		    if ($organization->error()) {
+			    $page->addError("Error updating organization");
 		    }
 			else {
-			    if (empty($_REQUEST['code'])) $_REQUEST['code'] = null;
-			    if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
-			    $parameters = array(
-				    "name"					    => $_REQUEST['name'],
-				    "code"					    => $_REQUEST['code'],
-				    "status"				    => $_REQUEST['status'],
-				    'is_reseller'			    => $_REQUEST['is_reseller'],
-				    "assigned_reseller_id"	    => $_REQUEST['assigned_reseller_id'],
-				    "notes"					    => noXSS(trim($_REQUEST['notes'])),
-				    "password_expiration_days"	=> $_REQUEST['password_expiration_days'],
-					"website_url"				=> $_REQUEST['website_url'],
-					"time_based_password"		=> $_REQUEST['time_based_password'],
-			    );
-			    if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
-			    if (! $_REQUEST['time_based_password']) $parameters['time_based_password'] = 0;
-			    if ($organization->id) {
-				    app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
-				    //app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);
-				    
-				    // Update Existing Organization
-				    $organization->update($parameters);
-
-				    if ($organization->error()) {
-					    $page->addError("Error updating organization");
-				    }
-					else {
-					    $page->appendSuccess("Organization Updated Successfully");
-				    }
-				    
-				    if ($_REQUEST['new_login']) {
-					    $present_customer = new \Register\Customer();
-
-					    # Make Sure Login is unique
-					    $present_customer->get($_REQUEST['new_login']);
-					    if ($present_customer->id) {
-						    $page->addError("Login already exists");
-					    }
-						elseif(!$present_customer->validLogin($_REQUEST['new_login'])) {
-							$page->addError("Invalid login");
-						}
-					    else {
-							$customer = new \Register\Customer();
-							$customer->add(
-							    array(
-								    "code"			=> $_REQUEST['new_login'],
-								    "first_name"	=> noXSS(trim($_REQUEST['new_first_name'])),
-								    "last_name"		=> noXSS(trim($_REQUEST['new_last_name'])),
-								    "organization_id"	=> $organization->id,
-								    "password"			=> uniqid()
-							    )
-						    );
-						    if ($customer->error()) {
-							    $page->addError("Error adding customer to organization: ".$customer->error());
-						    }
-						    else {
-							    $page->appendSuccess("Customer added to organization");
-						    }
-					    }
-				    }
-			    }
-				else {
-				    if (empty($parameters['code'])) $parameters['code'] = uniqid();
-				    app_log("Adding organization '".$parameters['name']."'");
-				    # See if code used
-				    $present_org = new \Register\Organization();
-					if (!$present_org->validCode($parameters['code'])) {
-						$page->addError("Invalid organization code");
-					}
-				    elseif ($present_org->get($parameters['code'])) {
-						$page->addError("Organization exists with code '".$parameters['code']."'");
-					}
-					else {
-						# Add Existing Organization
-						$organization = new \Register\Organization();
-						$organization->add($parameters);
-						if ($organization->error()) {
-							$page->addError("Error updating organization: ".$organization->error());
-						}
-						else {
-							$page->appendSuccess("Organization ".$organization->id." Created Successfully");
-						}
-					}
-			    }
+			    $page->appendSuccess("Organization Updated Successfully");
 		    }
 	    }		
 	}
 	
-	// add tag to organization
-	if (!empty($_REQUEST['addTag']) && empty($_REQUEST['removeTag'])) {
-	    $registerTag = new \Register\Tag();
-	    if (!empty($_REQUEST['newTag']) && $registerTag->validName($_REQUEST['newTag'])) {
-	        $registerTag->add(array('type'=>'ORGANIZATION','register_id'=>$_REQUEST['organization_id'],'name'=>$_REQUEST['newTag']));
-			if ($registerTag->error()) {
-				$page->addError("Error adding organization tag: ".$registerTag->error());
-			}
-			else {
-				$page->appendSuccess("Organization Tag added Successfully");
-			}
-	    }
-		else {
-    	    $page->addError("Value for Organization Tag is required");
-	    }
-	}
-	
-	// remove tag from organization
-	if (!empty($_REQUEST['removeTagId'])) {
-        $registerTagList = new \Register\TagList();
-        $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id, "id"=> $_REQUEST['removeTagId']));
-	    foreach ($organizationTags as $organizationTag) $organizationTag->delete();
-	}
-
 	if ($organization->id) {
 		$user = new \Register\Person();
 		$status = array();

@@ -51,7 +51,7 @@
 		foreach ($organizations as $organization) {
 	  ?>
 	<div class="tableRow">
-		<div class="tableCell"><a href="<?=PATH."/_register/admin_organization?organization_id=".$organization->id?>"><?=$organization->code?></a></div>
+		<div class="tableCell"><a href="<?=PATH."/_register/organization?organization_id=".$organization->id?>"><?=$organization->code?></a></div>
 		<div class="tableCell"><?=$organization->name?></div>
 		<div class="tableCell"><?=$organization->status?></div>
 		<div class="tableCell"><?=$organization->activeHumans()?></div>
@@ -75,6 +75,6 @@
 </div>
 </form>
 
-<form action="<?=PATH?>/_register/admin_organization" method="get">
+<form action="<?=PATH?>/_register/organization" method="get">
 	<div class="button-bar"><span style="text-align: center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span></div>
 </form>
