@@ -364,15 +364,18 @@
 					}
 				}
 				// Enforce Parameter Type Requirements
-				if (!empty($value) && (isset($options['content-type']) || isset($options['content_type']))) {
+				if (!empty($value) && (!empty($options['content-type']) || !empty($options['content_type']))) {
 					// Because I was stupid and used content-type instead of content_type at first
-					if (isset($options['content-type']) && !isset($options['content_type'])) $options['content_type'] = $options['content-type'];
+					if (!empty($options['content-type']) && !empty($options['content_type'])) $options['content_type'] = $options['content-type'];
 					if (in_array($options['content_type'],['int','integer','float']) && ! is_numeric($value)) {
 						$this->invalidRequest("Invalid $param value");
 					}
 					elseif (in_array($options['content_type'],['bool','boolean'])) {
 						if ($_REQUEST[$param] == 1) $_REQUEST[$param] = 'true';
 						elseif ($_REQUEST[$param] == 0) $_REQUEST[$param] = 'false';
+						elseif (isset($_REQUEST[$param]) && empty($_REQUEST[$param])) {
+							$_REQUEST[$param] = 'false';
+						}
 						if ($_REQUEST[$param] != 'true' && $_REQUEST[$param] != 'false') {
 							$this->invalidRequest("Invalid $param value");
 						}
@@ -686,6 +689,12 @@
 					// Textarea Input
 					if ($parameter->type == "textarea") {
 						$form .= $t.$t.$t.$t.'<textarea class="value input apiInput apiTextArea" name="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">'.$default.'</textarea>'.$cr;
+					}
+					elseif ($parameter->type == "checkbox") {
+						// Checkbox Input - DOESN'T WORK YET
+						$form .= $t.$t.$t.$t.'<input type="checkbox" id="'.$name.'" name="'.$name.'" class="value input apiInput'.$required_class.'" value="1" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()"';
+						if ($default) $form .= ' checked="checked"';
+						$form .= ' />'.$cr;
 					}
 					// Select Input
 					elseif (count($parameter->options)) {
