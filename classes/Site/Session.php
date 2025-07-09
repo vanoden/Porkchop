@@ -514,6 +514,9 @@ use Register\Customer;
 				return false;
 			}
 
+			// Clear Previous Bind Parameters
+			$database->resetParams();
+
 			// Prepare Query to Update Session with Customer Information
 			$update_session_query = "
 				UPDATE  session_sessions
