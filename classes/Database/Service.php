@@ -74,6 +74,14 @@
 			else array_push($this->_params,$values);
 		}
 
+		/** @method resetParams()
+		 * Reset the Bind Parameters
+		 * @return void
+		 */
+		public function resetParams() {
+			$this->_params = array();
+		}
+
 		/**
 		 * Get the Bind Parameters
 		 * @return array
