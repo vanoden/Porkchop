@@ -358,9 +358,9 @@ use Register\Customer;
 					// Handle OTP verification status from cache
 					if (isset($session->otpVerified)) {
 						$this->otpVerified = $session->otpVerified;
-						app_log("OTP verification status loaded from cache: " . ($this->otpVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__);
+						app_log("OTP verification status loaded from cache: " . ($this->otpVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 					} else {
-						app_log("No OTP verification status found in cache", 'debug', __FILE__, __LINE__);
+						app_log("No OTP verification status found in cache", 'debug', __FILE__, __LINE__, 'otplogs');
 					}
 					$this->cached(true);
 					return true;
@@ -802,14 +802,31 @@ use Register\Customer;
 		 * @return bool True if authenticated, false otherwise
 		 */
 		public function authenticated(): bool {
-			if (defined('USE_OTP') && USE_OTP && isset($this->customer->id) && $this->customer->requires_otp() && $this->customer->id > 0 && $this->otpVerified === false) {
+			app_log("=== AUTHENTICATED() METHOD CALL ===", 'debug', __FILE__, __LINE__, 'otplogs');
+			app_log("USE_OTP defined: " . (defined('USE_OTP') ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+			app_log("Customer ID: " . ($this->customer->id ?? 'null'), 'debug', __FILE__, __LINE__, 'otplogs');
+			app_log("Customer requires OTP: " . ($this->customer->requiresOTP() ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+			app_log("OTP verified status: " . ($this->otpVerified === false ? 'false' : ($this->otpVerified === true ? 'true' : 'null')), 'debug', __FILE__, __LINE__, 'otplogs');
+			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'debug', __FILE__, __LINE__, 'otplogs');
+			
+			if (defined('USE_OTP') && USE_OTP && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->otpVerified === false) {
 				// If OTP is required and not verified, redirect to OTP page
-				app_log("Customer logged in but OTP not verified, redirecting to OTP page",'debug',__FILE__,__LINE__);
-				header("Location: /_register/otp?target=".urlencode($_SERVER['REQUEST_URI']));
-				exit;
+				// But don't redirect if we're already on the OTP page to prevent loops
+				if (!preg_match('/\/_register\/otp/', $_SERVER['REQUEST_URI'])) {
+					app_log("Customer logged in but OTP not verified, redirecting to OTP page",'debug',__FILE__,__LINE__, 'otplogs');
+					header("Location: /_register/otp?target=".urlencode($_SERVER['REQUEST_URI']));
+					exit;
+				} else {
+					app_log("Already on OTP page, not redirecting to prevent loop",'debug',__FILE__,__LINE__, 'otplogs');
+				}
 			}
-			if (isset($this->customer->id) && $this->customer->id > 0) return true;
-			else return false;
+			if (isset($this->customer->id) && $this->customer->id > 0) {
+				app_log("Authentication successful", 'debug', __FILE__, __LINE__, 'otplogs');
+				return true;
+			} else {
+				app_log("Authentication failed - no customer ID", 'debug', __FILE__, __LINE__, 'otplogs');
+				return false;
+			}
 		}
 
 		/** @method isUser(user_id)
@@ -938,10 +955,30 @@ use Register\Customer;
 			if ($session) {
 				$session->otpVerified = $verified;
 				$cache->set($session, 600);
+				app_log("OTP verification status updated in cache: " . ($verified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+				return true;
+			} else {
+				// If no session in cache, create a new session object with current data
+				$session = new \stdClass();
+				$session->id = $this->id;
+				$session->code = $this->code;
+				$session->company_id = $this->company ? $this->company->id : 0;
+				$session->customer_id = $this->customer ? $this->customer->id : 0;
+				$session->timezone = $this->timezone;
+				$session->browser = $this->browser;
+				$session->first_hit_date = $this->first_hit_date;
+				$session->last_hit_date = $this->last_hit_date;
+				$session->super_elevation_expires = $this->super_elevation_expires;
+				$session->refer_url = $this->refer_url;
+				$session->oauth2_state = $this->oauth2_state;
+				$session->isMobile = $this->isMobile;
+				$session->csrfToken = $this->csrfToken;
+				$session->otpVerified = $verified;
+				
+				$cache->set($session, 600);
+				app_log("Created new session object in cache with OTP verification status: " . ($verified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 				return true;
 			}
-		
-			return false;
 		}
 
 		/**
