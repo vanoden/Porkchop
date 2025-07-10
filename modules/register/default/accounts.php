@@ -26,7 +26,7 @@
 
 <form id="custSearch" method="get">
     <div id="search_container">
-	    <input type="text" id="searchAccountInput" name="search" placeholder="account name" value="<?=$_REQUEST['search']?>"/>
+	    <input type="text" id="searchAccountInput" name="search" placeholder="account name" value="<?=isset($_REQUEST['search']) ? htmlspecialchars($_REQUEST['search']) : ''?>"/>
 	    <div><input type="checkbox" name="hidden" value="1" <?php if (isset($_REQUEST['hidden'])) print "checked"; ?> /><label>Hidden</label></div>
 	    <div><input type="checkbox" name="expired" value="1" <?php if (isset($_REQUEST['expired'])) print "checked"; ?> /><label>Expired</label></div>
 	    <div><input type="checkbox" name="blocked" value="1" <?php if (isset($_REQUEST['blocked'])) print "checked"; ?> /><label>Blocked</label></div>

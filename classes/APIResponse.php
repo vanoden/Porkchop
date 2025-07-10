@@ -49,7 +49,7 @@
 
 			$data = new \stdClass();
 
-			if ($this->_showDetails || (isset($_REQUEST['_showdetails']) && ($_REQUEST['_showdetails'] == 'true') || $_REQUEST['_showdetails'] == '1')) {
+			if ($this->_showDetails || (isset($_REQUEST['_showdetails']) && ($_REQUEST['_showdetails'] == 'true' || $_REQUEST['_showdetails'] == '1'))) {
 				$data->request_details = new \stdClass();
 				$data->request_details->api = $this->_api;
 				$data->request_details->method = $this->_method;

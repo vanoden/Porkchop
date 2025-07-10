@@ -407,21 +407,31 @@ class Person Extends \BaseModel {
     public function phone() {
         if (!$this->id) return new \Register\Contact();
         $contactlist = new ContactList();
-        list($phone) = $contactlist->find(array(
+        $found = $contactlist->find(array(
             'person_id' => $this->id,
             'type' => 'phone'
         ));
-        return $phone;
+        if (!empty($found)) {
+            list($phone) = $found;
+            return $phone;
+        } else {
+            return null;
+        }
     }
     
     public function email() {
         if (!$this->id) return new \Register\Contact();
         $contactlist = new ContactList();
-        list($email) = $contactlist->find(array(
+        $found = $contactlist->find(array(
             'person_id' => $this->id,
             'type' => 'email'
         ));
-        return $email;
+        if (!empty($found)) {
+            list($email) = $found;
+            return $email;
+        } else {
+            return null;
+        }
     }
     
     public function notify($message) {

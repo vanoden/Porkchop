@@ -480,7 +480,7 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
             }
 
 		    // Make Sure Authentication Requirements are Met
-		    if (($this->auth_required) and (! $GLOBALS ["_SESSION_"]->customer->id)) {
+		    if (($this->auth_required) and (! $GLOBALS ["_SESSION_"]->authenticated())) {
 			    if (($this->module != "register") or (! in_array ( $this->view, array ('login', 'forgot_password', 'register', 'email_verify', 'resend_verify', 'invoice_login', 'thank_you' ) ))) {
 				    // Clean Query Vars for this
 				    $auth_query_vars = preg_replace ( "/\/$/", "", $GLOBALS['_REQUEST_']->query_vars );

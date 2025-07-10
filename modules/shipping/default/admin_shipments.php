@@ -8,9 +8,9 @@
 <script src="/js/sortHelper.js"></script>
 
 <form id="shippingListForm" name="shippingListForm">
-<input type="hidden" name="filtered" value="<?=$_REQUEST['filtered']?>" />
-<input id="sort_field" type="hidden" name="sort_field" value="<?=$_REQUEST['sort_field']?>" />
-<input id="sort_direction" type="hidden" name="sort_direction" value="<?=($_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" /> 
+<input type="hidden" name="filtered" value="<?=isset($_REQUEST['filtered']) ? htmlspecialchars($_REQUEST['filtered']) : ''?>" />
+<input id="sort_field" type="hidden" name="sort_field" value="<?=isset($_REQUEST['sort_field']) ? htmlspecialchars($_REQUEST['sort_field']) : ''?>" />
+<input id="sort_direction" type="hidden" name="sort_direction" value="<?=(isset($_REQUEST['sort_direction']) && $_REQUEST['sort_direction'] == 'desc') ? 'asc': 'desc';?>" /> 
 <div class="table">
 	<div class="tableRowHeader">
 		<div id="document_number-sortable-column" class="tableCell sortableHeader" onclick="document.getElementById('sort_field').value = 'document_number'; updateReport()">Document</div>

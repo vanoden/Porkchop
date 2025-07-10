@@ -5,7 +5,8 @@
 
 		public $type;
         public $product_id;
-		public $name;		
+		public $name;
+		private $_database;		
 
 		public function __construct($id = 0) {
 			$this->_database = new \Database\Service();

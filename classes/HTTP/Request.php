@@ -321,7 +321,7 @@
 			app_log("Request: ".$this->module."::".$this->view."::".$this->index,'debug',__FILE__,__LINE__);
 
 			# Parse Remainder of Query String into Array
-			$parsed_vars = preg_split("@/@",$this->query_vars);
+			$parsed_vars = preg_split("@/@",$this->query_vars ?? '');
 			$qv_counter = 0;
 			foreach ($parsed_vars as $element) {
 				if (preg_match('/(.*)\?([\w\.\_\-]+\=.*)/',$element,$matches)) {

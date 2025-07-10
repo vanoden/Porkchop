@@ -29,7 +29,13 @@
 	$parameters = array();
 
 	// Load Each of the necessary objects
-	$form = array();
+	$form = array(
+		'organization_id' => 0,
+		'customer_id' => 0,
+		'shipping_location_id' => 0,
+		'billing_location_id' => 0,
+		'shipping_vendor_id' => 0
+	);
 	$organization_id = $_REQUEST['organization_id'] ?? null;
 	if ($request->validInteger($organization_id)) {
 		$organization = new \Register\Organization($organization_id);

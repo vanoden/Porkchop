@@ -321,14 +321,17 @@
 
 			$people = array();
 			while (list($id) = $rs->FetchRow()) {
+				// Always create customer object if we need it for role checking or array building
 				if (isset($parameters['role']) || ! array_key_exists('ids',$controls) || ! $controls['ids']) {
 					$customer = new Customer($id);
 				}
-				if (isset($parameters['role']) && ! $customer->has_role($parameters['role'])) continue;
+				
+				// Check role if required
+				if (isset($parameters['role']) && isset($customer) && ! $customer->has_role($parameters['role'])) continue;
 
 				// Don't build array if count is requested
 				if (array_key_exists('count', $controls) && isset($controls['count']) && !empty($controls['count'])) {}
-				else array_push($people,$customer);
+				elseif (isset($customer)) array_push($people,$customer);
 
 				$this->incrementCount();
 			}

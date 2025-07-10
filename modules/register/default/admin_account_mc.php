@@ -348,12 +348,12 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 if (isset($_REQUEST['customer_id'])) $customer = new \Register\Customer($_REQUEST['customer_id']);
 
 $image = new \Media\Image();
-if ($_REQUEST['new_image_code']) {
+if (isset($_REQUEST['new_image_code']) && $_REQUEST['new_image_code']) {
 	$image->get($_REQUEST['new_image_code']);
 	$customer->addImage($image->id, 'Register\Customer');
 }
 
-if ($_REQUEST['deleteImage']) {
+if (isset($_REQUEST['deleteImage']) && $_REQUEST['deleteImage']) {
 	$image->get($_REQUEST['deleteImage']);
 	$customer->dropImage($image->id, 'Register\Customer');
 }

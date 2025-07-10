@@ -195,6 +195,10 @@
 				return false;
 			}
 			$object = $rs->FetchNextObject(false);
+			if (! $object) {
+				$this->error("Package not found");
+				return false;
+			}
 			$this->code = $object->code;
 			$this->name = $object->name;
 			$this->license = $object->license;

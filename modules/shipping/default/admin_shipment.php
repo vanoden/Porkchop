@@ -47,7 +47,17 @@
             <?php if (!empty($shipment->date_shipped)) { ?>
                     <div class="tableCell"><?=$shipment->date_shipped?></div>
             <?php } ?>
-            <div class="tableCell"><?=$shippingVendor->name?></div>	  
+            <div class="tableCell">
+                <?php
+                if (is_object($shippingVendor) && isset($shippingVendor->name)) {
+                    echo $shippingVendor->name;
+                } elseif (is_string($shippingVendor)) {
+                    echo htmlspecialchars($shippingVendor);
+                } else {
+                    echo '[empty]';
+                }
+                ?>
+            </div>	  
         </div>
     </div>
 

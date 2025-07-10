@@ -217,7 +217,7 @@ class File extends \BaseModel {
 			$this->size = $object->size;
 			$this->user_id = $object->user_id;
 			$this->date_created = $object->date_created;
-			$this->timestamp = strtotime($this->timestamp);
+			$this->timestamp = $this->timestamp ? strtotime($this->timestamp) : null;
 			$this->_repository_id = $object->repository_id;
 			$this->access_privilege_json = $object->access_privileges;
 		}

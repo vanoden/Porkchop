@@ -232,11 +232,11 @@ class BaseClass {
 		// Apply validation based on type
 		switch ($type) {
 			case 'text':
-				return ctype_print($value) ? $value : '';
+				return ($value !== null && ctype_print($value)) ? $value : '';
 			case 'alpha':
-				return ctype_alpha($value) ? $value : '';
+				return ($value !== null && ctype_alpha($value)) ? $value : '';
 			case 'alphanumeric':
-				return ctype_alnum($value) ? $value : '';
+				return ($value !== null && ctype_alnum($value)) ? $value : '';
 			case 'integer':
 				return filter_var($value, FILTER_SANITIZE_NUMBER_INT);
 			case 'decimal':
@@ -405,31 +405,31 @@ class BaseClass {
 	/**
 	 * Validate a text string using ctype_print
 	 * 
-	 * @param string $string The string to validate
+	 * @param string|null $string The string to validate
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validText($string): bool {
-		return ctype_print($string);
+		return $string !== null && ctype_print($string);
 	}
 
 	/**
 	 * Validate an alphabetic string using ctype_alpha
 	 * 
-	 * @param string $string The string to validate
+	 * @param string|null $string The string to validate
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validAlpha($string): bool {
-		return ctype_alpha($string);
+		return $string !== null && ctype_alpha($string);
 	}
 
 	/**
 	 * Validate an alphanumeric string using ctype_alnum
 	 * 
-	 * @param string $string The string to validate
+	 * @param string|null $string The string to validate
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validAlphanumeric($string): bool {
-		return ctype_alnum($string);
+		return $string !== null && ctype_alnum($string);
 	}
 
 	/**

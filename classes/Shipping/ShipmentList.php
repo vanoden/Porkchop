@@ -18,31 +18,31 @@
 			// Load the Model Class for Field Validations
 			$validationClass = new \Shipping\Shipment();
 
-			if (is_numeric($parameters['document_id'])) {
+			if (isset($parameters['document_id']) && is_numeric($parameters['document_id'])) {
 				$find_objects_query .= "
 				AND		document_id = ?";
 				array_push($bind_params,$parameters['document_id']);
 			}
 
-			if (is_numeric($parameters['rec_contact_id'])) {
+			if (isset($parameters['rec_contact_id']) && is_numeric($parameters['rec_contact_id'])) {
 				$find_objects_query .= "
 				AND		rec_contact_id = ?";
 				array_push($bind_params,$parameters['rec_contact_id']);
 			}
 
-			if (is_numeric($parameters['send_contact_id'])) {
+			if (isset($parameters['send_contact_id']) && is_numeric($parameters['send_contact_id'])) {
 				$find_objects_query .= "
 				AND		send_contact_id = ?";
 				array_push($bind_params,$parameters['send_contact_id']);
 			}
 
-            if (is_numeric($parameters['rec_location_id'])) {
+            if (isset($parameters['rec_location_id']) && is_numeric($parameters['rec_location_id'])) {
                 $find_objects_query .= "
                 AND     rec_location_id = ?";
                 array_push($bind_params,$parameters['rec_location_id']);
             }
 
-            if (is_numeric($parameters['send_location_id'])) {
+            if (isset($parameters['send_location_id']) && is_numeric($parameters['send_location_id'])) {
                 $find_objects_query .= "
                 AND     send_location_id = ?";
                 array_push($bind_params,$parameters['send_location_id']);
@@ -82,7 +82,7 @@
 			
 			$shipments = array();
 			while (list($id) = $rs->FetchRow()) {
-				if (! $controls['count']) {
+				if (! isset($controls['count']) || ! $controls['count']) {
 					$shipment = new \Shipping\Shipment($id);
 					array_push($shipments,$shipment);
 				}

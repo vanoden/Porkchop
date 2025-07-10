@@ -12,6 +12,7 @@
 		public $required_role_id;
 		public $external = false;
 		public $ssl = false;
+		public $item; // Array of child navigation items
 
 		public function __construct($id = null) {
 			$this->_tableName = 'navigation_menu_items';

@@ -402,10 +402,10 @@ class BaseListClass extends \BaseClass {
 		// Clear any previous errors
 		$this->clearError();
 
-		if (!$controls['sort']) {
+		if (!isset($controls['sort']) || !$controls['sort']) {
 			$controls['sort'] = $this->_tableDefaultSortBy;
 		}
-		if (!$controls['order']) {
+		if (!isset($controls['order']) || !$controls['order']) {
 			$controls['order'] = 'asc';
 		}
 		$controls['limit'] = 1;
@@ -422,10 +422,10 @@ class BaseListClass extends \BaseClass {
 		// Clear any previous errors
 		$this->clearError();
 
-		if (!$controls['sort']) {
+		if (!isset($controls['sort']) || !$controls['sort']) {
 			$controls['sort'] = $this->_tableDefaultSortBy;
 		}
-		if (!$controls['order']) {
+		if (!isset($controls['order']) || !$controls['order']) {
 			$controls['order'] = 'desc';
 		}
 		$controls['limit'] = 1;

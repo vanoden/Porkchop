@@ -228,10 +228,10 @@ class Item extends \BaseModel {
 			$customer_id = $GLOBALS['_SESSION_']->customer->id;
 			$organization_id = $GLOBALS['_SESSION_']->customer->organization()->id;
 		}
-		if (! preg_match('/^\d+$/', $customer_id)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
-		if (! preg_match('/^\d+$/', $organization_id)) $organization_id = $GLOBALS['_SESSION_']->customer->organization()->id;
-		if (! preg_match('/^\d+$/', $customer_id)) $customer_id = 0;
-		if (! preg_match('/^\d+$/', $organization_id)) $organization_id = 0;
+		if ($customer_id === null || ! preg_match('/^\d+$/', $customer_id)) $customer_id = $GLOBALS['_SESSION_']->customer->id;
+		if ($organization_id === null || ! preg_match('/^\d+$/', $organization_id)) $organization_id = $GLOBALS['_SESSION_']->customer->organization()->id;
+		if ($customer_id === null || ! preg_match('/^\d+$/', $customer_id)) $customer_id = 0;
+		if ($organization_id === null || ! preg_match('/^\d+$/', $organization_id)) $organization_id = 0;
 
 		app_log("Checking privileges for item " . $media_id . ", customer " . $customer_id . ", organization " . $organization_id, 'debug', __FILE__, __LINE__);
 

@@ -169,6 +169,9 @@ if (!empty($_REQUEST['addTag']) && empty($_REQUEST['removeTag'])) {
 if (!empty($_REQUEST['removeTagId'])) {
 	$productTagList = new \Product\TagList();
 	$productTags = $productTagList->find(array("product_id" => $item->id, "id" => $_REQUEST['removeTagId']));
+	if ($productTagList->error() || !is_array($productTags)) {
+		$productTags = array();
+	}
 	foreach ($productTags as $productTag) {
 		$productTag->delete();
 		$page->appendSuccess("Product Tag removed Successfully");
@@ -178,6 +181,9 @@ if (!empty($_REQUEST['removeTagId'])) {
 // get tags for product
 $productTagList = new \Product\TagList();
 $productTags = $productTagList->find(array("product_id" => $item->id));
+if ($productTagList->error() || !is_array($productTags)) {
+	$productTags = array();
+}
 
 // add tag to product
 if (!empty($_REQUEST['newSearchTag']) && empty($_REQUEST['removeSearchTag'])) {
@@ -231,6 +237,9 @@ $searchTagXref = new \Site\SearchTagXrefList();
 $searchTagXrefs = $searchTagXref->find(array("object_id" => $item->id, "class" => "Product::Item"));
 
 $productSearchTags = array();
+if ($searchTagXref->error() || !is_array($searchTagXrefs)) {
+	$searchTagXrefs = array();
+}
 foreach ($searchTagXrefs as $searchTagXrefItem) {
 	$searchTag = new \Site\SearchTag();
 	$searchTag->load($searchTagXrefItem->tag_id);
@@ -244,14 +253,37 @@ if ($item->error()) $page->addError("Error loading item '" . $_REQUEST['code'] .
 // Get Manuals
 $documentlist = new \Media\DocumentList();
 $manuals = $documentlist->find();
+if ($documentlist->error() || !is_array($manuals)) {
+	$manuals = array();
+}
+
 $imagelist = new \Media\ImageList();
 $tables = $imagelist->find();
+if ($imagelist->error() || !is_array($tables)) {
+	$tables = array();
+}
+
 $dashboardlist = new \Monitor\DashboardList();
 $dashboards = $dashboardlist->find();
+if ($dashboardlist->error() || !is_array($dashboards)) {
+	$dashboards = array();
+}
+
 $prices = $item->prices();
+if (!is_array($prices)) {
+	$prices = array();
+}
+
 $priceAudit = new \Product\PriceAuditList();
 $auditedPrices = $priceAudit->find(array('product_id' => $item->id));
+if ($priceAudit->error() || !is_array($auditedPrices)) {
+	$auditedPrices = array();
+}
+
 $images = $item->images();
+if (!is_array($images)) {
+	$images = array();
+}
 
 $page->addBreadcrumb("Products", "/_product/report");
 if (isset($item->id)) $page->addBreadcrumb($item->code, "/_product/edit/" . $item->code);
