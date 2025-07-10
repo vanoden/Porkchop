@@ -640,7 +640,17 @@ use Register\Customer;
 			// Name For Cache Variable
 			$cache_key = "session[".$this->id."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
-			if ($cache) $cache->delete();
+			
+			// Preserve OTP verification status before deleting cache
+			$preservedOTPVerified = null;
+			if ($cache) {
+				$session = $cache->get();
+				if ($session && isset($session->otpVerified)) {
+					$preservedOTPVerified = $session->otpVerified;
+					app_log("Preserving OTP verification status: " . ($preservedOTPVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+				}
+				$cache->delete();
+			}
 			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
 
 			# Make Sure User Has Privileges to view other sessions
@@ -691,7 +701,25 @@ use Register\Customer;
 				'class_method' => 'update'
 			));
 
-			return $this->details();
+			$result = $this->details();
+			
+			// Restore OTP verification status if it was preserved
+			if ($preservedOTPVerified !== null) {
+				$this->otpVerified = $preservedOTPVerified;
+				app_log("Restored OTP verification status: " . ($preservedOTPVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+				
+				// Update cache with restored OTP status
+				$cache_key = "session[".$this->id."]";
+				$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+				$session = $cache->get();
+				if ($session) {
+					$session->otpVerified = $preservedOTPVerified;
+					$cache->set($session, 600);
+					app_log("Updated cache with restored OTP verification status", 'debug', __FILE__, __LINE__, 'otplogs');
+				}
+			}
+
+			return $result;
 		}
 
 		/** @method hits(id)

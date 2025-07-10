@@ -977,6 +977,9 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
         
         public function loadViewFiles($buffer = "") {
 		    ob_start ();
+            $be_file = null;
+            $fe_file = null;
+            
             if (isset($this->style)) {
                 if (file_exists(MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php'))
                     $be_file = MODULES.'/'.$this->module().'/'.$this->style.'/'.$this->view.'_mc.php';
@@ -985,6 +988,12 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
                 if (file_exists(MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php'))
                     $fe_file = MODULES . '/' . $this->module() . '/' . $this->style . '/' . $this->view . '.php';
                 elseif (file_exists(MODULES . '/' . $this->module() . '/default/' . $this->view . '.php'))
+                    $fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
+            } else {
+                // If no style is set, check default directory
+                if (file_exists(MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php'))
+                    $be_file = MODULES.'/'.$this->module().'/default/'.$this->view.'_mc.php';
+                if (file_exists(MODULES . '/' . $this->module() . '/default/' . $this->view . '.php'))
                     $fe_file = MODULES . '/' . $this->module() . '/default/' . $this->view . '.php';
             }
 		    app_log ( "Loading view " . $this->view() . " of module " . $this->module(), 'debug', __FILE__, __LINE__ );
@@ -1012,7 +1021,7 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 					return '<span class="label page_response_code">Resource not found</span>';
 				}
             }
-		    else app_log ( "Backend file '$be_file' for module " . $this->module() . " not found" );
+		    else app_log ( "Backend file for module " . $this->module() . " not found" );
             if (isset($fe_file) && file_exists ( $fe_file )) include ($fe_file);
 		    $buffer .= ob_get_clean ();
             
