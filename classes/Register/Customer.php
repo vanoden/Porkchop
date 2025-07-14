@@ -967,8 +967,8 @@
 			
 			app_log("DEBUG: requiresOTP() called for customer ID: ".$this->id, 'debug', __FILE__, __LINE__);
 
-			// If USE_OTP is not defined or false, return false immediately
-			if (!defined('USE_OTP') || !USE_OTP) {
+			// If use_otp false, return false immediately
+			if (!$GLOBALS['_config']->register->use_otp) {
 				return false;
 			}
 		

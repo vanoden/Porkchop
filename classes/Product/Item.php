@@ -169,7 +169,7 @@
             if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
 				app_log($update_product_query,'debug');
-				return null;
+				return false;
             }
 
 			// audit the update event

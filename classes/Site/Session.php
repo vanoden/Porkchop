@@ -427,7 +427,7 @@ use Register\Customer;
 				$this->csrfToken = $session->csrfToken;
 				
 				// Initialize OTP verification status based on user requirements
-				if (defined('USE_OTP') && USE_OTP && $this->customer && $this->customer->id > 0) {
+				if ($GLOBALS['_config']->register->use_otp && $this->customer && $this->customer->id > 0) {
 					// If user requires OTP, default to not verified
 					$session->otpVerified = false;
 					$this->otpVerified = false;
@@ -831,13 +831,13 @@ use Register\Customer;
 		 */
 		public function authenticated(): bool {
 			app_log("=== AUTHENTICATED() METHOD CALL ===", 'debug', __FILE__, __LINE__, 'otplogs');
-			app_log("USE_OTP defined: " . (defined('USE_OTP') ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+			app_log("OTP Enabled: " . ($GLOBALS['_config']->register->use_otp ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Customer ID: " . ($this->customer->id ?? 'null'), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Customer requires OTP: " . ($this->customer->requiresOTP() ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("OTP verified status: " . ($this->otpVerified === false ? 'false' : ($this->otpVerified === true ? 'true' : 'null')), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'debug', __FILE__, __LINE__, 'otplogs');
 			
-			if (defined('USE_OTP') && USE_OTP && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->otpVerified === false) {
+			if ($GLOBALS['_config']->register->use_otp && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->otpVerified === false) {
 				// If OTP is required and not verified, redirect to OTP page
 				// But don't redirect if we're already on the OTP page to prevent loops
 				if (!preg_match('/\/_register\/otp/', $_SERVER['REQUEST_URI'])) {

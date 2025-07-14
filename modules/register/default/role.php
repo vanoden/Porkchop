@@ -38,7 +38,7 @@ function checkUncheck() {
     <input type="hidden" name="id" value="<?=$role->id?>">
   </div>
 
-  <?php if (defined('USE_OTP') && USE_OTP) { ?>
+  <?php if ($GLOBALS['_config']->register->use_otp) { ?>
   <div>
     <label>Require Two-Factor Authentication</label>
     <input type="checkbox" id="totpCB" name="time_based_password" value="1" <?php if (!empty($role->time_based_password)) echo "checked"; ?>>

@@ -274,7 +274,7 @@
 
 				<?php if (!$readOnly) { ?>
 					<!-- Two-Factor Authentication Section -->
-					<?php if (defined('USE_OTP') && USE_OTP) { ?>
+					<?php if ($GLOBALS['_config']->register->use_otp) { ?>
 						<section class="form-group two-factor pageSect_full">
 							<h5>Time Based Password [Google Authenticator]</h5>
 							<div class="checkbox-group">
