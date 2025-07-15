@@ -88,7 +88,16 @@ class BaseModel extends \BaseClass {
 		elseif ($name == 'setMetadata') {
 			if (gettype($parameters[0]) == 'object') return $this->setMetadataObject($parameters[0], $parameters[1]);
 			else return $this->setMetadataScalar($parameters[0], $parameters[1]);
-		} else {
+		}
+		elseif ($name == 'uploadImage') {
+			if (gettype($parameters[1]) == 'int') {
+				return $this->uploadImageToRepoID($parameters[0], $parameters[1], $parameters[2] ?? null, $parameters[3] ?? null);
+			}
+			else {
+				return $this->uploadImageToRepoCode($parameters[0], $parameters[1], $parameters[2] ?? null, $parameters[3] ?? null);
+			}
+		}
+		else {
 			$caller = debug_backtrace()[1];
 			$className = get_called_class();
 			$callerClass = $caller["class"] ?? 'unknown';
@@ -1415,15 +1424,15 @@ class BaseModel extends \BaseClass {
 	}
 
 	/**
-	 * Upload an image and associate it with the object
-	 * 
+	 * Upload an image for a specific Repository by Code and associate it with the object
 	 * @param array $fileData The uploaded file data from $_FILES
-	 * @param string $path The path where the file should be stored
+	 * @param string $repository_code The Code of the repository where the file should be stored
+	 * @param string $path Optional path within the repository to store the file
 	 * @param string $label Optional label for the image
+	 * @param string|null $object_type Optional object type to associate the image with
 	 * @return bool True if upload and association are successful, false otherwise
 	 */
-	public function uploadImage(array $fileData, int $repository_id, string $path = '', string $label = '', $object_type = null): bool {
-
+	public function uploadImageToRepoCode(array $fileData, string $repository_code, string $path = '', string $label = '', $object_type = null): bool {
 		$this->clearError();
 
 		if (! preg_match('/^\//', $path)) $path = '/' . $path;
@@ -1436,8 +1445,63 @@ class BaseModel extends \BaseClass {
 
 		// Initialize the repository factory and load the repository
 		$factory = new \Storage\RepositoryFactory();
-		$repository = $factory->load($repository_id);
+		$repository = $factory->get($repository_code);
 
+		if ($factory->error()) {
+			$this->error('Error loading repository: ' . $factory->error());
+			return false;
+		}
+
+		if (! $repository->id) {
+			$this->error('Repository not found');
+			return false;
+		}
+
+		return ($this->uploadImageToRepo($fileData, $repository, $path, $label, $object_type));
+	}
+
+	/**
+	 * Upload an image and associate it with the object
+	 * 
+	 * @param array $fileData The uploaded file data from $_FILES
+	 * @param int $repository_id The ID of the repository where the file should be stored
+	 * @param string $path Optional path within the repository to store the file
+	 * @param string $label Optional label for the image
+	 * @return bool True if upload and association are successful, false otherwise
+	 */
+	public function uploadImageToRepoID(array $fileData, int $repository_id, string $path = '', string $label = '', $object_type = null): bool {
+
+		$this->clearError();
+
+		if (! preg_match('/^\//', $path)) $path = '/' . $path;
+
+		// Check if the file data is valid
+		if (empty($fileData) || !isset($fileData['tmp_name']) || !is_uploaded_file($fileData['tmp_name'])) {
+			$this->error('Invalid file data');
+			return false;
+		}
+
+		// Initialize the repository factory and load the repository
+		$repository = new \Storage\Repository($repository_id);
+		if (! $repository->exists()) {
+			$this->error('Repository not found');
+			return false;
+		}
+
+		return ($this->uploadImageToRepo($fileData, $repository, $path, $label, $object_type));
+	}
+
+	/**
+	 * Upload an image to a specified repository and associate it with the object.
+	 * Uploads an image to a specified repository and associates it with the object.
+	 * @param array $fileData The uploaded file data from $_FILES
+	 * @param \Storage\Repository $repository The repository where the file should be stored
+	 * @param string $path Optional path within the repository to store the file
+	 * @param string $label Optional label for the image
+	 * @param string|null $object_type Optional object type to associate the image with
+	 * @return bool True if upload and association are successful, false otherwise
+	 */
+	public function uploadImageToRepo(array $fileData, \Storage\Repository $repository, string $path = '', string $label = '', $object_type = null): bool {
 		if (! $repository->id) {
 			$this->error('Repository not found');
 			return false;
@@ -1445,11 +1509,6 @@ class BaseModel extends \BaseClass {
 
 		if (! $repository->writable()) {
 			$this->error('Permission Denied');
-			return false;
-		}
-
-		if ($factory->error()) {
-			$this->error('Error loading repository: ' . $factory->error());
 			return false;
 		}
 
