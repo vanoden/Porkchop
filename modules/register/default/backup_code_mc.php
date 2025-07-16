@@ -14,6 +14,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user_id = \Register\Customer::loginWithBackupCode($backup_code);
             if ($user_id) {
                 $GLOBALS['_SESSION_']->assign($user_id, false);
+                
+                // DEBUG: Log backup code login process
+                app_log("=== BACKUP CODE LOGIN ===", 'debug', __FILE__, __LINE__, 'otplogs');
+                app_log("User ID: " . $user_id, 'debug', __FILE__, __LINE__, 'otplogs');
+                app_log("Session assigned, setting OTP verified to true", 'debug', __FILE__, __LINE__, 'otplogs');
+                
+                // Set OTP verification status to true since backup code login bypasses OTP
+                $GLOBALS['_SESSION_']->setOTPVerified(true);
+                
+                app_log("OTP verification status set to true", 'debug', __FILE__, __LINE__, 'otplogs');
+                
                 $page->appendSuccess("Backup code accepted. Logging you in...");
                 header("Location: /_register/account");
                 exit;
