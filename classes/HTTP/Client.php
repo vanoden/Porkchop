@@ -137,11 +137,13 @@ use function Amp\now;
 				}
 				if ($this->_status == 'BODY') {
 					// Grab the rest of the body
-					app_log("Receiving remaining ".$content_length." bytes of body data at ".(time() - $start_time)." seconds",'trace');
 					// If we have already received some body data
-					$buffer = fread($this->_socket, $content_length - strlen($body));
-					$content .= $buffer;
-					app_log("Received ".strlen($buffer)." bytes of body data at ".(time() - $start_time)." seconds",'trace');
+					if ($content_length - strlen($body) <= 0) {
+						app_log("Receiving remaining ".$content_length." bytes of body data at ".(time() - $start_time)." seconds",'trace');
+						$buffer = fread($this->_socket, $content_length - strlen($body));
+						$content .= $buffer;
+						app_log("Received ".strlen($buffer)." bytes of body data at ".(time() - $start_time)." seconds",'trace');
+					}
 					// We are still receiving the body
 					if (strlen($content) >= $content_length + strlen($body)) {
 						// We have received the full body, stop reading
