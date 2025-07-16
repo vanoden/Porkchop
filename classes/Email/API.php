@@ -37,7 +37,7 @@
 			if (isset($GLOBALS['_config']->email->username)) $transport->username($GLOBALS['_config']->email->username);
 			if (isset($GLOBALS['_config']->email->password)) $transport->password($GLOBALS['_config']->email->password);
 			if (isset($GLOBALS['_config']->email->token)) $transport->token($GLOBALS['_config']->email->token);
-			if (! $transport->deliver($email)) $this->error($transport->error(),__FILE__,__LINE__);
+			if (! $transport->deliver($email)) $this->error("Transport error: ".$transport->error(),__FILE__,__LINE__);
 
 			$response = new \APIResponse();
 			$response->AddElement('result',$transport->result());
