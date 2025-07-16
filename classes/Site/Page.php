@@ -21,6 +21,7 @@
 	    private $_errors = array();
 		private $_warnings = array();
 
+		/** @constructor */
 	    public function __construct() {
 			$this->_tableName = "page_pages";
 			$this->_tableUKColumn = null;
@@ -58,16 +59,28 @@
 			$this->_addFields('tou_id');
 	    }
 
+		/** @method public __call(name, arguments)
+		 * Handles dynamic method calls for the Page class.
+		 */
 		public function __call($name, $arguments) {
 			if ($name == "get") return $this->getPage($arguments[0],$arguments[1],$arguments[2]);
 			else if ($name == "setMetadata") return $this->setMetadataScalar($arguments[0],$arguments[1]);
 			else $this->error("Method '$name' not found");
 		}
 
+		/** @method public fromRequest()
+		 * Initializes the Page object from the current request.
+		 */
 	    public function fromRequest() {
 		    return $this->getPage($GLOBALS['_REQUEST_']->module, $GLOBALS['_REQUEST_']->view, $GLOBALS['_REQUEST_']->index );
 	    }
-	    public function applyStyle() {
+
+		/** @method public applyStyle()
+		 * Applies the style configuration for the current page based on the module.
+		 * It checks if a specific style is defined in the global configuration and applies it.
+		 * If no specific style is defined, it defaults to the 'default' style.
+		 */
+		public function applyStyle() {
 		    if (isset ( $GLOBALS ['_config']->style [$this->module()] )) $this->style = $GLOBALS['_config']->style[$this->module()];
 	    }
 
@@ -87,6 +100,10 @@
 			return true;
 	    }
 
+		/** @method public requireSuperElevation()
+		 * Checks if the user has super elevation privileges.
+		 * If not, redirects to the login page.
+		 */
 	    public function requireSuperElevation() {
 		    if (! $GLOBALS ['_SESSION_']->customer->is_super_elevated()) {
 				$counter = new \Site\Counter("auth_redirect");
@@ -96,7 +113,13 @@
 		    }
 	    }
 
-	    public function requireRole($role) {	 
+		/** @method public requireRole(role)
+		 * Checks if the user has a specific role.
+		 * If not, redirects to the login page or permission denied page.
+		 * @param string $role The role to check for.
+		 * @return bool True if the user has the required role, otherwise redirects.
+		 */
+	    public function requireRole($role) {
 		    $this->requireAuth();
 		    if ($this->module == 'register' && $this->view == 'login') {
 			    // Do Nothing, we're Here
@@ -118,8 +141,14 @@
 			}
 	    }
 
+		/** @method public requirePrivilege(privilege name)
+		 * Checks if the user has a specific privilege.
+		 * If not, redirects to the login page or permission denied page.
+		 * @param string $privilege The privilege to check for.
+		 * @return bool True if the user has the required privilege, otherwise redirects.
+		 */
         public function requirePrivilege($privilege) {
-		$this->requireAuth();
+			$this->requireAuth();
             if ($GLOBALS['_SESSION_']->customer->can($privilege)) {
 				$counter = new \Site\Counter("auth_redirect");
 				$counter->increment();
@@ -139,6 +168,10 @@
 			}
         }
 
+		/** @method public requireOrganization()
+		 * Checks if the user belongs to an organization.
+		 * If not, redirects to the organization required page.
+		 */
 		public function requireOrganization() {
 			if (empty($GLOBALS['_SESSION_']->customer->organization()->id)) {
 				$counter = new \Site\Counter("organization_required");
@@ -148,6 +181,11 @@
 			}
 		}
 
+		/** @method public confirmTOUAcceptance()
+		 * Checks if the user has accepted the Terms of Use (TOU).
+		 * If not, redirects to the TOU acceptance form.
+		 * @return bool True if the user has accepted the TOU, otherwise redirects.
+		 */
 		public function confirmTOUAcceptance() {
 			if ($this->tou_id > 0) {
 				$tou = $this->tou();
@@ -166,6 +204,14 @@
 			return true;
 		}
 
+		/** @method public getPage(module, view, index)
+		 * Retrieves a page by its module, view, and index.
+		 * If the page does not exist, it attempts to create it.
+		 * @param string $module The module of the page.
+		 * @param string $view The view of the page.
+		 * @param string|null $index The index of the page, if applicable.
+		 * @return bool True if the page exists or was created successfully, otherwise false.
+		 */
 	    public function getPage($module, $view, $index = null) {
 			$this->clearError();
 
@@ -263,8 +309,9 @@
 		 * @return bool True if successful
 		 */
 	    public function add($module = '', $view = '', $index = '') {
+			// Clear previous errors
 			$this->clearError();
-app_log("Request to add page ".$module."::".$view."::".$index,'notice');
+
 			// Initialize Database Service
 			$database = new \Database\Service();
 
@@ -276,7 +323,7 @@ app_log("Request to add page ".$module."::".$view."::".$index,'notice');
 				    if (!empty($index) && $this->validIndex($index)) $this->index = $index;
 			    }
 		    }
-app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice');
+
 			// Prepare Query to Add Page
 		    $add_object_query = "
 			    INSERT
@@ -513,6 +560,13 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 			if (preg_match('/([\w\_\-]*)/',$this->index,$matches)) return $matches[1];
 		}
 
+		/** @method public title(string)
+		 * Gets or sets the title of the page.
+		 * If a string is provided, it sets the title; otherwise, it returns the current title.
+		 * It also checks for metadata or view name as a fallback for the title.
+		 * @param string|null $string The title to set. If null, returns the current title.
+		 * @return string|null Returns the current title if no parameter is provided, otherwise returns void.
+		 */
 		public function title($string = null) {
 			if (isset($string)) $this->title = $string;
 
@@ -524,6 +578,13 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 				return ucwords(preg_replace('/[\-\.\_]+/'," ",$this->view()));
 		}
 
+		/** @method public template()
+		 * Determines the template file to use for rendering the page.
+		 * It checks for a specific template defined in the metadata, or falls back to default templates
+		 * based on the module and view. If no specific template is found, it returns a default template
+		 * or null if no suitable template exists.
+		 * @return string|null Returns the template filename if found, otherwise null.
+		 */
 		public function template() {
 			$template = $this->getMetadata('template');
 			if (preg_match('/(\w[\w\_\-\.]*\.html)/',$template,$matches)) return $matches[1];
@@ -536,6 +597,13 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 			else return null;
 		}
 
+		/** @method load_template()
+		 * Loads the template for the page based on the module and view.
+		 * It checks if the module is 'static' or 'api' and loads the corresponding HTML file.
+		 * If a specific template is defined, it loads that template file.
+		 * If no specific template is found, it defaults to a generic page view.
+		 * @return string The parsed HTML content of the template.
+		 */
 		public function load_template() {
             $this->loadSiteHeaders();
 			if ($this->module() == 'static') {
@@ -550,6 +618,11 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 			return $this->parse('<r7 object="page" property="view"/>');
 	    }
 
+		/** @method public parse(message)
+		 * Parses a message string, replacing <r7> tokens with dynamic content.
+		 * @param string $message The message to parse.
+		 * @return string The parsed message with tokens replaced.
+		*/
 	    public function parse($message) {
 		    $module_pattern = "/<r7(\s[\w\-]+\=\"[^\"]*\")*\/>/is";
 		    while ( preg_match( $module_pattern, $message, $matched ) ) {
@@ -571,7 +644,12 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 			if (!empty($this->module)) header("X-Module: ".$this->module());
 			return $message;
 	    }
-	    
+
+		/** @method public parse_element(string)
+		 * Parses a <r7> element string into an associative array of parameters.
+		 * @param string $string The <r7> element string to parse.
+		 * @return array An associative array of parameters extracted from the <r7> element.
+		*/
 	    private function parse_element($string) {
 	    
 		    // Initialize Array to hold Parameters
@@ -599,7 +677,12 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 		    }
 		    return $parameters;
 	    }
-	    
+
+		/** @method public replace(string)
+		 * Replaces tokens in a string with dynamic content based on the <r7> element.
+		 * @param string $string The string containing the <r7> element to replace.
+		 * @return string The string with the <r7> element replaced by dynamic content.
+		 */
 	    public function replace($string) {
 			
 		    // Initialize Replacement Buffer
@@ -966,15 +1049,29 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
 		    }
 		    return $buffer;
 	    }
-	    
+
+		/** @method public loadSiteHeaders()
+		 * Loads site headers from the database and sets them in the HTTP response.
+		 * This method retrieves all headers defined in the Site\HeaderList and applies them to the response.
+		 * It is typically called before rendering the view to ensure all necessary headers are set.
+		 * @return void
+		 */
         public function loadSiteHeaders() {
             $headerList = new \Site\HeaderList();
             $headers = $headerList->find();
             foreach ($headers as $header) {
-                header($header->name.": ".$header->value);
+                header($header->name().": ".$header->value());
             }
         }
-        
+
+		/** @method public loadViewFiles(buffer)
+		 * Loads the view files for the current page, including both backend and frontend components.
+		 * It checks for the existence of specific view files based on the module, style, and view.
+		 * If the backend file exists, it is included first, followed by the frontend file.
+		 * The method captures the output into a buffer and returns it.
+		 * @param string $buffer The initial buffer content to append the view output to.
+		 * @return string The combined output of the backend and frontend view files.
+		 */
         public function loadViewFiles($buffer = "") {
 		    ob_start ();
             $be_file = null;
@@ -1033,7 +1130,14 @@ app_log("Adding page ".$this->module."::".$this->view."::".$this->index,'notice'
             }
             return $buffer;
         }
-        
+
+		/** @method public requires(role)
+		 * Checks if the current user has the required role to access the page.
+		 * If the user does not have the required role, they are redirected to the login page
+		 * or a not authorized page, depending on the role.
+		 * @param string $role The role required to access the page. Defaults to '_customer'.
+		 * @return bool Returns true if the user has the required role, otherwise redirects and exits
+		 */
 	    public function requires($role = '_customer') {
 		    if ($role == '_customer') {
 			    if ($GLOBALS ['_SESSION_']->customer->id) {
