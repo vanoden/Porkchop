@@ -59,7 +59,7 @@ use function Amp\now;
 			}
 
 			if ($ssl) $service = "ssl://".$host.":".$port;
-			elseif (empty($port)) $service = "tcp://".$host.":".$port;
+			elseif (!empty($port)) $service = "tcp://".$host.":".$port;
 			else $service = "tcp://".$host;
 			$this->_socket = stream_socket_client($service, $errno, $errstr, $this->_timeout);
 
