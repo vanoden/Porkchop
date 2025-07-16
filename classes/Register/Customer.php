@@ -753,7 +753,11 @@
 				'type'		=> 'email',
 				'notify'	=> true,
 			);
-			list($contact) = $contactList->find($parameters);
+			$contacts = $contactList->find($parameters);
+			if (empty($contacts)) {
+				return null;
+			}
+			list($contact) = $contacts;
 			return $contact->value;
 		}
 
