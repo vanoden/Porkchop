@@ -53,7 +53,7 @@
 			}
 		}
 	}
-print_r($header);
+
 	$page->addBreadcrumb('Headers', '/_site/headers');
 	if ($header->id() > 0) {
 		$page->title('Edit Header');
