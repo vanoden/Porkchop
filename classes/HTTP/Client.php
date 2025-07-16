@@ -53,8 +53,13 @@ use function Amp\now;
 				}
 			}
 
+			if (empty($port)) {
+				if ($ssl) $port = 443;	 // Default port for HTTPS
+				else $port = 80; 		// Default port for HTTP
+			}
+
 			if ($ssl) $service = "ssl://".$host.":".$port;
-			else $service = "tcp://".$host.":".$port;
+			elseif (empty($port)) $service = "tcp://".$host.":".$port;
 			$this->_socket = stream_socket_client($service, $errno, $errstr, $this->_timeout);
 
 			if (!$this->_socket) {
