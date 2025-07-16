@@ -139,7 +139,7 @@ class Event Extends \BaseModel {
 	}
 
 	public function appendDescription($description) {
-		if (strlen($this->description) > 0) $this->description .= ', ';
+		if (!empty($this->description)) $this->description .= ', ';
 		$this->description .= $description;
 	}
 }

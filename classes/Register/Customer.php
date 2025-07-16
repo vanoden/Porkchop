@@ -753,8 +753,40 @@
 				'type'		=> 'email',
 				'notify'	=> true,
 			);
-			list($contact) = $contactList->find($parameters);
+			$contacts = $contactList->find($parameters);
+			if (empty($contacts)) {
+				return null;
+			}
+			list($contact) = $contacts;
 			return $contact->value;
+		}
+
+		/** @method hasNotifyEmail()
+		 * Check if the user has any email addresses set to 'Notify'
+		 * @return bool True if user has notify email, false otherwise
+		 */
+		public function hasNotifyEmail(): bool {
+			$notify_email = $this->notify_email();
+			return !empty($notify_email);
+		}
+
+		/** @method getNotifyEmails()
+		 * Get all email addresses set to 'Notify' for this user
+		 * @return array Array of email addresses
+		 */
+		public function getNotifyEmails(): array {
+			$contactList = new \Register\ContactList();
+			$parameters = array(
+				'person_id'	=> $this->id,
+				'type'		=> 'email',
+				'notify'	=> true,
+			);
+			$contacts = $contactList->find($parameters);
+			$emails = array();
+			foreach ($contacts as $contact) {
+				$emails[] = $contact->value;
+			}
+			return $emails;
 		}
 
 		/** @method locations()
@@ -995,12 +1027,25 @@
 		}
 
 		/** @method sendOTPRecovery(email_address)
-		 * Generate and send OTP recovery token
-		 * @param string $email_address Email to send recovery to
-		 * @return bool True if successful
+		 * Send OTP recovery email to the specified email address
+		 * @param string $email_address Email address to send recovery to
+		 * @return bool True if sent successfully, false on error
 		 */
 		public function sendOTPRecovery($email_address): bool {
 			$this->clearError();
+
+			// Check if the user has an email set to 'Notify'
+			$notify_email = $this->notify_email();
+			if (empty($notify_email)) {
+				$this->error("No email address is set to 'Notify' for this account. Please contact support to update your email preferences.");
+				return false;
+			}
+
+			// Verify that the provided email matches the notify email (for security)
+			if ($email_address !== $notify_email) {
+				$this->error("The provided email address does not match the email address set to 'Notify' for this account.");
+				return false;
+			}
 
 			// Generate recovery token
 			$token = $this->generateOTPRecoveryToken();
