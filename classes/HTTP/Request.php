@@ -18,7 +18,6 @@
 		private $_body;
 		private $_uri = '/';
 		private $_query_string = '';
-		private $_content_type;
 		private $_parameters = array();
 		private $_headers = array();
 
@@ -54,7 +53,6 @@
 		 * @param string $value The header value
 		 */
 		public function addHeader($key,$value) {
-			if (strtolower($key) == "content-type") $this->_content_type = $value;
 			$this->_headers[$key] = $value;
 		}
 
@@ -64,8 +62,8 @@
 		 * @return string The current content type
 		 */
 		public function contentType($type = null) {
-			if (isset($type)) $this->_content_type = $type;
-			return $this->_content_type;
+			if (isset($type)) $this->_headers['Content-Type'] = $type;
+			return $this->_headers['Content-Type'] ?? null;
 		}
 
 		/** @method addParam(string $key, string $value)
@@ -153,11 +151,11 @@
 		public function serialize($parameters = array()) {
 			$this->clearError();
 
-			if (isset($parameters['host'])) $this->_host = $parameters['host'];
-			if (isset($parameters['method'])) $this->_method = $parameters['method'];
-			if (isset($parameters['body'])) $this->_body = $parameters['body'];
-			if (isset($parameters['uri'])) $this->_uri = $parameters['uri'];
-			
+			if (!empty($parameters['host'])) $this->_host = $parameters['host'];
+			if (!empty($parameters['method'])) $this->_method = $parameters['method'];
+			if (!empty($parameters['body'])) $this->_body = $parameters['body'];
+			if (!empty($parameters['uri'])) $this->_uri = $parameters['uri'];
+
 			if (count($this->_parameters)) {
 				$paramArray = array();
 				foreach($this->_parameters as $key => $value) array_push($paramArray,"$key=$value");
@@ -183,28 +181,28 @@
 			}
 			elseif (strlen($this->_body)) {
 				$this->_method = 'POST';
-				$this->_content_type = "application/x-www-form-urlencoded";
+				$this->contentType("application/x-www-form-urlencoded");
 			}
 			else {
 				$this->_method = 'GET';
 			}
 			
-			if (! isset($this->_content_type)) {
+			if (! isset($this->_headers['Content-Type'])) {
 				if ($this->_method == 'POST') {
-					$this->_content_type = "application/x-www-form-urlencoded";
+					$this->contentType("application/x-www-form-urlencoded");
 				}
 			}
 
 			$string = $this->_method." ".$this->url()." HTTP/1.1\r\n";
 			$string .= "Host: ".$this->_host."\r\n";
+
 			foreach ($this->_headers as $header => $value) {
 				$string .= $header.": ".$value."\r\n";
 			}
-			#if (isset($this->_content_type)) $string .= "Content-Type: ".$this->_content_type."\r\n";
 			if (strlen($this->_body)) $string .= "Content-Length: ".strlen($this->_body)."\r\n";
 			$string .= "\r\n";
 			$string .= $this->_body;
-			
+
 			return $string;
 		}
 

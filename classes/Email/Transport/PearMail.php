@@ -1,43 +1,15 @@
 <?php
 namespace Email\Transport;
 
-class Proxy {
-	private $_error;
-	private $_hostname;
-	private $_username;
-	private $_password;
+class PearMail Extends Base {
+	public $_auth;
 
-	public function __construct($parameters = array()) {
-			if (isset($parameters['hostname']) and ! $this->hostname($parameters['hostname'])) return null;
-			if (isset($parameters['username']) and ! $this->username($parameters['username'])) return null;
-			if (isset($parameters['password']) and ! $this->password($parameters['password'])) return null;
-	}
-
-	public function hostname($hostname) {
-		$this->_hostname = $hostname;
-		return $this->_hostname;
-	}
-
-	public function username($username) {
-		$this->_username = $username;
-		return $this->_username;
-	}
-
-	public function password($password) {
-		$this->_password = $password;
-	}
-
-	public function secure($secure) {
-		if (is_bool($secure)) {
-			$this->_secure = $secure;
-			return $this->_secure;
-		} else {
-			$this->_error = "secure must be true or false";
-			return null;
-		}
-	}
-
-	public function deliver($email) {
+	/** @method protected _deliver(email)
+	 * Sends the email using the PearMail transport.
+	 * @param \Email\Message $email The email message to send.
+	 * @return bool Returns true on success, false on failure.
+	 */
+	protected function _deliver($email) {
 		require_once("Mail.php");
 		#require_once('Mail/mime.php');
 		$connection = array(
@@ -52,8 +24,8 @@ class Proxy {
 		}
 
 		$headers = array(
-			'From' => $email->from,
-			'Subject' => $email->subject,
+			'From' => $email->from(),
+			'Subject' => $email->subject(),
 			'Content-type' => 'text/html'
 		);
 
@@ -63,16 +35,17 @@ class Proxy {
 		);
 
 		$mail = $smtp->send(
-			$this->_to,
-			$headers,
-			$this->_body
+			$email->to(),
+			$email->headers(),
+			$body
 		);
 
 		if (PEAR::isError($mail)) {
-			$this->error = "Error sending email: " . $mail->getMessage();
-			return null;
-		} else {
-			return 1;
+			$this->error("Error sending email: " . $mail->getMessage());
+			return false;
+		}
+		else {
+			return true;
 		}
 	}
 }
