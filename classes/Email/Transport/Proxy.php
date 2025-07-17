@@ -2,33 +2,21 @@
 	namespace Email\Transport;
 
 	class Proxy Extends Base {
-		private $_hostname;
-		private $_username;
-		private $_password;
-		
-		public function __construct($parameters = array()) {
-			if (isset($parameters['hostname']) and ! $this->hostname($parameters['hostname'])) return null;
-			if (isset($parameters['username']) and ! $this->username($parameters['username'])) return null;
-			if (isset($parameters['password']) and ! $this->password($parameters['password'])) return null;
-		}
-
-		public function hostname($hostname = null) {
-			if (isset($hostname)) $this->_hostname = $hostname;
-			return $this->_hostname;
-		}
-
-		public function token($token = null) {
-			if (isset($token)) $this->_token = $token;
-			return $this->_token;
-		}
-
-		public function deliver($email) {
+		/** @method protected _deliver(email)
+		 * Sends the email using the proxy transport.
+		 * @param \Email\Message $email The email message to send.
+		 * @return bool Returns true on success, false on failure.
+		 */
+		protected function _deliver($email) {
+			// Build the request to send the email
 			$request = new \HTTP\Request();
 			$request->url('http://'.$this->hostname().'/send.php');
 			if ($request->error()) {
 				$this->error($request->error());
 				return false;
 			}
+
+			$request->method('POST');
 			$request->addParam('token',$this->token());
 			$request->addParam('to',$email->to());
 			$request->addParam('from',$email->from());
@@ -36,6 +24,8 @@
 			$request->addParam('body',urlencode($email->body()));
 			if ($email->html()) $request->addParam('html','true');
 			app_log("Email request: '".$request->serialize()."'",'trace');
+
+			// Connect to the proxy server and send the request
 			$client = new \HTTP\Client();
 			$client->connect($this->hostname());
 			if ($client->error()) {
@@ -66,7 +56,7 @@
 			}
 			else {
 				$this->_result = "Failed";
-				$this->_error = $response->code().": ".$response->status();
+				$this->error($response->code().": ".$response->status());
 				return false;
 			}
 		}
