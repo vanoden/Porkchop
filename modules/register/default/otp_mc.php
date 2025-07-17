@@ -183,7 +183,8 @@ if ($can_proceed) {
 	$target = $_REQUEST['target'] ?? null;
 	if (isset($target) && !empty($target)) {
 		// Validate the target URL to prevent potential security issues
-		if (!filter_var($target, FILTER_VALIDATE_URL) && !preg_match('/^\/[a-zA-Z0-9\/_-]*$/', $target)) {
+		// Allow query parameters and common URL-safe characters
+		if (!filter_var($target, FILTER_VALIDATE_URL) && !preg_match('/^\/[a-zA-Z0-9\/_\-]*(\?[a-zA-Z0-9\/_\-=&]*)?$/', $target)) {
 			$page->addError("Invalid target URL format");
 		}
 		else {
