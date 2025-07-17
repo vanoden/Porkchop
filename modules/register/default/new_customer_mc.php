@@ -178,7 +178,8 @@
 						array(
 							'path'	=> $_config->register->verify_email->template,
 							'parameters'	=> array(
-								'VERIFYING.URL' => $verify_url
+								'VERIFYING.URL' => $verify_url,
+								'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? ''
 							)
 						)
 					);
@@ -230,7 +231,8 @@
 	                array(
 		                'path'	=> $_config->register->verify_email->template,
 		                'parameters'	=> array(
-			                'VERIFYING.URL' => $verify_url
+			                'VERIFYING.URL' => $verify_url,
+			                'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
 		                )
 	                )
                 );
@@ -288,7 +290,8 @@
 						'CUSTOMER.LAST_NAME'	=> $customer->last_name,
 						'EMAIL'					=> $customer->notify_email(),
 						'CUSTOMER.LOGIN'		=> $customer->code,
-						'SITE.LINK'				=> 'http://'.$_config->site->hostname.'/_register/pending_customers'
+						'SITE.LINK'				=> 'http://'.$_config->site->hostname.'/_register/pending_customers',
+						'COMPANY.NAME'			=> $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
 					)
 				);
 

@@ -224,7 +224,8 @@
 						'TICKET.LINK'	=> $ticket->internalLink(),
 						'ACTION.LINK'	=> $action->internalLink(),
 						'ACTION.TYPE'	=> $action->type,
-						'ACTION.DESCRIPTION'	=> $action->description
+						'ACTION.DESCRIPTION'	=> $action->description,
+						'COMPANY.NAME'	=> $GLOBALS['_SESSION_']->company->name ?? ''
 					));
 					$message = new \Email\Message();
 					$message->html(true);
@@ -244,6 +245,7 @@
 
 			// Notify Customer of Approval
 			$template = new \Content\Template\Shell($GLOBALS['_config']->register->account_activation_notification->template);
+			$template->addParam('COMPANY.NAME', $GLOBALS['_SESSION_']->company->name ?? '');
 			$message = new \Email\Message();
 			$message->html(true);
 			$message->from($GLOBALS['_config']->register->account_activation_notification->from);

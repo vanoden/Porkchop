@@ -95,6 +95,7 @@
 						$notice_template = new \Content\Template\Shell();
 						$notice_template->content($notice_content);
 						$notice_template->addParam('RECOVERY.URL',$recovery_url);
+						$notice_template->addParam('COMPANY.NAME',$GLOBALS['_SESSION_']->company->name ?? '');
 						app_log("Message: ".$notice_template->output(),'trace',__FILE__,__LINE__);
 
 						# Build Message For Delivery

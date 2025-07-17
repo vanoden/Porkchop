@@ -233,7 +233,8 @@ if (!empty($verifyAgain)) {
             array(
                 'path'    => $_config->register->verify_email->template,
                 'parameters'    => array(
-                    'VERIFYING.URL' => $verify_url
+                    'VERIFYING.URL' => $verify_url,
+                    'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? ''
                 )
             )
         );
