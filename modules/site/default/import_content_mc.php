@@ -49,7 +49,7 @@ if (is_array($content) && !empty($content)) {
 						if ($overwrite) {
 							$isUpdated = $siteConfiguration->update(array('value' => $configuration['value']));
 							if (!$isUpdated) {
-								$page->addError("<strong>Error Updating Site Configuration: </strong>" . $siteConfiguration->getError() . "<br/><strong> Key: </strong>" . $configuration['key'] . " <strong>Name: </strong> " . $configuration['value'] . "<br/>");
+								$page->addError("<strong>Error Updating Site Configuration: </strong>" . $siteConfiguration->error() . "<br/><strong> Key: </strong>" . $configuration['key'] . " <strong>Name: </strong> " . $configuration['value'] . "<br/>");
 								$can_proceed = false;
 							} else {
 								$page->appendSuccess("Updated Site Configuration: " . $configuration['key'] . " - " . $configuration['value']);
@@ -60,7 +60,7 @@ if (is_array($content) && !empty($content)) {
 					} else {
 						$addedSiteConfiguration = $siteConfiguration->add(array('key' => $configuration['key'], 'value' => $configuration['value']));
 						if (!$addedSiteConfiguration) {
-							$page->addError("<strong>Error Adding Site Configuration: </strong>" . $siteConfiguration->getError() . "<br/><strong> Key: </strong>" . $configuration['key'] . " <strong>Name: </strong> " . $configuration['value'] . "<br/>");
+							$page->addError("<strong>Error Adding Site Configuration: </strong>" . $siteConfiguration->error() . "<br/><strong> Key: </strong>" . $configuration['key'] . " <strong>Name: </strong> " . $configuration['value'] . "<br/>");
 							$can_proceed = false;
 						} else {
 							$page->appendSuccess("Added Site Configuration: " . $configuration['key'] . " - " . $configuration['value']);
@@ -82,7 +82,7 @@ if (is_array($content) && !empty($content)) {
 						if ($overwrite) {
 							$isUpdated = $navigationMenu->update(array('title' => $navigation['menuItem']['title']));
 							if (!$isUpdated) {
-								$page->addError("<strong>Error Updating Navigation Menu: </strong>" . $navigationMenu->getError() . "<br/><strong> Code: </strong>" . $navigation['menuItem']['code'] . " <strong>Title: </strong> " . $navigation['menuItem']['title'] . "<br/>");
+								$page->addError("<strong>Error Updating Navigation Menu: </strong>" . $navigationMenu->error() . "<br/><strong> Code: </strong>" . $navigation['menuItem']['code'] . " <strong>Title: </strong> " . $navigation['menuItem']['title'] . "<br/>");
 								$can_proceed = false;
 							} else {
 								$page->appendSuccess("Updated Navigation Menu: " . $navigation['menuItem']['code'] . " - " . $navigation['menuItem']['title']);
@@ -93,7 +93,7 @@ if (is_array($content) && !empty($content)) {
 					} else {
 						$addedNavigationMenu = $navigationMenu->add(array('code' => $navigation['menuItem']['code'], 'title' => $navigation['menuItem']['title']));
 						if (!$addedNavigationMenu) {
-							$page->addError("<strong>Error Adding Navigation Menu: </strong>" . $navigationMenu->getError() . "<br/><strong> Code: </strong>" . $navigation['menuItem']['code'] . " <strong>Title: </strong> " . $navigation['menuItem']['title'] . "<br/>");
+							$page->addError("<strong>Error Adding Navigation Menu: </strong>" . $navigationMenu->error() . "<br/><strong> Code: </strong>" . $navigation['menuItem']['code'] . " <strong>Title: </strong> " . $navigation['menuItem']['title'] . "<br/>");
 							$can_proceed = false;
 						} else {
 							$page->appendSuccess("Added Navigation Menu: " . $navigation['menuItem']['code'] . " - " . $navigation['menuItem']['title']);
@@ -119,7 +119,7 @@ if (is_array($content) && !empty($content)) {
 							if ($overwrite) {
 								$isUpdated = $navigationMenuItem->update($navigationItemData);
 								if (!$isUpdated) {
-									$page->addError("<strong>Error Updating Navigation Menu Item: </strong>" . $navigationMenuItem->getError() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['url'] . "<br/>");
+									$page->addError("<strong>Error Updating Navigation Menu Item: </strong>" . $navigationMenuItem->error() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['url'] . "<br/>");
 									$can_proceed = false;
 								} else {
 									$page->appendSuccess("Updated Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
@@ -130,7 +130,7 @@ if (is_array($content) && !empty($content)) {
 						} else {
 							$addedNavigationMenuItem = $navigationMenuItem->add($navigationItemData);
 							if (!$addedNavigationMenuItem) {
-								$page->addError("<strong>Error Adding Navigation Menu Item: </strong>" . $navigationMenuItem->getError() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['target'] . "<br/>");
+								$page->addError("<strong>Error Adding Navigation Menu Item: </strong>" . $navigationMenuItem->error() . "<br/><strong> Title: </strong>" . $navigationItem['title'] . " <strong>URL: </strong> " . $navigationItem['target'] . "<br/>");
 								$can_proceed = false;
 							} else {
 								$page->appendSuccess("Added Navigation Menu Item: " . $navigationItem['title'] . " - " . $navigationItem['target']);
@@ -163,7 +163,7 @@ if (is_array($content) && !empty($content)) {
 						if ($overwrite) {
 							$isUpdated = $termsOfUse->update($termsOfUseItemData);
 							if (!$isUpdated) {
-								$page->addError("<strong>Error Updating Terms of Use: </strong>" . $termsOfUse->getError() . "<br/><strong> Code: </strong>" . $term['termsOfUseItem']['code'] . " <strong>Name: </strong> " . $term['termsOfUseItem']['name'] . "<br/>");
+								$page->addError("<strong>Error Updating Terms of Use: </strong>" . $termsOfUse->error() . "<br/><strong> Code: </strong>" . $term['termsOfUseItem']['code'] . " <strong>Name: </strong> " . $term['termsOfUseItem']['name'] . "<br/>");
 								$can_proceed = false;
 							} else {
 								$page->appendSuccess("Updated Terms of Use: " . $term['termsOfUseItem']['code'] . " - " . $term['termsOfUseItem']['name']);
@@ -174,7 +174,7 @@ if (is_array($content) && !empty($content)) {
 					} else {
 						$addedTermOfUse = $termsOfUse->add($termsOfUseItemData);
 						if (!$addedTermOfUse) {
-							$page->addError("<strong>Error Adding Terms of Use: </strong>" . $termsOfUse->getError() . "<br/><strong> Code: </strong>" . $term['termsOfUseItem']['code'] . " <strong>Name: </strong> " . $term['termsOfUseItem']['name'] . "<br/>");
+							$page->addError("<strong>Error Adding Terms of Use: </strong>" . $termsOfUse->error() . "<br/><strong> Code: </strong>" . $term['termsOfUseItem']['code'] . " <strong>Name: </strong> " . $term['termsOfUseItem']['name'] . "<br/>");
 							$can_proceed = false;
 						} else {
 							$page->appendSuccess("Added Terms of Use: " . $term['termsOfUseItem']['code'] . " - " . $term['termsOfUseItem']['name']);
@@ -203,7 +203,7 @@ if (is_array($content) && !empty($content)) {
 								if ($overwrite) {
 									$isUpdated = $termsOfUseVersionItem->update($termsOfUseVersionData);
 									if (!$isUpdated) {
-										$page->addError("<strong>Error Updating Terms of Use Version: </strong>" . $termsOfUseVersionItem->getError() . "<br/><strong> Version Number: </strong>" . $termsOfUseVersion['version_number'] . " <strong>Status: </strong> " . $termsOfUseVersion['status'] . "<br/>");
+										$page->addError("<strong>Error Updating Terms of Use Version: </strong>" . $termsOfUseVersionItem->error() . "<br/><strong> Version Number: </strong>" . $termsOfUseVersion['version_number'] . " <strong>Status: </strong> " . $termsOfUseVersion['status'] . "<br/>");
 										$can_proceed = false;
 									} else {
 										$page->appendSuccess("Updated Terms of Use Version: " . $termsOfUseVersion['version_number'] . " - " . $termsOfUseVersion['status']);
@@ -214,7 +214,7 @@ if (is_array($content) && !empty($content)) {
 							} else {
 								$addedTermOfUseVersion = $termsOfUseVersionItem->add($termsOfUseVersionData);
 								if (!$addedTermOfUseVersion) {
-									$page->addError("<strong>Error Adding Terms of Use Version: </strong>" . $termsOfUseVersionItem->getError() . "<br/><strong> Version Number: </strong>" . $termsOfUseVersion['version_number'] . " <strong>Status: </strong> " . $termsOfUseVersion['status'] . "<br/>");
+									$page->addError("<strong>Error Adding Terms of Use Version: </strong>" . $termsOfUseVersionItem->error() . "<br/><strong> Version Number: </strong>" . $termsOfUseVersion['version_number'] . " <strong>Status: </strong> " . $termsOfUseVersion['status'] . "<br/>");
 									$can_proceed = false;
 								} else {
 									$page->appendSuccess("Added Terms of Use Version: " . $termsOfUseVersion['version_number'] . " - " . $termsOfUseVersion['status']);
@@ -267,7 +267,7 @@ if (is_array($content) && !empty($content)) {
 									if ($overwrite) {
 										$isUpdated = $marketingPage->update($marketingPageData);
 										if (!$isUpdated) {
-											$page->addError("<strong>Error Updating Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $marketingCurrentPage['module'] . " <strong>View: </strong> " . $marketingCurrentPage['view'] . "<br/>");
+											$page->addError("<strong>Error Updating Marketing Page: </strong>" . $marketingPage->error() . "<br/><strong> Module: </strong>" . $marketingCurrentPage['module'] . " <strong>View: </strong> " . $marketingCurrentPage['view'] . "<br/>");
 											$can_proceed = false;
 										} else {
 											$page->appendSuccess("Updated Marketing Page: " . $marketingCurrentPage['module'] . " - " . $marketingCurrentPage['view']);
@@ -278,7 +278,7 @@ if (is_array($content) && !empty($content)) {
 								} else {
 									$addedMarketingPage = $marketingPage->add($marketingPageData);
 									if (!$addedMarketingPage) {
-										$page->addError("<strong>Error Adding Marketing Page: </strong>" . $marketingPage->getError() . "<br/><strong> Module: </strong>" . $marketingCurrentPage['module'] . " <strong>View: </strong> " . $marketingCurrentPage['view'] . "<br/>");
+										$page->addError("<strong>Error Adding Marketing Page: </strong>" . $marketingPage->error() . "<br/><strong> Module: </strong>" . $marketingCurrentPage['module'] . " <strong>View: </strong> " . $marketingCurrentPage['view'] . "<br/>");
 										$can_proceed = false;
 									} else {
 										$page->appendSuccess("Added Marketing Page: " . $marketingCurrentPage['module'] . " - " . $marketingCurrentPage['view']);
@@ -308,7 +308,7 @@ if (is_array($content) && !empty($content)) {
 									if ($overwrite) {
 										$isUpdated = $marketingPageMetaData->update($marketingPageMetaDataData);
 										if (!$isUpdated) {
-											$page->addError("<strong>Error Updating Marketing Page Meta Data: </strong>" . $marketingPageMetaData->getError() . "<br/><strong> Key: </strong>" . $pageMetaData['key'] . " <strong>Value: </strong> " . $pageMetaData['value'] . "<br/>");
+											$page->addError("<strong>Error Updating Marketing Page Meta Data: </strong>" . $marketingPageMetaData->error() . "<br/><strong> Key: </strong>" . $pageMetaData['key'] . " <strong>Value: </strong> " . $pageMetaData['value'] . "<br/>");
 											$can_proceed = false;
 										} else {
 											$page->appendSuccess("Updated Marketing Page Meta Data: " . $pageMetaData['key'] . " - " . $pageMetaData['value']);
@@ -319,7 +319,7 @@ if (is_array($content) && !empty($content)) {
 								} else {
 									$addedMarketingPageMetaData = $marketingPageMetaData->addByParameters($marketingPageMetaDataData);
 									if (!$addedMarketingPageMetaData) {
-										$page->addError("<strong>Error Adding Marketing Page Meta Data: </strong>" . $marketingPageMetaData->getError() . "<br/><strong> Key: </strong>" . $pageMetaData['key'] . " <strong>Value: </strong> " . $pageMetaData['value'] . "<br/>");
+										$page->addError("<strong>Error Adding Marketing Page Meta Data: </strong>" . $marketingPageMetaData->error() . "<br/><strong> Key: </strong>" . $pageMetaData['key'] . " <strong>Value: </strong> " . $pageMetaData['value'] . "<br/>");
 										$can_proceed = false;
 									} else {
 										$page->appendSuccess("Added Marketing Page Meta Data: " . $pageMetaData['key'] . " - " . $pageMetaData['value']);
@@ -367,7 +367,7 @@ if (is_array($content) && !empty($content)) {
 									if ($overwrite) {
 										$isUpdated = $marketingContentBlock->update($contentBlockData);
 										if (!$isUpdated) {
-											$page->addError("<br/><u>Error Updating Marketing Content Block: </u>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . strip_tags($contentBlock['content']) . "<br/>");
+											$page->addError("<br/><u>Error Updating Marketing Content Block: </u>" . $marketingContentBlock->error() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . strip_tags($contentBlock['content']) . "<br/>");
 											$can_proceed = false;
 										} else {
 											$page->appendSuccess("<br/><u>Updated Marketing Content Block: </u><br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
@@ -378,7 +378,7 @@ if (is_array($content) && !empty($content)) {
 								} else {
 									$addedMarketingContentBlock = $marketingContentBlock->add($contentBlockData);
 									if (!$addedMarketingContentBlock) {
-										$page->addError("<br/><u>Error Adding Marketing Content Block: </u>" . $marketingContentBlock->getError() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . strip_tags($contentBlock['content']) . "<br/>");
+										$page->addError("<br/><u>Error Adding Marketing Content Block: </u>" . $marketingContentBlock->error() . "<br/><strong> Title: </strong>" . $contentBlock['title'] . " <strong>Content: </strong> " . strip_tags($contentBlock['content']) . "<br/>");
 										$can_proceed = false;
 									} else {
 										$page->appendSuccess("<br/><u>Added Marketing Content Block:</u> <br/><strong> Title: </strong>" . $contentBlock['title'] . " <br/><strong> Content: </strong>" . strip_tags($contentBlock['content']));
