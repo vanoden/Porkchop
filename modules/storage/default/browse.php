@@ -1,4 +1,5 @@
 <?=$page->showAdminPageInfo()?><div class="tableBody min-tablet">
+<h3>Folder: <?=$path?></h3>
 <h3>Directories</h3>
 <div class="tableBody min-tablet">
 	<div class="tableRowHeader">
@@ -23,7 +24,7 @@
 ?>
 </div>
 
-<h3>Files in <?=$_REQUEST["path"]?></h3>
+<h3>Files</h3>
 <div class="tableBody min-tablet">
 	<div class="tableRowHeader">
 		<div class="tableCell">Name</div>
@@ -58,10 +59,10 @@
 <?php	if ($repository->id) { ?>
 <form name="repoUpload" action="/_storage/file" method="post" enctype="multipart/form-data">
 	<div class="container">
-		<span class="label">Upload File</span>
+		<h3>Upload File</h3>
 		<input type="hidden" name="repository_id" value="<?=$repository->id?>" />
 		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-		<input type="hidden" name="path" value="<?=$_REQUEST['path']?>" />
+		<input type="hidden" name="path" value="<?=$path?>" />
 		<input type="file" name="uploadFile" />
 		<input type="submit" name="btn_submit" class="button" value="Upload" />
 	</div>

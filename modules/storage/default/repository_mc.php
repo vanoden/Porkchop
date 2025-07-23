@@ -6,31 +6,33 @@ $page = $site->page();
 // Authorization
 $page->requirePrivilege('manage storage repositories');
 
-$factory = new \Storage\RepositoryFactory();
-$repository = new \Storage\Repository();
-
 // Identify File from User Input
 if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
 	// POST/GET Variable with Repository ID
-	$repository = $factory->load($_REQUEST['id']);
-	if ($factory->error()) $page->addError("Cannot load repository #" . $_REQUEST['id'] . ": " . $factory->error());
-} elseif (!empty($_REQUEST['code'])) {
+	$repository = new \Storage\Repository($_REQUEST['id']);
+}
+elseif (!empty($_REQUEST['code'])) {
 	// POST/GET Variable with Repository Code
-	$repository = $factory->get($_REQUEST['code']);
-} elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
+	$repository = new \Storage\Repository();
+	$repository->get($_REQUEST['code']);
+}
+elseif (!empty($GLOBALS['_REQUEST_']->query_vars_array[0])) {
 	// Query String with Repository Code
+	$repository = new \Storage\Repository();
 	$repository->get($GLOBALS['_REQUEST_']->query_vars_array[0]);
-} elseif ($repository->validType($_REQUEST['type'])) {
-	// POST/GET Variable with Repository Type
-	$repository = $factory->create($_REQUEST['type']);
-	// If factory returns false (unsupported type), fall back to base repository
-	if (!$repository) $repository = new \Storage\Repository();
-} else {
+}
+//elseif ($repository->validType($_REQUEST['type'])) {
+//	// POST/GET Variable with Repository Type
+//	$repository = $factory->create($_REQUEST['type']);
+//	// If factory returns false (unsupported type), fall back to base repository
+//	if (!$repository) $repository = new \Storage\Repository();
+//}
+else {
 	// Default to Local Repository
-	$repository = $factory->create('local');
+	$repository = new \Storage\Repository();
 }
 
-$repository_types = $factory->types();
+$repository_types = $repository->getSupportedTypes();
 
 // Handle Form Submission
 if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
@@ -54,8 +56,9 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 
 		// For new repositories, create the proper repository type before validation
 		if (empty($repository->id) && !empty($_REQUEST['type']) && $repository->validType($_REQUEST['type'])) {
-			$repository = $factory->create($_REQUEST['type']);
-			if ($factory->error()) $page->addError($factory->error());
+			$repository = new \Storage\Repository();
+			$repository->getInstance($_REQUEST['type']);
+			if ($repository->error()) $page->addError($repository->error());
 			// If factory returns false (unsupported type), fall back to base repository
 			if (!$repository) {
 				$page->addError("Repository type '" . $_REQUEST['type'] . "' is not supported");
@@ -102,6 +105,7 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			else {
 				// Only create repository object if not already created during validation
 				if ($repository->id || get_class($repository) == 'Storage\Repository') {
+					$factory = new \Storage\RepositoryFactory();
 					$repository = $factory->create($_REQUEST['type']);
 					if ($factory->error()) $page->addError($factory->error());
 					// If factory returns false (unsupported type), fall back to base repository
@@ -113,9 +117,6 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 				if ($_REQUEST['type'] == 'local') $parameters['path'] = $_REQUEST['path'];
 				$repository->add($parameters);
 				$page->success = "Repository created";
-				
-				// Reload the repository to ensure all metadata is properly loaded
-				if (!$repository->error() && $repository->id) $repository = $factory->load($repository->id);
 			}
 			/********************************************/
 			/* Update Privileges						*/
@@ -235,8 +236,6 @@ foreach ($repository_types as $type => $name) {
 	$keys = $repo->getImpliedMetadataKeys();
 	$metadata_keys[$type] = $keys;
 }
-
-
 
 // Get Default Privileges for Repository
 if (is_object($repository)) {

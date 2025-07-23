@@ -4,12 +4,19 @@
 	class Local extends \Storage\Repository {
 		public $path;
 
+		/** @constructor */
 		public function __construct($id = null) {
 			$this->type = 'Local';
 			$this->_addMetadataKeys(array("path","endpoint"));
 			parent::__construct($id);
 		}
 
+		/** @method add(array $parameters)
+		 * Add a new local repository
+		 *
+		 * @param array $parameters
+		 * @return bool
+		 */
 		public function add($parameters = []): bool {
 			app_log("Creating local repository ".$parameters['name']." in ".$parameters['path'],'notice');
 			if (! isset($parameters['path'])) {
@@ -46,6 +53,11 @@
 			}
 		}
 
+		/** @method connect()
+		 * Connect to the repository
+		 * Test to make sure the path exists and is a directory
+		 * @return bool
+		 */
 		public function connect() {
 			$path = $this->getMetadata('path');
 			if (is_dir($path)) return true;
@@ -53,6 +65,12 @@
 			return false;
 		}
 
+		/** @method _path($path = null)
+		 * Set or get the path for this repository
+		 *
+		 * @param string $path
+		 * @return string
+		 */
 		private function _path($path = null) {
 			if (isset($path)) {
 			
@@ -71,6 +89,12 @@
 			return $this->getMetadata('path');
 		}
 
+		/** @method _endpoint($string = null)
+		 * Set or get the endpoint for this repository
+		 *
+		 * @param string $string
+		 * @return string
+		 */
 		public function _endpoint($string = null) {
 			if (isset($string)) $this->_setMetadata('endpoint',$string);
 			return $this->getMetadata('endpoint');
@@ -83,7 +107,7 @@
 			return true;
 		}
 
-        /**
+        /** @method addFile($file, $path)
          * Write contents to filesystem
          *
          * @param $file
@@ -93,6 +117,12 @@
 			return move_uploaded_file($path, $this->_path() . "/" . $file->code());
 		}
 
+		/** @method retrieveFile($file)
+		 * Retrieve file from filesystem
+		 *
+		 * @param $file
+		 * @return bool
+		 */
 		public function retrieveFile($file) {
 			if (!$this->validPath($this->_path())) {
 				$this->error("Invalid path for repository");
@@ -124,6 +154,12 @@
 			exit;
 		}
 
+		/** @method checkFile($file)
+		 * Check if file exists in repository
+		 *
+		 * @param $file
+		 * @return bool
+		 */
 		public function checkFile($file) {
 			if (!$this->validPath($this->_path())) {
 				$this->error("Invalid path for repository");
@@ -137,6 +173,12 @@
 			return true;
 		}
 
+		/** @method eraseFile($file)
+		 * Delete file from filesystem
+		 *
+		 * @param $file
+		 * @return bool
+		 */
 		public function eraseFile($file) {
 		
 			if (! file_exists($this->_path()."/".$file->code)) {
@@ -152,15 +194,28 @@
 			return true;
 		}
 
+		/** @method validPath($path)
+		 * Validate a path
+		 *
+		 * @param $path
+		 * @return bool
+		 */
 		public function validPath ($path) {
 			# No Uplevel paths
 			if (preg_match('/\.\./',$path)) return false;
 
 			# No funky chars
 			if (preg_match('/^\/?\w[\/\w\_\.]*$/',$path)) return true;
+			elseif (preg_match('/\//',$path)) return true;
 			else return false;
 		}
 
+		/** @method validEndpoint($endpoint)
+		 * Validate an endpoint
+		 *
+		 * @param $endpoint
+		 * @return bool
+		 */
 		public function validEndpoint ($endpoint) {
 			# Not Required
 			if (empty($endpoint)) return true;

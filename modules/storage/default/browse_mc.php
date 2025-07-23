@@ -10,7 +10,8 @@ $can_proceed = true;
 /****************************************/
 // Get the path parameter with validation
 $path = $_REQUEST['path'] ?? '/';
-if (!$request->validText($path) || strlen($path) < 1) {
+$directory = new \Storage\Directory();
+if (!$directory->validPath($path) || strlen($path) < 1) {
 	$path = '/';
 }
 
@@ -19,20 +20,26 @@ $repo_code = $_REQUEST['code'] ?? null;
 if (!$request->validText($repo_code)) {
 	$page->addError("Invalid repository code");
 	$can_proceed = false;
-} else {
-	$repoFactory = new \Storage\RepositoryFactory();
-	$repository = $repoFactory->get($repo_code);
-	if ($repoFactory->error()) {
-		$page->addError($repoFactory->error());
+}
+else {
+	$repository = new \Storage\Repository();
+	$repository->get($repo_code);
+	if ($repository->error()) {
+		$page->addError($repository->error());
 		$can_proceed = false;
-	} elseif (! $repository->id) {
+	}
+	elseif (! $repository->id) {
 		$page->addError("Repository not found");
 		$can_proceed = false;
-	} else {
+	}
+	else {
+		$repository = $repository->getInstance();
 		$directories = $repository->directories($path);
 		$files = $repository->files($path);
 	}
 }
+
+$repository = $repository->getInstance();
 
 /****************************************/
 /* Handle Form Actions					*/

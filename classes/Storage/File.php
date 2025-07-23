@@ -57,6 +57,19 @@ class File extends \BaseModel {
 			return false;
 		}
 
+		// Validate the repository ID
+		if (! isset($parameters['repository_id']) || ! is_numeric($parameters['repository_id'])) {
+			$this->error("Invalid repository_id '" . $parameters['repository_id'] . "'");
+			return false;
+		}
+		$repository = new \Storage\Repository($parameters['repository_id']);
+		if (! $repository->id) {
+			app_log("Repository not found for file upload: " . $parameters['repository_id'], 'error');
+			app_log(print_r(debug_backtrace(), true), 'notice');
+			$this->error("Repository not found for file upload");
+			return false;
+		}
+
 		// Validate the mime type
 		$this->code = $parameters['code'];
 		if (! $this->_valid_type($parameters['mime_type'])) {
@@ -87,6 +100,7 @@ class File extends \BaseModel {
 		$database->AddParam($parameters['path']);
 
 		// Execute Query
+		$database->trace(9);
 		$database->Execute($add_object_query);
 
 		// Check for Errors
@@ -365,7 +379,7 @@ class File extends \BaseModel {
 			// Get Repository 
 			$repository = new Repository($id);
 			if (! $repository->id) {
-				$this->error("Repository not found");
+				$this->error("Repository not found?");
 				return false;
 			} else {
 				$this->_repository_id = $id;
@@ -379,8 +393,8 @@ class File extends \BaseModel {
 	 * @return instance of file's Storage/Repository 
 	 */
 	public function repository() {
-		$factory = new \Storage\RepositoryFactory();
-		return $factory->load($this->_repository_id);
+		$repository = new \Storage\Repository($this->_repository_id);
+		return $repository->getInstance();
 	}
 
 	/**
@@ -619,29 +633,42 @@ class File extends \BaseModel {
 	 * @param array $parameters - Array of parameters to upload the file
 	 * @return bool - True if successful, False if not
 	 */
-	public function upload($parameters) {
+	public function upload($parameters): bool {
 		// make sure we have a file present in the request to upload it
 		if (empty($_FILES)) $this->addError("No file was selected to upload");
 
 		// make sure all the required parameters are set for upload to continue
 		if (! preg_match('/^\//', $parameters['path'])) $parameters['path'] = '/' . $parameters['path'];
-		$factory = new \Storage\RepositoryFactory();
+
+		// Load the repository based on the parameters provided
 		if (!empty($parameters['repository_id'])) {
-			$repository = $factory->load($parameters['repository_id']);
-		} elseif (!empty($parameters['repository_code'])) {
-			$repository = $factory->get($parameters['repository_code']);
-		} elseif (!empty($parameters['repository_name'])) {
+			$repository = new \Storage\Repository($parameters['repository_id']);
+		}
+		elseif (!empty($parameters['repository_code'])) {
+			$repository = new \Storage\Repository();
+			$repository->get($parameters['repository_code']);
+		}
+		elseif (!empty($parameters['repository_name'])) {
+			$factory = new \Storage\RepositoryFactory();
 			$repository = $factory->find($parameters['repository_name']);
-		} else {
+			if ($factory->error()) {
+				$this->addError("Error loading repository: " . $factory->error());
+				return false;
+			}
+		}
+		else {
 			$this->addError("Repository not specified");
 			return false;
 		}
 
-		if (isset($factory) && $factory->error()) {
-			$this->addError("Error loading repository: " . $factory->error());
-		} elseif (!$repository->exists()) {
+		if ($repository->error()) {
+			$this->addError("Error loading repository: " . $repository->error());
+			return false;
+		}
+		elseif (!$repository->exists()) {
 			$this->addError("Repository not found");
-		} else {
+		}
+		else {
 			app_log("Identified repo '" . $repository->name . "'");
 
 			if (! file_exists($_FILES['uploadFile']['tmp_name'])) {
@@ -652,7 +679,8 @@ class File extends \BaseModel {
 				} else {
 					$this->addError("Temp file '" . $_FILES['uploadFile']['tmp_name'] . "' not found");
 				}
-			} else {
+			}
+			else {
 
 				// Check for Conflict 
 				$filelist = new \Storage\FileList();
@@ -709,15 +737,24 @@ class File extends \BaseModel {
 		return true;
 	}
 
-	public function writePermitted($user_id = null) {
+	/** @method writePermitted(user id)
+	 * Check if the current user has write access to the file
+	 * @param mixed $user_id - ID of the user to check
+	 */
+	public function writePermitted($user_id = null): bool {
 		return $this->writable($user_id);
 	}
 
-	public function readPermitted($user_id = null) {
+	/** @method readPermitted(user id)
+	 * Check if the current user has read access to the file
+	 * @param mixed $user_id - ID of the user to check
+	 * @return bool - True if user has read access, False if not
+	 */
+	public function readPermitted($user_id = null): bool {
 		return $this->readable($user_id);
 	}
 
-	/**
+	/** @method getPrivileges()
 	 * Get the privileges for the current file
 	 * Privileges are stored as a JSON object
 	 * @return mixed - Associative Array of Entities and Privilege Levels
@@ -727,7 +764,7 @@ class File extends \BaseModel {
 		return $privilegeList->fromJSON($this->access_privilege_json);
 	}
 
-	/**
+	/** @method privilegeList()
 	 * Return multi-dimensional array of privileges for the current file
 	 * @return object[][] 
 	 */
@@ -775,10 +812,11 @@ class File extends \BaseModel {
 		return $this->update(array('access_privileges' => json_encode($privileges)));
 	}
 
-	public function validPath($string) {
+	public function validPath($string): bool {
 		// Only a virtual path!
-		if (preg_match('/\.{2}/', $string)) return false;
-		if (preg_match('/\/{2}/', $string)) return false;
+		if (preg_match('/\.\./', $string)) return false;
+		if (preg_match('/\/\//', $string)) return false;
+		if ($string == '/') return true;
 		if (preg_match('/^\/[\w\-\.\_\/]*$/', $string)) return true;
 		else return false;
 	}

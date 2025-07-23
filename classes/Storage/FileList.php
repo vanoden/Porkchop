@@ -65,7 +65,7 @@
 						$database->AddParam($parameters['repository_id']);
 					}
 					else {
-						$this->error("Repository not found");
+						$this->error("Repository not found-");
 						return [];
 					}
 				}

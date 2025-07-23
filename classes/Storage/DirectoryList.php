@@ -18,7 +18,7 @@
 
 			if (! isset($parameters['repository_id'])) {
 				$this->error("Repository ID Required");
-				return null;
+				return [];
 			}
 
 			// Build Query
@@ -46,8 +46,7 @@
 				AND		repository_id = ?
 			";
 			$database->AddParam($parameters['repository_id']);
-            app_log("Getting directories for ".$parameters['repository_id']." in ".$parameters['path'],"info");
-
+            app_log("Getting directories for ".$parameters['repository_id']." in ".$parameters['path'],"trace");
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
@@ -55,9 +54,9 @@
 			}
 
 			$directories = array();
-			if (preg_match("/^\/(.+)/",$parameters['path'],$matches)) {
+			if (preg_match("/(.*\/)([^\/]+)$/",$parameters['path'],$matches)) {
 				$directory = new \Storage\Directory();
-				$directory->get("/".$matches[1]);
+				$directory->get($matches[1]);
 				$directory->display("..");
 				array_push($directories,$directory);
 			}

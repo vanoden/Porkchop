@@ -272,6 +272,29 @@
 			return $filelist->find(array('repository_id' => $this->id,'path' => $path));
 		}
 
+		/** @method getInstance()
+		 * Get the current instance of the Repository
+		 * @return \Storage\Repository - Current Repository instance
+		 */
+		public function getInstance(): \Storage\Repository {
+			if ($this->id) {
+				if (strtolower($this->type) == 'local') {
+					return new \Storage\Repository\Local($this->id);
+				}
+				elseif (strtolower($this->type) == 's3') {
+					return new \Storage\Repository\S3($this->id);
+				}
+				else {
+					$this->error("Invalid repository type: ". $this->type);
+					return new \Storage\Repository();
+				}
+			}
+			else {
+				$this->error("Repository not found");
+				return new \Storage\Repository();
+			}
+		}
+
 		/**
 		 * Add File to Repository
 		 * @param PHP Uploaded File, single element of $_FILES array
@@ -279,6 +302,11 @@
 		 * @return Storage\File instance
 		 */
 		public function uploadFile($uploadedFile,$path = '/') {
+			if (! $this->id) {
+				$this->error("Repository not initialized");
+				return null;
+			}
+
 			// Check for Errors
 			if ($uploadedFile['error'] == 1) {
 				$this->error("Uploaded file too large");
@@ -333,6 +361,7 @@
 
 				if ($existing->id) {
 					$this->error("File already exists with that name in repo ".$this->name);
+					return null;
 				}
 				else {
 					// Add File to Library 
