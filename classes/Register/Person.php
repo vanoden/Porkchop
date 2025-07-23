@@ -585,4 +585,12 @@ class Person Extends \BaseModel {
 	public function otp_secret_key() {
 		return $this->secret_key;
 	}
+
+	/** @method login()
+	 * Returns the login (code) for the person
+	 * @return string
+	 */
+	public function login() {
+		return $this->code;
+	}
 }

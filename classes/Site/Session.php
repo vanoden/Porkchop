@@ -185,6 +185,9 @@ use Register\Customer;
 			// Clear Previous Errors
 			$this->clearError();
 
+			// Clear OTP verification cache
+			$this->clearOTPVerified();
+
 			// Initialize Database Service
 			$database = new \Database\Service();
 
@@ -355,13 +358,8 @@ use Register\Customer;
 					}
 					$this->csrfToken = $session->csrfToken;
 					
-					// Handle OTP verification status from cache
-					if (isset($session->otpVerified)) {
-						$this->otpVerified = $session->otpVerified;
-						app_log("OTP verification status loaded from cache: " . ($this->otpVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
-					} else {
-						app_log("No OTP verification status found in cache", 'debug', __FILE__, __LINE__, 'otplogs');
-					}
+					// Handle OTP verification status from separate cache
+					$this->otpVerified = $this->loadOTPVerifiedFromCache();
 					$this->cached(true);
 					return true;
 				}
@@ -429,12 +427,12 @@ use Register\Customer;
 				// Initialize OTP verification status based on user requirements
 				if ($GLOBALS['_config']->register->use_otp && $this->customer && $this->customer->id > 0) {
 					// If user requires OTP, default to not verified
-					$session->otpVerified = false;
 					$this->otpVerified = false;
+					$this->setOTPVerified(false);
 				} else {
 					// If user doesn't require OTP, default to verified
-					$session->otpVerified = true;
 					$this->otpVerified = true;
+					$this->setOTPVerified(true);
 				}
 
 				if ($session->id) $cache->set($session,600);
@@ -489,6 +487,9 @@ use Register\Customer;
 			$cache_key = "session[".$this->id."]";
 			$cache = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
 			$cache->delete();
+			
+			// Clear OTP verification cache when assigning to new customer
+			$this->clearOTPVerified();
 
 			// Prepare Query to Check if User is Already Logged In
 			$check_session_query = "
@@ -643,12 +644,15 @@ use Register\Customer;
 			
 			// Preserve OTP verification status before deleting cache
 			$preservedOTPVerified = null;
+			// Preserve OTP verification status from separate cache
+			$otp_cache_key = "session[".$this->id."]-otp-verified";
+			$otp_cache = new \Cache\Item($GLOBALS['_CACHE_'], $otp_cache_key);
+			$preservedOTPVerified = $otp_cache->get();
+			if ($preservedOTPVerified !== null) {
+				app_log("Preserving OTP verification status: " . ($preservedOTPVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+			}
+			
 			if ($cache) {
-				$session = $cache->get();
-				if ($session && isset($session->otpVerified)) {
-					$preservedOTPVerified = $session->otpVerified;
-					app_log("Preserving OTP verification status: " . ($preservedOTPVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
-				}
 				$cache->delete();
 			}
 			app_log("Unset cache key $cache_key",'debug',__FILE__,__LINE__);
@@ -708,15 +712,8 @@ use Register\Customer;
 				$this->otpVerified = $preservedOTPVerified;
 				app_log("Restored OTP verification status: " . ($preservedOTPVerified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 				
-				// Update cache with restored OTP status
-				$cache_key = "session[".$this->id."]";
-				$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
-				$session = $cache->get();
-				if ($session) {
-					$session->otpVerified = $preservedOTPVerified;
-					$cache->set($session, 600);
-					app_log("Updated cache with restored OTP verification status", 'debug', __FILE__, __LINE__, 'otplogs');
-				}
+				// Update separate cache with restored OTP status
+				$this->setOTPVerified($preservedOTPVerified);
 			}
 
 			return $result;
@@ -968,45 +965,38 @@ use Register\Customer;
 		}
 
 		/**
-		 * Set OTP verification status in cache
+		 * Set OTP verification status in separate cache with 2-hour expiration
 		 * @param bool $verified
 		 * @return bool
 		 */
 		public function setOTPVerified(bool $verified): bool {
 			$this->otpVerified = $verified;
 		
-			// Update cache
-			$cache_key = "session[".$this->id."]";
-			$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
-			$session = $cache->get();
-		
-			if ($session) {
-				$session->otpVerified = $verified;
-				$cache->set($session, 600);
-				app_log("OTP verification status updated in cache: " . ($verified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
-				return true;
+			// Use separate cache key for OTP verification with 2-hour expiration (7200 seconds)
+			$otp_cache_key = "session[".$this->id."]-otp-verified";
+			$otp_cache = new \Cache\Item($GLOBALS['_CACHE_'], $otp_cache_key);
+			$otp_cache->set($verified, 7200);
+			
+			app_log("OTP verification status updated in separate cache: " . ($verified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
+			return true;
+		}
+
+		/**
+		 * Load OTP verification status from separate cache
+		 * @return bool|null
+		 */
+		private function loadOTPVerifiedFromCache(): ?bool {
+			$otp_cache_key = "session[".$this->id."]-otp-verified";
+			$otp_cache = new \Cache\Item($GLOBALS['_CACHE_'], $otp_cache_key);
+			$verified = $otp_cache->get();
+			
+			if ($verified !== null) {
+				app_log("OTP verification status loaded from separate cache: " . ($verified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 			} else {
-				// If no session in cache, create a new session object with current data
-				$session = new \stdClass();
-				$session->id = $this->id;
-				$session->code = $this->code;
-				$session->company_id = $this->company ? $this->company->id : 0;
-				$session->customer_id = $this->customer ? $this->customer->id : 0;
-				$session->timezone = $this->timezone;
-				$session->browser = $this->browser;
-				$session->first_hit_date = $this->first_hit_date;
-				$session->last_hit_date = $this->last_hit_date;
-				$session->super_elevation_expires = $this->super_elevation_expires;
-				$session->refer_url = $this->refer_url;
-				$session->oauth2_state = $this->oauth2_state;
-				$session->isMobile = $this->isMobile;
-				$session->csrfToken = $this->csrfToken;
-				$session->otpVerified = $verified;
-				
-				$cache->set($session, 600);
-				app_log("Created new session object in cache with OTP verification status: " . ($verified ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
-				return true;
+				app_log("No OTP verification status found in separate cache", 'debug', __FILE__, __LINE__, 'otplogs');
 			}
+			
+			return $verified;
 		}
 
 		/**
@@ -1014,6 +1004,10 @@ use Register\Customer;
 		 * @return bool|null
 		 */
 		public function getOTPVerified(): ?bool {
+			// If not set in memory, try to load from separate cache
+			if ($this->otpVerified === null) {
+				$this->otpVerified = $this->loadOTPVerifiedFromCache();
+			}
 			return $this->otpVerified;
 		}
 
@@ -1024,6 +1018,22 @@ use Register\Customer;
 		public function isOTPVerified(): bool {
 			// If OTP verification is null, assume no OTP required (verified)
 			return $this->otpVerified !== false;
+		}
+
+		/**
+		 * Clear OTP verification status from cache
+		 * @return bool
+		 */
+		public function clearOTPVerified(): bool {
+			$this->otpVerified = null;
+			
+			// Clear from separate cache
+			$otp_cache_key = "session[".$this->id."]-otp-verified";
+			$otp_cache = new \Cache\Item($GLOBALS['_CACHE_'], $otp_cache_key);
+			$otp_cache->delete();
+			
+			app_log("OTP verification status cleared from cache", 'debug', __FILE__, __LINE__, 'otplogs');
+			return true;
 		}
 
 		public function location() {

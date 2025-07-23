@@ -192,7 +192,7 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validCode($string): bool {
-		return (preg_match($this->_patterns['code'], $string));
+		return (is_string($string) && preg_match($this->_patterns['code'], $string));
 	}
 
 	/**
@@ -312,7 +312,7 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validName($string): bool {
-		return (preg_match($this->_patterns['name'], $string));
+		return (is_string($string) && preg_match($this->_patterns['name'], $string));
 	}
 
 	/**
@@ -342,7 +342,7 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validSearch($string): bool {
-		return (preg_match($this->_patterns['search'], $string));
+		return (is_string($string) && preg_match($this->_patterns['search'], $string));
 	}
 
 	/**
@@ -352,7 +352,7 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validAddressLine($string): bool {
-		return (preg_match($this->_patterns['address_line'], urldecode($string)));
+		return (is_string($string) && preg_match($this->_patterns['address_line'], urldecode($string)));
 	}
 
 	/**
@@ -362,7 +362,7 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validCity($string): bool {
-		return (preg_match($this->_patterns['city_name'], urldecode($string)));
+		return (is_string($string) && preg_match($this->_patterns['city_name'], urldecode($string)));
 	}
 
 	/**
@@ -372,7 +372,7 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validHostname($string): bool {
-		return (preg_match($this->_patterns['hostname'], $string));
+		return (is_string($string) && preg_match($this->_patterns['hostname'], $string));
 	}
 
 	/**

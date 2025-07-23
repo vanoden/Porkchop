@@ -1071,6 +1071,7 @@
 			$notice_template->content($template_content);
 			$notice_template->addParam('RECOVERY.URL', $recovery_url);
 			$notice_template->addParam('RECOVERY.LINK', $recovery_url);
+			$notice_template->addParam('COMPANY.NAME', $GLOBALS['_SESSION_']->company->name ?? '');
 
 			// Create and send email
 			$message = new \Email\Message();
@@ -1309,6 +1310,7 @@
 				$notice_template->addParam('BACKUP.CODES', implode('<br>', array_map('htmlentities', $codes)));
 				$notice_template->addParam('USER.NAME', $this->full_name());
 				$notice_template->addParam('SITE.NAME', $GLOBALS['_config']->site->hostname);
+				$notice_template->addParam('COMPANY.NAME', $GLOBALS['_SESSION_']->company->name ?? '');
 
 				if ($email) {
 					$message = new \Email\Message();

@@ -6,6 +6,7 @@
 		public $type;
         public $register_id;
 		public $name;		
+		protected $_database;
 
 		public function __construct($id = 0) {
 			$this->_database = new \Database\Service();

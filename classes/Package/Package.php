@@ -207,7 +207,7 @@
 			$this->date_created = $object->date_created;
 			$this->timestamp = $object->timestamp;
 			$this->platform = $object->platform;
-			$this->package_version_id = $object->package_version_id;
+			$this->package_version_id = isset($object->package_version_id) ? $object->package_version_id : null;
 			$this->repository_id = $object->repository_id;
 
 			return true;

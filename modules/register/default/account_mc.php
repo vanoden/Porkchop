@@ -304,7 +304,8 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Resend Email" && !$rea
 			array(
 				'path'	=> $GLOBALS['_config']->register->verify_email->template,
 				'parameters'	=> array(
-					'VERIFYING.URL' => $verify_url
+					'VERIFYING.URL' => $verify_url,
+					'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? ''
 				)
 			)
 		);

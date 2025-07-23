@@ -60,11 +60,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 else {
                     $result = $customer->sendOTPRecovery($email_address);
-                    
-                    if ($result) {
-                        app_log("OTP recovery email sent to: " . $email_address . " for customer: " . $customer->code, 'notice', __FILE__, __LINE__);
-                        header("Location: /_register/otp_recovery_sent");
-                        exit;
+                
+                if ($result) {
+                    app_log("OTP recovery email sent to: " . $email_address . " for customer: " . $customer->code, 'notice', __FILE__, __LINE__);
+                    header("Location: /_register/otp_recovery_sent");
+                    exit;
                     }
                     else {
                         // Check for specific error about notify email
@@ -73,11 +73,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                         elseif (strpos($customer->error(), "does not match the email address set to 'Notify'") !== false) {
                             $page->addError("The email address you provided does not match the email address set to receive notifications for your account. Please use the email address that is configured for notifications.");
+                }
+                else {
+                    $page->addError("Error sending recovery email, please try again later");
                         }
-                        else {
-                            $page->addError("Error sending recovery email, please try again later");
-                        }
-                        app_log("Failed to send OTP recovery email: " . $customer->error(), 'error', __FILE__, __LINE__);
+                    app_log("Failed to send OTP recovery email: " . $customer->error(), 'error', __FILE__, __LINE__);
                     }
                 }
             }
