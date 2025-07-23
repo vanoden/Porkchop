@@ -378,6 +378,59 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
+			if ($this->version() < 10 && $max_version >= 10) {
+				app_log("Upgrading schema to version 10", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+				/* Create product_assemblies table */
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `product_assemblies` (
+						`id` int(11) NOT NULL AUTO_INCREMENT,
+						`part_number` int(11) NOT NULL,
+						`product_id` int(11) NOT NULL,
+						`part_product_id` int(11) NOT NULL,
+						`preference_order` int(2) NOT NULL DEFAULT 0,
+						`quantity` decimal(10,2) NOT NULL DEFAULT 1,
+						PRIMARY KEY (`id`),
+						INDEX `idx_product_part` (`product_id`, `part_number`),
+						UNIQUE KEY `uk_product_assembly` (`product_id`, `part_product_id`),
+						FOREIGN KEY `fk_product_assembly_product_id` (`product_id`) REFERENCES `product_products` (`id`),
+						FOREIGN KEY `fk_product_assembly_part_product_id` (`part_product_id`) REFERENCES `product_products` (`id`)
+					)
+				";
+
+				if (!$this->executeSQL($create_table_query)) {
+					$this->SQLError("Error creating product_assemblies table in " . $this->module . "::Schema::upgrade(): " . $this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(10);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 11 && $max_version >= 11) {
+				app_log("Upgrading schema to version 11", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `product_products` ADD `on_hand_cost` decimal(10,2) NOT NULL DEFAULT 0
+				";
+
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(11);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}
