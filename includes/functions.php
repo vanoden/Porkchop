@@ -290,7 +290,15 @@
 		$level = 'trace';
 		app_log('Query Time Audit: ' . $timeMilliseconds . 'ms '.$query."\n".print_r($params,true),$level);
 	}
-	
+
+	/** @function query_log(query, params, path to calling file, line number of calling line)
+	 * Log a Query to the Application Log
+	 * @param string $query
+	 * @param array $params
+	 * @param string $path
+	 * @param int $line
+	 * @return void
+	*/
 	function query_log($query,$params = array(),$path = null,$line = null) {
 		if (is_bool($path)) {
 			$level = 'debug';
