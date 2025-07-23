@@ -47,7 +47,7 @@ class BaseModel extends \BaseClass {
 			$calledClass = get_called_class();
 			$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
 			$callerInfo = '';
-			
+
 			// Get caller information from the backtrace
 			if (isset($backtrace[1])) {
 				$caller = $backtrace[1];
@@ -90,11 +90,15 @@ class BaseModel extends \BaseClass {
 			else return $this->setMetadataScalar($parameters[0], $parameters[1]);
 		}
 		elseif ($name == 'uploadImage') {
-			if (gettype($parameters[1]) == 'int') {
+			if (! empty($parameters[1]) && gettype($parameters[1]) == 'integer') {
 				return $this->uploadImageToRepoID($parameters[0], $parameters[1], $parameters[2] ?? null, $parameters[3] ?? null);
 			}
-			else {
+			elseif (! empty($parameters[1]) && gettype($parameters[1]) == 'string') {
 				return $this->uploadImageToRepoCode($parameters[0], $parameters[1], $parameters[2] ?? null, $parameters[3] ?? null);
+			}
+			else {
+				$this->error("Invalid parameters for uploadImage");
+				return false;
 			}
 		}
 		else {
@@ -1423,7 +1427,7 @@ class BaseModel extends \BaseClass {
 		return $found;
 	}
 
-	/**
+	/** @method uploadImageToRepoCode(array, string, string, string, string|null)
 	 * Upload an image for a specific Repository by Code and associate it with the object
 	 * @param array $fileData The uploaded file data from $_FILES
 	 * @param string $repository_code The Code of the repository where the file should be stored
@@ -1444,23 +1448,23 @@ class BaseModel extends \BaseClass {
 		}
 
 		// Initialize the repository factory and load the repository
-		$factory = new \Storage\RepositoryFactory();
-		$repository = $factory->get($repository_code);
+		$repository = new \Storage\Repository();
+		$repository->get($repository_code);
 
-		if ($factory->error()) {
-			$this->error('Error loading repository: ' . $factory->error());
+		if ($repository->error()) {
+			$this->error('Error loading repository: ' . $repository->error());
 			return false;
 		}
 
 		if (! $repository->id) {
-			$this->error('Repository not found');
+			$this->error('Repository not found with code ' . $repository_code);
 			return false;
 		}
 
 		return ($this->uploadImageToRepo($fileData, $repository, $path, $label, $object_type));
 	}
 
-	/**
+	/** @method uploadImageToRepoID(array, int, string, string, string|null)
 	 * Upload an image and associate it with the object
 	 * 
 	 * @param array $fileData The uploaded file data from $_FILES
@@ -1484,14 +1488,14 @@ class BaseModel extends \BaseClass {
 		// Initialize the repository factory and load the repository
 		$repository = new \Storage\Repository($repository_id);
 		if (! $repository->exists()) {
-			$this->error('Repository not found');
+			$this->error('Repository not found with ID ' . $repository_id);
 			return false;
 		}
 
 		return ($this->uploadImageToRepo($fileData, $repository, $path, $label, $object_type));
 	}
 
-	/**
+	/** @method uploadImageToRepo(array, \Storage\Repository, string, string, string|null)
 	 * Upload an image to a specified repository and associate it with the object.
 	 * Uploads an image to a specified repository and associates it with the object.
 	 * @param array $fileData The uploaded file data from $_FILES
@@ -1503,7 +1507,7 @@ class BaseModel extends \BaseClass {
 	 */
 	public function uploadImageToRepo(array $fileData, \Storage\Repository $repository, string $path = '', string $label = '', $object_type = null): bool {
 		if (! $repository->id) {
-			$this->error('Repository not found');
+			$this->error('Repository not found!');
 			return false;
 		}
 
@@ -1512,13 +1516,16 @@ class BaseModel extends \BaseClass {
 			return false;
 		}
 
+		// Get Instance of the repository
+		$instance = $repository->getInstance();
+
 		app_log("Identified repo '" . $repository->name . "'");
 
 		// Upload the file
-		$uploadedFile = $repository->uploadFile($fileData, $path);
+		$uploadedFile = $instance->uploadFile($fileData, $path);
 
 		if (!$uploadedFile) {
-			$this->error('Error uploading file: ' . $repository->error());
+			$this->error('Error uploading file: ' . $instance->error());
 			return false;
 		}
 
@@ -1532,6 +1539,11 @@ class BaseModel extends \BaseClass {
 		return true;
 	}
 
+	/** @method validMetadataKey(string)
+	 * Validate a metadata key
+	 * @param string $key The metadata key to validate
+	 * @return bool True if valid, false otherwise
+	 */
 	public function validMetadataKey($key) {
 		if (!preg_match('/^[\w_\-\.\s\:]+$/', $key)) {
 			$this->error("Invalid metadata key");
