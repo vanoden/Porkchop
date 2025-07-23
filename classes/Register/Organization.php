@@ -7,6 +7,8 @@
 		public ?string $code = null;
 		public string $status = 'NEW';
 		public bool $is_reseller = false;
+		public bool $is_customer = true;
+		public bool $is_vendor = false;
 		public $reseller;
 		public string $notes = "";
 		public ?int $assigned_reseller_id = null;
@@ -32,6 +34,11 @@
     		parent::__construct($id);
 		}
 
+		/** @method add(parameters)
+		 * Add a new Organization
+		 * @param array $parameters
+		 * @return bool
+		 */
 		public function add($parameters = []) {
 			
 			app_log("Register::Organization::add()",'trace',__FILE__,__LINE__);
@@ -70,6 +77,11 @@
 			return $this->update($parameters);
 		}
 
+		/** @method update(parameters)
+		 * Update an existing Organization
+		 * @param array $parameters
+		 * @return bool
+		 */
 		public function update($parameters = []): bool {
 
 			app_log("Register::Organization::update()",'trace',__FILE__,__LINE__);
@@ -95,6 +107,16 @@
 				$update_object_query .= ",
 						status = ?";
 				array_push($bind_params,$parameters['status']);
+			}
+			if (isset($parameters['is_reseller']) && is_numeric($parameters['is_reseller'])) {
+				$update_object_query .= ",
+						is_reseller = ?";
+				array_push($bind_params,$parameters['is_reseller']);
+			}
+			if (isset($parameters['is_customer']) && is_numeric($parameters['is_customer'])) {
+				$update_object_query .= ",
+						is_customer = ?";
+				array_push($bind_params,$parameters['is_customer']);
 			}
 			if (isset($parameters['is_reseller']) && is_numeric($parameters['is_reseller'])) {
 				$update_object_query .= ",
@@ -155,11 +177,14 @@
 			// audit any/all the organization changes made
 			if (isset($parameters['notes']) && ($parameters['notes'] != $this->notes)) $this->auditRecord('ORGANIZATION_UPDATED','Organization notes have been updated: '.$parameters['notes']);
 			if (isset($parameters['website_url']) && ($parameters['website_url'] != $this->website_url)) $this->auditRecord('ORGANIZATION_UPDATED','Organization website_url has been updated: '.$parameters['website_url']);
-			if (isset($parameters['status']) && ($parameters['status'] != $this->status)) $this->auditRecord('STATUS_CHANGED','Organization status has been updated: '.$parameters['status']);
-			if (isset($parameters['name']) && ($parameters['name'] != $this->name)) $this->auditRecord('NAME_CHANGED','Organization name has been changed: '.$parameters['name']);
-			if (isset($parameters['is_reseller']) && ($parameters['is_reseller'] != $this->is_reseller)) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (is_reseller): '.$parameters['is_reseller']);
-			if (isset($parameters['assigned_reseller_id']) && ($parameters['assigned_reseller_id'] != $this->assigned_reseller_id)) $this->auditRecord('RESELLER_CHANGED','Organization is a reseller has been updated (assigned_reseller_id): '.$parameters['assigned_reseller_id']);
-			
+			if (isset($parameters['status']) && ($parameters['status'] != $this->status)) $this->auditRecord('ORGANIZATION_UPDATED','Organization status has been updated: '.$parameters['status']);
+			if (isset($parameters['name']) && ($parameters['name'] != $this->name)) $this->auditRecord('ORGANIZATION_UPDATED','Organization name has been changed: '.$parameters['name']);
+			if (isset($parameters['is_reseller']) && ($parameters['is_reseller'] != $this->is_reseller)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a reseller has been updated (is_reseller): '.$parameters['is_reseller']);
+			if (isset($parameters['is_customer']) && ($parameters['is_customer'] != $this->is_customer)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a customer has been updated (is_customer): '.$parameters['is_customer']);
+			if (isset($parameters['is_vendor']) && ($parameters['is_vendor'] != $this->is_vendor)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a vendor has been updated (is_vendor): '.$parameters['is_vendor']);
+			if (isset($parameters['time_based_password']) && ($parameters['time_based_password'] != $this->time_based_password)) $this->auditRecord('ORGANIZATION_UPDATED','Organization time based password has been updated (time_based_password): '.$parameters['time_based_password']);
+			if (isset($parameters['assigned_reseller_id']) && ($parameters['assigned_reseller_id'] != $this->assigned_reseller_id)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a reseller has been updated (assigned_reseller_id): '.$parameters['assigned_reseller_id']);
+
 			// audit the update event
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
@@ -196,6 +221,12 @@
 				$this->code = $organization->code;
 				$this->status = $organization->status;
 				$this->is_reseller = boolval($organization->is_reseller);
+				if (isset($organization->is_customer)) {
+					$this->is_customer = boolval($organization->is_customer);
+				} else {
+					$this->is_customer = true; // Default to true if not set
+				}
+				$this->is_vendor = boolval($organization->is_vendor);
 				if (!empty($organization->notes)) $this->notes = $organization->notes;
 				else $this->notes = "";
 				$this->password_expiration_days = $organization->password_expiration_days;
@@ -225,6 +256,8 @@
 						status,
 						is_reseller,
 						assigned_reseller_id,
+						is_customer,
+						is_vendor,
 						notes,
 						password_expiration_days,
 				        default_billing_location_id,
@@ -255,6 +288,8 @@
 				if (!empty($object->website_url)) $this->website_url = $object->website_url;
 				else $this->website_url = "";
 				$this->is_reseller = boolval($object->is_reseller);
+				$this->is_customer = boolval($object->is_customer);
+				$this->is_vendor = boolval($object->is_vendor);
 				if (!empty($object->notes)) $this->notes = $object->notes;
 				else $this->notes = "";
 				$this->time_based_password = $object->time_based_password;

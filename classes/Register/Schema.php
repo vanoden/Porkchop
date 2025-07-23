@@ -1570,8 +1570,28 @@
 				}
 				$this->setVersion(46);
 				$database->CommitTrans();
+			}			
+			if ($this->version() < 47) {
+				app_log("Upgrading schema to version 47", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction
+				if (!$database->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				
+				$alter_table_query = "
+						ALTER TABLE `register_organizations` ADD COLUMN `is_vendor` int(1) DEFAULT 0,
+						ADD COLUMN `is_customer` int(1) DEFAULT 1
+					";
+				$database->Execute($alter_table_query);
+				if ($database->ErrorMsg()) {
+					$this->SQLError("Error altering register_organizations table in Register::Schema::upgrade(): ".$database->ErrorMsg());
+					app_log($this->error(), 'error', __FILE__, __LINE__);
+					$database->RollbackTrans();
+					return null;
+				}
+				$this->setVersion(47);
+				$database->CommitTrans();
 			}
-			
 			return true;
 		}
 	}
