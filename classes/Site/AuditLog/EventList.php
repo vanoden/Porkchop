@@ -39,7 +39,7 @@ class EventList extends \BaseListClass {
 		}
 
 		if (!empty($parameters['class_name'])) {
-			if (class_exists($workingClass->_modelName)) {
+			if (class_exists($parameters['class_name'])) {
 				$find_objects_query .= " AND class_name = ?";
 				$database->AddParam($parameters['class_name']);
 			}

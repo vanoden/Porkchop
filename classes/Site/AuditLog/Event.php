@@ -4,12 +4,12 @@ namespace Site\AuditLog;
 use Aws\TrustedAdvisor\TrustedAdvisorClient;
 
 class Event Extends \BaseModel {
-	public $event_date;				// Datetime of the event
-	public ?int $user_id;				// ID of the customer triggering the event
-	public ?int $instance_id;			// ID of the instance being audited
-	public $class_name;				// Class name of the object being audited
-	public $class_method;			// Method name of the object being audited
-	public $description;			// Description of the event
+	public $event_date = null;			// Datetime of the event
+	public ?int $user_id = null;		// ID of the customer triggering the event
+	public ?int $instance_id = null;	// ID of the instance being audited
+	public $class_name = null;			// Class name of the object being audited
+	public $class_method = null;		// Method name of the object being audited
+	public $description = null;			// Description of the event
 
 	/**
 	 * Constructor
