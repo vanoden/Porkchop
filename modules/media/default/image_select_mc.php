@@ -30,7 +30,7 @@
     <div id="image-container">
         <?php
         # Get Images to Display
-        $_image = new MediaImage();
+        $_image = new \Media\Image();
         $images = $_image->find();
 
         # Loop Through and Display Images

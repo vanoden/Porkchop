@@ -2,30 +2,37 @@
 namespace Media;
 
 class Image extends \Storage\File {
-
-	public function find($parameters = array()) {
-		$parameters['type'] = 'image';
-		return parent::find($parameters);
-	}
-
-	/**
+	/** @method resized($height, $width)
 	 * Return image file resized to given dimensions
 	 * @param mixed $height 
 	 * @param mixed $width 
-	 * @return null|void 
+	 * @return null|string 
 	 */
-	public function resize($height, $width) {
+	public function resized($height, $width): ?string {
 		if (! $this->id) {
 			$this->error("Image not found");
 			return null;
 		}
-		$filelist = new FileList();
-		$files = $filelist->find(array("item_id" => $this->id));
-		list($file) = $files;
 
-		$data = $file->load($file->id);
-		list($owidth, $oheight) = getimagesize($data);
-		$gd_image = imagecreatefromstring($width, $height);
-		print_r($file);
+		$repository = $this->repository();
+		$data = $repository->content($this);
+		if ($this->error()) {
+			return null;
+		}
+
+		// Resize Image Content
+		list($owidth, $oheight) = getimagesizefromstring($data);
+		$gd_image = imagecreatefromstring($data);
+		if ($gd_image === false) {
+			$this->error("Failed to create image from string");
+			return null;
+		}
+		$new_image = imagecreatetruecolor($width, $height);
+		imagecopyresampled($new_image, $gd_image, 0, 0, 0, 0, $width, $height, $owidth, $oheight);
+		$stream = fopen('php://memory', 'r+');
+		imagejpeg($new_image, $stream);
+		rewind($stream);
+		$buffer = stream_get_contents($stream);
+		return $buffer;
 	}
 }
