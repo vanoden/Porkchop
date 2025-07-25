@@ -58,7 +58,9 @@
 				    "name"					    => $_REQUEST['name'],
 				    "code"					    => $_REQUEST['code'],
 				    "status"				    => $_REQUEST['status'],
-				    'is_reseller'			    => $_REQUEST['is_reseller'],
+				    "is_reseller"			    => $_REQUEST['is_reseller'],
+					"is_customer"		    	=> $_REQUEST['is_customer'],
+					"is_vendor"			    	=> $_REQUEST['is_vendor'],
 				    "assigned_reseller_id"	    => $_REQUEST['assigned_reseller_id'],
 				    "notes"					    => noXSS(trim($_REQUEST['notes'])),
 				    "password_expiration_days"	=> $_REQUEST['password_expiration_days'],
@@ -66,6 +68,8 @@
 					"time_based_password"		=> $_REQUEST['time_based_password'],
 			    );
 			    if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
+				if (! $_REQUEST['is_customer']) $parameters['is_customer'] = 0;
+				if (! $_REQUEST['is_vendor']) $parameters['is_vendor'] = 0;
 			    if (! $_REQUEST['time_based_password']) $parameters['time_based_password'] = 0;
 			    if ($organization->id) {
 				    app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);

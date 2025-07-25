@@ -104,6 +104,21 @@
 				$find_objects_query .= "
 				AND		ro.is_reseller = ".$parameters['is_reseller'];
 
+			if (!empty($parameters['reseller_id']) && is_numeric($parameters['reseller_id'])) {
+				$find_objects_query .= "
+				AND		ro.reseller_id = ?";
+				$database->AddParam($parameters['reseller_id']);
+			}
+			if (isset($parameters['is_customer']) && is_numeric($parameters['is_customer'])) {
+				$find_objects_query .= "
+						AND	ro.is_customer = ?";
+				$database->AddParam($parameters['is_customer']);
+			}
+			if (isset($parameters['is_vendor']) && is_numeric($parameters['is_vendor'])) {
+				$find_objects_query .= "
+						AND	ro.is_vendor = ?";
+				$database->AddParam($parameters['is_vendor']);
+			}
 
             if (isset($controls['sort'])) {
                 if (!$validationClass->hasField($controls['sort'])) {
@@ -244,12 +259,56 @@
 				$find_objects_query .= "
 				AND		ro.status IN ('NEW','ACTIVE')";
 
-			if (isset($parameters['reseller_id']) && is_numeric($parameters['reseller_id'])) {
-				$find_objects_query .= "
-				AND		ro.reseller_id = ?";
-				$database->AddParam($parameters['reseller_id']);
+			if (isset($parameters['is_reseller'])) {
+				if (is_numeric($parameters['is_reseller'])) {
+					$find_objects_query .= "
+					AND		ro.is_reseller = ?";
+					$database->AddParam($parameters['is_reseller']);
+				}
+				else if ($parameters['is_reseller'] === true || $parameters['is_reseller'] === 'true') {
+					$find_objects_query .= "
+					AND		ro.is_reseller = 1";
+				}
+				else if ($parameters['is_reseller'] === false || $parameters['is_reseller'] === 'false') {
+					$find_objects_query .= "
+					AND		ro.is_reseller = 0";
+				}
 			}
-
+			if (!empty($parameters['is_vendor'])) {
+				if (is_numeric($parameters['is_vendor'])) {
+					$find_objects_query .= "
+					AND		ro.is_vendor = ?";
+					$database->AddParam($parameters['is_vendor']);
+				}
+				else if ($parameters['is_vendor'] === false || $parameters['is_vendor'] === 'false') {
+					$find_objects_query .= "
+						AND		ro.is_vendor = 0";
+				}
+				else if ($parameters['is_vendor'] === true || $parameters['is_vendor'] === 'true') {
+					$find_objects_query .= "
+						AND		ro.is_vendor > 0";
+				}
+			}
+			if (isset($parameters['is_customer'])) {
+				if (is_numeric($parameters['is_customer'])) {
+					$find_objects_query .= "
+						AND	ro.is_customer = ?";
+					$database->AddParam($parameters['is_customer']);
+				}
+				else if ($parameters['is_customer'] === true || $parameters['is_customer'] === 'true') {
+					$find_objects_query .= "
+						AND	ro.is_customer = 1";
+				}
+				else if ($parameters['is_customer'] === false || $parameters['is_customer'] === 'false') {
+					$find_objects_query .= "
+						AND	ro.is_customer = 0";
+				}
+			}
+			if (isset($parameters['is_vendor']) && is_numeric($parameters['is_vendor'])) {
+				$find_objects_query .= "
+						AND	ro.is_vendor = ?";
+				$database->AddParam($parameters['is_vendor']);
+			}
             if (isset($controls['sort'])) {
                 if (!$workingClass->hasField($controls['sort'])) {
                     $this->error("Invalid sort field");

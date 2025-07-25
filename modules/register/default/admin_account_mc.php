@@ -10,11 +10,13 @@ $page = new \Site\Page(array("module" => 'register', "view" => 'account'));
 $page->requirePrivilege('manage customers');
 $customer = new \Register\Customer();
 
-$factory = new \Storage\RepositoryFactory();
 $repository = new \Storage\Repository();
 $site_config = new \Site\Configuration();
 $site_config->get('website_images');
-if (!empty($site_config->value)) $repository = $factory->get($site_config->value);
+if (!empty($site_config->value)) {
+	$repository->get($site_config->value);
+	$repository = $repository->getInstance();
+}
 
 if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id']))
 	$customer_id = $_REQUEST['customer_id'];

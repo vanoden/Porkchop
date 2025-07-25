@@ -17,24 +17,7 @@
 	    }
 		else {
             $page->appendSuccess($_REQUEST['method']);
-		    if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
-		    $parameters = array(
-			    "password_expiration_days"	=> $_REQUEST['password_expiration_days'],
-				"website_url"				=> $_REQUEST['website_url'],
-				"time_based_password"		=> $_REQUEST['time_based_password'],
-		    );
-		    if (! $_REQUEST['time_based_password']) $parameters['time_based_password'] = 0;
-		    app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
-				    
-		    // Update Existing Organization
-		    $organization->update($parameters);
 
-		    if ($organization->error()) {
-			    $page->addError("Error updating organization");
-		    }
-			else {
-			    $page->appendSuccess("Organization Updated Successfully");
-		    }
 	    }		
 	}
 	
@@ -55,26 +38,34 @@
 			app_log("Error finding members: ".$organization->error,'error',__FILE__,__LINE__);
 		}
 
+		// Initialize Parameters for the form
+		$parameters = array();
+
 		// Update Existing Organization default billing
-		if (!empty($_REQUEST['setDefaultBilling']) && is_numeric($_REQUEST['setDefaultBilling'])) {
-		    $updateParameters = array();
-		    $updateParameters['default_billing_location_id'] = $_REQUEST['setDefaultBilling'];
-		    $organization->update($updateParameters);
-		    if ($organization->error) {
-			    $page->addError("Error updating organization");
-		    } else {
-			    $page->appendSuccess("Organization Updated Successfully");
-		    }		
-		}
-		
+		if (!empty($_REQUEST['setDefaultBilling']) && is_numeric($_REQUEST['setDefaultBilling']))
+		    $parameters['default_billing_location_id'] = $_REQUEST['setDefaultBilling'];
+	
 		// Update Existing Organization default shipping
         if (!empty($_REQUEST['setDefaultShipping']) && is_numeric($_REQUEST['setDefaultShipping'])) {
-		    $updateParameters = array();
-		    $updateParameters['default_shipping_location_id'] = $_REQUEST['setDefaultShipping'];
-		    $organization->update($updateParameters);
-		    if ($organization->error) {
+		    $parameters['default_shipping_location_id'] = $_REQUEST['setDefaultShipping'];
+		}
+	    if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
+		if (isset($_REQUEST['password_expiration_days']) && is_numeric($_REQUEST['password_expiration_days']))
+			$parameters['password_expiration_days'] = $_REQUEST['password_expiration_days'];
+		if (isset($_REQUEST['website_url']) && !empty($_REQUEST['website_url']))
+			$parameters['website_url'] = $_REQUEST['website_url'];
+		if (isset($_REQUEST['time_based_password']) && !empty($_REQUEST['time_based_password'])) {
+			$parameters['time_based_password'] = $_REQUEST['time_based_password'];
+		    app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
+		}
+	    // Update Existing Organization
+		if (count($parameters) > 0) {
+		    $organization->update($parameters);
+
+		    if ($organization->error()) {
 			    $page->addError("Error updating organization");
-		    } else {
+		    }
+			else {
 			    $page->appendSuccess("Organization Updated Successfully");
 		    }
 		}
@@ -83,10 +74,6 @@
     // get resellers
 	$resellerList = new \Register\OrganizationList();
 	$resellers = $resellerList->find(array("is_reseller" => true));
-
-    // get tags for organization
-    $registerTagList = new \Register\TagList();
-    $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id));
 
     // get organization locations
     $locations = array();

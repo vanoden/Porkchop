@@ -67,6 +67,7 @@
 			$this->clearError();
 			$this->clearCache();
 
+			app_log("Updating privilege ".$this->id,'debug',__FILE__,__LINE__);
 			$database = new \Database\Service();
 
 			$update_object_query = "

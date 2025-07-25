@@ -96,11 +96,23 @@
     </div>
     <div class="tableBody">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 100%;">Require Two-Factor Authentication</div>
+			<div class="tableCell">Is A Customer</div>
+			<div class="tableCell">Is A Vendor</div>
+			<div class="tableCell">Website URL</div>
+		    <div class="tableCell">Require Two-Factor Authentication</div>
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
+			<div class="tableCell">
+			    <input name="is_customer" type="checkbox" value="1" <?php if ($organization->is_customer) print " checked"?>>
+		    </div>
+			<div class="tableCell">
+			    <input name="is_vendor" type="checkbox" value="1" <?php if ($organization->is_vendor) print " checked"?>>
+		    </div>
+			<div class="tableCell">
+			    <input id="website_url" name="website_url" class="wide_lg" placeholder="http://" value="<?=$organization->website_url?>"/>
+		    </div>
 		    <div class="tableCell">
-			    <input name="time_based_password" type="checkbox" value="1" <?php if($organization->time_based_password) print " checked"?> />
+			    <input name="time_based_password" type="checkbox" value="1" <?php if($organization->time_based_password) print " checked"?>>
 			    <label for="time_based_password">Require two-factor authentication for all users in this organization</label>
 		    </div>
 	    </div>
@@ -115,16 +127,6 @@
 		    </div>
 	    </div>
     </div>
-    <div class="tableBody">
-	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 100%;">Website URL</div>
-	    </div> <!-- end row header -->
-	    <div class="tableRow">
-		    <div class="tableCell">
-			    <input id="website_url" name="website_url" class="wide_lg" placeholder="http://" value="<?=$organization->website_url?>"/>
-		    </div>
-	    </div>
-    </div>	
     <div><input type="submit" name="method" value="Apply" class="button"/></div>
 	<input type="button" name="btnAuditLog" value="Audit Log" onclick="location.href='/_register/organization_audit_log?organization_id=<?=$organization->id?>';" />
 

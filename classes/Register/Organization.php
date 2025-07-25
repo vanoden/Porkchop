@@ -18,8 +18,8 @@
 		public string $website_url = "";
 		public ?int $time_based_password = 0;
 		private bool $_nocache = false;
-		private $database;
 
+		/** @constructor */
 		public function __construct($id = null,$options = array()) {
 
 			$this->_tableName = "register_organizations";
@@ -118,10 +118,10 @@
 						is_customer = ?";
 				array_push($bind_params,$parameters['is_customer']);
 			}
-			if (isset($parameters['is_reseller']) && is_numeric($parameters['is_reseller'])) {
+			if (isset($parameters['is_vendor']) && is_numeric($parameters['is_vendor'])) {
 				$update_object_query .= ",
-						is_reseller = ?";
-				array_push($bind_params,$parameters['is_reseller']);
+						is_vendor = ?";
+				array_push($bind_params,$parameters['is_vendor']);
 			}
 			if (isset($parameters['assigned_reseller_id']) && is_numeric($parameters['assigned_reseller_id'])) {
 				$update_object_query .= ",
@@ -226,7 +226,11 @@
 				} else {
 					$this->is_customer = true; // Default to true if not set
 				}
-				$this->is_vendor = boolval($organization->is_vendor);
+				if (isset($organization->assigned_reseller_id)) {
+					$this->assigned_reseller_id = $organization->assigned_reseller_id;
+				} else {
+					$this->assigned_reseller_id = null; // Default to null if not set
+				}
 				if (!empty($organization->notes)) $this->notes = $organization->notes;
 				else $this->notes = "";
 				$this->password_expiration_days = $organization->password_expiration_days;

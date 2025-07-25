@@ -764,6 +764,9 @@
             if (!empty($_REQUEST["code"])) $parameters["code"] = $_REQUEST["code"];
             if (!empty($_REQUEST["name"])) $parameters["name"] = $_REQUEST["name"];
             if (!empty($_REQUEST["status"])) $parameters["status"] = $_REQUEST["status"];
+			if (!empty($_REQUEST["is_reseller"])) $parameters["is_reseller"] = $_REQUEST["is_reseller"];
+			if (!empty($_REQUEST["is_vendor"])) $parameters["is_vendor"] = $_REQUEST["is_vendor"];
+			if (!empty($_REQUEST["is_customer"])) $parameters["is_customer"] = $_REQUEST["is_customer"];
 
             # Get List of Matching Organizations
             $organizations = $organizationList->find($parameters);
@@ -779,7 +782,7 @@
             # Send Response
             $response->print();
         }
-        
+
         ###################################################
         ### Search Organizations						###
         ###################################################
@@ -1672,7 +1675,31 @@
 							'prompt'		=> 'Organization Name',
 							'validation_method'	=> 'Register::Organization::validName()',
 							'allow_wildcards'	=> true
-						)
+						),
+						'is_reseller'	=> array(
+							'description'	=> 'Is Reseller',
+							'prompt'		=> 'Is Reseller',
+							'type'			=> 'radio',
+							'options'		=> array(
+								'','true','false'
+							)
+						),
+						'is_customer'	=> array(
+							'description'	=> 'Is Customer',
+							'prompt'		=> 'Is Customer',
+							'type'			=> 'radio',
+							'options'		=> array(
+								'','true','false'
+							)
+						),
+						'is_vendor'	=> array(
+							'description'	=> 'Is Vendor',
+							'prompt'		=> 'Is Vendor',
+							'type'			=> 'radio',
+							'options'		=> array(
+								'','true','false'
+							)
+						),
 					)
 				),
 				'findOrganizationOwnedProducts'	=> array(
