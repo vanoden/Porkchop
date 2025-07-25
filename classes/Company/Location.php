@@ -245,7 +245,7 @@
 				return false;
 			}
 			$this->id = $database->Insert_ID();
-app_log("New Location ".$this->id." created for ".$this->company()->id,'notice',__FILE__,__LINE__);
+
 			// audit the add event
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
@@ -271,7 +271,7 @@ app_log("New Location ".$this->id." created for ".$this->company()->id,'notice',
 
 			if (! preg_match('/^\d+$/',$this->id)) {
 				$this->error("Valid id required for details in Company::Domain::update");
-				return null;
+				return false;
 			}
 
 			# Update Object
