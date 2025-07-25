@@ -107,7 +107,7 @@ class BaseModel extends \BaseClass {
 			$callerClass = $caller["class"] ?? 'unknown';
 			$callerFunction = $caller["function"] ?? 'unknown';
 			$callerLine = $caller["line"] ?? 0;
-			app_log("$className: No function '$name' found.  Called by " . $callerClass . "::" . $callerFunction . "() Line " . $callerLine, 'warning');
+			app_log("$className: No function '$name' found with ".count($parameters)." parameters. Called by " . $callerClass . "::" . $callerFunction . "() Line " . $callerLine, 'warning');
 			$this->error("Invalid method '$name'"); // for ".$this->objectName());
 		}
 	}
@@ -355,15 +355,16 @@ class BaseModel extends \BaseClass {
 		}
 	}
 
-	/**
-	 * Get Cached Object
-	 * @param array $fromCache
+	/** @method getCachedObject($cachedObject)
+	 * Load key/value pairs from cache into object properties
+	 * @param array $cachedObject Associative array of key/value pairs
+	 * @return void
 	 */
-	public function getCachedObject($fromCache) {
+	public function getCachedObject($cachedObject) {
 		// Is there a cached version of object?
-		if (!empty($fromCache)) {
+		if (!empty($cachedObject)) {
 			// Loop through and populate properties from cache
-			foreach ($fromCache as $key => $value) {
+			foreach ($cachedObject as $key => $value) {
 				// Only if property exists
 				if (property_exists($this, $key)) {
 					// Get Property Type
@@ -394,7 +395,7 @@ class BaseModel extends \BaseClass {
 		}
 	}
 
-	/**
+	/** @method details()
 	 * Load Object Attributes from Cache or Database
 	 * @return bool True if object found
 	 */
@@ -509,7 +510,7 @@ class BaseModel extends \BaseClass {
 		return true;
 	}
 
-	/** 
+	/** @method delete()
 	 * Delete a record from the database using current ID
 	 * @return bool True if object deleted
 	 */
@@ -627,6 +628,7 @@ class BaseModel extends \BaseClass {
 	 * @params array $params, values to populated prepared statement query
 	 */
 	protected function execute($query, $params) {
+		app_log("WHY IS THIS HERE?  Use Database\Service->Execute() instead!", 'warning');
 		$rs = $GLOBALS["_database"]->Execute($query, $params);
 		if ($GLOBALS['_database']->ErrorMsg()) {
 			$this->SQLError($GLOBALS['_database']->ErrorMsg());
@@ -770,12 +772,13 @@ class BaseModel extends \BaseClass {
 		if (!empty($this->_cacheKeyPrefix) && !empty($this->id)) {
 			// Bust Cache
 			$cache_key = $this->_cacheKeyPrefix . "[" . $this->id . "]";
+			app_log("Returning ".$cache_key,'trace');
 			return new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 		} else if (!empty($this->_cacheKeyPrefix)) {
-			app_log("No ID defined for " . get_class($this),'warning');
+			app_log("No ID defined for " . get_class($this),'debug');
 			return null;
 		} else {
-			app_log("No cache key defined for " . get_class($this),'warning');
+			app_log("No cache key defined for " . get_class($this),'debug');
 			return null;
 		}
 	}
@@ -786,7 +789,10 @@ class BaseModel extends \BaseClass {
 	 */
 	public function clearCache() {
 		$cache = $this->cache();
-		if ($cache) $cache->delete();
+		if ($cache) {
+			$cache->delete();
+		}
+		return true;
 	}
 
 	/**
@@ -1298,10 +1304,6 @@ class BaseModel extends \BaseClass {
 			array_push($objects, $object);
 		}
 		return $objects;
-	}
-
-	public function getError() {
-		return $this->_error;
 	}
 
 	/**
