@@ -463,15 +463,29 @@
 				if (!$GLOBALS['_database']->BeginTrans())
 					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
 
-				$alter_table_query = "
-					ALTER TABLE `product_vendor_items`
-					DROP FOREIGN KEY `FK_PRODUCT_VENDOR_ID`
-				";
-
-				if (! $this->executeSQL($alter_table_query)) {
-					$this->SQLError("Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
-					app_log($this->error(), 'error');
-					return false;
+				$schema = new \Database\Schema();
+				$table = $schema->table('product_vendor_items');
+				if ($table->has_constraint('FK_PRODUCT_VENDOR_ID')) {
+					$alter_table_query = "
+						ALTER TABLE `product_vendor_items`
+						DROP FOREIGN KEY `FK_PRODUCT_VENDOR_ID`
+					";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->SQLError("Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+						app_log($this->error(), 'error');
+						return false;
+					}
+				}
+				elseif ($table->has_constraint('product_vendor_items_ibfk_2')) {
+					$alter_table_query = "
+						ALTER TABLE `product_vendor_items`
+						DROP FOREIGN KEY `product_vendor_items_ibfk_2`
+					";
+					if (! $this->executeSQL($alter_table_query)) {
+						$this->SQLError("Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+						app_log($this->error(), 'error');
+						return false;
+					}
 				}
 
 				$alter_table_query = "
