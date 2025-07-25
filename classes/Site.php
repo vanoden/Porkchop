@@ -2,6 +2,10 @@
 	class Site Extends BaseClass {
 		private $_log_level = 'info';
 
+		/** @method loadModules(modules)
+		 * Load modules and their metadata, privileges, roles, templates, and navigation menus.
+		 * @param array $modules Array of modules to load, each with its metadata.
+		 */
 		public function loadModules($modules = array()) {
 			# Process Modules
 			foreach ($modules as $module_name => $module_data) {
@@ -40,11 +44,13 @@
 						$this->install_log("Adding privilege ".$privilege_name);
 						$privilege = new \Register\Privilege();
 						if ($privilege->get($privilege_name)) {
+							$this->install_log("Privilege $privilege_name already exists",'info');
 							$privilege->update(array('module' => $module_name));
 						}
 						else {
 							$privilege->add(array('name' => $privilege_name,'module' => $module_name));
 						}
+						$this->install_log("Privilege $privilege_name added",'info');
 					}
 				}
 
@@ -105,6 +111,10 @@
 			}
 		}
 
+		/** @method populateMenus(menus)
+		 * Populate the navigation menus with the provided menu data.
+		 * @param array $menus Array of menus to populate.
+		 */
 		public function populateMenus($menus = array()) {
 			foreach ($menus as $code => $menu) {
 				$nav_menu = new \Site\Navigation\Menu();
@@ -177,6 +187,54 @@
 					}
 				}
 			}
+		}
+
+		/** @method install_page()
+		 * Provide some layout for Installation and Upgrades
+		 */
+		public function install_page() {
+			print "<!DOCTYPE html>\n";
+			print "<html lang='en'>\n";
+			print "<head>\n";
+			print "<meta charset='UTF-8'>\n";
+			print "<meta name='viewport' content='width=device-width, initial-scale=1.0'>\n";
+			print "<title>Porkchop Site Upgrade</title>\n";
+			print "<style>\n";
+			print "body { font-family: Arial, sans-serif; color: #333; }\n";
+			print ".install_page { width: 100%; height: 100%; background-color: #fff; padding: 20px; }\n";
+			print ".install_page h1 { color: #333; }\n";
+			print ".install_page p { margin: 10px 0; }\n";
+			print ".install_page div.logger { background-color: #eaeaea; padding: 10px; border-radius: 5px; border: 1px solid #333; overflow: auto; max-height: 700px; }\n";
+			print ".install_page div.logger h2 { margin-top: 0; }\n";
+			print ".install_page div.logger p { margin: 5px 0; }\n";
+			print ".install_page div.logger div.logger_line { padding: 3px; border-bottom: 1px solid #ccc; }\n";
+			print ".install_page div.logger div.logger_line:nth-of-type(even) { background-color: #f9f9f9; }\n";
+			print ".install_page div.logger div.logger_line span.date { color: #666; width: 150px; display: inline-block; }\n";
+			print ".install_page div.logger div.logger_line span.pid { display: inline-block; margin-right: 10px; margin-left: 10px; width: 70px;}\n";
+			print ".install_page div.logger div.logger_line span.pid::before { content: \"[\"; }\n";
+			print ".install_page div.logger div.logger_line span.pid::after { content: \"]\"; }\n";
+			print ".install_page div.logger div.logger_line span.level { color: #111; font-weight: bold; display: inline-block; width: 50px; margin-right: 10px; }\n";
+			print ".install_page div.logger div.logger_line span.module_view { display: inline-block; min-width: 120px; }\n";
+			print ".install_page div.logger div.logger_line span.module { color: #007bff; font-weight: bold; }\n";
+			print ".install_page div.logger div.logger_line span.view { color: #28a745; }\n";
+			print ".install_page div.logger div.logger_line span.file { display: inline-block; width: 250px; color: #6c757d; }\n";
+			print ".install_page div.logger div.logger_line span.line { display: inline-block; width: 50px; color: #6c757d; }\n";
+			print ".install_page div.logger div.logger_line span.session { display: inline-block; width: 70px; color: #17a2b8; }\n";
+			print ".install_page div.logger div.logger_line span.customer { display: inline-block; width: 70px; color: #ffc107; }\n";
+			print ".install_page div.logger div.logger_line span.message { display: inline-block; width: 750px; overflow: auto; color: #dc3545; }\n";
+			print ".install_page div.logger div.logger_line .error { color: red; }\n";
+			print ".install_page div.logger div.logger_line .warning { color: orange; }\n";
+			print ".install_page div.logger div.logger_line .info { color: green; }\n";
+			print ".install_page div.logger div.logger_line .debug { color: blue; }\n";
+			print "</style>\n";
+			print "</head>\n";
+			print "<body>\n";
+			print "<div class='install_page'>";
+			print "<h1>Porkchop Site Upgrade</h1>";
+			print "<p><h3 style='display:inline-block'>Log Level</h3> <span id='log_level'>".$this->logLevel()."</span></p>";
+			print "<div class='logger'><div class='logger_line'><span class='logger date'>Date</span> <span class='logger pid'>PID</span><span class='logger level'>Level</span><span class='module_view'><span class='module'>Module</span><span class='view'>View</span></span><span class='file'>File</span><span class='logger line'>Line</span><span class='session'>Session</span><span class='customer'>CustID</span><span class='logger message'>Message</span></div></div>";
+			print "<div class=\"logger\">";
+			flush();
 		}
 
 		public function install_log($message = '',$level = 'info') {
