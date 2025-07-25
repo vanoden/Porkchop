@@ -91,6 +91,18 @@
 			}
 		}
 
+		public function exists($key) {
+			if ($this->_connected) {
+				$value = $this->_service->get($key);
+				if (isset($value)) return true;
+				else return false;
+			}
+			else {
+				$this->error("Cache client not connected");
+				return false;
+			}
+		}
+
 		public function increment($key) {
 			if ($this->_connected) {
                 if (! $this->_service->get($key)) {

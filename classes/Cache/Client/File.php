@@ -65,6 +65,13 @@
 			return false;
 		}
 
+		/** @method set()
+		 * Set a value in the cache for the given key
+		 * @param string $key The key to store the value under
+		 * @param mixed $value The value to store in the cache
+		 * @param int $expires The expiration time in seconds (default 0 for no expiration) 
+		 * @return bool True if set, false if not
+		 */
 		public function set($key,$value,$expires=0) {
 			if (!$this->_connected && ! $this->connect()) {
 				return false;
@@ -93,10 +100,17 @@
 			}
 		}
 
+		/** @method delete()
+		 * Delete a value from the cache for the given key
+		 * @param string $key The key to delete from the cache
+		 * @return bool True if deleted, false if not
+		 */
 		public function delete($key) {
+			app_log("Deleting cache of ".$key,'trace');
 			if ($this->_connected) {
 				$filename = $GLOBALS['_config']->cache->path."/".$key;
 				if (file_exists($filename)) {
+					app_log("Cache file exists: ".$filename,'trace');
 					if (unlink($filename)) {
 						if (! preg_match('/^_/',$key)) $this->incrementStat("delete_hits");
 					}
@@ -239,5 +253,12 @@
 
 		public function getStat($key) {
 			return $this->get("_".$key);
+		}
+
+		public function exists($key) {
+			if ($this->_connected) {
+				return file_exists($this->_path."/".$key);
+			}
+			return false;
 		}
 	}
