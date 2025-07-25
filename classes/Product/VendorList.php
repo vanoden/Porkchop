@@ -7,9 +7,14 @@ class VendorList Extends \Register\OrganizationList {
 	 * Returns a list of all vendors.
 	 * @return \Product\Vendor[]
 	 */
-	public function findAdvanced($parameters, $advanced, $controls): array {
+	public function find($parameters): array {
 		$parameters['is_vendor'] = true;
-
-		return parent::findAdvanced($parameters, $advanced, $controls);
+		$organizations = parent::find($parameters);
+		$vendors = [];
+		foreach ($organizations as $org) {
+			$vendor = new Vendor($org->id);
+			$vendors[] = $vendor;
+		}
+		return $vendors;
 	}
 }

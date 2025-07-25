@@ -431,6 +431,63 @@
 				$this->setVersion(11);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 12 && $max_version >= 12) {
+				app_log("Upgrading schema to version 12", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `product_vendor_items` ADD `pack_quantity` decimal(10,2) NOT NULL DEFAULT 1,
+					ADD `pack_unit` varchar(45) NOT NULL DEFAULT 'each',
+					ADD `price_break_quantity_1` decimal(10,2) NOT NULL DEFAULT 0,
+					ADD `price_at_quantity_1` decimal(10,2) NOT NULL DEFAULT 0,
+					ADD `price_break_quantity_2` decimal(10,2) NOT NULL DEFAULT 0,
+					ADD `price_at_quantity_2` decimal(10,2) NOT NULL DEFAULT 0
+				";
+
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("Error altering product_vendor_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(12);
+				$GLOBALS['_database']->CommitTrans();
+			}
+			if ($this->version() < 13 && $max_version >= 13) {
+				app_log("Upgrading schema to version 13", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+				$alter_table_query = "
+					ALTER TABLE `product_vendor_items`
+					DROP FOREIGN KEY `FK_PRODUCT_VENDOR_ID`
+				";
+
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("Error altering product_products table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$alter_table_query = "
+					ALTER TABLE `product_vendor_items`
+					ADD FOREIGN KEY `FK_PRODUCT_VENDOR_ID` (`vendor_id`) REFERENCES `register_organizations` (`id`)
+				";
+
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("Error altering product_vendor_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+
+				$this->setVersion(13);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}

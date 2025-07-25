@@ -25,6 +25,27 @@
 		/** @var string The product status */
 		public string $status = "ACTIVE";
 
+		/** @var float The quantity on hand */
+		public float $on_hand = 0.0;
+
+		/** @var float The cost of the quantity on hand */
+		public float $on_hand_cost = 0.0;
+
+		/** @var float The minimum quantity */
+		public float $min_quantity = 0.0;
+
+		/** @var float The maximum quantity */
+		public float $max_quantity = 0.0;
+
+		/** @var int|null The default vendor ID */
+		public ?int $default_vendor = null;
+
+		/** @var float The total quantity purchased */
+		public float $total_purchased = 0.0;
+
+		/** @var float The total cost of the product */
+		public float $total_cost = 0.0;
+
 		/**
 		 * Constructor
 		 * 
@@ -131,6 +152,9 @@
 				return false;
 			}
 
+			# Get Current Values for Audit
+			$current = new \Spectros\Product\Item($this->id);
+
 			# Bust Cache
 			$cache_key = "product[".$this->id."]";
 			$cache_item = new \Cache\Item($GLOBALS['_CACHE_'],$cache_key);
@@ -142,6 +166,13 @@
 				"type"			=> "/.+/",
 				"name"			=> '/^[\w\-\.\_\s]+$/',
 				"description"	=> "/.+/",
+				"on_hand"		=> '/^\d+(\.\d+)?$/',
+				"on_hand_cost"	=> '/^\d+(\.\d+)?$/',
+				"min_quantity"	=> '/^\d+(\.\d+)?$/',
+				"max_quantity"	=> '/^\d+(\.\d+)?$/',
+				"default_vendor" => '/^\d*$/',
+				"total_purchased" => '/^\d+(\.\d+)?$/',
+				"total_cost" => '/^\d+(\.\d+)?$/'
 			);
 
 			# Prepare Query to Update Product
@@ -150,11 +181,20 @@
 				SET		id = id
 			";
 
-			$bind_params = array();
-
 			# Loop Through Parameters
+			$changed_value = 0;
+			$change_description = "";
 			foreach (array_keys($parameters) as $parameter) {
 				if ($ok_params[$parameter]) {
+					if (!isset($parameters[$parameter]) || !preg_match($ok_params[$parameter], $parameters[$parameter])) {
+						$this->error("Invalid value for parameter: $parameter");
+						return false;
+					}
+					if ($current->$parameter != $parameters[$parameter]) {
+						$changed_value++;
+						$change_description .= "Changed $parameter from ".$current->$parameter." to ".$parameters[$parameter]."; ";
+					}
+					else continue;
 					$update_product_query .= ",
 					$parameter	= ?";
 					$database->AddParam($parameters[$parameter]);
@@ -165,6 +205,12 @@
 				WHERE	id = ?
 			";
 			$database->AddParam($this->id);
+
+			if ($changed_value == 0) {
+				$this->warn("No changes made to product");
+				return true;
+			}
+
 			$rs = $database->Execute($update_product_query);
             if (! $rs) {
 				$this->SQLError($database->ErrorMsg());
@@ -176,11 +222,16 @@
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
 				'instance_id' => $this->id,
-				'description' => 'Updated '.$this->_objectName(),
-				'class_name' => get_class($this),
+				'description' => 'Changes: '.$change_description,
+				'class_name' => 'Product\Item',
 				'class_method' => 'update'
 			));	
-					
+			if ($auditLog->error()) {
+				$this->error("Failed to log audit event: ".$auditLog->error());
+				print_r($auditLog->error());
+				return false;
+			}
+
 			return $this->details();
 		}
 
@@ -250,8 +301,8 @@
 			$auditLog = new \Site\AuditLog\Event();
 			$auditLog->add(array(
 				'instance_id' => $this->id,
-				'description' => 'Added new '.$this->_objectName(),
-				'class_name' => get_class($this),
+				'description' => 'Added code: '.$parameters['code'].", type: ".$parameters['type'].", status: ".$parameters['status'],
+				'class_name' =>'Product\Item',
 				'class_method' => 'add'
 			));
 
@@ -284,6 +335,13 @@
 				if (empty($product->description)) $product->description = '';
 				else $this->description = $product->description;
 				$this->description = $product->description;
+				$this->on_hand = $product->on_hand ?? 0;
+				$this->on_hand_cost = $product->on_hand_cost ?? 0;
+				$this->min_quantity = $product->min_quantity ?? 0;
+				$this->max_quantity = $product->max_quantity ?? 0;
+				$this->default_vendor = $product->default_vendor ?? null;
+				$this->total_purchased = $product->total_purchased ?? 0;
+				$this->total_cost = $product->total_cost ?? 0;
 				$this->cached($product->_cached);
 				$this->exists(true);
 
@@ -307,7 +365,14 @@
 						status,
 						type,
 						name,
-						description
+						description,
+						on_hand,
+						on_hand_cost,
+						min_quantity,
+						max_quantity,
+						default_vendor,
+						total_purchased,
+						total_cost
 				FROM	product_products
 				WHERE	id = ?";
 
@@ -328,6 +393,13 @@
 				$this->status = $object->status;
 				$this->description = strval($object->description);
 				$this->type = $object->type;
+				$this->on_hand = $object->on_hand ?? 0;
+				$this->on_hand_cost = $object->on_hand_cost ?? 0;
+				$this->min_quantity = $object->min_quantity ?? 0;
+				$this->max_quantity = $object->max_quantity ?? 0;
+				$this->default_vendor = $object->default_vendor ?? null;
+				$this->total_purchased = $object->total_purchased ?? 0;
+				$this->total_cost = $object->total_cost ?? 0;
 				$this->exists(true);
 			}
 			else {
@@ -522,6 +594,128 @@
 			$price = new \Product\Price();
 			return $price->getCurrent($this->id);
         }
+
+		/** @method vendors()
+		 * Get all vendors for the product
+		 */
+		public function vendors() {
+			$vendorList = new \Product\VendorList();
+			$vendors = $vendorList->find(array('product_id' => $this->id));
+			if ($vendorList->error()) {
+				$this->error($vendorList->error());
+				return null;
+			}
+			$item_vendors = array();
+			foreach ($vendors as $vendor) {
+				if ($vendor->hasItem($this)) {
+					$item_vendors[] = $vendor;
+				}
+				else if ($vendor->error()) {
+					$this->error("Error checking vendor ".$vendor->id.": ".$vendor->error());
+				}
+			}
+			return $item_vendors;
+		}
+
+		/** @method addVendor(vendor id, parameters)
+		 * Add a vendor to the product
+		 * @param int $vendor_id The vendor ID
+		 * @param array $parameters The vendor parameters
+		 * @return bool True if successful, false otherwise
+		 */
+		public function addVendor($vendor_id, $parameters = array()) {
+			// Clear any existing error
+			$this->clearError();
+
+			// Initialize the database service
+			$database = new \Database\Service();
+
+			// Check Privileges
+			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
+				$this->error("You do not have permissions for this task.");
+				app_log($GLOBALS['_SESSION_']->customer->code." failed to add vendor because not have 'manage products' privilege",'notice',__FILE__,__LINE__);
+				app_log(print_r($GLOBALS['_SESSION_'],true),'debug',__FILE__,__LINE__);
+				return false;
+			}
+
+			if (empty($parameters['price_break_quantity_1']) || ! is_numeric($parameters['price_break_quantity_1'])) $parameters['price_break_quantity_1'] = 0;
+			if (empty($parameters['price_at_quantity_1']) || ! is_numeric($parameters['price_at_quantity_1'])) $parameters['price_at_quantity_1'] = 0;
+			if (empty($parameters['price_break_quantity_2']) || ! is_numeric($parameters['price_break_quantity_2'])) $parameters['price_break_quantity_2'] = 0;
+			if (empty($parameters['price_at_quantity_2']) || ! is_numeric($parameters['price_at_quantity_2'])) $parameters['price_at_quantity_2'] = 0;
+
+			// Validate vendor ID
+			$vendor = new \Product\Vendor($vendor_id);
+			if (! $vendor->id) {
+				$this->error("Vendor not found");
+				return false;
+			}
+			$add_vendor_query = "
+				INSERT
+				INTO	product_vendor_items
+				(		vendor_id,
+						product_id,
+						cost,
+						minimum_order,
+						vendor_sku,
+						pack_quantity,
+						pack_unit,
+						price_break_quantity_1,
+						price_at_quantity_1,
+						price_break_quantity_2,
+						price_at_quantity_2
+				)
+				VALUES
+				(		?,?,?,?,?,?,?,?,?,?,?
+				)
+			";
+			// Add parameters and execute query
+			$database->AddParam($vendor_id);
+			$database->AddParam($this->id);
+			$database->AddParam($parameters['price'] ?? 0);
+			$database->AddParam($parameters['min_order'] ?? 1);
+			$database->AddParam($parameters['vendor_sku'] ?? '');
+			$database->AddParam($parameters['pack_quantity'] ?? 1);
+			$database->AddParam($parameters['pack_unit'] ?? 'each');
+			$database->AddParam($parameters['price_break_quantity_1'] ?? 0);
+			$database->AddParam($parameters['price_at_quantity_1'] ?? 0);
+			$database->AddParam($parameters['price_break_quantity_2'] ?? 0);
+			$database->AddParam($parameters['price_at_quantity_2'] ?? 0);
+
+			$database->Execute($add_vendor_query);
+			if ($database->error()) {
+				$this->error($database->error());
+				return false;
+			}
+			return true;
+		}
+
+		/** @method hasVendor(vendor)
+		 * Check if the product is available through a specific vendor
+		 * @param int $vendor_id The vendor ID
+		 */
+		public function hasVendor($vendor_id): bool {
+			$this->clearError();
+			$database = new \Database\Service();
+			$check_vendor_query = "
+				SELECT	1
+				FROM	product_vendor_items
+				WHERE	vendor_id = ?
+				AND		product_id = ?
+			";
+			$database->AddParam($vendor_id);
+			$database->AddParam($this->id);
+			$rs = $database->Execute($check_vendor_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			while ($row = $rs->FetchRow()) {
+				if ($row[0] == 1) {
+					return true;
+				}
+			}
+			return false;
+		}
 
         /**
          * Validate a product code

@@ -56,8 +56,6 @@
 				ON		p.id = r.product_id
 				WHERE	p.status != 'DELETED'";
 
-			$bind_params = array();
-
 			if (!empty($parameters['search'])) {
 				if (!$validationclass->validSearch($parameters['search']) ) {
 					$this->error("Invalid Search String");
