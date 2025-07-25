@@ -80,7 +80,7 @@
 			),
 			"templates"		=> array(
 				"organizations"		=> $templates['admin'],
-				"organization"		=> $templates['admin'],
+				"admin_organization"		=> $templates['admin'],
 				"accounts"			=> $templates['admin'],
 				"admin_account"		=> $templates['admin'],
 				"pending_customers"	=> $templates['admin'],
