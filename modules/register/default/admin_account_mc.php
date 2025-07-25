@@ -10,10 +10,10 @@ $page = new \Site\Page(array("module" => 'register', "view" => 'account'));
 $page->requirePrivilege('manage customers');
 $customer = new \Register\Customer();
 
-$repository = new \Storage\Repository();
 $site_config = new \Site\Configuration();
 $site_config->get('website_images');
 if (!empty($site_config->value)) {
+	$repository = new \Storage\Repository();
 	$repository->get($site_config->value);
 	$repository = $repository->getInstance();
 }
@@ -50,7 +50,11 @@ if (isset($_REQUEST['submit-type']) && $_REQUEST['submit-type'] == "delete-conta
 	}
 }
 
-// handle send another verification email
+/** @section Resend Email
+ * This section handles the resend email functionality.
+ * It checks if the method is "Resend Email" and processes the request.
+ * It generates a new validation key and sends a verification email to the customer.
+ */
 if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Resend Email") {
 
 	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
@@ -93,7 +97,10 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Resend Email") {
 	}
 }
 
-// handle form "apply" submit
+/** @section Apply Changes
+ * This section handles the form submission for applying changes to the customer account.
+ * It validates the input, updates the customer information, and handles password changes.
+ */
 if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 
 	// Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
@@ -350,6 +357,9 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 
 if (isset($_REQUEST['customer_id'])) $customer = new \Register\Customer($_REQUEST['customer_id']);
 
+/** @section Image Management
+ * This section handles the management of customer images.
+ */
 $image = new \Media\Image();
 if (isset($_REQUEST['new_image_code']) && $_REQUEST['new_image_code']) {
 	$image->get($_REQUEST['new_image_code']);
@@ -370,15 +380,17 @@ if (isset($_REQUEST['updateImage']) && $_REQUEST['updateImage'] == 'true') {
 		$page->appendSuccess('Default image updated successfully.', 'success');
 	}
 }
-				
-// File Upload Form Submitted
+
+/** @section File Upload
+ * This section handles the file upload functionality for customer images.
+ */
 if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 		$page->addError("Invalid Token");
 	} else {
 		$page->requirePrivilege('upload storage files');
 		
-		$imageUploaded = $customer->uploadImage($_FILES['uploadFile'], '', 'spectros_user_image', $_REQUEST['repository_id'], 'Register\Customer');
+		$imageUploaded = $customer->uploadImage($_FILES['uploadFile'], $repository->id, 'spectros_user_image', 'Register\Customer');
 		if ($imageUploaded) {
 			$page->success = "File uploaded";
 		} else {
@@ -388,6 +400,10 @@ if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 }  
 $customerImages = $customer->images('Register\Customer');
 
+/** @section Reset Auth Failures
+ * This section handles the reset of authentication failures for the customer account.
+ * It checks if the button is clicked and verifies the CSRF token before resetting.
+ */
 if (isset($_REQUEST["btnResetFailures"])) {
 
 	// Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
@@ -400,7 +416,10 @@ if (isset($_REQUEST["btnResetFailures"])) {
 	}
 }
 
-// add tag to Register Customer
+/** @section Search Tag Management
+ * This section handles the management of search tags for the customer account.
+ * It allows adding new tags, removing existing tags, and fetching all tags associated with the customer
+ */
 if (!empty($_REQUEST['newSearchTag']) && empty($_REQUEST['removeSearchTag'])) {
 
 	$searchTag = new \Site\SearchTag();
