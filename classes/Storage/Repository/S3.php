@@ -171,8 +171,10 @@
 			unset($this->credentials);
 		}
 
-		/**
-		 * Load contents from filesystem
+		/** @method retrieveFile($file)
+		 * Retrieve file from S3 storage and send it to the client
+		 * @param $file
+		 * @return bool
 		 */
 		public function retrieveFile($file) {
 			if (!$this->_connected) {
@@ -212,6 +214,31 @@
 			}
 			else {
 				app_log("Failed to download file",'error');
+			}
+		}
+
+		/** @method content()
+		 * Get the content of specified file from S3
+		 * @param $file
+		 * @return string
+		 */
+		public function content($file) {
+			if (!$this->_connected) {
+				if (!$this->connect()) {
+					if (empty($this->error())) $this->error("Failed to connect to S3 service");
+					return null;
+				}
+			}
+
+			try {
+				$result = $this->client->getObject(array(
+					'Bucket'	=> $this->_bucket(),
+					'Key'		=> $file->code()
+				));
+				return $result['Body'];
+			} catch (\Aws\S3\Exception\S3Exception $e) {
+				$this->error("Failed to get file content: ".$e->getMessage());
+				return null;
 			}
 		}
 

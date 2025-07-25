@@ -160,9 +160,9 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			// Find Specified Repository
-			$factory = new \Storage\RepositoryFactory();
-			$repository = $factory->get($_REQUEST['repository_code']);
-			if ($factory->error()) $this->error("Error loading repository: ".$factory->error());
+			$repositoryBase = new \Storage\Repository();
+			$repository = $repositoryBase->get($_REQUEST['repository_code']);
+			if ($repositoryBase->error()) $this->error("Error loading repository: ".$repositoryBase->error());
 			if (! $repository->id) $this->error("Repository not found");
 			app_log("Identified repo '".$repository->name."'");
 
@@ -362,8 +362,8 @@
 				if (empty($_REQUEST['repository_code'])) {
 					$this->error("Must specify code or repository_code and path and name");
 				}
-				$repositoryFactory = new \Storage\RepositoryFactory();
-				$repository = $repositoryFactory->get($_REQUEST['repository_code']);
+				$repositoryBase = new \Storage\Repository();
+				$repository = $repositoryBase->getInstance($_REQUEST['repository_code']);
 				if ($repository->error()) $this->error("Error loading repository: ".$repository->error());
 				if (!empty($repository->id) && !empty($_REQUEST['path']) && !empty($_REQUEST['name'])) {
 					$file->fromPathName($repository->id,$_REQUEST['path'],$_REQUEST['name']);

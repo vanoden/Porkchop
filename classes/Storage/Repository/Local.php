@@ -154,6 +154,30 @@
 			exit;
 		}
 
+		/** @method content()
+		 * Get the content of specified file
+		 * @return string
+		 */
+		public function content($file) {
+			if (!$this->validPath($this->_path())) {
+				$this->error("Invalid path for repository");
+				return false;
+			}
+
+			if (! file_exists($this->_path()."/".$file->code)) {
+				$this->error("File not found at ".$this->_path()."/".$file->code);
+				return false;
+			}
+
+			// Load contents from filesystem
+			$data = file_get_contents($this->_path()."/".$file->code);
+			if ($data === false) {
+				$this->error("Failed to read file content");
+				return false;
+			}
+			return $data;
+		}
+
 		/** @method checkFile($file)
 		 * Check if file exists in repository
 		 *

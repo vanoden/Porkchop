@@ -225,7 +225,15 @@ class File extends \BaseModel {
 			$this->code = $object->code;
 			$this->name = $object->name;
 			$this->path = $object->path;
-			$this->display_name = $object->display_name;
+			if (!empty($object->display_name)) {
+				$this->display_name = $object->display_name;
+			}
+			elseif (!empty($object->name)) {
+				$this->display_name = $object->name;
+			}
+			else {
+				$this->display_name = $object->code;
+			}
 			$this->description = $object->description;
 			$this->mime_type = $object->mime_type;
 			$this->size = $object->size;
@@ -604,6 +612,17 @@ class File extends \BaseModel {
 		$repository = $this->repository();
 		$repository->retrieveFile($this);
 		$this->error($repository->error());
+	}
+
+	/** @method content()
+	 * Get the content of the file
+	 * @return string - Content of the file
+	 */
+	public function content() {
+		$repository = $this->repository();
+		$repository->content($this);
+		$this->error($repository->error());
+		return $repository->content();
 	}
 
 	public function code() {
