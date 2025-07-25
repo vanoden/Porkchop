@@ -325,6 +325,8 @@
 				if (preg_match('/(.*)\?([\w\.\_\-]+\=.*)/',$element,$matches)) {
 					$element = $matches[1];
 					$rest = $matches[2];
+					$this->query_vars_array[$qv_counter] = $element;
+					$qv_counter ++;
 					$elements = preg_split('/&/',$rest);
 					foreach($elements as $element) {
 						if (preg_match("/=/",$element)) {
