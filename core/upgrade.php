@@ -70,7 +70,9 @@
 		print "Logger error\n";
 		exit;
 	}
+	if (!empty($_REQUEST['log_level']) && $logger->validLevel($_REQUEST['log_level'])) $logger->level($_REQUEST['log_level']);
 
+	$site->install_page();
 	###################################################
 	### Connect to Database							###
 	###################################################
