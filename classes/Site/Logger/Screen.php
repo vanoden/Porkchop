@@ -7,6 +7,12 @@
 			if (isset($parameters['html']) && $parameters['html']) {
 				$this->html = true;
 			}
+			if (isset($parameters['level'])) {
+				$this->level = $parameters['level'];
+			}
+			if (isset($parameters['linefeed'])) {
+				$this->linefeed = $parameters['linefeed'];
+			}
 			$this->type = 'Screen';
 			parent::__construct($parameters);
 		}
@@ -25,7 +31,9 @@
 
 		public function writeln($message,$level = 'debug',$file = null,$line = null) {
 			list($file,$line) = $this->caller($file,$line);
-
-			$this->write($message."\n",$level,$file,$line);
+			if ($this->linefeed) {
+				$message .= "\n";
+			}
+			$this->write($message,$level,$file,$line);
 		}
 	}

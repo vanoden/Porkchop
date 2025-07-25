@@ -7,6 +7,7 @@
 		public $html = false;
 		public $syslog = false;
 		public $type = 'File';
+		public $linefeed = true;
 
 		public function __construct($parameters = []) {
 			if (isset($parameters['level'])) {
@@ -53,7 +54,7 @@
 
 			# Build String
 			if ($this->html) {
-				return "$date [$pid] [$level] $module::$view $file:$line $session_id $customer_id $message<br>\n";
+				return "<div class=\"logger_line\"><span class='logger date'>$date</span><span class='logger pid'>$pid</span> <span class='logger level'>$level</span> <span class='logger module_view'><span class='logger module'>$module</span>::<span class='logger view'>$view</span></span> <span class='logger file'>$file</span>:<span class='logger line'>$line</span> <span class='logger session'>$session_id</span> <span class='logger customer'>$customer_id</span> <span class='logger message'>$message</span></div>\n";
 			}
 			elseif ($this->syslog) {
 				return "[$level] $module::$view $file:$line $session_id $customer_id $message";
