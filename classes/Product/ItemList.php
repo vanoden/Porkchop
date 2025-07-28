@@ -107,14 +107,16 @@
 				}
 			}
 			if (isset($parameters['status']) && is_array($parameters['status'])) {
+				// Validate all statuses first
 				foreach ($parameters['status'] as $status) {
 					if (! $validationclass->validStatus($status)) {
 						$this->error("Invalid Status: ".$status);
 						return [];
 					}
-					$find_objects_query .= "
-					AND     p.status IN ('".implode("','",$parameters['status'])."')";
 				}
+				// Add the IN clause once after validation
+				$find_objects_query .= "
+				AND     p.status IN ('".implode("','",$parameters['status'])."')";
 			}
 			elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
 				$find_objects_query .= "

@@ -221,7 +221,7 @@ class File extends \BaseModel {
 
 		// Fetch result row as object
 		$object = $rs->FetchNextObject(false);
-		if ($object->id) {
+		if ($object && is_object($object) && $object->id) {
 			$this->code = $object->code;
 			$this->name = $object->name;
 			$this->path = $object->path;
