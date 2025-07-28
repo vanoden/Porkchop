@@ -360,19 +360,7 @@
 
 			// Prepare Query to Get Product Details
 			$get_details_query = "
-				SELECT	id,
-						code,
-						status,
-						type,
-						name,
-						description,
-						on_hand,
-						on_hand_cost,
-						min_quantity,
-						max_quantity,
-						default_vendor,
-						total_purchased,
-						total_cost
+				SELECT	*
 				FROM	product_products
 				WHERE	id = ?";
 

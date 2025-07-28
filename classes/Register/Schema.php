@@ -1589,9 +1589,9 @@
 					$database->RollbackTrans();
 					return null;
 				}
-				$this->setVersion(47);
-				$database->CommitTrans();
-			}
-			return true;
+							$this->setVersion(47);
+			$database->CommitTrans();
 		}
+		return true;
+	}
 	}

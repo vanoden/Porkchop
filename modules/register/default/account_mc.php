@@ -41,11 +41,13 @@ app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer 
 ### Handle Actions					###
 #######################################
 
-$factory = new \Storage\RepositoryFactory();
 $repository = new \Storage\Repository();
 $site_config = new \Site\Configuration();
 $site_config->get('website_images');
-if (!empty($site_config->value)) $repository = $factory->get($site_config->value);
+if (!empty($site_config->value)) {
+	$repository->get($site_config->value);
+	$repository = $repository->getInstance();
+}
 
 $image = new \Media\Image();
 if (!empty($_REQUEST['new_image_code'])) {
