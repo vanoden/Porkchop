@@ -12,6 +12,7 @@
 	define ( 'APPLICATION_LOG_TYPE', 'File' );
 	define ( 'APPLICATION_LOG', '/var/log/apache2/application.log');
 	define ( 'APPLICATION_LOG_LEVEL', 'debug');
+	define ( 'TEMPLATES', BASE.'/templates' );
 
 	# Initialize config
 	$_config = new stdClass();
@@ -68,4 +69,20 @@
 			"Register\\Role",
 			"Register\\Tag",
 			"Site\\Page",
+	);
+
+	# Registration Module Email Configurations
+	$_config->register = new stdClass();
+	$_config->register->password_reset_notification = (object) array(
+		"from"          => 'no-reply@CHANGEME.com',
+		"subject"       => "Your Password Has Been Reset",
+		"template"      => TEMPLATES . "/registration/password_reset_notification.html"
+	);
+	$_config->register->otp_reset_notification = (object) array(
+		"from"          => 'no-reply@CHANGEME.com',
+		"subject"       => "Two-Factor Authentication Reset",
+		"template"      => TEMPLATES . "/registration/otp_reset_notification.html"
+	);
+	$_config->register->otp_recovery = (object) array(
+		"template" => TEMPLATES . "/registration/otp_recovery.html"
 	);

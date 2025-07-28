@@ -1215,8 +1215,87 @@
 				return false;
 			}
 
-			$this->auditRecord('OTP_RESET', 'OTP recovery token used to reset 2FA and secret key cleared');
-			return true;
+				$this->auditRecord('OTP_RESET', 'OTP recovery token used to reset 2FA and secret key cleared');
+		
+		// Send OTP reset notification email
+		$this->sendOTPResetNotification();
+		
+		return true;
+		}
+
+		/** @method sendOTPResetNotification()
+		 * Send OTP reset notification email to customer
+		 * @return bool True if email was sent successfully, false otherwise
+		 */
+		private function sendOTPResetNotification(): bool {
+			if (!$this || !$this->id) {
+				app_log("Invalid customer object for OTP reset notification", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			$to_email = $this->notify_email();
+			if (empty($to_email)) {
+				app_log("No email address available for customer " . $this->id, 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			// Check if template configuration exists
+			if (!isset($GLOBALS['_config']->register->otp_reset_notification)) {
+				app_log("OTP reset notification email configuration not found", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			$email_config = $GLOBALS['_config']->register->otp_reset_notification;
+			if (!isset($email_config->template) || !file_exists($email_config->template)) {
+				app_log("OTP reset notification email template not found", 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			$template = new \Content\Template\Shell(
+				array(
+					'path' => $email_config->template,
+					'parameters' => array(
+						'CUSTOMER.FIRST_NAME' => $this->first_name,
+						'CUSTOMER.LOGIN' => $this->code,
+						'RESET.DATE' => date('Y-m-d'),
+						'RESET.TIME' => date('H:i:s T'),
+						'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email,
+						'SUPPORT.PHONE' => '1-800-SPECTROS',
+						'LOGIN.URL' => 'http' . ($GLOBALS['_config']->site->https ? 's' : '') . '://' . $GLOBALS['_config']->site->hostname . '/_register/login',
+						'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+					)
+				)
+			);
+
+			if ($template->error()) {
+				app_log("Error generating OTP reset notification email: " . $template->error(), 'error', __FILE__, __LINE__);
+				return false;
+			}
+
+			$message = new \Email\Message();
+			$message->html(true);
+			$message->to($to_email);
+			$message->from($email_config->from);
+			$message->subject($email_config->subject);
+			$message->body($template->output());
+
+			$transportFactory = new \Email\Transport();
+			$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+			if ($transport && !$transport->error()) {
+				$transport->hostname($GLOBALS['_config']->email->hostname);
+				$transport->token($GLOBALS['_config']->email->token);
+				if (!$transport->deliver($message)) {
+					app_log("Error sending OTP reset notification email: " . $transport->error(), 'error', __FILE__, __LINE__);
+					return false;
+				} else {
+					app_log("OTP reset notification email sent to " . $to_email, 'info', __FILE__, __LINE__);
+					$this->auditRecord('OTP_RESET_NOTIFICATION_SENT', 'OTP reset notification email sent to: ' . $to_email);
+					return true;
+				}
+			} else {
+				app_log("Error creating email transport for OTP reset notification: " . ($transport ? $transport->error() : 'Transport creation failed'), 'error', __FILE__, __LINE__);
+				return false;
+			}
 		}
 
 		/** @method resetOTPSetup()
@@ -1235,7 +1314,10 @@
 			$result = $this->update(array('secret_key' => ''));
 
 			if ($result) {
-				$this->auditRecord('OTP_RESET', 'OTP setup reset - secret key cleared');
+						$this->auditRecord('OTP_RESET', 'OTP setup reset - secret key cleared');
+		
+		// Send OTP reset notification email
+		$this->sendOTPResetNotification();
 				
 				// Clear cache
 				$cache_key = "customer[" . $this->id . "]";
@@ -1263,6 +1345,13 @@
 				$update = $db->Execute("UPDATE register_backup_codes SET used = 1 WHERE id = ?", array($code_id));
 				// Clear the user's secret_key so they can reset TOTP
 				$db->Execute("UPDATE register_users SET secret_key = '' WHERE id = ?", array($user_id));
+				
+							// Send OTP reset notification email
+			$customer = new \Register\Customer($user_id);
+			if (!$customer->error()) {
+				$customer->sendOTPResetNotification();
+			}
+				
 				return $user_id;
 			}
 			return false;
