@@ -51,7 +51,8 @@ if ($can_proceed) {
 	
 	$userStoredSecret = $customer->otp_secret_key();
 	app_log("User stored secret length: " . strlen($userStoredSecret), 'debug', __FILE__, __LINE__, 'otplogs');
-	app_log("User stored secret (first 10 chars): " . substr($userStoredSecret, 0, 10) . "...", 'debug', __FILE__, __LINE__, 'otplogs');
+	app_log("User stored secret (first 10 chars): " . (empty($userStoredSecret) ? '(empty)' : substr($userStoredSecret, 0, 10) . "..."), 'debug', __FILE__, __LINE__, 'otplogs');
+	app_log("Secret key empty? " . (empty($userStoredSecret) ? 'YES' : 'NO'), 'debug', __FILE__, __LINE__, 'otplogs');
   
 	// Show QR code if no secret 2FA key is found
 	$showQRCode = false;

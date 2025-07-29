@@ -1122,33 +1122,43 @@
 				return true;
 			}
 
-			// Prepare email template using the template system and config path
-			$template_path = isset($GLOBALS['_config']->register->backup_code_used_notification->template)
-				? $GLOBALS['_config']->register->backup_code_used_notification->template
-				: null;
-			if (!$template_path || !file_exists($template_path)) {
+			// Check if template configuration exists
+			if (!isset($GLOBALS['_config']->register->backup_code_used_notification)) {
+				$this->error("Backup code notification email configuration not found");
+				return false;
+			}
+
+			$email_config = $GLOBALS['_config']->register->backup_code_used_notification;
+			if (!isset($email_config->template) || !file_exists($email_config->template)) {
 				$this->error("Backup code notification email template not found");
 				return false;
 			}
-			
-			$template_content = file_get_contents($template_path);
-			$notice_template = new \Content\Template\Shell();
-			$notice_template->content($template_content);
-			
-			// Add template parameters
-			$notice_template->addParam('CUSTOMER_NAME', $this->name ?? 'Customer');
-			$notice_template->addParam('CUSTOMER_EMAIL', $notify_email);
-			$notice_template->addParam('DATE_TIME', date('F j, Y \a\t g:i A T'));
-			$notice_template->addParam('IP_ADDRESS', $_SERVER['REMOTE_ADDR'] ?? 'Unknown');
-			$notice_template->addParam('COMPANY.NAME', $GLOBALS['_SESSION_']->company->name ?? '');
+
+			$template = new \Content\Template\Shell(
+				array(
+					'path' => $email_config->template,
+					'parameters' => array(
+						'CUSTOMER.NAME' => $this->full_name(),
+						'CUSTOMER.EMAIL' => $notify_email,
+						'DATE.TIME' => date('F j, Y \a\t g:i A T'),
+						'IP.ADDRESS' => $_SERVER['REMOTE_ADDR'] ?? 'Unknown',
+						'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+					)
+				)
+			);
+
+			if ($template->error()) {
+				$this->error("Error generating backup code notification email: " . $template->error());
+				return false;
+			}
 
 			// Create and send email
 			$message = new \Email\Message();
 			$message->html(true);
 			$message->to($notify_email);
-			$message->from($GLOBALS['_config']->register->backup_code_used_notification->from ?? 'no-reply@' . $GLOBALS['_config']->site->hostname);
-			$message->subject($GLOBALS['_config']->register->backup_code_used_notification->subject ?? "Account Backup Code was used");
-			$message->body($notice_template->output());
+			$message->from($email_config->from);
+			$message->subject($email_config->subject);
+			$message->body($template->output());
 
 			$transportFactory = new \Email\Transport();
 			$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
@@ -1415,6 +1425,11 @@
 				$update = $db->Execute("UPDATE register_backup_codes SET used = 1 WHERE id = ?", array($code_id));
 				// Clear the user's secret_key so they can reset TOTP
 				$db->Execute("UPDATE register_users SET secret_key = '' WHERE id = ?", array($user_id));
+				
+				// Clear customer cache to ensure fresh data is loaded
+				$cache_key = "customer[" . $user_id . "]";
+				$cache = new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
+				$cache->delete();
 				
 							// Send OTP reset notification email
 			$customer = new \Register\Customer($user_id);
