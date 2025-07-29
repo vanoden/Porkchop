@@ -831,10 +831,11 @@ use Register\Customer;
 			app_log("OTP Enabled: " . ($GLOBALS['_config']->register->use_otp ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Customer ID: " . ($this->customer->id ?? 'null'), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Customer requires OTP: " . ($this->customer->requiresOTP() ? 'true' : 'false'), 'debug', __FILE__, __LINE__, 'otplogs');
-			app_log("OTP verified status: " . ($this->otpVerified === false ? 'false' : ($this->otpVerified === true ? 'true' : 'null')), 'debug', __FILE__, __LINE__, 'otplogs');
+			$otpStatus = $this->getOTPVerified();
+		app_log("OTP verified status: " . ($otpStatus === false ? 'false' : ($otpStatus === true ? 'true' : 'null')), 'debug', __FILE__, __LINE__, 'otplogs');
 			app_log("Current URI: " . $_SERVER['REQUEST_URI'], 'debug', __FILE__, __LINE__, 'otplogs');
 			
-			if ($GLOBALS['_config']->register->use_otp && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->otpVerified === false) {
+			if ($GLOBALS['_config']->register->use_otp && isset($this->customer->id) && $this->customer->requiresOTP() && $this->customer->id > 0 && $this->getOTPVerified() === false) {
 				// If OTP is required and not verified, redirect to OTP page
 				// But don't redirect if we're already on the OTP page to prevent loops
 				if (!preg_match('/\/_register\/otp/', $_SERVER['REQUEST_URI'])) {

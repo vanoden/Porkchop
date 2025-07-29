@@ -179,8 +179,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 												'CUSTOMER.LOGIN' => $customer->code,
 												'RESET.DATE' => date('Y-m-d'),
 												'RESET.TIME' => date('H:i:s T'),
-												'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email,
-												'SUPPORT.PHONE' => '1-800-SPECTROS',
+												'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email,						
 												'LOGIN.URL' => 'http' . ($GLOBALS['_config']->site->https ? 's' : '') . '://' . $GLOBALS['_config']->site->hostname . '/_register/login',
 												'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
 											)

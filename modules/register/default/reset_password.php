@@ -28,7 +28,7 @@
 	</ul>
 </section>
 <?php }	?>
-<?php if ($_REQUEST['status'] == "complete") { ?>
+<?php if (isset($_REQUEST['status']) && $_REQUEST['status'] == "complete") { ?>
 <section id="reg_complete" class="body">
 	<p class="pageSect_full">Your password has been updated.  Please <a href="/_register/login">log back in</a>.</p>
 </section>

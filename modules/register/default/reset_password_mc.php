@@ -16,8 +16,8 @@
 
 		// Consume Token
 		$customer_id = $token->consume($_REQUEST['token']);
-		if ($token->error) {
-			app_log("Error in password recovery: ".$token->error,'error',__FILE__,__LINE__);
+		if ($token->error()) {
+			app_log("Error in password recovery: ".$token->error(),'error',__FILE__,__LINE__);
 			$page->addError("Error in password recovery.  Admins have been notified.  Please try again later.");
 		} elseif ($customer_id > 0) {
 			$GLOBALS['_SESSION_']->superElevate();
@@ -99,7 +99,7 @@
 												'RESET.DATE' => date('Y-m-d'),
 												'RESET.TIME' => date('H:i:s T'),
 												'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email,
-												'SUPPORT.PHONE' => '1-800-SPECTROS',
+						
 												'LOGIN.URL' => 'http' . ($GLOBALS['_config']->site->https ? 's' : '') . '://' . $GLOBALS['_config']->site->hostname . '/_register/login',
 												'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
 											)

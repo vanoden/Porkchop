@@ -25,6 +25,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 app_log("OTP verification status set to true", 'debug', __FILE__, __LINE__, 'otplogs');
                 
+                // Send backup code used notification email
+                $customer = new \Register\Customer($user_id);
+                $emailResult = $customer->sendBackupCodeUsedNotification();
+                if (!$emailResult) {
+                    app_log("Failed to send backup code notification: " . $customer->error(), 'warn', __FILE__, __LINE__, 'otplogs');
+                } else {
+                    app_log("Backup code notification email sent successfully", 'info', __FILE__, __LINE__, 'otplogs');
+                }
+                
                 $page->appendSuccess("Backup code accepted. Logging you in...");
                 header("Location: /_register/account");
                 exit;

@@ -1107,6 +1107,76 @@
 			}
 		}
 
+		/** @method sendBackupCodeUsedNotification()
+		 * Send backup code used notification email
+		 * @return bool True if sent successfully, false on error
+		 */
+		public function sendBackupCodeUsedNotification(): bool {
+			$this->clearError();
+
+			// Get the notify email address
+			$notify_email = $this->notify_email();
+			if (empty($notify_email)) {
+				// Don't error if no notify email - just log and return true
+				app_log("No notify email set for customer " . $this->id . ", skipping backup code notification", 'info', __FILE__, __LINE__, 'otplogs');
+				return true;
+			}
+
+			// Prepare email template using the template system and config path
+			$template_path = isset($GLOBALS['_config']->register->backup_code_used_notification->template)
+				? $GLOBALS['_config']->register->backup_code_used_notification->template
+				: null;
+			if (!$template_path || !file_exists($template_path)) {
+				$this->error("Backup code notification email template not found");
+				return false;
+			}
+			
+			$template_content = file_get_contents($template_path);
+			$notice_template = new \Content\Template\Shell();
+			$notice_template->content($template_content);
+			
+			// Add template parameters
+			$notice_template->addParam('CUSTOMER_NAME', $this->name ?? 'Customer');
+			$notice_template->addParam('CUSTOMER_EMAIL', $notify_email);
+			$notice_template->addParam('DATE_TIME', date('F j, Y \a\t g:i A T'));
+			$notice_template->addParam('IP_ADDRESS', $_SERVER['REMOTE_ADDR'] ?? 'Unknown');
+			$notice_template->addParam('COMPANY.NAME', $GLOBALS['_SESSION_']->company->name ?? '');
+
+			// Create and send email
+			$message = new \Email\Message();
+			$message->html(true);
+			$message->to($notify_email);
+			$message->from($GLOBALS['_config']->register->backup_code_used_notification->from ?? 'no-reply@' . $GLOBALS['_config']->site->hostname);
+			$message->subject($GLOBALS['_config']->register->backup_code_used_notification->subject ?? "Account Backup Code was used");
+			$message->body($notice_template->output());
+
+			$transportFactory = new \Email\Transport();
+			$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+			
+			if (!$transport) {
+				$this->error("Error initializing email transport");
+				return false;
+			}
+
+			if ($transport->error()) {
+				$this->error("Error initializing email transport: " . $transport->error());
+				return false;
+			}
+
+			$transport->hostname($GLOBALS['_config']->email->hostname);
+			$transport->token($GLOBALS['_config']->email->token);
+
+			if ($transport->deliver($message)) {
+				$this->auditRecord('BACKUP_CODE_USED', 'Backup code used notification sent to: ' . $notify_email);
+				app_log("Backup code notification email sent to: " . $notify_email, 'info', __FILE__, __LINE__, 'otplogs');
+				return true;
+			}
+			else {
+				$this->error("Error sending backup code notification email: " . ($transport->error() ?: "Unknown error"));
+				return false;
+			}
+		}
+
 		/** @method generateOTPRecoveryToken()
 		 * Generate OTP recovery token
 		 * @return string|false Recovery token or false on error
@@ -1260,7 +1330,7 @@
 						'RESET.DATE' => date('Y-m-d'),
 						'RESET.TIME' => date('H:i:s T'),
 						'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email,
-						'SUPPORT.PHONE' => '1-800-SPECTROS',
+		
 						'LOGIN.URL' => 'http' . ($GLOBALS['_config']->site->https ? 's' : '') . '://' . $GLOBALS['_config']->site->hostname . '/_register/login',
 						'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
 					)
