@@ -32,6 +32,9 @@
 		$page->notFound();
 	}
 
+	// Initialize productSearchTags array in case item is not found
+	$productSearchTags = array();
+
 	if ($item->id) {
 		// get tags for product
 		$productTagList = new \Product\TagList();
@@ -88,7 +91,6 @@
 		// get tags for product
 		$searchTagXref = new \Site\SearchTagXrefList();
 		$searchTagXrefs = $searchTagXref->find(array("object_id" => $item->id, "class" => "Product::Item"));
-		$productSearchTags = array();
 		foreach ($searchTagXrefs as $searchTagXrefItem) {
 			$searchTag = new \Site\SearchTag();
 			$searchTag->load($searchTagXrefItem->tag_id);

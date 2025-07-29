@@ -25,6 +25,10 @@
 		$page->notFound();
 	}
 
+	// Initialize arrays in case item is not found
+	$prices = array();
+	$auditedPrices = array();
+
 	if ($item->id) {
 		$prices = $item->prices();
 		$priceAudit = new \Product\PriceAuditList();

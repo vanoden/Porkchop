@@ -34,11 +34,15 @@
 	<th>Status</th>
 	<th>Amount</th>
 </tr>
-<?php foreach ($prices as $price) { ?>
-<tr><td class="value"><?= $price->date_active ?></td>
-	<td class="value"><?= $price->status ?></td>
-	<td class="value"><?= $price->amount ?></td>
-</tr>
+<?php if (!empty($prices)) { ?>
+	<?php foreach ($prices as $price) { ?>
+	<tr><td class="value"><?= $price->date_active ?></td>
+		<td class="value"><?= $price->status ?></td>
+		<td class="value"><?= $price->amount ?></td>
+	</tr>
+	<?php } ?>
+<?php } else { ?>
+	<tr><td colspan="3" class="value">No prices found</td></tr>
 <?php } ?>
 </table>
 
@@ -48,14 +52,18 @@
 	<th>Date</th>
 	<th>Note</th>
 </tr>
-<?php foreach ($auditedPrices as $priceAudit) { ?>
-<tr><td class="value">
-<?php $customer = new Register\Customer($priceAudit->user_id); ?>
-		<?= $customer->first_name ?> <?= $customer->last_name ?>
-	</td>
-	<td class="value"><?= $priceAudit->date_updated ?></td>
-	<td class="value"><?= stripslashes($priceAudit->note) ?></td>
-</tr>
+<?php if (!empty($auditedPrices)) { ?>
+	<?php foreach ($auditedPrices as $priceAudit) { ?>
+	<tr><td class="value">
+	<?php $customer = new Register\Customer($priceAudit->user_id); ?>
+			<?= $customer->first_name ?> <?= $customer->last_name ?>
+		</td>
+		<td class="value"><?= $priceAudit->date_updated ?></td>
+		<td class="value"><?= stripslashes($priceAudit->note) ?></td>
+	</tr>
+	<?php } ?>
+<?php } else { ?>
+	<tr><td colspan="3" class="value">No price audit records found</td></tr>
 <?php } ?>
 </table>
 
