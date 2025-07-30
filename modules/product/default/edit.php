@@ -137,7 +137,7 @@
 			<?php foreach ($images as $image) { ?>
 				<div class="editItemImage" id="ItemImageDiv_<?= $image->code ?>">
 					<input type="button" name="btn_drop" class="editItemThumbnail" onclick="dropImage('<?= $image->code ?>')" value="X" />
-					<img class="editItemThumbnail" src="/_media/api?method=downloadMediaFile&code=<?= $image->files[0]->code ?>">
+					<img class="editItemThumbnail" src="/_media/api?method=downloadMediaFile&code=<?= $image->code ?>">
 				</div>
 			<?php } ?>
 			<div class="editItemImage" id="newImageBox">

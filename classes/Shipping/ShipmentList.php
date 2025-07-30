@@ -65,10 +65,10 @@
 				ORDER BY	date_entered DESC";
 			}
 
-			if (is_numeric($controls['limit'])) {
+			if (isset($controls['limit']) && is_numeric($controls['limit'])) {
 				$find_objects_query .= "
 				LIMIT	".$controls['limit'];
-				if (is_numeric($controls['offset'])) {
+				if (isset($controls['offset']) && is_numeric($controls['offset'])) {
 					$find_objects_query .= "
 					OFFSET	".$controls['offset'];
 				}
