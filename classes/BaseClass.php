@@ -409,7 +409,9 @@ class BaseClass {
 	 * @return bool True if valid, false otherwise
 	 */
 	public function validText($string): bool {
-		return $string !== null && ctype_print($string);
+		// Allow carriage returns
+		//return $string !== null && ctype_print($string);
+		return $this->safeString($string);
 	}
 
 	/**
@@ -522,6 +524,7 @@ class BaseClass {
 	 */
 	public function validDate($string): bool {
 		if (empty($string)) return false;
+		if (!empty(get_mysql_date())) return true;
 		if (isset($this->_patterns['date']) && preg_match($this->_patterns['date'], $string)) return false;
 		$date = date_parse($string);
 		return $date['error_count'] === 0;
