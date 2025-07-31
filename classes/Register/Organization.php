@@ -220,12 +220,13 @@
 				$this->name = $organization->name;
 				$this->code = $organization->code;
 				$this->status = $organization->status;
-				$this->is_reseller = boolval($organization->is_reseller);
+				$this->is_reseller = isset($organization->is_reseller) ? boolval($organization->is_reseller) : false;
 				if (isset($organization->is_customer)) {
 					$this->is_customer = boolval($organization->is_customer);
 				} else {
 					$this->is_customer = true; // Default to true if not set
 				}
+				$this->is_vendor = isset($organization->is_vendor) ? boolval($organization->is_vendor) : false;
 				if (isset($organization->assigned_reseller_id)) {
 					$this->assigned_reseller_id = $organization->assigned_reseller_id;
 				} else {
@@ -254,20 +255,7 @@
 
 			// Get Details for Organization
 			$get_details_query = "
-				SELECT	id,
-						code,
-						name,
-						status,
-						is_reseller,
-						assigned_reseller_id,
-						is_customer,
-						is_vendor,
-						notes,
-						password_expiration_days,
-				        default_billing_location_id,
-				        default_shipping_location_id,
-						website_url,
-						time_based_password
+				SELECT	*
 				FROM	register_organizations
 				WHERE	id = ?
 			";
@@ -291,12 +279,12 @@
                 $this->default_shipping_location_id = $object->default_shipping_location_id;
 				if (!empty($object->website_url)) $this->website_url = $object->website_url;
 				else $this->website_url = "";
-				$this->is_reseller = boolval($object->is_reseller);
-				$this->is_customer = boolval($object->is_customer);
-				$this->is_vendor = boolval($object->is_vendor);
+				$this->is_reseller = isset($object->is_reseller) ? boolval($object->is_reseller) : false;
+				$this->is_customer = isset($object->is_customer) ? boolval($object->is_customer) : true;
+				$this->is_vendor = isset($object->is_vendor) ? boolval($object->is_vendor) : false;
 				if (!empty($object->notes)) $this->notes = $object->notes;
 				else $this->notes = "";
-				$this->time_based_password = $object->time_based_password;
+				$this->time_based_password = isset($object->time_based_password) ? $object->time_based_password : 0;
 			}
 			else {
 				$this->id = null;

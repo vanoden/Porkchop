@@ -73,7 +73,7 @@
 	<form method="post" action="/_product/admin_images">
 		<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
 		<input type="hidden" name="id" value="<?= $item->id ?>" />
-		<input type="hidden" id="default_image_id" name="default_image_id" value="<?=$item->getDefaultStorageImage()->name ?>" />
+		<input type="hidden" id="default_image_id" name="default_image_id" value="<?= ($defaultImage = $item->getDefaultStorageImage()) ? $defaultImage->name : '' ?>" />
 		<input type="hidden" id="updateImage" name="updateImage" value="" />
 
 	<div class="container">

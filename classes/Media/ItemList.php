@@ -52,7 +52,7 @@ class ItemList extends \BaseListClass {
 		while (list($id) = $rs->FetchRow()) {
 			$object = new \Media\Item($id);
 			$privileges = $object->privileges($id);
-			if ($privileges['read']) {
+			if (is_array($privileges) && $privileges['read']) {
 				app_log("Adding " . $object->id . " to array", 'debug', __FILE__, __LINE__);
 				array_push($objects, $object);
 				$this->incrementCount();

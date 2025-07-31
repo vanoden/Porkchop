@@ -16,8 +16,8 @@
 
 		// Consume Token
 		$customer_id = $token->consume($_REQUEST['token']);
-		if ($token->error) {
-			app_log("Error in password recovery: ".$token->error,'error',__FILE__,__LINE__);
+		if ($token->error()) {
+			app_log("Error in password recovery: ".$token->error(),'error',__FILE__,__LINE__);
 			$page->addError("Error in password recovery.  Admins have been notified.  Please try again later.");
 		} elseif ($customer_id > 0) {
 			$GLOBALS['_SESSION_']->superElevate();
@@ -84,6 +84,67 @@
 						$page->addError("Error updating customer password.  Our admins have been notified.  Please try again later");
 					}
 					else {
+						// Send password reset notification email
+						if ($customer && $customer->id) {
+							$to_email = $customer->notify_email();
+							if (!empty($to_email) && isset($GLOBALS['_config']->register->password_reset_notification)) {
+								$email_config = $GLOBALS['_config']->register->password_reset_notification;
+								if (isset($email_config->template) && file_exists($email_config->template)) {
+									$template = new \Content\Template\Shell(
+										array(
+											'path' => $email_config->template,
+											'parameters' => array(
+												'CUSTOMER.FIRST_NAME' => $customer->first_name,
+												'CUSTOMER.LOGIN' => $customer->code,
+												'RESET.DATE' => date('Y-m-d'),
+												'RESET.TIME' => date('H:i:s T'),
+												'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email,
+						
+												'LOGIN.URL' => 'http' . ($GLOBALS['_config']->site->https ? 's' : '') . '://' . $GLOBALS['_config']->site->hostname . '/_register/login',
+												'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+											)
+										)
+									);
+
+									if (!$template->error()) {
+										$message = new \Email\Message();
+										$message->html(true);
+										$message->to($to_email);
+										$message->from($email_config->from);
+										$message->subject($email_config->subject);
+										$message->body($template->output());
+
+										$transportFactory = new \Email\Transport();
+										$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+										if ($transport && !$transport->error()) {
+											$transport->hostname($GLOBALS['_config']->email->hostname);
+											$transport->token($GLOBALS['_config']->email->token);
+											if (!$transport->deliver($message)) {
+												app_log("Error sending password reset notification email: " . $transport->error(), 'error', __FILE__, __LINE__);
+											} else {
+												app_log("Password reset notification email sent to " . $to_email, 'info', __FILE__, __LINE__);
+												$customer->auditRecord('PASSWORD_RESET_NOTIFICATION_SENT', 'Password reset notification email sent to: ' . $to_email);
+											}
+										} else {
+											app_log("Error creating email transport for password reset notification: " . ($transport ? $transport->error() : 'Transport creation failed'), 'error', __FILE__, __LINE__);
+										}
+									} else {
+										app_log("Error generating password reset notification email: " . $template->error(), 'error', __FILE__, __LINE__);
+									}
+								} else {
+									app_log("Password reset notification email template not found", 'error', __FILE__, __LINE__);
+								}
+							} else {
+								if (empty($to_email)) {
+									app_log("No email address available for customer " . $customer->id, 'error', __FILE__, __LINE__);
+								} else {
+									app_log("Password reset notification email configuration not found", 'error', __FILE__, __LINE__);
+								}
+							}
+						} else {
+							app_log("Invalid customer object for password reset notification", 'error', __FILE__, __LINE__);
+						}
+						
 						app_log("Expiring session and showing logged out page","info");
 						if ($GLOBALS['_SESSION_']->end()) {
 							header("Location: /_register/reset_password?status=complete");

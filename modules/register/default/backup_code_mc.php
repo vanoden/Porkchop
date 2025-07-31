@@ -18,15 +18,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // DEBUG: Log backup code login process
                 app_log("=== BACKUP CODE LOGIN ===", 'debug', __FILE__, __LINE__, 'otplogs');
                 app_log("User ID: " . $user_id, 'debug', __FILE__, __LINE__, 'otplogs');
-                app_log("Session assigned, setting OTP verified to true", 'debug', __FILE__, __LINE__, 'otplogs');
+                app_log("Session assigned, secret key was cleared - user will need to set up 2FA again", 'debug', __FILE__, __LINE__, 'otplogs');
+                                
+                // Send backup code used notification email
+                $customer = new \Register\Customer($user_id);
+                $emailResult = $customer->sendBackupCodeUsedNotification();
+                if (!$emailResult) {
+                    app_log("Failed to send backup code notification: " . $customer->error(), 'warn', __FILE__, __LINE__, 'otplogs');
+                } else {
+                    app_log("Backup code notification email sent successfully", 'info', __FILE__, __LINE__, 'otplogs');
+                }
                 
-                // Set OTP verification status to true since backup code login bypasses OTP
-                $GLOBALS['_SESSION_']->setOTPVerified(true);
-                
-                app_log("OTP verification status set to true", 'debug', __FILE__, __LINE__, 'otplogs');
-                
-                $page->appendSuccess("Backup code accepted. Logging you in...");
-                header("Location: /_register/account");
+                $page->appendSuccess("Backup code accepted. Please set up two-factor authentication again.");
+                header("Location: /_register/otp");
                 exit;
             } else {
                 $page->addError("Invalid or already used backup code");

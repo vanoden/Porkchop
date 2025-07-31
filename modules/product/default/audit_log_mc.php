@@ -31,6 +31,11 @@
 		if (!$item->id) $page->addError("Item not found");
 	}
 
+	// Initialize $item variable if not already set
+	if (!isset($item)) {
+		$item = new \Product\Item();
+	}
+
 	// extract sort and order parameters from request
 	$sort_direction = $_REQUEST['sort_by'] ?? '';
 	$order_by = $_REQUEST['order_by'] ?? 'desc';

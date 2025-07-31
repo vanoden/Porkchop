@@ -41,11 +41,13 @@ app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer 
 ### Handle Actions					###
 #######################################
 
-$factory = new \Storage\RepositoryFactory();
 $repository = new \Storage\Repository();
 $site_config = new \Site\Configuration();
 $site_config->get('website_images');
-if (!empty($site_config->value)) $repository = $factory->get($site_config->value);
+if (!empty($site_config->value)) {
+	$repository->get($site_config->value);
+	$repository = $repository->getInstance();
+}
 
 $image = new \Media\Image();
 if (!empty($_REQUEST['new_image_code'])) {
@@ -132,6 +134,66 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply" && !$readOnly) 
 			// set the user to active if they're expired, this will ensure then can continue to login
 			if (isset($parameters["password"])) {
 				if ($customer->status == 'EXPIRED') $customer->update(array('status' => 'ACTIVE'));
+				
+				// Send password reset notification email when password is changed
+				if ($customer && $customer->id) {
+					$to_email = $customer->notify_email();
+					if (!empty($to_email) && isset($GLOBALS['_config']->register->password_reset_notification)) {
+						$email_config = $GLOBALS['_config']->register->password_reset_notification;
+						if (isset($email_config->template) && file_exists($email_config->template)) {
+							$template = new \Content\Template\Shell(
+								array(
+									'path' => $email_config->template,
+									'parameters' => array(
+										'CUSTOMER.FIRST_NAME' => $customer->first_name,
+										'CUSTOMER.LOGIN' => $customer->code,
+										'RESET.DATE' => date('Y-m-d'),
+										'RESET.TIME' => date('H:i:s T'),
+										'SUPPORT.EMAIL' => $GLOBALS['_config']->site->support_email,				
+										'LOGIN.URL' => 'http' . ($GLOBALS['_config']->site->https ? 's' : '') . '://' . $GLOBALS['_config']->site->hostname . '/_register/login',
+										'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? 'Spectros Instruments'
+									)
+								)
+							);
+
+							if (!$template->error()) {
+								$message = new \Email\Message();
+								$message->html(true);
+								$message->to($to_email);
+								$message->from($email_config->from);
+								$message->subject($email_config->subject);
+								$message->body($template->output());
+
+								$transportFactory = new \Email\Transport();
+								$transport = $transportFactory->Create(array('provider' => $GLOBALS['_config']->email->provider));
+								if ($transport && !$transport->error()) {
+									$transport->hostname($GLOBALS['_config']->email->hostname);
+									$transport->token($GLOBALS['_config']->email->token);
+									if (!$transport->deliver($message)) {
+										app_log("Error sending password reset notification email: " . $transport->error(), 'error', __FILE__, __LINE__);
+									} else {
+										app_log("Password reset notification email sent to " . $to_email, 'info', __FILE__, __LINE__);
+										$customer->auditRecord('PASSWORD_RESET_NOTIFICATION_SENT', 'Password reset notification email sent to: ' . $to_email);
+									}
+								} else {
+									app_log("Error creating email transport for password reset notification: " . ($transport ? $transport->error() : 'Transport creation failed'), 'error', __FILE__, __LINE__);
+								}
+							} else {
+								app_log("Error generating password reset notification email: " . $template->error(), 'error', __FILE__, __LINE__);
+							}
+						} else {
+							app_log("Password reset notification email template not found", 'error', __FILE__, __LINE__);
+						}
+					} else {
+						if (empty($to_email)) {
+							app_log("No email address available for customer " . $customer->id, 'error', __FILE__, __LINE__);
+						} else {
+							app_log("Password reset notification email configuration not found", 'error', __FILE__, __LINE__);
+						}
+					}
+				} else {
+					app_log("Invalid customer object for password reset notification", 'error', __FILE__, __LINE__);
+				}
 			}
 			if (isset($parameters["profile"])) $customer->update(array('profile' => $parameters["profile"]));
 			
