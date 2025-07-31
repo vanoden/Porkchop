@@ -135,7 +135,7 @@
 		public function addFile($file, $path) {
 			if (!$this->_connected) {
 				if (!$this->connect()) {
-					$this->error("Failed to connect to S3 service");
+					$this->error("Failed to connect to S3 service: ".$this->error());
 					return null;
 				}
 			}

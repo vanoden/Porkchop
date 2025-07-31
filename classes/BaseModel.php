@@ -1476,14 +1476,13 @@ class BaseModel extends \BaseClass {
 	 * @return bool True if upload and association are successful, false otherwise
 	 */
 	public function uploadImageToRepoID(array $fileData, int $repository_id, string $path = '', string $label = '', $object_type = null): bool {
-
 		$this->clearError();
 
 		if (! preg_match('/^\//', $path)) $path = '/' . $path;
 
 		// Check if the file data is valid
 		if (empty($fileData) || !isset($fileData['tmp_name']) || !is_uploaded_file($fileData['tmp_name'])) {
-			$this->error('Invalid file data');
+			$this->error('Invalid file data: '. json_encode($fileData));
 			return false;
 		}
 
