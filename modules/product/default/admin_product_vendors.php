@@ -6,6 +6,7 @@
 	<a href="/_product/admin_product_vendors/<?= $item->code ?>" class="button" disabled>Vendors</a>
 	<a href="/_product/admin_images/<?= $item->code ?>" class="button">Images</a>
 	<a href="/_product/admin_product_tags/<?= $item->code ?>" class="button">Tags</a>
+	<a href="/_product/admin_product_parts/<?= $item->code ?>" class="button">Parts</a>
 </div>
 
 <h3>Add A Vendor</h3>

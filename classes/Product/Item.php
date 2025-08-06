@@ -26,25 +26,25 @@
 		public string $status = "ACTIVE";
 
 		/** @var float The quantity on hand */
-		public float $on_hand = 0.0;
+		protected float $on_hand = 0.0;
 
 		/** @var float The cost of the quantity on hand */
-		public float $on_hand_cost = 0.0;
+		protected float $on_hand_cost = 0.0;
 
 		/** @var float The minimum quantity */
-		public float $min_quantity = 0.0;
+		protected float $min_quantity = 0.0;
 
 		/** @var float The maximum quantity */
-		public float $max_quantity = 0.0;
+		protected float $max_quantity = 0.0;
 
 		/** @var int|null The default vendor ID */
-		public ?int $default_vendor = null;
+		protected ?int $default_vendor = null;
 
 		/** @var float The total quantity purchased */
-		public float $total_purchased = 0.0;
+		protected float $total_purchased = 0.0;
 
 		/** @var float The total cost of the product */
-		public float $total_cost = 0.0;
+		protected float $total_cost = 0.0;
 
 		/**
 		 * Constructor
@@ -133,7 +133,7 @@
 			return true;
 		}
 
-		/**
+		/** @method update(parameters)
 		 * Update the product with the provided parameters
 		 * 
 		 * @param array $parameters The parameters to update
@@ -235,7 +235,7 @@
 			return $this->details();
 		}
 
-		/**
+		/** @method add(parameters)
 		 * Add a new product
 		 * 
 		 * @param array $parameters The parameters for the new product
@@ -417,22 +417,7 @@
 		 * @return bool|null True if found, false if not found, null on error
 		 */
 		public function getByCode($code) {
-			$get_details_query = "
-				SELECT	id
-				FROM	product_products
-				WHERE	code = ?
-			";
-			$rs = $GLOBALS['_database']->Execute($get_details_query,array($code));
-			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
-			}
-			list($this->id) = $rs->FetchRow();
-
-			if ($this->id)
-				return $this->details();
-			else
-				return false;
+			return $this->get($code);
 		}
 
 		/**
@@ -572,7 +557,7 @@
 			return null;
 		}
 
-		/**
+		/** @method getPriceAmount($parameters = array)
 		 * Get the current price amount of the product
 		 * 
 		 * @param array $parameters Optional parameters
@@ -582,6 +567,55 @@
 			$price = new \Product\Price();
 			return $price->getCurrent($this->id);
         }
+
+		/** @method minQuantity()
+		 * Get the minimum quantity of the product
+		 */
+		public function minQuantity() {
+			return $this->min_quantity;
+		}
+
+		/** @method maxQuantity()
+		 * Get the maximum quantity of the product
+		 */
+		public function maxQuantity() {
+			return $this->max_quantity;
+		}
+
+		/** @method onHand()
+		 * Get the quantity on hand of the product
+		 */
+		public function onHand() {
+			return $this->on_hand;
+		}
+
+		/** @method onHandCost()
+		 * Get the cost of the quantity on hand of the product
+		 */
+		public function onHandCost() {
+			return $this->on_hand_cost;
+		}
+
+		/** @method totalPurchased()
+		 * Get the total quantity purchased of the product
+		 */
+		public function totalPurchased() {
+			return $this->total_purchased;
+		}
+
+		/** @method totalCost()
+		 * Get the total cost of the product
+		 */
+		public function totalCost() {
+			return $this->total_cost;
+		}
+
+		/** @method defaultVendor()
+		 * Get the default vendor ID for the product
+		 */
+		public function defaultVendor() {
+			return $this->default_vendor;
+		}
 
 		/** @method vendors()
 		 * Get all vendors for the product
@@ -705,7 +739,7 @@
 			return false;
 		}
 
-        /**
+        /** @method validateCode($string)
          * Validate a product code
          * 
          * @param string $string The code to validate
@@ -716,7 +750,7 @@
             else return false;
         }
 
-		/**
+		/** @method validName($string)
 		 * Validate a product name
 		 * 
 		 * @param string $string The name to validate
@@ -729,7 +763,7 @@
 				return false;
 		}	
 
-        /**
+        /** @method validType($string)
          * Validate a product type
          * 
          * @param string $string The type to validate
@@ -740,7 +774,7 @@
             else return false;
         }
 
-        /**
+        /** @method validStatus($string)
          * Validate a product status
          * 
          * @param string $string The status to validate
@@ -751,17 +785,7 @@
             else return false;
         }
 
-		/**
-		 * Check if the product is a multi-zone product
-		 * 
-		 * @return bool True if multi-zone, false otherwise
-		 */
-		public function isMultiZone() {
-			if (preg_match("/(SF|PM|MB)400\-/",$this->code)) return true;
-			else return false;
-		}
-
-        /**
+        /** @method getDefaultStorageImage()
          * Get the default storage image for the product
          * 
          * @return \Storage\File|null The default image file or null if not found
@@ -774,4 +798,95 @@
 			}
 			return null;
         }
+
+		/** @method addPart(product_id, quantity)
+		 * Add a part for assembly of product
+		 * @param int $product_id The product ID of the part
+		 * @param float $quantity The quantity of the part
+		 * @return bool True if successful, false otherwise
+		 */
+		public function addPart($id, $quantity): bool {
+			// Clear any existing error
+			$this->clearError();
+			
+			// Check Privileges
+			if (! $GLOBALS['_SESSION_']->customer->can('manage products')) {
+				$this->error("You do not have permissions for this task.");
+				app_log($GLOBALS['_SESSION_']->customer->code." failed to add part because not have 'manage products' privilege",'notice',__FILE__,__LINE__);
+				app_log(print_r($GLOBALS['_SESSION_'],true),'debug',__FILE__,__LINE__);
+				return false;
+			}
+
+			// Validate product ID and quantity
+			if (! is_numeric($quantity) || $quantity <= 0) {
+				$this->error("Invalid quantity");
+				return false;
+			}
+			$part = new \Product\Item($id);
+			if (! $part->id) {
+				$this->error("Part not found");
+				return false;
+			}
+
+			$part = new \Product\Item\Part();
+			$part->add(array(
+				'product_id' => $this->id,
+				'part_product_id' => $id,
+				'quantity' => $quantity
+			));
+			if ($part->error()) {
+				$this->error($part->error());
+				return false;
+			}
+			return true;
+		}
+
+		/** @method updatePart(parameters)
+		 * Update a part for the product
+		 * @param array $parameters The parameters for the part
+		 * @return bool True if successful, false otherwise
+		 */
+		public function updatePart($parameters = []): bool {
+			$this->clearError();
+			$part = new \Product\Item\Part();
+			if (! $part->get($this->id, $parameters['part_id'])) {
+				$this->error($part->error());
+				return false;
+			}
+			if (! $part->update($parameters)) {
+				$this->error($part->error());
+				return false;
+			}
+			return true;
+		}
+
+		/** @method deletePart(part_id)
+		 * Delete a part from the product
+		 * @param int $part_id The part ID to delete
+		 * @return bool True if successful, false otherwise
+		 */
+		public function deletePart($part_id): bool {
+			$this->clearError();
+			$part = new \Product\Item\Part($part_id);
+			if (! $part->delete($part_id)) {
+				$this->error($part->error());
+				return false;
+			}
+			return true;
+		}
+
+		/** @method parts()
+		 * Get all parts for the product
+		 * @return array|null Array of part objects or null on error
+		 */
+		public function parts() {
+			$partList = new \Product\Item\PartList();
+			$parts = $partList->find(array('product_id' => $this->id));
+			if ($partList->error()) {
+				$this->error($partList->error());
+				return null;
+			} else {
+				return $parts;
+			}
+		}
 	}
