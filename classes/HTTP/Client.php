@@ -26,6 +26,7 @@ use function Amp\now;
 		 * @return bool Returns true on success, false on failure
 		 */
 		public function connect($host = '127.0.0.1',$port = null, $ssl = false) {
+			// Parse The Host for Possible URL with Port instead of hostname or IP
 			if (preg_match('/^(https?):\/\/([\w\-\.]+)\:(\d+)/',$host,$matches)) {
 				$protocol = $matches[1];
 				$host = $matches[2];
@@ -37,6 +38,7 @@ use function Amp\now;
 					else $port = 80;
 				}
 			}
+			// Parse The Host for Possible URL without Port instead of hostname or IP
 			elseif (preg_match('/(https?):\/\/([\w\-\.]+)\/?/',$host,$matches)) {
 				$protocol = $matches[1];
 				$host = $matches[2];
@@ -47,12 +49,14 @@ use function Amp\now;
 					else $port = 80;
 				}
 			}
+			// Hostname or IP without Port
 			else {
 				if (!$ssl) {
 					if ($port == 443) $ssl = true;
 				}
 			}
 
+			// If no port is specified, use default port for HTTP or HTTPS
 			if (empty($port)) {
 				if ($ssl) $port = 443;	 // Default port for HTTPS
 				else $port = 80; 		// Default port for HTTP
