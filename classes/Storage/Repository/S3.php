@@ -153,14 +153,20 @@
 						'Source' => 'Uploaded from Website'
 					)
 				));
+				app_log("Uploaded File '".$file->code()."' to S3 bucket '".$this->_bucket()."' [".$result['ObjectURL']."]",'notice');
 			}
 			catch (\Aws\S3\Exception\S3Exception $e) {
 				$this->error("Repository upload error: ".$e->getMessage());
 				$this->_connected = false;
 				return false;
 			}
+			catch( \Exception $e) {
+				$this->error("General Exception: ".$e->getMessage());
+				$this->_connected = false;
+				return false;
+			}
 			
-			return $result;
+			return true;
 		}
 		
 		/**
