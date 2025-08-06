@@ -61,12 +61,12 @@
 				}
 			}
 			catch (\Aws\S3\Exception\S3Exception $e) {
-				$this->error($e->getMessage());
+				$this->error("AWS Exception: " . $e->getMessage());
 				$this->_connected = false;
 				return false;
 			}
 			catch (\Exception $e) {
-				$this->error($e->getMessage());
+				$this->error("General Exception: " . $e->getMessage());
 				$this->_connected = false;
 				return false;
 			}
@@ -136,7 +136,10 @@
 			if (!$this->_connected) {
 				if (!$this->connect()) {
 					$this->error("Failed to connect to S3 service: ".$this->error());
-					return null;
+					app_log("Failed to connect to S3 service for bucket '".$this->_bucket()."': ".$this->error(),'error');
+					app_log("Bucket: ".$this->_bucket(),'error');
+					app_log("Region: ".$this->region(),'error');
+					return false;
 				}
 			}
 
