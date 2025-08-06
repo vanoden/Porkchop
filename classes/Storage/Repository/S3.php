@@ -139,8 +139,14 @@
 					app_log("Failed to connect to S3 service for bucket '".$this->_bucket()."': ".$this->error(),'error');
 					app_log("Bucket: ".$this->_bucket(),'error');
 					app_log("Region: ".$this->region(),'error');
+print_r("Error connecting to S3: ".$this->error());
 					return false;
 				}
+print_r("Connected to S3 bucket '".$this->_bucket()."' in region '".$this->region()."'");
+			}
+			else {
+				app_log("Already connected to S3 bucket '".$this->_bucket()."' in region '".$this->region()."'");
+print_r("Already connected to S3 bucket '".$this->_bucket()."' in region '".$this->region()."'");
 			}
 
 			try {
@@ -157,11 +163,13 @@
 			}
 			catch (\Aws\S3\Exception\S3Exception $e) {
 				$this->error("Repository upload error: ".$e->getMessage());
+print_r("AWS Exception uploading file to S3: ".$this->error());
 				$this->_connected = false;
 				return false;
 			}
 			catch( \Exception $e) {
 				$this->error("General Exception: ".$e->getMessage());
+print_r("General Exception uploading file to S3: ".$this->error());
 				$this->_connected = false;
 				return false;
 			}
