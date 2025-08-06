@@ -60,39 +60,38 @@ if ($can_proceed && $page->errorCount() < 1) {
 				if (!$GLOBALS['_SESSION_']->verifyCSRFToken($csrfToken)) {
 					$page->addError("Invalid Token");
 					$can_proceed = false;
-				} else {
+				}
+				else {
 					$path = $_REQUEST['path'] ?? '';
 					$display_name = $_REQUEST['display_name'] ?? '';
 					$name = $_REQUEST['name'] ?? '';
-					
-					if (!$request->validText($path)) {
-						$page->addError("Invalid path");
-						$can_proceed = false;
-					} else {
-						if (!preg_match('/^\//', $path)) $path = '/' . $path;
+
+					if (!preg_match('/^\//', $path)) $path = '/' . $path;
 						
-						if (!$file->writePermitted()) {
-							$page->addError("Permission Denied");
-							return 403;
-						} elseif (!$file->validPath($path)) {
-							$page->addError("Invalid Path");
+					if (!$file->writePermitted()) {
+						$page->addError("Permission Denied");
+						return 403;
+					}
+					elseif (!$file->validPath($path)) {
+						$page->addError("Invalid Path");
+						$can_proceed = false;
+					}
+					elseif (!$file->validName($name)) {
+						$page->addError("Invalid Name");
+						$can_proceed = false;
+					}
+					else {
+						$parameters = array(
+							'display_name'	=> htmlspecialchars($display_name),
+							'name'			=> $name,
+							'path'			=> $path
+						);
+						$file->update($parameters);
+						if ($file->error()) {
+							$page->addError("Update error: " . $file->error());
 							$can_proceed = false;
-						} elseif (!$file->validName($name)) {
-							$page->addError("Invalid Name");
-							$can_proceed = false;
-						} else {
-							$parameters = array(
-								'display_name'	=> htmlspecialchars($display_name),
-								'name'			=> $name,
-								'path'			=> $path
-							);
-							$file->update($parameters);
-							if ($file->error()) {
-								$page->addError("Update error: " . $file->error());
-								$can_proceed = false;
-							}
-							else $page->success = "File updated";
 						}
+						else $page->success = "File updated";
 					}
 				}
 			}
@@ -106,45 +105,41 @@ if ($can_proceed && $page->errorCount() < 1) {
 				} else {
 					$page->requirePrivilege('upload storage files');
 					$path = $_REQUEST['path'] ?? '';
-					if (!$request->validText($path)) {
-						$page->addError("Invalid path");
+
+					if (!preg_match('/^\//', $path)) $path = '/' . $path;
+					$repositoryBase = new \Storage\Repository($repository_id);
+					$repository = $repositoryBase->getInstance();
+
+					if ($repository->error()) {
+						$page->addError("Error loading repository: " . $repository->error());
+						$can_proceed = false;
+					} else if (!$repository->id) {
+						$page->addError("Repository not found");
+						$can_proceed = false;
+					} else if (!$repository->writable()) {
+						$page->addError("Permission Denied");
 						$can_proceed = false;
 					} else {
-						if (!preg_match('/^\//', $path)) $path = '/' . $path;
-						$factory = new \Storage\RepositoryFactory();
-						$repository = $factory->load($repository_id);
+						app_log("Identified repo '" . $repository->name . "'");
 
-						if ($factory->error()) {
-							$page->addError("Error loading repository: " . $factory->error());
-							$can_proceed = false;
-						} else if (!$repository->id) {
-							$page->addError("Repository not found");
-							$can_proceed = false;
-						} else if (!$repository->writable()) {
-							$page->addError("Permission Denied");
-							$can_proceed = false;
-						} else {
-							app_log("Identified repo '" . $repository->name . "'");
-
-							if ($uploadedFile = $repository->uploadFile($_FILES['uploadFile'], $path)) {
-								$page->success = "File uploaded";
-								$file = $uploadedFile;
+						if ($uploadedFile = $repository->uploadFile($_FILES['uploadFile'], $path)) {
+							$page->success = "File uploaded";
+							$file = $uploadedFile;
 								
-								// add metadata to the file if the keys and values are set
-								$metadata_key = $_REQUEST['storage_file_metadata_key'] ?? null;
-								$metadata_value = $_REQUEST['storage_file_metadata_value'] ?? null;
+							// add metadata to the file if the keys and values are set
+							$metadata_key = $_REQUEST['storage_file_metadata_key'] ?? null;
+							$metadata_value = $_REQUEST['storage_file_metadata_value'] ?? null;
 								
-								if ($request->validText($metadata_key) && $request->validText($metadata_value)) {
-									// if the file is a product image, add it to the product
-									if ($metadata_key == 'spectros_product_image') {
-										$product = new \Product\Item($metadata_value);
-										$product->addImage($file->id);
-									}
+							if ($request->validText($metadata_key) && $request->validText($metadata_value)) {
+								// if the file is a product image, add it to the product
+								if ($metadata_key == 'spectros_product_image') {
+									$product = new \Product\Item($metadata_value);
+									$product->addImage($file->id);
 								}
-							} else {
-								$page->addError("Error uploading file: " . $repository->error());
-								$can_proceed = false;
 							}
+						} else {
+							$page->addError("Error uploading file: " . $repository->error());
+							$can_proceed = false;
 						}
 					}
 				}
