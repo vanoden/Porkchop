@@ -772,7 +772,7 @@ class BaseModel extends \BaseClass {
 		if (!empty($this->_cacheKeyPrefix) && !empty($this->id)) {
 			// Bust Cache
 			$cache_key = $this->_cacheKeyPrefix . "[" . $this->id . "]";
-			app_log("Returning ".$cache_key,'trace');
+			app_log("Returning ".$cache_key." from cache",'trace');
 			return new \Cache\Item($GLOBALS['_CACHE_'], $cache_key);
 		} else if (!empty($this->_cacheKeyPrefix)) {
 			app_log("No ID defined for " . get_class($this),'debug');
