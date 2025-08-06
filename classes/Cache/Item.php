@@ -13,7 +13,6 @@
 		public function __construct($client,$key) {
 			$this->_client = $client;
 			$this->_key = $key;
-			app_log("Creating cache item with key: ".$this->_key,'trace');
 			if (! $this->_client->connected()) {
 				$this->error("Client not connected");
 			} elseif (! $this->_key) {
