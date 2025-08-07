@@ -5,45 +5,6 @@ $page = $site->page();
 $request = new \HTTP\Request();
 $can_proceed = true;
 
-// Capture S3-related app_log messages for display on page
-$s3_log_messages = array();
-$original_app_log = function_exists('app_log') ? 'app_log' : null;
-
-// Override app_log function to capture S3 messages
-if ($original_app_log) {
-    function sapp_log($message, $level = 'debug', $path = null, $line = null) {
-        global $s3_log_messages, $original_app_log;
-        
-        // Check if message is S3-related
-        $s3_keywords = array('S3', 'AWS', 'bucket', 'upload', 's3', 'aws', 'spectros-test-site-images');
-        $is_s3_related = false;
-        
-        foreach ($s3_keywords as $keyword) {
-            if (stripos($message, $keyword) !== false) {
-                $is_s3_related = true;
-                break;
-            }
-        }
-        
-        // If S3-related, capture for display
-        if ($is_s3_related) {
-            $timestamp = date('H:i:s');
-            $level_icon = '';
-            switch ($level) {
-                case 'error': $level_icon = '❌'; break;
-                case 'warning': $level_icon = '⚠️'; break;
-                case 'notice': $level_icon = 'ℹ️'; break;
-                case 'info': $level_icon = 'ℹ️'; break;
-                default: $level_icon = '🔍'; break;
-            }
-            $s3_log_messages[] = "[$timestamp] $level_icon [$level] $message";
-        }
-        
-        // Call original app_log function
-        return call_user_func($original_app_log, $message, $level, $path, $line);
-    }
-}
-
 // Identify File from User Input
 $file_id = $_REQUEST['id'] ?? null;
 if ($request->validInteger($file_id) && $file_id > 0) {
@@ -179,14 +140,6 @@ if ($can_proceed && $page->errorCount() < 1) {
 						} else {
 							$page->addError("Error uploading file: " . $repository->error());
 							$can_proceed = false;
-						}
-						
-						// Display captured S3 log messages as page errors
-						if (!empty($s3_log_messages)) {
-							$page->addError("S3 Debug Information:");
-							foreach ($s3_log_messages as $log_message) {
-								$page->addError($log_message);
-							}
 						}
 					}
 				}
