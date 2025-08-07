@@ -240,7 +240,7 @@ foreach ($repository_types as $type => $name) {
 // Get Default Privileges for Repository
 if (is_object($repository)) {
 	$default_privileges = $repository->default_privileges();
-	$override_privileges = $repository->override_privileges();
+	//$override_privileges = $repository->override_privileges();
 } else {
 	$page->addError("Repository not found or could not be created.");
 }

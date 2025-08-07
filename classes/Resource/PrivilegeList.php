@@ -25,18 +25,24 @@
 				return array(new \stdClass());
 			}
 			else {
+				print_r($json);
 				// Parse JSON String into Multidimensional Associative Array
 				$data = json_decode($json);
 				if (!empty($data)) {
 					$privileges = array();	// Array of Privilege Objects
 					$allSet = false;		// We found a matching privilege
 
+					$already = [];
+					$entity_id = 0;
 					// Loop Through Privilege Entities
 					foreach ($data as $entity_type => $privs) {
 						$read = false;
 						$write = false;
 						$authSet = false;
-
+						if (isset($already[$entity_type][$entity_id])) {
+							$this->error("Duplicate privilege entity type found in JSON data!");
+							continue;
+						}
 						// Handle 'All' privileges
 						if ($entity_type == 'a') {
 							$allSet = true;
@@ -58,6 +64,7 @@
 							$privilege->write = $write;
 							array_push($privileges,$privilege);
 							array_push($this->_data,$privilege);
+							$already[$entity_type][$entity_id] = 1;
 						}
 						elseif ($entity_type == 't') {
 							$authSet = true;
@@ -79,6 +86,7 @@
 							$privilege->write = $write;
 							array_push($privileges,$privilege);
 							array_push($this->_data,$privilege);
+							$already[$entity_type][$entity_id] = 1;
 						}
 						// Handle Specific Entity Privileges
 						else {
@@ -126,6 +134,7 @@
 									// Invalid entity type!
 									// Ignore it
 								}
+								$already[$entity_type][$id] = 1;
 							}
 						}
 					}

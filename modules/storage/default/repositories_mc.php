@@ -4,3 +4,6 @@
 
     $repositoryList = new \Storage\RepositoryList();
     $repositories = $repositoryList->find();
+
+	$page->title('Repositories');
+	$page->addBreadCrumb('Storage');

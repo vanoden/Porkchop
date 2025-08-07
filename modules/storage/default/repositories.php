@@ -1,16 +1,18 @@
-<div class="title">Repositories</div>
+<?=$page->showAdminPageInfo()?>
 <a class="button" href="/_storage/repository">New Repository</a>
-<table class="body">
-<tr><th>Code</th>
-	<th>Name</th>
-	<th>Type</th>
-	<th>Status</th>
-</tr>
+<div class="tableBody">
+<div class="tableRowHeader">
+	<div class="tableCell">Code</div>
+	<div class="tableCell">Name</div>
+	<div class="tableCell">Type</div>
+	<div class="tableCell">Status</div>
+</div>
 <?php	 foreach ($repositories as $repository) { ?>
-<tr><td><a href="/_storage/repository?code=<?=$repository->code?>"><?=$repository->code?></a></td>
-	<td><?=$repository->name?></td>
-	<td><?=$repository->type?></td>
-	<td><?=$repository->status?></td>
-</tr>
+<div class="tableRow">
+	<div class="tableCell"><a href="/_storage/repository?code=<?=$repository->code?>"><?=$repository->code?></a></div>
+	<div class="tableCell"><?=$repository->name?></div>
+	<div class="tableCell"><?=$repository->type?></div>
+	<div class="tableCell"><?=$repository->status?></div>
+</div>
 <?php	 } ?>
-</table>
+</div>

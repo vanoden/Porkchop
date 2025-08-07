@@ -120,7 +120,9 @@
     	</div>
     	<!-- end row header -->
 		<!-- Existing Privileges -->
-		<?php foreach ($default_privileges as $privilege) {
+		<?php
+			print_r($default_privileges);
+			foreach ($default_privileges as $privilege) {
 			if (empty($privilege->entity_type)) continue;
 		?>
     	<div class="tableRow">

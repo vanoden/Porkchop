@@ -35,7 +35,6 @@ class S3 extends \Storage\Repository {
 
 		$bucket_name = $this->getMetadata('bucket');
 		$region = $this->region() ?: 'us-east-1';
-print_r("Attempting to connect to S3 bucket: '$bucket_name' in region: '$region'<br>\n");
 		app_log("Attempting to connect to S3 bucket: '$bucket_name' in region: '$region'", 'info');
 
 		try {
@@ -43,7 +42,7 @@ print_r("Attempting to connect to S3 bucket: '$bucket_name' in region: '$region'
 				// Use explicit credentials if provided
 				app_log("Using explicit AWS credentials for S3 connection", 'debug');
 				$this->credentials = new \Aws\Credentials\CredentialProvider($this->accessKey(), $this->secretKey());
-print_r("Connecting to S3 with explicit credentials<br>\n");
+
 				// Instantiate the S3 client with your AWS credentials
 				$this->client = new \Aws\S3\S3Client([
 					'region' => $region,
@@ -53,7 +52,6 @@ print_r("Connecting to S3 with explicit credentials<br>\n");
 			} else {
 				// Use IAM roles or instance profile authentication
 				app_log("Using IAM role/instance profile authentication for S3 connection", 'debug');
-print_r("Connecting to S3 with IAM role/instance profile authentication<br>\n");
 				$this->client = new \Aws\S3\S3Client([
 					'region' => $region,
 					'version' => 'latest'
@@ -63,7 +61,6 @@ print_r("Connecting to S3 with IAM role/instance profile authentication<br>\n");
 			$error_message = $e->getMessage();
 			$this->error("Failed to create S3 client: $error_message");
 			app_log("S3 Connection failed: $error_message", 'error');
-print_r("Error creating S3 client: ".$this->error()."<br>\n");
 			$this->_connected = false;
 			return false;
 		}
@@ -75,7 +72,6 @@ print_r("Error creating S3 client: ".$this->error()."<br>\n");
 			if (!$result) {
 				$this->error("Bucket '$bucket_name' does not exist or is not accessible");
 				app_log("S3 Bucket verification failed: Bucket '$bucket_name' does not exist or is not accessible", 'error');
-print_r("S3 Bucket verification failed: Bucket '$bucket_name' does not exist or is not accessible<br>\n");
 				$this->_connected = false;
 				return false;
 			}
@@ -90,7 +86,6 @@ print_r("S3 Bucket verification failed: Bucket '$bucket_name' does not exist or 
 			$this->error("AWS S3 Exception [$error_code]: $error_message");
 			app_log("S3 Connection failed with AWS Exception [$error_code]: $error_message", 'error');
 			app_log("Bucket: '$bucket_name', Region: '$region'", 'error');
-print_r("AWS Error connecting to S3: ".$this->error()."<br>\n");
 			$this->_connected = false;
 			return false;
 		} catch (\Exception $e) {
@@ -98,7 +93,6 @@ print_r("AWS Error connecting to S3: ".$this->error()."<br>\n");
 			$this->error("General Exception: $error_message");
 			app_log("S3 Connection failed with General Exception: $error_message", 'error');
 			app_log("Bucket: '$bucket_name', Region: '$region'", 'error');
-print_r("General Error connecting to S3: ".$this->error()."<br>\n");
 			$this->_connected = false;
 			return false;
 		}
@@ -176,14 +170,11 @@ print_r("General Error connecting to S3: ".$this->error()."<br>\n");
 				app_log("Failed to connect to S3 service for bucket '" . $this->_bucket() . "': " . $this->error(), 'error');
 				app_log("Bucket: " . $this->_bucket(), 'error');
 				app_log("Region: " . $this->region(), 'error');
-print_r("Error connecting to S3: ".$this->error());
 				return false;
 			}
-print_r("Connected to S3 bucket '".$this->_bucket()."' in region '".$this->region()."'");
 			}
 			else {
 				app_log("Already connected to S3 bucket '".$this->_bucket()."' in region '".$this->region()."'");
-print_r("Already connected to S3 bucket '".$this->_bucket()."' in region '".$this->region()."'");
 		}
 
 		$bucket_name = $this->_bucket();

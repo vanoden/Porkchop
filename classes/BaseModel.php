@@ -38,7 +38,7 @@ class BaseModel extends \BaseClass {
 	// Should we always audit events for this class?
 	protected $_auditEvents = false;
 
-	/**
+	/** @constructor($id = 0)
 	 * Load object base on ID if given
 	 * @param int $id
 	 */
@@ -70,7 +70,7 @@ class BaseModel extends \BaseClass {
 		}
 	}
 
-	/**
+	/** @method __call($name, $parameters)
 	 * Polymorphism for Fun and Profit
 	 * @param string $name
 	 * @param array $parameters
@@ -112,7 +112,7 @@ class BaseModel extends \BaseClass {
 		}
 	}
 
-	/**
+	/** @method _tableName()
 	 * Return the name of the table
 	 * @return string Name of table
 	 */
@@ -556,7 +556,7 @@ class BaseModel extends \BaseClass {
 		return true;
 	}
 
-	/**
+	/** @method deleteByKey(keyname)
 	 * Delete a record from the database using a key
 	 * @param string $keyName
 	 * @return bool True if object deleted
@@ -601,7 +601,7 @@ class BaseModel extends \BaseClass {
 		return true;
 	}
 
-	/**
+	/** @method maxColumnValue($column = 'id')
 	 * get max value from a column in the current DB table
 	 */
 	public function maxColumnValue($column = 'id') {
@@ -619,7 +619,7 @@ class BaseModel extends \BaseClass {
 		return $value;
 	}
 
-	/**
+	/** @method execute($query, $params)
 	 * @TODO REMOVE -> move to the recordset Service->Execute()
 	 *
 	 * get the error that may have happened on the DB level
@@ -670,7 +670,7 @@ class BaseModel extends \BaseClass {
 		} elseif (!in_array($keys, $this->_metadataKeys)) array_push($this->_metadataKeys, $keys);
 	}
 
-	/**
+	/** @method _metadataKeys($keys = null, $value = null)
 	 * Return array of keys for metadata
 	 * @param mixed $keys
 	 * @param mixed $value
@@ -687,7 +687,7 @@ class BaseModel extends \BaseClass {
 		return $this->_metadataKeys;
 	}
 
-	/**
+	/** @method _ukExists($code)
 	 * Get Object Record Using Unique Code
 	 * and return true if found, false if not
 	 * @param string $code
@@ -724,7 +724,7 @@ class BaseModel extends \BaseClass {
 		}
 	}
 
-	/**
+	/** @method _addStatus($param)
 	 * Add a status to the list of valid statii for this object
 	 * @param mixed $param
 	 * @return void
@@ -734,7 +734,7 @@ class BaseModel extends \BaseClass {
 		else array_push($this->_statii, $param);
 	}
 
-	/**
+	/** @method statii()
 	 * Return array of valid statii for this object
 	 * @return array 
 	 */
@@ -742,7 +742,7 @@ class BaseModel extends \BaseClass {
 		return $this->_statii;
 	}
 
-	/**
+	/** @method _addTypes($param)
 	 * Add a type to the list of valid types for this object
 	 * @param mixed $param 
 	 * @return void 
@@ -752,7 +752,7 @@ class BaseModel extends \BaseClass {
 		else array_push($this->_types, $param);
 	}
 
-	/**
+	/** @method exists($exists = null)
 	 * Get/Set existance of instance.  Was the record found in the database?
 	 * @param mixed $exists Tell the object if it exists
 	 * @return bool Tell us if the object exists
@@ -783,7 +783,7 @@ class BaseModel extends \BaseClass {
 		}
 	}
 
-	/**
+	/** @method clearCache()
 	 * Clear Object from Cache
 	 * @return void
 	 */
@@ -795,7 +795,7 @@ class BaseModel extends \BaseClass {
 		return true;
 	}
 
-	/**
+	/** @method cached($cached = null)
 	 * Don't check cache, just see if data came from cache!
 	 * @param bool $cached
 	 * @return bool
@@ -810,7 +810,7 @@ class BaseModel extends \BaseClass {
 		return $this->_cached;
 	}
 
-	/**
+	/** @method setMetadataScalar(key, value)
 	 * Set Metadata Value for Key
 	 * @param string $key
 	 * @param string $value
@@ -856,7 +856,7 @@ class BaseModel extends \BaseClass {
 		return true;
 	}
 
-	/**
+	/** @method setMetadataObject(key, value)
 	 * Set Metadata Object
 	 * @param string $key
 	 * @param stdClass $value
@@ -902,7 +902,7 @@ class BaseModel extends \BaseClass {
 		return true;
 	}
 
-	/**
+	/** @method unsetMetadata(key)
 	 * Unset Metadata Value for Key
 	 * @param string $key
 	 * @return bool True if unset
@@ -943,7 +943,7 @@ class BaseModel extends \BaseClass {
 		return true;
 	}
 
-	/**
+	/** @method getImpliedMetadataKeys()
 	 * Get Implied Key - Only those set in the object
 	 * @return array
 	 */
@@ -954,7 +954,7 @@ class BaseModel extends \BaseClass {
 		return $this->_metadataKeys();
 	}
 
-	/**
+	/** @method getMetadataKeys()
 	 * Get All Metadata Keys for Object
 	 * @return array
 	 */
@@ -986,7 +986,7 @@ class BaseModel extends \BaseClass {
 		return $keys;
 	}
 
-	/**
+	/** @method getInstanceMetadataKeys()
 	 * Get All Metadata Keys defined for this Instance
 	 * @return array
 	 */
@@ -1022,7 +1022,7 @@ class BaseModel extends \BaseClass {
 		return $keys;
 	}
 
-	/**
+	/** @method getMetadata(key)
 	 * Get Metadata Value for Key
 	 * @param key
 	 * @return string
@@ -1057,7 +1057,7 @@ class BaseModel extends \BaseClass {
 		return strval($value);
 	}
 
-	/**
+	/** @method getMetadataInt(key)
 	 * Get Metadata Value for Key as Integer
 	 * @param key
 	 * @return int
@@ -1092,7 +1092,7 @@ class BaseModel extends \BaseClass {
 		return intval($value);
 	}
 
-	/**
+	/** @method getMetadataFloat(key)
 	 * Get Metadata Value for Key as Float
 	 * @param key
 	 * @return float
@@ -1127,7 +1127,7 @@ class BaseModel extends \BaseClass {
 		return floatval($value);
 	}
 
-	/**
+	/** @method getMetadataBool(key)
 	 * Get Metadata Value for Key as Boolean
 	 * @param key
 	 * @return bool
@@ -1162,7 +1162,7 @@ class BaseModel extends \BaseClass {
 		return boolval($value);
 	}
 
-	/**
+	/** @method getMetadataObject(key)
 	 * Get Metadata Record as Object
 	 * @param key
 	 * @return object
@@ -1197,7 +1197,7 @@ class BaseModel extends \BaseClass {
 		return json_decode($value);
 	}
 
-	/**
+	/** @method getAllMetadata()
 	 * Get All Metadata for Object as a Key/Value Array
 	 * @return array 
 	 */
@@ -1262,8 +1262,10 @@ class BaseModel extends \BaseClass {
 		return true;
 	}
 
-	/**
+	/** @method searchMeta(key, value)
 	 * Get Metadata for Object as a Key/Value Array
+	 * @param string $key The metadata key to search for
+	 * @param string $value The value to search for in the metadata
 	 * @return array 
 	 */
 	public function searchMeta($key, $value): array {
@@ -1306,9 +1308,9 @@ class BaseModel extends \BaseClass {
 		return $objects;
 	}
 
-	/**
+	/** @method images(object_type = null)
 	 * Get all images associated with the product
-	 * 
+	 * @param string|null $object_type The type of object to retrieve images for, defaults to class name
 	 * @return array|null Array of Storage\File objects or null on error
 	 */
 	public function images($object_type = null) {
@@ -1346,10 +1348,12 @@ class BaseModel extends \BaseClass {
 		return $images;
 	}
 
-	/**
+	/** @method addImage(image_id, object_type, label)
 	 * Add an image to the product
 	 * 
 	 * @param int $image_id The image ID to add
+	 * @param string|null $object_type The type of object to associate the image with, defaults to class name
+	 * @param string $label Optional label for the image
 	 * @return int 1 if successful, 0 otherwise
 	 */
 	public function addImage($image_id, $object_type = null, $label = '') {
@@ -1376,7 +1380,7 @@ class BaseModel extends \BaseClass {
 		return 1;
 	}
 
-	/**
+	/** @method dropImage(image_id, object_type)
 	 * Remove an image from the product
 	 * 
 	 * @param int $image_id The image ID to remove
@@ -1401,7 +1405,7 @@ class BaseModel extends \BaseClass {
 		return 1;
 	}
 
-	/**
+	/** @method hasImage(int, string|null)
 	 * Check if the product has a specific image
 	 * 
 	 * @param int $image_id The image ID to check
