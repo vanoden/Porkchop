@@ -1,4 +1,22 @@
 <?= $page->showAdminPageInfo() ?>
+
+<?php if ($page->errorCount() > 0) { ?>
+<section id="form-message">
+	<ul class="connectBorder errorText">
+		<?php foreach ($page->errors as $error) { ?>
+			<li><?= htmlspecialchars($error) ?></li>
+		<?php } ?>
+	</ul>
+</section>
+<?php } ?>
+
+<?php if ($page->success) { ?>
+<section id="form-message">
+	<ul class="connectBorder progressText">
+		<li><?= htmlspecialchars($page->success) ?></li>
+	</ul>
+</section>
+<?php } ?>
 <style>
 	span.label {
 		display: inline-block;
