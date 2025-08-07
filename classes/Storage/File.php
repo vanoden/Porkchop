@@ -621,8 +621,8 @@ class File extends \BaseModel {
 	public function content() {
 		$repository = $this->repository();
 		$repository->content($this);
-		$this->error($repository->error());
-		return $repository->content();
+		if ($repository->error()) $this->error($repository->error());
+		return $repository->content($this);
 	}
 
 	public function code() {

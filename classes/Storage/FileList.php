@@ -37,12 +37,18 @@
 					AND sfm.key = ? AND sfm.value = ?";
 					$database->AddParam($parameters['type']);
 					$database->AddParam($parameters['ref_id']);
+					print_r($parameters['type']);
 				}
 				else {
 					$this->error("Invalid type");
 					return [];
 				}
             }
+			if (!empty($parameters['mime_type']) && preg_match('/^(image|application|audio|video|text)\/?\w*\%?$/',$parameters['mime_type'])) {
+				$find_objects_query .= "
+					AND sf.mime_type LIKE ?";
+				$database->AddParam($parameters['mime_type']);
+			}
 
 			if (!empty($parameters['name'])) {
 				if ($workingClass->validName($parameters['name'])) {
@@ -99,7 +105,9 @@
 			while(list($id) = $rs->FetchRow()) {
 				$file = new File($id);
 				if ($file->readable($GLOBALS['_SESSION_']->customer->id)) {
-					array_push($files,$file);
+					$clone = $file->_clone();
+					$clone->type = $file->mime_type;
+					array_push($files,$clone);
 					$this->incrementCount();
 				}
 			}

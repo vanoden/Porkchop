@@ -13,9 +13,9 @@
 			parent::__construct();
 		}
 
-		###################################################
-		### Add Media Item								###
-		###################################################
+		/** @method addMediaItem()
+		 * Add a new media item.
+		 */
 		public function addMediaItem() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -48,9 +48,9 @@
 			$response->print();
 		}
 
-		###################################################
-		### Find Media Items							###
-		###################################################
+		/** @method findMediaItems()
+		 * Find media items based on search criteria.
+		 */
 		public function findMediaItems() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'media.items.xsl';
@@ -76,9 +76,9 @@
 			}
 		}
 
-		###################################################
-		### Get Media Item								###
-		###################################################
+		/** @method getMediaItem()
+		 * Get a media item by its code.
+		 */
 		public function getMediaItem() {
 			# Default StyleSheet
 			if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'media.item.xsl';
@@ -101,33 +101,33 @@
 				$response->print();
 			}
 		}
-		
-		###################################################
-		### Download File								###
-		###################################################
+
+		/** @method downloadMediaFile()
+		 * Download a media file.
+		 */
 		public function downloadMediaFile() {
 			# Initiate Media File Object
 			$file = new \Media\File();
 			if ($file->error()) $this->error($file->error());
 
 			# Get File from Repository
-			$file->load($_REQUEST['code']);
+			$file->get($_REQUEST['code']);
 
 			# Error Handling
 			if ($file->error()) $this->error($file->error());
 			else{
 				app_log("Downloading ".$file->code.", type ".$file->mime_type.", ".$file->size." bytes.",'debug',__FILE__,__LINE__);
-				if ($file->size != strlen($file->content())) app_log("Size doesn't match: ".$file->size." != ".strlen($file->content()),'notice',__FILE__,__LINE__);
+				//if ($file->size != strlen($file->content())) app_log("Size doesn't match: ".$file->size." != ".strlen($file->content()),'notice',__FILE__,__LINE__);
 				header('Content-Type: '.$file->mime_type);
 				header('Content-Disposition: attachment; filename='.$file->display_name());
 				print ($file->content());
 				exit;
 			}
 		}
-		
-		###################################################
-		### downloadMediaImage							###
-		###################################################
+
+		/** @method downloadMediaImage()
+		 * Download a media image file.
+		 */
 		public function downloadMediaImage() {
 			# Initiate Media Image Object
 			$image = new \Media\Image();
@@ -157,9 +157,9 @@
 			exit;
 		}
 		
-		###################################################
-		### Add Media Metadata							###
-		###################################################
+		/** @method setMediaMetadata()
+		 * Set metadata for a media item.
+		 */
 		public function setMediaMetadata() {
 			# Make Sure Upload was Successful
 			$this->check_upload($_FILES['file']);
@@ -264,12 +264,12 @@
 							'description' => 'Type of media items to find',
 							'required' => false,
 						),
-						'key[]' => array(
+						'key' => array(
 							'type' => 'string',
 							'description' => 'Keys to filter by',
 							'required' => false,
 						),
-						'value[]' => array(
+						'value' => array(
 							'type' => 'string',
 							'description' => 'Values corresponding to keys',
 							'required' => false,

@@ -1,66 +1,23 @@
 <?php
 namespace Media;
 
-class ItemList extends \BaseListClass {
+class ItemList extends \Storage\FileList {
 	public function __construct() {
 		$this->_modelName = '\Media\Item';
 	}
 
 	public function findAdvanced($parameters, $advanced, $controls): array {
-		$this->clearError();
-		$this->resetCount();
-
-		// Initialize Database Service
-		$database = new \Database\Service();
-
-		// Build the Query
-		$find_object_query = "
-				SELECT	distinct(m.item_id)
-				FROM	media_metadata m,
-						media_items i
-				WHERE	m.item_id = i.id
-				AND		i.deleted = 0
-			";
-
-		// Add Parameters
-		foreach ($parameters as $label => $value) {
-			if (! preg_match('/^[\w\-\.\_]+$/', $label)) {
-				$this->error("Invalid parameter name in Media::ItemList::find()");
-				return null;
-			}
-			if ($label == "type") {
-				$find_object_query .= "
-					AND	i.type = ?";
-				$database->AddParam($value);
-			}
+		if (!empty($parameters['type'])) {
+			if ($parameters['type'] == 'image')	$parameters['mime_type'] = 'image/%';
+			else if ($parameters['type'] == 'video') $parameters['mime_type'] = 'video/%';
+			else if ($parameters['type'] == 'audio') $parameters['mime_type'] = 'audio/%';
+			else if ($parameters['type'] == 'document') $parameters['mime_type'] = 'application/%';
+			else if ($parameters['type'] == 'text') $parameters['mime_type'] = 'text/%';
 			else {
-				$find_object_query .= "
-					AND (	m.label = ?
-						AND m.value = ?";
-				$database->AddParams($label, $value);
+				$this->error("Invalid type");
+				return [];
 			}
 		}
-
-		// Execute the Query
-		$rs = $database->Execute($find_object_query);
-		if ($database->ErrorMsg()) {
-			$this->SQLError($database->ErrorMsg());
-			return [];
-		}
-
-		$objects = array();
-		while (list($id) = $rs->FetchRow()) {
-			$object = new \Media\Item($id);
-			$privileges = $object->privileges($id);
-			if (is_array($privileges) && $privileges['read']) {
-				app_log("Adding " . $object->id . " to array", 'debug', __FILE__, __LINE__);
-				array_push($objects, $object);
-				$this->incrementCount();
-			}
-			else {
-				app_log("Hiding " . $object->id . " lacking privileges", 'debug', __FILE__, __LINE__);
-			}
-		}
-		return $objects;
+		return parent::findAdvanced($parameters, $advanced, $controls);
 	}
 }

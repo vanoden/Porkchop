@@ -1,6 +1,6 @@
 <script language="Javascript">
     function initImageSelectWizard() {
-        childWindow = open("http://<?= $_SERVER['HTTP_HOST'] ?>/api/storage/downloadFile/", "imageselect", 'resizable=no,width=500,height=500');
+        childWindow = open("<?=$site->url()?>/_media/image_select", "imageselect", 'resizable=no,width=500,height=500');
         if (childWindow.opener == null) childWindow.opener = self;
     }
 
