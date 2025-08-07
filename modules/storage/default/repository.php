@@ -121,7 +121,6 @@
     	<!-- end row header -->
 		<!-- Existing Privileges -->
 		<?php
-			print_r($default_privileges);
 			foreach ($default_privileges as $privilege) {
 			if (empty($privilege->entity_type)) continue;
 		?>

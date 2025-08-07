@@ -25,7 +25,6 @@
 				return array(new \stdClass());
 			}
 			else {
-				print_r($json);
 				// Parse JSON String into Multidimensional Associative Array
 				$data = json_decode($json);
 				if (!empty($data)) {

@@ -11,7 +11,7 @@ $original_app_log = function_exists('app_log') ? 'app_log' : null;
 
 // Override app_log function to capture S3 messages
 if ($original_app_log) {
-    function app_log($message, $level = 'debug', $path = null, $line = null) {
+    function sapp_log($message, $level = 'debug', $path = null, $line = null) {
         global $s3_log_messages, $original_app_log;
         
         // Check if message is S3-related
