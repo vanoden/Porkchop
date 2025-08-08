@@ -542,17 +542,17 @@
 			# Load Media Module
 			$product = new \Product\Item();
 			$product->get($_REQUEST['product_code']);
-			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+			if ($product->error()) app_log("Error finding product: ".$product->error(),'error',__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
 	
 			$image = new \Media\Item();
 			$image->get($_REQUEST['image_code']);
-			if ($image->error()) app_error("Error finding image: ".$image->error(),__FILE__,__LINE__);
+			if ($image->error()) app_log("Error finding image: ".$image->error(),'error',__FILE__,__LINE__);
 			if (! $image->id) $this->error("Image not found");
 	
 	
-			$product->addImage($product->id,$image->id,$_REQUEST['label']);
-			if ($product->error()) app_error("Error adding image: ".$product->error(),__FILE__,__LINE__);
+			$product->addImage($image->id, null, isset($_REQUEST['label']) ? $_REQUEST['label'] : '');
+			if ($product->error()) app_log("Error adding image: ".$product->error(),'error',__FILE__,__LINE__);
 
             $response = new \APIResponse();
             $response->print();
@@ -571,11 +571,11 @@
 			$this->requirePrivilege("manage products");
 			$product = new \Product\Item();
 			$product->get($_REQUEST['code']);
-			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+			if ($product->error()) app_log("Error finding product: ".$product->error(),'error',__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
 	
 			$product->addMeta($product->id,$_REQUEST['key'],$_REQUEST['value']);
-			if ($product->error()) app_error("Error adding metadata: ".$product->error(),__FILE__,__LINE__);
+			if ($product->error()) app_log("Error adding metadata: ".$product->error(),'error',__FILE__,__LINE__);
 
             $response = new \APIResponse();
             $response->print();
@@ -895,6 +895,28 @@
 						'organization_code'	=> array(
 							'description'	=> 'Organization Code',
 							'validation_method' => 'Register::Organization::validCode()'
+						),
+					)
+				),
+				'addProductImage'	=> array(
+					'description'		=> 'Add an image to a product',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage products',
+					'parameters'		=> array(
+						'product_code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'image_code'	=> array(
+							'required' => true,
+							'description' => 'Image Code',
+							'validation_method' => 'Media::Item::validCode()'
+						),
+						'label'		=> array(
+							'required' => false,
+							'description' => 'Optional label for the image'
 						),
 					)
 				),

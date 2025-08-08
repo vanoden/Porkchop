@@ -1,4 +1,8 @@
+<script language="Javascript" src="/js/product.js" defer></script>
 <script language="Javascript">
+	// CSRF Token for API requests
+	var csrfToken = '<?=$GLOBALS['_SESSION_']->getCSRFToken()?>';
+	
 	// Counter for newly added images
 	var new_image_count = 0;
 
@@ -6,8 +10,25 @@
 	 * Popup New Image Selection Window to user can add existing images to product
 	 */
     function initImageSelectWizard() {
-        childWindow = open("<?=$site->url()?>/_media/image_select", "imageselect", 'resizable=no,width=500,height=500');
-        if (childWindow.opener == null) childWindow.opener = self;
+        var imageSelectUrl = "/_media/image_select";
+        console.log("Opening image select window with URL: " + imageSelectUrl);
+        
+        // Test if the URL is accessible by trying to fetch it first
+        fetch(imageSelectUrl)
+            .then(response => {
+                if (response.ok) {
+                    console.log("URL is accessible, opening popup");
+                    childWindow = open(imageSelectUrl, "imageselect", 'resizable=no,width=500,height=500');
+                    if (childWindow.opener == null) childWindow.opener = self;
+                } else {
+                    console.error("URL returned status: " + response.status);
+                    alert("Error: Image select page returned status " + response.status);
+                }
+            })
+            .catch(error => {
+                console.error("Error accessing image select URL: " + error);
+                alert("Error accessing image select page: " + error.message);
+            });
     }
 
 	/** @function endImageSelectWizard(code)
@@ -17,27 +38,38 @@
 	 * @param {string} code - The code of the selected image.
 	 */
     function endImageSelectWizard(code) {
+		if (!code) {
+			console.error("No image code provided");
+			return;
+		}
+
+		console.log("Adding image with code: " + code);
+
+		// Check if Item object is available
+		if (typeof Item === 'undefined') {
+			console.error("Item object is not defined - cannot proceed");
+			return;
+		}
+
 		// Assign new image to product via API call
 		var product = Object.create(Item);
 		product.get('<?=$item->code?>');
-		product.addImage(code);
+		
+		// Check if product loaded successfully
+		if (product.error) {
+			console.error("Error loading product: " + product.error);
+			return;
+		}
 
-		// Add Image to Image Box
-		var imageBox = document.getElementById('image_box');
-		var newImageDiv = document.createElement('div');
-		newImageDiv.id = 'ItemImageDiv_new_' + new_image_count;
-		newImageDiv.className = 'image-item';
-		newImageDiv.style.backgroundImage = '/api/storage/downloadFile/' + code;
-        imageBox.appendChild(newImageDiv);
-
-		// Add new image code to form
-		// Note: Not really necessary if we add via API call above
-		var imageForm = document.getElementById('imagesForm');
-		var newImageInput = document.createElement('input');
-		newImageInput.type = 'hidden';
-		newImageInput.name = 'new_image_code[]';
-		newImageInput.value = code;
-		imageForm.appendChild(newImageInput);
+		// Add image to product
+		if (product.addImage(code)) {
+			console.log("Image added successfully to product");
+			
+			// Close the popup window
+			window.close();
+		} else {
+			console.error("Error adding image: " + product.error);
+		}
     }
 
 	/** @function highlightImage(id)
@@ -51,7 +83,13 @@
             images[i].classList.remove('highlighted');
         }
         // Add highlight to the clicked image
-        document.getElementById('ItemImageDiv_' + id).classList.add('highlighted');
+        var targetElement = document.getElementById('ItemImageDiv_' + id);
+        if (targetElement) {
+            var imageItem = targetElement.querySelector('.image-item');
+            if (imageItem) {
+                imageItem.classList.add('highlighted');
+            }
+        }
     }
 
 	/** @function updateDefaultImage(imageId)
