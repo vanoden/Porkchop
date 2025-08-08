@@ -57,24 +57,25 @@
 				}
 			}
 		}
+
+		// Update Default Image
+		if (isset($_REQUEST['updateImage']) && $_REQUEST['updateImage'] == 'true') {
+			if ($item->validInteger($_REQUEST['default_image_id'] ?? null)) {
+				$defaultImageId = $_REQUEST['default_image_id'];
+				$item->setMetadataScalar('default_image', $defaultImageId);
+				if ($item->error()) $page->addError("Error setting default image: " . $item->error());
+				else $page->appendSuccess('Default image updated successfully.', 'success');
+			} else {
+				$page->addError("Invalid image ID");
+			}
+		}
 	
 		// Check if item has images
 		$images = $item->images();
 		$defaultImageId = $item->getMetadata('default_image');
 	}
 
-// COPIED FROM ORIGINAL PAGE - INTEGRATE!
-// Update image
-if (isset($_REQUEST['updateImage']) && $_REQUEST['updateImage'] == 'true') {
-	if ($item->validInteger($_REQUEST['default_image_id'] ?? null)) {
-		$defaultImageId = $_REQUEST['default_image_id'];
-		$item->setMetadataScalar('default_image', $defaultImageId);
-		if ($item->error()) $page->addError("Error setting default image: " . $item->error());
-		else $page->appendSuccess('Default image updated successfully.', 'success');
-	} else {
-		$page->addError("Invalid image ID");
-	}
-}
+
 	$page->addBreadcrumb('Products', '/_product/admin');
 	$page->addBreadcrumb($item->code, '/_spectros/admin_product/'.$item->code);
 

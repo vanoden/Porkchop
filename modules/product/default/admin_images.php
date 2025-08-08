@@ -1,16 +1,33 @@
 <script language="Javascript">
+	// Counter for newly added images
+	var new_image_count = 0;
+
+	// Popup New Image Selection Window
     function initImageSelectWizard() {
         childWindow = open("<?=$site->url()?>/_media/image_select", "imageselect", 'resizable=no,width=500,height=500');
         if (childWindow.opener == null) childWindow.opener = self;
     }
 
+	// Add Selected Image to Image Box
     function endImageSelectWizard(code) {
+		var imageBox = document.getElementById('image_box');
         document.getElementById('new_image_code').value = code;
-        document.getElementById('newImageBox').style.backgroundImage = '/api/storage/downloadFile/' + code;
+		var newImageDiv = document.createElement('div');
+		newImageDiv.id = 'ItemImageDiv_new_' + new_image_count;
+		newImageDiv.className = 'image-item';
+		newImageDiv.style.backgroundImage = '/api/storage/downloadFile/' + code;
+        imageBox.appendChild(newImageDiv);
+
+		var imageForm = document.getElementById('imagesForm');
+		var newImageInput = document.createElement('input');
+		newImageInput.type = 'hidden';
+		newImageInput.name = 'new_image_code[]';
+		newImageInput.value = code;
+		imageForm.appendChild(newImageInput);
     }
 
+	// Highlight Selected Image
     function highlightImage(id) {
-
         // Remove highlight from all images
         var images = document.getElementsByClassName('image-item');
         for (var i = 0; i < images.length; i++) {
@@ -20,6 +37,7 @@
         document.getElementById('ItemImageDiv_' + id).classList.add('highlighted');
     }
 
+	// Set Selected Image as Default
     function updateDefaultImage(imageId) {
         document.getElementById('default_image_id').value = imageId;
         document.getElementById('updateImage').value = 'true';
@@ -55,6 +73,7 @@
 </div>
 
 <?php if ($repository->id) { ?>
+	<!-- File Upload Form -->
     <form name="repoUpload" action="/_product/admin_images/<?= $item->code ?>" method="post" enctype="multipart/form-data">
         <div class="container">
             <h3 class="label">Upload Product Image for this device</h3>
@@ -71,36 +90,37 @@
 		<button class="button" onclick="initImageSelectWizard();">Select Image</button>
 	</div>
 
-	<form method="post" action="/_product/admin_images">
-		<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
-		<input type="hidden" name="id" value="<?= $item->id ?>" />
-		<input type="hidden" id="default_image_id" name="default_image_id" value="<?= ($defaultImage = $item->getDefaultStorageImage()) ? $defaultImage->name : '' ?>" />
-		<input type="hidden" id="updateImage" name="updateImage" value="" />
+	<!-- Display Existing Images, Allow user to select a new default -->
+	<form method="post" action="/_product/admin_images" id="imagesForm">
+	<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+	<input type="hidden" name="id" value="<?= $item->id ?>" />
+	<input type="hidden" id="default_image_id" name="default_image_id" value="<?= ($defaultImage = $item->getDefaultStorageImage()) ? $defaultImage->name : '' ?>" />
+	<input type="hidden" id="updateImage" name="updateImage" value="" />
 
 	<div class="container">
 		<h3 class="label">Current Images</h3>
-		<?php if (isset($images) && count($images) > 0) { ?>
-			<div class="image-list">
-				<?php foreach ($images as $image) { ?>
-					<div id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage(<?= $image->id ?>);">
-						<div class="image-item" style="background-image: url('/api/media/downloadMediaImage?height=100&width=100&code=<?= $image->code ?>');"></div>
-						<span class="image-code"><?= $image->display_name ?></span>
-						<?php if ($image->id == $defaultImageId) { ?>
-							<span class="default-image">Default</span>
-						<?php } else { ?>
-						<button class="button" onclick="updateDefaultImage(<?= $image->id ?>);">Set as Default</button>
-						<?php } ?>
-					</div>
-				<?php } ?>
-			</div>
-			</div>
-						</form>
-<?php } else { ?>
+<?php 	if (isset($images) && count($images) > 0) { ?>
+		<div id="image_box" class="image-list">
+			<?php foreach ($images as $image) { ?>
+				<div id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage(<?= $image->id ?>);">
+					<div class="image-item" style="background-image: url('/api/media/downloadMediaImage?height=100&width=100&code=<?= $image->code ?>');"></div>
+					<span class="image-code"><?= $image->display_name ?></span>
+					<?php if ($image->id == $defaultImageId) { ?>
+						<span class="default-image">Default</span>
+					<?php } else { ?>
+					<button class="button" onclick="updateDefaultImage(<?= $image->id ?>);">Set as Default</button>
+					<?php } ?>
+				</div>
+			<?php } ?>
+		</div>
+<?php 	} else { ?>
 	<p>No images found for this product.</p>
 <?php } ?>
 	</div>
-<?php    } else {
+	</form>
+<?php } else {
 ?>
+	<!-- Repository not found, display message -->
     <div class="container">
         <h3 class="label">Upload Product Image for this device</h3>
         <p style="color: red;">Repository not found. (please create an S3, Local, Google or Dropbox repository to upload images for this product)</p>
