@@ -2,22 +2,36 @@
 	// Counter for newly added images
 	var new_image_count = 0;
 
-	// Popup New Image Selection Window
+	/** @function initImageSelectWizard
+	 * Popup New Image Selection Window to user can add existing images to product
+	 */
     function initImageSelectWizard() {
         childWindow = open("<?=$site->url()?>/_media/image_select", "imageselect", 'resizable=no,width=500,height=500');
         if (childWindow.opener == null) childWindow.opener = self;
     }
 
-	// Add Selected Image to Image Box
+	/** @function endImageSelectWizard(code)
+	 * Callback from Image Select Window
+	 * Assign Selected Image to the Product via API and then
+	 * to the Image Box.
+	 * @param {string} code - The code of the selected image.
+	 */
     function endImageSelectWizard(code) {
+		// Assign new image to product via API call
+		var product = Object.create(Item);
+		product.get('<?=$item->code?>');
+		product.addImage(code);
+
+		// Add Image to Image Box
 		var imageBox = document.getElementById('image_box');
-        document.getElementById('new_image_code').value = code;
 		var newImageDiv = document.createElement('div');
 		newImageDiv.id = 'ItemImageDiv_new_' + new_image_count;
 		newImageDiv.className = 'image-item';
 		newImageDiv.style.backgroundImage = '/api/storage/downloadFile/' + code;
         imageBox.appendChild(newImageDiv);
 
+		// Add new image code to form
+		// Note: Not really necessary if we add via API call above
 		var imageForm = document.getElementById('imagesForm');
 		var newImageInput = document.createElement('input');
 		newImageInput.type = 'hidden';
@@ -26,7 +40,10 @@
 		imageForm.appendChild(newImageInput);
     }
 
-	// Highlight Selected Image
+	/** @function highlightImage(id)
+	 * Highlight Selected Image
+	 * @param {string} id - The ID of the image to highlight.
+	 */
     function highlightImage(id) {
         // Remove highlight from all images
         var images = document.getElementsByClassName('image-item');
@@ -37,7 +54,10 @@
         document.getElementById('ItemImageDiv_' + id).classList.add('highlighted');
     }
 
-	// Set Selected Image as Default
+	/** @function updateDefaultImage(imageId)
+	 * Set Selected Image as Default
+	 * @param {string} imageId - The ID of the image to set as default.
+	 */
     function updateDefaultImage(imageId) {
         document.getElementById('default_image_id').value = imageId;
         document.getElementById('updateImage').value = 'true';
@@ -83,8 +103,6 @@
             <input type="submit" name="btn_submit" class="button" value="Upload" />
         </div>
     </form>
-	<div id="newImageBox" style="width: 100px; height: 100px; background-size: cover; background-position: center; margin-top: 10px;"></div>
-	<input type="hidden" id="new_image_code" name="new_image_code" value="" />
 	<div class="container">
 		<h3 class="label">Select Image from Repository</h3>
 		<button class="button" onclick="initImageSelectWizard();">Select Image</button>
