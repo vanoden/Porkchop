@@ -49,7 +49,7 @@
 			$validationclass = new \Product\Item();
 
 			$find_objects_query = "
-				SELECT	DISTINCT(p.id)
+				SELECT	DISTINCT p.id
 				FROM	product_products p
 				LEFT OUTER JOIN
 						product_relations r
@@ -234,7 +234,8 @@
 			}
 
 			$items = array();
-			while (list($id) = $rs->FetchRow()) {
+			while ($row = $rs->FetchRow()) {
+				$id = $row[0]; // Get the first column (ID)
 				$item = new Item($id);
 				$this->incrementCount();
 				array_push($items,$item);
@@ -297,6 +298,7 @@
 				return [];
 			}
 
+			$items = array();
 			while (list($id) = $rs->FetchRow()) {
 				$item = new Item($id);
 				$this->incrementCount();

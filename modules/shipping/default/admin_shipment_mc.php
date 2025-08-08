@@ -168,7 +168,10 @@
 
 	// Set up object links
 	if (isset($shipment->document_number)) {
-		$rma_id = $rma->extractRmaId($shipment->document_number);
+		$rma_id = null;
+		if (isset($rma) && $rma !== null) {
+			$rma_id = $rma->extractRmaId($shipment->document_number);
+		}
 		if ($rma_id !== null) {
 			$object_id = $rma_id;
 			$object_link = "/_support/admin_rma?id=$object_id";
