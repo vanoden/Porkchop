@@ -102,9 +102,14 @@
 
 		// get tags for organization
 	    $registerTagList = new \Register\TagList();
-	    $organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $organization->id));
+	    $org = isset($organization) && is_object($organization) ? $organization : $GLOBALS['_SESSION_']->customer->organization();
+	    if ($org && $org->id) {
+	    	$organizationTags = $registerTagList->find(array("type" => "ORGANIZATION", "register_id" => $org->id));
+	    } else {
+	    	$organizationTags = array();
+	    }
 	}
 
-	$page->addBreadcrumb('Products', '/_product/admin');
+	$page->addBreadcrumb('Products', '/_spectros/admin_products');
 	$page->addBreadcrumb($item->code, '/_spectros/admin_product/'.$item->code);
 	$page->title("Product Tags");

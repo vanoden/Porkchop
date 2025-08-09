@@ -551,7 +551,8 @@
 			if (! $image->id) $this->error("Image not found");
 	
 	
-			$product->addImage($image->id, null, isset($_REQUEST['label']) ? $_REQUEST['label'] : '');
+            // Force object_type to Spectros\Product\Item for consistency in object_images
+            $product->addImage($image->id, 'Spectros\\Product\\Item', isset($_REQUEST['label']) ? $_REQUEST['label'] : '');
 			if ($product->error()) app_log("Error adding image: ".$product->error(),'error',__FILE__,__LINE__);
 
             $response = new \APIResponse();
@@ -717,11 +718,7 @@
 							'default' => get_mysql_date(time()),
 							'validation_method'	=> 'Product::Item::validDate()',
 						),
-	                    'status'        => array(
-							'description' => 'Price Status',
-							'options' => $validationClass->statuses()
-						),
-	                    'status'        => array(
+                    'price_status'        => array(
 							'required' => true,
 							'default' => 'ACTIVE',
 							'options' => $validationClass->statuses()

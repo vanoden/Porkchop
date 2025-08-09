@@ -99,7 +99,8 @@
     function updateDefaultImage(imageId) {
         document.getElementById('default_image_id').value = imageId;
         document.getElementById('updateImage').value = 'true';
-        //document.getElementById('productEdit').submit();
+        var form = document.getElementById('imagesForm');
+        if (form) form.submit();
     }
 </script>
 <style>
@@ -121,30 +122,66 @@
 
 <?=$page->showAdminPageInfo()?>
 
-<div id="page_top_nav" style="margin-bottom: 20px;">
-	<a href="/_spectros/admin_product/<?= $item->code ?>" class="button">Details</a>
-	<a href="/_product/admin_product_prices/<?= $item->code ?>" class="button">Prices</a>
-	<a href="/_product/admin_product_vendors/<?= $item->code ?>" class="button">Vendors</a>
-	<a href="/_product/admin_images/<?= $item->code ?>" class="button" disabled>Images</a>
-	<a href="/_product/admin_product_tags/<?= $item->code ?>" class="button">Tags</a>
-	<a href="/_product/admin_product_parts/<?= $item->code ?>" class="button">Parts</a>
+<style>
+  .tabs { display:flex; gap:6px; margin-bottom:20px; border-bottom:1px solid #ddd; }
+  .tabs .tab { color:#555; background:#f4f4f4; border:1px solid #ddd; border-bottom:none; padding:8px 12px; border-top-left-radius:6px; border-top-right-radius:6px; text-decoration:none; }
+  .tabs .tab:hover { background:#eee; }
+  .tabs .tab.active { background:#fff; color:#222; font-weight:600; }
+</style>
+<?php $activeTab = 'images'; ?>
+<?php
+    // Small default image thumb + title above tabs
+    $__defImg = $item->getDefaultStorageImage();
+    if ($__defImg && $__defImg->id) {
+        $__thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
+        $__title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
+        echo '<div style="margin:6px 0 8px 0; display:flex; align-items:center; gap:8px;">'
+            . '<img src="'. $__thumb .'" alt="Default" style="width:50px;height:50px;border:1px solid #ddd;border-radius:3px;object-fit:cover;" />'
+            . '<div style="font-weight:600;">'. $__title .'</div>'
+            . '</div>';
+    }
+?>
+<div class="tabs">
+    <a href="/_spectros/admin_product/<?= $item->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
+    <a href="/_product/admin_product_prices/<?= $item->code ?>" class="tab <?= $activeTab==='prices'?'active':'' ?>">Prices</a>
+    <a href="/_product/admin_product_vendors/<?= $item->code ?>" class="tab <?= $activeTab==='vendors'?'active':'' ?>">Vendors</a>
+    <a href="/_product/admin_images/<?= $item->code ?>" class="tab <?= $activeTab==='images'?'active':'' ?>">Images</a>
+    <a href="/_product/admin_product_tags/<?= $item->code ?>" class="tab <?= $activeTab==='tags'?'active':'' ?>">Tags</a>
+    <a href="/_product/admin_product_parts/<?= $item->code ?>" class="tab <?= $activeTab==='parts'?'active':'' ?>">Parts</a>
+    <a href="/_spectros/admin_asset_sensors/<?= $item->code ?>" class="tab <?= $activeTab==='sensors'?'active':'' ?>">Sensors</a>
+    <a href="/_product/audit_log/<?= $item->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
 </div>
+
+<?php
+    // Show current default image below breadcrumbs if available
+    $defaultImage = $item->getDefaultStorageImage();
+    if ($defaultImage && $defaultImage->id) {
+        $thumbUrl = "/api/media/downloadMediaImage?height=150&width=150&code=" . $defaultImage->code;
+?>
+    <div class="container" style="margin: 10px 0 20px 0; display: flex; align-items: center; gap: 16px;">
+        <img src="<?= $thumbUrl ?>" alt="Default image for <?= htmlspecialchars($item->code) ?>" style="border:1px solid #ddd; border-radius:4px; width:150px; height:150px; object-fit:cover;" />
+        <div>
+            <div class="label">Current Default Image</div>
+            <div><?= htmlspecialchars($defaultImage->display_name ?? $defaultImage->name) ?></div>
+        </div>
+    </div>
+<?php } ?>
 
 <?php if ($repository->id) { ?>
 	<!-- File Upload Form -->
-    <form name="repoUpload" action="/_product/admin_images/<?= $item->code ?>" method="post" enctype="multipart/form-data">
-        <div class="container">
-            <h3 class="label">Upload Product Image for this device</h3>
+    <div class="container" style="display:block;">
+        <form name="repoUpload" action="/_product/admin_images/<?= $item->code ?>" method="post" enctype="multipart/form-data">
+            <h3 class="label">Upload Product Image</h3>
             <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
             <input type="hidden" name="repository_id" value="<?= $repository->id ?>" />
             <input type="file" name="uploadFile" />
             <input type="submit" name="btn_submit" class="button" value="Upload" />
+        </form>
+        <div>
+            <h3 class="label">Select From Library</h3>
+            <button class="button" onclick="initImageSelectWizard();">Open Image Library</button>
         </div>
-    </form>
-	<div class="container">
-		<h3 class="label">Select Image from Repository</h3>
-		<button class="button" onclick="initImageSelectWizard();">Select Image</button>
-	</div>
+    </div>
 
 	<!-- Display Existing Images, Allow user to select a new default -->
 	<form method="post" action="/_product/admin_images" id="imagesForm">
@@ -156,19 +193,22 @@
 	<div class="container">
 		<h3 class="label">Current Images</h3>
 <?php 	if (isset($images) && count($images) > 0) { ?>
-		<div id="image_box" class="image-list">
-			<?php foreach ($images as $image) { ?>
-				<div id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage(<?= $image->id ?>);">
-					<div class="image-item" style="background-image: url('/api/media/downloadMediaImage?height=100&width=100&code=<?= $image->code ?>');"></div>
-					<span class="image-code"><?= $image->display_name ?></span>
-					<?php if ($image->id == $defaultImageId) { ?>
-						<span class="default-image">Default</span>
-					<?php } else { ?>
-					<button class="button" onclick="updateDefaultImage(<?= $image->id ?>);">Set as Default</button>
-					<?php } ?>
-				</div>
-			<?php } ?>
-		</div>
+        <div id="image_box" class="image-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:14px;">
+            <?php foreach ($images as $image) { 
+                $thumb = "/api/media/downloadMediaImage?height=120&width=120&code=".$image->code;
+                $isDefault = ($image->id == $defaultImageId);
+            ?>
+                <div id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage(<?= $image->id ?>);" style="border:1px solid #e3e3e3; border-radius:6px; padding:10px;">
+                    <div class="image-item" style="background-image: url('<?= $thumb ?>'); width: 120px; height: 120px; margin: 0 auto 8px; border-radius:4px;"></div>
+                    <div class="image-code" style="text-align:center; font-size:12px; margin-bottom:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="<?= htmlspecialchars($image->display_name) ?>"><?= htmlspecialchars($image->display_name) ?></div>
+                    <?php if ($isDefault) { ?>
+                        <div style="text-align:center;"><span class="default-image" style="background:#eef7ff; color:#2a6fdb; padding:2px 6px; border-radius:10px; font-size:11px;">Default</span></div>
+                    <?php } else { ?>
+                        <div style="text-align:center;"><button type="button" class="button" onclick="updateDefaultImage(<?= $image->id ?>);">Set as Default</button></div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+        </div>
 <?php 	} else { ?>
 	<p>No images found for this product.</p>
 <?php } ?>
