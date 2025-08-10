@@ -561,6 +561,10 @@
             $response->print();
 		}
 
+		/** @method addProductImage()
+		 * DEPRECATED
+		 * Alias for addItemImage()
+		 */
 		public function addProductImage() {
 			$this->addItemImage();
 		}
@@ -582,7 +586,7 @@
 			if (! $image->id) $this->error("Image not found");
 
 			// Remove Image from Product
-			$product->removeImage($product->id,$image->id);
+			$product->removeImage($image->id);
 			if ($product->error()) app_error("Error removing image: ".$product->error(),__FILE__,__LINE__);
 
 			// Assemble and Deliver Response
@@ -599,7 +603,7 @@
 			$product->get($_REQUEST['product_code']);
 			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
-			$images = $product->images($product->id);
+			$images = $product->images();
 			if ($product->error()) app_error("Error getting images: ".$product->error(),__FILE__,__LINE__);
 			$response = new \APIResponse();
 			$response->addElement('images',$images);
@@ -652,7 +656,7 @@
 			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
 
-			$metadata = $product->getAllMetadata($product->id);
+			$metadata = $product->getAllMetadata();
 			if ($product->error()) app_error("Error getting metadata: ".$product->error(),__FILE__,__LINE__);
 
             $response = new \APIResponse();
@@ -676,10 +680,17 @@
             $response->print();
 		}
 
+		/** @method addProductMeta()
+		 * DEPRECATED
+		 * Alias for addItemMetadata()
+		 */
 		public function addProductMeta() {
 			$this->addItemMetadata();
 		}
-	
+
+		/** @method _methods()
+		 * Get a list of all available API methods
+		 */
 		public function _methods() {
 			$validationClass = new \Product\Item();
 			return array(
