@@ -938,7 +938,7 @@
 	                    'status'        => array(
 							'description' => 'Price Status',
 							'options' => $validationClass->statuses(),
-							'validation_method' => 'Product::Item::validStatus()'
+							'validation_method' => 'Product::Item::validStatus()',
 							'default' => 'ACTIVE',
 							'options' => $validationClass->statuses()
 						),
