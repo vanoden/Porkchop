@@ -48,20 +48,19 @@
 			// For Validation
 			$validationclass = new \Product\Item();
 
-			$find_objects_query = "
-				SELECT	DISTINCT(p.id)
-				FROM	product_products p
-				LEFT OUTER JOIN
-						product_relations r
-				ON		p.id = r.product_id
-				WHERE	p.status != 'DELETED'";
+            // Build inner distinct ID query (no ORDER BY/LIMIT here)
+            $find_ids_query = "
+                SELECT DISTINCT p.id
+                FROM product_products p
+                LEFT OUTER JOIN product_relations r ON p.id = r.product_id
+                WHERE p.status != 'DELETED'";
 
 			if (!empty($parameters['search'])) {
 				if (!$validationclass->validSearch($parameters['search']) ) {
 					$this->error("Invalid Search String");
 					return [];
 				}
-				$find_objects_query .= "
+                $find_ids_query .= "
 				AND     (
 							p.code LIKE ?
 							OR p.name LIKE ?
@@ -77,31 +76,31 @@
 					// Implied Wildcards
 					$search_string = '%'.$parameters['search'].'%';
 				}
-				$database->AddParams($search_string,$search_string,$search_string);
+                $database->AddParams([$search_string,$search_string,$search_string]);
 			}
 			# Filter on Given Parameters
 			if (isset($parameters['type'])) {
 				if (is_array($parameters['type'])) {
-					$find_objects_query .= "
+                    $find_ids_query .= "
 					AND		p.type in (";
 					$count = 0;
-					foreach ($parameters['type'] as $type) {
+                    foreach ($parameters['type'] as $type) {
 						if (!$validationclass->validType($type)) {
 							$this->error("Invalid Type: ".$type);
 							return [];
 						}
-						if ($count) $find_objects_query .= ",";
+                        if ($count) $find_ids_query .= ",";
 						$count ++;
-						$find_objects_query .= "'".$type."'";
+                        $find_ids_query .= "'".$type."'";
 					}
-					$find_objects_query .= ")";
+                    $find_ids_query .= ")";
 				}
 				else {
 					if (!$validationclass->validType($parameters["type"])) {
 						$this->error("Invalid Type: ".$parameters["type"]);
 						return [];
 					}
-					$find_objects_query .= "
+                    $find_ids_query .= "
 					AND		p.type = ?";
 					$database->AddParam($parameters["type"]);
 				}
@@ -115,16 +114,16 @@
 					}
 				}
 				// Add the IN clause once after validation
-				$find_objects_query .= "
+                $find_ids_query .= "
 				AND     p.status IN ('".implode("','",$parameters['status'])."')";
 			}
 			elseif (!empty($parameters['status']) && $validationclass->validClass($parameters['status'])) {
-				$find_objects_query .= "
+                $find_ids_query .= "
 				AND		p.status = ?";
 				$database->AddParam(strtoupper($parameters["status"]));
 			}
 			else
-				$find_objects_query .= "
+                $find_ids_query .= "
 				AND		p.status = 'ACTIVE'";
 
 			if (isset($parameters['category_code'])) {
@@ -138,7 +137,7 @@
 						);
 						array_push($category_ids,$category->id);
 					}
-					$find_objects_query .= "
+                    $find_ids_query .= "
 					AND	r.parent_id in (".join(',',$category_ids).")";
 				}
 				elseif(preg_match('/^[\w\-\_\.\s]+$/',$parameters['category_code'])) {
@@ -161,81 +160,76 @@
 					$this->error("Invalid Category");
 					return [];
 				}
-				$find_objects_query .= "
-				AND		r.parent_id = ?";
+                $find_ids_query .= "
+                AND		r.parent_id = ?";
 				$database->AddParam($category_id);
 
-			} elseif (isset($parameters['category_id'])) {
-				$find_objects_query .= "
-				AND		r.parent_id = ?";
+            } elseif (isset($parameters['category_id'])) {
+                $find_ids_query .= "
+                AND		r.parent_id = ?";
 				$database->AddParam($parameters['category_id']);
 			}
 
 			if (isset($parameters['id']) and preg_match('/^\d+$/',$parameters['id'])) {
-				$find_objects_query .= "
+                    $find_ids_query .= "
 				AND		p.id = ?";
 				$database->AddParam($parameters['id']);
 			}
 
-			// Order Clause
-			switch ($controls['sort'] ?? '') {
+            // Order Clause (applied in outer query against product_products as alias p)
+            $order_by = '';
+            switch ($controls['sort'] ?? '') {
 				case 'name':
-					$find_objects_query .= "
-						ORDER BY p.name";
+                    $order_by = " ORDER BY p.name";
 					break;
 				case 'date_added':
-					$find_objects_query .= "
-						ORDER BY p.date_added";
+                    $order_by = " ORDER BY p.date_added";
 					break;
 				case 'code':
-					$find_objects_query .= "
-						ORDER BY p.code";
+                    $order_by = " ORDER BY p.code";
 					break;
 				case 'type':
-					$find_objects_query .= "
-						ORDER BY p.type";
+                    $order_by = " ORDER BY p.type";
 					break;
 				case 'status':
-					$find_objects_query .= "
-						ORDER BY p.status";
+                    $order_by = " ORDER BY p.status";
 					break;
 				case 'category':
-					$find_objects_query .= "
-						ORDER BY r.parent_id";
+                    // We cannot safely order by r.parent_id without changing DISTINCT behavior; default to code
+                    $order_by = " ORDER BY p.code";
 					break;
 				case 'id':
-					$find_objects_query .= "
-						ORDER BY p.id";
+                    $order_by = " ORDER BY p.id";
 					break;
 				case 'price':
-					$find_objects_query .= "
-						ORDER BY p.price";
+                    $order_by = " ORDER BY p.code";
 					break;
 				case 'quantity':
-					$find_objects_query .= "
-						ORDER BY p.quantity";
+                    $order_by = " ORDER BY p.code";
 					break;
 				case 'sku':
-					$find_objects_query .= "
-						ORDER BY p.sku";
+                    $order_by = " ORDER BY p.code";
 					break;
 				default:
-					$find_objects_query .= "
-						ORDER BY p.code";
+                    $order_by = " ORDER BY p.code";
 			}
 
-			// Limit Clause
-			$find_objects_query .= $this->limitClause($parameters);
+            // Build final query using outer select to allow ORDER BY on non-selected columns
+            $final_query = "SELECT ids.id FROM (".$find_ids_query.") ids JOIN product_products p ON p.id = ids.id".$order_by;
+            // Limit Clause
+            $final_query .= $this->limitClause($parameters);
 
-			$rs = $database->Execute($find_objects_query);
+            $rs = $database->Execute($final_query);
 			if ($database->ErrorMsg()) {
 				$this->SQLError($database->ErrorMsg());
 				return [];
 			}
 
-			$items = array();
-			while (list($id) = $rs->FetchRow()) {
-				$item = new Item($id);
+            $items = array();
+            while ($row = $rs->FetchRow()) {
+                // p.id is first selected; some drivers may return associative keys
+                $id = isset($row['id']) ? $row['id'] : $row[0];
+                $item = new Item($id);
 				$this->incrementCount();
 				array_push($items,$item);
 			}
@@ -267,7 +261,7 @@
 						OR st.value LIKE ?
 					)
 				";
-				$database->AddParams('%'.$advanced['categories'].'%','%'.$parameters['search'].'%');
+                $database->AddParams(['%'.$advanced['categories'].'%','%'.$parameters['search'].'%']);
 			}
 			elseif (!empty($parameters['search_tags'])) {
 				// Join to the existing query
@@ -278,7 +272,7 @@
 					WHERE st.class = 'Product::Item'
 					AND st.value LIKE ?
 				";
-				$database->AddParams('%'.$parameters['search'].'%','%'.$parameters['search'].'%');
+                $database->AddParams(['%'.$parameters['search'].'%','%'.$parameters['search'].'%']);
 			}
 			else {
 				$find_product_query = "
@@ -297,6 +291,7 @@
 				return [];
 			}
 
+			$items = array();
 			while (list($id) = $rs->FetchRow()) {
 				$item = new Item($id);
 				$this->incrementCount();

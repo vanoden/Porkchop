@@ -351,7 +351,7 @@
 			
 				// Check for Conflict 
 				$filelist = new \Storage\FileList();
-				list($existing) = $filelist->find(
+				$existing_files = $filelist->find(
 					array(
 						'repository_id' => $this->id,
 						'path'	=> $path,
@@ -359,7 +359,12 @@
 					)
 				);
 
-				if ($existing->id) {
+				$existing = null;
+				if (!empty($existing_files)) {
+					$existing = $existing_files[0];
+				}
+
+				if (isset($existing) && isset($existing->id) && $existing->id) {
 					$this->error("File already exists with that name in repo ".$this->name);
 					return null;
 				}

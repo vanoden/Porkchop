@@ -77,7 +77,7 @@ if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 	} else {
 		$page->requirePrivilege('upload storage files');
 
-		$imageUploaded = $customer->uploadImage($_FILES['uploadFile'], '', 'spectros_product_image', $_REQUEST['repository_id'] ?? '', 'Register\Customer');
+        $imageUploaded = $customer->uploadImage($_FILES['uploadFile'], $repository->id, 'spectros_user_image', 'Register\Customer');
 		if ($imageUploaded) {
 			$page->success = "File uploaded";
 		} else {

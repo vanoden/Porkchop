@@ -184,7 +184,11 @@ class Order extends \BaseModel {
 				'class_method' => 'update'
 			));	
 
-			$this->addEvent(array('new_status' => $parameters['status'],'user_id' => $GLOBALS['_SESSION_']->customer->id,'type' => "UPDATE"));
+            $this->addEvent(array(
+                'new_status' => $parameters['status'] ?? $this->status,
+                'user_id'    => $GLOBALS['_SESSION_']->customer->id,
+                'type'       => "UPDATE"
+            ));
 			return $this->details();
 		}
 

@@ -109,6 +109,6 @@
 		}
 	}
 
-	$page->addBreadcrumb('Products', '/_product/admin');
+	$page->addBreadcrumb('Products', '/_spectros/admin_products');
 	$page->addBreadcrumb($item->code, '/_spectros/admin_product/'.$item->code);
 	$page->title("Product Vendors");

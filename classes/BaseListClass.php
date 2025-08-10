@@ -98,7 +98,8 @@ class BaseListClass extends \BaseClass {
 	public function findSimple($parameters = []) {
 		// Initialize controls array with defaults
 		$controls = [
-			'order'		=> 'ASC',
+			'sort'		=> $this->_tableDefaultSortBy ?? 'id',
+			'order'		=> $this->_tableDefaultSortOrder ?? 'ASC',
 			'ids'		=> false,
 			'offset'	=> 0
 		];
@@ -127,6 +128,8 @@ class BaseListClass extends \BaseClass {
 		if (!empty($parameters['_sort_desc'])) $controls['order'] = 'DESC';
 		if (!empty($parameters['_sort_order'])) $controls['order'] = $parameters['_sort_order'];
 		if (!empty($parameters['_flat']) && $parameters['_flat']) $controls['ids'] = true;
+		// Normalize order to ASC/DESC only
+		$controls['order'] = preg_match('/^(asc|desc)$/i', $controls['order'] ?? '') ? $controls['order'] : 'ASC';
 		return $this->findAdvanced($parameters, [], $controls);
 	}
 

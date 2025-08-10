@@ -539,21 +539,21 @@
 			// Identify Product by Code or ID
 			$product = new \Product\Item();
 			$product->get($_REQUEST['product_code']);
-			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+			if ($product->error()) app_log("Error finding product: ".$product->error(),'error',__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
 			
 			// Identify Image by Code or ID
 			$image = new \Media\Item();
 			$image->get($_REQUEST['image_code']);
-			if ($image->error()) app_error("Error finding image: ".$image->error(),__FILE__,__LINE__);
+			if ($image->error()) app_log("Error finding image: ".$image->error(),'error',__FILE__,__LINE__);
 			if (! $image->id) $this->error("Image not found");
 
 			// Default Label to Image Code if not given
 			if (! isset($_REQUEST['label']) || ! strlen($_REQUEST['label'])) $_REQUEST['label'] = $image->name;
 
-			// Assign Image to Product with Given Label
-			$product->addImage($product->id,$image->id,$_REQUEST['label']);
-			if ($product->error()) app_error("Error adding image: ".$product->error(),__FILE__,__LINE__);
+            // Force object_type to Spectros\Product\Item for consistency in object_images
+            $product->addImage($image->id, 'Spectros\\Product\\Item', isset($_REQUEST['label']) ? $_REQUEST['label'] : '');
+			if ($product->error()) app_log("Error adding image: ".$product->error(),'error',__FILE__,__LINE__);
 
 			// Assemble and Deliver Response
             $response = new \APIResponse();
@@ -632,7 +632,7 @@
 		public function getItemMetadata() {
 			$product = new \Product\Item();
 			$product->get($_REQUEST['code']);
-			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+			if ($product->error()) app_log("Error finding product: ".$product->error(),'error',__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
 
 			$value = $product->getMetadata($_REQUEST['key']);
@@ -939,7 +939,9 @@
 							'description' => 'Price Status',
 							'options' => $validationClass->statuses(),
 							'validation_method' => 'Product::Item::validStatus()'
-						)
+							'default' => 'ACTIVE',
+							'options' => $validationClass->statuses()
+						),
 					)
                 ),
 				'getPrice'		=> array(
@@ -1113,6 +1115,28 @@
 						'organization_code'	=> array(
 							'description'	=> 'Organization Code',
 							'validation_method' => 'Register::Organization::validCode()'
+						),
+					)
+				),
+				'addProductImage'	=> array(
+					'description'		=> 'Add an image to a product',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage products',
+					'parameters'		=> array(
+						'product_code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'image_code'	=> array(
+							'required' => true,
+							'description' => 'Image Code',
+							'validation_method' => 'Media::Item::validCode()'
+						),
+						'label'		=> array(
+							'required' => false,
+							'description' => 'Optional label for the image'
 						),
 					)
 				),

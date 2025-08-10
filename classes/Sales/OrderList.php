@@ -87,12 +87,13 @@
 				}
 			}
 
-			// apply the order and sort direction
-			if (!empty($controls['sort']) && !empty($controls['order'])) {
-				$order_by_clause = " ORDER BY ";
-				$sort_direction_clause = " `" . $controls['sort'] . "` " . strtoupper($controls['order']);
-				$find_objects_query .= $order_by_clause . $sort_direction_clause;
-			}
+            // apply the order and sort direction with sane defaults
+            $sort  = $controls['sort'] ?? ($this->_tableDefaultSortBy ?? $workingClass->_tableIDColumn());
+            $order = strtoupper($controls['order'] ?? ($this->_tableDefaultSortOrder ?? 'ASC'));
+            $order = in_array($order, ['ASC','DESC']) ? $order : 'ASC';
+            if ($workingClass->hasField($sort)) {
+                $find_objects_query .= " ORDER BY `{$sort}` {$order}";
+            }
 
 			// Limit Clause
 			$find_objects_query .= $this->limitClause($controls);
@@ -104,17 +105,16 @@
 				return [];
 			}
 
-			// Build Results
-			$objects = array();
-			while (list($organization_id,$product_id) = $rs->FetchRow()) {
-				$orgProduct = new \Register\Organization\OwnedProduct($organization_id,$product_id);
-				$object = $orgProduct;
-				if ($this->error()) {
-					$this->error("Error getting details for ".$this->_modelName.": ".$this->error());
-					return [];
-				}
-				array_push($objects,$object);
-			}
+            // Build Results
+            $objects = array();
+            while (list($id) = $rs->FetchRow()) {
+                $orderObj = new \Sales\Order($id);
+                if ($orderObj->error()) {
+                    $this->error($orderObj->error());
+                    return [];
+                }
+                array_push($objects,$orderObj);
+            }
 
 			return $objects;
 		}

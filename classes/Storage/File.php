@@ -77,8 +77,10 @@ class File extends \BaseModel {
 			return false;
 		}
 
-		// Default Original Name frmo Current Name
-		if (! $parameters['original_name']) $parameters['original_name'] = $parameters['name'];
+		// Default Original Name from Current Name
+		if (!isset($parameters['original_name']) || !$parameters['original_name']) {
+			$parameters['original_name'] = $parameters['name'];
+		}
 		// Default Path is '/'
 		if (! $parameters['path']) $parameters['path'] = '/';
 

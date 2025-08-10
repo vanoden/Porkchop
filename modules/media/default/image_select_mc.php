@@ -16,3 +16,14 @@
 		'order_by' => 'edited',
 		'order_direction' => 'DESC'
 	));
+	
+	# Check for errors
+	if ($imageList->error()) {
+		app_log("Error finding images: " . $imageList->error(), 'error');
+		$images = array();
+	}
+	
+	# If no images found, show message
+	if (empty($images)) {
+		app_log("No images found for repository", 'notice');
+	}
