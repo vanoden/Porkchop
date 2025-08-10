@@ -37,7 +37,7 @@
 					AND sfm.key = ? AND sfm.value = ?";
 					$database->AddParam($parameters['type']);
 					$database->AddParam($parameters['ref_id']);
-					print_r($parameters['type']);
+					//print_r($parameters['type']);
 				}
 				else {
 					$this->error("Invalid type");
