@@ -1357,6 +1357,26 @@ class BaseModel extends \BaseClass {
 	 * @return int 1 if successful, 0 otherwise
 	 */
 	public function addImage($image_id, $object_type = null, $label = '') {
+		// Clear Previous Errors
+		$this->clearError();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Validate Inputs
+		if (!is_numeric($image_id) || $image_id <= 0) {
+			$this->error('Invalid image ID provided');
+			return 0;
+		}
+		if (!is_string($label)) {
+			$this->error('Label must be a string');
+			return 0;
+		}
+		if (empty($label)) $label = 'Image ' . $image_id;
+		if (!preg_match('/^[\w\s\-\.]+$/', $label)) {
+			$this->error('Invalid label format');
+			return 0;
+		}
 
 		// Prepare Query to Tie Object to Image
 		$add_image_query = "
@@ -1372,9 +1392,16 @@ class BaseModel extends \BaseClass {
 			";
 
 		if (!$object_type) $object_type = get_class($this);
-		$GLOBALS['_database']->Execute($add_image_query, array($this->id, $object_type, $image_id, $label));
-		if ($GLOBALS['_database']->ErrorMsg()) {
-			$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+		// Bind Parameters
+		$database->AddParam($this->id);
+		$database->AddParam($object_type);
+		$database->AddParam($image_id);
+		$database->AddParam($label);
+
+		$database->Execute($add_image_query);
+		if ($database->ErrorMsg()) {
+			$this->SQLError($database->ErrorMsg());
 			return 0;
 		}
 		return 1;
@@ -1555,5 +1582,14 @@ class BaseModel extends \BaseClass {
 			return false;
 		}
 		return true;
+	}
+
+	/** @method validMetadataValue(string)
+	 * Validate a metadata value
+	 * @param string $value The metadata value to validate
+	 * @return bool True if valid, false otherwise
+	 */
+	public function validMetadataValue($value) {
+		return $this->safeString($value);
 	}
 }

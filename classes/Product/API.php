@@ -532,55 +532,150 @@
 			$response->print();
 		}
 
-		###################################################
-		### Add Image to Product						###
-		###################################################
+		/** @method addItemImage()
+		 * Assign an image to an existing product
+		 */
 		public function addItemImage() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
-
-			$this->requirePrivilege("manage products");
-			# Load Media Module
+			// Identify Product by Code or ID
 			$product = new \Product\Item();
 			$product->get($_REQUEST['product_code']);
 			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
-	
+			
+			// Identify Image by Code or ID
 			$image = new \Media\Item();
 			$image->get($_REQUEST['image_code']);
 			if ($image->error()) app_error("Error finding image: ".$image->error(),__FILE__,__LINE__);
 			if (! $image->id) $this->error("Image not found");
-	
-	
+
+			// Default Label to Image Code if not given
+			if (! isset($_REQUEST['label']) || ! strlen($_REQUEST['label'])) $_REQUEST['label'] = $image->name;
+
+			// Assign Image to Product with Given Label
 			$product->addImage($product->id,$image->id,$_REQUEST['label']);
 			if ($product->error()) app_error("Error adding image: ".$product->error(),__FILE__,__LINE__);
 
+			// Assemble and Deliver Response
             $response = new \APIResponse();
+			$response->addElement('product',$product);
             $response->print();
 		}
 
 		public function addProductImage() {
 			$this->addItemImage();
 		}
-		
-		###################################################
-		### Add Metadata to Product						###
-		###################################################
-		public function addItemMetadata() {
-			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
-			$this->requirePrivilege("manage products");
+		/** @method dropItemImage()
+		 * Dissassociate an Image from a Product
+		 */
+		public function dropItemImage() {
+			// Identify Product by Code or ID
+			$product = new \Product\Item();
+			$product->get($_REQUEST['product_code']);
+			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+			if (! $product->id) $this->error("Product not found");
+
+			// Identify Image by Code or ID
+			$image = new \Media\Item();
+			$image->get($_REQUEST['image_code']);
+			if ($image->error()) app_error("Error finding image: ".$image->error(),__FILE__,__LINE__);
+			if (! $image->id) $this->error("Image not found");
+
+			// Remove Image from Product
+			$product->removeImage($product->id,$image->id);
+			if ($product->error()) app_error("Error removing image: ".$product->error(),__FILE__,__LINE__);
+
+			// Assemble and Deliver Response
+            $response = new \APIResponse();
+            $response->print();
+		}
+
+		/** @method getItemImages()
+		 * Get All Images Associated with a Product
+		 */
+		public function findItemImages() {
+			// Identify Product by Code or ID
+			$product = new \Product\Item();
+			$product->get($_REQUEST['product_code']);
+			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+			if (! $product->id) $this->error("Product not found");
+			$images = $product->images($product->id);
+			if ($product->error()) app_error("Error getting images: ".$product->error(),__FILE__,__LINE__);
+			$response = new \APIResponse();
+			$response->addElement('images',$images);
+			$response->print();
+		}
+
+		/** @method addItemMetadata()
+		 * Add Metadata Key/Value Pair to a Product
+		 */
+		public function addItemMetadata() {
+			$product = new \Product\Item();
+			$product->get($_REQUEST['code']);
+			if ($product->error()) $this->app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+			if (! $product->id) $this->error("Product not found");
+
+			$product->setMetadata($_REQUEST['key'],$_REQUEST['value']);
+			if ($product->error()) $this->app_error("Error adding metadata: ".$product->error(),__FILE__,__LINE__);
+
+            $response = new \APIResponse();
+			$response->addElement('metadata',array(
+				'key' => $_REQUEST['key'],
+				'value' => $_REQUEST['value']
+			));
+            $response->print();
+		}
+
+		/** @method getItemMetadata()
+		 * Get Metadata Value for a Product with associated key
+		 */
+		public function getItemMetadata() {
 			$product = new \Product\Item();
 			$product->get($_REQUEST['code']);
 			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
 			if (! $product->id) $this->error("Product not found");
-	
-			$product->addMeta($product->id,$_REQUEST['key'],$_REQUEST['value']);
-			if ($product->error()) app_error("Error adding metadata: ".$product->error(),__FILE__,__LINE__);
+
+			$value = $product->getMetadata($_REQUEST['key']);
+			if ($product->error()) app_error("Error getting metadata: ".$product->error(),__FILE__,__LINE__);
+
+            $response = new \APIResponse();
+			$response->addElement('value',$value);
+            $response->print();
+		}
+
+		/** @method getAllItemMetadata()
+		 * Get All Metadata Key/Value Pairs for a Product
+		 */
+		public function getAllItemMetadata() {
+			$product = new \Product\Item();
+			$product->get($_REQUEST['code']);
+			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+			if (! $product->id) $this->error("Product not found");
+
+			$metadata = $product->getAllMetadata($product->id);
+			if ($product->error()) app_error("Error getting metadata: ".$product->error(),__FILE__,__LINE__);
+
+            $response = new \APIResponse();
+			$response->addElement('metadata',$metadata);
+            $response->print();
+		}
+
+		/** @method dropItemMetadata()
+		 * Remove Metadata Key/Value Pair from a Product
+		 */
+		public function dropItemMetadata() {
+			$product = new \Product\Item();
+			$product->get($_REQUEST['code']);
+			if ($product->error()) app_error("Error finding product: ".$product->error(),__FILE__,__LINE__);
+			if (! $product->id) $this->error("Product not found");
+
+			$product->dropMeta($_REQUEST['key']);
+			if ($product->error()) app_error("Error dropping metadata: ".$product->error(),__FILE__,__LINE__);
 
             $response = new \APIResponse();
             $response->print();
 		}
-		
+
 		public function addProductMeta() {
 			$this->addItemMetadata();
 		}
@@ -704,14 +799,137 @@
 						),
 					)
 				),
-                'addPrice'      => array(
+				'addItemMetadata'	=> array(
+					'description'		=> 'Add Metadata Key/Value Pair to a Product',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required' => 'manage products',
+					'parameters'		=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'key'			=> array(
+							'required' => true,
+							'description' => 'Metadata Key',
+							'validation_method' => 'Product::Item::validMetadataKey()'
+						),
+						'value'		=> array(
+							'required' => true,
+							'description' => 'Metadata Value',
+							'validation_method' => 'Product::Item::validMetadataValue()'
+						),
+					)
+				),
+				'getItemMetadata' => array(
+					'description'		=> 'Get Metadata Value for a Product with associated key',
+					'authentication_required' => true,
+					'parameters'		=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'key'			=> array(
+							'required' => true,
+							'description' => 'Metadata Key',
+							'validation_method' => 'Product::Item::validMetadataKey()'
+						),
+					)
+				),
+				'dropItemMetadata' => array(
+					'description'		=> 'Remove Metadata Key/Value Pair from a Product',
+					'authentication_required' => true,
+					'token_required'	=> true,
+					'privilege_required' => 'manage products',
+					'parameters'		=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'key'			=> array(
+							'required' => true,
+							'description' => 'Metadata Key',
+							'validation_method' => 'Product::Item::validMetadataKey()'
+						),
+					)
+				),
+				'getAllItemMetadata' => array(
+					'description'		=> 'Get All Metadata Key/Value Pairs for a Product',
+					'authentication_required' => true,
+					'parameters'		=> array(
+						'code'	=> array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+					)
+				),
+				'addItemImage'	=> array(
+					'description'	=> 'Assign an Existing Image to an Existing Product',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required' => 'manage products',
+					'parameters' => array(
+						'product_code' => array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'image_code' => array(
+							'required' => true,
+							'description' => 'Image Code',
+							'validation_method' => 'Media::Image::validCode()'
+						)
+					)
+				),
+				'dropItemImage'	=> array(
+					'description'	=> 'Remove an Image from a Product',
+					'authentication_required'	=> true,
+					'token_required' => true,
+					'privilege_required' => 'manage products',
+					'parameters' => array(
+						'product_code' => array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+						'image_code' => array(
+							'required' => true,
+							'description' => 'Image Code',
+							'validation_method' => 'Media::Image::validCode()'
+						)
+					)
+				),
+				'findItemImages' => array(
+					'description'	=> 'Find Images assigned to a Product',
+					'authentication_required' => false,
+					'parameters' => array(
+						'product_code' => array(
+							'required' => true,
+							'description' => 'Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+					)
+				),
+				'addPrice'      => array(
 					'description'		=> 'Add a price to a product',
 					'authentication_required' => true,
 					'token_required'	=> true,
 					'privilege_required' => 'manage products',
 					'parameters'	=> array(
-	                    'product_code'  => array('required' => true),
-	                    'amount'        => array('required' => true),
+	                    'product_code'  => array(
+							'required' => true,
+							'description' => 'Unique Product Code',
+							'validation_method' => 'Product::Item::validCode()'
+						),
+	                    'amount'        => array(
+							'required' => true,
+							'description' => 'Price Amount',
+							'content_type' => 'decimal'
+						),
 	                    'date_active'   => array(
 							'required' => false,
 							'default' => get_mysql_date(time()),
@@ -719,13 +937,9 @@
 						),
 	                    'status'        => array(
 							'description' => 'Price Status',
-							'options' => $validationClass->statuses()
-						),
-	                    'status'        => array(
-							'required' => true,
-							'default' => 'ACTIVE',
-							'options' => $validationClass->statuses()
-						),
+							'options' => $validationClass->statuses(),
+							'validation_method' => 'Product::Item::validStatus()'
+						)
 					)
                 ),
 				'getPrice'		=> array(
@@ -745,10 +959,12 @@
 					'parameters'		=> array(
 						'parent_code'	=> array(
 							'description' => 'Parent Product Code',
+							'required' => true,
 							'validation_method' => 'Product::Item::validCode()'
 						),
 						'child_code'	=> array(
 							'description' => 'Child Product Code',
+							'required' => true,
 							'validation_method' => 'Product::Item::validCode()'
 						),
 					)
@@ -777,10 +993,12 @@
 					'parameters'		=> array(
 						'parent_code'	=> array(
 							'description' => 'Parent Product Code',
+							'required' => true,
 							'validation_method' => 'Product::Item::validCode()'
 						),
 						'child_code'	=> array(
 							'description' => 'Child Product Code',
+							'required' => true,
 							'validation_method' => 'Product::Item::validCode()'
 						),
 					)
