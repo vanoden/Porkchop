@@ -200,4 +200,18 @@
 				return false;
 			}
 		}
+
+		/**
+		 * Check if Slack Channel is a valid format
+		 * @param string Slack Channel
+		 * @return bool True if valid
+		 */
+		function validSlackChannel($string): bool {
+			// Slack channels start with a # and can contain alphanumeric characters, underscores, and hyphens
+			if (preg_match('/^#([a-zA-Z0-9_-]+)$/', $string)) return true;
+			else {
+				app_log("Invalid Slack channel format: '$string'",'info');
+				return false;
+			}
+		}
 	}

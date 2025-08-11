@@ -299,10 +299,12 @@
 				$message->body($template->output());
 
 				app_log("Sending Admin Confirm new customer reminder",'debug');
-				$role = new \Register\Role();
-				$role->get('register manager');
-				$role->notify($message);
-				if ($role->error()) app_log("Error sending admin confirm new customer reminder: ".$role->error());
+				$slackClient = new \Slack\Client();
+				$slackClient->send($_config->register->registration_notification->channel,$template->render());
+				//$role = new \Register\Role();
+				//$role->get('register manager');
+				//$role->notify($message);
+				//if ($role->error()) app_log("Error sending admin confirm new customer reminder: ".$role->error());
 
 				$isVerifedAccount = true;				
 			}
