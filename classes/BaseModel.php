@@ -1356,7 +1356,7 @@ class BaseModel extends \BaseClass {
 	 * @param string $label Optional label for the image
 	 * @return int 1 if successful, 0 otherwise
 	 */
-	public function addImage($image_id, $object_type = null, $label = '') {
+	public function addImage($image_id, $object_type = null, $label = ''): bool {
 		// Clear Previous Errors
 		$this->clearError();
 
@@ -1366,16 +1366,16 @@ class BaseModel extends \BaseClass {
 		// Validate Inputs
 		if (!is_numeric($image_id) || $image_id <= 0) {
 			$this->error('Invalid image ID provided');
-			return 0;
+			return false;
 		}
 		if (!is_string($label)) {
 			$this->error('Label must be a string');
-			return 0;
+			return false;
 		}
 		if (empty($label)) $label = 'Image ' . $image_id;
-		if (!preg_match('/^[\w\s\-\.]+$/', $label)) {
-			$this->error('Invalid label format');
-			return 0;
+		if (!preg_match('/^[\w\s\-\.\\\\]+$/', $label)) {
+			$this->error('Invalid label format "'.$label.'"');
+			return false;
 		}
 
 		// Prepare Query to Tie Object to Image
@@ -1402,9 +1402,9 @@ class BaseModel extends \BaseClass {
 		$database->Execute($add_image_query);
 		if ($database->ErrorMsg()) {
 			$this->SQLError($database->ErrorMsg());
-			return 0;
+			return false;
 		}
-		return 1;
+		return true;
 	}
 
 	/** @method dropImage(image_id, object_type)

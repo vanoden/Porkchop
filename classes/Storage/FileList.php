@@ -105,9 +105,7 @@
 			while(list($id) = $rs->FetchRow()) {
 				$file = new File($id);
 				if ($file->readable($GLOBALS['_SESSION_']->customer->id)) {
-					$clone = $file->_clone();
-					$clone->type = $file->mime_type;
-					array_push($files,$clone);
+					array_push($files,$file);
 					$this->incrementCount();
 				}
 			}

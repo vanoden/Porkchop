@@ -16,8 +16,8 @@
 		<div class="tableCell"><a href="/_storage/browse?code=<?=$repository->code?>&path=<?=$directory->path?>"><?=$directory->name()?></a></div>
 		<div class="tableCell"></div>
 		<div class="tableCell">N/A</div>
-		<div class="tableCell"><?=$directory->read_protect?></div>
-		<div class="tableCell"><?=$directory->write_protect?></div>
+		<div class="tableCell"><?=$directory->read_protect()?></div>
+		<div class="tableCell"><?=$directory->write_protect()?></div>
 	</div>
 <?php	}
 	}
@@ -40,10 +40,11 @@
 <?php
 	if (is_array($files)) {
 		foreach ($files as $file) {
+			if (! $file->readable($GLOBALS['_SESSION_']->customer->id)) continue;
 ?>
 	<div class="tableRow">
 		<div class="tableCell"><a href="/_storage/file?id=<?=$file->id?>"><?=$file->name()?></a></div>
-		<div class="tableCell"><a href="/_storage/downloadfile?id=<?=$file->id?>">Download</a>&nbsp;<a href="/_storage/browse?method=deleteFile&file_id=<?=$file->id?>&code=<?=$repository->code?>">Delete</a></div>
+		<div class="tableCell"><a href="/_storage/downloadfile?id=<?=$file->id?>">Download</a>&nbsp;<a href="/_storage/browse?method=deleteFile&file_id=<?=$file->id?>&code=<?=$repository->code?>&path=<?=$path?>">Delete</a></div>
 		<div class="tableCell"><?=$file->mime_type?></div>
 		<div class="tableCell"><?=$file->size?></div>
 		<div class="tableCell"><?=$file->date_created?></div>
