@@ -113,6 +113,7 @@
 			if (isset($_REQUEST['name'])) $parameters["name"] = $_REQUEST['name'];
 			if (isset($_REQUEST['status'])) $parameters["status"] = $_REQUEST['status'];
 			if (isset($_REQUEST['type']) && !empty($_REQUEST['type'])) $parameters['type'] = $_REQUEST['type'];
+			if (!empty($_REQUEST['variant_type'])) $parameters['variant_type'] = $_REQUEST['variant_type'];
 			$products = $productlist->find($parameters);
 			if ($productlist->error()) $this->error("Error finding products: ".$productlist->error());
 	
@@ -703,7 +704,11 @@
 						'code'		=> array(),
 						'name'		=> array(),
 						'status'	=> array(),
-						'type'		=> array()
+						'type'		=> array(),
+						'variant_type'	=> array(
+							'description' => 'Variant Type',
+							'options' => array_merge(array(''), $validationClass->variantTypes())
+						),
 					)
 				),
 				'getItem'	=> array(
