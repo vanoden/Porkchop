@@ -55,8 +55,8 @@
 			$this->_query = $query;
 		}
 
-		/**
-		 * Apply a Bind Parameter to the Query
+		/** @method AddParam(value)
+		 * Apply a Bind Parameter to the Query.  Parameters are applied to parameter marker in order of addition.
 		 * @param mixed $value
 		 * @return void
 		 */
@@ -64,8 +64,9 @@
 			array_push($this->_params,$value);
 		}
 
-		/**
+		/** @method AddParams(values)
 		 * Apply an array of Bind Parameters to the Query
+		 * Loops through array and calls AddParam() method for each one in order
 		 * @param mixed $values
 		 * @return void
 		 */
@@ -75,25 +76,25 @@
 		}
 
 		/** @method resetParams()
-		 * Reset the Bind Parameters
+		 * Reset the Bind Parameters.  Empties the stored array for re-use
 		 * @return void
 		 */
 		public function resetParams() {
 			$this->_params = array();
 		}
 
-		/**
-		 * Get the Bind Parameters
+		/** @method Parameters()
+		 * Get the contents of the existing bind parameter array
 		 * @return array
 		 */
 		public function Parameters() {
 			return $this->_params;
 		}
 
-		/**
-		 * Execute a Query against the database
+		/** @method Execute(query, parameters|null)
+		 * Execute a Query against the database.  If provided, the parameters will be appended to the existing bind parameter array.
 		 * @param mixed $query 
-		 * @param mixed $bind_params 
+		 * @param array|null $bind_params 
 		 * @return null|RecordSet 
 		 */
 		public function Execute($query = "",$bind_params = null) {
@@ -133,32 +134,33 @@
 			return $recordSet;
 		}
 
-		/**
-		 * Begin a Transaction
+		/** @method BeginTrans()
+		 * Begin a Database SQL Transaction
 		 * @return bool
 		 */
 		public function BeginTrans() {
 			return $this->_connection->BeginTrans();
 		}
 
-		/**
-		 * Commit a Transaction
+		/** @method CommitTrans()
+		 * Commit a Database SQL Transaction
 		 * @return bool
 		 */
 		public function CommitTrans() {
 			return $this->_connection->CommitTrans();
 		}
 
-		/**
-		 * Rollback a Transaction
+		/** @method RollbackTrans()
+		 * Rollback a Database SQL Transaction
 		 * @return bool
 		 */
 		public function RollbackTrans() {
 			return $this->_connection->RollbackTrans();
 		}
 
-		/**
-		 * Set the database debug level
+		/** @method trace(level)
+		 * Set the database debug level.  Must set debug to 'log' or 'screen'
+		 * using debugOutput() method
 		 * @param string $level - Optional, defaults to null
 		 * @return int
 		 */
@@ -168,6 +170,18 @@
 				if (empty($this->debug)) $this->debug == 'log';
 			}
 			return $this->_trace_level;
+		}
+
+		/** @method debugOutput(string)
+		 * Set the output for trace logging to screen or log
+		 * @param string $output (screen or log)
+		 */
+		public function debugOutput($output) {
+			if (strtolower($output) != 'screen' && strtolower($output) != 'log') {
+				$this->error("Invalid debug output type: $output");
+				return;
+			}
+			$this->debug = strtolower($output);
 		}
 
 		/**
