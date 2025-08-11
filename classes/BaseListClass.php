@@ -107,6 +107,8 @@ class BaseListClass extends \BaseClass {
 	 * @return array
 	 */
 	public function findSimple($parameters = []) {
+		$validationClass = new $this->_modelName();
+
 		// Initialize controls array with defaults
 		$controls = [
 			'order'		=> $this->_tableDefaultSortOrder ?? 'ASC',
@@ -116,7 +118,7 @@ class BaseListClass extends \BaseClass {
 		if ($this->_tableDefaultSortBy) {
 			$controls['sort'] = $this->_tableDefaultSortBy;
 		}
-		elseif ($this->hasField('id')) {
+		elseif ($validationClass->hasField('id')) {
 			$controls['sort'] = 'id';
 		}
 
