@@ -23,11 +23,9 @@
 		$class_name = $_REQUEST['class_name'] ?? null;
 		if (empty($class_name)) {
 			$page->addError("Please select a class to view audit logs.");
-			$can_proceed = false;
 		}
 		elseif (!class_exists($class_name)) {
 			$page->addError("Class does not exist.");
-			$can_proceed = false;
 		}
 		else {
 			$parameters['class_name'] = $class_name;
@@ -35,15 +33,12 @@
 			$code = $_REQUEST['code'] ?? null;
 			if (empty($code)) {
 				$page->addError("Please enter an instance code");
-				$can_proceed = false;
 			}
 			elseif (!$class->validCode($code)) {
 				$page->addError("Invalid instance code.");
-				$can_proceed = false;
 			}
 			elseif (!$class->get($code)) {
 				$page->addError("Instance does not exist.");
-				$can_proceed = false;
 			}
 			else {
 				$parameters['instance_id'] = $class->id;
