@@ -12,7 +12,7 @@
 			parent::__construct();
 		}
 
-		/**
+		/** @method addItem()
 		 * Add a new Product
 		 * Takes values from $_REQUEST
 		 * Required: code, name, type
@@ -42,7 +42,7 @@
 			$response->print();
 		}
 	
-		/**
+		/** @method updateItem()
 		 * Update an existing Product's details
 		 * Takes values from $_REQUEST
 		 * @return void
@@ -76,7 +76,7 @@
 			$response->print();
 		}
 
-		/**
+		/** @method getItem()
 		 * Get Specified Product with id or code
 		 * Takes values from $_REQUEST
 		 * Required: id or code
@@ -103,9 +103,9 @@
 			$response->print();
 		}
 
-		###################################################
-		### Find matching Product						###
-		###################################################
+		/** @method findItems()
+		 * Find matching Product Items given various criteria
+		 */
 		public function findItems() {
 			$productlist = new \Product\ItemList();
 			$parameters = array();
@@ -120,10 +120,10 @@
 			$response->addElement('item',$products);
 			$response->print();
 		}
-	
-        ###################################################
-        ### Add a Price                                 ###
-        ###################################################
+
+        /** @method addPrice()
+		 * Add a price to a Product Item
+		 */
         public function addPrice() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -148,9 +148,9 @@
 			$response->print();
         }
 
-        ###################################################
-        ### Get a Product Price                         ###
-        ###################################################
+		/** @method getPrice()
+		 * Get a Product Item Price
+		 */
         public function getPrice() {
             $parameters = array();
             $product = new \Product\Item();
@@ -164,9 +164,9 @@
 			$response->print();
         }
 
-		###################################################
-		### Add a Relationship							###
-		###################################################
+		/** @method addRelationship()
+		 * Add a relationship between two Product Items
+		 */
 		public function addRelationship() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -198,10 +198,10 @@
 			$response->addElement('relationship',$relationship);
 			$response->print();
 		}
-	
-		###################################################
-		### Get a Relationship							###
-		###################################################
+
+		/** @method getRelationship()
+		 * Get a relationship between two Product Items
+		 */
 		public function getRelationship() {
 			if ($_REQUEST['parent_code']) {
 				$parent = new \Product\Item();
@@ -215,20 +215,20 @@
 			}
 			if (! $_REQUEST['child_id'])
 				error("child_id or valid child_code required");
-	
+
 			$relationship = new \Product\Relationship();
 			$relationship->get($_REQUEST['parent_id'],$_REQUEST['child_id']);
-	
+
 			if ($relationship->error()) $this->error("Error getting relationship: ".$relationship->error());
 
 			$response = new \APIResponse();
 			$response->addElement('relationship',$relationship);
 			$response->print();
 		}
-	
-		###################################################
-		### Find Relationships							###
-		###################################################
+
+		/** @method findRelationships()
+		 * Find relationships between Product Items given various criteria
+		 */
 		public function findRelationships() {
 			$product = new \Product\Item();
 			if ($_REQUEST['parent_code']) {
@@ -251,10 +251,10 @@
 			$response->addElement('relationship',$relationships);
 			$response->print();
 		}
-	
-		###################################################
-		### Add a Group									###
-		###################################################
+
+		/** @method addGroup()
+		 * Add a new Product Item of type 'group'
+		 */
 		public function addGroup() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -262,28 +262,28 @@
 			$_REQUEST['type'] = 'group';
 			$this->addItem();
 		}
-	
-		###################################################
-		### Update a Group								###
-		###################################################
+
+		/** @method updateGroup()
+		 * Update a Product Item of type 'group'
+		 */
 		public function updateGroup() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
 			$this->requirePrivilege("manage products");
 			$this->updateItem();
 		}
-	
-		###################################################
-		### Find matching Group							###
-		###################################################
+
+		/** @method findGroups()
+		 * Find matching Product Items of type 'group'
+		 */
 		public function findGroups() {
 			$_REQUEST['type'] = 'group';
 			$this->findItems();
 		}
-	
-		###################################################
-		### Add Product to Group						###
-		###################################################
+
+		/** @method addGroupItem()
+		 * Add a Product Item to a Group
+		 */
 		public function addGroupItem() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -306,9 +306,9 @@
 			$response->print();
 		}
 
-		###################################################
-		### Find Products in Group						###
-		###################################################
+		/** @method findGroupItems()
+		 * Find Products in Group
+		 */
 		public function findGroupItems() {
 			$group = new \Product\Group();
 			if (!$group->get($_REQUEST['code'])) $this->error("Product Group Not Found");
@@ -323,9 +323,9 @@
 			$response->print();
 		}
 
-		###################################################
-		### Add a Product Intance						###
-		###################################################
+		/** @method addInstance()
+		 * Add a new Product Instance
+		 */
 		public function addInstance() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -377,9 +377,9 @@
 			$response->print();
 		}
 
-		###################################################
-		### Get Specified Instance						###
-		###################################################
+		/** @method getInstance()
+		 * Get a specified Product Instance
+		 */
 		public function getInstance() {
 			if (isset($_REQUEST['id'])) {
 				$instance = new \Product\Instance($_REQUEST['id']);
@@ -408,9 +408,9 @@
 			}
 		}
 
-		###################################################
-		### Update an Instance							###
-		###################################################
+		/** @method updateInstance()
+		 * Update a specified Product Instance
+		 */
 		public function updateInstance() {
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
@@ -451,9 +451,9 @@
             $response->print();
 		}
 
-		###################################################
-		### Find matching Instances						###
-		###################################################
+		/** @method findInstances()
+		 * Find matching Product Instances
+		 */
 		public function findInstances() {
 			$instancelist = new \Product\InstanceList();
 			if ($instancelist->error()) $this->app_error("Error initializing instance list: ".$instancelist->error(),__FILE__,__LINE__);
@@ -496,7 +496,7 @@
             $response->print();
 		}
 
-		/**
+		/** @method changeInstanceCode()
 		 * Change the code of an existing product instance
 		 * Takes values from $_REQUEST
 		 * Required: code, new_code, reason
