@@ -5,7 +5,7 @@ namespace Site\AuditLog;
 class EventList extends \BaseListClass {
 	public function __construct() {
 		$this->_modelName = '\Site\AuditLog\Event';
-		$this->_tableDefaultSortBy = 'date_event';
+		$this->_tableDefaultSortBy = 'event_date';
 	}
 
 	public function findAdvanced($parameters, $advanced, $controls): array {
