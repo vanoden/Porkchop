@@ -7,26 +7,34 @@
 			$this->_modelName = '\Product\Item';
 		}
 
-		public function count($parameters = []) {
-			if (!empty($this->_count)) return $this->_count;
-			$this->_count = count($this->find($parameters));
-			return $this->_count;
-		}
-
+		/** @method getAllProducts(type = 'unique')
+		 * Get Product ID's of All ACTIVE Products
+		 * @params type Product Type to Match On
+		 * @return array
+		 */
 		public function getAllProducts($type = 'unique') {
+			// Clear Previous Errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query to get Product IDs
 			$query = "
 				SELECT id
 				FROM product_products
 				WHERE status = 'ACTIVE'
 			";
-			if ($type !== null) $query .= " AND type = ?";
-			$query .= " ORDER BY id";
-			$bind_params = $type !== null ? [$type] : [];
 
-			query_log($query, $bind_params);
-			$rs = $GLOBALS['_database']->Execute($query, $bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			if ($type !== null) {
+				$query .= " AND type = ?";
+				$database->AddParam($type);
+			}
+			$query .= " ORDER BY id";
+
+			$rs = $database->Execute($query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 
@@ -38,6 +46,13 @@
 			return $productIds;
 		}
 
+		/** @method findAdvanced(parameters, controls, advanced)
+		 * Find items based on a set of parameters, controls, and advanced search options
+		 * @param array $parameters (fields to match on)
+		 * @param array $controls (sort/limit/offset)
+		 * @param array $advanced (advanced search parameters)
+		 * @return array
+		 */
 		public function findAdvanced($parameters = [], $controls = [], $advanced = []): array {
 			$this->clearError();
 			$this->resetCount();
@@ -78,6 +93,7 @@
 				}
                 $database->AddParams([$search_string,$search_string,$search_string]);
 			}
+
 			# Filter on Given Parameters
 			if (isset($parameters['type'])) {
 				if (is_array($parameters['type'])) {
@@ -174,6 +190,16 @@
                     $find_ids_query .= "
 				AND		p.id = ?";
 				$database->AddParam($parameters['id']);
+			}
+
+			if (!empty($parameters['variant_type'])) {
+				if (!$validationclass->validVariantType($parameters['variant_type'])) {
+					$this->error("Invalid Variant Type");
+					return [];
+				}
+				$find_ids_query .= "
+				AND		r.variant_type = ?";
+				$database->AddParam($parameters['variant_type']);
 			}
 
             // Order Clause (applied in outer query against product_products as alias p)

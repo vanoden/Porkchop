@@ -520,6 +520,25 @@
 				$this->setVersion(14);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 15 && $max_version >= 15) {
+				app_log("Upgrading schema to version 15", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+				$alter_table_query = "
+					ALTER TABLE `product_relations`
+					ADD COLUMN `variant_type` enum('none','size','color','shape','material','model','style') NOT NULL DEFAULT 'none'
+				";
+				if (! $this->executeSQL($alter_table_query)) {
+					$this->SQLError("Error altering product_relations table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					app_log($this->error(), 'error');
+					return false;
+				}
+				
+				$this->setVersion(15);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}

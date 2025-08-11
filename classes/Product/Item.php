@@ -889,4 +889,22 @@
 				return $parts;
 			}
 		}
+
+		/** @method variantTypes()
+		 * Get a list of valid variant types
+		 * @return array Array of variant type strings
+		 */
+		public function variantTypes(): array {
+			return array('none','size','color','shape','material','model','style');
+		}
+
+		/** @method validVariantType(string)
+		 * Validate the variant type
+		 * @param string $type
+		 * @return bool
+		 */
+		public function validVariantType($type) {
+			$valid_types = ['none','size','color','shape','material','model','style'];
+			return in_array($type, $valid_types);
+		}
 	}
