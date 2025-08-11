@@ -1,26 +1,37 @@
 <?php
 class BaseListClass extends \BaseClass {
-
-	protected $_count = 0;
-	protected $_modelName;
+	protected $_count = 0;	// Number of matched records from latest find/search
+	protected $_modelName;	// Name of object type found in this list
 
 	// Default Sort Controls
-	protected $_tableDefaultSortBy;
-	protected $_tableDefaultSortOrder;
+	protected $_tableDefaultSortBy;	// Default column to sort by
+	protected $_tableDefaultSortOrder;	// Default sort order (ASC/DESC)
 
+	/** @method count()
+	 * Return the number of records found matchin the last find/search query
+	 * @return int Number of Records
+	 */
 	public function count() {
 		return $this->_count;
 	}
 
+	/** @method incrementCount()
+	 * Increment the count of records matched
+	 * @return int Number of Records
+	 */
 	public function incrementCount() {
 		$this->_count++;
+		return $this->_count;
 	}
 
+	/** @method resetCount()
+	 * Reset the matching record counter
+	 */
 	public function resetCount() {
 		$this->_count = 0;
 	}
 
-	/**
+	/** @method __call(name, parameters)
 	 * Polymorphic method for find and search
 	 * @param mixed $name 
 	 * @param mixed $parameters 
@@ -58,7 +69,7 @@ class BaseListClass extends \BaseClass {
 		}
 	}
 
-	/**
+	/** @method searchSimple(string)
 	 * Simple search for messages based on a search string.  This method is a wrapper for searchControlled
 	 *
 	 * @param array $parameters Search parameters
@@ -74,10 +85,10 @@ class BaseListClass extends \BaseClass {
 		return $this->searchAdvanced($search_string, $advanced, $controls);
 	}
 
-	/**
+	/** @method searchControlled(string, controls array)
 	 * Search for messages based on a search string with controls as separate parameters
-	 * @param mixed $parameters 
-	 * @param mixed $controls 
+	 * @param mixed $parameters (search string)
+	 * @param mixed $controls (sort/limit/offset)
 	 * @return array|int 
 	 */
 	public function searchControlled($search_string, $controls) {
@@ -89,20 +100,25 @@ class BaseListClass extends \BaseClass {
 		return $this->searchAdvanced($search_string, $advanced, $controls);
 	}
 
-	/**
+	/** @method findSimple(parameters)
 	 * Transfer control parameters from parameters array to controls array
-	 * @param array $parameters 
-	 * @param array $controls 
+	 * @param array $parameters (fields to match on)
+	 * @param array $controls (sort/limit/offset)
 	 * @return array
 	 */
 	public function findSimple($parameters = []) {
 		// Initialize controls array with defaults
 		$controls = [
-			'sort'		=> $this->_tableDefaultSortBy ?? 'id',
 			'order'		=> $this->_tableDefaultSortOrder ?? 'ASC',
 			'ids'		=> false,
 			'offset'	=> 0
 		];
+		if ($this->_tableDefaultSortBy) {
+			$controls['sort'] = $this->_tableDefaultSortBy;
+		}
+		elseif ($this->hasField('id')) {
+			$controls['sort'] = 'id';
+		}
 
 		// Control Parameters
 		// sort - Sort by column
@@ -133,6 +149,11 @@ class BaseListClass extends \BaseClass {
 		return $this->findAdvanced($parameters, [], $controls);
 	}
 
+	/** @method findControlled(parameters, controls)
+	 * Find items based on a set of parameters and controls
+	 * @param array parameters (fields to match on)
+	 * @param array controls (sort/limit/offset)
+	 */
 	public function findControlled($parameters, array $controls): array {
 		if (!empty($controls['count'])) $controls['ids'] = $controls['count'];
 		if (!empty($controls['showCachedObjects'])) $controls['showCachedObjects'] = $controls['showCachedObjects'];
@@ -140,21 +161,23 @@ class BaseListClass extends \BaseClass {
 		return $this->findAdvanced($parameters, [], $controls);
 	}
 
-	/**
+	/** @method searchAdvanced(string, advanced, controls)
 	 * Search for messages based on a search string
 	 * @param array $parameters Search parameters
+	 * @param array $advanced Advanced search parameters
+	 * @param array $controls Control parameters (sort/limit/offset)
 	 * @return array|int Array of Content\Message objects or 0 on error
 	 */
 	public function searchAdvanced($search_string, array $advanced, array $controls): array {
 		return array();
 	}
 
-	/**
+	/** @method findAdvanced(parameters, advanced, controls)
 	 * Find items based on a search string
-	 * @param array $parameters 
-	 * @param array $advanced 
-	 * @param array $controls 
-	 * @return array 
+	 * @param array $parameters (fields to match on)
+	 * @param array $advanced (advanced search parameters)
+	 * @param array $controls (sort/limit/offset)
+	 * @return array
 	 */
 	public function findAdvanced(array $parameters, array $advanced, array $controls): array {
 		$this->clearError();
@@ -240,9 +263,9 @@ class BaseListClass extends \BaseClass {
 		return $objects;
 	}
 
-	/**
+	/** @method limitClause(controls)
 	 * Generate limit clause for SQL
-	 * @param array $controls
+	 * @param array $controls (sort/limit/offset)
 	 * @return string
 	 */
 	public function limitClause($controls) {
@@ -260,7 +283,9 @@ class BaseListClass extends \BaseClass {
 		return $limit;
 	}
 
-	// Return Incremented Line Number
+	/** @method nextNumber($parent_id = null)
+	 * Return Incremented Line Number
+	 */
 	public function nextNumber($parent_id = null) {
 		$this->clearError();
 		$database = new \Database\Service();
@@ -293,9 +318,10 @@ class BaseListClass extends \BaseClass {
 			return 1;
 	}
 
-	/**
+	/** @method searchTags(string, controls)
 	 * Search Only on Tags
-	 * 
+	 * @param string $search_string
+	 * @param array $controls (sort/limit/offset)
 	 */
 	public function searchTags($search_string, $controls = []): array {
 		$this->clearError();
@@ -341,9 +367,10 @@ class BaseListClass extends \BaseClass {
 		return $objects;
 	}
 
-	/**
+	/** @method searchCategorizedTags(array, controls)
 	 * Search Only on Categorized Tags
 	 * @param array $parameters
+	 * @param array $controls (sort/limit/offset)
 	 * @return mixed
 	 */
 	public function searchCategorizedTags($tags, $controls = []): array {
@@ -401,6 +428,11 @@ class BaseListClass extends \BaseClass {
 		return $objects;
 	}
 
+	/** @method first(array, controls)
+	 * Return first record matching parameters
+	 * @param array $parameters (fields to match on)
+	 * @param array $controls (sort/limit/offset)
+	 */
 	public function first($parameters = array(), $controls = array()) {
 		// Clear any previous errors
 		$this->clearError();
@@ -421,6 +453,11 @@ class BaseListClass extends \BaseClass {
 		return $objects[0];
 	}
 
+	/** @method last(array, controls)
+	 * Return last record matching parameters
+	 * @param array $parameters (fields to match on)
+	 * @param array $controls (sort/limit/offset)
+	 */
 	public function last($parameters = array(), $controls = array()) {
 		// Clear any previous errors
 		$this->clearError();
@@ -439,6 +476,11 @@ class BaseListClass extends \BaseClass {
 		return end($objects);
 	}
 
+	/** @method getTagIds(array)
+	 * Get Tag IDs from an array of tags
+	 * @param array $tags
+	 * @return array
+	 */
 	protected function getTagIds($tags): array {
 		$modelClass = new $this->_modelName();
 
@@ -458,6 +500,11 @@ class BaseListClass extends \BaseClass {
 		return $tags;
 	}
 
+	/** @method validSearchString(string)
+	 * Validate a search string
+	 * @param string $string
+	 * @return bool
+	 */
 	public function validSearchString($string) {
 		if (is_array($string)) {
 			$this->error("Invalid search string");
@@ -467,6 +514,11 @@ class BaseListClass extends \BaseClass {
 		else return false;
 	}
 
+	/** @method setWildCards(string)
+	 * Replace common search string chars with SQL appropriate chars
+	 * @param string $string
+	 * @return string
+	 */
 	public function setWildCards($string) {
 		$string = preg_replace('/\*/', '%', $string);
 		$string = preg_replace('/\?/', '_', $string);
