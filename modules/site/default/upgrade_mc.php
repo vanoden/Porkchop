@@ -328,7 +328,7 @@
 						array (
 							"title"	=> "Pages",
 							"target"	=> "/_site/pages",
-							"view_order"	=> 20,
+							"view_order"	=> 10,
 							"alt"			=> "Page Management",
 							"description"	=> "Page Management"
 						),
@@ -340,19 +340,48 @@
 							"description"	=> "Site Configurations"
 						),
 						array (
-							"title"	=> "API Sessions",
-							"target"	=> "/_monitor/comm_dashboard",
-							"view_order"	=> 20,
-							"alt"			=> "Session Report",
-							"description"	=> "Session Report"
+							"title" => "HTTP Headers",
+							"target"	=> "/_site/headers",
+							"view_order"	=> 30,
+							"alt"			=> "HTTP Headers",
+							"description"	=> "HTTP Headers"
 						),
 						array (
 							"title"	=> "Site Counters",
 							"target"	=> "/_site/counters",
-							"view_order"	=> 20,
+							"view_order"	=> 40,
 							"alt"			=> "Site Counters",
 							"description"	=> "Site Counters"
-						)						
+						),
+						array (
+							"title" => "Navigation",
+							"target"	=> "/_navigation/menus",
+							"view_order"	=> 50,
+							"alt"			=> "Navigation",
+							"description"	=> "Navigation"
+						),
+						array (
+							"title" => "Terms of Use",
+							"target"	=> "/_site/terms_of_use",
+							"view_order"	=> 60,
+							"alt"			=> "Terms of Use",
+							"description"	=> "Terms of Use"
+						),
+						array (
+							"title" => "Audit Log",
+							"target"	=> "/_site/audit_log",
+							"view_order"	=> 70,
+							"alt"			=> "Audit Log",
+							"description"	=> "Audit Log",
+							"required_role"	=> "administrator"
+						),
+						array (
+							"title"	=> "API Sessions",
+							"target"	=> "/_monitor/comm_dashboard",
+							"view_order"	=> 90,
+							"alt"			=> "Session Report",
+							"description"	=> "Session Report"
+						),					
 					)
 				)
 			)
