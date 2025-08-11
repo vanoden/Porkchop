@@ -131,7 +131,7 @@
 			if (isset($searchTerm)) {
 				if (! $validationclass->validSearch($searchTerm)) {
 					$this->error("Invalid search string");
-					return null;
+					return [];
 				}
 				if (preg_match('/^\*/',$searchTerm) || preg_match('/\*$/',$searchTerm)) {
 					$searchTerm = preg_replace('/^\*/','%',$searchTerm);
@@ -350,12 +350,12 @@
 
 			if (empty($search_string)) {
 				$this->error("Search string required");
-				return null;
+				return [];
 			}
 
 			if (! $this->validSearchString($search_string)) {
 				$this->error("Invalid search string");
-				return null;
+				return [];
 			}
 			$parameters['string'] = $search_string;
 
@@ -428,7 +428,7 @@
 			$rs = $GLOBALS['_database']->Execute($find_person_query,$bind_params);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			$people = array();
