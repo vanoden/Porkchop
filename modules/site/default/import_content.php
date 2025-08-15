@@ -2,19 +2,7 @@
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
 
-<style>	
-    input[type="submit"]:disabled {
-        background-color: grey;
-        color: white;
-    }
-    
-    textarea {
-        width: 100%;
-        height: 1000px;
-        overflow: auto;
-    }
-    
-</style>
+
 
 <form action="/_site/import_content" method="post">
 
@@ -42,7 +30,7 @@
     <input id="submitButton" type="submit" value="Import">
 
     <br/>Paste JSON data here (for import):<br/>
-    <textarea id="jsonData" name="jsonData" oninput="toggleSubmitButton()"></textarea>
+    <textarea id="jsonData" name="jsonData" class="site-import-content-textarea" oninput="toggleSubmitButton()"></textarea>
     
 </form>
 

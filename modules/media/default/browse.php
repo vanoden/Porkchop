@@ -1,14 +1,4 @@
-<style>
-	div.mediaItem {
-		position: relative;
-	}
-	div.mediaItemEdit {
-		position: absolute;
-		float: right;
-		top: 0px;
-		left: 300px;
-	}
-</style>
+
 <div class="body">
 <?php	if (in_array('media manager',$GLOBALS['_SESSION_']->customer->roles)) { ?>
 	<div class="mediaItemAdd"><a href="/_media/edit/">Add</a></div>

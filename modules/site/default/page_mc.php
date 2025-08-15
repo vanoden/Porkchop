@@ -3,7 +3,7 @@
 	$page = $site->page();
 	$page->requirePrivilege('edit site pages');
 
-	$index = $_REQUEST['index'];
+	$index = isset($_REQUEST['index']) ? $_REQUEST['index'] : null;
 	if ($index == '[null]') $index = null;
 	$editPage = new \Site\Page();
 

@@ -1,14 +1,4 @@
-<style>
-    .search-results-table {
-      border-collapse: collapse;
-      border: 1px solid #ddd;
-    }
-    .search-results-table th,
-    .search-results-table td {
-      border: 1px solid #ddd;
-      padding: 5px;
-    }
-  </style>
+
 
 <h1 class="title">Site Search</h1>
 
@@ -79,4 +69,4 @@ if (!empty($results)) {
 <?php
 $totalString = (is_array($results) && count($results) > 0) ? count($results) : 0;
 ?>
-<p><span style="float: right;">Total Result(s): <?= $totalString ?></span></p>
+<p><span class="text-float-right">Total Result(s): <?= $totalString ?></span></p>

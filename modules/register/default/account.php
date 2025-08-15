@@ -70,14 +70,9 @@
 	}
 </script>
 
-<style>
-	input:disabled,
-	select:disabled {
-		background: #eeeee4;
-	}
-</style>
 
-<main id="pageContainer" class="custom-template" style="padding-top: 0px; margin:auto; width: 75%;">
+
+<main id="pageContainer" class="custom-template register-account-container">
 
 	<div class="pageSect_full pad_vert-sm">
 
@@ -185,7 +180,7 @@
 						</li>
 						<li id="accountJobDescriptionQuestion" class="form-row">
 							<label for="job_description">*Job Description:</label>
-							<textarea name="job_description" style="max-height: 50px; min-height: 50px;" class="long-field" <?php if ($readOnly) echo 'disabled'; ?>><?= $customer->getMetadata('job_description') ?></textarea>
+							<textarea name="job_description" class="long-field register-account-textarea" <?php if ($readOnly) echo 'disabled'; ?>><?= $customer->getMetadata('job_description') ?></textarea>
 						</li>
 					</ul>
 				</section>
@@ -267,7 +262,7 @@
 
 				<?php if ($customer->profile == "public") { ?>
 				<!-- Business Card Preview Link -->
-				<div style="margin: 20px 0;">
+				<div class="register-account-margin">
 					<a href="/_register/businesscard?customer_id=<?= $customer->id ?>" class="button" target="_blank">Preview Business Card</a>
 				</div>
 				<?php } ?>
@@ -324,7 +319,7 @@
 							<div class="default-image">
 								<h4>Current Default Image</h4>
 								<div class="image-preview">
-									<img src="/_storage/downloadfile?file_id=<?= $defaultImageId ?>" alt="Default Image" style="max-width: 100px;" />
+									<img src="/_storage/downloadfile?file_id=<?= $defaultImageId ?>" alt="Default Image" class="register-account-image" />
 									<p class="image-name"><?= htmlspecialchars($defaultImage->name) ?></p>
 								</div>
 							</div>

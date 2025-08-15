@@ -17,13 +17,7 @@
 	</ul>
 </section>
 <?php } ?>
-<style>
-	span.label {
-		display: inline-block;
-		width: 150px;
-		font-weight: bold;
-	}
-</style>
+
 <script language="Javascript">
 	function updateIds(elem) {
 		console.log("updateIds()");
@@ -72,7 +66,7 @@
 	<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
 	<input type="hidden" name="id" value="<?= $file->id ?>">
 	<h3>File Details</h3>
-	<div class="inline-block" style="width: 100%; float: left;">
+	<div class="container-inline-block">
 		<div class="container fileDetailContainer">
 			<span class="label">Code</span>
 			<span class="value"><?= $file->code ?>
@@ -115,8 +109,8 @@
 		</div>
 		<?php if ($file->mime_type == "image/jpeg" || $file->mime_type == "image/png" || $file->mime_type == "image/gif") { ?>
 			<h3>Preview</h3>
-			<div id="image_preview" style="float: left">
-				<img src="<?= $file->downloadURI() ?>" id="image_preview" style="max-width: 300px; max-height: 300px; border: 1px solid black" />
+			<div id="image_preview" class="img-preview">
+				<img src="<?= $file->downloadURI() ?>" id="image_preview" class="img-max-width-300 img-max-height-300 border-1" />
 			</div>
 		<?php   } ?>
 		<h3>Permissions</h3>

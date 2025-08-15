@@ -1,16 +1,3 @@
-<style>
-    
-    .user_accounts_container {
-        margin-top: 50px; 
-        border: solid 1px #9a9a9a; 
-        padding:10px 10px 50px 10px;
-    }
-    
-    .member_status_expired, .member_status_hidden, .member_status_deleted, .member_status_blocked .tableCell{
-        color:#999;
-        font-style:italic;
-    }
-</style>
 <script language="JavaScript">
 	function addLocation() {
 		var organization_id = document.forms[0].organization_id.value;
@@ -52,12 +39,12 @@
     <!--	Start First Row-->
     <div class="tableBody min-tablet marginTop_20">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 20%;">Code</div>
-		    <div class="tableCell" style="width: 20%;">Name</div>
-		    <div class="tableCell" style="width: 15%;">Status</div>
-		    <div class="tableCell" style="width: 10%;">Can Resell</div>
-		    <div class="tableCell" style="width: 15%;">Reseller</div>
-		    <div class="tableCell" style="width: 15%;">Password Exp. (days)</div>
+		    <div class="tableCell register-admin-organization-code-cell">Code</div>
+		    <div class="tableCell register-admin-organization-name-cell">Name</div>
+		    <div class="tableCell register-admin-organization-status-cell">Status</div>
+		    <div class="tableCell register-admin-organization-resell-cell">Can Resell</div>
+		    <div class="tableCell register-admin-organization-reseller-cell">Reseller</div>
+		    <div class="tableCell register-admin-organization-password-exp-cell">Password Exp. (days)</div>
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell">
@@ -119,7 +106,7 @@
     </div>
     <div class="tableBody">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 100%;">Notes</div>
+		    <div class="tableCell register-admin-organization-notes-cell">Notes</div>
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell">
@@ -135,7 +122,7 @@
     <h3>Add Organization Tag</h3>
     <div class="tableBody min-tablet">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 35%;">Tag</div>
+		    <div class="tableCell register-admin-organization-tag-cell">Tag</div>
 	    </div>
         <?php	
             foreach ($organizationTags as $tag) {
@@ -160,11 +147,11 @@
         <!--	Start First Row-->
         <div class="tableBody">
 	        <div class="tableRowHeader">
-		        <div class="tableCell value" style="width: 20%;">Username</div>
-		        <div class="tableCell value" style="width: 20%;">First Name</div>
-		        <div class="tableCell value" style="width: 20%;">Last Name</div>
-		        <div class="tableCell value" style="width: 10%;">Status</div>
-		        <div class="tableCell value" style="width: 30%;">Last Active</div>
+		        <div class="tableCell value register-admin-organization-user-username-cell">Username</div>
+		        <div class="tableCell value register-admin-organization-user-first-name-cell">First Name</div>
+		        <div class="tableCell value register-admin-organization-user-last-name-cell">Last Name</div>
+		        <div class="tableCell value register-admin-organization-user-status-cell">Status</div>
+		        <div class="tableCell value register-admin-organization-user-last-active-cell">Last Active</div>
 	        </div>
         <?php	foreach ($members as $member) { ?>
 	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
@@ -193,9 +180,9 @@
         <?php	if ($organization->id) { ?>
         <div class="tableBody min-tablet">
 	        <div class="tableRowHeader">
-		        <div class="tableCell value" style="width: 20%;">Username</div>
-		        <div class="tableCell value" style="width: 10%;">Status</div>
-		        <div class="tableCell value" style="width: 30%;">Last Active</div>
+		        <div class="tableCell value register-admin-organization-user-username-cell">Username</div>
+		        <div class="tableCell value register-admin-organization-user-status-cell">Status</div>
+		        <div class="tableCell value register-admin-organization-user-last-active-cell">Last Active</div>
 	        </div>
         <?php	foreach ($automationMembers as $member) { ?>
 	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
@@ -219,9 +206,9 @@
     <!--	Start First Row-->
     <div class="tableBody">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 35%;">Username</div>
-		    <div class="tableCell" style="width: 30%;">First Name</div>
-		    <div class="tableCell" style="width: 35%;">Last Name</div>
+		    <div class="tableCell register-admin-organization-new-user-username-cell">Username</div>
+		    <div class="tableCell register-admin-organization-new-user-first-name-cell">First Name</div>
+		    <div class="tableCell register-admin-organization-new-user-last-name-cell">Last Name</div>
 	    </div>
 	    <div class="tableRow">
 		    <div class="tableCell"><input type="text" class="wide_100per" name="new_login" value="" /></div>
@@ -235,12 +222,12 @@
     <!--	Start First Row-->
     <div class="tableBody">
 	    <div class="tableRowHeader">
-        	<div class="tableCell value" style="width: 5%;">Default Billing</div>
-        	<div class="tableCell value" style="width: 5%;">Default Shipping</div>
-		    <div class="tableCell value" style="width: 20%;">Name</div>
-		    <div class="tableCell value" style="width: 20%;">Address</div>
-		    <div class="tableCell value" style="width: 20%;">City</div>
-		    <div class="tableCell value" style="width: 20%;">Province/Region</div>
+        	<div class="tableCell value register-admin-organization-location-default-billing-cell">Default Billing</div>
+        	<div class="tableCell value register-admin-organization-location-default-shipping-cell">Default Shipping</div>
+		    <div class="tableCell value register-admin-organization-location-name-cell">Name</div>
+		    <div class="tableCell value register-admin-organization-location-address-cell">Address</div>
+		    <div class="tableCell value register-admin-organization-location-city-cell">City</div>
+		    <div class="tableCell value register-admin-organization-location-province-cell">Province/Region</div>
 	    </div>
 	    	    
     <?php	foreach ($locations as $location) { ?>

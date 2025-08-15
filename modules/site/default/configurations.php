@@ -54,7 +54,7 @@
 	    foreach ($configuration as $record) {
     ?>
 	    <div class="tableRow">
-		    <div class="tableCell"><input id="key_<?=$idx?>" style="color: #969696;" type="text" name="key_<?=$idx?>" readonly="readonly" value="<?=$record->key?>" /></div>
+		    <div class="tableCell"><input id="key_<?=$idx?>" class="input-color-gray" type="text" name="key_<?=$idx?>" readonly="readonly" value="<?=$record->key?>" /></div>
 		    <div class="tableCell"><input id="value_<?=$idx?>" type="text" name="value_<?=$idx?>" value="<?=$record->value?>" /></div>
 		    <div class="tableCell">
 			    <input type="button" name="update_<?=$idx?>" value="Update" class="button" onclick="updateConfig('<?=$idx?>');" />

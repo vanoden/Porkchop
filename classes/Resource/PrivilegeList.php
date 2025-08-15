@@ -30,6 +30,7 @@
 				if (!empty($data)) {
 					$privileges = array();	// Array of Privilege Objects
 					$allSet = false;		// We found a matching privilege
+					$authSet = false;		// We found a matching authenticated privilege
 
 					$already = [];
 					$entity_id = 0;
@@ -37,7 +38,6 @@
 					foreach ($data as $entity_type => $privs) {
 						$read = false;
 						$write = false;
-						$authSet = false;
 						if (isset($already[$entity_type][$entity_id])) {
 							$this->error("Duplicate privilege entity type found in JSON data!");
 							continue;

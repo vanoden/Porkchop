@@ -2,14 +2,6 @@
 <?=$page->showAdminPageInfo() ?>
 <!-- End Page Header -->
 
-<style>
-    fieldset {
-        max-width: 500px;
-    }
-    form input[type=number] {
-        max-width: 75px;
-    }
-</style>
 <script>
     function scrollToBottom (id) {
        var div = document.getElementById(id);
@@ -39,7 +31,7 @@
 	});
 </script>
 
-<div id="sales_cart_form" style="clear: both">
+<div id="sales_cart_form" class="clear-both">
 	<form method="post" action="/_sales/cart">
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 	  <input id="order_id" type="hidden" name="order_id" value="<?=$order->id?>" />
@@ -115,13 +107,13 @@
 	<?php	if ($order->id > 0) { ?>
 	<div class="tableBody">
 		<div class="tableRowHeader">
-			<div class="tableCell" style="width: 10%;">Product Code</div>
-			<div class="tableCell" style="width: 16%;">Serial Number</div>
-			<div class="tableCell" style="width: 35%;">Description</div>
-			<div class="tableCell" style="width: 3%;">QTY</div>
-			<div class="tableCell" style="width: 15%;">Price</div>
-			<div class="tableCell" style="width: 15%;">TOTAL</div>
-			<div class="tableCell" style="width: 5%;"><span style="color: #666;">Delete</span></div>
+			<div class="tableCell tableCell-width-10">Product Code</div>
+			<div class="tableCell tableCell-width-16">Serial Number</div>
+			<div class="tableCell tableCell-width-35">Description</div>
+			<div class="tableCell tableCell-width-3">QTY</div>
+			<div class="tableCell tableCell-width-15">Price</div>
+			<div class="tableCell tableCell-width-15">TOTAL</div>
+			<div class="tableCell tableCell-width-5"><span class="text-color-666">Delete</span></div>
 		</div>
 	  <?php	foreach ($orderItems as $item) { ?>
 		<div class="tableRow">
@@ -134,13 +126,13 @@
 			<?php	} else { ?> 
 			  <div class="tableCell"><input type="text" name="serial_number[<?=$item->id?>]" value="<?=$item->serial_number?>" onchange="update(this)" /></div>
 			<?php	} ?>
-			<div class="tableCell"><textarea style="max-height: 35px;" name="description[<?=$item->id?>]" onchange="update()"><?=strip_tags($item->description)?></textarea></div>
+			<div class="tableCell"><textarea class="input-max-height-35" name="description[<?=$item->id?>]" onchange="update()"><?=strip_tags($item->description)?></textarea></div>
 		  <?php	if ($item->product()->type == 'unique') { ?>
-			  <div class="tableCell"><span class="value" style="text-align: right"><?=number_format($item->quantity,0)?></div>
+			  <div class="tableCell"><span class="value input-text-right"><?=number_format($item->quantity,0)?></div>
 		  <?php	} else { ?>
-	 		  <div class="tableCell"><input id="quantity[<?=$item->id?>]" name="quantity[<?=$item->id?>]" style="width: 40px; textalign: right" value="<?=number_format($item->quantity,0)?>" onchange="update()" /></div>
+	 		  <div class="tableCell"><input id="quantity[<?=$item->id?>]" name="quantity[<?=$item->id?>]" class="input-width-40 input-text-right" value="<?=number_format($item->quantity,0)?>" onchange="update()" /></div>
 		  <?php	} ?>
-			<div class="tableCell">$ <input id="price[<?=$item->id?>]" style="width: 90px; text-align: right" type="text" value="<?=$item->unit_price?>" name="price[<?=$item->id?>]" onchange="update()" /></div>
+			<div class="tableCell">$ <input id="price[<?=$item->id?>]" class="input-width-90 input-text-right" type="text" value="<?=$item->unit_price?>" name="price[<?=$item->id?>]" onchange="update()" /></div>
 			<div class="tableCell">$ <?=number_format($item->total(),2)?></div>
 			<div class="tableCell"><input type="image" name="btn_remove" src="/img/icons/icon_tools_trash_active.svg" onclick="removeItem(<?=$item->id?>);" /></div>
 	  </div>
@@ -162,13 +154,13 @@
 			<div class="tableCell">&nbsp;</div>
 		</div>
 		<div class="tableRowHeader">
-			<div class="tableCell" style="width: 10%;"></div>
-			<div class="tableCell" style="width: 16%;"></div>
-			<div class="tableCell" style="width: 25%;"></div>
-			<div class="tableCell" style="width: 3%;"></div>
-			<div class="tableCell" style="width: 15%;">Total Quote:</div>
-			<div class="tableCell" style="width: 15%;">$<?=number_format($order->total(),2)?></div>
-			<div class="tableCell" style="width: 5%;"></div>
+			<div class="tableCell tableCell-width-10"></div>
+			<div class="tableCell tableCell-width-16"></div>
+			<div class="tableCell tableCell-width-25"></div>
+			<div class="tableCell tableCell-width-3"></div>
+			<div class="tableCell tableCell-width-15">Total Quote:</div>
+			<div class="tableCell tableCell-width-15">$<?=number_format($order->total(),2)?></div>
+			<div class="tableCell tableCell-width-5"></div>
 		</div>
 	</div>
     <!-- END Order Items -->

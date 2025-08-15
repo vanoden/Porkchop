@@ -17,22 +17,22 @@
   <?php if ($display_results) { ?>
   <div class="tableBody min-tablet">
     <div class="tableRowHeader">
-        <div class="tableCell" style="width: 15%;">
+        <div class="tableCell tableCell-width-15">
             <a href="/_site/audit_log?pageNumber=<?php echo $pageNumber; ?>&btn_submit=1<?php if (isset($_REQUEST['add'])) echo '&add=' . $_REQUEST['add']; if (isset($_REQUEST['update'])) echo '&update=' . $_REQUEST['update']; if (isset($_REQUEST['delete'])) echo '&delete=' . $_REQUEST['delete']; ?>&sort_by=event_date&order_by=<?php echo $sort_direction === 'event_date' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Event Date</a>
         </div>
-        <div class="tableCell" style="width: 15%;">
+        <div class="tableCell tableCell-width-15">
             <a href="/_site/audit_log?pageNumber=<?php echo $pageNumber; ?>&btn_submit=1<?php if (isset($_REQUEST['add'])) echo '&add=' . $_REQUEST['add']; if (isset($_REQUEST['update'])) echo '&update=' . $_REQUEST['update']; if (isset($_REQUEST['delete'])) echo '&delete=' . $_REQUEST['delete']; ?>&sort_by=user_id&order_by=<?php echo $sort_direction === 'user_id' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">User</a>
         </div>
-        <div class="tableCell" style="width: 15%;">
+        <div class="tableCell tableCell-width-15">
             <a href="/_site/audit_log?pageNumber=<?php echo $pageNumber; ?>&btn_submit=1<?php if (isset($_REQUEST['add'])) echo '&add=' . $_REQUEST['add']; if (isset($_REQUEST['update'])) echo '&update=' . $_REQUEST['update']; if (isset($_REQUEST['delete'])) echo '&delete=' . $_REQUEST['delete']; ?>&sort_by=class_method&order_by=<?php echo $sort_direction === 'class_method' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Class Method</a>
         </div>
-        <div class="tableCell" style="width: 15%;">
+        <div class="tableCell tableCell-width-15">
             <a href="/_site/audit_log?pageNumber=<?php echo $pageNumber; ?>&btn_submit=1<?php if (isset($_REQUEST['add'])) echo '&add=' . $_REQUEST['add']; if (isset($_REQUEST['update'])) echo '&update=' . $_REQUEST['update']; if (isset($_REQUEST['delete'])) echo '&delete=' . $_REQUEST['delete']; ?>&sort_by=instance_id&order_by=<?php echo $sort_direction === 'instance_id' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Instance ID</a>
         </div>
-        <div class="tableCell" style="width: 15%;">
+        <div class="tableCell tableCell-width-15">
             <a href="/_site/audit_log?pageNumber=<?php echo $pageNumber; ?>&btn_submit=1<?php if (isset($_REQUEST['add'])) echo '&add=' . $_REQUEST['add']; if (isset($_REQUEST['update'])) echo '&update=' . $_REQUEST['update']; if (isset($_REQUEST['delete'])) echo '&delete=' . $_REQUEST['delete']; ?>&sort_by=class_name&order_by=<?php echo $sort_direction === 'class_name' && $order_by === 'asc' ? 'desc' : 'asc'; ?>">Class Name</a>
         </div>
-        <div class="tableCell" style="width: 15%;">Description</div>
+        <div class="tableCell tableCell-width-15">Description</div>
     </div>
 
     <?php foreach ($auditsCurrentPage as $audit) { ?>

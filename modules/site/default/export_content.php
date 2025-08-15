@@ -1,23 +1,6 @@
 <!-- Page Header -->
 <?=$page->showAdminPageInfo()?>
 <!-- End Page Header -->
-
-<style>	
-    input[type="submit"]:disabled {
-        background-color: grey;
-        color: white;
-    }
-    
-    textarea {
-        width: 100%;
-        height: 1000px;
-        overflow: auto;
-    }
-    button {
-        background-color: #4CAF50;
-    }
-</style>
-
 <script>
 // copy the JSON data to the clipboard
 async function copyText() {
@@ -68,7 +51,7 @@ function toggleCollapse() {
     <input id="submitButton" type="submit" value="Export">
     
     <button onclick="copyText()" class="secondary" type="button">&#x1F4CB; Copy to clipboard</button>
-    <textarea id="JSONContent"><?=$siteData->getJSON()?></textarea>
+    <textarea id="JSONContent" class="textarea-width-100 textarea-height-1000"><?=$siteData->getJSON()?></textarea>
 
     <?php
     if (isset($_REQUEST['debug']) && $_REQUEST['debug'] == 'true'):
@@ -77,7 +60,7 @@ function toggleCollapse() {
             <button onclick="toggleCollapse()" class="secondary chevron-btn" type="button">
                 Debug <span id="chevron">&#9655;</span>
             </button>
-            <div id="content" style="display: none;">
+            <div id="content" class="display-none">
                 <textarea><?=$siteData->viewData()?></textarea>
             </div>
         </div>

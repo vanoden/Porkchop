@@ -1,7 +1,7 @@
 	<span class="title">Porkchop Spectros API Version <?=$_package["version"]?></span>
 	<div id="apiScroller">
 		<div class="apiMethod">Request</div>
-		<pre id="requestContent" style="text-align: left; width: 550px; height: 100px; overflow: auto; font-size: 11px; border: 1px dashed blue;"><?=print_r($_REQUEST)?></pre>
+		<pre id="requestContent" class="debug-output"><?=print_r($_REQUEST)?></pre>
 		<form method="post" action="<?=PATH?>/_media/api" name="ping">
 		<input type="hidden" name="apiMethod" value="ping">
 		<div class="apiMethod">

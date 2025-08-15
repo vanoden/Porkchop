@@ -1,12 +1,7 @@
 <?= $page->showBreadCrumbs() ?>
 <?= $page->showTitle() ?>
 <?= $page->showMessages() ?>
-<style>
-	#contentArea {
-		display: block;
-		clear: both;
-	}
-</style>
+
 <script src="https://cdn.tiny.cloud/1/owxjg74mr7ujxhw9soo7iquo7iul2mclregqovcp7ophazmn/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
 <?php if ($version->status == 'NEW') { ?>
 	<script>
@@ -42,7 +37,7 @@
 			<li><label for="name">Version Number</label><span class="value"><?= $version->date_created() ?></span></li>
 			<li><label for="name">Version Status</label><span class="value"><?= $version->status ?></span></li>
 		</ul>
-		<div id="contentArea">
+		<div id="contentArea" class="site-tou-version-content-area">
 			<textarea id="content" name="content"><?= strip_slashes($version->content) ?></textarea>
 			<?php if ($version->status == 'NEW') { ?>
 				<input type="submit" name="btn_submit" value="Submit" />

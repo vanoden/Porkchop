@@ -5,12 +5,6 @@
 		alert(metadata[id]);
 	}
 </script>
-<style>
-	.codeValue { width: 21%; }
-	.smallValue{ width: 7%; } /* for Type and Status */
-	.nameValue { width: 35%; }
-	.descValue { width: 30%; }
-</style>
 <?=$totalRecords?> Products Found
 <a href="/_product/edit">New Product</a>
 <div id="search_container">

@@ -1,22 +1,3 @@
-<style>
-	.table {
-		display: table;
-		width: 756px;
-	}
-	.tableHead {
-		display: table-row;
-		font-weight: bold;
-		text-align: center;
-	}
-	.tableRow {
-		display: table-row;
-	}
-	.tableCell {
-		display: table-cell;
-		padding: 3px 10px;
-		border: 1px solid #999999;
-	}
-</style>
 <span class="title">Content Blocks</span>
 <a href="/_site/content_block?method=new">New Block</a>
 
@@ -35,17 +16,17 @@
 </section>
 <?php	} ?>
 
-<div class="table">
-	<div class="tableHead">
-		<div class="tableCell">Target</div>
-		<div class="tableCell">Name</div>
-		<div class="tableCell">Actions</div>
+<div class="table site-content-blocks-table">
+	<div class="tableHead site-content-blocks-table-head">
+		<div class="tableCell site-content-blocks-table-cell">Target</div>
+		<div class="tableCell site-content-blocks-table-cell">Name</div>
+		<div class="tableCell site-content-blocks-table-cell">Actions</div>
 	</div>
 <?php	foreach ($messages as $message) { ?>
-	<div class="tableRow">
-		<div class="tableCell"><?=$message->target?></a></div>
-		<div class="tableCell"><?=$message->name?></div>
-		<div class="tableCell">
+	<div class="tableRow site-content-blocks-table-row">
+		<div class="tableCell site-content-blocks-table-cell"><?=$message->target?></a></div>
+		<div class="tableCell site-content-blocks-table-cell"><?=$message->name?></div>
+		<div class="tableCell site-content-blocks-table-cell">
 			<a href="/_content/<?=$message->target?>">View</a>
 <?php		if ($GLOBALS['_SESSION_']->customer->has_privilege('edit content messages')) { ?>
 			<a href="/_site/content_block/<?=$message->target?>">Edit</a>

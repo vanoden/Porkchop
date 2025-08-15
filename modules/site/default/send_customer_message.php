@@ -1,25 +1,5 @@
-<style>
-    ul {
-        list-style-type: none;
-    }
 
-    input.checkbox {
-        box-shadow: unset;
-    }
 
-    .errorText {
-        color: red;
-    }
-
-    .progressText {
-        color: green;
-
-    }
-
-    #formError {
-        display: none;
-    }
-</style>
 <script>
     function filterUsers() {
         document.getElementById("role").disabled = !document.getElementById('user_select_checkbox').checked;
@@ -133,9 +113,9 @@
                     <br /><input type="checkbox" id="important" name="important" value="important" <?=isset($_REQUEST['important']) && !empty($_REQUEST['important']) ? "checked=\"checked\"" : ""?>>
                     <label for="important">Important?</label><br />
                     <br /><label for="subject">Subject</label><br />
-                    <input type="text" id="subject" name="subject" style="min-width: 100%;" value="<?=$_REQUEST['subject']?>"><br /><br />
+                    <input type="text" id="subject" name="subject" class="input-width-100" value="<?=$_REQUEST['subject']?>"><br /><br />
                     <label for="content">Message Content</label><br />
-                    <textarea id="content" name="content" style="height:200px"><?=$_REQUEST['content']?></textarea>
+                    <textarea id="content" name="content" class="textarea-height-200"><?=$_REQUEST['content']?></textarea>
                     <input type="hidden" id="method" value="submit" name="method" />
                     <input type="button" value="Submit" onclick="createMessage()">
                 </div>

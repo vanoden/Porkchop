@@ -6,7 +6,7 @@ echo <<<MENU
         <a class="top_nav_button" href="/_monitor/collections">Jobs</a>
         <a class="top_nav_button" href="/_register/account">Account</a>
         <a class="top_nav_button" href="/_register/logout">Logout</a>
-        <a class="top_nav_button" href="/_local/admin_home" style="float:right;">Admin</a>
+        <a class="top_nav_button register-loggedin-admin-link" href="/_local/admin_home">Admin</a>
     </div>
 MENU;
 } else {

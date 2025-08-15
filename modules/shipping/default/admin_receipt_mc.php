@@ -42,6 +42,6 @@ if (!empty($_REQUEST['rma_number'])) {
 }
 
 // Always return false if there was a validation error
-if ($validation_error) {
+if (isset($validation_error) && $validation_error) {
 	return false;
 }

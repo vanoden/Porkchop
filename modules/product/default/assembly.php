@@ -2,11 +2,11 @@
 
 <div class="tableBody min-tablet marginTop_20">
 	<div class="tableRowHeader">
-		<div class="tableCell" style="width: 20%;">Part Code</div>
-		<div class="tableCell" style="width: 20%;">Part Name</div>
-		<div class="tableCell" style="width: 20%;">Quantity</div>
-		<div class="tableCell" style="width: 20%;">Available</div>
-		<div class="tableCell" style="width: 20%;">Actions</div>
+		<div class="tableCell tableCell-width-20">Part Code</div>
+		<div class="tableCell tableCell-width-20">Part Name</div>
+		<div class="tableCell tableCell-width-20">Quantity</div>
+		<div class="tableCell tableCell-width-20">Available</div>
+		<div class="tableCell tableCell-width-20">Actions</div>
 	</div> <!-- end row header -->
 	
 <?php foreach ($parts as $part): ?>

@@ -1,10 +1,3 @@
-<style>
-    ul {
-        list-style-type: none;
-        padding: 0;
-        margin:0;
-    }
-</style>
 <section>
     <h1 class="pageSect_full">Password Reset</h1>
 </section>

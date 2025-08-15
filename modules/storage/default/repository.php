@@ -94,35 +94,42 @@
     <span class="value"><?=$repository->type?></span>
 <?php	 } else { ?>
     <select id="type" name="type" class="value input wide_xl" onchange="getValue(this)">
-<?php	foreach($repository_types as $type => $name) { ?>
+<?php	if (isset($repository_types) && is_array($repository_types)) {
+		foreach($repository_types as $type => $name) { ?>
         <option value="<?=$type?>" <?php	if ($form['type'] == "<?=$type?>") print " selected"; ?>><?=$type?></option>
-<?php	 	} ?>
+<?php	 		} 
+		} ?>
 	</select>
 <?php	} ?>
 	<h3>Configuration</h3>
-<?php	foreach ($repository_types as $type => $name) { ?>
-    <div id="<?=$type?>Settings"<?php if ($form['type'] != $type) { print "style=\"display:none;\""; } ?>>
+<?php	if (isset($repository_types) && is_array($repository_types)) {
+		foreach ($repository_types as $type => $name) { ?>
+    <div id="<?=$type?>Settings"<?php if ($form['type'] != $type) { print " class=\"display-none\""; } ?>>
 		<h4><?=$name?></h4>
-        <div class="container" style="margin: 10px; padding: 20px; border:dashed 1px gray; display: inline-table;">
-<?php	foreach($metadata_keys[$type] as $key) { ?>
+        <div class="container container-dashed-gray">
+<?php	if (isset($metadata_keys[$type]) && is_array($metadata_keys[$type])) { 
+		foreach($metadata_keys[$type] as $key) { ?>
             <span class="label"><?=ucfirst($key)?></span>
             <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" name="<?=$key?>" class="value input wide_xl" value="<?=$form[$key]?>" />
-<?php	} ?>
+<?php		} 
+	} ?>
         </div>
     </div>
-<?php	} ?>
+<?php		} 
+	} ?>
 	<h3>Privileges</h3>
 	<div class="tableBody clean min-tablet">
 		<div class="tableRowHeader">
-        	<div class="tableCell" style="width: 25%;">Type</div>
-        	<div class="tableCell" style="width: 25%;">ID</div>
-        	<div class="tableCell" style="width: 50%;">Permissions</div>
+        	<div class="tableCell tableCell-width-25">Type</div>
+        	<div class="tableCell tableCell-width-25">ID</div>
+        	<div class="tableCell tableCell-width-50">Permissions</div>
     	</div>
     	<!-- end row header -->
 		<!-- Existing Privileges -->
 		<?php
-			foreach ($default_privileges as $privilege) {
-			if (empty($privilege->entity_type)) continue;
+			if (isset($default_privileges) && is_array($default_privileges)) {
+				foreach ($default_privileges as $privilege) {
+				if (empty($privilege->entity_type)) continue;
 		?>
     	<div class="tableRow">
     		<div class="tableCell">
@@ -136,7 +143,8 @@
 				Write<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['w']" value="1"<?php if ($privilege->write) print " checked"; ?> />
     		</div>
 		</div>
-		<?php	} ?>
+		<?php		} 
+			} ?>
 		<!-- New Privilege -->
     	<div class="tableRow">
     		<div class="tableCell">

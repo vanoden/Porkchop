@@ -32,19 +32,19 @@
 	    <div><input type="checkbox" name="blocked" value="1" <?php if (isset($_REQUEST['blocked'])) print "checked"; ?> /><label>Blocked</label></div>
 	    <div><input type="checkbox" name="deleted" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><label>Deleted</label></div>
 	    <div><input type="hidden" id="start" name="start" value="0"></div>
-        <div><label>Records per page:</label><input type="text" name="<?=$pagination->sizeElemName?>" class="value input" style="width: 45px" value="<?=$pagination->size()?>" /></div>
+        <div><label>Records per page:</label><input type="text" name="<?=$pagination->sizeElemName?>" class="value input register-accounts-pagination-size" value="<?=$pagination->size()?>" /></div>
       <button id="searchOrganizationButton" name="btn_search" onclick="submitSearch(0)">Search</button>
     </div>
 </form>
 
 <div class="tableBody">
   <div class="tableRowHeader">
-    <div class="tableCell" style="width: 18%;">Login</div>
-    <div class="tableCell" style="width: 15%;">First Name</div>
-    <div class="tableCell" style="width: 15%;">Last Name</div>
-    <div class="tableCell" style="width: 24%; overflow-x: hidden;">Organization</div>
-    <div class="tableCell" style="width: 10%;">Status</div>
-    <div class="tableCell" style="width: 18%;">Last Active</div>
+    <div class="tableCell register-accounts-login-cell">Login</div>
+    <div class="tableCell register-accounts-first-name-cell">First Name</div>
+    <div class="tableCell register-accounts-last-name-cell">Last Name</div>
+    <div class="tableCell register-accounts-organization-cell">Organization</div>
+    <div class="tableCell register-accounts-status-cell">Status</div>
+    <div class="tableCell register-accounts-last-active-cell">Last Active</div>
   </div>
   <?php
     if (! $page->errorCount()) {

@@ -1,6 +1,7 @@
 <html>
 <head>
 	<title>Text Editor</title>
+	
 	<script type="text/javascript" src="/js/content.api.js"></script>
 	
 	<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
@@ -40,8 +41,8 @@
 <input type="hidden" name="object" value="<?=$_REQUEST["object"]?>" />
 <input type="hidden" name="id" value="<?=$_REQUEST["id"]?>" />
 <input type="hidden" name="origin" value="<?=$_REQUEST["origin"]?>" />
-<textarea id="contentEditTextArea" style="width: 100%; height: 100%;"></textarea>
-<div style="width: 100%; text-align:right">
+<textarea id="contentEditTextArea" class="textarea-width-100 textarea-height-100"></textarea>
+<div class="text-align-right">
 	<input type="button" name="operation" value="Cancel" class="button" onclick="cancel();"/>
 	<input type="button" name="operation" value="Preview" class="button" onclick="previewContent();"/>
 	<input type="button" name="operation" value="Save" class="button" onclick="saveContent();"/>

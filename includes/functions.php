@@ -39,13 +39,14 @@
 	function caller($level = 1) {
 		$trace = debug_backtrace();
 		$caller = $trace[$level];
-		return array('function' => $caller['function'], 'class' => $caller['class'], 'file' => $caller['file'], 'line' => $caller['line']);
+		return array('function' => $caller['function'], 'class' => isset($caller['class']) ? $caller['class'] : '', 'file' => $caller['file'], 'line' => $caller['line']);
 	}
 
 	function get_mysql_date($date = null,$range=0) {
 		if (empty($date)) {
 			$caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS,2)[1];
-			$ident = $caller['class']."::".$caller['function']." (".$caller['file'].":".$caller['line'].")";
+			$class = isset($caller['class']) ? $caller['class'] : '';
+			$ident = $class."::".$caller['function']." (".$caller['file'].":".$caller['line'].")";
 			app_log("get_mysql_date() received empty date from $ident",'info');
 			return null;
 		}
@@ -107,14 +108,14 @@
 		}
 
 		# Regular Format (slash delimited)
-		if (preg_match('/^(\d+)\/(\d+)\/(\d+)\s(\d+)\:(\d+)\:?(\d+)*/',$date,$matches)) {
+		if (preg_match('/^(\d+)\/(\d+)\/(\d+)\s(\d+)\:(\d+)\:?(\d+)?/',$date,$matches)) {
 			# mm/dd/yyyy hh:mm:ss
 			$year = $matches[3];
 			$month = $matches[1];
 			$day = $matches[2];
 			$hour = $matches[4];
 			$minute = $matches[5];
-			$second = $matches[6];
+			$second = isset($matches[6]) ? $matches[6] : 0;
 		}
 		elseif (preg_match('/^(\d+)\/(\d+)\/(\d+)$/',$date,$matches)) {
 			# mm/dd/yyyy
@@ -134,14 +135,14 @@
 			$minute = 0;
 			$second = 0;
 		}
-		elseif (preg_match('/^(\d+)\/(\d+)\s(\d+)\:(\d+)\:?(\d+)*/',$date,$matches)) {
+		elseif (preg_match('/^(\d+)\/(\d+)\s(\d+)\:(\d+)\:?(\d+)?/',$date,$matches)) {
 			# mm/dd hh:mm:ss
 			$year = date('Y');
 			$month = $matches[1];
 			$day = $matches[2];
 			$hour = $matches[3];
 			$minute = $matches[4];
-			$second = $matches[5];
+			$second = isset($matches[5]) ? $matches[5] : 0;
 		}
 
 		# Default 0 Seconds

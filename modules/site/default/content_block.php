@@ -1,9 +1,3 @@
-<style>
-	#contentArea {
-		display: block;
-		clear: both;
-	}
-</style>
 <script src="https://cdn.tiny.cloud/1/owxjg74mr7ujxhw9soo7iquo7iul2mclregqovcp7ophazmn/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 	tinymce.init({
@@ -53,13 +47,13 @@
 		</div>
 
 		<br/><br/>
-		<h3 style="display:inline;">Content Message Search Tags</h3>
-		<h4 style="display:inline;">(customer support knowledge center)</h4>
+		<h3 class="text-inline">Content Message Search Tags</h3>
+		<h4 class="text-inline">(customer support knowledge center)</h4>
 		<div class="tableBody min-tablet">
 			<div class="tableRowHeader">
-				<div class="tableCell" style="width: 33%;">&nbsp;</div>
-				<div class="tableCell" style="width: 33%;">Category</div>
-				<div class="tableCell" style="width: 33%;">Search Tag</div>
+				<div class="tableCell tableCell-width-33">&nbsp;</div>
+				<div class="tableCell tableCell-width-33">Category</div>
+				<div class="tableCell tableCell-width-33">Search Tag</div>
 			</div>
 			<?php
 			foreach ($registerCustomerSearchTags as $searchTag) {
