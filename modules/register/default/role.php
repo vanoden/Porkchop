@@ -34,7 +34,7 @@ function checkUncheck() {
 
   <div class="role-description-container">
     <span class="label role-description-label">Description</span>
-    <input type="text" name="description" class="role-description-input" value="<?=strip_tags($role->description)?>" />
+    <input type="text" name="description" class="width-400px" value="<?=strip_tags($role->description)?>" />
     <input type="hidden" name="id" value="<?=$role->id?>">
   </div>
 
@@ -57,8 +57,8 @@ function checkUncheck() {
 
       <div class="tableRowHeader">
         <div class="tableCell role-privileges-select">Select <input type="checkbox" id="checkAll" name"checkAll" value="1" onclick="checkUncheck()" <?php if ($allChecked) print "checked";?>/></div>
-        <div class="tableCell role-privileges-module">Privilege Module</div>
-        <div class="tableCell role-privileges-description">Description</div>
+        <div class="tableCell width-22per">Privilege Module</div>
+        <div class="tableCell width-70per">Description</div>
       </div>
 
 <?php foreach ($privileges as $privilege) { ?>

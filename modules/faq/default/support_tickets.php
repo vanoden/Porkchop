@@ -16,7 +16,7 @@
 		</li>
 		<li>
 			<img src="/img/faq/support/myacct_verify-email.png" class="table-group-img">
-			<button class="hiddenDesktop faq-button" onclick="window.location.href='#step2';">Next Step</button>
+			<button class="display-none faq-button" onclick="window.location.href='#step2';">Next Step</button>
 		</li>
 	</ul>
 </section>
@@ -34,7 +34,7 @@
 		</li>
 		<li>
 			<img src="/img/faq/support/monitors-list.png" class="table-group-img">
-			<button class="hiddenDesktop faq-button" onclick="window.location.href='#step3';">Next Step</button>
+			<button class="display-none faq-button" onclick="window.location.href='#step3';">Next Step</button>
 		</li>
 	</ul>
 </section>
@@ -54,7 +54,7 @@
 		<li>
 			<img src="/img/faq/support/monitor-detail_start.png" class="faq-img">
 			<img src="/img/faq/support/monitor-detail_support-exp.png" class="faq-img">
-			<button class="hiddenDesktop faq-button" onclick="window.location.href='#step4';">Next Step</button>
+			<button class="display-none faq-button" onclick="window.location.href='#step4';">Next Step</button>
 		</li>
 	</ul>
 </section>
@@ -75,7 +75,7 @@
 		<li>
 			<img src="/img/faq/support/monitor-detail_ticket-added.png" class="faq-img">
 			<img src="/img/faq/support/support-list.png" class="faq-img">
-			<button class="hiddenDesktop faq-button" onclick="window.location.href='#step5';">Next Step</button>
+			<button class="display-none faq-button" onclick="window.location.href='#step5';">Next Step</button>
 		</li>
 	</ul>
 </section>
@@ -93,7 +93,7 @@
 		</li>
 		<li>
 			<img src="/img/faq/support/support-detail.png" class="faq-img">
-			<button class="hiddenDesktop faq-button" onclick="window.location.href='#step6';">Next Step</button>
+			<button class="display-none faq-button" onclick="window.location.href='#step6';">Next Step</button>
 		</li>
 	</ul>
 </section>
@@ -112,7 +112,7 @@
 		</li>
 		<li>
 			<img src="/img/faq/support/rma_step1.png" class="faq-img">
-			<button class="hiddenDesktop faq-button" onclick="window.location.href='#step7';">Next Step</button>
+			<button class="display-none faq-button" onclick="window.location.href='#step7';">Next Step</button>
 		</li>
 	</ul>
 </section>
@@ -133,7 +133,7 @@
 		</li>
 		<li>
 			<img src="/img/faq/support/rma_step2.png" class="faq-img">
-			<button class="hiddenDesktop faq-button" onclick="window.location.href='#step8';">Next Step</button>
+			<button class="display-none faq-button" onclick="window.location.href='#step8';">Next Step</button>
 		</li>
 	</ul>
 </section>
@@ -151,7 +151,7 @@
 		</li>
 		<li>
 			<img src="/img/faq/support/rma_processing.png" class="faq-img">
-			<button class="hiddenDesktop faq-button" onclick="window.location.href='#step9';">Next Step</button>
+			<button class="display-none faq-button" onclick="window.location.href='#step9';">Next Step</button>
 		</li>
 	</ul>
 </section>
@@ -170,7 +170,7 @@
 		</li>
 		<li>
 			<img src="/img/faq/support/rma_received.png" class="faq-img">
-			<button class="hiddenDesktop faq-button" onclick="window.location.href='#step10';">Next Step</button>
+			<button class="display-none faq-button" onclick="window.location.href='#step10';">Next Step</button>
 		</li>
 	</ul>
 </section>

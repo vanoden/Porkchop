@@ -53,7 +53,7 @@
 		    <div class="tableCell"><?=$organization->is_reseller ? "Yes" : "No"?></div>
 		    <div class="tableCell"><?=($organization->reseller && isset($organization->reseller->name)) ? $organization->reseller->name : ''?></div>
 		    <div class="tableCell">
-			    <input name="password_expiration_days" type="number" step="1" min="0" max="365" id="password_expiration_days" class="wide_100per" value="<?=$organization->password_expiration_days?>" />
+			    <input name="password_expiration_days" type="number" step="1" min="0" max="365" id="password_expiration_days" class="width-100per" value="<?=$organization->password_expiration_days?>" />
 		    </div>
 	    </div>
     </div>
@@ -74,7 +74,7 @@
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <input id="website_url" name="website_url" class="wide_lg" placeholder="http://" value="<?=$organization->website_url?>"/>
+			    <input id="website_url" name="website_url" class="width-250px" placeholder="http://" value="<?=$organization->website_url?>"/>
 		    </div>
 	    </div>
     </div>	

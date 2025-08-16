@@ -2,11 +2,11 @@
 
 <div class="tableBody">
 	<div class="tableRowHeader">
-		<div class="tableCell register-audit-log-event-date-cell">Event Date</div>
-		<div class="tableCell register-audit-log-acted-on-cell">Acted On</div>
-		<div class="tableCell register-audit-log-acted-by-cell">Acted By</div>
-		<div class="tableCell register-audit-log-action-cell">Action</div>
-		<div class="tableCell register-audit-log-notes-cell">Notes</div>
+		<div class="tableCell width-10per">Event Date</div>
+		<div class="tableCell width-10per">Acted On</div>
+		<div class="tableCell width-10per">Acted By</div>
+		<div class="tableCell width-10per">Action</div>
+		<div class="tableCell width-60per">Notes</div>
 	</div>
 <?php	foreach ($records as $record) { 
 			if (isset($users[$record->user_id])) $user = $users[$record->user_id];

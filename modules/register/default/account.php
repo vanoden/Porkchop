@@ -218,7 +218,7 @@
 					<?php foreach ($contacts as $contact) { ?>
 						<div class="tableRow">
 							<div class="tableCell">
-								<span class="hiddenDesktop value">Types: </span>
+								<span class="display-none value">Types: </span>
 								<select class="contact_type_value value input" name="type[<?= $contact->id ?>]" <?php if ($readOnly)
 									  echo 'disabled'; ?>>
 									<?php foreach (array_keys($contact_types) as $contact_type) { ?>
@@ -228,38 +228,38 @@
 								</select>
 							</div>
 							<div class="tableCell">
-								<span class="hiddenDesktop value">Description: </span>
+								<span class="display-none value">Description: </span>
 								<input type="text" name="description[<?= $contact->id ?>]"
 									class="value input contactDescriptionColumn"
 									value="<?= strip_tags($contact->description) ?>" <?php if ($readOnly)
 										  echo 'disabled'; ?> />
 							</div>
 							<div class="tableCell">
-								<span class="hiddenDesktop value">Address/Number: </span>
+								<span class="display-none value">Address/Number: </span>
 								<input type="text" name="value[<?= $contact->id ?>]" class="value input contactValueColumn"
 									value="<?= $contact->value ?>" <?php if ($readOnly)
 										  echo 'disabled'; ?> />
 							</div>
 							<div class="tableCell">
-								<span class="hiddenDesktop value">Notes: </span>
+								<span class="display-none value">Notes: </span>
 								<input type="text" name="notes[<?= $contact->id ?>]" class="value input contactNotesColumn"
 									value="<?= strip_tags($contact->notes) ?>" <?php if ($readOnly)
 										  echo 'disabled'; ?> />
 							</div>
 							<div class="tableCell">
-								<span class="hiddenDesktop value">Notify: </span>
+								<span class="display-none value">Notify: </span>
 								<input type="checkbox" class="contact_notify" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify)
 									  print "checked"; ?> 		<?php if ($readOnly)
 													 echo 'disabled'; ?> />
 							</div>
 							<div class="tableCell">
-								<span class="hiddenDesktop value">Public: </span>
+								<span class="display-none value">Public: </span>
 								<input type="checkbox" class="contact_public" name="public[<?= $contact->id ?>]" value="1" <?php if ($contact->public)
 									  print "checked"; ?> 		<?php if ($readOnly)
 													 echo 'disabled'; ?> />
 							</div>
 							<div class="tableCell textAlignCenter">
-								<span class="hiddenDesktop value"><a href="#"
+								<span class="display-none value"><a href="#"
 										onclick="submitDelete(<?= $contact->id ?>); return false;">Delete Contact</a></span>
 								<span class="value hiddenMobile">
 									<input type="button" name="drop_contact[<?= $contact->id ?>]" class="deleteButton" value="X"

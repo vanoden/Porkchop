@@ -32,19 +32,19 @@
 	    <div><input type="checkbox" name="blocked" value="1" <?php if (isset($_REQUEST['blocked'])) print "checked"; ?> /><label>Blocked</label></div>
 	    <div><input type="checkbox" name="deleted" value="1" <?php if (isset($_REQUEST['deleted'])) print "checked"; ?> /><label>Deleted</label></div>
 	    <div><input type="hidden" id="start" name="start" value="0"></div>
-        <div><label>Records per page:</label><input type="text" name="<?=$pagination->sizeElemName?>" class="value input register-accounts-pagination-size" value="<?=$pagination->size()?>" /></div>
+        <div><label>Records per page:</label><input type="text" name="<?=$pagination->sizeElemName?>" class="value input width-45px" value="<?=$pagination->size()?>" /></div>
       <button id="searchOrganizationButton" name="btn_search" onclick="submitSearch(0)">Search</button>
     </div>
 </form>
 
 <div class="tableBody">
   <div class="tableRowHeader">
-    <div class="tableCell register-accounts-login-cell">Login</div>
-    <div class="tableCell register-accounts-first-name-cell">First Name</div>
-    <div class="tableCell register-accounts-last-name-cell">Last Name</div>
+    <div class="tableCell width-18per">Login</div>
+    <div class="tableCell width-15per">First Name</div>
+    <div class="tableCell width-15per">Last Name</div>
     <div class="tableCell register-accounts-organization-cell">Organization</div>
-    <div class="tableCell register-accounts-status-cell">Status</div>
-    <div class="tableCell register-accounts-last-active-cell">Last Active</div>
+    <div class="tableCell width-10per">Status</div>
+    <div class="tableCell width-18per">Last Active</div>
   </div>
   <?php
     if (! $page->errorCount()) {
@@ -60,12 +60,12 @@
 		}
   ?>
   <div class="tableRow">
-    <div class="tableCell"><label for="customer" class="hiddenDesktop">Login</label><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
-    <div class="tableCell"><label for="first" class="hiddenDesktop">First Name</label><?=htmlspecialchars($customer->first_name)?></div>
-    <div class="tableCell"><label for="last" class="hiddenDesktop">Last Name</label><?=htmlspecialchars($customer->last_name)?></div>
-    <div class="tableCell"><label for="organization" class="hiddenDesktop">Organization</label><a href="/_register/admin_organization?organization_id=<?=$organization_id?>"><?=$organization_name?></a></div>
-    <div class="tableCell"><label for="status" class="hiddenDesktop">Status</label><?=htmlspecialchars($customer->status)?></div>
-    <div class="tableCell"><label for="activity" class="hiddenDesktop">Last Active</label><?=$customer->last_active()?></div>
+    <div class="tableCell"><label for="customer" class="display-none">Login</label><a class="value<?=$greenbar?>" href="<?=PATH."/_register/admin_account?customer_id=".$customer->id?>"><?=$customer->code?></a></div>
+    <div class="tableCell"><label for="first" class="display-none">First Name</label><?=htmlspecialchars($customer->first_name)?></div>
+    <div class="tableCell"><label for="last" class="display-none">Last Name</label><?=htmlspecialchars($customer->last_name)?></div>
+    <div class="tableCell"><label for="organization" class="display-none">Organization</label><a href="/_register/admin_organization?organization_id=<?=$organization_id?>"><?=$organization_name?></a></div>
+    <div class="tableCell"><label for="status" class="display-none">Status</label><?=htmlspecialchars($customer->status)?></div>
+    <div class="tableCell"><label for="activity" class="display-none">Last Active</label><?=$customer->last_active()?></div>
   </div>
   <?php		
     }}

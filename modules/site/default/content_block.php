@@ -35,15 +35,15 @@
 	<div class="body">
 		<div class="input-horiz" id="itemName">
 			<span class="label">Name</span>
-			<input type="text" class="value input wide_lg" name="name" id="name" value="<?= htmlspecialchars($message->name) ?>" />
+			<input type="text" class="value input width-250px" name="name" id="name" value="<?= htmlspecialchars($message->name) ?>" />
 		</div>
 		<div class="input-horiz" id="itemTarget">
 			<span class="label">Target</span>
-			<input type="text" class="value input wide_lg" name="target" id="target" value="<?= htmlspecialchars($message->target) ?>" />
+			<input type="text" class="value input width-250px" name="target" id="target" value="<?= htmlspecialchars($message->target) ?>" />
 		</div>
 		<div class="input-horiz" id="itemContent">
 			<span class="label align-top">Content</span>
-			<textarea class="value input wide_lg" name="content" id="content"><?= htmlspecialchars($message->content) ?></textarea>
+			<textarea class="value input width-250px" name="content" id="content"><?= htmlspecialchars($message->content) ?></textarea>
 		</div>
 
 		<br/><br/>

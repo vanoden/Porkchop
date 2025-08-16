@@ -30,28 +30,28 @@
     <?php } else { ?>
         <div class="container">
             <span class="label">Code</span>
-            <input type="text" name="code" class="value input wide_xl" value="" />
+            <input type="text" name="code" class="value input width-300px" value="" />
         </div>
     <?php } ?>
     <div class="container">
         <span class="label">Name</span>
-        <input type="text" name="name" class="value input wide_xl" value="<?=$package->name?>" />
+        <input type="text" name="name" class="value input width-300px" value="<?=$package->name?>" />
     </div>
     <div class="container">
         <span class="label">Description</span>
-        <textarea name="description" class="value input wide_xl"><?=strip_tags($package->description)?></textarea>
+        <textarea name="description" class="value input width-300px"><?=strip_tags($package->description)?></textarea>
     </div>
     <div class="container">
         <span class="label">Platform</span>
-        <input type="text" name="platform" class="value input wide_xl" value="<?=$package->platform?>" />
+        <input type="text" name="platform" class="value input width-300px" value="<?=$package->platform?>" />
     </div>
     <div class="container">
         <span class="label">License</span>
-        <input type="text" name="license" class="value input wide_xl" value="<?=$package->license?>" />
+        <input type="text" name="license" class="value input width-300px" value="<?=$package->license?>" />
     </div>
     <div class="container">
         <span class="label">Owner</span>
-        <select name="owner_id" class="value input wide_xl">
+        <select name="owner_id" class="value input width-300px">
     <?php foreach ($admins as $owner) { ?>
             <option value="<?=$owner->id?>"<?php	if ($package->owner->id == $owner->id) print " selected"; ?>><?=$owner->code?></option>
     <?php } ?>
@@ -62,7 +62,7 @@
     <?php if ($package->id) { ?>
         <span class="value"><?=$package->repository->name?></span>
     <?php } else { ?>
-        <select name="repository_id" class="value input wide_xl">
+        <select name="repository_id" class="value input width-300px">
     <?php foreach ($repositories as $repository) { ?>
             <option value="<?=$repository->id?>"><?=$repository->name?></option>
     <?php } ?>
@@ -70,7 +70,7 @@
     <?php } ?>
     <div class="container">
         <span class="label">Status</span>
-        <select name="status" class="value input wide_xl">
+        <select name="status" class="value input width-300px">
 	<?php	foreach ($statii as $status) { ?>
 			<option value="<?=$status?>"<?php if ($package->status == $status) print " selected";?>><?=$status?></option>
 	<?php	} ?>

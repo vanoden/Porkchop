@@ -18,7 +18,7 @@
 		<div class="tableCell"><input type="text" name="new_currency_name" placeholder="New Currency Name" /></div>
 		<div class="tableCell"><input type="text" name="new_currency_symbol" placeholder="New Currency Symbol" /></div>
 	</div>
-	<div class="tableRowFooter">
+	<div class="width-800px">
 		<input type="submit" name="btn_submit" value="Submit" />
 	</div>
 </div>

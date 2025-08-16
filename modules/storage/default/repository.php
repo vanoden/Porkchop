@@ -82,9 +82,9 @@
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="id" value="<?=$repository->id?>" />
     <h3>Name</h3>
-    <input type="text" name="name" class="value input wide_xl" value="<?=$form['name']?>" />
+    <input type="text" name="name" class="value input width-300px" value="<?=$form['name']?>" />
     <h3>Status</h3>
-    <select id="status" name="status" class="value input wide_xl">
+    <select id="status" name="status" class="value input width-300px">
         <option value="NEW"<?php	if ($form['status'] == "NEW") print " selected"; ?>>NEW</option>
         <option value="ACTIVE"<?php	if ($form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
         <option value="DISABLED"<?php	if ($form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
@@ -93,7 +93,7 @@
 <?php	 if ($repository->id) { ?>
     <span class="value"><?=$repository->type?></span>
 <?php	 } else { ?>
-    <select id="type" name="type" class="value input wide_xl" onchange="getValue(this)">
+    <select id="type" name="type" class="value input width-300px" onchange="getValue(this)">
 <?php	if (isset($repository_types) && is_array($repository_types)) {
 		foreach($repository_types as $type => $name) { ?>
         <option value="<?=$type?>" <?php	if ($form['type'] == "<?=$type?>") print " selected"; ?>><?=$type?></option>
@@ -110,7 +110,7 @@
 <?php	if (isset($metadata_keys[$type]) && is_array($metadata_keys[$type])) { 
 		foreach($metadata_keys[$type] as $key) { ?>
             <span class="label"><?=ucfirst($key)?></span>
-            <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" name="<?=$key?>" class="value input wide_xl" value="<?=$form[$key]?>" />
+            <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" name="<?=$key?>" class="value input width-300px" value="<?=$form[$key]?>" />
 <?php		} 
 	} ?>
         </div>

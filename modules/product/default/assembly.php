@@ -39,7 +39,7 @@
 			</select>
 		</div>
 		<div class="tableCell">
-			<input type="number" name="new_part_quantity" min="1" value="1" class="wide_100per">
+			<input type="number" name="new_part_quantity" min="1" value="1" class="width-100per">
 		</div>
 		<div class="tableCell">
 			<button type="submit" name="add_part" class="btn btn-primary">Add Part</button>

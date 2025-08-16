@@ -81,7 +81,7 @@
 		</div>
 		<div class="container fileDetailContainer">
 			<span class="label">Name</span>
-			<input type="text" class="value input" name="name" value="<?= $file->name() ?>" />
+			<input type="text" class="value input width-300px" name="name" value="<?= $file->name() ?>" />
 		</div>
 		<div class="container fileDetailContainer">
 			<span class="label">Path</span>

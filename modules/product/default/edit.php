@@ -63,11 +63,11 @@
 		</div>
 		<div class="input-horiz" id="itemName">
 			<span class="label">Name</span>
-			<input type="text" class="value input wide_lg" name="name" id="name" value="<?= htmlspecialchars($item->getMetadata('name')) ?>" />
+			<input type="text" class="value input width-250px" name="name" id="name" value="<?= htmlspecialchars($item->getMetadata('name')) ?>" />
 		</div>
 		<div class="input-horiz" id="itemStatus">
 			<span class="label">Status</span>
-			<select name="status" class="value input wide_sm">
+			<select name="status" class="value input width-150px">
 				<option value="">Select</option>
 				<option value="ACTIVE" <?php if ($item->status == 'ACTIVE') print " selected"; ?>>ACTIVE</option>
 				<option value="HIDDEN" <?php if ($item->status == 'HIDDEN') print " selected"; ?>>HIDDEN</option>
@@ -76,39 +76,39 @@
 		</div>
 		<div class="input-horiz" id="itemShortDescription">
 			<span class="label align-top">Short Description</span>
-			<textarea class="value input wide_lg" name="short_description" id="short_description"><?= htmlspecialchars($item->getMetadata('short_description')) ?></textarea>
+			<textarea class="value input width-250px" name="short_description" id="short_description"><?= htmlspecialchars($item->getMetadata('short_description')) ?></textarea>
 		</div>
 		<div class="input-horiz" id="itemDescription">
 			<span class="label align-top">Description</span>
-			<textarea class="value input wide_lg" name="description" id="description"><?= htmlspecialchars($item->getMetadata('description')) ?></textarea>
+			<textarea class="value input width-250px" name="description" id="description"><?= htmlspecialchars($item->getMetadata('description')) ?></textarea>
 		</div>
 		<div class="input-horiz" id="itemModel">
 			<span class="label">Model</span>
-			<input type="text" class="value input wide_md" name="model" id="model" value="<?= htmlspecialchars($item->getMetadata('model')) ?>" />
+			<input type="text" class="value input width-200px" name="model" id="model" value="<?= htmlspecialchars($item->getMetadata('model')) ?>" />
 		</div>
 		<div class="input-horiz" id="itemEmpericalFormula">
 			<span class="label">Empirical Formula</span>
-			<input type="text" class="value input wide_md" name="empirical_formula" id="empirical_formula" value="<?= htmlspecialchars($item->getMetadata('empirical_formula')) ?>" />
+			<input type="text" class="value input width-200px" name="empirical_formula" id="empirical_formula" value="<?= htmlspecialchars($item->getMetadata('empirical_formula')) ?>" />
 		</div>
 		<div class="input-horiz">
 			<span class="label">Sensitivity</span>
-			<input type="text" class="value input wide_md" name="sensitivity" id="sensitivity" value="<?= htmlspecialchars($item->getMetadata('sensitivity')) ?>" />
+			<input type="text" class="value input width-200px" name="sensitivity" id="sensitivity" value="<?= htmlspecialchars($item->getMetadata('sensitivity')) ?>" />
 		</div>
 		<div class="input-horiz">
 			<span class="label">Measure Range</span>
-			<input type="text" class="value input wide_md" name="measure_range" id="measure_range" value="<?= htmlspecialchars($item->getMetadata('measure_range')) ?>" />
+			<input type="text" class="value input width-200px" name="measure_range" id="measure_range" value="<?= htmlspecialchars($item->getMetadata('measure_range')) ?>" />
 		</div>
 		<div class="input-horiz">
 			<span class="label">Datalogger</span>
-			<input type="text" class="value input wide_md" name="datalogger" id="datalogger" value="<?= htmlspecialchars($item->getMetadata('datalogger')) ?>" />
+			<input type="text" class="value input width-200px" name="datalogger" id="datalogger" value="<?= htmlspecialchars($item->getMetadata('datalogger')) ?>" />
 		</div>
 		<div class="input-horiz">
 			<span class="label">Accuracy</span>
-			<input type="text" class="value input wide_md" name="accuracy" id="accuracy" value="<?= htmlspecialchars($item->getMetadata('accuracy')) ?>" />
+			<input type="text" class="value input width-200px" name="accuracy" id="accuracy" value="<?= htmlspecialchars($item->getMetadata('accuracy')) ?>" />
 		</div>
 		<div class="input-horiz">
 			<span class="label">Default Dashboard</span>
-			<select class="value input wide_md" name="default_dashboard_id" id="default_dashboard_id">
+			<select class="value input width-200px" name="default_dashboard_id" id="default_dashboard_id">
 				<?php $default_dashboard = $item->getMetadata('default_dashboard_id');
 				foreach ($dashboards as $dashboard) { ?>
 		        	<option value="<?=$dashboard->id?>"<?php if ($default_dashboard == $dashboard->id) { print " selected"; } ?>><?=$dashboard->name?></option>
@@ -117,7 +117,7 @@
 		</div>
 		<div class="input-horiz">
 			<span class="label">Manual</span>
-			<select class="value input wide_md" name="manual_id" id="manual_id">
+			<select class="value input width-200px" name="manual_id" id="manual_id">
 				<?php foreach ($manuals as $manual) { ?>
 			        <option value="<?=$manual->id?>"<?php if ($item->manual_id == $manual->id) { print " selected"; } ?>><?=$manual->name?></option>
 				<?php } ?>
@@ -125,7 +125,7 @@
 		</div>
 		<div class="input-horiz">
 			<span class="label">Spec Table</span>
-			<select class="value input wide_md" name="spec_table_image" id="spec_table_image">
+			<select class="value input width-200px" name="spec_table_image" id="spec_table_image">
 				<option value=""></option>
 				<?php foreach ($tables as $table) { ?>
 			        <option value="<?=$table->id?>"<?php if ($item->spec_table_image == $table->id) { print " selected"; } ?>><?=$table->name?></option>
@@ -135,12 +135,12 @@
 		<div class="input-horiz" id="itemImages">
 			<span class="label align-top">Images</span>
 			<?php foreach ($images as $image) { ?>
-				<div class="editItemImage" id="ItemImageDiv_<?= $image->code ?>">
+				<div class="width-126px" id="ItemImageDiv_<?= $image->code ?>">
 					<input type="button" name="btn_drop" class="editItemThumbnail" onclick="dropImage('<?= $image->code ?>')" value="X" />
 					<img class="editItemThumbnail" src="/_media/api?method=downloadMediaFile&code=<?= $image->code ?>">
 				</div>
 			<?php } ?>
-			<div class="editItemImage" id="newImageBox">
+			<div class="width-126px" id="newImageBox">
 				<input type="button" name="addImageButton" value="" class="add-image" onclick="initImageSelectWizard()" />
 				<input type="hidden" name="new_image_code" id="new_image_code" />
 			</div>
