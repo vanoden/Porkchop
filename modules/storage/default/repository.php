@@ -82,12 +82,12 @@
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="id" value="<?=$repository->id?>" />
     <h3>Name</h3>
-    <input type="text" name="name" class="value input width-300px" value="<?=$form['name']?>" />
+    <input type="text" name="name" class="value input width-300px" value="<?=isset($form['name']) ? htmlspecialchars($form['name']) : ''?>" />
     <h3>Status</h3>
     <select id="status" name="status" class="value input width-300px">
-        <option value="NEW"<?php	if ($form['status'] == "NEW") print " selected"; ?>>NEW</option>
-        <option value="ACTIVE"<?php	if ($form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
-        <option value="DISABLED"<?php	if ($form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
+        <option value="NEW"<?php	if (isset($form['status']) && $form['status'] == "NEW") print " selected"; ?>>NEW</option>
+        <option value="ACTIVE"<?php	if (isset($form['status']) && $form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
+        <option value="DISABLED"<?php	if (isset($form['status']) && $form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
     </select>
     <h3>Type</h3>
 <?php	 if ($repository->id) { ?>
@@ -96,7 +96,7 @@
     <select id="type" name="type" class="value input width-300px" onchange="getValue(this)">
 <?php	if (isset($repository_types) && is_array($repository_types)) {
 		foreach($repository_types as $type => $name) { ?>
-        <option value="<?=$type?>" <?php	if ($form['type'] == "<?=$type?>") print " selected"; ?>><?=$type?></option>
+        <option value="<?=$type?>" <?php	if (isset($form['type']) && $form['type'] == "<?=$type?>") print " selected"; ?>><?=$type?></option>
 <?php	 		} 
 		} ?>
 	</select>
@@ -104,13 +104,13 @@
 	<h3>Configuration</h3>
 <?php	if (isset($repository_types) && is_array($repository_types)) {
 		foreach ($repository_types as $type => $name) { ?>
-    <div id="<?=$type?>Settings"<?php if ($form['type'] != $type) { print " class=\"display-none\""; } ?>>
+    <div id="<?=$type?>Settings"<?php if (isset($form['type']) && $form['type'] != $type) { print " class=\"display-none\""; } ?>>
 		<h4><?=$name?></h4>
         <div class="container container-dashed-gray">
 <?php	if (isset($metadata_keys[$type]) && is_array($metadata_keys[$type])) { 
 		foreach($metadata_keys[$type] as $key) { ?>
             <span class="label"><?=ucfirst($key)?></span>
-            <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" name="<?=$key?>" class="value input width-300px" value="<?=$form[$key]?>" />
+            <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" name="<?=$key?>" class="value input width-300px" value="<?=isset($form[$key]) ? htmlspecialchars($form[$key]) : ''?>" />
 <?php		} 
 	} ?>
         </div>
