@@ -6,7 +6,7 @@
         public $_content;
 
 		public function __construct($id = 0) {
-            $this->_content = $content;
+            $this->_content = '';
         }
 
 		public function content($string) {

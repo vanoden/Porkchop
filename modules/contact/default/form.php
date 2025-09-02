@@ -1,21 +1,4 @@
-<style>
-    .label {
-        width: 150px;
-		display: block;
-		float: left;
-        vertical-align: top;
-    }   
-    .input {
-        margin-bottom: 6px;
-    }
-	.labelRequired:after {
-		content: "*";
-	}
-	.form_instruction {
-		font-style: italic;
-		display: block;
-	}
-</style>
+
 <script type="text/javascript">
     function validateForm() {
         // Check if email addresses match

@@ -1,9 +1,3 @@
-<style>
-	#contentArea {
-		display: block;
-		clear: both;
-	}
-</style>
 <script src="https://cdn.tiny.cloud/1/owxjg74mr7ujxhw9soo7iquo7iul2mclregqovcp7ophazmn/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 	tinymce.init({
@@ -41,25 +35,25 @@
 	<div class="body">
 		<div class="input-horiz" id="itemName">
 			<span class="label">Name</span>
-			<input type="text" class="value input wide_lg" name="name" id="name" value="<?= htmlspecialchars($message->name) ?>" />
+			<input type="text" class="value input width-250px" name="name" id="name" value="<?= htmlspecialchars($message->name) ?>" />
 		</div>
 		<div class="input-horiz" id="itemTarget">
 			<span class="label">Target</span>
-			<input type="text" class="value input wide_lg" name="target" id="target" value="<?= htmlspecialchars($message->target) ?>" />
+			<input type="text" class="value input width-250px" name="target" id="target" value="<?= htmlspecialchars($message->target) ?>" />
 		</div>
 		<div class="input-horiz" id="itemContent">
 			<span class="label align-top">Content</span>
-			<textarea class="value input wide_lg" name="content" id="content"><?= htmlspecialchars($message->content) ?></textarea>
+			<textarea class="value input width-250px" name="content" id="content"><?= htmlspecialchars($message->content) ?></textarea>
 		</div>
 
 		<br/><br/>
-		<h3 style="display:inline;">Content Message Search Tags</h3>
-		<h4 style="display:inline;">(customer support knowledge center)</h4>
+		<h3 class="text-inline">Content Message Search Tags</h3>
+		<h4 class="text-inline">(customer support knowledge center)</h4>
 		<div class="tableBody min-tablet">
 			<div class="tableRowHeader">
-				<div class="tableCell" style="width: 33%;">&nbsp;</div>
-				<div class="tableCell" style="width: 33%;">Category</div>
-				<div class="tableCell" style="width: 33%;">Search Tag</div>
+				<div class="tableCell tableCell-width-33">&nbsp;</div>
+				<div class="tableCell tableCell-width-33">Category</div>
+				<div class="tableCell tableCell-width-33">Search Tag</div>
 			</div>
 			<?php
 			foreach ($registerCustomerSearchTags as $searchTag) {

@@ -1,42 +1,4 @@
-<style>
-    a { text-decoration: none; cursor: pointer; color: blue; }
-    a:visited { color: blue; }
-    a:not([href]):not([tabindex]) { color:blue; }
-    
-    .info-row.row { padding: 10px; }
-    .info-row.row.selected { background-color: #edfaff; }  
-    .info-row.row:hover{ background-color: #edfaff; cursor:pointer;  }
-    
-    .messaging-page-wrapper {  margin: 50px;     }
-    .row { display: flex; flex-direction: row; flex-wrap: wrap; width: 100%; margin: 0 0 2rem; border-bottom: 1px solid #dddddd; }
-    .full-column-row { margin: 1px; border-bottom: 0px; }
-    .column {display: flex; flex-direction: column; flex-basis: 100%; flex: 1; margin: 10px; }
-    
-    .message-icon { padding: 10px;}
-    .list-column { display:inline-flex; }
-    .full-column { flex: 100%;}
-    .message-title { white-space:nowrap;}
-    .message-sub-title { color: blue; white-space:nowrap; }
-    .message-date { padding-bottom: 5px; }
-	.message-sender { padding-bottom: 5px; }
-    .message-subject { font-size: 20px; }
-    .message-links-wrapper { margin-top: 10px; }
-    .read-more-link { margin-top: 10px; }
-    .right-column { flex: 3; position: relative; }
-    .left-column { flex: 1; padding: 10px; position: relative; border-left: 4px solid #dddddd; border-right: 1px solid #dddddd; }
-    .message-title-chevron { min-width: 20px; text-align: end;font-size: 30px; color: #999;}
-    .year-column { font-size: 24px; }
-    .message-content { overflow: hidden; text-overflow: ellipsis;  height: 25px; }
-    .bold {
-        font-weight: bold;
-    }
-    
-    @media only screen and (max-width: 900px) {
-      .row {flex-direction: column; }
-      .year-column { background-color: black; text-align: center; color:white; flex:unset; }
-      .year-column.list-column { display:unset; padding: 10px; }
-    }
-</style>
+
 
 <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
 
@@ -98,16 +60,16 @@
 <?=$page->showTitle()?>
 <?=$page->showMessages()?>
 
-<div class="row full-column-row">
+<div class="row row-full-column">
     <form method="post" id="filterForm">
-    <div style="flex: 1;">
+    <div class="flex-2">
         <span class="value">Acknowledged</span>&nbsp;<input type="checkbox" name="seeAcknowledged"<?php if ($params['acknowledged'] && $params['acknowledged'] == 'read') print " checked";?> onchange="document.getElementById('filterForm').submit()"/>
         <input type="hidden" name="filter" value="Filter" />
     </div>
     </form>
 </div>
 
-<div class="messaging-page-wrapper">
+<div class="margin-50">
     <?php
     $currentYear = '';
     foreach ($siteMessages as $siteMessage) {
@@ -120,9 +82,9 @@
         if ($currentYear != $currentYearCheck) {
         $currentYear = $currentYearCheck;	
     ?>
-      <div class="row full-column-row">
-        <div class="column full-column">
-          <div class="list-column year-column">
+      <div class="row row-full-column">
+        <div class="column column-flex full-column">
+          <div class="list-column column-year">
             <?=$currentYearCheck?>
           </div>
         </div>
@@ -130,13 +92,13 @@
     <?php
         }
     ?>
-      <div id="row-<?=$siteMessage->id?>" class="row info-row">
-        <div class="column left-column">
+      <div id="row-<?=$siteMessage->id?>" class="row row-flex info-row">
+        <div class="column column-left">
           <div class="list-column">
-            <div style="flex: 2;">
+            <div class="flex-2">
                 <div id="message-date-<?=$siteMessage->id?>" class="message-date <?=($siteMessageDelivery->acknowledged()) ? '' : 'bold'?>"><?=date('m/d/Y', strtotime($siteMessage->date_created));?></div>
             </div>
-            <div style="flex: 1;"></div>   
+            <div class="flex-1"></div>   
           </div>
           <div class="list-column">
             <div>
@@ -147,13 +109,13 @@
                     <?php } ?>
 				</div>
             </div>
-            <div style="flex: 2;">
+            <div class="flex-2">
                 <div id="message-title-<?=$siteMessage->id?>" class="message-title <?=($siteMessageDelivery->acknowledged()) ? '' : 'bold'?>"></div>
             </div>
-            <div style="flex: 1;"></div>
+            <div class="flex-1"></div>
           </div>
         </div>
-        <div class="column right-column">
+        <div class="column column-right">
           <div class="messages-column">
             <div id="message-subject-<?=$siteMessage->id?>" class="message-subject <?=($siteMessageDelivery->acknowledged()) ? '' : 'bold'?>"></div>
             <div class="message-subject">

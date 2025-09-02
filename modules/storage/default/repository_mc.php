@@ -33,6 +33,7 @@ else {
 }
 
 $repository_types = $repository->getSupportedTypes();
+$factory = new \Storage\RepositoryFactory();
 
 // Handle Form Submission
 if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
@@ -178,8 +179,10 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 				$form['status'] = $repository->status;
 				$form['path'] = $repository->getMetadata('path');
 				$metadata_keys = $repository->getMetadataKeys();
-				foreach ($metadata_keys as $key) {
-					$form[$key] = $repository->getMetadata($key);
+				if (is_array($metadata_keys)) {
+					foreach ($metadata_keys as $key) {
+						$form[$key] = $repository->getMetadata($key);
+					}
 				}
 			}
 		} else {
@@ -188,8 +191,10 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			$form['type'] = $_REQUEST['type'];
 			$form['status'] = $_REQUEST['status'];
 			$metadata_keys = $repository->getImpliedMetadataKeys();
-			foreach ($metadata_keys as $key) {
-				$form[$key] = $_REQUEST[$key];
+			if (is_array($metadata_keys)) {
+				foreach ($metadata_keys as $key) {
+					$form[$key] = $_REQUEST[$key];
+				}
 			}
 		}
 	}
@@ -202,8 +207,10 @@ elseif (! $page->errorCount()) {
 		$form['type'] = $repository->type;
 		$form['status'] = $repository->status;
 		$metadata_keys = $repository->getMetadataKeys();
-		foreach ($metadata_keys as $key) {
-			$form[$key] = $repository->getMetadata($key);
+		if (is_array($metadata_keys)) {
+			foreach ($metadata_keys as $key) {
+				$form[$key] = $repository->getMetadata($key);
+			}
 		}
 		if (is_object($repository)) {
 			$default_privileges = $repository->default_privileges();
@@ -224,17 +231,21 @@ elseif (!empty($_REQUEST['name'])) {
 	$form['type'] = $_REQUEST['type'];
 	$form['status'] = $_REQUEST['status'];
 	$metadata_keys = $repository->getImpliedMetadataKeys();
-	foreach ($metadata_keys as $key) {
-		$form[$key] = $_REQUEST[$key];
+	if (is_array($metadata_keys)) {
+		foreach ($metadata_keys as $key) {
+			$form[$key] = $_REQUEST[$key];
+		}
 	}
 }
 
 // Array of Type Metadata Keys
-foreach ($repository_types as $type => $name) {
-	$repo = $factory->create($type);
-	if (empty($repo)) continue;
-	$keys = $repo->getImpliedMetadataKeys();
-	$metadata_keys[$type] = $keys;
+if (is_array($repository_types)) {
+	foreach ($repository_types as $type => $name) {
+		$repo = $factory->create($type);
+		if (empty($repo)) continue;
+		$keys = $repo->getImpliedMetadataKeys();
+		$metadata_keys[$type] = $keys;
+	}
 }
 
 // Get Default Privileges for Repository

@@ -55,22 +55,22 @@
 			    if (empty($_REQUEST['code'])) $_REQUEST['code'] = null;
 			    if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
 			    $parameters = array(
-				    "name"					    => $_REQUEST['name'],
-				    "code"					    => $_REQUEST['code'],
-				    "status"				    => $_REQUEST['status'],
-				    "is_reseller"			    => $_REQUEST['is_reseller'],
-					"is_customer"		    	=> $_REQUEST['is_customer'],
-					"is_vendor"			    	=> $_REQUEST['is_vendor'],
-				    "assigned_reseller_id"	    => $_REQUEST['assigned_reseller_id'],
-				    "notes"					    => noXSS(trim($_REQUEST['notes'])),
-				    "password_expiration_days"	=> $_REQUEST['password_expiration_days'],
-					"website_url"				=> $_REQUEST['website_url'],
-					"time_based_password"		=> $_REQUEST['time_based_password'],
+				    "name"					    => isset($_REQUEST['name']) ? $_REQUEST['name'] : '',
+				    "code"					    => isset($_REQUEST['code']) ? $_REQUEST['code'] : '',
+				    "status"				    => isset($_REQUEST['status']) ? $_REQUEST['status'] : '',
+				    "is_reseller"			    => isset($_REQUEST['is_reseller']) ? $_REQUEST['is_reseller'] : 0,
+					"is_customer"		    	=> isset($_REQUEST['is_customer']) ? $_REQUEST['is_customer'] : 0,
+					"is_vendor"			    	=> isset($_REQUEST['is_vendor']) ? $_REQUEST['is_vendor'] : 0,
+				    "assigned_reseller_id"	    => isset($_REQUEST['assigned_reseller_id']) ? $_REQUEST['assigned_reseller_id'] : '',
+				    "notes"					    => isset($_REQUEST['notes']) ? noXSS(trim($_REQUEST['notes'])) : '',
+				    "password_expiration_days"	=> isset($_REQUEST['password_expiration_days']) ? $_REQUEST['password_expiration_days'] : 0,
+					"website_url"				=> isset($_REQUEST['website_url']) ? $_REQUEST['website_url'] : '',
+					"time_based_password"		=> isset($_REQUEST['time_based_password']) ? $_REQUEST['time_based_password'] : 0,
 			    );
-			    if (! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
-				if (! $_REQUEST['is_customer']) $parameters['is_customer'] = 0;
-				if (! $_REQUEST['is_vendor']) $parameters['is_vendor'] = 0;
-			    if (! $_REQUEST['time_based_password']) $parameters['time_based_password'] = 0;
+			    if (!isset($_REQUEST['is_reseller']) || ! $_REQUEST['is_reseller']) $parameters['is_reseller'] = 0;
+				if (!isset($_REQUEST['is_customer']) || ! $_REQUEST['is_customer']) $parameters['is_customer'] = 0;
+				if (!isset($_REQUEST['is_vendor']) || ! $_REQUEST['is_vendor']) $parameters['is_vendor'] = 0;
+			    if (!isset($_REQUEST['time_based_password']) || ! $_REQUEST['time_based_password']) $parameters['time_based_password'] = 0;
 			    if ($organization->id) {
 				    app_log("Updating '".$organization->name."'",'debug',__FILE__,__LINE__);
 				    //app_log(print_r($parameters,true),'trace',__FILE__,__LINE__);

@@ -2,11 +2,11 @@
 
 <div class="tableBody">
 	<div class="tableRowHeader">
-		<div class="tableCell" style="width: 10%;">Event Date</div>
-		<div class="tableCell" style="width: 10%;">Acted On</div>
-		<div class="tableCell" style="width: 10%;">Acted By</div>
-		<div class="tableCell" style="width: 10%;">Action</div>
-		<div class="tableCell" style="width: 60%;">Notes</div>
+		<div class="tableCell width-10per">Event Date</div>
+		<div class="tableCell width-10per">Acted On</div>
+		<div class="tableCell width-10per">Acted By</div>
+		<div class="tableCell width-10per">Action</div>
+		<div class="tableCell width-60per">Notes</div>
 	</div>
 <?php	foreach ($records as $record) { 
 			if (isset($users[$record->user_id])) $user = $users[$record->user_id];

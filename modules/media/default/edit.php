@@ -1,14 +1,5 @@
-<style>
-	span.label {
-		float: left;
-		display: block;
-		width: 125px;
-	}
-	textarea.input {
-		height: 75px;
-		width: 300px;
-	}
-</style>
+
+
 <div class="title">Edit Media Item</div>
 <?php	if ($GLOBALS['_page']->error) { ?>
 <div class="form_error"><?=$GLOBALS['_page']->error?></div>
@@ -34,7 +25,7 @@
 	</div>
 	<div class="editItem" id="itemDescription">
 		<span class="label">Description</span>
-		<textarea class="value input" name="description" id="description"><?=strip_tags($item->description)?></textarea>
+		<textarea class="value input textarea-height-75 textarea-width-300" name="description" id="description"><?=strip_tags($item->description)?></textarea>
 	</div>
 	<div class="editSubmit">
 		<input type="submit" class="button" value="Submit" name="submit" id="submit"/>

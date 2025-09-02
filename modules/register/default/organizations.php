@@ -8,12 +8,7 @@
 		return true;
 	}
 </script>
-<style>
-	.label { text-align: left; }
-	th.organizationsCodeLabel { width: 150px; }
-	th.organizationsNameLabel { width: 540px; }
-	td.value { overflow: hidden; }
-</style>
+
 
 <!-- Page Header -->
 <?=$page->showAdminPageInfo()?>
@@ -35,7 +30,7 @@
 		<?php	} ?>
 		</select>
 	</div>
-	<div><label>Records per page:</label><input type="text" name="<?=$pagination->sizeElemName?>" class="value input" style="width: 45px" value="<?=$pagination->size()?>" /></div>
+	<div><label>Records per page:</label><input type="text" name="<?=$pagination->sizeElemName?>" class="value input register-organizations-pagination-size" value="<?=$pagination->size()?>" /></div>
 	<button id="searchOrganizationButton" name="btn_search" onclick="submitSearch(0)">Search</button>
 </div>
 
@@ -76,5 +71,5 @@
 </form>
 
 <form action="<?=PATH?>/_register/admin_organization" method="get">
-	<div class="button-bar"><span style="text-align: center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span></div>
+	<div class="button-bar"><span class="register-organizations-button-center"><input type="submit" name="button_submit" value="Add Organization" class="input button"/></span></div>
 </form>

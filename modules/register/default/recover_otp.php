@@ -1,5 +1,5 @@
 <contentblock>
-    <section style="margin-top: 0;">
+    <section class="register-recover-otp-section">
         <div class="pageSect_full pad_vert-sm">
             <h1>Recover Two-Factor Authentication</h1>
             <?= $page->showBreadcrumbs() ?>
@@ -31,14 +31,14 @@
                     placeholder="Enter your email address"
                     value="<?= htmlspecialchars($_POST['email_address'] ?? '') ?>"
                     class="long-field"
-                    style="max-width: 350px; margin-bottom: 1em;">
+                    class="register-recover-otp-email-input">
                 <br>
                 <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
                 <input type="submit" class="button" value="Send Recovery Instructions">
             </form>
         </div>
 
-        <div class="pageSect_full pad_vert-sm" style="text-align: center;">
+        <div class="pageSect_full pad_vert-sm register-recover-otp-center">
             <a href="/_register/otp">&larr; Back to Two-Factor Authentication</a>
         </div>
 </contentblock>

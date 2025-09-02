@@ -84,20 +84,20 @@
 
 // Set some content to print
 $html = <<<EOD
-<table style="width: 275px;  border: solid 1px #000;">
-<tr><th style="background-color:grey; color:white;"><strong>Customer</strong></th></tr>
+<table class="table-width-275 table-border-black">
+<tr><th class="bg-gray text-white"><strong>Customer</strong></th></tr>
 <tr><td>Customer Name Here<br/>
         Organization Name Here<br/>
-        <span style="font-size: 10px;">Email and Phone Here</span>
+        <span class="text-size-10">Email and Phone Here</span>
     </td>
   </tr>
 </table>
 <br/><br/><br/><br/>
-<table style="width:90%">
+<table class="table-width-90">
   <tr>
-    <th style="background-color:grey; color:white; border: solid 1px #000;"><strong>RMA #</strong></th>
+    <th class="bg-gray text-white table-border-black"><strong>RMA #</strong></th>
     <th></th>
-    <th style="background-color:grey; color:white; border: solid 1px #000;"><strong>Date Approved</strong></th>
+    <th class="bg-gray text-white table-border-black"><strong>Date Approved</strong></th>
   </tr>
   <tr>
     <td>RMA # Here</td>
@@ -106,11 +106,11 @@ $html = <<<EOD
   </tr>
 </table>
 <br/><br/>
-<table style="width:90%">
+<table class="table-width-90">
   <tr>
-    <th style="background-color:grey; color:white; border: solid 1px #000;"><strong>Ticket #</strong></th>
+    <th class="bg-gray text-white table-border-black"><strong>Ticket #</strong></th>
     <th></th>
-    <th style="background-color:grey; color:white; border: solid 1px #000;"><strong>Approved By</strong></th>
+    <th class="bg-gray text-white table-border-black"><strong>Approved By</strong></th>
   </tr>
   <tr>
     <td>Ticket # Here</td>
@@ -119,8 +119,8 @@ $html = <<<EOD
   </tr>
 </table>
 <br/><br/><br/>
-<table style="width:100%; border: solid 1px #000; font-size: 10px;">
-  <tr style="background-color:grey; color:white;">
+<table class="table-width-100 table-border-black text-size-10">
+  <tr class="bg-gray text-white">
     <th><strong>Product</strong></th>
     <th><strong>QTY</strong></th>
     <th><strong>Serial</strong></th>
@@ -133,8 +133,8 @@ EOD;
 $html .= "
 </table>
 <br/><br/><br/>
-<table style='width:100%; border: solid 1px #000;'>
-  <tr style='background-color:grey; color:white;'>
+<table class='table-width-100 table-border-black'>
+  <tr class='bg-gray text-white'>
     <th><u>Customer Notes</u></th>
   </tr>
   <tr>
@@ -144,14 +144,14 @@ $html .= "
 
 $html .= "
 <br/><br/><br/>
-<table style=\"width:100%; font-size: 11px;\" cellspacing=\"10\" cellpadding=\"10\">
-  <tr style=\"background-color:grey; color:white;\">
+<table class=\"table-width-100 text-size-11\" cellspacing=\"10\" cellpadding=\"10\">
+  <tr class=\"bg-gray text-white\">
     <th>Repair Address</th>
     <th>Return Address</th>
   </tr>
-  <tr style=\"font-size: 20px;\">
-    <td style=\"border:1px dashed #000;\">Location Here</td>
-    <td style=\"border:1px dashed #000;\">To Here</td>
+  <tr class=\"text-size-20\">
+    <td class=\"border-dashed-black\">Location Here</td>
+    <td class=\"border-dashed-black\">To Here</td>
   </tr>
 </table>";
 

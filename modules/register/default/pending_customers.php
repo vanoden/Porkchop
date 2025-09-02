@@ -1,9 +1,5 @@
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<style>
-   .ui-autocomplete-loading {
-        background: white url("https://jqueryui.com/resources/demos/autocomplete/images/ui-anim_basic_16x16.gif") right center no-repeat;
-   }
-</style>
+
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script>
@@ -73,56 +69,8 @@
 			checkExisting(id, orgName);
 		}
 	});
-/*
-    // page load apply button status, setup up autocomplete
-    $(function() {
-        // autocomplete textbox
-        $(".organization").autocomplete({
-            source: "/_register/api?method=findOrganizations",
-            minLength: 2,
-            select: function(event, ui) {
-                var id = $(this)[0].id
-                document.getElementById(id + "_assign_button").disabled = false;
-                document.getElementById(id + "_new_button").disabled = true;
-            }
-        });
-
-        // page load confirm if org exists already
-        $(".organization").each(function(index) {
-            checkExisting($(this)[0].id, $(this).val())
-        });
-
-        // if change the field, then keep the button disable sync'd
-        $(".organization").keyup(function() {      
-			console.log(      
-            checkExisting($(this)[0].id, $(this).val())
-        });
-    });
-*/
 </script>
-<style>
-  .strong-text {
-    font-weight: bold;
-  }
-  .small-text {
-    font-size: 10px;
-  }
-  .cursor-pointer {
-    cursor:pointer;
-  }
-  .hidden {
-    display:none;
-  }
-  .vertical-align-top {
-    vertical-align: unset;
-  }   
-  .resend-verify-message {
-    font-size: 10px;
-  }
-  .icon-button:disabled {
-    opacity: 0.25;
-  }
-</style>
+
 <script>
    // reset the page forms to only allow the one in question
    function resetPage() {
@@ -231,26 +179,26 @@
           <input list="organization_list_<?=$queuedCustomer->id?>" class="organization" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?=$queuedCustomer->name?>"/>
 		  <datalist id="organization_list_<?=$queuedCustomer->id?>"></datalist>
 		  <br>
-          <input type="image" class="icon-button" src="/img/icons/icon_cust_add-existing.svg" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" disabled="disabled"/> 
-          <input type="image" class="icon-button" src="/img/icons/icon_cust_add-new.svg" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" title="Assign customer to new organization" disabled="disabled"/> 
-          <input type="image" class="icon-button" src="/img/icons/icon_cust_deny.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" title="Deny customer creation" />
+          <input type="image" class="width-30px" src="/img/icons/icon_cust_add-existing.svg" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" disabled="disabled"/> 
+          <input type="image" class="width-30px" src="/img/icons/icon_cust_add-new.svg" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="assignCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" title="Assign customer to new organization" disabled="disabled"/> 
+          <input type="image" class="width-30px" src="/img/icons/icon_cust_deny.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" title="Deny customer creation" />
         </div>
         <?php
           break;
           case 'VERIFYING':
         ?>
-		    <span style="color: <?=colorCodeStatus("VERIFYING")?>"><i class="fa fa-clock-o" aria-hidden="true"></i> email validating
+		    <span class="register-pending-customers-status-verifying"><i class="fa fa-clock-o" aria-hidden="true"></i> email validating
     	  <button type="button" class="resend-verify-message" onclick="resend(<?=$queuedCustomer->register_user_id?>)">Resend Verify Email Message</button></span>
         <?php
           break;
           case 'APPROVED':
         ?>
-		    <span style="color: <?=colorCodeStatus("APPROVED")?>"><i class="fa fa-check-circle" aria-hidden="true"></i> approved</span>
+		    <span class="register-pending-customers-status-approved"><i class="fa fa-check-circle" aria-hidden="true"></i> approved</span>
         <?php
           break;
           default:
         ?>
-		    <span style="color: <?=colorCodeStatus("DENIED")?>"><i class="fa fa-times" aria-hidden="true"></i> denied</span>
+		    <span class="register-pending-customers-status-denied"><i class="fa fa-times" aria-hidden="true"></i> denied</span>
         <?php
           break;
           }
@@ -281,7 +229,7 @@
 			  </form>
 		  </div>
 		  <div id="customer_status_form_links_<?=$queuedCustomer->id?>" class="customer_status_form_links">
-			  <span style="color: <?=colorCodeStatus($queuedCustomer->status)?>"><?=$queuedCustomer->status?></span>
+			  <span class="register-pending-customers-status-<?=strtolower($queuedCustomer->status)?>"><?=$queuedCustomer->status?></span>
 			  <a class="small-text cursor-pointer" onclick="editStatus(<?=$queuedCustomer->id?>)"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</a>
 		  </div>
 	  </div>
@@ -302,7 +250,7 @@
 	  </div>
 	  <div class="tableCell">
 		  <?php if ($queuedCustomer->product_id) { ?>
-			  <div style="color: #003308; padding: 10px 0px 10px 0px;"><?=$productItem->name?> [<?=$productItem->code?>]</div>
+			  <div class="register-pending-customers-product-info"><?=$productItem->name?> [<?=$productItem->code?>]</div>
 			  <strong>Serial #:</strong> <?=$queuedCustomer->serial_number?><br/>
       <?php } ?>
 	  </div>

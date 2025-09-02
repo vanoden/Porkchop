@@ -1,16 +1,3 @@
-<style>
-    
-    .user_accounts_container {
-        margin-top: 50px; 
-        border: solid 1px #9a9a9a; 
-        padding:10px 10px 50px 10px;
-    }
-    
-    .member_status_expired, .member_status_hidden, .member_status_deleted, .member_status_blocked .tableCell{
-        color:#999;
-        font-style:italic;
-    }
-</style>
 <script language="JavaScript">
 	function addLocation() {
 		var organization_id = document.forms[0].organization_id.value;
@@ -52,22 +39,22 @@
     <!--	Start First Row-->
     <div class="tableBody min-tablet marginTop_20">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 20%;">Code</div>
-		    <div class="tableCell" style="width: 20%;">Name</div>
-		    <div class="tableCell" style="width: 15%;">Status</div>
-		    <div class="tableCell" style="width: 10%;">Can Resell</div>
-		    <div class="tableCell" style="width: 15%;">Reseller</div>
-		    <div class="tableCell" style="width: 15%;">Password Exp. (days)</div>
+		    <div class="tableCell width-20per">Code</div>
+		    <div class="tableCell width-20per">Name</div>
+		    <div class="tableCell width-15per">Status</div>
+		    <div class="tableCell width-10per">Can Resell</div>
+		    <div class="tableCell width-15per">Reseller</div>
+		    <div class="tableCell width-15per">Password Exp. (days)</div>
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <input name="code" type="text" id="organizationCodeValue" class="wide_100per" value="<?=$organization->code?>" />
+			    <input name="code" type="text" id="organizationCodeValue" class="width-100per" value="<?=$organization->code?>" />
 		    </div>
 		    <div class="tableCell">
-			    <input name="name" type="text" id="organizationNameValue" class="wide_100per" value="<?=$organization->name?>" />
+			    <input name="name" type="text" id="organizationNameValue" class="width-100per" value="<?=$organization->name?>" />
 		    </div>
 		    <div class="tableCell">
-			    <select name="status" id="organizationStatusValue" class="wide_100per">
+			    <select name="status" id="organizationStatusValue" class="width-100per">
 				    <?php		foreach ($statii as $status) { ?>
 				    <option value="<?=$status?>"<?php	if ($status == $organization->status) print " selected"; ?>><?=$status?></option>
 				    <?php		} ?>
@@ -77,7 +64,7 @@
 			    <input name="is_reseller" type="checkbox" value="1" <?php	if($organization->is_reseller) print " checked"?> />
 		    </div>
 		    <div class="tableCell">
-			    <select name="assigned_reseller_id" class="wide_100per">
+			    <select name="assigned_reseller_id" class="width-100per">
 				    <option value="">Select</option>
 				    <?php	
 				    foreach ($resellers as $reseller) {
@@ -90,7 +77,7 @@
 			    </select>
 		    </div>
 		    <div class="tableCell">
-			    <input name="password_expiration_days" type="number" step="1" min="0" max="365" id="password_expiration_days" class="wide_100per" value="<?=$organization->password_expiration_days?>" />
+			    <input name="password_expiration_days" type="number" step="1" min="0" max="365" id="password_expiration_days" class="width-100per" value="<?=$organization->password_expiration_days?>" />
 		    </div>
 	    </div>
     </div>
@@ -109,7 +96,7 @@
 			    <input name="is_vendor" type="checkbox" value="1" <?php if ($organization->is_vendor) print " checked"?>>
 		    </div>
 			<div class="tableCell">
-			    <input id="website_url" name="website_url" class="wide_lg" placeholder="http://" value="<?=$organization->website_url?>"/>
+			    <input id="website_url" name="website_url" class="width-250px" placeholder="http://" value="<?=$organization->website_url?>"/>
 		    </div>
 		    <div class="tableCell">
 			    <input name="time_based_password" type="checkbox" value="1" <?php if($organization->time_based_password) print " checked"?>>
@@ -119,11 +106,11 @@
     </div>
     <div class="tableBody">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 100%;">Notes</div>
+		    <div class="tableCell width-100per">Notes</div>
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <textarea name="notes" class="wide_lg"><?=strip_tags($organization->notes)?></textarea>
+			    <textarea name="notes" class="width-250px"><?=strip_tags($organization->notes)?></textarea>
 		    </div>
 	    </div>
     </div>
@@ -135,7 +122,7 @@
     <h3>Add Organization Tag</h3>
     <div class="tableBody min-tablet">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 35%;">Tag</div>
+		    <div class="tableCell width-35per">Tag</div>
 	    </div>
         <?php	
             foreach ($organizationTags as $tag) {
@@ -160,11 +147,11 @@
         <!--	Start First Row-->
         <div class="tableBody">
 	        <div class="tableRowHeader">
-		        <div class="tableCell value" style="width: 20%;">Username</div>
-		        <div class="tableCell value" style="width: 20%;">First Name</div>
-		        <div class="tableCell value" style="width: 20%;">Last Name</div>
-		        <div class="tableCell value" style="width: 10%;">Status</div>
-		        <div class="tableCell value" style="width: 30%;">Last Active</div>
+		        <div class="tableCell value width-20per">Username</div>
+		        <div class="tableCell value width-20per">First Name</div>
+		        <div class="tableCell value width-20per">Last Name</div>
+		        <div class="tableCell value width-10per">Status</div>
+		        <div class="tableCell value width-30per">Last Active</div>
 	        </div>
         <?php	foreach ($members as $member) { ?>
 	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
@@ -193,9 +180,9 @@
         <?php	if ($organization->id) { ?>
         <div class="tableBody min-tablet">
 	        <div class="tableRowHeader">
-		        <div class="tableCell value" style="width: 20%;">Username</div>
-		        <div class="tableCell value" style="width: 10%;">Status</div>
-		        <div class="tableCell value" style="width: 30%;">Last Active</div>
+		        <div class="tableCell value width-20per">Username</div>
+		        <div class="tableCell value width-10per">Status</div>
+		        <div class="tableCell value width-30per">Last Active</div>
 	        </div>
         <?php	foreach ($automationMembers as $member) { ?>
 	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
@@ -219,14 +206,14 @@
     <!--	Start First Row-->
     <div class="tableBody">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 35%;">Username</div>
-		    <div class="tableCell" style="width: 30%;">First Name</div>
-		    <div class="tableCell" style="width: 35%;">Last Name</div>
+		    <div class="tableCell width-35per">Username</div>
+		    <div class="tableCell width-30per">First Name</div>
+		    <div class="tableCell width-35per">Last Name</div>
 	    </div>
 	    <div class="tableRow">
-		    <div class="tableCell"><input type="text" class="wide_100per" name="new_login" value="" /></div>
-		    <div class="tableCell"><input type="text" class="wide_100per" name="new_first_name" value="" /></div>
-		    <div class="tableCell"><input type="text" class="wide_100per" name="new_last_name" value="" /></div>
+		    <div class="tableCell"><input type="text" class="width-100per" name="new_login" value="" /></div>
+		    <div class="tableCell"><input type="text" class="width-100per" name="new_first_name" value="" /></div>
+		    <div class="tableCell"><input type="text" class="width-100per" name="new_last_name" value="" /></div>
 	    </div>
     </div>
     <div><input type="submit" name="method" value="Add User" class="button"/></div>
@@ -235,12 +222,12 @@
     <!--	Start First Row-->
     <div class="tableBody">
 	    <div class="tableRowHeader">
-        	<div class="tableCell value" style="width: 5%;">Default Billing</div>
-        	<div class="tableCell value" style="width: 5%;">Default Shipping</div>
-		    <div class="tableCell value" style="width: 20%;">Name</div>
-		    <div class="tableCell value" style="width: 20%;">Address</div>
-		    <div class="tableCell value" style="width: 20%;">City</div>
-		    <div class="tableCell value" style="width: 20%;">Province/Region</div>
+        	<div class="tableCell value width-5per">Default Billing</div>
+        	<div class="tableCell value width-5per">Default Shipping</div>
+		    <div class="tableCell value width-20per">Name</div>
+		    <div class="tableCell value width-20per">Address</div>
+		    <div class="tableCell value width-20per">City</div>
+		    <div class="tableCell value width-20per">Province/Region</div>
 	    </div>
 	    	    
     <?php	foreach ($locations as $location) { ?>

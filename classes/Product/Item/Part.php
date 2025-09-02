@@ -3,7 +3,7 @@
 namespace Product\Item;
 
 class Part Extends \BaseXREF {
-	public $id = 0;
+	public int $id = 0;
 	protected $product_id = 0;		// ID of the product this part belongs to
 	protected $part_product_id = 0;	// ID of the part in this assembly
 	public $quantity = 0;			// Number of parts in this assembly

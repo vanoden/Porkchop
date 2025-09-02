@@ -1,8 +1,3 @@
-<style>
-	th {
-		text-align: left;
-	}
-</style>
 <script language="Javascript">
 	function drop(id) {
 		document.forms[0].delete.value = id;
@@ -31,7 +26,7 @@
 <input type="hidden" name="delete" value="" />
 <input type="button" name="add" value="Add Item" onclick="addItem(<?=$parent->id?>);" />
 
-<table class="body" style="clear: both">
+<table class="body clear-both">
 <tr><th>Title</th>
 	<th>Target</th>
 	<th>Alt</th>

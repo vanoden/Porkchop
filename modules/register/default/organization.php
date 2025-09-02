@@ -1,16 +1,3 @@
-<style>
-    
-    .user_accounts_container {
-        margin-top: 50px; 
-        border: solid 1px #9a9a9a; 
-        padding:10px 10px 50px 10px;
-    }
-    
-    .member_status_expired, .member_status_hidden, .member_status_deleted, .member_status_blocked .tableCell{
-        color:#999;
-        font-style:italic;
-    }
-</style>
 <script language="JavaScript">
 	function addLocation() {
 		var organization_id = document.forms[0].organization_id.value;
@@ -52,12 +39,12 @@
     <!--	Start First Row-->
     <div class="tableBody min-tablet marginTop_20">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 20%;">Code</div>
-		    <div class="tableCell" style="width: 20%;">Name</div>
-		    <div class="tableCell" style="width: 15%;">Status</div>
-		    <div class="tableCell" style="width: 10%;">Can Resell</div>
-		    <div class="tableCell" style="width: 15%;">Reseller</div>
-		    <div class="tableCell" style="width: 15%;">Password Exp. (days)</div>
+		    <div class="tableCell tableCell-width-20">Code</div>
+		    <div class="tableCell tableCell-width-20">Name</div>
+		    <div class="tableCell tableCell-width-15">Status</div>
+		    <div class="tableCell tableCell-width-10">Can Resell</div>
+		    <div class="tableCell tableCell-width-15">Reseller</div>
+		    <div class="tableCell tableCell-width-15">Password Exp. (days)</div>
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell"><?=$organization->code?></div>
@@ -66,13 +53,13 @@
 		    <div class="tableCell"><?=$organization->is_reseller ? "Yes" : "No"?></div>
 		    <div class="tableCell"><?=($organization->reseller && isset($organization->reseller->name)) ? $organization->reseller->name : ''?></div>
 		    <div class="tableCell">
-			    <input name="password_expiration_days" type="number" step="1" min="0" max="365" id="password_expiration_days" class="wide_100per" value="<?=$organization->password_expiration_days?>" />
+			    <input name="password_expiration_days" type="number" step="1" min="0" max="365" id="password_expiration_days" class="width-100per" value="<?=$organization->password_expiration_days?>" />
 		    </div>
 	    </div>
     </div>
     <div class="tableBody">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 100%;">Require Two-Factor Authentication</div>
+		    <div class="tableCell tableCell-width-100">Require Two-Factor Authentication</div>
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell">
@@ -83,11 +70,11 @@
     </div>
     <div class="tableBody">
 	    <div class="tableRowHeader">
-		    <div class="tableCell" style="width: 100%;">Website URL</div>
+		    <div class="tableCell tableCell-width-100">Website URL</div>
 	    </div> <!-- end row header -->
 	    <div class="tableRow">
 		    <div class="tableCell">
-			    <input id="website_url" name="website_url" class="wide_lg" placeholder="http://" value="<?=$organization->website_url?>"/>
+			    <input id="website_url" name="website_url" class="width-250px" placeholder="http://" value="<?=$organization->website_url?>"/>
 		    </div>
 	    </div>
     </div>	
@@ -100,11 +87,11 @@
         <!--	Start First Row-->
         <div class="tableBody">
 	        <div class="tableRowHeader">
-		        <div class="tableCell value" style="width: 20%;">Username</div>
-		        <div class="tableCell value" style="width: 20%;">First Name</div>
-		        <div class="tableCell value" style="width: 20%;">Last Name</div>
-		        <div class="tableCell value" style="width: 10%;">Status</div>
-		        <div class="tableCell value" style="width: 30%;">Last Active</div>
+		        <div class="tableCell value tableCell-width-20">Username</div>
+		        <div class="tableCell value tableCell-width-20">First Name</div>
+		        <div class="tableCell value tableCell-width-20">Last Name</div>
+		        <div class="tableCell value tableCell-width-10">Status</div>
+		        <div class="tableCell value tableCell-width-30">Last Active</div>
 	        </div>
         <?php	foreach ($members as $member) { ?>
 	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
@@ -133,9 +120,9 @@
         <?php	if ($organization->id) { ?>
         <div class="tableBody min-tablet">
 	        <div class="tableRowHeader">
-		        <div class="tableCell value" style="width: 20%;">Username</div>
-		        <div class="tableCell value" style="width: 10%;">Status</div>
-		        <div class="tableCell value" style="width: 30%;">Last Active</div>
+		        <div class="tableCell value tableCell-width-20">Username</div>
+		        <div class="tableCell value tableCell-width-10">Status</div>
+		        <div class="tableCell value tableCell-width-30">Last Active</div>
 	        </div>
         <?php	foreach ($automationMembers as $member) { ?>
 	        <div class="tableRow member_status_<?=strtolower($member->status)?>">
@@ -159,12 +146,12 @@
     <!--	Start First Row-->
     <div class="tableBody">
 	    <div class="tableRowHeader">
-        	<div class="tableCell value" style="width: 5%;">Default Billing</div>
-        	<div class="tableCell value" style="width: 5%;">Default Shipping</div>
-		    <div class="tableCell value" style="width: 20%;">Name</div>
-		    <div class="tableCell value" style="width: 20%;">Address</div>
-		    <div class="tableCell value" style="width: 20%;">City</div>
-		    <div class="tableCell value" style="width: 20%;">Province/Region</div>
+        	<div class="tableCell value tableCell-width-5">Default Billing</div>
+        	<div class="tableCell value tableCell-width-5">Default Shipping</div>
+		    <div class="tableCell value tableCell-width-20">Name</div>
+		    <div class="tableCell value tableCell-width-20">Address</div>
+		    <div class="tableCell value tableCell-width-20">City</div>
+		    <div class="tableCell value tableCell-width-20">Province/Region</div>
 	    </div>
 	    	    
     <?php	foreach ($locations as $location) { ?>

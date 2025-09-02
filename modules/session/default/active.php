@@ -1,28 +1,14 @@
-<style>
-	.activeLoginLabel {
-		width: 125px;
-	}
-	.activeIPLabel {
-		width: 125px;
-	}
-	.activeFirstHitLabel,
-	.activeLastHitLabel {
-		width: 150px;
-	}
-	.activeScriptLabel {
-		width: 275px;
-	}
-</style>
+
 <?php  if ($GLOBALS['_page']->error) { ?>
 <div class="form_error"><?=$GLOBALS['_page']->error?></div>
 <?php	} ?>
 <table class="body">
 <tr><td class="title" colspan="10">Active Sessions</tr>
-<tr><td class="label activeLoginLabel">Login</td>
-	<td class="label activeIPLabel">Remote IP</td>
-	<td class="label activeFirstHitLabel">First Hit</td>
-	<td class="label activeLastHitLabel">Last Hit</td>
-	<td class="label activeScriptLabel">Script</td>
+<tr><td class="label session-active-login-label">Login</td>
+	<td class="label session-active-ip-label">Remote IP</td>
+	<td class="label session-active-first-hit-label">First Hit</td>
+	<td class="label session-active-last-hit-label">Last Hit</td>
+	<td class="label session-active-script-label">Script</td>
 </tr>
 <?php
 	$_user = new \Register\Person();

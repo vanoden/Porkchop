@@ -1,10 +1,3 @@
-<style>
-  #submit-button-container {
-    bottom: 0px;
-    left: 10%;
-  }
-</style>
-
 <link href="/css/upload.css" type="text/css" rel="stylesheet">
 
 <script type="text/javascript">
@@ -146,14 +139,14 @@
   <!-- ============================================== -->
   <!-- CUSTOMER LOGIN -->
   <!-- ============================================== -->
-  <div id="contact-main-table" class="tableBody min-tablet" style="font-size: 1.11rem;">
+  <div id="contact-main-table" class="tableBody min-tablet table-main">
     <div class="tableRowHeader">
-      <div class="tableCell" style="width: 30%;">Login / Registration</div>
-      <div class="tableCell" style="width: 20%;">Type</div>
+      <div class="tableCell width-30per">Login / Registration</div>
+      <div class="tableCell width-20per">Type</div>
     </div>
-    <div class="tableRow" style="background: var(--color-light-one);">
-      <div class="tableCell" style="width: 50%;">Login: <span class="value"><?= $customer->code ?></span></div>
-      <div class="tableCell" style="width: 50%;">Type:
+    <div class="tableRow register-admin-account-light-background">
+      <div class="tableCell width-50per">Login: <span class="value"><?= $customer->code ?></span></div>
+      <div class="tableCell width-50per">Type:
         <select name="automation" class="value input">
           <option value="0" <?php if ($customer->human()) print " selected"; ?>>Human</option>
           <option value="1" <?php if ($customer->automation()) print " selected"; ?>>Automation</option>
@@ -161,7 +154,7 @@
       </div>
     </div>
     <div class="tableRow">
-        <div class="tableCell" style="width: 50%;">Account Status
+        <div class="tableCell width-50per">Account Status
 			<select class="input" name="status">
 <?php foreach (array('NEW', 'ACTIVE', 'EXPIRED', 'HIDDEN', 'DELETED', 'BLOCKED') as $status) { ?>
 				<option value="<?= $status ?>" <?php if ($status == $customer->status) print " selected"; ?>><?= $status ?></option>
@@ -169,7 +162,7 @@
 			</select>
 		</div>
 	
-		<div class="tableCell" style="width: 50%;">
+		<div class="tableCell width-50per">
 			<label for="status">Registration Status:</label>
 			<span id="status" class="value"><?= $registration_status ?></span>
 <?php
@@ -183,7 +176,7 @@
 	</div>
 	<div class="tableRow">
       <?php if ($GLOBALS['_config']->register->use_otp) { ?>
-        <div class="tableCell" style="width: 50%;">Time Based Password [Authenticator App]
+        <div class="tableCell width-50per">Time Based Password [Authenticator App]
           <input id="time_based_password" type="checkbox" name="time_based_password" value="1" <?php if (!empty($customer->time_based_password)) echo "checked"; ?> <?php 
             $roles = $customer->roles();
             $requiresTOTP = false;
@@ -230,14 +223,14 @@
   <!-- ============================================== -->
   <section class="tableBody clean">
     <div class="tableRowHeader">
-      <div class="tableCell" style="width: 30%;">Organization</div>
-      <div class="tableCell" style="width: 20%;">First Name</div>
-      <div class="tableCell" style="width: 20%;">Last Name</div>
-      <div class="tableCell" style="width: 30%;">Time Zone</div>
+      <div class="tableCell width-30per">Organization</div>
+      <div class="tableCell width-20per">First Name</div>
+      <div class="tableCell width-20per">Last Name</div>
+      <div class="tableCell width-30per">Time Zone</div>
     </div>
     <div class="tableRow">
       <div class="tableCell">
-        <label class="hiddenDesktop value">Organization: </label>
+        <label class="display-none value">Organization: </label>
         <select class="value input registerValue" name="organization_id">
           <option value="">Select</option>
           <?php foreach ($organizations as $organization) { ?>
@@ -246,15 +239,15 @@
         </select>
       </div>
       <div class="tableCell">
-        <label class="hiddenDesktop value">First Name: </label>
+        <label class="display-none value">First Name: </label>
         <input type="text" class="value input registerValue registerFirstNameValue" name="first_name" value="<?= htmlentities($customer->first_name) ?>" />
       </div>
       <div class="tableCell">
-        <label class="hiddenDesktop value">Last Name: </label>
+        <label class="display-none value">Last Name: </label>
         <input type="text" class="value registerValue registerLastNameValue" name="last_name" value="<?= htmlentities($customer->last_name) ?>" />
       </div>
       <div class="tableCell">
-        <label class="hiddenDesktop value">Time Zone: </label>
+        <label class="display-none value">Time Zone: </label>
         <select id="timezone" name="timezone" class="value input collectionField">
           <?php foreach (timezone_identifiers_list() as $timezone) {
             if (isset($customer->timezone))
@@ -274,7 +267,7 @@
       </div>
       <div class="tableCell">
         <label for="job_description">Job Description:</label>
-        <textarea name="job_description" style="max-height: 50px; min-height: 50px;" class="value input wide_100per"><?= htmlentities($customer->getMetadata('job_description')) ?></textarea>
+        <textarea name="job_description" class="value input width-100per register-admin-account-job-description"><?= htmlentities($customer->getMetadata('job_description')) ?></textarea>
       </div>
       <div class="tableCell"></div>
       <div class="tableCell"></div>
@@ -287,30 +280,30 @@
   <h3>Methods of Contact</h3>
   <div id="contact-main-table" class="tableBody min-tablet">
     <div class="tableRowHeader">
-      <div class="tableCell" style="width: 20%;">Type</div>
-      <div class="tableCell" style="width: 25%;">Description</div>
-      <div class="tableCell" style="width: 25%;">Address/Number or Email etc.</div>
-      <div class="tableCell" style="width: 10%;">Notes</div>
-      <div class="tableCell" style="width: 5%;">Notify</div>
-      <div class="tableCell" style="width: 5%;">Public</div>
-      <div class="tableCell" style="width: 5%;">Drop</div>
+      <div class="tableCell width-20per">Type</div>
+      <div class="tableCell width-25per">Description</div>
+      <div class="tableCell width-25per">Address/Number or Email etc.</div>
+      <div class="tableCell width-10per">Notes</div>
+      <div class="tableCell width-5per">Notify</div>
+      <div class="tableCell width-5per">Public</div>
+      <div class="tableCell width-5per">Drop</div>
     </div>
     <?php foreach ($contacts as $contact) { ?>
       <div class="tableRow">
         <div class="tableCell">
-          <label class="hiddenDesktop value">Type: </label>
+          <label class="display-none value">Type: </label>
           <select class="value input" name="type[<?= $contact->id ?>]">
             <?php foreach (array_keys($contact_types) as $contact_type) { ?>
               <option value="<?= $contact_type ?>" <?php if ($contact_type == $contact->type) print " selected"; ?>><?= $contact_types[$contact_type] ?></option>
             <?php } ?>
           </select>
         </div>
-        <div class="tableCell"><input type="text" name="description[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->description) ?>" /></div>
-        <div class="tableCell"><input type="text" name="value[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->value) ?>" /></div>
-        <div class="tableCell"><input type="text" name="notes[<?= $contact->id ?>]" class="value wide_100per" value="<?= htmlentities($contact->notes) ?>" /></div>
+        <div class="tableCell"><input type="text" name="description[<?= $contact->id ?>]" class="value width-100per" value="<?= htmlentities($contact->description) ?>" /></div>
+        <div class="tableCell"><input type="text" name="value[<?= $contact->id ?>]" class="value width-100per" value="<?= htmlentities($contact->value) ?>" /></div>
+        <div class="tableCell"><input type="text" name="notes[<?= $contact->id ?>]" class="value width-100per" value="<?= htmlentities($contact->notes) ?>" /></div>
         <div class="tableCell"><input type="checkbox" name="notify[<?= $contact->id ?>]" value="1" <?php if ($contact->notify) print "checked"; ?> /></div>
         <div class="tableCell"><input type="checkbox" name="public[<?= $contact->id ?>]" value="1" <?php if ($contact->public) print "checked"; ?> /></div>
-        <div class="tableCell"><img style="max-width: 18px; cursor:pointer;" name="drop_contact[<?= $contact->id ?>]" class="icon-button" src="/img/icons/icon_tools_trash_active.svg" onclick="submitDelete(<?= $contact->id ?>)" /></div>
+        <div class="tableCell"><img class="width-30px register-admin-account-contact-drop-icon" name="drop_contact[<?= $contact->id ?>]" src="/img/icons/icon_tools_trash_active.svg" onclick="submitDelete(<?= $contact->id ?>)" /></div>
       </div>
       <!-- New contact entry -->
     <?php } ?>
@@ -324,11 +317,11 @@
           <option value="0" selected="selected">Select</option>
         </select>
       </div>
-      <div class="tableCell"><br /><input type="text" id="new-description" name="description[0]" class="value wide_100per" style="display:none;" /></div>
-      <div class="tableCell"><br /><input type="text" id="new-value" name="value[0]" class="value wide_100per" style="display:none;" /></div>
-      <div class="tableCell"><br /><input type="text" id="new-notes" name="notes[0]" class="value wide_100per" style="display:none;" /></div>
-      <div class="tableCell"><br /><input type="checkbox" id="new-notify" name="notify[0]" value="1" style="display:none;" /></div>
-      <div class="tableCell"><br /><input type="checkbox" id="new-public" name="public[0]" value="1" style="display:none;" /></div>
+      <div class="tableCell"><br /><input type="text" id="new-description" name="description[0]" class="value width-100per register-admin-account-new-contact-hidden" /></div>
+      <div class="tableCell"><br /><input type="text" id="new-value" name="value[0]" class="value width-100per register-admin-account-new-contact-hidden" /></div>
+      <div class="tableCell"><br /><input type="text" id="new-notes" name="notes[0]" class="value width-100per register-admin-account-new-contact-hidden" /></div>
+      <div class="tableCell"><br /><input type="checkbox" id="new-notify" name="notify[0]" value="1" class="register-admin-account-new-contact-hidden" /></div>
+      <div class="tableCell"><br /><input type="checkbox" id="new-public" name="public[0]" value="1" class="register-admin-account-new-contact-hidden" /></div>
       <div class="tableCell"></div>
     </div>
   </div>
@@ -336,7 +329,7 @@
 
   <?php if ($customer->profile == "public") { ?>
   <!-- Business Card Preview Link -->
-  <div style="margin: 20px 0;">
+  <div class="register-admin-account-business-card-preview">
     <a href="/_register/businesscard?customer_id=<?= $customer_id ?>" class="button" target="_blank">Preview Business Card</a>
   </div>
   <?php } ?>
@@ -353,12 +346,12 @@
     </section>
     <div class="tableBody clean min-tablet">
       <div class="tableRowHeader">
-        <div class="tableCell" style="width: 30%;">New Password</div>
-        <div class="tableCell" style="width: 30%;">Confirm New Password</div>
+        <div class="tableCell width-30per">New Password</div>
+        <div class="tableCell width-30per">Confirm New Password</div>
       </div>
       <div class="tableRow">
-        <div class="tableCell"><input type="password" class="value wide_100per" name="password" /></div>
-        <div class="tableCell"><input type="password" class="value wide_100per" name="password_2" /></div>
+        <div class="tableCell"><input type="password" class="value width-100per" name="password" /></div>
+        <div class="tableCell"><input type="password" class="value width-100per" name="password_2" /></div>
       </div>
     </div>
   <?php } ?>
@@ -369,9 +362,9 @@
   <h3>Assigned Roles</h3>
   <div class="tableBody min-tablet">
     <div class="tableRowHeader">
-      <div class="tableCell" style="width: 20%;">Select</div>
-      <div class="tableCell" style="width: 25%;">Name</div>
-      <div class="tableCell" style="width: 30%;">Description</div>
+      <div class="tableCell width-20per">Select</div>
+      <div class="tableCell width-25per">Name</div>
+      <div class="tableCell width-30per">Description</div>
     </div>
     <?php foreach ($all_roles as $role) { ?>
       <div class="tableRow">
@@ -415,7 +408,7 @@
   </div>
 
   <h3>Terms of Use History</h3>
-  <div id="terms-of-use-table" style="margin-bottom: 10px;">
+  <div id="terms-of-use-table" class="register-admin-terms-table">
     <div class="tableBody min-tablet">
       <div class="tableRowHeader">
         <div class="tableCell">Code</div>
@@ -449,27 +442,27 @@
   </div>
 
   <h3>Locations</h3>
-  <div class="table" style="width: 80%;">
+  <div class="table width-80per">
     <div class="tableRowHeader">
-      <div class="tableCell" style="width: 20%;">Name</div>
-      <div class="tableCell" style="width: 80%;">Address</div>
+      <div class="tableCell width-20per">Name</div>
+      <div class="tableCell width-80per">Address</div>
     </div>
     <?php foreach ($locations as $location) { ?>
       <div class="tableRow">
-        <div class="tableCell" style="width: 20%;"><?= $location->name ?></div>
-        <div class="tableCell" style="width: 80%;"><?= $location->HTMLBlockFormat() ?></div>
+        <div class="tableCell width-20per"><?= $location->name ?></div>
+        <div class="tableCell width-80per"><?= $location->HTMLBlockFormat() ?></div>
       </div>
     <?php   } ?>
   </div>
 
   <br /><br />
-  <h3 style="display:inline;">Customer Search Tags</h3>
-  <h4 style="display:inline;">(customer support knowledge center)</h4>
+  <h3 class="register-admin-account-search-tags-inline">Customer Search Tags</h3>
+  <h4 class="register-admin-account-search-tags-inline">(customer support knowledge center)</h4>
   <div class="tableBody min-tablet">
     <div class="tableRowHeader">
-      <div class="tableCell" style="width: 33%;">&nbsp;</div>
-      <div class="tableCell" style="width: 33%;">Category</div>
-      <div class="tableCell" style="width: 33%;">Search Tag</div>
+      <div class="tableCell width-33per">&nbsp;</div>
+      <div class="tableCell width-33per">Category</div>
+      <div class="tableCell width-33per">Search Tag</div>
     </div>
     <?php
     foreach ($registerCustomerSearchTags as $searchTag) {
@@ -518,7 +511,7 @@
     ?>
         <div class="image-container">
           <h4>Current Default Image</h4>
-          <img src="/_storage/downloadfile?file_id=<?= $defaultImageId ?>" style="max-width: 200px;" />
+          <img src="/_storage/downloadfile?file_id=<?= $defaultImageId ?>" class="register-admin-image" />
           <p><?= htmlspecialchars($defaultImage->name) ?></p>
         </div>
     <?php
@@ -539,7 +532,7 @@
           $hasImages = true;
         ?>
           <div class="image-item" id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage('<?= $image->id ?>'); updateDefaultImage('<?= $image->id ?>');">
-            <img src="/_storage/downloadfile?file_id=<?= $image->id ?>" style="max-width: 100px;" />
+            <img src="/_storage/downloadfile?file_id=<?= $image->id ?>" class="max-width-100px" />
             <p><?= htmlspecialchars($image->name) ?></p>
             <?php if ($defaultImageId == $image->id): ?>
               <span class="image-indicator">Default</span>
@@ -558,9 +551,9 @@
     <p><strong>Generate 6 backup codes for this user. Generating new codes will erase all previous backup codes.</strong></p>
     <input type="submit" class="button" name="generate_backup_codes" value="Generate Backup Codes">
     <?php if (isset($generatedBackupCodes) && is_array($generatedBackupCodes)) { ?>
-      <div class="backup-codes-list" style="margin-top: 10px;">
+      <div class="backup-codes-list margin-top-10px">
         <p><strong>Backup Codes (save these in a safe place):</strong></p>
-        <ul style="font-size: 1.2em; letter-spacing: 2px;">
+        <ul class="register-admin-account-backup-codes-ul">
           <?php foreach ($generatedBackupCodes as $code) { ?>
             <li><?= htmlentities($code) ?></li>
           <?php } ?>
@@ -568,20 +561,20 @@
       </div>
     <?php } ?>
     <?php if (isset($allBackupCodes) && count($allBackupCodes) > 0) { ?>
-      <div class="backup-codes-list" style="margin-top: 10px;">
+      <div class="backup-codes-list margin-top-10px">
         <p><strong>Current Backup Codes:</strong></p>
-        <table style="width: 100%; max-width: 400px; border-collapse: collapse;">
+        <table class="table-backup-codes">
           <tr><th>Code</th><th>Status</th></tr>
           <?php foreach ($allBackupCodes as $bcode) { ?>
             <tr>
-              <td style="padding: 4px 8px; font-family: monospace; font-size: 1.1em;">
+              <td class="register-admin-account-backup-codes-td">
                 <?= htmlentities($bcode['code']) ?>
               </td>
-              <td style="padding: 4px 8px;">
+              <td class="register-admin-account-backup-codes-status-td">
                 <?php if ($bcode['used']) { ?>
-                  <span style="color: #b00; font-weight: bold;">Used</span>
+                  <span class="register-admin-account-backup-codes-used">Used</span>
                 <?php } else { ?>
-                  <span style="color: #080; font-weight: bold;">Unused</span>
+                  <span class="register-admin-account-backup-codes-unused">Unused</span>
                 <?php } ?>
               </td>
             </tr>
@@ -621,7 +614,7 @@
 ?>
   <div class="container">
     <h3 class="label">Upload User Image for this account</h3>
-    <p style="color: red;">Repository not found. (please create an S3, Local, Google or Dropbox repository to upload images for this user)</p>
+    <p class="register-admin-account-repository-error">Repository not found. (please create an S3, Local, Google or Dropbox repository to upload images for this user)</p>
   </div>
 <?php
 }

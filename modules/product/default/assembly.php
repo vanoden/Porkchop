@@ -2,11 +2,11 @@
 
 <div class="tableBody min-tablet marginTop_20">
 	<div class="tableRowHeader">
-		<div class="tableCell" style="width: 20%;">Part Code</div>
-		<div class="tableCell" style="width: 20%;">Part Name</div>
-		<div class="tableCell" style="width: 20%;">Quantity</div>
-		<div class="tableCell" style="width: 20%;">Available</div>
-		<div class="tableCell" style="width: 20%;">Actions</div>
+		<div class="tableCell tableCell-width-20">Part Code</div>
+		<div class="tableCell tableCell-width-20">Part Name</div>
+		<div class="tableCell tableCell-width-20">Quantity</div>
+		<div class="tableCell tableCell-width-20">Available</div>
+		<div class="tableCell tableCell-width-20">Actions</div>
 	</div> <!-- end row header -->
 	
 <?php foreach ($parts as $part): ?>
@@ -39,7 +39,7 @@
 			</select>
 		</div>
 		<div class="tableCell">
-			<input type="number" name="new_part_quantity" min="1" value="1" class="wide_100per">
+			<input type="number" name="new_part_quantity" min="1" value="1" class="width-100per">
 		</div>
 		<div class="tableCell">
 			<button type="submit" name="add_part" class="btn btn-primary">Add Part</button>

@@ -21,23 +21,24 @@
   <div class="tableBody min-tablet">
 
     <div class="tableRowHeader">
-      <div class="tableCell" style="width: 15%;">
-      <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=code&order_by=<?php echo $controls['sort'] === 'code' && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Code</a>
+      <div class="tableCell tableCell-width-15">
+      <a href="/_sales/orders?pageNumber=<?php echo isset($pageNumber) ? $pageNumber : 1; ?>&sort_by=code&order_by=<?php echo isset($controls['sort']) && $controls['sort'] === 'code' && isset($controls['order']) && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Code</a>
       </div>
-      <div class="tableCell" style="width: 15%;">Created</div>
-      <div class="tableCell" style="width: 20%;">
-        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=customer_id&order_by=<?php echo $controls['sort'] === 'customer_id' && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Customer</a>
+      <div class="tableCell tableCell-width-15">Created</div>
+      <div class="tableCell tableCell-width-20">
+        <a href="/_sales/orders?pageNumber=<?php echo isset($pageNumber) ? $pageNumber : 1; ?>&sort_by=customer_id&order_by=<?php echo isset($controls['sort']) && $controls['sort'] === 'customer_id' && isset($controls['order']) && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Customer</a>
       </div>
-      <div class="tableCell" style="width: 20%;">
-        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=salesperson_id&order_by=<?php echo $controls['sort'] === 'salesperson_id' && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Sales Agent</a>
+      <div class="tableCell tableCell-width-20">
+        <a href="/_sales/orders?pageNumber=<?php echo isset($pageNumber) ? $pageNumber : 1; ?>&sort_by=salesperson_id&order_by=<?php echo isset($controls['sort']) && $controls['sort'] === 'salesperson_id' && isset($controls['order']) && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Sales Agent</a>
       </div>
-      <div class="tableCell" style="width: 15%;">
-        <a href="/_sales/orders?pageNumber=<?php echo $pageNumber; ?>&sort_by=status&order_by=<?php echo $controls['sort'] === 'status' && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Status</a>
+      <div class="tableCell tableCell-width-15">
+        <a href="/_sales/orders?pageNumber=<?php echo isset($pageNumber) ? $pageNumber : 1; ?>&sort_by=status&order_by=<?php echo isset($controls['sort']) && $controls['sort'] === 'status' && isset($controls['order']) && $controls['order'] === 'asc' ? 'desc' : 'asc'; ?>">Status</a>
       </div>
-      <div class="tableCell" style="width: 15%;">Amount</div>
+      <div class="tableCell tableCell-width-15">Amount</div>
     </div>
 
-    <?php foreach ($orders as $order) { ?>
+    <?php if (isset($orders) && is_array($orders)) {
+		foreach ($orders as $order) { ?>
 
       <div class="tableRow">
         <div class="tableCell"><a href="/_sales/cart/<?=$order->code?>"><?=$order->code?></a></div>
@@ -59,14 +60,17 @@
         <div class="tableCell">$<?=number_format($order->total(),2)?></div>
       </div>
 
-    <?php } ?>
+    <?php 		} 
+	} ?>
     
   </div>
 
   <!-- Start pagination -->
+  <?php if (isset($pagination) && is_object($pagination)) { ?>
   <div class="pagination" id="pagination">
       <?=$pagination->renderPages()?>
   </div>
+  <?php } ?>
   <!-- End pagination -->
 
 </form>

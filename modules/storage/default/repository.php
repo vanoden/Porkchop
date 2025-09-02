@@ -82,47 +82,54 @@
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="id" value="<?=$repository->id?>" />
     <h3>Name</h3>
-    <input type="text" name="name" class="value input wide_xl" value="<?=$form['name']?>" />
+    <input type="text" name="name" class="value input width-300px" value="<?=isset($form['name']) ? htmlspecialchars($form['name']) : ''?>" />
     <h3>Status</h3>
-    <select id="status" name="status" class="value input wide_xl">
-        <option value="NEW"<?php	if ($form['status'] == "NEW") print " selected"; ?>>NEW</option>
-        <option value="ACTIVE"<?php	if ($form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
-        <option value="DISABLED"<?php	if ($form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
+    <select id="status" name="status" class="value input width-300px">
+        <option value="NEW"<?php	if (isset($form['status']) && $form['status'] == "NEW") print " selected"; ?>>NEW</option>
+        <option value="ACTIVE"<?php	if (isset($form['status']) && $form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
+        <option value="DISABLED"<?php	if (isset($form['status']) && $form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
     </select>
     <h3>Type</h3>
 <?php	 if ($repository->id) { ?>
     <span class="value"><?=$repository->type?></span>
 <?php	 } else { ?>
-    <select id="type" name="type" class="value input wide_xl" onchange="getValue(this)">
-<?php	foreach($repository_types as $type => $name) { ?>
-        <option value="<?=$type?>" <?php	if ($form['type'] == "<?=$type?>") print " selected"; ?>><?=$type?></option>
-<?php	 	} ?>
+    <select id="type" name="type" class="value input width-300px" onchange="getValue(this)">
+<?php	if (isset($repository_types) && is_array($repository_types)) {
+		foreach($repository_types as $type => $name) { ?>
+        <option value="<?=$type?>" <?php	if (isset($form['type']) && $form['type'] == "<?=$type?>") print " selected"; ?>><?=$type?></option>
+<?php	 		} 
+		} ?>
 	</select>
 <?php	} ?>
 	<h3>Configuration</h3>
-<?php	foreach ($repository_types as $type => $name) { ?>
-    <div id="<?=$type?>Settings"<?php if ($form['type'] != $type) { print "style=\"display:none;\""; } ?>>
+<?php	if (isset($repository_types) && is_array($repository_types)) {
+		foreach ($repository_types as $type => $name) { ?>
+    <div id="<?=$type?>Settings"<?php if (isset($form['type']) && $form['type'] != $type) { print " class=\"display-none\""; } ?>>
 		<h4><?=$name?></h4>
-        <div class="container" style="margin: 10px; padding: 20px; border:dashed 1px gray; display: inline-table;">
-<?php	foreach($metadata_keys[$type] as $key) { ?>
+        <div class="container container-dashed-gray">
+<?php	if (isset($metadata_keys[$type]) && is_array($metadata_keys[$type])) { 
+		foreach($metadata_keys[$type] as $key) { ?>
             <span class="label"><?=ucfirst($key)?></span>
-            <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" name="<?=$key?>" class="value input wide_xl" value="<?=$form[$key]?>" />
-<?php	} ?>
+            <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" name="<?=$key?>" class="value input width-300px" value="<?=isset($form[$key]) ? htmlspecialchars($form[$key]) : ''?>" />
+<?php		} 
+	} ?>
         </div>
     </div>
-<?php	} ?>
+<?php		} 
+	} ?>
 	<h3>Privileges</h3>
 	<div class="tableBody clean min-tablet">
 		<div class="tableRowHeader">
-        	<div class="tableCell" style="width: 25%;">Type</div>
-        	<div class="tableCell" style="width: 25%;">ID</div>
-        	<div class="tableCell" style="width: 50%;">Permissions</div>
+        	<div class="tableCell tableCell-width-25">Type</div>
+        	<div class="tableCell tableCell-width-25">ID</div>
+        	<div class="tableCell tableCell-width-50">Permissions</div>
     	</div>
     	<!-- end row header -->
 		<!-- Existing Privileges -->
 		<?php
-			foreach ($default_privileges as $privilege) {
-			if (empty($privilege->entity_type)) continue;
+			if (isset($default_privileges) && is_array($default_privileges)) {
+				foreach ($default_privileges as $privilege) {
+				if (empty($privilege->entity_type)) continue;
 		?>
     	<div class="tableRow">
     		<div class="tableCell">
@@ -136,7 +143,8 @@
 				Write<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['w']" value="1"<?php if ($privilege->write) print " checked"; ?> />
     		</div>
 		</div>
-		<?php	} ?>
+		<?php		} 
+			} ?>
 		<!-- New Privilege -->
     	<div class="tableRow">
     		<div class="tableCell">

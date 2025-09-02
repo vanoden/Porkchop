@@ -6,6 +6,17 @@
 	// Counter for newly added images
 	var new_image_count = 0;
 
+	// Set background images from data attributes
+	document.addEventListener('DOMContentLoaded', function() {
+		var imageItems = document.querySelectorAll('.product-admin-images-background');
+		imageItems.forEach(function(item) {
+			var backgroundImage = item.getAttribute('data-background-image');
+			if (backgroundImage) {
+				item.style.backgroundImage = 'url(' + backgroundImage + ')';
+			}
+		});
+	});
+
 	/** @function initImageSelectWizard
 	 * Popup New Image Selection Window to user can add existing images to product
 	 */
@@ -103,31 +114,10 @@
         if (form) form.submit();
     }
 </script>
-<style>
-	.image-item {
-		width: 100px;
-		height: 100px;
-		background-size: cover;
-		background-position: center;
-		border: 1px solid #ccc;
-		margin: 5px;
-		display: inline-block;
-		cursor: pointer;
-	}
-	.image-item.highlighted {
-		border-color: blue;
-	}
-</style>
-<link href="/css/upload.css" type="text/css" rel="stylesheet">
 
-<?=$page->showAdminPageInfo()?>
 
-<style>
-  .tabs { display:flex; gap:6px; margin-bottom:20px; border-bottom:1px solid #ddd; }
-  .tabs .tab { color:#555; background:#f4f4f4; border:1px solid #ddd; border-bottom:none; padding:8px 12px; border-top-left-radius:6px; border-top-right-radius:6px; text-decoration:none; }
-  .tabs .tab:hover { background:#eee; }
-  .tabs .tab.active { background:#fff; color:#222; font-weight:600; }
-</style>
+<?= $page->showAdminPageInfo() ?>
+
 <?php $activeTab = 'images'; ?>
 <?php
     // Small default image thumb + title above tabs
@@ -135,9 +125,9 @@
     if ($__defImg && $__defImg->id) {
         $__thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
         $__title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
-        echo '<div style="margin:6px 0 8px 0; display:flex; align-items:center; gap:8px;">'
-            . '<img src="'. $__thumb .'" alt="Default" style="width:50px;height:50px;border:1px solid #ddd;border-radius:3px;object-fit:cover;" />'
-            . '<div style="font-weight:600;">'. $__title .'</div>'
+        echo '<div class="product-container">'
+            . '<img src="'. $__thumb .'" alt="Default" class="product-thumb" />'
+            . '<div class="product-title">'. $__title .'</div>'
             . '</div>';
     }
 ?>
@@ -158,8 +148,8 @@
     if ($defaultImage && $defaultImage->id) {
         $thumbUrl = "/api/media/downloadMediaImage?height=150&width=150&code=" . $defaultImage->code;
 ?>
-    <div class="container" style="margin: 10px 0 20px 0; display: flex; align-items: center; gap: 16px;">
-        <img src="<?= $thumbUrl ?>" alt="Default image for <?= htmlspecialchars($item->code) ?>" style="border:1px solid #ddd; border-radius:4px; width:150px; height:150px; object-fit:cover;" />
+    <div class="container container-flex-center">
+        <img src="<?= $thumbUrl ?>" alt="Default image for <?= htmlspecialchars($item->code) ?>" class="img-default-thumb" />
         <div>
             <div class="label">Current Default Image</div>
             <div><?= htmlspecialchars($defaultImage->display_name ?? $defaultImage->name) ?></div>
@@ -169,7 +159,7 @@
 
 <?php if ($repository->id) { ?>
 	<!-- File Upload Form -->
-    <div class="container" style="display:block;">
+    <div class="container container-block">
         <form name="repoUpload" action="/_product/admin_images/<?= $item->code ?>" method="post" enctype="multipart/form-data">
             <h3 class="label">Upload Product Image</h3>
             <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
@@ -193,18 +183,18 @@
 	<div class="container">
 		<h3 class="label">Current Images</h3>
 <?php 	if (isset($images) && count($images) > 0) { ?>
-        <div id="image_box" class="image-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:14px;">
+        <div id="image_box" class="image-list image-grid">
             <?php foreach ($images as $image) { 
                 $thumb = "/api/media/downloadMediaImage?height=120&width=120&code=".$image->code;
                 $isDefault = ($image->id == $defaultImageId);
             ?>
-                <div id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage(<?= $image->id ?>);" style="border:1px solid #e3e3e3; border-radius:6px; padding:10px;">
-                    <div class="image-item" style="background-image: url('<?= $thumb ?>'); width: 120px; height: 120px; margin: 0 auto 8px; border-radius:4px;"></div>
-                    <div class="image-code" style="text-align:center; font-size:12px; margin-bottom:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="<?= htmlspecialchars($image->display_name) ?>"><?= htmlspecialchars($image->display_name) ?></div>
+                <div id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage(<?= $image->id ?>);" class="image-item-container">
+                    <div class="image-item product-admin-images-background" data-background-image="<?= $thumb ?>"></div>
+                    <div class="image-code" title="<?= htmlspecialchars($image->display_name) ?>"><?= htmlspecialchars($image->display_name) ?></div>
                     <?php if ($isDefault) { ?>
-                        <div style="text-align:center;"><span class="default-image" style="background:#eef7ff; color:#2a6fdb; padding:2px 6px; border-radius:10px; font-size:11px;">Default</span></div>
+                        <div class="text-align-center"><span class="default-image">Default</span></div>
                     <?php } else { ?>
-                        <div style="text-align:center;"><button type="button" class="button" onclick="updateDefaultImage(<?= $image->id ?>);">Set as Default</button></div>
+                        <div class="text-align-center"><button type="button" class="button" onclick="updateDefaultImage(<?= $image->id ?>);">Set as Default</button></div>
                     <?php } ?>
                 </div>
             <?php } ?>
@@ -219,7 +209,7 @@
 	<!-- Repository not found, display message -->
     <div class="container">
         <h3 class="label">Upload Product Image for this device</h3>
-        <p style="color: red;">Repository not found. (please create an S3, Local, Google or Dropbox repository to upload images for this product)</p>
+        <p class="text-color-red">Repository not found. (please create an S3, Local, Google or Dropbox repository to upload images for this product)</p>
     </div>
 <?php
 }

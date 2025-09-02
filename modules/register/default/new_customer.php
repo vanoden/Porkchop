@@ -190,7 +190,7 @@ function getProvinces() {
             <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
             <input type="hidden" name="method" value="resend">
             <input type="hidden" name="login" value="<?=$_REQUEST['login'];?>">
-            <input type="submit" class="button" value="Resend Email" style="height: 35px; width: 190px;">
+            <input type="submit" class="button register-new-customer-resend-button" value="Resend Email">
         </form>
       <?php
     }
@@ -220,36 +220,36 @@ function getProvinces() {
       <li>
         <input type="text" class="value registerValue long-field" name="organization_name" value="<?=!empty($_REQUEST['organization_name']) ? $_REQUEST['organization_name'] : "" ?>" placeholder="Company LLC" maxlength="50" required /></li>
       <li>
-        <input id="is_reseller_checkbox" type="checkbox" name="reseller" value="yes" style="display: inline;" onChange="checkReseller();">Are you a reseller? (wish sell our products and services)</li>
+        <input id="is_reseller_checkbox" type="checkbox" name="reseller" value="yes" class="register-new-customer-reseller-checkbox" onChange="checkReseller();">Are you a reseller? (wish sell our products and services)</li>
     </ul>
 
     <h2>Register your Product</h2>
     <section>
-      <ul id="serial_number_message" class="connectBorder errorText" style="display: none">
+      <ul id="serial_number_message" class="connectBorder errorText register-new-customer-serial-message">
         <li>Serial number not found in our system</li>
       </ul>
     </section>
 
     <section>
-      <ul id="serial_number_message_ok" class="connectBorder progressText" style="display: none">
+      <ul id="serial_number_message_ok" class="connectBorder progressText register-new-customer-serial-message">
         <li>Serial number has been found</li>
       </ul>
     </section>
 
     <ul class="form-grid four-col connectBorder">
       <li>
-        <input id="has_item_checkbox" type="checkbox" name="reseller" value="yes" style="display: inline;" onChange="checkRegisterProduct();">Already have a device you would like to register?
+        <input id="has_item_checkbox" type="checkbox" name="reseller" value="yes" class="register-new-customer-reseller-checkbox" onChange="checkRegisterProduct();">Already have a device you would like to register?
       </li>
-      <li id="product_type" style="display: none;"> 
+      <li id="product_type" class="register-new-customer-product-type"> 
         <label for="product">Product:</label>
-        <select id="product_id" name="product_id" class="value input collectionField" style="display: block" onchange="document.getElementById('serial_number_message').style.display = 'none';">
+        <select id="product_id" name="product_id" class="value input collectionField register-new-customer-product-select" onchange="document.getElementById('serial_number_message').style.display = 'none';">
           <option value="" <?php	if (isset($selectedProduct) && $product==$selectedProduct) print " selected"; ?>>---</option>
           <?php	foreach ($productsAvailable as $product) { ?>
             <option value="<?=$product->id?>"<?php	if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=strip_tags($product->description)?></option>
           <?php	} ?>
         </select>
       </li>
-      <li id="product_serial" style="display: none;">
+      <li id="product_serial" class="register-new-customer-product-serial">
         <label for="serialNum">Serial #</label>
         <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number" onfocus="checkProduct();" onchange="checkSerial()" maxlength="50">
       </li>
@@ -298,7 +298,7 @@ function getProvinces() {
         <input type="text" class="value registerValue registerLastNameValue long-field" name="last_name" value="<?=!empty($_REQUEST['last_name']) ? $_REQUEST['last_name'] : "" ?>" placeholder="" maxlength="50" required/>
       </li>
       <li>
-        <label for="state" style="clear: both">Phone Number</label>
+        <label for="state" class="register-new-customer-label-clear">Phone Number</label>
         <select name="phone_type" class="input contactTypeInput">
           <option value="Business Phone">Business Phone</option>
           <option value="Home Phone">Home Phone</option>
@@ -307,7 +307,7 @@ function getProvinces() {
         <input type="text" id="phone" name="phone_number" placeholder="555-555-5555" value="<?=!empty($_REQUEST['phone_number']) ? $_REQUEST['phone_number'] : "" ?>" maxlength="50" />
       </li>
       <li>
-        <label for="state" style="clear: both">Email Address:</label>
+        <label for="state" class="register-new-customer-label-clear">Email Address:</label>
         <select name="email_type" class="input contactTypeInput">
           <option value="Work Email">Work Email</option>
           <option value="Home Email">Home Email</option>
@@ -316,7 +316,7 @@ function getProvinces() {
       </li>
       <li>
         <label for="username">Username:</span>
-        <input type="text" id="login" style="<?=isset($loginTaken) ? 'border:solid red 2px;' : ''?> display:inline;" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onchange="checkUserName()" maxlength="50" required/>
+        <input type="text" id="login" class="<?=isset($loginTaken) ? 'register-new-customer-login-error' : 'register-new-customer-login-normal'?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onchange="checkUserName()" maxlength="50" required/>
       </li>
       <li>
         <label for="password">Create Password:</span>
@@ -333,7 +333,7 @@ function getProvinces() {
       <?php
       if (!$captcha_ok) {
       ?>
-        <div style="color:red; font-size: 12px; padding-top:15px;">
+        <div class="register-new-customer-error-message">
           <?=$page->errorString()?>
         </div>
       <?php    
