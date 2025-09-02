@@ -54,8 +54,15 @@ if ($request->validText($method) && $method == 'deleteFile' && $can_proceed) {
 		if (! $file->exists()) {
 			$page->addError("File not found");
 		} else {
-			if ($repository->deleteFileFromDb($file->id)) $page->appendSuccess("File deleted");
-			else $page->addError($repository->error());
+			// See If Image is Associated with Objects
+			$objects = $file->associatedObjects();
+			if (count($objects) > 0) {
+				$page->addError("File is associated with other objects and cannot be deleted");
+			} 
+			else {
+				if ($repository->deleteFileFromDb($file->id)) $page->appendSuccess("File deleted");
+				else $page->addError($repository->error());
+			}
 		}
 	}
 }

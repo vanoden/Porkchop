@@ -110,6 +110,10 @@
 			<span class="value"><?= $file->owner()->code ?></span>
 		</div>
 		<div class="container fileDetailContainer">
+			<span class="label">Associations</span>
+			<span class="value"><?= $assoc_string ?></span>
+		</div>
+		<div class="container fileDetailContainer">
 			<span class="label">Download URI</span>
 			<span class="value"><?= $file->downloadURI() ?></span>
 		</div>

@@ -188,3 +188,31 @@ if ($repository->id) {
 	$page->addBreadcrumb($repository->name, '/_storage/repository/' . $repository->code);
 	$page->addBreadcrumb($file->name);
 }
+
+$object_associations = $file->associatedObjects();
+
+$assoc_string = "";
+foreach ($object_associations as $assoc) {
+	if (! class_exists($assoc['object_type'])) {
+		$page->addError("Class not found for '".$assoc['object_type']."'");
+	}
+	else {
+		$object = new $assoc['object_type']($assoc['object_id']);
+		switch ($assoc['object_type']) {
+			case 'Product\Item':
+				$assoc_string .= "<a href=\"/_product/item/" . $object->code . "\">" . $assoc['label'] . "</a>; ";
+				break;
+			case 'Spectros\Product\Item':
+				$assoc_string .= "<a href=\"/_spectros/item/" . $object->code . "\">" . $object->code . "</a>; ";
+				break;
+			case 'Support\Request\Item':
+				$assoc_string .= "<a href=\"/_support/ticket/" . $object->ticketNumber() . "\">Ticket " . $object->ticketNumber() . "</a>; ";
+				break;
+			case 'Register\Customer':
+				$assoc_string .= "<a href=\"/_register/customer/" . $object->code . "\">" . $assoc['label'] . "</a>; ";
+				break;
+			default:
+				$assoc_string .= $assoc['object_type'] . ': ' . $assoc['label'] . "; ";
+		}
+	}
+}
