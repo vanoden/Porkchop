@@ -35,6 +35,8 @@ class File extends \BaseModel {
 	 */
 	public function __construct($id = 0) {
 		$this->_tableName = 'storage_files';
+		$this->_metaTableName = 'storage_file_metadata';
+		$this->_tableMetaFKColumn = 'file_id';
 		parent::__construct($id);
 	}
 
@@ -423,7 +425,7 @@ class File extends \BaseModel {
 	 * @return bool - True if valid, False if not
 	 */
 	public function validMimeType($mime_type) {
-		if (preg_match('/^(image|application|text|video)\/(png|jpg|jpeg|gif|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip|pdf|octet\-stream|mp4|vcard)$/', $mime_type)) return true;
+		if (preg_match('/^(image|application|text|video)\/(webp|png|jpg|jpeg|gif|tif|tiff|plain|html|csv|cs|js|xml|json|gzip|tar\+gzip|pdf|octet\-stream|mp4|vcard)$/', $mime_type)) return true;
 		return false;
 	}
 
@@ -670,10 +672,15 @@ class File extends \BaseModel {
 			$repository->get($parameters['repository_code']);
 		}
 		elseif (!empty($parameters['repository_name'])) {
-			$factory = new \Storage\RepositoryFactory();
-			$repository = $factory->find($parameters['repository_name']);
-			if ($factory->error()) {
-				$this->addError("Error loading repository: " . $factory->error());
+			$repositoryBase = new \Storage\Repository();
+			$repositoryBase->get($parameters['repository_name']);
+			if ($repositoryBase->error()) {
+				$this->addError("Error finding repository: " . $repositoryBase->error());
+				return false;
+			}
+			$repository = $repositoryBase->getInstance();
+			if ($repositoryBase->error()) {
+				$this->addError("Error loading repository: " . $repositoryBase->error());
 				return false;
 			}
 		}
@@ -714,7 +721,7 @@ class File extends \BaseModel {
 				);
 
 				if ($existing->id) {
-					$this->addError("File already exists with that name in repository: " . $repository->name);
+					$this->addError("File already exists with that name at path '".$parameters['path']."' in repository: " . $repository->name);
 				} else {
 
 					// Add File to Library
@@ -858,5 +865,48 @@ class File extends \BaseModel {
 		if (preg_match('/^(zip|tar|gz|tgz|bz2|rar)$/', $string)) return true;
 
 		return false;
+	}
+
+	/** @method public associatedObjects()
+	 * Get a list of objects associated with this file
+	 * @return array - List of associated objects
+	 */
+	public function associatedObjects() {
+		// Clear Previous Errors
+		$this->clearError();
+
+		// Initialize Database Service
+		$database = new \Database\Service();
+
+		// Prepare Query
+		$get_objects_query = "
+			SELECT	object_id,
+					object_type,
+					label
+			FROM	object_images
+			WHERE	image_id = ?
+		";
+
+		// Bind Parameters
+		$database->AddParam($this->id);
+
+		// Execute Query
+		$rs = $database->Execute($get_objects_query);
+
+		// Check For Errors
+		if (! $rs) {
+			$this->SQLError($database->ErrorMsg());
+			return [];
+		}
+
+		$objects = [];
+		while ($object = $rs->FetchNextObject(false)) {
+			$objects[] = array(
+				'object_id' => $object->object_id,
+				'object_type' => $object->object_type,
+				'label' => $object->label
+			);
+		}
+		return $objects;
 	}
 }
