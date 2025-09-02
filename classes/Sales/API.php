@@ -115,7 +115,7 @@
 				# OK To Update
                 $order = new \Sales\Order();
                 if (! $order->get($_REQUEST['code'])) $this->error("Order not found");
-                if (in_array($order->status,array('APPROVED','CANCELLED','COMPLETE'))) $this->error("Order not ready for approval");
+                if (in_array($order->status(),array('APPROVED','CANCELLED','COMPLETE'))) $this->error("Order not ready for approval");
                 if (! $order->approve()) $this->error($order->error());
 			}
             else $this->error("Permission denied");
@@ -142,7 +142,7 @@
 				# OK To Update
                 $order = new \Sales\Order();
                 if (! $order->get($_REQUEST['code'])) $this->error("Order not found");
-                if (in_array($order->status,array('CANCELLED','COMPLETE'))) $this->error($order->status." order not ready for cancellation");
+                if (in_array($order->status(),array('CANCELLED','COMPLETE'))) $this->error($order->status()." order not ready for cancellation");
                 if (! $order->cancel()) $this->error($order->error());
 			}
             else $this->error("Permission denied");
@@ -430,13 +430,40 @@
 			return array(
 				'ping'			=> array(),
 				'addOrder'		=> array(
-					'code'			=> array(),
-					'customer_code'	=> array('required' => true),
-					'status'		=> array(),
-					'salesperson_code'	=> array(),
-                    'customer_order_number' => array(),
-					'date_quote'	=> array(),
-					'date_order'	=> array(),
+					'description'	=> 'Add a new sales order',
+					'authorization_required' => true,
+					'token_required' => true,
+					'privilege_required' => 'create sales order',
+					'parameters' => array(
+						'code'			=> array(
+							'required' => false,
+							'validation_method' => 'Sales::Order::validCode()'
+						),
+						'customer_code'	=> array(
+							'required' => true,
+							'validation_method' => 'Register::Customer::validCode()'
+						),
+						'status'		=> array(
+							'required' => false,
+							'validation_method' => 'Sales::Order::validStatus()'
+						),
+						'salesperson_code'	=> array(
+							'required' => false,
+							'validation_method' => 'Register::Customer::validCode()'
+						),
+	                    'customer_order_number' => array(
+							'required' => false,
+							'validation_method' => 'Sales::Order::safeString()'
+						),
+						'date_quote'	=> array(
+							'required' => false,
+							'validation_method' => 'Sales::Order::validDate()'
+						),
+						'date_order'	=> array(
+							'required' => false,
+							'validation_method' => 'Sales::Order::validDate()'
+						),
+					)
 				),
                 `updateOrder`   => array(
 					'code'			=> array('required' => true),
@@ -453,8 +480,20 @@
 					'code'	=> array('required' => true),
 				),
 				'cancelOrder'	=> array(
-					'code'	=> array('required' => true),
-                    'reason'    => array('required' => true)
+					'description'	=> 'Put specified order into CANCELLED status with provided reason',
+					'authorization_required' => true,
+					'token_required' => true,
+					'privilege_required' => 'edit sales order',
+					'parameters' => array(
+						'code'	=> array(
+							'required' => true,
+							'validation_method' => 'Sales::Order::validCode()'
+						),
+						'reason'    => array(
+							'required' => true,
+							'validation_method' => 'Sales::Order::safeString()'
+						)
+					)
 				),
 				'findOrders' => array(
 					'organization_code' => array(),
