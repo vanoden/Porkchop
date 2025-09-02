@@ -1,3 +1,8 @@
+<style>
+	th {
+		text-align: left;
+	}
+</style>
 <script language="Javascript">
 	function drop(id) {
 		document.forms[0].delete.value = id;
@@ -14,17 +19,17 @@
 		window.location.href = target;
 	}
 	function addItem(parent) {
-		window.location.href = "/_navigation/item?menu_id=<?=$menu->id?>&parent_id="+parent;
-	}
+	window.location.href = "/_navigation/item?menu_id=<?=isset($menu) ? $menu->id : ''?>&parent_id="+parent;
+}
 </script>
 <?=$page->showAdminPageInfo()?>
 
 <form name="menuForm" action="/_navigation/items" method="post">
 <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-<input type="hidden" name="id" value="<?=$menu->id?>" />
-<input type="hidden" name="parent_id" value="<?=$parent->id?>" />
+<input type="hidden" name="id" value="<?=isset($menu) ? $menu->id : ''?>" />
+<input type="hidden" name="parent_id" value="<?=isset($parent) ? $parent->id : 0?>" />
 <input type="hidden" name="delete" value="" />
-<input type="button" name="add" value="Add Item" onclick="addItem(<?=$parent->id?>);" />
+<input type="button" name="add" value="Add Item" onclick="addItem(<?=isset($parent) ? $parent->id : 0?>);" />
 
 <table class="body clear-both">
 <tr><th>Title</th>
@@ -38,10 +43,10 @@
 <tr><td><?=$item->title?></td>
 	<td><?=$item->target?></td>
 	<td><?=$item->alt?></td>
-	<td><?=$item->required_role()->name?></td>
+	<td><?=$item->required_role() ? $item->required_role()->name : ''?></td>
 	<td><?=$item->view_order?></td>
 	<td>
-		<input type="button" name="details[<?=$item->id?>]" class="button" value="Edit" onclick="edit(<?=$item->id?>,<?=$menu->id?>,<?=$parent->id?>);" />
+		<input type="button" name="details[<?=$item->id?>]" class="button" value="Edit" onclick="edit(<?=$item->id?>,<?=isset($menu) ? $menu->id : ''?>,<?=isset($parent) ? $parent->id : 0?>);" />
 		<input type="button" name="follow[<?=$item->id?>]" class="button" value="Follow" onclick="follow('<?=$item->target?>');"<?php if (empty($item->target)) print " disabled";?> />
 		<input type="button" name="children[<?=$item->id?>]" class="button" value="Children" onclick="childLink(<?=$item->id?>);" />
 		<input type="button" name="deleteit[<?=$item->id?>]" class="button" value="Drop" onclick="drop(<?=$item->id?>);" />

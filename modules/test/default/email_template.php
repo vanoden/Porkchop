@@ -15,7 +15,7 @@
 </select>
 <input type="submit" name="method" value="Load" />
 <?php   }
-        elseif ($_REQUEST['method'] == "Load") {
+        elseif (isset($_REQUEST['method']) && $_REQUEST['method'] == "Load") {
             foreach ($fields as $field) { ?>
 <div>
     <span><?=$field?></span>

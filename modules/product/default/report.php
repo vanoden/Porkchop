@@ -9,18 +9,18 @@
 <a href="/_product/edit">New Product</a>
 <div id="search_container">
     <form method="get">
-        <input type="text" name="search" id="search" placeholder="search" value="<?=$_REQUEST['search']?>" />
+        <input type="text" name="search" id="search" placeholder="search" value="<?=isset($_REQUEST['search']) ? htmlspecialchars($_REQUEST['search']) : ''?>" />
         <select name="product_type" id="product_type">
             <option value="">All</option>
-            <option value="inventory"<?php if ($_REQUEST['product_type'] == "inventory") { print " selected"; } ?>>Inventory</option>
-            <option value="unique"<?php if ($_REQUEST['product_type'] == "unique") { print " selected"; } ?>>Unique</option>
-            <option value="group"<?php if ($_REQUEST['product_type'] == "group") { print " selected"; } ?>>Group</option>
-            <option value="kit"<?php if ($_REQUEST['product_type'] == "kit") { print " selected"; } ?>>Kit</option>
-            <option value="note"<?php if ($_REQUEST['product_type'] == "note") { print " selected"; } ?>>Note</option>
+            <option value="inventory"<?php if (isset($_REQUEST['product_type']) && $_REQUEST['product_type'] == "inventory") { print " selected"; } ?>>Inventory</option>
+            <option value="unique"<?php if (isset($_REQUEST['product_type']) && $_REQUEST['product_type'] == "unique") { print " selected"; } ?>>Unique</option>
+            <option value="group"<?php if (isset($_REQUEST['product_type']) && $_REQUEST['product_type'] == "group") { print " selected"; } ?>>Group</option>
+            <option value="kit"<?php if (isset($_REQUEST['product_type']) && $_REQUEST['product_type'] == "kit") { print " selected"; } ?>>Kit</option>
+            <option value="note"<?php if (isset($_REQUEST['product_type']) && $_REQUEST['product_type'] == "note") { print " selected"; } ?>>Note</option>
         </select>
-        <input type="checkbox" name="status_active" value="true" <?php if ($_REQUEST['status_active'] == 'true') { print "checked"; } ?>/><label>Active</label>
-        <input type="checkbox" name="status_hidden" value="true" <?php if ($_REQUEST['status_hidden'] == 'true') { print "checked"; } ?>/><label>Hidden</label>
-        <input type="checkbox" name="status_deleted" value="true" <?php if ($_REQUEST['status_deleted'] == 'true') { print "checked"; } ?>/><label>Deleted</label>
+        <input type="checkbox" name="status_active" value="true" <?php if (isset($_REQUEST['status_active']) && $_REQUEST['status_active'] == 'true') { print "checked"; } ?>/><label>Active</label>
+        <input type="checkbox" name="status_hidden" value="true" <?php if (isset($_REQUEST['status_hidden']) && $_REQUEST['status_hidden'] == 'true') { print "checked"; } ?>/><label>Hidden</label>
+        <input type="checkbox" name="status_deleted" value="true" <?php if (isset($_REQUEST['status_deleted']) && $_REQUEST['status_deleted'] == 'true') { print "checked"; } ?>/><label>Deleted</label>
         <input type="submit" name="btn_search" value="Search" />
     </form>
 </div>

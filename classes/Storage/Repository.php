@@ -152,10 +152,10 @@
 				}
 			}
 
-			if ($parameters['default_privileges_json'] == "[]") {
+			if (isset($parameters['default_privileges_json']) && $parameters['default_privileges_json'] == "[]") {
 				$parameters['default_privileges_json'] = "";
 			}
-			else if (!empty($parameters['default_privileges_json'])) {
+			else if (isset($parameters['default_privileges_json']) && !empty($parameters['default_privileges_json'])) {
 				if (!json_decode($parameters['default_privileges_json'])) {
 					$this->error("Invalid default privileges JSON");
 					return false;

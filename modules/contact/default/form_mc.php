@@ -21,9 +21,9 @@
 		
 		# Validate email addresses
 		if (!empty($_REQUEST['email_address']) && !empty($_REQUEST['email_address_confirm'])) {
-			if ($_REQUEST['email_address'] !== $_REQUEST['email_address_confirm']) {
+			if (isset($_REQUEST['email_address']) && isset($_REQUEST['email_address_confirm']) && $_REQUEST['email_address'] !== $_REQUEST['email_address_confirm']) {
 				$page->addError("Email addresses do not match.");
-			} elseif (!filter_var($_REQUEST['email_address'], FILTER_VALIDATE_EMAIL)) {
+			} elseif (isset($_REQUEST['email_address']) && !filter_var($_REQUEST['email_address'], FILTER_VALIDATE_EMAIL)) {
 				$page->addError("Please enter a valid email address.");
 			}
 		}

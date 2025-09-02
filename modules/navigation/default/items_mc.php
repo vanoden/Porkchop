@@ -86,3 +86,16 @@
 		$page->addBreadcrumb($parent->title);
 	}
 	else $page->addBreadcrumb($menu->title ?? 'Menu Items');
+
+// Ensure variables are defined before including template
+if (!isset($items)) {
+	$items = [];
+}
+if (!isset($menu)) {
+	$page->addError("No menu specified");
+	$page->render();
+	exit;
+}
+
+// Include the template
+include(__DIR__ . '/items.php');

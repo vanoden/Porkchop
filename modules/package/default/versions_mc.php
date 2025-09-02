@@ -20,7 +20,7 @@
         }
     }
 
-    if ($can_proceed && $_REQUEST['dothis'] == 'publish') {
+    if ($can_proceed && isset($_REQUEST['dothis']) && $_REQUEST['dothis'] == 'publish') {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
             $page->addError("Invalid Request");
             $can_proceed = false;
@@ -37,7 +37,7 @@
             }
         }
     }
-    elseif ($can_proceed && $_REQUEST['dothis'] == 'hide') {
+    elseif ($can_proceed && isset($_REQUEST['dothis']) && $_REQUEST['dothis'] == 'hide') {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
             $page->addError("Invalid Request");
             $can_proceed = false;
@@ -53,7 +53,7 @@
             }
         }
     }
-    elseif ($can_proceed && $_REQUEST['dothis'] == 'download') {
+    elseif ($can_proceed && isset($_REQUEST['dothis']) && $_REQUEST['dothis'] == 'download') {
         if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) {
             $page->addError("Invalid Request");
             $can_proceed = false;

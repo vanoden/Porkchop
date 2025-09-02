@@ -45,7 +45,7 @@
 
 	// Validate parent item if provided
 	if ($can_proceed && !empty($_REQUEST['parent_id'])) {
-		if (!$navItem->validInteger($_REQUEST['parent_id']) || $_REQUEST['parent_id'] === 'undefined') {
+		if (isset($_REQUEST['parent_id']) && (!$navItem->validInteger($_REQUEST['parent_id']) || $_REQUEST['parent_id'] === 'undefined')) {
 			// If parent_id is invalid or 'undefined', treat it as null
 			$_REQUEST['parent_id'] = null;
 		} else {

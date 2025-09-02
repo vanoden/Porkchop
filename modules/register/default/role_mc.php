@@ -71,7 +71,7 @@
             } else {
             
 		        foreach ($privileges as $privilege) {
-		            if ($_REQUEST['privilege'][$privilege->id] == 1) {
+		            if (isset($_REQUEST['privilege'][$privilege->id]) && $_REQUEST['privilege'][$privilege->id] == 1) {
 		                if (! $role->has_privilege($privilege->id) && $role->addPrivilege($privilege->id)) {
 		                    $page->appendSuccess("Added privilege '".$privilege->name."'");
 		                }

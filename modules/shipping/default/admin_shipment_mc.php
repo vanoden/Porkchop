@@ -86,7 +86,7 @@
 										if (!$item->update(array('condition' => $_REQUEST['item_condition'][$item->id]))) {
 											$page->addError("Error updating item " . $item->id . ": " . $item->error());
 										}
-										if ($_REQUEST['item_condition'][$item->id] == 'MISSING' && 
+										if (isset($_REQUEST['item_condition'][$item->id]) && $_REQUEST['item_condition'][$item->id] == 'MISSING' && 
 											($_REQUEST['package_condition'][$package->id] ?? '') != 'DAMAGED') {
 											$_REQUEST['package_condition'][$package->id] = 'INCOMPLETE';
 										}

@@ -394,7 +394,7 @@
 		 * @return mixed The value of the parameter or null if not found
 		 */
 		public function parameter($key) {
-			return $this->_parameters[$key];
+			return $this->_parameters[$key] ?? null;
 		}
 
 		/** @method riskLevel()

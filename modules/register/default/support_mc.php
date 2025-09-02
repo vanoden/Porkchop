@@ -13,11 +13,11 @@ exit;
 
     // apply requested sort
     if (isset($_REQUEST['sortBy']) && !empty($_REQUEST['sortBy'])) {
-        if ($_REQUEST['sortBy'] == "date") $searchQuery['sort_by'] = "requested";
-        if ($_REQUEST['sortBy'] == "serial") $searchQuery['sort_by'] = "serial";
-        if ($_REQUEST['sortBy'] == "ticket") $searchQuery['sort_by'] = "ticket_id";
-        if ($_REQUEST['sortBy'] == "status") $searchQuery['sort_by'] = "status";
-        if ($_REQUEST['sortBy'] == "requestor") $searchQuery['sort_by'] = "requestor";
+        if (isset($_REQUEST['sortBy']) && $_REQUEST['sortBy'] == "date") $searchQuery['sort_by'] = "requested";
+        if (isset($_REQUEST['sortBy']) && $_REQUEST['sortBy'] == "serial") $searchQuery['sort_by'] = "serial";
+        if (isset($_REQUEST['sortBy']) && $_REQUEST['sortBy'] == "ticket") $searchQuery['sort_by'] = "ticket_id";
+        if (isset($_REQUEST['sortBy']) && $_REQUEST['sortBy'] == "status") $searchQuery['sort_by'] = "status";
+        if (isset($_REQUEST['sortBy']) && $_REQUEST['sortBy'] == "requestor") $searchQuery['sort_by'] = "requestor";
     }
     
 	$supportItemRequest = new Support\Request\ItemList();
