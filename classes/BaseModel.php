@@ -85,6 +85,10 @@ class BaseModel extends \BaseClass {
 			}
 			return $this->_getObject($parameters[0]);
 		}
+		elseif ($name == 'addMetadata') {
+			if (gettype($parameters[0]) == 'object') return $this->setMetadataObject($parameters[0], $parameters[1]);
+			else return $this->setMetadataScalar($parameters[0], $parameters[1]);
+		}
 		elseif ($name == 'setMetadata') {
 			if (gettype($parameters[0]) == 'object') return $this->setMetadataObject($parameters[0], $parameters[1]);
 			else return $this->setMetadataScalar($parameters[0], $parameters[1]);
