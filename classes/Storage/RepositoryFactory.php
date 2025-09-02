@@ -44,7 +44,7 @@
 			$repository->find($name);
 
 			if (! $repository->id) {
-				$this->error("Repository not found1");
+				$this->error("Repository not found");
 				return false;
 			}
 			
