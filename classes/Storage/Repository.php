@@ -365,7 +365,7 @@
 				}
 
 				if (isset($existing) && isset($existing->id) && $existing->id) {
-					$this->error("File already exists with that name in repo ".$this->name);
+					$this->error("File already exists with that name at path ".$path." in repo ".$this->name);
 					return null;
 				}
 				else {
@@ -415,11 +415,18 @@
 		 */
 		public function deleteFileFromDb($file_id) {
 			$file = new \Storage\File($file_id);
-			
+
 			if ($file->exists()) {
-				
-				// First delete any references in object_images table
+				// Initialize Database Service
 				$database = new \Database\Service();
+
+				// First delete any metadata
+				$delete_metadata_query = "DELETE FROM storage_file_metadata WHERE file_id = ?";
+				$database->AddParam($file_id);
+				$database->Execute($delete_metadata_query);
+
+				// First delete any references in object_images table
+
 				$delete_refs_query = "DELETE FROM object_images WHERE image_id = ?";
 				$database->AddParam($file_id);
 				$database->Execute($delete_refs_query);
