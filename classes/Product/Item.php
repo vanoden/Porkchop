@@ -46,6 +46,12 @@
 		/** @var float The total cost of the product */
 		protected float $total_cost = 0.0;
 
+		/** @var int|null The manual ID */
+		public ?int $manual_id = null;
+
+		/** @var int|null The spec table image ID */
+		public ?int $spec_table_image = null;
+
 		/**
 		 * Constructor
 		 * 
@@ -342,6 +348,8 @@
 				$this->default_vendor = $product->default_vendor ?? null;
 				$this->total_purchased = $product->total_purchased ?? 0;
 				$this->total_cost = $product->total_cost ?? 0;
+				$this->manual_id = $product->manual_id ?? null;
+				$this->spec_table_image = $product->spec_table_image ?? null;
 				$this->cached($product->_cached);
 				$this->exists(true);
 
@@ -388,6 +396,8 @@
 				$this->default_vendor = $object->default_vendor ?? null;
 				$this->total_purchased = $object->total_purchased ?? 0;
 				$this->total_cost = $object->total_cost ?? 0;
+				$this->manual_id = $object->manual_id ?? null;
+				$this->spec_table_image = $object->spec_table_image ?? null;
 				$this->exists(true);
 			}
 			else {

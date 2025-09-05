@@ -12,7 +12,7 @@
 	</script>
 <!--	<script type="text/javascript" src="/js/textEditor.js"></script> -->
 	<script type="text/javascript">
-		var messageID = <?=$_REQUEST["id"]?>;
+		var messageID = <?=isset($_REQUEST["id"]) ? $_REQUEST["id"] : 'null'?>;
 		function saveContent()
 		{
 			var content = CKEDITOR.instances.contentEditTextArea.getData();
@@ -36,11 +36,11 @@
 		}		
 	</script>
 </head>
-<body onload="_contentEdit(<?=$_REQUEST["id"]?>)">
+<body onload="_contentEdit(<?=isset($_REQUEST["id"]) ? $_REQUEST["id"] : 'null'?>)">
 <form name="textEditorForm" method="post">
-<input type="hidden" name="object" value="<?=$_REQUEST["object"]?>" />
-<input type="hidden" name="id" value="<?=$_REQUEST["id"]?>" />
-<input type="hidden" name="origin" value="<?=$_REQUEST["origin"]?>" />
+<input type="hidden" name="object" value="<?=isset($_REQUEST["object"]) ? htmlspecialchars($_REQUEST["object"]) : ''?>" />
+<input type="hidden" name="id" value="<?=isset($_REQUEST["id"]) ? htmlspecialchars($_REQUEST["id"]) : ''?>" />
+<input type="hidden" name="origin" value="<?=isset($_REQUEST["origin"]) ? htmlspecialchars($_REQUEST["origin"]) : ''?>" />
 <textarea id="contentEditTextArea" class="textarea-width-100 textarea-height-100"></textarea>
 <div class="text-align-right">
 	<input type="button" name="operation" value="Cancel" class="button" onclick="cancel();"/>

@@ -2,7 +2,7 @@
     $page = new \Site\Page();
     $site = new \Site();
 
-    if ($_REQUEST['method'] == "Send") {
+    if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Send") {
         // Initialize Selected Template
         $template = new \Content\Template\Shell();
         $template_name = $_REQUEST['template'];
@@ -79,7 +79,7 @@
             print "</pre>\n";
         }
     }
-    elseif ($_REQUEST['method'] == "Load") {
+    elseif (isset($_REQUEST['method']) && $_REQUEST['method'] == "Load") {
         // Initialize Selected Template
         $template = new \Content\Template\Shell();
         $template_name = $_REQUEST['template'];

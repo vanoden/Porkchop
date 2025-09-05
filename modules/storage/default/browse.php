@@ -49,7 +49,7 @@
 		<div class="tableCell"><?=$file->size?></div>
 		<div class="tableCell"><?=$file->date_created?></div>
 		<div class="tableCell"><?=$file->owner()->full_name()?></div>
-		<div class="tableCell"><?=$file->endpoint?></div>
+		<div class="tableCell"><?=$file->repository()->endpoint?></div>
 		<div class="tableCell"><?=$file->read_protect?></div>
 		<div class="tableCell"><?=$file->write_protect?></div>
 	</div>

@@ -129,7 +129,7 @@
 			}
 
 			// Order Clause
-			if (preg_match('/^(login|first_name|last_name|organization_id)$/',$controls['sort'])) {
+			if (isset($controls['sort']) && preg_match('/^(login|first_name|last_name|organization_id)$/',$controls['sort'])) {
 				$find_person_query .= " ORDER BY ".$controls['sort'];
 			}
 			else

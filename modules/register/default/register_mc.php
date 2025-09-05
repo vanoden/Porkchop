@@ -14,7 +14,7 @@ exit;
 	### Handle Actions		###
 	###########################
 	
-	if ($_REQUEST['method'] == "Apply") {
+	if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 	
 		// Initialize Admin Object
 		$_customer = new \Register\Admin();

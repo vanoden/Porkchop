@@ -16,7 +16,8 @@
 	    public ?string $success = null;
 		public string $instructions = "";
 		public ?int $tou_id = null;
-		public string $sitemap = "";
+			public string $sitemap = "";
+		public bool $isSearchResults = false;
 		private $_breadcrumbs = array();
 	    private $_errors = array();
 		private $_warnings = array();
@@ -1444,5 +1445,14 @@
 			if (preg_match('/\.\./', $string)) return false;
 			if (preg_match('/^\w[\w\-\.\_]*\.html?$/',$string)) return true;
 			else return false;
+		}
+
+		/**
+		 * Set whether the current page is displaying search results
+		 * @param bool $isSearchResults
+		 * @return void
+		 */
+		public function setSearchResults(bool $isSearchResults): void {
+			$this->isSearchResults = $isSearchResults;
 		}
     }

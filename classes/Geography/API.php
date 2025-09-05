@@ -78,7 +78,7 @@
 			$countryList = new \Geography\CountryList();
 
 			$parameters = array();
-			if ($_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
+			if (isset($_REQUEST['status']) && $_REQUEST['status']) $parameters['status'] = $_REQUEST['status'];
 			
 			$countries = $countryList->find($parameters);
 			if ($countryList->error()) $this->error("Error finding countries: ".$countryList->error());
@@ -178,7 +178,7 @@
 				$country = new \Geography\Country($_REQUEST['country_id']);
 				$parameters['country_id'] = $country->id;
 			}
-			if ($_REQUEST['name']) $parameters['name'] = $_REQUEST['name'];
+			if (isset($_REQUEST['name']) && $_REQUEST['name']) $parameters['name'] = $_REQUEST['name'];
 			
 			$provinces = $provinceList->find($parameters);
 			if ($provinceList->error()) $this->error("Error finding provinces: ".$provinceList->error());

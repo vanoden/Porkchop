@@ -25,13 +25,13 @@
 				$_REQUEST['index'] = null;
 			}
 			elseif ($editPage->getPage($_REQUEST['module'],$_REQUEST['view'],$index)) {
-				if ($_REQUEST['key'] == "template" && !$page->validTemplate($_REQUEST['value']) && $_REQUEST['todo'] != 'drop') {
+				if (isset($_REQUEST['key']) && $_REQUEST['key'] == "template" && isset($_REQUEST['value']) && !$page->validTemplate($_REQUEST['value']) && $_REQUEST['todo'] != 'drop') {
 					$page->addError("Invalid template name");
 					return;
 				}
 
 				if (isset($_REQUEST['todo'])) {
-					if ($_REQUEST['todo'] == 'drop') {
+					if (isset($_REQUEST['todo']) && $_REQUEST['todo'] == 'drop') {
 						if ($editPage->unsetMetadata($_REQUEST['key'])) {
 							$page->success = "Metadata key '".$_REQUEST['key']."' dropped";
 						}

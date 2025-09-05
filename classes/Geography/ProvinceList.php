@@ -38,7 +38,7 @@ class ProvinceList Extends \BaseListClass {
 			$database->AddParam($parameters['country_id']);
 		}
 
-		if ($parameters['name']) {
+		if (isset($parameters['name']) && $parameters['name']) {
 			// Handle Wildcards
 			if (preg_match('/[\*\?]/',$parameters['name']) && preg_match('/^[\*\?\w\-\.\s]+$/',$parameters['name'])) {
 				$parameters['name'] = str_replace('*','%',$parameters['name']);

@@ -16,7 +16,7 @@ exit;
 	app_log($_REQUEST['action']." request:".print_r($_REQUEST,true),'debug',__FILE__,__LINE__);
 
 	# Call Requested Event
-	if ($_REQUEST["method"])
+	if (isset($_REQUEST["method"]) && !empty($_REQUEST["method"]))
 	{
 		# Call the Specified Method
 		$function_name = $_REQUEST["method"];
@@ -71,6 +71,7 @@ exit;
 		else error("session code required");
 
 		$hits = $session->hits();
+		$response = new \HTTP\Response();
 		$response->success = 1;
 		$response->hit = $hits;
         api_log($response);

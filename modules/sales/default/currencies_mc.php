@@ -6,7 +6,7 @@
 
 	// Handle User Input
 	foreach ($_REQUEST['currency_name'] as $currency_id => $currency_name) {
-		$currency_symbol = $_REQUEST['currency_symbol'][$currency_id];
+		$currency_symbol = $_REQUEST['currency_symbol'][$currency_id] ?? '';
 
 		$currency = new \Sales\Currency();
 		if ($currency->validInteger($currency_id)) {

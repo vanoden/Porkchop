@@ -7,7 +7,7 @@
 	<div><select name="class_name">
 		<option value="">Select a class</option>
 		<?php foreach ($classList as $class) { ?>
-			<option value="<?=$class?>"<?php if ($_REQUEST["class_name"] == $class) print " selected";?>><?=$class?></option>
+			<option value="<?=$class?>"<?php if (isset($_REQUEST["class_name"]) && $_REQUEST["class_name"] == $class) print " selected";?>><?=$class?></option>
 		<?php } ?>
 	</select></div>
 	<div><input type="text" name="code" value="<?php if (isset($_REQUEST['code'])) print $_REQUEST['code']; ?>" placeholder="Instance Code" /></div>

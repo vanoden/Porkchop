@@ -49,7 +49,9 @@
         if (!empty($_REQUEST['setDefaultShipping']) && is_numeric($_REQUEST['setDefaultShipping'])) {
 		    $parameters['default_shipping_location_id'] = $_REQUEST['setDefaultShipping'];
 		}
-	    if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
+	    if (!isset($_REQUEST['password_expiration_days']) || !is_numeric($_REQUEST['password_expiration_days'])) {
+	        $_REQUEST['password_expiration_days'] = 0;
+	    }
 		if (isset($_REQUEST['password_expiration_days']) && is_numeric($_REQUEST['password_expiration_days']))
 			$parameters['password_expiration_days'] = $_REQUEST['password_expiration_days'];
 		if (isset($_REQUEST['website_url']) && !empty($_REQUEST['website_url']))

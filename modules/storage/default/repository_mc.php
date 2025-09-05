@@ -46,23 +46,23 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			$page->addError("Invalid name");
 			$_REQUEST['name'] = htmlspecialchars($_REQUEST['name']);
 		}
-		if (empty($repository->id) && !$repository->validType($_REQUEST['type'])) {
-			$page->addError("Invalid type '" . $_REQUEST['type'] . "'");
-			$_REQUEST['type'] = htmlspecialchars($_REQUEST['type']);
-		}
-		if (!$repository->validStatus($_REQUEST['status'])) {
+					if (empty($repository->id) && isset($_REQUEST['type']) && !$repository->validType($_REQUEST['type'])) {
+				$page->addError("Invalid type '" . $_REQUEST['type'] . "'");
+				$_REQUEST['type'] = htmlspecialchars($_REQUEST['type']);
+			}
+		if (isset($_REQUEST['status']) && !$repository->validStatus($_REQUEST['status'])) {
 			$page->addError("Invalid status");
 			$_REQUEST['status'] = htmlspecialchars($_REQUEST['status']);
 		}
 
 		// For new repositories, create the proper repository type before validation
-		if (empty($repository->id) && !empty($_REQUEST['type']) && $repository->validType($_REQUEST['type'])) {
+		if (empty($repository->id) && !empty($_REQUEST['type']) && isset($_REQUEST['type']) && $repository->validType($_REQUEST['type'])) {
 			$repository = new \Storage\Repository();
 			$repository->getInstance($_REQUEST['type']);
 			if ($repository->error()) $page->addError($repository->error());
 			// If factory returns false (unsupported type), fall back to base repository
 			if (!$repository) {
-				$page->addError("Repository type '" . $_REQUEST['type'] . "' is not supported");
+				$page->addError("Repository type '" . (isset($_REQUEST['type']) ? $_REQUEST['type'] : '') . "' is not supported");
 				$repository = new \Storage\Repository();
 			}
 		}
@@ -92,8 +92,8 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			}
 			
 			// Debug logging for S3 repositories
-			if ($_REQUEST['type'] == 's3') {
-				app_log("S3 Repository creation - bucket parameter: '" . $_REQUEST['bucket'] . "'", 'debug');
+			if (isset($_REQUEST['type']) && $_REQUEST['type'] == 's3') {
+				app_log("S3 Repository creation - bucket parameter: '" . (isset($_REQUEST['bucket']) ? $_REQUEST['bucket'] : '') . "'", 'debug');
 				app_log("S3 Repository creation - all metadata: " . print_r($parameters, true), 'debug');
 			}
 
@@ -115,7 +115,7 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 						$repository = new \Storage\Repository();
 					}
 				}
-				if ($_REQUEST['type'] == 'local') $parameters['path'] = $_REQUEST['path'];
+				if (isset($_REQUEST['type']) && $_REQUEST['type'] == 'local' && isset($_REQUEST['path'])) $parameters['path'] = $_REQUEST['path'];
 				$repository->add($parameters);
 				$page->success = "Repository created";
 			}
@@ -126,11 +126,15 @@ if (isset($_REQUEST['btn_submit']) && ! $page->errorCount()) {
 			// Parse Existing Privilege Data
 			$privilegeList->fromJSON($repository->default_privileges_json);
 			// Apply Form Edits to Existing Privileges
-			$privilegeList->apply($_REQUEST['privilege']);
+			if (isset($_REQUEST['privilege'])) {
+				$privilegeList->apply($_REQUEST['privilege']);
+			}
 			if ($privilegeList->error()) $page->error($privilegeList->error());
 			if (!empty($privilegeList->message)) $page->appendSuccess($privilegeList->message);
 			// Add New Privileges
-			$privilegeList->grant($_REQUEST['new_privilege_entity_type'], $_REQUEST['new_privilege_entity_id'], $_REQUEST['new_privilege_read'], $_REQUEST['new_privilege_write']);
+			if (isset($_REQUEST['new_privilege_entity_type']) && isset($_REQUEST['new_privilege_entity_id']) && isset($_REQUEST['new_privilege_read']) && isset($_REQUEST['new_privilege_write'])) {
+				$privilegeList->grant($_REQUEST['new_privilege_entity_type'], $_REQUEST['new_privilege_entity_id'], $_REQUEST['new_privilege_read'], $_REQUEST['new_privilege_write']);
+			}
 			// Update Repository Record with Updated Privileges
 			$privilege_json = $privilegeList->toJSON();
 			if (!$repository->update(array('default_privileges_json' => $privilege_json))) $page->addError("Error updating privileges: " . $repository->error() . "\n");

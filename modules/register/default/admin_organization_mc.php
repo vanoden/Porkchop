@@ -13,11 +13,11 @@
 
 	# Security - Only Register Module Operators or Managers can see other customers
 	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
-		if (preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
+		if (isset($_REQUEST['organization_id']) && preg_match('/^\d+$/',$_REQUEST['organization_id'])) {
 			$organization = new \Register\Organization($_REQUEST['organization_id']);
 			if ($organization->error()) $page->addError("Unable to load organization: ".$organization->error());
 		}
-		elseif (preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
+		elseif (isset($GLOBALS['_REQUEST_']->query_vars_array[0]) && preg_match('/^[\w\-\.\_]+$/',$GLOBALS['_REQUEST_']->query_vars_array[0])) {
 			$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
 			$organization = new \Register\Organization();
 			if ($organization->validCode($code)) {
@@ -39,13 +39,13 @@
 	    }
 		else {
             $page->appendSuccess($_REQUEST['method']);
-		    if (! $_REQUEST['name']) {
+		    if (!isset($_REQUEST['name']) || ! $_REQUEST['name']) {
 			    $page->addError("Name required");
 		    }
 			elseif (!$organization->validName($_REQUEST['name'])) {
 				$page->addError("Invalid name");
 			}
-			elseif (!$organization->validStatus($_REQUEST['status'])) {
+			elseif (!isset($_REQUEST['status']) || !$organization->validStatus($_REQUEST['status'])) {
 			    $page->addError("Invalid status");
 		    }
 			elseif (!empty($_REQUEST['code']) && !$organization->validCode($_REQUEST['code'])) {
@@ -53,7 +53,9 @@
 		    }
 			else {
 			    if (empty($_REQUEST['code'])) $_REQUEST['code'] = null;
-			    if (! is_numeric($_REQUEST['password_expiration_days'])) $_REQUEST['password_expiration_days'] = 0;
+			    if (!isset($_REQUEST['password_expiration_days']) || !is_numeric($_REQUEST['password_expiration_days'])) {
+			        $_REQUEST['password_expiration_days'] = 0;
+			    }
 			    $parameters = array(
 				    "name"					    => isset($_REQUEST['name']) ? $_REQUEST['name'] : '',
 				    "code"					    => isset($_REQUEST['code']) ? $_REQUEST['code'] : '',
