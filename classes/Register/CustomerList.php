@@ -4,7 +4,16 @@
 	class CustomerList Extends \BaseListClass {
 
 		public function flagActive() {
+			// Clear Previous Errors
+			$this->clearError();
 
+			// Reset Counter
+			$this->resetCount();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Prepare Query to Find Recently Active Users
 			$find_session_query = "
 				SELECT 	MAX(user_id)
 				FROM	session_sessions
@@ -12,30 +21,31 @@
 				AND		session.last_hit > date_sub(sysdate(),interval 3 month)
 				GROUP BY user_id
 			";
-			$rs = $GLOBALS['_database']->Execute($find_session_query);
+			$rs = $database->Execute($find_session_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
-			$counter = 0;
+
 			while (list($id) = $rs->FetchRow()) {
-				$counter ++;
+				$this->incrementCount();
 				$update_customer_query = "
 					UPDATE	register_users
 					SET		status = 'ACTIVE'
 					WHERE	id = ?
 				";
-				$GLOBALS['_database']->Execute(
-					$update_customer_query,
-					array($id)
+				$database->resetParams();
+				$database->AddParam($id);
+				$database->Execute(
+					$update_customer_query
 				);
-				if ($GLOBALS['_database']->ErrorMsg()) {
-					$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				if ($database->ErrorMsg()) {
+					$this->SQLError($database->ErrorMsg());
 					return null;
 				}
 			}
-			app_log("Activated ".$counter." customers",'info',__FILE__,__LINE__);
-			return $counter;
+			app_log("Activated ".$this->getCount()." customers",'info',__FILE__,__LINE__);
+			return $this->getCount();
 		}
 		
 		public function expireInactive($age = 14) {
@@ -301,7 +311,7 @@
 			}
 			else
 				$find_person_query .= " ORDER BY login";
-			if (!empty($controls['order'])) $find_person_query .= " DESC";
+			if (!empty($controls['order']) && strtolower($controls['order']) == 'desc') $find_person_query .= " DESC";
 			else $find_person_query .= " ASC";
 
 			if (!empty($controls['limit']) && is_numeric($controls['limit'])) {
