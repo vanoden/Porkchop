@@ -48,7 +48,7 @@
 				else return $this->setMetadataScalar($parameters[0], $parameters[1]);
 			}
 			else {
-				$this->error("Invalid method called");
+				$this->error("Invalid method '".$name."' called on ".get_class($this)." object");
 				return false;
 			}
 		}
