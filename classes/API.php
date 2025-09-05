@@ -414,6 +414,7 @@
 						$validation_class = new $validation_class_name();
 						//print_r("\tValidation: ".$validation_class_name."->".$validation_method."(".$_REQUEST[$param].")\n");
 						if (! $validation_class->$validation_method($value)) {
+							app_log("Invalid $param value '".$value."' for validation method '".$validation_class_name."->".$validation_method."'",'notice');
 							$this->invalidRequest("Invalid $param value");
 						}
 					}
