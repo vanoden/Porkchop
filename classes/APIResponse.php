@@ -87,7 +87,7 @@
 			$document->prepare($data);
 
 			// Store Document in Communication Record
-			$comm->update(json_encode($document));
+			$comm->update(json_encode($data,JSON_FORCE_OBJECT));
 
 			// Specify content length if configured
 			if (isset($GLOBALS['_config']->site->force_content_length) && $GLOBALS['_config']->site->force_content_length == true) {
