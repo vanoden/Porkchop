@@ -168,14 +168,28 @@
 		}
 
 		public function members() {
+			// Clear Previous Errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Ensure Role Exists
+			if (! $this->id) {
+				$this->error("Role not found");
+				return null;
+			}
+
+			// Prepare Query to Get Members
 			$get_members_query = "
 				SELECT	user_id
 				FROM	register_users_roles
 				WHERE	role_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_members_query,array($this->id));
+			$database->AddParam($this->id);
+			$rs = $database->Execute($get_members_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 			$admins = array();
