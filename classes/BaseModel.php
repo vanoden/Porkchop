@@ -80,7 +80,6 @@ class BaseModel extends \BaseClass {
 		if ($name == 'get' && count($parameters) == 2) $this->error("Too many parameters for 'get'");
 		elseif ($name == 'get')  {
 			if (!isset($parameters[0]) || $parameters[0] === null || $parameters[0] === '') {
-				$this->error("No value provided to get()");
 				return false;
 			}
 			return $this->_getObject($parameters[0]);
