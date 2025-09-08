@@ -135,10 +135,6 @@
 			),
 		),
 		"Action"		=> array(
-			"roles"			=> array(
-				"action manager"	=> array(),
-				"action user"		=> array(),
-			),
 		),
 		"Monitor"		=> array(
 			"roles"			=> array(
