@@ -49,10 +49,6 @@
 				$GLOBALS['_database']->CommitTrans();
 			}
 
-			$this->addRoles(array(
-				'content operator'	=> 'Can edit web site content',
-				'content developer'	=> 'Can view api page'
-			));
 			return true;
 		}
 	}
