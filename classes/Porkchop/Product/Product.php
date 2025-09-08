@@ -11,7 +11,7 @@
 		private $_type;
 		private $_description;
 		
-		public function __construct($session) {
+		public function __construct($session = null) {
 			$this->_session = $session;
 		}
 
