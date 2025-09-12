@@ -52,6 +52,9 @@
 	};
 
 	document.addEventListener("DOMContentLoaded", function() {
+		// Reset page to hide all forms initially
+		resetPage();
+		
 		// Check if the organization already exists for button states
 		var elements = document.getElementsByClassName("organization");
 		for (let i = 0; i < elements.length; i++) {

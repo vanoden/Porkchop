@@ -1,0 +1,141 @@
+<?= $page->showAdminPageInfo() ?>
+
+<?php $activeTab = 'metadata'; ?>
+<?php
+    $__defImg = $item->getDefaultStorageImage();
+    if ($__defImg && $__defImg->id) {
+        $__thumb = "/api/media/downloadMediaImage?height=50&width=50&code=".$__defImg->code;
+        $__title = htmlspecialchars($item->getMetadata('name') ?: $item->name ?: $item->code);
+        echo '<div class="product-container">'
+            . '<img src="'. $__thumb .'" alt="Default" class="product-thumb" />'
+            . '<div class="product-title">'. $__title .'</div>'
+            . '</div>';
+    }
+?>
+<div class="tabs">
+    <a href="/_spectros/admin_product/<?= $item->code ?>" class="tab <?= $activeTab==='details'?'active':'' ?>">Details</a>
+    <a href="/_product/admin_product_prices/<?= $item->code ?>" class="tab <?= $activeTab==='prices'?'active':'' ?>">Prices</a>
+    <a href="/_product/admin_product_vendors/<?= $item->code ?>" class="tab <?= $activeTab==='vendors'?'active':'' ?>">Vendors</a>
+    <a href="/_product/admin_images/<?= $item->code ?>" class="tab <?= $activeTab==='images'?'active':'' ?>">Images</a>
+    <a href="/_product/admin_product_tags/<?= $item->code ?>" class="tab <?= $activeTab==='tags'?'active':'' ?>">Tags</a>
+    <a href="/_product/admin_product_parts/<?= $item->code ?>" class="tab <?= $activeTab==='parts'?'active':'' ?>">Parts</a>
+    <a href="/_spectros/admin_asset_sensors/<?= $item->code ?>" class="tab <?= $activeTab==='sensors'?'active':'' ?>">Sensors</a>
+    <a href="/_product/admin_product_metadata/<?= $item->code ?>" class="tab <?= $activeTab==='metadata'?'active':'' ?>">Metadata</a>
+    <a href="/_product/audit_log/<?= $item->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
+</div>
+
+<form id="metadataForm" name="metadataForm" method="post" action="/_product/admin_product_metadata/<?= $item->code ?>">
+    <input type="hidden" name="id" id="id" value="<?= $item->id ?>" />
+    <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+
+    <h3>Product Metadata</h3>
+    <p>Configure additional metadata fields for this product.</p>
+
+    <div class="metadata-section">
+        <h4>Basic Information</h4>
+        <div class="input-horiz">
+            <span class="label">Name</span>
+            <input type="text" class="value input width-300px" name="name" id="name" value="<?= htmlspecialchars($item->getMetadata('name')) ?>" />
+        </div>
+        <div class="input-horiz">
+            <span class="label">Short Description</span>
+            <input type="text" class="value input width-500px" name="short_description" id="short_description" value="<?= htmlspecialchars($item->getMetadata('short_description')) ?>" />
+        </div>
+        <div class="input-horiz">
+            <span class="label">Description</span>
+            <textarea class="value input width-500px textarea-height-100" name="description" id="description"><?= htmlspecialchars($item->getMetadata('description')) ?></textarea>
+        </div>
+    </div>
+
+    <div class="metadata-section">
+        <h4>Product Configuration</h4>
+        <div class="input-horiz">
+            <span class="label">Default Dashboard</span>
+            <select class="value input width-300px" name="default_dashboard_id" id="default_dashboard_id">
+                <option value="">Select Dashboard</option>
+                <?php $default_dashboard_id = $item->getMetadata('default_dashboard_id');
+                foreach ($dashboards as $dashboard) { ?>
+                    <option value="<?= $dashboard->id ?>" <?php if ($default_dashboard_id == $dashboard->id) { print " selected"; } ?>><?= htmlspecialchars($dashboard->name) ?></option>
+                <?php } ?>
+            </select>
+        </div>
+        <div class="input-horiz">
+            <span class="label">Manual</span>
+            <select class="value input width-300px" name="manual_id" id="manual_id">
+                <option value="">Select Manual</option>
+                <?php foreach ($manuals as $manual) { ?>
+                    <option value="<?= $manual->id ?>" <?php if ($item->manual_id == $manual->id) { print " selected"; } ?>><?= htmlspecialchars($manual->name) ?></option>
+                <?php } ?>
+            </select>
+        </div>
+        <div class="input-horiz">
+            <span class="label">Spec Table</span>
+            <select class="value input width-300px" name="spec_table_image" id="spec_table_image">
+                <option value="">Select Spec Table</option>
+                <?php foreach ($tables as $table) { ?>
+                    <option value="<?= $table->id ?>" <?php if ($item->spec_table_image == $table->id) { print " selected"; } ?>><?= htmlspecialchars($table->name) ?></option>
+                <?php } ?>
+            </select>
+        </div>
+    </div>
+
+    <div class="metadata-section">
+        <h4>Additional Metadata</h4>
+        <?php foreach ($metadataKeys as $key) {
+            if (in_array($key, ['default_dashboard_id', 'manual_id', 'spec_table_image', 'name', 'description', 'short_description'])) continue;
+            $label = $key;
+            $label = ucwords(str_replace("_", " ", $label));
+        ?>
+            <div class="input-horiz" id="item<?= $key ?>">
+                <span class="label"><?= $label ?></span>
+                <input type="text" class="value input width-300px" name="<?= $key ?>" id="<?= $key ?>" value="<?= htmlspecialchars($item->getMetadata($key)) ?>" />
+            </div>
+        <?php } ?>
+    </div>
+
+    <div class="editSubmit button-bar floating">
+        <input type="submit" class="button" value="Update Metadata" name="updateMetadata" id="updateMetadata" />
+    </div>
+</form>
+
+<style>
+.metadata-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.metadata-section h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+}
+
+.input-horiz {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.input-horiz .label {
+    min-width: 150px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.input-horiz input,
+.input-horiz select,
+.input-horiz textarea {
+    flex: 1;
+    max-width: 500px;
+}
+
+.textarea-height-100 {
+    height: 100px;
+    resize: vertical;
+}
+</style>

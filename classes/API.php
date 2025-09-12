@@ -367,10 +367,14 @@
 				if (!empty($value) && (!empty($options['content-type']) || !empty($options['content_type']))) {
 					// Because I was stupid and used content-type instead of content_type at first
 					if (!empty($options['content-type']) && !empty($options['content_type'])) $options['content_type'] = $options['content-type'];
-					if (in_array($options['content_type'],['int','integer','float']) && ! is_numeric($value)) {
+					
+					// Ensure content_type is set
+					$content_type = isset($options['content_type']) ? $options['content_type'] : (isset($options['content-type']) ? $options['content-type'] : '');
+					
+					if (in_array($content_type,['int','integer','float']) && ! is_numeric($value)) {
 						$this->invalidRequest("Invalid $param value");
 					}
-					elseif (in_array($options['content_type'],['bool','boolean'])) {
+					elseif (in_array($content_type,['bool','boolean'])) {
 						if ($_REQUEST[$param] == 1) $_REQUEST[$param] = 'true';
 						elseif ($_REQUEST[$param] == 0) $_REQUEST[$param] = 'false';
 						elseif (isset($_REQUEST[$param]) && empty($_REQUEST[$param])) {
@@ -380,19 +384,19 @@
 							$this->invalidRequest("Invalid $param value");
 						}
 					}
-					elseif (in_array($options['content_type'],['date','datetime'])) {
+					elseif (in_array($content_type,['date','datetime'])) {
 						if (! get_mysql_date($value)) $this->invalidRequest("Invalid $param value");
 					}
-					elseif ($options['content_type'] == 'email') {
+					elseif ($content_type == 'email') {
 						if (! filter_var($value,FILTER_VALIDATE_EMAIL)) $this->invalidRequest("Invalid $param value");
 					}
-					elseif ($options['content_type'] == 'url') {
+					elseif ($content_type == 'url') {
 						if (! filter_var($value,FILTER_VALIDATE_URL)) $this->invalidRequest("Invalid $param value");
 					}
-					elseif ($options['content_type'] == 'phone') {
+					elseif ($content_type == 'phone') {
 						if (! preg_match('/^\d{10,11}$/',$value)) $this->invalidRequest("Invalid $param value");
 					}
-					elseif ($options['content_type'] == 'file') {
+					elseif ($content_type == 'file') {
 						if (! preg_match('/^[\w\-\_\.]+$/',$value)) $this->invalidRequest("Invalid $param value");
 					}
 				}

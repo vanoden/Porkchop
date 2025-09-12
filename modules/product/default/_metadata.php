@@ -1,6 +1,6 @@
 <?php
 	$modules["Product"] = array(
-		"schema"	=> 15,
+		"schema"	=> 16,
 		"privileges"	=> array(
 			"edit product prices",
 			"manage products",
@@ -18,5 +18,6 @@
 			"admin_product_tags"		=> $templates['admin'],
 			"admin_product_parts"		=> $templates['admin'],
 			"audit_log"					=> $templates['admin'],
+			"admin_product_metadata"		=> $templates['admin']
 		)
 	);
