@@ -10,7 +10,7 @@ class Client Extends \BaseClass {
 	 * Set the token from the Site Config
 	 */
 	public function __construct() {
-		$this->token = $GLOBALS['_config']->slack->bot_token;
+		$this->token = isset($GLOBALS['_config']->slack) && isset($GLOBALS['_config']->slack->bot_token) ? $GLOBALS['_config']->slack->bot_token : null;
 	}
 
 	/** @method send(string $channel, string $message)
@@ -54,11 +54,12 @@ class Client Extends \BaseClass {
 			elseif (preg_match('/application\/json/',$response->header("content-type"))) {
 				$object = json_decode($response->content());
 				// Check for Success Element
-				if ($object->success == 1) {
+				if (isset($object->success) && $object->success == 1) {
 					return true;
 				}
 				else {
-					$this->error("Error sending message: ".$object->error);
+					$error_msg = isset($object->error) ? $object->error : 'Unknown error';
+					$this->error("Error sending message: ".$error_msg);
 					return false;
 				}
 			}

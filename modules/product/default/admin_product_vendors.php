@@ -20,6 +20,7 @@
     <a href="/_product/admin_product_tags/<?= $item->code ?>" class="tab <?= $activeTab==='tags'?'active':'' ?>">Tags</a>
     <a href="/_product/admin_product_parts/<?= $item->code ?>" class="tab <?= $activeTab==='parts'?'active':'' ?>">Parts</a>
     <a href="/_spectros/admin_asset_sensors/<?= $item->code ?>" class="tab <?= $activeTab==='sensors'?'active':'' ?>">Sensors</a>
+    <a href="/_product/admin_product_metadata/<?= $item->code ?>" class="tab <?= $activeTab==='metadata'?'active':'' ?>">Metadata</a>
     <a href="/_product/audit_log/<?= $item->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
 </div>
 
@@ -48,13 +49,13 @@
 					<?php } ?>
 				</select>
 			</td>
-			<td><input type="text" name="price" class="value input input-width-110" /></td>
-			<td><input type="text" name="min_order" class="value input input-width-110" /></td>
-			<td><input type="text" name="pack_quantity" class="value input input-width-110" /></td>
-			<td><input type="text" name="pack_unit" class="value input input-width-110" /></td>
-			<td><input type="text" name="price_break_quantity_1" class="value input input-width-110" /></td>
-			<td><input type="text" name="price_at_quantity_1" class="value input input-width-110" /></td>
-			<td><input type="text" name="price_break_quantity_2" class="value input input-width-110" /></td>
+			<td><input type="text" name="price" class="value input input-width-80" /></td>
+			<td><input type="text" name="min_order" class="value input input-width-80" /></td>
+			<td><input type="text" name="pack_quantity" class="value input input-width-80" /></td>
+			<td><input type="text" name="pack_unit" class="value input input-width-80" /></td>
+			<td><input type="text" name="price_break_quantity_1" class="value input input-width-80" /></td>
+			<td><input type="text" name="price_at_quantity_1" class="value input input-width-80" /></td>
+			<td><input type="text" name="price_break_quantity_2" class="value input input-width-80" /></td>
 			<td><input type="text" name="price_at_quantity_2" class="value input input-width-80" /></td>
 		</tr>
 	</table>
@@ -86,14 +87,14 @@
 			<form method="post" action="/_product/admin_product_vendors/<?= $item->code ?>">
 			<tr><td><span class="text-inline-block text-width-150"><?= htmlspecialchars($vendor->name) ?></span></td>
 				<td><?= htmlspecialchars($vendor->code) ?></td>
-				<td><input type="text" class="input-width-100 input-text-right" name="price" value="<?=$vendorItem->price?>"/></td>
-				<td><input type="text" class="input-width-100 input-text-right" name="min_order" value="<?=$vendorItem->minimum_order?>"/></td>
-				<td><input type="text" class="input-width-100 input-text-right" name="pack_quantity" value="<?=$vendorItem->pack_quantity?>"/></td>
-				<td><input type="text" class="input-width-100 input-text-right" name="pack_unit" value="<?=$vendorItem->pack_unit?>"/></td>
-				<td><input type="text" class="input-width-100 input-text-right" name="price_break_quantity_1" value="<?=$vendorItem->price_break_quantity_1?>"/></td>
-				<td><input type="text" class="input-width-100 input-text-right" name="price_at_quantity_1" value="<?=$vendorItem->price_at_quantity_1?>"/></td>
-				<td><input type="text" class="input-width-100 input-text-right" name="price_break_quantity_2" value="<?=$vendorItem->price_break_quantity_2?>"/></td>
-				<td><input type="text" class="input-width-100 input-text-right" name="price_at_quantity_2" value="<?=$vendorItem->price_at_quantity_2?>"/></td>
+				<td><input type="text" class="input-width-80 input-text-right" name="price" value="<?=$vendorItem->price?>"/></td>
+				<td><input type="text" class="input-width-80 input-text-right" name="min_order" value="<?=$vendorItem->minimum_order?>"/></td>
+				<td><input type="text" class="input-width-80 input-text-right" name="pack_quantity" value="<?=$vendorItem->pack_quantity?>"/></td>
+				<td><input type="text" class="input-width-80 input-text-right" name="pack_unit" value="<?=$vendorItem->pack_unit?>"/></td>
+				<td><input type="text" class="input-width-80 input-text-right" name="price_break_quantity_1" value="<?=$vendorItem->price_break_quantity_1?>"/></td>
+				<td><input type="text" class="input-width-80 input-text-right" name="price_at_quantity_1" value="<?=$vendorItem->price_at_quantity_1?>"/></td>
+				<td><input type="text" class="input-width-80 input-text-right" name="price_break_quantity_2" value="<?=$vendorItem->price_break_quantity_2?>"/></td>
+				<td><input type="text" class="input-width-80 input-text-right" name="price_at_quantity_2" value="<?=$vendorItem->price_at_quantity_2?>"/></td>
 				<td><div class="text-inline-block text-width-150">
 					<input type="submit" name="updateVendor" value="Update" class="button" />
 					<input type="hidden" name="vendor_id" value="<?= $vendor->id ?>" />

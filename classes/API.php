@@ -367,10 +367,14 @@
 				if (!empty($value) && (!empty($options['content-type']) || !empty($options['content_type']))) {
 					// Because I was stupid and used content-type instead of content_type at first
 					if (!empty($options['content-type']) && !empty($options['content_type'])) $options['content_type'] = $options['content-type'];
-					if (in_array($options['content_type'],['int','integer','float']) && ! is_numeric($value)) {
+					
+					// Ensure content_type is set
+					$content_type = isset($options['content_type']) ? $options['content_type'] : (isset($options['content-type']) ? $options['content-type'] : '');
+					
+					if (in_array($content_type,['int','integer','float']) && ! is_numeric($value)) {
 						$this->invalidRequest("Invalid $param value");
 					}
-					elseif (in_array($options['content_type'],['bool','boolean'])) {
+					elseif (in_array($content_type,['bool','boolean'])) {
 						if ($_REQUEST[$param] == 1) $_REQUEST[$param] = 'true';
 						elseif ($_REQUEST[$param] == 0) $_REQUEST[$param] = 'false';
 						elseif (isset($_REQUEST[$param]) && empty($_REQUEST[$param])) {
@@ -380,19 +384,19 @@
 							$this->invalidRequest("Invalid $param value");
 						}
 					}
-					elseif (in_array($options['content_type'],['date','datetime'])) {
+					elseif (in_array($content_type,['date','datetime'])) {
 						if (! get_mysql_date($value)) $this->invalidRequest("Invalid $param value");
 					}
-					elseif ($options['content_type'] == 'email') {
+					elseif ($content_type == 'email') {
 						if (! filter_var($value,FILTER_VALIDATE_EMAIL)) $this->invalidRequest("Invalid $param value");
 					}
-					elseif ($options['content_type'] == 'url') {
+					elseif ($content_type == 'url') {
 						if (! filter_var($value,FILTER_VALIDATE_URL)) $this->invalidRequest("Invalid $param value");
 					}
-					elseif ($options['content_type'] == 'phone') {
+					elseif ($content_type == 'phone') {
 						if (! preg_match('/^\d{10,11}$/',$value)) $this->invalidRequest("Invalid $param value");
 					}
-					elseif ($options['content_type'] == 'file') {
+					elseif ($content_type == 'file') {
 						if (! preg_match('/^[\w\-\_\.]+$/',$value)) $this->invalidRequest("Invalid $param value");
 					}
 				}
@@ -578,79 +582,79 @@
 				}
 				$form .= $t.$t.'<input type="hidden" name="csrfToken" value="'.$token.'">'.$cr;
 				$form .= $t.$t.'<input type="hidden" name="method" value="'.$form_name.'" />'.$cr;
-				$form .= $t.$t.'<div class="apiMethod" onMouseOver="frameAPIFormBorder(this)" onMouseOut="unframeAPIFormBorder(this)">'.$cr;
-				if ($method->deprecated) $form .= $t.$t.'<div class="h3 apiMethodTitle apiMethodDeprecated">'.$form_name." - deprecated!".'</div>'.$cr;
-				else $form .= $t.$t.'<div class="h3 apiMethodTitle">'.$form_name.'</div>'.$cr;
+				$form .= $t.$t.'<section class="form-group apiMethod" onMouseOver="frameAPIFormBorder(this)" onMouseOut="unframeAPIFormBorder(this)"><ul class="form-grid four-col connectBorder">'.$cr;
+				if ($method->deprecated) $form .= $t.$t.'<h4>'.$form_name." - deprecated!".'</h4>'.$cr;
+				else $form .= $t.$t.'<h4>'.$form_name.'</h4>'.$cr;
 
 				// Show Method Description if provided
 				if ($method->description) {
-					$form .= $t.$t.'<span class="apiMethodDescription">'.$method->description.'</span>'.$cr;
+					$form .= $t.$t.'<h5>Description: '.$method->description.'</h5>'.$cr;
 				}
 				if (!empty($method->path)) {
 					$form .= $t.$t.'
-					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">URI</span>
-						<span class="value apiMethodSetting">'.$method->path.'</span>
-					</div>'.$cr;
+					<li class="apiMethodSetting">
+						<label for="URI">URI</label>
+						<span class="value">'.$method->path.'</span>
+					</li>'.$cr;
 				}
 
 				// Show Method Return Info if provided
 				if ($method->return_element) {
 					$form .= $t.$t.'
-					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">return_element</span>
-						<span class="value apiMethodSetting">'.$method->return_element.'</span>
-					</div>'.$cr;
+					<li class="apiMethodSetting">
+						<label for="return_element">return_element</label>
+						<span class="value">'.$method->return_element.'</span>
+					</li>'.$cr;
 				}
 				if ($method->return_type) {
 					$form .= $t.$t.'
-					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">return_type</span>
-						<span class="value apiMethodSetting">'.$method->return_type.'</span>
-					</div>'.$cr;
+					<li class="apiMethodSetting">
+						<label for="return_type">return_type</label>
+						<span class="value">'.$method->return_type.'</span>
+					</li>'.$cr;
 				}
 				if ($method->return_mime_type) {
 					$form .= $t.$t.'
-					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">return_mime_type</span>
-						<span class="value apiMethodSetting">'.$method->return_mime_type.'</span>
-					</div>'.$cr;
+					<li class="apiMethodSetting">
+						<label for="">return_mime_type</label>
+						<span class="value">'.$method->return_mime_type.'</span>
+					</li>'.$cr;
 				}
 
 				// Show Method Authentication Requirement
 				$form .= '
-					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">Authentication Required</span>
-						<span class="value apiMethodSetting">';
+					<li class="apiMethodSetting">
+						<label for="">Authentication Required</label>
+						<span class="value">';
 				if ($method->authentication_required || $method->privilege_required) $form .= "Yes";
 				else $form .= "No";
 				$form .= '
 						</span>
-					</div>'.$cr;
+					</li>'.$cr;
 
 				// Show Method AntiCSRF Requirement
 				$form .= '
-					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">AntiCSRF Token Required</span>
-						<span class="value apiMethodSetting">';
+					<li class="apiMethodSetting">
+						<label for="">AntiCSRF Token Required</label>
+						<span class="value">';
 				if ($method->token_required) $form .= "Yes";
 				else $form .= "No";
 				$form .= '
 						</span>
-					</div>'.$cr;
+					</li>'.$cr;
 
 				// Show Method Privilege Requirement
 				if (!empty($method->privilege_required)) $form .= $t.$t.'
-					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">Privilege Required</span>
-						<span class="value apiMethodSetting">'.$method->privilege_required.'
+					<li class="apiMethodSetting">
+						<label for="">Privilege Required</label>
+						<span class="value">'.$method->privilege_required.'
 						</span>
-					</div>'.$cr;
+					</li>'.$cr;
 				else $form .= $t.$t.'
-					<div class="apiMethodSetting">
-						<span class="label apiMethodSetting">Privilege Required</span>
-						<span class="value apiMethodSetting">None</span>
-					</div>'.$cr;
+					<li class="apiMethodSetting">
+						<label for="">Privilege Required</label>
+						<span class="value">None</span>
+					</li>'.$cr;
 
 				// Add Parameters
 				$parameters = $method->parameters();
@@ -660,7 +664,7 @@
 
 					// Formatting for Required Fields
 					if ($parameter->required) $required_class = ' required';
-					elseif (!empty($parameter->requirement_group)) $required_class = ' required-group-'.$parameter->requirement_group;
+					elseif (!empty($parameter->requirement_group)) $required_class = ' group-'.$parameter->requirement_group;
 					else $required_class = '';
 					if ($parameter->deprecated) $required_class .= ' deprecated';
 
@@ -668,10 +672,10 @@
 					$default = $parameter->default;
 
 					// Open Parameter Div Element
-					$form .= $t.$t.$t.'<div class="apiParameter">'.$cr;
+					$form .= $t.$t.$t.'<li class="apiParameter">'.$cr;
 
 					// Open Label Span Element
-					$form .= $t.$t.$t.$t.'<span class="label apiLabel'.$required_class.'" for="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">'.$name.'</span>'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel required'.$required_class.'" for="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">'.$name.'</label>'.$cr;
 
 					// Populate Form Helper Values
 					if (!empty($parameter->object)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_object" value="'.addslashes($parameter->object).'"/>'.$cr;
@@ -711,19 +715,19 @@
 						if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" placeholder="'.$parameter->prompt.'" class="value input apiInput'.$required_class.'" value="'.$default.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()" />'.$cr;
 						else $form .= $t.$t.$t.$t.'<input type="'.$parameter->type.'" id="'.$name.'" name="'.$name.'" class="value input apiInput'.$required_class.'" value="'.$default.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()" />'.$cr;
 					}
-					$form .= $t.$t.$t.'</div>'.$cr;
+					$form .= $t.$t.$t.'</li>'.$cr;
 				}
 				if ($method->show_controls) {
 					$form .= $t.$t.$t.'<hr class="apiMethodControls"/>'.$cr;
-					$form .= $t.$t.$t.'<div class="apiMethodControls">'.$cr;
-					$form .= $t.$t.$t.$t.'<span class="label apiLabel">limit</span><input type="text" name="_limit" placeholder="Max Records" value="" class="value input"/>'.$cr;
-					$form .= $t.$t.$t.$t.'<span class="label apiLabel">offset</span><input type="text" name="_offset" placeholder="First Record" value="" class="value input"/>'.$cr;
-					$form .= $t.$t.$t.$t.'<span class="label apiLabel">sort</span><input type="text" name="_sort" value="" placeholder="Sort Field" class="value input"/>'.$cr;
-					$form .= $t.$t.$t.$t.'<span class="label apiLabel">direction</span><input type="text" name="_direction" placeholder="ASC or DESC" value="" class="value input"/>'.$cr;
-					$form .= $t.$t.$t.'</div>'.$cr;
+					$form .= $t.$t.$t.'<li class="apiMethodControls">'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel">limit</span><input type="text" name="_limit" placeholder="Max Records" value="" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel">offset</span><input type="text" name="_offset" placeholder="First Record" value="" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel">sort</span><input type="text" name="_sort" value="" placeholder="Sort Field" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel">direction</span><input type="text" name="_direction" placeholder="ASC or DESC" value="" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.'</li>'.$cr;
 				}
 				$form .= $t.$t.$t.'<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>'.$cr;
-				$form .= $t.$t.'</div>'.$cr;
+				$form .= $t.$t.'</ul></section>'.$cr;
 				$form .= $t.'</form>'.$cr;
 			}
 			return $form;

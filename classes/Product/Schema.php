@@ -539,6 +539,18 @@
 				$this->setVersion(15);
 				$GLOBALS['_database']->CommitTrans();
 			}
+			if ($this->version() < 16 && $max_version >= 16) {
+				app_log("Upgrading schema to version 16", 'notice', __FILE__, __LINE__);
+
+				# Start Transaction
+				if (!$GLOBALS['_database']->BeginTrans())
+					app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+				# Version 16 adds admin.html templates
+				
+				$this->setVersion(16);
+				$GLOBALS['_database']->CommitTrans();
+			}
 			return true;
 		}
 	}
