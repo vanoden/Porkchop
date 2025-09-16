@@ -76,108 +76,218 @@
     ?>
 </script>
 
+<!-- Page Header -->
 <?=$page->showAdminPageInfo()?>
+<!-- End Page Header -->
 
 <form name="repositoryForm" action="/_storage/repository" method="post">
 	<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <input type="hidden" name="id" value="<?=$repository->id?>" />
-    <h3>Name</h3>
-    <input type="text" name="name" class="value input width-300px" value="<?=isset($form['name']) ? htmlspecialchars($form['name']) : ''?>" />
-    <h3>Status</h3>
-    <select id="status" name="status" class="value input width-300px">
-        <option value="NEW"<?php	if (isset($form['status']) && $form['status'] == "NEW") print " selected"; ?>>NEW</option>
-        <option value="ACTIVE"<?php	if (isset($form['status']) && $form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
-        <option value="DISABLED"<?php	if (isset($form['status']) && $form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
-    </select>
-    <h3>Type</h3>
-<?php	 if ($repository->id) { ?>
-    <span class="value"><?=$repository->type?></span>
-<?php	 } else { ?>
-    <select id="type" name="type" class="value input width-300px" onchange="getValue(this)">
-<?php	if (isset($repository_types) && is_array($repository_types)) {
-		foreach($repository_types as $type => $name) { ?>
-        <option value="<?=$type?>" <?php	if (isset($form['type']) && $form['type'] == "<?=$type?>") print " selected"; ?>><?=$type?></option>
-<?php	 		} 
-		} ?>
-	</select>
-<?php	} ?>
-	<h3>Configuration</h3>
-<?php	if (isset($repository_types) && is_array($repository_types)) {
-		foreach ($repository_types as $type => $name) { ?>
-    <div id="<?=$type?>Settings"<?php if (isset($form['type']) && $form['type'] != $type) { print " class=\"display-none\""; } ?>>
-		<h4><?=$name?></h4>
-        <div class="container container-dashed-gray">
-<?php	if (isset($metadata_keys[$type]) && is_array($metadata_keys[$type])) { 
-		foreach($metadata_keys[$type] as $key) { ?>
-            <span class="label"><?=ucfirst($key)?></span>
-            <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" name="<?=$key?>" class="value input width-300px" value="<?=isset($form[$key]) ? htmlspecialchars($form[$key]) : ''?>" />
-<?php		} 
-	} ?>
-        </div>
-    </div>
-<?php		} 
-	} ?>
-	<h3>Privileges</h3>
-	<div class="tableBody clean min-tablet">
-		<div class="tableRowHeader">
-        	<div class="tableCell tableCell-width-25">Type</div>
-        	<div class="tableCell tableCell-width-25">ID</div>
-        	<div class="tableCell tableCell-width-50">Permissions</div>
-    	</div>
-    	<!-- end row header -->
-		<!-- Existing Privileges -->
-		<?php
-			if (isset($default_privileges) && is_array($default_privileges)) {
-				foreach ($default_privileges as $privilege) {
-				if (empty($privilege->entity_type)) continue;
-		?>
-    	<div class="tableRow">
-    		<div class="tableCell">
-	            <?=$privilege->entity_type_name()?>
-    		</div>
-    		<div class="tableCell">
-				<?=$privilege->entity_name()?>
-    		</div>
-    		<div class="tableCell">
-				Read<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['r']" value="1"<?php if ($privilege->read) print " checked"; ?> />
-				Write<input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['w']" value="1"<?php if ($privilege->write) print " checked"; ?> />
-    		</div>
-		</div>
-		<?php		} 
-			} ?>
-		<!-- New Privilege -->
-    	<div class="tableRow">
-    		<div class="tableCell">
-	            <select name="new_privilege_entity_type" onchange="updateIds(this,'new_privilege_entity_id')">
-					<option value="u">User</option>
-					<option value="o">Organization</option>
-					<option value="r">Role</option>
-				</select>
-    		</div>
-    		<div class="tableCell">
-				<select name="new_privilege_entity_id" class="value input"></select>
-    		</div>
-    		<div class="tableCell">
-				Read<input type="checkbox" name="new_privilege_read" value="1" />
-				Write<input type="checkbox" name="new_privilege_write" value="1" />
-    		</div>
-		</div>
-	</div>
     
-    <div class="form_footer">
+    <div class="form_instruction">Configure repository settings and click 'Update' to save changes.</div>
+
+    <!-- ============================================== -->
+    <!-- REPOSITORY BASIC INFORMATION -->
+    <!-- ============================================== -->
+    <h3>Repository Information</h3>
+    <section class="tableBody clean min-tablet">
+        <div class="tableRowHeader">
+            <div class="tableCell width-25per">Field</div>
+            <div class="tableCell width-75per">Value</div>
+        </div>
+        <div class="tableRow">
+            <div class="tableCell">
+                <span class="label">Repository Name</span>
+            </div>
+            <div class="tableCell">
+                <input type="text" name="name" class="value input width-100per" value="<?=isset($form['name']) ? htmlspecialchars($form['name']) : ''?>" placeholder="Enter repository name" />
+            </div>
+        </div>
+        <div class="tableRow">
+            <div class="tableCell">
+                <span class="label">Status</span>
+            </div>
+            <div class="tableCell">
+                <select id="status" name="status" class="value input width-100per">
+                    <option value="NEW"<?php	if (isset($form['status']) && $form['status'] == "NEW") print " selected"; ?>>NEW</option>
+                    <option value="ACTIVE"<?php	if (isset($form['status']) && $form['status'] == "ACTIVE") print " selected"; ?>>ACTIVE</option>
+                    <option value="DISABLED"<?php	if (isset($form['status']) && $form['status'] == "DISABLED") print " selected"; ?>>DISABLED</option>
+                </select>
+            </div>
+        </div>
+        <div class="tableRow">
+            <div class="tableCell">
+                <span class="label">Type</span>
+            </div>
+            <div class="tableCell">
+                <?php if ($repository->id) { ?>
+                    <span class="value"><?= htmlspecialchars($repository->type) ?></span>
+                <?php } else { ?>
+                    <select id="type" name="type" class="value input width-100per" onchange="getValue(this)">
+                        <?php if (isset($repository_types) && is_array($repository_types)) {
+                            foreach($repository_types as $type => $name) { ?>
+                            <option value="<?=$type?>" <?php	if (isset($form['type']) && $form['type'] == $type) print " selected"; ?>><?= htmlspecialchars($type) ?></option>
+                        <?php } 
+                        } ?>
+                    </select>
+                <?php } ?>
+            </div>
+        </div>
+    </section>
+    <!-- ============================================== -->
+    <!-- REPOSITORY CONFIGURATION -->
+    <!-- ============================================== -->
+    <h3>Repository Configuration</h3>
+    <?php if (isset($repository_types) && is_array($repository_types)) {
+        foreach ($repository_types as $type => $name) { ?>
+    <div id="<?=$type?>Settings"<?php if (isset($form['type']) && $form['type'] != $type) { print " class=\"display-none\""; } ?>>
+        <h4><?= htmlspecialchars($name) ?> Settings</h4>
+        <section class="tableBody clean min-tablet">
+            <div class="tableRowHeader">
+                <div class="tableCell width-25per">Configuration Field</div>
+                <div class="tableCell width-75per">Value</div>
+            </div>
+            <?php if (isset($metadata_keys[$type]) && is_array($metadata_keys[$type])) { 
+                foreach($metadata_keys[$type] as $key) { ?>
+            <div class="tableRow">
+                <div class="tableCell">
+                    <span class="label"><?= ucfirst(str_replace('_', ' ', $key)) ?></span>
+                </div>
+                <div class="tableCell">
+                    <input type="<?php if (preg_match('/secret/',$key)) print "password"; else print "text";?>" 
+                           name="<?=$key?>" 
+                           class="value input width-100per" 
+                           value="<?=isset($form[$key]) ? htmlspecialchars($form[$key]) : ''?>" 
+                           placeholder="Enter <?= str_replace('_', ' ', $key) ?>" />
+                </div>
+            </div>
+            <?php } 
+            } else { ?>
+            <div class="tableRow">
+                <div class="tableCell width-100per text-align-center">
+                    <span class="value">No configuration fields available for this repository type.</span>
+                </div>
+            </div>
+            <?php } ?>
+        </section>
+    </div>
+    <?php } 
+    } ?>
+    <!-- ============================================== -->
+    <!-- REPOSITORY PRIVILEGES -->
+    <!-- ============================================== -->
+    <h3>Repository Privileges</h3>
+    <section class="tableBody clean min-tablet">
+        <div class="tableRowHeader">
+            <div class="tableCell width-20per">Entity Type</div>
+            <div class="tableCell width-30per">Entity Name</div>
+            <div class="tableCell width-30per">Permissions</div>
+            <div class="tableCell width-20per">Actions</div>
+        </div>
+        <!-- Existing Privileges -->
+        <?php if (isset($default_privileges) && is_array($default_privileges)) {
+            foreach ($default_privileges as $privilege) {
+                if (empty($privilege->entity_type)) continue;
+        ?>
+        <div class="tableRow">
+            <div class="tableCell">
+                <span class="value"><?= htmlspecialchars($privilege->entity_type_name()) ?></span>
+            </div>
+            <div class="tableCell">
+                <span class="value"><?= htmlspecialchars($privilege->entity_name()) ?></span>
+            </div>
+            <div class="tableCell">
+                <div class="checkbox-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['r']" value="1"<?php if ($privilege->read) print " checked"; ?> />
+                        <span class="value">Read</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="privilege['<?=$privilege->entity_type?>'][<?=$privilege->entity_id?>]['w']" value="1"<?php if ($privilege->write) print " checked"; ?> />
+                        <span class="value">Write</span>
+                    </label>
+                </div>
+            </div>
+            <div class="tableCell">
+                <span class="value">Existing</span>
+            </div>
+        </div>
+        <?php } 
+        } ?>
+        <!-- Add New Privilege -->
+        <div class="tableRow">
+            <div class="tableCell">
+                <select name="new_privilege_entity_type" class="value input width-100per" onchange="updateIds(this,'new_privilege_entity_id')">
+                    <option value="u">User</option>
+                    <option value="o">Organization</option>
+                    <option value="r">Role</option>
+                </select>
+            </div>
+            <div class="tableCell">
+                <select name="new_privilege_entity_id" class="value input width-100per"></select>
+            </div>
+            <div class="tableCell">
+                <div class="checkbox-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="new_privilege_read" value="1" />
+                        <span class="value">Read</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="new_privilege_write" value="1" />
+                        <span class="value">Write</span>
+                    </label>
+                </div>
+            </div>
+            <div class="tableCell">
+                <span class="value">New</span>
+            </div>
+        </div>
+    </section>
+    
+    <!-- ============================================== -->
+    <!-- FORM ACTIONS -->
+    <!-- ============================================== -->
+    <div class="form_footer marginTop_20">
         <input type="submit" name="btn_submit" class="button" value="Update" />
-        <input type="button" name="btn_files" class="button" value="Browse" onclick="window.location.href='/_storage/browse?code=<?=$repository->code?>';" />
-        <input type="button" name="btn_back" class="button" value="Back" onclick="window.location.href='/_storage/repositories';" />
+        <?php if ($repository->id) { ?>
+        <input type="button" name="btn_files" class="button secondary" value="Browse Files" onclick="window.location.href='/_storage/browse?code=<?=$repository->code?>';" />
+        <?php } ?>
+        <input type="button" name="btn_back" class="button secondary" value="Back to Repositories" onclick="window.location.href='/_storage/repositories';" />
     </div>
 </form>
-<?php	if ($repository->id) { ?>
-<form name="repoUpload" action="/_storage/file" method="post" enctype="multipart/form-data">
-    <div class="container">
-	    <span class="label">Upload File</span>
-		<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
-	    <input type="hidden" name="repository_id" value="<?=$repository->id?>" />
-	    <input type="file" name="uploadFile" />
-	    <input type="submit" name="btn_submit" class="button" value="Upload" />
-    </div>
-</form>
-<?php	} ?>
+
+<?php if ($repository->id) { ?>
+    <!-- ============================================== -->
+    <!-- FILE UPLOAD SECTION -->
+    <!-- ============================================== -->
+    <h3>Upload Files</h3>
+    <form name="repoUpload" action="/_storage/file" method="post" enctype="multipart/form-data">
+        <section class="tableBody clean min-tablet">
+            <div class="tableRowHeader">
+                <div class="tableCell width-50per">File Upload</div>
+                <div class="tableCell width-50per">Instructions</div>
+            </div>
+            <div class="tableRow">
+                <div class="tableCell">
+                    <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
+                    <input type="hidden" name="repository_id" value="<?=$repository->id?>" />
+                    <div class="label">Choose File</div>
+                    <input type="file" name="uploadFile" class="value input width-100per" accept="*/*" />
+                    <div class="marginTop_10">
+                        <input type="submit" name="btn_submit" class="button" value="Upload" />
+                    </div>
+                </div>
+                <div class="tableCell">
+                    <div class="label">Upload Guidelines</div>
+                    <div class="value">
+                        <ul style="margin: 0; padding-left: 20px;">
+                            <li>Select a file from your computer</li>
+                            <li>File will be uploaded to the repository root</li>
+                            <li>Use the Browse Files button to organize files</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </form>
+<?php } ?>

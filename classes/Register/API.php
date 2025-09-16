@@ -110,7 +110,7 @@
             $this->requireAuth();
 
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
             # Initiate Product Object
             if ($_REQUEST["login"] && (! $_REQUEST["code"])) $_REQUEST['code'] = $_REQUEST['login'];
@@ -146,7 +146,7 @@
         ###################################################
         function updateCustomer() {
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.customer.xsl';
 
             if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
                 # Can Update Anyone
@@ -301,7 +301,7 @@
         ###################################################
         function findRoleMembers() {
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.rolemembers.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.rolemembers.xsl';
 
             if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
@@ -488,7 +488,7 @@
             $this->requireAuth();
 
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'gallery.image.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'gallery.image.xsl';
 
             # Initiate Image Object
             $_image = new \Media\Image();
@@ -522,7 +522,7 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
             # Initiate Image Object
             $user = new \Register\Customer();
@@ -624,7 +624,7 @@
             $response->header('method',$_REQUEST["method"]);
 
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.verify.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.verify.xsl';
 
             # Initiate Image Object
             $user = new Customer();
@@ -662,7 +662,7 @@
 			else $this->notFound();
 
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.contact.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.contact.xsl';
 
 			$message = new \Email\Message();
 			$message->html(true);
@@ -689,7 +689,7 @@
 			if (!$this->validCSRFToken()) $this->error("Invalid Request");
 
             // Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'register.user.xsl';
 
             if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
@@ -721,7 +721,7 @@
         ###################################################
         function getOrganization() {
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organization.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organization.xsl';
 
             if (isset($_REQUEST['code']))
                 if ($GLOBALS['_SESSION_']->customer->can('manage customers') || $GLOBALS['_SESSION_']->customer->organization()->code == $_REQUEST['code'])
@@ -752,7 +752,7 @@
         ###################################################
         function findOrganizations() {
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
             if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
@@ -788,7 +788,7 @@
         ###################################################
         function searchOrganizations() {
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
             if (! $GLOBALS['_SESSION_']->customer->can('manage customers')) $this->deny();
 
@@ -818,7 +818,7 @@
         ###################################################
         function findOrganizationOwnedProducts() {
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
             # Build Query Parameters
 			if (! $GLOBALS['_SESSION_']->customer->can("manage customer products")) {
@@ -866,7 +866,7 @@
 			$this->requireAuth();
 
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
             # Initiate Organization Object
             $organization = new \Register\Organization();
@@ -902,7 +902,7 @@
 			if (!$GLOBALS['_SESSION_']->customer->can("manage customer credits")) $this->deny();
 
             # Default StyleSheet
-            if (! $_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
+            if (!isset($_REQUEST["stylesheet"]) || !$_REQUEST["stylesheet"]) $_REQUEST["stylesheet"] = 'customer.organizations.xsl';
 
             # Initiate Organization Object
             $organization = new \Register\Organization();

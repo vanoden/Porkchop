@@ -45,12 +45,41 @@
 			$can_proceed = false;
 		}
 		
+		// Validate login code if provided
+		if (!empty($_REQUEST['login']) && !preg_match('/^[a-zA-Z0-9_-]+$/', $_REQUEST['login'])) {
+			$page->addError("Login code can only contain letters, numbers, hyphens, and underscores");
+			$can_proceed = false;
+		}
+		
+		// Validate status
+		$valid_statuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED'];
+		if (!empty($_REQUEST['status']) && !in_array($_REQUEST['status'], $valid_statuses)) {
+			$page->addError("Invalid status value");
+			$can_proceed = false;
+		}
+		
 		if ($can_proceed) {
-			$company->update(array('name' => $_REQUEST['name']));
+			// Prepare update parameters
+			$update_params = array('name' => $_REQUEST['name']);
+			
+			// Add optional fields if provided
+			if (isset($_REQUEST['login'])) {
+				$update_params['login'] = $_REQUEST['login'];
+			}
+			if (isset($_REQUEST['status'])) {
+				$update_params['status'] = $_REQUEST['status'];
+			}
+			if (isset($_REQUEST['deleted'])) {
+				$update_params['deleted'] = 1;
+			} else {
+				$update_params['deleted'] = 0;
+			}
+			
+			$company->update($update_params);
 			if ($company->error()) {
 				$page->addError("Error updating company: " . $company->error());
 			} else {
-				$page->appendSuccess("Updated company name");
+				$page->appendSuccess("Company configuration updated successfully");
 			}
 		}
 	}

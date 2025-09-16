@@ -485,4 +485,146 @@
 		public function validMenuCode($string): bool {
 			return $this->validCode($string);
 		}
+
+		/**
+		 * Check if current URL matches this navigation item's target
+		 * Supports exact matches and pattern matching
+		 * 
+		 * @param string $currentURL The current page URL
+		 * @return bool True if URL matches this item
+		 */
+		public function matchesURL($currentURL) {
+			if (empty($this->target) || empty($currentURL)) {
+				return false;
+			}
+
+			// Normalize URLs for comparison
+			$target = $this->normalizeURL($this->target);
+			$current = $this->normalizeURL($currentURL);
+
+			// Exact match
+			if ($target === $current) {
+				return true;
+			}
+
+			// Pattern matching for wildcards
+			if (strpos($target, '*') !== false) {
+				$pattern = str_replace('*', '.*', preg_quote($target, '/'));
+				return preg_match('/^' . $pattern . '$/', $current);
+			}
+
+		// Check if current URL starts with target (for parent matching)
+		// Only allow this for proper path segments, not single characters
+		if (strpos($current, $target) === 0) {
+			$targetLength = strlen($target);
+			
+			// Exclude very short targets that are too broad (like "/" or "/_")
+			if ($targetLength <= 2) {
+				return false;
+			}
+			
+			// Additional safety check: don't match root targets like "/" against any URL
+			if ($target === '/' || $target === '_' || $target === '' || $target === 'company' || $target === 'sales' || $target === 'datalogger') {
+				return false;
+			}
+			
+			// Additional check: ensure the target is a proper module path (starts with _)
+			if (substr($target, 0, 1) !== '_') {
+				return false;
+			}
+			
+			// Only match if:
+			// 1. Exact match, OR
+			// 2. Target ends with '/' and current starts with target, OR  
+			// 3. Current has a '/' right after the target (proper path segment)
+			// BUT exclude cases where target is just a prefix without proper path separation
+			if ($current === $target || 
+				(substr($target, -1) === '/' && strpos($current, $target) === 0) ||
+				($targetLength < strlen($current) && $current[$targetLength] === '/')) {
+				
+				// Additional check: don't match if target is just a prefix without proper path structure
+				// e.g., don't match "/_engineering" against "/_engineering/home" 
+				// unless "/_engineering" is meant to be a parent path
+				if ($current !== $target && substr($target, -1) !== '/') {
+					// If target doesn't end with '/', make sure it's a proper path segment
+					// by checking that the next character after target is '/'
+					if ($targetLength >= strlen($current) || $current[$targetLength] !== '/') {
+						return false;
+					}
+					// Additional check: make sure the target is a complete path segment
+					// Don't match "/_engineering" against "/_engineering/home" unless we want parent matching
+					// For now, disable this type of matching to prevent false positives
+					return false;
+				}
+				
+				return true;
+			}
+		}
+
+			return false;
+		}
+
+		/**
+		 * Normalize URL for consistent comparison
+		 * 
+		 * @param string $url URL to normalize
+		 * @return string Normalized URL
+		 */
+		private function normalizeURL($url) {
+			// Remove leading slash
+			$url = ltrim($url, '/');
+			
+			// Remove query parameters for comparison
+			$url = strtok($url, '?');
+			
+			// Remove trailing slash
+			$url = rtrim($url, '/');
+			
+			return $url;
+		}
+
+		/**
+		 * Get all parent navigation items for this item
+		 * 
+		 * @return array Array of parent item IDs
+		 */
+		public function getParentChain() {
+			$parents = array();
+			$currentParentId = $this->parent_id;
+			
+			while ($currentParentId > 0) {
+				$parent = new self($currentParentId);
+				if ($parent->id > 0) {
+					$parents[] = $parent->id;
+					$currentParentId = $parent->parent_id;
+				} else {
+					break;
+				}
+			}
+			
+			return $parents;
+		}
+
+		/**
+		 * Check if this item or any of its children match the current URL
+		 * 
+		 * @param string $currentURL The current page URL
+		 * @return bool True if this item or its children match
+		 */
+		public function matchesURLRecursive($currentURL) {
+			// Check if this item matches
+			if ($this->matchesURL($currentURL)) {
+				return true;
+			}
+
+			// Check children recursively
+			$children = $this->children();
+			foreach ($children as $child) {
+				if ($child->matchesURLRecursive($currentURL)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
 	}

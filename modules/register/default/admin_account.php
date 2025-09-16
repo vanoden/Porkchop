@@ -182,17 +182,19 @@
             $requiresTOTP = false;
             $rolesRequiringTOTP = [];
             foreach ($roles as $role) {
-              if ($role->time_based_password) {
+              if ($role && isset($role->time_based_password) && $role->time_based_password) {
                 $requiresTOTP = true;
                 $rolesRequiringTOTP[] = $role->name;
               }
             }
-            if ($requiresTOTP || $customer->organization()->time_based_password) echo "disabled checked"; 
+            $organization = $customer->organization();
+            $orgRequiresTOTP = $organization && isset($organization->time_based_password) && $organization->time_based_password;
+            if ($requiresTOTP || $orgRequiresTOTP) echo "disabled checked"; 
           ?>>
           <?php if ($requiresTOTP) { ?>
             <div class="note"><em>TOTP is required by the following roles: <?= implode(', ', $rolesRequiringTOTP) ?></em></div>
-          <?php } elseif ($customer->organization()->time_based_password) { ?>
-            <div class="note"><em>TOTP is required by the organization: <?= $customer->organization()->name ?></em></div>
+          <?php } elseif ($orgRequiresTOTP) { ?>
+            <div class="note"><em>TOTP is required by the organization: <?= $organization->name ?></em></div>
           <?php } ?>
         </div>
       <?php } ?>
@@ -234,7 +236,7 @@
         <select class="value input registerValue" name="organization_id">
           <option value="">Select</option>
           <?php foreach ($organizations as $organization) { ?>
-            <option value="<?= $organization->id ?>" <?php if ($organization->id == $customer->organization()->id) print " selected"; ?>><?= $organization->name ?></option>
+            <option value="<?= $organization->id ?>" <?php if ($customer->organization() && $organization->id == $customer->organization()->id) print " selected"; ?>><?= $organization->name ?></option>
           <?php } ?>
         </select>
       </div>

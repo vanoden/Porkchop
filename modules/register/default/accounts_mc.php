@@ -22,8 +22,8 @@
 	if ($GLOBALS['_SESSION_']->customer->can('manage customers')) {
 		// Ok
 	}
-	elseif (!empty($GLOBALS['_SESSION_']->customer->organization()->id))
-		$find_parameters['organization_id'] = $GLOBLAS['_SESSION_']->customer->organization()->id;
+	elseif ($GLOBALS['_SESSION_']->customer->organization() && !empty($GLOBALS['_SESSION_']->customer->organization()->id))
+		$find_parameters['organization_id'] = $GLOBALS['_SESSION_']->customer->organization()->id;
 	else 
 		return 403;
 

@@ -170,7 +170,7 @@
 					</li>
 					<li id="accountOrganizationQuestion" class="form-row">
 						<label for="">*Organization:</label>
-						<span class="value registerValue"><?= $customer->organization()->name ?></span>
+						<span class="value registerValue"><?= $customer->organization() ? $customer->organization()->name : 'No Organization' ?></span>
 					</li>
 					<li id="accountTimeZoneQuestion" class="form-row">
 						<label for="timezone">*Time Zone:</label>
@@ -323,12 +323,14 @@
 											   $requiresTOTP = false;
 											   $rolesRequiringTOTP = [];
 											   foreach ($roles as $role) {
-												   if ($role->time_based_password) {
+												   if ($role && isset($role->time_based_password) && $role->time_based_password) {
 													   $requiresTOTP = true;
 													   $rolesRequiringTOTP[] = $role->name;
 												   }
 											   }
-											   if ($requiresTOTP || $customer->organization()->time_based_password)
+											   $organization = $customer->organization();
+											   $orgRequiresTOTP = $organization && isset($organization->time_based_password) && $organization->time_based_password;
+											   if ($requiresTOTP || $orgRequiresTOTP)
 												   echo "disabled checked";
 											   ?>>
 							<label for="time_based_password">Enable Two-Factor Authentication</label>
@@ -336,9 +338,9 @@
 						<?php if ($requiresTOTP) { ?>
 							<div class="note pageSect_half"><em>TOTP is required by the following roles:
 									<?= implode(', ', $rolesRequiringTOTP) ?></em></div>
-						<?php } elseif ($customer->organization()->time_based_password) { ?>
+						<?php } elseif ($orgRequiresTOTP) { ?>
 							<div class="note pageSect_half"><em>TOTP is required by the organization:
-									<?= $customer->organization()->name ?></em></div>
+									<?= $organization->name ?></em></div>
 						<?php } ?>
 					</section>
 				<?php } ?>

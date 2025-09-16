@@ -57,7 +57,11 @@
 
 			if ($_SERVER["SCRIPT_FILENAME"] == BASE."/core/install.php") app_log("Installer updating new admin account",'info');
 			else {
-				if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) $this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$this->organization()->name." to ".$parameters['organization_id']);
+				if (!empty($parameters['organization_id']) && $this->organization_id != $parameters['organization_id']) {
+					$oldOrg = $this->organization();
+					$oldOrgName = $oldOrg ? $oldOrg->name : 'Unknown';
+					$this->auditRecord("ORGANIZATION_CHANGED","Organization changed from ".$oldOrgName." to ".$parameters['organization_id']);
+				}
 				if (!empty($parameters['status']) && $this->status != $parameters['status']) $this->auditRecord("STATUS_CHANGED","Status changed from ".$this->status." to ".$parameters['status']);
 				if (!empty($parameters['first_name']) && $this->first_name != $parameters['first_name'] || !empty($parameters['last_name']) && $this->last_name != $parameters['last_name'])  $this->auditRecord("USER_UPDATED","Customer Name changed from " . $this->first_name . " " . $this->last_name . " to " . $parameters['first_name'] . " " . $parameters['last_name']);
 				if (isset($parameters['profile_visibility']) && $this->profile != $parameters['profile_visibility']) $this->auditRecord("PROFILE_VISIBILITY_CHANGED","Profile visibility changed from ".$this->profile." to ".$parameters['profile_visibility']);
@@ -804,7 +808,12 @@
 				FROM	register_user_locations rul
 				WHERE	rul.user_id = ?
 			";
-			$rs = $GLOBALS['_database']->Execute($get_locations_query,array($this->organization()->id,$this->id));
+			$organization = $this->organization();
+		if (!$organization) {
+			$this->error("Customer has no associated organization");
+			return null;
+		}
+		$rs = $GLOBALS['_database']->Execute($get_locations_query,array($organization->id,$this->id));
 			
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());

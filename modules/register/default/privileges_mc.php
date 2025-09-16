@@ -11,12 +11,23 @@
 			$page->addError("Invalid Privilege Name");
 		}
 		else {
-            if ($privilege->add(array('name' => $_REQUEST['newPrivilege']))) {
-                $page->appendSuccess("Privilege Added");
-            }
-			else {
-                $page->addError("Error adding privilege: ".$privilege->error());
-            }
+			$module = new \Site\Module();
+			$module_name = $_REQUEST['newModule'] ?? '';
+			if (!empty($module_name) && !$module->validName($module_name)) {
+				$page->addError("Invalid module name");
+			} else {
+				$params = array('name' => $_REQUEST['newPrivilege']);
+				if (!empty($module_name)) {
+					$params['module'] = $module_name;
+				}
+				
+				if ($privilege->add($params)) {
+					$page->appendSuccess("Privilege Added");
+				}
+				else {
+					$page->addError("Error adding privilege: ".$privilege->error());
+				}
+			}
         }
     }
 	elseif (isset($_REQUEST['btn_update']) && $_REQUEST['btn_update'] == "Update") {
