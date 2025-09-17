@@ -1,9 +1,12 @@
+<style>
+	th {
+		text-align: left;
+	}
+</style>
 <script language="Javascript">
 	function drop(id) {
-		if (confirm('Are you sure you want to delete this navigation item? This action cannot be undone.')) {
-			document.forms[0].delete.value = id;
-			document.forms[0].submit();
-		}
+		document.forms[0].delete.value = id;
+		document.forms[0].submit();
 	}
 	function childLink(id) {
 		document.forms[0].parent_id.value = id;
@@ -13,15 +16,11 @@
 		window.location.href = "/_navigation/item?menu_id="+menu_id+"&parent_id="+parent_id+"&id="+item_id;
 	}
 	function follow(target) {
-		if (target && target.trim() !== '') {
-			window.location.href = target;
-		} else {
-			alert('No target URL specified for this item.');
-		}
+		window.location.href = target;
 	}
 	function addItem(parent) {
-		window.location.href = "/_navigation/item?menu_id=<?=isset($menu) ? $menu->id : ''?>&parent_id="+parent;
-	}
+	window.location.href = "/_navigation/item?menu_id=<?=isset($menu) ? $menu->id : ''?>&parent_id="+parent;
+}
 </script>
 
 <!-- Page Header -->
@@ -48,7 +47,7 @@
 	<input type="hidden" name="delete" value="" />
 	
 	<div class="marginBottom_20">
-		<input type="button" name="add" value="Add New Item" class="button" onclick="addItem(<?=isset($parent) ? $parent->id : 0?>);" />
+		<input type="button" name="add" value="Add Item" onclick="addItem(<?=isset($parent) ? $parent->id : 0?>);" />
 		<?php if (isset($parent) && $parent->id > 0) { ?>
 		<input type="button" name="back" value="Back to Parent" class="button secondary" onclick="window.location.href='/_navigation/items/<?= isset($menu) ? $menu->code : '' ?>';" />
 		<?php } ?>
@@ -93,9 +92,9 @@
 			<div class="tableCell">
 				<div class="button-group">
 					<input type="button" name="details[<?=$item->id?>]" class="button" value="Edit" onclick="edit(<?=$item->id?>,<?=isset($menu) ? $menu->id : ''?>,<?=isset($parent) ? $parent->id : 0?>);" />
-					<input type="button" name="follow[<?=$item->id?>]" class="button secondary" value="Follow" onclick="follow('<?= htmlspecialchars($item->target) ?>');"<?php if (empty($item->target)) print " disabled";?> />
-					<input type="button" name="children[<?=$item->id?>]" class="button secondary" value="Children" onclick="childLink(<?=$item->id?>);" />
-					<input type="button" name="deleteit[<?=$item->id?>]" class="button secondary" value="Delete" onclick="drop(<?=$item->id?>);" />
+					<input type="button" name="follow[<?=$item->id?>]" class="button" value="Follow" onclick="follow('<?= htmlspecialchars($item->target) ?>');"<?php if (empty($item->target)) print " disabled";?> />
+					<input type="button" name="children[<?=$item->id?>]" class="button" value="Children" onclick="childLink(<?=$item->id?>);" />
+					<input type="button" name="deleteit[<?=$item->id?>]" class="button" value="Drop" onclick="drop(<?=$item->id?>);" />
 				</div>
 			</div>
 		</div>
