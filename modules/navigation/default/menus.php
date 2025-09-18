@@ -4,17 +4,11 @@
 		return true;
 	}
 </script>
-
-<!-- Page Header -->
-<?=$page->showAdminPageInfo()?>
-<!-- End Page Header -->
-
 <div class="title">Navigation Menus</div>
 
 <?php	foreach ($menus as $menu) { ?>
 <form name="menuForm" action="/_navigation/menus" method="post">
 <input type="hidden" name="id" value="<?=$menu->id?>" />
-<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <div class="container">
 	<div class="container">
 		<span class="label">Code</span>
@@ -31,10 +25,8 @@
 </div>
 </form>
 <?php  } ?>
-
 <form name="menuForm" action="/_navigation/menus" method="post">
 <input type="hidden" name="id" value="0" />
-<input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
 <div class="container">
 	<div class="container">
 		<span class="label">Code</span>

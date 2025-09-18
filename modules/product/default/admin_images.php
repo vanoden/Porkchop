@@ -139,7 +139,6 @@
     <a href="/_product/admin_product_tags/<?= $item->code ?>" class="tab <?= $activeTab==='tags'?'active':'' ?>">Tags</a>
     <a href="/_product/admin_product_parts/<?= $item->code ?>" class="tab <?= $activeTab==='parts'?'active':'' ?>">Parts</a>
     <a href="/_spectros/admin_asset_sensors/<?= $item->code ?>" class="tab <?= $activeTab==='sensors'?'active':'' ?>">Sensors</a>
-    <a href="/_product/admin_product_metadata/<?= $item->code ?>" class="tab <?= $activeTab==='metadata'?'active':'' ?>">Metadata</a>
     <a href="/_product/audit_log/<?= $item->code ?>" class="tab <?= $activeTab==='audit'?'active':'' ?>">Audit Log</a>
 </div>
 
@@ -149,135 +148,70 @@
     if ($defaultImage && $defaultImage->id) {
         $thumbUrl = "/api/media/downloadMediaImage?height=150&width=150&code=" . $defaultImage->code;
 ?>
-    <!-- ============================================== -->
-    <!-- CURRENT DEFAULT IMAGE -->
-    <!-- ============================================== -->
-    <section class="tableBody clean">
-        <div class="tableRowHeader">
-            <div class="tableCell width-20per">Preview</div>
-            <div class="tableCell width-80per">Current Default Image</div>
+    <div class="container container-flex-center">
+        <img src="<?= $thumbUrl ?>" alt="Default image for <?= htmlspecialchars($item->code) ?>" class="img-default-thumb" />
+        <div>
+            <div class="label">Current Default Image</div>
+            <div><?= htmlspecialchars($defaultImage->display_name ?? $defaultImage->name) ?></div>
         </div>
-        <div class="tableRow">
-            <div class="tableCell">
-                <img src="<?= $thumbUrl ?>" alt="Default image for <?= htmlspecialchars($item->code) ?>" class="img-default-thumb" />
-            </div>
-            <div class="tableCell">
-                <div class="label">Image Name</div>
-                <div class="value"><?= htmlspecialchars($defaultImage->display_name ?? $defaultImage->name) ?></div>
-                <div class="label marginTop_10">Status</div>
-                <div class="value"><span class="default-image">Currently Set as Default</span></div>
-            </div>
-        </div>
-    </section>
+    </div>
 <?php } ?>
 
 <?php if ($repository->id) { ?>
-    <!-- ============================================== -->
-    <!-- IMAGE UPLOAD SECTION -->
-    <!-- ============================================== -->
-    <h3>Add New Images</h3>
-    <section class="tableBody clean min-tablet">
-        <div class="tableRowHeader">
-            <div class="tableCell width-50per">Upload New Image</div>
-            <div class="tableCell width-50per">Select From Library</div>
+	<!-- File Upload Form -->
+    <div class="container container-block">
+        <form name="repoUpload" action="/_product/admin_images/<?= $item->code ?>" method="post" enctype="multipart/form-data">
+            <h3 class="label">Upload Product Image</h3>
+            <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+            <input type="hidden" name="repository_id" value="<?= $repository->id ?>" />
+            <input type="file" name="uploadFile" />
+            <input type="submit" name="btn_submit" class="button" value="Upload" />
+        </form>
+        <div>
+            <h3 class="label">Select From Library</h3>
+            <button class="button" onclick="initImageSelectWizard();">Open Image Library</button>
         </div>
-        <div class="tableRow">
-            <div class="tableCell">
-                <form name="repoUpload" action="/_product/admin_images/<?= $item->code ?>" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
-                    <input type="hidden" name="repository_id" value="<?= $repository->id ?>" />
-                    <div class="label">Choose File</div>
-                    <input type="file" name="uploadFile" class="value input width-100per" accept="image/*" />
-                    <div class="marginTop_10">
-                        <input type="submit" name="btn_submit" class="button" value="Upload" />
-                    </div>
-                </form>
-            </div>
-            <div class="tableCell">
-                <div class="label">Image Library</div>
-                <div class="value">Select from existing images in the media library</div>
-                <div class="marginTop_10">
-                    <button class="button" onclick="initImageSelectWizard();">Browse Image Library</button>
-                </div>
-            </div>
-        </div>
-    </section>
+    </div>
 
-    <!-- ============================================== -->
-    <!-- EXISTING IMAGES GALLERY -->
-    <!-- ============================================== -->
-    <h3>Product Images</h3>
-    <form method="post" action="/_product/admin_images" id="imagesForm">
-        <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
-        <input type="hidden" name="id" value="<?= $item->id ?>" />
-        <input type="hidden" id="default_image_id" name="default_image_id" value="<?= ($defaultImage = $item->getDefaultStorageImage()) ? $defaultImage->name : '' ?>" />
-        <input type="hidden" id="updateImage" name="updateImage" value="" />
+	<!-- Display Existing Images, Allow user to select a new default -->
+	<form method="post" action="/_product/admin_images" id="imagesForm">
+	<input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+	<input type="hidden" name="id" value="<?= $item->id ?>" />
+	<input type="hidden" id="default_image_id" name="default_image_id" value="<?= ($defaultImage = $item->getDefaultStorageImage()) ? $defaultImage->name : '' ?>" />
+	<input type="hidden" id="updateImage" name="updateImage" value="" />
 
-        <?php if (isset($images) && count($images) > 0) { ?>
-        <section class="tableBody clean">
-            <div class="tableRowHeader">
-                <div class="tableCell width-15per">Preview</div>
-                <div class="tableCell width-35per">Image Details</div>
-                <div class="tableCell width-25per">Status</div>
-                <div class="tableCell width-25per">Actions</div>
-            </div>
+	<div class="container">
+		<h3 class="label">Current Images</h3>
+<?php 	if (isset($images) && count($images) > 0) { ?>
+        <div id="image_box" class="image-list image-grid">
             <?php foreach ($images as $image) { 
                 $thumb = "/api/media/downloadMediaImage?height=120&width=120&code=".$image->code;
                 $isDefault = ($image->id == $defaultImageId);
             ?>
-            <div class="tableRow" id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage(<?= $image->id ?>);" style="cursor: pointer;">
-                <div class="tableCell">
-                    <div class="image-item product-admin-images-background" data-background-image="<?= $thumb ?>" style="width: 80px; height: 80px; background-size: cover; background-position: center; border: 2px solid #ddd; border-radius: 4px;"></div>
-                </div>
-                <div class="tableCell">
-                    <div class="label">Name</div>
-                    <div class="value" title="<?= htmlspecialchars($image->display_name) ?>"><?= htmlspecialchars($image->display_name) ?></div>
-                    <div class="label marginTop_5">Code</div>
-                    <div class="value"><?= htmlspecialchars($image->code) ?></div>
-                </div>
-                <div class="tableCell">
+                <div id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage(<?= $image->id ?>);" class="image-item-container">
+                    <div class="image-item product-admin-images-background" data-background-image="<?= $thumb ?>"></div>
+                    <div class="image-code" title="<?= htmlspecialchars($image->display_name) ?>"><?= htmlspecialchars($image->display_name) ?></div>
                     <?php if ($isDefault) { ?>
-                        <span class="default-image">✓ Default Image</span>
+                        <div class="text-align-center"><span class="default-image">Default</span></div>
                     <?php } else { ?>
-                        <span class="value">Available</span>
+                        <div class="text-align-center"><button type="button" class="button" onclick="updateDefaultImage(<?= $image->id ?>);">Set as Default</button></div>
                     <?php } ?>
                 </div>
-                <div class="tableCell">
-                    <?php if ($isDefault) { ?>
-                        <span class="value">Currently Default</span>
-                    <?php } else { ?>
-                        <button type="button" class="button" onclick="updateDefaultImage(<?= $image->id ?>); event.stopPropagation();">Set as Default</button>
-                    <?php } ?>
-                </div>
-            </div>
             <?php } ?>
-        </section>
-        <?php } else { ?>
-        <section class="tableBody clean">
-            <div class="tableRow">
-                <div class="tableCell width-100per text-align-center">
-                    <div class="value">No images found for this product.</div>
-                    <div class="label marginTop_10">Upload your first image using the form above.</div>
-                </div>
-            </div>
-        </section>
-        <?php } ?>
-    </form>
-<?php } else { ?>
-    <!-- ============================================== -->
-    <!-- REPOSITORY ERROR -->
-    <!-- ============================================== -->
-    <section class="tableBody clean">
-        <div class="tableRowHeader">
-            <div class="tableCell width-100per">Repository Configuration Required</div>
         </div>
-        <div class="tableRow">
-            <div class="tableCell">
-                <div class="label">Upload Product Image for this device</div>
-                <div class="value text-color-red">Repository not found. Please create an S3, Local, Google or Dropbox repository to upload images for this product.</div>
-            </div>
-        </div>
-    </section>
+<?php 	} else { ?>
+	<p>No images found for this product.</p>
 <?php } ?>
-
+	</div>
+	</form>
+<?php } else {
+?>
+	<!-- Repository not found, display message -->
+    <div class="container">
+        <h3 class="label">Upload Product Image for this device</h3>
+        <p class="text-color-red">Repository not found. (please create an S3, Local, Google or Dropbox repository to upload images for this product)</p>
+    </div>
+<?php
+}
+?>
 
