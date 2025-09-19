@@ -1,3 +1,4 @@
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script language="Javascript">
 	function loginSubmitEnter(e) {
 		var code = (e.keyCode ? e.keyCode : e.which);
