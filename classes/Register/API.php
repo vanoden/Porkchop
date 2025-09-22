@@ -279,93 +279,6 @@
             }
         }
 
-        /**
-         * check if product is valid
-         */
-        function checkProduct() {
-            $product_id = $_REQUEST["product_id"];
-            
-            if (empty($product_id)) {
-                print json_encode(array('success' => false, 'message' => 'Product selection is required'));
-                return;
-            }
-            
-            try {
-                // Create Monitor API instance and call validateProductForRegistration method
-                $monitorAPI = new \Monitor\API();
-                
-                // Set up the request parameters for the Monitor API
-                $_REQUEST['product_id'] = $product_id;
-                
-                // Capture the output from Monitor API
-                ob_start();
-                $monitorAPI->validateProductForRegistration();
-                $monitorResponse = ob_get_clean();
-                
-                // Parse the XML response from Monitor API
-                $xml = simplexml_load_string($monitorResponse);
-                if ($xml && isset($xml->success) && (string)$xml->success == 'true') {
-                    print json_encode(array('success' => true, 'message' => 'Product is valid'));
-                } else {
-                    $errorMessage = 'Product not found';
-                    if (isset($xml->error)) {
-                        $errorMessage = (string)$xml->error;
-                    }
-                    print json_encode(array('success' => false, 'message' => $errorMessage));
-                }
-                
-            } catch (\Exception $e) {
-                print json_encode(array('success' => false, 'message' => 'Error checking product: ' . $e->getMessage()));
-            }
-        }
-
-        /**
-         * check if serial number exists and matches product
-         */
-        function checkSerialNumber() {
-            $code = $_REQUEST["code"];
-            $product_id = $_REQUEST["product_id"];
-            
-            if (empty($code)) {
-                print json_encode(array('success' => false, 'message' => 'Serial number is required'));
-                return;
-            }
-            
-            if (empty($product_id)) {
-                print json_encode(array('success' => false, 'message' => 'Product selection is required'));
-                return;
-            }
-            
-            try {
-                // Create Monitor API instance and call validateSerialForRegistration method
-                $monitorAPI = new \Monitor\API();
-                
-                // Set up the request parameters for the Monitor API
-                $_REQUEST['code'] = $code;
-                $_REQUEST['product_id'] = $product_id;
-                
-                // Capture the output from Monitor API
-                ob_start();
-                $monitorAPI->validateSerialForRegistration();
-                $monitorResponse = ob_get_clean();
-                
-                // Parse the XML response from Monitor API
-                $xml = simplexml_load_string($monitorResponse);
-                if ($xml && isset($xml->success) && (string)$xml->success == 'true') {
-                    print json_encode(array('success' => true, 'message' => 'Serial number found and matches product'));
-                } else {
-                    $errorMessage = 'Serial number not found in our system';
-                    if (isset($xml->error)) {
-                        $errorMessage = (string)$xml->error;
-                    }
-                    print json_encode(array('success' => false, 'message' => $errorMessage));
-                }
-                
-            } catch (\Exception $e) {
-                print json_encode(array('success' => false, 'message' => 'Error checking serial number: ' . $e->getMessage()));
-            }
-        }
-
         ###################################################
         ### Find Roles									###
         ###################################################
@@ -1967,16 +1880,6 @@
 						'password' => array('required' => true)
 					),
 				),
-				'checkProduct' => array(
-					'description' => 'Check if a product is valid for registration',
-					'authentication_required' => false,
-					'token_required' => false,
-					'return_type' => 'json',
-					'return_mime_type' => 'application/json',
-					'parameters' => array(
-						'product_id' => array('required' => true, 'description' => 'Product ID to validate')
-					),
-				),
 				'checkSerialNumber' => array(
 					'description' => 'Check if a serial number exists and matches the selected product',
 					'authentication_required' => false,
@@ -1984,8 +1887,16 @@
 					'return_type' => 'json',
 					'return_mime_type' => 'application/json',
 					'parameters' => array(
-						'code' => array('required' => true, 'description' => 'Serial number to check'),
-						'product_id' => array('required' => true, 'description' => 'Product ID to match against')
+						'code' => array(
+							'required' => true, 
+							'description' => 'Serial number to check',
+							'validation_method' => 'Monitor::Asset::validCode()'
+						),
+						'product_id' => array(
+							'required' => true, 
+							'description' => 'Product ID to match against',
+							'validation_method' => 'Product::Item::validId()'
+						)
 					),
 				),
 				'getPasswordResetURL' => array(

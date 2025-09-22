@@ -1,77 +1,9 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script src="/js/monitor.js"></script>
 <script src="/js/geography.js"></script>
 <script type="text/javascript">
-
-// AJAX Request Factory (from existing codebase pattern)
-function FactoryXMLHttpRequest() {
-    if (window.XMLHttpRequest) {
-        return new XMLHttpRequest();
-    }
-    else if (window.ActiveXObject) {
-        var msxmls = new Array(
-            'Msxml2.XMLHTTP.5.0',
-            'Msxml2.XMLHTTP.4.0',
-            'Msxml2.XMLHTTP.3.0',
-            'Msxml2.XMLHTTP',
-            'Microsoft.XMLHTTP');
-        for (var i = 0; i< msxmls.length; i++) {
-            try {
-                return new ActiveXObject(msxmls[i]);
-            } catch (e) {}
-        }
-    }
-    throw new Error("Could not instantiate XMLHttpRequest");
-}
-
-// API Request Wrapper (from existing codebase pattern)
-function apiRequest(url, params, callback, responseType) {
-    var xmlhttp = new FactoryXMLHttpRequest();
-    
-    xmlhttp.onreadystatechange = function() {
-        if (xmlhttp.readyState === 4) {
-            if (xmlhttp.status === 200) {
-                if (responseType === 'text') {
-                    // Handle plain text response
-                    if (callback) callback(xmlhttp.responseText.trim(), null);
-                } else {
-                    // Handle JSON response (default)
-                    try {
-                        var response = JSON.parse(xmlhttp.responseText);
-                        if (callback) callback(response, null);
-                    } catch (e) {
-                        if (callback) callback(null, 'Error parsing response: ' + e.message);
-                    }
-                }
-            } else {
-                if (callback) callback(null, 'HTTP error: ' + xmlhttp.status);
-            }
-        }
-    };
-    
-    xmlhttp.open('POST', url, true);
-    xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xmlhttp.send(params);
-}
-
-// API Request for GET requests (for plain text responses)
-function apiGetRequest(url, callback) {
-    var xmlhttp = new FactoryXMLHttpRequest();
-    
-    xmlhttp.onreadystatechange = function() {
-        if (xmlhttp.readyState === 4) {
-            if (xmlhttp.status === 200) {
-                if (callback) callback(xmlhttp.responseText.trim(), null);
-            } else {
-                if (callback) callback(null, 'HTTP error: ' + xmlhttp.status);
-            }
-        }
-    };
-    
-    xmlhttp.open('GET', url, true);
-    xmlhttp.send();
-}
 
 // validate email from user
 function validateEmail(email) {
@@ -119,15 +51,15 @@ function checkProduct() {
     
     var productID = productElem.options[productElem.selectedIndex].value;
     
-    // Make API call to validate product
-    var params = 'method=checkProduct&product_id=' + encodeURIComponent(productID);
-    apiRequest('/_register/api', params, function(response, error) {
+    // Make API call to validate product using Product API directly
+    var params = 'method=getItem&id=' + encodeURIComponent(productID);
+    apiRequest('/_product/api', params, function(response, error) {
         if (error) {
             serialMessage.innerHTML = 'Error validating product. Please try again.';
             serialMessage.style.display = 'block';
             serialMessageOK.style.display = 'none';
             console.error('Product validation error:', error);
-        } else if (response.success) {
+        } else if (response && response.item) {
             // Product is valid, hide any existing messages
             serialMessage.style.display = 'none';
             serialMessageOK.style.display = 'none';
@@ -137,7 +69,7 @@ function checkProduct() {
                 checkSerial();
             }
         } else {
-            serialMessage.innerHTML = response.message;
+            serialMessage.innerHTML = 'Product not found';
             serialMessage.style.display = 'block';
             serialMessageOK.style.display = 'none';
         }
@@ -148,39 +80,18 @@ function checkProduct() {
 
 // make sure that the user name isn't taken
 function checkUserName() {
-    var loginField = document.getElementById('login');
-    var loginMessage = document.getElementById('login-message');
-    
-    if (!loginField || !loginMessage) {
-        console.error('Login field or message element not found');
-        return;
-    }
-    
-    // Don't check if login field is empty
-    if (loginField.value.trim() === '') {
-        loginField.style.border = '';
-        loginMessage.innerHTML = '';
-        loginMessage.style.color = '';
-        return;
-    }
-    
-    // Use apiGetRequest for consistency with the codebase pattern
-    var url = '/_register/api?method=checkLoginNotTaken&login=' + encodeURIComponent(loginField.value);
-    apiGetRequest(url, function(data, error) {
-        if (error) {
-            console.error('Login check error:', error);
-            // Don't show error to user for login check failures
-        } else {
-            if (data == 1) {
-                loginField.style.border = '2px solid green';
-                loginMessage.innerHTML = 'login is available';
-                loginMessage.style.color = 'green';
-            } else {
-                loginField.style.border = '2px solid red';
-                loginMessage.innerHTML = 'login is not available';
-                loginMessage.style.color = 'red';
-            }
-        }
+    var loginField = $("#login");
+    var loginMessage = $("#login-message");
+    $.get('/_register/api?method=checkLoginNotTaken&login=' + loginField.val(), function (data, status) {
+      if (data == 1) {
+        loginField.css('border', '2px solid green');
+        loginMessage.html('login is available');
+        loginMessage.css('color', 'green');
+      } else {
+        loginField.css('border', '2px solid red');
+        loginMessage.html('login is not available');
+        loginMessage.css('color', 'red');
+      }
     });
 }
 
@@ -209,39 +120,44 @@ function checkSerial() {
   var serialNumberMessageOK = document.getElementById('serial_number_message_ok');
 
   if (serialInput.value.length < 1) return true;
-  if (productID == '') {
-    serialInput.style.border = 'solid 2px red';
-    serialNumberMessage.innerHTML = 'Please select a product first';
-    serialNumberMessage.style.display = 'block';
-    serialNumberMessageOK.style.display = 'none';
-    return false;
+  var code = serialInput.value.trim();
+  serialInput.value = code;
+
+  // Check if Asset object is available
+  if (typeof Asset === 'undefined') {
+    console.log('Asset object not available, skipping serial number validation');
+    return true;
   }
 
-  var code = serialInput.value;
-  
-  // Make API call to check serial number
-  var params = 'method=checkSerialNumber&code=' + encodeURIComponent(code) + '&product_id=' + encodeURIComponent(productID);
-  apiRequest('/_register/api', params, function(response, error) {
-    if (error) {
-      serialInput.style.border = 'solid 2px red';
-      serialNumberMessage.innerHTML = 'Error checking serial number. Please try again.';
-      serialNumberMessage.style.display = 'block';
-      serialNumberMessageOK.style.display = 'none';
-      console.error('Serial number check error:', error);
-    } else if (response.success) {
-      serialInput.style.border = 'solid 2px green';
-      serialNumberMessage.style.display = 'none';
-      serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
-      serialNumberMessageOK.style.display = 'block';
+  try {
+    var asset = Object.create(Asset);
+
+    if (asset.get(code)) {
+      if (asset.product.id == productID) {
+        serialInput.style.border = 'solid 2px green';
+        serialNumberMessage.style.display = 'none';
+        serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
+        serialNumberMessageOK.style.display = 'block';
+        return true;
+      } else {
+        serialInput.style.border = 'solid 2px red';
+        serialNumberMessage.innerHTML = 'Product not found with that serial number';
+        serialNumberMessage.style.display = 'block';
+        serialNumberMessageOK.style.display = 'none';
+        return false;
+      }
     } else {
       serialInput.style.border = 'solid 2px red';
-      serialNumberMessage.innerHTML = response.message;
+      serialNumberMessage.innerHTML = 'Serial number not found in our system';
       serialNumberMessage.style.display = 'block';
       serialNumberMessageOK.style.display = 'none';
+      return false;
     }
-  });
-  
-  return false; // Always return false since this is async
+  } catch (error) {
+    console.log('Error checking serial number:', error);
+    // If there's an error, just return true to allow the form to continue
+    return true;
+  }
 }
 
 function checkRegisterProduct(){
