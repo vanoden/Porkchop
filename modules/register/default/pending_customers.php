@@ -1,5 +1,73 @@
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 
+<style>
+#search_container {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 5px;
+	max-width: 1000px;
+	align-items: center;
+	padding: 0.6rem 1rem;
+	background: #e8e8e8;
+	margin-top: 0.5rem;
+}
+#search_container form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 5px;
+	align-items: center;
+	width: 100%;
+}
+#search_container input[type="text"],
+#search_container input[type="submit"],
+#search_container input[type="button"] {
+	margin: 0;
+}
+#search_container .button-group {
+	display: flex;
+	gap: 5px;
+	align-items: center;
+}
+#search_container .button-group input[type="submit"] {
+	background-color: #28a745;
+	color: white;
+	padding: 5px 10px;
+	border: none;
+	border-radius: 3px;
+	cursor: pointer;
+}
+#search_container .button-group input[type="button"] {
+	background-color: #6c757d;
+	color: white;
+	padding: 5px 10px;
+	border: none;
+	border-radius: 3px;
+	cursor: pointer;
+}
+#search_container label {
+	margin: 0 0 0 2px;
+	font-size: 0.9em;
+}
+.button-group {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	padding: 0.6rem 1rem;
+}
+.button-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 3px;
+}
+.button-label {
+	font-size: 0.7em;
+	color: #666;
+	text-align: center;
+	line-height: 1.2;
+}
+</style>
+
 <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script>
@@ -159,6 +227,25 @@
 </div>
 
 <!-- ============================================== -->
+<!-- FILTER FORM -->
+<!-- ============================================== -->
+<div id="search_container">
+	<form method="GET" action="/_register/pending_customers">
+		<input type="text" name="search" id="search" placeholder="search" value="<?=htmlspecialchars($_REQUEST['search'] ?? '')?>">
+		<input type="text" id="dateStart" name="dateStart" placeholder="From Date" value="<?=htmlspecialchars($_REQUEST['dateStart'] ?? '')?>">
+		<input type="text" id="dateEnd" name="dateEnd" placeholder="To Date" value="<?=htmlspecialchars($_REQUEST['dateEnd'] ?? '')?>">
+		<input type="checkbox" name="VERIFYING" value="VERIFYING" <?=isset($_REQUEST['VERIFYING']) ? 'checked' : ''?>><label>Verifying</label>
+		<input type="checkbox" name="PENDING" value="PENDING" <?=isset($_REQUEST['PENDING']) || (empty($_REQUEST['VERIFYING']) && empty($_REQUEST['PENDING']) && empty($_REQUEST['APPROVED']) && empty($_REQUEST['DENIED'])) ? 'checked' : ''?>><label>Pending</label>
+		<input type="checkbox" name="APPROVED" value="APPROVED" <?=isset($_REQUEST['APPROVED']) ? 'checked' : ''?>><label>Approved</label>
+		<input type="checkbox" name="DENIED" value="DENIED" <?=isset($_REQUEST['DENIED']) ? 'checked' : ''?>><label>Denied</label>
+		<div class="button-group">
+			<input type="submit" name="btn_search" value="Search">
+			<input type="button" value="Clear" onclick="window.location.href='/_register/pending_customers'">
+		</div>
+	</form>
+</div>
+
+<!-- ============================================== -->
 <!-- PENDING CUSTOMERS LIST -->
 <!-- ============================================== -->
 <h3>Pending Customers</h3>
@@ -197,9 +284,18 @@
 					<input list="organization_list_<?=$queuedCustomer->id?>" class="organization value input width-100per" id="organization_<?=$queuedCustomer->id?>" name="organization" value="<?= htmlspecialchars($queuedCustomer->name) ?>" placeholder="Match Organization"/>
 					<datalist id="organization_list_<?=$queuedCustomer->id?>"></datalist>
 					<div class="button-group marginTop_5">
-						<input type="image" class="width-30px" src="/img/icons/icon_cust_add-existing.svg" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignExistingCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" disabled="disabled"/> 
-						<input type="image" class="width-30px" src="/img/icons/icon_cust_add-new.svg" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="addNewCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" title="Assign customer to new organization" disabled="disabled"/> 
-						<input type="image" class="width-30px" src="/img/icons/icon_cust_deny.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" title="Deny customer creation" />
+						<div class="button-item">
+							<input type="image" class="width-30px" src="/img/icons/icon_cust_add-existing.svg" id="organization_<?=$queuedCustomer->id?>_assign_button" onclick="assignExistingCustomer(<?=$queuedCustomer->id?>)" alt="Assign Existing" title="Assign customer to existing organization" disabled="disabled"/> 
+							<div class="button-label">Assign</div>
+						</div>
+						<div class="button-item">
+							<input type="image" class="width-30px" src="/img/icons/icon_cust_add-new.svg" id="organization_<?=$queuedCustomer->id?>_new_button" onclick="addNewCustomer(<?=$queuedCustomer->id?>)" alt="Add as New" title="Assign customer to new organization" disabled="disabled"/> 
+							<div class="button-label">New</div>
+						</div>
+						<div class="button-item">
+							<input type="image" class="width-30px" src="/img/icons/icon_cust_deny.svg" id="organization_<?=$queuedCustomer->id?>_deny_button" onclick="denyCustomer(<?=$queuedCustomer->id?>)" alt="Deny" title="Deny customer creation" />
+							<div class="button-label">Deny</div>
+						</div>
 					</div>
 				</div>
 				<?php

@@ -205,14 +205,15 @@
 					$parameters['name'] = str_replace('*','%',$parameters['name']);
 					$parameters['name'] = str_replace('?','_',$parameters['name']);
 					$find_objects_query .= "
-					AND	name LIKE ?";
+					AND	ro.name LIKE ?";
 					$database->AddParam($parameters['name']);
 				}
-				// Handle Exact Match
+				// Handle No Wildcards - Add * on both sides
 				elseif ($workingClass->validName($parameters['name'])) {
+					$search_name = '%' . $parameters['name'] . '%';
 					$find_objects_query .= "
-					AND		ro.name = ?";
-					$database->AddParam($parameters['name']);
+					AND		ro.name LIKE ?";
+					$database->AddParam($search_name);
 				}
 				else {
 					$this->error("Invalid name");

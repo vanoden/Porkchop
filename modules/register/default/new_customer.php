@@ -4,6 +4,75 @@
 <script src="/js/geography.js"></script>
 <script type="text/javascript">
 
+// AJAX Request Factory (from existing codebase pattern)
+function FactoryXMLHttpRequest() {
+    if (window.XMLHttpRequest) {
+        return new XMLHttpRequest();
+    }
+    else if (window.ActiveXObject) {
+        var msxmls = new Array(
+            'Msxml2.XMLHTTP.5.0',
+            'Msxml2.XMLHTTP.4.0',
+            'Msxml2.XMLHTTP.3.0',
+            'Msxml2.XMLHTTP',
+            'Microsoft.XMLHTTP');
+        for (var i = 0; i< msxmls.length; i++) {
+            try {
+                return new ActiveXObject(msxmls[i]);
+            } catch (e) {}
+        }
+    }
+    throw new Error("Could not instantiate XMLHttpRequest");
+}
+
+// API Request Wrapper (from existing codebase pattern)
+function apiRequest(url, params, callback, responseType) {
+    var xmlhttp = new FactoryXMLHttpRequest();
+    
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState === 4) {
+            if (xmlhttp.status === 200) {
+                if (responseType === 'text') {
+                    // Handle plain text response
+                    if (callback) callback(xmlhttp.responseText.trim(), null);
+                } else {
+                    // Handle JSON response (default)
+                    try {
+                        var response = JSON.parse(xmlhttp.responseText);
+                        if (callback) callback(response, null);
+                    } catch (e) {
+                        if (callback) callback(null, 'Error parsing response: ' + e.message);
+                    }
+                }
+            } else {
+                if (callback) callback(null, 'HTTP error: ' + xmlhttp.status);
+            }
+        }
+    };
+    
+    xmlhttp.open('POST', url, true);
+    xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xmlhttp.send(params);
+}
+
+// API Request for GET requests (for plain text responses)
+function apiGetRequest(url, callback) {
+    var xmlhttp = new FactoryXMLHttpRequest();
+    
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState === 4) {
+            if (xmlhttp.status === 200) {
+                if (callback) callback(xmlhttp.responseText.trim(), null);
+            } else {
+                if (callback) callback(null, 'HTTP error: ' + xmlhttp.status);
+            }
+        }
+    };
+    
+    xmlhttp.open('GET', url, true);
+    xmlhttp.send();
+}
+
 // validate email from user
 function validateEmail(email) {
     if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) return true;
@@ -39,32 +108,78 @@ function checkProduct() {
     var productElem = document.getElementById('product_id');
     var serialNumber = document.getElementById('serial_number');
     var serialMessage = document.getElementById('serial_number_message');
-    serialNumber.focus();
-    serialNumber.style.border = '1px solid gray';
-    if (productElem.selectedIndex > 0) {
-        if (document.getElementById('serial_number').value.length > 0) serialMessage.display = 'none';
-        return true;
-    } else {
+    var serialMessageOK = document.getElementById('serial_number_message_ok');
+    
+    if (productElem.selectedIndex <= 0) {
         serialMessage.innerHTML = 'Select a product first';
         serialMessage.style.display = 'block';
-        productElem.focus();
+        serialMessageOK.style.display = 'none';
         return false;
     }
+    
+    var productID = productElem.options[productElem.selectedIndex].value;
+    
+    // Make API call to validate product
+    var params = 'method=checkProduct&product_id=' + encodeURIComponent(productID);
+    apiRequest('/_register/api', params, function(response, error) {
+        if (error) {
+            serialMessage.innerHTML = 'Error validating product. Please try again.';
+            serialMessage.style.display = 'block';
+            serialMessageOK.style.display = 'none';
+            console.error('Product validation error:', error);
+        } else if (response.success) {
+            // Product is valid, hide any existing messages
+            serialMessage.style.display = 'none';
+            serialMessageOK.style.display = 'none';
+            
+            // If there's a serial number entered, validate it
+            if (document.getElementById('serial_number').value.length > 0) {
+                checkSerial();
+            }
+        } else {
+            serialMessage.innerHTML = response.message;
+            serialMessage.style.display = 'block';
+            serialMessageOK.style.display = 'none';
+        }
+    });
+    
+    return false; // Always return false since this is async
 }
 
 // make sure that the user name isn't taken
 function checkUserName() {
-    var loginField = $("#login");
-    var loginMessage = $("#login-message");
-    $.get('/_register/api?method=checkLoginNotTaken&login=' + loginField.val(), function(data, status) {
-        if (data == 1) {
-            loginField.css('border', '2px solid green');
-            loginMessage.html('login is available');
-            loginMessage.css('color', 'green');
+    var loginField = document.getElementById('login');
+    var loginMessage = document.getElementById('login-message');
+    
+    if (!loginField || !loginMessage) {
+        console.error('Login field or message element not found');
+        return;
+    }
+    
+    // Don't check if login field is empty
+    if (loginField.value.trim() === '') {
+        loginField.style.border = '';
+        loginMessage.innerHTML = '';
+        loginMessage.style.color = '';
+        return;
+    }
+    
+    // Use apiGetRequest for consistency with the codebase pattern
+    var url = '/_register/api?method=checkLoginNotTaken&login=' + encodeURIComponent(loginField.value);
+    apiGetRequest(url, function(data, error) {
+        if (error) {
+            console.error('Login check error:', error);
+            // Don't show error to user for login check failures
         } else {
-            loginField.css('border', '2px solid red');
-            loginMessage.html('login is not available');
-            loginMessage.css('color', 'red');
+            if (data == 1) {
+                loginField.style.border = '2px solid green';
+                loginMessage.innerHTML = 'login is available';
+                loginMessage.style.color = 'green';
+            } else {
+                loginField.style.border = '2px solid red';
+                loginMessage.innerHTML = 'login is not available';
+                loginMessage.style.color = 'red';
+            }
         }
     });
 }
@@ -94,30 +209,39 @@ function checkSerial() {
   var serialNumberMessageOK = document.getElementById('serial_number_message_ok');
 
   if (serialInput.value.length < 1) return true;
-  var code = serialInput.value;
-  var asset = Object.create(Asset);
-
-  if (asset.get(code)) {
-    if (asset.product.id == productID) {
-      serialInput.style.border = 'solid 2px green';
-      serialNumberMessage.style.display = 'none';
-      serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
-      serialNumberMessageOK.style.display = 'block';
-      return true;
-    } else {
-      serialInput.style.border = 'solid 2px red';
-      serialNumberMessage.innerHTML = 'Product not found with that serial number';
-      serialNumberMessage.style.display = 'block';
-      serialNumberMessageOK.style.display = 'none';
-      return false;
-    }
-  } else {
+  if (productID == '') {
     serialInput.style.border = 'solid 2px red';
-    serialNumberMessage.innerHTML = 'Serial number not found in our system';
+    serialNumberMessage.innerHTML = 'Please select a product first';
     serialNumberMessage.style.display = 'block';
     serialNumberMessageOK.style.display = 'none';
     return false;
   }
+
+  var code = serialInput.value;
+  
+  // Make API call to check serial number
+  var params = 'method=checkSerialNumber&code=' + encodeURIComponent(code) + '&product_id=' + encodeURIComponent(productID);
+  apiRequest('/_register/api', params, function(response, error) {
+    if (error) {
+      serialInput.style.border = 'solid 2px red';
+      serialNumberMessage.innerHTML = 'Error checking serial number. Please try again.';
+      serialNumberMessage.style.display = 'block';
+      serialNumberMessageOK.style.display = 'none';
+      console.error('Serial number check error:', error);
+    } else if (response.success) {
+      serialInput.style.border = 'solid 2px green';
+      serialNumberMessage.style.display = 'none';
+      serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
+      serialNumberMessageOK.style.display = 'block';
+    } else {
+      serialInput.style.border = 'solid 2px red';
+      serialNumberMessage.innerHTML = response.message;
+      serialNumberMessage.style.display = 'block';
+      serialNumberMessageOK.style.display = 'none';
+    }
+  });
+  
+  return false; // Always return false since this is async
 }
 
 function checkRegisterProduct(){
@@ -128,10 +252,15 @@ function checkRegisterProduct(){
   console.log(checkBoxItem.checked);
   if (checkBoxItem.checked == true) {
     fieldsProductType.style.display = "block";
-    fieldsProductSerial.style.display = "block"; 
+    fieldsProductSerial.style.display = "block";
   } else {
     fieldsProductType.style.display = "none";
-    fieldsProductSerial.style.display = "none"; 
+    fieldsProductSerial.style.display = "none";
+    // Clear any existing serial number validation messages
+    document.getElementById('serial_number_message').style.display = 'none';
+    document.getElementById('serial_number_message_ok').style.display = 'none';
+    // Clear the serial number field
+    document.getElementById('serial_number').value = '';
   }
 }
 
@@ -225,13 +354,13 @@ function getProvinces() {
 
     <h2>Register your Product</h2>
     <section>
-      <ul id="serial_number_message" class="connectBorder errorText register-new-customer-serial-message">
+      <ul id="serial_number_message" class="connectBorder errorText register-new-customer-serial-message" style="display: none;">
         <li>Serial number not found in our system</li>
       </ul>
     </section>
 
     <section>
-      <ul id="serial_number_message_ok" class="connectBorder progressText register-new-customer-serial-message">
+      <ul id="serial_number_message_ok" class="connectBorder progressText register-new-customer-serial-message" style="display: none;">
         <li>Serial number has been found</li>
       </ul>
     </section>
@@ -240,18 +369,18 @@ function getProvinces() {
       <li>
         <input id="has_item_checkbox" type="checkbox" name="reseller" value="yes" class="register-new-customer-reseller-checkbox" onChange="checkRegisterProduct();">Already have a device you would like to register?
       </li>
-      <li id="product_type" class="register-new-customer-product-type"> 
+      <li id="product_type" class="register-new-customer-product-type" style="display: none;"> 
         <label for="product">Product:</label>
-        <select id="product_id" name="product_id" class="value input collectionField register-new-customer-product-select" onchange="document.getElementById('serial_number_message').style.display = 'none';">
+        <select id="product_id" name="product_id" class="value input collectionField register-new-customer-product-select" onchange="document.getElementById('serial_number_message').style.display = 'none'; document.getElementById('serial_number_message_ok').style.display = 'none';">
           <option value="" <?php	if (isset($selectedProduct) && $product==$selectedProduct) print " selected"; ?>>---</option>
           <?php	foreach ($productsAvailable as $product) { ?>
             <option value="<?=$product->id?>"<?php	if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=strip_tags($product->description)?></option>
           <?php	} ?>
         </select>
       </li>
-      <li id="product_serial" class="register-new-customer-product-serial">
+      <li id="product_serial" class="register-new-customer-product-serial" style="display: none;">
         <label for="serialNum">Serial #</label>
-        <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number" onfocus="checkProduct();" onchange="checkSerial()" maxlength="50">
+        <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number" onmouseout="checkProduct();" onchange="checkSerial()" maxlength="50">
       </li>
     </ul>
 
@@ -316,7 +445,8 @@ function getProvinces() {
       </li>
       <li>
         <label for="username">Username:</span>
-        <input type="text" id="login" class="<?=isset($loginTaken) ? 'register-new-customer-login-error' : 'register-new-customer-login-normal'?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onchange="checkUserName()" maxlength="50" required/>
+        <input type="text" id="login" class="<?=isset($loginTaken) ? 'register-new-customer-login-error' : 'register-new-customer-login-normal'?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onmouseout="checkUserName()" maxlength="50" required/>
+        <div id="login-message"></div>
       </li>
       <li>
         <label for="password">Create Password:</span>
