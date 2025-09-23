@@ -23,7 +23,7 @@ if (!isset($item) || !is_object($item)) {
     $item = new \Spectros\Product\Item();
 }
 
-$metadataKeys = $item->getMetadataKeys();
+$metadataKeys = $item->getInstanceMetadataKeys();
 
 // Handle Actions
 if (!empty($_REQUEST['updateMetadata'])) {
@@ -32,7 +32,7 @@ if (!empty($_REQUEST['updateMetadata'])) {
     if (!$page->errorCount()) {
         app_log("Admin " . $GLOBALS['_SESSION_']->customer->first_name . " updating metadata for product " . $item->code, 'notice', __FILE__, __LINE__);
 
-        // Update metadata fields
+        // Update existing metadata fields
         foreach ($metadataKeys as $meta_field) {
             if (isset($_REQUEST[$meta_field])) {
                 $value = trim($_REQUEST[$meta_field]);
@@ -58,6 +58,65 @@ if (!empty($_REQUEST['updateMetadata'])) {
         if (isset($_REQUEST['spec_table_image']) && $item->validInteger($_REQUEST['spec_table_image'])) {
             $item->update(array('spec_table_image' => $_REQUEST['spec_table_image']));
             if ($item->error()) $page->addError("Error updating spec table: " . $item->error());
+        }
+
+        // Handle adding new metadata if fields are present
+        if (!empty($_REQUEST['new_metadata_key']) && !empty($_REQUEST['new_metadata_value'])) {
+            $newKey = trim($_REQUEST['new_metadata_key']);
+            $newValue = trim($_REQUEST['new_metadata_value']);
+            
+            if (empty($newKey)) {
+                $page->addError("Metadata key is required");
+            } elseif (empty($newValue)) {
+                $page->addError("Metadata value is required");
+            } elseif (!$item->validMetadataKey($newKey)) {
+                $page->addError("Invalid metadata key format");
+            } elseif (!$item->validMetadataValue($newValue)) {
+                $page->addError("Invalid metadata value format");
+            } else {
+                // Check if key already exists
+                if ($item->getMetadata($newKey) !== '') {
+                    $page->addError("Metadata key '" . $newKey . "' already exists");
+                } else {
+                    // Add the new metadata
+                    $item->setMetadata($newKey, $newValue);
+                    if ($item->error()) {
+                        $page->addError("Error adding metadata: " . $item->error());
+                    } else {
+                        $page->appendSuccess("Added new metadata '" . $newKey . "'");
+                        // Refresh metadata keys to include the new one
+                        $metadataKeys = $item->getInstanceMetadataKeys();
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Handle deleting metadata
+if (!empty($_REQUEST['deleteMetadata'])) {
+    // CSRF Token Check
+    if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'] ?? '')) $page->addError("Invalid Request");
+    if (!$page->errorCount()) {
+        $deleteKey = trim($_REQUEST['delete_metadata_key'] ?? '');
+        
+        if (empty($deleteKey)) {
+            $page->addError("Metadata key is required for deletion");
+        } else {
+            // Check if it's a protected key
+            if (in_array($deleteKey, ['default_dashboard_id', 'manual_id', 'spec_table_image', 'name', 'description', 'short_description'])) {
+                $page->addError("Cannot delete protected metadata field: " . $deleteKey);
+            } else {
+                // Delete the metadata
+                $item->unsetMetadata($deleteKey);
+                if ($item->error()) {
+                    $page->addError("Error deleting metadata: " . $item->error());
+                } else {
+                    $page->appendSuccess("Deleted metadata field '" . $deleteKey . "'");
+                    // Refresh metadata keys
+                    $metadataKeys = $item->getInstanceMetadataKeys();
+                }
+            }
         }
     }
 }
