@@ -211,6 +211,7 @@
 		 * Parses the URI, identifies module, view, index, and query variables
 		 */
 		public function deconstruct() {
+			app_log("REQUEST: ".$_SERVER['REQUEST_URI'],'debug',__FILE__,__LINE__);
 			# Store User Agent
 			$this->user_agent = $_SERVER['HTTP_USER_AGENT'];
 
