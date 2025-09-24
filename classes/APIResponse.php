@@ -45,6 +45,14 @@
 		}
 
 		public function print($format = 'xml') {
+			// Client machines don't need the massive overhead!
+			if (preg_match('/^(portal_sync_service)/i',$_SERVER['HTTP_USER_AGENT'])) {
+				header_remove('Content-Security-Policy');
+				header_remove('Permissions-Policy');
+				header_remove('Strict-Transport-Security');
+				header_remove('X-Content-Type-Options');
+			}
+
 			$comm = new \Monitor\Communication();
 
 			$data = new \stdClass();
