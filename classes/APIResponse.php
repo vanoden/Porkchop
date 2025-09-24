@@ -51,6 +51,7 @@
 				header_remove('Permissions-Policy');
 				header_remove('Strict-Transport-Security');
 				header_remove('X-Content-Type-Options');
+				header_remove('X-Powered-By');
 			}
 
 			$comm = new \Monitor\Communication();
