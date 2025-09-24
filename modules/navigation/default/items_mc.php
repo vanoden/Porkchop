@@ -96,6 +96,3 @@ if (!isset($menu)) {
 	$page->render();
 	exit;
 }
-
-// Include the template
-include(__DIR__ . '/items.php');

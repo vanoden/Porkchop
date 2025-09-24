@@ -52,7 +52,8 @@
         if (isset($greenbar)) $greenbar = ''; else $greenbar = " greenbar";
 		if (!empty($customer->organization_id)) {
 			$organization_id = $customer->organization_id;
-			$organization_name = $customer->organization()->name;
+			$organization = $customer->organization();
+			$organization_name = $organization ? $organization->name : 'Unknown Organization';
 		}
 		else {
 			$organization_id = 0;

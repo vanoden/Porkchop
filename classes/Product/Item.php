@@ -139,6 +139,14 @@
 			return true;
 		}
 
+		/** @method name()
+		 * Get the name of a product, might be the property or in metadata
+		 * @return string Product Name
+		*/
+		public function name() {
+			return $this->getMetadata('name') ?: $this->name ?: $this->code;
+		}
+
 		/** @method update(parameters)
 		 * Update the product with the provided parameters
 		 * 

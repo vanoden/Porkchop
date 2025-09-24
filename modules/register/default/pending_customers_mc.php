@@ -193,8 +193,10 @@ if (!empty($dateEnd) && !$queueObj->validDate($dateEnd)) {
     $can_proceed = false;
 }
 
-// set to default of no options selected
-if (empty($statusFiltered)) $_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
+// set to default of no options selected - show only PENDING by default
+if (empty($statusFiltered)) {
+	$_REQUEST['PENDING'] = $statusFiltered[] = 'PENDING';
+}
 
 // get results
 app_log("Find");

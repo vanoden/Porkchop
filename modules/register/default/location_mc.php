@@ -11,7 +11,9 @@
         return 404;
     }
 
-    if ($location->organization()->id != $GLOBALS['_SESSION_']->customer->organization()->id && $location->customer()->id != $GLOBALS['_SESSION_']->customer->id) {
+    $locationOrg = $location->organization();
+    $customerOrg = $GLOBALS['_SESSION_']->customer->organization();
+    if ((!$locationOrg || !$customerOrg || $locationOrg->id != $customerOrg->id) && $location->customer()->id != $GLOBALS['_SESSION_']->customer->id) {
         $page->addError("Location not found");
         return 404;
     }

@@ -61,7 +61,7 @@ if (!empty($job_title)) {
 }
 
 // Organization
-echo "ORG:{$customer->organization()->name}\n";
+echo "ORG:" . ($customer->organization() ? $customer->organization()->name : 'Unknown Organization') . "\n";
 
 // Timezone if available
 if (!empty($customer->timezone)) {

@@ -11,6 +11,11 @@
 	$page = new \Site\Page();
 
 	if (empty($_REQUEST['csrfToken'])) $_REQUEST['csrfToken'] = null;
+    
+	// Set CAPTCHA public key for template use
+	if (isset($GLOBALS['_config']->captcha->public_key)) $captcha_public_key = $GLOBALS['_config']->captcha->public_key;
+	else app_log("CAPTCHA Not Configured",'warn');
+	
     // Check Risk Level from Host
 	$CAPTCHA_GO = false;
 	$remote_host = new \Network\Host();
@@ -214,5 +219,3 @@
 		app_log("No authentication information sent",'debug',__FILE__,__LINE__);
 	}
 
-	if (isset($GLOBALS['_config']->captcha->public_key)) $captcha_public_key = $GLOBALS['_config']->captcha->public_key;
-	else app_log("CAPTCH Not Configured",'warn');

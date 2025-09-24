@@ -6,8 +6,12 @@
 
     // expand text to read the whole message
     function expandText(messageId) {
-        document.getElementById('message-text-' + messageId).style.height = "150px";
-        document.getElementById('message-text-read-more-' + messageId).style.display = 'none';
+        var messageText = document.getElementById('message-text-' + messageId);
+        var expandBtn = document.getElementById('message-text-read-more-' + messageId);
+        
+        messageText.style.maxHeight = "none";
+        messageText.style.overflow = "visible";
+        expandBtn.style.display = 'none';
     }
     
     // mark the message individually as acknowledged
@@ -17,17 +21,23 @@
             'csrfToken': '<?=$GLOBALS['_SESSION_']->getCSRFToken()?>',
             'message_id': messageId
         }, function( data ) {
-            document.getElementById('message-title-' + messageId).classList.remove('bold');
-            document.getElementById('message-subject-' + messageId).classList.remove('bold');
-            document.getElementById('message-date-' + messageId).classList.remove('bold');         
+            var messageCard = document.getElementById('row-' + messageId);
+            messageCard.classList.remove('message-unread');
+            messageCard.classList.add('message-read');
+            
+            // Update the button to show read status
+            var messageActions = messageCard.querySelector('.message-actions');
+            messageActions.innerHTML = '<span class="status-badge status-read">Read</span>';
         });
-        location.reload(true);
     }
     
     // toggle all messages for acknowledged option
     var isSelectAll = false;
     function selectAll() {
-        var messages = document.getElementsByClassName("row info-row");
+        var messages = document.getElementsByClassName("message-card");
+        var selectBtn = document.getElementById('selectAll');
+        var markBtn = document.getElementById('mark-acknowledged');
+        
         for (var i = 0; i < messages.length; i++) {
             if (!isSelectAll) {
                 messages.item(i).classList.add('selected');
@@ -36,7 +46,8 @@
             }
         }
         isSelectAll = !isSelectAll;
-        document.getElementById('mark-acknowledged').disabled = !isSelectAll;
+        markBtn.disabled = !isSelectAll;
+        selectBtn.querySelector('.btn-text').textContent = isSelectAll ? 'Deselect All' : 'Select All';
     }
     
     // acknowledge all messages at once on button click
@@ -48,10 +59,12 @@
             'btn_submit' : 'Submit' 
         
         }, function( data ) {
-            var messages = document.getElementsByClassName("row info-row");
-            for (var i = 0; i < messages.length; i++) acknowledged(messages[i].id.replace('row-', ''));
+            var messages = document.getElementsByClassName("message-card");
+            for (var i = 0; i < messages.length; i++) {
+                var messageId = messages[i].id.replace('row-', '');
+                acknowledge(messageId);
+            }
             selectAll();
-            document.getElementById('selectAll').checked = false;
         });
     }
 </script>
@@ -60,19 +73,50 @@
 <?=$page->showTitle()?>
 <?=$page->showMessages()?>
 
-<div class="row row-full-column">
-    <form method="post" id="filterForm">
-    <div class="flex-2">
-        <span class="value">Acknowledged</span>&nbsp;<input type="checkbox" name="seeAcknowledged"<?php if ($params['acknowledged'] && $params['acknowledged'] == 'read') print " checked";?> onchange="document.getElementById('filterForm').submit()"/>
-        <input type="hidden" name="filter" value="Filter" />
+<div class="messages-header">
+    <div class="messages-controls">
+        <div class="messages-actions">
+            <button type="button" class="btn btn-secondary" onclick="selectAll()" id="selectAll">
+                <span class="btn-text">Select All</span>
+            </button>
+            <button type="button" class="btn btn-primary" onclick="acknowledgeAll()" id="mark-acknowledged" disabled>
+                <span class="btn-text">Mark as Read</span>
+            </button>
+        </div>
+        <form method="post" id="filterForm" class="filter-form">
+            <div class="filter-group">
+                <label class="filter-label">
+                    <input type="checkbox" name="seeAcknowledged"<?php if ($params['acknowledged'] && $params['acknowledged'] == 'read') print " checked";?> onchange="document.getElementById('filterForm').submit()"/>
+                    <span class="checkmark"></span>
+                    Show acknowledged messages
+                </label>
+                <input type="hidden" name="filter" value="Filter" />
+            </div>
+        </form>
     </div>
-    </form>
 </div>
 
-<div class="margin-50">
+<div class="messages-container">
     <?php
-    $currentYear = '';
-    foreach ($siteMessages as $siteMessage) {
+    // Check if there are any messages
+    if (empty($siteMessages)) {
+        $showUnreadOnly = !isset($_REQUEST['seeAcknowledged']) || !$_REQUEST['seeAcknowledged'];
+        if ($showUnreadOnly) {
+            // No unread messages
+            echo '<div class="no-messages">';
+            echo '<h3>No unread messages</h3>';
+            echo '<p>You\'re all caught up! There are no unread messages at this time.</p>';
+            echo '</div>';
+        } else {
+            // No acknowledged messages
+            echo '<div class="no-messages">';
+            echo '<h3>No acknowledged messages</h3>';
+            echo '<p>There are no acknowledged messages to display.</p>';
+            echo '</div>';
+        }
+    } else {
+        $currentYear = '';
+        foreach ($siteMessages as $siteMessage) {
 
         // insert that the message has been viewed
         $sender = new \Register\Customer($siteMessage->user_created);
@@ -82,52 +126,48 @@
         if ($currentYear != $currentYearCheck) {
         $currentYear = $currentYearCheck;	
     ?>
-      <div class="row row-full-column">
-        <div class="column column-flex full-column">
-          <div class="list-column column-year">
-            <?=$currentYearCheck?>
-          </div>
-        </div>
+      <div class="year-divider">
+        <div class="year-text"><?=$currentYearCheck?></div>
       </div>
     <?php
         }
     ?>
-      <div id="row-<?=$siteMessage->id?>" class="row row-flex info-row">
-        <div class="column column-left">
-          <div class="list-column">
-            <div class="flex-2">
-                <div id="message-date-<?=$siteMessage->id?>" class="message-date <?=($siteMessageDelivery->acknowledged()) ? '' : 'bold'?>"><?=date('m/d/Y', strtotime($siteMessage->date_created));?></div>
+      <div id="row-<?=$siteMessage->id?>" class="message-card <?=($siteMessageDelivery->acknowledged()) ? 'message-read' : 'message-unread'?>">
+        <div class="message-header">
+          <div class="message-meta">
+            <div class="message-date" id="message-date-<?=$siteMessage->id?>">
+              <?=date('M j, Y', strtotime($siteMessage->date_created));?>
             </div>
-            <div class="flex-1"></div>   
+            <div class="message-sender">
+              <span class="sender-name"><?=$sender->full_name()?></span>
+            </div>
           </div>
-          <div class="list-column">
-            <div>
-                <span class="message-sender"><?=$sender->full_name()?></span>
-                <div>
-                    <?php if (! $siteMessageDelivery->acknowledged()) { ?>
-				        <input type="button" class="button" name="btn_ack[<?=$siteMessageDelivery->id?>]" value="Acknowledge" onclick="acknowledge('<?=$siteMessageDelivery->message_id?>');" />
-                    <?php } ?>
-				</div>
-            </div>
-            <div class="flex-2">
-                <div id="message-title-<?=$siteMessage->id?>" class="message-title <?=($siteMessageDelivery->acknowledged()) ? '' : 'bold'?>"></div>
-            </div>
-            <div class="flex-1"></div>
+          <div class="message-actions">
+            <?php if (! $siteMessageDelivery->acknowledged()) { ?>
+              <button type="button" class="btn btn-sm btn-outline" onclick="acknowledge('<?=$siteMessageDelivery->message_id?>')">
+                Mark as Read
+              </button>
+            <?php } else { ?>
+              <span class="status-badge status-read">Read</span>
+            <?php } ?>
           </div>
         </div>
-        <div class="column column-right">
-          <div class="messages-column">
-            <div id="message-subject-<?=$siteMessage->id?>" class="message-subject <?=($siteMessageDelivery->acknowledged()) ? '' : 'bold'?>"></div>
-            <div class="message-subject">
-                <div id="message-subject-<?=$siteMessage->id?>" class="message-content"><?=$siteMessage->subject?></div>
-            </div>
-            <div class="message-text">
-                <div id="message-text-<?=$siteMessage->id?>" class="message-content"><?= strip_tags($siteMessage->content) ?></div>
-            </div>
+        <div class="message-content">
+          <h3 class="message-subject" id="message-subject-<?=$siteMessage->id?>">
+            <?=$siteMessage->subject?>
+          </h3>
+          <div class="message-text" id="message-text-<?=$siteMessage->id?>">
+            <?= strip_tags($siteMessage->content) ?>
+            <?php if (strlen(strip_tags($siteMessage->content)) > 200) { ?>
+              <button class="expand-btn" onclick="expandText(<?=$siteMessage->id?>)" id="message-text-read-more-<?=$siteMessage->id?>">
+                Read more...
+              </button>
+            <?php } ?>
           </div>
         </div>
       </div>
       <?php
         }
+    }
     ?>
 </div>

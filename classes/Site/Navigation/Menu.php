@@ -168,8 +168,12 @@
 		    }
 		    return $response;
 	    }
-	    public function asHTML($parameters = array ()) {
+		public function asHTML($parameters = array ()) {
 		    $html = '';
+		    
+		    // Get current URL for navigation matching
+		    $currentURL = $this->getCurrentURL();
+		    
 		    if (isset ( $parameters ['type'] ) && $parameters ['type'] == 'left_nav') {
 			    if (! isset ( $parameters ['nav_id'] )) $parameters ['nav_id'] = 'left_nav';
 			    if (! isset ( $parameters ['a_class'] )) $parameters ['a_class'] = 'left_nav_button';
@@ -183,16 +187,31 @@
 			    if (! isset ( $parameters ['nav_button_class'] )) $parameters ['nav_button_class'] = 'left_nav_button';
 			    if (! isset ( $parameters ['subnav_button_class'] )) $parameters ['subnav_button_class'] = 'left_subnav_button';
 
+			    // Get items that should be expanded based on current URL
+			    $expandedItems = $this->findItemsToExpand($currentURL);
+			    // Get items that should be highlighted as current page
+			    $currentPageItems = $this->findCurrentPageItems($currentURL);
+
 			    // Nav Container
 			    $html .= '<nav id="' . $parameters ['nav_id'] . '">' . "\n";
-          $html .= '<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>' . "\n";
+			    // Close button as first menu item
+			    $html .= '<div class="nav-close-container">' . "\n";
+			    $html .= '<a href="javascript:void(0)" class="nav-close-btn" onclick="closeNav()">Close Menu</a>' . "\n";
+			    $html .= '</div>' . "\n";
 			    $items = $this->cascade ();
 			    foreach ( $items as $item ) {
 				    if ($item->hasChildren ()) $has_children = 1;
 				    else $has_children = 0;
 
 				    // Parent Nav Button
-				    $html .= "\t" . '<a id="left_nav[' . $item->id . ']" class="' . $parameters ['nav_button_class'] . '"';
+				    $buttonClass = $parameters ['nav_button_class'];
+				    if (in_array($item->id, $currentPageItems)) {
+					    $buttonClass .= ' current-page';
+				    }
+				    if (in_array($item->id, $expandedItems)) {
+					    $buttonClass .= ' open-section';
+				    }
+				    $html .= "\t" . '<a id="left_nav[' . $item->id . ']" class="' . $buttonClass . '"';
 
 				    if ($has_children) {
 					    $html .= ' href="javascript:void(0)"';
@@ -204,19 +223,24 @@
 				    if ($has_children) {
 					    // Sub Nav Container
 					    $html .= '<div id="left_subnav[' . $item->id . ']" class="left_subnav"';
-					    if (isset ( $_REQUEST ['expandNav'] ) && $_REQUEST ['expandNav'] == $item->id) $html .= ' style="display: block"';
+					    // Use new URL-based expansion instead of expandNav parameter
+					    if (in_array($item->id, $expandedItems)) $html .= ' style="display: block"';
 					    $html .= '>';
 					    foreach ( $item->item as $subitem ) {
-						    // Sub Nav Button
-						    $target = $subitem->target;
-						    if (preg_match ( '/\?/', $target )) $target .= "&expandNav=" . $item->id;
-						    else $target .= "?expandNav=" . $item->id;
-						    $html .= '<a href="' . $target . '" class="' . $parameters ['subnav_button_class'] . '">' . $subitem->title . '</a>';
+						    // Sub Nav Button - no longer append expandNav parameter
+						    $subButtonClass = $parameters ['subnav_button_class'];
+						    if (in_array($subitem->id, $currentPageItems)) {
+							    $subButtonClass .= ' current-page';
+						    }
+						    $html .= '<a href="' . $subitem->target . '" class="' . $subButtonClass . '">' . $subitem->title . '</a>';
 					    }
 					    $html .= '</div>';
 				    }
 			    }
 				$html.= '</nav>' . "\n";
+				
+				// Add JavaScript for navigation auto-expansion
+				$html .= $this->generateNavigationScript($currentURL, $expandedItems);
 		    }
 		    return $html;
 	    }
@@ -254,4 +278,220 @@ END;
 			if (! preg_match('/\<\>/',urldecode($string))) return true;
 			else return false;
 		}
+
+		/**
+		 * Find navigation items that should be expanded based on current URL
+		 * 
+		 * @param string $currentURL The current page URL
+		 * @return array Array of item IDs that should be expanded
+		 */
+		public function findItemsToExpand($currentURL) {
+			$expandedItems = array();
+			$items = $this->cascade();
+			
+		
+		// Find all matches first, then select the most specific one
+		$allMatches = array();
+		foreach ($items as $item) {
+			// Check if this item or its children match the current URL
+			if ($item->matchesURLRecursive($currentURL)) {
+				// Find the specific child that matches
+				$matchingChild = $this->findMatchingChild($item, $currentURL);
+				if ($matchingChild) {
+					$allMatches[] = array(
+						'parent_id' => $item->id,
+						'child_id' => $matchingChild->id,
+						'target' => $matchingChild->target,
+						'specificity' => strlen($matchingChild->target)
+					);
+				}
+			}
+		}
+			
+		// If we have matches, find the most specific one
+		if (!empty($allMatches)) {
+			// Sort by specificity (longest target first)
+			usort($allMatches, function($a, $b) {
+				return $b['specificity'] - $a['specificity'];
+			});
+			
+			// Take the most specific match
+			$bestMatch = $allMatches[0];
+			
+			// Add the parent item to expanded list
+			$expandedItems[] = $bestMatch['parent_id'];
+			
+			// Add all parent items to expanded list
+			$parentItem = new Item($bestMatch['parent_id']);
+			$expandedItems = array_merge($expandedItems, $parentItem->getParentChain());
+		}
+			
+		// Remove duplicates and return
+		return array_unique($expandedItems);
+	}
+
+	/**
+	 * Find the specific child item that matches the current URL
+	 * 
+	 * @param Item $parentItem The parent navigation item
+	 * @param string $currentURL The current page URL
+	 * @return Item|null The matching child item or null
+	 */
+	private function findMatchingChild($parentItem, $currentURL) {
+		$children = $parentItem->children();
+		foreach ($children as $child) {
+			if ($child->matchesURL($currentURL)) {
+				return $child;
+			}
+		}
+		return null;
+	}
+
+		/**
+		 * Find navigation items that should be highlighted as current page
+		 * 
+		 * @param string $currentURL The current page URL
+		 * @return array Array of item IDs that should be highlighted
+		 */
+	public function findCurrentPageItems($currentURL) {
+		$currentItems = array();
+		$items = $this->cascade();
+		
+		
+		// Find all matches and their specificity (target length)
+		$matches = array();
+		foreach ($items as $item) {
+			// Check if this item exactly matches the current URL
+			if ($item->matchesURL($currentURL)) {
+				$matches[] = array('id' => $item->id, 'target' => $item->target, 'type' => 'parent');
+			}
+			
+			// Also check children for exact matches
+			foreach ($item->item as $child) {
+				if ($child->matchesURL($currentURL)) {
+					$matches[] = array('id' => $child->id, 'target' => $child->target, 'type' => 'child', 'parent_id' => $item->id);
+				}
+			}
+		}
+		
+		if (empty($matches)) {
+			return $currentItems;
+		}
+		
+		// Find the most specific match (longest target)
+		$mostSpecific = null;
+		$maxLength = 0;
+		foreach ($matches as $match) {
+			$targetLength = strlen($match['target']);
+			if ($targetLength > $maxLength) {
+				$maxLength = $targetLength;
+				$mostSpecific = $match;
+			}
+		}
+		
+		if ($mostSpecific) {
+			$currentItems[] = $mostSpecific['id'];
+			
+			// If it's a child match, also add the parent
+			if ($mostSpecific['type'] === 'child') {
+				$currentItems[] = $mostSpecific['parent_id'];
+			}
+		}
+		
+		return array_unique($currentItems);
+	}
+
+		/**
+		 * Get navigation data for JavaScript processing
+		 * 
+		 * @param string $currentURL The current page URL
+		 * @return array Navigation data structure
+		 */
+		public function getNavigationData($currentURL) {
+			$items = $this->cascade();
+			$expandedItems = $this->findItemsToExpand($currentURL);
+			
+			return array(
+				'currentURL' => $currentURL,
+				'expandedItems' => $expandedItems,
+				'items' => $this->buildNavigationTree($items)
+			);
+		}
+
+		/**
+		 * Build navigation tree structure for JavaScript
+		 * 
+		 * @param array $items Navigation items
+		 * @return array Tree structure
+		 */
+		private function buildNavigationTree($items) {
+			$tree = array();
+			
+			foreach ($items as $item) {
+				$node = array(
+					'id' => $item->id,
+					'title' => $item->title,
+					'target' => $item->target,
+					'parent_id' => $item->parent_id,
+					'hasChildren' => $item->hasChildren(),
+					'children' => array()
+				);
+				
+				if ($item->hasChildren()) {
+					$node['children'] = $this->buildNavigationTree($item->item);
+				}
+				
+				$tree[] = $node;
+			}
+			
+			return $tree;
+		}
+
+		/**
+		 * Get current URL for navigation matching
+		 * 
+		 * @return string Current URL
+		 */
+		private function getCurrentURL() {
+			// Get current URL from request
+			if (isset($GLOBALS['_REQUEST_'])) {
+				$request = $GLOBALS['_REQUEST_'];
+				if ($request->module == 'content') {
+					return '/' . $request->index;
+				} elseif ($request->module == 'static') {
+					return '/' . $request->view;
+				} else {
+					return '/_' . $request->module . '/' . $request->view . '/' . $request->index;
+				}
+			}
+			
+			// Fallback to REQUEST_URI
+			return $_SERVER['REQUEST_URI'] ?? '/';
+		}
+
+	/**
+	 * Generate JavaScript configuration for navigation auto-expansion
+	 * 
+	 * @param string $currentURL Current page URL
+	 * @param array $expandedItems Items that should be expanded
+	 * @return string JavaScript configuration code
+	 */
+	private function generateNavigationScript($currentURL, $expandedItems) {
+		$expandedItemsJson = json_encode($expandedItems);
+		$currentURLJson = json_encode($currentURL);
+		$currentPageItems = $this->findCurrentPageItems($currentURL);
+		$currentPageItemsJson = json_encode($currentPageItems);
+		
+		return <<<SCRIPT
+<script>
+// Navigation Configuration - Generated by PHP
+window.NAV_CONFIG = {
+    currentURL: {$currentURLJson},
+    expandedItems: {$expandedItemsJson},
+    currentPageItems: {$currentPageItemsJson},
+    storageKey: 'navigation_expanded_items'
+};
+</script>
+SCRIPT;
+	}
     }

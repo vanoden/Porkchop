@@ -1,3 +1,4 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script src="/js/monitor.js"></script>
@@ -39,33 +40,58 @@ function checkProduct() {
     var productElem = document.getElementById('product_id');
     var serialNumber = document.getElementById('serial_number');
     var serialMessage = document.getElementById('serial_number_message');
-    serialNumber.focus();
-    serialNumber.style.border = '1px solid gray';
-    if (productElem.selectedIndex > 0) {
-        if (document.getElementById('serial_number').value.length > 0) serialMessage.display = 'none';
-        return true;
-    } else {
+    var serialMessageOK = document.getElementById('serial_number_message_ok');
+    
+    if (productElem.selectedIndex <= 0) {
         serialMessage.innerHTML = 'Select a product first';
         serialMessage.style.display = 'block';
-        productElem.focus();
+        serialMessageOK.style.display = 'none';
         return false;
     }
+    
+    var productID = productElem.options[productElem.selectedIndex].value;
+    
+    // Make API call to validate product using Product API directly
+    var params = 'method=getItem&id=' + encodeURIComponent(productID);
+    apiRequest('/_product/api', params, function(response, error) {
+        if (error) {
+            serialMessage.innerHTML = 'Error validating product. Please try again.';
+            serialMessage.style.display = 'block';
+            serialMessageOK.style.display = 'none';
+            console.error('Product validation error:', error);
+        } else if (response && response.item) {
+            // Product is valid, hide any existing messages
+            serialMessage.style.display = 'none';
+            serialMessageOK.style.display = 'none';
+            
+            // If there's a serial number entered, validate it
+            if (document.getElementById('serial_number').value.length > 0) {
+                checkSerial();
+            }
+        } else {
+            serialMessage.innerHTML = 'Product not found';
+            serialMessage.style.display = 'block';
+            serialMessageOK.style.display = 'none';
+        }
+    });
+    
+    return false; // Always return false since this is async
 }
 
 // make sure that the user name isn't taken
 function checkUserName() {
     var loginField = $("#login");
     var loginMessage = $("#login-message");
-    $.get('/_register/api?method=checkLoginNotTaken&login=' + loginField.val(), function(data, status) {
-        if (data == 1) {
-            loginField.css('border', '2px solid green');
-            loginMessage.html('login is available');
-            loginMessage.css('color', 'green');
-        } else {
-            loginField.css('border', '2px solid red');
-            loginMessage.html('login is not available');
-            loginMessage.css('color', 'red');
-        }
+    $.get('/_register/api?method=checkLoginNotTaken&login=' + loginField.val(), function (data, status) {
+      if (data == 1) {
+        loginField.css('border', '2px solid green');
+        loginMessage.html('login is available');
+        loginMessage.css('color', 'green');
+      } else {
+        loginField.css('border', '2px solid red');
+        loginMessage.html('login is not available');
+        loginMessage.css('color', 'red');
+      }
     });
 }
 
@@ -94,29 +120,43 @@ function checkSerial() {
   var serialNumberMessageOK = document.getElementById('serial_number_message_ok');
 
   if (serialInput.value.length < 1) return true;
-  var code = serialInput.value;
-  var asset = Object.create(Asset);
+  var code = serialInput.value.trim();
+  serialInput.value = code;
 
-  if (asset.get(code)) {
-    if (asset.product.id == productID) {
-      serialInput.style.border = 'solid 2px green';
-      serialNumberMessage.style.display = 'none';
-      serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
-      serialNumberMessageOK.style.display = 'block';
-      return true;
+  // Check if Asset object is available
+  if (typeof Asset === 'undefined') {
+    console.log('Asset object not available, skipping serial number validation');
+    return true;
+  }
+
+  try {
+    var asset = Object.create(Asset);
+
+    if (asset.get(code)) {
+      if (asset.product.id == productID) {
+        serialInput.style.border = 'solid 2px green';
+        serialNumberMessage.style.display = 'none';
+        serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
+        serialNumberMessageOK.style.display = 'block';
+        return true;
+      } else {
+        serialInput.style.border = 'solid 2px red';
+        serialNumberMessage.innerHTML = 'Product not found with that serial number';
+        serialNumberMessage.style.display = 'block';
+        serialNumberMessageOK.style.display = 'none';
+        return false;
+      }
     } else {
       serialInput.style.border = 'solid 2px red';
-      serialNumberMessage.innerHTML = 'Product not found with that serial number';
+      serialNumberMessage.innerHTML = 'Serial number not found in our system';
       serialNumberMessage.style.display = 'block';
       serialNumberMessageOK.style.display = 'none';
       return false;
     }
-  } else {
-    serialInput.style.border = 'solid 2px red';
-    serialNumberMessage.innerHTML = 'Serial number not found in our system';
-    serialNumberMessage.style.display = 'block';
-    serialNumberMessageOK.style.display = 'none';
-    return false;
+  } catch (error) {
+    console.log('Error checking serial number:', error);
+    // If there's an error, just return true to allow the form to continue
+    return true;
   }
 }
 
@@ -128,10 +168,15 @@ function checkRegisterProduct(){
   console.log(checkBoxItem.checked);
   if (checkBoxItem.checked == true) {
     fieldsProductType.style.display = "block";
-    fieldsProductSerial.style.display = "block"; 
+    fieldsProductSerial.style.display = "block";
   } else {
     fieldsProductType.style.display = "none";
-    fieldsProductSerial.style.display = "none"; 
+    fieldsProductSerial.style.display = "none";
+    // Clear any existing serial number validation messages
+    document.getElementById('serial_number_message').style.display = 'none';
+    document.getElementById('serial_number_message_ok').style.display = 'none';
+    // Clear the serial number field
+    document.getElementById('serial_number').value = '';
   }
 }
 
@@ -225,13 +270,13 @@ function getProvinces() {
 
     <h2>Register your Product</h2>
     <section>
-      <ul id="serial_number_message" class="connectBorder errorText register-new-customer-serial-message">
+      <ul id="serial_number_message" class="connectBorder errorText register-new-customer-serial-message" style="display: none;">
         <li>Serial number not found in our system</li>
       </ul>
     </section>
 
     <section>
-      <ul id="serial_number_message_ok" class="connectBorder progressText register-new-customer-serial-message">
+      <ul id="serial_number_message_ok" class="connectBorder progressText register-new-customer-serial-message" style="display: none;">
         <li>Serial number has been found</li>
       </ul>
     </section>
@@ -240,18 +285,18 @@ function getProvinces() {
       <li>
         <input id="has_item_checkbox" type="checkbox" name="reseller" value="yes" class="register-new-customer-reseller-checkbox" onChange="checkRegisterProduct();">Already have a device you would like to register?
       </li>
-      <li id="product_type" class="register-new-customer-product-type"> 
+      <li id="product_type" class="register-new-customer-product-type" style="display: none;"> 
         <label for="product">Product:</label>
-        <select id="product_id" name="product_id" class="value input collectionField register-new-customer-product-select" onchange="document.getElementById('serial_number_message').style.display = 'none';">
+        <select id="product_id" name="product_id" class="value input collectionField register-new-customer-product-select" onchange="document.getElementById('serial_number_message').style.display = 'none'; document.getElementById('serial_number_message_ok').style.display = 'none';">
           <option value="" <?php	if (isset($selectedProduct) && $product==$selectedProduct) print " selected"; ?>>---</option>
           <?php	foreach ($productsAvailable as $product) { ?>
             <option value="<?=$product->id?>"<?php	if (isset($selectedProduct) && $product->id == $selectedProduct) print " selected"; ?>><?=$product->code?> - <?=strip_tags($product->description)?></option>
           <?php	} ?>
         </select>
       </li>
-      <li id="product_serial" class="register-new-customer-product-serial">
+      <li id="product_serial" class="register-new-customer-product-serial" style="display: none;">
         <label for="serialNum">Serial #</label>
-        <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number" onfocus="checkProduct();" onchange="checkSerial()" maxlength="50">
+        <input type="text" id="serial_number" class="long-field" name="serial_number" placeholder="Serial Number" onmouseout="checkProduct();" onchange="checkSerial()" maxlength="50">
       </li>
     </ul>
 
@@ -316,7 +361,8 @@ function getProvinces() {
       </li>
       <li>
         <label for="username">Username:</span>
-        <input type="text" id="login" class="<?=isset($loginTaken) ? 'register-new-customer-login-error' : 'register-new-customer-login-normal'?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onchange="checkUserName()" maxlength="50" required/>
+        <input type="text" id="login" class="<?=isset($loginTaken) ? 'register-new-customer-login-error' : 'register-new-customer-login-normal'?>" name="login" value="<?=!empty($_REQUEST['login']) ? $_REQUEST['login'] : "" ?>" onmouseout="checkUserName()" maxlength="50" required/>
+        <div id="login-message"></div>
       </li>
       <li>
         <label for="password">Create Password:</span>

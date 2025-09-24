@@ -285,7 +285,7 @@
 
 				$template = new \Content\Template\Shell($_config->register->registration_notification->template);
 				$template->addParams(array(
-						'ORGANIZATION.NAME'		=> $queuedCustomer->organization()->name,
+						'ORGANIZATION.NAME'		=> $queuedCustomer->organization() ? $queuedCustomer->organization()->name : 'Unknown Organization',
 						'CUSTOMER.FIRST_NAME'	=> $customer->first_name,
 						'CUSTOMER.LAST_NAME'	=> $customer->last_name,
 						'EMAIL'					=> $customer->notify_email(),

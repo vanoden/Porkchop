@@ -905,7 +905,7 @@
 					    $buffer .= "<r7_product.detail format=thumbnail id=".$product->id.">";
 				    }
 			    }
-				elseif ($property == "detail") {
+				elseif ($property == "detailz") {
 				    if (preg_match ( "/^\d+$/", $parameter ["id"] )) $id = $parameter ["id"];
 				    elseif ($GLOBALS['_REQUEST_']->query_vars) $id = $GLOBALS['_REQUEST_']->query_vars;
 

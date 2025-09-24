@@ -66,23 +66,23 @@
 					$page->addError("Location not found");
 					$_REQUEST['location_id'] = null;
 				}
-				// Validate domain name using the domain class's validDomainName method
-				elseif (!$domain->validDomainName($_REQUEST["domain_name"] ?? null)) {
+				// Validate domain name using the domain class's validDomainName method (only if provided)
+				elseif (!empty($_REQUEST["domain_name"]) && !$domain->validDomainName($_REQUEST["domain_name"])) {
 					$page->addError("Invalid domain name");
 					$_REQUEST['domain_name'] = null;
 				}
-				// Validate domain registrar using the domain class's validRegistrar method
-				elseif (!$domain->validRegistrar($_REQUEST['domain_registrar'] ?? null)) {
+				// Validate domain registrar using the domain class's validRegistrar method (only if provided)
+				elseif (!empty($_REQUEST['domain_registrar']) && !$domain->validRegistrar($_REQUEST['domain_registrar'])) {
 					$page->addError("Invalid domain registrar name");
 					$_REQUEST['domain_registrar'] = null;
 				}
-				// Validate date_registered using the BaseClass validDate method
-				elseif (!$domain->validDate($_REQUEST["date_registered"] ?? null)) {
+				// Validate date_registered using the BaseClass validDate method (only if provided)
+				elseif (!empty($_REQUEST["date_registered"]) && !$domain->validDate($_REQUEST["date_registered"])) {
 					$page->addError("Invalid date registered");
 					$_REQUEST['date_registered'] = null;
 				}
-				// Validate date_expires using the BaseClass validDate method
-				elseif (!$domain->validDate($_REQUEST["date_expires"] ?? null)) {
+				// Validate date_expires using the BaseClass validDate method (only if provided)
+				elseif (!empty($_REQUEST["date_expires"]) && !$domain->validDate($_REQUEST["date_expires"])) {
 					$page->addError("Invalid date expires");
 					$_REQUEST['date_expires'] = null;
 				}
@@ -98,23 +98,46 @@
 
 					// Update or add in a single if statement
 					if ($domain->validInteger($_REQUEST['id'] ?? null)) {
-						if (!$domain->update($parameters)) $page->addError("Error updating domain");
-						else $page->success = "Updated!";
+						// Ensure domain object is loaded
+						if (!($domain->id ?? null)) {
+							$page->addError("Domain not found for update");
+						} else {
+							if (!$domain->update($parameters)) {
+								$error_msg = $domain->error() ? $domain->error() : "Update failed";
+								$page->addError("Error updating domain: " . $error_msg);
+							} else {
+								$page->success = "Domain updated successfully!";
+							}
+						}
 					} else {
-						if (!$domain->add($parameters)) $page->addError("Error adding domain");
-						else $page->success = "Added!";
+						if (!$domain->add($parameters)) {
+							$error_msg = $domain->error() ? $domain->error() : "Add failed";
+							$page->addError("Error adding domain: " . $error_msg);
+						} else {
+							$page->success = "Domain added successfully!";
+						}
 					}
 				}
 			}
 		}
 	}
 
-	if (!($domain->name ?? null)) $domain->name = "[null]";
+	// Set default values if domain is new or invalid
+	if (!($domain->id ?? null)) {
+		$domain->name = '';
+		$domain->registrar = '';
+		$domain->date_registered = '';
+		$domain->date_expires = '';
+		$domain->company_id = null;
+		$domain->location_id = null;
+	}
+
 	$page->title("Domain");
 
 	$page->AddBreadCrumb("Company");
 	$page->AddBreadCrumb("Domains","/_company/domains");
-	$page->AddBreadCrumb($domain->name,"/_company/domain?id=".$domain->id);
-
-	if ($domain->id ?? null) $domain_name = $domain->name;
-	else $domain_name = "New Domain";
+	if ($domain->id ?? null) {
+		$page->AddBreadCrumb($domain->name,"/_company/domain?id=".$domain->id);
+	} else {
+		$page->AddBreadCrumb("New Domain","/_company/domain");
+	}

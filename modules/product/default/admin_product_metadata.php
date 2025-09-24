@@ -89,13 +89,34 @@
             <div class="input-horiz" id="item<?= $key ?>">
                 <span class="label"><?= $label ?></span>
                 <input type="text" class="value input width-300px" name="<?= $key ?>" id="<?= $key ?>" value="<?= htmlspecialchars($item->getMetadata($key)) ?>" />
+                <button type="button" class="button delete-metadata-btn" data-key="<?= htmlspecialchars($key) ?>" title="Delete this metadata field">×</button>
             </div>
         <?php } ?>
+    </div>
+
+    <div class="metadata-section new-metadata-section">
+        <h4>Add New Metadata</h4>
+        <p>Add a new key/value pair to this product's metadata.</p>
+        <div class="input-horiz">
+            <span class="label">Key</span>
+            <input type="text" class="value input width-300px" name="new_metadata_key" id="new_metadata_key" placeholder="e.g., technical_specs, features, etc." />
+        </div>
+        <div class="input-horiz">
+            <span class="label">Value</span>
+            <input type="text" class="value input width-500px" name="new_metadata_value" id="new_metadata_value" placeholder="Enter the value for this metadata key" />
+        </div>
     </div>
 
     <div class="editSubmit button-bar floating">
         <input type="submit" class="button" value="Update Metadata" name="updateMetadata" id="updateMetadata" />
     </div>
+</form>
+
+<!-- Hidden form for deleting metadata -->
+<form id="deleteMetadataForm" method="post" action="/_product/admin_product_metadata/<?= $item->code ?>" style="display: none;">
+    <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
+    <input type="hidden" name="deleteMetadata" value="1">
+    <input type="hidden" name="delete_metadata_key" id="delete_metadata_key" value="">
 </form>
 
 <style>
@@ -138,4 +159,74 @@
     height: 100px;
     resize: vertical;
 }
+
+.button-bar {
+    margin-top: 20px;
+    padding: 10px 0;
+}
+
+.button-bar .button {
+    margin-right: 10px;
+}
+
+.new-metadata-section {
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+}
+
+.new-metadata-section h4 {
+    color: #333;
+    border-bottom: 1px solid #ccc;
+}
+
+.delete-metadata-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 5px 8px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    min-width: 30px;
+}
+
+.delete-metadata-btn:hover {
+    background-color: #c82333;
+}
+
+.input-horiz {
+    align-items: center;
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Clear new metadata fields after successful submission
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+        const newKeyInput = document.getElementById('new_metadata_key');
+        const newValueInput = document.getElementById('new_metadata_value');
+        if (newKeyInput) newKeyInput.value = '';
+        if (newValueInput) newValueInput.value = '';
+    }
+    
+    // Handle delete metadata button clicks
+    const deleteButtons = document.querySelectorAll('.delete-metadata-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const key = this.getAttribute('data-key');
+            const label = this.closest('.input-horiz').querySelector('.label').textContent;
+            
+            if (confirm('Are you sure you want to delete the metadata field "' + label + '" (' + key + ')? This action cannot be undone.')) {
+                // Set the key to delete and submit the form
+                document.getElementById('delete_metadata_key').value = key;
+                document.getElementById('deleteMetadataForm').submit();
+            }
+        });
+    });
+});
+</script>
