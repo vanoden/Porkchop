@@ -415,6 +415,11 @@
 					if (preg_match("/(.*)\:\:([\w\_\-]+)\(\)/",$validation_method,$matches)) {
 						$validation_method = $matches[2];
 						$validation_class_name = '\\'.str_replace('::','\\',$matches[1]);
+						if (! class_exists($validation_class_name)) {
+							$trace = debug_backtrace();
+							app_log("Class not found: ".$validation_class_name." called by ".get_class($trace[0]['object']),'error',__FILE__,__LINE__);
+							$this->error("Validation class '$validation_class_name' not found");
+						}
 						$validation_class = new $validation_class_name();
 						//print_r("\tValidation: ".$validation_class_name."->".$validation_method."(".$_REQUEST[$param].")\n");
 						if (! $validation_class->$validation_method($value)) {
