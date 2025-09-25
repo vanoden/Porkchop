@@ -582,7 +582,7 @@
 				}
 				$form .= $t.$t.'<input type="hidden" name="csrfToken" value="'.$token.'">'.$cr;
 				$form .= $t.$t.'<input type="hidden" name="method" value="'.$form_name.'" />'.$cr;
-				$form .= $t.$t.'<section class="form-group apiMethod" onMouseOver="frameAPIFormBorder(this)" onMouseOut="unframeAPIFormBorder(this)"><ul class="form-grid four-col connectBorder">'.$cr;
+				$form .= $t.$t.'<section class="form-group apiMethod" onMouseOver="frameAPIFormBorder(this)" onMouseOut="unframeAPIFormBorder(this)"><ul class="form-grid four-col connectBorder stackSlim">'.$cr;
 				if ($method->deprecated) $form .= $t.$t.'<h4>'.$form_name." - deprecated!".'</h4>'.$cr;
 				else $form .= $t.$t.'<h4>'.$form_name.'</h4>'.$cr;
 
