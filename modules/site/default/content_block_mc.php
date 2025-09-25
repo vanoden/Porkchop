@@ -62,7 +62,7 @@
 					$page->success = 'Added Content Message';
 				}
 			}
-			if ($_REQUEST['addPage'] && !$page->errorCount()) {
+			if (isset($_REQUEST['addPage']) && $_REQUEST['addPage'] && !$page->errorCount()) {
 				$addPage = new \Site\Page();
 				if (!$page->add('content', 'index', $message->target)) {
 					$page->addError("Cannot create page: " . $addPage->errorString());
