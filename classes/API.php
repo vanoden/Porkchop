@@ -725,10 +725,10 @@
 				if ($method->show_controls) {
 					$form .= $t.$t.$t.'<hr class="apiMethodControls"/>'.$cr;
 					$form .= $t.$t.$t.'<li class="apiMethodControls">'.$cr;
-					$form .= $t.$t.$t.$t.'<label class="apiLabel">limit</span><input type="text" name="_limit" placeholder="Max Records" value="" class="value input"/>'.$cr;
-					$form .= $t.$t.$t.$t.'<label class="apiLabel">offset</span><input type="text" name="_offset" placeholder="First Record" value="" class="value input"/>'.$cr;
-					$form .= $t.$t.$t.$t.'<label class="apiLabel">sort</span><input type="text" name="_sort" value="" placeholder="Sort Field" class="value input"/>'.$cr;
-					$form .= $t.$t.$t.$t.'<label class="apiLabel">direction</span><input type="text" name="_direction" placeholder="ASC or DESC" value="" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel">limit</label><input type="text" name="_limit" placeholder="Max Records" value="" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel">offset</label><input type="text" name="_offset" placeholder="First Record" value="" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel">sort</label><input type="text" name="_sort" value="" placeholder="Sort Field" class="value input"/>'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel">direction</label><input type="text" name="_direction" placeholder="ASC or DESC" value="" class="value input"/>'.$cr;
 					$form .= $t.$t.$t.'</li>'.$cr;
 				}
 				$form .= $t.$t.$t.'<div class="apiMethodFooter"><input type="submit" name="btn_submit" value="Submit" class="button apiMethodSubmit"/></div>'.$cr;
