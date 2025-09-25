@@ -16,7 +16,7 @@
 	    public ?string $success = null;
 		public string $instructions = "";
 		public ?int $tou_id = null;
-			public string $sitemap = "";
+		public string $sitemap = "";
 		public bool $isSearchResults = false;
 		private $_breadcrumbs = array();
 	    private $_errors = array();
@@ -1099,7 +1099,7 @@
 				// Load Backend File
                 try {
                     $res = include($be_file);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     app_log("Error in backend file $be_file: " . $e->getMessage(), 'error');
                     http_response_code(500);
                     $counter = new \Site\Counter("return500");
@@ -1131,7 +1131,7 @@
             if (isset($fe_file) && file_exists ( $fe_file )) {
                 try {
                     include ($fe_file);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     app_log("Error in frontend file $fe_file: " . $e->getMessage(), 'error');
                     // Don't return here, just log the error and continue
                 }

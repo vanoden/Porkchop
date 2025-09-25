@@ -26,10 +26,10 @@
 		),
 		"Content"		=> array(
 			"roles"			=> array(
-				"developer"		=> array(
+				"Content Developer"		=> array(
 					"description"	=> "Content Developer"
 				),
-				"operator"		=> array(),
+				"Content Operator"		=> array(),
 			),
 		),
         "Register"		=> array(

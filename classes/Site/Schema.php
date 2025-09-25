@@ -675,6 +675,34 @@
 				$database->CommitTrans();
 			}
 
+			if ($this->version() < 27) {
+				app_log("Upgrading ".$this->module." schema to version 27",'notice',__FILE__,__LINE__);
+
+				// Need Storage Schema to be installed first
+				$prerequisite = new \Storage\Schema();
+				$prerequisite->upgrade();
+
+				$create_table_query = "
+					CREATE TABLE IF NOT EXISTS `object_files` (
+					  `object_id` int NOT NULL,
+					  `object_type` varchar(50) NOT NULL,
+					  `file_id` int NOT NULL,
+					  `label` varchar(100) NOT NULL,
+					  `view_order` int NOT NULL DEFAULT '999',
+					  PRIMARY KEY (`object_id`, `object_type`, `file_id`),
+					  KEY `FK_FILE_ID` (`file_id`),
+					  CONSTRAINT `object_files_ibfk_1` FOREIGN KEY (`file_id`) REFERENCES `storage_files` (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+				";
+				if (! $database->Execute($create_table_query)) {
+					$this->SQLError("Creating object_files table: ".$database->error());
+					return false;
+				}
+
+				$this->setVersion(27);
+				$database->CommitTrans();
+			}
+
 			return true;
 		}
 	}

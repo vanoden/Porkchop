@@ -48,7 +48,7 @@
 
 	if ($can_proceed) {
 		// find orders
-		$orderslist = new \Sales\OrderList();
+		$orderslist = new \Sales\SalesOrderList();
 		$orders = $orderslist->find($parameters, $controls);
 		$totalRecords = $orderslist->count();
 		if ($orderslist->error()) {

@@ -1,5 +1,5 @@
 <?php
-	namespace Sales\Order;
+	namespace Sales\Document;
 
 	class Item extends \BaseModel {
 	
@@ -20,22 +20,30 @@
 			parent::__construct($id);
 		}
 		
-		public function add($parameters = []) {		
-		
+		public function add($parameters = []) {
+			// Clear Prevoius Errors
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Validate Required Parameters
 			$product = new \Product\Item($parameters['product_id']);
 			if (! $product->id) {
 				$this->error("Product not found");
 				return false;
 			}
 			
-			$salesOrder = new \Sales\Order($parameters['order_id']);
-			if (! $salesOrder->id) {
-				$this->error("Sales Order not found");
+			$order = new \Sales\Document($parameters['order_id']);
+			if (! $order->id) {
+				$this->error("Sales Document not found");
 				return false;
 			}			
-			
-			$line_number = $this->maxLineNumberByOrder($salesOrder->id);
-			
+
+			// Get the previous line number
+			$line_number = $order->maxLineNumber();
+
+			// Prepare the query to add the new item
 			$add_object_query = "
 				INSERT
 				INTO	sales_order_items
@@ -43,13 +51,17 @@
 				VALUES
 				(		null,?,?,?)
 			";
-			
-			$GLOBALS['_database']->Execute($add_object_query,array($salesOrder->id,($line_number+1),$product->id));
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+
+			// Bind Parameters
+			$database->AddParam($order->id);
+			$database->AddParam($line_number+1);
+			$database->AddParam($product->id);
+			$database->Execute($add_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
-			$this->id = $GLOBALS['_database']->Insert_ID();
+			$this->id = $database->Insert_ID();
 
             // audit the add event
             $auditLog = new \Site\AuditLog\Event();
@@ -62,30 +74,25 @@
 
 			return $this->update($parameters);
 		}
-		
-        /**
-         * get max value from a sales order line number based on the order it's in
-         */
-		public function maxLineNumberByOrder($salesOrderId) {
-		
-			$database = new \Database\Service();
-			$get_object_query = "SELECT MAX(`line_number`) FROM `$this->_tableName` WHERE `order_id` = " . $salesOrderId;
-
-			$rs = $database->Execute($get_object_query);
-			if (!$rs) {
-				$this->SQLError($database->ErrorMsg());
-				return false;
-			}
-			list($value) = $rs->FetchRow();
-			return $value;
-		}
 
 		public function update($parameters = array()): bool {
+			// Clear Previous Errors
+			$this->clearError();
+
+			// Prepare Database Service
+			$database = new \Database\Service();
+
+			// Validate Required Parameters
+			if (! $this->id) {
+				$this->error("Item ID is required for update");
+				return false;
+			}
+
+			// Prepare the update query
 			$update_object_query = "
 				UPDATE	sales_order_items
 				SET		id = id";
 
-			$bind_params = array();
 			if (isset($parameters['product_id'])) {
 				$product = new \Product\Item($parameters['product_id']);
 				if (! $product->id) {
@@ -93,36 +100,37 @@
 					return false;
 				}
 				$update_object_query .= ", product_id = ?";
-				array_push($bind_params,$product->id);
+				$database->AddParam($product->id);
 			}
 			if (isset($parameters['quantity'])) {
 				$update_object_query .= ", quantity = ?";
-				array_push($bind_params,$parameters['quantity']);
+				$database->AddParam($parameters['quantity']);
 			}
 			if (isset($parameters['serial_number'])) {
 				$update_object_query .= ", serial_number = ?";
-				array_push($bind_params,$parameters['serial_number']);
+				$database->AddParam($parameters['serial_number']);
 			}
 			if (isset($parameters['description'])) {
 				$update_object_query .= ", description = ?";
-				array_push($bind_params,$parameters['description']);
+				$database->AddParam($parameters['description']);
 			}
 			if (isset($parameters['unit_price'])) {
 				$update_object_query .= ", unit_price = ?";
-				array_push($bind_params,$parameters['unit_price']);
+				$database->AddParam($parameters['unit_price']);
 			}
 			if (isset($parameters['status'])) {
 				$update_object_query .= ", status = ?";
-				array_push($bind_params,$parameters['status']);
+				$database->AddParam($parameters['status']);
 			}
 
 			$update_object_query .= "
 				WHERE	id = ?";
-			array_push($bind_params,$this->id);
+			$database->AddParam($this->id);
 
-			$GLOBALS['_database']->Execute($update_object_query,$bind_params);
-			if ($GLOBALS['_database']->ErrorMsg()) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+			// Execute Query
+			$database->Execute($update_object_query);
+			if ($database->ErrorMsg()) {
+				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
 			
@@ -166,11 +174,27 @@
 			}
 		}
 
+		/** @method total
+		 * Calculate the total price for this item
+		 * @return float Total price for the item
+		 */
 		public function total() {
 			return $this->quantity * $this->unit_price;
 		}
 
+		/** @method public product()
+		 * Get the product associated with this item
+		 * @return \Product\Item Product object
+		 */
 		public function product() {
 			return new \Product\Item($this->product_id);
+		}
+
+		/** @method public order()
+		 * Get the order associated with this item
+		 * @return \Sales\Document Document object
+		 */
+		public function order() {
+			return new \Sales\Document($this->order_id);
 		}
 	}

@@ -1,9 +1,9 @@
 <?php
-	namespace Sales\Order;
+	namespace Sales\Document;
 
 	class ItemList Extends \BaseListClass {
 		public function __construct() {
-			$this->_modelName = '\Sales\Order\Item';
+			$this->_modelName = '\Sales\Document\Item';
 		}
 
 		public function findAdvanced($parameters, $advanced, $controls): array {
@@ -31,7 +31,7 @@
 					$database->AddParam($parameters['order_id']);
 				}
 				else {
-					$this->error('Order not found');
+					$this->error('Document not found');
 					return [];
 				}
 			}
@@ -57,7 +57,7 @@
 				}
 			}
 
-			// Order Clause
+			// Document Clause
 			$find_objects_query .= "
 				ORDER BY order_id, line_number
 			";
@@ -69,7 +69,7 @@
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
-				return null;
+				return [];
 			}
 
 			// Build Results

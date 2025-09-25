@@ -211,6 +211,7 @@
 		 * Parses the URI, identifies module, view, index, and query variables
 		 */
 		public function deconstruct() {
+			app_log("REQUEST: ".$_SERVER['REQUEST_URI'],'debug',__FILE__,__LINE__);
 			# Store User Agent
 			$this->user_agent = $_SERVER['HTTP_USER_AGENT'];
 
@@ -253,8 +254,15 @@
 			}
 			elseif (preg_match('/^\/\_(\w[\w\-\_]*)\/(\w[\w\-\_]*)\/*(.+)*$/',$this->_uri,$matches)) {
 				// Full Porkchop URIs
-				$this->module = $matches[1];
-				$this->view = $matches[2];
+				// Special handling for content module
+				if ($matches[1] == 'content') {
+					$this->module = $matches[1];
+					$this->view = 'index';  // Content pages always use 'index' view
+					$this->index = $matches[2];  // The second part becomes the index
+				} else {
+					$this->module = $matches[1];
+					$this->view = $matches[2];
+				}
 			}
 			elseif (preg_match('/^\/([\w\-\_]*)$/',$this->_uri,$matches)) {
 				// Short CMS URIs

@@ -57,7 +57,7 @@
 			while (list($id) = $rs->FetchRow()) {
 				$object = new $this->_modelName($id);
 				array_push($objects,$object);
-				$this->_incrementCount();
+				$this->incrementCount();
 			}
 			return $objects;
 		}
@@ -65,8 +65,8 @@
 		public function first($parameters = [], $controls = []): ?\Site\Hit {
 			$controls['sort'] = 'date_hit';
 			$controls['order'] = 'asc';
-			$objects = parent::first($parameters, $controls);
-			return !empty($objects) ? $objects[0] : null;
+			$object = parent::first($parameters, $controls);
+			return !empty($object) ? $object : null;
 		}
 		public function last($parameters = [], $controls = []): ?\Site\Hit {
 			$controls['sort'] = 'date_hit';

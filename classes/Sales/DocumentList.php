@@ -1,9 +1,10 @@
 <?php
 	namespace Sales;
 
-	class OrderList Extends \BaseListClass {
+	abstract class DocumentList Extends \BaseListClass {
+		protected $document_type = 'SALES_ORDER'; // Default order type
+
 		public function __construct() {
-			$this->_modelName = '\Sales\Order';
 			$this->_tableDefaultSortBy = 'date_event';
 		}
 
@@ -15,16 +16,20 @@
 			$database = new \Database\Service();
 
 			// Initialize Working Class
-			$workingClass = new $this->_modelName;
+			$modelName = $this->_modelName ?? '\Sales\SalesOrder';
+			$workingClass = new $modelName();
 
 			// Build Query
 			$find_objects_query = "
 				SELECT	`".$workingClass->_tableIDColumn()."`
 				FROM	`".$workingClass->_tableName()."`
 				WHERE	`".$workingClass->_tableIDColumn()."` = `".$workingClass->_tableIDColumn()."`
+				AND		`order_type` = ?
 			";
 
 			// Add Parameters
+			$database->AddParam($this->document_type);
+
 			if (!empty($parameters['id']) && is_numeric($parameters['id'])) {
 				$order = new $this->_modelName($parameters['id']);
 				if ($order->exists()) {
@@ -34,7 +39,7 @@
 					$database->AddParam($parameters['id']);
 				}
 				else {
-					$this->error('Order not found');
+					$this->error('Document not found');
 					return [];
 				}
 			}
@@ -98,17 +103,19 @@
 			// Limit Clause
 			$find_objects_query .= $this->limitClause($controls);
 
+			$database->debug = 'screen';
+			$database->trace(9);
 			// Execute Query
 			$rs = $database->Execute($find_objects_query);
 			if (! $rs) {
-				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				$this->SQLError($database->ErrorMsg());
 				return [];
 			}
 
             // Build Results
             $objects = array();
             while (list($id) = $rs->FetchRow()) {
-                $orderObj = new \Sales\Order($id);
+				$orderObj = new $this->_modelName($id);
                 if ($orderObj->error()) {
                     $this->error($orderObj->error());
                     return [];

@@ -1,5 +1,5 @@
 <?php
-	namespace Sales\Order;
+	namespace Sales\Document;
 
 	class EventList Extends \BaseListClass {
 		public function __construct() {

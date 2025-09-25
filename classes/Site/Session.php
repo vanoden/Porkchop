@@ -756,6 +756,24 @@ use Register\Customer;
 			return true;
 		}
 
+		/** @method hitCount()
+		 * Get the number of hits for the current session
+		 * @return int Number of hits
+		 */
+		function hitCount(): ?int {
+			$hitlist = new HitList();
+			$hits = $hitlist->find(
+				array(
+					"session_id" => $this->id
+				)
+			);
+			if ($hitlist->error()) {
+				$this->error($hitlist->error());
+				return null;
+			}
+			return count($hits);
+		}
+
 		/** @method last_hit()
 		 * Get the last hit for a session
 		 * @return  Last hit object or null if not found
@@ -763,6 +781,18 @@ use Register\Customer;
 		function last_hit() {
 			$hitList = new HitList();
 			$hit = $hitList->last(
+				array("session_id" => $this->id)
+			);
+			return $hit;
+		}
+
+		/** @method first_hit()
+		 * Get the first hit for a session
+		 * @return First hit object or null if not found
+		 */
+		function first_hit() {
+			$hitList = new HitList();
+			$hit = $hitList->first(
 				array("session_id" => $this->id)
 			);
 			return $hit;

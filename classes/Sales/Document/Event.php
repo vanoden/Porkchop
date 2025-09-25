@@ -1,5 +1,5 @@
 <?php
-	namespace Sales\Order;
+	namespace Sales\Document;
 
 	class Event extends \BaseModel {
 		public $order_id;
@@ -20,13 +20,13 @@
 
 			$database = new \Database\Service();
 
-			$order = new \Sales\Order($parameters['order_id']);
+			$order = new \Sales\Document($parameters['order_id']);
 			if (! $order->exists()) {
-				$this->error("Order not found");
+				$this->error("Document not found");
 				return false;
 			}
             if (!isset($parameters['user_id'])) $parameters['user_id'] = $GLOBALS['_SESSION_']->customer->id;
-			if (!isset($parameters['new_status'])) $parameters['new_status'] = $order->status;
+			if (!isset($parameters['new_status'])) $parameters['new_status'] = $order->status();
 
 			$add_object_query = "
 				INSERT
