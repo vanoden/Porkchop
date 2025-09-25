@@ -683,18 +683,18 @@
 					$form .= $t.$t.$t.$t.'<label class="apiLabel required'.$required_class.'" for="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">'.$name.'</label>'.$cr;
 
 					// Populate Form Helper Values
-					if (!empty($parameter->object)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_object" value="'.addslashes($parameter->object).'"/>'.$cr;
-					if (!empty($parameter->property)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_property" value="'.addslashes($parameter->property).'"/>'.$cr;
-					if ($parameter->deprecated) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_deprecated" value="'.addslashes($parameter->deprecated).'"/>'.$cr;
-					if ($parameter->allow_wildcards) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_allow_wildcards" value="'.addslashes('yes').'"/>'.$cr;
-					if (!empty($parameter->type)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_type" value="'.addslashes($parameter->type).'"/>'.$cr;
-					if (!empty($parameter->description)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_description" value="'.addslashes($parameter->description).'"/>'.$cr;
-					if ($parameter->required) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_required" value="'.addslashes($parameter->required).'"/>'.$cr;
-					if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_prompt" value="'.addslashes($parameter->prompt).'"/>'.$cr;
-					if (!empty($parameter->default)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_default" value="'.addslashes($parameter->default).'"/>'.$cr;
-					if (!empty($parameter->content_type)) $form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_content_type" value="'.addslashes($parameter->content_type).'"/>'.$cr;
-					if (!empty($parameter->regex))$form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_regex" value="'.addslashes($parameter->regex).'"/>'.$cr;
-					if (!empty($parameter->validation_method))$form .= $t.$t.$t.$t.'<input type="hidden" name="'.$name.'-help_message_validation_method" value="'.addslashes($parameter->validation_method).'"/>'.$cr;
+					if (!empty($parameter->object)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_object">'.addslashes($parameter->object).'</span>'.$cr;
+					if (!empty($parameter->property)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_property">'.addslashes($parameter->property).'</span>'.$cr;
+					if ($parameter->deprecated) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_deprecated">'.addslashes($parameter->deprecated).'</span>'.$cr;
+					if ($parameter->allow_wildcards) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_allow_wildcards">'.addslashes('yes').'</span>'.$cr;
+					if (!empty($parameter->type)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_type">'.addslashes($parameter->type).'</span>'.$cr;
+					if (!empty($parameter->description)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_description">'.addslashes($parameter->description).'</span>'.$cr;
+					if ($parameter->required) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_required" value="'.addslashes($parameter->required).'"/>'.$cr;
+					if (!empty($parameter->prompt)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_prompt">'.addslashes($parameter->prompt).'</span>'.$cr;
+					if (!empty($parameter->default)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_default">'.addslashes($parameter->default).'</span>'.$cr;
+					if (!empty($parameter->content_type)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_content_type">'.addslashes($parameter->content_type).'</span>'.$cr;
+					if (!empty($parameter->regex))$form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_regex">'.addslashes($parameter->regex).'</span>'.$cr;
+					if (!empty($parameter->validation_method))$form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_validation_method">'.addslashes($parameter->validation_method).'</span>'.$cr;
 
 					// Textarea Input
 					if ($parameter->type == "textarea") {
