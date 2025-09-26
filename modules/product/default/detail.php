@@ -8,9 +8,6 @@
   </div>
 </section>
 
-<section>
-<h1><?=$product->name()?></h1>
-
 <?php if ($page->errorCount() > 0) { ?>
 <section id="form-message">
 	<ul class="connectBorder errorText">
@@ -68,67 +65,67 @@
         <div class="tableCell">Property</div><div class="tableCell">Specification</div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Product Type</div><div class="tableCell">Sulfuryl Fluoride (SO<sub>2</sub>F<sub>2</sub>)</div>
+        <div class="tableCell">Product Type</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Product Type')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Coverage</div><div class="tableCell">4 zones standard (8,12,16 zone options)</div>
+        <div class="tableCell">Coverage</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Coverage')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Measuring Range</div><div class="tableCell">0.11g/M<sup>3</sup> to 260g/M<sup>3</sup></div>
+        <div class="tableCell">Measuring Range</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('measure_range')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Monitoring Distance</div><div class="tableCell">500ft/150m (sample + exhaust)</div>
+        <div class="tableCell">Monitoring Distance</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Monitoring Distance')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Detector Type</div><div class="tableCell">NDIR (Non-Dispersive Infrared)</div>
+        <div class="tableCell">Detector Type</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Detector Type')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Accuracy</div><div class="tableCell">+/- 1% (50-3,000ppm) +/- 3% (full scale)</div>
+        <div class="tableCell">Accuracy</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Accuracy')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Front Panel</div><div class="tableCell">3 indicator lights</div>
+        <div class="tableCell">Front Panel</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Front Panel')) ?></div>
       </div>
       <div class="tableRow">
         <div class="tableCell">Data Logging &amp; Web Portal Upload</div><div class="tableCell"><ul><li>Advanced microprocessor command and conrol</li><li>Data Storage with continuous data transfer to Spectros Instruments Web Portal and archival option of 1 million record storage</li></ul></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Displays</div><div class="tableCell">Color touchscreen web interface; Monochrome LCD monitor</div>
+        <div class="tableCell">Displays</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Displays')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Sampling Frequency</div><div class="tableCell">User selectable for automatic on/off collection of data and storage onboard and/or on secured web portal</div>
+        <div class="tableCell">Sampling Frequency</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Sampling Frequency')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Response Time/Flow Rate</div><div class="tableCell">Dependent on gas-sample line length; 0.25” OD x 0.17” ID tubing</div>
+        <div class="tableCell">Response Time/Flow Rate</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Response Time')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Power Safety Mode</div><div class="tableCell">Fully automatic system reset; all programmed parameters retained</div>
+        <div class="tableCell">Power Safety Mode</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Power Safety Mode')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">AC Power</div><div class="tableCell">100 - 240 VAC;50/60Hz mains (standard) also battery/solar panel(optional)</div>
+        <div class="tableCell">AC Power</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('AC Power')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Power Consumption</div><div class="tableCell">20 Watts</div>
+        <div class="tableCell">Power Consumption</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Power Consumption')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">System Noise</div><div class="tableCell">Less than 40dB(A) at 10 feet</div>
+        <div class="tableCell">System Noise</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('System Noise')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Operating Temp</div><div class="tableCell">32º - 122°F (0 - 50°C)</div>
+        <div class="tableCell">Operating Temp</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Operating Temperature')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Ambient Humidity</div><div class="tableCell">5% to 90% RH (non-condensing)</div>
+        <div class="tableCell">Ambient Humidity</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Ambient Humidity')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Temperature Drift</div><div class="tableCell">±0.3% of reading per Cº</div>
+        <div class="tableCell">Temperature Drift</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Temperature Drift')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Altitude Limit</div><div class="tableCell">6,562 ft. (2,000m)</div>
+        <div class="tableCell">Altitude Limit</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Altitude Limit')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Size/Weight</div><div class="tableCell">22”H x 14”W x 6”D / 16 lbs.</div>
+        <div class="tableCell">Size/Weight</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Dimensions')) ?></div>
       </div>
       <div class="tableRow">
-        <div class="tableCell">Warranty</div><div class="tableCell">1 Year from date of shipment. All non-wetted parts.</div>
+        <div class="tableCell">Warranty</div><div class="tableCell"><?= htmlspecialchars($product->getMetadata('Warranty')) ?></div>
       </div>
     </div>
   </div>
