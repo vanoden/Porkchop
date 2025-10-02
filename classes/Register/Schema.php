@@ -69,8 +69,8 @@
 							`department_id` int(11) NOT NULL DEFAULT '0',
 							`organization_id` int(11) DEFAULT '0',
 							`opt_in` boolean NOT NULL DEFAULT '0',
-							`date_created` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-							`date_updated` timestamp NOT NULL,
+							`date_created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+							`date_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 							`date_expires` datetime NOT NULL,
 							`auth_method` varchar(100) DEFAULT 'local',
 							`unsubscribe_key` varchar(50) NOT NULL DEFAULT '',
@@ -161,11 +161,12 @@
 				}
 				$create_table_query = "
 						CREATE TABLE IF NOT EXISTS `register_organization_products` (
+							`id`				int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 							`organization_id`	int(11) NOT NULL,
 							`product_id`		int(11) NOT NULL,
 							`quantity`			decimal(9,2) NOT NULL,
 							`date_expires`		datetime DEFAULT '9999-12-31 23:59:59',
-							PRIMARY KEY `pk_organization_product` (`organization_id`,`product_id`),
+							UNIQUE KEY `uk_organization_product` (`organization_id`,`product_id`),
 							FOREIGN KEY `fk_orgproduct_organization` (`organization_id`) REFERENCES `register_organizations` (`id`),
 							FOREIGN KEY `fk_orgproduct_product` (`product_id`) REFERENCES `product_products` (`id`)
 						)
@@ -1181,7 +1182,7 @@
 				app_log("Upgrading schema to version 33", 'notice', __FILE__, __LINE__);
 				if (!$database->BeginTrans()) app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
 				$alter_table_query = "
-					ALTER TABLE `register_users` ADD COLUMN `last_hit_date` datetime NOT NULL DEFAULT '0000-00-00 00:00:00'
+					ALTER TABLE `register_users` ADD COLUMN `last_hit_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 				";
 				$database->Execute($alter_table_query);
 				if ($database->ErrorMsg()) {
@@ -1340,89 +1341,7 @@
 				# Start Transaction 
 				if (! $database->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-				$table = new \Database\Schema\Table('register_organization_products');
-
-				if (! $table->has_column('id')) {
-					$constraints = $table->constraints();
-					foreach ($constraints as $constraint) {
-						app_log("Dropping ".$constraint->type." ".$constraint->name." from ".$constraint->table);
-						if (!$constraint->drop()) {
-							$this->SQLError("Error dropping constraint '".$constraint->name."': ".$constraint->error());
-							app_log("Error dropping constraint '".$constraint->name."': ".$constraint->error());
-							return false;
-						}
-						app_log("Contraint ".$constraint->name." dropped");
-					}
-
-					app_log("Adding id column to register_organization_products");
-					$alter_table_query = "
-						ALTER TABLE `register_organization_products` ADD COLUMN `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST
-					";
-
-					$database->Execute($alter_table_query);
-					if ($database->ErrorMsg()) {
-						$this->SQLError("Error altering register_organization_products table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-						app_log($this->error(), 'error', __FILE__, __LINE__);
-						$database->RollbackTrans();
-						return null;
-					}
-				}
-
-				$constraint = $table->constraint("PRIMARY");
-				if (! $constraint) {
-					app_log("Adding primary key to register_organization_products");
-					$alter_table_query = "
-						ALTER TABLE `register_organization_products` ADD PRIMARY KEY (`id`)
-					";
-
-					$database->Execute($alter_table_query);
-					if ($database->ErrorMsg()) {
-						$this->SQLError("Error altering register_organization_products table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-						app_log($this->error(), 'error', __FILE__, __LINE__);
-						$database->RollbackTrans();
-						return null;
-					}
-				}
-
-				if (! $table->has_constraint('fk_orgproduct_organization')) {
-					app_log("Adding fk_orgproduct_organization constraint to register_organization_products");
-					$alter_table_query = "
-						ALTER TABLE `register_organization_products` ADD CONSTRAINT `fk_orgproduct_organization` FOREIGN KEY (`organization_id`) REFERENCES `register_organizations` (`id`)
-					";
-					$database->Execute($alter_table_query);
-					if ($database->ErrorMsg()) {
-						$this->SQLError("Error altering register_organization_products table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-						app_log($this->error(), 'error', __FILE__, __LINE__);
-						$database->RollbackTrans();
-						return null;
-					}
-				}
-
-				if (! $table->has_constraint('fk_orgproduct_product')) {
-					app_log("Adding fk_orgproduct_product constraint to register_organization_products");
-					$alter_table_query = "
-						ALTER TABLE `register_organization_products` ADD CONSTRAINT `fk_orgproduct_product` FOREIGN KEY (`product_id`) REFERENCES `product_products` (`id`)
-					";
-					$database->Execute($alter_table_query);
-					if ($database->ErrorMsg()) {
-						$this->SQLError("Error altering register_organization_products table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-						app_log($this->error(), 'error', __FILE__, __LINE__);
-						$database->RollbackTrans();
-						return null;
-					}
-				} else {
-					app_log("Adding fk_orgproduct_product constraint to register_organization_products");
-				}
-
-				$alter_table_query = "
-					alter table register_organization_products add unique `uk_organization_products` (`organization_id`,`product_id`)";
-				$database->Execute($alter_table_query);
-				if ($database->ErrorMsg()) {
-					$this->SQLError("Error altering register_organization_products table in Register::Schema::upgrade(): " . $database->ErrorMsg());
-					app_log($this->error(), 'error', __FILE__, __LINE__);
-					$database->RollbackTrans();
-					return null;
-				}
+				// Changes made have been move to initial schema creation to fix issues with older versions upgrading to version 41
 
 				$this->setVersion(41);
 				$database->CommitTrans();
