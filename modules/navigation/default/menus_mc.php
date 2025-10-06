@@ -1,5 +1,6 @@
 <?php
-	$page = new \Site\Page();
+	$site = new \Site();
+	$page = $site->page();
 	$page->requirePrivilege('manage navigation menus');
 	$can_proceed = true;
 
@@ -69,3 +70,5 @@
 	if ($menuList->error()) {
 		$page->addError($menuList->error());
 	}
+
+	$page->title("Navigation Menus");
