@@ -760,6 +760,8 @@
             # Error Handling
             if ($organization->error()) $this->error($organization->error());
 
+            if (! $organization->exists()) $this->notFound();
+
             $response = new \APIResponse();
             $response->success = 1;
             $response->addElement('organization',$organization);
