@@ -76,8 +76,8 @@ class Event Extends \BaseModel {
 			}
 			app_log("Rejected audit event - No customer ID. Params: " . print_r($params, true));
 			app_log(print_r($params, true));
-			$this->error("No customer ID found in session.  Cannot log event.");
-			return false;
+			$this->warn("No customer ID found in session.  Cannot log event.");
+			return true;
 		}
 
 		$this->instance_id = $params['instance_id'];
