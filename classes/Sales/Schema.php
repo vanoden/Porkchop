@@ -96,17 +96,17 @@
 						quantity decimal(5,2) NOT NULL DEFAULT 1,
 						unit_price decimal(11,2) NOT NULL DEFAULT 0,
 						PRIMARY KEY `pk_id` (`id`),
-						UNIQUE KEY `uk_sales_order_line` (`order_id`,`line_number`),
-						FOREIGN KEY `fk_sales_order_item_id` (`order_id`) REFERENCES `sales_orders` (`id`),
-						FOREIGN KEY `fk_sales_order_product_id` (`product_id`) REFERENCES `product_products` (`id`)
+						UNIQUE KEY `uk_sales_document_line` (`document_id`,`line_number`),
+						FOREIGN KEY `fk_sales_document_item_id` (`document_id`) REFERENCES `sales_documents` (`id`),
+						FOREIGN KEY `fk_sales_document_product_id` (`product_id`) REFERENCES `product_products` (`id`)
 					)
 				";
 				if (! $this->executeSQL($create_table_query)) {
-					$this->SQLError("Creating sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Creating sales_document_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
-					app_log("Created sales_order_items table",'info');
+					app_log("Created sales_document_items table",'info');
 				}
 
 				app_log("Update version",'info');
@@ -122,17 +122,17 @@
 
 				# Sales Document Items
 				$alter_table_query = "
-					ALTER TABLE `sales_order_items`
+					ALTER TABLE `sales_document_items`
 					ADD	COLUMN `status` enum('OPEN','VOID','FULFILLED','RETURNED') NOT NULL DEFAULT 'OPEN',
 					ADD COLUMN `cost` decimal(10,4),
-					ADD INDEX `idx_order_item_status` (`status`)
+					ADD INDEX `idx_document_item_status` (`status`)
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->SQLError("Altering sales_order_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Altering sales_document_items table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
-					app_log("Updated sales_order_items table",'info');
+					app_log("Updated sales_document_items table",'info');
 				}
 
 				app_log("Update version",'info');
@@ -148,7 +148,7 @@
 
 				# Sales Document Items
 				$alter_table_query = "
-					ALTER TABLE `sales_orders`
+					ALTER TABLE `sales_documents`
 					ADD	COLUMN `customer_order_number` varchar(255),
 					ADD INDEX `idx_customer_order_num` (`customer_id`,`customer_order_number`)
 				";
@@ -157,7 +157,7 @@
 					return false;
 				}
 				else {
-					app_log("Updated sales_orders table",'info');
+					app_log("Updated sales_documents table",'info');
 				}
 
 				app_log("Update version",'info');
@@ -173,16 +173,16 @@
 
 				# Sales Document Items
 				$alter_table_query = "
-					ALTER TABLE `sales_orders`
+					ALTER TABLE `sales_documents`
 					ADD	COLUMN `organization_id` int(11),
 					ADD INDEX `idx_order_org_id` (`organization_id`,`status`)
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->SQLError("Altering sales_orders table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Altering sales_documents table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
-					app_log("Updated sales_orders table",'info');
+					app_log("Updated sales_documents table",'info');
 				}
 
 				app_log("Update version",'info');
@@ -198,15 +198,15 @@
 
 				# Sales Document Items
 				$alter_table_query = "
-					ALTER TABLE `sales_order_events`
+					ALTER TABLE `sales_document_events`
 					ADD	COLUMN `message` text(512)
 				";
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->SQLError("Altering sales_order_events table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Altering sales_document_events table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
-					app_log("Updated sales_order_events table",'info');
+					app_log("Updated sales_document_events table",'info');
 				}
 
 				app_log("Update version",'info');
@@ -245,32 +245,32 @@
 				// Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
-				$table = new \Database\Schema\Table('sales_orders');
+				$table = new \Database\Schema\Table('sales_documents');
 				
 				if (! $table->has_column('billing_location_id')) {
-					$alter_table_query = "ALTER TABLE `sales_orders` ADD COLUMN `billing_location_id` int NULL";
+					$alter_table_query = "ALTER TABLE `sales_documents` ADD COLUMN `billing_location_id` int NULL";
 					if (! $this->executeSQL($alter_table_query)) {
-						$this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
+						$this->SQLError("Altering `sales_documents` table in ".$this->module."::Schema::upgrade(): ".$this->error());
 						return false;
 					}
-					
-					$alter_table_query = "ALTER TABLE `sales_orders` ADD CONSTRAINT `sales_orders_ibfk_3` FOREIGN KEY (`billing_location_id`) REFERENCES `register_locations` (`id`);";
+
+					$alter_table_query = "ALTER TABLE `sales_documents` ADD CONSTRAINT `sales_documents_ibfk_3` FOREIGN KEY (`billing_location_id`) REFERENCES `register_locations` (`id`);";
 					if (! $this->executeSQL($alter_table_query)) {
-						$this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
+						$this->SQLError("Altering `sales_documents` table in ".$this->module."::Schema::upgrade(): ".$this->error());
 						return false;
 					}
 				}
 
 				if (! $table->has_column('shipping_location_id')) {
-					$alter_table_query = "ALTER TABLE `sales_orders` ADD COLUMN `shipping_location_id` int NULL;";
+					$alter_table_query = "ALTER TABLE `sales_documents` ADD COLUMN `shipping_location_id` int NULL;";
 					if (! $this->executeSQL($alter_table_query)) {
-						$this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
+						$this->SQLError("Altering `sales_documents` table in ".$this->module."::Schema::upgrade(): ".$this->error());
 						return false;
 					}
 
-					$alter_table_query = "ALTER TABLE `sales_orders` ADD CONSTRAINT `sales_orders_ibfk_4` FOREIGN KEY (`shipping_location_id`) REFERENCES `register_locations` (`id`);";
+					$alter_table_query = "ALTER TABLE `sales_documents` ADD CONSTRAINT `sales_documents_ibfk_4` FOREIGN KEY (`shipping_location_id`) REFERENCES `register_locations` (`id`);";
 					if (! $this->executeSQL($alter_table_query)) {
-						$this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
+						$this->SQLError("Altering `sales_documents` table in ".$this->module."::Schema::upgrade(): ".$this->error());
 						return false;
 					}
 				}
@@ -285,10 +285,10 @@
 
 				// Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
-			    $table = new \Database\Schema\Table('sales_orders');				    
-                $alter_table_query = "ALTER TABLE `sales_orders` MODIFY COLUMN `status` ENUM('NEW','QUOTE','CANCELLED','APPROVED','ACCEPTED','COMPLETE');";
+			    $table = new \Database\Schema\Table('sales_documents');				    
+                $alter_table_query = "ALTER TABLE `sales_documents` MODIFY COLUMN `status` ENUM('NEW','QUOTE','CANCELLED','APPROVED','ACCEPTED','COMPLETE');";
                 if (! $this->executeSQL($alter_table_query)) {
-                    $this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
+                    $this->SQLError("Altering `sales_documents` table in ".$this->module."::Schema::upgrade(): ".$this->error());
                     return false;
                 }
 				$this->setVersion(9);
@@ -301,10 +301,10 @@
 
 				// Start Transaction
 				if (! $GLOBALS['_database']->BeginTrans()) app_log("Transactions not supported",'warning',__FILE__,__LINE__);
-			    
-                $alter_table_query = "ALTER TABLE `sales_orders` ADD `shipping_vendor_id` int(11)";
+
+                $alter_table_query = "ALTER TABLE `sales_documents` ADD `shipping_vendor_id` int(11)";
                 if (! $this->executeSQL($alter_table_query)) {
-                    $this->SQLError("Altering `sales_orders` table in ".$this->module."::Schema::upgrade(): ".$this->error());
+                    $this->SQLError("Altering `sales_documents` table in ".$this->module."::Schema::upgrade(): ".$this->error());
                     return false;
                 }
 				$this->setVersion(10);
@@ -320,16 +320,16 @@
 					app_log("Transactions not supported",'warning',__FILE__,__LINE__);
 
 				$alter_table_query = "
-					ALTER TABLE `sales_orders`
+					ALTER TABLE `sales_documents`
 					ADD	COLUMN `document_type` enum('SALES_ORDER','PURCHASE_ORDER','RETURN_ORDER','INVENTORY_ADJUSTMENT') NOT NULL DEFAULT 'SALES_ORDER'
 				";
 
 				if (! $this->executeSQL($alter_table_query)) {
-					$this->SQLError("Altering sales_orders table in ".$this->module."::Schema::upgrade(): ".$this->error());
+					$this->SQLError("Altering sales_documents table in ".$this->module."::Schema::upgrade(): ".$this->error());
 					return false;
 				}
 				else {
-					app_log("Updated sales_orders table",'info');
+					app_log("Updated sales_documents table",'info');
 				}
 				app_log("Update version",'info');
 				$this->setVersion($this->version()+1);

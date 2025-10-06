@@ -11,6 +11,13 @@
 			$this->clearError();
 			$database = new \Database\Service();
 
+			// Make Sure Storage Schema Loaded present
+			$storage_schema = new \Storage\Schema();
+			if (! $storage_schema->upgrade()) {
+				$this->error("Cannot upgrade Storage Schema: ".$storage_schema->error());
+				return false;
+			}
+
 			if ($this->version() < 2) {
 				app_log("Upgrading schema to version 2",'notice',__FILE__,__LINE__);
 
@@ -58,7 +65,7 @@
 						FOREIGN KEY `fk_package_version_user` (`user_id`) REFERENCES `register_users` (`id`)
 					)
 				";
-				if (! $database->ErrorMsg($create_table_query)) {
+				if (! $database->Execute($create_table_query)) {
 					$this->SQLError("Error creating package_versions table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
 					app_log($this->error(), 'error');
 					return false;

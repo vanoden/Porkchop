@@ -141,7 +141,7 @@
 			if ($this->version() < 4) {
 				$update_table_query = "
 					ALTER TABLE `company_locations` 
-					MODIFY COLUMN `content` text DEFAULT ''
+					MODIFY COLUMN `content` text DEFAULT NULL
 				";
 				if (! $this->executeSQL($update_table_query)) {
 					$this->SQLError("Updating company_locations table in ".$this->module."::Schema::upgrade(): ".$this->error());
