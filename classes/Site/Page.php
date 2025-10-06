@@ -271,7 +271,7 @@
 				if ($message->get($index)) {
 					return $this->add($module,$view,$index);
 				}
-				elseif ($GLOBALS['_SESSION_']->customer->can('edit content messages')) {
+				elseif (!empty($GLOBALS['_SESSION_']->customer) && $GLOBALS['_SESSION_']->customer->can('edit content messages')) {
 					return $this->getPage("site","content_block");
 				}
 				else return false;
