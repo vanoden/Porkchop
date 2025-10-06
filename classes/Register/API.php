@@ -279,6 +279,27 @@
             }
         }
 
+        /** @method getRole()
+         * Get Role Details
+         * @param name - Role Name
+        */
+        function getRole() {
+            $role = new \Register\Role();
+            $role->get($_REQUEST['code']);
+            if ($role->error()) $this->error($role->error());
+
+            if (! $role->exists()) {
+                $this->notFound();
+            }
+
+            $response = new \APIResponse();
+            $response->success(true);
+            $response->addElement('role',$role);
+
+            # Send Response
+            $response->print();
+        }
+
         ###################################################
         ### Find Roles									###
         ###################################################
@@ -1731,6 +1752,52 @@
 						)
 					)
 				),
+                'addRole'   => array(
+                    'description'	=> 'Create a new role',
+                    'path'			=> '/api/register/addRole',
+                    'authentication_required'	=> true,
+                    'token_required' => true,
+                    'privilege_required' => 'manage customers',
+                    'return_element'	=> 'role',
+                    'return_type' => 'Register::Role',
+                    'parameters'	=> array(
+                        'name'	=> array(
+                            'description'	=> 'Role Name',
+                            'prompt'		=> 'Role Name',
+                            'required'		=> true,
+                            'validation_method'	=> 'Register::Role::validCode()'
+                        ),
+                        'description'	=> array(
+                            'description'	=> 'Role Description',
+                            'prompt'		=> 'Role Description',
+                            'required'		=> true,
+                            'validation_method'	=> 'Register::Role::validDescription()'
+                        ),
+                        'time_based_password' => array(
+                            'description'   => 'Require Time-Based Password for this Role',
+                            'type'          => 'radio',
+                            'options'       => array(
+                                'true',
+                                'false'
+                            )
+                        )
+                    )
+                ),
+                'getRole'    => array(
+                    'description'	=> 'Get information about a role',
+                    'path'			=> '/api/register/getRole/{code}',
+                    'authentication_required'	=> true,
+                    'privilege_required' => 'manage customers',
+                    'return_element'	=> 'role',
+                    'return_type' => 'Register::Role',
+                    'parameters'	=> array(
+                        'code'	=> array(
+                            'description'	=> 'Role Name',
+                            'prompt'		=> 'Role Name',
+                            'validation_method'	=> 'Register::Role::validCode()'
+                        )
+                    )
+                ),
 				'findRoles'	    => array(
 					'description'	=> 'List all roles',
 					'path'			=> '/api/register/findRoles',
