@@ -202,6 +202,41 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
+			if (empty($menu_id) or !is_numeric($menu_id)) {
+				$this->error("Valid Menu ID Required");
+				return false;
+			}
+			else {
+				$menu = new Menu($menu_id);
+				if (! $menu->id) {
+					$this->error("Menu not found");
+					return false;
+				}
+			}
+			if (empty($code) or ! $this->validMenuCode($code)) {
+				$this->error("Valid Code Required");
+				return false;
+			}
+			if (!empty($parent)) {
+				if (is_numeric($parent)) {
+					$parent = new Item($parent);
+				}
+				elseif (is_object($parent)) {
+					// do nothing
+				}
+				elseif (is_string($parent)) {
+					$parent_item = new Item();
+					if (! $parent_item->get('menu_id',$menu_id,'title',$parent)) {
+						$this->error("Parent not found");
+						return false;
+					}
+					$parent = $parent_item;
+				}
+				else {
+					$this->error("Invalid Parent");
+					return false;
+				}
+			}
 			// Prepare Query
 			$get_object_query = "
 				SELECT	id
@@ -211,7 +246,8 @@
 			";
 
 			// Add Parameters
-			$database->AddParams($menu_id,$code);
+			$database->AddParam($menu->id);
+			$database->AddParam($code);
 
 			if (isset($parent) and is_object($parent)) {
 				$get_object_query .= "

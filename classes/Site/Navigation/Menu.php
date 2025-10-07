@@ -148,6 +148,12 @@
 		    }
 		    return true;
 	    }
+
+		/** @method public items($parent_id)
+		 * Get list of navigation items for this menu
+		 * @param $parent_id, parent id of items to get, default 0 for top level items
+		 * @return array of navigation items
+		 */
 	    public function items($parent_id = 0) {
 		    if (! preg_match("/^\d+$/", $parent_id )) $parent_id = 0;
 
@@ -159,6 +165,23 @@
 		    }
 		    return $items;
 	    }
+
+		/** @method public getItem($title)
+		 * Get navigation item belonging to this menu by title
+		 * @param $title, title of item to get
+		 * @param $parent_id parent id of item to get, default 0 for top level items
+		 * @return navigation item object
+		 */
+		public function getItem($title, $parent_id = 0) {
+			$item = new \Site\Navigation\Item();
+			$item->getItem($this->id, $title, $parent_id);
+			if ($item->error()) {
+				$this->error($item->error());
+				return null;
+			}
+			return $item;
+		}
+
 	    public function cascade($parent_id = 0) {
 		    $response = array ();
 		    $items = $this->items ( $parent_id );
