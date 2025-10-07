@@ -18,18 +18,18 @@ class Person Extends \BaseModel {
     public string $timezone = "America/New_York";
     public string $auth_method = "local";
     public int $time_based_password = 0;
-	public $opt_in = false;
-	public $date_created;
-	public $date_updated;
-	public $date_expires;
-	public $unsubscribe_key;
-	public $validation_key;
-	public $custom_metadata;
-	public $notes;
-	public $default_billing_location_id;
-	public $default_shipping_location_id;
-	public $last_hit_date;
-	public $profile;
+	public bool $opt_in = false;
+	public ?string $date_created = "";
+	public ?string $date_updated = "";
+	public ?string $date_expires = "";
+	public ?string $unsubscribe_key = "";
+	public ?string $validation_key = "";
+	public ?string $custom_metadata = "";
+	public ?string $notes = "";
+	public ?int $default_billing_location_id = null;
+	public ?int $default_shipping_location_id = null;
+	public ?string $last_hit_date = "";
+	public ?string $profile = "";
     protected string $secret_key = "";
 
     protected $_settings = array( "date_format" => "US" );
@@ -546,6 +546,15 @@ class Person Extends \BaseModel {
 		if (preg_match("/^[\w\-\_@\.\+\s]{2,100}\$/", $login)) return true;
 		else return false;
 	}
+
+    public function validFirstName($string) {
+        if (preg_match("/^[\w\-\.\_\s]{1,100}\$/", $string)) return true;
+        else return false;
+    }
+
+    public function validLastName($string) {
+        return $this->validFirstName($string);
+    }
 
 	public function settings($key) {
 	
