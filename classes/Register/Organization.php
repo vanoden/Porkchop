@@ -15,9 +15,10 @@
 		public ?int $password_expiration_days = null;
 		public ?int $default_billing_location_id = null;
 		public ?int $default_shipping_location_id = null;
-		public string $website_url = "";
-		public ?int $time_based_password = 0;
-		private bool $_nocache = false;
+	public string $website_url = "";
+	public ?int $time_based_password = 0;
+	public ?string $account_number = null;
+	private bool $_nocache = false;
 
 		/** @constructor */
 		public function __construct($id = null,$options = array()) {
@@ -158,6 +159,11 @@
 						time_based_password = ?";
 				array_push($bind_params,$parameters['time_based_password']);
 			}
+			if (isset($parameters['account_number'])) {
+				$update_object_query .= ",
+						account_number = ?";
+				array_push($bind_params,$parameters['account_number']);
+			}
 
 			$update_object_query .= "
 				WHERE	id = ?
@@ -184,6 +190,7 @@
 			if (isset($parameters['is_vendor']) && ($parameters['is_vendor'] != $this->is_vendor)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a vendor has been updated (is_vendor): '.$parameters['is_vendor']);
 			if (isset($parameters['time_based_password']) && ($parameters['time_based_password'] != $this->time_based_password)) $this->auditRecord('ORGANIZATION_UPDATED','Organization time based password has been updated (time_based_password): '.$parameters['time_based_password']);
 			if (isset($parameters['assigned_reseller_id']) && ($parameters['assigned_reseller_id'] != $this->assigned_reseller_id)) $this->auditRecord('ORGANIZATION_UPDATED','Organization is a reseller has been updated (assigned_reseller_id): '.$parameters['assigned_reseller_id']);
+			if (isset($parameters['account_number']) && ($parameters['account_number'] != $this->account_number)) $this->auditRecord('ORGANIZATION_UPDATED','Organization account number has been updated: '.$parameters['account_number']);
 
 			// audit the update event
 			$auditLog = new \Site\AuditLog\Event();
@@ -240,6 +247,7 @@
 				if (!empty($organization->website_url)) $this->website_url = $organization->website_url;
 				else $this->website_url = "";
 				if (isset($organization->time_based_password)) $this->time_based_password = $organization->time_based_password;
+				if (isset($organization->account_number)) $this->account_number = $organization->account_number;
 				$this->cached(true);
 				$this->exists(true);
 
@@ -285,6 +293,7 @@
 				if (!empty($object->notes)) $this->notes = $object->notes;
 				else $this->notes = "";
 				$this->time_based_password = isset($object->time_based_password) ? $object->time_based_password : 0;
+				if (isset($object->account_number)) $this->account_number = $object->account_number;
 			}
 			else {
 				$this->id = null;

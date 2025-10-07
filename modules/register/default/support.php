@@ -1,17 +1,19 @@
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" type="text/css" rel="stylesheet"> 
 <script>
 
    // date picker with max date being current day
    window.onload = function() {
-	  $("#dateStart").datepicker({
-		   maxDate: '0'
-	  });
-	  $("#dateEnd").datepicker({
-		   maxDate: '0'
-	  });
+	  var dateStart = document.getElementById('dateStart');
+	  var dateEnd = document.getElementById('dateEnd');
+	  
+	  if (dateStart) {
+		  dateStart.type = 'date';
+		  dateStart.max = new Date().toISOString().split('T')[0];
+	  }
+	  
+	  if (dateEnd) {
+		  dateEnd.type = 'date';
+		  dateEnd.max = new Date().toISOString().split('T')[0];
+	  }
 	  
       window.serialNumber = document.getElementById("serialNumber");
       window.sortByMessage = document.getElementById("sort-by");
@@ -99,7 +101,7 @@
                 </div>
             </div>
             <div id="filter-result" class="col-sm-3 col-6 padding-top">
-              Filter Results <i class="fas fa-filter"></i>
+              Filter Results <img src="/img/icons/icon_catgy_power_1C.svg" alt="Filter" class="filter-icon support-icon-16x16">
             </div>
             <div class="col-sm-3 new-request-button-container">
                 <button id="new-request-top-button" type="button" class="btn btn-danger" onclick="window.location='/_support/request'">New Request</button>
@@ -135,7 +137,7 @@
                 </div>
             </div>
             <div class="col-sm">
-                <span onclick="newSearch()" class="register-support-clear-filters">Clear Filters</span> <i class="fa fa-times register-support-clear-icon" aria-hidden="true" onclick="newSearch()"></i>
+                <span onclick="newSearch()" class="register-support-clear-filters">Clear Filters</span> <img src="/img/_global/icon_error.svg" alt="Clear" class="register-support-clear-icon support-icon-16x16 support-icon-clickable" onclick="newSearch()">
                 <div class="register-support-search-container">
                     <button type="button" class="btn btn-info" onclick="search()">Search</button>
                 </div>
@@ -147,7 +149,7 @@
              ?>
             <div class="row data-container"> 
                 <div class="col-sm support-ticket">
-                    <i class="fas fa-tag product-tag"></i> Ticket #:<?=str_pad($supportItem->id, 5, "0", STR_PAD_LEFT);?>
+                    <img src="/img/icons/flag_on.svg" alt="Ticket" class="product-tag support-icon-16x16"> Ticket #:<?=str_pad($supportItem->id, 5, "0", STR_PAD_LEFT);?>
                     <p><?=ucfirst(strtolower($supportItem->request->type))?></p>
                 </div>
                 <div class="col-sm">
@@ -181,7 +183,7 @@
                     <span class="key-value-text"><?=date("F j, Y, g:i a", strtotime($supportItem->request->date_request));?></span>
                     <div class="value-divider"></div>
                     <span class="key-text">Status:</span> 
-                    <span class="key-value-text"><i class="fas fa-circle 
+                    <span class="key-value-text"><img src="/img/_global/circ-letter.svg" alt="Status" class="status-icon 
                     <?php
                         if ($supportItem->status == 'NEW') {
                             print "new-action";                
@@ -191,7 +193,7 @@
                             print "active-action";
                         }
                     
-                    ?>"></i> 
+                    ?>" class="support-icon-12x12"> 
                         <?=$supportItem->status?>
                     </span>                
                 </div>

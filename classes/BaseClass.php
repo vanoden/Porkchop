@@ -625,7 +625,7 @@ class BaseClass {
 		// javascript: in inline events
 		if (preg_match('/alert\(/i', $string)) return false;
 
-		return (preg_match('/^[^\%\<\>]+$/', $string));
+		return true;
 	}
 
 	/**

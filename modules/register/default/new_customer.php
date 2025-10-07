@@ -1,8 +1,7 @@
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script src="/js/monitor.js"></script>
 <script src="/js/geography.js"></script>
+<script src="/js/dom-utils.js"></script>
 <script type="text/javascript">
 
 // validate email from user
@@ -14,14 +13,12 @@ function validateEmail(email) {
 
 // validate password and submit if ok to go
 function submitForm() {
-  var emailField = $("#email");
-  if (!validateEmail(emailField.val())) {
+  var emailField = document.getElementById("email");
+  if (!validateEmail(emailField.value)) {
     console.log("email is not valid");
-    // $(emailField).addClass("input-failed");
     return false;
   } else {
     console.log("email is good");
-    // $(emailField).addClass("input-passed");     
   }
 
   if (document.register.password.value.length < 6) {
@@ -80,27 +77,34 @@ function checkProduct() {
 
 // make sure that the user name isn't taken
 function checkUserName() {
-    var loginField = $("#login");
-    var loginMessage = $("#login-message");
-    $.get('/_register/api?method=checkLoginNotTaken&login=' + loginField.val(), function (data, status) {
-      if (data == 1) {
-        loginField.css('border', '2px solid green');
-        loginMessage.html('login is available');
-        loginMessage.css('color', 'green');
-      } else {
-        loginField.css('border', '2px solid red');
-        loginMessage.html('login is not available');
-        loginMessage.css('color', 'red');
-      }
-    });
+    var loginField = document.getElementById("login");
+    var loginMessage = document.getElementById("login-message");
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/_register/api?method=checkLoginNotTaken&login=' + encodeURIComponent(loginField.value), true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var data = xhr.responseText;
+            if (data == 1) {
+                loginField.style.border = '2px solid green';
+                loginMessage.innerHTML = 'login is available';
+                loginMessage.style.color = 'green';
+            } else {
+                loginField.style.border = '2px solid red';
+                loginMessage.innerHTML = 'login is not available';
+                loginMessage.style.color = 'red';
+            }
+        }
+    };
+    xhr.send();
 }
 
 // Check password strength
 function checkPasswordStrength() {
-  var customer = document.createObject(Customer);
+  var customer = Object.create(Customer);
   var passwordField = document.getElementById('password');
-  var passwordMessage = document.getElementByid('password-message');
-  if (customer.checkPasswordStrength(myPasswordVar)) {
+  var passwordMessage = document.getElementById('password-message');
+  if (customer.checkPasswordStrength(passwordField.value)) {
     passwordField.classList.add("input-passed");
     passwordMessage.innerHTML = 'strong password';
   }
@@ -207,7 +211,6 @@ function getProvinces() {
 		return false;
 	}
 }
-
 </script>
 
 <?php
