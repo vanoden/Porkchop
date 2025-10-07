@@ -42,36 +42,7 @@
     <input type="hidden" name="todo" value="" />
     <input type="hidden" name="csrfToken" value="<?=$GLOBALS['_SESSION_']->getCSRFToken()?>">
     <div class="subheading">Manage Site Configurations</div>
-	<div class="value"><?=$rows?> database records found</div>
-    
-    <!-- Static Configuration Values from config.php -->
-    <div class="subheading" style="margin-top: 20px;">Static Configuration Values (Read-Only)</div>
-    <div class="table">
-	    <div class="tableRowHeader">
-		    <div class="tableCell">Key</div>
-		    <div class="tableCell">Value</div>
-		    <div class="tableCell">Source</div>
-	    </div>
-    <?php
-        // Get static configurations from ConfigurationList class
-        $staticConfigs = $siteConfigurations->getStaticConfigurations();
-        
-        $staticIdx = 0;
-        foreach ($staticConfigs as $key => $value) {
-    ?>
-	    <div class="tableRow">
-		    <div class="tableCell"><strong><?=htmlspecialchars($key)?></strong></div>
-		    <div class="tableCell"><?=htmlspecialchars($value)?></div>
-		    <div class="tableCell"><span style="color: #666;">config.php</span></div>
-	    </div>
-    <?php
-            $staticIdx++;
-        }
-    ?>
-    </div>
-    
-    <!-- Database Configuration Values -->
-    <div class="subheading" style="margin-top: 20px;">Database Configuration Values (Editable)</div>
+
     <div class="table">
 	    <div class="tableRowHeader">
 		    <div class="tableCell">Key</div>
@@ -83,12 +54,18 @@
 	    foreach ($configuration as $record) {
     ?>
 	    <div class="tableRow">
-		    <div class="tableCell"><input id="key_<?=$idx?>" class="input-color-gray" type="text" name="key_<?=$idx?>" readonly="readonly" value="<?=$record->key?>" style="text-transform: none;" /></div>
+			<input type="hidden" name="key_<?=$idx?>" value="<?=$record->key?>" />
+		    <div class="tableCell"><span class="input-color-gray" style="text-transform: none;"><?=$record->key?></span></div>
+	<?php if ($record->readOnly) { ?>
+		    <div class="tableCell"><span class="input-color-gray" style="text-transform: none;"><?=$record->value?></span></div>
+		    <div class="tableCell"><em>Read-Only</em></div>
+	<?php } else { ?>
 		    <div class="tableCell"><input id="value_<?=$idx?>" type="text" name="value_<?=$idx?>" value="<?=$record->value?>" style="text-transform: none;" /></div>
 		    <div class="tableCell">
 			    <input type="button" name="update_<?=$idx?>" value="Update" class="button" onclick="updateConfig('<?=$idx?>');" />
 			    <input type="button" name="drop_<?=$idx?>" value="Drop" class="button" onclick="dropConfig('<?=$idx?>');" />
 		    </div>
+	<?php } ?>
 	    </div>
     <?php	
 		    $idx ++;

@@ -5,6 +5,9 @@
 
 		public $key;
 		public $value;
+		public bool $readOnly = false;
+		private string $_sensitivePattern = '/(slack|password|token|private_key|secret|key|username|hostname|captcha_bypass|database)/i';
+		private string $_uselessPattern = '/^(ADODB|_ADODB|ENV|MODE|PATH|PHP|DB_AUTOQUERY)/';
 
 		protected $_fields = array('key','value');
 
@@ -62,11 +65,13 @@
 				return false;
 			}
 			list($this->key,$this->value) = $rs->FetchRow();
+
 			if (empty($this->key)) {
 				app_log("No Record in DB, Checking Config Global");
 				if (isset($GLOBALS['_config']->site->{$key})) {
 					$this->key = $key;
 					$this->value = $GLOBALS['_config']->site->{$key};
+					$this->readOnly = true;
 					return true;
 				}
 				else {
@@ -162,6 +167,32 @@
 			if (isset($cache)) $cache->delete();
 
             return true;
+		}
+
+		/**
+		 * Determine if configuration is sensitive based on pattern match
+		 * @return bool True if sensitive, False if not
+		 */
+		public function isSensitive(): bool {
+			if (preg_match($this->_sensitivePattern, $this->key)) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+
+		/** @method public isUseful()
+		 * Determine if configuration is useful based on pattern match
+		 * @return bool True if useful, False if not
+		 */
+		public function isUseful(): bool {
+			if (preg_match($this->_uselessPattern, $this->key)) {
+				return false;
+			}
+			else {
+				return true;
+			}
 		}
 
         public function getByKey($key) {

@@ -2,6 +2,7 @@
 	namespace Site;
 		
 	class ConfigurationList Extends \BaseListClass {
+
 		public function __construct() {
 			$this->_modelName = '\Site\Configuration';
 		}
@@ -69,6 +70,14 @@
 				$this->incrementCount();
 				array_push($objects,$object);
 			}
+
+			$objects = array_merge($objects, $this->getStaticConfigurations());
+			$this->_count = count($objects);
+
+			// Sort by key after merging static configurations
+			usort($objects, function($a, $b) {
+				return strcmp($a->key, $b->key);
+			});
 			return $objects;
 		}
 
@@ -81,12 +90,16 @@
 			// Get all defined constants
 			$definedConstants = get_defined_constants(true);
 			$userConstants = isset($definedConstants['user']) ? $definedConstants['user'] : array();
-			
+
 			// Filter out sensitive constants
 			$safeConstants = array();
 			foreach ($userConstants as $name => $value) {
-				if (!in_array(strtolower($name), array('qa_captcha_bypass'))) {
-					$safeConstants[$name] = is_bool($value) ? ($value ? 'true' : 'false') : $value;
+				$configuration = new \Site\Configuration();
+				$configuration->key = $name;
+				if (!$configuration->isSensitive() && $configuration->isUseful()) {
+					$configuration->value = is_bool($value) ? ($value ? 'true' : 'false') : $value;
+					$configuration->readOnly = true;
+					array_push($safeConstants, $configuration);
 				}
 			}
 			
@@ -106,35 +119,26 @@
 		 * @return array Extracted configuration values
 		 */
 		private function extractConfigValues($config, $prefix = '', $excludeKeys = array()): array {
-			$result = array();
-			
-			// Define keys to exclude (sensitive information)
-			$defaultExcludeKeys = array(
-				'password', 'token', 'private_key', 'secret', 'key', 'username', 'hostname'
-			);
-			$excludeKeys = array_merge($defaultExcludeKeys, $excludeKeys);
+			$results = array();
 			
 			if (is_object($config)) {
 				foreach ($config as $key => $value) {
 					$currentKey = $prefix ? $prefix . '->' . $key : $key;
-					
-					// Skip sensitive keys
-					$isSensitive = false;
-					foreach ($excludeKeys as $excludeKey) {
-						if (stripos($key, $excludeKey) !== false) {
-							$isSensitive = true;
-							break;
-						}
-					}
-					
-					if (!$isSensitive) {
+
+					$configuration = new \Site\Configuration();
+					$configuration->key = $currentKey;
+					$configuration->readOnly = true;
+				
+					if (!$configuration->isSensitive() && $configuration->isUseful()) {
 						if (is_object($value) || is_array($value)) {
-							$result = array_merge($result, $this->extractConfigValues($value, $currentKey, $excludeKeys));
+							$results = array_merge($results, $this->extractConfigValues($value, $currentKey, $excludeKeys));
 						} else {
 							if (is_array($value)) {
-								$result[$currentKey] = implode(', ', $value);
+								$configuration->value = implode(', ', $value);
+								array_push($results, $configuration);
 							} else {
-								$result[$currentKey] = is_bool($value) ? ($value ? 'true' : 'false') : $value;
+								$configuration->value = is_bool($value) ? ($value ? 'true' : 'false') : $value;
+								array_push($results, $configuration);
 							}
 						}
 					}
@@ -142,19 +146,23 @@
 			} elseif (is_array($config)) {
 				foreach ($config as $key => $value) {
 					$currentKey = $prefix ? $prefix . '[' . $key . ']' : $key;
-					
+
+					$configuration = new \Site\Configuration();
+					$configuration->key = $currentKey;
+					$configuration->readOnly = true;
+
 					if (is_object($value) || is_array($value)) {
-						$result = array_merge($result, $this->extractConfigValues($value, $currentKey, $excludeKeys));
+						$results = array_merge($results, $this->extractConfigValues($value, $currentKey, $excludeKeys));
 					} else {
 						if (is_array($value)) {
-							$result[$currentKey] = implode(', ', $value);
+							$configuration->value = implode(', ', $value);
 						} else {
-							$result[$currentKey] = is_bool($value) ? ($value ? 'true' : 'false') : $value;
+							$configuration->value = is_bool($value) ? ($value ? 'true' : 'false') : $value;
 						}
 					}
 				}
 			}
-			
-			return $result;
+
+			return $results;
 		}
 	}
