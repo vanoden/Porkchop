@@ -25,6 +25,10 @@
 		public $verb = 'POST';
 
 		public function __construct($parameters = []) {
+			// Make sure we have an array or object
+			if (!is_array($parameters) && !is_object($parameters)) return;
+
+			// Set Properties
 			foreach ($parameters as $name => $value) {
 				if ($name == "description") $this->description = $value;
 				elseif ($name == "name") $this->name = $value;

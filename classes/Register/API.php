@@ -1492,13 +1492,6 @@
 		public function _methods() {
 			$queue = new \Register\Queue();
 			return array(
-				'ping'	=> array(
-					'description' => 'Check API Availability',
-					'authentication_required' => false,
-					'parameters' => array(),
-					'return_element' => 'message',
-					'return_type' => 'string'
-				),
 				'csrfToken'	=> array(
 					'description' => 'Get a CSRF Token',
 					'authentication_required' => false,
@@ -1532,6 +1525,54 @@
 						)
 					)
 				),
+                'addCustomer'    => array(
+                    'description'	=> 'Add a new customer',
+                    'authentication_required'	=> true,
+                    'token_required' 			=> true,
+                    'privilege_required' => 'manage customers',
+                    'return_element' => 'customer',
+                    'return_type' => 'Register::Customer',
+                    'parameters'	=> array(
+                        'organization_code'	=> array(
+                            'description'	=> 'Organization Code',
+                            'prompt' => 'Organization Code',
+                            'validation_method'	=> 'Register::Organization::validCode()'
+                        ),
+                        'first_name'	=> array(
+                            'description'	=> 'Customer First Name',
+                            'prompt' => 'Customer First Name',
+                            'validation_method' => 'Register::Customer::validFirstName()'
+                        ),
+                        'last_name'		=> array(
+                            'description'	=> 'Customer Last Name',
+                            'prompt' => 'Customer Last Name',
+                            'validation_method' => 'Register::Customer::validLastName()'
+                        ),
+                        'code'			=> array(
+                            'description'	=> 'Customer Login',
+                            'prompt' => 'Customer Login',
+                            'validation_method' => 'Register::Customer::validLogin()'
+                        ),
+                        'password'  	=> array(
+                            'description'	=> 'Customer Password',
+                            'prompt' => 'Customer Password',
+                            'validation_method' => 'Register::Customer::validPassword()'
+                        ),
+                        'automation'	=> array(
+                            'description'	=> 'Human or Machine.  True for machine.',
+                            'type'			=> 'radio',
+                            'options' => array(
+                                'true',
+                                'false'
+                            )
+                        ),
+                        'timezone'		=> array(
+                            'description'	=> 'Customer Timezone.  See https://www.php.net/manual/en/timezones.php for valid list.',
+                            'prompt' => 'Customer Timezone',
+                            'validation_method' => 'Porkchop::validTimezone()'
+                        )
+                    )
+                ),
 				'getCustomer'	=> array(
 					'description'	=> 'Get information about a customer',
 					'path' => '/api/register/getCustomer/{code}',
@@ -1648,6 +1689,29 @@
 						)
 					)
 				),
+                'addOrganization'    => array(
+                    'description'    => 'Create a new organization',
+                    'path'            => '/api/register/addOrganization',
+                    'authentication_required'    => true,
+                    'token_required' => true,
+                    'privilege_required' => 'manage customers',
+                    'return_element'    => 'organization',
+                    'return_type' => 'Register::Organization',
+                    'parameters'    => array(
+                        'code'    => array(
+                            'description'    => 'Organization Code',
+                            'prompt'        => 'Organization Code',
+                            'required'        => false,
+                            'validation_method'    => 'Register::Organization::validCode()'
+                        ),
+                        'name'    => array(
+                            'description'    => 'Organization Name',
+                            'prompt'        => 'Organization Name',
+                            'required'        => true,
+                            'validation_method'    => 'Register::Organization::validName()'
+                        )
+                    )
+                ),
 				'getOrganization' => array(
 					'description'	=> 'Get information about an organization',
 					'path'			=> '/api/register/getOrganization/{code}',

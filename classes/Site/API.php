@@ -345,10 +345,10 @@
 					$this->error($menu->error());
 				}
 				else {
-					$this->error("Menu not found");
+					$this->notFound("Menu not found");
 				}
 			}
-			else $this->error("menu code required");
+			else $this->invalidRequest("menu code required");
 
 			# Send Response
 			$response->print();
@@ -436,7 +436,15 @@
 
 			if (! isset($_REQUEST['menu_code'])) $this->error("menu_code required");
 			$menu = new \Site\Navigation\Menu();
-			if (! $menu->get($_REQUEST['menu_code'])) $this->error("Menu not found");
+			if (! $menu->get($_REQUEST['menu_code'])) $this->error("Menu not found");			
+
+			if (!empty($_REQUEST['parent_code'])) {
+				$parent_item = new \Site\Navigation\Item();
+				$parent_item->getItem($menu->id,$_REQUEST['parent_code']);
+				if ($parent_item->error()) $this->error("Error finding parent menu item: ".$parent_item->error());
+				if (! $parent_item->exists()) $this->invalidRequest("Parent Menu Item not found");
+				$parameters['parent_id'] = $parent_item->id;
+			}
 
 			$parameters['menu_id'] = $menu->id;	
 			$parameters['title'] = $_REQUEST['title'];
@@ -444,12 +452,14 @@
 			$parameters['alt'] = $_REQUEST['alt'];
 			$parameters['description'] = $_REQUEST['description'];
 			$parameters['view_order'] = $_REQUEST['view_order'];
+			$parameters['parent_id'] = isset($parent_item) ? $parent_item->id : null;
 
 			$response = new \APIResponse();
 			$item = new \Site\Navigation\Item();
 			if ($item->add($parameters)) {
 				$response->AddElement('item',$item);
 				$response->success(true);
+				$response->addElement('item',$item);
 			}
 			elseif ($item->error()) {
 				$this->error($item->error());
@@ -498,6 +508,39 @@
 
 			# Send Response
 			$response->print();
+		}
+
+		/** @method getNavigationItem
+		 * Get Menu Item Details
+		 * @param code Title of the Menu to which it belongs
+		 * @param title Title of the Menu Item
+		 * @param parent_code (optional) Code of Parent Menu Item
+		 * @return void
+		 */
+		function getNavigationItem() {
+			$response = new \APIResponse();
+			$menu = new \Site\Navigation\Menu();
+			$menu->get($_REQUEST['menu_code']);
+			if ($menu->error()) $this->error("Error finding menu: ".$menu->error());
+			if (! $menu->exists()) $this->invalidRequest("Menu not found");
+
+			if (!empty($_REQUEST['parent_code'])) {
+				$parent_item = new \Site\Navigation\Item();
+				$parent_item->getItem($menu->id,$_REQUEST['parent_code']);
+				if ($parent_item->error()) $this->error("Error finding parent menu item: ".$parent_item->error());
+				if (! $parent_item->exists()) $this->invalidRequest("Parent Menu Item not found");
+			}
+			else {
+				$parent_item = null;
+			}
+
+			$menu_item = $menu->getItem($_REQUEST['title'], isset($parent_item) ? $parent_item->id : null);
+			if ($menu->error()) $this->error($menu->error());
+			if (! $menu_item->exists()) $this->notFound("Menu Item not found");
+
+			$response->AddElement('item', $menu_item);
+			$response->print();
+			return;
 		}
 
 		###################################################
@@ -1188,7 +1231,6 @@
 
 		public function _methods() {
 			return array(
-				'ping'			=> array(),
 				'findPages'	=> array(
 					'description'	=> 'Find site pages matching criteria',
 					'parameters'	=> array(
@@ -1416,6 +1458,9 @@
 							'required' => true,
 							'validation_method'	=> 'Site::Navigation::Item::validTitle()',
 						),
+						'parent_code'	=> array(
+							'validation_method'	=> 'Site::Navigation::Item::validCode()',
+						),
 						'target'		=> array(
 							'required' => true,
 							'validation_method'	=> 'Site::Navigation::Item::validTarget()',
@@ -1428,6 +1473,24 @@
 						),
 						'view_order'	=> array(
 							'content-type' => 'int'
+						),
+					)
+				),
+				'getNavigationItem'	=> array(
+					'description'	=> 'Get navigation item',
+					'return_element'	=> 'item',
+					'return_type'	=> 'Site::Navigation::Item',
+					'parameters'	=> array(
+						'menu_code'			=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Navigation::Menu::validCode()',
+						),
+						'title'				=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::Navigation::Item::validTitle()',
+						),
+						'parent_code'		=> array(
+							'validation_method'	=> 'Site::Navigation::Item::validCode()',
 						),
 					)
 				),
@@ -1707,31 +1770,77 @@
 					]
 				), 
 				'removeSiteMessageMetaData'	=> array(
-					'item_id' => array('required' => true)
+					'description'	=> 'Remove metadata from a site message',
+					'token_required'	=> true,
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'item_id' => array('required' => true)
+					]
 				),
 				'acknowledgeSiteMessageByUserId'	=> array(
-					'user_created' => array('required' => true)
+					'description'	=> 'Acknowledge all site messages for a user',
+					'token_required'	=> true,
+					'authentication_required'	=> true,
+					'parameters'	=> [
+						'user_created' => array('required' => true)
+					]
 				),
 				'addTermsOfUse' => array(
-					'code'	=> array(),
-					'name'	=> array('required' => true),
-					'description' => array()
+					'description'	=> 'Add a new terms of use',
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage terms of use',
+					'parameters'	=> array(
+						'code'	=> array(
+							'validation_method'	=> 'Site::TermsOfUse::validCode()',
+						),
+						'name'	=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::TermsOfUse::safeString()',
+						),
+						'description' => array(
+							'validation_method'	=> 'Site::TermsOfUse::safeString()',
+						)
+					)
 				),
 				'addTermsOfUseVersion' => array(
-					'tou_code'	=> array('required' => true),
-					'status'	=> array(
-										'required' => true,
-										'options'	=> array (
-											'NEW','CACNELLED','PUBLISHED'
-										)
-									),
-					'content'	=> array(),
+					'description'	=> 'Add a new terms of use version',
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage terms of use',
+					'parameters'	=> array(
+						'tou_code'	=> array('required' => true),
+						'status'	=> array(
+							'required' => true,
+							'options'	=> array (
+								'NEW','CANCELLED','PUBLISHED'
+							)
+						),
+						'content'	=> array(
+							'required' => true,
+							'validation_method'	=> 'Site::TermsOfUse::safeString()',
+						),
+					),
 				),
 				'activateTermsOfUseVersion' => array(
-					'version_id'	=> array('required')
+					'description'	=> 'Activate a terms of use version',
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage terms of use',
+					'parameters'	=> array(
+						'version_id'	=> array(
+							'required' => true,
+							'content-type'	=> 'int',
+						),
+					)
 				),
 				'cancelTermsOfUseVersion' => array(
-					'version_id'	=> array('required')
+					'description'	=> 'Cancel a terms of use version',
+					'token_required'	=> true,
+					'privilege_required'	=> 'manage terms of use',
+					'parameters'	=> array(
+						'version_id'	=> array(
+							'required' => true,
+							'content-type'	=> 'int',
+						),
+					)
 				),
 				'timestamp' => array(
 					'description'	=> 'Get current timestamp',

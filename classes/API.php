@@ -1,6 +1,6 @@
 <?php
 	/* Base Class for Site APIs */
-	class API {
+	abstract class API {
 		protected $_error;
 		protected $response;
 		protected $module;
@@ -8,7 +8,7 @@
 		protected $_default_home = '/';
 		protected $_schema;
 		protected $_version;
-		protected $_name;
+		protected $_name = "";
 		protected $_release;
 		protected $_communication;
 		private $page;
@@ -57,6 +57,8 @@
 			$response->success(true);
 			$response->print();
 		}
+
+		/********************************************/
 
 		/********************************************/
 		/* Return Error unless User Authenticated	*/
@@ -298,6 +300,48 @@
 			}
 		}
 
+		/** @method public fullMethods()
+		 * Add helper methods to the list of methods returned by _methods()
+		 * @return array
+		 */
+		public function fullMethods() {
+			$methods = $this->_methods();
+			$name = $this->_name;
+			$methods['ping'] = array(
+				'description' => 'Ping the API to see if it is responding',
+				'authentication_required' => false,
+				'return_element' => 'message',
+				'return_type' => 'string',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			$methods['csrfToken'] = array(
+				'description' => 'Get an AntiCSRF Token',
+				'authentication_required' => false,
+				'return_element' => 'token',
+				'return_type' => 'string',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			$methods['definition'] = array(
+				'description' => 'Get API Definition',
+				'authentication_required' => false,
+				'return_element' => 'api_definition',
+				'return_type' => 'API::Definition',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			$methods['export'] = array(
+				'description' => 'Export API Definition as OpenAPI Specification',
+				'authentication_required' => false,
+				'return_element' => 'openapi_specification',
+				'return_type' => 'string',
+				'parameters' => [],
+				'hidden'	=> true
+			);
+			return $methods;
+		}
+
 		/************************************************/
 		/* Call requested API function					*/
 		/************************************************/
@@ -308,7 +352,7 @@
 
 			if (empty($function_name)) {
 				if ($this->page->requireRole('API User') || $this->page->requireRole('Administrator')) {
-					$this->apiMethods();
+					$this->fullMethods();
 				}
 				else {
 					$this->deny();
@@ -317,11 +361,11 @@
 			}
 
 			// Method Requirements
-			if (!array_key_exists($function_name,$api->_methods())) {
+			if (!array_key_exists($function_name,$this->fullMethods())) {
 				$this->notFound("Method '$function_name' not found in ".$this->module." API");
 			}
 
-			$method = $api->_methods()[$function_name];
+			$method = $this->fullMethods()[$function_name];
 			if (isset($method['privilege_required']) && !(preg_match('/^\[\w+\]$/',$method['privilege_required']))) {
 				$this->requirePrivilege($method['privilege_required']);
 			}
@@ -470,7 +514,7 @@
 		/* Return List of Available Methods				*/
 		/************************************************/
 		public function apiMethods() {
-			$methods = $this->_methods();
+			$methods = $this->fullMethods();
 			$response = new \APIResponse();
 			$response->success(true);
 			$response->addElement('method',$methods);
@@ -556,7 +600,7 @@
 			$api_name = "\\".ucfirst($this->module)."\\API";
 			$api = new $api_name();
 			$form = '';
-			$methods = $api->_methods();
+			$methods = $api->fullMethods();
 
 			$form .= '<h1>'.ucfirst($this->module).' API</h1>';
 
@@ -567,7 +611,18 @@
 			foreach ($methods as $form_name => $settings) {
 				$method = new \API\Method($settings);
 
+				// Skip Hidden Methods
 				if ($method->hidden) continue;
+
+				//$form .= "Auth req: ".$method->authentication_required." Customer: ".print_r($GLOBALS['_SESSION_']->customer,true)."\n";
+				// Only Show Methods User is Authorized For
+				if ($method->authentication_required && !$GLOBALS['_SESSION_']->customer->exists()) {
+					continue;
+				}
+				//$form .= "Priv req: ".$method->privilege_required." Customer: ".print_r($GLOBALS['_SESSION_']->customer,true)."\n";
+				if ($method->privilege_required && !$GLOBALS['_SESSION_']->customer->can($method->privilege_required)) {
+					continue;
+				}
 
 				// See if method has file inputs
 				$has_file_inputs = false;
@@ -680,7 +735,7 @@
 					$form .= $t.$t.$t.'<li class="apiParameter">'.$cr;
 
 					// Open Label Span Element
-					$form .= $t.$t.$t.$t.'<label class="apiLabel required'.$required_class.'" for="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">'.$name.'</label>'.$cr;
+					$form .= $t.$t.$t.$t.'<label class="apiLabel'.$required_class.'" for="'.$name.'" onMouseOver="showAPIHelpMessage(this)" onMouseOut="hideAPIHelpMessage()">'.$name.'</label>'.$cr;
 
 					// Populate Form Helper Values
 					if (!empty($parameter->object)) $form .= $t.$t.$t.$t.'<span class="toolTip" name="'.$name.'-help_message_object">'.addslashes($parameter->object).'</span>'.$cr;
@@ -744,7 +799,7 @@
 		public function definition() {
 			$api_name = "\\".ucfirst($this->module)."\\API";
 			$api = new $api_name();
-			$methods = $api->_methods();
+			$methods = $this->fullMethods();
 			$definition_object = array();
 			$components = array();
 			$definition_object['openapi'] = "3.0.0";
@@ -760,6 +815,15 @@
 			);
 			$definition_object['paths'] = array();
 			foreach ($methods as $form_name => $settings) {
+				// Only Show Methods User is Authorized For
+				if ($settings["authentication_required"] && !$GLOBALS['_SESSION_']->customer->exists()) {
+					continue;
+				}
+				//$form .= "Priv req: ".$method->privilege_required." Customer: ".print_r($GLOBALS['_SESSION_']->customer,true)."\n";
+				if ($settings["privilege_required"] && !$GLOBALS['_SESSION_']->customer->can($settings["privilege_required"])) {
+					continue;
+				}
+				
 				if (!empty($settings['path'])) {
 					if ($settings['return_type'] == 'int') {
 						//Skip for now
@@ -769,6 +833,11 @@
 					}
 					else {
 						$class_name = "\\".str_replace('::','\\',$settings['return_type']);
+						if ($class_name == '\array') {
+							//Skip for now
+							continue;
+						}
+						app_log("Defining API Method ".$form_name." with return type ".$class_name,'debug',__FILE__,__LINE__);
 						$class = new \ReflectionClass($class_name);
 						$definition_object['paths'][$settings['path']] = array();
 						if (!array_key_exists($settings['return_type'],$components)) {
@@ -845,9 +914,9 @@
 					}
 				}
 			}
-			$definition_object['components'] = array(
+			$definition_object['components'] = [
 				"schemas" => $components,
-			);
+			];
 			header('Content-Type: text/plain');
 			print yaml_emit($definition_object);
 		}
@@ -855,11 +924,33 @@
 		public function export() {
 			$api_name = "\\".ucfirst($this->module)."\\API";
 			$api = new $api_name();
-			$methods = $api->_methods();
+			$methods = $this->fullMethods();
 			header('Content-Type: text/csv');
 			header('Content-disposition: attachment;filename='.$api->_name.'.csv');
 			print("Method,Description,Return Type,Return MIME Type,Authentication Required,Token Required,Privilege Required,Role Required,Deprecated,Path,Verb\n");
 			foreach ($methods as $form_name => $settings) {
+				// Only Show Methods User is Authorized For
+				if ($settings["authentication_required"] && !$GLOBALS['_SESSION_']->customer->exists()) {
+					continue;
+				}
+				//$form .= "Priv req: ".$method->privilege_required." Customer: ".print_r($GLOBALS['_SESSION_']->customer,true)."\n";
+				if ($settings["privilege_required"] && !$GLOBALS['_SESSION_']->customer->can($settings["privilege_required"])) {
+					continue;
+				}
+				if (empty($settings['description'])) $settings['description'] = "";
+				if (empty($settings['return_type'])) $settings['return_type'] = "";
+				if (empty($settings['return_mime_type'])) $settings['return_mime_type'] = "";
+				if (empty($settings['authentication_required']) || !$settings['authentication_required']) $settings['authentication_required'] = "false";
+				else $settings['authentication_required'] = "true";
+				if (empty($settings['token_required']) || !$settings['token_required']) $settings['token_required'] = "false";
+				else $settings['token_required'] = "true";
+				if (empty($settings['privilege_required']) || !$settings['privilege_required']) $settings['privilege_required'] = "";
+				if (empty($settings['role_required'])) $settings['role_required'] = "";
+				if (empty($settings['deprecated']) || !$settings['deprecated']) $settings['deprecated'] = "false";
+				else $settings['deprecated'] = "true";
+				if (empty($settings['path'])) $settings['path'] = "";
+				if (empty($settings['verb'])) $settings['verb'] = "";
+				// Build Record
 				$record = array(
 					"method" => $form_name,
 					"description" => '"'.$settings['description'].'"',

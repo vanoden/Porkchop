@@ -97,6 +97,9 @@
 			if ($product->exists()) {
 				$responseObj->metadata = $product->getAllMetadata();
 			}
+			else {
+				$this->notFound();
+			}
 
 			$response = new \APIResponse();
 			$response->addElement('item',$responseObj);

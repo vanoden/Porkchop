@@ -13,7 +13,7 @@
 
 			// Identify Calling Endpoint and Method
 			$backtrace = debug_backtrace();
-			if (isset($backtrace[1]['class']) && isset($backtrace[1]['function'])) {
+			if (isset($backtrace[1]['class']) && isset($backtrace[1]['function']) && isset($backtrace[2]['class']) && isset($backtrace[2]['function'])) {
 				$this->_api = $backtrace[2]['class'];
 				$this->_method = $backtrace[2]['function'];
 			}
