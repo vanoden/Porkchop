@@ -524,7 +524,8 @@
 
 			// Intranet style site, No public content
             if (isset($GLOBALS['_config']->site->private_mode) && $GLOBALS['_config']->site->private_mode) {
-                $this->auth_required = true;
+				if ($this->view == "api") $this->auth_required = false;
+                else $this->auth_required = true;
             }
 
 		    // Make Sure Authentication Requirements are Met
@@ -709,7 +710,9 @@
 			    }
 		    }
 			elseif ($this->view() == "api") {
-				$api = new \API();
+				app_log("Loading API for module ".$this->module(),'debug');
+				$api_name = "\\".ucfirst($this->module())."\\API";
+				$api = new $api_name();
 				if (empty($_REQUEST["method"])) {
 					# Call the Specified Method
 					$buffer = $api->_form();
