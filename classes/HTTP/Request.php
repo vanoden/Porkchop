@@ -233,6 +233,14 @@
 				$this->module = "site";
 				$this->view = "map_xml";
 			}
+			elseif (preg_match('/api\/([\w\-\_]+)\/([\w\-\_]+)\/([\w\-\_]+)\/([\w\-\_]+)/',$this->_uri,$matches)) {
+				// API URIs
+				$this->module = $matches[1];
+				$this->view = "api";
+				$_REQUEST['method'] = $matches[2];
+				$_REQUEST['code'] = $matches[3];
+				$_REQUEST['code2'] = $matches[4];
+			}
 			elseif (preg_match('/api\/([\w\-\_]+)\/([\w\-\_]+)\/([\w\-\_]+)/',$this->_uri,$matches)) {
 				// API URIs
 				$this->module = $matches[1];
