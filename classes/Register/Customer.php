@@ -638,7 +638,7 @@
 				}
 			}
 			$check_privilege_query = "
-				SELECT	1
+				SELECT	*
 				FROM	register_users_roles rur,
 						register_roles_privileges rrp
 				WHERE	rur.user_id = ?
@@ -715,8 +715,14 @@
 		 * @return bool True if user has the required level
 		 */
 		private function checkPrivilegeLevel(int $user_level, int $required_level): bool {
-			// Define privilege levels in descending order
-			$levels = [63, 15, 7, 3, 0]; // Administrator, Distributor, Organization Manager, Sub-Organization Manager, Customer
+			// Define privilege levels in descending order using constants
+			$levels = [
+				\Register\PrivilegeLevel::ADMINISTRATOR,
+				\Register\PrivilegeLevel::DISTRIBUTOR,
+				\Register\PrivilegeLevel::ORGANIZATION_MANAGER,
+				\Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER,
+				\Register\PrivilegeLevel::CUSTOMER
+			];
 			
 			// If user level is 0, they only have customer level
 			if ($user_level == 0) {
