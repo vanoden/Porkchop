@@ -544,7 +544,7 @@
 			if ($GLOBALS['_SESSION_']->elevated()) return true;
 
 			// Convert level to integer if it's a string
-			$level_int = $this->convertLevelToInt($required_level);
+			$level_int = \Register\PrivilegeLevel::convertLevelToInt($required_level);
 			if ($level_int === null) {
 				return false;
 			}
@@ -552,22 +552,6 @@
 			return $this->has_privilege_level($privilege_name, $level_int);
 		}
 
-		/** @method convertLevelToInt(level)
-		 * Convert privilege level to integer
-		 * @param mixed $level The privilege level (string name or int ID)
-		 * @return int|null The privilege level ID or null if invalid
-		 */
-		private function convertLevelToInt($level): ?int {
-			if (is_int($level)) {
-				return $level;
-			}
-			
-			if (is_string($level)) {
-				return \Register\PrivilegeLevel::privilegeId($level);
-			}
-			
-			return null;
-		}
 
 		/** @method has_role(role_name)
 		 * See If a User has been granted a Role

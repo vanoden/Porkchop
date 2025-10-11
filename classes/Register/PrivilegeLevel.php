@@ -183,4 +183,21 @@
 		public static function validPrivilegeName(string $name): bool {
 			return isset(self::LEVEL_IDS[$name]);
 		}
+
+		/**
+		 * Convert privilege level to integer
+		 * @param mixed $level The privilege level (string name or int ID)
+		 * @return int|null The privilege level ID or null if invalid
+		 */
+		public static function convertLevelToInt($level): ?int {
+			if (is_int($level)) {
+				return $level;
+			}
+			
+			if (is_string($level)) {
+				return self::privilegeId($level);
+			}
+			
+			return null;
+		}
 	}
