@@ -515,14 +515,235 @@
 			return $products;
 		}
 
-		/** @method can(privilege_name)
-		 * Check if the user has a specific privilege
-		 * @param string $privilege_name The name of the privilege to check
-		 * @return bool True if user has the privilege, otherwise false
+		/**
+		 * Magic method to handle can() calls with different parameter counts
+		 * @param string $name Method name
+		 * @param array $parameters Method parameters
+		 * @return mixed
 		 */
-		public function can($privilege_name): bool {
+		public function __call($name, $parameters) {
+			if ($name == "can") {
+				if (count($parameters) == 2) {
+					return $this->_canLevel($parameters[0], $parameters[1]);
+				} elseif (count($parameters) == 1) {
+					return $this->_canLevel($parameters[0], 63); // Default to administrator level
+				}
+			}
+			
+			// If method not found, trigger error
+			trigger_error("Call to undefined method " . get_class($this) . "::$name()", E_USER_ERROR);
+		}
+
+		/**
+		 * Check if customer has a privilege with specific level
+		 * @param string $privilege_name The privilege name to check
+		 * @param mixed $required_level The required privilege level (int or string)
+		 * @return bool True if customer has the privilege at the required level
+		 */
+		protected function _canLevel($privilege_name, $required_level): bool {
 			if ($GLOBALS['_SESSION_']->elevated()) return true;
-			return $this->has_privilege($privilege_name);
+
+			// Convert level to integer if it's a string
+			$level_int = $this->convertLevelToInt($required_level);
+			if ($level_int === null) {
+				return false;
+			}
+
+			return $this->has_privilege_level($privilege_name, $level_int);
+		}
+
+		/** @method can_level(privilege_name, required_level)
+		 * Check if the user has a specific privilege with required level
+		 * @param string $privilege_name The name of the privilege to check
+		 * @param int $required_level The required privilege level
+		 * @return bool True if user has the privilege with sufficient level, otherwise false
+		 */
+		public function can_level($privilege_name, int $required_level = \Register\PrivilegeLevel::CUSTOMER): bool {
+			if ($GLOBALS['_SESSION_']->elevated()) return true;
+			return $this->has_privilege_level($privilege_name, $required_level);
+		}
+
+		/** @method privilegeName(id)
+		 * Get privilege level name by ID
+		 * @param int $id The privilege level ID
+		 * @return string|null The privilege level name or null if not found
+		 */
+		public function privilegeName(int $id): ?string {
+			return \Register\PrivilegeLevel::privilegeName($id);
+		}
+
+		/** @method privilegeId(name)
+		 * Get privilege level ID by name
+		 * @param string $name The privilege level name
+		 * @return int|null The privilege level ID or null if not found
+		 */
+		public function privilegeId(string $name): ?int {
+			return \Register\PrivilegeLevel::privilegeId($name);
+		}
+
+		/** @method validPrivilegeName(name)
+		 * Validate privilege level name
+		 * @param string $name The privilege level name to validate
+		 * @return bool True if valid
+		 */
+		public function validPrivilegeName(string $name): bool {
+			return \Register\PrivilegeLevel::validPrivilegeName($name);
+		}
+
+		/** @method canForEntity(privilege_name, object)
+		 * Check if the user has a specific privilege for a specific entity
+		 * @param string $privilege_name The name of the privilege to check
+		 * @param object $object The entity object (Customer, SubOrganization, Organization)
+		 * @return bool True if user has the privilege for the entity, otherwise false
+		 */
+		private function canForEntity($privilege_name, $object): bool {
+			// Determine required level based on object type
+			$required_level = $this->getRequiredLevelForObject($object);
+			if ($required_level === null) {
+				return false;
+			}
+			
+			// Check if user has privilege at required level
+			if (!$this->has_privilege_level($privilege_name, $required_level)) {
+				return false;
+			}
+			
+			// Check if user is member of the entity
+			return $this->isMemberOfEntity($object);
+		}
+
+		/** @method convertLevelToInt(level)
+		 * Convert privilege level to integer
+		 * @param mixed $level The privilege level (string name or int ID)
+		 * @return int|null The privilege level ID or null if invalid
+		 */
+		private function convertLevelToInt($level): ?int {
+			if (is_int($level)) {
+				return $level;
+			}
+			
+			if (is_string($level)) {
+				return $this->privilegeId($level);
+			}
+			
+			return null;
+		}
+
+		/** @method getRequiredLevelForObject(object)
+		 * Get required privilege level for object type
+		 * @param object $object The entity object
+		 * @return int|null The required privilege level or null if invalid
+		 */
+		private function getRequiredLevelForObject($object): ?int {
+			$class_name = get_class($object);
+			
+			switch ($class_name) {
+				case 'Register\Customer':
+					return \Register\PrivilegeLevel::CUSTOMER;
+				case 'Register\SubOrganization':
+					return \Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER;
+				case 'Register\Organization':
+					return \Register\PrivilegeLevel::ORGANIZATION_MANAGER;
+				default:
+					return null;
+			}
+		}
+
+		/** @method isMemberOfEntity(object)
+		 * Check if user is member of the entity
+		 * @param object $object The entity object
+		 * @return bool True if user is member of the entity
+		 */
+		private function isMemberOfEntity($object): bool {
+			$class_name = get_class($object);
+			
+			switch ($class_name) {
+				case 'Register\Customer':
+					// User can only access their own customer record
+					return $object->id === $this->id;
+					
+				case 'Register\SubOrganization':
+					// Check if user belongs to the sub-organization
+					return $this->belongsToSubOrganization($object->id);
+					
+				case 'Register\Organization':
+					// Check if user belongs to the organization
+					return $this->belongsToOrganization($object->id);
+					
+				default:
+					return false;
+			}
+		}
+
+		/** @method belongsToSubOrganization(sub_organization_id)
+		 * Check if user belongs to a sub-organization
+		 * @param int $sub_organization_id The sub-organization ID
+		 * @return bool True if user belongs to the sub-organization
+		 */
+		private function belongsToSubOrganization(int $sub_organization_id): bool {
+			// Implementation depends on your sub-organization membership structure
+			// This is a placeholder - implement based on your actual data structure
+			return false;
+		}
+
+		/** @method belongsToOrganization(organization_id)
+		 * Check if user belongs to an organization
+		 * @param int $organization_id The organization ID
+		 * @return bool True if user belongs to the organization
+		 */
+		private function belongsToOrganization(int $organization_id): bool {
+			// Check if user's organization matches
+			return $this->organization_id === $organization_id;
+		}
+
+		/** @method canManagePrivileges()
+		 * Check if user can manage privileges
+		 * @return bool True if user can manage privileges
+		 */
+		public function canManagePrivileges(): bool {
+			// Only administrators can manage privileges globally
+			return $this->can('manage privileges');
+		}
+
+		/** @method canAssignRoleToUser(target_user, role)
+		 * Check if user can assign a role to another user
+		 * @param Customer $target_user The user to assign the role to
+		 * @param Role $role The role to assign
+		 * @return bool True if user can assign the role
+		 */
+		public function canAssignRoleToUser($target_user, $role): bool {
+			// Users cannot assign roles to themselves
+			if ($target_user->id === $this->id) {
+				return false;
+			}
+
+			// Administrators can assign any role to any user
+			if ($this->can('manage privileges')) {
+				return true;
+			}
+
+			// Organization managers can only assign roles they have to users in their organization
+			if ($this->can('manage privileges', 'organization_manager')) {
+				// Check if target user is in the same organization
+				if ($target_user->organization_id !== $this->organization_id) {
+					return false;
+				}
+
+				// Check if current user has the role they're trying to assign
+				return $this->has_role($role->name);
+			}
+
+			return false;
+		}
+
+		/** @method canModifyRolePrivileges(role)
+		 * Check if user can modify privileges for a role
+		 * @param Role $role The role to modify
+		 * @return bool True if user can modify the role
+		 */
+		public function canModifyRolePrivileges($role): bool {
+			// Only administrators can modify role privileges
+			return $this->can('manage privileges');
 		}
 
 		/** @method has_role(role_name)
@@ -613,6 +834,177 @@
 
 			if ($found == "1") return true;
 			else return false;
+		}
+
+		/** @method has_privilege_level(privilege_name, required_level)
+		 * Check if customer has specified privilege with required level
+		 * @param string $privilege_name Privilege Name
+		 * @param int $required_level Required privilege level
+		 * @return bool True if customer has privilege with sufficient level, otherwise false
+		 */
+		public function has_privilege_level($privilege_name, int $required_level = \Register\PrivilegeLevel::CUSTOMER) {
+			$this->clearError();
+			$database = new \Database\Service();
+			$privilege = new \Register\Privilege();
+			
+			if (! $privilege->get($privilege_name)) {
+				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
+					$privilege->add(array('name' => $privilege_name));
+				}
+				else {
+					return false;
+				}
+			}
+			
+			// Use the level column
+			$check_privilege_query = "
+				SELECT	MAX(rrp.level) as max_level
+				FROM	register_users_roles rur,
+						register_roles_privileges rrp
+				WHERE	rur.user_id = ?
+				AND		rrp.role_id = rur.role_id
+				AND		rrp.privilege_id = ?
+			";
+			$database->AddParam($this->id);
+			$database->AddParam($privilege->id);
+
+			$rs = $database->Execute($check_privilege_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			
+			$row = $rs->FetchRow();
+			if ($row) {
+				list($user_level) = $row;
+				return $this->checkPrivilegeLevel($user_level, $required_level);
+			}
+			else {
+				return false;
+			}
+		}
+
+		/**
+		 * Check if user's privilege level contains the required level
+		 * Uses bitwise subtraction to determine if a specific level is included
+		 * @param int $user_level The user's combined privilege level
+		 * @param int $required_level The required privilege level
+		 * @return bool True if user has the required level
+		 */
+		private function checkPrivilegeLevel(int $user_level, int $required_level): bool {
+			// Define privilege levels in descending order
+			$levels = [63, 15, 7, 3, 0]; // Administrator, Distributor, Organization Manager, Sub-Organization Manager, Customer
+			
+			// If user level is 0, they only have customer level
+			if ($user_level == 0) {
+				return $required_level == 0;
+			}
+			
+			// Check each level by subtracting from user's level
+			$remaining = $user_level;
+			
+			foreach ($levels as $level) {
+				if ($remaining >= $level) {
+					// User has this level
+					if ($level == $required_level) {
+						return true;
+					}
+					$remaining -= $level;
+				}
+			}
+			
+			return false;
+		}
+
+		/**
+		 * Grant a specific privilege level to a user
+		 * @param string $privilege_name The privilege name
+		 * @param int $level_to_grant The privilege level to grant
+		 * @return bool True if granted successfully
+		 */
+		public function grantPrivilegeLevel($privilege_name, int $level_to_grant): bool {
+			$this->clearError();
+			$database = new \Database\Service();
+			$privilege = new \Register\Privilege();
+			
+			if (! $privilege->get($privilege_name)) {
+				$this->error("Privilege not found: $privilege_name");
+				return false;
+			}
+			
+			// Get current privilege level for this user
+			$current_level = $this->getPrivilegeLevel($privilege_name);
+			
+			// Check if user already has this level
+			if ($current_level && $this->checkPrivilegeLevel($current_level, $level_to_grant)) {
+				// User already has this level
+				return true;
+			}
+			
+			// Calculate new level by adding the level to grant
+			$new_level = ($current_level ?? 0) + $level_to_grant;
+			
+			// Update or insert the privilege level
+			$update_query = "
+				INSERT INTO register_roles_privileges (role_id, privilege_id, level)
+				SELECT rur.role_id, ?, ?
+				FROM register_users_roles rur
+				WHERE rur.user_id = ?
+				ON DUPLICATE KEY UPDATE level = VALUES(level)
+			";
+			
+			$database->AddParam($privilege->id);
+			$database->AddParam($new_level);
+			$database->AddParam($this->id);
+			
+			$rs = $database->Execute($update_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			
+			return true;
+		}
+
+		/**
+		 * Get current privilege level for a specific privilege
+		 * @param string $privilege_name The privilege name
+		 * @return int|null The current privilege level or null if not found
+		 */
+		public function getPrivilegeLevel($privilege_name): ?int {
+			$this->clearError();
+			$database = new \Database\Service();
+			$privilege = new \Register\Privilege();
+			
+			if (! $privilege->get($privilege_name)) {
+				return null;
+			}
+			
+			$check_privilege_query = "
+				SELECT	MAX(rrp.level) as max_level
+				FROM	register_users_roles rur,
+						register_roles_privileges rrp
+				WHERE	rur.user_id = ?
+				AND		rrp.role_id = rur.role_id
+				AND		rrp.privilege_id = ?
+			";
+			$database->AddParam($this->id);
+			$database->AddParam($privilege->id);
+
+			$rs = $database->Execute($check_privilege_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+			
+			$row = $rs->FetchRow();
+			if ($row) {
+				list($level) = $row;
+				return (int)$level;
+			}
+			else {
+				return null;
+			}
 		}
 		
 		/** @method notify_role_members(role_id, message)

@@ -44,44 +44,66 @@
             $page->addError("Invalid Request");
         }
 		else {
-            $updateParams = array(
-                'description' => noXSS(trim($_REQUEST['description'])),
-                'time_based_password' => isset($_REQUEST['time_based_password']) ? 1 : 0
-            );
-            
-		    if ($role->update($updateParams)) {
-			    $page->appendSuccess("Role Updated");
-		    }
-			else {
-			    $page->addError("Role update failed: ".$role->error());
-		    }
+            // Check if user can modify role privileges
+            if (!$GLOBALS['_SESSION_']->customer->canModifyRolePrivileges($role)) {
+                $page->addError("You do not have permission to modify role privileges");
+            } else {
+                $updateParams = array(
+                    'description' => noXSS(trim($_REQUEST['description'])),
+                    'time_based_password' => isset($_REQUEST['time_based_password']) ? 1 : 0
+                );
+                
+                if ($role->update($updateParams)) {
+                    $page->appendSuccess("Role Updated");
+                }
+                else {
+                    $page->addError("Role update failed: ".$role->error());
+                }
+            }
         }
 	}
 
-	/** Add/Remove Privileges from Role based on Form Input **/
-	$allChecked = false;
+	/** Add/Update/Remove Privileges from Role based on Form Input **/
 	$privileges = array();
 	if ($role->id) {
-		$allChecked = true;
 		$privilegeList = new \Register\PrivilegeList();
 	    $privileges = $privilegeList->find(array('_sort' => 'module'));
 		if (isset($_REQUEST['btn_submit'])) {
 		    if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
                 $page->addError("Invalid Request");
             } else {
-            
-		        foreach ($privileges as $privilege) {
-		            if (isset($_REQUEST['privilege'][$privilege->id]) && $_REQUEST['privilege'][$privilege->id] == 1) {
-		                if (! $role->has_privilege($privilege->id) && $role->addPrivilege($privilege->id)) {
-		                    $page->appendSuccess("Added privilege '".$privilege->name."'");
+                // Check if user can modify role privileges
+                if (!$GLOBALS['_SESSION_']->customer->canModifyRolePrivileges($role)) {
+                    $page->addError("You do not have permission to modify role privileges");
+                } else {
+		            foreach ($privileges as $privilege) {
+		                $new_level = isset($_REQUEST['privilege_level'][$privilege->id]) ? (int)$_REQUEST['privilege_level'][$privilege->id] : 0;
+		                $current_level = $role->getPrivilegeLevel($privilege->id);
+		                
+		                if ($new_level > 0) {
+		                    // Add or update privilege with level
+		                    if ($current_level === null) {
+		                        // Add new privilege
+		                        if ($role->addPrivilege($privilege->id, $new_level)) {
+		                            $level_name = \Register\PrivilegeLevel::privilegeName($new_level);
+		                            $page->appendSuccess("Added privilege '".$privilege->name."' with level '".$level_name."'");
+		                        }
+		                    } elseif ($current_level != $new_level) {
+		                        // Update existing privilege level
+		                        if ($role->addPrivilege($privilege->id, $new_level)) {
+		                            $old_level_name = \Register\PrivilegeLevel::privilegeName($current_level);
+		                            $new_level_name = \Register\PrivilegeLevel::privilegeName($new_level);
+		                            $page->appendSuccess("Updated privilege '".$privilege->name."' level from '".$old_level_name."' to '".$new_level_name."'");
+		                        }
+		                    }
+		                } else {
+		                    // Remove privilege (level = 0)
+		                    if ($current_level !== null && $role->dropPrivilege($privilege->id)) {
+		                        $page->appendSuccess("Removed privilege '".$privilege->name."'");
+		                    }
 		                }
-		            }
-		            else {
-		                if ($role->has_privilege($privilege->id) && $role->dropPrivilege($privilege->id)) {
-		                    $page->appendSuccess("Removed privilege '".$privilege->name."'");
-		                }
-		            }
 			    }
+                }
             }
 	    }
 

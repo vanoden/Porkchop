@@ -268,7 +268,7 @@
 			}
 		}
 		
-		public function addPrivilege($new_privilege) {
+		public function addPrivilege($new_privilege, $level = \Register\PrivilegeLevel::CUSTOMER) {
 			if (is_numeric($new_privilege))
 				$privilege = new \Register\Privilege($new_privilege);
 			else {
@@ -278,16 +278,51 @@
 					return false;
 				}
 			}
+			
+			// Validate privilege level
+			if (!\Register\PrivilegeLevel::isValidLevel($level)) {
+				$this->error("Invalid privilege level: $level");
+				return false;
+			}
+			
+			// Check if privilege already exists to determine if this is an update
+			$existing_level = $this->getPrivilegeLevel($privilege->id);
+			$is_update = $existing_level !== null;
+			
 			$add_privilege_query = "
 				INSERT	INTO	register_roles_privileges
-				VALUES  (?,?)
+				(role_id, privilege_id, level)
+				VALUES  (?,?,?)
+				ON DUPLICATE KEY UPDATE level = VALUES(level)
 			";
-			$GLOBALS['_database']->Execute($add_privilege_query,array($this->id,$privilege->id));
+			$GLOBALS['_database']->Execute($add_privilege_query,array($this->id,$privilege->id,$level));
 			if ($GLOBALS['_database']->ErrorMsg()) {
 				$this->SQLError($GLOBALS['_database']->ErrorMsg());
 				return false;
 			}
-			else return true;
+			
+			// Audit the privilege change
+			$auditLog = new \Site\AuditLog\Event();
+			$level_name = \Register\PrivilegeLevel::privilegeName($level);
+			$old_level_name = $existing_level ? \Register\PrivilegeLevel::privilegeName($existing_level) : 'none';
+			
+			if ($is_update) {
+				$auditLog->add(array(
+					'instance_id' => $this->id,
+					'description' => "Updated privilege '{$privilege->name}' level from {$old_level_name} to {$level_name} for role '{$this->name}'",
+					'class_name' => get_class($this),
+					'class_method' => 'addPrivilege'
+				));
+			} else {
+				$auditLog->add(array(
+					'instance_id' => $this->id,
+					'description' => "Added privilege '{$privilege->name}' with level {$level_name} to role '{$this->name}'",
+					'class_name' => get_class($this),
+					'class_method' => 'addPrivilege'
+				));
+			}
+			
+			return true;
 		}
 
 		/**
@@ -297,6 +332,10 @@
 		 */
 		public function dropPrivilege($privilege_id) {
 			$this->clearError();
+
+			// Get privilege information before deletion for audit
+			$privilege = new \Register\Privilege($privilege_id);
+			$existing_level = $this->getPrivilegeLevel($privilege_id);
 
 			// Initialize Database Service
 			$database = new \Database\Service();
@@ -319,6 +358,18 @@
 				$this->SQLError($database->ErrorMsg());
 				return false;
 			}
+
+			// Audit the privilege removal
+			$auditLog = new \Site\AuditLog\Event();
+			$level_name = $existing_level ? \Register\PrivilegeLevel::privilegeName($existing_level) : 'unknown';
+			
+			$auditLog->add(array(
+				'instance_id' => $this->id,
+				'description' => "Removed privilege '{$privilege->name}' with level {$level_name} from role '{$this->name}'",
+				'class_name' => get_class($this),
+				'class_method' => 'dropPrivilege'
+			));
+
 			return true;
 		}
 
@@ -332,9 +383,9 @@
 			// Initialize Database Service
 			$database = new \Database\Service();
 
-			// Build Query
+			// Use the level column
 			$get_privileges_query = "
-				SELECT	privilege_id
+				SELECT	privilege_id, level
 				FROM	register_roles_privileges
 				WHERE	role_id = ?
 			";
@@ -351,8 +402,9 @@
 
 			// Assemble Results
 			$privileges = array();
-			while(list($id) = $rs->FetchRow()) {
+			while(list($id, $level) = $rs->FetchRow()) {
 				$privilege = new \Register\Privilege($id);
+				$privilege->level = $level;
 				array_push($privileges,$privilege);
 			}
 			return $privileges;
@@ -406,6 +458,100 @@
 			}
 			else {
 				return false;
+			}
+		}
+
+		/**
+		 * Check if a role has a privilege with specific level
+		 * @param mixed $param Privilege name or ID
+		 * @param int $required_level Required privilege level
+		 * @return bool
+		 */
+		public function has_privilege_level($param, int $required_level = \Register\PrivilegeLevel::CUSTOMER): bool {
+			$this->clearError();
+
+			// Validate Input
+			if (is_numeric($param)) {
+				$privilege = new \Register\Privilege($param);
+			}
+			else {
+	   			$privilege = new \Register\Privilege();
+				if (! $privilege->get($param)) {
+					return false;
+				}
+			}
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Level column exists, use it
+			$get_privilege_query = "
+				SELECT	level
+				FROM	register_roles_privileges
+				WHERE	role_id = ?
+				AND		privilege_id = ?
+			";
+
+			// Add Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($privilege->id);
+
+			// Execute Query
+			$rs = $database->Execute($get_privilege_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+
+			// Check if privilege exists and has sufficient level
+			$row = $rs->FetchRow();
+			if ($row) {
+				list($level) = $row;
+				return \Register\PrivilegeLevel::hasLevel($level, $required_level);
+			}
+			else {
+				return false;
+			}
+		}
+
+		/**
+		 * Get privilege level for a specific privilege
+		 * @param int $privilege_id The privilege ID
+		 * @return int|null The privilege level or null if not found
+		 */
+		public function getPrivilegeLevel(int $privilege_id): ?int {
+			$this->clearError();
+
+			// Initialize Database Service
+			$database = new \Database\Service();
+
+			// Use the level column
+			$get_privilege_query = "
+				SELECT	level
+				FROM	register_roles_privileges
+				WHERE	role_id = ?
+				AND		privilege_id = ?
+			";
+
+			// Add Parameters
+			$database->AddParam($this->id);
+			$database->AddParam($privilege_id);
+
+			// Execute Query
+			$rs = $database->Execute($get_privilege_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return null;
+			}
+
+			// Get privilege level
+			$row = $rs->FetchRow();
+			if ($row) {
+				list($level) = $row;
+				return (int)$level;
+			}
+			else {
+				return null;
 			}
 		}
 
