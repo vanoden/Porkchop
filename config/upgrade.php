@@ -115,6 +115,9 @@
 		"S4Engine"		=> array(
 			"schema"	=> 1
 		),
+		"Search"		=> array(
+			"schema"	=> 1
+		)
 	);
 
 	// Additional modules
