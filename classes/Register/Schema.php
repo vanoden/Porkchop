@@ -1532,6 +1532,36 @@
 			$this->setVersion(48);
 			$database->CommitTrans();
 		}
+
+		if ($this->version() < 49) {
+			app_log("Upgrading schema to version 49 - Adding privilege levels", 'notice', __FILE__, __LINE__);
+
+			# Start Transaction
+			if (!$database->BeginTrans())
+				app_log("Transactions not supported", 'warning', __FILE__, __LINE__);
+
+			// Add level column to register_roles_privileges table
+			$alter_table_query = "ALTER TABLE `register_roles_privileges` ADD COLUMN `level` tinyint(3) NOT NULL DEFAULT 0";
+			if (! $database->Execute($alter_table_query)) {
+				$this->SQLError("Error adding level column to register_roles_privileges table in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+				app_log($this->error(), 'error');
+				$database->RollbackTrans();
+				return false;
+			}
+
+			// Update all existing records to administrator level (63)
+			$update_existing_query = "UPDATE `register_roles_privileges` SET `level` = 63";
+			if (! $database->Execute($update_existing_query)) {
+				$this->SQLError("Error updating existing privilege levels in ".$this->module."::Schema::upgrade(): ".$database->ErrorMsg());
+				app_log($this->error(), 'error');
+				$database->RollbackTrans();
+				return false;
+			}
+
+			$this->setVersion(49);
+			$database->CommitTrans();
+		}
+
 		return true;
 	}
 }

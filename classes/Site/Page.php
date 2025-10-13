@@ -169,6 +169,34 @@
 			}
         }
 
+		/** @method public requirePrivilegeLevel(privilege, required_level)
+		 * Checks if the user has a specific privilege with required level.
+		 * If not, redirects to the login page or permission denied page.
+		 * @param string $privilege The privilege to check for.
+		 * @param int $required_level The required privilege level.
+		 * @return bool True if the user has the required privilege level, otherwise redirects.
+		 */
+        public function requirePrivilegeLevel($privilege, $required_level = \Register\PrivilegeLevel::CUSTOMER) {
+			$this->requireAuth();
+            if ($GLOBALS['_SESSION_']->customer->can_level($privilege, $required_level)) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
+                return true;
+            }
+            elseif (!isset($GLOBALS['_SESSION_']->customer->id)) {
+				$counter = new \Site\Counter("auth_redirect");
+				$counter->increment();
+				header('location: /_register/login?target=' . urlencode ( $_SERVER ['REQUEST_URI'] ) );
+			    exit;
+		    }
+            else {
+				$counter = new \Site\Counter("permission_denied");
+				$counter->increment();
+			    header('location: /_register/permission_denied' );
+                exit;
+			}
+        }
+
 		/** @method public requireOrganization()
 		 * Checks if the user belongs to an organization.
 		 * If not, redirects to the organization required page.

@@ -515,15 +515,43 @@
 			return $products;
 		}
 
-		/** @method can(privilege_name)
-		 * Check if the user has a specific privilege
-		 * @param string $privilege_name The name of the privilege to check
-		 * @return bool True if user has the privilege, otherwise false
+		/**
+		 * Magic method to handle can() calls with different parameter counts
+		 * @param string $name Method name
+		 * @param array $parameters Method parameters
+		 * @return mixed
 		 */
-		public function can($privilege_name): bool {
-			if ($GLOBALS['_SESSION_']->elevated()) return true;
-			return $this->has_privilege($privilege_name);
+		public function __call($name, $parameters) {
+			if ($name == "can") {
+				if (count($parameters) == 2) {
+					return $this->_canLevel($parameters[0], $parameters[1]);
+				} elseif (count($parameters) == 1) {
+					return $this->_canLevel($parameters[0], 63); // Default to administrator level
+				}
+			}
+			
+			// If method not found, trigger error
+			trigger_error("Call to undefined method " . get_class($this) . "::$name()", E_USER_ERROR);
 		}
+
+		/**
+		 * Check if customer has a privilege with specific level
+		 * @param string $privilege_name The privilege name to check
+		 * @param mixed $required_level The required privilege level (int or string)
+		 * @return bool True if customer has the privilege at the required level
+		 */
+		protected function _canLevel($privilege_name, $required_level): bool {
+			if ($GLOBALS['_SESSION_']->elevated()) return true;
+
+			// Convert level to integer if it's a string
+			$level_int = \Register\PrivilegeLevel::convertLevelToInt($required_level);
+			if ($level_int === null) {
+				return false;
+			}
+
+			return $this->has_privilege_level($privilege_name, $level_int);
+		}
+
 
 		/** @method has_role(role_name)
 		 * See If a User has been granted a Role
@@ -594,7 +622,7 @@
 				}
 			}
 			$check_privilege_query = "
-				SELECT	1
+				SELECT	*
 				FROM	register_users_roles rur,
 						register_roles_privileges rrp
 				WHERE	rur.user_id = ?
@@ -614,6 +642,93 @@
 			if ($found == "1") return true;
 			else return false;
 		}
+
+		/** @method has_privilege_level(privilege_name, required_level)
+		 * Check if customer has specified privilege with required level
+		 * @param string $privilege_name Privilege Name
+		 * @param int $required_level Required privilege level
+		 * @return bool True if customer has privilege with sufficient level, otherwise false
+		 */
+		public function has_privilege_level($privilege_name, int $required_level = \Register\PrivilegeLevel::CUSTOMER) {
+			$this->clearError();
+			$database = new \Database\Service();
+			$privilege = new \Register\Privilege();
+			
+			if (! $privilege->get($privilege_name)) {
+				if ($privilege_name != "manage privileges" && $GLOBALS['_SESSION_']->customer->can("manage privileges")) {
+					$privilege->add(array('name' => $privilege_name));
+				}
+				else {
+					return false;
+				}
+			}
+			
+			// Use the level column
+			$check_privilege_query = "
+				SELECT	MAX(rrp.level) as max_level
+				FROM	register_users_roles rur,
+						register_roles_privileges rrp
+				WHERE	rur.user_id = ?
+				AND		rrp.role_id = rur.role_id
+				AND		rrp.privilege_id = ?
+			";
+			$database->AddParam($this->id);
+			$database->AddParam($privilege->id);
+
+			$rs = $database->Execute($check_privilege_query);
+			if (! $rs) {
+				$this->SQLError($database->ErrorMsg());
+				return false;
+			}
+			
+			$row = $rs->FetchRow();
+			if ($row) {
+				list($user_level) = $row;
+				return $this->checkPrivilegeLevel($user_level, $required_level);
+			}
+			else {
+				return false;
+			}
+		}
+
+		/**
+		 * Check if user's privilege level contains the required level
+		 * Uses bitwise subtraction to determine if a specific level is included
+		 * @param int $user_level The user's combined privilege level
+		 * @param int $required_level The required privilege level
+		 * @return bool True if user has the required level
+		 */
+		private function checkPrivilegeLevel(int $user_level, int $required_level): bool {
+			// Define privilege levels in descending order using constants
+			$levels = [
+				\Register\PrivilegeLevel::ADMINISTRATOR,
+				\Register\PrivilegeLevel::DISTRIBUTOR,
+				\Register\PrivilegeLevel::ORGANIZATION_MANAGER,
+				\Register\PrivilegeLevel::SUB_ORGANIZATION_MANAGER,
+				\Register\PrivilegeLevel::CUSTOMER
+			];
+			
+			// If user level is 0, they only have customer level
+			if ($user_level == 0) {
+				return $required_level == 0;
+			}
+			
+			// Check each level by subtracting from user's level
+			$remaining = $user_level;
+			
+			foreach ($levels as $level) {
+				if ($remaining >= $level) {
+					// User has this level
+					if ($level == $required_level) {
+						return true;
+					}
+					$remaining -= $level;
+				}
+			}
+			
+			return false;
+		}
+
 		
 		/** @method notify_role_members(role_id, message)
 		 * Send notification to Members in a Role

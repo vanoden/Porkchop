@@ -1,17 +1,18 @@
 <script>
-// check or uncheck all boxes for ease of manage privileges
-function checkUncheck() {
-	var inputElem = document.getElementById("checkAll");
-	if (inputElem.checked) {
-		document.querySelectorAll('input[type=checkbox]').forEach(function(el) {
-			if (el.id != "totpCB") el.checked = true;
-		});
-	}
-	else {
-    	document.querySelectorAll('input[type=checkbox]').forEach(function(el) {
-			if (el.id != "totpCB") el.checked = false;
-		});
-	}
+// Set all privilege levels to administrator for ease of management
+function setAllAdministrator() {
+	var selectElements = document.querySelectorAll('select[name^="privilege_level"]');
+	selectElements.forEach(function(el) {
+		el.value = '63'; // Administrator level
+	});
+}
+
+// Set all privilege levels to none
+function setAllNone() {
+	var selectElements = document.querySelectorAll('select[name^="privilege_level"]');
+	selectElements.forEach(function(el) {
+		el.value = '0'; // None level
+	});
 }
 </script>
 
@@ -56,14 +57,38 @@ function checkUncheck() {
 	  <div class="tableBody">
 
       <div class="tableRowHeader">
-        <div class="tableCell role-privileges-select">Select <input type="checkbox" id="checkAll" name"checkAll" value="1" onclick="checkUncheck()" <?php if ($allChecked) print "checked";?>/></div>
-        <div class="tableCell width-22per">Privilege Module</div>
-        <div class="tableCell width-70per">Description</div>
+        <div class="tableCell role-privileges-select">
+          <button type="button" onclick="setAllAdministrator()" class="button small">Set All Admin</button>
+          <button type="button" onclick="setAllNone()" class="button small">Set All None</button>
+        </div>
+        <div class="tableCell width-15per">Privilege Level</div>
+        <div class="tableCell width-20per">Privilege Module</div>
+        <div class="tableCell width-45per">Description</div>
       </div>
 
-<?php foreach ($privileges as $privilege) { ?>
+<?php 
+// Get current privilege levels for this role
+$current_privilege_levels = array();
+if ($role->id) {
+    $role_privileges = $role->privileges();
+    foreach ($role_privileges as $role_privilege) {
+        $current_privilege_levels[$role_privilege->id] = $role_privilege->level ?? 0;
+    }
+}
+
+foreach ($privileges as $privilege) { 
+    $current_level = $current_privilege_levels[$privilege->id] ?? 0;
+?>
       <div class="tableRow">
-        <div class="tableCell role-privileges-checkbox"><input type="checkbox" name="privilege[<?=$privilege->id?>]" value="1"<?php if ($role->has_privilege($privilege->id)) print " checked";?>></div>
+        <div class="tableCell role-privileges-level">
+          <select name="privilege_level[<?=$privilege->id?>]" class="privilege-level-select">
+            <option value="0" <?php if ($current_level == 0) echo 'selected'; ?>>None</option>
+            <option value="3" <?php if ($current_level == 3) echo 'selected'; ?>>Sub-Organization Manager</option>
+            <option value="7" <?php if ($current_level == 7) echo 'selected'; ?>>Organization Manager</option>
+            <option value="15" <?php if ($current_level == 15) echo 'selected'; ?>>Distributor</option>
+            <option value="63" <?php if ($current_level == 63) echo 'selected'; ?>>Administrator</option>
+          </select>
+        </div>
         <div class="tableCell"><?=$privilege->module?></div>
         <div class="tableCell"><?=$privilege->name?></div>
       </div>
