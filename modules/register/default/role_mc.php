@@ -77,29 +77,42 @@
                     $page->addError("You do not have permission to modify role privileges");
                 } else {
 		            foreach ($privileges as $privilege) {
-		                $new_level = isset($_REQUEST['privilege_level'][$privilege->id]) ? (int)$_REQUEST['privilege_level'][$privilege->id] : 0;
+		                // Get selected privilege levels from checkboxes
+		                $selected_levels = isset($_REQUEST['privilege_level'][$privilege->id]) ? $_REQUEST['privilege_level'][$privilege->id] : array();
 		                $current_level = $role->getPrivilegeLevel($privilege->id);
 		                
-		                if ($new_level > 0) {
-		                    // Add or update privilege with level
+		                // If no levels are selected, remove the privilege
+		                if (empty($selected_levels)) {
+		                    if ($current_level !== null && $role->dropPrivilege($privilege->id)) {
+		                        $page->appendSuccess("Removed privilege '".$privilege->name."'");
+		                    }
+		                } else {
+		                    // Calculate the combined privilege level using bitwise OR
+		                    // This allows multiple privilege levels to be combined
+		                    $new_level = 0;
+		                    foreach ($selected_levels as $level) {
+		                        $new_level |= (int)$level;
+		                    }
+		                    
 		                    if ($current_level === null) {
 		                        // Add new privilege
 		                        if ($role->addPrivilege($privilege->id, $new_level)) {
-		                            $level_name = \Register\PrivilegeLevel::privilegeName($new_level);
-		                            $page->appendSuccess("Added privilege '".$privilege->name."' with level '".$level_name."'");
+		                            $level_names = array();
+		                            foreach ($selected_levels as $level) {
+		                                $level_names[] = \Register\PrivilegeLevel::privilegeName((int)$level);
+		                            }
+		                            $page->appendSuccess("Added privilege '".$privilege->name."' with levels: ".implode(', ', $level_names));
 		                        }
 		                    } elseif ($current_level != $new_level) {
 		                        // Update existing privilege level
 		                        if ($role->addPrivilege($privilege->id, $new_level)) {
 		                            $old_level_name = \Register\PrivilegeLevel::privilegeName($current_level);
-		                            $new_level_name = \Register\PrivilegeLevel::privilegeName($new_level);
-		                            $page->appendSuccess("Updated privilege '".$privilege->name."' level from '".$old_level_name."' to '".$new_level_name."'");
+		                            $new_level_names = array();
+		                            foreach ($selected_levels as $level) {
+		                                $new_level_names[] = \Register\PrivilegeLevel::privilegeName((int)$level);
+		                            }
+		                            $page->appendSuccess("Updated privilege '".$privilege->name."' level from '".$old_level_name."' to '".implode(', ', $new_level_names)."'");
 		                        }
-		                    }
-		                } else {
-		                    // Remove privilege (level = 0)
-		                    if ($current_level !== null && $role->dropPrivilege($privilege->id)) {
-		                        $page->appendSuccess("Removed privilege '".$privilege->name."'");
 		                    }
 		                }
 			    }
