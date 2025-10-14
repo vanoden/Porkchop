@@ -530,8 +530,8 @@
 				}
 			}
 			
-			// If method not found, trigger error
-			trigger_error("Call to undefined method " . get_class($this) . "::$name()", E_USER_ERROR);
+			// Delegate other method calls to parent class
+			return parent::__call($name, $parameters);
 		}
 
 		/**
