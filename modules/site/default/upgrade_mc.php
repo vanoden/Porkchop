@@ -146,6 +146,13 @@
 							"description"	=> "Organizations"
 						),
 						array (
+							"title"			=> "Duplicate Report",
+							"target"		=> "/_register/organizations_report",
+							"view_order"	=> 15,
+							"alt"			=> "Organizations Duplicate Report",
+							"description"	=> "Find and manage duplicate organizations"
+						),
+						array (
 							"title"			=> "Accounts",
 							"target"		=> "/_register/accounts",
 							"view_order"	=> 20,

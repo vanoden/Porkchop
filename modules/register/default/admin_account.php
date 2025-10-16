@@ -290,7 +290,7 @@
       <div class="tableCell width-5per">Public</div>
       <div class="tableCell width-5per">Drop</div>
     </div>
-    <?php foreach ($contacts as $contact) { ?>
+    <?php if (!empty($contacts)) { foreach ($contacts as $contact) { ?>
       <div class="tableRow">
         <div class="tableCell">
           <label class="display-none value">Type: </label>
@@ -308,7 +308,7 @@
         <div class="tableCell"><img class="width-30px register-admin-account-contact-drop-icon" name="drop_contact[<?= $contact->id ?>]" src="/img/icons/icon_tools_trash_active.svg" onclick="submitDelete(<?= $contact->id ?>)" /></div>
       </div>
       <!-- New contact entry -->
-    <?php } ?>
+    <?php } } ?>
     <div class="tableRow">
       <div class="tableCell">
         <strong>Add New Contact:</strong>
@@ -396,14 +396,14 @@
         <div class="tableCell">Reason</div>
         <div class="tableCell">Endpoint</div>
       </div>
-      <?php foreach ($authFailures as $authFailure) { ?>
+      <?php if (!empty($authFailures)) { foreach ($authFailures as $authFailure) { ?>
         <div class="tableRow">
           <div class="tableCell"><?= $authFailure->date ?></div>
           <div class="tableCell"><?= $authFailure->ip_address ?></div>
           <div class="tableCell"><?= $authFailure->reason ?></div>
           <div class="tableCell"><?= $authFailure->endpoint ?></div>
         </div>
-      <?php } ?>
+      <?php } } ?>
     </div>
     <input type="submit" name="btnResetFailures" value="Reset Failures" />
     <input type="button" name="btnAuditLog" value="Audit Log" onclick="location.href='/_register/audit_log?user_id=<?= $customer->id ?>';" />
@@ -419,7 +419,7 @@
         <div class="tableCell">Last Action</div>
         <div class="tableCell">Last Action Date</div>
       </div>
-      <?php foreach ($terms as $term) { ?>
+      <?php if (!empty($terms)) { foreach ($terms as $term) { ?>
         <div class="tableRow">
           <div class="tableCell"><?= $term->code ?></div>
           <div class="tableCell"><?= $term->name ?></div>
@@ -439,7 +439,7 @@
             <?= $mostRecentActionDate ?>
           </div>
         </div>
-      <?php } ?>
+      <?php } } ?>
     </div>
   </div>
 
@@ -449,12 +449,12 @@
       <div class="tableCell width-20per">Name</div>
       <div class="tableCell width-80per">Address</div>
     </div>
-    <?php foreach ($locations as $location) { ?>
+    <?php if (!empty($locations)) { foreach ($locations as $location) { ?>
       <div class="tableRow">
         <div class="tableCell width-20per"><?= $location->name ?></div>
         <div class="tableCell width-80per"><?= $location->HTMLBlockFormat() ?></div>
       </div>
-    <?php   } ?>
+    <?php   } } ?>
   </div>
 
   <br /><br />
@@ -467,7 +467,7 @@
       <div class="tableCell width-33per">Search Tag</div>
     </div>
     <?php
-    foreach ($registerCustomerSearchTags as $searchTag) {
+    if (!empty($registerCustomerSearchTags)) { foreach ($registerCustomerSearchTags as $searchTag) {
     ?>
       <div class="tableRow">
         <div class="tableCell">
@@ -483,7 +483,7 @@
       </div>
 
     <?php
-    }
+    } }
     ?>
     <br />
     <div class="tableRow">
@@ -530,7 +530,7 @@
         <?php
         }
       } else {
-        foreach ($customerImages as $image) {
+        if (!empty($customerImages)) { foreach ($customerImages as $image) {
           $hasImages = true;
         ?>
           <div class="image-item" id="ItemImageDiv_<?= $image->id ?>" onclick="highlightImage('<?= $image->id ?>'); updateDefaultImage('<?= $image->id ?>');">
@@ -541,7 +541,7 @@
             <?php endif; ?>
           </div>
       <?php
-        }
+        } }
       }
       ?>
     </div>
@@ -556,9 +556,9 @@
       <div class="backup-codes-list margin-top-10px">
         <p><strong>Backup Codes (save these in a safe place):</strong></p>
         <ul class="register-admin-account-backup-codes-ul">
-          <?php foreach ($generatedBackupCodes as $code) { ?>
+          <?php if (!empty($generatedBackupCodes)) { foreach ($generatedBackupCodes as $code) { ?>
             <li><?= htmlentities($code) ?></li>
-          <?php } ?>
+          <?php } } ?>
         </ul>
       </div>
     <?php } ?>
@@ -567,7 +567,7 @@
         <p><strong>Current Backup Codes:</strong></p>
         <table class="table-backup-codes">
           <tr><th>Code</th><th>Status</th></tr>
-          <?php foreach ($allBackupCodes as $bcode) { ?>
+          <?php if (!empty($allBackupCodes)) { foreach ($allBackupCodes as $bcode) { ?>
             <tr>
               <td class="register-admin-account-backup-codes-td">
                 <?= htmlentities($bcode['code']) ?>
@@ -580,7 +580,7 @@
                 <?php } ?>
               </td>
             </tr>
-          <?php } ?>
+          <?php } } ?>
         </table>
       </div>
     <?php } ?>

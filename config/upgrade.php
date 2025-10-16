@@ -80,6 +80,7 @@
 			),
 			"templates"		=> array(
 				"organizations"		=> $templates['admin'],
+				"organizations_report"	=> $templates['admin'],
 				"admin_organization"		=> $templates['admin'],
 				"admin_organization_users"	=> $templates['admin'],
 				"admin_organization_tags"	=> $templates['admin'],
