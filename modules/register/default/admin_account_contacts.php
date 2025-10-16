@@ -27,18 +27,6 @@
         }
       }
     }
-
-    if (document.register.password.value.length > 0 || document.register.password_2.value.length > 0) {
-      if (document.register.password.value.length < 6) {
-        alert("Your password is too short.");
-        return false;
-      }
-
-      if (document.register.password.value != document.register.password_2.value) {
-        alert("Your passwords don't match.");
-        return false;
-      }
-    }
     return true;
   }
 

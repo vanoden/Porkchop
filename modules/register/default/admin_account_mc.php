@@ -44,7 +44,7 @@ app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer 
  */
 if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Resend Email") {
 
-	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+	if (!isset($_REQUEST['csrfToken']) || ! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 		$page->addError("Invalid Request");
 	} else {
 
@@ -91,19 +91,19 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Resend Email") {
 if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 
 	// Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
-	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+	if (!isset($_POST['csrfToken']) || !$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 		$page->addError("Invalid request");
 		return 403;
 	} else {
 		app_log("Account form submitted", 'debug', __FILE__, __LINE__);
 		$parameters = array();
-		if (!$customer->validLogin($_REQUEST['login']))
+		if (!isset($_REQUEST['login']) || !$customer->validLogin($_REQUEST['login']))
 			$page->addError("Invalid login");
-		elseif (!$customer->validStatus($_REQUEST['status']))
-			$page->addError("Invalid status " . $_REQUEST['status']);
+		elseif (!isset($_REQUEST['status']) || !$customer->validStatus($_REQUEST['status']))
+			$page->addError("Invalid status " . (isset($_REQUEST['status']) ? $_REQUEST['status'] : ''));
 		else {
 
-			$parameters['login'] = $_REQUEST["login"];
+			$parameters['login'] = isset($_REQUEST["login"]) ? $_REQUEST["login"] : '';
 			if (isset($_REQUEST["first_name"]) && preg_match('/^[\w\-\.\_\s]+$/', $_REQUEST["first_name"])) $parameters['first_name'] = $_REQUEST["first_name"];
 			if (isset($_REQUEST["last_name"]) && preg_match('/^[\w\-\.\_\s]+$/', $_REQUEST["last_name"])) $parameters['last_name'] = $_REQUEST["last_name"];
 			if (isset($_REQUEST["timezone"])) $parameters['timezone'] = $_REQUEST["timezone"];
@@ -118,7 +118,7 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 
 			if (isset($_REQUEST['organization_id'])) $parameters["organization_id"] = $_REQUEST["organization_id"];
 
-			if (isset($_REQUEST["password"]) and ($_REQUEST["password_2"])) {
+			if (isset($_REQUEST["password"]) and isset($_REQUEST["password_2"])) {
 				if ($_REQUEST["password"] != $_REQUEST["password_2"]) {
 					$page->addError("Passwords do not match");
 					goto load;
@@ -138,15 +138,15 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				$customer->update($parameters);
 
 				// set the job title and description
-				$customer->setMetadataScalar('job_title', $_REQUEST['job_title']);
-				$customer->setMetadataScalar('job_description', $_REQUEST['job_description']);
+				if (isset($_REQUEST['job_title'])) $customer->setMetadataScalar('job_title', $_REQUEST['job_title']);
+				if (isset($_REQUEST['job_description'])) $customer->setMetadataScalar('job_description', $_REQUEST['job_description']);
 
 				if ($customer->error()) {
 					app_log("Error updating customer: " . $customer->error(), 'error', __FILE__, __LINE__);
 					$page->addError("Error updating customer information.  Our admins have been notified.  Please try again later");
 					goto load;
 				}
-				if ($_REQUEST['password']) {
+				if (isset($_REQUEST['password']) && !empty($_REQUEST['password'])) {
 					if (!$customer->changePassword($_REQUEST["password"])) {
 						$page->addError("Password needs more complexity");
 					} else {
@@ -219,7 +219,9 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 				app_log("New customer registration", 'debug', __FILE__, __LINE__);
 
 				// Default Login to Email Address
-				if (!$_REQUEST['login']) $_REQUEST['login'] = $_REQUEST['email_address'];
+				if (!isset($_REQUEST['login']) || empty($_REQUEST['login'])) {
+					$_REQUEST['login'] = isset($_REQUEST['email_address']) ? $_REQUEST['email_address'] : '';
+				}
 
 				// Generate Validation Key
 				$validation_key = md5(microtime());
@@ -246,14 +248,14 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 					}
 				}
 
-				if (empty($_REQUEST['password'])) $_REQUEST['password'] = $customer->randomPassword();
+				if (!isset($_REQUEST['password']) || empty($_REQUEST['password'])) $_REQUEST['password'] = $customer->randomPassword();
 				$customer->changePassword($_REQUEST['password']);
 
 				$template = new \Content\Template\Shell($GLOBALS['_config']->register->account_created->template);
 				$template->addParam('URL', $GLOBALS['_config']->site->url);
 				$template->addParam('WEBSITE', $GLOBALS['_config']->site->hostname);
-				$template->addParam('LOGIN', $_REQUEST['login']);
-				$template->addParam('PASSWORD', $_REQUEST['password']);
+				$template->addParam('LOGIN', isset($_REQUEST['login']) ? $_REQUEST['login'] : '');
+				$template->addParam('PASSWORD', isset($_REQUEST['password']) ? $_REQUEST['password'] : '');
 
 				$message = new \Email\Message();
 				$message->from($GLOBALS['_config']->register->confirmation->from);

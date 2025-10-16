@@ -36,16 +36,15 @@ app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer 
 if (isset($_REQUEST["btnResetFailures"])) {
 
 	// Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
-	if (!$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+	if (!isset($_POST['csrfToken']) || !$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
 		$page->addError("Invalid request");
 		return 403;
 	} else {
-		$customer = new \Register\Customer($_REQUEST['customer_id']);
+		$customer = new \Register\Customer(isset($_REQUEST['customer_id']) ? $_REQUEST['customer_id'] : $customer_id);
 		$customer->resetAuthFailures();
 	}
 }
 
-load:
 if ($customer_id) {
 	$customer = new \Register\Customer($customer_id);
 }

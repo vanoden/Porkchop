@@ -39,13 +39,78 @@
     <input type="submit" class="button" name="generate_backup_codes" value="Generate Backup Codes">
     <?php if (isset($generatedBackupCodes) && is_array($generatedBackupCodes)) { ?>
       <div class="backup-codes-list margin-top-10px">
-        <p><strong>Backup Codes (save these in a safe place):</strong></p>
-        <ul class="register-admin-account-backup-codes-ul">
-          <?php if (!empty($generatedBackupCodes)) { foreach ($generatedBackupCodes as $code) { ?>
-            <li><?= htmlentities($code) ?></li>
-          <?php } } ?>
-        </ul>
+        <div class="backup-codes-warning" style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin: 10px 0;">
+          <h4 style="color: #856404; margin: 0 0 10px 0; font-size: 16px;">⚠️ Important: Save These Backup Codes</h4>
+          <p style="color: #856404; margin: 0; font-size: 14px;">These codes are shown only once. Save them in a secure location like a password manager or write them down and store them safely.</p>
+        </div>
+        
+        <div class="backup-codes-display" style="background-color: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; padding: 20px; margin: 15px 0; font-family: 'Courier New', monospace;">
+          <h4 style="color: #495057; margin: 0 0 15px 0; font-size: 16px; text-align: center;">🔐 New Backup Codes</h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; text-align: center;">
+            <?php if (!empty($generatedBackupCodes)) { 
+              $counter = 1;
+              foreach ($generatedBackupCodes as $code) { ?>
+                <div style="background-color: #ffffff; border: 1px solid #ced4da; border-radius: 4px; padding: 12px; font-size: 18px; font-weight: bold; color: #212529; letter-spacing: 1px;">
+                  <div style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">Code #<?= $counter ?></div>
+                  <?= htmlentities($code) ?>
+                </div>
+            <?php 
+              $counter++;
+              } 
+            } ?>
+          </div>
+          <div style="text-align: center; margin-top: 15px;">
+            <button type="button" onclick="copyBackupCodes()" style="background-color: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+              📋 Copy All Codes
+            </button>
+          </div>
+        </div>
       </div>
+      
+      <script>
+        function copyBackupCodes() {
+          const codes = <?= json_encode($generatedBackupCodes) ?>;
+          const codeText = codes.join('\n');
+          
+          // Check if clipboard API is available
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(codeText).then(function() {
+              alert('Backup codes copied to clipboard!');
+            }).catch(function(err) {
+              console.error('Clipboard API failed: ', err);
+              fallbackCopyToClipboard(codeText);
+            });
+          } else {
+            // Use fallback for browsers that don't support clipboard API
+            fallbackCopyToClipboard(codeText);
+          }
+        }
+        
+        function fallbackCopyToClipboard(text) {
+          try {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            if (successful) {
+              alert('Backup codes copied to clipboard!');
+            } else {
+              alert('Unable to copy. Please select and copy the codes manually.');
+            }
+          } catch (err) {
+            console.error('Fallback copy failed: ', err);
+            alert('Unable to copy. Please select and copy the codes manually.');
+          }
+        }
+      </script>
     <?php } ?>
     <?php if (isset($allBackupCodes) && count($allBackupCodes) > 0) { ?>
       <div class="backup-codes-list margin-top-10px">

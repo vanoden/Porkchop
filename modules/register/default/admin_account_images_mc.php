@@ -57,7 +57,7 @@ if (isset($_REQUEST['updateImage']) && $_REQUEST['updateImage'] == 'true') {
 	if ($customer->error()) {
 		$page->addError("Error setting default image: " . $customer->error());
 	} else {
-		$page->appendSuccess('Default image updated successfully.', 'success');
+		$page->appendSuccess('Default image updated successfully.');
 	}
 }
 
@@ -65,7 +65,7 @@ if (isset($_REQUEST['updateImage']) && $_REQUEST['updateImage'] == 'true') {
  * This section handles the file upload functionality for customer images.
  */
 if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
-	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
+	if (!isset($_REQUEST['csrfToken']) || ! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
 		$page->addError("Invalid Token");
 	} else {
 		$page->requirePrivilege('upload storage files');
@@ -80,7 +80,6 @@ if (isset($_REQUEST['btn_submit']) && $_REQUEST['btn_submit'] == 'Upload') {
 }  
 $customerImages = $customer->images('Register\Customer');
 
-load:
 if ($customer_id) {
 	$customer = new \Register\Customer($customer_id);
 }
