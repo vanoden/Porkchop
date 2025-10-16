@@ -261,9 +261,10 @@ if (is_object($repository)) {
 }
 
 
-$page->title("Storage Repository");
-if ($repository->id) $page->instructions = "Update values and click Submit to update repository setting";
-else $page->instructions = "Fill out form and click Submit to create a new Storage Repository";
+	$page->title("Storage Repository");
+	$page->setAdminMenuSection("Storage");  // Keep Storage section open
+	if ($repository->id) $page->instructions = "Update values and click Submit to update repository setting";
+	else $page->instructions = "Fill out form and click Submit to create a new Storage Repository";
 $page->addBreadCrumb("Repositories", "/_storage/repositories");
 if ($repository->id) $page->addBreadCrumb($repository->name, "/_storage/repository?id=" . $repository->id);
 else $page->addBreadCrumb("New Repository");

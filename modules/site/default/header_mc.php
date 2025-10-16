@@ -54,6 +54,7 @@
 		}
 	}
 
+	$page->setAdminMenuSection("Site");  // Keep Site section open
 	$page->addBreadcrumb('Headers', '/_site/headers');
 	if ($header->id() > 0) {
 		$page->title('Edit Header');

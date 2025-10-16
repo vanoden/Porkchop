@@ -133,6 +133,7 @@
 	}
 
 	$page->title("Domain");
+	$page->setAdminMenuSection("Company");  // Keep Company section open
 
 	$page->AddBreadCrumb("Company");
 	$page->AddBreadCrumb("Domains","/_company/domains");

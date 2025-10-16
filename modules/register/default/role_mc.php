@@ -131,6 +131,8 @@
 
 	// Page Header
 	$page->title = "Role Details";
+	$page->setAdminMenuSection("Customer");  // Keep Customer section open
+	$page->addBreadcrumb("Customer");
 	$page->addBreadcrumb("Roles", "/_register/roles");
 	if (!empty($role->id)) {
 		$page->addBreadcrumb($role->name);

@@ -87,7 +87,7 @@
 					<?php foreach ($products as $part): 
 						if ($part->id == $item->id) continue; // Skip the current item
 					?>
-						<option value="<?= $part->id ?>"><?= $part->code . " - ".$part->getMetadata("short_description")?></option>
+						<option value="<?= $part->id ?>"><?= $part->code ?></option>
 					<?php endforeach; ?>
 				</select>
 			</div>

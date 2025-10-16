@@ -94,6 +94,7 @@ if ($can_proceed) {
 }
 
 $page->title("Products");
+$page->setAdminMenuSection("Products");  // Keep Products section open
 $page->addBreadcrumb("Products");
 
 if ($can_proceed) {

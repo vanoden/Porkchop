@@ -76,6 +76,7 @@
 	}
 
 	$page->title("Menu Items");
+	$page->setAdminMenuSection("Site");  // Keep Site section open
 	$page->addBreadcrumb("Menus", "/_navigation/menus");
 	if (isset($parent)) {
 		$page->addBreadcrumb($menu->title,"/_navigation/items/".$menu->code);

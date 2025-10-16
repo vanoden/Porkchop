@@ -285,6 +285,7 @@ if (!is_array($images)) {
 	$images = array();
 }
 
+$page->setAdminMenuSection("Products");  // Keep Products section open
 $page->addBreadcrumb("Products", "/_product/report");
 if (isset($item->id)) $page->addBreadcrumb($item->code, "/_product/edit/" . $item->code);
 

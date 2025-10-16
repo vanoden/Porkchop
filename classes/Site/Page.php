@@ -833,6 +833,8 @@
 				    if ($parameter['code']) {
 					    $menu = new \Site\Navigation\Menu ();
 					    if ($menu->get($parameter['code'])) {
+							// Pass the current page object to the menu for admin menu section override
+							$menu->setPage($this);
 							if (!empty($parameter['version']) && $parameter['version'] == 'v2') {
 								$buffer .= $menu->asHTMLV2($parameter);
 							}
@@ -841,7 +843,7 @@
 							}
 					    }
 				    }
-					else {
+				    else {
 					    app_log("navigation menu references without code");
 				    }
 			    }
@@ -1311,6 +1313,28 @@
 				else $html .= "\t\t<li>".$breadcrumb['name']."</li>";
 			}
 		    return "<nav id=\"breadcrumb\">\n\t<ul>\n$html\n\t</ul>\n</nav>\n";
+		}
+
+		/**
+		 * Set which admin menu section should be open for this page
+		 * This overrides the automatic URL-based detection
+		 * 
+		 * @param string $sectionName The name of the admin menu section to open
+		 * @return void
+		 */
+		public function setAdminMenuSection($sectionName) {
+			app_log("Setting admin menu section to: " . $sectionName, 'debug');
+			$this->setMetadata('admin_menu_section', $sectionName);
+		}
+
+		/**
+		 * Get the admin menu section override
+		 * 
+		 * @return string|null The admin menu section to open, or null for auto-detection
+		 */
+		public function getAdminMenuSection() {
+			$section = $this->getMetadata('admin_menu_section');
+			return $section;
 		}
 
 		public function showMessages() {

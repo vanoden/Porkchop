@@ -85,3 +85,7 @@
 	$parameters['_sort_desc'] = true; 
     $versionList = new \Package\VersionList();
     $versions = $versionList->find($parameters);
+    
+    $page->title("Versions");
+    $page->setAdminMenuSection("Package");  // Keep Package section open
+    $page->addBreadcrumb("Package", "/_package/packages");

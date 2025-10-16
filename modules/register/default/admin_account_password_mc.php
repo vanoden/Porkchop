@@ -1,8 +1,8 @@
 <?php
 ###################################################
-## admin_account_mc.php							###
-## This program handles the login/registration	###
-## functionality for customer account management.	###
+## admin_account_password_mc.php				###
+## This program handles the password tab for	###
+## customer account management.				###
 ## A. Caravello 11/12/2002						###
 ###################################################
 
@@ -10,14 +10,6 @@ $page = new \Site\Page(array("module" => 'register', "view" => 'account'));
 $page->requirePrivilege('manage customers');
 $page->setAdminMenuSection("Customer");  // Keep Customer section open
 $customer = new \Register\Customer();
-
-$site_config = new \Site\Configuration();
-$site_config->get('website_images');
-if (!empty($site_config->value)) {
-	$repository = new \Storage\Repository();
-	$repository->get($site_config->value);
-	$repository = $repository->getInstance();
-}
 
 if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id']))
 	$customer_id = $_REQUEST['customer_id'];
@@ -36,53 +28,6 @@ app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer 
 #######################################
 ## Handle Actions					###
 #######################################
-
-/** @section Resend Email
- * This section handles the resend email functionality.
- * It checks if the method is "Resend Email" and processes the request.
- * It generates a new validation key and sends a verification email to the customer.
- */
-if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Resend Email") {
-
-	if (! $GLOBALS['_SESSION_']->verifyCSRFToken($_REQUEST['csrfToken'])) {
-		$page->addError("Invalid Request");
-	} else {
-
-		$validation_key = md5(microtime());
-		$customer = new \Register\Customer($customer_id);
-		$customer->update(array('validation_key'=>$validation_key));
-
-		// create the verify account email
-		$verify_url = $GLOBALS['_config']->site->hostname . '/_register/new_customer?method=verify&access=' . $validation_key . '&login=' . $customer->code;
-		if ($GLOBALS['_config']->site->https) $verify_url = "https://$verify_url";
-		else $verify_url = "http://$verify_url";
-
-		$template = new \Content\Template\Shell(
-			array(
-				'path'	=> $GLOBALS['_config']->register->verify_email->template,
-				'parameters'	=> array(
-					'VERIFYING.URL' => $verify_url,
-					'COMPANY.NAME' => $GLOBALS['_SESSION_']->company->name ?? ''
-				)
-			)
-		);
-		if ($template->error()) {
-			app_log($template->error(),'error');
-			$page->addError("Error generating verification email, please contact us at ".$GLOBALS['_config']->site->support_email." to complete your registration, thank you!");
-		}
-		else {
-			$message = new \Email\Message($GLOBALS['_config']->register->verify_email);
-			$message->html(true);
-			$message->body($template->output());
-			if (! $customer->notify($message)) {
-				$page->addError("Confirmation email could not be sent, please contact us at ".$GLOBALS['_config']->site->support_email." to complete your registration, thank you!");
-				app_log("Error sending confirmation email: ".$customer->error(),'error');
-			} else {
-				$page->success = "Another verification email has been issued.";
-			}
-		}
-	}
-}
 
 /** @section Apply Changes
  * This section handles the form submission for applying changes to the customer account.
@@ -299,21 +244,9 @@ $contact_types = $_contact->types;
 
 if (!isset($target)) $target = '';
 
-$page->title = "Customer Account Details";
+$page->title = "Customer Account Details - Change Password";
 $page->addBreadcrumb("Customer");
 $page->addBreadcrumb("Organizations", "/_register/organizations");
 $organization = $customer->organization();
 if (isset($organization->id)) $page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
 if (isset($customer->id)) $page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);
-
-// get customer queued status
-$queuedCustomer = new \Register\Queue(); 
-$queuedCustomer->getByQueuedLogin($customer->id);
-if (!empty($queuedCustomer->status)) $registration_status = $queuedCustomer->status;
-else $registration_status = "COMPLETE";
-
-// get unique categories and tags for autocomplete
-$searchTagList = new \Site\SearchTagList();
-$uniqueTagsData = $searchTagList->getUniqueCategoriesAndTagsJson();
-
-if (!isset($target)) $target = '';
