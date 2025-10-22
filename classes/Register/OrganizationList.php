@@ -202,11 +202,20 @@
 			if (!empty($parameters['name'])) {
 				// Handle Wildcards
 				if (preg_match('/[\*\?]/',$parameters['name']) && preg_match('/^[\*\?\w\-\.\s]+$/',$parameters['name'])) {
-					$parameters['name'] = str_replace('*','%',$parameters['name']);
-					$parameters['name'] = str_replace('?','_',$parameters['name']);
+					$search_name = str_replace('*','%',$parameters['name']);
+					$search_name = str_replace('?','_',$search_name);
+					
+					// Special case: if search ends with * and has no other wildcards, treat same as no wildcards
+					// This makes "Inc" and "Inc*" behave the same way
+					if (preg_match('/^[^*?]+\*$/', $parameters['name'])) {
+						// Remove the trailing * and add wildcards on both sides
+						$base_name = rtrim($parameters['name'], '*');
+						$search_name = '%' . $base_name . '%';
+					}
+					
 					$find_objects_query .= "
 					AND	ro.name LIKE ?";
-					$database->AddParam($parameters['name']);
+					$database->AddParam($search_name);
 				}
 				// Handle No Wildcards - Add * on both sides
 				elseif ($workingClass->validName($parameters['name'])) {

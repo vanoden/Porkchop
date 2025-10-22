@@ -133,24 +133,7 @@
     <head>
         <meta charset="UTF-8">
         <title><?php echo htmlentities($title, ENT_QUOTES, 'UTF-8') ?></title>
-        <style type="text/css">
-            html {
-                font-family: Helvetica, Arial, sans-serif;
-            }
-            .error, .success {
-                padding: 5px 15px;
-            }
-            .error {
-                background-color: lightpink;
-                border: 1px solid darkred;
-                color: darkred;
-            }
-            .success {
-                background-color: lightgreen;
-                border: 1px solid darkgreen;
-                color: darkgreen;
-            }
-        </style>
+        <link rel="stylesheet" type="text/css" href="/html.src/css/oauth.css">
     </head>
     <body>
         <h1><?php echo htmlentities($title, ENT_QUOTES, 'UTF-8') ?></h1>

@@ -80,23 +80,24 @@ function checkUserName() {
     var loginField = document.getElementById("login");
     var loginMessage = document.getElementById("login-message");
     
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/_register/api?method=checkLoginNotTaken&login=' + encodeURIComponent(loginField.value), true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            var data = xhr.responseText;
-            if (data == 1) {
-                loginField.style.border = '2px solid green';
-                loginMessage.innerHTML = 'login is available';
-                loginMessage.style.color = 'green';
-            } else {
-                loginField.style.border = '2px solid red';
-                loginMessage.innerHTML = 'login is not available';
-                loginMessage.style.color = 'red';
-            }
+    var url = '/_register/api?method=checkLoginNotTaken&login=' + encodeURIComponent(loginField.value);
+    
+    AJAXUtils.get(url, function(data) {
+        if (data == 1) {
+            loginField.style.border = '2px solid green';
+            loginMessage.innerHTML = 'login is available';
+            loginMessage.style.color = 'green';
+        } else {
+            loginField.style.border = '2px solid red';
+            loginMessage.innerHTML = 'login is not available';
+            loginMessage.style.color = 'red';
         }
-    };
-    xhr.send();
+    }, function(status) {
+        console.error('Error checking login availability:', status);
+        loginField.style.border = '2px solid orange';
+        loginMessage.innerHTML = 'Error checking availability';
+        loginMessage.style.color = 'orange';
+    });
 }
 
 // Check password strength
@@ -114,54 +115,11 @@ function checkPasswordStrength() {
   }
 }
 
-// make sure the serial number is valid
+// Serial number validation removed - no longer checking device availability
 function checkSerial() {
-  var productInput = document.getElementById('product_id');
-  checkProduct();
-  var productID = productInput.options[productInput.selectedIndex].value;
-  var serialInput = document.getElementById('serial_number');
-  var serialNumberMessage = document.getElementById('serial_number_message');
-  var serialNumberMessageOK = document.getElementById('serial_number_message_ok');
-
-  if (serialInput.value.length < 1) return true;
-  var code = serialInput.value.trim();
-  serialInput.value = code;
-
-  // Check if Asset object is available
-  if (typeof Asset === 'undefined') {
-    console.log('Asset object not available, skipping serial number validation');
-    return true;
-  }
-
-  try {
-    var asset = Object.create(Asset);
-
-    if (asset.get(code)) {
-      if (asset.product.id == productID) {
-        serialInput.style.border = 'solid 2px green';
-        serialNumberMessage.style.display = 'none';
-        serialNumberMessageOK.innerHTML = 'Serial number has been found, thank you for providing!';
-        serialNumberMessageOK.style.display = 'block';
-        return true;
-      } else {
-        serialInput.style.border = 'solid 2px red';
-        serialNumberMessage.innerHTML = 'Product not found with that serial number';
-        serialNumberMessage.style.display = 'block';
-        serialNumberMessageOK.style.display = 'none';
-        return false;
-      }
-    } else {
-      serialInput.style.border = 'solid 2px red';
-      serialNumberMessage.innerHTML = 'Serial number not found in our system';
-      serialNumberMessage.style.display = 'block';
-      serialNumberMessageOK.style.display = 'none';
-      return false;
-    }
-  } catch (error) {
-    console.log('Error checking serial number:', error);
-    // If there's an error, just return true to allow the form to continue
-    return true;
-  }
+  // Serial number validation has been removed for security reasons
+  // Users can still enter serial numbers but they won't be validated client-side
+  return true;
 }
 
 function checkRegisterProduct(){

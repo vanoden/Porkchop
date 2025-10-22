@@ -214,21 +214,14 @@
         console.log("Opening image select window with URL: " + imageSelectUrl);
         
         // Test if the URL is accessible by trying to fetch it first
-        fetch(imageSelectUrl)
-            .then(response => {
-                if (response.ok) {
-                    console.log("URL is accessible, opening popup");
-                    childWindow = open(imageSelectUrl, "imageselect", 'resizable=no,width=500,height=500');
-                    if (childWindow.opener == null) childWindow.opener = self;
-                } else {
-                    console.error("URL returned status: " + response.status);
-                    alert("Error: Image select page returned status " + response.status);
-                }
-            })
-            .catch(error => {
-                console.error("Error accessing image select URL: " + error);
-                alert("Error accessing image select page: " + error.message);
-            });
+        AJAXUtils.get(imageSelectUrl, function(data) {
+            console.log("URL is accessible, opening popup");
+            childWindow = open(imageSelectUrl, "imageselect", 'resizable=no,width=500,height=500');
+            if (childWindow.opener == null) childWindow.opener = self;
+        }, function(status) {
+            console.error("URL returned status: " + status);
+            alert("Error: Image select page returned status " + status);
+        });
     }
 
 	/** @function endImageSelectWizard(code)

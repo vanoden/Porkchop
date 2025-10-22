@@ -9,19 +9,22 @@
 $page = new \Site\Page(array("module" => 'register', "view" => 'account'));
 $page->requirePrivilege('manage customers');
 $page->setAdminMenuSection("Customer");  // Keep Customer section open
-$customer = new \Register\Customer();
 
 if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id']))
 	$customer_id = $_REQUEST['customer_id'];
 elseif (preg_match('/^[\w\-\.\_]+$/', $GLOBALS['_REQUEST_']->query_vars_array[0])) {
 	$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
-	$customer->get($code);
-	if ($customer->id)
-		$customer_id = $customer->id;
+	$temp_customer = new \Register\Customer();
+	$temp_customer->get($code);
+	if ($temp_customer->id)
+		$customer_id = $temp_customer->id;
 	else
 		$page->addError("Customer not found");
 } else
 	$customer_id = $GLOBALS['_SESSION_']->customer->id;
+
+// Initialize customer object early so it's available for processing
+$customer = new \Register\Customer($customer_id);
 
 app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer " . $customer_id, 'notice', __FILE__, __LINE__);
 
@@ -170,7 +173,6 @@ if (isset($_REQUEST['method']) && $_REQUEST['method'] == "Apply") {
 
 load:
 if ($customer_id) {
-	$customer = new \Register\Customer($customer_id);
 	$contacts = $customer->contacts();
 }
 $rolelist = new \Register\RoleList();

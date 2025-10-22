@@ -1,3 +1,5 @@
+<link rel="stylesheet" type="text/css" href="/html.src/css/support.css">
+
 <script>
 
    // date picker with max date being current day

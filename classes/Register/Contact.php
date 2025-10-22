@@ -138,7 +138,7 @@
 			$database->Execute($add_contact_query);
 			
 			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMSg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 					

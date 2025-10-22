@@ -684,6 +684,10 @@
 			$row = $rs->FetchRow();
 			if ($row) {
 				list($user_level) = $row;
+				// Handle null user_level from MAX() query when no records match
+				if ($user_level === null) {
+					return false;
+				}
 				return $this->checkPrivilegeLevel($user_level, $required_level);
 			}
 			else {

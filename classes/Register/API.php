@@ -1949,25 +1949,6 @@
 						'password' => array('required' => true)
 					),
 				),
-				'checkSerialNumber' => array(
-					'description' => 'Check if a serial number exists and matches the selected product',
-					'authentication_required' => false,
-					'token_required' => false,
-					'return_type' => 'json',
-					'return_mime_type' => 'application/json',
-					'parameters' => array(
-						'code' => array(
-							'required' => true, 
-							'description' => 'Serial number to check',
-							'validation_method' => 'Monitor::Asset::validCode()'
-						),
-						'product_id' => array(
-							'required' => true, 
-							'description' => 'Product ID to match against',
-							'validation_method' => 'Product::Item::validId()'
-						)
-					),
-				),
 				'getPasswordResetURL' => array(
 					'description' => 'Get URL for password reset',
 					'authentication_required' => true,
