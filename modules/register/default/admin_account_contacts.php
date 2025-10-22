@@ -41,11 +41,12 @@
   }
 
   function enableNewContact() {
-    document.getElementById('new-description').style.display = "block";
-    document.getElementById('new-value').style.display = "block";
-    document.getElementById('new-notes').style.display = "block";
-    document.getElementById('new-notify').style.display = "block";
-    document.getElementById('new-public').style.display = "block";
+    // Remove the hidden class to show the form fields
+    document.getElementById('new-description').classList.remove('register-admin-account-new-contact-hidden');
+    document.getElementById('new-value').classList.remove('register-admin-account-new-contact-hidden');
+    document.getElementById('new-notes').classList.remove('register-admin-account-new-contact-hidden');
+    document.getElementById('new-notify').classList.remove('register-admin-account-new-contact-hidden');
+    document.getElementById('new-public').classList.remove('register-admin-account-new-contact-hidden');
     var newContactSelect = document.getElementById("new-contact-select");
     newContactSelect.remove(5);
   }

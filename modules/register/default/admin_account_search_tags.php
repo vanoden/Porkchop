@@ -47,22 +47,22 @@
   <h4 class="register-admin-account-search-tags-inline">(customer support knowledge center)</h4>
   <div class="tableBody min-tablet">
     <div class="tableRowHeader">
-      <div class="tableCell width-33per">&nbsp;</div>
       <div class="tableCell width-33per">Category</div>
       <div class="tableCell width-33per">Search Tag</div>
+      <div class="tableCell width-33per">&nbsp;</div>
     </div>
     <?php
     if (!empty($registerCustomerSearchTags)) { foreach ($registerCustomerSearchTags as $searchTag) {
     ?>
       <div class="tableRow">
         <div class="tableCell">
-          <input type="button" onclick="removeSearchTagById('<?= $searchTag->id ?>')" name="removeSearchTag" value="Remove" class="button" />
-        </div>
-        <div class="tableCell">
           <?= $searchTag->category ?>
         </div>
         <div class="tableCell">
           <?= $searchTag->value ?>
+        </div>
+        <div class="tableCell">
+          <img src="/img/icons/icon_tools_trash_active.svg" onclick="removeSearchTagById('<?= $searchTag->id ?>')" style="cursor: pointer; width: 20px; height: 20px;" alt="Remove" title="Remove" />
         </div>
 
       </div>
