@@ -6,4 +6,5 @@
     $repositories = $repositoryList->find();
 
 	$page->title('Repositories');
+	$page->setAdminMenuSection("Storage");  // Keep Storage section open
 	$page->addBreadCrumb('Storage');

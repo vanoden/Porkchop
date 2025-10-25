@@ -46,9 +46,19 @@
 				"organization"		=> $admin_template,
 				"accounts"			=> $admin_template,
 				"admin_account"		=> $admin_template,
+				"admin_account_contacts"	=> $admin_template,
+				"admin_account_password"	=> $admin_template,
+				"admin_account_roles"		=> $admin_template,
+				"admin_account_auth_failures"	=> $admin_template,
+				"admin_account_terms"		=> $admin_template,
+				"admin_account_locations"	=> $admin_template,
+				"admin_account_images"		=> $admin_template,
+				"admin_account_backup_codes"	=> $admin_template,
+				"admin_account_search_tags"	=> $admin_template,
 				"pending_customers"	=> $admin_template,
 				"roles"				=> $admin_template,
-				"role"				=> $admin_template
+				"role"				=> $admin_template,
+				"audit_log"			=> $admin_template
 			),
 		),
         "Contact"		=> array(
@@ -144,6 +154,13 @@
 							"view_order"	=> 10,
 							"alt"			=> "Organizations",
 							"description"	=> "Organizations"
+						),
+						array (
+							"title"			=> "Duplicate Report",
+							"target"		=> "/_register/organizations_report",
+							"view_order"	=> 15,
+							"alt"			=> "Organizations Duplicate Report",
+							"description"	=> "Find and manage duplicate organizations"
 						),
 						array (
 							"title"			=> "Accounts",
@@ -395,7 +412,7 @@
 	if ($_REQUEST['log_level']) $log_level = $_REQUEST['log_level'];
 
 	install_log("Starting site upgrade",'notice');
-	if (file_exists(HTML."/version.txt")) {
+	if (defined('HTML') && file_exists(HTML."/version.txt")) {
 		install_log("Loaded ".HTML."/version.txt",'debug');
 		$version_info = file_get_contents(HTML."/version.txt");
 		if (preg_match('/PRODUCT\:\s(.+)/',$version_info,$matches)) install_log("Product: ".$matches[1],'notice');
@@ -404,7 +421,7 @@
 		if (preg_match('/VERSION\:\s(.+)/',$version_info,$matches)) install_log("Version: ".$matches[1],'notice');
 	}
 	else {
-		install_log("No version.txt found",'warning');
+		install_log("No version.txt found or HTML constant not defined",'warning');
 	}
 
 	# Process Modules

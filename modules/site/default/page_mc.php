@@ -70,6 +70,7 @@
 
 	$bc_view = ucfirst($editPage->module)."::".ucfirst($editPage->view);
 	if (!empty($editPage->index)) $bc_view .= "::".$editPage->index;
+	$page->setAdminMenuSection("Site");  // Keep Site section open
 	$page->addBreadcrumb("Site Pages", "/_site/pages");
 	if (isset($editPage->view)) {
 		$page->addBreadcrumb($bc_view);

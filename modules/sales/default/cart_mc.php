@@ -315,3 +315,4 @@
 	else {
 		$page->title("Create Order");
 	}
+	$page->setAdminMenuSection("Sales");  // Keep Sales section open

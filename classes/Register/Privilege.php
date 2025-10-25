@@ -188,6 +188,39 @@
 		}
 
 		/**
+		 * Get Privilege Peers with specific level
+		 * @param int $required_level The required privilege level
+		 * @return null|array 
+		 */
+		public function peersWithLevel($required_level = \Register\PrivilegeLevel::CUSTOMER) {
+		
+			// Level column exists, use it
+			$get_object_query = "
+				SELECT	rur.user_id, MAX(rrp.level) as max_level
+				FROM	register_users_roles rur,
+						register_roles_privileges rrp
+				WHERE	rrp.privilege_id = ?
+				AND		rrp.role_id = rur.role_id
+				GROUP BY rur.user_id
+				HAVING max_level >= ?
+			";
+			
+			$rs = $GLOBALS['_database']->Execute($get_object_query,array($this->id, $required_level));
+			if (! $rs) {
+				$this->SQLError($GLOBALS['_database']->ErrorMsg());
+				return null;
+			}
+			
+			$people = array();
+			while (list($id, $level) = $rs->FetchRow()) {
+				$person = new \Register\Person($id);
+				$person->privilege_level = $level;
+				array_push($people,$person);
+			}
+			return $people;
+		}
+
+		/**
 		 * Send a message to all people with this privilege
 		 * @param mixed $message 
 		 * @return null|false|void 

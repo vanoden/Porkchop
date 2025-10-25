@@ -1,0 +1,75 @@
+<?php
+###################################################
+## admin_account_auth_failures_mc.php			###
+## This program handles the auth failures tab	###
+## for customer account management.			###
+## A. Caravello 11/12/2002						###
+###################################################
+
+$page = new \Site\Page(array("module" => 'register', "view" => 'account'));
+$page->requirePrivilege('manage customers');
+$page->setAdminMenuSection("Customer");  // Keep Customer section open
+$customer = new \Register\Customer();
+
+if (isset($_REQUEST['customer_id']) && preg_match('/^\d+$/', $_REQUEST['customer_id']))
+	$customer_id = $_REQUEST['customer_id'];
+elseif (preg_match('/^[\w\-\.\_]+$/', $GLOBALS['_REQUEST_']->query_vars_array[0])) {
+	$code = $GLOBALS['_REQUEST_']->query_vars_array[0];
+	$customer->get($code);
+	if ($customer->id)
+		$customer_id = $customer->id;
+	else
+		$page->addError("Customer not found");
+} else
+	$customer_id = $GLOBALS['_SESSION_']->customer->id;
+
+app_log($GLOBALS['_SESSION_']->customer->code . " accessing account of customer " . $customer_id, 'notice', __FILE__, __LINE__);
+
+#######################################
+## Handle Actions					###
+#######################################
+
+/** @section Reset Auth Failures
+ * This section handles the reset of authentication failures for the customer account.
+ * It checks if the button is clicked and verifies the CSRF token before resetting.
+ */
+if (isset($_REQUEST["btnResetFailures"])) {
+
+	// Anti-CSRF measures, reject an HTTP POST with invalid/missing token in session
+	if (!isset($_POST['csrfToken']) || !$GLOBALS['_SESSION_']->verifyCSRFToken($_POST['csrfToken'])) {
+		$page->addError("Invalid request");
+		return 403;
+	} else {
+		$customer = new \Register\Customer(isset($_REQUEST['customer_id']) ? $_REQUEST['customer_id'] : $customer_id);
+		$customer->resetAuthFailures();
+	}
+}
+
+if ($customer_id) {
+	$customer = new \Register\Customer($customer_id);
+}
+$rolelist = new \Register\RoleList();
+$all_roles = $rolelist->find();
+$_department = new \Register\Department();
+$departments = $_department->find();
+app_log("Loading Organizations", 'trace', __FILE__, __LINE__);
+$organizationlist = new \Register\OrganizationList();
+$organizations = $organizationlist->find();
+$_contact = new \Register\Contact();
+$contact_types = $_contact->types;
+
+if (!empty($customer->code)) {
+	$authFailureList = new \Register\AuthFailureList();
+	$authFailures = $authFailureList->find(array('_limit' => 5, 'login' => $customer->code));
+} else {
+	$authFailures = array();
+}
+
+if (!isset($target)) $target = '';
+
+$page->title = "Customer Account Details - Recent Auth Failures";
+$page->addBreadcrumb("Customer");
+$page->addBreadcrumb("Organizations", "/_register/organizations");
+$organization = $customer->organization();
+if (isset($organization->id)) $page->addBreadcrumb($organization->name, "/_register/admin_organization?id=" . $organization->id);
+if (isset($customer->id)) $page->addBreadcrumb($customer->full_name(), "/_register/admin_account?customer_id=" . $customer->id);

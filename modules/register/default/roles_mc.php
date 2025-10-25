@@ -22,3 +22,8 @@
 	$roleList = new \Register\RoleList();
 	$roles = $roleList->find();
 	if ($roleList->error()) $page->addError($roleList->error());
+	
+	$page->title = "Roles";
+	$page->setAdminMenuSection("Customer");  // Keep Customer section open
+	$page->addBreadcrumb("Customer");
+	$page->addBreadcrumb("Roles","/_register/roles");

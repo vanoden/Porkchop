@@ -72,6 +72,7 @@ if ($request->validText($method) && $method == 'deleteFile' && $can_proceed) {
 /****************************************/
 if (isset($repository) && $repository->id) {
 	$page->title = $repository->name;
+	$page->setAdminMenuSection("Storage");  // Keep Storage section open
 	$page->addBreadcrumb("Storage");
 	$page->addBreadcrumb("Repositories", '/_storage/repositories');
 	$page->addBreadcrumb($repository->name, '/_storage/repository/' . $repository->code);

@@ -181,6 +181,7 @@ if (empty($repository) || !$repository->writable($GLOBALS['_SESSION_']->customer
 	return 403;
 }
 
+$page->setAdminMenuSection("Storage");  // Keep Storage section open
 $page->addBreadcrumb("Storage");
 $page->addBreadcrumb("Repositories", '/_storage/repositories');
 $repository = $file->repository();

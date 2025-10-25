@@ -2,15 +2,26 @@
 
     namespace Site\Navigation;
 
-    class Menu Extends \BaseModel {
+class Menu Extends \BaseModel {
 
-		public $code;
-		public $title;
+	public $code;
+	public $title;
+	private $_page = null;
 
 	    public function __construct($id = 0) {
 			$this->_tableName = 'navigation_menus';
     		parent::__construct($id);
 	    }
+
+		/**
+		 * Set the page object for admin menu section override
+		 * 
+		 * @param \Site\Page $page The page object
+		 * @return void
+		 */
+		public function setPage($page) {
+			$this->_page = $page;
+		}
 
 		/**
 		 * get navigation menu by code
@@ -289,6 +300,20 @@ END;
 			$expandedItems = array();
 			$items = $this->cascade();
 			
+		// Check for manual override first
+		if ($this->_page && $this->_page->getAdminMenuSection()) {
+			$sectionName = $this->_page->getAdminMenuSection();
+			app_log("Admin menu section override: " . $sectionName, 'debug');
+			foreach ($items as $item) {
+				if (strtolower($item->title) === strtolower($sectionName)) {
+					app_log("Found matching menu item: " . $item->title . " (ID: " . $item->id . ")", 'debug');
+					$expandedItems[] = $item->id;
+					// Also add parent chain if this item has parents
+					$expandedItems = array_merge($expandedItems, $item->getParentChain());
+					return array_unique($expandedItems);
+				}
+			}
+		}
 		
 		// Find all matches first, then select the most specific one
 		$allMatches = array();

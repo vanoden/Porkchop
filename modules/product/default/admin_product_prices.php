@@ -30,7 +30,7 @@
 <input type="hidden" name="csrfToken" value="<?= $GLOBALS['_SESSION_']->getCSRFToken() ?>">
 <input type="hidden" name="id" value="<?= $item->id ?>">
 
-<div class="label align-top">Add Price</div>
+<h3>Add Price</h3>
 	<table class="body">
 	<tr><th>Date Active</th>
 		<th>Status</th>

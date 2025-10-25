@@ -117,24 +117,28 @@
 				(		person_id,
 						type,
 						value,
+						description,
+						notes,
 						notify,
 						public
 				)
 				VALUES
 				(		
-				    ?,?,?,?,?
+				    ?,?,?,?,?,?,?
 				)
 			";
 
 			$database->AddParam($parameters['person_id']);
 			$database->AddParam($parameters['type']);
 			$database->AddParam($parameters['value']);
+			$database->AddParam(isset($parameters['description']) ? $parameters['description'] : '');
+			$database->AddParam(isset($parameters['notes']) ? $parameters['notes'] : '');
 			$database->AddParam($parameters['notify']);
 			$database->AddParam($parameters['public']);
 			$database->Execute($add_contact_query);
 			
 			if ($database->ErrorMsg()) {
-				$this->SQLError($database->ErrorMSg());
+				$this->SQLError($database->ErrorMsg());
 				return null;
 			}
 					
@@ -317,7 +321,7 @@
 				if (preg_match('/^\+?\d[\d\.\-\s\#\(\)]+$/',$string)) return true;
 			} elseif ($type == 'email') {
 				if (valid_email($string)) return true;
-			} elseif ($type == 'sms-text') {
+			} elseif ($type == 'sms') {
 				if (preg_match('/^[\d\-\.\(\)\#]+$/',$string)) return true;
 			} else {
     			if (!empty($string)) return true;

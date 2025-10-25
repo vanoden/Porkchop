@@ -77,6 +77,7 @@
 
 	if ($tou->id) $page->instructions = "Update values and click Submit to update this Terms of Use record";
 	else $page->instructions = "Fill out form and click Submit to create a new Terms Of Use record";
+	$page->setAdminMenuSection("Site");  // Keep Site section open
 	$page->addBreadCrumb("Terms of Use","/_site/terms_of_use");
 	if ($tou->id) $page->addBreadCrumb($tou->name);
 	else $page->addBreadCrumb("New Terms of Use");

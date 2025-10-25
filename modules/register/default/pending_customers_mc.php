@@ -261,4 +261,9 @@ if (!empty($verifyAgain)) {
 
 $possibleStatii = $queueObj->statii();
 
+$page->title = "Pending Customers";
+$page->setAdminMenuSection("Customer");  // Keep Customer section open
+$page->addBreadcrumb("Customer");
+$page->addBreadcrumb("Pending Customers","/_register/pending_customers");
+
 $_REQUEST['search'] = $search ?? '';

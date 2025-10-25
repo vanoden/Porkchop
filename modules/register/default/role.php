@@ -1,17 +1,48 @@
+<style>
+.privilege-level-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 6px;
+}
+</style>
+
 <script>
-// check or uncheck all boxes for ease of manage privileges
-function checkUncheck() {
-	var inputElem = document.getElementById("checkAll");
-	if (inputElem.checked) {
-		document.querySelectorAll('input[type=checkbox]').forEach(function(el) {
-			if (el.id != "totpCB") el.checked = true;
-		});
-	}
-	else {
-    	document.querySelectorAll('input[type=checkbox]').forEach(function(el) {
-			if (el.id != "totpCB") el.checked = false;
-		});
-	}
+// Set all privilege levels to administrator for ease of management
+function setAllAdministrator() {
+	var checkboxElements = document.querySelectorAll('input[name^="privilege_level"][value="63"]');
+	checkboxElements.forEach(function(el) {
+		el.checked = true;
+	});
+	// Uncheck all other levels
+	var otherCheckboxes = document.querySelectorAll('input[name^="privilege_level"]:not([value="63"])');
+	otherCheckboxes.forEach(function(el) {
+		el.checked = false;
+	});
+}
+
+// Set all privilege levels to none
+function setAllNone() {
+	var checkboxElements = document.querySelectorAll('input[name^="privilege_level"]');
+	checkboxElements.forEach(function(el) {
+		el.checked = false;
+	});
+}
+
+// Handle checkbox changes - allow multiple selections
+function handlePrivilegeLevelChange(privilegeId, changedCheckbox) {
+	// No restrictions - allow multiple privilege levels to be selected
+	// The backend will handle determining the appropriate permission level
 }
 </script>
 
@@ -56,16 +87,66 @@ function checkUncheck() {
 	  <div class="tableBody">
 
       <div class="tableRowHeader">
-        <div class="tableCell role-privileges-select">Select <input type="checkbox" id="checkAll" name"checkAll" value="1" onclick="checkUncheck()" <?php if ($allChecked) print "checked";?>/></div>
-        <div class="tableCell width-22per">Privilege Module</div>
-        <div class="tableCell width-70per">Description</div>
+        <div class="tableCell role-privileges-select" style="min-width: 300px;">
+          <button type="button" onclick="setAllAdministrator()" class="button small">Set All Admin</button>
+          <button type="button" onclick="setAllNone()" class="button small">Set All None</button>
+        </div>
+        <div class="tableCell width-20per">Privilege Module</div>
+        <div class="tableCell width-40per">Description</div>
       </div>
 
-<?php foreach ($privileges as $privilege) { ?>
+<?php 
+// Get current privilege levels for this role
+$current_privilege_levels = array();
+if ($role->id) {
+    $role_privileges = $role->privileges();
+    foreach ($role_privileges as $role_privilege) {
+        $current_privilege_levels[$role_privilege->id] = $role_privilege->level ?? 0;
+    }
+}
+
+foreach ($privileges as $privilege) { 
+    $current_level = $current_privilege_levels[$privilege->id] ?? 0;
+?>
       <div class="tableRow">
-        <div class="tableCell role-privileges-checkbox"><input type="checkbox" name="privilege[<?=$privilege->id?>]" value="1"<?php if ($role->has_privilege($privilege->id)) print " checked";?>></div>
-        <div class="tableCell"><?=$privilege->module?></div>
-        <div class="tableCell"><?=$privilege->name?></div>
+        <div class="tableCell role-privileges-level">
+          <div class="privilege-level-checkboxes">
+            <label class="checkbox-label">
+              <input type="checkbox" 
+                     name="privilege_level[<?=$privilege->id?>][]" 
+                     value="3" 
+                     <?php if (($current_level & 3) == 3) echo 'checked'; ?>
+                     onchange="handlePrivilegeLevelChange(<?=$privilege->id?>, this)">
+              Sub-Org Manager
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" 
+                     name="privilege_level[<?=$privilege->id?>][]" 
+                     value="7" 
+                     <?php if (($current_level & 7) == 7) echo 'checked'; ?>
+                     onchange="handlePrivilegeLevelChange(<?=$privilege->id?>, this)">
+              Org Manager
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" 
+                     name="privilege_level[<?=$privilege->id?>][]" 
+                     value="15" 
+                     <?php if (($current_level & 15) == 15) echo 'checked'; ?>
+                     onchange="handlePrivilegeLevelChange(<?=$privilege->id?>, this)">
+              Distributor
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" 
+                     name="privilege_level[<?=$privilege->id?>][]" 
+                     value="63" 
+                     <?php if (($current_level & 63) == 63) echo 'checked'; ?>
+                     onchange="handlePrivilegeLevelChange(<?=$privilege->id?>, this)">
+              Administrator
+            </label>
+          </div>
+        </div>
+        <div class="tableCell"><?=$privilege->module ?: 'No Module'?></div>
+        <div class="tableCell"><?=$privilege->description ?: $privilege->name ?: 'No Description'?></div>
       </div>
 <?php	} ?>
 

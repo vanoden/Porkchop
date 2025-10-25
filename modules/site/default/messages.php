@@ -12,25 +12,19 @@
     
     // mark the message individually as acknowledged
     function acknowledge(messageId) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/_site/api', true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        
         var params = 'method=acknowledgeSiteMessage&csrfToken=<?=$GLOBALS['_SESSION_']->getCSRFToken()?>&message_id=' + messageId;
         
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var messageCard = document.getElementById('row-' + messageId);
-                messageCard.classList.remove('message-unread');
-                messageCard.classList.add('message-read');
-                
-                // Update the button to show read status
-                var messageActions = messageCard.querySelector('.message-actions');
-                messageActions.innerHTML = '<span class="status-badge status-read">Read</span>';
-            }
-        };
-        
-        xhr.send(params);
+        AJAXUtils.post('/_site/api', params, function(data) {
+            var messageCard = document.getElementById('row-' + messageId);
+            messageCard.classList.remove('message-unread');
+            messageCard.classList.add('message-read');
+            
+            // Update the button to show read status
+            var messageActions = messageCard.querySelector('.message-actions');
+            messageActions.innerHTML = '<span class="status-badge status-read">Read</span>';
+        }, function(status) {
+            console.error('Error acknowledging message:', status);
+        });
     }
     
     // toggle all messages for acknowledged option
@@ -54,24 +48,18 @@
     
     // acknowledge all messages at once on button click
     function acknowledgeAll() {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/_site/api', true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        
         var params = 'method=acknowledgeSiteMessageByUserId&user_created=<?=$GLOBALS['_SESSION_']->customer->id?>&csrfToken=<?=$GLOBALS['_SESSION_']->getCSRFToken()?>&btn_submit=Submit';
         
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var messages = document.getElementsByClassName("message-card");
-                for (var i = 0; i < messages.length; i++) {
-                    var messageId = messages[i].id.replace('row-', '');
-                    acknowledge(messageId);
-                }
-                selectAll();
+        AJAXUtils.post('/_site/api', params, function(data) {
+            var messages = document.getElementsByClassName("message-card");
+            for (var i = 0; i < messages.length; i++) {
+                var messageId = messages[i].id.replace('row-', '');
+                acknowledge(messageId);
             }
-        };
-        
-        xhr.send(params);
+            selectAll();
+        }, function(status) {
+            console.error('Error acknowledging all messages:', status);
+        });
     }
 </script>
 

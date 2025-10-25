@@ -69,7 +69,7 @@
 			),
 		),
 		"Register"		=> array(
-			"schema"		=> 48,
+			"schema"		=> 49,
 			"privileges"	=> array(
 				"manage privileges",
 				"manage customers",
@@ -80,6 +80,7 @@
 			),
 			"templates"		=> array(
 				"organizations"		=> $templates['admin'],
+				"organizations_report"	=> $templates['admin'],
 				"admin_organization"		=> $templates['admin'],
 				"admin_organization_users"	=> $templates['admin'],
 				"admin_organization_tags"	=> $templates['admin'],
