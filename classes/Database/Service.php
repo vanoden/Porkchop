@@ -64,6 +64,45 @@
 			array_push($this->_params,$value);
 		}
 
+		/** @method AddParamHex(value)
+		 * Apply a Bind Parameter to the Query as a HEX value.  Parameters are applied to parameter marker in order of addition.
+		 * @param array $value Array of byte values
+		 * @return void
+		 */
+		public function AddParamHex($value) {
+			$hex = "x";
+			foreach ($value as $byte) {
+				if (! ctype_xdigit($byte))
+					$hex .= dechex($byte);
+				else
+					$hex .= $byte;
+			}
+			app_log("AddParamHex: ".$hex,'info');
+			array_push($this->_params,$hex);
+		}
+
+		/** @method AddParamBinary($value)
+		 * Apply a Bind Parameter to the Query as a Binary value.  Parameters are applied to parameter marker in order of addition.
+		 * @param array bytes to write
+		 * @return void
+		 */
+		public function AddParamBinary($value) {
+			$binary = "";
+			foreach ($value as $byte) {
+				if (ctype_xdigit($byte))
+					$byte = hexdec($byte);
+				else if (! ctype_digit($byte))
+					$byte = ord($byte);
+				else
+					$byte = intval($byte);
+				if ($byte < 0) $byte = 0;
+				if ($byte > 255) $byte = 255;
+				$binary .= chr($byte);
+			}
+			array_push($this->_params,$binary);
+		}
+
+
 		/** @method AddParams(values)
 		 * Apply an array of Bind Parameters to the Query
 		 * Loops through array and calls AddParam() method for each one in order
